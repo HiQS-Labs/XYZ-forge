@@ -150,3 +150,11 @@ retry unchanged; the cause is unproven. Both results are retained. An earlier di
 was stopped because the driver's worker-count override invalidated the default-setting fixture;
 controlled red/green proves that attribution, and no source change was made for it. This remains
 local evidence; automatic qualification after the dependent merge is still pending.
+
+## Merge evidence
+
+- PR #597 merged 2026-09-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #598 merged 2026-09-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

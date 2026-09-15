@@ -29,6 +29,23 @@ Ask only for missing scope, a consequential unresolved decision, or a real block
 do not repeat permission questions already answered. Merge, deployment, and clone
 teardown are separate actions unless the operator explicitly includes them.
 
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **Start-Task Discipline:**
+> 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone with a task branch off `origin/development`, register the PDDA capture doc in `1-INBOX`, and record 4-axis RELEASES task ratings.
+> 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
+> 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
+> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation.
+> 5. **Final relay QA & open ready PR (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retain the task clone for merge handoff.
+>
+> **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
+
+Then begin work.
+
+---
+
 ## Workflow
 
 1. **Resolve the request and the target repo.** Read its startup instructions

@@ -619,6 +619,9 @@ TESTS=(
   "gh396-find-harness-roots.sh"     # GH-396 (find-harness two-roots contract: #395 ×5 topologies, #394 warn-under-override + runnable remedy, --quiet)
   "gh393-deepseek-readiness.sh"     # GH-396 / #393 (RELAY_HAS_DEEPSEEK parity with deepseek-turn.py's own binary rule + API key)
   "gh591-prepush-commit-boundary.sh" # GH-591 (hook-created files do not travel in the selected commit)
+  "gh589-xyz-mini-sync.sh"          # GH-589 (XYZ mini publisher: idempotent, inclusion-only, mirror, ownership guard, secret tripwire, push read-back)
+  "gh589-consult-no-tick.sh"        # GH-589 (consult runs in the exported mini package without bin/tick; explicit broken TICK_BIN stays fatal; empty answers fail)
+  "gh589-skill-viewer.sh"           # GH-589 (mini skill viewer count/name set == disk; frontmatter styles; empty-dir red)
 )
 
 PASSED=()

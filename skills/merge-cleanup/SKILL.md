@@ -11,6 +11,21 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](../../WORKTREE-SAFETY.md) and [`AGENT
 
 ---
 
+## Recite this — verbatim, as the first thing in your first response
+
+> **Merge-Cleanup Discipline:**
+> 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
+> 2. **Inventory checkouts & protect active sessions (Phases 1–3).** Scan worktrees and task clones across safe roots; preserve any checkout with active file handles, driver locks, `.tick` claims, or recent edits (10m/60m recency ladder).
+> 3. **Sequence PRs & pre-gate conflicts (Phases 4–5).** Fetch open PRs into a topological DAG to prevent file collisions; pre-simulate landings and resolve disjoint ledger/doc conflicts.
+> 4. **Merge & reconcile governance (Phase 5).** Remote squash-merge in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
+> 5. **Safe teardown & status confirmation (Phase 6).** Deregister worktrees via canonical git protocol, move clean disposable clones to Trash, prune dangling skill symlinks, and confirm all PRs are landed.
+>
+> **Overall Goal:** All ready-to-merge PRs processed and local disk clones and git worktree folders safely torn down when appropriate.
+
+Then begin work.
+
+---
+
 ## Conversational Triggers
 
 When the operator speaks naturally:
@@ -63,8 +78,9 @@ about everyone else's work and nothing about their own.
   Phase 0 and the fast-forward alike.
 - **Unpushed commits on the integration branch are a blocker, not a note.** A squash-merge landing
   skips them silently, which is how local work is lost.
-- Not ready is a **refusal**, reported before the PR matrix and enforced before the first merge.
-  It covers `--reconcile-pr` too: that mode launches governance writers straight into this tree.
+- Not ready is a **refusal**, reported before the PR matrix and enforced before the first mutation.
+  It covers zero-PR cleanup, teardown-only cleanup, and `--reconcile-pr`; none may silently defer
+  the primary checkout to the operator after reporting success.
   A dry run still prints the sequence, labelled explicitly as not executable while blockers stand.
   `--allow-unready-primary` overrides the refusal deliberately and records the blockers.
 - The verdict is **re-established against the live remote** immediately before the first merge, so
@@ -95,12 +111,23 @@ the answer will inform a landing.
 - Checks driver locks: `.git/relay-driver.lock` (or vendored `.relay-driver.lock`) and validates holder PID liveness via `kill -0 <pid>`.
 - Checks `.tick/` active claims through the **event log fold**, never `STATE.md` (a derived snapshot): `tick claims --json` with `TICK_REPO_ROOT` pinned to the coordination root (a linked worktree's is its parent clone's). Any claimed task → `ACTIVE_TICK_CLAIM` naming task and agent; a `.tick/locks/` entry of any shape counts; `tick` missing, failing, or an events directory that is missing/unreadable → `PRESERVE_UNVERIFIED_SESSION` naming why (GH-534 A.4, `decisions/2026-09-09-tick-claims-verb.md`).
 - Checks live file handles via `lsof -F pcn +D <checkout>` from a CWD outside it. Three outcomes, because `lsof +D` exits 1 whether idle or held: a normal exit with code 0/1 **and** empty stderr is a complete enumeration (matches → `ACTIVE_PROCESS` naming PIDs and commands, none → verified idle); a signal-killed/timed-out/absent `lsof`, or **any** stderr line (`WARNING: can't opendir`), is incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning.
+- **Activity Window Ladder (10m + 60m Recency Detection):** Inspects non-ephemeral file modification timestamps (`mtime` ignoring `.git`, `node_modules`, `.venv`, `.DS_Store`, and `*.sqlite-wal`/`*.sqlite-shm`) to classify:
+  - **`ACTIVE_WRITING`** ($\le 10$m): In-progress active editing.
+  - **`RECENT_IDLE`** ($10\text{m} - 60\text{m}$): Paused session, recent edits.
+  - **`DORMANT`** ($> 60$m): Zero file modifications in over an hour.
+  - When open file handles are detected on a `DORMANT` checkout, `ACTIVE_PROCESS` is annotated with `(Dormant handle: 0 files modified in >60m)` to distinguish idle background handles from active editing.
 - Honors explicit user exclusion patterns (e.g. `--exclude gh427`).
 
 ### Phase 3: Git Safety & Worktree Verification
 - **Dirty status:** reads the complete NUL-safe `git status --porcelain -z --untracked-files=all` and names **every** file in the disposition. There is no regenerable-artifact allowance: `harnesses.db` carries invocation data, `*.db.bak` may be the last pre-rebuild copy (GH-534 A.3).
 - **Stashes:** Asserts `git stash list` is empty (0 unpopped stashes).
 - **Landed vs unlanded refs, by provenance (A.2):** after a verified `git fetch origin <integration-branch>`, every local ref tip — all `refs/heads/*`, detached `HEAD`, any local-only ref — must be either (1) reachable from `origin/<integration-branch>`, or (2) the exact `headRefOid` of a **MERGED** PR (base = integration branch, `gh pr list --state merged`, remote identity bound to the clone's `origin`) whose merge commit is reachable **and** whose landed content equals the branch's — per-path blob ids and modes from `git diff --raw --full-index`, so whitespace and binaries count. Anything else is `PRESERVE_UNPUSHED` naming the ref, the commit and the reason (no merged PR; content differs from PR #N; lookup unavailable). Squash merges no longer read as "unpushed forever"; a changed conflict resolution or a commit after the PR head still preserves. `git cherry` is never an authorization input.
+- **Completion Confidence & Agent Follow-up (Medium Scan Ladder):**
+  - **Medium Scan:** Inspects commit logs for QA attestations (`relay-drive: attest ... approved`, `status — final QA approved`, `LGTM`, `QA approved`), working tree cleanliness, and PDDA task checklists under `PROJECT/2-WORKING/`.
+  - **Deep Scan Escalation:** If unlanded commits exist without QA attestation, marks confidence as `MEDIUM` and recommends a deeper scan (`/recon` or `/debug-mantra`).
+  - **Agent Follow-up:** Identifies the owning agent (via `.tick` claim, author/co-author, or PID command name) and provides actionable follow-up guidance.
+- **Canonical GitHub Issue Marker (`--marker`):**
+  - Resolves linked canonical issue (via branch name, directory name, or commit log regex) and formats a structured status checkpoint comment to post to GitHub.
 - **Worktree dependencies:** Verifies no other linked worktrees point to a clone before marking it disposable.
 - **Every safety query fails closed (A.5):** a non-zero or unparseable `git status`, `stash list`, `worktree list`, `for-each-ref`, `fetch`, `tick claims` or `lsof` → `PRESERVE_UNVERIFIED_QUERY` / `PRESERVE_UNVERIFIED_SESSION` naming the query. No result is ever defaulted to "none".
 
@@ -112,7 +139,7 @@ the answer will inform a landing.
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 
 ### Phase 5: Safe Execution & Post-Merge Reconciliation
-- **Refuses to merge when Phase 0 says the primary is not landing-ready**, unless `--allow-unready-primary` is passed. Merging is remote and effectively irreversible; landing into a tree that cannot fast-forward leaves the repo half-landed with reconciliation unrun.
+- **Refuses every executing cleanup when Phase 0 says the primary is not landing-ready**, unless the operator explicitly passes `--allow-unready-primary` to defer that cleanup. This gate applies before any Phase 5 or Phase 6 mutation, including zero-PR and `--teardown-only` runs; the skill never silently chooses to leave the primary dirty or otherwise unready.
 - Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
 - **Every PR is re-fetched before every decision (E).** `gh pr view` is read fresh per PR; a `gh` failure or a `mergeable` of `UNKNOWN` stops the run (a PR whose state is unknown is never merged). A hold label (`hold`, `do not merge`, `blocked`, `wip`) skips the PR (#444). A PR whose base is not the checked integration branch stops the run.
 - **Pre-merge ledger gate (E.6):** the landing is simulated in a disposable full clone — PR head, then `git merge --no-ff --no-commit origin/<integration-branch>` against the integration head fetched *now* (the three-way merge keeps `MERGE_HEAD`, which the ledger resolver's generation floor reads). On a clean merge: a three-way ledger classification (a clean textual merge can still be a semantic conflict), then `releases_app.py check` and `roadmap reconcile-state --dry-run`. Any non-zero exit or `FAIL:` line is **red** and the PR is not merged; `warn:` lines, per-row identity skips and `would move` lines are diagnostics, not red.
@@ -211,7 +238,7 @@ python3 skills/merge-cleanup/scripts/attempt_record.py finish --index 0 --outcom
 ## Safety Guarantees
 
 1. **Zero Data Loss:** Any dirty working tree, unpopped stash, or unlanded commit automatically stops deletion and marks the checkout `PRESERVE_*`, naming the files or refs. The primary checkout is inspected first and by identity, so it can never be skipped by a scan filter. Anything the scanner cannot prove is preserved, naming the failed query.
-2. **No Blind Landing:** PR merges refuse to run while the primary checkout cannot fast-forward the integration branch.
+2. **No Silent Primary Deferral:** every executing run refuses before merge, teardown, or symlink mutation while the primary is unready; only the operator can defer primary cleanup with `--allow-unready-primary`.
 3. **Zero Process Interference:** Clones with active driver locks, active tick claims (from the event fold), or open file handles are detected and preserved; an unverifiable session is preserved too.
 4. **Canonical Worktree Protocol:** Linked worktrees are always cleanly deregistered from git metadata.
 5. **Governed Landing:** Every PR is gated on the ledger against the current integration head before it merges, verified `MERGED` after, and reconciled (wave reconciliation, ledger check, doc sync) before the next PR is looked at; any failure stops the run.
