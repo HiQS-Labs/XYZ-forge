@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: Reviewer (codex)
+NEXT: orchestrator (Builder)
 STATUS: Open
 ---
 
@@ -106,3 +106,35 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Codex review — 2026-09-15 (Round 2)
+
+**Grade: C- / Block.** Round 2 correctly cuts `roadmap_items`, keeps the existing completion endpoint as the sole writer, and requires a post-success matrix refetch. The plan is still not build-ready because project association is ambiguous, the existing writer can fall back across duplicate task titles, and the missing-goals/cache contracts contradict or exceed the implementation plan.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — CONDITIONAL FAIL.** The v1 source boundary is now appropriately small (`project_registry + 0. Goals.md`; `GH-229-PORTFOLIO-PLANNING-MATRIX.md:21-25,47-49`), and adding a section-aware read helper beside the existing goal parser is reasonable. The named matcher is not: `canonical_repo_key()` is explicitly a GitHub repository-claim key that only applies org aliases and case-folding (`src/rebalance/ingest/registry.py:71-80`; `src/rebalance/ingest/config.py:342-357`), not a canonicalizer for free-form project headings. Combined with unspecified “prefix match,” it can attach one section to the wrong project when names share a prefix, and it does not define how `Project / Subproject` populates the wire-level `subproject` field (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:50-53,65-74`). Cheapest correction: reuse the existing free-form `normalize_match_text()` (`src/rebalance/ingest/project_classifier.py:24-31`), require exact normalized project-key equality, reject duplicate normalized registry keys, and specify the project/subproject split with fixtures for shared prefixes and slash/spacing variants.
+
+2. **Single writer path — FAIL on mutation safety, despite correct topology.** The topology is now right: the plan names only `POST /api/focus5/goals/complete`, the current route invokes `complete_goal_in_file()`, and the client refetches after a 200 (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:54-58`; `src/rebalance/web.py:1115-1155`). But the plan calls this “exact-line completion” while the existing helper tries `line_index` first and then falls back to the first open checkbox with the same title (`src/rebalance/ingest/goals_file.py:81-99`). If the file shifts and two projects contain the same task title, the HUD can complete the wrong project’s task. The proposed duplicate-heading test does not cover duplicate task titles (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:126-127`). Keep the one writer, but make its fallback ambiguity-safe (zero or multiple title matches => 404/409, no write) and add a shifted-line + duplicate-title regression test before exposing interactive pills.
+
+3. **Data contract & wire shape — FAIL pending deterministic failure semantics.** The additive snake-case shape and three-task cap are compact. Three details remain undefined or contradictory:
+   - Missing goals means an empty portfolio at `GH-229-PORTFOLIO-PLANNING-MATRIX.md:47-49`, but projects with empty task arrays at `:123-124`. Pick one; the latter preserves the portfolio and is the cheaper behavior.
+   - `int(custom_fields.get(...))` raises for `null`, `"N/A"`, floats-as-strings, lists, and other malformed curated data; the tests cover only missing fields (`:79-84,125`). Specify one safe coercion helper and test malformed values so a single bad metric cannot turn the whole local route into a 500.
+   - `subproject` appears in the response but has no extraction/default/order contract (`:50-53,65-75`). Define it or remove it from v1.
+
+4. **UI & ergonomics — CONDITIONAL FAIL.** `Grid`/`GridRow`, Theme reuse, horizontal scrolling, and both panel widths are appropriate. However, placing the entire grid inside a horizontal `ScrollView` scrolls the first column away—the existing Markdown table idiom does exactly that (`macOS/Apps/Focus5Float/Sources/Focus5Float/ContentView.swift:1584-1614`). “Fixed with a 130pt minimum width” does not make the project identity frozen, and “fixed” conflicts with “minimum” (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:85-90`). At 340pt, viewing Task 2/3 can therefore lose row identity. Specify a fixed left project column outside the horizontal task-column scroller (or explicitly accept a non-frozen column and prove row identity another way). Also change “Tested and verified” at `:89` to a future acceptance criterion; no implementation exists yet.
+
+5. **Gaps / blind spots — FAIL.** The Round 1 offline-cache blocker remains: the verification matrix promises a cached matrix offline (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:128`), but neither the component list nor Phase 2 adds a matrix cache (`:106-115,141-149`). Existing `RosterCache` is schema-versioned specifically around `Focus5Response` and `roster-cache.json` (`macOS/Apps/Focus5Float/Sources/Focus5Float/RosterCache.swift:17-36`), so it cannot store `PortfolioMatrixResponse` as written. Cheapest v1 correction: cut cold-start matrix caching, retain only the last in-memory matrix on transient failure, and disable mutations while offline. If disk cache is required, name a distinct typed cache path/schema and its round-trip/stale-schema tests. The plan should also say how the Swift completion/refetch test observes the request sequence; `Focus5Model` currently owns a private concrete client (`Focus5Model.swift:259-261`), so the test needs an explicit injection or URL-protocol seam rather than an activity-only promise.
+
+### SWE rubric
+
+| Pillar | Result | Cheapest plan correction |
+|---|---|---|
+| Recon | Fix | Add the matcher ambiguity, writer fallback, and cache type boundaries above to the current-state map. |
+| Minimal | Pass with fix | Keep the v1 source cut; remove cold-start matrix caching unless it is a real requirement. |
+| Diagnosable | Fix | Name one warning for malformed metrics/unmatched headings and the visible empty/offline state; no new observability subsystem. |
+| Blast | Block | Guard the only mutation against shifted lines plus duplicate titles; wrong-goal completion is the consequential failure. |
+| Proof | Block | Resolve the missing-goals contradiction and add malformed-metric, ambiguous-project, duplicate-title, frozen-column, and POST-then-GET assertions. |
+
+**Reversibility:** Easy for the additive route/tab. Goal completion remains the only mutation, and it is unsafe to expose until the ambiguous fallback is pinned by a failing-then-passing regression test.
+
+VERDICT: FAIL
