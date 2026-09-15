@@ -85,6 +85,26 @@ PYW
 [ "$(py_warn claude-opus-4-8 0.50)" = "WARNED" ] && pass "Opus warning fires for opus + default budget" || fail "Opus warning did not fire"
 [ "$(py_warn claude-opus-4-8 5.00)" = "SILENT" ] && pass "Opus warning silent when budget raised" || fail "Opus warning fired despite raised budget"
 [ "$(py_warn claude-sonnet-4-6 0.50)" = "SILENT" ] && pass "Opus warning silent for Sonnet" || fail "Opus warning fired for Sonnet"
+# DEFAULT-stream contract: with no stream= injection the message must land on stderr, not stdout.
+DBG="$(mktemp -d)"
+python3 - "$PYCLAUDE" "$DBG/out.txt" "$DBG/err.txt" <<'PYD'
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(sys.argv[1]))
+spec = importlib.util.spec_from_file_location("claude_turn", sys.argv[1])
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+out, err = open(sys.argv[2], "w"), open(sys.argv[3], "w")
+mod.warn_opus_budget("claude-opus-4-8", "0.50", stream=None) if False else None
+_saved_out, sys.stdout = sys.stdout, out
+_saved_err, sys.stderr = sys.stderr, err
+mod.warn_opus_budget("claude-opus-4-8", "0.50")
+sys.stdout, sys.stderr = _saved_out, _saved_err
+out.close(); err.close()
+PYD
+grep -q "Opus-class" "$DBG/err.txt" && ! grep -q "Opus-class" "$DBG/out.txt" \
+  && pass "Opus warning defaults to stderr (not stdout)" || fail "Opus warning default stream wrong"
+# runtime call pin: main() must invoke the helper (removing the call must go red)
+grep -qE '^    warn_opus_budget\(model, max_budget\)' "$PYCLAUDE" \
+  && pass "main() calls warn_opus_budget (runtime call pinned)" || fail "main() no longer calls warn_opus_budget"
 
 # --- item 3: marathon_drive.resolve_force_relay_task --------------------------------------------
 python3 -m py_compile "$PYDRIVE" && pass "marathon_drive.py compiles" || fail "marathon_drive.py does not compile"
@@ -202,11 +222,27 @@ PYZ
 [ "$(py_zc acceptance-section 1 text)" = "SILENT" ] && pass "zero-criteria warning silent when items exist" || fail "zero-criteria warning fired despite items"
 [ "$(py_zc whole-document 0 text)" = "SILENT" ] && pass "zero-criteria warning silent outside acceptance-section mode" || fail "warning fired for non-acceptance mode"
 [ "$(py_zc acceptance-section 0 json)" = "SILENT" ] && pass "zero-criteria warning silent for json format" || fail "warning fired for json"
-# ordering pin: the warn call site must precede the dry-run exit (moving it after = regression)
-wc_line=$(grep -n "warn_zero_criteria(acc_mode" "$PYPREFLIGHT" | head -1 | cut -d: -f1)
-dry_line=$(grep -n "if args.dry_run:" "$PYPREFLIGHT" | head -1 | cut -d: -f1)
-[ -n "$wc_line" ] && [ -n "$dry_line" ] && [ "$wc_line" -lt "$dry_line" ] \
-  && pass "zero-criteria warning precedes the dry-run exit" || fail "warning call site moved after dry-run exit"
+# DEFAULT-stream contract for the zero-criteria warning as well.
+python3 - "$PYPREFLIGHT" "$DBG/zout.txt" "$DBG/zerr.txt" <<'PYZ'
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(sys.argv[1]))
+spec = importlib.util.spec_from_file_location("swarm_preflight", sys.argv[1])
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+out, err = open(sys.argv[2], "w"), open(sys.argv[3], "w")
+_saved_out, sys.stdout = sys.stdout, out
+_saved_err, sys.stderr = sys.stderr, err
+mod.warn_zero_criteria("acceptance-section", [], "DOC.md", "text")
+sys.stdout, sys.stderr = _saved_out, _saved_err
+out.close(); err.close()
+PYZ
+grep -q "Acceptance section with no" "$DBG/zerr.txt" && ! grep -q "Acceptance section with no" "$DBG/zout.txt" \
+  && pass "zero-criteria warning defaults to stderr (not stdout)" || fail "zero-criteria warning default stream wrong"
+# ordering pin v2: the INDENTED runtime call inside main() must precede the dry-run exit — the
+# column-0 `def warn_zero_criteria` line must NOT satisfy this (round-3 tautology fix).
+call_line=$(grep -n '^    warn_zero_criteria(acc_mode' "$PYPREFLIGHT" | head -1 | cut -d: -f1)
+dry_line=$(grep -n '^    if args.dry_run:' "$PYPREFLIGHT" | head -1 | cut -d: -f1)
+[ -n "$call_line" ] && [ -n "$dry_line" ] && [ "$call_line" -lt "$dry_line" ] \
+  && pass "zero-criteria runtime call (indented) precedes the dry-run exit" || fail "runtime call moved/removed relative to dry-run exit (call=$call_line dry=$dry_line)"
 grep -q "Acceptance section with no " utils/swarm-preflight.sh 2>/dev/null \
   && fail "bash fallback was edited (frozen twin — keep fixes in the Python twin)" \
   || pass "frozen bash fallback untouched (GH-308)"
