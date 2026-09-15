@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Phases 0–2 are implemented; the operator-authorized fresh Codex cycle approved the bounded publisher and test surface after its final ownership mutant passed. | Run one exact-SHA qualifying gate in a disposable full clone, then open the PR into `development`; do not publish the child before merge. |
+| The parent implementation is published as draft PR #622 and the generated child is live. The landing-page correction now gives the root and nested package README one canonical Forge source. | Qualify and republish the correction, then retain the parent PR as draft until its known unrelated full-gate baseline is resolved. |
 
 ## Goal and ownership
 
@@ -70,12 +70,11 @@ collection/target.
 | XYZ Forge source | Child destination | Ownership |
 |---|---|---|
 | `skills/skills-army-hq/SKILL.md` | `skills-army-hq/SKILL.md` | managed |
-| `skills/skills-army-hq/README.md` | `skills-army-hq/README.md` | managed |
+| `skills/skills-army-hq/README.md` | `skills-army-hq/README.md` and `README.md` | managed / single package and landing-page authority |
 | `skills/skills-army-hq/scripts/intake.py` | `skills-army-hq/scripts/intake.py` | managed |
 | `skills/skills-army-hq/scripts/sync.py` | `skills-army-hq/scripts/sync.py` | managed |
 | `skills/skills-army-hq/references/recovery.md` | `skills-army-hq/references/recovery.md` | managed |
 | `skills/skills-army-hq/references/targets.md` | `skills-army-hq/references/targets.md` | managed |
-| `mini/skills-army-README.md` | `README.md` | managed / landing README |
 | `mini/skills-army-gitignore` | `.gitignore` | managed |
 | `LICENSE` | `LICENSE` | managed |
 | `LICENSE-COMMERCIAL.md` | `LICENSE-COMMERCIAL.md` | managed |
@@ -83,6 +82,18 @@ collection/target.
 Profile-owned values are limited to manifest, display/commit identity, environment variable, and
 default sibling checkout. Calling the CLI with no `--target` must retain XYZ-mini's existing values
 and output. This is a fixed two-profile data seam, not a plugin API.
+
+### README publication recon
+
+- Mapping the canonical package directory directly to the child root is mechanically possible, but
+  it violates the manager's current package boundary: initialization requires the containing folder
+  name to equal the skill name (`skills-army-hq`).
+- The flattened candidate reproduced that failure in the detached smoke at initialization. Treating
+  an arbitrary repository root as the skill would also broaden the payload boundary to repository
+  metadata unless the manager's filesystem contract were redesigned.
+- The bounded solution keeps the runnable package at `skills-army-hq/` and publishes its canonical
+  README to both `skills-army-hq/README.md` and the repository-root `README.md`. The regression test
+  compares both byte streams directly with the Forge source.
 
 ### Phase 0 QA gate
 

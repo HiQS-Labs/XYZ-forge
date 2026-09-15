@@ -47,7 +47,7 @@ The agent instructions live in the skill folder's `SKILL.md`.
 ## Source ownership
 
 XYZ Forge is the authoritative source for this managed package. The
-[`HiQS-Labs/XYZ-skills-army-mini`](https://github.com/HiQS-Labs/XYZ-skills-army-mini) is a generated
+[`HiQS-Labs/XYZ-skills-army-mini`](https://github.com/HiQS-Labs/XYZ-skills-army-mini) repository is a generated
 projection: change managed files in
 XYZ Forge, merge them, and republish. Do not maintain equivalent patches in both repositories.
 Local collections and their receipts, targets, catalogs, history, backups, and imported skills are
@@ -78,8 +78,8 @@ a separate empty collection directory, preview initialization, then apply it:
 ```bash
 git clone https://github.com/HiQS-Labs/XYZ-skills-army-mini.git
 cd XYZ-skills-army-mini
-python3 ./scripts/intake.py --root "/path/to/Deployed Skills" init
-python3 ./scripts/intake.py --root "/path/to/Deployed Skills" --apply init
+python3 ./skills-army-hq/scripts/intake.py --root "/path/to/Deployed Skills" init
+python3 ./skills-army-hq/scripts/intake.py --root "/path/to/Deployed Skills" --apply init
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
 ```
 
@@ -114,7 +114,7 @@ This is a filesystem deployment health check, not proof that an app or extension
 has loaded a skill or that its runtime dependencies work. Report app discovery and
 runtime readiness separately as verified or unverified.
 
-See [target setup](https://github.com/HiQS-Labs/XYZ-skills-army-mini/blob/main/references/targets.md)
+See [target setup](https://github.com/HiQS-Labs/XYZ-skills-army-mini/blob/main/skills-army-hq/references/targets.md)
 for app-specific discovery guidance and
-[recovery](https://github.com/HiQS-Labs/XYZ-skills-army-mini/blob/main/references/recovery.md)
+[recovery](https://github.com/HiQS-Labs/XYZ-skills-army-mini/blob/main/skills-army-hq/references/recovery.md)
 for backups, interruptions, relocation, and migration.

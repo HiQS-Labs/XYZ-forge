@@ -14,8 +14,8 @@ broad Forge governance, databases, release machinery, or routine manual cherry-p
 Add one explicit target profile to the existing publisher. Map tracked parent sources to child
 destinations and mark each `managed` or `seed`. Keep target-specific data to the manifest, display
 identity, environment variable, and default sibling checkout; do not create a plugin framework.
-When the child repository is the package, map the canonical parent package directory directly to
-the child root. Do not create a second landing-page source or a redundant wrapper directory.
+When a package README also serves as the child landing page, map the same canonical parent file to
+both destinations. Do not create a second landing-page source that can drift.
 
 ## 3. Bootstrap the child
 

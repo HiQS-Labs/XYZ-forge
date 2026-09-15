@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-14
 
+- **GH-620: give the Skills Army child one README authority.** The canonical
+  `skills/skills-army-hq/README.md` now supplies both the standalone repository landing page and the
+  nested runnable package README byte-for-byte; the redundant mini-only README is gone. The nested
+  package boundary remains because detached initialization requires its folder name to match
+  `skills-army-hq`; a tested root-flattening candidate broke that contract. Reversibility: **Easy** —
+  restore the separate landing source and its manifest entry. Verification: a witnessed README-drift
+  red control plus the focused publisher and detached-package suites.
 - **GH-620: generated XYZ Skills Army mini and reusable spin-off playbook.** The existing GH-589 publisher now has one fixed `skills-army-mini` profile for the closed Skills Army HQ package, child landing files, licenses, provenance, and remote read-back; its default remains XYZ-mini. A pre-write live `origin/main` comparison refuses wrong-branch, stale, ahead, behind, or divergent destinations while permitting an unborn child or the exact retained publisher commit needed to retry a failed push. `/push-to-skills-army-mini` documents the manual operator flow, and `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md` records the parent-authoritative recipe for future generated children. Reversibility: **Easy** — revert the parent PR and generated child commit. Verification: existing GH-589 and Skills Army suites plus `test/gh620-skills-army-mini-sync.sh` with a witnessed missing-manifest red control, literal payload oracle, detached init/add/target/sync smoke, idempotence, provenance, and stale-remote refusal.
 
 ## 2026-09-13
