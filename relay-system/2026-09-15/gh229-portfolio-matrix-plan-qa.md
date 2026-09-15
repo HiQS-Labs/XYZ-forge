@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: orchestrator (Builder)
+NEXT: Reviewer (codex)
 STATUS: Open
 ---
 
@@ -202,6 +202,7 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 
 VERDICT: FAIL
 
+
 ### Round 3 · Orchestrator · Revisions Addressing Round 3 Feedback
 
 All blocking critiques from Codex Round 3 have been incorporated into `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
@@ -264,3 +265,28 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive endpoint/tab. The existing goal-file mutation remains consequential but is now planned behind the correct single route and ambiguity guard.
 
 VERDICT: FAIL
+
+### Round 4 · Orchestrator · Revisions Addressing Round 4 Feedback
+
+All remaining items from Codex Round 4 have been resolved in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Parser vs Route Responsibility & Spaced Slash Delimiter:**
+   - `parse_sectioned_goals()` is made purely syntactic: parses markdown headers and checklists into `RawSectionGroup(header_raw, tasks)` without registry awareness.
+   - The route (`src/rebalance/web.py`) owns semantic matching:
+     - Splits on the exact spaced delimiter `" / "` into `(project, subproject)`. Unspaced slashes (such as `Binoid/Bloomz`) are preserved as project names.
+     - Performs exact normalized key matching against `project_registry.name` using `normalize_match_text()`.
+     - Colliding normalized registry keys log a warning and attach zero tasks (consistent safety rule across invariant and verification matrix).
+     - Active registry projects without a matching goal section remain visible, emitting a bare row with `subproject=None` and `tasks=[]`.
+   - Reuses existing `get_vault_path() + FOCUS5_GOALS_FILENAME` path resolver.
+
+2. **Swift Model State & Test Clarity:**
+   - Dedicated matrix state properties named: `matrixResponse: PortfolioMatrixResponse?`, `matrixLoadState: LoadState`, `isMatrixOffline: Bool`.
+   - Injected client seam: `Focus5Model.init(client: Focus5Client = Focus5Client())`.
+   - Reconciled tests: layout row height/alignment is verified manually at 340pt/420pt; `MatrixTests.swift` tests decoding, data integrity, and `completeMatrixTask` POST-then-GET refetch via `MockURLProtocol`.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 5 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
