@@ -30,6 +30,9 @@ from scan_clones import (
     inspect_primary_landing,
     format_primary_landing,
     format_scan_table,
+    format_completion_and_followup_summary,
+    format_issue_marker_body,
+    resolve_canonical_issue,
     run_git
 )
 from toposort_prs import (
@@ -117,6 +120,21 @@ def hold_label(info: Dict[str, Any]) -> Optional[str]:
         if any(tok in low for tok in HOLD_LABEL_TOKENS):
             return name
     return None
+
+
+def post_issue_marker(repo_path: Path, issue_num: int, body: str, dry_run: bool = True) -> bool:
+    """Posts a status marker comment to the specified GitHub issue."""
+    if dry_run:
+        log(f"[DRY RUN] Would post status marker comment to GitHub issue #{issue_num}")
+        return True
+    log(f"Posting status marker comment to GitHub issue #{issue_num}...")
+    res = _gh(["issue", "comment", str(issue_num), "--body", body], repo_path, timeout=60)
+    if res.returncode == 0:
+        log(f"✅ Posted status marker to GH-#{issue_num}")
+        return True
+    else:
+        log_warn(f"Failed to post marker to GH-#{issue_num}: {res.stderr.strip()}")
+        return False
 
 
 def origin_url(repo_path: Path) -> Optional[str]:
@@ -640,6 +658,7 @@ def main():
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
     parser.add_argument("--reconcile-pr", type=int, default=0, help="Run post-merge reconcile on a specific PR number")
     parser.add_argument("--integration-branch", default="development", help="Branch PRs land on and the primary must be able to fast-forward (default: development)")
+    parser.add_argument("--marker", action="store_true", help="Post status marker comments to linked canonical GitHub issues for active/incomplete checkouts")
     parser.add_argument("--allow-unready-primary", action="store_true", help="Explicitly defer primary-checkout cleanup and proceed even though the primary cannot receive the landing")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
 
@@ -690,6 +709,25 @@ def main():
     print(f"PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS ({len(checkouts)} found)")
     print("=" * 80 + "\n")
     print(format_scan_table(checkouts) + "\n")
+
+    summary = format_completion_and_followup_summary(checkouts)
+    if summary:
+        print(summary)
+
+    if args.marker:
+        print("=" * 80)
+        print("CANONICAL GITHUB ISSUE STATUS MARKERS")
+        print("=" * 80 + "\n")
+        marked = 0
+        for c in checkouts:
+            issue_num = c.get("canonical_issue")
+            if issue_num and c.get("disposition") != "PRIMARY_CHECKOUT":
+                body = format_issue_marker_body(c)
+                if post_issue_marker(primary_repo, issue_num, body, dry_run=dry_run):
+                    marked += 1
+        if marked == 0:
+            log("No linked canonical issues found for candidate checkouts.")
+        print()
 
     if args.scan_only:
         return 0

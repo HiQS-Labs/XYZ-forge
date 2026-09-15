@@ -96,12 +96,23 @@ the answer will inform a landing.
 - Checks driver locks: `.git/relay-driver.lock` (or vendored `.relay-driver.lock`) and validates holder PID liveness via `kill -0 <pid>`.
 - Checks `.tick/` active claims through the **event log fold**, never `STATE.md` (a derived snapshot): `tick claims --json` with `TICK_REPO_ROOT` pinned to the coordination root (a linked worktree's is its parent clone's). Any claimed task → `ACTIVE_TICK_CLAIM` naming task and agent; a `.tick/locks/` entry of any shape counts; `tick` missing, failing, or an events directory that is missing/unreadable → `PRESERVE_UNVERIFIED_SESSION` naming why (GH-534 A.4, `decisions/2026-09-09-tick-claims-verb.md`).
 - Checks live file handles via `lsof -F pcn +D <checkout>` from a CWD outside it. Three outcomes, because `lsof +D` exits 1 whether idle or held: a normal exit with code 0/1 **and** empty stderr is a complete enumeration (matches → `ACTIVE_PROCESS` naming PIDs and commands, none → verified idle); a signal-killed/timed-out/absent `lsof`, or **any** stderr line (`WARNING: can't opendir`), is incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning.
+- **Activity Window Ladder (10m + 60m Recency Detection):** Inspects non-ephemeral file modification timestamps (`mtime` ignoring `.git`, `node_modules`, `.venv`, `.DS_Store`, and `*.sqlite-wal`/`*.sqlite-shm`) to classify:
+  - **`ACTIVE_WRITING`** ($\le 10$m): In-progress active editing.
+  - **`RECENT_IDLE`** ($10\text{m} - 60\text{m}$): Paused session, recent edits.
+  - **`DORMANT`** ($> 60$m): Zero file modifications in over an hour.
+  - When open file handles are detected on a `DORMANT` checkout, `ACTIVE_PROCESS` is annotated with `(Dormant handle: 0 files modified in >60m)` to distinguish idle background handles from active editing.
 - Honors explicit user exclusion patterns (e.g. `--exclude gh427`).
 
 ### Phase 3: Git Safety & Worktree Verification
 - **Dirty status:** reads the complete NUL-safe `git status --porcelain -z --untracked-files=all` and names **every** file in the disposition. There is no regenerable-artifact allowance: `harnesses.db` carries invocation data, `*.db.bak` may be the last pre-rebuild copy (GH-534 A.3).
 - **Stashes:** Asserts `git stash list` is empty (0 unpopped stashes).
 - **Landed vs unlanded refs, by provenance (A.2):** after a verified `git fetch origin <integration-branch>`, every local ref tip — all `refs/heads/*`, detached `HEAD`, any local-only ref — must be either (1) reachable from `origin/<integration-branch>`, or (2) the exact `headRefOid` of a **MERGED** PR (base = integration branch, `gh pr list --state merged`, remote identity bound to the clone's `origin`) whose merge commit is reachable **and** whose landed content equals the branch's — per-path blob ids and modes from `git diff --raw --full-index`, so whitespace and binaries count. Anything else is `PRESERVE_UNPUSHED` naming the ref, the commit and the reason (no merged PR; content differs from PR #N; lookup unavailable). Squash merges no longer read as "unpushed forever"; a changed conflict resolution or a commit after the PR head still preserves. `git cherry` is never an authorization input.
+- **Completion Confidence & Agent Follow-up (Medium Scan Ladder):**
+  - **Medium Scan:** Inspects commit logs for QA attestations (`relay-drive: attest ... approved`, `status — final QA approved`, `LGTM`, `QA approved`), working tree cleanliness, and PDDA task checklists under `PROJECT/2-WORKING/`.
+  - **Deep Scan Escalation:** If unlanded commits exist without QA attestation, marks confidence as `MEDIUM` and recommends a deeper scan (`/recon` or `/debug-mantra`).
+  - **Agent Follow-up:** Identifies the owning agent (via `.tick` claim, author/co-author, or PID command name) and provides actionable follow-up guidance.
+- **Canonical GitHub Issue Marker (`--marker`):**
+  - Resolves linked canonical issue (via branch name, directory name, or commit log regex) and formats a structured status checkpoint comment to post to GitHub.
 - **Worktree dependencies:** Verifies no other linked worktrees point to a clone before marking it disposable.
 - **Every safety query fails closed (A.5):** a non-zero or unparseable `git status`, `stash list`, `worktree list`, `for-each-ref`, `fetch`, `tick claims` or `lsof` → `PRESERVE_UNVERIFIED_QUERY` / `PRESERVE_UNVERIFIED_SESSION` naming the query. No result is ever defaulted to "none".
 
