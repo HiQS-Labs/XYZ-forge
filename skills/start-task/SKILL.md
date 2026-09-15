@@ -80,8 +80,11 @@ Then begin work.
    and base SHA, and create the task branch under repo policy. In XYZ Forge this
    is one `feat/` or `fix/` branch off `origin/development`, with the per-clone git
    hooks installed and checked. Preserve the primary checkout and other sessions.
-   An explicit resume should locate and verify the existing task clone, branch,
-   PR and HEAD rather than duplicate them or overwrite their state.
+   **Resume Reconciliation Protocol:** An explicit resume must locate and verify the
+   existing task clone, branch, remote branch, remote PR status (`gh pr list --head <branch>`),
+   and live HEAD commit rather than duplicating clones, creating redundant branches, or
+   overwriting valid working state. On transport drops or reconnects, ascertain remote execution
+   state before retrying mutations.
    Create any missing issue first. Where PDDA applies, capture it in `1-INBOX`,
    park its roadmap entry immediately, then promote it through the documented
    lifecycle before execution. Read `PROJECT/PDDA.md` and the repo's RELEASES
@@ -161,6 +164,8 @@ Then begin work.
    established builder/jog/marathon workflow as appropriate. Multiple issues alone
    do not require a new marathon, queue, daemon, or parallel executor. Preserve
    existing role splits, active-marathon limits, driver locks and retry limits.
+   On network drops, command timeouts, or interrupted turns during branch creation, push,
+   or external mutation, ascertain remote execution state before re-dispatching.
    Complete the ordered work and update per-issue state and recon findings in the
    plan as you go. Commit coherent checkpoints to the group's branch. Revisit
    plan QA if new evidence materially changes scope, architecture, or risk.
@@ -198,7 +203,9 @@ Then begin work.
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
    and accidental files, push through the repository's required gate, and open the
    PR against its active integration branch (`development` in XYZ Forge). Reuse
-   an existing PR for the branch. Include the problem/result, issue mapping,
+   an existing PR for the branch. If a network interruption occurs during PR creation,
+   query `gh pr list --head <branch>` to verify whether the PR was registered before
+   re-executing. Include the problem/result, issue mapping,
    relevant validation and relay evidence, dependencies and remaining limitations.
    Query the emitted PR to verify its base, head SHA, scope and readiness; verify
    hosted checks for that SHA when required by the repo. A configured workflow is

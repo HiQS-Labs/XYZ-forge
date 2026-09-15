@@ -103,6 +103,7 @@ TESTS=(
   "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
   "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
   "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
+  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, expand-contract migrations, containment)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
