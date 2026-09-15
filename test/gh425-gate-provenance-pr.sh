@@ -177,6 +177,108 @@ class Receipts(unittest.TestCase):
                 self.assertEqual(wave.run_subprocesses.call_count, int(expected == 0))
 
 
+    def test_cli_commit_landing_gate_express_receipt(self):
+        """GH-592 red control: --commit <sha> --gate on a direct (express) landing.
+        (a) no receipt -> 6 with the matcher's message; (b) the receipt the express
+        driver's own helper writes for A -> gate passes; (c) same receipt vs a
+        declared commit B -> 6 (B is declared, so the matcher, not exit 4, decides)."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("express", root / "utils/py/express.py")
+        express = importlib.util.module_from_spec(spec)
+        with patch.object(sys, "argv", ["express"]):
+            spec.loader.exec_module(express)
+        (self.repo / ".git").mkdir()
+        sha_a, sha_b = "c3" * 20, "d4" * 20
+        manifest = self.repo / "offline.json"
+        manifest.write_text(json.dumps({"commits": [
+            {"sha": sha_a, "message": "fix(GH-592): demo [express]\n\nCloses #592", "committedAt": "2026-09-13T00:00:00Z"},
+            {"sha": sha_b, "message": "fix(GH-591): other [express]\n\nCloses #591", "committedAt": "2026-09-13T00:00:00Z"},
+        ], "issues": [{"number": 592, "state": "OPEN"}, {"number": 591, "state": "OPEN"}]}))
+
+        def run_cli(commit):
+            with contextlib.ExitStack() as stack:
+                for name, value in (("check_porcelain_cleanliness", None),
+                                    ("check_current_branch", None),
+                                    ("github_slug_from_origin", "example/repo"),
+                                    ("run_subprocesses", None),
+                                    ("run_validation_gate", None)):
+                    stack.enter_context(patch.object(wave, name, return_value=value))
+                stack.enter_context(patch.object(sys, "argv", [
+                    "wave-reconcile", "--root", str(self.repo), "--commit", commit, "--gate",
+                    "--offline", str(manifest), "--skip-pull", "--skip-branch-check", "--dry-run"]))
+                output = stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
+                stack.enter_context(contextlib.redirect_stderr(output))
+                code = 0
+                try:
+                    wave.main()
+                except SystemExit as exc:
+                    code = exc.code
+                return code, output.getvalue()
+
+        # (a) RED: no receipt anywhere
+        self.results.mkdir()
+        code, out = run_cli(sha_a)
+        self.assertEqual(code, 6, out)
+        self.assertIn("No provenance.jsonl or error_log.jsonl entry matches", out)
+        # (b) GREEN: the express driver's own writer produced the receipt for A
+        rel = express.write_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh", 0)
+        self.assertTrue((self.repo / rel).is_file(), rel)
+        rec = json.loads((self.repo / rel).read_text().splitlines()[0])
+        self.assertEqual((rec["commit"], rec["gate"], rec["rc"], rec["command"]),
+                         (sha_a, "express-suite", 0, "bash test/gh592-demo.sh"))
+        code, out = run_cli(sha_a)
+        self.assertNotEqual(code, 6, out)
+        self.assertIn(f"Provenance receipt matched for PR #{sha_a[:12]}", out)
+        # (c) RED again: the same receipt is not evidence for a different declared commit
+        code, out = run_cli(sha_b)
+        self.assertEqual(code, 6, out)
+        self.assertIn("No provenance.jsonl or error_log.jsonl entry matches", out)
+        # the shared predicate rejects failed / wrong-suite / wrong-issue records
+        self.assertTrue(express.valid_express_receipt(rec, sha_a, 592, "test/gh592-demo.sh"))
+        for bad in ({**rec, "rc": 1, "result": "fail"}, {**rec, "command": "bash test/other.sh"},
+                    {**rec, "issue": 591}, {**rec, "commit": sha_b}, {**rec, "rc": "0"}):
+            self.assertFalse(express.valid_express_receipt(bad, sha_a, 592, "test/gh592-demo.sh"), bad)
+        # and find_receipt is by content, so a second write for the same landing is a no-op
+        self.assertEqual(express.write_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh", 0), rel)
+        self.assertEqual(len((self.repo / rel).read_text().splitlines()), 1)
+        # explicit PR identity is not express evidence (the real matcher treats it as conflicting)
+        self.assertFalse(express.valid_express_receipt({**rec, "pr": 999}, sha_a, 592, "test/gh592-demo.sh"))
+        # bare and test/-prefixed suite spellings are one expectation
+        self.assertTrue(express.valid_express_receipt(rec, sha_a, 592, "gh592-demo.sh"))
+        # I5: an unterminated prior line must not swallow the next record
+        (self.repo / rel).write_text((self.repo / rel).read_text().rstrip("\n") + "\n{")
+        rel2 = express.write_receipt(str(self.repo), sha_b, 592, "test/gh592-demo.sh", 0)
+        self.assertEqual(rel2, rel)
+        lines = (self.repo / rel2).read_text().splitlines()
+        self.assertEqual(len(lines), 3, lines)
+        self.assertEqual(json.loads(lines[-1])["commit"], sha_b)
+        code, out = run_cli(sha_b)
+        self.assertNotEqual(code, 6, out)
+        # I5 variant: a VALID prior record that merely lacks its final newline is preserved intact
+        (self.repo / rel).write_text((self.repo / rel).read_text().rstrip("\n"))
+        sha_d = "f6" * 20
+        express.write_receipt(str(self.repo), sha_d, 592, "test/gh592-demo.sh", 0)
+        lines = (self.repo / rel).read_text().splitlines()
+        self.assertEqual([json.loads(l)["commit"] for l in lines if l.startswith("{\"")], [sha_a, sha_b, sha_d])
+        # a symlinked provenance.jsonl is not evidence for express either — falsifiable: the
+        # ONLY record for sha_c lives behind a symlink in a directory that sorts FIRST
+        # ("0-link" < "2026-…"), so removing the symlink guard would make find_receipt return it.
+        sha_c = "e5" * 20
+        outside = self.repo / "outside-provenance.jsonl"
+        outside.write_text(json.dumps({**rec, "commit": sha_c}) + "\n")
+        (self.repo / "TESTS-RESULTS" / "0-link").mkdir()
+        (self.repo / "TESTS-RESULTS" / "0-link" / "provenance.jsonl").symlink_to(outside)
+        self.assertTrue(express.valid_express_receipt(json.loads(outside.read_text()), sha_c, 592, "test/gh592-demo.sh"))
+        self.assertIsNone(express.find_receipt(str(self.repo), sha_c, 592, "test/gh592-demo.sh"))
+        self.assertEqual(express.find_receipt(str(self.repo), sha_a, 592, "test/gh592-demo.sh"), rel)
+        # and the writer refuses to write THROUGH a symlink at the receipt path
+        linked_dir = self.repo / "TESTS-RESULTS" / ("%s+GH-590-express" % express.datetime.datetime.now(express.datetime.timezone.utc).strftime("%Y-%m-%d"))
+        linked_dir.mkdir()
+        (linked_dir / "provenance.jsonl").symlink_to(outside)
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()):
+                express.write_receipt(str(self.repo), sha_c, 590, "test/gh590-demo.sh", 0)
+        self.assertEqual(len(outside.read_text().splitlines()), 1)  # nothing was appended through the link
 class Qualification(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='gh591-qualification-')
@@ -322,7 +424,5 @@ FIXTURE
         self.qualify(metas=[self.meta,dict(self.meta,number=426)])
         path=next((self.root/'TESTS-RESULTS').rglob('provenance.jsonl'))
         self.assertEqual({json.loads(line)['pr'] for line in path.read_text().splitlines()},{425,426})
-
-
 unittest.main(verbosity=2)
 PY
