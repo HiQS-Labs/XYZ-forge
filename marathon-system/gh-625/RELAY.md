@@ -115,3 +115,11 @@ The changes fully satisfy the acceptance criteria:
 3. A full file sweep found no preexisting issues or logic faults in the surrounding bridge server logic.
 
 **Verdict:** Approved
+
+### Attestation · relay-drive — 2026-09-15T07:02:05Z
+task: MARATHON-GH-625-TURN
+reviewer: agy
+status: Approved
+reviewed-head: d461ca4b85624a10ef32ccbfcbe0f41575fba427
+added-range: 10154+595
+added-sha256: a4c9ab3d164605e6e9b3aed8b72c3f54fdd1f1a2c2ccfc80c435a859020ead9a
