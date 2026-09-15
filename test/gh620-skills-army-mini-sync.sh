@@ -51,14 +51,14 @@ r = publish("--push")
 ok("first publication pushes and reads back", r.returncode == 0, r.stderr[-300:])
 expected = {
     ".gitignore", ".xyz-forge-revision", "LICENSE", "LICENSE-COMMERCIAL.md", "MANIFEST.txt", "README.md",
-    "skills-army-hq/README.md", "skills-army-hq/SKILL.md",
-    "skills-army-hq/references/recovery.md", "skills-army-hq/references/targets.md",
-    "skills-army-hq/scripts/intake.py", "skills-army-hq/scripts/sync.py",
+    "SKILL.md", "references/recovery.md", "references/targets.md", "scripts/intake.py", "scripts/sync.py",
 }
 actual = set(filter(None, git(dest, "ls-files").stdout.splitlines()))
 ok("literal inclusion-only payload set", actual == expected, f"missing={sorted(expected-actual)} extra={sorted(actual-expected)}")
 manifest = set(pathlib.Path(dest, "MANIFEST.txt").read_text().splitlines())
-ok("manifest names exactly the ten managed payloads", manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
+ok("manifest names exactly the nine managed payloads", manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
+ok("root README is byte-identical to the canonical package README",
+   pathlib.Path(dest, "README.md").read_bytes() == pathlib.Path(src, "skills/skills-army-hq/README.md").read_bytes())
 if MUTANT == "1":
     print(f"gh620-skills-army-mini-sync mutant: {P} passed, {F} failed")
     sys.exit(1 if F else 0)
@@ -69,7 +69,7 @@ r = publish("--push")
 ok("republication is idempotent", r.returncode == 0 and git(dest, "rev-parse", "HEAD").stdout.strip() == head)
 
 # A failed push leaves one exact publisher commit: rerun may push it, but an amended extra file may not.
-landing = pathlib.Path(src, "mini/skills-army-README.md")
+landing = pathlib.Path(src, "skills/skills-army-hq/README.md")
 landing.write_text(landing.read_text() + "\nRetry fixture.\n")
 git(src, "add", str(landing)); git(src, "commit", "-qm", "publisher retry fixture")
 bad = os.path.join(WORK, "bad-retry"); git(WORK, "clone", "-q", bare, bad)
@@ -87,7 +87,7 @@ ok("exact retained publisher commit retries push", r.returncode == 0 and git(bar
 # A previously managed path dropped by the new profile must be absent in an exact retry.
 drop_src = os.path.join(WORK, "drop-src"); git(WORK, "clone", "-q", src, drop_src)
 drop_sync = os.path.join(drop_src, "utils/py/xyz_mini_sync.py")
-drop_text = pathlib.Path(drop_sync).read_text().replace('    ("mini/skills-army-README.md", "README.md", "managed"),\n', "")
+drop_text = pathlib.Path(drop_sync).read_text().replace('    ("skills/skills-army-hq", "", "managed"),\n', "")
 pathlib.Path(drop_sync).write_text(drop_text); git(drop_src, "add", drop_sync); git(drop_src, "commit", "-qm", "drop prior managed path")
 drop_dest = os.path.join(WORK, "drop-dest"); git(WORK, "clone", "-q", bare, drop_dest)
 r = sh(sys.executable, drop_sync, "--target", "skills-army-mini", "--dest", drop_dest, "--apply")
@@ -105,7 +105,7 @@ owner_manifest.write_text("\n".join(p for p in owner_manifest.read_text().splitl
 pathlib.Path(owner_remote, "README.md").write_text("operator-owned remote README\n")
 git(owner_remote, "add", "MANIFEST.txt", "README.md"); git(owner_remote, "commit", "-qm", "operator owns README"); git(owner_remote, "push", "-q", "origin", "main")
 owner_retry = os.path.join(WORK, "owner-retry"); git(WORK, "clone", "-q", owner_bare, owner_retry)
-shutil.copy(os.path.join(src, "mini/skills-army-README.md"), os.path.join(owner_retry, "README.md"))
+shutil.copy(os.path.join(src, "skills/skills-army-hq/README.md"), os.path.join(owner_retry, "README.md"))
 owner_manifest = pathlib.Path(owner_retry, "MANIFEST.txt")
 owner_manifest.write_text("\n".join(sorted(expected - {"MANIFEST.txt", ".xyz-forge-revision"})) + "\n")
 git(owner_retry, "add", "MANIFEST.txt", "README.md")
@@ -144,8 +144,8 @@ collection = os.path.join(WORK, "collection")
 target = os.path.join(WORK, "target"); os.mkdir(target)
 home = os.path.join(WORK, "home"); os.mkdir(home)
 env = {**os.environ, "HOME": home, "PYTHONDONTWRITEBYTECODE": "1"}
-intake = os.path.join(dest, "skills-army-hq/scripts/intake.py")
-sync_child = os.path.join(dest, "skills-army-hq/scripts/sync.py")
+intake = os.path.join(dest, "scripts/intake.py")
+sync_child = os.path.join(dest, "scripts/sync.py")
 def cli(script, *args): return sh(sys.executable, "-B", script, "--root", collection, *args, env=env)
 r = cli(intake, "init")
 ok("init preview leaves absent collection untouched", r.returncode == 0 and not os.path.exists(collection), r.stderr)

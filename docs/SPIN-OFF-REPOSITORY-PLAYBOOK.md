@@ -14,6 +14,8 @@ broad Forge governance, databases, release machinery, or routine manual cherry-p
 Add one explicit target profile to the existing publisher. Map tracked parent sources to child
 destinations and mark each `managed` or `seed`. Keep target-specific data to the manifest, display
 identity, environment variable, and default sibling checkout; do not create a plugin framework.
+When the child repository is the package, map the canonical parent package directory directly to
+the child root. Do not create a second landing-page source or a redundant wrapper directory.
 
 ## 3. Bootstrap the child
 
@@ -26,8 +28,9 @@ state, personal collections, receipts, targets, backups, secrets, or machine-loc
 Keep one parent end-to-end publisher contract plus the smallest detached-runtime smoke. Use a
 literal expected payload set independent of the manifest and witness it fail when a required entry
 is removed. Exercise preview, apply, idempotence, ownership/seed behavior when applicable,
-divergence refusal, push read-back, and only the runtime behavior changed by detachment. Do not add
-a framework, matrix, fuzz campaign, recovery system, or mirrored child battery for an MVP.
+divergence refusal, push read-back, and only the runtime behavior changed by detachment. When a
+README is the child landing page, assert its bytes equal the canonical parent README. Do not add a
+framework, matrix, fuzz campaign, recovery system, or mirrored child battery for an MVP.
 
 ## 5. Land, then publish
 
