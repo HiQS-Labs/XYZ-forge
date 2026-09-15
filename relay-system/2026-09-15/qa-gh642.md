@@ -132,3 +132,19 @@ only writable path; verify the implementation against the plan, never edit code)
 VERDICT: CHANGES REQUESTED — fix suffix-candidate malformed handling, emit the auto-suffix notice on
 stderr, and replace the false-positive/static checks with behavior-level regression assertions that
 go red when each guarded behavior is reverted.
+
+---
+
+## QA round 2 request (operator, 2026-09-15)
+
+All findings applied:
+- BLOCKER malformed-scan: `_status(candidate) == "malformed"` mid-scan now dies (exit 2) —
+  utils/py/marathon_drive.py (resolve_force_relay_task scan loop).
+- SHOULD stderr: announcement printed to `sys.stderr` (log()/stdout untouched).
+- BLOCKER tests: malformed-base case now uses the REAL stub path (exercises the malformed branch,
+  not missing-binary); new behavior tests: malformed mid-scan → exit 2; monotonic skip of a
+  claimed -R2 → takes -R3; stderr announcement captured; copy-mutation proves ROOT stays clean;
+  non-git fallback exercised; slug 3-word accepted / 4-word refused. Suite now 42/0.
+- NIT docstring: aligned with the parent-dir contract.
+
+Please re-verify (same envelope) and return `VERDICT: APPROVED` or the remaining list.
