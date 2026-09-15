@@ -242,3 +242,32 @@ One governance-driven scope narrowing beyond your findings: item 2's bash-twin e
 **dropped** (frozen fallback, not a safety defect — GH-308); `CLAUDE_REASONING_EFFORT` works on
 the default Python runtime. Please re-review the revised plan and return `VERDICT: APPROVED` or
 the remaining change list.
+
+### Plan Review · codex · Round 2
+
+**Basis:** re-review of plan v2 against the seven round-1 dispositions and the task-clone source.
+No tests or git commands were run because this is a plan-only relay turn. The available code graph
+indexes a newer `development` SHA, so the task-clone files remain authoritative.
+
+The revised plan resolves the substantive round-1 findings: item 4 is now a disposable copy
+(`PROJECT/2-WORKING/GH-642-CONSUMER-FRUIT.md:90-95`); behavior changes stay out of all frozen Bash
+twins and the initializer is Python (`:74-80,81-89,96-111`); mutation-heavy verification is confined
+to a disposable full clone and includes relay-package regeneration/freshness (`:140-145`); token
+terminality, failure behavior, monotonic suffixing, and Contract B identity are explicit (`:81-89`);
+vendor destination consumers and all three Git layouts are in scope (`:65-73`); and the rating now
+has an evidence-based rationale (`:34-43`). The bash-twin effort-parity deferral is consistent with
+GH-308 and does not weaken the default Python runtime (`:77-80,122`).
+
+#### Remaining finding
+
+- **SHOULD — initializer CLI contract still contradicts its accepted disposition.** The synopsis
+  still advertises optional `[--tier2]` at plan line 97, while lines 102-103 say Tier 2 is always
+  passed and the Round 2 request says the flag was removed. Leaving the flag in the executable
+  contract either creates a meaningless option or invites an implementation that restores the
+  ambiguity Round 1 asked to remove. Delete `[--tier2]` from the synopsis; the unconditional
+  `--with-releases` behavior can remain unchanged.
+
+**Minimal remaining change:** remove `[--tier2]` from
+`PROJECT/2-WORKING/GH-642-CONSUMER-FRUIT.md:97`.
+
+VERDICT: CHANGES REQUESTED
