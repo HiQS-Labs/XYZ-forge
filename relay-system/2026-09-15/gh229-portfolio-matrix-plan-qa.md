@@ -201,3 +201,66 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive endpoint/tab. The sole consequential mutation remains goal completion; its ambiguity outcome must be explicit before build so the safety guard is testable end to end.
 
 VERDICT: FAIL
+
+### Round 3 · Orchestrator · Revisions Addressing Round 3 Feedback
+
+All blocking critiques from Codex Round 3 have been incorporated into `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Section Parser & Multi-Subproject Group-to-Row Projection:**
+   - `parse_sectioned_goals()` returns `list[SectionedGoalGroup]` where each group carries `(project, subproject, tasks)`.
+   - Each group emits one distinct matrix row, inheriting the parent's metrics (`revenue_ranking`, `revenue_potential`, `computed_score`). Sibling subprojects sort after bare-project rows (`subproject=None` first).
+   - Derived Swift ID is formalized as `id: "\(name):\(subproject ?? "")"`. Colliding keys log a warning.
+
+2. **Ambiguity Signal & Mutation Safety Contract:**
+   - Formalized helper-to-HTTP error contract: `complete_goal_in_file()` raises `AmbiguousGoalError(title)` when title fallback matches >1 open goal.
+   - `focus5_complete_goal()` catches `AmbiguousGoalError` and returns **HTTP 409** `{"ok": False, "error": "ambiguous_goal_title", "title": title}` with **zero file writes**.
+   - Zero matches remains **HTTP 404**. Added test cases for both.
+
+3. **UI Fixed Row Height & Alignment:**
+   - Specified a shared, fixed row height (`58pt`) across both the left frozen column and the right scrolling task grid, guaranteeing that row heights never diverge when task text wraps.
+   - Titles clamped to 1 line for project/subproject and 2 lines for task pills.
+
+4. **Swift Testability & Dependency Injection Seam:**
+   - Injected client seam: `Focus5Model.init(client: Focus5Client = Focus5Client())` (mirroring `ObsidianRemindersStore(client:)`).
+   - Production method named: `completeMatrixTask(title:lineIndex:) async` executes POST -> GET refetch -> state replacement.
+   - Test explicitly verifies this dispatch sequence using a stubbed `URLSession` with `MockURLProtocol`.
+   - Explicitly hooked `refreshMatrix()` into `Focus5Model.refresh()` when `viewMode == .matrix`.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 4 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex review — 2026-09-15 (Round 4)
+
+**Grade: B- / Block.** Round 4 now has a testable single-writer error contract, a credible injected-client seam, no speculative persistence, and a UI layout whose two halves share one row-height rule. The plan is still not build-ready because the project/section projection is internally inconsistent: the proposed path-only parser cannot perform the registry matching assigned to it, `/` is both data and delimiter, and the plan disagrees about collision handling and whether registry projects without groups remain visible.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — CONDITIONAL FAIL.** The selected subsystems remain the right ones, but responsibility is misplaced. `parse_sectioned_goals(path: Path)` has no registry input, yet the same invariant and Phase 1 assign it exact matching against `project_registry.name` (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:53-61,159-162`). Keep that helper purely syntactic; have the route build one normalized registry index and perform group-to-project matching. Also name reuse of the existing configured-vault path contract (`get_vault_path()` + `FOCUS5_GOALS_FILENAME`) rather than adding another way to locate `0. Goals.md`; that logic already owns missing/unreadable-file behavior (`src/rebalance/web.py:1037-1073`).
+
+2. **Single writer path — PASS.** The plan now specifies one mutation route, an `AmbiguousGoalError` signal from the non-HTTP helper, a route-level 409 mapping, zero writes on ambiguity, 404 on absence, and POST-then-GET state replacement (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:68-75,149,152,160-170`). That closes the current unsafe first-title fallback in `complete_goal_in_file()` (`src/rebalance/ingest/goals_file.py:73-116`) and the current route's all-failures-to-404 behavior (`src/rebalance/web.py:1115-1155`) without introducing a second writer.
+
+3. **Data contract & wire shape — FAIL pending one deterministic projection contract.** Three contradictions remain:
+   - The syntax says split `## Project / Subproject` on `/` (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:62`), but `/` already occurs in the plan's own project identity (`Binoid/Bloomz` at `:35,83`). A header for that registry name can be misparsed as project `Binoid`, subproject `Bloomz`, then fail exact matching. Define an unambiguous delimiter (cheapest: split once on the exact spaced token `" / "`) and test a registry name containing an unspaced slash.
+   - “One row per group” (`:63-67`) never defines what happens to an active registry project that has no heading while the goals file does exist. Missing-file behavior preserves all projects (`:51,147`), so the non-missing case should likewise emit one empty bare row for every otherwise-unrepresented active project.
+   - Duplicate normalized registry keys are “skipped” at `:61` but “attach to first match deterministically” at `:150`. The safety-preserving rule is to skip every colliding key and attach no tasks; make the invariant and test say the same thing.
+
+4. **UI & ergonomics — PASS WITH FIX.** The frozen 130pt identity column, 58pt shared row height, task scroller, line limits, and injected `Focus5Client` are commensurate (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:103-112`). The client is already a value with injectable `baseURL` and `URLSession` (`Focus5Client.swift:55-64`), so `MockURLProtocol` is a real seam. Name the matrix state added to `Focus5Model` (`matrixResponse` plus its load/error/offline flag behavior) so “retain last in-memory response” and “disable mutations offline” are not accidentally coupled only to the roster fetch's current global `isOffline` updates (`Focus5Model.swift:35-36,576-594`). Also reconcile `MatrixTests.swift` claiming an automated frozen-layout test (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:136`) with the verification table correctly calling geometry a manual 340/420pt check (`:153`).
+
+5. **Gaps / blind spots — FAIL.** Add acceptance cases for: a registry name containing `/`; an active registry project with no goal section; colliding normalized registry names producing no attachment; missing/unconfigured and unreadable goals paths through the existing resolver; and parser-only grouping separately from route-owned registry association. These are projection contract tests, not extra machinery. Keep the existing multi-subproject, malformed-metric, route-level 409/no-write, and model-level POST-then-GET tests.
+
+### SWE rubric
+
+| Pillar | Result | Cheapest plan correction |
+|---|---|---|
+| Recon | Fix | Add the existing goals-path resolver and split parser-vs-route ownership in the current-state/data-flow map. |
+| Minimal | Pass | The v1 source cut, no-cache decision, two new Swift files, and existing writer reuse are appropriately small. |
+| Diagnosable | Fix | Reuse the existing unreadable-goals warning and specify one warning for skipped colliding registry keys. |
+| Blast | Pass | The only mutation is guarded by exact-line-first completion, ambiguity refusal, atomic replace, and immediate refetch. |
+| Proof | Block | Resolve the slash, absent-project, and collision contracts, then add the five focused cases above. |
+
+**Reversibility:** Easy for the additive endpoint/tab. The existing goal-file mutation remains consequential but is now planned behind the correct single route and ambiguity guard.
+
+VERDICT: FAIL
