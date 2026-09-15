@@ -185,6 +185,7 @@ the declared `skills-army-hq` collection folder.
 - [x] Recognize a mismatched repository-root source only when Forge provenance and the publisher manifest prove the generated shape; keep ordinary `skill_info` callers strict.
 - [x] Hash and stage the generated root without `.git`, `.gitignore`, licenses, manifest, or provenance so the installed manager remains the canonical package payload.
 - [x] Update the canonical README, spin-off playbook, ownership map, and clone-relative links for the root layout.
+- [x] Match the default sibling checkout's case to the public `XYZ-skills-army-mini` repository and cover the no-`--dest` path in the GH-620 regression.
 - [x] Run the GH-620, GH-589, and Skills Army HQ focused suites from a disposable full clone.
 - [x] Republish and read back the exact root payload bytes, executable modes, manifest, provenance, and idempotent retry.
 - [x] Designate PR #622 as the immutable parent/child SHA receipt so publication updates do not create a self-referential project-doc republish loop.
