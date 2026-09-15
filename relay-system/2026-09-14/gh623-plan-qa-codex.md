@@ -159,3 +159,67 @@ record). Re-review requested on the revised plan.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex re-review — changes requested (round 2)
+
+**Verdict: Block** — all six round-1 findings are substantively resolved, but the same
+"a hung call never reaches retry" defect remains on Phase 4 discovery, and two smaller plan/proof
+contracts need to be made internally consistent before implementation.
+
+### Findings
+
+1. **Block — Phase 4's `gh pr list` call is still unbounded, so its promised retry can hang
+   forever.** The plan correctly bounds Git network calls and notes that `refresh_pr` is already
+   bounded through `_gh` (`GH-623...md:126-137`), but `fetch_open_prs` does not use `_gh`:
+   it calls `subprocess.run(...)` with no timeout and catches neither `OSError` nor
+   `TimeoutExpired` (`toposort_prs.py:16-33`). A hung discovery call therefore never returns an
+   error for `_retry()` to classify, recreating finding 2 one phase earlier. Cheapest fix: give
+   `fetch_open_prs` a bounded subprocess timeout and convert `OSError`/`TimeoutExpired` into the
+   same explicit error result used for non-zero/invalid output. Extend `pr-list-discovery` (or add
+   one focused case) so a mocked `TimeoutExpired` proves Phase 4 exits 2 before Phase 6 rather than
+   hanging or reporting an empty queue. The test must also assert the subprocess was invoked with
+   a finite timeout; merely injecting the exception proves handling, not boundedness.
+
+2. **Fix — the affected-file inventory omits the production file that R2a changes.** Scope says
+   "Three files" and lists `toposort_prs.py`, `merge_cleanup.py`, and `SKILL.md`
+   (`GH-623...md:59-70`), but the design adds `timeout` to `scan_clones.py::run_git`
+   (`:130-135`; current definition `scan_clones.py:85-100`). The ordered implementation list then
+   misleadingly places the `run_git` change under the `merge_cleanup.py` step (`:193-195`). Add
+   `scan_clones.py` to the production scope and give its additive-default contract an explicit
+   assertion: an existing non-network call remains unbounded by default, while `_net_git` forwards
+   a finite timeout. This matters because `run_git` has many scan and ledger consumers; the default
+   is the compatibility shield the plan relies on.
+
+3. **Fix — the retry count and delay schedule contradict each other.** Requirements and the
+   retry-success test specify **three total attempts** (fail twice, succeed on the third;
+   `GH-623...md:76-80,165-166`), while Design says "up to 3 attempts with 2s/4s/8s backoff"
+   (`:126-128`). Three total attempts have only two inter-attempt sleeps (2s, 4s); a third 8s sleep
+   implies a fourth call or a pointless sleep after exhaustion. State one exact contract and pin
+   call count plus sleep sequence. The existing proposed three-call test supports the lean reading:
+   3 total calls, sleeps `[2, 4]`, then defer/stop.
+
+### Re-adjudication of the requested questions
+
+- **Round-1 closure:** hard/soft publication while retaining `_deps` as the JSON union closes the
+  compatibility concern; the existing explicit `Depends on #2` pin at
+  `gh534_phase_c_tests.py:257-273` remains hard-blocked. `land_prs` is the only in-repo runtime
+  reader of `_deps`; `toposort_prs.py:198-201` remains the observable serializer.
+- **Deferral and E:** deferring a transiently unreadable PR before the ledger gate/merge, recording
+  it in the predecessor outcome map, continuing independent PRs, and returning 3 preserves the
+  rule that unknown state is never merged. Default pre-queue refusal (subject to the existing
+  `--allow-unready-primary` override) and post-merge stop are the correct two non-deferral sites.
+- **Resume ceiling:** `reserve()` re-loads and counts under `RecordLock` before appending
+  (`attempt_record.py:129-143`), so `--resume` cannot mint repair three. An unreadable resume
+  pre-check may warn and proceed because any repair still reaches the fail-closed `load()` path
+  (`:101-114`); a currently clean/mergeable PR consumes no repair slot.
+- **Red controls:** soft-edge, network-defer, pr-list non-zero failure, and resume all fail current
+  code as stated. The hung-Git control will fail current code with propagated `TimeoutExpired`, but
+  must assert finite timeout forwarding to prove the actual bound. Add the equivalent Phase 4
+  hung-discovery control from finding 1. With those assertions, the footprint remains commensurate
+  and needs no broader framework.
+
+Graph discovery used the `Users-noelsaw-Documents-GH-Repos-XYZ-forge` index at generation
+`2026-09-15T04:47:51Z`; all eight named source/test paths reported metadata-matched coverage with
+no recorded issue. `trace_path` was unavailable under the no-approval policy, so graph search was
+confirmed with direct, bounded source reads and repository literal search. The only scope gap under
+`skills/merge-cleanup` was excluded `__pycache__`; unrelated parse-partial test files were not used.
