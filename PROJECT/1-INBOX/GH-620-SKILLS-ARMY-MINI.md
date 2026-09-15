@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| The root-projection contract is implemented with a witnessed pre-fix failure: the canonical package folder maps directly onto the child root while installed payloads retain the `skills-army-hq` name. | Run the focused final-state gates, republish the child, and update draft PR #622 with exact-SHA evidence. |
+| The root-projection contract and focused final-state gates are complete: GH-620 27/27, GH-589 18/18, and Skills Army HQ 25/25 plus four subtests. | Republish the child, read back the exact root layout, and update draft PR #622 with the final SHAs. |
 
 ## Goal and ownership
 
@@ -92,10 +92,10 @@ changing the installed skill-folder identity or weakening ordinary import valida
 
 | Seam | Location | Crosses | Breaks if |
 |---|---|---|---|
-| Manifest expansion | `utils/py/xyz_mini_sync.py:111` | Forge paths → child paths | an empty destination becomes an empty/escaping file path |
-| Source identity | `skills/skills-army-hq/scripts/intake.py:95` | checkout folder → declared skill name | all folder/name mismatches are accepted instead of only generated roots |
-| Payload hashing/copy | `skills/skills-army-hq/scripts/intake.py:130`, `:542` | generated checkout → installed manager | `.git`, licenses, or publisher controls enter the installed skill |
-| Initialization/update | `skills/skills-army-hq/scripts/intake.py:180`, `:575` | root checkout → collection receipt/staging | init works but later manager update rejects the recorded source |
+| Manifest expansion | `utils/py/xyz_mini_sync.py:110` | Forge paths → child paths | an empty destination becomes an empty/escaping file path |
+| Source identity | `skills/skills-army-hq/scripts/intake.py:98`, `:134` | checkout folder → declared skill name | all folder/name mismatches are accepted instead of only generated roots |
+| Payload hashing/copy | `skills/skills-army-hq/scripts/intake.py:147`, `:563` | generated checkout → installed manager | `.git`, licenses, or publisher controls enter the installed skill |
+| Initialization/update | `skills/skills-army-hq/scripts/intake.py:200`, `:602` | root checkout → collection receipt/staging | init works but later manager update rejects the recorded source |
 
 #### Call paths in and state
 
@@ -185,14 +185,15 @@ the declared `skills-army-hq` collection folder.
 - [x] Recognize a mismatched repository-root source only when Forge provenance and the publisher manifest prove the generated shape; keep ordinary `skill_info` callers strict.
 - [x] Hash and stage the generated root without `.git`, `.gitignore`, licenses, manifest, or provenance so the installed manager remains the canonical package payload.
 - [x] Update the canonical README, spin-off playbook, ownership map, and clone-relative links for the root layout.
-- [ ] Run the GH-620 and GH-589 focused suites from a disposable full clone, republish, read back exact bytes and modes, and update PR #622.
+- [x] Run the GH-620, GH-589, and Skills Army HQ focused suites from a disposable full clone.
+- [ ] Republish, read back exact bytes and modes, and update PR #622.
 
 ### Phase 4 — QA checklist
 
-- [ ] Root payload oracle and detached init/update smoke pass after the witnessed pre-fix failure.
-- [ ] Ordinary mismatched skill folders remain rejected; the generated-root proof fails when provenance or required manifest entries are absent.
-- [ ] Existing XYZ-mini publisher behavior remains green.
-- [ ] Blast: **Easy** undo; shield is the existing generated-child profile plus strict projection recognition; tripwire is any payload-set, metadata-exclusion, init/update, or read-back failure before publication.
+- [x] Root payload oracle and detached init/update smoke pass after the witnessed pre-fix failure.
+- [x] Ordinary mismatched skill folders remain rejected; the generated-root proof fails when provenance or required manifest entries are absent.
+- [x] Existing XYZ-mini publisher behavior remains green.
+- [x] Blast: **Easy** undo; shield is the existing generated-child profile plus strict projection recognition; tripwire is any payload-set, metadata-exclusion, init/update, or read-back failure before publication.
 - [ ] Status table and `updated:` date reflect the final published SHAs.
 
 ## Rating rationale (2026-09-14)
