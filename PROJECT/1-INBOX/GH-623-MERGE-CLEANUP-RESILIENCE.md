@@ -285,3 +285,10 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   blocker carries the reviewer's own prescribed fix language (transcribed verbatim above), and
   a final "Approved" state cannot be truthfully claimed without one confirmation pass. If
   round 4 does not approve, implementation STOPS and the group is reported blocked.
+- 2026-09-14: Codex plan QA round 4 (confirmation; token `RELAY-gh623-plan-qa-r4`): VERDICT
+  PASS — all six adjudication questions pass (grounding, requirement coverage, pinned
+  guarantees, resume safety, blast radius, red controls). Plan APPROVED. Bookkeeping note: the
+  driver refused the terminal close ("close-mismatch" — the token had been handed back to
+  Producer) and the spent token could not be re-claimed, done'd, or reaped afterwards; the
+  open token is gitignored local `.tick/` residue, while the committed relay file carries the
+  PASS verdict. Implementation starts on the approved plan.
