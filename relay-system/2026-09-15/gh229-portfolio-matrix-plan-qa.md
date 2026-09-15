@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: orchestrator (Builder)
+NEXT: Reviewer (codex)
 STATUS: Open
 ---
 
@@ -385,3 +385,37 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive route/tab. The shared completion contract is broader than the matrix, so its revision migration must cover the existing reminders consumer before implementation.
 
 VERDICT: FAIL
+
+### Round 6 · Orchestrator · Revisions Addressing Round 6 Feedback
+
+All items from Codex Round 6 have been resolved in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Existing Reminders Caller Compatibility & Optional Wire Contract:**
+   - Addressed existing `ObsidianRemindersStore -> Focus5Client.completeGoal -> POST /api/focus5/goals/complete` flow and response models:
+     - `Focus5GoalCompleteRequest` defines `goals_revision: str | None = None` (optional).
+     - Both `_focus5_goals_payload()` (`GET /focus-5/goals`) and `GET /portfolio-matrix.json` return `goals_revision: str | None`.
+     - `Focus5GoalsResponse` and `Focus5GoalCompleteResponse` in `Models.swift` add `goals_revision: String?`.
+     - `ObsidianRemindersStore` stores `goalsRevision: String?` from goals response and threads it to `Focus5Client.completeGoal(title:lineIndex:revision:)`.
+     - Legacy callers omitting `goals_revision` complete safely by title/index, guarded by `AmbiguousGoalError` -> HTTP 409 if duplicate titles exist.
+     - Callers providing `goals_revision` (matrix and updated reminders store) enforce strict optimistic concurrency.
+
+2. **Single Owner of Revision Check (Zero Check-Then-Read Gap):**
+   - The revision check is owned **exclusively** by `complete_goal_in_file(path, title, line_index=None, expected_revision=None)` on the single file read before any mutation.
+   - If `expected_revision` does not match `compute_goals_revision(content)`, raises typed `StaleRevisionError` -> mapped to HTTP 409 `stale_goal_snapshot` with **zero file writes**.
+
+3. **Self-Healing UI on Ambiguous Transport Outcomes:**
+   - Differentiates explicit HTTP errors (409 stale/ambiguous, 404, 500) from ambiguous transport/network failures in `Focus5Model.completeMatrixTask`:
+     - **Explicit HTTP Error:** clears in-flight lock, retains last matrix, displays error banner.
+     - **Ambiguous Transport Failure:** immediately dispatches a safe recovery GET (`refreshMatrix()`). If the recovery GET succeeds, state updates to server ground truth (reflecting completed task if server wrote it, or restoring clean revision). If recovery GET also fails, retains prior matrix and shows persistent connection error banner.
+
+4. **Focused Acceptance Cases Added:**
+   - (a) `test_obsidian_reminders_store_with_revision()`: existing reminders caller refresh -> completion with supplied revision.
+   - (b) `test_complete_goal_omitted_revision_backward_compat()`: omitted revision completes unique title; rejects ambiguous duplicate titles with 409 without writes.
+   - (c) `MatrixTests.testAmbiguousTransportTriggersRecoveryGET()`: lost POST response followed by recovery GET, replacing matrix state on success.
+   - (d) `MatrixTests.testRecoveryGETFailureRetainsMatrix()`: recovery GET failure retains prior matrix state with visible error banner.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 7 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
