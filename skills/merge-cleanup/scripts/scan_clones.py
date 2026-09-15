@@ -83,20 +83,29 @@ def is_safe_deletable_path(path: Path, safe_roots: Optional[List[Path]] = None, 
     return True, "OK"
 
 
-def run_git(cwd: Path, args: List[str]) -> subprocess.CompletedProcess:
+def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subprocess.CompletedProcess:
     """Runs a git command in the target directory.
 
     Callers treat a non-zero return code as "git said no". A git that cannot be LAUNCHED at all
     (missing binary, unreadable cwd, OS refusal) is the same answer as far as they are concerned,
     so it is reported the same way rather than escaping as an exception (R1-F5).
+
+    `timeout` is additive (GH-623) and defaults to None = unbounded, so every existing scan and
+    ledger caller keeps today's behavior; network call sites pass a finite value (see
+    merge_cleanup._net_git). A timeout is reported as a non-zero exit — the same "git said no"
+    shape — never as an exception.
     """
     try:
         return subprocess.run(
             ["git", "-C", str(cwd)] + args,
             capture_output=True,
             text=True,
-            check=False
+            check=False,
+            timeout=timeout
         )
+    except subprocess.TimeoutExpired as exc:
+        return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
+                                           stderr=f"timed out after {exc.timeout}s: git {' '.join(args)}")
     except OSError as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=f"{exc}")
 

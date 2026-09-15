@@ -13,24 +13,40 @@ import subprocess
 from typing import List, Dict, Any, Set, Tuple, Optional
 
 
+class FetchError(RuntimeError):
+    """`gh pr list` failed, timed out, or returned unusable output.
+
+    GH-623: an empty PR queue and a FAILED discovery are different facts. Returning [] on
+    failure made the orchestrator print "No open PRs found" and roll into teardown — a false
+    success. Failures now raise, and every caller decides (the orchestrator exits 2 before
+    teardown; the standalone CLI prints the diagnostic and exits non-zero)."""
+
+
+# GH-623: `subprocess.run` used to be called here with no timeout and no exception handling, so
+# a hung `gh` never returned and no retry could classify it.
+LIST_TIMEOUT_S = 180
+
+
 def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Fetches open PRs via GitHub CLI."""
+    """Fetches open PRs via GitHub CLI. Raises FetchError; never a silent []."""
     cmd = [
         os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
         "--state", "open",
         "--json", "number,title,headRefName,baseRefName,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
     ]
     cwd = repo_path or "."
-    res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False)
+    try:
+        res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False, timeout=LIST_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        raise FetchError(f"gh pr list timed out after {LIST_TIMEOUT_S}s")
+    except OSError as exc:
+        raise FetchError(f"gh pr list could not be launched: {exc}")
     if res.returncode != 0:
-        print(f"toposort_prs: gh pr list failed: {res.stderr.strip()}", file=sys.stderr)
-        return []
-
+        raise FetchError((res.stderr.strip() or "gh pr list failed")[:300])
     try:
         return json.loads(res.stdout)
     except json.JSONDecodeError as exc:
-        print(f"toposort_prs: JSON parse error: {exc}", file=sys.stderr)
-        return []
+        raise FetchError(f"gh pr list returned unusable output: {exc}")
 
 
 def parse_pr_dependencies(body: str, title: str) -> Set[int]:
@@ -70,9 +86,12 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
     """Topologically sorts open PRs based on explicit dependencies and file collisions."""
     pr_by_num = {pr["number"]: pr for pr in prs}
     dep_graph: Dict[int, Set[int]] = {pr["number"]: set() for pr in prs}
+    hard_edges: Dict[int, Set[int]] = {pr["number"]: set() for pr in prs}
+    soft_edges: Dict[int, Set[int]] = {pr["number"]: set() for pr in prs}
     warnings: List[str] = []
 
-    # 1. Build explicit dependencies
+    # 1. Explicit dependencies are HARD (GH-623): a declared "depends on #N" is a semantic
+    #    ordering the operator or author asserted, so a failed predecessor must block it.
     for pr in prs:
         num = pr["number"]
         body = pr.get("body") or ""
@@ -82,11 +101,17 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
         for d in deps:
             if d in pr_by_num:
                 dep_graph[num].add(d)
+                hard_edges[num].add(d)
             else:
                 # Dependency is either already merged, closed, or external issue
                 pass
 
-    # 2. Analyze file overlap between PRs without explicit dependencies
+    # 2. File-collision edges are SOFT (GH-623): they decide SEQUENCE (land the older first so
+    #    the newer lands on top of it), never ELIGIBILITY. Treating them as hard made one
+    #    handoff cascade "NOT attempted" through every collision-adjacent PR — GH-623's S3 —
+    #    even when the dependent was mergeable on its own. The per-PR landing simulation
+    #    remains the real gate: if the files genuinely conflict, the successor's own landing
+    #    conflicts too and is routed to B1 or handed off on its own merits.
     for i, pr1 in enumerate(prs):
         num1 = pr1["number"]
         files1 = extract_touched_files(pr1)
@@ -106,18 +131,24 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                     created2 = pr2.get("createdAt", "")
                     if created1 <= created2:
                         dep_graph[num2].add(num1)
+                        soft_edges[num2].add(num1)
                         warnings.append(
                             f"File collision on {len(overlap)} file(s) between PR #{num1} and PR #{num2} — ordering #{num1} before #{num2}"
                         )
                     else:
                         dep_graph[num1].add(num2)
+                        soft_edges[num1].add(num2)
                         warnings.append(
                             f"File collision on {len(overlap)} file(s) between PR #{num2} and PR #{num1} — ordering #{num2} before #{num1}"
                         )
 
-    # GH-534 C: Kahn's loop below consumes dep_graph. Keep the edges on each PR so Phase 5 can
-    # refuse a dependent whose predecessor was parked or handed off.
+    # GH-534 C: Kahn's loop below consumes dep_graph. Phase 5 keeps a runtime map of predecessor
+    # outcomes, but only HARD edges make a PR "NOT attempted" (GH-623). The three lists are
+    # captured BEFORE Kahn mutates dep_graph; `_deps` stays the sorted union for the standalone
+    # `--json` output contract (field set only grows).
     for pr in prs:
+        pr["_hard_deps"] = sorted(hard_edges[pr["number"]])
+        pr["_soft_deps"] = sorted(soft_edges[pr["number"]])
         pr["_deps"] = sorted(dep_graph[pr["number"]])
 
     # 3. Topological sort with cycle detection (Kahn's algorithm)
@@ -190,7 +221,13 @@ def main():
 
     args = parser.parse_args()
 
-    prs = fetch_open_prs(args.repo)
+    # GH-623: a failed discovery is an error, never an empty queue. Print the diagnostic and
+    # exit non-zero instead of "No open PRs found." (or a silent empty JSON array).
+    try:
+        prs = fetch_open_prs(args.repo)
+    except FetchError as exc:
+        print(f"toposort_prs: PR discovery failed: {exc}", file=sys.stderr)
+        sys.exit(2)
     if not prs:
         print("No open PRs found.")
         return
