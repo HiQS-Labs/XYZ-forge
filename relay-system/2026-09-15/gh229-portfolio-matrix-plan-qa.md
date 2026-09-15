@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: orchestrator (Builder)
+NEXT: Reviewer (codex)
 STATUS: Open
 ---
 
@@ -68,3 +68,41 @@ Conclude with `VERDICT: PASS` (and set `STATUS: Approved`) or `VERDICT: FAIL` (a
 **Reversibility:** Easy for the additive route/tab; task completion is the only mutation and already has an undo helper, but the plan must prevent non-goal rows from entering that path.
 
 VERDICT: FAIL
+
+### Round 1 · Orchestrator · Revisions Addressing Codex QA Feedback
+
+All 5 blocking critiques from Codex Round 1 have been resolved in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Subsystem Reuse & V1 Scope Boundaries:**
+   - Explicitly excluded `roadmap_items` and multi-repo querying from v1. V1 data sources are strictly bounded to local `rebalance.db` (`project_registry`) and local `0. Goals.md`.
+   - Defined the deterministic section parsing: adding `parse_sectioned_goals()` to `src/rebalance/ingest/goals_file.py` to parse markdown headings (`# Project` or `## Project`) and group checkboxes.
+   - Project matching: matches headers against `project_registry.name` using canonical normalization.
+
+2. **Single Writer Path & Refetch Invariant:**
+   - Task completion routes exclusively through `POST /api/focus5/goals/complete(title, line_index)`.
+   - Refetch rule is explicit: on HTTP 200, the client immediately dispatches a fresh `fetchPortfolioMatrix()` to update the matrix in place.
+   - When offline, mutation checkboxes are visibly disabled.
+
+3. **Deterministic Data Contract & Coercion Rules:**
+   - Formalized exact scoring rules:
+     - `revenue_ranking`: `int(custom_fields.get("revenue_ranking", priority_tier or 0))`
+     - `revenue_potential`: `int(custom_fields.get("revenue_potential", 0))`
+     - `computed_score`: `int(custom_fields.get("computed_score", revenue_ranking + revenue_potential))`
+   - Sorting: descending by `computed_score`, then ascending by `name`.
+   - Redundant fields (`is_complete`, `status`) removed.
+   - Canonical `resolve_database_path()` handling: missing DB or goals file returns HTTP 200 `{ "computed_at": null, "projects": [] }`.
+
+4. **UI Ergonomics & Layout:**
+   - `PortfolioMatrixView.swift` adopts the SwiftUI `Grid` / `GridRow` layout idiom wrapped in a horizontal `ScrollView`.
+   - Column 1 has a 130pt minimum width; Task columns have 150pt minimum width. Verified for 340pt and 420pt panel widths.
+   - Updated `ViewMode` contract to cover all switch statements across `Focus5Model` and `ContentView`.
+
+5. **Edge Cases & Test Footprint:**
+   - Added full verification matrix covering missing DB, missing goals, custom field fallback, unmatched headings, exact-line completion + refetch, and offline interactions.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 2 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
