@@ -319,3 +319,18 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   family. Flake attribution: gh53 passes 4/4 on this branch and 3/3 on clean development;
   gh32 fails 1-of-3 ON CLEAN DEVELOPMENT in the repetition control. Every deterministic
   failure is fixed; the residual flake reproduces on pristine development at a comparable rate.
+- 2026-09-15: Operator forwarded Antigravity's sharpened implementation plan
+  (issue comment 5674845451) for incorporation. Adjudication — the plan's five sections were
+  already shipped by this PR's approved design; two clean increments INCORPORATED: (a) resume
+  mode now announces itself at run start (coordinator path + refresh-first order) and the
+  end-of-run summary breaks out parked-on-resume counts — the comment's "Resuming: X merged,
+  Y parked, Z remaining" pre-count was deliberately reshaped into per-PR + end-of-run reporting
+  because counting parked/landed BEFORE the live refresh is exactly the strand-a-repaired-PR
+  hazard codex round 3 rejected; (b) the SKILL.md drive loop gains the anti-downgrade wording
+  "report the blockers and stop — never silently truncate the task". One element REJECTED with
+  a traced constraint: deriving hard edges from "stacked branch bases" is unreachable in this
+  orchestrator — Phase 5's base-mismatch gate (R2-2) refuses any PR whose base is not the
+  checked integration branch before ordering could matter, so a stack edge would be dead code
+  under this repo's all-PRs-target-development policy; recorded here rather than added as
+  speculative machinery. Network retry/defer, --resume semantics, drive loop, classifier
+  fallback, and all four proposed verification shapes were already covered (names differ).

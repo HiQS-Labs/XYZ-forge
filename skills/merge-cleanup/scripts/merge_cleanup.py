@@ -577,6 +577,13 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     workdir = Path(tempfile.mkdtemp(prefix="merge-cleanup-"))
     keep_workdir = False
     origin = origin_url(primary_repo) or ""
+    if getattr(args, "resume", False):
+        # GH-623 (Antigravity review): say up front what resume does and does not trust. The
+        # live refresh stays authoritative — counts are only known per-PR as the loop reaches
+        # them, never pre-skipped from records alone.
+        coordinator = attempt_record.record_path(primary_repo, origin, 0).parent
+        log(f"Resume mode: attempt records under {coordinator} are consulted only after each "
+            f"PR's live refresh; a repaired, now-mergeable PR still lands.")
     # C: runtime map of predecessor outcomes. toposort only ORDERS; a dependent of a parked or
     # handed-off PR must not be attempted at all.
     failed: Dict[int, str] = {}
@@ -770,8 +777,11 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
         # "the queue completed but not everything landed"; 2 remains a hard stop.
         if failed:
             deferred = [n for n, w in failed.items() if w.startswith("deferred:")]
+            resumed_parked = [n for n, w in failed.items() if w == "previously parked (resume)"]
+            other = len(failed) - len(deferred) - len(resumed_parked)
             log_err(f"{len(failed)} PR(s) did not land "
-                    f"({len(deferred)} deferred by network; the rest handed off or parked): "
+                    f"({len(deferred)} deferred by network, {len(resumed_parked)} parked on resume, "
+                    f"{other} handed off or parked): "
                     + ", ".join(f"#{n} ({w})" for n, w in failed.items()))
             return 3
         return 0
