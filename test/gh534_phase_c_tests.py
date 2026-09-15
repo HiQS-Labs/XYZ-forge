@@ -6,6 +6,7 @@ for the script-side runs; the record tests below need only a directory and the C
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -412,6 +413,10 @@ REQUIRED_CAPABILITIES = {
     "coordinator-pinned-to-primary": "script", "teardown-trash-only": "script",
     "code-conflict-recon": "caller", "code-conflict-resolution": "caller",
     "teardown-fresh-inspection": "script",
+    # GH-623 (final-QA finding 1): the new rows are REQUIRED too — a row that the guard does
+    # not demand can be deleted from SKILL.md with the parity test still green.
+    "soft-edge-nonblocking": "script", "network-retry-defer": "script",
+    "resume-skips-parked": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
     "D": (SC_SRC, "inspect_checkout", "inspect_tick_claims"),
@@ -739,6 +744,58 @@ class TestGh623Resilience(LedgerFixture):
         self.assertIn("Could not resolve host", r.stderr)
         self.assertNotIn("Traceback", r.stderr)
         self.assertNotIn("No open PRs found", r.stdout)
+
+
+class TestGh623DriveLoopDocContract(unittest.TestCase):
+    """R4 regression proof (GH-623 final-QA finding 2): SKILL.md's Drive loop section, its Done
+    rule (with all three explicit-mode exceptions), and the permission-classifier retry-once
+    rule are load-bearing contracts, not prose. The controls mutate the text and watch the
+    checker go red, so these cannot pass on unrelated wording."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.text = SKILL_MD.read_text()
+
+    def drive_loop_section(self, text):
+        m = re.search(r"## Drive loop[^\n]*\n(.*?)(?=\n## )", text, re.S)
+        return m.group(0) if m else ""
+
+    def assert_contract(self, text):
+        section = self.drive_loop_section(text)
+        self.assertTrue(section, "the ## Drive loop section is missing")
+        for phrase in (
+            "--resume --execute",                                  # the continuation command
+            "do not report Done unless Phase 5 ran",               # the Done rule
+            "`--teardown-only`", "`--scan-only`", "`--prs-only`",  # the three explicit-mode exceptions
+            "exit 0 or a stop",                                    # the loop terminates on facts
+            "retry the identical command once",                    # classifier-block rule (S2)
+            "permission",
+        ):
+            self.assertIn(phrase, section, f"Drive loop lost a load-bearing contract: {phrase}")
+
+    def test_drive_loop_contracts_present(self):
+        self.assert_contract(self.text)
+
+    def _section_with(self, replacement, pattern):
+        mutated = re.sub(pattern, replacement, self.text, flags=re.S)
+        self.assertNotEqual(mutated, self.text, "control pattern no longer matches SKILL.md — repoint it")
+        return mutated
+
+    def test_control_deleting_the_done_rule_is_caught(self):
+        mutated = self._section_with("DONE-RULE-REMOVED", r"\*\*Done rule:\*\*.*?(?=\n\n)")
+        with self.assertRaises(AssertionError):
+            self.assert_contract(mutated)
+
+    def test_control_deleting_the_classifier_rule_is_caught(self):
+        mutated = self._section_with("RETRY-RULE-REMOVED", r"\*\*Permission-classifier blocks:\*\*.*?(?=\n\n)")
+        with self.assertRaises(AssertionError):
+            self.assert_contract(mutated)
+
+    def test_control_deleting_the_whole_section_is_caught(self):
+        mutated = re.sub(r"## Drive loop.*?(?=\n## Caller decision ladder)", "GONE\n", self.text, flags=re.S)
+        self.assertNotEqual(mutated, self.text)
+        with self.assertRaises(AssertionError):
+            self.assert_contract(mutated)
 
 
 class TestParityGuard(unittest.TestCase):
