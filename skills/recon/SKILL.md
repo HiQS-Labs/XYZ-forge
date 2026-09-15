@@ -68,9 +68,9 @@ Scale the lane count to the radius, and say which you ran: a two-file change wit
 | Lane | Question it answers | Owns |
 | --- | --- | --- |
 | **A. Entry & call paths** | How does control reach this code? | Callers and entry points — routes, CLI, cron, hooks, event handlers, tests — plus runtime registration, plugin dispatch, reflection, and anything invoked by name from config |
-| **B. State & data** | What reads and writes the state involved? | Read sites and *write* sites, schema, migrations, caches, serialized formats, database triggers/views/procedures, and whether there is a single write path |
-| **C. Contracts & boundaries** | What crosses a line if this changes? | Public APIs, exported symbols with external consumers, events/queues, config keys, env vars, feature flags, cross-service and cross-repository consumers |
-| **D. Build, failure & operations** | How is this built, how does it fail, who notices? | Build/CI config and package metadata, generated code and its generator, IaC and deploy manifests, error paths, retries, timeouts, existing tests covering the subject, logs/metrics/traces, and the rollback path |
+| **B. State & data** | What reads and writes the state involved? | Read sites and *write* sites, active readers and writers, schema, migrations, caches, serialized formats, database triggers/views/procedures, and whether there is a single write path |
+| **C. Contracts & boundaries** | What crosses a line if this changes? | Public APIs, exported symbols with external consumers, events/queues, background worker queues, delayed/asynchronous consumers, config keys, env vars, feature flags, cross-service and cross-repository consumers |
+| **D. Build, failure & operations** | How is this built, how does it fail, who notices? | Build/CI config and package metadata, generated code and its generator, IaC and deploy manifests, error paths, retries, timeouts, operational tripwires, lock budgets, existing tests covering the subject, logs/metrics/traces, and the reverse-sync rollback path |
 
 Budget each lane: **read-only, no edits, roughly 8 minutes, report what you found and what the budget cut off.** The budget is a prompt instruction, not a timeout — which is exactly why the report-what-you-cut rule is the part that has to hold. An empty lane is a finding, not a failure. Give every lane the same honesty instruction: *`file:line` for everything claimed; anything inferred, unverified, or graph-only is listed as an unknown, never smoothed into the findings.*
 

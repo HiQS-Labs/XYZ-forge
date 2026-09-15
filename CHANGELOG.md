@@ -2,6 +2,9 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-14
+
+- **GH-626: skills(workhorse, unstuck): close the autonomous re-entry loop.** Establishes an explicit orchestrator re-entry drive loop (`drive → repair/park → --resume → loop`) in `skills/workhorse/SKILL.md`, mandating that sub-item repairs (such as resolving PR merge conflicts) are treated as intermediate steps requiring immediate re-invocation of the batch runner with `--resume` rather than prompting the operator. Adds an anti-downgrade rail forbidding "Done" claims when batch deliverables were bypassed. Equips `skills/unstuck/SKILL.md` with 4 autonomous self-trigger tripwires (two-turn no-milestone, tool exit code inertia, passive waiting narration, false completion) and hardens Rung 5 to require re-driving the primary execution engine before exiting. Reversibility: **Easy** — revert the two SKILL.md edits and re-deploy via Skills Army HQ. Verification: `test/test_deploy_skills.py` 25/25 passing; live deployment via `intake.py --apply update` to all enabled IDE targets; `utils/pdda/pdda.sh run` clean.
 - **GH-605: preserve JSON-native unresolved identities across saved preview/apply.** Normalize planner output once so unchanged unknown evidence survives JSON round-tripping; retain exact drift refusal. Existing real integration fixtures now include a missing-ledger issue, assert it stays untouched, and reject tampered unresolved evidence. Reversibility: Easy, revert the output normalization. Verification: witnessed failing regression before correction and 51/51 focused board tests after.
 
 ## 2026-09-13
