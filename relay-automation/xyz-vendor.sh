@@ -300,11 +300,16 @@ reconcile_ignore_state() {
   # it), but exclude is machine-local by nature: appending to a tracked .gitignore dirtied a
   # consumer's worktree and hard-stopped the next --require-clean fire until someone manually
   # reverted it (local-addon-nexus-ai run 2). `rev-parse --git-path` resolves the right file for
-  # normal clones, linked worktrees, and --separate-git-dir alike. Non-git targets keep the old
-  # .gitignore fallback so the rules stay visible to the operator.
+  # normal clones, linked worktrees, and --separate-git-dir alike — but it answers CWD-RELATIVE
+  # to the target top-level, so anchor it (the vendor's own cwd is NOT the target). Non-git
+  # targets keep the old .gitignore fallback so the rules stay visible to the operator.
   local exclude
-  if ! exclude="$(git -C "$TARGET_REPO" rev-parse --git-path info/exclude 2>/dev/null)" \
-     || [ -z "$exclude" ]; then
+  if exclude="$(git -C "$TARGET_REPO" rev-parse --git-path info/exclude 2>/dev/null)" && [ -n "$exclude" ]; then
+    case "$exclude" in
+      /*) ;;                                  # already absolute
+      *) exclude="$TARGET_REPO/$exclude" ;;
+    esac
+  else
     exclude="$gitignore"
   fi
   mkdir -p "$(dirname "$exclude")"
