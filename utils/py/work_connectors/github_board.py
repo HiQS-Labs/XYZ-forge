@@ -9,8 +9,8 @@ repo-qualified idempotence check and the board-identity refusal.
 The contract with the parent (`work_connectors/__init__.py`) is deliberately narrow, because
 the parent treats everything here as untrusted:
 
-  stdin   {"connector": name, "config": {...}, "events": [{"id","gh_number","event",
-                                                           "payload","at"}, ...]}
+  stdin   {"connector": name, "config": {...}, "events": [{"id","gh_number",
+                                                           "event","payload","at"}, ...]}
   stdout  advanced_to: <the id of the last event this connector actually applied>
   exit    0 = the batch was applied · non-zero = it was not, and the cursor stays put
 
@@ -18,10 +18,13 @@ the parent treats everything here as untrusted:
 only thing we can influence is that one integer — and the parent validates it against the batch
 it handed us, so we cannot skip events by reporting past the end.
 
-**Why `advanced_to` is the last APPLIED id, not simply the last id in the batch.** If event 7
-fails, reporting 9 would bury 7 forever. We report 6, exit non-zero, and `work reconcile`
-hands 7 back on the next run. Applying is set-to-value, never an increment, so replaying an
-event that already landed is a no-op rather than a double-apply.
+**Batch failure is conservative.** If event 7 fails after 1–6 landed, the child exits non-zero;
+the parent deliberately ignores any partial `advanced_to` and keeps the whole prior cursor.
+`work reconcile` therefore replays 1–7. Legacy writes are set-to-value, so this is idempotent;
+policy-managed boards refuse this raw replay path because their multi-item policy needs a fresh,
+repo-qualified snapshot instead. Legacy raw replay remains the existing configured single-repo
+path; repository ownership on database events is consumed by policy/evidence projection, not by
+widening this protocol.
 
 ## The column mapping is configuration, not code
 
@@ -88,7 +91,12 @@ def apply_event(cfg, ev, status_map, snapshot):
     if column is None:
         return (True, "event %s (%s): unmapped in status_map — skipped"
                 % (ev.get("id"), ev.get("event")))
-    msg = board_sync.set_issue_status(cfg, int(num), column, write=True, snapshot=snapshot)
+    repos = cfg.get("repos") or []
+    if not repos:
+        raise RuntimeError("event %s has no configured repository" % ev.get("id"))
+    repo = repos[0]
+    msg = board_sync.set_issue_status(cfg, int(num), column, write=True, snapshot=snapshot,
+                                      repo=repo)
     return (True, "event %s (%s): %s" % (ev.get("id"), ev.get("event"), msg))
 
 
@@ -109,6 +117,20 @@ def run(batch):
         status_map.update({k: v for k, v in raw_map.items() if isinstance(v, str)})
     elif raw_map is not None:
         print("github_board: status_map is not an object — using the defaults", file=sys.stderr)
+
+    # GH-605: a saved selection policy owns this board's complete projection. Raw event replay
+    # cannot enforce top-N, terminal windows, reopen handling or unknown preservation, so mixing
+    # the two writers would immediately undo a reviewed policy plan. Pending policies are already
+    # consumable and therefore guarded too; automatic connector enablement remains operator-owned.
+    try:
+        policy = board_sync.resolve_selection_policy(required=False)
+    except ValueError as exc:
+        raise RuntimeError("saved github_board_selection_policy is invalid: %s" % exc) from exc
+    if (policy and policy["project_owner"] == cfg.get("project_owner")
+            and policy["project_number"] == int(cfg.get("project_number") or 0)):
+        raise RuntimeError(
+            "raw event replay is disabled for this policy-managed board; use "
+            "board_sync.py policy-preview followed by policy-apply")
 
     # Refuse before the first network call when the board identity is not configured. This is
     # the same guard board_sync's own verbs take, and it is why an unconfigured harness cannot

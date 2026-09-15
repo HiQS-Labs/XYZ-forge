@@ -15,6 +15,12 @@ Own the lifecycle from the operator's request to reviewed, ready PRs. Reuse the
 repository's existing execution, governance, and relay tools. Keep the canonical
 plan resumable so another session can continue without reconstructing chat.
 
+**Commensurate Complexity Mantra:** Machinery, defensive handling, and test
+suites must remain strictly commensurate with the scale and role of the core code
+being produced. An 80-line sync script or local utility must not become entangled
+with multiple layers of complexity and enterprise-grade fail-safes unless the
+operator explicitly specifies it.
+
 Invoking this workflow to execute work authorizes its ordinary steps through
 issue creation, task branches, commits, pushes, Codex QA, and opening PRs. Preserve
 explicit limits such as "plan only", "hold after QA", or a different reviewer.
@@ -22,6 +28,23 @@ Discovering this skill during discussion does not authorize external writes.
 Ask only for missing scope, a consequential unresolved decision, or a real blocker;
 do not repeat permission questions already answered. Merge, deployment, and clone
 teardown are separate actions unless the operator explicitly includes them.
+
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **Start-Task Discipline:**
+> 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone with a task branch off `origin/development`, register the PDDA capture doc in `1-INBOX`, and record 4-axis RELEASES task ratings.
+> 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
+> 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
+> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation.
+> 5. **Final relay QA & open ready PR (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retain the task clone for merge handoff.
+>
+> **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
+
+Then begin work.
+
+---
 
 ## Workflow
 
@@ -95,16 +118,19 @@ teardown are separate actions unless the operator explicitly includes them.
    work, schema/shared-contract edits and uncertain fixes need a written plan.
    Use the existing project plan or create the repo-governed one. Include the
    observed problem, per-issue requirements, smallest affected surface, explicit
-   non-goals, dependencies, risks/rollback, and one ordered implementation list
-   with verification inline. Name the existing subsystem and canonical writer
-   being extended. Keep changes surgical and DRY: reuse and extend the existing
-   system, without similar subsystems, duplicate modules, parallel write paths,
-   speculative abstractions, or unrelated refactors. Do not impose every SOLID
-   principle as a checklist. If the existing design cannot carry a requirement,
-   show the traced constraint and propose the smallest change to it; do not quietly
-   build a second system. Acceptance checks must detect the actual failure, reject
-   empty input where relevant, and specify a red control for new/changed gates.
-   Scale the detail to the task and obey repo-specific arc planning when applicable.
+   non-goals, dependencies, risks/rollback, bounded test scope (with explicit
+   test non-scope: no speculative test frameworks, synthetic runners, or fuzzers
+   outside stated acceptance criteria; test footprint must scale to implementation
+   size), and one ordered implementation list with verification inline. Name the
+   existing subsystem and canonical writer being extended. Keep changes surgical
+   and DRY: reuse and extend the existing system, without similar subsystems,
+   duplicate modules, parallel write paths, speculative abstractions, or unrelated
+   refactors. Do not impose every SOLID principle as a checklist. If the existing
+   design cannot carry a requirement, show the traced constraint and propose the
+   smallest change to it; do not quietly build a second system. Acceptance checks
+   must detect the actual failure, reject empty input where relevant, and specify
+   a red control for new/changed gates. Scale the detail to the task and obey
+   repo-specific arc planning when applicable.
 
 6. **QA the plan before implementation.** For every non-simple change, load
    `relay-xyz` and use its locator, prerequisite checks, thread protocol and
@@ -114,15 +140,22 @@ teardown are separate actions unless the operator explicitly includes them.
    Does the plan extend the existing subsystem and writer? Are blast radius,
    dependency ordering, rollback, and falsifiable checks sufficient? Are per-task
    ratings grounded, recurrence claims supported, appeal neutral unless the user
-   set it, and user overrides preserved? Give the
-   reviewer the requirements and source paths, not just a summary of your design.
-   Keep reviewer writes limited to the relay thread. Adjudicate findings against
-   evidence and repo principles, record every disposition, revise, and re-review
-   until Approved within the relay's configured cap (default three review rounds
-   for this workflow). Unresolved blockers, unavailable reviewers, containment
-   failures or exhausted caps stop that group's implementation; record the exact
-   failure and next action. Do not silently substitute a self-review or consult.
-   A simple change may skip this stage with a brief reason; final QA still applies.
+   set it, and user overrides preserved? Give the reviewer the requirements and
+   source paths, not just a summary of your design. Explicitly state the
+   operational envelope in the review packet: instruct the reviewer to grade
+   against the stated requirements and commensurate complexity, not unrequested
+   enterprise multi-tenant threat models. Keep reviewer writes limited to the
+   relay thread. Adjudicate findings against evidence, stated requirements, and
+   repo principles via `/ponytail`: reviewer findings are advisory evaluations,
+   NOT a mandate to accept scope expansion, speculative abstractions, or enterprise
+   machinery for lightweight tasks. Reject unneeded machinery with a documented
+   disposition (`Disposition: Rejected (Out of Scope / Ponytail)`). Record every
+   disposition, revise, and re-review until Approved within the relay's configured
+   cap (default three review rounds for this workflow). Unresolved blockers,
+   unavailable reviewers, containment failures or exhausted caps stop that group's
+   implementation; record the exact failure and next action. Do not silently
+   substitute a self-review or consult. A simple change may skip this stage with
+   a brief reason; final QA still applies.
 
 7. **Execute and verify the reviewed scope.** Use the current agent or the repo's
    established builder/jog/marathon workflow as appropriate. Multiple issues alone
@@ -131,27 +164,36 @@ teardown are separate actions unless the operator explicitly includes them.
    Complete the ordered work and update per-issue state and recon findings in the
    plan as you go. Commit coherent checkpoints to the group's branch. Revisit
    plan QA if new evidence materially changes scope, architecture, or risk.
-   Run the relevant deterministic checks against the final changes, including
-   governance checks. For code/runtime work, run the repo-required gate. In XYZ
-   Forge, mutation-heavy suites run in a **separate disposable full clone**, never
-   a valued task clone or linked worktree. Verify its repository identity before
-   and after the run; drift invalidates its evidence. Retain required provenance
-   with the PR. Failed/skipped checks remain failed/skipped; fix within scope or
-   mark the group blocked. Do not pass dependents on a failing prerequisite.
+   Apply tiered verification discipline: during iterative implementation and
+   relay review loops, run ONLY the focused target test suite (`bash test/<target-test>.sh`
+   or `./validate.sh --auto`). Do NOT re-run full qualifying test gates between
+   review rounds when tweaking text or minor points. Run the full qualifying gate
+   (`ci-local.sh` or full `./validate.sh`) EXACTLY ONCE on the final approved
+   commit. In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
+   never a valued task clone or linked worktree. Verify its repository identity
+   before and after the run; drift invalidates its evidence. Retain required
+   provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
+   scope or mark the group blocked. Do not pass dependents on a failing prerequisite.
 
 8. **Run final Codex relay QA and resolve findings.** Use `relay-xyz` on the
    committed implementation, plan, per-issue acceptance map, and test evidence.
-   Ask whether each issue is satisfied, its persisted rating matches its latest
-   evidence and user overrides, actual codepaths match the plan, a duplicate
-   subsystem or writer slipped in, and checks substantiate the claims. A textual
-   review does not replace deterministic tests. Keep author and reviewer roles
-   separate, adjudicate each finding, apply surgical fixes and rerun affected checks
-   and review within the same bounded loop. Require Approved and passing applicable
-   gates for the final artifact revision. Changes after approval must receive
-   appropriate fresh verification/review; do not reuse stale approval for a changed
-   implementation. Treat a nonzero driver exit, empty output or missing verdict
-   as a failed review, even if a transcript sounds positive. Preserve a resumable
-   blocked state when review cannot complete, and continue independent groups.
+   Frame the final review packet with the same commensurate operational envelope
+   so verification checks actual acceptance criteria rather than demanding
+   speculative layers of complexity. Ask whether each issue is satisfied, its
+   persisted rating matches its latest evidence and user overrides, actual codepaths
+   match the plan, a duplicate subsystem or writer slipped in, and checks
+   substantiate the claims. A textual review does not replace deterministic tests.
+   Keep author and reviewer roles separate, adjudicate each finding against stated
+   requirements (rejecting speculative scope creep with `/ponytail`), apply
+   surgical fixes and rerun affected focused checks and review within the bounded
+   loop. Prevent review thrashing: the 3-round cap is a binding budget; do not
+   extend review cycles for speculative edge cases when core acceptance criteria
+   are green. Require Approved and passing applicable gates for the final artifact
+   revision. Changes after approval must receive appropriate fresh verification/review;
+   do not reuse stale approval for a changed implementation. Treat a nonzero driver
+   exit, empty output or missing verdict as a failed review, even if a transcript
+   sounds positive. Preserve a resumable blocked state when review cannot complete,
+   and continue independent groups.
 
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
    and accidental files, push through the repository's required gate, and open the

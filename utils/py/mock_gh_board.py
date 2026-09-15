@@ -37,6 +37,9 @@ def get_default_state():
                 "id": "PVTF_status_001",
                 "options": [
                     {"id": "OPT_in_progress_001", "name": "In progress"},
+                    {"id": "OPT_ready_001", "name": "Ready"},
+                    {"id": "OPT_in_review_001", "name": "In review"},
+                    {"id": "OPT_backlog_001", "name": "Backlog"},
                     {"id": "OPT_todo_001", "name": "Todo"},
                     {"id": "OPT_done_001", "name": "Done"},
                 ],
@@ -56,6 +59,7 @@ def get_default_state():
                 405: {"id": "ISS_mock_HiQS-Labs_XYZ-forge_405", "state": "OPEN"},
             }
         },
+        "pull_requests": {"HiQS-Labs/XYZ-forge": {}},
         "faults": {},
         "next_item_id": 1,
     }
@@ -114,23 +118,23 @@ def handle_graphql(query, variables, state, state_path):
             ]
         }
 
-    # 1. user(login) / organization(login) -> projectV2(number) -> field
+    # 1. repositoryOwner(login) union -> projectV2(number) -> field
     if "projectV2" in query and "SingleSelectField" in query:
         owner = variables.get("o", state["project_owner"])
         number = int(variables.get("n", state["project_number"]))
         field_name = variables.get("f", "Status")
         proj = resolve_project_v2_field(state, owner, number, field_name)
-        if state.get("is_org"):
-            return {"data": {"user": None, "organization": {"projectV2": proj}}}
-        return {"data": {"user": {"projectV2": proj}, "organization": None}}
+        return {"data": {"repositoryOwner": {"projectV2": proj}}}
 
-    # 2. repository(owner, name) -> issue(number)
-    if "repository(owner:" in query and "issue(number:" in query:
+    # 2. repository(owner, name) -> issue/pullRequest(number)
+    if "repository(owner:" in query and ("issue(number:" in query or "pullRequest(number:" in query):
         repo_owner = variables.get("o", "")
         repo_name = variables.get("n", "")
         issue_num = int(variables.get("i", 0))
         repo_key = f"{repo_owner}/{repo_name}"
-        repo_issues = state["issues"].get(repo_key, {})
+        is_pr = "pullRequest(number:" in query
+        store = state.get("pull_requests" if is_pr else "issues", {})
+        repo_issues = store.get(repo_key, {})
         # If not present in fixture, generate a simulated open issue on demand
         if str(issue_num) in repo_issues:
             issue_data = repo_issues[str(issue_num)]
@@ -138,10 +142,32 @@ def handle_graphql(query, variables, state, state_path):
             issue_data = repo_issues[issue_num]
         else:
             issue_data = {"id": f"ISS_mock_{repo_owner}_{repo_name}_{issue_num}", "state": "OPEN"}
-            state["issues"].setdefault(repo_key, {})[str(issue_num)] = issue_data
+            store.setdefault(repo_key, {})[str(issue_num)] = issue_data
+            state["pull_requests" if is_pr else "issues"] = store
             save_state(state, state_path)
 
-        return {"data": {"repository": {"issue": issue_data}}}
+        return {"data": {"repository": {"pullRequest" if is_pr else "issue": issue_data}}}
+
+    # 2b. complete issue/PR collection for GH-605 policy reads.
+    if "repository(owner:" in query and ("issues(first:" in query or "pullRequests(first:" in query):
+        repo_key = f"{variables.get('o', '')}/{variables.get('n', '')}"
+        is_pr = "pullRequests(first:" in query
+        collection = state.get("pull_requests" if is_pr else "issues", {}).get(repo_key, {})
+        nodes = []
+        for number, value in sorted(collection.items(), key=lambda pair: int(pair[0])):
+            node = dict(value, number=int(number), updatedAt=value.get("updated_at"),
+                        closedAt=value.get("closed_at"))
+            if is_pr:
+                node.update(isDraft=bool(value.get("draft")), mergedAt=value.get("merged_at"),
+                            closingIssuesReferences={"pageInfo": {"hasNextPage": False},
+                                                     "nodes": value.get("closing_issues", [])})
+            else:
+                node["stateReason"] = value.get("state_reason")
+            nodes.append(node)
+        field = "pullRequests" if is_pr else "issues"
+        return {"data": {"repository": {field: {"pageInfo": {"endCursor": None,
+                                                                 "hasNextPage": False},
+                                                       "nodes": nodes}}}}
 
     # 3. node(id: $id) -> ProjectV2 items pagination
     if "... on ProjectV2" in query and "items(" in query:
@@ -162,6 +188,7 @@ def handle_graphql(query, variables, state, state_path):
             node = {
                 "id": item["id"],
                 "content": {
+                    "__typename": "PullRequest" if item.get("kind") == "pr" else "Issue",
                     "number": item["number"],
                     "repository": {"nameWithOwner": item["repository"]},
                 },
@@ -190,14 +217,23 @@ def handle_graphql(query, variables, state, state_path):
         proj_id = variables.get("p", state["project_id"])
         content_id = variables.get("c", "")
 
-        # Lookup issue details from content_id
-        found_repo, found_num = "HiQS-Labs/XYZ-forge", 0
-        for repo_key, iss_map in state.get("issues", {}).items():
-            for num, iss in iss_map.items():
-                if iss["id"] == content_id:
-                    found_repo = repo_key
-                    found_num = int(num)
+        # Resolve the exact content identity. Project cards can contain issues or PRs; silently
+        # manufacturing issue #0 makes the stateful mock unable to detect PR-add regressions.
+        found = None
+        for kind, collection_name in (("issue", "issues"), ("pr", "pull_requests")):
+            for repo_key, content_map in state.get(collection_name, {}).items():
+                for num, content in content_map.items():
+                    if content.get("id") == content_id:
+                        found = (kind, repo_key, int(num))
+                        break
+                if found:
                     break
+            if found:
+                break
+        if found is None:
+            return {"errors": [{"message": "Content %r not found" % content_id,
+                                "type": "NOT_FOUND"}]}
+        found_kind, found_repo, found_num = found
 
         # Re-add creates a duplicate card (reproducing real GitHub behavior, [Should] 3)
         item_counter = state.get("next_item_id", len(state.get("items", [])) + 1)
@@ -207,6 +243,7 @@ def handle_graphql(query, variables, state, state_path):
         new_item = {
             "id": item_id,
             "content_id": content_id,
+            "kind": found_kind,
             "repository": found_repo,
             "number": found_num,
             "field_values": {},
@@ -255,6 +292,16 @@ def handle_graphql(query, variables, state, state_path):
         save_state(state, state_path)
 
         return {"data": {"updateProjectV2ItemFieldValue": {"projectV2Item": {"id": item_id}}}}
+
+    if "clearProjectV2ItemFieldValue" in query:
+        item_id = variables.get("i", "")
+        field_id = variables.get("f", "")
+        for item in state.get("items", []):
+            if item["id"] == item_id:
+                item.setdefault("field_values", {}).pop(field_id, None)
+                break
+        save_state(state, state_path)
+        return {"data": {"clearProjectV2ItemFieldValue": {"projectV2Item": {"id": item_id}}}}
 
     # 6. deleteProjectV2Item(input: {projectId, itemId})
     if "deleteProjectV2Item" in query:
@@ -306,6 +353,7 @@ def main(argv=None):
                 "field_values": {"PVTF_status_001": "OPT_in_progress_001"},
             }
         ]
+        state["next_item_id"] = 2
         save_state(state, state_path)
         print(f"mock_gh_board: seeded state at {state_path}")
         return 0

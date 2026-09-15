@@ -28,13 +28,30 @@ Activity is not movement. More findings, helpers, review rounds, scaffolding, or
 do not count unless they enable the next milestone or prevent a demonstrated correctness or safety
 failure.
 
+---
+
+## Recite this — verbatim, as the first thing in your first response
+
+> **Unstuck Discipline:**
+> 1. **Freeze the cogs (Rung 1).** Immediately stop inventing machinery, abstractions, helpers, review loops, or new plans; preserve working state, and record the true requested outcome, nearest milestone, last real movement, and current time sink.
+> 2. **Re-anchor the finish line (Rung 2).** State the nearest observable task milestone in one sentence (e.g. "failing test passes", "PR exists", "operator chose A vs B"); strip all self-created prerequisites from the critical path.
+> 3. **Test the claimed blocker (Rung 3).** Ask *"If this item were fixed now, could the next milestone proceed?"*; strictly classify items as Goal Blocker, Required Correctness/Safety, External Dependency, Polish, or Cog; park cogs/polish and queue genuine blockers into durable intake.
+> 4. **Execute foundational resolution — no bandages (Rung 4).** Select the single smallest action that resolves the true root blocker gating the milestone; strictly forbid painkillers, silencing hacks, bypassed invariants, or symptom patches that kick the can down the road (hand off to `/workhorse` if a structural fix is required).
+> 5. **Act once, verify movement & exit (Rung 5).** Execute the single move, check whether the milestone itself changed, emit the structured UNSTUCK receipt, and immediately resume execution (or return to parent `/workhorse` ladder).
+>
+> **Overall Goal:** Stalled session interrupted and durable goal movement restored immediately via the simplest foundational action that advances the milestone, with zero added machinery, zero symptom bandages, and zero bypassed safety invariants.
+
+Then begin work.
+
+---
+
 ## The five-rung recovery ladder
 
 ```text
 1. Freeze the cogs       ──► Stop adding machinery, reviews, and scope; preserve current work
 2. Re-anchor the goal    ──► Original outcome, current milestone, last verified movement
 3. Test the blocker      ──► Required to advance, required for safety, polish, or machinery?
-4. Choose one next move  ──► Smallest bounded action that changes task state
+4. Choose one next move  ──► Smallest bounded action that changes task state (foundational, no bandages)
 5. Act, verify, exit     ──► One action, one movement check, one explicit next state
 ```
 
@@ -101,9 +118,14 @@ outstanding work with a recorded home; parked items are cogs or polish that may 
 Choose the first safe option that applies:
 
 1. execute the already accepted plan or next committed step;
-2. fix one narrow, evidenced blocker, then resume the plan;
+2. fix one narrow, evidenced foundational blocker, then resume the plan;
 3. use an existing seam, supported command, or bounded manual bridge instead of building machinery;
 4. ask the operator one crisp decision that genuinely cannot be inferred.
+
+**No Bandages / No Painkillers Law.** Never apply temporary hacks that kick the can down the road:
+- Do NOT disable tests, silence type/lint errors (`@ts-ignore`, `# noqa`, suppressed asserts), or weaken contracts to simulate progress.
+- Do NOT patch call-site symptoms when the root cause is a broken invariant.
+- If the blocker requires a multi-file structural or architectural remedy, do NOT apply an inline hack—transition cleanly to `/workhorse` to execute the governed 7-rung solution.
 
 **Recurrence tripwire.** A narrow fix stops being the smallest move the second time the same
 *class* of blocker appears: a repeated narrow fix is symptom relief with a demonstrated failure

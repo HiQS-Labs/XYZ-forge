@@ -293,7 +293,7 @@ def agy_validate_model(agy_bin):
 
     try:
         with open(out_file) as f:
-            available = [line.rstrip("\r\n") for line in f if line.rstrip("\r\n")]
+            available = [line.strip().split()[0] for line in f if line.strip()]
     except Exception:
         available = []
     finally:

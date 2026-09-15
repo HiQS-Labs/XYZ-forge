@@ -27,6 +27,11 @@ from scan_clones import (
     is_safe_deletable_path,
     inspect_checkout,
     inspect_driver_lock,
+    inspect_file_activity,
+    inspect_completion_confidence,
+    derive_agent_followup,
+    resolve_canonical_issue,
+    format_issue_marker_body,
     DEFAULT_SAFE_ROOTS,
     DEFAULT_NEVER_DELETE
 )
@@ -377,7 +382,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             ["--primary", str(self.primary), "--integration-branch", "main", "--scan-only"], landing_ready=True)
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
-    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None, ff_rc=0, final_fetch_rc=0):
+    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None,
+                      ff_rc=0, final_fetch_rc=0, checkouts=None):
         """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues.
 
         Phase 5's tail calls `prune_dangling_skill_symlinks(dry_run=False)`, which walks the REAL
@@ -419,6 +425,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         insp_kwargs = ({"side_effect": [_verdict(v) for v in verdicts]} if verdicts
                        else {"return_value": _verdict(landing_ready)})
 
+        scanned = [] if checkouts is None else checkouts
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
              mock.patch.object(Path, "home", return_value=fake_home), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
@@ -430,12 +437,28 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=True) as merged, \
              mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
              mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
-             mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
+             mock.patch.object(merge_cleanup, "scan_directories", return_value=scanned), \
+             mock.patch.object(merge_cleanup, "refresh_for_teardown", return_value=scanned), \
              mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=prs or []):
             rc = merge_cleanup.main()
         self.pruner = pruner
         self.inspections = insp
         return rc, git_calls, merged, reconcile, teardown
+
+    def _removable_candidate(self):
+        return {
+            "path": str(Path(self.temp_dir) / "finished-clone"),
+            "name": "finished-clone",
+            "checkout_type": "standalone_clone",
+            "current_branch": "done",
+            "is_clean": True,
+            "dirty_count": 0,
+            "stash_count": 0,
+            "has_unpushed": False,
+            "unpushed_branches": [],
+            "disposition": "SAFE_REMOVE_CLONE",
+            "disposition_reason": "synthetic removable clone",
+        }
 
     def test_orchestration_tests_never_prune_the_real_home(self):
         """THE PIN (R3-1): containment. Unmocking the pruner must fail HERE, not on a real machine."""
@@ -523,6 +546,65 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         reconcile.assert_not_called()
         teardown.assert_not_called()
 
+    def test_unready_primary_refuses_zero_pr_cleanup_before_any_mutation(self):
+        """THE PIN (GH-595): zero open PRs must not silently bypass the primary decision."""
+        candidate = self._removable_candidate()
+        rc, _, merged, reconcile, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"],
+            landing_ready=False, checkouts=[candidate])
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_unready_primary_refuses_teardown_only_before_any_mutation(self):
+        """THE PIN (GH-595): teardown-only is still cleanup, so deferral must be explicit."""
+        candidate = self._removable_candidate()
+        rc, _, merged, reconcile, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--teardown-only", "--execute"],
+            landing_ready=False, checkouts=[candidate])
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_operator_can_explicitly_defer_unready_primary_cleanup(self):
+        candidate = self._removable_candidate()
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--teardown-only", "--execute",
+             "--allow-unready-primary"],
+            landing_ready=False, checkouts=[candidate])
+        self.assertEqual(rc, 0)
+        teardown.assert_called_once_with(candidate, dry_run=False)
+        self.pruner.assert_called_once_with(dry_run=False)
+
+    def test_ready_primary_allows_zero_pr_cleanup(self):
+        candidate = self._removable_candidate()
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"],
+            landing_ready=True, checkouts=[candidate])
+        self.assertEqual(rc, 0)
+        teardown.assert_called_once_with(candidate, dry_run=False)
+        self.pruner.assert_called_once_with(dry_run=False)
+
+    def test_scan_only_does_not_require_primary_override(self):
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--scan-only", "--execute"],
+            landing_ready=False)
+        self.assertEqual(rc, 0)
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_prs_only_does_not_require_primary_override(self):
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--prs-only", "--execute"],
+            landing_ready=False)
+        self.assertEqual(rc, 0)
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
 
 class TestDanglingSymlinkPrune(unittest.TestCase):
     """Phase 6 prune missed two whole classes of dangling link (fixed 2026-09-05).
@@ -591,6 +673,125 @@ class TestDanglingSymlinkPrune(unittest.TestCase):
             (source / "dead").is_symlink(),
             "prune walked through a symlinked skills root into the source repo",
         )
+
+
+class TestMergeCleanupActivityAndCompletion(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp = Path(self.tmp_dir.name)
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
+    def test_inspect_file_activity_windows(self):
+        repo = self.tmp / "test_repo"
+        repo.mkdir(parents=True)
+        now = 1700000000.0
+
+        # File modified 5 minutes ago (300s) -> active writing (10m)
+        f_recent = repo / "recent.py"
+        f_recent.write_text("print('recent')")
+        os.utime(f_recent, (now - 300, now - 300))
+
+        # File modified 30 minutes ago (1800s) -> idle (60m)
+        f_idle = repo / "idle.py"
+        f_idle.write_text("print('idle')")
+        os.utime(f_idle, (now - 1800, now - 1800))
+
+        # File modified 2 hours ago (7200s)
+        f_old = repo / "old.py"
+        f_old.write_text("print('old')")
+        os.utime(f_old, (now - 7200, now - 7200))
+
+        # Ephemeral files that must be ignored
+        git_dir = repo / ".git"
+        git_dir.mkdir()
+        (git_dir / "index").write_text("git")
+        os.utime(git_dir / "index", (now - 100, now - 100))
+
+        node_mod = repo / "node_modules" / "pkg"
+        node_mod.mkdir(parents=True)
+        (node_mod / "pkg.js").write_text("js")
+        os.utime(node_mod / "pkg.js", (now - 100, now - 100))
+
+        wal = repo / "data.sqlite-wal"
+        wal.write_text("wal")
+        os.utime(wal, (now - 100, now - 100))
+
+        act = inspect_file_activity(repo, now_ts=now)
+        self.assertEqual(act["activity_tier"], "ACTIVE_WRITING")
+        self.assertEqual(act["modified_10m_count"], 1)
+        self.assertIn("recent.py", act["modified_10m_files"])
+        self.assertEqual(act["modified_60m_count"], 2)
+
+        # Remove the 10m file, re-evaluate -> RECENT_IDLE
+        f_recent.unlink()
+        act_idle = inspect_file_activity(repo, now_ts=now)
+        self.assertEqual(act_idle["activity_tier"], "RECENT_IDLE")
+        self.assertEqual(act_idle["modified_10m_count"], 0)
+        self.assertEqual(act_idle["modified_60m_count"], 1)
+
+        # Remove the 60m file, re-evaluate -> DORMANT
+        f_idle.unlink()
+        act_dormant = inspect_file_activity(repo, now_ts=now)
+        self.assertEqual(act_dormant["activity_tier"], "DORMANT")
+        self.assertEqual(act_dormant["modified_10m_count"], 0)
+        self.assertEqual(act_dormant["modified_60m_count"], 0)
+
+    def test_resolve_canonical_issue(self):
+        repo = self.tmp / "gh-radar-umbrella-rescore"
+        repo.mkdir()
+
+        # 1. From branch name
+        self.assertEqual(resolve_canonical_issue(repo, branch_name="feat/gh593-radar-umbrella-rescore"), 593)
+        self.assertEqual(resolve_canonical_issue(repo, branch_name="fix/gh-440-review-findings"), 440)
+
+        # 2. From folder name
+        repo_named = self.tmp / "XYZ-forge-gh595"
+        repo_named.mkdir()
+        self.assertEqual(resolve_canonical_issue(repo_named, branch_name="development"), 595)
+
+    def test_inspect_completion_confidence(self):
+        repo = self.tmp / "repo"
+        repo.mkdir()
+        (repo / ".git").mkdir()
+
+        # Dirty working tree -> Incomplete
+        res_dirty = inspect_completion_confidence(repo, {"dirty_count": 3, "is_clean": False, "has_unpushed": False})
+        self.assertFalse(res_dirty["completed"])
+        self.assertEqual(res_dirty["confidence"], "HIGH")
+        self.assertIn("3 dirty files", res_dirty["summary"])
+
+        # Clean with unpushed commits and no QA attestation -> recommend deep scan
+        res_unpushed = inspect_completion_confidence(repo, {"dirty_count": 0, "is_clean": True, "has_unpushed": True})
+        self.assertFalse(res_unpushed["completed"])
+        self.assertTrue(res_unpushed["recommend_deep_scan"])
+        self.assertEqual(res_unpushed["confidence"], "MEDIUM")
+
+    def test_format_issue_marker_body(self):
+        info = {
+            "name": "gh592-express-receipt",
+            "path": "/Users/noelsaw/marathon-clones/gh592-express-receipt",
+            "current_branch": "fix/gh592-express-receipt",
+            "head_sha": "eea51a34",
+            "is_clean": True,
+            "dirty_count": 0,
+            "activity": {
+                "activity_tier": "DORMANT",
+                "modified_10m_count": 0,
+                "modified_60m_count": 0,
+                "latest_file": "test/gh592.py"
+            },
+            "completion": {
+                "summary": "QA approval attestation found; code complete"
+            },
+            "agent_followup": None
+        }
+        body = format_issue_marker_body(info)
+        self.assertIn("gh592-express-receipt", body)
+        self.assertIn("fix/gh592-express-receipt", body)
+        self.assertIn("DORMANT", body)
+        self.assertIn("QA approval attestation found", body)
 
 
 # GH-534 Phase A suites live in their own module and are collected here so this file stays the

@@ -100,6 +100,9 @@ TESTS=(
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
+  "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
+  "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
+  "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
@@ -275,7 +278,8 @@ TESTS=(
   "gh131-marathon-target-root.sh" # #131 (cross-repo --target-root + target --phases-dir: render and escalation commits land in the TARGET repo; in-repo control byte-identical; phase_commit_root unit) — 12/0; pool-safe: marathon's fixture-rooted lock + the relay-drive child inherits RELAY_DRIVER_LOCKED=1
   "gh139-pipe-grep-guard.sh"     # #139 (static inventory guard: no NEW `| grep -q` pipes in test/ — the GH-460 SIGPIPE shape; baseline of unconverted stragglers beside it)
   # #141 Phase 1: every test/synthetic/ suite is owned by THIS registry (single selector).
-  # Direct entries — the runner invokes bash test/<entry>, wrappers would only add indirection.
+  # Direct entries — the runner dispatches .py with Python and everything else with Bash;
+  # wrappers would only add indirection.
   "synthetic/gh101-consult-programmatic.sh"   # GH-101 (programmatic tool mode: consult adapters fail closed without a sandbox backend)
   "synthetic/gh101-relay-programmatic-stress.sh" # GH-101 (relay-drive PGID process cleanup + fail-closed sandbox checks under --tool-mode programmatic)
   "synthetic/gh102-telemetry-schema.sh"       # GH-102 (Telemetry 1.0 shared schema invariants across fuzz-loop and ATE emitters; #141 Phase 2 extends it with mixed-outcome fixtures + rendered-group assertions)
@@ -547,6 +551,8 @@ TESTS=(
   "gh421-auto-wave-reconcile.sh"      # GH-421 (post-merge CI auto-trigger for wave_reconcile.py; idempotent repeat, no re-shipped ledger writes)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
+  "gh605-work-state.sh"               # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
+  "gh605-board-policy.sh"              # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
   "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
   "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
@@ -613,6 +619,9 @@ TESTS=(
   "gh396-find-harness-roots.sh"     # GH-396 (find-harness two-roots contract: #395 ×5 topologies, #394 warn-under-override + runnable remedy, --quiet)
   "gh393-deepseek-readiness.sh"     # GH-396 / #393 (RELAY_HAS_DEEPSEEK parity with deepseek-turn.py's own binary rule + API key)
   "gh591-prepush-commit-boundary.sh" # GH-591 (hook-created files do not travel in the selected commit)
+  "gh589-xyz-mini-sync.sh"          # GH-589 (XYZ mini publisher: idempotent, inclusion-only, mirror, ownership guard, secret tripwire, push read-back)
+  "gh589-consult-no-tick.sh"        # GH-589 (consult runs in the exported mini package without bin/tick; explicit broken TICK_BIN stays fatal; empty answers fail)
+  "gh589-skill-viewer.sh"           # GH-589 (mini skill viewer count/name set == disk; frontmatter styles; empty-dir red)
 )
 
 PASSED=()
@@ -1296,7 +1305,7 @@ if [ -n "$PARALLEL_JOBS" ]; then
     echo "$why: $t — re-running it alone to see if that verdict survives"
     echo "==============================="
     _s="$(rt_now_ms)"
-    if bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
+    if $NICE_CMD bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
       rc_alone=0
       PASSED+=("$t")
       CONTENDED+=("$t")

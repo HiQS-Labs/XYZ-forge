@@ -45,7 +45,7 @@ opinions.
 **Locating the script — resolve it cwd-independently; never assume your cwd is the repo root.** A bare
 `consult.sh` or `relay-automation/consult.sh` only resolves when you happen to be sitting at the root,
 so invoke it through its repo-root anchor instead. Two homes are supported so consult works both in
-the `xyz-3-agents-swarm` checkout **and** in any repo that has a vendored `.xyz/` install: the
+the XYZ-forge (or XYZ mini) checkout **and** in any repo that has a vendored `.xyz/` install: the
 top-level `relay-automation/` if present, otherwise the vendored `.xyz/relay-automation/`.
 
 ```
@@ -60,11 +60,11 @@ CONSULT_ROOT="$ROOT" "$SCRIPT" --prompt "…" --label …
 
 `git rev-parse --show-toplevel` works from any subdirectory of the repo. If you are not inside a repo
 that has consult (no top-level `relay-automation/` and no `.xyz/`), either `cd` into the
-`xyz-3-agents-swarm` worktree, or vendor a `.xyz/` into the target repo first
+XYZ-forge/XYZ mini checkout, or (XYZ-forge only) vendor a `.xyz/` into the target repo first
 (`relay-automation/xyz-vendor.sh <repo>`). (Do **not** go hunting the disk for `consult.sh`; the
 anchor above always finds it.)
 
-**Provable no-mutation boundary (not best-effort).** Advisors run with their working directory set to a
+**Repository isolation (CWD-level, not a process sandbox).** Advisors run with their working directory set to a
 **throwaway git worktree** checked out from your *current* state — tracked WIP (via `git stash create`)
 plus untracked-non-ignored files copied in — so they see your working state (minus `.gitignore`d
 files), including a brand-new file under
@@ -81,14 +81,14 @@ consult.sh --prompt "Is X sound?"        # inline question
   [--label SLUG]                         # run-subdir + transcript stem (default "consult")
 ```
 
-For native Claude, follow [subscription setup](../../relay-automation/README.md#claude-subscription-mode).
+For native Claude, follow [subscription setup](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/README.md#claude-subscription-mode).
 `--models claude` is a single advisory answer, not cross-model consensus. Claude uses read-only
 built-in tools in native restricted mode; user/project/local settings are ignored in both
 authentication modes, and outside-checkout reads are denied by the CLI. See the setup guide
 for the CLI requirement and effort settings. Relay reviews separately retain protocol writes.
 
 Each run gets its own `<label>-<HHMMSS>/` subdir, so two consults the same day never overwrite each
-other. Behavior is covered by `test/consult.sh` in `validate.sh` (WIP preservation, no advisor leak,
+other. Behavior is covered by `test/consult.sh` in XYZ-forge's `validate.sh` (WIP preservation, no advisor leak,
 graceful degrade, non-git refusal).
 
 Exit `0` = at least one advisor answered; `5` = all failed; `3` = not a git repo (isolation needs
@@ -138,9 +138,11 @@ hunts overclaims and misses silent drops: the easy direction satisfices.)
 - **Two models, not ground truth.** Cross-model agreement raises confidence; it does not prove
   correctness — both can share a blind spot or a wrong prior. Treat a unanimous answer as *strong
   signal*, not proof, especially when correctness rides on runtime behavior neither model ran.
-- **Repo-isolated, not process-sandboxed.** Advisors run in a throwaway worktree and cannot reach
-  your real tree, so a consult never changes your code even if an advisor ignores the "advisory only"
-  instruction. Be precise about the boundary: this protects your *repository*, not the *host process*.
+- **Repo-isolated, not process-sandboxed.** Advisors run in a throwaway worktree, so an advisor that
+  ignores the "advisory only" instruction edits the worktree, not your checkout. Be precise about the
+  boundary: the worktree shares the repository's Git object store and the advisor CLI runs with the
+  host's normal permissions (agy is launched with `--dangerously-skip-permissions`), so this protects
+  your *working tree*, not the *host* or *Git state*.
   Codex additionally runs `-s read-only`; agy runs with `--dangerously-skip-permissions` and is
   repo-isolated but not a sandboxed process (it can still reach the network / the host outside the
   worktree). For a hard process boundary, run consult inside your own sandbox. If a fix is needed,
@@ -152,7 +154,7 @@ hunts overclaims and misses silent drops: the easy direction satisfices.)
 - **Needs the shims present, but is not tied to one repo.** Unlike `relay` (model-agnostic, file-only),
   consult hard-depends on the `codex` + `agy` CLIs being installed and authed and on the
   `relay-automation` shims. Those shims can live at the repo root **or** in a vendored `.xyz/` install,
-  so any repo carrying a `.xyz/` (see `relay-automation/xyz-vendor.sh`) can run consult standalone.
+  so any repo carrying a `.xyz/` (see `relay-automation/xyz-vendor.sh` in XYZ-forge) can run consult standalone.
 
 ## Gotcha: run consult OUTSIDE Claude Code's Bash sandbox
 

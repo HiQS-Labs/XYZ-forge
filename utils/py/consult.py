@@ -192,6 +192,35 @@ def aider_answer_ok(out_path):
         return False
     return True
 
+def advisor_answer_ok(out_path, model):
+    """GH-589: exit 0 with no visible answer is a FAILURE, not an answer. Codex transcripts carry a
+    prepended ATTESTATION header, so strip that block before judging emptiness."""
+    try:
+        with open(out_path, "r", errors="replace") as f:
+            text = f.read()
+    except OSError:
+        return False
+    body = text
+    if body.startswith("> **ATTESTATION**"):
+        body = body.split("\n\n", 1)[1] if "\n\n" in body else ""
+    # codex's raw provenance lines (model:/provider:/sandbox:) are metadata, not an answer
+    body = "\n".join(l for l in body.splitlines() if not re.match(r"^(model|provider|sandbox):", l))
+    is_json = out_path.endswith(".json")
+    if is_json:  # gemini JSON mode: judge the decoded response text, not the envelope (preamble tolerated like src/cost.js)
+        try:
+            import json as _json
+            body = str(_json.loads(text[text.index("{"):]).get("response", "") or "")
+        except (ValueError, AttributeError):
+            body = ""
+    if not body.strip():
+        if not is_json:  # keep a JSON transcript byte-identical so the existing cost capture can still parse it
+            with open(out_path, "a") as f:
+                f.write(f"\nconsult: {model} returned no visible content (exit 0, empty answer) — counted as FAILED.\n")
+        else:
+            warn(f"{model} returned no visible content (exit 0, empty JSON response) — counted as FAILED")
+        return False
+    return True
+
 def consult_codex_attestation(out_path):
     # GH-308 port (consult.sh run_codex): prepend an ATTESTATION provenance header (which
     # model/provider/sandbox actually answered), parsed from the codex output. This lived only in the
@@ -404,8 +433,22 @@ def agy_auth_preflight(agy_bin, log_file):
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = os.environ.get("CONSULT_ROOT", xyz_root)
-    consult_tick_root = resolve_tick_repo_root(root)
-    consult_tick_bin = resolve_tick_bin(consult_tick_root, xyz_root)
+    consult_tick_root = resolve_tick_repo_root(root)  # strict: a bad explicit TICK_REPO_ROOT stays fatal
+    # GH-589: `tick` is optional for consult (its only consumer is the CONSULT_GEMINI_JSON cost step,
+    # already guarded below). An EXPLICIT TICK_BIN is validated here, at the caller, because
+    # resolve_tick_bin falls through to <root>/bin/tick when the explicit value is unusable — which
+    # would silently replace a misconfiguration. Only an UNSET (or empty) TICK_BIN may degrade.
+    explicit_tick = os.environ.get("TICK_BIN", "")
+    if explicit_tick:
+        if not (os.path.isfile(explicit_tick) and os.access(explicit_tick, os.X_OK)):
+            die(f"TICK_BIN is set but not an executable file: {explicit_tick}")
+        consult_tick_bin = resolve_tick_bin(consult_tick_root, xyz_root)
+    else:
+        try:
+            consult_tick_bin = resolve_tick_bin(consult_tick_root, xyz_root)
+        except RuntimeError:
+            consult_tick_bin = ""
+            warn("tick not found — cost capture disabled (GH-589)")
     
     rtl = RelayTurnLib(root, xyz_root, "", "")  # Dummy init for transcript root
     
@@ -707,7 +750,7 @@ def main():
                     failed += 1
                     summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                     results.append((m, out, False))
-                elif proc.returncode == 0 and (m != "aider" or aider_answer_ok(out)):
+                elif proc.returncode == 0 and (aider_answer_ok(out) if m == "aider" else advisor_answer_ok(out, m)):
                     answered += 1
                     summary += f"\n  [ok]   {m} -> {out}"
                     survivor_model = m

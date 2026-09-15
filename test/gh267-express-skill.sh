@@ -99,7 +99,7 @@ printf 'twin body\n' > "$FX/relay-automation/consult.sh"
 printf 'shared runtime\n' > "$FX/relay-automation/relay-turn-lib.sh"
 printf 'kernel\n' > "$FX/src/project.js"
 printf 'readme\n' > "$FX/README.md"
-printf '.tick/\n' > "$FX/.gitignore"
+printf '.tick/\nTESTS-RESULTS/.relay-scratch/\n' > "$FX/.gitignore"
 printf '# demo suite\n' > "$FX/test/gh999-demo.sh"
 printf '# suite that writes a stray file at run time (TOCTOU probe)\nprintf stray > stray-suite-artifact.txt\n' > "$FX/test/gh999-drift.sh"
 printf '# suite that rewrites a qualified path (content TOCTOU probe)\nprintf suite-mutated > utils/py/foo.py\n' > "$FX/test/gh999-content-drift.sh"
@@ -125,6 +125,10 @@ if a[:2] in (["roadmap", "add"], ["manifest", "dial-in"], ["manifest", "ship"]):
     c.execute("INSERT INTO fixture_writes(verb) VALUES (?)", (" ".join(a[:2]),))
     if a[:2] == ["manifest", "ship"]:
         c.execute("UPDATE manifest_items SET state='shipped'")
+        inject = os.environ.get("STUB_INJECT_PATH")  # GH-592 control (i): dirt after the clean check
+        if inject:
+            os.makedirs(os.path.dirname(inject), exist_ok=True)
+            open(inject, "a").write('{"commit": "deadbeef", "case": "unrelated"}\n')
     c.commit(); c.close()
     for name in ("releases.sql", "RELEASES-PREVIEW.html",
                  "LEADERBOARD.html", "LEADERBOARD.md"):
@@ -141,6 +145,29 @@ if subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=Tr
     print("reconcile requires a clean tree", file=sys.stderr); sys.exit(8)
 if subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True).stdout.strip() != "development":
     print("reconcile requires development", file=sys.stderr); sys.exit(7)
+# GH-592: the driver must pass --gate; the gate mirrors check_provenance_receipts'
+# identity check — some TESTS-RESULTS/**/provenance.jsonl line must carry the commit.
+if "--gate" not in sys.argv:
+    print("stub: --gate was not supplied", file=sys.stderr); sys.exit(11)
+import json
+sha = sys.argv[sys.argv.index("--commit") + 1]
+found = False
+for d, _, fs in os.walk("TESTS-RESULTS"):
+    if "provenance.jsonl" in fs:
+        fp = os.path.join(d, "provenance.jsonl")
+        if os.path.islink(fp):
+            continue
+        for line in open(fp, encoding="utf-8"):
+            try:
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            if "pr" in rec or "pr_number" in rec:
+                continue  # explicit PR identity conflicts with a commit landing (real matcher: pr fields must match)
+            if rec.get("commit") == sha: found = True
+if not found:
+    print("--gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #%s" % sha[:12], file=sys.stderr); sys.exit(6)
+print("stub: Provenance receipt matched for commit %s" % sha[:12])
 if os.path.isdir("PROJECT/2-WORKING"):
     for root_dir, dirs, files in os.walk("PROJECT/2-WORKING"):
         for f in files:
@@ -290,6 +317,10 @@ new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "
 run_check > /dev/null 2> "$ERR" && ok "the lane's own paperwork (CHANGELOG) stays exempt" || bad "CHANGELOG counted against bounds: $(tail -1 "$ERR")"
 
 echo "== docs born complete =="
+# GH-592 I8: docs without --suite must refuse BEFORE any write (no half-born doc, no CHANGELOG mutation)
+CL_BEFORE="$(shasum -a 256 "$FX/CHANGELOG.md")"
+! python3 "$DRIVER" --root "$FX" docs --issue 999 --summary "demo" >/dev/null 2>"$ERR" && grep -q -- "--suite is required" "$ERR" && ok "docs refuses a missing --suite with an actionable message" || bad "docs accepted a missing --suite: $(tail -1 "$ERR")"
+[ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && [ "$(shasum -a 256 "$FX/CHANGELOG.md")" = "$CL_BEFORE" ] && ok "docs without --suite wrote nothing" || bad "docs without --suite left a partial write"
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs scaffold failed: $(cat "$ERR")"
 DOC="$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
 [ -f "$DOC" ] && ok "capture doc created" || bad "capture doc missing"
@@ -325,6 +356,56 @@ grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json" && ok "run closed GitHub i
 [ -z "$(git -C "$FX" status --porcelain)" ] && ok "successful closeout leaves development clean" || bad "successful closeout left drift: $(git -C "$FX" status --short | tr '\n' ';')"
 FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
 [ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
+
+echo "== GH-592: the landing writes its provenance receipt and reconciles under --gate =="
+FIX_SHA="$(git -C "$FX" log --format=%H --grep='\[express\]' -1)"
+RECEIPT_DIR="$(ls -d "$FX"/TESTS-RESULTS/*+GH-999-express 2>/dev/null | head -1)"
+[ -n "$RECEIPT_DIR" ] && [ -f "$RECEIPT_DIR/provenance.jsonl" ] && ok "receipt file exists at TESTS-RESULTS/<date>+GH-999-express/provenance.jsonl" || bad "receipt file missing"
+REC_CHECK="$(python3 - "$FX" "$FIX_SHA" <<'PY'
+import json, os, sys
+root, sha = sys.argv[1], sys.argv[2]
+recs = []
+for d, _, fs in os.walk(os.path.join(root, "TESTS-RESULTS")):
+    if "provenance.jsonl" in fs:
+        for line in open(os.path.join(d, "provenance.jsonl"), encoding="utf-8"):
+            try: r = json.loads(line)
+            except ValueError: continue
+            if r.get("commit") == sha and r.get("case") == "express-landing": recs.append(r)
+if len(recs) != 1: print("count=%d" % len(recs)); sys.exit(1)
+r = recs[0]
+ok = (r.get("command") == "bash test/gh999-demo.sh" and r.get("rc") == 0 and r.get("gate") == "express-suite"
+      and r.get("result") == "pass" and r.get("issue") == 999)
+print("ok" if ok else "bad:%s" % json.dumps(r)); sys.exit(0 if ok else 1)
+PY
+)"
+[ "$REC_CHECK" = ok ] && ok "exactly one record for the landing sha: command/rc/gate/result/issue as specified" || bad "receipt record wrong: $REC_CHECK"
+SHIP_COMMIT="$(git -C "$FX" log --format=%H --grep='express ship GH-999' -1)"
+SHIP_STAT="$(git -C "$FX" show --stat --format= "$SHIP_COMMIT")"
+grep -q 'GH-999-express/provenance.jsonl' <<<"$SHIP_STAT" && ok "ship transaction commits exactly the receipt" || bad "receipt not in ship commit"
+grep -q "Provenance receipt matched for commit" <<<"$RUNOUT" && ok "gated reconcile outcome is printed in the landing output" || bad "gate outcome not visible: $RUNOUT"
+grep -q "registered suite test/gh999-demo.sh green (express-suite, not the full gate)" "$FX/releases.sql" 2>/dev/null || true
+
+# control (i): unrelated TESTS-RESULTS dirt appearing AFTER the clean-development check must refuse closeout
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-inject\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2i\n' > "$FX/test/gh999-demo.sh"
+issue_json OPEN "Demo hotfix" 999
+STUB_INJECT_PATH="$FX/TESTS-RESULTS/unrelated/provenance.jsonl" python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary demo >/dev/null 2>"$ERR" \
+  && bad "unrelated results dirt must refuse closeout" \
+  || { grep -q "unexpected dirty path" "$ERR" && grep -q "TESTS-RESULTS/unrelated/provenance.jsonl" "$ERR" && ok "control (i): unrelated TESTS-RESULTS file refused by name; exact-path grant did not widen" || bad "control (i) wrong failure: $(tail -2 "$ERR")"; }
+INJ_FIX_SHA="$(git -C "$FX" log --format=%H --grep='\[express\]' -1)"
+[ "$(git -C "$REMOTE" rev-parse development)" = "$INJ_FIX_SHA" ] && ok "control (i): remote development == post-fix-push sha (no closeout commit landed)" || bad "control (i): closeout commits reached the remote"
+rm -rf "$FX/TESTS-RESULTS/unrelated"; git -C "$FX" checkout -q -- . 2>/dev/null; git -C "$FX" clean -qfd -- TESTS-RESULTS 2>/dev/null || true
+
+# control (ii): mutation — write_receipt returns the expected path WITHOUT writing → gate fails closed
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-mut\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2m\n' > "$FX/test/gh999-demo.sh"
+issue_json OPEN "Demo hotfix" 999
+python3 - "$DRIVER" "$FX" <<'PY' >/dev/null 2>"$ERR" && bad "no-write mutation must fail closed" || { grep -q "express-reconcile-failed" "$ERR" && grep -q "No provenance.jsonl" "$ERR" && ok "control (ii): driver without a real receipt write fails the gate (missing-receipt oracle reached)" || bad "control (ii) wrong failure: $(tail -2 "$ERR")"; }
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("express", sys.argv[1]); express = importlib.util.module_from_spec(spec); spec.loader.exec_module(express)
+express.write_receipt = lambda root, sha, issue, suite, rc: "TESTS-RESULTS/mutant+GH-999-express/provenance.jsonl"
+sys.argv = ["express.py", "--root", sys.argv[2], "run", "--issue", "999", "--suite", "test/gh999-demo.sh", "--summary", "demo"]
+express.main()
+PY
+git -C "$FX" checkout -q development 2>/dev/null; git -C "$FX" reset -q --hard origin/development 2>/dev/null
 
 echo "== four-step standalone flow (check / docs / ledger / land, each its own process) =="
 # GH-278 review finding: SKILL.md documents this as an equally-valid alternative
@@ -389,14 +470,14 @@ issue_json OPEN "Demo hotfix" 999
 
 # --- Rejection 1: Unrelated dirty files on task branch ---
 touch "$FX/unrelated-task-dirty.txt"
-! python3 "$DRIVER" --root "$FX" resume --issue 999 2>"$ERR" && ok "resume rejects dirty working tree on task branch" || bad "resume accepted dirty tree on task branch"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "resume rejects dirty working tree on task branch" || bad "resume accepted dirty tree on task branch"
 grep -q "working tree is not clean" "$ERR" && ok "dirty task tree error reported" || bad "dirty task tree error missing: $(cat "$ERR")"
 rm -f "$FX/unrelated-task-dirty.txt"
 
 # --- Rejection 2: Unrelated dirty files on development ---
 git -C "$FX" checkout -q development
 touch "$FX/unrelated-dev-dirty.txt"
-! python3 "$DRIVER" --root "$FX" resume --issue 999 2>"$ERR" && ok "resume rejects dirty working tree on development" || bad "resume accepted dirty tree on development"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "resume rejects dirty working tree on development" || bad "resume accepted dirty tree on development"
 grep -q "working tree is not clean" "$ERR" && ok "dirty development tree error reported" || bad "dirty dev tree error missing: $(cat "$ERR")"
 rm -f "$FX/unrelated-dev-dirty.txt"
 git -C "$FX" checkout -q task/gh-999
@@ -415,7 +496,7 @@ git -C "$FX" push -q origin HEAD:development
 git -C "$FX" commit --allow-empty -qm "local only unpushed commit"
 LOCAL_SHA="$(git -C "$FX" rev-parse HEAD)"
 git -C "$FX" reset -q --hard HEAD~1
-! python3 "$DRIVER" --root "$FX" resume --issue 999 --sha "$LOCAL_SHA" 2>"$ERR" && ok "resume rejects unpushed/unreachable SHA" || bad "resume accepted unpushed SHA"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh --sha "$LOCAL_SHA" 2>"$ERR" && ok "resume rejects unpushed/unreachable SHA" || bad "resume accepted unpushed SHA"
 grep -q "not reachable from origin/development" "$ERR" && ok "unreachable SHA error reported" || bad "unreachable SHA error missing: $(cat "$ERR")"
 
 # --- Rejection 4: Unrelated commit SHA passed to --sha (no closing reference for issue) ---
@@ -424,16 +505,79 @@ git -C "$FX" commit --allow-empty -qm "fix(GH-888): unrelated issue landing [exp
 Closes #888"
 git -C "$FX" push -q origin HEAD:development
 UNRELATED_SHA="$(git -C "$FX" rev-parse HEAD)"
-! python3 "$DRIVER" --root "$FX" resume --issue 999 --sha "$UNRELATED_SHA" 2>"$ERR" && ok "resume rejects unrelated commit SHA" || bad "resume accepted unrelated SHA"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh --sha "$UNRELATED_SHA" 2>"$ERR" && ok "resume rejects unrelated commit SHA" || bad "resume accepted unrelated SHA"
 grep -q "does not close issue #999" "$ERR" && ok "unrelated SHA error reported" || bad "unrelated SHA error missing: $(cat "$ERR")"
 
 # --- Rejection 5: Neighboring issue collision in auto-resolution (GH-99 vs GH-999) ---
 # origin/development contains commit for GH-999; auto-resolution for GH-99 must NOT match GH-999
-! python3 "$DRIVER" --root "$FX" resume --issue 99 2>"$ERR" && ok "auto-resolution for GH-99 does not match GH-999" || bad "auto-resolution matched GH-999 for GH-99"
+! python3 "$DRIVER" --root "$FX" resume --issue 99 --suite test/gh999-demo.sh 2>"$ERR" && ok "auto-resolution for GH-99 does not match GH-999" || bad "auto-resolution matched GH-999 for GH-99"
 grep -q "Could not automatically resolve landing commit for GH-99" "$ERR" && ok "neighboring issue 99 reported unresolved" || bad "unresolved error missing: $(cat "$ERR")"
 
-# --- Happy Path 1: Resume from task branch without --sha (auto-resolves LAND_SHA) ---
-python3 "$DRIVER" --root "$FX" resume --issue 999 >"$WORK/resume.log" 2>"$ERR" && ok "express resume exits 0 on valid landing" || bad "express resume failed (rc!=0): $(cat "$ERR")"
+# --- GH-592 control (iii): no receipt for the landing → resume refuses BEFORE closing/shipping, with the recipe ---
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "control (iii): resume refuses a landing with no valid receipt" || bad "resume accepted a landing with no receipt"
+grep -q "no COMMITTED valid express receipt bound to commit" "$ERR" && grep -q "write_receipt" "$ERR" && grep -q "skills/express/SKILL.md" "$ERR" && grep -q "fails closed" "$ERR" && grep -q "VOIDs on any difference" "$ERR" && ok "control (iii): refusal carries the recovery recipe incl. identity snapshot" || bad "recipe missing: $(tail -1 "$ERR")"
+grep -q '"state":"OPEN"' "$GH_STATE/issue-999.json" && ok "control (iii): issue #999 still OPEN — refused before close" || bad "resume closed the issue without evidence"
+# --- GH-592 control (iv): failed / wrong-suite / wrong-issue records are not evidence ---
+git -C "$FX" checkout -q development; git -C "$FX" pull -q --ff-only origin development
+BADDIR="$FX/TESTS-RESULTS/$(date -u +%F)+GH-999-express"; mkdir -p "$BADDIR"
+python3 - "$BADDIR/provenance.jsonl" "$LAND_SHA" <<'PY'
+import json, sys
+p, sha = sys.argv[1], sys.argv[2]
+base = {"commit": sha, "issue": 999, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh999-demo.sh", "rc": 0, "result": "pass"}
+with open(p, "w") as f:
+    f.write(json.dumps({**base, "rc": 1, "result": "fail"}) + "\n")
+    f.write(json.dumps({**base, "command": "bash test/other.sh"}) + "\n")
+    f.write(json.dumps({**base, "issue": 998}) + "\n")
+    f.write("not json\n")
+PY
+git -C "$FX" add -A && git -C "$FX" commit -qm "fixture: invalid receipts for GH-999" && git -C "$FX" push -q origin development
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "control (iv): rc=1 / wrong-suite / wrong-issue / malformed records are not evidence" || bad "resume accepted invalid receipts"
+# --- GH-592 control (vi): a valid receipt that is only in an IGNORED path (uncommitted) is not evidence ---
+git -C "$FX" checkout -q development
+python3 - "$DRIVER" "$FX" "$LAND_SHA" <<'PY'
+import importlib.util, sys, os, json
+spec = importlib.util.spec_from_file_location("express", sys.argv[1]); express = importlib.util.module_from_spec(spec); spec.loader.exec_module(express)
+os.makedirs(os.path.join(sys.argv[2], "TESTS-RESULTS/.relay-scratch"), exist_ok=True)
+rec = {"commit": sys.argv[3], "issue": 999, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh999-demo.sh", "rc": 0, "result": "pass"}
+assert express.valid_express_receipt(rec, sys.argv[3], 999, "test/gh999-demo.sh")
+open(os.path.join(sys.argv[2], "TESTS-RESULTS/.relay-scratch/provenance.jsonl"), "w").write(json.dumps(rec) + "\n")
+PY
+[ -z "$(git -C "$FX" status --porcelain=v1)" ] && ok "control (vi): ignored receipt leaves porcelain clean (the guard alone would not catch it)" || bad "fixture ignore rule not applied"
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && grep -q "no COMMITTED valid express receipt" "$ERR" && ok "control (vi): uncommitted (ignored-path) valid receipt is refused — evidence is read from HEAD" || bad "resume accepted an uncommitted receipt: $(tail -1 "$ERR")"
+rm -rf "$FX/TESTS-RESULTS/.relay-scratch"
+# --- GH-592 control (vii): a committed receipt whose only identity is an explicit PR field is not express evidence ---
+python3 - "$FX" "$LAND_SHA" <<'PY'
+import json, sys, glob
+p = glob.glob(sys.argv[1] + "/TESTS-RESULTS/*+GH-999-express/provenance.jsonl")[0]
+rec = {"commit": sys.argv[2], "pr": 4242, "issue": 999, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh999-demo.sh", "rc": 0, "result": "pass"}
+open(p, "a").write(json.dumps(rec) + "\n")
+PY
+git -C "$FX" add -A && git -C "$FX" commit -qm "fixture: pr-identified record for GH-999" && git -C "$FX" push -q origin development
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "control (vii): a record carrying an explicit pr field is not express evidence (matches the real matcher's conflict rule)" || bad "resume accepted a pr-identified record"
+# --- GH-592 control (viii): a COMMITTED symlink named provenance.jsonl is not evidence (HEAD reader skips mode 120000) ---
+git -C "$FX" checkout -q development
+python3 - "$FX" "$LAND_SHA" <<'PY'
+import json, sys, os
+root, sha = sys.argv[1], sys.argv[2]
+rec = {"commit": sha, "issue": 999, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh999-demo.sh", "rc": 0, "result": "pass"}
+open(os.path.join(root, "outside-evidence.jsonl"), "w").write(json.dumps(rec) + "\n")
+os.makedirs(os.path.join(root, "TESTS-RESULTS/0-linked"), exist_ok=True)
+os.symlink("../../outside-evidence.jsonl", os.path.join(root, "TESTS-RESULTS/0-linked/provenance.jsonl"))
+PY
+git -C "$FX" add -A && git -C "$FX" commit -qm "fixture: committed symlink receipt for GH-999" && git -C "$FX" push -q origin development
+! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && grep -q "no COMMITTED valid express receipt" "$ERR" && ok "control (viii): a committed symlinked provenance.jsonl is not evidence for resume" || bad "resume accepted a committed symlink receipt: $(tail -1 "$ERR")"
+git -C "$FX" rm -q -r TESTS-RESULTS/0-linked outside-evidence.jsonl && git -C "$FX" commit -qm "fixture: drop symlink receipt" && git -C "$FX" push -q origin development
+# --- GH-592 control (v): genuine interrupted success — valid receipt written by the driver's own helper and committed, reconcile never ran ---
+python3 - "$DRIVER" "$FX" "$LAND_SHA" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("express", sys.argv[1]); express = importlib.util.module_from_spec(spec); spec.loader.exec_module(express)
+print(express.write_receipt(sys.argv[2], sys.argv[3], 999, "test/gh999-demo.sh", 0))
+PY
+git -C "$FX" add -A && git -C "$FX" commit -qm "fixture: valid receipt for GH-999 landing" && git -C "$FX" push -q origin development
+git -C "$FX" checkout -q task/gh-999
+# --- Happy Path 1: Resume from task branch without --sha (auto-resolves LAND_SHA); bare suite name must normalize (I4) ---
+python3 "$DRIVER" --root "$FX" resume --issue 999 --suite gh999-demo.sh >"$WORK/resume.log" 2>"$ERR" && ok "express resume exits 0 on valid landing" || bad "express resume failed (rc!=0): $(cat "$ERR")"
+grep -q "Provenance receipt matched for commit" "$WORK/resume.log" && ok "control (v): resume reconciled under --gate against the committed receipt" || bad "resume gate outcome not printed"
 [ "$(git -C "$FX" branch --show-current)" = development ] && ok "resume switched to development" || bad "resume branch wrong"
 [ -z "$(git -C "$FX" status --porcelain=v1)" ] && ok "development working tree is clean after resume" || bad "development dirty after resume: $(git -C "$FX" status --porcelain=v1)"
 grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json" && ok "resume closed GitHub issue #999" || bad "issue #999 remained open"
@@ -447,7 +591,10 @@ RESUMED_TICK="$(ls -t "$FX/.tick/events/"*express-resumed*.jsonl 2>/dev/null | h
 [ -n "$RESUMED_TICK" ] && ok "express-resumed event receipt written" || bad "express-resumed tick missing"
 
 # --- Happy Path 2: Idempotent second resume ---
-python3 "$DRIVER" --root "$FX" resume --issue 999 >"$WORK/resume2.log" 2>"$ERR" && ok "second resume invocation succeeds idempotently" || bad "second resume failed: $(cat "$ERR")"
+RECEIPT_LINES_BEFORE="$(cat "$FX"/TESTS-RESULTS/*+GH-999-express/provenance.jsonl | wc -l | tr -d ' ')"
+HEAD_BEFORE="$(git -C "$FX" rev-parse HEAD)"
+python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh >"$WORK/resume2.log" 2>"$ERR" && ok "second resume invocation succeeds idempotently" || bad "second resume failed: $(cat "$ERR")"
+[ "$(cat "$FX"/TESTS-RESULTS/*+GH-999-express/provenance.jsonl | wc -l | tr -d ' ')" = "$RECEIPT_LINES_BEFORE" ] && ok "control (v): second resume wrote no new receipt record" || bad "second resume appended a record"
 [ "$(git -C "$FX" rev-parse HEAD)" = "$LOCAL_DEV_SHA" ] && ok "idempotent resume created no spurious commits" || bad "second resume created extra commits"
 
 # --- Happy Path 3: Interruption immediately after ship commit (post-ship recovery without --sha) ---
@@ -464,10 +611,16 @@ git -C "$FX" checkout -q development
 git -C "$FX" pull -q --ff-only origin development
 # Simulate that ship was already committed and pushed, but wave_reconcile was interrupted
 python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db'); c.execute('UPDATE manifest_items SET state=\"shipped\" WHERE issue_ref_id=2'); c.commit(); c.close()"
-git -C "$FX" commit -am "chore(releases): express ship GH-998 (commit $LAND_998_SHA)"
+# GH-592: the ship transaction carries the landing's receipt (written by the driver's own helper)
+python3 - "$DRIVER" "$FX" "$LAND_998_SHA" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("express", sys.argv[1]); express = importlib.util.module_from_spec(spec); spec.loader.exec_module(express)
+print(express.write_receipt(sys.argv[2], sys.argv[3], 998, "test/gh998-demo.sh", 0))
+PY
+git -C "$FX" add -A && git -C "$FX" commit -qm "chore(releases): express ship GH-998 (commit $LAND_998_SHA)"
 git -C "$FX" push -q origin development
 # Resume issue 998 WITHOUT --sha — must parse landing SHA from ship commit and complete reconciliation
-python3 "$DRIVER" --root "$FX" resume --issue 998 >"$WORK/resume998.log" 2>"$ERR" && ok "resume after ship commit succeeds without --sha" || bad "post-ship resume failed: $(cat "$ERR")"
+python3 "$DRIVER" --root "$FX" resume --issue 998 --suite test/gh998-demo.sh >"$WORK/resume998.log" 2>"$ERR" && ok "resume after ship commit succeeds without --sha" || bad "post-ship resume failed: $(cat "$ERR")"
 [ ! -f "$FX/PROJECT/2-WORKING/GH-998-DEMO-HOTFIX.md" ] && [ -f "$FX/PROJECT/3-COMPLETED/GH-998-DEMO-HOTFIX.md" ] && ok "post-ship resume reconciled doc to 3-COMPLETED" || bad "post-ship doc not reconciled"
 
 # --- Falsification check: Deliberate failure during reconciliation under WR_FAIL=1 ---
@@ -482,7 +635,14 @@ FAIL_SHA="$(git -C "$FX" rev-parse HEAD)"
 git -C "$FX" push -q origin HEAD:development
 git -C "$FX" checkout -q development
 git -C "$FX" pull -q --ff-only origin development
-! WR_FAIL=1 python3 "$DRIVER" --root "$FX" resume --issue 997 --sha "$FAIL_SHA" 2>"$ERR" && ok "resume fails when reconciliation fails (falsifiable)" || bad "resume succeeded despite reconcile failure"
+# GH-592: give the landing a valid committed receipt so this case reaches the reconciler (not the evidence gate)
+python3 - "$DRIVER" "$FX" "$FAIL_SHA" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("express", sys.argv[1]); express = importlib.util.module_from_spec(spec); spec.loader.exec_module(express)
+print(express.write_receipt(sys.argv[2], sys.argv[3], 997, "test/gh997-demo.sh", 0))
+PY
+git -C "$FX" add -A && git -C "$FX" commit -qm "fixture: receipt for GH-997" && git -C "$FX" push -q origin development
+! WR_FAIL=1 python3 "$DRIVER" --root "$FX" resume --issue 997 --suite test/gh997-demo.sh --sha "$FAIL_SHA" 2>"$ERR" && grep -q "forced reconcile failure" "$ERR" && ok "resume fails when reconciliation fails (falsifiable)" || bad "resume succeeded despite reconcile failure"
 
 # Verify central telemetry mirroring
 CENTRAL_TICK="$(ls -t "$HOME/.config/xyz/events/"*express*.jsonl 2>/dev/null | head -1)"
