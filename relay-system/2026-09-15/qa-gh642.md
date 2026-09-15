@@ -1,0 +1,134 @@
+---
+Goal: Codex final QA — GH-642 implementation vs approved plan v2.1
+Date: 2026-09-15
+NEXT: agy
+STATUS: Changes requested
+---
+
+# Context
+
+Final QA of the GH-642 implementation on branch `feat/gh642-consumer-fruit` (this tree; HEAD is
+the reviewed state). The approved plan is `PROJECT/2-WORKING/GH-642-CONSUMER-FRUIT.md` (plan v2.1,
+your round-3 APPROVED). Requirements source: [#642](https://github.com/HiQS-Labs/XYZ-forge/issues/642)
++ field evidence [#621](https://github.com/HiQS-Labs/XYZ-forge/issues/621).
+
+Implementation commits to review (git log, read-only — you may run `git log`/`git diff`? NO:
+do not run git; read the FILES as they now stand):
+- relay-automation/xyz-vendor.sh — reconcile_ignore_state direction 1 → repo-local info/exclude
+  (cwd-anchored), comments updated
+- utils/py/claude-turn.py — Opus-class default-budget stderr warning
+- utils/py/marathon_drive.py — resolve_force_relay_task() + call site before receipt/render
+- relay-automation/relay-turn-lib.sh — rtl_worktree_begin disposable node_modules copy
+- utils/py/xyz_init_clone.py — new initializer (py, no new Bash)
+- utils/py/swarm_preflight.py — zero-criteria stderr warning before the dry-run exit
+- test/gh642-consumer-fruit.sh — new focused suite (36 cases, currently 36/0 in the disposable clone)
+- test/xyz-vendor.sh, test/gh312-vendor-preserves-state.sh, test/gh365-driver-lane-registry.sh,
+  skills/vendor-stack/SKILL.md, validate.sh (TESTS registry), skills/relay-automation/relay-pkg.tar.gz
+
+Frozen Bash fallbacks (claude-turn.sh, marathon-drive.sh, utils/swarm-preflight.sh) are untouched —
+verify that claim.
+
+Operational envelope: grade against the plan's stated requirements + commensurate complexity;
+findings cite file:line; no speculative machinery.
+
+Questions:
+
+1. Does each of the six tranche items satisfy its acceptance line in the plan? Cite file:line.
+2. Item 1: is the info/exclude destination correct and complete (cwd-anchored; three Git shapes;
+   direction-2 refusal untouched; the `.gitignore` fallback for non-git targets reachable)?
+3. Item 3: does resolve_force_relay_task implement the round-1 SHOULD spec exactly (spent ≡
+   done|circuit_broken; missing/malformed fails before render; monotonic -R2…; explicit ids
+   never rewritten)? Is the call site early enough that _RESULT["token"]/receipt/render all see
+   ONE resolved identity?
+4. Item 4: does the copy happen before the allowlist seeding loop matters, stay advisory on
+   failure, and avoid the containment hole (no symlink)? Can a turn's writes through the copied
+   tree reach ROOT?
+5. Item 5: does xyz_init_clone.py match the approved contract (umbrella required; slug ≤3 words;
+   -r2 on occupied; vendor Tier 2 always; hooks when present)? Any new-Bash or frozen-twin
+   violation anywhere in the diff surface?
+6. Item 6: warning placement — emitted before the dry-run exit, text-format only, exit unchanged?
+7. Governance: confirm the frozen twins are byte-untouched and no new .sh was added under
+   utils/ or relay-automation/ (xyz-init-clone as .py). Confirm validate.sh's TESTS registry
+   entry + gh365 exemption entry are the only registry changes.
+8. Tests: does test/gh642-consumer-fruit.sh actually falsify each item (would it catch a revert
+   of each behavior)? Any tautological assertions?
+
+Write `### Final QA · codex` below: per-question answers (file:line), findings tagged
+BLOCKER/SHOULD/NIT, final line `VERDICT: APPROVED` or `VERDICT: CHANGES REQUESTED` + minimal
+fix list. Edit ONLY this relay file. Do NOT run git.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex — FINAL QA REVIEWER role; ALLOW_PATHS is empty: this relay file is your
+only writable path; verify the implementation against the plan, never edit code)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Final QA · codex
+
+1. **Six acceptance lines:** items 1, 2, 4, 5, and 6 are implemented as planned. Item 1 resolves
+   and cwd-anchors the repo-local exclude with a non-git `.gitignore` fallback
+   (`relay-automation/xyz-vendor.sh:297-319`). Item 2 warns non-fatally for `claude-opus*` plus the
+   effective `$0.50` default (`utils/py/claude-turn.py:96-110`). Item 4 performs an advisory real
+   copy before allowlist seeding (`relay-automation/relay-turn-lib.sh:758-791`). Item 5 requires the
+   umbrella, validates the slug, derives/retries the destination, clones the supplied remote, always
+   vendors Tier 2, installs hooks when present, and prints next steps
+   (`utils/py/xyz_init_clone.py:72-125`). Item 6 emits a text-format stderr warning before the
+   dry-run exit without changing the exit (`utils/py/swarm_preflight.py:1688-1706`). Item 3 is not
+   exact; see BLOCKER/SHOULD below (`utils/py/marathon_drive.py:487-522`).
+
+2. **Item 1:** correct and complete. `rev-parse --git-path info/exclude` is anchored when relative,
+   so normal clones, linked worktrees, and separate-git-dir layouts resolve correctly; failure/non-git
+   falls back to the target `.gitignore` (`relay-automation/xyz-vendor.sh:297-319`). Direction 2 still
+   runs first, uses `git check-ignore -v`, preserves the blocking rule, and performs no direction-1
+   mutation until after its diagnostic (`relay-automation/xyz-vendor.sh:253-295`). The focused suite
+   exercises the three Git shapes and preservation (`test/gh642-consumer-fruit.sh:29-65`), though it
+   omits the reachable non-git fallback case.
+
+3. **Item 3:** the call site is early enough: resolution and `_RESULT["token"]` assignment occur at
+   `utils/py/marathon_drive.py:1378-1385`, before heartbeat (`:1443-1454`), receipt consumers, and
+   relay rendering (`:2908-2938`), so one resolved identity flows downstream. Explicit ids and
+   non-force calls are unchanged (`:496-497`), and spent means `done|circuit_broken` (`:511-515`).
+   **BLOCKER:** malformed output is rejected only for the base token. During the `-R2...` scan,
+   `_status(candidate) == "malformed"` falls through and the loop advances forever rather than
+   failing before render (`:516-522`). A bounded monkeypatch probe observed calls to base, `-R2`,
+   then `-R3` after malformed `-R2` output. **SHOULD:** the required fresh-id announcement is sent
+   through `log()`, which writes stdout (`:484-485,520`), not stderr as specified.
+
+4. **Item 4:** correct. The copy occurs immediately after worktree creation and before the allowlist
+   seed loop (`relay-automation/relay-turn-lib.sh:750-774`); failure only traces and continues
+   (`:766-771`); `cp -R` creates a separate tree, not a symlink (`:762-768`). Writes through the
+   worktree copy therefore cannot mutate `RTL_ROOT/node_modules` through a link.
+
+5. **Item 5:** the approved contract is present at `utils/py/xyz_init_clone.py:72-125`: required
+   umbrella (`:79-80`), at-most-three-word lowercase slug (`:46-50,81-82,94-97`), monotonic `-r2`
+   retry without reuse (`:53-61,99-105`), unconditional `--with-releases` (`:106`), conditional hook
+   install (`:108-112`), and next steps (`:114-125`). **NIT:** the module prose says an explicitly
+   passed existing `--dir` is refused (`:23-25`), while the parser and implementation treat `--dir`
+   as the parent directory and permit it (`:83-85,99-103`); align the prose with the implemented and
+   tested parent-directory contract.
+
+6. **Item 6:** correct. The guard is text-format only, names the document and checklist fix, writes
+   stderr, precedes the dry-run exit, and introduces no exit-code change
+   (`utils/py/swarm_preflight.py:1688-1706`).
+
+7. **Governance:** the supplied diff surface names no frozen twin, and the current frozen fallbacks
+   contain none of the GH-642 behavior markers; the initializer exists only as
+   `utils/py/xyz_init_clone.py`. Because this turn explicitly prohibited git/diff, byte equality to
+   the base is necessarily based on the supplied diff surface rather than an independent byte
+   comparison. The two registry additions are the focused-suite entry in `validate.sh:502` and its
+   driver-lane exemption in `test/gh365-driver-lane-registry.sh:134`; no other GH-642 registry entry
+   is present.
+
+8. **Tests:** **BLOCKER:** `test/gh642-consumer-fruit.sh` does not falsify every item despite its
+   36/0 result. The malformed-info case passes the literal path `"$STUB/tick"` from a single-quoted
+   heredoc (`:101-111`), so it exercises the missing-binary branch, not malformed output. It never
+   tests malformed/occupied suffix candidates or the required stderr announcement (`:75-113`). The
+   Opus warning and zero-criteria warning are compile+grep assertions only (`:67-70,164-170`), so
+   removing the runtime print or moving it after the dry-run exit can remain green. The Tier-2 claim
+   checks only that `.xyz` exists (`:147-150`), which Tier 1 also supplies. The copy case does not
+   mutate the copied tree and prove ROOT unchanged or exercise advisory copy failure (`:115-136`).
+   Add behavior-level assertions for these paths; also add the omitted non-git fallback and default
+   slug/three-word boundary cases if retaining the suite's claim that it covers the full contract.
+
+VERDICT: CHANGES REQUESTED — fix suffix-candidate malformed handling, emit the auto-suffix notice on
+stderr, and replace the false-positive/static checks with behavior-level regression assertions that
+go red when each guarded behavior is reverted.
