@@ -39,9 +39,9 @@ grep -Fqx 'node_modules/' "$R1/.gitignore" && pass "exclude: pre-existing .gitig
 [ "$(grep -c '^\.xyz/$' "$R1/.git/info/exclude")" = 1 ] && pass "exclude: idempotent re-run (1 .xyz/ line)" || fail "exclude: duplicate lines after re-run"
 
 # linked-worktree shape: vendor inside a worktree of a bare-parented repo
-BR="$(mkrepo r2-bare --bare --initial-branch=main)"
+BR="$WORK/r2-bare.git"; git init -q --bare "$BR"
 WT="$WORK/r2-wt"
-git -C "$R1" push -q "$BR" HEAD:refs/heads/main 2>/dev/null || git -C "$R1" push -q "$BR" HEAD 2>/dev/null
+git -C "$R1" push -q "$BR" HEAD 2>/dev/null
 git clone -q "$BR" "$WT-main" 2>/dev/null
 git -C "$WT-main" worktree add -q "$WT" 2>/dev/null
 if [ -d "$WT/.git" ] || [ -f "$WT/.git" ]; then
@@ -74,7 +74,7 @@ python3 -m py_compile "$PYDRIVE" && pass "marathon_drive.py compiles" || fail "m
 STUB="$WORK/stub-tick"; mkdir -p "$STUB"
 cat > "$STUB/tick" <<'STUB'
 #!/usr/bin/env bash
-case "$1 $3" in
+case "$1 $2" in
   "info MARATHON-P1-TURN")    printf 'id:       MARATHON-P1-TURN\nstatus:   done\n';;
   "info MARATHON-P1-TURN-R2") echo "task not found" >&2; exit 1;;
   "info MARATHON-P1-TURN-R3") printf 'id:       MARATHON-P1-TURN-R3\nstatus:   open\n';;
