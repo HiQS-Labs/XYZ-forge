@@ -120,3 +120,11 @@ The builder has fully addressed the acceptance criteria:
 4. No pre-existing defects were found during the sweep.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-15T07:33:54Z
+task: MARATHON-GH-629-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 7fd219d2a1ba5adca2ef9603525aa77cd8f0b7b9
+added-range: 11013+1188
+added-sha256: 6ecbfa415992874a0e62aac4dde68df6b3f37181500e7ad8eb1a5b2af41ee8b5
