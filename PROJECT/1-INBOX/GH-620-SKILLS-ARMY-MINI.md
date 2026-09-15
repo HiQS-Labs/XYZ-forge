@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| The root-projection contract and focused final-state gates are complete: GH-620 27/27, GH-589 18/18, and Skills Army HQ 25/25 plus four subtests. | Republish the child, read back the exact root layout, and update draft PR #622 with the final SHAs. |
+| Root projection is published and read back: six canonical package files are at child root, nine managed files are recorded, retry is idempotent, and live root-level init/update passed. | Inspect exact-head hosted checks on draft PR #622; merge readiness remains gated by the separately recorded full-suite baseline. |
 
 ## Goal and ownership
 
@@ -186,7 +186,8 @@ the declared `skills-army-hq` collection folder.
 - [x] Hash and stage the generated root without `.git`, `.gitignore`, licenses, manifest, or provenance so the installed manager remains the canonical package payload.
 - [x] Update the canonical README, spin-off playbook, ownership map, and clone-relative links for the root layout.
 - [x] Run the GH-620, GH-589, and Skills Army HQ focused suites from a disposable full clone.
-- [ ] Republish, read back exact bytes and modes, and update PR #622.
+- [x] Republish and read back the exact root payload bytes, executable modes, manifest, provenance, and idempotent retry.
+- [x] Designate PR #622 as the immutable parent/child SHA receipt so publication updates do not create a self-referential project-doc republish loop.
 
 ### Phase 4 — QA checklist
 
@@ -194,7 +195,7 @@ the declared `skills-army-hq` collection folder.
 - [x] Ordinary mismatched skill folders remain rejected; the generated-root proof fails when provenance or required manifest entries are absent.
 - [x] Existing XYZ-mini publisher behavior remains green.
 - [x] Blast: **Easy** undo; shield is the existing generated-child profile plus strict projection recognition; tripwire is any payload-set, metadata-exclusion, init/update, or read-back failure before publication.
-- [ ] Status table and `updated:` date reflect the final published SHAs.
+- [x] Status table reflects the verified publication; exact immutable SHAs are recorded in PR #622 to avoid creating a self-referential republish loop.
 
 ## Rating rationale (2026-09-14)
 

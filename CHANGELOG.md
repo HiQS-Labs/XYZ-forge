@@ -9,8 +9,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
   Manager initialization and update recognize only the publisher-proven root shape, install it under
   the declared `skills-army-hq` name, and exclude VCS and repository-only metadata; ordinary skill
   folder/name validation stays strict. Reversibility: **Easy** — restore the nested destination map
-  and republish. Verification: witnessed pre-fix root-payload/init failure plus focused publisher,
-  projected-root, metadata-exclusion, and detached-runtime coverage.
+  and republish. Verification: witnessed pre-fix root-payload/init failure; GH-620 27/27, GH-589
+  18/18, Skills Army HQ 25/25 plus four subtests; exact live root payload/mode read-back and detached
+  root init/update smoke.
 - **GH-620: generated XYZ Skills Army mini and reusable spin-off playbook.** The existing GH-589 publisher now has one fixed `skills-army-mini` profile for the closed Skills Army HQ package, child landing files, licenses, provenance, and remote read-back; its default remains XYZ-mini. A pre-write live `origin/main` comparison refuses wrong-branch, stale, ahead, behind, or divergent destinations while permitting an unborn child or the exact retained publisher commit needed to retry a failed push. `/push-to-skills-army-mini` documents the manual operator flow, and `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md` records the parent-authoritative recipe for future generated children. Reversibility: **Easy** — revert the parent PR and generated child commit. Verification: existing GH-589 and Skills Army suites plus `test/gh620-skills-army-mini-sync.sh` with a witnessed missing-manifest red control, literal payload oracle, detached init/add/target/sync smoke, idempotence, provenance, and stale-remote refusal.
 
 ## 2026-09-13
