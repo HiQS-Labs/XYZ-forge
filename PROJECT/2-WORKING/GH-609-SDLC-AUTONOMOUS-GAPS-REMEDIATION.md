@@ -113,5 +113,3 @@ Rather than fragmenting into separate single-purpose tools, the remediation exte
 8. [x] Register `gh609-sdlc-agent-gaps.sh` in `validate.sh`.
 9. [x] Run `test/gh609-sdlc-agent-gaps.sh` and pre-push self-check gate (`./validate.sh`).
 10. [x] Execute final Codex Relay QA on completed diff (`STATUS: Approved`).
-
-

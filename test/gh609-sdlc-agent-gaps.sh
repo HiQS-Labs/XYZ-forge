@@ -53,10 +53,10 @@ done
 check_workhorse_contract() {
   local target="$1"
   [ -s "$target" ] || return 1
-  
+
   # Durable operation identity tuple
   grep -q "operation_id, target_arn_or_url, request_fingerprint, idempotency_key" "$target" || return 1
-  
+
   # 4-state reconciliation evaluation & deadline cap
   grep -q "Confirmed Success" "$target" || return 1
   grep -q "Authoritative Non-Execution" "$target" || return 1
@@ -65,13 +65,13 @@ check_workhorse_contract() {
   grep -q "Unknown / Unavailable Lookup / Expired Deduplication / Deadline Exhausted" "$target" || return 1
   grep -q "STOP and escalate to human decision" "$target" || return 1
   grep -q "total reconciliation deadline / attempt cap" "$target" || return 1
-  
+
   # Stale-writer fence: local PID scoping vs remote monotonic fencing tokens
   grep -q "Local process liveness checks" "$target" || return 1
   grep -q "whose complete write lifetime is demonstrably local" "$target" || return 1
   grep -q "target-enforced monotonic fencing tokens" "$target" || return 1
   grep -q "generation numbers that reject stale writers" "$target" || return 1
-  
+
   # Preservation split: costly tested rollback vs one-way door permanent loss & confirmation
   grep -q "Costly Operations" "$target" || return 1
   grep -q "tested rollback and restoration procedure" "$target" || return 1
@@ -80,11 +80,11 @@ check_workhorse_contract() {
   grep -q "exact permanent loss" "$target" || return 1
   grep -q "fresh, operation-specific operator confirmation" "$target" || return 1
   grep -q "Never claim impossible rollback proofs" "$target" || return 1
-  
+
   # Semantic post-mutation verification
   grep -q "Verify (Semantic Post-Mutation Verification):" "$target" || return 1
   grep -q "Verify semantic data content, schema integrity, and state invariants, not merely process exit code" "$target" || return 1
-  
+
   # Operational containment reference
   grep -q "ci-debug" "$target" || return 1
   grep -q "Provider-level Revocation/Rotation" "$target" || return 1
@@ -94,12 +94,12 @@ check_workhorse_contract() {
 check_start_task_contract() {
   local target="$1"
   [ -s "$target" ] || return 1
-  
+
   # Step 3 resume reconciliation against remote PR and live HEAD
   grep -q "Resume Reconciliation Protocol:" "$target" || return 1
   grep -q "gh pr list --head <branch>" "$target" || return 1
   grep -q "live HEAD commit" "$target" || return 1
-  
+
   # Step 7/9 transport drop handling
   grep -q "ascertain remote execution state before re-dispatching" "$target" || return 1
   grep -q "query \`gh pr list --head <branch>\` to verify whether the PR was registered" "$target" || return 1
@@ -109,7 +109,7 @@ check_start_task_contract() {
 check_swe_contract() {
   local target="$1"
   [ -s "$target" ] || return 1
-  
+
   grep -q "Zero-Downtime Expand-Contract Schema & State Migration Rubric" "$target" || return 1
   grep -q "Stage 1 — Expand:" "$target" || return 1
   grep -q "concurrent write synchronization" "$target" || return 1
@@ -133,7 +133,7 @@ check_swe_contract() {
 check_recon_contract() {
   local target="$1"
   [ -s "$target" ] || return 1
-  
+
   # Scoped lane checks: verify that the mappings are in the respective Lane rows
   grep -E "^\| \*\*B\. State & data\*\*.*active readers and writers.*schema" "$target" >/dev/null || return 1
   grep -E "^\| \*\*C\. Contracts & boundaries\*\*.*background worker queues, delayed/asynchronous consumers" "$target" >/dev/null || return 1
@@ -144,7 +144,7 @@ check_recon_contract() {
 check_ci_optimize_contract() {
   local target="$1"
   [ -s "$target" ] || return 1
-  
+
   # Principle 13: Bounded stress + active quarantine sink
   grep -q "13\. Bounded Flake Stress Loops and Active Quarantine Sinks" "$target" || return 1
   grep -q "100-iteration diagnostic stress loop" "$target" || return 1
@@ -152,7 +152,7 @@ check_ci_optimize_contract() {
   grep -q "Principle 4 (matched base/candidate attribution)" "$target" || return 1
   grep -q "quarantined test requires a named owner, linked tracked issue, explicit UTC expiry date" "$target" || return 1
   grep -q "quarantine sink must continue running and reporting assertions" "$target" || return 1
-  
+
   # Principle 14: Workload-scoped performance fences
   grep -q "14\. Workload-Scoped Performance and Resource Budget Fences" "$target" || return 1
   grep -q "heapsnapshot diffing, memory allocation profiling, and p99 latency thresholds" "$target" || return 1
@@ -163,16 +163,16 @@ check_ci_optimize_contract() {
 check_ci_debug_contract() {
   local target="$1"
   [ -s "$target" ] || return 1
-  
+
   grep -q "Operational Containment Protocol (Secrets, Leakage & Incident Response)" "$target" || return 1
-  
+
   # Strict priority order verification (P1 before P2 before P3 before P4)
   local line_p1 line_p2 line_p3 line_p4
   line_p1="$(grep -n "Priority 1 — Provider Revocation & Rotation First:" "$target" | cut -d: -f1 || echo 0)"
   line_p2="$(grep -n "Priority 2 — Blast Radius Audit in Access Logs:" "$target" | cut -d: -f1 || echo 0)"
   line_p3="$(grep -n "Priority 3 — Preserve Sanitized Evidence:" "$target" | cut -d: -f1 || echo 0)"
   line_p4="$(grep -n "Priority 4 — Explicitly Authorized History Scrubbing:" "$target" | cut -d: -f1 || echo 0)"
-  
+
   [ "$line_p1" -gt 0 ] && [ "$line_p2" -gt "$line_p1" ] && [ "$line_p3" -gt "$line_p2" ] && [ "$line_p4" -gt "$line_p3" ] || return 1
   grep -q "WORKTREE-SAFETY.md" "$target" || return 1
   return 0
@@ -256,13 +256,13 @@ run_mutation_test() {
 
   cp "$base_file" "$mut_file"
   bash -c "$mut_cmd"
-  
+
   # 1. Assert the mutation actually changed the file
   if cmp -s "$base_file" "$mut_file"; then
     fail "$desc: mutation command failed to alter fixture"
     return 1
   fi
-  
+
   # 2. Assert the validator rejects the mutated file
   if ! $checker "$mut_file"; then
     pass "$desc: mutated fixture properly rejected (reported RED)"
