@@ -315,6 +315,44 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True)
     return ok
 
 
+def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str) -> bool:
+    """Commit, push, and verify every primary-side write made after a PR lands."""
+    status = run_git(repo_path, ["status", "--porcelain", "--untracked-files=all"])
+    if status.returncode != 0:
+        log_err(f"PR #{pr_num}: cannot inspect post-merge writes: {status.stderr.strip()}")
+        return False
+
+    if status.stdout.strip():
+        added = run_git(repo_path, ["add", "-A"])
+        if added.returncode != 0:
+            log_err(f"PR #{pr_num}: could not stage post-merge writes: {added.stderr.strip()}")
+            return False
+        committed = run_git(repo_path, ["commit", "-m", f"chore: reconcile after PR #{pr_num}"])
+        if committed.returncode != 0:
+            log_err(f"PR #{pr_num}: could not commit post-merge writes: {committed.stderr.strip()}")
+            return False
+
+    pushed = run_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"])
+    if pushed.returncode != 0:
+        log_err(f"PR #{pr_num}: could not push post-merge writes: {pushed.stderr.strip()}")
+        return False
+    fetched = run_git(repo_path, ["fetch", "origin", integration_branch])
+    if fetched.returncode != 0:
+        log_err(f"PR #{pr_num}: could not verify pushed integration head: {fetched.stderr.strip()}")
+        return False
+
+    clean = run_git(repo_path, ["status", "--porcelain", "--untracked-files=all"])
+    local = run_git(repo_path, ["rev-parse", "HEAD"])
+    remote = run_git(repo_path, ["rev-parse", f"origin/{integration_branch}"])
+    if (clean.returncode != 0 or clean.stdout.strip() or
+            local.returncode != 0 or remote.returncode != 0 or
+            local.stdout.strip() != remote.stdout.strip()):
+        log_err(f"PR #{pr_num}: post-merge durability check failed — primary must be clean and match origin/{integration_branch}")
+        return False
+    log(f"✅ PR #{pr_num} post-merge writes committed; primary is clean at origin/{integration_branch}")
+    return True
+
+
 # Dispositions that are never re-inspected for teardown: the operator's own tree, an explicit
 # exclusion, and wiki clones. Everything else — including a scan-time PRESERVE_* — is
 # re-inspected fresh in Phase 6, because a PR landing in Phase 5 can turn PRESERVE_UNPUSHED into
@@ -611,12 +649,8 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                 continue
             if not execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False):
                 return 2
-            # GH-549: the one place that can honestly claim a merge — execute_pr_merge returned
-            # True, which means gh pr merge exited 0 AND the re-query read MERGED with a merge
-            # commit. Reporting only; it cannot fail the landing. `pr` rather than `info` because
-            # the emitter reads the body for `Closes #N`, and the refresh does not fetch it.
-            emit_pr_merged(primary_repo, pr, dry_run=False)
-            # Land it locally, then reconcile — both gating, before the next PR is even looked at.
+            # Land it locally before anything writes into the primary. In particular, emitting
+            # pr_merged before this fast-forward dirties releases.sql and can block the landing.
             fetched = run_git(primary_repo, ["fetch", "origin", branch])
             if fetched.returncode != 0:
                 log_err(f"post-merge fetch failed: {fetched.stderr.strip()} — stopping")
@@ -628,6 +662,13 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                 return 2
             if not run_post_merge_reconcile(p_num, primary_repo, dry_run=False):
                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
+                return 2
+            # GH-549/GH-624: report only after the merge, primary fast-forward, and reconcile
+            # (including any fast-forward performed by reconciliation) all succeeded. `pr` rather
+            # than `info` because the emitter reads the body for `Closes #N`.
+            emit_pr_merged(primary_repo, pr, dry_run=False)
+            if not commit_and_push_phase5_writes(p_num, primary_repo, branch):
+                log_err(f"PR #{p_num}: post-merge writes were not made durable — stopping before the next PR")
                 return 2
         if handoffs:
             log_err(f"{handoffs} PR(s) handed off or parked; dependents were not attempted: "

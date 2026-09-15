@@ -6,6 +6,7 @@ for the script-side runs; the record tests below need only a directory and the C
 """
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -193,6 +194,30 @@ class TestCScript(LedgerFixture):
 
     def record_for(self, n):
         return ar.record_path(self.primary, str(self.origin), n)
+
+    def test_two_ledger_prs_emit_only_after_fast_forward_and_finish_durable(self):
+        """GH-624: a witnessed event cannot dirty the primary before either fast-forward.
+
+        Both PRs touch the ledger and emit pr_merged in one execute run. The pre-fix ordering
+        (emit before merge --ff-only) fails this scenario instead of reaching the second landing.
+        """
+        self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "from PR 2"))
+        self.st["prs"]["1"]["body"] = "Closes #200"
+        self.st["prs"]["2"]["body"] = "Closes #201"
+        self.save()
+
+        rc = self.run_main()
+
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
+        self.assertEqual(_git(self.primary, "status", "--porcelain").stdout, "")
+        self.assertEqual(_git(self.primary, "rev-parse", "HEAD").stdout.strip(), self.origin_dev())
+        with sqlite3.connect(self.primary / "releases.db") as conn:
+            events = conn.execute(
+                "SELECT gh_number FROM work_events WHERE event='pr_merged' ORDER BY id"
+            ).fetchall()
+        self.assertEqual(events, [(200,), (201,)])
 
     def test_b1_attempt_is_recorded_at_the_pinned_coordinator(self):
         self.same_key_conflict()

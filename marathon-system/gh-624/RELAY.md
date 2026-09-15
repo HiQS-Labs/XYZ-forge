@@ -1,6 +1,6 @@
 # Marathon Phase gh-624
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-624-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -102,3 +102,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `merge_cleanup.py` so Phase 5 now orders each successful landing as remote merge → primary fast-forward → gated reconciliation → `pr_merged` emission → commit/push → clean/equal-to-origin verification. Added one fail-closed helper for staging, committing, pushing, and checking all primary-side reconciliation/event writes before the loop advances.
+- Added the two-ledger-PR fake-`gh` regression in `test/gh534_phase_c_tests.py`; it requires both PRs to read MERGED, both `pr_merged` events to exist, a clean primary, and `HEAD == origin/development`.
+- Updated the Phase 5 skill contract and capability-table pin, plus a `gh549-work-events.sh` AST ordering guard covering fast-forward, reconcile, emit, commit, and push sequencing.
+- Tests were not run in this isolated turn because the phase scope lock explicitly forbids executing them here; the harness owns the focused gate after handoff.

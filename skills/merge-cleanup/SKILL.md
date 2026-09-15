@@ -147,10 +147,8 @@ the answer will inform a landing.
 - **One durable attempt record per PR, at the pinned coordinator (C):** before B1 runs, the script reserves a repair slot in `<primary>/.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json` — `<primary>` is the explicit `--primary` path the run started with, never a disposable clone's CWD. Every writer (this script, and each caller repair rung via `attempt_record.py`) holds `fcntl.flock` on `<record>.lock` for the whole read → reserve → write; that lock is independent of the driver's mkdir lock, so a worker under a running driver still reserves. A lock timeout **stops** the attempt (never "skipped"). Only repairs count (`B1`, `ponytail`, `start-task`); `debug-mantra`/`recon` are notes. **Two repairs per PR, whatever the head**: at the ceiling the PR is **parked** with the record path, and B1 does not run. Any handoff or park prints `export MERGE_CLEANUP_RECORD=<record>` for the caller ladder below.
 - **Dependents of a parked or handed-off PR are not attempted (C):** Phase 4 only orders; Phase 5 keeps a runtime map of predecessor outcomes and skips a PR whose declared dependency (`depends on #N`, or a file-collision edge) failed, naming it. Independent PRs still land. A run with any handoff/park exits 3 after the sequence; a stop (unknown state, gate red, merge/reconcile failure, unreadable record) exits 2 immediately.
 - Executes remote merges in topological sequence (`gh pr merge <PR_NUM> --squash --delete-branch`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails.
-- Fast-forwards the primary repository onto the **checked** integration branch
-  (`git merge --ff-only origin/<integration-branch>`), and reports loudly if that fast-forward
-  fails after the PRs have already merged remotely.
-- Executes post-merge reconciliation, **gating** (a failure stops the run before the next PR; teardown and symlink pruning do not run after a failed landing; `--reconcile-pr` propagates the same exit):
+- After each verified remote merge, performs one ordered durability sequence before looking at the next PR: **fast-forward primary → reconcile → emit `pr_merged` → commit all resulting primary-side ledger/governance writes → push `origin/<integration-branch>` → assert the primary is clean and `HEAD == origin/<integration-branch>`**. The emitter therefore runs only after both the landing fast-forward and any fast-forward performed by reconciliation; a failure at any step stops the run.
+- Executes post-merge reconciliation, **gating** (a failure stops the run before emission, commit, push, the next PR, teardown, and symlink pruning; `--reconcile-pr` propagates the same exit):
   - Wait for hosted `wave-reconcile.yml` run to complete on `development` (`gh run list --workflow wave-reconcile.yml`).
   - Fast-forward primary onto `origin/development`.
   - If hosted run fails or for offline/local reconciliation: `python3 utils/py/wave_reconcile.py --pr <PR_NUM>` (use `--force-local-reconcile` only if an active run was manually killed).
@@ -196,7 +194,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | coordinator-pinned-to-primary | 5 | script | TestCScript.test_omitted_primary_is_refused_and_no_record_root_is_minted |
 | teardown-trash-only | 6 | script | TestCScript.test_teardown_refuses_without_trash |
 | dependents-blocked | 5 | script | TestCScript.test_dependent_of_a_handed_off_pr_is_not_attempted_and_an_independent_pr_proceeds |
-| reconciliation-gating | 5 | script | TestPhase5EndToEnd.test_failed_reconcile_stops_before_the_next_pr |
+| reconciliation-gating | 5 | script | TestCScript.test_two_ledger_prs_emit_only_after_fast_forward_and_finish_durable |
 | code-conflict-recon | 5 | caller | — |
 | code-conflict-resolution | 5 | caller | — |
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
@@ -241,5 +239,5 @@ python3 skills/merge-cleanup/scripts/attempt_record.py finish --index 0 --outcom
 2. **No Silent Primary Deferral:** every executing run refuses before merge, teardown, or symlink mutation while the primary is unready; only the operator can defer primary cleanup with `--allow-unready-primary`.
 3. **Zero Process Interference:** Clones with active driver locks, active tick claims (from the event fold), or open file handles are detected and preserved; an unverifiable session is preserved too.
 4. **Canonical Worktree Protocol:** Linked worktrees are always cleanly deregistered from git metadata.
-5. **Governed Landing:** Every PR is gated on the ledger against the current integration head before it merges, verified `MERGED` after, and reconciled (wave reconciliation, ledger check, doc sync) before the next PR is looked at; any failure stops the run.
+5. **Governed Landing:** Every PR is gated on the ledger against the current integration head before it merges, verified `MERGED` after, then fast-forwarded, reconciled, emitted, committed, pushed, and verified clean/equal to the remote integration head before the next PR is looked at; any failure stops the run.
 6. **Bounded Repair:** every repair attempt on a PR — the script's B1 and each caller rung — is counted in one record at the pinned coordinator under one lock; the third is refused wherever it starts, and a dependent of a parked PR is never attempted.

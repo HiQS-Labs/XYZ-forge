@@ -594,6 +594,27 @@ case "$MCOUT" in
   *"dry=0"*) ok "a dry run emits nothing" ;;
   *) bad "dry run emitted an event: $MCOUT" ;;
 esac
+python3 - "$MC" <<'PYORDER'
+import ast, sys
+src = open(sys.argv[1], encoding="utf-8").read()
+tree = ast.parse(src)
+fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "land_prs")
+lines = {}
+for node in ast.walk(fn):
+    if not isinstance(node, ast.Call):
+        continue
+    name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+    if name in {"execute_pr_merge", "run_post_merge_reconcile", "emit_pr_merged", "commit_and_push_phase5_writes"}:
+        lines.setdefault(name, node.lineno)
+    if name == "run_git" and any(
+        isinstance(a, ast.Constant) and a.value == "--ff-only" for a in ast.walk(node)
+    ):
+        lines.setdefault("landing_fast_forward", node.lineno)
+assert lines["execute_pr_merge"] < lines["landing_fast_forward"] < lines["run_post_merge_reconcile"] < lines["emit_pr_merged"] < lines["commit_and_push_phase5_writes"], lines
+PYORDER
+[ $? -eq 0 ] \
+  && ok "merge-cleanup emits only after reconciliation, then commits and pushes the event" \
+  || bad "merge-cleanup Phase 5 durability order drifted"
 
 echo "17. the VENDORED github_board connector, through normal config, offline (impl QA r2)"
 # The registry names work_connectors.github_board. Round 2 found the module did not exist, so
