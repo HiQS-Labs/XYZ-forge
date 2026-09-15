@@ -42,7 +42,7 @@ if MUTANT == "1":
     git(src, "add", sync); git(src, "commit", "-qm", "drop required payload")
 
 bare = os.path.join(WORK, "child.git")
-dest = os.path.join(WORK, "child")
+dest = os.path.join(WORK, "XYZ-skills-army-mini")
 git(WORK, "init", "-q", "--bare", bare); git(bare, "symbolic-ref", "HEAD", "refs/heads/main")
 git(WORK, "clone", "-q", bare, dest); git(dest, "symbolic-ref", "HEAD", "refs/heads/main")
 def publish(*extra): return sh(sys.executable, sync, "--target", "skills-army-mini", "--dest", dest, *extra)
@@ -68,6 +68,9 @@ ok("revision records exact parent commit", f"source_sha={source_sha}" in pathlib
 head = git(dest, "rev-parse", "HEAD").stdout.strip()
 r = publish("--push")
 ok("republication is idempotent", r.returncode == 0 and git(dest, "rev-parse", "HEAD").stdout.strip() == head)
+r = sh(sys.executable, sync, "--target", "skills-army-mini", "--apply")
+ok("default sibling path uses the public repository casing",
+   r.returncode == 0 and git(dest, "rev-parse", "HEAD").stdout.strip() == head, r.stderr[-300:])
 
 # A failed push leaves one exact publisher commit: rerun may push it, but an amended extra file may not.
 landing = pathlib.Path(src, "skills/skills-army-hq/README.md")

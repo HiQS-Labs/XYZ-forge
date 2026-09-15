@@ -73,7 +73,7 @@ TARGETS = {
     "skills-army-mini": {
         "manifest": SKILLS_ARMY_MANIFEST,
         "env": "XYZ_SKILLS_ARMY_MINI_REPO",
-        "sibling": "XYZ-Skills-Army-mini",
+        "sibling": "XYZ-skills-army-mini",
         "log": "skills-army-mini-sync",
     },
 }

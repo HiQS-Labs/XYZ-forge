@@ -35,8 +35,8 @@ child-owned. The bet is that the existing GH-589 publisher can carry one additio
 profile without becoming a general deployment framework. Failure mode: target-specific paths or
 state leak across profiles. Rollback is Easy: revert the parent PR and the generated child commit.
 
-The public child repository will be `HiQS-Labs/XYZ-Skills-Army-mini`. Profile `skills-army-mini`
-uses `$XYZ_SKILLS_ARMY_MINI_REPO` or the sibling checkout `../XYZ-Skills-Army-mini`. Version 1 has
+The public child repository will be `HiQS-Labs/XYZ-skills-army-mini`. Profile `skills-army-mini`
+uses `$XYZ_SKILLS_ARMY_MINI_REPO` or the sibling checkout `../XYZ-skills-army-mini`. Version 1 has
 no seed paths: every exported file is parent-managed. `MANIFEST.txt` and `.xyz-forge-revision` are
 publisher-managed control files. Deployed collections, receipts, targets, history, backups, secrets,
 and machine-local paths are excluded.

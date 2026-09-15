@@ -2,14 +2,14 @@
 name: push-to-skills-army-mini
 description: >-
   Publish the parent-managed Skills Army HQ package from landed XYZ Forge into the generated
-  HiQS-Labs/XYZ-Skills-Army-mini child repository. Trigger on "publish Skills Army mini",
+  HiQS-Labs/XYZ-skills-army-mini child repository. Trigger on "publish Skills Army mini",
   "sync Skills Army mini", or "push Skills Army mini".
 ---
 
 # Push to XYZ Skills Army mini
 
 XYZ Forge is authoritative; the child is generated. Run from a clean landed `development` checkout
-with a clean `main` checkout of `HiQS-Labs/XYZ-Skills-Army-mini` at the sibling path or at
+with a clean `main` checkout of `HiQS-Labs/XYZ-skills-army-mini` at the sibling path or at
 `$XYZ_SKILLS_ARMY_MINI_REPO`.
 
 1. Preview: `python3 utils/py/xyz_mini_sync.py --target skills-army-mini`.
