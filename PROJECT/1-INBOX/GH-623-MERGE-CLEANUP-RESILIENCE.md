@@ -302,3 +302,9 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
 - 2026-09-14: Codex FINAL implementation QA round 2 (token `RELAY-gh623-impl-qa-r2`): VERDICT
   PASS — all three graded findings pass; "GH-623 implementation QA is approved." Implementation
   and proof complete; proceeding to the qualifying gate and PR.
+- 2026-09-15: REBASE onto origin/development (17 upstream commits, including #601/#604 — the
+  incident queue's own landings touching the same files). Conflicts: the RELEASES ledger trio
+  (resolved by taking the reconciled upstream side and re-parking the GH-623 row through the
+  CLI — new gid rmi-01M2HWFA214B5R74NZ4ZFRK883, same rating 82/80/50/65; `releases check` clean)
+  and CHANGELOG.md (both entries kept). Post-rebase focused suite: 164/164 green (upstream added
+  4 tests; no semantic conflicts with the GH-623 changes).
