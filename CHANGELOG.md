@@ -2,6 +2,10 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-14
+
+- **GH-626: skills(workhorse, unstuck): close the autonomous re-entry loop.** Establishes an explicit orchestrator re-entry drive loop (`drive → repair/park → --resume → loop`) in `skills/workhorse/SKILL.md`, mandating that sub-item repairs (such as resolving PR merge conflicts) are treated as intermediate steps requiring immediate re-invocation of the batch runner with `--resume` rather than prompting the operator. Adds an anti-downgrade rail forbidding "Done" claims when batch deliverables were bypassed. Equips `skills/unstuck/SKILL.md` with 4 autonomous self-trigger tripwires (two-turn no-milestone, tool exit code inertia, passive waiting narration, false completion) and hardens Rung 5 to require re-driving the primary execution engine before exiting. Reversibility: **Easy** — revert the two SKILL.md edits and re-deploy via Skills Army HQ. Verification: `test/test_deploy_skills.py` 25/25 passing; live deployment via `intake.py --apply update` to all enabled IDE targets; `utils/pdda/pdda.sh run` clean.
+
 ## 2026-09-13
 
 - **GH-589: XYZ mini publisher and the beginner package.** `utils/py/xyz_mini_sync.py` copies an embedded, inclusion-only manifest (relay, consult, agent-chorus runtime, debug-mantra, ponytail, honest, a new skill viewer, README/TODO, licences) into a local `HiQS-Labs/XYZ-mini` checkout, mirrors removals, scans the shipped files for secrets, commits with the source SHA and pushes; it refuses to overwrite a file it did not publish. `/push-to-xyz-mini` wraps it (manual; automation later). consult tolerates an absent `tick` and counts an exit-0 empty answer as failed; debug-mantra dropped two forge-only issue links. Reversibility: **Easy** for the forge changes (revert the PR; mini keeps its last publication); a public push is not reversible. Verification: `test/gh589-xyz-mini-sync.sh`, `test/gh589-consult-no-tick.sh`, `test/gh589-skill-viewer.sh`.
