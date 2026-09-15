@@ -1,5 +1,5 @@
 # Marathon Phase gh-629
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-629-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -104,3 +104,19 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Extended `test/gh534_phase_c_tests.py` with a `gh run list` fixture. The normal fixture returns no runs so the existing two-PR execute case exercises local fallback; the hosted fixture transitions `in_progress` → `completed/success`, pushes a fake hosted commit, and asserts the local writer was not called and that the primary includes that commit before final durability.
 - Updated `test/gh549-work-events.sh`'s static Phase 5 contract probe and documented the exact wait/fallback contract and environment variable in `skills/merge-cleanup/SKILL.md`.
 - Verification: Python AST parsing passed for both changed Python files (`.relay-scratch/gh629-static-check.log`). Per the phase scope lock, no test or project gate was run in this isolated worktree; the harness owns the specified gate.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+swept file: yes
+
+I have reviewed the entire files (`skills/merge-cleanup/scripts/merge_cleanup.py`, `skills/merge-cleanup/SKILL.md`, `test/gh534_phase_c_tests.py`, and `test/gh549-work-events.sh`). 
+
+The builder has fully addressed the acceptance criteria:
+1. `wait_for_hosted_reconcile` correctly queries the hosted `wave-reconcile.yml` run for the exact merged head and integration branch, utilizing `MERGE_CLEANUP_HOSTED_WAIT_S` for polling. Local fallback `run_local_wave_reconcile` is correctly employed only when the hosted run isn't present, failed, or timed out.
+2. The durability sequence in `land_prs` preserves the correct order and `emit_pr_merged` only emits after the fast-forward and reconcile success. Also, `commit_and_push_phase5_writes` pushes these event commits and correctly enforces that `git status --porcelain` is empty and `HEAD == origin/<integration>`.
+3. `test/gh534_phase_c_tests.py` includes a `gh run list` fixture via `GH_RUN_WRAPPER` that properly simulates the state machine (in_progress -> completed).
+4. No pre-existing defects were found during the sweep.
+
+relay closed, no further turn needed
