@@ -7,6 +7,8 @@ for the script-side runs; the record tests below need only a directory and the C
 import json
 import os
 import re
+import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -32,6 +34,61 @@ from gh534_phase_a_tests import TestA2Provenance, TestA4OpenHandles, TestA4TickC
 from gh534_phase_b_tests import LedgerFixture, TestE6Gate, TestPhase5EndToEnd, _app, _git, commit_all, park  # noqa: E402,F401
 
 CLI = REPO / "skills" / "merge-cleanup" / "scripts" / "attempt_record.py"
+
+
+GH_RUN_WRAPPER = r'''#!/usr/bin/env python3
+"""Phase C extension: answer gh run list, delegating every other command to Phase B."""
+import json, os, pathlib, shutil, subprocess, sys, tempfile
+
+state_path = os.environ["GH_STATE"]
+args = sys.argv[1:]
+if args[:2] != ["run", "list"]:
+    backend = os.path.join(os.path.dirname(__file__), "gh-phase-b")
+    os.execv(backend, [backend] + args)
+
+with open(state_path) as fh:
+    state = json.load(fh)
+state.setdefault("calls", []).append(args)
+if not state.get("hosted_wait"):
+    with open(state_path, "w") as fh:
+        json.dump(state, fh, indent=1)
+    print("[]")
+    raise SystemExit(0)
+
+def git(cwd, *argv):
+    return subprocess.run(["git", "-C", str(cwd)] + list(argv),
+                          capture_output=True, text=True, check=True)
+
+state["run_list_count"] = state.get("run_list_count", 0) + 1
+if not state.get("hosted_head"):
+    state["hosted_head"] = git(
+        state["probe"], "ls-remote", state["origin"],
+        "refs/heads/" + state["base"],
+    ).stdout.split()[0]
+
+if state["run_list_count"] == 1:
+    run = {"databaseId": 62901, "status": "in_progress", "conclusion": ""}
+else:
+    if not state.get("hosted_commit"):
+        work = tempfile.mkdtemp(prefix="gh629-hosted.")
+        try:
+            subprocess.run(["git", "clone", "-q", state["origin"], work], check=True)
+            git(work, "config", "user.email", "hosted@stub")
+            git(work, "config", "user.name", "hosted-reconcile")
+            git(work, "checkout", "-q", state["base"])
+            pathlib.Path(work, "hosted-reconcile.txt").write_text("hosted\n")
+            git(work, "add", "hosted-reconcile.txt")
+            git(work, "commit", "-q", "-m", "hosted reconcile")
+            state["hosted_commit"] = git(work, "rev-parse", "HEAD").stdout.strip()
+            git(work, "push", "-q", "origin", state["base"])
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+    run = {"databaseId": 62901, "status": "completed", "conclusion": "success"}
+
+with open(state_path, "w") as fh:
+    json.dump(state, fh, indent=1)
+print(json.dumps([run]))
+'''
 
 
 def cli(cwd, *args, env=None, timeout=None):
@@ -188,12 +245,74 @@ class TestCScript(LedgerFixture):
     """The orchestrator's side: B1 reserves a slot at the pinned coordinator, parks at the ceiling,
     and never attempts a dependent of a parked/handed-off PR."""
 
+    def setUp(self):
+        super().setUp()
+        backend = self.tmp / "gh-phase-b"
+        shutil.copy(self.gh, backend)
+        backend.chmod(0o755)
+        self.gh.write_text(GH_RUN_WRAPPER)
+        self.gh.chmod(0o755)
+        env = mock.patch.dict(os.environ, {merge_cleanup.HOSTED_POLL_ENV: "0",
+                                            merge_cleanup.HOSTED_GRACE_ENV: "0"})
+        env.start()
+        self.addCleanup(env.stop)
+
     def same_key_conflict(self):
         self.branch("feat/a", 1, lambda r: _app(r, "roadmap", "update", "--issue-num", "100", "--section", "Completed"))
         self.branch("feat/b", 2, lambda r: _app(r, "roadmap", "update", "--issue-num", "100", "--section", "In progress"))
 
     def record_for(self, n):
         return ar.record_path(self.primary, str(self.origin), n)
+
+    def test_two_ledger_prs_emit_only_after_fast_forward_and_finish_durable(self):
+        """GH-624: a witnessed event cannot dirty the primary before either fast-forward.
+
+        Both PRs touch the ledger and emit pr_merged in one execute run. The pre-fix ordering
+        (emit before merge --ff-only) fails this scenario instead of reaching the second landing.
+        """
+        self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "from PR 2"))
+        self.st["prs"]["1"]["body"] = "Closes #200"
+        self.st["prs"]["2"]["body"] = "Closes #201"
+        self.save()
+
+        rc = self.run_main()
+
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
+        self.assertEqual(_git(self.primary, "status", "--porcelain").stdout, "")
+        self.assertEqual(_git(self.primary, "rev-parse", "HEAD").stdout.strip(), self.origin_dev())
+        with sqlite3.connect(self.primary / "releases.db") as conn:
+            events = conn.execute(
+                "SELECT gh_number FROM work_events WHERE event='pr_merged' ORDER BY id"
+            ).fetchall()
+        self.assertEqual(events, [(200,), (201,)])
+        run_lists = [c for c in self.load()["calls"] if c[:2] == ["run", "list"]]
+        self.assertEqual(len(run_lists), 2, "each merged head must check for its hosted reconcile run")
+
+    def test_hosted_run_is_waited_for_and_fast_forwarded_before_emission(self):
+        """GH-629: an active hosted writer wins; the local writer must never race it."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
+        self.st["prs"]["1"]["body"] = "Closes #200"
+        self.st["hosted_wait"] = True
+        self.save()
+
+        with mock.patch.object(
+                merge_cleanup, "run_local_wave_reconcile",
+                wraps=merge_cleanup.run_local_wave_reconcile) as local_reconcile:
+            rc = self.run_main()
+
+        self.assertEqual(rc, 0, self.err)
+        local_reconcile.assert_not_called()
+        state = self.load()
+        self.assertGreaterEqual(state.get("run_list_count", 0), 2)
+        self.assertTrue((self.primary / "hosted-reconcile.txt").is_file())
+        self.assertEqual(_git(self.primary, "status", "--porcelain").stdout, "")
+        self.assertEqual(_git(self.primary, "rev-parse", "HEAD").stdout.strip(), self.origin_dev())
+        self.assertEqual(
+            _git(self.primary, "merge-base", "--is-ancestor", state["hosted_commit"], "HEAD").returncode,
+            0,
+        )
 
     def test_b1_attempt_is_recorded_at_the_pinned_coordinator(self):
         self.same_key_conflict()

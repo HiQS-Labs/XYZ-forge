@@ -148,13 +148,11 @@ the answer will inform a landing.
 - **Only HARD dependencies block on a failed predecessor (C + GH-623):** Phase 4 orders; Phase 5 keeps a runtime map of predecessor outcomes and skips a PR whose declared dependency (`depends on #N`) was handed off, parked or deferred, naming it. File-collision edges are SOFT: a collision-adjacent PR is attempted anyway and its own landing simulation decides — a genuinely conflicting successor hands off on its own merits instead of never being tried (the incident's S3 cascade: one handoff removed most of the queue). Independent PRs still land. A run with any non-landed outcome (handoff / park / defer) exits 3 after the sequence; a stop (unknown state, gate red, merge/reconcile failure, unreadable record) exits 2 immediately.
 - **`--resume` continues a previous run (GH-623):** the live refresh stays first and authoritative. Only when a PR's landing actually conflicts — a repair would be needed — does the attempt record decide: at the ceiling with `--resume`, the PR is skipped as `previously parked` without re-running the B1 machinery (and without consuming a slot). A PR whose last recorded repair finished `resolved` and whose head now merges cleanly LANDS — a resume run completes a successful repair's work, never strands it. Without `--resume`, `reserve()` is the under-lock authority and the behavior is unchanged. Resume mode announces itself (`Resume mode: ...`) and the end-of-run summary breaks out parked-on-resume counts.
 - Executes remote merges in topological sequence (`gh pr merge <PR_NUM> --squash --delete-branch`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails.
-- Fast-forwards the primary repository onto the **checked** integration branch
-  (`git merge --ff-only origin/<integration-branch>`), and reports loudly if that fast-forward
-  fails after the PRs have already merged remotely.
-- Executes post-merge reconciliation, **gating** (a failure stops the run before the next PR; teardown and symlink pruning do not run after a failed landing; `--reconcile-pr` propagates the same exit):
-  - Wait for hosted `wave-reconcile.yml` run to complete on `development` (`gh run list --workflow wave-reconcile.yml`).
-  - Fast-forward primary onto `origin/development`.
-  - If hosted run fails or for offline/local reconciliation: `python3 utils/py/wave_reconcile.py --pr <PR_NUM>` (use `--force-local-reconcile` only if an active run was manually killed).
+- After each verified remote merge, performs one ordered durability sequence before looking at the next PR: **fast-forward primary → reconcile → emit `pr_merged` → commit all resulting primary-side ledger/governance writes → push `origin/<integration-branch>` → assert the primary is clean and `HEAD == origin/<integration-branch>`**. The emitter therefore runs only after both the landing fast-forward and any fast-forward performed by reconciliation; a failure at any step stops the run.
+- Executes post-merge reconciliation, **gating** (a failure stops the run before emission, commit, push, the next PR, teardown, and symlink pruning; `--reconcile-pr` propagates the same exit):
+  - Query the hosted `wave-reconcile.yml` run for the exact merged head and integration branch (`gh run list --workflow wave-reconcile.yml --branch <integration> --commit <merged-head>`). If it is queued or in progress, poll until completion for at most `MERGE_CLEANUP_HOSTED_WAIT_S` seconds (default 1800); timing out while it remains active stops the landing rather than racing it locally.
+  - On hosted success, fetch and fast-forward the primary onto `origin/<integration>`'s reconciliation commit.
+  - An empty answer inside the first `MERGE_CLEANUP_HOSTED_GRACE_S` seconds (default 60) is "not listed yet", not "no workflow" — the run for a just-pushed head can lag `gh run list` by a few seconds, and reconciling locally in that gap would race the hosted writer. After the grace window, if no hosted run/workflow/`gh` exists, or the hosted run completed unsuccessfully, fall back to `python3 utils/py/wave_reconcile.py --pr <PR_NUM>`. Never invoke that local writer while the observed hosted run is queued or in progress (`--force-local-reconcile` remains a manual recovery tool only).
   - `python3 utils/py/releases_app.py check`
   - Verify with `bash utils/pdda/pdda.sh issue-doc-sync`.
 
@@ -230,7 +228,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | soft-edge-nonblocking | 5 | script | TestGh623Resilience.test_soft_edge_predecessor_does_not_block_a_collision_dependent |
 | network-retry-defer | 5 | script | TestGh623Resilience.test_transient_view_failure_defers_and_independents_land |
 | resume-skips-parked | 5 | script | TestGh623Resilience.test_resume_skips_a_still_conflicting_exhausted_pr |
-| reconciliation-gating | 5 | script | TestPhase5EndToEnd.test_failed_reconcile_stops_before_the_next_pr |
+| reconciliation-gating | 5 | script | TestCScript.test_two_ledger_prs_emit_only_after_fast_forward_and_finish_durable |
 | code-conflict-recon | 5 | caller | — |
 | code-conflict-resolution | 5 | caller | — |
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
@@ -278,5 +276,5 @@ python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents
 2. **No Silent Primary Deferral:** every executing run refuses before merge, teardown, or symlink mutation while the primary is unready; only the operator can defer primary cleanup with `--allow-unready-primary`.
 3. **Zero Process Interference:** Clones with active driver locks, active tick claims (from the event fold), or open file handles are detected and preserved; an unverifiable session is preserved too.
 4. **Canonical Worktree Protocol:** Linked worktrees are always cleanly deregistered from git metadata.
-5. **Governed Landing:** Every PR is gated on the ledger against the current integration head before it merges, verified `MERGED` after, and reconciled (wave reconciliation, ledger check, doc sync) before the next PR is looked at; any failure stops the run.
+5. **Governed Landing:** Every PR is gated on the ledger against the current integration head before it merges, verified `MERGED` after, then fast-forwarded, reconciled, emitted, committed, pushed, and verified clean/equal to the remote integration head before the next PR is looked at; any failure stops the run.
 6. **Bounded Repair:** every repair attempt on a PR — the script's B1 and each caller rung — is counted in one record at the pinned coordinator under one lock; the third is refused wherever it starts, and a dependent of a parked PR is never attempted.
