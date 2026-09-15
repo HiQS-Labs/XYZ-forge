@@ -1,6 +1,6 @@
 # Marathon Phase gh-625
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-625-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -97,3 +97,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Files touched: `skills/agent-chorus/scripts/agent_chorus_bridge.py`, `test/agent-chorus-bridge.sh`, and this relay file.
+- Overrode `ThreadingHTTPServer.server_bind` to bind through `socketserver.TCPServer.server_bind`, then populate `server_name` and `server_port` directly from the bound socket. This preserves `server_address` while bypassing `HTTPServer.server_bind` and its `socket.getfqdn` reverse-DNS lookup.
+- Added a bounded GH-625 regression probe that replaces `socket.getfqdn` with a hard failure and requires bridge startup to reach the existing unauthenticated-tunnel refusal with exit 2 within the four-second window. Removing the override makes this control fail before the refusal.
+- Verification: per the phase scope lock, I did not run tests or gates in this isolated worktree; the harness owns `bash test/agent-chorus-bridge.sh` after handoff.
