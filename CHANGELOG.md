@@ -2,6 +2,18 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-14
+
+- **GH-620: project the canonical Skills Army package directly onto the child root.** The generated
+  repository now gets `skills/skills-army-hq/` without a redundant wrapper or landing-page source.
+  Manager initialization and update recognize only the publisher-proven root shape, install it under
+  the declared `skills-army-hq` name, and exclude VCS and repository-only metadata; ordinary skill
+  folder/name validation stays strict. Reversibility: **Easy** — restore the nested destination map
+  and republish. Verification: witnessed pre-fix root-payload/init failure; GH-620 27/27, GH-589
+  18/18, Skills Army HQ 25/25 plus four subtests; exact live root payload/mode read-back and detached
+  root init/update smoke.
+- **GH-620: generated XYZ Skills Army mini and reusable spin-off playbook.** The existing GH-589 publisher now has one fixed `skills-army-mini` profile for the closed Skills Army HQ package, child landing files, licenses, provenance, and remote read-back; its default remains XYZ-mini. A pre-write live `origin/main` comparison refuses wrong-branch, stale, ahead, behind, or divergent destinations while permitting an unborn child or the exact retained publisher commit needed to retry a failed push. `/push-to-skills-army-mini` documents the manual operator flow, and `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md` records the parent-authoritative recipe for future generated children. Reversibility: **Easy** — revert the parent PR and generated child commit. Verification: existing GH-589 and Skills Army suites plus `test/gh620-skills-army-mini-sync.sh` with a witnessed missing-manifest red control, literal payload oracle, detached init/add/target/sync smoke, idempotence, provenance, and stale-remote refusal.
+
 ## 2026-09-13
 
 - **GH-589: XYZ mini publisher and the beginner package.** `utils/py/xyz_mini_sync.py` copies an embedded, inclusion-only manifest (relay, consult, agent-chorus runtime, debug-mantra, ponytail, honest, a new skill viewer, README/TODO, licences) into a local `HiQS-Labs/XYZ-mini` checkout, mirrors removals, scans the shipped files for secrets, commits with the source SHA and pushes; it refuses to overwrite a file it did not publish. `/push-to-xyz-mini` wraps it (manual; automation later). consult tolerates an absent `tick` and counts an exit-0 empty answer as failed; debug-mantra dropped two forge-only issue links. Reversibility: **Easy** for the forge changes (revert the PR; mini keeps its last publication); a public push is not reversible. Verification: `test/gh589-xyz-mini-sync.sh`, `test/gh589-consult-no-tick.sh`, `test/gh589-skill-viewer.sh`.

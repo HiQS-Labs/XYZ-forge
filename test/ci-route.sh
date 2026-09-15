@@ -226,8 +226,8 @@ out="$(bash "$ROUTER" subsystems pdda)"
   && pass "subsystems pdda lists its 12 suites (GH-496)" \
   || fail "subsystems pdda listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems skills-army-hq)"
-[[ "$(wc -w <<<"$out")" -eq 1 ]] \
-  && pass "subsystems skills-army-hq lists its dedicated suite (GH-487)" \
+[[ "$(wc -w <<<"$out")" -eq 2 && "$out" == *"skills-army-hq.sh"* && "$out" == *"gh620-skills-army-mini-sync.sh"* ]] \
+  && pass "subsystems skills-army-hq lists its two dedicated suites (GH-487/GH-620)" \
   || fail "subsystems skills-army-hq listed $(wc -w <<<"$out") suites: $out"
 
 # ── GH-496: validate.sh append-only test registration routing ─────────────────────────────────
