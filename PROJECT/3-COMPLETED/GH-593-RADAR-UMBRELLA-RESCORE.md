@@ -1,8 +1,8 @@
 ---
 title: radar re-scores whack-a-mole umbrellas — "solved" is a quiet score, not a closed issue
-status: Active
+status: Complete
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-15
 owner: noelsaw1
 goal: A whack-a-mole umbrella is called solved only when radar re-measures its cluster signature below 5 on two consecutive runs after the fix merged — never on issue closure alone.
 gh_issue: 593
