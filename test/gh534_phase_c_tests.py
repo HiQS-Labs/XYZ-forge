@@ -578,11 +578,16 @@ class TestGh623Resilience(LedgerFixture):
         """The discovery subprocess must be invoked with a FINITE timeout — handling a
         TimeoutExpired proves nothing if the call could hang forever."""
         self.branch("feat/a", 1, lambda r: park(r, 200, "queued"))
+        real_run = toposort.subprocess.run
 
         def bounded(cmd, **kw):
-            if kw.get("timeout") in (None, 0):
-                raise AssertionError("gh pr list was invoked without a finite timeout")
-            raise subprocess.TimeoutExpired(cmd, kw["timeout"])
+            # Patch precisely: only the gh call is intercepted (subprocess is a shared module);
+            # every git call from the scan/landing machinery passes through to the real run.
+            if str(cmd[0]).endswith("gh"):
+                if kw.get("timeout") in (None, 0):
+                    raise AssertionError("gh pr list was invoked without a finite timeout")
+                raise subprocess.TimeoutExpired(cmd, kw["timeout"])
+            return real_run(cmd, **kw)
 
         with mock.patch.object(toposort.subprocess, "run", side_effect=bounded):
             rc = self.run_main()
@@ -621,7 +626,9 @@ class TestGh623Resilience(LedgerFixture):
         real = merge_cleanup.run_git
 
         def hung_clone(cwd, args, **kw):
-            if args[:1] == ["clone"]:
+            # Only PR 1's landing clone hangs (the clone target dir carries the pr-N prefix);
+            # PR 2's network stays healthy so the defer-and-continue can be observed.
+            if args[:1] == ["clone"] and "pr-1-" in str(args[-1]):
                 raise subprocess.TimeoutExpired(cmd=["git", "-C", str(cwd)] + list(args), timeout=kw.get("timeout") or 0)
             return real(cwd, args, **kw)
 
@@ -651,8 +658,10 @@ class TestGh623Resilience(LedgerFixture):
         """RED on current code: no --resume flag exists. THE ROUND-3 PIN: a PR whose record shows
         two finished repairs with the last `resolved` and whose live landing is clean is LANDED —
         the record is consulted only when a repair would actually be needed."""
+        # PR 1 carries the ledger change; PR 2 touches only README, so its landing merges clean
+        # (a clean landing never routes to B1, whatever the record says).
         self.branch("feat/a", 1, lambda r: park(r, 200, "first"))
-        self.branch("feat/b", 2, lambda r: park(r, 201, "repaired"))
+        self.branch("feat/b", 2, lambda r: (r / "README.md").write_text("repaired docs\n"))
         self.exhausted_record(2, outcomes=("handoff", "resolved"))
         rc = self.run_main(extra=["--resume"])
         self.assertEqual(rc, 0, self.err)
@@ -679,7 +688,7 @@ class TestGh623Resilience(LedgerFixture):
         fetches = []
 
         def down(cwd, args, **kw):
-            if args == ["fetch", "origin", "development"] and Path(cwd) == self.primary:
+            if args == ["fetch", "origin", "development"] and Path(cwd).resolve() == self.primary.resolve():
                 fetches.append(1)
                 return subprocess.CompletedProcess(args=args, returncode=1, stdout="",
                                                    stderr="gh: Could not resolve host: github.com")
@@ -702,7 +711,7 @@ class TestGh623Resilience(LedgerFixture):
         state = {"remaining": 3}  # network recovers right after the pre-queue retries exhaust
 
         def flaky(cwd, args, **kw):
-            if args == ["fetch", "origin", "development"] and Path(cwd) == self.primary and state["remaining"] > 0:
+            if args == ["fetch", "origin", "development"] and Path(cwd).resolve() == self.primary.resolve() and state["remaining"] > 0:
                 state["remaining"] -= 1
                 fetches.append(1)
                 return subprocess.CompletedProcess(args=args, returncode=1, stdout="",
@@ -762,7 +771,8 @@ class TestParityGuard(unittest.TestCase):
         self.assertIn("test missing: landing-refetch-and-gate names TestE6Gate.test_gone", self._fails(skill=mutated))
 
     def test_control_documented_option_absent_from_argparse_is_named(self):
-        mutated = self.skill.replace("`--execute`.", "`--execute`, `--bogus-flag`.")
+        mutated = self.skill.replace("`--resume`.", "`--resume`, `--bogus-flag`.")
+        self.assertNotEqual(mutated, self.skill, "the options line moved — repoint this control")
         self.assertIn("documented option not in argparse: --bogus-flag", self._fails(skill=mutated))
 
     def test_control_call_replaced_by_comment_is_named(self):
