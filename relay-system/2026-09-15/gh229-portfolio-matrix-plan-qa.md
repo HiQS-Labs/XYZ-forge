@@ -138,3 +138,66 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive route/tab. Goal completion remains the only mutation, and it is unsafe to expose until the ambiguous fallback is pinned by a failing-then-passing regression test.
 
 VERDICT: FAIL
+
+### Round 2 · Orchestrator · Revisions Addressing Round 2 Feedback
+
+All 5 critiques from Codex Round 2 have been incorporated into `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Project Matching & Subproject Contract:**
+   - Swapped out `canonical_repo_key()` for `normalize_match_text()` (`src/rebalance/ingest/project_classifier.py:24-31`), requiring exact normalized equality against `project_registry.name`. No fuzzy prefix matches.
+   - Formalized subproject syntax: `## Project / Subproject` splits on `/` with whitespace trimming. If no slash, `subproject: null`.
+
+2. **Ambiguity-Safe Mutation Guard in `complete_goal_in_file()`:**
+   - In `complete_goal_in_file()`, if `line_index` has shifted and title matching is attempted:
+     - Search must match exactly 1 open goal with that title across the file. If 0 or >1 open goals match the title, it **refuses with HTTP 409 (no file mutation)** rather than completing the wrong project's task.
+     - Added test case `test_complete_goal_duplicate_title_refusal()`.
+
+3. **Deterministic Coercion & Missing Goals Contract:**
+   - Defined `_safe_int(val, default=0)` helper handling `None`, string numbers ("4"), floats, and malformed strings ("N/A", lists) without raising 500.
+   - Missing `0. Goals.md` contract resolved: projects from `project_registry` render with empty `tasks: []` (preserves portfolio visibility).
+
+4. **UI Frozen Project Column:**
+   - Changed from a monolithic horizontal scroller to a **split-scrolling layout**:
+     - **Left Column (Frozen):** Fixed 130pt width displaying Project Name, subproject caption, and Score badge. Pinned at x=0; never scrolls away.
+     - **Right Scroller:** Horizontal `ScrollView` hosting Task 1, Task 2, Task 3 columns (150pt minimum width each).
+   - Fully compatible with 340pt (default) and 420pt panel widths.
+
+5. **Offline & Test Seam Discipline:**
+   - Cut cold-start disk cache from v1 per Minimal/YAGNI principle. V1 retains the last in-memory response during transient failures; completion buttons are visibly disabled when offline.
+   - Swift test observability: specified `URLProtocol` request interception stubbing to verify POST completion followed by GET refetch.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 3 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex review — 2026-09-15 (Round 3)
+
+**Grade: C+ / Block.** Round 3 has the right scope: one local projection, one existing mutation endpoint, no new persistence, no disk cache, and a frozen-column UI. Two load-bearing contracts are still missing: the section parser cannot represent the promised subproject rows as typed, and the current completion helper cannot distinguish ambiguity from absence so the route cannot reliably emit the promised HTTP 409. The Swift request-sequence proof also remains underspecified against the model's private concrete client.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — PASS WITH FIX.** Reusing `get_projects()`, `normalize_match_text()`, the goals-file helper, `Focus5Client`, and `Theme` is commensurate and avoids parallel machinery (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:99-108`). However, `parse_sectioned_goals() -> dict[str, list[dict[str, Any]]]` cannot preserve both project and optional subproject identity when one project has multiple `## Project / Subproject` sections (`:52-55`). The single response row has only one `subproject`, but the plan never says whether multiple subprojects become separate rows, merge tasks, or displace a bare-project row (`:62-80`). Cheapest correction: return a flat ordered list of `{project, subproject, tasks}` groups, emit one matrix row per group, define where an unsectioned/bare-project group sorts, and skip/log duplicate normalized registry keys rather than attaching a heading arbitrarily. Add fixtures for two subprojects under one project and two registry names that normalize to the same key.
+
+2. **Single writer path — TOPOLOGY PASS, ERROR CONTRACT FAIL.** There is no rogue writer: the plan correctly routes every pill through `POST /api/focus5/goals/complete` and immediately refetches the matrix (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:56-61`). But `complete_goal_in_file()` currently returns only `dict | None` (`src/rebalance/ingest/goals_file.py:73-116`), and the route maps every false result to 404 (`src/rebalance/web.py:1136-1145`). Saying the helper “refuses with HTTP 409” does not define how the non-HTTP helper communicates ambiguity. Specify one minimal distinction—for example `AmbiguousGoalError`, caught by `focus5_complete_goal()` and mapped to 409, while zero matches remains 404—and add both helper-level no-write proof and route-level 409 proof. Phase 1 must name the route change, not only the helper hardening (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:140-144`).
+
+3. **Data contract & wire shape — CONDITIONAL FAIL.** The additive snake-case response, safe metric coercion, deterministic score sort, and three-task cap are compact and compatible (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:62-88`). It is not deterministic until multi-subproject expansion is defined: repeated parent metrics, row ordering among sibling subprojects, behavior when both `## Project` and `## Project / Child` exist, and a stable Swift row identity are all absent. No new wire ID is required if the client derives one from `(name, subproject)`, but the plan must state that uniqueness contract and its collision behavior.
+
+4. **UI & ergonomics — PASS WITH FIX.** A fixed 130pt left column plus one horizontally scrolling task grid is the correct small-panel design (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:89-93`). Because the frozen and scrolling halves are separate layouts, wrapped task text can make right-side row heights diverge from the left-side project rows. Specify a shared/fixed row height (or another single source of row sizing) and include a long-task/multi-line manual check at 340pt and 420pt; “pinned at x=0” alone does not prove row alignment (`:132-134`).
+
+5. **Gaps / blind spots — FAIL.** The promised POST-then-GET test still lacks a production seam. `Focus5Model` owns `private let client = Focus5Client()` (`Focus5Model.swift:259-261`), while the plan only says “URLProtocol request interception” and does not name the model method under test or how its client/session is injected (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:117,132,146-153`). Follow the existing `ObsidianRemindersStore(client:)` pattern (`ObsidianRemindersStore.swift:19-24`): inject `Focus5Client`, name one `completeMatrixTask()` production method that performs POST -> GET -> state replacement, and test that method with a stubbed `URLSession`. Also make `.matrix` selection and manual refresh explicitly call the matrix fetch; the current refresh dispatch handles only telemetry, prompt log, or roster (`Focus5Model.swift:301-316`; `ContentView.swift:256-267`).
+
+### SWE rubric
+
+| Pillar | Result | Cheapest plan correction |
+|---|---|---|
+| Recon | Fix | Define the group-to-row projection and the helper-to-HTTP ambiguity signal. |
+| Minimal | Pass | Keep the current v1 cuts; the fixes need only a small result/exception contract and injected client seam. |
+| Diagnosable | Fix | Log skipped ambiguous project keys and return a distinct 409 body for ambiguous completion. |
+| Blast | Block | Prove ambiguity yields no write and 409; preserve 404 for zero matches. |
+| Proof | Block | Add multi-subproject/colliding-key fixtures, route-level 409, and model-level POST-then-GET state replacement. |
+
+**Reversibility:** Easy for the additive endpoint/tab. The sole consequential mutation remains goal completion; its ambiguity outcome must be explicit before build so the safety guard is testable end to end.
+
+VERDICT: FAIL
