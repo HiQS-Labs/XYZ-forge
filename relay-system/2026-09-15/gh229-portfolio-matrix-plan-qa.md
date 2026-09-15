@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: Reviewer (codex)
+NEXT: orchestrator (Builder)
 STATUS: Open
 ---
 
@@ -477,3 +477,33 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex review — 2026-09-15 (Round 8)
+
+**Grade: B / Block.** Round 8 correctly binds each GET's line indices and revision to one read, makes the revision-less selection rule unambiguous, and pins unknown-outcome recovery to the primary URL. Two end-to-end writer invariants remain unstated: concurrent requests can still validate the same revision and overwrite one another, and ordinary mutable-state GETs can still come from port 8767 while POST/refetch targets port 8787. The existing reminders consumer also needs to adopt the revision returned by each successful completion.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — PASS WITH FIX.** The revised plan uses one goals-file subsystem, one projection/matching route, one completion helper, one client, and existing UI tokens (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:48-91,136-158`). Keep that shape. Add only a process-local, path-scoped critical section around the helper's complete read -> revision check -> selection -> temp write -> replace sequence. This is commensurate with the declared single-process local server and belongs inside the existing writer; it is not a second writer or a new coordination subsystem.
+
+2. **Single writer path — TOPOLOGY PASS, SERIALIZATION FAIL.** `complete_goal_in_file()` is the sole planned writer, but a single path is not yet a serialized path. The current helper reads at `src/rebalance/ingest/goals_file.py:90` and writes a fixed sibling `.tmp` then replaces at `:113-115`; the sync FastAPI route at `src/rebalance/web.py:1115-1155` may serve overlapping requests. Two requests carrying the same valid revision can both read snapshot V and pass the hash check; A writes V+A, then B writes V+B from its stale copy, losing A while both can report success. They can also race on the same `.tmp` name. Hold one per-path lock across the entire read/check/write critical section so the second request observes the first write and returns stale-revision 409. Add a barrier-driven regression proving two concurrent same-revision completions cannot both return 200 or lose a committed completion.
+
+3. **Data contract & wire shape — PASS WITH FIX.** The response projection and revision field are now compact and internally consistent. The server identity is not. Normal `fetchPortfolioMatrix(primaryOnly: false)` may use `candidateBaseURLs` (`Focus5Client.swift:86-92,136-172`), but planned `completeGoal()` sends once to the primary, and only the *transport-failure* recovery GET is pinned (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:85-91,146,200-201`). A matrix initially loaded from 8767 can therefore post to 8787; even a successful primary POST is followed by the unpinned `fetchPortfolioMatrix()` at `:89`, which can replace state from another server. Cheapest correction: make every GET whose response supplies a revision for mutation (`fetchGoals` and matrix fetch/refetch) primary-only. If secondary operation must remain supported, return the actual responding base URL and pin POST plus both success and failure reconciliation to that exact origin.
+
+4. **UI & ergonomics — PASS WITH FIX.** The layout and error-state plan fit the panel. Mutation state must cover the whole shared writer, not only the tapped pill: `completingTaskKey` currently disables the active pill (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:87-91`), so another matrix pill can start with the same revision. The existing reminders guard is also installed only *after* the await (`ObsidianRemindersStore.swift:39-55`), so it does not prevent duplicate dispatch. Disable all goal mutations while one request is in flight in each view, set the guard before awaiting, and use `defer` to clear it. Server-side serialization remains the correctness boundary; UI guards are only the ergonomic shield.
+
+5. **Gaps / blind spots — FAIL.** `ObsidianRemindersStore` must update `goalsRevision` from both `Focus5GoalsResponse` and the refreshed `Focus5GoalCompleteResponse`. The plan adds the revision to both models but only says the store retains it from goals fetches (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:71-73,142-144,197-198`); the current two `apply` methods are separate (`ObsidianRemindersStore.swift:60-78`). Without updating on completion, the second sequential reminder completion sends the pre-write revision and receives 409 until a separate refresh. Add focused proof for: (a) two concurrent same-revision POSTs serialize, with at most one 200 and no lost update; (b) two sequential reminder completions succeed because the first completion response advances the stored revision; (c) a secondary-candidate GET can never produce an actionable revision for a different POST target; and (d) both success and ambiguous-failure matrix reconciliation query exactly the POST target.
+
+### SWE rubric
+
+| Pillar | Result | Cheapest plan correction |
+|---|---|---|
+| Recon | Fix | Add the overlapping-request path, fixed temp-path write window, and mutable GET origin to the current-state map. |
+| Minimal | Pass | One in-helper path lock, primary-only mutable GETs (or explicit origin affinity), and storing the returned revision extend existing seams only. |
+| Diagnosable | Pass | Typed 409/transport errors and visible banners are sufficient once concurrency and endpoint identity are deterministic. |
+| Blast | Block | Two requests can both validate snapshot V and lose one write; a fallback GET can authorize or reconcile a mutation against a different server. |
+| Proof | Block | Add the concurrent-writer, sequential-reminders revision, and exact-origin GET/POST assertions above. |
+
+**Reversibility:** Easy for the additive route/tab. Goal completion remains the only consequential mutation; it must be serialized and server-affine before the plan is safe to build.
+
+VERDICT: FAIL
