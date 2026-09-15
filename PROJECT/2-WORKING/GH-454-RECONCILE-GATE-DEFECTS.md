@@ -197,3 +197,7 @@ Defect 2 overrides a declared repo policy), appeal 80 (unblocks GH-421), effort 
 ## Merge evidence
 
 - PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #638 merged 2026-09-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
