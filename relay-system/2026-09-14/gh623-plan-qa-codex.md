@@ -241,3 +241,89 @@ Plan revised (see §Execution log round-2 record). Final re-review requested.
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex final re-review — changes requested (round 3)
+
+**Verdict: Block** — the three round-2 findings are closed, and the hard/soft, retry, timeout,
+and compatibility contracts are now coherent. One resume ordering bug would strand a successfully
+repaired PR, however, and three smaller scope/proof gaps should be resolved with it.
+
+### Findings
+
+1. **Block — the pre-refresh `--resume` skip can discard the successful second repair.** The plan
+   skips any record with two finished repairs *before* live refresh
+   (`GH-623-MERGE-CLEANUP-RESILIENCE.md:152-155`) and directs the caller to re-run with
+   `--resume --execute` after the repair ladder (`:156-160`). But attempts record outcomes such as
+   `resolved`/`handoff`/`failed` (`attempt_record.py:140-149`), and the second allowed caller repair
+   can legitimately finish `resolved` after pushing a now-mergeable head. That record has two
+   finished attempts, so the prescribed resume run would label the PR “previously parked” without
+   even calling the authoritative `refresh_pr` (`merge_cleanup.py:481-498`) and would never land
+   it. This does not bypass the ceiling; it prevents completion after using it correctly. Cheapest
+   fix: perform the live refresh first and let an OPEN/MERGEABLE PR proceed without reserving a
+   repair; apply the exhausted-record skip only when another repair would actually be needed (and
+   retain `reserve()` as the under-lock authority at `attempt_record.py:129-143`). Add the paired
+   pin: two finished unsuccessful repairs + still conflicting skips, while two finished repairs
+   with the last `resolved` + live MERGEABLE proceeds and lands. The current resume test
+   (`GH-623...md:192-194`) covers only the first half.
+
+2. **Fix — the promised Phase 4 red control still lacks a concrete failure fixture.** The only
+   planned gh-stub additions are `files` passthrough and the per-PR `view_fail` map
+   (`GH-623...md:166-171`), while the existing `pr list` branch always succeeds
+   (`gh534_phase_b_tests.py:91-96`). Yet `pr-list-discovery` says the real `gh pr list` fails with
+   a DNS diagnostic and, on current code, proves the false “No open PRs” path
+   (`GH-623...md:181-186,201-205`). Specify a minimal `list_fail`/remaining-failures stub state (or
+   an equivalently explicit direct test of `fetch_open_prs` plus the orchestration call site).
+   Mocking only `merge_cleanup.fetch_open_prs` to raise would not prove the current
+   `toposort_prs.py:24-33` empty-on-error defect. The standalone `toposort_prs.py` main is also a
+   caller (`toposort_prs.py:185-201`); since `fetch_open_prs` will now raise `FetchError`, state that
+   main catches it, prints the diagnostic, and exits non-zero rather than leaking a traceback.
+
+3. **Fix — `test/gh436-merge-cleanup.py` is in the behavioral blast radius, not merely a gate.**
+   Its Phase 5 harness patches `merge_cleanup.run_git` with a two-argument `fake_git(cwd, args)`
+   (`test/gh436-merge-cleanup.py:409-418,428`). `_net_git` forwarding `timeout=` through that patch
+   will raise `TypeError`, so the file needs the additive timeout-compatible fake signature (and
+   should remain in the focused run). Add it to the affected-test inventory; the current scope
+   lists only the two gh534 files (`GH-623...md:73-74`) even though the ordered gate names gh436
+   later (`:217-219`).
+
+4. **Fix — narrow or fulfill the “every network call is bounded” claim.** R2a says every network
+   call is bounded (`GH-623...md:87-94`), but the enumerated `_net_git` sites stop at the initial
+   landing clone/fetches and the pre/post-merge fetches (`:144-151`). Existing B1 paths still
+   include an origin clone (`merge_cleanup.py:157-164`) and a remote push (`:182-191`) through
+   unbounded `run_git`. The least-scope resolution is to say “every GH-623 retry-site network call”
+   and explicitly leave the B1 validation/push behavior out of scope; alternatively route those
+   calls through the finite-time wrapper and pin their stop semantics. Do not imply repository-wide
+   boundedness while preserving `run_git`'s unbounded default for compatibility.
+
+### Final adjudication
+
+- The corrected explicit/collision citations are accurate. Publishing `_hard_deps` and
+  `_soft_deps` while retaining `_deps` as their sorted JSON union preserves the standalone output
+  shape and the explicit `Depends on #2` guarantee at `gh534_phase_c_tests.py:257-273`.
+- Three total calls with sleeps `[2, 4]`, finite Phase 4 and Git retry-site timeouts, transient-only
+  retry, per-PR defer-and-continue, default pre-queue refusal with the existing override, and
+  post-merge stop satisfy the issue's network and E/exit-code requirements as revised.
+- `--resume` still cannot mint repair three because `reserve()` re-loads and counts under
+  `RecordLock` (`attempt_record.py:129-143`). Warning on an unreadable pre-check remains safe because
+  any actual repair reaches that fail-closed load. Finding 1 is a liveness/correctness defect, not a
+  ceiling bypass.
+- The soft-edge, network-defer, retry-success, timeout, and existing resume red controls are
+  commensurate and would fail current code. Add the successful-final-repair resume pin and make the
+  Phase 4 fixture/proof explicit; no new framework is needed.
+
+Graph discovery used `Users-noelsaw-Documents-GH-Repos-XYZ-forge` generation
+`2026-09-15T04:47:51Z`. All named code/test paths were metadata-matched with no recorded coverage
+gap; the revised plan was missing from that generation and was read directly. `trace_path` was
+unavailable under the no-approval policy, so caller/blast-radius claims were confirmed with bounded
+source reads and literal search. The only recorded gap under `skills/merge-cleanup` was excluded
+`__pycache__`; unrelated parse-partial test files were not used.
+
+## Log
+
+### Codex round 3 handoff
+
+VERDICT: FAIL
+
+Basis: The revised plan would skip a successfully repaired, now-mergeable PR before live refresh;
+the Phase 4 failure fixture, gh436 timeout-compatible mock, and bounded-network scope also need the
+specific corrections recorded above.
