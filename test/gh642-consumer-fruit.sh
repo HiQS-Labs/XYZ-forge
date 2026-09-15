@@ -73,7 +73,8 @@ grep -Fqx '/relay-system' "$B4/.gitignore" && pass "direction 2 intact: blocking
 python3 -m py_compile "$PYCLAUDE" && pass "claude-turn.py compiles" || fail "claude-turn.py does not compile"
 py_warn() {  # <model> <budget> -> prints the warning stdout/stderr capture marker when it fires
   python3 - "$PYCLAUDE" "$1" "$2" <<'PYW'
-import importlib.util, io, sys
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(sys.argv[1]))
 spec = importlib.util.spec_from_file_location("claude_turn", sys.argv[1])
 mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
 buf = io.StringIO()
@@ -188,7 +189,8 @@ python3 "$PYINIT" "file://$BARE" --umbrella 78 --slug a-b-c-d --dir "$CL/boundar
 python3 -m py_compile "$PYPREFLIGHT" && pass "swarm_preflight.py compiles" || fail "swarm_preflight.py does not compile"
 py_zc() {  # <acc_mode> <items_csv-present 1|0> <fmt> -> marker when the warning fires
   python3 - "$PYPREFLIGHT" "$1" "$2" "$3" <<'PYZ'
-import importlib.util, io, sys
+import importlib.util, os, sys
+sys.path.insert(0, os.path.dirname(sys.argv[1]))
 spec = importlib.util.spec_from_file_location("swarm_preflight", sys.argv[1])
 mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
 buf = io.StringIO()
