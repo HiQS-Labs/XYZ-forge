@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: Reviewer (codex)
+NEXT: orchestrator (Builder)
 STATUS: Open
 ---
 
@@ -355,3 +355,33 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex review — 2026-09-15 (Round 6)
+
+**Grade: B / Block.** Round 6 closes the stale-index and multi-dispatch hazards for the new matrix path, and the projection/UI plan remains appropriately small. The plan still is not build-ready because making `goals_revision` required breaks the existing Obsidian-reminders caller of the same writer, and an ambiguous POST transport failure leaves the UI holding a stale, re-enabled mutation control instead of reconciling with a safe GET.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — PASS.** The plan keeps one goals parser, one route-owned projection, one existing completion endpoint/helper, and one `Focus5Client`; it adds no database, cache, or parallel writer (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:48-75,120-140`). Duplicate headings, normalized-key collisions, missing projects, and subprojects now have deterministic projection rules.
+
+2. **Single writer path — TOPOLOGY PASS, COMPATIBILITY FAIL.** The revision check and one-POST rule correctly protect matrix mutations. But the plan makes `goals_revision` required in the existing POST (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:65-72,125-128,167-176`) while only the new `MatrixModels.swift` response is planned to carry it (`:134,174`). The already-shipped `ObsidianRemindersStore.complete()` calls `Focus5Client.completeGoal(title:lineIndex:)` with no revision (`ObsidianRemindersStore.swift:39-56`), and `Focus5GoalsResponse` contains no revision (`Models.swift:313-320`). A required Pydantic field therefore turns that existing completion path into HTTP 422; making the field silently optional would instead leave it outside the promised stale-snapshot guard. Cheapest correction: add the same revision to `_focus5_goals_payload()` / `Focus5GoalsResponse`, store it in `ObsidianRemindersStore`, thread it through the shared `completeGoal` call, and add a regression proving the existing reminders completion still works. If old external clients must remain compatible, state the optional-field/version policy explicitly and bound which callers may omit it.
+
+3. **Data contract & wire shape — PASS WITH FIX.** The matrix response is compact, additive, and deterministic, and the revision token is the right concurrency primitive (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:76-103`). Define the revision over the exact bytes that `complete_goal_in_file()` reads and mutates, and perform comparison inside that helper against that same snapshot; the current plan redundantly assigns checking to both the helper and route (`:125-126,167-170`) without naming a stale-revision result/exception contract. One owner avoids a check-then-re-read gap and makes the no-write proof precise.
+
+4. **UI & ergonomics — PASS WITH FIX.** The frozen identity column, fixed shared row height, bounded task columns, dedicated matrix state, and in-flight lock fit the 340/420pt HUD (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:104-114`). The error path is not self-healing: after an ambiguous transport failure, the server may have completed the task, but the plan merely clears `completingTaskKey`, retains the stale matrix, and re-enables the pill (`:71-75`). A second click then sends another mutation attempt against stale state. Keep exactly one POST, but follow an ambiguous transport failure with a safe matrix GET; replace state if that GET succeeds, and retain the last response only if reconciliation also fails.
+
+5. **Gaps / blind spots — FAIL.** Add focused acceptance cases for: (a) existing `ObsidianRemindersStore` refresh -> completion with the supplied revision; (b) missing revision behavior, including the declared backward-compatibility result; (c) one POST whose response is lost, followed by exactly one recovery GET and refreshed matrix/revision; and (d) recovery GET failure retaining the prior matrix while keeping the error visible. The current matrix only asserts one POST/no failover and successful POST-then-GET (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:154-158`), so it does not prove either the existing caller survives or an unknown POST outcome is reconciled.
+
+### SWE rubric
+
+| Pillar | Result | Cheapest plan correction |
+|---|---|---|
+| Recon | Block | Add the existing `ObsidianRemindersStore -> Focus5Client.completeGoal -> POST` consumer and its response model to the blast radius. |
+| Minimal | Pass | Threading one revision through the existing goals payload/store and one recovery GET uses current seams only. |
+| Diagnosable | Fix | Distinguish stale/ambiguous HTTP responses from unknown transport outcomes; reconcile only the latter with GET. |
+| Blast | Block | A required field currently breaks an existing writer consumer; an unknown POST outcome can expose a stale retry control. |
+| Proof | Block | Add the four compatibility/reconciliation assertions above alongside the existing negative-path tests. |
+
+**Reversibility:** Easy for the additive route/tab. The shared completion contract is broader than the matrix, so its revision migration must cover the existing reminders consumer before implementation.
+
+VERDICT: FAIL
