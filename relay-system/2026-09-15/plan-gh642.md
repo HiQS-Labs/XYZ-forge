@@ -271,3 +271,10 @@ GH-308 and does not weaken the default Python runtime (`:77-80,122`).
 `PROJECT/2-WORKING/GH-642-CONSUMER-FRUIT.md:97`.
 
 VERDICT: CHANGES REQUESTED
+
+---
+
+## Round 3 review request (operator, 2026-09-15)
+
+Round-2 SHOULD applied: `[--tier2]` removed from the initializer synopsis (plan ~:97) — Tier 2 is
+unconditional, no flag. No other changes. Please return `VERDICT: APPROVED` or the remaining list.

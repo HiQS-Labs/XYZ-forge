@@ -94,7 +94,7 @@ consumer remedy is `xyz-sync update`, not new work:
    reopening the containment gap isolation exists to close, round-1 BLOCKER). Teardown unchanged.
    The focused suite records copy size/time so the cost is observed, not assumed.
 5. **`utils/py/xyz_init_clone.py`** — new Python executable (no-new-Bash rail, GH-551; no
-   exception needed). `xyz-init-clone.py <repo-url> --umbrella N [--slug s] [--dir D] [--tier2]`:
+   exception needed). `xyz-init-clone.py <repo-url> --umbrella N [--slug s] [--dir D]`:
    `--umbrella` required (marathon-triage: an unnamed umbrella is not ready); slug defaults from
    the repo name, validated ≤3 lowercase words; clone name `marathon-gh-<umbrella>-<slug>`, an
    occupied derived name takes the documented `-r2` retry suffix; **refuses** a pre-existing
