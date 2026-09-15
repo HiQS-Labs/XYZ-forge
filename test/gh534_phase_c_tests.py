@@ -6,6 +6,7 @@ for the script-side runs; the record tests below need only a directory and the C
 """
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import sys
