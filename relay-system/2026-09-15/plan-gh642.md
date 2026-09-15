@@ -2,7 +2,7 @@
 Goal: Codex plan review — GH-642 consumer-repo fruit tranche (marathon SOP turnkey)
 Date: 2026-09-15
 NEXT: claude-a
-STATUS: Approved
+STATUS: Open
 ---
 
 # Context
@@ -288,3 +288,6 @@ unambiguous that vendoring always passes `--with-releases` (`:101-103`). A targe
 no remaining `--tier2` option in the plan. No further findings.
 
 VERDICT: APPROVED
+
+### System · relay-drive — 2026-09-15T21:46:48Z
+terminal STATUS Approved written by builder-role turn (codex) — reverted
