@@ -148,3 +148,55 @@ All findings applied:
 - NIT docstring: aligned with the parent-dir contract.
 
 Please re-verify (same envelope) and return `VERDICT: APPROVED` or the remaining list.
+
+### Final QA · codex (round 2)
+
+1. **Six acceptance lines:** the implementation now satisfies all six. Items 1, 2, 4, 5, and 6
+   remain as previously reviewed (`relay-automation/xyz-vendor.sh:297-319`,
+   `utils/py/claude-turn.py:96-110`, `relay-automation/relay-turn-lib.sh:758-791`,
+   `utils/py/xyz_init_clone.py:46-61,72-125`, `utils/py/swarm_preflight.py:1688-1706`). Item 3's
+   two round-1 defects are fixed at `utils/py/marathon_drive.py:516-531`.
+
+2. **Item 1:** correct. The relative `rev-parse --git-path info/exclude` result is anchored to the
+   target (`relay-automation/xyz-vendor.sh:307-314`), all three Git layouts remain covered, the
+   direction-2 diagnostic still precedes mutation (`:253-295`), and the non-git fallback is reachable
+   (`:312-314`). The focused suite now exercises that fallback (`test/gh642-consumer-fruit.sh:61-64`).
+
+3. **Item 3:** correct after round 2. A malformed suffix candidate now fails before selection
+   (`utils/py/marathon_drive.py:518-524`), and the fresh-id notice is emitted on stderr (`:525-530`).
+   Spent remains exactly `done|circuit_broken` (`:511-515`); explicit ids remain unchanged (`:496-497`);
+   and resolution still precedes `_RESULT["token"]` and all downstream consumers (`:1388-1395`). The
+   revised tests use the real stub path and cover malformed base, malformed `-R2`, occupied `-R2` /
+   free `-R3`, and stderr (`test/gh642-consumer-fruit.sh:80-118`).
+
+4. **Item 4:** implementation correct. The real copy precedes allowlist seeding, and copy failure
+   remains advisory (`relay-automation/relay-turn-lib.sh:758-774`). The new mutation assertion proves
+   writes in the copied tree do not reach ROOT (`test/gh642-consumer-fruit.sh:128-143`).
+
+5. **Item 5:** implementation correct. The docstring now matches the parent-directory contract
+   (`utils/py/xyz_init_clone.py:17-25`); required umbrella, slug validation/defaulting, monotonic
+   occupied-name retry, unconditional Tier 2, conditional hooks, and next steps remain at `:46-61`
+   and `:72-125`.
+
+6. **Item 6:** implementation correct. The text-only stderr warning is before the dry-run exit and
+   leaves exit behavior unchanged (`utils/py/swarm_preflight.py:1688-1706`).
+
+7. **Governance:** the current frozen fallbacks still contain none of the GH-642 behavior and the
+   initializer remains Python-only. The registry locations remain the focused-suite entry
+   (`validate.sh:502`) and the gh365 exemption (`test/gh365-driver-lane-registry.sh:134`). As in round
+   1, the no-git constraint means byte equality and base-diff exhaustiveness cannot be independently
+   established; this confirmation is bounded to the supplied diff surface and current file contents.
+
+8. **Tests:** the round-1 test BLOCKER is only partially fixed. The token, copy-mutation, non-git,
+   and slug-boundary additions are behavior-level and useful. **BLOCKER:** item 2 is still only
+   compile + source grep (`test/gh642-consumer-fruit.sh:72-75`), so removing the warning print,
+   routing it to stdout, or warning for a non-default budget can remain green. **BLOCKER:** item 6 is
+   still only compile + source grep (`:175-181`), so moving the warning after the dry-run exit,
+   routing it to stdout, emitting it for JSON, or changing runtime exit behavior can remain green.
+   **BLOCKER:** the Tier-2 assertion checks only `.xyz/relay-automation` (`:154-157`), which Tier 1
+   also installs; removing `--with-releases` from `xyz_init_clone.py:106` would not make it fail.
+   **SHOULD:** advisory copy failure and default-slug derivation remain unexercised, so regressions in
+   those acceptance clauses can also pass.
+
+VERDICT: CHANGES REQUESTED — add behavior-level Opus-warning and zero-criteria dry-run assertions;
+prove a Tier-2-only vendored artifact; exercise advisory copy failure and default-slug derivation.
