@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: Reviewer (codex)
+NEXT: orchestrator (Builder)
 STATUS: Open
 ---
 
@@ -419,3 +419,33 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex review — 2026-09-15 (Round 7)
+
+**Grade: B / Block.** Round 7 preserves the existing reminders caller, gives the writer one owner for revision validation, and adds a sensible recovery GET after an unknown POST outcome. Two snapshot-integrity gaps and one recovery-target gap remain: the read endpoints do not yet bind task line indices and the returned revision to one file read, a revision-less preferred-line hit can still bypass duplicate-title ambiguity detection, and the recovery GET can fail over to a server other than the one that received the POST.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — PASS WITH FIX.** The source choices remain correct: one registry reader, one goals-file subsystem, one completion route/helper, one Swift client, and existing UI tokens (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:48-85,130-152`). Add one small goals snapshot primitive rather than letting each endpoint independently parse a path and then read again for a hash. The plan still specifies a path-reading `parse_sectioned_goals(path:)` while separately promising `goals_revision` in both projections (`:54,68`); the existing goals payload already delegates its read to `parse_goals(path)` (`src/rebalance/web.py:1037-1064`). Cheapest correction: read `0. Goals.md` once per response, derive both revision and parsed items/groups from that exact in-memory content, and keep path-based wrappers only for existing callers.
+
+2. **Single writer path — TOPOLOGY PASS, AMBIGUITY CONTRACT FAIL.** There is still exactly one writer, and the expected-revision path is now well specified. The revision-less compatibility path is not. The plan says ambiguity is checked only when “fallback title search” runs (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:76-78`), while the current helper tries the preferred index first and immediately writes the first matching title (`src/rebalance/ingest/goals_file.py:55-60,73-115`). Therefore an omitted-revision request whose preferred line points at one of two same-titled open goals can mutate it without ever counting the duplicate, contradicting the plan's blanket 409 claim at `GH-229-PORTFOLIO-PLANNING-MATRIX.md:167`. Define selection explicitly: on the helper's one read, collect all open title matches first; with no expected revision, permit exactly one match and otherwise raise `AmbiguousGoalError` regardless of `line_index`; with a matching revision, use the supplied line when valid and use the same ambiguity rule only when falling back.
+
+3. **Data contract & wire shape — FAIL pending a single-read response snapshot.** The response fields are otherwise compact and backward-compatible, but optimistic concurrency is sound only if each emitted `line_index` and `goals_revision` describe the same bytes. Both planned producers return the hash (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:68,86-106`), yet the matrix parser remains path-based (`:54`) and the existing goals projection's parser performs its own file read (`src/rebalance/ingest/goals_file.py:14-48`; `src/rebalance/web.py:1063`). If parsing observes content A and hashing observes content B, the client can submit B's accepted revision with A's stale line index—the exact hazard the token is meant to close. Require one file read per GET payload and add a regression that proves the parser and hash consume one identical snapshot for both `/focus-5/goals` and `/portfolio-matrix.json`.
+
+4. **UI & ergonomics — PASS WITH FIX.** The five-mode integration, fixed 58pt rows, frozen identity column, in-flight lock, and retained error state remain appropriate for the 340/420pt HUD (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:104-124`). Pin the ambiguous-outcome recovery GET to the same primary base URL as the single-dispatch POST. The plan currently calls ordinary `refreshMatrix()` (`:80-85`), while the client's generic executor retries GETs across both the configured/base server and port 8767 (`Focus5Client.swift:86-92,136-171`). A response from another candidate is not proof of what happened on the POST target. Normal display GETs may keep failover, but mutation reconciliation must query the writer endpoint only.
+
+5. **Gaps / blind spots — FAIL.** Add three focused negative cases: (a) a goals file changed between would-be parse/hash reads still produces one internally consistent snapshot (and only one read) for each GET; (b) omitted revision + preferred index matching one of duplicate titles returns 409 with byte-for-byte no write; and (c) a lost POST response triggers exactly one recovery GET to the same base URL, never port 8767, retaining prior state if that endpoint is unavailable. The planned tests at `GH-229-PORTFOLIO-PLANNING-MATRIX.md:166-173` do not exercise these paths.
+
+### SWE rubric
+
+| Pillar | Result | Cheapest plan correction |
+|---|---|---|
+| Recon | Fix | Add the read-side parse/hash sequence and the recovery GET's candidate behavior to the current-state map. |
+| Minimal | Pass | One shared in-memory snapshot parse, one unambiguous selection rule, and one primary-only recovery GET extend existing seams only. |
+| Diagnosable | Pass with fix | Existing typed HTTP/transport errors and banners are sufficient once recovery is pinned to the writer endpoint. |
+| Blast | Block | A mismatched read snapshot or revision-less preferred hit can authorize the wrong goal mutation; cross-port recovery can report the wrong ground truth. |
+| Proof | Block | Add the three snapshot/ambiguity/endpoint assertions above alongside the Round 6 compatibility tests. |
+
+**Reversibility:** Easy for the additive endpoint/tab. Goal completion is the only consequential mutation; the remaining fixes make its concurrency token and unknown-outcome recovery end-to-end rather than nominal.
+
+VERDICT: FAIL
