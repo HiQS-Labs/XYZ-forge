@@ -56,3 +56,11 @@ Answers to correctness questions:
 
 Basis: `git diff ab7ab1d5 -- skills test CHANGELOG.md` along with specific views of `skills/merge-cleanup/scripts/merge_cleanup.py`, `skills/agent-chorus/scripts/agent_chorus_bridge.py`, `test/gh534_phase_c_tests.py`, `skills/merge-cleanup/SKILL.md`, and the `PROJECT/2-WORKING` acceptance criteria files.
 VERDICT: PASS
+
+### Attestation · relay-drive — 2026-09-15T08:07:48Z
+task: MARATHON-10DAYS-FINAL-QA
+reviewer: agy
+status: Approved
+reviewed-head: 0dc208683e7afb8df906db24f4a70c7b1e3b4930
+added-range: 2604+2412
+added-sha256: 6c74a84721c5233e7bffc141ecd93ffe9faba918043f7d52630d83573e938922
