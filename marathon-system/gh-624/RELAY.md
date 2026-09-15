@@ -123,3 +123,11 @@ The implementation correctly fulfills the Phase Brief acceptance criteria:
 I found no pre-existing defects in the touched files during the sweep.
 
 **Verdict:** Approved
+
+### Attestation · relay-drive — 2026-09-15T07:12:17Z
+task: MARATHON-GH-624-TURN
+reviewer: agy
+status: Approved
+reviewed-head: b937ed978e6efda15e0a0286c0712c0a8e75e453
+added-range: 11238+875
+added-sha256: e851c4355709b3dd3cec47772a2f07feffadb6be85e19767c5c8493382ba3ccc
