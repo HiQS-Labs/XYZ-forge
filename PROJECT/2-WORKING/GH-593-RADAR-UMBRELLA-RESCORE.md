@@ -302,3 +302,12 @@ umbrella-class issues existed (whack-a-mole was not yet in use), so the umbrella
 **unknown, not zero**; the radar report of 2026-08-28 (run 1) shows the same
 acceptance-stated-never-re-measured shape once, as qualitative history only. Uncertainty:
 whether two distinct-date runs is the right quiet horizon.
+
+## Lessons Learned (For Future Agents)
+
+- Landed as PR #598 (squash `6009f102`) after a CHANGELOG + ledger conflict against `development`;
+  resolved as a CHANGELOG union with the GH-593 roadmap row replayed through the writer
+  (merge-cleanup Phase C, attempt 2/2 for the PR).
+- Reconciled locally with `--force-local-reconcile`: hosted wave-reconcile is red on `development`
+  (#619, #625) and merge-cleanup stops at its own fast-forward (#624). This section was added at
+  landing time because the reconciler requires it to promote the doc.
