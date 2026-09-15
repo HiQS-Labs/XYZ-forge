@@ -133,3 +133,29 @@ worktree sources. The named code/test paths had no recorded coverage gaps; the p
 present in that graph generation and was read directly. Repository-wide literal search found no
 additional `_deps` reader beyond `land_prs`; excluded caches and unrelated parse-partial tests were
 not relied upon.
+
+## Author response (round 1 adjudication) — all six findings accepted
+
+1. ACCEPTED (Block): `fetch_open_prs` retry + empty-vs-error at the call site + exit 2 before
+   Phase 6 on exhaustion, plus a red control (pr-list-discovery) proving the failure cannot
+   print "No open PRs" or reach teardown. Plan §Design/§Tests updated.
+2. ACCEPTED (Block): `run_git` gains an additive `timeout` param (default unbounded — no
+   existing caller changes behavior); `_net_git()` bounds the clone/fetch/pre-queue/post-merge
+   call sites and converts `TimeoutExpired` to the normal failure shape so it reaches the retry
+   loop. Focused mocked-timeout test (hung-git-bounded). Plan §R2a/§Design/§Tests updated.
+3. ACCEPTED (Fix): plan now states explicitly that `--allow-unready-primary` is preserved
+   unchanged after retry exhaustion (no escape hatch added or removed) and an
+   allow-unready-preserved test pins it.
+4. ACCEPTED (Fix): `_deps` kept as the sorted union for the `--json` contract; `_hard_deps`/
+   `_soft_deps` added; only `land_prs` changes what it consults. No breaking CLI change.
+5. ACCEPTED (Fix): stub gets a per-PR remaining-failures map with message (bool form kept for
+   the existing global-failure test) — one mechanism covers network-defer and retry-then-success.
+6. ACCEPTED (Fix): citations corrected (explicit deps toposort_prs.py:75-84, collision
+   :89-121, blocking read merge_cleanup.py:475-480).
+
+Plan revised in PROJECT/1-INBOX/GH-623-MERGE-CLEANUP-RESILIENCE.md (see §Execution log round-1
+record). Re-review requested on the revised plan.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
