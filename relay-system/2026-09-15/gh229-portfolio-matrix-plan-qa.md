@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: Reviewer (codex)
+NEXT: orchestrator (Builder)
 STATUS: Open
 ---
 
@@ -290,3 +290,34 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+## Codex review — 2026-09-15 (Round 5)
+
+**Grade: B- / Block.** Round 5 resolves the parser/route responsibility split, spaced-slash parsing, registry-key collision rule, unrepresented-project rows, dedicated matrix state, and manual-vs-automated layout proof. The projection is now coherent. Two mutation-safety gaps remain: a stale `line_index` can still match the wrong same-titled task before the ambiguity fallback runs, and the existing Swift transport retries POST requests across both localhost candidates.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — PASS.** The plan now keeps `parse_sectioned_goals()` syntactic, performs registry association once in the route, reuses `resolve_database_path()`, `get_vault_path() + FOCUS5_GOALS_FILENAME`, `get_projects()`, `normalize_match_text()`, `Focus5Client`, and `Theme`, and adds no persistence or parallel completion engine (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:49-69,113-133`). This is commensurate with the local single-user scope.
+
+2. **Single writer path — TOPOLOGY PASS, END-TO-END SAFETY FAIL.** Every task still targets the one canonical endpoint/helper, but the request contract is not enough to guarantee the intended task. `_candidate_indexes()` puts the preferred line first, and `complete_goal_in_file()` immediately writes it when its title matches (`src/rebalance/ingest/goals_file.py:55-60,73-115`). If edits shift another project's same-titled task onto the stale index, the preferred-line check succeeds and `AmbiguousGoalError` is never reached; the planned fallback-only ambiguity guard at `GH-229-PORTFOLIO-PLANNING-MATRIX.md:63-68` does not cover this case. Cheapest correction: add a `goals_revision` content hash to the matrix response and completion request, compute it from the same content the helper will mutate, and return a no-write `409 stale_goal_snapshot` when it differs. Keep the field optional only if backward compatibility is required, but require it for matrix mutations and add the shifted-index/same-title regression.
+
+   The Swift transport also makes mutation failover unsafe. `candidateBaseURLs` contains ports 8787 and 8767, `execute()` continues after every HTTP or transport error, and `completeGoal()` sends its POST through that generic executor (`macOS/Apps/Focus5Float/Sources/Focus5Float/Focus5Client.swift:86-92,136-171,244-264`). Thus a 409 from the canonical server is retried against the second candidate and can be masked; a lost response after a successful write can dispatch the same mutation again. Keep candidate failover for GETs, but make POST completion single-attempt against the selected primary and never retry after an HTTP response or ambiguous transport failure. Add a `MockURLProtocol` assertion that a 409 produces exactly one POST and no candidate failover.
+
+3. **Data contract & wire shape — PASS WITH FIX.** The additive snake-case projection, safe coercion, deterministic metric ordering, three-task cap, and row shape are compact (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:70-96`). Add the revision token required above. Also define duplicate source-section behavior: two identical `## Project / Subproject` groups currently produce two rows but both derive the same Swift ID (`:53,60-61`). Coalesce identical matched `(project, subproject)` groups in file order before the three-task cap, or skip later duplicates with a warning; either rule must guarantee one emitted row per derived ID and have a fixture.
+
+4. **UI & ergonomics — PASS WITH FIX.** The frozen 130pt column, shared 58pt row height, bounded task columns, dedicated load/offline state, injected client, and 340/420pt manual check fit the panel (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:97-107,149-150`). The model state names no mutation error or in-flight guard (`:104-106`). Surface 409/stale-snapshot errors without discarding the last matrix, and disable the active pill while its request is in flight so repeated clicks cannot issue concurrent completion requests.
+
+5. **Gaps / blind spots — FAIL.** Add focused acceptance cases for: (a) a stale index now occupied by another section's same-titled task -> 409 and byte-for-byte no write; (b) completion 409 -> exactly one POST, no port-8767 fallback, visible error, unchanged matrix; (c) transport ambiguity -> no second POST and retained/refetched state; and (d) duplicate identical section headings -> one unique row ID with the chosen coalesce/skip rule. The current matrix covers duplicate-title fallback and successful POST-then-GET only (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:146-149`), so it would not catch either consequential mutation path above.
+
+### SWE rubric
+
+| Pillar | Result | Cheapest plan correction |
+|---|---|---|
+| Recon | Pass with fix | Add the generic client's candidate-failover behavior and preferred-line-before-fallback ordering to the current-state map. |
+| Minimal | Pass | A revision hash, one POST failover policy, and duplicate-group rule are small extensions of existing components, not new machinery. |
+| Diagnosable | Fix | Surface 409/stale-snapshot errors in matrix UI while retaining the last response; do not mask the first server's HTTP error with fallback attempts. |
+| Blast | Block | Prevent a stale exact index from completing another section's same-titled task and prevent multi-candidate POST dispatch. |
+| Proof | Block | Add the four negative-path assertions above; retain the existing projection, layout, coercion, and success-sequence checks. |
+
+**Reversibility:** Easy for the additive endpoint/tab. Goal completion remains consequential and must be snapshot-bound and single-dispatch before interactive matrix pills are safe.
+
+VERDICT: FAIL
