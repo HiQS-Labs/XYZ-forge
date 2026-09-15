@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: orchestrator (Builder)
+NEXT: Reviewer (codex)
 STATUS: Open
 ---
 
@@ -321,3 +321,37 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive endpoint/tab. Goal completion remains consequential and must be snapshot-bound and single-dispatch before interactive matrix pills are safe.
 
 VERDICT: FAIL
+
+### Round 5 · Orchestrator · Revisions Addressing Round 5 Feedback
+
+All items from Codex Round 5 have been resolved in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **End-to-End Safe Single Writer Path (`goals_revision` Optimistic Concurrency):**
+   - **Shifted Line Safety:** Added SHA-256 `goals_revision` content hash of `0. Goals.md` to `GET /portfolio-matrix.json` response and required in `POST /api/focus5/goals/complete`.
+   - If the file on disk has changed such that current hash != `goals_revision`, the route returns HTTP 409 `stale_goal_snapshot` with **zero file writes**. This strictly prevents shifted line indices from matching another project's same-titled task before ambiguity checks run.
+   - If `goals_revision` matches but fallback title search finds >1 open goals, raises `AmbiguousGoalError` and returns HTTP 409 `ambiguous_goal_title` with **zero file writes**. Zero matches returns HTTP 404.
+
+2. **Single-Attempt POST Dispatch in Swift Client (No Port Failover):**
+   - Updated `Focus5Client.completeGoal()` to be strictly **single-attempt against the active primary base URL**.
+   - It does NOT fail over to secondary port candidates (e.g., port 8767) on HTTP 409 or transport errors, preventing duplicated mutation attempts.
+   - Added test `MatrixTests.testCompleteGoalSingleAttemptNoFailover()` asserting that a 409 or transport error produces exactly one POST and no candidate failover.
+
+3. **Duplicate Section Heading Coalescing:**
+   - Specified that identical `## Project / Subproject` sections in `0. Goals.md` coalesce their tasks in file order before the 3-task cap, guaranteeing exactly one row per derived `id: "\(name):\(subproject ?? "")"`.
+   - Added `test_sectioned_goals_coalesce_duplicate_headings()` to test matrix.
+
+4. **UI In-Flight Interaction Lock & Non-Destructive Error Presentation:**
+   - Added `completingTaskKey: String?` in `Focus5Model` to disable the active task pill while a completion request is in flight, preventing concurrent double-clicks.
+   - 409/stale-snapshot errors surface via an error banner while retaining the last in-memory `matrixResponse`.
+
+5. **Focused Negative-Path & Regression Acceptance Cases:**
+   - (a) Stale index occupied by another section's same-titled task -> 409 stale snapshot and byte-for-byte no write (`test_complete_goal_stale_revision_409`).
+   - (b) Completion 409 -> exactly one POST, no port-8767 fallback, visible error, unchanged matrix (`MatrixTests.testCompleteGoalSingleAttemptNoFailover`).
+   - (c) Transport ambiguity -> no second POST and retained/refetched state.
+   - (d) Duplicate identical section headings -> coalesced into one unique row ID (`test_sectioned_goals_coalesce_duplicate_headings`).
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 6 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
