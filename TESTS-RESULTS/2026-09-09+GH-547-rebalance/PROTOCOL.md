@@ -1,0 +1,9 @@
+# Rebalance HiQS-Labs transfer screen
+
+Read-only local SQLite snapshot: latest 12 HiQS-Labs issues, latest 12 PRs by updated_at, latest 12 direct commits by committed_at; stable tie ordering by repo and ID. Use title or first commit-message line only. No private data leaves the machine. This tests transfer of the existing six-class synthetic-trained classifier, not retraining or next-action prediction. Cached observations are not current remote verification.
+
+Reuse original 48 synthetic training examples, model revision, mean pooling and linear-head hyperparameters; TF-IDF baseline unchanged. Freeze manual expected labels before fitting/prediction. Same coordinator authored training data and reviews labels; no independent adjudication. Planning, maintenance/closeout, unclear or multi-event titles get out_of_scope and are excluded from six-class accuracy. The existing model has no trained out-of-scope class or calibrated abstention: record its forced predictions on those records without treating them as valid classifications.
+
+Deduplicate exact case-insensitive text before primary metrics; disclose raw and unique counts. PR titles/commit subjects can still refer to the same change without matching text; this is not a session/project-disjoint holdout. Score only classes represented, report support and coverage, no comparison of aggregate accuracy to the balanced synthetic screen as a causal change. Two warm test passes check repeatability. Report confusion and error counts locally; publish only aggregate metrics, scripts and hashes.
+
+Sample SHA256: 410b67d6704eb928ab3186457c6f720fb27992624de91a3bedc5df5e32193a4c. Raw and labeled snapshot stored locally under ~/.cache/xyz-modernbert-rebalance, never staged. Do not tune against this sample or claim independent truth labels. GitHub metadata is the preferred source for known merge/status facts; this screen assesses text semantics only.

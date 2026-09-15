@@ -397,16 +397,47 @@ echo "── unauthenticated-by-default guard (GH-384 review) ──"
 # Execute the real entry point; this only adds diagnostics, not a longer wait or a retry.
 cat > "$WORK/bridge-probe.py" <<'PY_PROBE'
 import faulthandler
+import os
 import runpy
+import socket
 import sys
 from pathlib import Path
 
 faulthandler.dump_traceback_later(4)
+if os.environ.get("AGENT_CHORUS_TEST_GETFQDN") == "raise":
+    def blocked_getfqdn(*args, **kwargs):
+        raise RuntimeError("socket.getfqdn must not run during bridge bind")
+    socket.getfqdn = blocked_getfqdn
 script = sys.argv.pop(1)
 sys.argv[0] = script
 sys.path.insert(0, str(Path(script).parent))
 runpy.run_path(script, run_name="__main__")
 PY_PROBE
+
+# GH-625: binding must not perform reverse DNS. The tunnel refusal is downstream of server
+# construction, so reaching it with getfqdn replaced by a hard failure proves startup bypassed
+# the lookup. NEGATIVE CONTROL: remove ThreadingHTTPServer.server_bind and this check goes red.
+_getfqdn_log="$WORK/getfqdn-bind.log"
+: > "$_getfqdn_log"
+( env -u CF_ACCESS_CLIENT_ID -u CF_ACCESS_CLIENT_SECRET \
+    AGENT_CHORUS_TEST_GETFQDN=raise PYTHONUNBUFFERED=1 \
+    python3 "$WORK/bridge-probe.py" "$BRIDGE" --port 0 --tunnel --root "$REPO" \
+    > "$_getfqdn_log" 2>&1; echo "rc=$?" >> "$_getfqdn_log" ) &
+_getfqdn_pid=$!
+for _i in $(seq 1 40); do
+  grep -q '^rc=' "$_getfqdn_log" 2>/dev/null && break
+  sleep 0.1
+done
+kill "$_getfqdn_pid" 2>/dev/null || true
+wait "$_getfqdn_pid" 2>/dev/null || true
+getfqdn_out="$(cat "$_getfqdn_log")"
+
+case "$getfqdn_out" in
+  *"REFUSING --tunnel without Cloudflare Access credentials"*"rc=2"*)
+    pass "GH-625: bridge binds and reaches tunnel refusal without socket.getfqdn" ;;
+  *)
+    fail "GH-625: bridge startup called socket.getfqdn or missed the 4s refusal window (got: $getfqdn_out)" ;;
+esac
 
 _noauth_log="$WORK/noauth-tunnel.log"
 : > "$_noauth_log"

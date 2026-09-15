@@ -81,6 +81,16 @@ Nothing here requires a paid tier, a dedicated runner vendor, or speculative sub
 * **Prevents:** "Review theatre" where a green checkmark gives a false sense of security over uninspected code.
 * **Audit Check:** Do automated test and review reports clearly disclose exclusions, skipped tiers, and boundary limitations?
 
+### 13. Bounded Flake Stress Loops and Active Quarantine Sinks
+* **Mechanism:** When investigating non-deterministic test failures, use a bounded 100-iteration diagnostic stress loop under artificial CPU/disk jitter and concurrency race detectors (ThreadSanitizer, Go `-race`), capped by a total time/resource budget (e.g. 5-minute timeout). This diagnostic option cross-references Principle 4 (matched base/candidate attribution) so it does not become a competing single-sided attribution protocol. Tests isolated to a quarantine sink must continue running and reporting assertions in CI; every quarantined test requires a named owner, linked tracked issue, explicit UTC expiry date, and strict fail/return-to-gate behavior upon expiration. Never silently disable assertions.
+* **Prevents:** Flaky tests silently poisoning the integration branch or being permanently masked by unconditional test disables.
+* **Audit Check:** Do quarantined tests continue running and reporting assertions? Do they carry a named owner, tracked issue, and active UTC expiry date?
+
+### 14. Workload-Scoped Performance and Resource Budget Fences
+* **Mechanism:** For performance-critical workloads, batch runners, and stateful daemons, establish automated regression fences (heapsnapshot diffing, memory allocation profiling, and p99 latency thresholds) scoped to representative workloads and critical paths.
+* **Prevents:** Silent memory leaks, unbounded heap growth, and latency regressions creeping into mainline code.
+* **Audit Check:** Are memory and latency thresholds asserted against representative workloads in performance-critical paths?
+
 ---
 
 ## Anti-Patterns: What to Skip
