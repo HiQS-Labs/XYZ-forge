@@ -48,3 +48,14 @@ reporting modes and do not require the override.
 - [x] Read-only modes and ready-primary execution retain their behavior.
 - [x] The source skill and deployed copy are synchronized through Skills Army HQ.
 - [ ] Focused tests, PDDA checks, and the repository validation gate pass.
+
+## Lessons Learned (For Future Agents)
+
+- Landed as PR #596 (squash `7059ec32`) after a CHANGELOG + ledger conflict against `development`;
+  the ledger row was replayed through the writer rather than merged textually (merge-cleanup Phase C,
+  attempt 2/2 for the PR).
+- The gate this PR adds refuses an unready primary *before* mutation. The same landing exposed the
+  opposite gap: merge-cleanup's own `pr_merged` work-emit dirties a READY primary before its
+  fast-forward (#624), so "ready at Phase 0" is not "ready at fast-forward" until that is fixed.
+- Hosted wave-reconcile could not land this reconciliation (development's suite red on #619/#625);
+  it was run locally with `--force-local-reconcile` after cancelling the in-flight hosted run.
