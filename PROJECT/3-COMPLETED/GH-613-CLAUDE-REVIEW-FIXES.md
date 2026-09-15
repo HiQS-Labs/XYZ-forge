@@ -1,8 +1,8 @@
 ---
 title: "GH-613: Claude review follow-ups"
-status: Active
+status: Complete
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-15
 owner: operator
 gh_issue: 613
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/613
