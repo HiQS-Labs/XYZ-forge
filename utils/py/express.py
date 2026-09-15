@@ -658,7 +658,7 @@ def cmd_ledger(args):
             if not cands:
                 refuse(root, "no-doc", "run `express docs` first (or pass --doc-path)", issue=args.issue)
             doc = "PROJECT/2-WORKING/" + cands[0]
-        raw = ("- **GH-%d · %s** 🆕 rated 2/2/2 — [doc](%s) · [#%d](%s)" %
+        raw = ("- **GH-%d · %s** 🆕 rated 2/2/2/2 — [doc](%s) · [#%d](%s)" %
                (args.issue, meta["title"], doc, args.issue, meta["url"]))
         run_releases(root, "roadmap", "add",
                      "--issue-num", str(args.issue), "--issue-url", meta["url"],

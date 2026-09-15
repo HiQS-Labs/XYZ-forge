@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""xyz_mini_sync.py — copy the embedded manifest of XYZ-forge files into a local checkout of
+HiQS-Labs/XYZ-mini, commit with the source SHA, optionally push. (GH-589)
+
+The manifest lives in this file so a publication is a function of (source revision, this file).
+Preview by default; --apply writes and commits; --push also pushes and reads origin/main back.
+
+Guards (deliberately few):
+  * every manifest source must exist and be tracked, or nothing is written (exit 2)
+  * an existing destination file at an output path that the previous publication did not write is
+    never overwritten (exit 2) — the one ownership guard
+  * the files about to ship are regex-scanned for secrets before anything is written (exit 4)
+
+Usage: utils/py/xyz_mini_sync.py [--dest PATH] [--apply] [--push] [--allow-dirty] [--print-manifest]
+Exit:  0 ok · 2 refused · 3 commit/push failed · 4 secret found
+"""
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+# (source path in XYZ-forge, destination path in XYZ mini, mode)
+#   managed: replaced every run, deleted from mini when dropped from this list
+#   seed:    copied only when absent in mini; never replaced, never deleted
+# A directory entry ships every TRACKED file beneath it.
+MANIFEST = (
+    ("skills/relay", "skills/relay", "managed"),
+    ("skills/ponytail", "skills/ponytail", "managed"),
+    ("skills/honest", "skills/honest", "managed"),
+    ("skills/debug-mantra", "skills/debug-mantra", "managed"),
+    # agent-chorus runtime only (its standalone publish pipeline stays behind)
+    ("skills/agent-chorus/SKILL.md", "skills/agent-chorus/SKILL.md", "managed"),
+    ("skills/agent-chorus/README.md", "skills/agent-chorus/README.md", "managed"),
+    ("skills/agent-chorus/TELEMETRY.md", "skills/agent-chorus/TELEMETRY.md", "managed"),
+    ("skills/agent-chorus/EXPERIMENTS.md", "skills/agent-chorus/EXPERIMENTS.md", "managed"),
+    ("skills/agent-chorus/install.sh", "skills/agent-chorus/install.sh", "managed"),
+    ("skills/agent-chorus/agents", "skills/agent-chorus/agents", "managed"),
+    ("skills/agent-chorus/scripts", "skills/agent-chorus/scripts", "managed"),
+    # consult: skill + shim + full bash lib + its closed Python import set (layout preserved)
+    ("skills/consult", "skills/consult", "managed"),
+    ("relay-automation/consult.sh", "relay-automation/consult.sh", "managed"),
+    ("relay-automation/relay-turn-lib.sh", "relay-automation/relay-turn-lib.sh", "managed"),
+    ("utils/py/consult.py", "utils/py/consult.py", "managed"),
+    ("utils/py/rtl.py", "utils/py/rtl.py", "managed"),
+    ("utils/py/turn_diagnostics.py", "utils/py/turn_diagnostics.py", "managed"),
+    ("utils/py/claude_cli.py", "utils/py/claude_cli.py", "managed"),
+    ("utils/py/proc_group.py", "utils/py/proc_group.py", "managed"),
+    # mini-only sources authored in forge under mini/
+    ("mini/skills/skill-viewer", "skills/skill-viewer", "managed"),
+    ("mini/README.md", "README.md", "managed"),
+    ("mini/gitignore", ".gitignore", "managed"),
+    ("mini/TODO.md", "TODO.md", "seed"),
+    ("LICENSE", "LICENSE", "managed"),
+    ("LICENSE-COMMERCIAL.md", "LICENSE-COMMERCIAL.md", "managed"),
+)
+MANIFEST_FILE = "MANIFEST.txt"        # managed paths of the last publication (drives deletions)
+REVISION_FILE = ".xyz-forge-revision"  # source SHA of the last publication
+SECRET_PATTERNS = (
+    ("aws-access-key", re.compile(rb"(?<![A-Z0-9])(AKIA|ASIA)[A-Z0-9]{16}(?![A-Z0-9])")),
+    ("github-token", re.compile(rb"\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,}\b")),
+    ("github-pat", re.compile(rb"\bgithub_pat_[A-Za-z0-9_]{80,}\b")),
+    ("openai-key", re.compile(rb"\bsk-(proj-|ant-)?[A-Za-z0-9_-]{32,}\b")),
+    ("google-api-key", re.compile(rb"\bAIza[0-9A-Za-z_-]{35}\b")),
+    ("slack-token", re.compile(rb"\bxox[bpas]-[A-Za-z0-9-]{10,}\b")),
+    ("private-key-pem", re.compile(rb"-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY( BLOCK)?-----")),
+)
+
+
+class Refuse(Exception):
+    def __init__(self, msg, code=2):
+        super().__init__(msg)
+        self.code = code
+
+
+def log(msg):
+    print(f"xyz-mini-sync: {msg}", file=sys.stderr)
+
+
+def git(repo, *args, check=True):
+    cp = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True)
+    if check and cp.returncode != 0:
+        raise Refuse(f"git {' '.join(args)} failed in {repo}: {cp.stderr.strip()}")
+    return cp
+
+
+def expand(source):
+    """(src_file, dest_file, mode) for every tracked file the manifest names."""
+    out = []
+    for src, dest, mode in MANIFEST:
+        files = [f for f in git(source, "ls-files", "-z", "--", src).stdout.split("\0") if f]
+        if not files:
+            raise Refuse(f"manifest source missing or untracked: {src}")
+        for f in files:
+            out.append((f, dest if f == src else dest + f[len(src):], mode))
+    return out
+
+
+def scan(root, rels):
+    for rel in rels:
+        with open(os.path.join(root, rel), "rb") as fh:
+            data = fh.read()
+        for name, rx in SECRET_PATTERNS:
+            if rx.search(data):
+                raise Refuse(f"secret pattern '{name}' in {rel}", code=4)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dest", default=os.environ.get("XYZ_MINI_REPO"))
+    ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--push", action="store_true")
+    ap.add_argument("--allow-dirty", action="store_true")
+    ap.add_argument("--print-manifest", action="store_true")
+    a = ap.parse_args(argv)
+    if a.print_manifest:
+        print(json.dumps([list(e) for e in MANIFEST]))
+        return 0
+    apply = a.apply or a.push
+    try:
+        source = git(os.path.dirname(os.path.abspath(__file__)), "rev-parse", "--show-toplevel").stdout.strip()
+        dest = os.path.realpath(a.dest or os.path.join(source, os.pardir, "XYZ-mini"))
+        if not os.path.isdir(os.path.join(dest, ".git")):
+            raise Refuse(f"destination is not a git checkout: {dest}")
+        sha = git(source, "rev-parse", "HEAD").stdout.strip()
+        branch = git(source, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+        dirty = bool(git(source, "status", "--porcelain").stdout.strip())
+        if dirty and not a.allow_dirty:
+            raise Refuse("source has uncommitted changes (commit them or pass --allow-dirty)")
+        if git(dest, "status", "--porcelain").stdout.strip():
+            raise Refuse("destination has uncommitted changes")
+
+        files = expand(source)
+        managed = sorted({d for _, d, m in files if m == "managed"})
+        prev_path = os.path.join(dest, MANIFEST_FILE)
+        prev = set(open(prev_path).read().split()) if os.path.isfile(prev_path) else set()
+        owned = prev | {MANIFEST_FILE, REVISION_FILE}
+
+        # the one ownership guard: never overwrite something the last publication did not write
+        for _, d, m in files:
+            if m != "seed" and d not in owned and os.path.lexists(os.path.join(dest, d)):
+                raise Refuse(f"{d} exists in the destination but was not published by this tool — refusing to overwrite")
+        deletions = sorted(d for d in prev - set(managed) if os.path.lexists(os.path.join(dest, d)))
+        copies = [(s, d) for s, d, m in files if m == "managed" or not os.path.exists(os.path.join(dest, d))]
+
+        scan(source, [s for s, _ in copies])
+        log(f"source {sha[:12]} ({branch}{', dirty' if dirty else ''}) → {dest}")
+        log(f"plan: copy {len(copies)} files, delete {len(deletions)}" + (": " + " ".join(deletions) if deletions else ""))
+        if not apply:
+            log("preview only — pass --apply to write, --push to publish")
+            return 0
+
+        for d in deletions:
+            git(dest, "rm", "-q", "--", d)
+        for s, d in copies:
+            dp = os.path.join(dest, d)
+            os.makedirs(os.path.dirname(dp), exist_ok=True)
+            shutil.copy(os.path.join(source, s), dp)  # copy() keeps the executable bit
+            git(dest, "add", "--", d)
+        with open(prev_path, "w") as fh:
+            fh.write("".join(p + "\n" for p in managed))
+        with open(os.path.join(dest, REVISION_FILE), "w") as fh:
+            fh.write(f"source_repo=XYZ-forge\nsource_sha={sha}\nsource_branch={branch}\nsource_dirty={int(dirty)}\n")
+        git(dest, "add", "--", MANIFEST_FILE, REVISION_FILE)
+
+        if git(dest, "diff", "--cached", "--quiet", check=False).returncode == 0:
+            log("no changes — no commit created")
+        else:
+            msg = f"sync: XYZ-forge@{sha[:12]} ({branch}){' [dirty source]' if dirty else ''}"
+            cp = git(dest, "-c", "user.name=xyz-mini-sync", "-c", "user.email=xyz-mini-sync@users.noreply.github.com",
+                     "commit", "-q", "-m", msg, check=False)
+            if cp.returncode != 0:
+                log(f"commit failed: {cp.stderr.strip()}")
+                return 3
+            log(f"committed {git(dest, 'rev-parse', '--short', 'HEAD').stdout.strip()}: {msg}")
+        if a.push:
+            cp = git(dest, "push", "origin", "HEAD:main", check=False)
+            if cp.returncode != 0:
+                log(f"push failed (commit retained, rerun to retry): {cp.stderr.strip()}")
+                return 3
+            head = git(dest, "rev-parse", "HEAD").stdout.strip()
+            remote = git(dest, "ls-remote", "origin", "refs/heads/main").stdout.split()
+            if not remote or remote[0] != head:
+                log(f"push read-back mismatch: remote {remote[:1]} != {head}")
+                return 3
+            log(f"pushed and verified origin/main == {head[:12]}")
+        return 0
+    except Refuse as e:
+        log(f"refused: {e}")
+        return e.code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -640,7 +640,7 @@ def main():
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
     parser.add_argument("--reconcile-pr", type=int, default=0, help="Run post-merge reconcile on a specific PR number")
     parser.add_argument("--integration-branch", default="development", help="Branch PRs land on and the primary must be able to fast-forward (default: development)")
-    parser.add_argument("--allow-unready-primary", action="store_true", help="Merge even though the primary checkout cannot receive the landing (records the blockers and proceeds)")
+    parser.add_argument("--allow-unready-primary", action="store_true", help="Explicitly defer primary-checkout cleanup and proceed even though the primary cannot receive the landing")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
 
     args = parser.parse_args()
@@ -739,9 +739,6 @@ def main():
             return 2
         primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
         print(format_primary_landing(primary_landing) + "\n")
-        if _primary_blocks("merge"):
-            return 2
-
         # R2-2: the branch Phase 0 checked must be the branch these PRs actually land on. A PR
         # based elsewhere would merge into a tree whose readiness was never established.
         mismatched = [pr for pr in ordered_prs
@@ -753,6 +750,12 @@ def main():
             log_err("Phase 0 only vouches for the selected integration branch.")
             log_err(f"Re-run with --integration-branch <their base>, or exclude them.")
             return 2
+
+    # GH-595: executing cleanup is one operation, even when there are no PRs or the caller chose
+    # teardown-only. The operator — not the skill — owns any decision to leave the primary
+    # unready. Refuse before the first Phase 5/6 mutation unless that deferral is explicit.
+    if _primary_blocks("execute cleanup"):
+        return 2
 
     if not args.teardown_only and ordered_prs:
         print("=" * 80)

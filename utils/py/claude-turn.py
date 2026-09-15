@@ -8,6 +8,7 @@ import json
 import shutil
 from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root, rtl_default_log
 from turn_diagnostics import TurnDiagnostics
+from claude_cli import resolve_binary, preflight, read_result
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -57,15 +58,7 @@ def main():
         print(f"claude-turn: actor {me} is not the Claude agent ({claude_agent}) — deferring (window-driven)", file=sys.stderr)
         sys.exit(0)
 
-    resolved_claude = ""
-    claude_bin_env = os.environ.get("CLAUDE_BIN", "")
-    if claude_bin_env and shutil.which(claude_bin_env):
-        resolved_claude = claude_bin_env
-    else:
-        if shutil.which("claude"):
-            resolved_claude = "claude"
-        elif os.access(os.path.expanduser("~/.claude/local/claude"), os.X_OK):
-            resolved_claude = os.path.expanduser("~/.claude/local/claude")
+    resolved_claude = resolve_binary(os.environ)
             
     if not resolved_claude:
         print("claude CLI not found on PATH; set CLAUDE_BIN or use a codex/agy builder", file=sys.stderr)
@@ -161,6 +154,13 @@ def main():
     # Claude evaluates the directory it is launched in; under worktree isolation that is `wt`,
     # rather than the original target root.
     if bounded_rc == 0:
+        try:
+            preflight(resolved_claude, run_env, run_cwd)
+        except ValueError as error:
+            print(f"claude-turn: {error}", file=sys.stderr)
+            bounded_rc = 5
+
+    if bounded_rc == 0:
         warn_if_workspace_untrusted(run_cwd)
 
     # GH-346: named so the telemetry block below can record the flags this turn actually ran with.
@@ -185,7 +185,12 @@ def main():
         diag.start()
         try:
             with open(claude_log, "w") as log_f:
-                subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
+                subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stdin=subprocess.DEVNULL, check=True)
+            if run_env.get("CLAUDE_AUTH_MODE") == "subscription":
+                read_result(claude_log)
+        except ValueError as error:
+            print(f"claude-turn: {error}", file=sys.stderr)
+            bounded_rc = 5
         except subprocess.TimeoutExpired:
             bounded_rc = 7
         except subprocess.CalledProcessError as e:

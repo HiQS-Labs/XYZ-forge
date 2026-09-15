@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Focused, git-free receipts test. All fixtures are temporary; no shared setup hooks.
+# Receipt attribution plus disposable Git qualification fixtures; no network or shared setup.
 set -eu
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 exec python3 -B - "$ROOT" "$@" <<'PY'
@@ -279,7 +279,150 @@ class Receipts(unittest.TestCase):
             with contextlib.redirect_stderr(io.StringIO()):
                 express.write_receipt(str(self.repo), sha_c, 590, "test/gh590-demo.sh", 0)
         self.assertEqual(len(outside.read_text().splitlines()), 1)  # nothing was appended through the link
+class Qualification(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='gh591-qualification-')
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name) / 'source'
+        self.root.mkdir()
+        import subprocess
+        self.subprocess = subprocess
+        self.git('init', '-b', 'development')
+        self.git('config', 'user.name', 'Fixture')
+        self.git('config', 'user.email', 'fixture@example.invalid')
+        self.git('remote', 'add', 'origin', 'https://example.invalid/fixture/repo')
+        self.bin = Path(self.tmp.name) / 'bin'
+        self.bin.mkdir()
+        (self.bin / 'npm').write_text('#!/bin/sh\nexit 0\n')
+        (self.bin / 'npm').chmod(0o755)
+        (self.root / 'validate.sh').write_text('''#!/bin/sh
+test "$1" = --sequential || exit 7
+test -z "${XYZ_VALIDATE_SKIP:-}" || exit 8
+test -z "${RT_SHARD:-}" || exit 9
+test -z "${XYZ_HARNESS_DB:-}" || exit 10
+test -z "${PYTEST_ADDOPTS:-}" || exit 11
+test "$TICK_REPO_ROOT" = "$(pwd -P)" || exit 12
+if [ "${GH591_FIXTURE:-}" = red ]; then exit 42; fi
+if [ "${GH591_FIXTURE:-}" = drift ]; then git config core.bare true; exit 0; fi
+python3 - <<'FIXTURE'
+import os,json,pathlib,subprocess
+sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+rows=[dict(event='run.start',commit=sha,mode='sequential',tier=3,registered=1)]
+rows += [dict(event='suite',lane=lane,name=name,rc=0) for lane,name in
+         [('sequential','fixture.sh'),('non-suite','python:test_python_layer.py'),
+          ('non-suite','gamma-poison-staleness-probe')]]
+rows.append(dict(event='run.summary',passed=4,failed=0,total=4,envelope_rc='0',
+                 suite_events_match='yes',run_set='1',registered='1'))
+for row in rows: row.update(run=sha[:9]+'-'+str(os.getppid()),runner='validate')
+if os.environ.get('GH591_FIXTURE') == 'wrong-run':
+    for row in rows: row['run']='unrelated'
+if os.environ.get('GH591_FIXTURE') == 'empty': rows=[]
+if os.environ.get('GH591_FIXTURE') == 'nonobject': rows=[None]
+if os.environ.get('GH591_FIXTURE') == 'partial': rows.pop()
+p=pathlib.Path(os.environ.get('XYZ_VALIDATE_TELEMETRY','.tick/telemetry'))
+p.mkdir(parents=True)
+(p/'validate-sequential-nested-0.jsonl').write_text('{}')
+(p/('validate-sequential-fixture-'+str(os.getppid())+'.jsonl')).write_text(''.join(json.dumps(r)+'\\n' for r in rows))
+FIXTURE
+''')
+        (self.root / '.gitignore').write_text('.tick/\n')
+        self.git('add', 'validate.sh', '.gitignore')
+        self.git('commit', '-m', 'qualification fixture')
+        self.sha = self.git('rev-parse', 'HEAD').strip()
+        self.meta = dict(META, mergeCommit={'oid': self.sha})
+        self.journal = wave.RollbackJournal()
+        self.addCleanup(self.journal.cleanup)
 
+    def git(self, *args):
+        return self.subprocess.check_output(['git', *args], cwd=self.root,
+                                            stderr=self.subprocess.DEVNULL, text=True)
 
+    def qualify(self, mode='', metas=None):
+        with patch.dict(os.environ, PATH=str(self.bin)+os.pathsep+os.environ['PATH'],
+                        GH591_FIXTURE=mode, XYZ_VALIDATE_SKIP='fixture.sh', RT_SHARD='1',
+                        XYZ_HARNESS_DB='/external/sentinel.db', TICK_REPO_ROOT='/external/tick',
+                        PYTEST_ADDOPTS='-k only_one'):
+            wave.qualify_landings(str(self.root), metas or [self.meta], self.journal)
+
+    def receipt(self):
+        files = list((self.root/'TESTS-RESULTS').rglob('provenance.jsonl'))
+        self.assertEqual(len(files), 1)
+        return json.loads(files[0].read_text().splitlines()[0])
+
+    def test_full_gate_produces_attributable_retained_proof(self):
+        self.qualify()
+        entry = self.receipt()
+        self.assertEqual(entry['tested_commit'], self.sha)
+        self.assertTrue(wave.qualification_receipt_matches(str(self.root), entry, self.meta))
+        wave.check_provenance_receipts(str(self.root), self.meta)
+        self.assertEqual(wave.committed_qualifications(str(self.root)), [])
+
+    def test_red_partial_and_identity_drift_produce_no_receipt(self):
+        for mode in ('red', 'partial', 'drift', 'empty', 'nonobject', 'wrong-run'):
+            with self.subTest(mode=mode), self.assertRaises(wave.ReconcileError) as caught:
+                self.qualify(mode)
+            self.assertEqual(caught.exception.code, 6)
+            self.assertFalse(list(self.root.rglob('provenance.jsonl')))
+            self.assertEqual(self.git('rev-parse','HEAD').strip(), self.sha)
+            self.assertEqual(self.git('status','--porcelain'), '')
+
+    def test_wrong_landing_fails_before_qualification(self):
+        with self.assertRaises(wave.ReconcileError):
+            self.qualify(metas=[dict(self.meta, mergeCommit={'oid':'b'*40})])
+        self.assertFalse(list(self.root.rglob('provenance.jsonl')))
+
+    def test_committed_proof_makes_replay_idempotent(self):
+        self.qualify()
+        self.git('add','TESTS-RESULTS')
+        self.git('commit','-m','generated proof and reconciliation')
+        before={str(p):p.read_bytes() for p in (self.root/'TESTS-RESULTS').rglob('*') if p.is_file()}
+        self.qualify('red')  # Would fail if the valid committed proof were not reused.
+        self.assertEqual(before,{str(p):p.read_bytes() for p in (self.root/'TESTS-RESULTS').rglob('*') if p.is_file()})
+
+    def test_new_schema_cannot_fall_through_to_legacy_pr_match(self):
+        self.qualify()
+        entry=self.receipt()
+        for key,value in [('result','fail'),('rc',False),('tested_commit','c'*40),
+                          ('landing_commit','d'*40),('schema_version','wave-qualification@99'),
+                          ('telemetry_sha256','0'*64),('pr',999)]:
+            with self.subTest(key=key):
+                bad=dict(entry, **{key:value})
+                path=next((self.root/'TESTS-RESULTS').rglob('provenance.jsonl'))
+                path.write_text(json.dumps(bad)+'\n')
+                with self.assertRaises(wave.ReconcileError) as caught:
+                    wave.check_provenance_receipts(str(self.root), self.meta)
+                self.assertEqual(caught.exception.code,6)
+
+    def test_incomplete_or_quarantined_telemetry_is_rejected(self):
+        self.qualify()
+        entry = self.receipt()
+        rows = [json.loads(line) for line in (self.root/entry['telemetry']).read_text().splitlines()]
+        for index, field, value in [(0,'registered',0),(-1,'failed',1),(-1,'run_set','0'),
+                                    (-1,'suite_events_match','no'),(-1,'envelope_rc','2')]:
+            with self.subTest(field=field):
+                broken = [dict(row) for row in rows]
+                broken[index][field] = value
+                with self.assertRaises(ValueError):
+                    wave.qualification_summary('\n'.join(json.dumps(row) for row in broken), self.sha)
+
+    def test_bounded_runner_timeout_refuses_receipts(self):
+        from proc_group import BoundedResult
+        with patch('proc_group.run_bounded', return_value=BoundedResult(None,'','',True,1,5400)) as bounded:
+            with self.assertRaises(wave.ReconcileError) as caught:
+                self.qualify()
+            self.assertEqual(caught.exception.code,6)
+            self.assertEqual(bounded.call_args.kwargs['timeout'],5400)
+        self.assertFalse(list(self.root.rglob('provenance.jsonl')))
+
+    def test_receipts_participate_in_rollback(self):
+        self.qualify()
+        self.journal.rollback()
+        self.assertFalse(list(self.root.rglob('provenance.jsonl')))
+        self.assertFalse(list(self.root.rglob('validation.jsonl')))
+
+    def test_batch_qualifies_once_and_retains_each_landing(self):
+        self.qualify(metas=[self.meta,dict(self.meta,number=426)])
+        path=next((self.root/'TESTS-RESULTS').rglob('provenance.jsonl'))
+        self.assertEqual({json.loads(line)['pr'] for line in path.read_text().splitlines()},{425,426})
 unittest.main(verbosity=2)
 PY
