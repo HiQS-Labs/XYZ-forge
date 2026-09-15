@@ -58,30 +58,40 @@ not same root cause — no numeric multiplier applied.
 
 ## Scope — smallest affected surface
 
-Three files plus their pinned tests; no change to B1 resolution, the ledger gate, teardown, or
-the two-repair ceiling.
+Four production files plus their pinned tests; no change to B1 resolution, the ledger gate,
+teardown, or the two-repair ceiling.
 
-1. `skills/merge-cleanup/scripts/toposort_prs.py` — split the published edge lists.
-2. `skills/merge-cleanup/scripts/merge_cleanup.py` — block only on hard edges; retry +
-   defer network failures; `--resume`.
-3. `skills/merge-cleanup/SKILL.md` — drive loop, Done rule, classifier-retry guidance,
+1. `skills/merge-cleanup/scripts/toposort_prs.py` — split the published edge lists; bound and
+   error-harden `fetch_open_prs` (see R2a — it calls `subprocess.run` directly today,
+   `toposort_prs.py:16-33`, with no timeout and no `OSError`/`TimeoutExpired` handling).
+2. `skills/merge-cleanup/scripts/scan_clones.py` — additive `timeout` parameter on `run_git`
+   (default unchanged = unbounded, so every existing scan/ledger caller behaves as today).
+3. `skills/merge-cleanup/scripts/merge_cleanup.py` — block only on hard edges; retry +
+   defer network failures; `--resume`; `_net_git` forwarding finite timeouts.
+4. `skills/merge-cleanup/SKILL.md` — drive loop, Done rule, classifier-retry guidance,
    capability-table rows.
-4. `test/gh534_phase_c_tests.py` — new tests + parity rows; `test/gh534_phase_b_tests.py` —
-   additive gh-stub support (custom failure message, `files` passthrough).
+5. `test/gh534_phase_c_tests.py` — new tests + parity rows; `test/gh534_phase_b_tests.py` —
+   additive gh-stub support (per-PR remaining-failure map, `files` passthrough).
 
 ## Requirements (per issue acceptance criteria)
 
 - R1: `_deps` split into hard (explicit annotations) and soft (collision) edges; **soft edges
   never produce "NOT attempted"** — the per-PR landing simulation remains the real gate.
-- R2: transient network failures (DNS, connection, TLS, timeout) retried with backoff (3
-  attempts); a PR whose pre-decision refresh or landing-clone prep still fails is **deferred**
-  and the queue continues. The same retry applies to **Phase 4 PR discovery** (`fetch_open_prs`):
-  today any `gh pr list` failure returns `[]` and reads as "No open PRs" (a false success);
-  after the fix, empty-vs-error is distinguished and retry exhaustion exits 2 before teardown.
-- R2a: network git calls are **bounded in time**. `run_git` (scan_clones.py:85-100) has no
-  timeout and catches only `OSError`, so a hung clone/fetch never returns and never reaches any
-  retry. Network call sites get a bounded timeout whose `TimeoutExpired` converts to the same
-  failure-result shape as any other error, so it is retried/deferred like the rest.
+- R2: transient network failures (DNS, connection, TLS, timeout) retried with **3 total
+  attempts**, inter-attempt backoff of 2s then 4s (two sleeps, three calls — the exact contract
+  the retry tests pin). A PR whose pre-decision refresh or landing-clone prep still fails is
+  **deferred** and the queue continues. The same retry applies to **Phase 4 PR discovery**
+  (`fetch_open_prs`): today any `gh pr list` failure returns `[]` and reads as "No open PRs" (a
+  false success); after the fix, empty-vs-error is distinguished and retry exhaustion exits 2
+  before teardown.
+- R2a: every network call is **bounded in time**, including the two that are not today:
+  `run_git` (scan_clones.py:85-100) has no timeout and catches only `OSError`, and
+  `fetch_open_prs` (toposort_prs.py:16-33) calls `subprocess.run` with no timeout and no
+  exception handling. `run_git` gains an additive `timeout` parameter (default unbounded — no
+  existing caller changes behavior); network call sites bound their calls and convert
+  `TimeoutExpired` into the same failure-result shape as any other error, so a hung call is
+  retried/deferred/stopped like any other failure. Tests must assert the finite timeout is
+  actually forwarded (boundedness), not merely that the exception is handled.
 - R3: `--resume` re-reads attempt records and skips parked (budget-exhausted) PRs; landed PRs
   are already skipped by the live state re-fetch.
 - R4: SKILL.md gains an explicit drive loop, the rule "Do not report Done unless Phase 5 ran —
@@ -112,9 +122,13 @@ the two-repair ceiling.
   `_deps` is **kept** as the sorted union of both, because `toposort_prs.py --json`
   (`main()`, `:198-201`) serializes the PR dicts and that standalone JSON output is consumed
   outside this repository; the field set only grows. Only `land_prs` changes what it consults.
-- `merge_cleanup.py` Phase 4 discovery: `fetch_open_prs` gains retry (3 transient attempts);
-  its empty-vs-error distinction is preserved at the call site — a `gh pr list` failure after
-  retries prints the diagnostic and **exits 2 before Phase 6**, never "No open PRs found".
+- `merge_cleanup.py` Phase 4 discovery: `fetch_open_prs` is hardened first — its
+  `subprocess.run` gains a finite timeout (180s, matching `_gh`'s default) and
+  `OSError`/`TimeoutExpired` convert into a raised `FetchError` (an explicit error, never a
+  silent `[]` — the existing `mock.patch(..., return_value=[...])` call sites keep working
+  because success still returns a list). The `merge_cleanup.py` call site retries transient
+  failures (3 attempts, 2s/4s), distinguishes empty-vs-error, and **exits 2 before Phase 6**
+  on exhaustion — never "No open PRs found".
 - `merge_cleanup.py land_prs()`:
   - `blocked_by` reads `_hard_deps` ∩ failed — unchanged semantics for explicit dependencies
     (the pinned `dependents-blocked` test uses an explicit annotation and stays green).
@@ -125,16 +139,16 @@ the two-repair ceiling.
     blocked) and are named in the end-of-run summary; any non-empty outcome map → exit 3.
   - `_transient()`: stderr matcher for `could not resolve host`, `connection refused`, `connection
     timed out`, `timed out`, `TLS`/`SSL`, `rate limit`. A `_retry()` helper runs a network call
-    up to 3 attempts with 2s/4s/8s backoff, retrying only transient failures. Applied to:
-    `refresh_pr` (`gh pr view` — already timeout-bounded via `_gh`), Phase 4's `gh pr list`,
-    and the network git calls: `run_git` gains an additive optional `timeout` parameter
-    (default unchanged = unbounded, so every existing caller and the scan paths behave as
-    today), and a small `_net_git()` wrapper in `merge_cleanup.py` passes a bounded timeout to
-    the clone + both fetches in `prepare_landing_clone`, the pre-queue fetch, and the post-merge
-    fetch, converting `subprocess.TimeoutExpired` into the same failure-result shape as a
-    non-zero exit (diagnostic "timed out after Ns"), so a hung git call reaches the retry loop
-    instead of hanging the run. Post-retry exhaustion: defer-and-continue for the two
-    pre-decision call sites; refuse/stop for the pre-queue and post-merge sites (see non-goals).
+    up to **3 total attempts** with 2s then 4s between them (two sleeps, three calls), retrying
+    only transient failures; the retry tests pin the call count and the exact sleep sequence.
+    Applied to: `refresh_pr` (`gh pr view` — already timeout-bounded via `_gh`), Phase 4's
+    `gh pr list` (bounded per the Phase 4 bullet), and the network git calls via a small
+    `_net_git()` wrapper in `merge_cleanup.py` that passes a finite timeout to the clone + both
+    fetches in `prepare_landing_clone`, the pre-queue fetch, and the post-merge fetch,
+    converting `subprocess.TimeoutExpired` into the same failure-result shape as a non-zero exit
+    (diagnostic "timed out after Ns"), so a hung git call reaches the retry loop instead of
+    hanging the run. Post-retry exhaustion: defer-and-continue for the two pre-decision call
+    sites; refuse/stop for the pre-queue and post-merge sites (see non-goals).
 - `--resume`: before the live refresh, if a PR's attempt record exists and shows the repair
   budget exhausted with no in-progress attempt, skip it as `previously parked (resume)`.
   A missing record proceeds normally; an unreadable one warns and proceeds (reserve still gates
@@ -162,13 +176,19 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   - network-defer: `pr view` for PR A fails with "Could not resolve host: github.com" on every
     attempt (backoff patched to near-zero) → A deferred, named in the summary; independent PR B
     still lands; exit 3.
-  - retry-then-success: PR A's view fails exactly twice then succeeds → three `pr view` calls
-    are observed and A lands.
+  - retry-then-success: PR A's view fails exactly twice then succeeds → exactly three `pr view`
+    calls with sleeps [2, 4] between them are observed, and A lands (pins the retry contract).
   - pr-list-discovery: `gh pr list` fails with the DNS message on every attempt → exit 2 before
     Phase 6, the diagnostic is named, and neither "No open PRs found" nor teardown appears.
-    (Red control: on current code this scenario prints "No open PRs" and exits 0.)
+    (Red control: on current code this scenario prints "No open PRs" and exits 0.) A mocked
+    `TimeoutExpired` case additionally proves Phase 4 exits 2 before Phase 6, and the mock
+    asserts the subprocess was invoked **with a finite timeout** — handling alone is not the
+    bound being pinned.
   - hung-git-bounded: `prepare_landing_clone`'s clone raises `subprocess.TimeoutExpired`
     (mocked) → the run defers the PR with a "timed out" diagnostic instead of hanging; exit 3.
+    The mock asserts `_net_git` forwarded a finite timeout to `run_git`, and a companion
+    assertion pins that a plain `run_git` call with no timeout argument stays unbounded by
+    default (the compatibility shield for scan/ledger callers).
   - resume: pre-seed PR A's record with 2 finished repairs → `--resume` skips A as previously
     parked, B lands, no B1 line for A; without `--resume`, A takes the park path (existing
     behavior preserved).
@@ -188,10 +208,10 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
 ## Ordered implementation list
 
 1. Write the red tests + stub support; run → expect exactly those failures.
-2. `toposort_prs.py`: `_hard_deps`/`_soft_deps` (+ `_deps` kept as union); keep ordering
-   identical -> expect `test/gh436-merge-cleanup.py` green.
-3. `merge_cleanup.py`: hard/soft blocking, bounded network calls (`run_git` timeout param +
-   `_net_git`), Phase 4 discovery retry + exit-2, `_transient`/`_retry`, defer-and-continue,
+2. `toposort_prs.py`: `_hard_deps`/`_soft_deps` (+ `_deps` kept as union); `fetch_open_prs`
+   bounded + `FetchError`; keep ordering identical -> expect `test/gh436-merge-cleanup.py` green.
+3. `scan_clones.py` additive `run_git` timeout; `merge_cleanup.py`: hard/soft blocking,
+   `_net_git`, Phase 4 discovery retry + exit-2, `_transient`/`_retry`, defer-and-continue,
    `--resume` -> expect the red tests green; `test/gh534_phase_c_tests.py` fully green.
 4. SKILL.md drive loop + rows + option list -> expect `TestParityGuard` green.
 5. Focused gate: `python3 -m unittest test.gh534_phase_c_tests -v` and `bash test/gh436-merge-cleanup.sh`
@@ -213,3 +233,12 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   unchanged, test added. (4) `toposort_prs.py --json` serializes `_deps` — kept as union,
   no breaking change. (5) stub needs per-PR remaining-failure counts; accepted. (6) citation
   corrections accepted. Plan revised this commit; no finding rejected.
+- 2026-09-14: Codex plan QA round 2 (fresh token `RELAY-gh623-plan-qa-r2`, exit 5 = changes
+  requested). Three findings, all ACCEPTED: (1) BLOCK — `fetch_open_prs` calls `subprocess.run`
+  directly with no timeout or exception handling (toposort_prs.py:16-33), so the promised
+  Phase 4 retry could hang forever; resolved by bounding it and raising `FetchError`, with a
+  test that asserts the finite timeout is actually forwarded. (2) `scan_clones.py` was missing
+  from the affected-file inventory even though `run_git` lives there; added, with an explicit
+  default-unbounded contract assertion. (3) retry contract said "3 attempts" and "2s/4s/8s"
+  backoff, which implies 4 calls; pinned to exactly 3 calls with sleeps [2, 4]. Plan revised
+  this commit; no finding rejected.

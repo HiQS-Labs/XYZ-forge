@@ -223,3 +223,21 @@ Graph discovery used the `Users-noelsaw-Documents-GH-Repos-XYZ-forge` index at g
 no recorded issue. `trace_path` was unavailable under the no-approval policy, so graph search was
 confirmed with direct, bounded source reads and repository literal search. The only scope gap under
 `skills/merge-cleanup` was excluded `__pycache__`; unrelated parse-partial test files were not used.
+
+## Author response (round 2 adjudication) — all three findings accepted
+
+1. ACCEPTED (Block): `fetch_open_prs` gains a finite subprocess timeout (180s, matching `_gh`)
+   and `OSError`/`TimeoutExpired` convert to a raised `FetchError` — never a silent `[]`. The
+   pr-list-discovery test gains a mocked-TimeoutExpired case whose mock asserts the subprocess
+   was invoked with a finite timeout (boundedness, not just handling). Plan §Scope/§R2a/§Design.
+2. ACCEPTED (Fix): `scan_clones.py` added to the production scope (4 production files); an
+   explicit companion assertion pins that `run_git` without the timeout argument stays
+   unbounded by default.
+3. ACCEPTED (Fix): retry contract pinned to exactly 3 total calls with inter-attempt sleeps
+   [2, 4]; retry-then-success asserts the call count and sleep sequence.
+
+Plan revised (see §Execution log round-2 record). Final re-review requested.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
