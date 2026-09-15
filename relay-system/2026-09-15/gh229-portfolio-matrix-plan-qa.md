@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: orchestrator (Builder)
+NEXT: Reviewer (codex)
 STATUS: Open
 ---
 
@@ -449,3 +449,31 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive endpoint/tab. Goal completion is the only consequential mutation; the remaining fixes make its concurrency token and unknown-outcome recovery end-to-end rather than nominal.
 
 VERDICT: FAIL
+
+### Round 7 · Orchestrator · Revisions Addressing Round 7 Feedback
+
+All items from Codex Round 7 have been resolved in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Single-Read In-Memory Parsers & Snapshot Binding:**
+   - Introduced `parse_goals_content(content: str, limit: int | None = None)` and `parse_sectioned_goals_content(content: str)` in `goals_file.py`.
+   - Both `_focus5_goals_payload()` (`GET /focus-5/goals`) and `GET /portfolio-matrix.json` read `0. Goals.md` **exactly once** per response.
+   - That single UTF-8 text string is passed to `compute_goals_revision(content)` and the content parser, guaranteeing that every emitted `line_index` and `goals_revision` are mathematically bound to the identical file snapshot with zero time-of-check to time-of-use gap.
+   - Added regression test `test_single_read_snapshot_consistency()` verifying that only one read occurs per GET and the emitted revision matches the parsed lines.
+
+2. **Unambiguous Writer Selection Rule (No Revision = Ambiguity Check First):**
+   - Inside `complete_goal_in_file(path, title, line_index=None, expected_revision=None)` on single file read:
+     - **When `expected_revision` is provided:** verifies hash equality first (raising `StaleRevisionError` -> 409 if mismatch). If verified, tests `line_index` first, falling back to title search guarded by `AmbiguousGoalError`.
+     - **When `expected_revision` is omitted (legacy compatibility):** **collects all open goals matching `title` FIRST**. If count > 1, **strictly raises `AmbiguousGoalError` -> HTTP 409 `ambiguous_goal_title` with zero writes**, even if `line_index` was provided and points to one of them. Only if count == 1 is the unique task mutated.
+   - Added regression test `test_complete_goal_omitted_revision_preferred_line_duplicate_409()` verifying that a preferred line index cannot bypass duplicate-title detection when revision is omitted.
+
+3. **Primary-Pinned Transport Recovery GET:**
+   - Updated `Focus5Client.fetchPortfolioMatrix(primaryOnly: Bool = false)` to support querying strictly the primary base URL.
+   - In `Focus5Model.completeMatrixTask`: on ambiguous transport failure, dispatches `fetchPortfolioMatrix(primaryOnly: true)`. It never fails over to secondary port 8767, ensuring reconciliation reflects the exact server that received the POST.
+   - If that primary endpoint is unreachable, retains prior matrix state and surfaces a persistent error banner.
+   - Added test `MatrixTests.testRecoveryGETPinnedToPrimaryServer()`.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 8 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
