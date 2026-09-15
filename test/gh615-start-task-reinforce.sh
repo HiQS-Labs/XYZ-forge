@@ -20,19 +20,25 @@ TARGET="$ROOT/skills/start-task/SKILL.md"
 check_start_task_reinforce_contract() {
   local t="$1"
   [ -s "$t" ] || return 1
-  grep -q "bounded test scope" "$t" || return 1
-  grep -q "test non-scope: no speculative test frameworks" "$t" || return 1
-  grep -q "test footprint must scale to implementation" "$t" || return 1
-  grep -q "and repo principles via \`/ponytail\`: reviewer findings are advisory evaluations" "$t" || return 1
-  grep -q "NOT a mandate to accept scope expansion" "$t" || return 1
-  grep -q "Disposition: Rejected (Out of Scope / Ponytail)" "$t" || return 1
-  grep -q "Apply tiered verification discipline" "$t" || return 1
-  grep -q "run ONLY the focused target test suite" "$t" || return 1
-  grep -q "Do NOT re-run full qualifying test gates between" "$t" || return 1
-  grep -q "Run the full qualifying gate" "$t" || return 1
-  grep -q "EXACTLY ONCE on the final approved" "$t" || return 1
-  grep -q "the 3-round cap is a binding budget; do not extend review cycles" "$t" || return 1
-  grep -q "for speculative edge cases when core acceptance criteria are green" "$t" || return 1
+  # GH-616 reflowed the target's prose without changing its policy; match on
+  # whitespace-normalized text so line wrapping cannot defeat the contract.
+  # Mutations below delete whole phrase-bearing lines, so normalization cannot
+  # resurrect a deleted contract phrase.
+  local n
+  n="$(tr '\n' ' ' < "$t" | tr -s '[:space:]' ' ')"
+  grep -q "bounded test scope" <<<"$n" || return 1
+  grep -q "test non-scope: no speculative test frameworks" <<<"$n" || return 1
+  grep -q "test footprint must scale to implementation" <<<"$n" || return 1
+  grep -q "and repo principles via \`/ponytail\`: reviewer findings are advisory evaluations" <<<"$n" || return 1
+  grep -q "NOT a mandate to accept scope expansion" <<<"$n" || return 1
+  grep -q "Disposition: Rejected (Out of Scope / Ponytail)" <<<"$n" || return 1
+  grep -q "Apply tiered verification discipline" <<<"$n" || return 1
+  grep -q "run ONLY the focused target test suite" <<<"$n" || return 1
+  grep -q "Do NOT re-run full qualifying test gates between" <<<"$n" || return 1
+  grep -q "Run the full qualifying gate" <<<"$n" || return 1
+  grep -q "EXACTLY ONCE on the final approved" <<<"$n" || return 1
+  grep -q "the 3-round cap is a binding budget; do not extend review cycles" <<<"$n" || return 1
+  grep -q "for speculative edge cases when core acceptance criteria are green" <<<"$n" || return 1
   return 0
 }
 
