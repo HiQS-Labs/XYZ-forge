@@ -63,8 +63,9 @@ about everyone else's work and nothing about their own.
   Phase 0 and the fast-forward alike.
 - **Unpushed commits on the integration branch are a blocker, not a note.** A squash-merge landing
   skips them silently, which is how local work is lost.
-- Not ready is a **refusal**, reported before the PR matrix and enforced before the first merge.
-  It covers `--reconcile-pr` too: that mode launches governance writers straight into this tree.
+- Not ready is a **refusal**, reported before the PR matrix and enforced before the first mutation.
+  It covers zero-PR cleanup, teardown-only cleanup, and `--reconcile-pr`; none may silently defer
+  the primary checkout to the operator after reporting success.
   A dry run still prints the sequence, labelled explicitly as not executable while blockers stand.
   `--allow-unready-primary` overrides the refusal deliberately and records the blockers.
 - The verdict is **re-established against the live remote** immediately before the first merge, so
@@ -123,7 +124,7 @@ the answer will inform a landing.
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 
 ### Phase 5: Safe Execution & Post-Merge Reconciliation
-- **Refuses to merge when Phase 0 says the primary is not landing-ready**, unless `--allow-unready-primary` is passed. Merging is remote and effectively irreversible; landing into a tree that cannot fast-forward leaves the repo half-landed with reconciliation unrun.
+- **Refuses every executing cleanup when Phase 0 says the primary is not landing-ready**, unless the operator explicitly passes `--allow-unready-primary` to defer that cleanup. This gate applies before any Phase 5 or Phase 6 mutation, including zero-PR and `--teardown-only` runs; the skill never silently chooses to leave the primary dirty or otherwise unready.
 - Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
 - **Every PR is re-fetched before every decision (E).** `gh pr view` is read fresh per PR; a `gh` failure or a `mergeable` of `UNKNOWN` stops the run (a PR whose state is unknown is never merged). A hold label (`hold`, `do not merge`, `blocked`, `wip`) skips the PR (#444). A PR whose base is not the checked integration branch stops the run.
 - **Pre-merge ledger gate (E.6):** the landing is simulated in a disposable full clone — PR head, then `git merge --no-ff --no-commit origin/<integration-branch>` against the integration head fetched *now* (the three-way merge keeps `MERGE_HEAD`, which the ledger resolver's generation floor reads). On a clean merge: a three-way ledger classification (a clean textual merge can still be a semantic conflict), then `releases_app.py check` and `roadmap reconcile-state --dry-run`. Any non-zero exit or `FAIL:` line is **red** and the PR is not merged; `warn:` lines, per-row identity skips and `would move` lines are diagnostics, not red.
@@ -138,7 +139,7 @@ the answer will inform a landing.
   - Wait for hosted `wave-reconcile.yml` run to complete on `development` (`gh run list --workflow wave-reconcile.yml`).
   - Fast-forward primary onto `origin/development`.
   - If hosted run fails or for offline/local reconciliation: `python3 utils/py/wave_reconcile.py --pr <PR_NUM>` (use `--force-local-reconcile` only if an active run was manually killed).
-  - `python3 utils/py/releases_app.py gen && python3 utils/py/releases_app.py check`
+  - `python3 utils/py/releases_app.py check`
   - Verify with `bash utils/pdda/pdda.sh issue-doc-sync`.
 
 ### Phase 6: Safe Teardown
@@ -222,7 +223,7 @@ python3 skills/merge-cleanup/scripts/attempt_record.py finish --index 0 --outcom
 ## Safety Guarantees
 
 1. **Zero Data Loss:** Any dirty working tree, unpopped stash, or unlanded commit automatically stops deletion and marks the checkout `PRESERVE_*`, naming the files or refs. The primary checkout is inspected first and by identity, so it can never be skipped by a scan filter. Anything the scanner cannot prove is preserved, naming the failed query.
-2. **No Blind Landing:** PR merges refuse to run while the primary checkout cannot fast-forward the integration branch.
+2. **No Silent Primary Deferral:** every executing run refuses before merge, teardown, or symlink mutation while the primary is unready; only the operator can defer primary cleanup with `--allow-unready-primary`.
 3. **Zero Process Interference:** Clones with active driver locks, active tick claims (from the event fold), or open file handles are detected and preserved; an unverifiable session is preserved too.
 4. **Canonical Worktree Protocol:** Linked worktrees are always cleanly deregistered from git metadata.
 5. **Governed Landing:** Every PR is gated on the ledger against the current integration head before it merges, verified `MERGED` after, and reconciled (wave reconciliation, ledger check, doc sync) before the next PR is looked at; any failure stops the run.

@@ -25,7 +25,7 @@ jobs:
       github.event_name != 'pull_request' ||
       (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development')
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     permissions:
       contents: write
       issues: read
@@ -48,6 +48,8 @@ jobs:
           test "$(gh api "repos/$REPO/branches/development" --jq .protected)" = false
       - name: Install runtime dependencies
         run: npm ci
+      - name: Install Python dependencies for complete qualification
+        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
       - name: Reconcile merged PR or catch up
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -55,9 +57,9 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$EVENT_NAME" = pull_request ]; then
-            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --gate
+            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --catch-up --gate --qualify
           else
-            python3 utils/py/wave_reconcile.py --catch-up --gate
+            python3 utils/py/wave_reconcile.py --catch-up --gate --qualify
           fi
       - name: Commit declared artifacts and push
         shell: python3 {0}
@@ -72,12 +74,13 @@ jobs:
           # Include both sides of doc moves; --no-renames makes the deletions explicit.
           changed = set(filter(None, git('diff', '--name-only', '--no-renames', '-z', 'HEAD').split(b'\0')))
           changed.update(filter(None, git('ls-files', '--others', '--exclude-standard', '-z').split(b'\0')))
-          exact = {'releases.db', 'releases.sql', 'RELEASES.generated.md', 'ROADMAP.md',
+          exact = {'releases.db', 'releases.sql', 'ROADMAP.md',
                    'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md'}
           doc = r'PROJECT/(?:2-WORKING|3-COMPLETED|4-MISC)/(?:GH-)?[0-9]+-[^/]+\.md'
           plan = r'(?:PROJECT/2-WORKING/)?MARATHON-PLAN-[0-9]{4}-[0-9]{2}-[0-9]{2}\.md'
+          receipt = r'TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/(?:provenance|validation)\.jsonl'
           paths = sorted(os.fsdecode(path) for path in changed)
-          unexpected = [p for p in paths if p not in exact and not re.fullmatch(doc, p) and not re.fullmatch(plan, p)]
+          unexpected = [p for p in paths if p not in exact and not re.fullmatch(doc, p) and not re.fullmatch(plan, p) and not re.fullmatch(receipt, p)]
           if unexpected:
               raise SystemExit('Refusing undeclared reconciliation artifacts: ' + repr(unexpected))
           if not paths:

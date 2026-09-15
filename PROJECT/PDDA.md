@@ -624,6 +624,9 @@ simplification over the old per-tag-doc check's issue/tag cross-checks against `
 
 #### RELEASES.md — release ledger
 
+**Note for XYZ-forge (GH-568):** `RELEASES.md` is retired in this repository in favor of `releases.db`
+and `releases_app.py`. Downstream repos adopting PDDA may still use `RELEASES.md` under the contract below.
+
 **`RELEASES.md` is an optional planning aid.** It is not a required artifact, not a checklist, and
 not something to keep topped up. An empty file, a stale file, or no file at all are all valid
 states — `pdda.sh releases` skips a missing file entirely ("RELEASES.md not found — nothing to

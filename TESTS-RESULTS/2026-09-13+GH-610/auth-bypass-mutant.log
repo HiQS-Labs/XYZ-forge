@@ -1,0 +1,149 @@
+test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) ... 
+  test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='loggedIn') ... FAIL
+  test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='authMethod') ... FAIL
+  test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='apiProvider') ... FAIL
+  test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='subscriptionType') ... FAIL
+test_legacy_and_invalid_mode (__main__.ClaudeSubscription.test_legacy_and_invalid_mode) ... FAIL
+test_missing_binary (__main__.ClaudeSubscription.test_missing_binary) ... FAIL
+test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) ... 
+  test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='ANTHROPIC_API_KEY') ... FAIL
+  test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='ANTHROPIC_AUTH_TOKEN') ... FAIL
+  test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='ANTHROPIC_BASE_URL') ... FAIL
+  test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='CLAUDE_CODE_USE_BEDROCK') ... FAIL
+  test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='CLAUDE_CODE_USE_VERTEX') ... FAIL
+  test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='CLAUDE_CODE_USE_FOUNDRY') ... FAIL
+test_probe_failures (__main__.ClaudeSubscription.test_probe_failures) ... FAIL
+test_real_probe_and_consult_dispatch (__main__.ClaudeSubscription.test_real_probe_and_consult_dispatch) ... ok
+test_results (__main__.ClaudeSubscription.test_results) ... ok
+test_subscription_account (__main__.ClaudeSubscription.test_subscription_account) ... ERROR
+
+======================================================================
+ERROR: test_subscription_account (__main__.ClaudeSubscription.test_subscription_account)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 16, in test_subscription_account
+    self.assertEqual(run.call_args.args[0],['/cli','auth','status'])
+                     ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'args'
+
+======================================================================
+FAIL: test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='loggedIn')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 25, in test_bad_accounts
+    with self.assertRaisesRegex(ValueError,'subscription'): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription'},'/repo')
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='authMethod')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 25, in test_bad_accounts
+    with self.assertRaisesRegex(ValueError,'subscription'): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription'},'/repo')
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='apiProvider')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 25, in test_bad_accounts
+    with self.assertRaisesRegex(ValueError,'subscription'): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription'},'/repo')
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) (key='subscriptionType')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 25, in test_bad_accounts
+    with self.assertRaisesRegex(ValueError,'subscription'): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription'},'/repo')
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_legacy_and_invalid_mode (__main__.ClaudeSubscription.test_legacy_and_invalid_mode)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 40, in test_legacy_and_invalid_mode
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'typo'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_missing_binary (__main__.ClaudeSubscription.test_missing_binary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 19, in test_missing_binary
+    with self.assertRaisesRegex(ValueError,'binary not found'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='ANTHROPIC_API_KEY')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 29, in test_overrides_rejected_before_probe
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription',key:'private-value'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='ANTHROPIC_AUTH_TOKEN')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 29, in test_overrides_rejected_before_probe
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription',key:'private-value'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='ANTHROPIC_BASE_URL')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 29, in test_overrides_rejected_before_probe
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription',key:'private-value'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='CLAUDE_CODE_USE_BEDROCK')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 29, in test_overrides_rejected_before_probe
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription',key:'private-value'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='CLAUDE_CODE_USE_VERTEX')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 29, in test_overrides_rejected_before_probe
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription',key:'private-value'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) (key='CLAUDE_CODE_USE_FOUNDRY')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 29, in test_overrides_rejected_before_probe
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription',key:'private-value'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_probe_failures (__main__.ClaudeSubscription.test_probe_failures)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<string>", line 34, in test_probe_failures
+    with self.assertRaises(ValueError): preflight('/cli',{'CLAUDE_AUTH_MODE':'subscription'},'/repo')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.919s
+
+FAILED (failures=13, errors=1)

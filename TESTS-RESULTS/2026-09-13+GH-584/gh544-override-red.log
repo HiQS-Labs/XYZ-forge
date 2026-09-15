@@ -1,0 +1,31 @@
+== test: gh544-parallel-default ==
+  PASS: --parallel with no value is a usage error (exit 2)
+  PASS:   and says what it wanted
+  PASS: --parallel 0 is refused (exit 2)
+  PASS: --parallel with a non-integer is refused (exit 2)
+  PASS: an unknown flag is refused (exit 2)
+  PASS:   usage names ALL THREE forms
+  PASS: --sequential takes no argument (exit 2)
+  FAIL: a malformed XYZ_VALIDATE_PARALLEL is refused, not silently ignored
+  FAIL:   and names the variable so the operator can find it
+  PASS: --print-mode exits 0
+  PASS: --print-mode runs NO suite (no '== test:' banner in its output)
+  PASS: --print-mode prints no per-suite result lines
+  FAIL: XYZ_VALIDATE_PARALLEL=0 selects sequential
+  FAIL:   and names the env var as the reason (never a silent downgrade)
+  PASS: --sequential selects sequential
+  PASS:   and names the flag as the reason
+  FAIL: XYZ_VALIDATE_PARALLEL=N pins the width
+  FAIL:   and names the env var as the reason
+  PASS: --parallel N pins the width
+  PASS:   and names the flag as the reason
+  PASS: an explicit flag OVERRIDES XYZ_VALIDATE_PARALLEL
+  PASS: no-args run announces a mode
+  FAIL: no-args run states a REASON for whichever mode it picked
+  PASS: a parallel run disclaims promotion evidence in its own header
+  PASS: the sequential header does NOT carry that disclaimer (it is the qualifying form)
+  PASS: ci-local.sh does NOT invoke validate.sh (it runs TESTS itself, sequentially)
+  PASS: ci-local.sh still parses the TESTS array (one list, no drift)
+  PASS: ci.yml's macOS boundary pins --sequential explicitly
+  PASS:   and no CI step invokes a bare ./validate.sh
+  gh544-parallel-default: 22 pass, 7 fail

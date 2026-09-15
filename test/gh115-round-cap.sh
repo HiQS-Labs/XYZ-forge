@@ -103,6 +103,11 @@ round-cap: 2
 BRIEF_EOF
 
 export XYZ_HARNESS_CONTEXT=marathon
+# The driver checks both clients before the stubbed relay runs; no installed agents required.
+for client in agy codex; do
+  printf '#!/usr/bin/env bash\nexit 99\n' > "$A/$client"
+  chmod +x "$A/$client"
+done
 export PATH="$A:$PATH"
 export TICK_BIN="$TICK"
 

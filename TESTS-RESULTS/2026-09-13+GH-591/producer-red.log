@@ -1,0 +1,14 @@
+test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... ERROR
+
+======================================================================
+ERROR: test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 240, in test_full_gate_produces_attributable_retained_proof
+  File "<stdin>", line 232, in qualify
+AttributeError: module 'wave_reconcile' has no attribute 'qualify_landings'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.168s
+
+FAILED (errors=1)

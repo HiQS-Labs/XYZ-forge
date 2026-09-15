@@ -1,0 +1,65 @@
+== test: consult ==
+  workdir: <temporary-path>
+  PASS: happy path exits 0
+  PASS: codex transcript captured
+  PASS: gemini transcript captured
+  PASS: full panel is not stamped
+  PASS: operator WIP preserved (tracked.txt still WIP)
+  PASS: advisor writes did NOT leak into operator tree
+  PASS: tree shows ONLY the operator's WIP, no advisor churn
+  PASS: isolation worktree cleaned up
+  PASS: one-model failure still exits 0 (graceful degrade)
+  PASS: degrade reported honestly (1 answered, 1 failed)
+  PASS: degrade stamped on stdout
+  PASS: degrade stamped INTO the surviving transcript
+  PASS: stamped transcript still has the real answer beneath the stamp
+  PASS: format-agnostic sidecar marker written
+  PASS: all-fail exits 5
+  PASS: non-git root refused (exit 3)
+  PASS: unknown model alongside a valid one still exits 0
+  PASS: unknown model name warned and skipped (not treated as a case fallthrough)
+  PASS: the valid model in the list still ran despite the unknown sibling
+  PASS: hung advisor times out -> all-fail exit 5
+  PASS: timeout actually fired (2s < 20s, not the 30s sleep)
+  PASS: aider advisor answers (exit 0)
+  PASS: aider transcript captured
+  PASS: aider counted as an answered advisor
+  PASS: intentional single-model request is not stamped
+  PASS: intentional single-model transcript not stamped
+  PASS: aider with no OPENROUTER_API_KEY -> all-fail exit 5
+  PASS: aider no-key transcript states the remedy
+  PASS: aider exit-0 auth-error transcript -> FAILED (all-fail exit 5)
+  PASS: aider auth-error counted as failed, not answered
+  PASS: aider exit-0 empty answer -> FAILED (all-fail exit 5)
+  PASS: LM Studio base URL answers with no OPENROUTER_API_KEY (exit 0)
+  PASS: LM Studio-backed aider counted answered
+  PASS: uncited-answer run still exits 0 (mechanical stamp only, not a failure)
+  PASS: uncited answer warned on stdout
+  PASS: uncited answer stamped INTO the transcript
+  PASS: stamping preserved the real answer beneath it
+  PASS: per-advisor NO-CITATION sidecar file written
+  PASS: cited answer (quote + file:line) is not stamped
+  PASS: cited transcript not stamped
+  PASS: no sidecar written for a cited answer
+  PASS: a later uncited claim is flagged despite an earlier unrelated citation (per-claim, not whole-transcript)
+  PASS: stamping preserved the real answer beneath it
+  PASS: echoed-citation run exits 0
+  PASS: echoed-citation stdout warns once with the echoed count
+  PASS: prompt snapshot persisted PROMPT_TEXT only
+  PASS: prompt snapshot excludes PREAMBLE
+  PASS: echoed provenance counted zero firsthand claims
+  PASS: echoed provenance counted echoed claims
+  PASS: echoed provenance records the matched token
+  PASS: firsthand-citation run exits 0
+  PASS: firsthand-citation run emits no echoed warning
+  PASS: firsthand provenance counted firsthand claims
+  PASS: firsthand provenance counted zero echoed claims
+  PASS: firsthand provenance records no echoed tokens
+  PASS: XYZ_PYTHON=1 one-model failure still exits 0 (graceful degrade)
+  PASS: XYZ_PYTHON=1 degrade stamped on stdout
+  PASS: XYZ_PYTHON=1 degrade stamped INTO the surviving transcript
+  PASS: XYZ_PYTHON=1 stamped transcript still has the real answer beneath the stamp
+  PASS: XYZ_PYTHON=1 format-agnostic sidecar marker written
+  PASS: XYZ_PYTHON=1 happy path exits 0
+  PASS: XYZ_PYTHON=1 full panel is not stamped
+  consult: 62 passed, 0 failed

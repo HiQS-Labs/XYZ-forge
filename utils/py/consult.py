@@ -9,6 +9,7 @@ import shlex
 import time
 from datetime import datetime
 import shutil
+from contextlib import nullcontext
 
 def xyz_write_ops_log_append(pattern, cmd):
     if os.environ.get("XYZ_WRITE_OPS_LOG") == "0":
@@ -40,6 +41,8 @@ def xyz_write_ops_log_append(pattern, cmd):
 from rtl import (RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict,
                  agy_auth_timeout_verdict, AGY_AUTH_TIMEOUT_DEFAULT_S)
 from turn_diagnostics import TurnDiagnostics
+from claude_cli import resolve_binary as resolve_claude, preflight as claude_preflight, read_result as claude_result
+from proc_group import kill_existing
 
 # GH-492: how long an advisor may show no CPU and no transcript growth before it is killed,
 # independent of CONSULT_TIMEOUT. Deliberately well under the 300s default wall cap — a consult that
@@ -189,6 +192,35 @@ def aider_answer_ok(out_path):
         return False
     return True
 
+def advisor_answer_ok(out_path, model):
+    """GH-589: exit 0 with no visible answer is a FAILURE, not an answer. Codex transcripts carry a
+    prepended ATTESTATION header, so strip that block before judging emptiness."""
+    try:
+        with open(out_path, "r", errors="replace") as f:
+            text = f.read()
+    except OSError:
+        return False
+    body = text
+    if body.startswith("> **ATTESTATION**"):
+        body = body.split("\n\n", 1)[1] if "\n\n" in body else ""
+    # codex's raw provenance lines (model:/provider:/sandbox:) are metadata, not an answer
+    body = "\n".join(l for l in body.splitlines() if not re.match(r"^(model|provider|sandbox):", l))
+    is_json = out_path.endswith(".json")
+    if is_json:  # gemini JSON mode: judge the decoded response text, not the envelope (preamble tolerated like src/cost.js)
+        try:
+            import json as _json
+            body = str(_json.loads(text[text.index("{"):]).get("response", "") or "")
+        except (ValueError, AttributeError):
+            body = ""
+    if not body.strip():
+        if not is_json:  # keep a JSON transcript byte-identical so the existing cost capture can still parse it
+            with open(out_path, "a") as f:
+                f.write(f"\nconsult: {model} returned no visible content (exit 0, empty answer) — counted as FAILED.\n")
+        else:
+            warn(f"{model} returned no visible content (exit 0, empty JSON response) — counted as FAILED")
+        return False
+    return True
+
 def consult_codex_attestation(out_path):
     # GH-308 port (consult.sh run_codex): prepend an ATTESTATION provenance header (which
     # model/provider/sandbox actually answered), parsed from the codex output. This lived only in the
@@ -234,10 +266,11 @@ def consult_agy_isolation_breach(out_path, root):
         pass
     return False
 
-def guarded_with_timeout(cmd, cwd, log_file, timeout_s, env=None):
+def guarded_with_timeout(cmd, cwd, log_file, timeout_s, env=None, *, own_group=False):
     try:
-        with open(log_file, "w") as f:
-            proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+        with open(log_file, "w") as f, (open(log_file + ".stderr", "w") if own_group else nullcontext(subprocess.STDOUT)) as err:
+            proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=f, stderr=err, stdin=subprocess.DEVNULL, start_new_session=own_group)
+            proc.xyz_own_group = own_group
             return proc
     except Exception as e:
         with open(log_file, "a") as f:
@@ -296,6 +329,10 @@ def _kill_advisor_group(proc):
     consult launches advisors without start_new_session, so the group may be the caller's own and
     must never be signalled.
     """
+    if getattr(proc, "xyz_own_group", False):
+        kill_existing(proc.pid)
+        proc.wait()
+        return
     try:
         pgid = os.getpgid(proc.pid)
         if pgid != os.getpgid(0):
@@ -396,8 +433,22 @@ def agy_auth_preflight(agy_bin, log_file):
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = os.environ.get("CONSULT_ROOT", xyz_root)
-    consult_tick_root = resolve_tick_repo_root(root)
-    consult_tick_bin = resolve_tick_bin(consult_tick_root, xyz_root)
+    consult_tick_root = resolve_tick_repo_root(root)  # strict: a bad explicit TICK_REPO_ROOT stays fatal
+    # GH-589: `tick` is optional for consult (its only consumer is the CONSULT_GEMINI_JSON cost step,
+    # already guarded below). An EXPLICIT TICK_BIN is validated here, at the caller, because
+    # resolve_tick_bin falls through to <root>/bin/tick when the explicit value is unusable — which
+    # would silently replace a misconfiguration. Only an UNSET (or empty) TICK_BIN may degrade.
+    explicit_tick = os.environ.get("TICK_BIN", "")
+    if explicit_tick:
+        if not (os.path.isfile(explicit_tick) and os.access(explicit_tick, os.X_OK)):
+            die(f"TICK_BIN is set but not an executable file: {explicit_tick}")
+        consult_tick_bin = resolve_tick_bin(consult_tick_root, xyz_root)
+    else:
+        try:
+            consult_tick_bin = resolve_tick_bin(consult_tick_root, xyz_root)
+        except RuntimeError:
+            consult_tick_bin = ""
+            warn("tick not found — cost capture disabled (GH-589)")
     
     rtl = RelayTurnLib(root, xyz_root, "", "")  # Dummy init for transcript root
     
@@ -543,7 +594,27 @@ def main():
         procs = []
         
         for m in models:
-            if m == "codex":
+            if m == "claude":
+                f_out = os.path.join(run_dir, f"{label}.claude.md")
+                cenv = dict(base_env)
+                claude_bin = resolve_claude(cenv)
+                try:
+                    if not claude_bin:
+                        raise ValueError("claude CLI not found; set CLAUDE_BIN")
+                    claude_preflight(claude_bin, cenv, wt)
+                except ValueError as error:
+                    with open(f_out, "w") as stream:
+                        stream.write(f"consult: {error}\n")
+                    procs.append((None, m, f_out, time.time(), None))
+                    continue
+                cmd = [claude_bin, "-p", full_prompt, "--output-format", "json",
+                       "--model", cenv.get("CLAUDE_MODEL", "claude-sonnet-4-6"),
+                       "--tools", "Read,Grep,Glob", "--allowedTools", "Read,Grep,Glob",
+                       "--strict-mcp-config", "--max-turns", cenv.get("CLAUDE_MAX_TURNS", "12"),
+                       "--max-budget-usd", cenv.get("CLAUDE_MAX_BUDGET", "0.50")]
+                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, cenv, own_group=True)
+                procs.append((proc, m, f_out, time.time(), cmd))
+            elif m == "codex":
                 f_out = os.path.join(run_dir, f"{label}.codex.md")
                 cflags = os.environ.get("CODEX_FLAGS", "-s read-only").split()
                 cenv = dict(base_env)
@@ -653,6 +724,16 @@ def main():
                 # the real repo root escaped its isolation worktree — fail the advisor (Bash `return 5`)
                 # rather than count a silent grounding breach as a clean answer.
                 breached = False
+                if m == "claude" and proc.returncode == 0:
+                    try:
+                        answer = claude_result(out)
+                        shutil.copyfile(out, out + ".json")
+                        with open(out, "w") as stream:
+                            stream.write(answer + "\n")
+                    except ValueError as error:
+                        with open(out, "a") as stream:
+                            stream.write(f"\nconsult: {error}; CLI diagnostics: {out}.stderr\n")
+                        breached = True
                 if m == "agy" and proc.returncode == 0 and os.path.isfile(out) and os.path.getsize(out) > 0:
                     if consult_agy_isolation_breach(out, root):
                         with open(out, "a") as f:
@@ -663,7 +744,7 @@ def main():
                     failed += 1
                     summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                     results.append((m, out, False))
-                elif proc.returncode == 0 and (m != "aider" or aider_answer_ok(out)):
+                elif proc.returncode == 0 and (aider_answer_ok(out) if m == "aider" else advisor_answer_ok(out, m)):
                     answered += 1
                     summary += f"\n  [ok]   {m} -> {out}"
                     survivor_model = m
@@ -679,10 +760,15 @@ def main():
                     summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                     with open(out, "a") as f:
                         f.write(f"\nconsult: advisor failed with exit {proc.returncode}\n")
+                        if m == "claude":
+                            f.write(f"consult: CLI diagnostics: {out}.stderr\n")
                     results.append((m, out, False))
             except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.wait()
+                if getattr(proc, "xyz_own_group", False):
+                    _kill_advisor_group(proc)
+                else:
+                    proc.kill()
+                    proc.wait()
                 failed += 1
                 summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                 with open(out, "a") as f:

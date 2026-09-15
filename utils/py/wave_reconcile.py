@@ -18,7 +18,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -412,6 +412,195 @@ def landing_label(meta):
     return "PR #" + str(meta.get("number", "?"))
 
 
+QUALIFICATION_SCHEMA = "wave-qualification@1"
+QUALIFICATION_PATH = r"TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/validation\.jsonl"
+
+
+def qualification_summary(raw, tested_sha):
+    """Require the existing runner's complete, unquarantined sequential evidence."""
+    rows = [json.loads(line) for line in raw.splitlines() if line.strip()]
+    if not rows or any(not isinstance(row, dict) for row in rows):
+        raise ValueError("missing or malformed validation telemetry")
+    starts = [row for row in rows if row.get("event") == "run.start"]
+    summaries = [row for row in rows if row.get("event") == "run.summary"]
+    if len(starts) != 1 or len(summaries) != 1 or rows[-1] != summaries[0]:
+        raise ValueError("validation telemetry has no unique completed run")
+    start, summary = starts[0], summaries[0]
+    registered = start.get("registered")
+    if (start.get("commit") != tested_sha or start.get("mode") != "sequential"
+            or start.get("tier") != 3 or type(registered) is not int or registered <= 0
+            or not start.get("run") or any(row.get("run") != start["run"]
+                or row.get("runner") != "validate" for row in rows)):
+        raise ValueError("validation run identity, mode or registry does not match")
+    suites = [row for row in rows if row.get("event") == "suite"]
+    sequential = [row for row in suites if row.get("lane") == "sequential"]
+    if (len(sequential) != registered or len({row.get("name") for row in sequential}) != registered
+            or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites)
+            or summary.get("failed") != 0 or summary.get("total") != registered + 3
+            or summary.get("passed") != summary["total"]
+            or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
+            or str(summary.get("run_set")) != str(registered)
+            or str(summary.get("registered")) != str(registered)):
+        raise ValueError("validation telemetry is failed, incomplete or quarantined")
+    names = {row.get("name") for row in suites}
+    if not {"python:test_python_layer.py", "gamma-poison-staleness-probe"} <= names:
+        raise ValueError("validation is missing required full-suite probes")
+    return summary
+
+
+def qualification_receipt_matches(repo_root, entry, meta):
+    """An integrated snapshot passed; never claim the historical merge tree ran."""
+    tested, landing = entry.get("tested_commit"), (meta.get("mergeCommit") or {}).get("oid")
+    if (entry.get("schema_version") != QUALIFICATION_SCHEMA
+            or not isinstance(tested, str) or not re.fullmatch(r"[0-9a-f]{40}", tested)
+            or not isinstance(landing, str) or not re.fullmatch(r"[0-9a-f]{40}", landing)
+            or entry.get("landing_commit") != landing
+            or entry.get("result") != "pass" or type(entry.get("rc")) is not int or entry["rc"] != 0
+            or entry.get("gate") != "validate.sh --sequential"
+            or entry.get("artifact_kind") != meta.get("artifactKind", "pr")):
+        return False
+    if meta.get("artifactKind") != "commit" and (
+            type(entry.get("pr")) is not int or entry["pr"] != meta.get("number")):
+        return False
+    if "pr_number" in entry and entry["pr_number"] != entry.get("pr"):
+        return False
+    telemetry = entry.get("telemetry", "")
+    if not isinstance(telemetry, str) or not re.fullmatch(QUALIFICATION_PATH, telemetry):
+        return False
+    path = Path(repo_root).resolve() / telemetry
+    try:
+        if path.resolve() != path:  # Neither a file nor a parent may redirect evidence.
+            return False
+        raw = path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != entry.get("telemetry_sha256"):
+            return False
+        qualification_summary(raw, tested)
+        for older, newer in ((landing, tested), (tested, "HEAD")):
+            if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer],
+                              cwd=repo_root, capture_output=True, check=False).returncode:
+                return False
+    except (OSError, ValueError, TypeError, KeyError):
+        return False
+    return True
+
+
+def committed_qualifications(repo_root):
+    """Only bot-committed completion receipts can suppress a replay or recover a lost event."""
+    paths = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", "HEAD", "--",
+                                     "TESTS-RESULTS/"], cwd=repo_root, text=True).splitlines()
+    found = []
+    for path in paths:
+        if not re.fullmatch(QUALIFICATION_PATH.replace("validation", "provenance"), path):
+            continue
+        raw = subprocess.check_output(["git", "show", f"HEAD:{path}"], cwd=repo_root, text=True)
+        for line in raw.splitlines():
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(entry, dict) and entry.get("schema_version") == QUALIFICATION_SCHEMA:
+                found.append(entry)
+    return found
+
+
+def qualify_landings(repo_root, metas, journal):
+    """Produce retained provenance in the existing closeout transaction, after a real full gate."""
+    from gate_env import gate_env
+    from proc_group import run_bounded
+
+    previous = committed_qualifications(repo_root)
+    pending = [meta for meta in metas if not any(
+        qualification_receipt_matches(repo_root, entry, meta) for entry in previous)]
+    if not pending:
+        return
+    check_porcelain_cleanliness(repo_root)
+    tested = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip()
+    for meta in pending:
+        landing = (meta.get("mergeCommit") or {}).get("oid", "")
+        if (meta.get("state") != "MERGED" or meta.get("baseRefName") != "development"
+                or not re.fullmatch(r"[0-9a-f]{40}", landing)
+                or subprocess.run(["git", "merge-base", "--is-ancestor", landing, tested],
+                                  cwd=repo_root, capture_output=True, check=False).returncode):
+            die(f"Qualification refuses {landing_label(meta)}: merge not in the tested development snapshot", code=6)
+    log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with the full sequential suite")
+    with tempfile.TemporaryDirectory(prefix="wave-qualification-") as temporary:
+        scratch = Path(temporary).resolve()
+        clone = scratch / "repo"
+        telemetry = clone / ".tick" / "telemetry"
+        # Reuse the harness environment contract, then isolate Git and runner controls.
+        env = {k: v for k, v in gate_env().items()
+               if not k.startswith(("GIT_", "RT_", "XYZ_VALIDATE_", "PYTEST_"))
+               and k not in ("XYZ_HARNESS_DB", "PYTHONPATH", "PYTHONHOME")}
+        config = scratch / "gitconfig"
+        config.write_text('[user]\nname = Qualification Fixture\nemail = qualification@example.invalid\n'
+                          '[init]\ndefaultBranch = main\n')
+        env.update(GIT_CONFIG_GLOBAL=str(config), GIT_CONFIG_NOSYSTEM="1",
+                   RELAY_SELF_SUFFICIENCY_SKIP="1", TICK_REPO_ROOT=str(clone))
+        def command(args, capture=False):
+            result = run_bounded(args, cwd=str(clone if clone.exists() else scratch), env=env, timeout=5400)
+            if not capture:
+                print(result.stdout, end="", flush=True)
+                print(result.stderr, end="", file=sys.stderr, flush=True)
+            if result.timed_out or result.rc != 0:
+                raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                                    result.stdout, result.stderr)
+            return result
+        try:
+            # --no-local prevents object hardlinks/alternates as well as shared git metadata.
+            command(["git", "clone", "--no-local", "--quiet", repo_root, str(clone)])
+            command(["git", "checkout", "--quiet", "--detach", tested])
+            origin = subprocess.check_output(["git", "remote", "get-url", "origin"],
+                                             cwd=repo_root, text=True).strip()
+            command(["git", "remote", "set-url", "origin", origin])
+            before_config = command(["git", "config", "--local", "--list"], True).stdout
+            command(["python3", "-c", "import pytest"])
+            command(["npm", "ci"])
+            validation = command(["bash", "validate.sh", "--sequential"])
+            if (command(["git", "rev-parse", "HEAD"], True).stdout.strip() != tested
+                    or command(["git", "status", "--porcelain"], True).stdout.strip()
+                    or command(["git", "config", "--local", "--list"], True).stdout != before_config):
+                die("Qualification clone identity/content changed under the suite", code=6)
+            # Suites may launch nested validator probes. Bind proof to the exact
+            # process we launched, not another passing run in the telemetry directory.
+            files = list(telemetry.glob(f"validate-sequential-*-{validation.pgid}.jsonl"))
+            if len(files) != 1:
+                die("Qualification requires exactly one retained validation run", code=6)
+            raw = files[0].read_bytes()
+            summary = qualification_summary(raw, tested)
+            if summary['run'] != f"{tested[:9]}-{validation.pgid}":
+                die("Qualification telemetry does not identify the launched validation process", code=6)
+        except (subprocess.SubprocessError, OSError, ValueError) as exc:
+            die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip() != tested:
+        die("Publishing HEAD changed during qualification; rerun from fresh development", code=6)
+    check_porcelain_cleanliness(repo_root)
+    now = datetime.now(timezone.utc)
+    folder = Path(repo_root) / "TESTS-RESULTS" / f"{now:%Y-%m-%d}+GH-591" / f"wave-{tested}"
+    folder.mkdir(parents=True, exist_ok=True)
+    telemetry_path, receipt_path = folder / "validation.jsonl", folder / "provenance.jsonl"
+    for path in (telemetry_path, receipt_path):
+        if path.exists():
+            die(f"Refusing to overwrite qualification evidence: {path.name}", code=6)
+        journal.track_created(path)
+    telemetry_path.write_bytes(raw)
+    entries = []
+    for meta in pending:
+        entry = dict(schema_version=QUALIFICATION_SCHEMA, artifact_kind=meta.get("artifactKind", "pr"),
+                     tested_commit=tested, landing_commit=meta["mergeCommit"]["oid"], result="pass", rc=0,
+                     gate="validate.sh --sequential", timestamp=now.isoformat(),
+                     telemetry=str(telemetry_path.relative_to(repo_root)),
+                     telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=summary["passed"],
+                     total=summary["total"])
+        if meta.get("artifactKind") != "commit":
+            entry["pr"] = meta["number"]
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            entry["run_url"] = (f"https://github.com/{os.environ.get('GITHUB_REPOSITORY', '')}/actions/runs/"
+                                f"{os.environ.get('GITHUB_RUN_ID', '')}")
+        entries.append(json.dumps(entry, sort_keys=True))
+    receipt_path.write_text("\n".join(entries) + "\n", encoding="utf-8")
+    log(f"Full-suite qualification passed; retained {receipt_path.relative_to(repo_root)}")
+
+
 def check_provenance_receipts(repo_root, pr_meta):
     """Require a JSONL receipt attributable to this PR (GH-425).
 
@@ -470,6 +659,12 @@ def check_provenance_receipts(repo_root, pr_meta):
                             continue
                         if not isinstance(entry, dict):
                             continue
+                        if str(entry.get("schema_version", "")).startswith("wave-qualification"):
+                            if qualification_receipt_matches(repo_root, entry, pr_meta):
+                                log(f"  Full-suite integration receipt matched for {landing_label(pr_meta)}: "
+                                    f"{os.path.relpath(path, repo_root)}:{line_num}")
+                                return
+                            continue  # A malformed qualification cannot fall through to legacy PR identity.
                         pr_fields = [key for key in ("pr", "pr_number") if key in entry]
                         matched = None
                         if pr_fields:
@@ -697,11 +892,11 @@ def find_active_doc_for_issue(repo_root, issue_num):
     working_dir = os.path.join(repo_root, "PROJECT", "2-WORKING")
     if not os.path.isdir(working_dir):
         return None
-    for fname in os.listdir(working_dir):
+    for fname in sorted(os.listdir(working_dir)):
         if not fname.endswith(".md"):
             continue
         # Match GH-123-*.md or 123-*.md
-        if re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", fname, re.IGNORECASE):
+        if re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
             return os.path.join(working_dir, fname)
     return None
 
@@ -919,7 +1114,71 @@ def ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, dry_run=False,
                      member["url"], "--evidence", sha], dry_run, journal)
 
 
-def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
+def unreconciled_prs(repo_root, repo_slug, metadata):
+    """Recover every supported merge from committed receipts, not just closed-issue drift.
+
+    The existing workflow's first introduction is the activation boundary. This is
+    deliberately not an arbitrary lookback or a second watermark/ledger.
+    """
+    shallow = subprocess.check_output(['git', 'rev-parse', '--is-shallow-repository'],
+                                      cwd=repo_root, text=True).strip()
+    if shallow != 'false':
+        die('Merged-PR recovery requires a full, non-shallow clone', code=6)
+    dates = subprocess.check_output(
+        ['git', 'log', '--follow', '--diff-filter=A', '--format=%cI', '--',
+         '.github/workflows/wave-reconcile.yml'], cwd=repo_root, text=True).splitlines()
+    if not dates or not repo_slug:
+        die('Cannot recover merged PRs without full workflow history and repository identity', code=6)
+    try:
+        activated = datetime.fromisoformat(dates[-1].replace('Z', '+00:00'))
+    except ValueError:
+        die('Invalid workflow activation timestamp; restore full Git history', code=6)
+    result = subprocess.run(
+        ['gh', 'api', '--paginate', '--slurp',
+         f'repos/{repo_slug}/pulls?state=closed&base=development&sort=updated&direction=desc&per_page=100'],
+        cwd=repo_root, capture_output=True, text=True, check=False)
+    if result.returncode:
+        die(f'Merged-PR recovery failed: {result.stderr}', code=6)
+    previous = committed_qualifications(repo_root)
+    pending = []
+    try:
+        pages = json.loads(result.stdout)
+        if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+            raise ValueError('expected paginated pull-request arrays')
+        for page in pages:
+            for pr in page:
+                if not isinstance(pr, dict):
+                    raise ValueError('invalid pull-request record')
+                if ('merged_at' not in pr or not isinstance(pr.get('base'), dict)
+                        or not isinstance(pr['base'].get('ref'), str)):
+                    raise ValueError('pull request lacks merged_at or base.ref')
+                merged = pr['merged_at']
+                if merged is not None and not isinstance(merged, str):
+                    raise ValueError('invalid merged_at timestamp')
+                if merged is None:
+                    continue
+                if datetime.fromisoformat(merged.replace('Z', '+00:00')) < activated:
+                    continue
+                if (pr.get('base') or {}).get('ref') != 'development':
+                    continue
+                if (type(pr.get('number')) is not int or pr['number'] <= 0
+                        or not re.fullmatch(r'[0-9a-f]{40}', pr.get('merge_commit_sha') or '')):
+                    raise ValueError('merged PR has no exact landing identity')
+                meta = dict(number=pr['number'], title=pr.get('title') or '', body=pr.get('body') or '',
+                            state='MERGED', mergedAt=merged, baseRefName='development',
+                            mergeCommit={'oid':pr['merge_commit_sha']}, url=pr.get('html_url') or '',
+                            headRefOid=(pr.get('head') or {}).get('sha'), commits=[])
+                key = ('pr', str(pr['number']))
+                metadata[key] = meta  # Reuse the batch response; no per-PR metadata query.
+                if not any(qualification_receipt_matches(repo_root, entry, meta) for entry in previous):
+                    pending.append(str(pr['number']))
+    except (ValueError, TypeError, AttributeError) as exc:
+        die(f'Malformed merged-PR recovery response: {exc}', code=6)
+    log(f'Receipt recovery found {len(pending)} pending PR(s) since workflow activation {activated.isoformat()}')
+    return pending
+
+
+def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_metadata=None):
     """Derive drift from committed state; no PR watermark or auxiliary ledger.
 
     Timeline pagination recovers closing PRs even outside an arbitrary recent-PR window.
@@ -938,7 +1197,7 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
         match = re.match(r"GH-([0-9]+)-", path.name)
         if match:
             issues.add(int(match[1]))
-    found = set()
+    found = set(unreconciled_prs(repo_root, repo_slug, qualification_metadata)) if qualification_metadata is not None else set()
     for issue in sorted(issues):
         if fetch_issue_state(repo_root, issue, offline_manifest) != "CLOSED":
             continue
@@ -957,14 +1216,22 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None):
                     if referenced.get("pull_request") and referenced.get("repository_url", "").lower() == (
                         f"https://api.github.com/repos/{repo_slug}".lower()):
                         numbers.add(referenced["number"])
-            candidates = [fetch_pr_metadata(repo_root, n) for n in sorted(numbers)]
+            candidates = [(qualification_metadata or {}).get(("pr", str(n))) or fetch_pr_metadata(repo_root, n)
+                          for n in sorted(numbers)]
+        if qualification_metadata is not None:
+            for pr in candidates:
+                qualification_metadata[("pr", str(pr["number"]))] = pr
         matches = [pr for pr in candidates if pr.get("state", "").upper() == "MERGED"
                    and pr.get("baseRefName") == "development"
                    and issue in extract_linked_issues(pr, repo_slug)[0]]
         if not matches:
-            die(f"Closed GH-{issue} has reconciliation drift but no attributable merged development PR", code=6)
+            log(f"WARNING — Closed GH-{issue} has reconciliation drift but no attributable merged development PR; "
+                "leaving this legacy row unchanged and continuing (GH-584; non-PR closure tracked by GH-492)")
+            continue
         # The most recent closing PR owns the current lifecycle transition.
         found.add(str(max(matches, key=lambda pr: (pr.get("mergedAt") or "", pr["number"]))["number"]))
+    if qualification_metadata is not None:
+        return sorted(found, key=lambda n: (qualification_metadata.get(("pr", n), {}).get("mergedAt") or "", int(n)))
     return sorted(found, key=int)
 
 
@@ -1204,7 +1471,7 @@ def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
     if dry_run or journal is None:
         return
     for name in (
-        "releases.db", "releases.sql", "RELEASES.generated.md",
+        "releases.db", "releases.sql",
         "RELEASES-PREVIEW.html",
         "LEADERBOARD.html", "LEADERBOARD.md",
         os.path.join(".tick", "marathon-plan.fingerprint"),
@@ -1474,7 +1741,7 @@ def run_pre_merge(repo_root, args):
         matches = []
         if os.path.isdir(working_dir):
             for fname in sorted(os.listdir(working_dir)):
-                if fname.endswith(".md") and re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", fname, re.IGNORECASE):
+                if fname.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
                     matches.append(os.path.join(working_dir, fname))
         if len(matches) > 1:
             errors.append(f"Ambiguous active doc match for issue #{issue_num}: {', '.join(os.path.basename(m) for m in matches)}")
@@ -1484,8 +1751,8 @@ def run_pre_merge(repo_root, args):
             completed_dir = os.path.join(repo_root, "PROJECT", "3-COMPLETED")
             comp_matches = [
                 os.path.join(completed_dir, f)
-                for f in os.listdir(completed_dir)
-                if f.endswith(".md") and re.search(rf"(?:^|[^\d])(GH-)?{issue_num}(?:[^\d]|$)", f, re.IGNORECASE)
+                for f in sorted(os.listdir(completed_dir))
+                if f.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", f, re.IGNORECASE)
             ] if os.path.isdir(completed_dir) else []
             if comp_matches:
                 target_docs.add(comp_matches[0])
@@ -1613,9 +1880,13 @@ def main():
         help="Bypass hosted in-flight reconciler check for emergency local reconciliation (GH-496)",
     )
 
+    parser.add_argument("--qualify", action="store_true",
+                        help="Run the full sequential suite and retain integration evidence before gated closeout")
     parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
 
     args = parser.parse_args()
+    if args.qualify and (not args.require_receipts or args.dry_run or args.offline or args.allow_dirty or args.pre_merge):
+        parser.error("--qualify requires --gate and a live, clean, non-preview post-merge checkout")
 
     repo_root = os.path.abspath(args.root) if args.root else resolve_repo_root()
 
@@ -1672,11 +1943,33 @@ def main():
         with ReconcilerLock(lock_file):
             reconciled_issues = set()
             repo_slug = github_slug_from_origin(repo_root)  # GH-429: URL-form closers, this repo only
+            metadata = {}
             if args.catch_up:
-                landing_items.extend(("pr", str(n)) for n in catch_up_prs(repo_root, repo_slug, offline_manifest))
+                landing_items.extend(("pr", str(n)) for n in catch_up_prs(
+                    repo_root, repo_slug, offline_manifest, qualification_metadata=metadata if args.qualify else None))
             landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
+            if args.qualify and landing_items:
+                for kind, value in landing_items:
+                    if (kind, value) not in metadata:
+                        metadata[(kind, value)] = (fetch_commit_metadata(repo_root, value) if kind == "commit"
+                                                  else fetch_pr_metadata(repo_root, value))
+                qualify_landings(repo_root, [metadata[item] for item in landing_items], journal)
+            # A recovered batch can contain several closing PRs for one issue.
+            # Qualify every landing, but let its newest known closer own all lifecycle
+            # writes, including when that closer already has a committed receipt.
+            issue_owners = {}
+            if args.catch_up and args.qualify:
+                for key, meta in metadata.items():
+                    if meta.get('state') != 'MERGED' or meta.get('baseRefName') != 'development':
+                        continue
+                    rank = (meta.get('mergedAt') or '', str(meta['number']))
+                    for issue in extract_linked_issues(meta, repo_slug)[0]:
+                        if issue not in issue_owners or rank > issue_owners[issue][0]:
+                            issue_owners[issue] = (rank, key)
             for landing_kind, landing_id in landing_items:
-                if landing_kind == "commit":
+                if (landing_kind, landing_id) in metadata:
+                    pr_meta = metadata[(landing_kind, landing_id)]
+                elif landing_kind == "commit":
                     pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest)
                 else:
                     pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
@@ -1714,6 +2007,10 @@ def main():
                 )
 
                 for issue_num in action_issues:
+                    owner = issue_owners.get(issue_num)
+                    if owner and owner[1] != (landing_kind, landing_id):
+                        log(f"  GH-{issue_num} lifecycle belongs to newer PR #{owner[1][1]}; retaining this landing's qualification")
+                        continue
                     doc_path = find_active_doc_for_issue(repo_root, issue_num)
                     issue_state = fetch_issue_state(repo_root, issue_num, offline_manifest)
                     fm = parse_doc_frontmatter(doc_path) if doc_path else {}

@@ -105,8 +105,15 @@ rc=0; out="$(bash "$V" --tier 9 2>&1)" || rc=$?
 ok "--tier 9 is refused (exit 2)" "[ $rc -eq 2 ]"
 
 # ── (3) tier selection is orthogonal to width and never promotion evidence ───────────────────────
-out="$(probe --tier 2)"
-ok "--tier 2 defaults to the throttled 2-worker pool" "[ "$(width_of "$out")" = "2" ]"
+# Exercise both hardware branches regardless of the machine running this suite.
+mkdir -p "$WORK/cpu-bin"
+printf '#!/bin/sh\nprintf "%%s\\n" "$TEST_CPU_CORES"\n' > "$WORK/cpu-bin/sysctl"
+chmod +x "$WORK/cpu-bin/sysctl"
+out="$(PATH="$WORK/cpu-bin:$PATH" TEST_CPU_CORES=3 probe --tier 2)"
+ok "--tier 2 respects the low-core sequential fallback" \
+   "printf '%s' \"\$out\" | grep 'SEQUENTIAL mode.*only 3 core(s) detected' >/dev/null"
+out="$(PATH="$WORK/cpu-bin:$PATH" TEST_CPU_CORES=8 probe --tier 2)"
+ok "--tier 2 defaults to the throttled 2-worker pool on an eligible host" "[ "$(width_of "$out")" = "2" ]"
 ok "  and a tier below 3 disclaims promotion evidence in its own header" \
    "printf '%s' \"\$out\" | grep 'NEVER promotion evidence' >/dev/null"
 out="$(probe --tier 1)"

@@ -1,0 +1,63 @@
+test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing) ... wave-reconcile: Qualifying 2 landing(s) in integrated snapshot 9c536effde8a795ac8bbd66015db6c117196ea9c with the full sequential suite
+wave-reconcile: Full-suite qualification passed; retained TESTS-RESULTS/2026-09-13+GH-591/wave-9c536effde8a795ac8bbd66015db6c117196ea9c/provenance.jsonl
+ok
+test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 29afe3436709213534581050d9ed3d4f2b85964d with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh591-qualification-k73f5s_s/source', '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wave-qualification-gl75nac1/repo']' returned non-zero exit status 124.
+ok
+test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 29afe3436709213534581050d9ed3d4f2b85964d with the full sequential suite
+wave-reconcile: Full-suite qualification passed; retained TESTS-RESULTS/2026-09-13+GH-591/wave-29afe3436709213534581050d9ed3d4f2b85964d/provenance.jsonl
+ok
+test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot bdb8cae7dfbfc692263647fa8ca906a2615f9386 with the full sequential suite
+wave-reconcile: Full-suite qualification passed; retained TESTS-RESULTS/2026-09-13+GH-591/wave-bdb8cae7dfbfc692263647fa8ca906a2615f9386/provenance.jsonl
+wave-reconcile:   Full-suite integration receipt matched for PR #425: TESTS-RESULTS/2026-09-13+GH-591/wave-bdb8cae7dfbfc692263647fa8ca906a2615f9386/provenance.jsonl:1
+ok
+test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot eb211a81de80ad2bee07601676cc69b9d511fef7 with the full sequential suite
+wave-reconcile: Full-suite qualification passed; retained TESTS-RESULTS/2026-09-13+GH-591/wave-eb211a81de80ad2bee07601676cc69b9d511fef7/provenance.jsonl
+ok
+test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot eb211a81de80ad2bee07601676cc69b9d511fef7 with the full sequential suite
+wave-reconcile: Full-suite qualification passed; retained TESTS-RESULTS/2026-09-13+GH-591/wave-eb211a81de80ad2bee07601676cc69b9d511fef7/provenance.jsonl
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+ok
+test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 2c38d02bb0a0626d7f23d2a3e249fe96ae15564d with the full sequential suite
+wave-reconcile: Full-suite qualification passed; retained TESTS-RESULTS/2026-09-13+GH-591/wave-2c38d02bb0a0626d7f23d2a3e249fe96ae15564d/provenance.jsonl
+wave-reconcile: Rolling back all uncommitted mutations...
+ok
+test_red_partial_and_identity_drift_produce_no_receipt (__main__.Qualification.test_red_partial_and_identity_drift_produce_no_receipt) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 0da02b4ef65f447b8f1c720e05cd4fd9b618fd09 with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['bash', 'validate.sh', '--sequential']' returned non-zero exit status 42.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 0da02b4ef65f447b8f1c720e05cd4fd9b618fd09 with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: validation telemetry has no unique completed run
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 0da02b4ef65f447b8f1c720e05cd4fd9b618fd09 with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['git', 'status', '--porcelain']' returned non-zero exit status 128.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 0da02b4ef65f447b8f1c720e05cd4fd9b618fd09 with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: missing or malformed validation telemetry
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 0da02b4ef65f447b8f1c720e05cd4fd9b618fd09 with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: missing or malformed validation telemetry
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 0da02b4ef65f447b8f1c720e05cd4fd9b618fd09 with the full sequential suite
+wave-reconcile: ERROR — Qualification telemetry does not identify the launched validation process
+ok
+test_wrong_landing_fails_before_qualification (__main__.Qualification.test_wrong_landing_fails_before_qualification) ... wave-reconcile: ERROR — Qualification refuses PR #425: merge not in the tested development snapshot
+ok
+test_cli_gate_and_ungated_path (__main__.Receipts.test_cli_gate_and_ungated_path) ... ok
+test_empty_or_malformed_receipts_fail (__main__.Receipts.test_empty_or_malformed_receipts_fail) ... ok
+test_later_record_and_error_log (__main__.Receipts.test_later_record_and_error_log) ... ok
+test_matching_pr_names_receipt_and_field (__main__.Receipts.test_matching_pr_names_receipt_and_field) ... ok
+test_merge_commit_matches_exactly (__main__.Receipts.test_merge_commit_matches_exactly) ... ok
+test_metadata_requests_merge_commit (__main__.Receipts.test_metadata_requests_merge_commit) ... ok
+test_missing_directory_fails (__main__.Receipts.test_missing_directory_fails) ... ok
+test_missing_identity_cannot_match_null (__main__.Receipts.test_missing_identity_cannot_match_null) ... ok
+test_names_and_symlinks_are_not_evidence (__main__.Receipts.test_names_and_symlinks_are_not_evidence) ... ok
+test_short_sha_matches_candidate_prefix (__main__.Receipts.test_short_sha_matches_candidate_prefix) ... ok
+test_squashed_branch_commit_lineage_matches (__main__.Receipts.test_squashed_branch_commit_lineage_matches) ... ok
+test_unattributable_receipts_fail (__main__.Receipts.test_unattributable_receipts_fail) ... ok
+test_wrong_pr_is_rejected (__main__.Receipts.test_wrong_pr_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 8.839s
+
+OK

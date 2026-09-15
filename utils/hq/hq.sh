@@ -353,16 +353,6 @@ cmd_park(){
     fi
   fi
 
-  # GH-164 Phase 1 item 2: regenerate the dashboard right after the ROADMAP write, closing the gap
-  # the manual GH-161-164 trace hit twice (forgetting this step is exactly why it is automated here).
-  # "Only if present" mirrors the pdda.sh frontmatter check below — never required, never fatal.
-  if [ "$is_releases" = "1" ]; then
-    if ( cd "$path" && python3 "$r_bin" gen >/dev/null 2>&1 ); then
-      echo '  ✓ dashboard: RELEASES.md regenerated'
-    else
-      echo '  ! dashboard: releases gen failed — regenerate manually' >&2
-    fi
-  fi
 
   local fm_ok=1
   if [ -f "$path/utils/pdda/pdda.sh" ]; then

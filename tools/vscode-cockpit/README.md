@@ -9,9 +9,8 @@ session. See [GH-480](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-ag
 - **Marathons** — YAML frontmatter (`title`, `status`, `updated`/`created`, `owner`) from every
   `PROJECT/2-WORKING/MARATHON-PLAN-*.md` file in each open workspace folder. Copies the filename
   stem, e.g. `MARATHON-PLAN-2026-08-06`.
-- **Releases** — blocks in `RELEASES.md` (`Release:` / `Codename:` / `Status:` / `Target Date:` /
-  `Milestone:` / `Description:`). This file is optional and often sparse by design (GH-381) — an
-  empty section here is expected, not a bug. Copies the codename, or the version if there is none.
+- **Releases** — queried from `releases.db` (with fallback to legacy `RELEASES.md` blocks).
+  Copies the codename, or the version if there is none.
 - **Git Worktrees** — `git worktree list --porcelain` run in each open workspace folder. Copies the
   worktree's filesystem path.
 

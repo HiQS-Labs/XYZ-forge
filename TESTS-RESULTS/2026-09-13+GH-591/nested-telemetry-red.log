@@ -1,0 +1,128 @@
+test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing) ... wave-reconcile: Qualifying 2 landing(s) in integrated snapshot 182a41efd66891111b8cab279b3e57d753ddab1e with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+ERROR
+test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 6ae3c02d8e673e7388f4f6c8c553396d585a2a22 with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh591-qualification-wac39k31/source', '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wave-qualification-sck2bl9n/repo']' returned non-zero exit status 124.
+ok
+test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 6ae3c02d8e673e7388f4f6c8c553396d585a2a22 with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+ERROR
+test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 6ae3c02d8e673e7388f4f6c8c553396d585a2a22 with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+ERROR
+test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 43274786398a9f8dfd8f746fbacb7fae0248bc18 with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+ERROR
+test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 545c73fd131b44c65d87d0d9bb677d30ce9e0042 with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+ERROR
+test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 545c73fd131b44c65d87d0d9bb677d30ce9e0042 with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+ERROR
+test_red_partial_and_identity_drift_produce_no_receipt (__main__.Qualification.test_red_partial_and_identity_drift_produce_no_receipt) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 4bd2b544fc1c0bd2eef5d3d10440626656491aee with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['bash', 'validate.sh', '--sequential']' returned non-zero exit status 42.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 4bd2b544fc1c0bd2eef5d3d10440626656491aee with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 4bd2b544fc1c0bd2eef5d3d10440626656491aee with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['git', 'status', '--porcelain']' returned non-zero exit status 128.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 4bd2b544fc1c0bd2eef5d3d10440626656491aee with the full sequential suite
+wave-reconcile: ERROR — Qualification requires exactly one retained validation run
+ok
+test_wrong_landing_fails_before_qualification (__main__.Qualification.test_wrong_landing_fails_before_qualification) ... wave-reconcile: ERROR — Qualification refuses PR #425: merge not in the tested development snapshot
+ok
+test_cli_gate_and_ungated_path (__main__.Receipts.test_cli_gate_and_ungated_path) ... ok
+test_empty_or_malformed_receipts_fail (__main__.Receipts.test_empty_or_malformed_receipts_fail) ... ok
+test_later_record_and_error_log (__main__.Receipts.test_later_record_and_error_log) ... ok
+test_matching_pr_names_receipt_and_field (__main__.Receipts.test_matching_pr_names_receipt_and_field) ... ok
+test_merge_commit_matches_exactly (__main__.Receipts.test_merge_commit_matches_exactly) ... ok
+test_metadata_requests_merge_commit (__main__.Receipts.test_metadata_requests_merge_commit) ... ok
+test_missing_directory_fails (__main__.Receipts.test_missing_directory_fails) ... ok
+test_missing_identity_cannot_match_null (__main__.Receipts.test_missing_identity_cannot_match_null) ... ok
+test_names_and_symlinks_are_not_evidence (__main__.Receipts.test_names_and_symlinks_are_not_evidence) ... ok
+test_short_sha_matches_candidate_prefix (__main__.Receipts.test_short_sha_matches_candidate_prefix) ... ok
+test_squashed_branch_commit_lineage_matches (__main__.Receipts.test_squashed_branch_commit_lineage_matches) ... ok
+test_unattributable_receipts_fail (__main__.Receipts.test_unattributable_receipts_fail) ... ok
+test_wrong_pr_is_rejected (__main__.Receipts.test_wrong_pr_is_rejected) ... ok
+
+======================================================================
+ERROR: test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 314, in test_batch_qualifies_once_and_retains_each_landing
+  File "<stdin>", line 235, in qualify
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+    die("Qualification requires exactly one retained validation run", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
+
+======================================================================
+ERROR: test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 265, in test_committed_proof_makes_replay_idempotent
+  File "<stdin>", line 235, in qualify
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+    die("Qualification requires exactly one retained validation run", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
+
+======================================================================
+ERROR: test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 243, in test_full_gate_produces_attributable_retained_proof
+  File "<stdin>", line 235, in qualify
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+    die("Qualification requires exactly one retained validation run", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
+
+======================================================================
+ERROR: test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 287, in test_incomplete_or_quarantined_telemetry_is_rejected
+  File "<stdin>", line 235, in qualify
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+    die("Qualification requires exactly one retained validation run", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
+
+======================================================================
+ERROR: test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 273, in test_new_schema_cannot_fall_through_to_legacy_pr_match
+  File "<stdin>", line 235, in qualify
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+    die("Qualification requires exactly one retained validation run", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
+
+======================================================================
+ERROR: test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 308, in test_receipts_participate_in_rollback
+  File "<stdin>", line 235, in qualify
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 565, in qualify_landings
+    die("Qualification requires exactly one retained validation run", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<clone-root>/gh591-reconciler/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Qualification requires exactly one retained validation run
+
+----------------------------------------------------------------------
+Ran 22 tests in 6.081s
+
+FAILED (errors=6)

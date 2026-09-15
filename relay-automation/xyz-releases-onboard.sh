@@ -7,8 +7,10 @@ Usage:
   xyz-releases-onboard.sh [target-repo] [--slug <slug>]
   xyz-releases-onboard.sh -h | --help
 
-Onboard a repository to the Tier 2 SQLite-backed RELEASES ledger (GH-197).
+Onboard an external target repository to the Tier 2 SQLite-backed RELEASES ledger (GH-197).
 Mechanizes the legacy RELEASES.md -> releases.db onboarding SOP (LTVera-Pandas ad0d816).
+Note: XYZ-forge root itself is fully app-managed and RELEASES.md has been retired (GH-568).
+This script is preserved exclusively for onboarding external repositories.
 
 Steps performed:
   1. Validates preconditions (refuses if releases.db exists, requires RELEASES.md).

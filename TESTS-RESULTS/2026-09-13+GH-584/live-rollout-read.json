@@ -1,0 +1,133 @@
+{
+  "pending_window_prs": 24,
+  "closing_issues_checked": 18,
+  "checks": [
+    {
+      "issue": 496,
+      "pr": 580,
+      "state": "OPEN",
+      "active_doc": "PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md",
+      "lessons_error": null
+    },
+    {
+      "issue": 523,
+      "pr": 526,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 524,
+      "pr": 526,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 528,
+      "pr": 531,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 529,
+      "pr": 573,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 533,
+      "pr": 573,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 534,
+      "pr": 560,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 536,
+      "pr": 540,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 537,
+      "pr": 542,
+      "state": "OPEN",
+      "active_doc": "PROJECT/2-WORKING/GH-537-FIVE-SKILL.md",
+      "lessons_error": null
+    },
+    {
+      "issue": 549,
+      "pr": 559,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 554,
+      "pr": 573,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 555,
+      "pr": 573,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 556,
+      "pr": 557,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 561,
+      "pr": 577,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 564,
+      "pr": 574,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 567,
+      "pr": 576,
+      "state": "OPEN",
+      "active_doc": "PROJECT/2-WORKING/GH-567-REMOVE-ROADMAP-DASHBOARD.md",
+      "lessons_error": null
+    },
+    {
+      "issue": 568,
+      "pr": 581,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    },
+    {
+      "issue": 586,
+      "pr": 587,
+      "state": "CLOSED",
+      "active_doc": null,
+      "lessons_error": null
+    }
+  ],
+  "limitations": "Read-only current metadata and active-doc lessons check; downstream planner/ledger writes and actual hosted run not exercised."
+}

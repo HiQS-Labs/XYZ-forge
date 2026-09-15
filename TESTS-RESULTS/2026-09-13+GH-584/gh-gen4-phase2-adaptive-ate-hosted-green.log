@@ -1,0 +1,20 @@
+== test: gh-gen4-phase2-adaptive-ate ==
+  PASS: utils/py/adaptive_ate.py exists and is executable
+  PASS: utils/py/calibrate_tier1.py exists and is executable
+  PASS: reference grid utils/ate/grids/gen4-pairwise-example.yaml shipped
+  PASS: utils/ate/tier1-calibration.json shipped
+  PASS: adaptive_ate.py --mode suite passes
+  PASS: 12-flag grid yields 14 cases (<=200; Cartesian is 13824)
+  PASS: independent brute-force check: 0 invalid cases, 100% 2-way coverage (invalid=0 required=327 missing=0)
+  PASS: --mode coverage reports complete
+  PASS: grid referencing an unknown flag is refused
+  PASS: calibrate_tier1.py --verify: 0 false negatives on the built-in 50-pass/20-fail benchmark
+  PASS: benchmark is 50 known-pass / 24 known-fail (20 + 4 shapes from the first Gen 4 campaign)
+  PASS: recalibration into a scratch file is deterministic and FN=0
+  PASS: calibrator exits 1 when the 0% false-negative floor cannot be met
+  PASS: planted --burst+json defect found by the pairwise array (2 fail, 0 anomaly, rc=1)
+  PASS: run telemetry is line-valid TelemetryEvent JSONL (phase=pairwise)
+  PASS: 0 false positives / 0 false negatives across the executed array
+  PASS: tier-2 command not invoked on a clean run ($0 floor)
+  PASS: tier-2 command receives the anomaly list when rc=7 is unclassified
+== gh-gen4-phase2-adaptive-ate: 18 passed, 0 failed ==

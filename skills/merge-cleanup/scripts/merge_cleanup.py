@@ -270,7 +270,7 @@ def emit_pr_merged(repo_path, pr, dry_run=False):
 
 
 def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True) -> bool:
-    """Executes wave_reconcile.py, RELEASES DB generation/check, and pdda issue-doc-sync."""
+    """Executes wave_reconcile.py, RELEASES DB check, and pdda issue-doc-sync."""
     if dry_run:
         log(f"[DRY RUN] Would run wave_reconcile.py --pr {pr_num} and RELEASES DB sync")
         return True
@@ -292,13 +292,9 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path, dry_run: bool = True)
             log_err(f"wave_reconcile FAILED for PR #{pr_num} (exit {r_res.returncode}): {(r_res.stderr.strip() or r_res.stdout.strip())[-600:]}")
             ok = False
 
-    # 2. releases_app.py gen & check
+    # 2. releases_app.py check
     releases_app = repo_path / "utils" / "py" / "releases_app.py"
     if releases_app.exists():
-        g_res = subprocess.run([sys.executable, str(releases_app), "gen"], cwd=str(repo_path), capture_output=True, text=True, check=False)
-        if g_res.returncode != 0:
-            log_err(f"RELEASES gen FAILED (exit {g_res.returncode}): {(g_res.stderr.strip() or g_res.stdout.strip())[-400:]}")
-            ok = False
         c_res = subprocess.run([sys.executable, str(releases_app), "check"], cwd=str(repo_path), capture_output=True, text=True, check=False)
         if c_res.returncode == 0:
             log("✅ RELEASES DB check passed")
@@ -663,7 +659,7 @@ def main():
     parser.add_argument("--reconcile-pr", type=int, default=0, help="Run post-merge reconcile on a specific PR number")
     parser.add_argument("--integration-branch", default="development", help="Branch PRs land on and the primary must be able to fast-forward (default: development)")
     parser.add_argument("--marker", action="store_true", help="Post status marker comments to linked canonical GitHub issues for active/incomplete checkouts")
-    parser.add_argument("--allow-unready-primary", action="store_true", help="Merge even though the primary checkout cannot receive the landing (records the blockers and proceeds)")
+    parser.add_argument("--allow-unready-primary", action="store_true", help="Explicitly defer primary-checkout cleanup and proceed even though the primary cannot receive the landing")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
 
     args = parser.parse_args()
@@ -781,9 +777,6 @@ def main():
             return 2
         primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
         print(format_primary_landing(primary_landing) + "\n")
-        if _primary_blocks("merge"):
-            return 2
-
         # R2-2: the branch Phase 0 checked must be the branch these PRs actually land on. A PR
         # based elsewhere would merge into a tree whose readiness was never established.
         mismatched = [pr for pr in ordered_prs
@@ -795,6 +788,12 @@ def main():
             log_err("Phase 0 only vouches for the selected integration branch.")
             log_err(f"Re-run with --integration-branch <their base>, or exclude them.")
             return 2
+
+    # GH-595: executing cleanup is one operation, even when there are no PRs or the caller chose
+    # teardown-only. The operator — not the skill — owns any decision to leave the primary
+    # unready. Refuse before the first Phase 5/6 mutation unless that deferral is explicit.
+    if _primary_blocks("execute cleanup"):
+        return 2
 
     if not args.teardown_only and ordered_prs:
         print("=" * 80)

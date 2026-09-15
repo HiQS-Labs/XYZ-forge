@@ -102,10 +102,19 @@ def load_provider_key(provider, key_env):
     os.environ[key_env] = secret
 
 
+def resolve_reasoning_effort():
+    effort = os.environ.get("DEEPSEEK_REASONING_EFFORT", "high")
+    if effort not in ("off", "low", "high", "max"):
+        die("invalid DEEPSEEK_REASONING_EFFORT %r — expected off, low, high, or max" % effort)
+    return effort
+
+
 def generate_patch_overlay(provider, model_id, api_key_env):
     """Generate a temporary cordis patch overlay configuring the LLM route."""
     base_url, default_key_env, _key_file = provider_route(provider)
     key_env = api_key_env or default_key_env
+    effort = resolve_reasoning_effort()
+    thinking = "disabled" if effort == "off" else "enabled"
 
     # The route's `models` list only REGISTERS models; the model the agent actually runs comes
     # from the base bundle's `agent-default-model` entry (deepseek-v4-flash). Without the second
@@ -121,8 +130,8 @@ def generate_patch_overlay(provider, model_id, api_key_env):
   config:
     apiKeyEnv: {key_env}
     baseURL: {base_url}
-    thinking: enabled
-    reasoningEffort: high
+    thinking: {thinking}
+    reasoningEffort: {effort}
     models:
 {model_entry}
 - id: agent-default-model
@@ -201,6 +210,7 @@ def main():
     # an unknown value; doing that after the claim would leave the relay token held by a turn that
     # never ran.
     provider_route(os.environ.get("DEEPSEEK_PROVIDER", "openrouter"))
+    reasoning_effort = resolve_reasoning_effort()
 
     allow_paths = os.environ.get("ALLOW_PATHS", "")
     peer = os.environ.get("RELAY_PEER", "")
@@ -336,7 +346,7 @@ def main():
             task_scope=t,
             model_id=deepseek_model,
             gateway=deepseek_provider,
-            reasoning_effort=os.environ.get("DEEPSEEK_REASONING_EFFORT", "high"),
+            reasoning_effort="none" if reasoning_effort == "off" else reasoning_effort,
             cli_flags=dflags,
             repo_root=xyz_root,
         ) as logger:

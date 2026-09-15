@@ -9,8 +9,11 @@ PDDA_WORKING_DIR="${PDDA_WORKING_DIR:-$PDDA_REPO_ROOT/PROJECT/2-WORKING}"
 PDDA_COMPLETED_DIR="${PDDA_COMPLETED_DIR:-$PDDA_REPO_ROOT/PROJECT/3-COMPLETED}"
 PDDA_MISC_DIR="${PDDA_MISC_DIR:-$PDDA_REPO_ROOT/PROJECT/4-MISC}"
 # Forward-looking release-planning ledger — a single root file (like ROADMAP.md/CHANGELOG.md), not
-# a lifecycle bucket of per-tag docs. See PROJECT/PDDA.md "RELEASES.md — release ledger".
-PDDA_RELEASES_FILE="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
+if [ -z "${PDDA_RELEASES_FILE:-}" ] && [ -f "$PDDA_REPO_ROOT/RELEASES.md" ]; then
+  PDDA_RELEASES_FILE="$PDDA_REPO_ROOT/RELEASES.md"
+else
+  PDDA_RELEASES_FILE="${PDDA_RELEASES_FILE:-}"
+fi
 PDDA_ACTIVITY_LOG="${PDDA_ACTIVITY_LOG:-$PDDA_REPO_ROOT/PROJECT/PDDA-ACTIVITY.jsonl}"
 # Cached GitHub issue-state file (TSV: "<number>\t<STATE>", '#'-comment lines ignored). Written by
 # pdda-gh-refresh.sh; read by `pdda.sh issue-doc-sync` when gh is absent/offline. Gitignored runtime
@@ -445,7 +448,9 @@ pdda_write_gh_state_cache() {  # <table>
   mv "$tmp" "$PDDA_GH_STATE_CACHE" 2>/dev/null || { rm -f "$tmp"; return 1; }
 }
 
-# --- RELEASES.md helpers -------------------------------------------------------------------------
+# --- RELEASES.md helpers (Legacy) ----------------------------------------------------------------
+# RELEASES.md is retired in XYZ-forge in favor of releases.db (GH-568). These helpers are preserved
+# for downstream repos using legacy Markdown ledgers.
 # RELEASES.md is a single forward-looking planning ledger (like ROADMAP.md/CHANGELOG.md), not a
 # bucket of per-tag docs — see PROJECT/PDDA.md "RELEASES.md — release ledger". Each release is a
 # flat "Label: value" block; a block starts at a line matching ^Release: and runs until the next

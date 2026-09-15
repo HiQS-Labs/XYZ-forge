@@ -7,8 +7,8 @@ build swarms. Built in phases on top of `tick` (see
 **Execution contract: default live-window flow** — the default operator path is
 still the poll-driven, live-window flow: a Claude window under `/loop`, or a
 human one-line nudge when the turn belongs to a non-Claude window. Headless
-turn-takers now exist for Codex, agy, and Pi (`codex-turn.sh`, `agy-turn.sh`,
-`pi-turn.sh`).
+turn-takers now exist for Claude, Codex, agy, and Pi (`claude-turn.sh`, `codex-turn.sh`,
+`agy-turn.sh`, `pi-turn.sh`). Claude setup is covered in [subscription mode](#claude-subscription-mode).
 `relay-loop.sh --background --cross-model-cmd <shim>` can now auto-fire one of
 those shims on `DECISION: nudge-cross-model`; without that wrapper-only flag,
 the loop still degrades to the existing manual nudge. For the current headless path, see
@@ -24,6 +24,7 @@ the loop still degrades to the existing manual nudge. For the current headless p
 | `watchdog.sh` | **Phase 2** liveness: `tick analyze --format json` → parked `parked_suspects[]` → structured escalation record; reap gated behind `--allow-reap` (stub, pending an authority decision). |
 | `relay-drive.sh` | **Phase 4b** relay supervisor: loops a `/relay` Producer↔Reviewer thread to termination via a turn-taker; round cap + no-progress escalation. |
 | `relay-turn-lib.sh` | **Shared safety core** (sourced, not run): the model-agnostic containment contract — path-allowlist + commit-bypass guard + no-push. Both headless turn-takers source this so the boundary lives in ONE place. See [decisions/2026-06-15-unattended-agent-containment.md](../decisions/2026-06-15-unattended-agent-containment.md). |
+| `claude-turn.sh` | Native Claude relay reviewer and explicitly selected builder; shared token and allowlist enforcement. |
 | `codex-turn.sh` | **Option-A** headless turn-taker for the **Codex** agent (`codex exec`); thin dispatch wrapper over `relay-turn-lib.sh`. |
 | `agy-turn.sh` | **Option-A** headless turn-taker for the **agy** (Antigravity CLI) agent (`agy -p`); thin dispatch wrapper over `relay-turn-lib.sh`. Permanent replacement for `gemini-turn.sh`; live-validated 2026-06-18. |
 | `pi-turn.sh` | **GH-295** headless turn-taker for **Pi** (`pi.dev`, package `@earendil-works/pi-coding-agent`; `pi --provider … --model … --mode json -p`); thin dispatch wrapper over `relay-turn-lib.sh`. Same posture as agy (no built-in sandbox — containment is worktree isolation + `rtl_enforce`), but genuinely better on cost visibility: `--mode json`'s JSONL stream carries real per-call `usage`/`cost` fields, so this is the first non-Claude lane with actual `tick cost --tool pi` capture. `PI_MODEL` has **no default** by design (GH-280/aider#5486 class of bug); the operator must set it explicitly. |
@@ -34,19 +35,67 @@ the loop still degrades to the existing manual nudge. For the current headless p
 
 ## Adding a new consult advisor (GH-178 A1)
 
-`consult.sh`'s `--models` dispatch is a data table (`ADV_NAMES`/`ADV_RUNFNS`, parallel arrays —
-bash 3.2/macOS has no `declare -A`), so adding a 5th advisor is a data addition, not a new case arm:
-add its name to `ADV_NAMES`, write a `run_<vendor>() { local out="$1"; ...; }` alongside the existing
-`run_codex`/`run_agy`/`run_gemini`/`run_aider`, and add its function name to `ADV_RUNFNS` at the same
-index. What a new `run_<vendor>()` must do itself (genuinely vendor-specific): the CLI invocation
-syntax/flags, any auth pre-flight probe (see `agy_auth_preflight`), and transcript-format quirks (e.g.
-`run_codex`'s attestation-header prepend). What it gets for free by calling `_guarded "$out" ...`
-(shared via this file, not `relay-turn-lib.sh` — that lib backs the separate `*-turn.sh` relay shims):
-the wall-clock timeout watchdog and output capture into `$out`. If the new advisor is also wired as a
-relay turn-taker (a `<vendor>-turn.sh` alongside `codex-turn.sh`/`agy-turn.sh`/`aider-turn.sh`), it
-should source `relay-turn-lib.sh` for the containment contract (`rtl_init`/`rtl_before`/
-`rtl_run_bounded`/`rtl_enforce`) exactly like the existing shims — that boundary is already
-model-agnostic; do not reimplement it.
+The default Python implementation dispatches advisors in `utils/py/consult.py`. Add the
+vendor invocation there, reuse `guarded_with_timeout` and the existing result aggregation,
+and register a regression suite in `validate.sh`. Account-specific preflight and result
+parsing belong in a helper shared with that vendor's relay adapter. The Bash fallback is
+frozen; do not extend its dispatch table. Relay adapters retain the shared `RelayTurnLib`
+contract for claims, scoped writes, cleanup, and handoff.
+
+## Claude subscription mode
+
+Use an installed **Claude Code CLI** signed in with your own Claude.ai subscription:
+
+```bash
+claude auth login
+claude auth status
+export CLAUDE_AUTH_MODE=subscription
+# If Claude is outside PATH, set CLAUDE_BIN to its executable's absolute path.
+relay-automation/consult.sh --models claude \
+  --prompt 'Read README.md and identify one issue with a file:line citation.'
+```
+
+This opt-in mode uses native `claude -p` and verifies `claude auth status` in the same
+directory and environment as the request. It requires an authenticated first-party
+Pro, Max, Team, or Enterprise Claude.ai account. API-key/helper authentication,
+API/provider environment overrides, failed probes, and unrecognized account shapes
+stop the Claude lane with an actionable error. Credentials remain managed by Claude Code;
+XYZ does not extract OAuth tokens, run a proxy, or retry through an API billing route.
+Use a CLI version that supports JSON `auth status`; older versions fail the preflight.
+
+`CLAUDE_AUTH_MODE=inherit` (the default) preserves the CLI's existing authentication and
+settings, including API/provider configurations. It does **not** validate subscription use.
+Native consult supports Claude only in the default Python runtime; `XYZ_PYTHON=0` selects
+the frozen legacy implementation and does not provide these new account checks.
+
+| Task | Existing XYZ route |
+|---|---|
+| One-shot consult | `consult.sh --models claude`, with `Read`, `Grep`, and `Glob` tools; no configured MCP tools |
+| Standalone relay review | `CLAUDE_AGENT=<reviewer-id>` with `relay-drive.sh --reviewer <reviewer-id> --agent-cmd relay-automation/claude-turn.sh` |
+| Explicit builder | `--builder claude` in Marathon, or the existing Claude relay adapter with the artifact allowlist |
+
+Load the relay skill before driving a relay. Relay reviewers still need to write their
+review block and hand off the tick token; the shared reviewer contract limits artifact
+changes. Marathon reviewers remain restricted to Codex/Agy. Default builders are unchanged.
+
+`CLAUDE_MODEL` selects the model (default `claude-sonnet-4-6`), `CLAUDE_MAX_TURNS` limits
+turns (default 12), and `CLAUDE_MAX_BUDGET` supplies an API dollar budget (default $0.50).
+Consult uses `CONSULT_TIMEOUT` (default 300 seconds); relay uses `RELAY_TURN_TIMEOUT_S`
+(default 900). Subscription quotas and any account-enabled extra usage still apply:
+a successful preflight verifies the account route, not remaining quota or a billing ceiling.
+JSON error, exhausted-turn, or empty results fail the new Claude consult and subscription
+relay paths even if the CLI exits zero. Inspect the local transcript before retrying.
+Consult retains raw JSON beside its answer as `.md.json` and CLI diagnostics as `.md.stderr`;
+failed-Claude messages point to that stderr file. Keep private prompts and account
+details out of published evidence.
+
+Provider policy is time-sensitive. As of 2026-09-13, Anthropic's
+[subscription notice](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan)
+says the announced billing changes are paused and `claude -p` continues to draw from
+subscription limits. This guide covers personal local CLI automation. It does not offer
+third-party product login or promise an unlimited subscription API. See the official
+[headless guide](https://code.claude.com/docs/en/headless) and
+[authentication reference](https://code.claude.com/docs/en/authentication).
 
 ## XYZ completion telemetry
 
@@ -581,7 +630,7 @@ export XYZ_ARCHIVE_ROOT=/abs/path/to/transcript-archive   # absolute + exists + 
 
 - No push by design. Shim-taken turns commit locally only.
 - `.tick/` is local. Token state on this device is independent of other machines.
-- Each headless turn is real API spend, so keep `--round-cap` small. Codex, agy, and Pi differ in cost visibility; the agy lane is currently cost-blind in harness logs, and Codex's token-stats parsing is still a Phase-1 partial. Pi's `--mode json` stream carries real per-call usage/cost fields, so the Pi lane is the first non-Claude lane with genuine `tick cost --tool pi` capture — a real gap-closer versus the other two, not just parity (GH-295).
+- Headless turns consume the selected account’s subscription quota or API credits, so keep `--round-cap` small. Codex, agy, and Pi differ in cost visibility; the agy lane is currently cost-blind in harness logs, and Codex's token-stats parsing is still a Phase-1 partial. Pi's `--mode json` stream carries real per-call usage/cost fields, so the Pi lane is the first non-Claude lane with genuine `tick cost --tool pi` capture — a real gap-closer versus the other two, not just parity (GH-295).
 - Headless runs should not share an agent id with a live `/loop` on the same relay.
 
 ## OpenRouter model-alias lookup (GH-120)

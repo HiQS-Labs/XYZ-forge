@@ -1,0 +1,18 @@
+== test: gh610-claude-subscription ==
+  workdir: <temporary-path>
+  PASS: good produces exit 0 and cleans up the claimed turn
+  PASS: error produces exit 5 and cleans up the claimed turn
+  PASS: authfail produces exit 5 and cleans up the claimed turn
+test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) ... ok
+test_legacy_and_invalid_mode (__main__.ClaudeSubscription.test_legacy_and_invalid_mode) ... ok
+test_missing_binary (__main__.ClaudeSubscription.test_missing_binary) ... ok
+test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) ... ok
+test_probe_failures (__main__.ClaudeSubscription.test_probe_failures) ... ok
+test_real_probe_and_consult_dispatch (__main__.ClaudeSubscription.test_real_probe_and_consult_dispatch) ... ok
+test_results (__main__.ClaudeSubscription.test_results) ... ok
+test_subscription_account (__main__.ClaudeSubscription.test_subscription_account) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 1.057s
+
+OK

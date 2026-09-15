@@ -91,29 +91,18 @@ cat > "$OPEN_JSON" <<'EOF'
 {"number":108,"title":"no reference","createdAt":"2026-07-01T00:00:00Z","updatedAt":"2026-07-02T00:00:00Z","url":"u/108","labels":[]}
 EOF
 
-REL="$WORK/RELEASES.md"
-cat > "$REL" <<'EOF'
-Release: 0.1.0
-Status: Draft
-Codename: n/a
-Description: no join key on purpose
-Milestone:
+DB="$WORK/releases.db"
+python3 - "$DB" <<'PYEOF'
+import sqlite3, sys
+conn = sqlite3.connect(sys.argv[1])
+conn.execute("CREATE TABLE releases (version TEXT, codename TEXT, status TEXT, milestone TEXT)")
+conn.execute("INSERT INTO releases VALUES ('0.1.0', 'n/a', 'draft', '')")
+conn.execute("INSERT INTO releases VALUES ('1.0.0', 'Quicksilver', 'draft', 'Quicksilver')")
+conn.execute("INSERT INTO releases VALUES ('0.9.0', 'Older', 'shipped', 'Older')")
+conn.commit()
+PYEOF
 
-Release: 1.0.0
-Status: Draft
-Target Date: 2026-08-01
-Codename: Quicksilver
-Description: the live one
-Milestone: Quicksilver
-
-Release: 0.9.0
-Status: Shipped
-Codename: Older
-Description: history — must be excluded from auto-resolve
-Milestone: Older
-EOF
-
-lanes() { PATH="$STUB:$PATH" RELEASES_FILE="$REL" bash "$LANES" "$@"; }
+lanes() { PATH="$STUB:$PATH" RELEASES_DB="$DB" bash "$LANES" "$@"; }
 
 # ── milestone resolution ────────────────────────────────────────────────────────────────────────
 out="$(lanes rollup --milestone Quicksilver --trunk "$TRUNK" 2>&1)"; rc=$?
@@ -146,12 +135,23 @@ out="$(lanes seed --release NoSuchRelease 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && pass "an unknown --release exits 3" || fail "unknown --release gave rc=$rc: $out"
 
 # Two live blocks with join keys is ambiguous — it must say so, not silently pick one.
-REL2="$WORK/RELEASES-ambiguous.md"
-{ cat "$REL"; printf '\nRelease: 2.0.0\nStatus: Draft\nCodename: Second\nMilestone: Second\n'; } > "$REL2"
-out="$(PATH="$STUB:$PATH" RELEASES_FILE="$REL2" bash "$LANES" rollup --trunk "$TRUNK" 2>&1)"; rc=$?
+DB2="$WORK/releases-ambiguous.db"
+cp "$DB" "$DB2"
+python3 - "$DB2" <<'PYEOF'
+import sqlite3, sys
+conn = sqlite3.connect(sys.argv[1])
+conn.execute("INSERT INTO releases VALUES ('2.0.0', 'Second', 'draft', 'Second')")
+conn.commit()
+PYEOF
+out="$(PATH="$STUB:$PATH" RELEASES_DB="$DB2" bash "$LANES" rollup --trunk "$TRUNK" 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && printf '%s' "$out" | grep -q 'Quicksilver' && printf '%s' "$out" | grep -q 'Second' \
   && pass "two in-progress releases with join keys is an error that names both" \
   || fail "ambiguous auto-resolve should exit 3 naming both (rc=$rc): $out"
+
+# Red control: verify missing DB file exits 3
+out="$(PATH="$STUB:$PATH" RELEASES_DB="$WORK/nonexistent.db" bash "$LANES" rollup --trunk "$TRUNK" 2>&1)"; rc=$?
+[ "$rc" -eq 3 ] && pass "red control: missing releases.db exits 3" \
+  || fail "red control: missing releases.db should exit 3 (rc=$rc): $out"
 
 # ── the landed matcher ──────────────────────────────────────────────────────────────────────────
 ROLL="$(lanes rollup --milestone Quicksilver --trunk "$TRUNK" 2>&1)"
@@ -295,7 +295,7 @@ if PATH="$NOGH" command -v gh >/dev/null 2>&1; then
 else
   pass "the gh-absent fixture really resolves no gh (the case is not vacuous)"
 fi
-out="$(PATH="$NOGH" RELEASES_FILE="$REL" bash "$LANES" seed --milestone Quicksilver 2>&1)"; rc=$?
+out="$(PATH="$NOGH" RELEASES_DB="$DB" bash "$LANES" seed --milestone Quicksilver 2>&1)"; rc=$?
 grep -q 'gh CLI not found' <<<"$([ "$rc" -eq 3 ] && printf '%s' "$out")" \
   && pass "a missing gh exits 3 with a named reason" \
   || fail "missing gh gave rc=$rc: $out"

@@ -33,7 +33,7 @@ function gatherSections(): Section[] {
       id: 'releases',
       title: 'Releases',
       items: releases,
-      emptyMessage: 'No RELEASES.md entries — this file is optional and often empty.',
+      emptyMessage: 'No releases found in releases.db.',
     },
     {
       id: 'worktrees',
@@ -85,7 +85,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   const watcher = vscode.workspace.createFileSystemWatcher(
-    '**/{RELEASES.md,PROJECT/2-WORKING/MARATHON-PLAN-*.md,.git/worktrees/**}',
+    '**/{releases.db,PROJECT/2-WORKING/MARATHON-PLAN-*.md,.git/worktrees/**}',
   );
   context.subscriptions.push(
     watcher,

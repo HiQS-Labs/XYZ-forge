@@ -2,7 +2,7 @@
 title: Relay Architecture — headless Claude, Codex, and agy turns over a tick token
 status: Reference
 created: 2026-06-22
-updated: 2026-09-12
+updated: 2026-09-13
 owner: noelsaw
 doc_type: architecture
 summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap query pipeline and the adoption gate for derived views.
@@ -44,6 +44,7 @@ without reading all of them first.
 | [agent-chorus](skills/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
 | [ate](skills/ate/SKILL.md) | Drive bounded, unattended variation-test matrices and roll findings into one issue. |
 | [better-options](skills/better-options/SKILL.md) | Falsify the apparent option set, then surface smaller viable alternatives. |
+| [ci-debug](skills/ci-debug/SKILL.md) | Debug failing CI pipelines and pre-push gates in safe full-clone isolation via debug-mantra, recon, and ponytail. |
 | [ci-doctor](skills/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [consult](skills/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
 | [debug-mantra](skills/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
@@ -62,6 +63,7 @@ without reading all of them first.
 | [open-router](skills/open-router/SKILL.md) | Resolve a colloquial model name to its canonical OpenRouter slug. |
 | [phase-qa](skills/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
 | [ponytail](skills/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
+| [push-to-xyz-mini](skills/push-to-xyz-mini/SKILL.md) | Publish the curated XYZ mini skill subset into the local XYZ-mini checkout and push it, via the deterministic embedded-manifest publisher `utils/py/xyz_mini_sync.py` (GH-589). |
 | [radar](skills/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
 | [read-only](skills/read-only/SKILL.md) | Add a narrow read-only command allowlist to Claude Code settings. |
 | [readme-audit](skills/readme-audit/SKILL.md) | Audit a README as both user-facing artifact and map of the repo's docs. |
@@ -70,7 +72,7 @@ without reading all of them first.
 | [relay-automation](skills/relay-automation/SKILL.md) | Tick-backed automation library behind the `/relay` review loop. |
 | [relay-to-issue](skills/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [relay-xyz](skills/relay-xyz/SKILL.md) | Drive an automated relay review loop with the shipped harness. |
-| [releases](skills/releases/SKILL.md) | Read/author/publish the optional RELEASES.md planning ledger. |
+| [releases](skills/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
 | [review-xyz](skills/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [rpr](skills/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |
 | [shakedown](skills/shakedown/SKILL.md) | Audit script-calling skills across CWD, install, symlink, and permission scenarios. |

@@ -1,0 +1,20 @@
+{
+  "added_len": 2191,
+  "added_sha256": "38480d2a9fd2c6d4a7858cedd387c81470b60e346345bad09f44c776e9e2ca7c",
+  "added_start": 11008,
+  "artifact_sha256": null,
+  "attested_at": "2026-09-13T23:59:12Z",
+  "driver_pid": 55342,
+  "isolated": true,
+  "relay_file": "<local-path-redacted>",
+  "relay_file_rel": "relay-system/gh610-account-review.md",
+  "reviewed_head": "723e233092c1113b42e2b9f427b857d03e62a491",
+  "reviewer": "claude-reviewer",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "<local-path-redacted>",
+  "task": "RELAY-gh610-review",
+  "trailer_sha256": "2f0a3aa5a9fcaed990d002200ca2b9049acb69f949749c109009a08d0a6afd20",
+  "transcript_repo": "<local-path-redacted>",
+  "source_sha256": "87bc87e124c10872dc1146a3caf107fa67a2e1afc7d84ace8ffcfcca6dd08ba5"
+}

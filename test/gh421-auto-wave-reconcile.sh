@@ -54,6 +54,36 @@ class ReconcileTests(unittest.TestCase):
         self.calls = []
         self.fail_after = None
 
+    def test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs(self):
+        for stage in ('2-WORKING', '3-COMPLETED'):
+            for name in ('GH-421-canonical.md', '421-canonical.md'):
+                with self.subTest(stage=stage, name=name), tempfile.TemporaryDirectory() as root:
+                    folder = Path(root) / 'PROJECT' / stage
+                    folder.mkdir(parents=True)
+                    canonical = folder / name
+                    canonical.write_text('canonical task document')
+                    (folder / 'recon-GH-421-notes.md').write_text('supporting notes')
+                    (folder / 'GH-4210-unrelated.md').write_text('unrelated task')
+                    seen = []
+                    real_listdir = os.listdir
+                    def git_output(command, **kwargs):
+                        if command[1] == 'log':
+                            return 'Fix task\nCloses #421\n'
+                        if command[1] == 'diff':
+                            return ''
+                        return 'a' * 40 + '\n'
+                    with patch.object(wave.subprocess, 'check_output', side_effect=git_output), \
+                         patch.object(wave, 'github_slug_from_origin', return_value='test/repo'), \
+                         patch.object(wave.os, 'listdir', side_effect=lambda p: sorted(real_listdir(p), reverse=True)), \
+                         patch.object(wave, 'validate_frontmatter_schema', side_effect=lambda p: seen.append(p)), \
+                         patch.object(wave, 'validate_lessons_learned', return_value=None), \
+                         patch.object(wave, 'validate_pre_merge_receipts', return_value=None), \
+                         contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()), \
+                         self.assertRaises(SystemExit) as stopped:
+                        wave.run_pre_merge(root, SimpleNamespace(pr=None, offline=True))
+                    self.assertEqual(stopped.exception.code, 0)
+                    self.assertEqual(seen, [str(canonical)])
+
     def rows(self, sql):
         with contextlib.closing(sqlite3.connect(self.root / 'releases.db')) as conn:
             conn.row_factory = sqlite3.Row
@@ -271,6 +301,125 @@ class ReconcileTests(unittest.TestCase):
             self.apply()
         self.assertEqual(before, self.snapshot())
 
+    def test_supporting_note_cannot_steal_canonical_closeout(self):
+        recon=self.root/'PROJECT/2-WORKING/recon-gh421-support.md'
+        recon.write_text((self.root/self.doc).read_text())
+        before=recon.read_bytes()
+        original=wave.os.listdir
+        def listdir(path):
+            names=original(path)
+            if str(path)==str(recon.parent):
+                return sorted(names,key=lambda name: name!=recon.name)
+            return names
+        with patch.object(wave.os,'listdir',side_effect=listdir):
+            self.apply()
+        self.assertTrue((self.root/self.doc.replace('2-WORKING','3-COMPLETED')).is_file())
+        self.assertEqual(before,recon.read_bytes())
+        self.assertEqual(self.rows('SELECT doc_path FROM roadmap_items')[0]['doc_path'],
+                         self.doc.replace('2-WORKING','3-COMPLETED'))
+
+    def test_legacy_row_does_not_block_attributable_pr(self):
+        self.cli('roadmap','add','--issue-num','52','--title','legacy',
+                 '--created','2026-09-01','--issue-url','https://github.com/test/repo/issues/52',
+                 '--doc-path','PROJECT/1-INBOX/GH-52-legacy.md')
+        self.offline['issues'].append({'number':52,'state':'CLOSED'})
+        before=self.snapshot()
+        out=io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(wave.catch_up_prs(str(self.root),'test/repo',self.offline),['42'])
+        self.assertIn('WARNING',out.getvalue())
+        self.assertIn('GH-52',out.getvalue())
+        self.assertEqual(before,self.snapshot())
+
+    def test_recovery_covers_no_issue_and_open_reference_prs(self):
+        def pr(number,body='',date='2026-09-11T00:00:00Z'):
+            return dict(number=number,title='fixture',body=body,merged_at=date,
+                        merge_commit_sha=str(number)*40,base={'ref':'development'})
+        pages=[[pr(1,date='2026-09-01T00:00:00Z'),pr(2)],
+               [pr(3,'References #421'),pr(4),pr(5),pr(6,date=None)]]
+        def command(args,**kwargs):
+            self.assertIn('--paginate',args)
+            self.assertIn('--slurp',args)
+            self.assertIn('per_page=100',args[-1])
+            return SimpleNamespace(returncode=0,stdout=json.dumps(pages),stderr='')
+        metadata={}
+        with patch.object(wave.subprocess,'check_output',side_effect=lambda args,**kw:
+                          'false\n' if '--is-shallow-repository' in args else '2026-09-10T00:00:00Z\n'), \
+             patch.object(wave.subprocess,'run',side_effect=command), \
+             patch.object(wave,'committed_qualifications',return_value=[{'pr':4},{'pr':5}]), \
+             patch.object(wave,'qualification_receipt_matches',side_effect=lambda root,entry,meta:
+                          entry['pr']==meta['number']==4):
+            self.assertEqual(wave.unreconciled_prs(str(self.root),'test/repo',metadata),['2','3','5'])
+        self.assertEqual(metadata[('pr','3')]['body'],'References #421')
+        self.assertEqual(metadata[('pr','2')]['mergeCommit']['oid'],'2'*40)
+        # PR #5 carried a number-shaped but invalid receipt; it MUST remain recoverable.
+        self.assertIn(('pr','5'),metadata)
+
+    def test_recovery_fails_closed_on_missing_history_or_api_error(self):
+        with patch.object(wave.subprocess,'check_output',return_value=''):
+            with self.assertRaises(wave.ReconcileError):
+                wave.unreconciled_prs(str(self.root),'test/repo',{})
+        with patch.object(wave.subprocess,'check_output',side_effect=lambda args,**kw:
+                          'false\n' if '--is-shallow-repository' in args else '2026-09-10T00:00:00Z\n'), \
+             patch.object(wave.subprocess,'run',return_value=SimpleNamespace(returncode=1,stdout='',stderr='API unavailable')):
+            with self.assertRaises(wave.ReconcileError):
+                wave.unreconciled_prs(str(self.root),'test/repo',{})
+
+    def test_recovery_rejects_shallow_and_malformed_metadata(self):
+        with patch.object(wave.subprocess,'check_output',return_value='true\n'):
+            with self.assertRaisesRegex(wave.ReconcileError,'non-shallow'):
+                wave.unreconciled_prs(str(self.root),'test/repo',{})
+        for record in ({'base':{'ref':'development'}}, {'merged_at':None},
+                       {'merged_at':42,'base':{'ref':'development'}}):
+            with self.subTest(record=record), \
+                 patch.object(wave.subprocess,'check_output',side_effect=['false\n','2026-09-10T00:00:00Z\n']), \
+                 patch.object(wave,'committed_qualifications',return_value=[]), \
+                 patch.object(wave.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout=json.dumps([[record]]),stderr='')):
+                with self.assertRaisesRegex(wave.ReconcileError,'Malformed'):
+                    wave.unreconciled_prs(str(self.root),'test/repo',{})
+
+    def test_recovered_closers_have_one_newest_lifecycle_owner(self):
+        # Merge order differs from PR number order. Both require qualification.
+        older=dict(self.pr,number=90,mergedAt='2026-09-07T00:00:00Z',mergeCommit={'oid':'b'*40})
+        def discover(root,slug,offline,qualification_metadata=None):
+            qualification_metadata.update({('pr','90'):older,('pr','42'):self.pr})
+            return ['90','42']
+        argv=['wave','--root',str(self.root),'--catch-up','--qualify','--gate','--skip-pull','--skip-branch-check']
+        with patch.object(sys,'argv',argv), \
+             patch.object(wave,'catch_up_prs',side_effect=discover), \
+             patch.object(wave,'qualify_landings') as qualify, \
+             patch.object(wave,'check_provenance_receipts'), \
+             patch.object(wave,'fetch_issue_state',return_value='CLOSED'), \
+             patch.object(wave,'check_porcelain_cleanliness',return_value=''), \
+             patch.object(wave,'verify_rollback_completeness'), \
+             patch.object(wave,'github_slug_from_origin',return_value='test/repo'), \
+             patch.object(wave,'harness_tool',side_effect=lambda root,path:str(source/path)), \
+             patch.object(wave.subprocess,'run',side_effect=self.run_command), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            wave.main()
+        self.assertEqual([p['number'] for p in qualify.call_args.args[1]],[90,42])
+        self.assertEqual(self.rows('SELECT reason FROM manifest_state_events')[-1]['reason'],'a'*40)
+        row=self.rows('SELECT * FROM roadmap_items')[0]
+        self.assertIn('PR #42',row['raw_text'])
+        doc=(self.root/self.doc.replace('2-WORKING','3-COMPLETED')).read_text()
+        self.assertIn('updated: 2026-09-08',doc)
+        self.assertNotIn('updated: 2026-09-07',doc)
+
+    def test_qualified_empty_sweep_writes_nothing(self):
+        before=self.snapshot()
+        argv=['wave','--root',str(self.root),'--catch-up','--qualify','--gate','--skip-pull','--skip-branch-check']
+        with patch.object(sys,'argv',argv), \
+             patch.object(wave,'catch_up_prs',return_value=[]), \
+             patch.object(wave,'qualify_landings') as qualify, \
+             patch.object(wave,'run_subprocesses') as regenerate, \
+             patch.object(wave,'check_porcelain_cleanliness',return_value=''), \
+             patch.object(wave,'github_slug_from_origin',return_value='test/repo'), \
+             contextlib.redirect_stdout(io.StringIO()):
+            wave.main()
+        qualify.assert_not_called()
+        regenerate.assert_not_called()
+        self.assertEqual(before,self.snapshot())
+
     def test_live_catch_up_pagination_and_foreign_reference(self):
         pages = [[], [dict(source={'issue': dict(number=42, pull_request={'url':'pr'},
                  repository_url='https://api.github.com/repos/test/repo')}),
@@ -288,8 +437,11 @@ class ReconcileTests(unittest.TestCase):
         with patch.object(wave, 'fetch_issue_state', return_value='CLOSED'), \
              patch.object(wave.subprocess, 'run', side_effect=command), \
              patch.object(wave, 'fetch_pr_metadata', return_value=dict(self.pr, body='References #421')):
-            with self.assertRaises(wave.ReconcileError):
-                wave.catch_up_prs(str(self.root), 'test/repo')
+            output=io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo'), [])
+            self.assertIn('WARNING',output.getvalue())
+            self.assertIn('GH-421',output.getvalue())
 
 
 class WorkflowTests(unittest.TestCase):
@@ -302,7 +454,8 @@ class WorkflowTests(unittest.TestCase):
         for marker in ('types: [closed]', 'branches: [development]', 'queue: max',
                        'cancel-in-progress: false', 'ref: development', 'fetch-depth: 0',
                        'github.event.pull_request.merged == true', "github.event.pull_request.base.ref == 'development'",
-                       '--pr "$PR_NUMBER" --gate', '--catch-up --gate'):
+                       '--pr "$PR_NUMBER" --catch-up --gate --qualify', '--catch-up --gate --qualify',
+                       'timeout-minutes: 120', 'python3 -m pip install --quiet --break-system-packages pytest'):
             self.assertIn(marker, self.workflow)
         self.assertIsNone(re.search(r'^  push:', self.workflow, re.M))
         self.assertIn('permissions:\n  contents: read', self.workflow)
@@ -341,11 +494,18 @@ class WorkflowTests(unittest.TestCase):
         paths = ['releases.db', 'releases.sql',
                  'PROJECT/2-WORKING/GH-421-fixture.md', 'PROJECT/3-COMPLETED/GH-421-fixture.md',
                  'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md']
+        paths += ['TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/provenance.jsonl',
+                  'TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/validation.jsonl']
         calls = self.publish(paths)
         self.assertIn(['add', '-A', '--', *sorted(paths)], calls)
         self.assertEqual(calls[-1], ['push', 'origin', 'HEAD:development'])
         with self.assertRaisesRegex(SystemExit, 'undeclared'):
             self.publish(paths + ['utils/py/unexpected.py'])
+        with self.assertRaisesRegex(SystemExit, 'undeclared'):
+            self.publish(paths + ['TESTS-RESULTS/arbitrary/provenance.jsonl'])
+        for sha in ('a'*39, 'a'*41, 'g'*40):
+            with self.subTest(sha=sha), self.assertRaisesRegex(SystemExit, 'undeclared'):
+                self.publish(paths + ['TESTS-RESULTS/2026-09-13+GH-591/wave-'+sha+'/provenance.jsonl'])
         with self.assertRaises(wave.subprocess.CalledProcessError):
             self.publish(paths, reject_push=True)
         with self.assertRaises(SystemExit) as result:

@@ -46,6 +46,13 @@ gate
 ```
 
 ## Install
+
+**Native Claude subscription support requires the full XYZ checkout or the current Tier 1/2
+vendored harness** (`xyz-vendor.sh`), which includes the Python runtime under `utils/py/`.
+This legacy partial tarball does not contain the Claude/consult adapters or their Python
+helpers; extracting it alone does not enable GH-610. Follow the [relay-xyz installation
+instructions](../relay-xyz/SKILL.md#concurrent-relays-across-repos-same-machine) for that route.
+
 The relay scripts + tests ship as `relay-pkg.tar.gz` beside this SKILL.md (regenerable
 from sources via `make-pkg.sh`). Extract into a repo that already has a capable `tick`
 (run the gate first):

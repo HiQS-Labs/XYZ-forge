@@ -100,6 +100,9 @@ TESTS=(
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
+  "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
+  "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
+  "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
@@ -122,6 +125,7 @@ TESTS=(
   "gh372-escalation-log-tail.sh" # GH-372 (escalation root cause tail)
   "gh374-drift-path-filter.sh"  # GH-374 (drift-brief path-existence filter)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
+  "gh610-claude-subscription.sh" # account routes and native Claude JSON results
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
   "worktree-isolation.sh"
@@ -289,6 +293,7 @@ TESTS=(
   "gh141-fuzz-inputs.sh"         # #141 Phase 3 (fuzz_inputs.py parser-only slice positive/negative controls)
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
+  "gh608-deepseek-effort.sh"     # GH-608 (DEEPSEEK_REASONING_EFFORT matrix, early claim prevention, telemetry normalization)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
   "gh155-phase1-metamorphic-invariants.sh" # #155 Phase 1 (Metamorphic Invariant Assertions & Sandbox Hardening: zero-mutation, idempotence, realpath containment)
   "gh155-phase2-differential-oracle.sh" # #155 Phase 2 (Differential Multi-Harness Cross-Testing Oracle across all 7 turn shims)
@@ -536,6 +541,7 @@ TESTS=(
   "gh567-roadmap-dashboard-retired.sh" # GH-567 (verify ROADMAP-DASHBOARD.md and view-staleness machinery are retired)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
   "gh269-roadmap-retired.sh"          # GH-269 (verify ROADMAP.md is retired, tools operate on releases.db, move/update CLI verbs)
+  "gh568-releases-md-retired.sh"      # GH-568 (verify RELEASES.md is retired, tools operate on releases.db, writers audit)
   "gh423-roadmap-render.sh"           # GH-423 (releases roadmap render emits roadmap_items as ledger markdown marathon_plan.py parses unchanged)
   "gh454-reconciler-defects.sh"       # GH-454 (wave_reconcile: unnamed release no longer aborts; PDDA full-gate overreach scoped to its documented surface)
   "gh424-roadmap-status-marker.sh"    # GH-424 (roadmap_items.status_marker gets a CLI writer; releases-mode rows can leave 🆕)
@@ -609,6 +615,10 @@ TESTS=(
   "gh-gen4-phase5-campaign.sh"       # GH-299 Phase 5 (Gen 4 sandboxed campaign: bounded soak in a disposable clone, 0 host contamination, poison control)
   "gh396-find-harness-roots.sh"     # GH-396 (find-harness two-roots contract: #395 ×5 topologies, #394 warn-under-override + runnable remedy, --quiet)
   "gh393-deepseek-readiness.sh"     # GH-396 / #393 (RELAY_HAS_DEEPSEEK parity with deepseek-turn.py's own binary rule + API key)
+  "gh591-prepush-commit-boundary.sh" # GH-591 (hook-created files do not travel in the selected commit)
+  "gh589-xyz-mini-sync.sh"          # GH-589 (XYZ mini publisher: idempotent, inclusion-only, mirror, ownership guard, secret tripwire, push read-back)
+  "gh589-consult-no-tick.sh"        # GH-589 (consult runs in the exported mini package without bin/tick; explicit broken TICK_BIN stays fatal; empty answers fail)
+  "gh589-skill-viewer.sh"           # GH-589 (mini skill viewer count/name set == disk; frontmatter styles; empty-dir red)
 )
 
 PASSED=()

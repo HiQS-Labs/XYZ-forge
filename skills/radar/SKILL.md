@@ -28,14 +28,16 @@ Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 
 - **Analysis reads; only the report writes.** The two report sinks (Step 5) are the *only* writes.
   Never edit an existing doc, never edit ROADMAP.md, never commit, never push.
-- **Never edit releases.db or RELEASES.md.** Absent, sparse, or stale are all valid states (its §GH-381 forbids
+- **Never edit releases.db.** Absent, sparse, or stale are all valid states (its §GH-381 forbids
   topping it up). Report drift; stop there.
 - **Transform is declared, never inferred.** No commit prefix promotes work to Transform — only an
   explicit `rgt: transform` frontmatter key on the governing `PROJECT/**` doc. Auto-promoting
   `perf:`/`refactor:` would inflate the one number this exercise exists to keep honest.
 - **Cite or drop.** An uncited target is a guess.
-- **No targets → write nothing.** Report the flow distribution in-session and stop. A clean run
-  that manufactures paperwork trains the operator to ignore the artifacts.
+- **No targets and no umbrella observations → write nothing.** Report the flow distribution
+  in-session and stop. A clean run that manufactures paperwork trains the operator to ignore
+  the artifacts. An umbrella observation (Lens 2 signal 8) is a finding in its own right: a run
+  with zero ordinary targets and one tracked umbrella still writes both sinks.
 - **Degrade loudly.** Missing `gh`, no `PROJECT/**`, no conventional commits → run the lenses you
   can and state plainly which signal was unavailable and what that costs the verdict (table below).
 
@@ -171,6 +173,41 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
    - When detected, flag them specifically as **Potential Regressions** rather than generic tech debt:
      they indicate that recent changes skipped sufficient edge-case testing, lacked automated guards,
      or broke assumptions made by other components.
+8. **Umbrella re-score** — the completion check for `whack-a-mole`'s output. An umbrella issue
+   says a class of bugs has one root cause; "umbrella closed" is not evidence the class stopped
+   (the #591 chain closed two fixes and each exposed the next break). Radar is the only thing
+   that measures it.
+   - Discover: `gh issue list --state all --limit 200 --search 'Umbrella: in:title'`, then keep
+     only titles that **begin** with `Umbrella:` (case-insensitive) — whack-a-mole's
+     `gh issue create --title "Umbrella: <mechanism>"` form. `MARATHON umbrella:`,
+     `[Umbrella]`, `… — tracking umbrella` and the like are other tools' groupings with no
+     churn claim and are excluded, not reconstructed. Report the yield as `N hits, M
+     whack-a-mole-form` (witnessed: 10 hits, 1 umbrella).
+   - Read each body's `### Cluster signature` block — the contract lives in
+     `skills/whack-a-mole/SKILL.md` §6 (keys `cluster run window weights paths errors issues
+     commits signals`, JSON-array lists). A block present but unparseable is a **parser
+     failure**; no block at all (an umbrella filed before the template carried one) is
+     **legacy**: reconstruct a signature from the body's "Symptoms this explains" list and
+     named paths, label it `reconstructed`, and treat `filed at` as unavailable.
+   - Cutoff: the merge time on the trunk of the PR the umbrella's Remediation **Fix** task names,
+     or that its closing comment cites (`gh pr view <m> --json mergedAt`). A docs/reconcile commit
+     that merely mentions the umbrella number is not a cutoff. No such PR → no cutoff. A reverted
+     or superseded fix voids its cutoff. Merge is not deployment: if signal 6 shows the class
+     still firing after the cutoff, the umbrella cannot read as solved whatever the score.
+   - Count with whack-a-mole's counting rules (§6 of that file, "Counting rules for a
+     re-score"): interval = this radar window intersected with strictly-after-cutoff; membership
+     = its §3 two-signal rule and it gates every count (a `fix:` that merely touches a
+     signature path is adjacency, not a repeat fix); the six raw fields as counted; score with
+     the **default** weights
+     (`3·reopens + 3·repeat_fixes + 4·reverts + size + floor(comments/5) + floor(open_days/7)`)
+     even when the block's `weights:` line differs — a non-default line only marks the baseline
+     `filed-custom (non-comparable)`.
+   - An unavailable input (no `gh`, timeline calls refused, signature unreadable) is reported as
+     unavailable per the yield rule below — it is never a score of 0 and never earns quiet credit.
+   - The umbrella *row* (Step 5) is a completion ledger and stays out of the target ranking
+     above; the activity that re-scored it is ordinary Lens 2 evidence and may form or feed a
+     `RADAR-<id>` target, which the row then links as `class RADAR-<id>`. One class, two
+     ledgers — never a second numeric target because an umbrella exists.
 
 **Guard against corpus drift when comparing runs.** Signal 1's citation graph is scoped to a set of
 directories, so a *lifecycle* action — a PDDA sweep moving docs from `2-WORKING` to `3-COMPLETED`
@@ -246,7 +283,7 @@ classification results directly into Step 4.3 for the "In-Flight Work & Open PRs
 
 ## Step 3 — Lens 3: release recalibration
 
-Read the DB using `releases check`, `releases roadmap sync --dry-run`, and the `python3 utils/timeline/export_timeline.py --json` payload instead of hand-parsing `RELEASES.md`. Cite the DB generation numbers in the report.
+Read the DB using `releases check`, `releases list`, and the `python3 utils/timeline/export_timeline.py --json` payload. Cite the DB generation numbers in the report.
 
 Skip silently if the DB is absent, has no unshipped releases, or contains only the installer's seed block (e.g., a release whose description says EXAMPLE / "replace this", or that has an empty target date and tracking issue). Reporting drift against a seed is precisely the "do not treat a sparse file as an incomplete one" failure §GH-381 forbids.
 
@@ -279,7 +316,7 @@ Treat the in-session reply as an **SDLC Process Coach & Strategic Decision Memo*
 Speak in the voice of an experienced, encouraging Principal Engineer or Agile Process Coach who cares about
 developer momentum, team health, and sustainable delivery velocity.
 
-When no targets were found, report only the flow distribution (§3) and the all-clear recommendation; skip the multi-paragraph coaching narrative and retrospective sections.
+When no targets and no umbrella observations were found, report only the flow distribution (§3) and the all-clear recommendation; skip the multi-paragraph coaching narrative and retrospective sections. Umbrella observations alone still get the Structured Evidence section and Step 5.
 
 Lead directly with a warm, insightful two-paragraph executive narrative, followed by prioritized coaching recommendations and a clean summary of the evidence. Keep the raw commit tallies, mathematical proofs, and forensic debug traces in the persisted evidence report unless specifically requested.
 
@@ -347,7 +384,9 @@ If invoked directly with `/radar --arc`, `/radar --summary`, or when the operato
 
 ## Step 5 — Persist the report (two sinks, one confirmation)
 
-Skip entirely when there are no targets.
+Skip entirely when there are no targets **and** no umbrella observations (signal 8). An
+umbrella-only run writes both sinks: the report carries the re-score evidence, the live issue
+gets the umbrella row.
 
 ### Target IDs — stable across runs
 
@@ -419,6 +458,37 @@ acceptance condition, so a different agent in a later session can execute one co
 - [ ] Close #18 / #314 / #440 with the commit SHA — none of them doc-only this time
 ```
 
+**`## Umbrellas — re-scored` — one section, appended after the target sections, one row per
+umbrella found by signal 8.** The first line is the fixed row; the second is a continuation:
+
+```md
+## Umbrellas — re-scored
+
+- [ ] #<n> — filed at <score> (<run>), now <score> (<window>), fix merged <YYYY-MM-DD PR #m | not yet> → holding | class survived — recommend reopening | solved
+      cluster <slug> · baseline observed | legacy — no signature (reconstructed) | filed-custom (non-comparable) · quiet <k>/2 (<report-a>, <report-b>) · class RADAR-<id> | none
+```
+
+- `filed at legacy` when the umbrella has no signature (the baseline is reconstructed and can
+  show `class survived`, but never earns quiet credit until an operator adds a real signature —
+  radar never edits the umbrella).
+- **holding** — the fallback: every observation that is neither `class survived` nor `solved`.
+  That includes an open umbrella with no fix yet, an open umbrella whose fix merged but whose
+  post-cutoff score is still ≥ 5 (the displayed score says the class is alive; the umbrella
+  is still open so there is nothing to reopen), and an observation whose evidence was
+  unavailable. `quiet k/2` counts consecutive below-5 observations *after* the cutoff; an
+  active (≥ 5) or unavailable observation earns 0 and resets the streak.
+- **class survived — recommend reopening** — the umbrella is **closed** and the post-cutoff
+  score is ≥ 5 (whack-a-mole's own floor is "no cluster *above* 5"; radar deliberately keeps
+  the conservative boundary). Radar recommends; it never reopens.
+- **solved** — the only state that is struck through, and only on `quiet 2/2` **and** a `fix
+  merged` PR. This is the umbrella form of the "names the seam" rule above: a citable fix plus
+  two quiet observations. "Consecutive" means the two most recent Sink A reports (filename
+  date/run suffix, UTC) on **distinct dates** — a same-day `-runN` rerun is not a second
+  observation. The streak resets to 0 on any run scoring ≥ 5, on an unavailable input, on a
+  changed cutoff, or on a changed signature or weights (two low scores over different
+  memberships or scales are not one streak). Two observations is what the rule asks; it is not a
+  claim about elapsed exposure.
+
 ### Confirmation
 
 Preview both artifacts, write on **one** confirmation covering both sinks. Never ask twice.
@@ -446,3 +516,4 @@ Always state which rows applied and what they cost the verdict.
 | `/honest` | Whole-repo maturity read | Windowed (21 days) and mix-focused |
 | `pdda.sh glance` / `releases-current` | Doc-state inventory | A verdict across git + issues + docs + releases, not an inventory |
 | `/10days` | Sweeps issues then **executes** | Radar never executes anything |
+| `whack-a-mole` | Files one umbrella per run for a churn cluster, with a Cluster signature | Radar re-measures that signature on every run (signal 8) and is the only thing that calls the class solved — never issue closure |

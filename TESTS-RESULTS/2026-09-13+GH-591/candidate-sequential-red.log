@@ -1,0 +1,58 @@
+pre-push: running the full gate before this push reaches the remote (GH-544).
+pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+pre-push:   validate.sh: SEQUENTIAL mode — XYZ_VALIDATE_PARALLEL=0
+pre-push:   validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+validate.sh: SEQUENTIAL mode — XYZ_VALIDATE_PARALLEL=0
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.lV2ZoX/harnesses.db), envelope state captured
+
+==
+Running gh544-parallel-default.sh
+overlay.sh
+  + checkjs.sh
+  + acorn-extract.sh
+  + registry-lock-concurrency.sh
+  + marathon-monitor.sh
+  + signal-triage.sh
+  + fixtures/canary-token-reuse/verify-fixture.sh
+  + fixtures/canary-peer-orphan/verify-fixture.sh
+  + fixtures/canary-reviewer-overstep/verify-fixture.sh
+  + phase3-signoff-guard.sh
+  + relay-self-sufficiency.sh
+  + agy-tui-takeover-verdict.sh
+  + gh105-vendor-releases-addon.sh
+  + gh107-timeline-json-seam.sh
+  + gh132-review-xyz-skill.sh
+  + gh165-governance-canonical-paths-guard.sh
+  + gh197-vendor-tier-split.sh
+  + gh273-marathon-root-audit-python-shape.sh
+  + gh312-vendor-preserves-state.sh
+  + relay-uncited-findings.sh
+  + wave-reconcile.sh
+  + gh496-phase2-reconciliation-views.sh
+  + gh306-registry-bidirectional.sh
+  + gh298-ate-gen4-ci-smoke.sh
+  + gh-gen4-phase1-domain-oracles.sh
+  + gh-gen4-phase2-adaptive-ate.sh
+  + gh-gen4-phase3-fuzz-engine.sh
+  + gh-gen4-phase4-repro-synth.sh
+  + gh-gen4-phase5-campaign.sh
+  + gh396-find-harness-roots.sh
+  + gh393-deepseek-readiness.sh
+  + gh591-prepush-commit-boundary.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+failed:
+  - gh544-parallel-default.sh
+
+pre-push: full validation RED (exit 1) after 3121s — push REFUSED.
+
+  The failing checks are named in the output above.
+
+  Hosted CI may run after the push, but this local boundary is the earliest full signal and the
+  Ubuntu pull-request lane is advisory. Do not use downstream CI as a reason to ignore this red.
+
+  To push anyway (and you may have a good reason — a WIP branch, a known-red baseline):
+    git push --no-verify
+error: failed to push some refs to 'https://github.com/HiQS-Labs/XYZ-forge.git'

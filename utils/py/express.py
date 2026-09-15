@@ -4,13 +4,17 @@
 One motion, per the design on #267 (v2): fix -> releases DB -> PDDA docs ->
 land on development -> reconcile. This driver is the mechanized form of SOP.md
 §4's express-to-development carve-out: the ONLY sanctioned agent path to a
-direct development landing without a human review loop, because every oracle
-that a PR would have satisfied is asserted up front instead.
+direct development landing without a human review loop, because the express
+qualification checks and the fix's registered regression suite are asserted up
+front. It does NOT run the full pre-push gate (validate.sh) — that bypass is the
+lane's design (GH-267/GH-516) — and every landing leaves a TESTS-RESULTS receipt
+saying exactly that (`gate: express-suite`, GH-592).
 
 Landing shape: the qualified commit is pushed directly to development. The
-operator's /express invocation IS the landing authorization; the pre-push gate,
-fast-forward update, commit reachability check, and commit-based reconciliation
-replace the former immediately-merged ghost PR.
+operator's /express invocation IS the landing authorization; the registered
+suite (Step 7), fast-forward update, commit reachability check, and gated
+commit-based reconciliation replace the former immediately-merged ghost PR. The
+full pre-push gate is bypassed on every express push (XYZ_SKIP_PREPUSH=1).
 
 Exit codes: 0 ok; 3 express-refused (guardrail); 4 environment/dependency.
 Every refusal and every fired run appends a .tick event under .tick/events/
@@ -66,7 +70,6 @@ DRIVER_LEDGER = ("releases.db", "releases.sql")
 # releases app's opt-in signal, so only files already adopted by this checkout
 # are accepted as driver output. The dashboard is rendered explicitly below.
 RELEASES_PROJECTIONS = (
-    "RELEASES.generated.md",
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",
@@ -150,6 +153,143 @@ def run_releases(root, *args, check=True):
     if check and r.returncode != 0:
         die("releases %s failed: %s" % (args[0], (r.stderr or r.stdout).strip()))
     return r
+
+
+# ── provenance receipt (GH-592) ───────────────────────────────────────────
+# The one producer of express evidence. The receipt's `commit` is the identity
+# `wave_reconcile.py --gate` reads (check_provenance_receipts matches it against
+# the landing's mergeCommit.oid); `gate` states what actually ran — the
+# registered suite, never the full pre-push gate. Errors are fatal: a receipt
+# that silently failed to write would be the GH-425 shape again.
+
+RECEIPT_CASE = "express-landing"
+RECEIPT_GATE = "express-suite"
+
+
+def normalize_suite(suite):
+    """One spelling for the registered suite everywhere it is compared: landing,
+    receipt `command`, and resume's expectation (GH-592 I4)."""
+    suite = suite.strip()
+    if not suite.startswith("test/"):
+        suite = "test/" + suite
+    return suite
+
+
+def receipt_command(suite):
+    return "bash %s" % normalize_suite(suite)
+
+
+def valid_express_receipt(rec, sha, issue, suite):
+    """The one predicate for dedup AND resume: identity + success + the exact suite."""
+    return (isinstance(rec, dict)
+            and "pr" not in rec and "pr_number" not in rec  # express evidence is commit-identified only
+            and rec.get("commit") == sha
+            and rec.get("issue") == issue
+            and rec.get("case") == RECEIPT_CASE
+            and rec.get("gate") == RECEIPT_GATE
+            and type(rec.get("rc")) is int and rec.get("rc") == 0
+            and rec.get("result") == "pass"
+            and rec.get("command") == receipt_command(suite))
+
+
+def _receipt_lines_match(text, sha, issue, suite):
+    for line in text.splitlines():
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if valid_express_receipt(rec, sha, issue, suite):
+            return True
+    return False
+
+
+def find_receipt(root, sha, issue, suite):
+    """Repo-relative path of the first working-tree receipt satisfying
+    valid_express_receipt, scanning every TESTS-RESULTS/**/provenance.jsonl by
+    content (not path) so a date boundary never yields a duplicate. Symlinked
+    files are not evidence (the real matcher skips them too). None if absent.
+    Used for dedup at write time; resume uses find_committed_receipt."""
+    results = os.path.join(root, "TESTS-RESULTS")
+    if not os.path.isdir(results):
+        return None
+    for dirpath, dirs, files in os.walk(results):
+        dirs.sort()
+        if "provenance.jsonl" not in files:
+            continue
+        path = os.path.join(dirpath, "provenance.jsonl")
+        if os.path.islink(path) or not os.path.isfile(path):
+            continue
+        try:
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+        except OSError:
+            continue
+        if _receipt_lines_match(text, sha, issue, suite):
+            return os.path.relpath(path, root)
+    return None
+
+
+def find_committed_receipt(root, sha, issue, suite):
+    """Like find_receipt but reads ONLY what HEAD tracks (`git ls-files` +
+    `git show HEAD:<path>`), so an ignored, untracked, or symlinked file can never
+    stand in for committed evidence (GH-592 I1)."""
+    ls = git(root, "ls-files", "-z", "--", "TESTS-RESULTS", check=False).stdout
+    for rel in sorted(p for p in ls.split("\0") if p.endswith("/provenance.jsonl")):
+        mode = git(root, "ls-files", "-s", "--", rel, check=False).stdout.split(" ", 1)[0]
+        if mode == "120000":  # symlink blob
+            continue
+        shown = git(root, "show", "HEAD:%s" % rel, check=False)
+        if shown.returncode != 0:
+            continue
+        if _receipt_lines_match(shown.stdout, sha, issue, suite):
+            return rel
+    return None
+
+
+def write_receipt(root, sha, issue, suite, rc):
+    """Append the landing's receipt and return its repo-relative path. `rc` is the
+    real exit status of the suite run in THIS process — never inferred. Idempotent
+    on a valid existing record for the same sha/issue/suite. Write errors raise."""
+    existing = find_receipt(root, sha, issue, suite) if rc == 0 else None
+    if existing:
+        return existing
+    rel_dir = os.path.join("TESTS-RESULTS", "%s+GH-%d-express" % (
+        datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"), issue))
+    rel = os.path.join(rel_dir, "provenance.jsonl")
+    rec = {
+        "timestamp": now_iso(), "commit": sha, "issue": issue, "case": RECEIPT_CASE,
+        "gate": RECEIPT_GATE, "command": receipt_command(suite), "rc": rc,
+        "result": "pass" if rc == 0 else "fail",
+        "environment": "express driver, direct development push",
+    }
+    os.makedirs(os.path.join(root, rel_dir), exist_ok=True)
+    full = os.path.join(root, rel)
+    if os.path.islink(full):
+        die("refusing to write a receipt through a symlink: %s" % rel)
+    with open(full, "a+", encoding="utf-8") as f:
+        f.seek(0, os.SEEK_END)
+        if f.tell() > 0:
+            f.seek(f.tell() - 1)
+            if f.read(1) != "\n":  # an interrupted or unterminated prior line must not swallow ours
+                f.write("\n")
+        f.write(json.dumps(rec) + "\n")
+    return rel
+
+
+RECOVERY_RECIPE = (
+    "no COMMITTED valid express receipt bound to commit %s for issue #%d and suite %s. Resume writes no "
+    "evidence. Recover in a FRESH disposable full clone with the script in skills/express/SKILL.md "
+    "(section 'Recovery recipe'): it checks out %s, requires a clean baseline via git diff-index/ls-files "
+    "(each inspection fails closed), snapshots HEAD + porcelain + remotes + local-config hash to a log "
+    "OUTSIDE the tree, runs `bash %s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
+    "Only then, from clean development: python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
+    "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>))'; commit receipt + recovery-run.log under "
+    "TESTS-RESULTS/*+GH-%d-express/, push, re-run resume."
+)
+
+
+def recovery_recipe(sha, issue, suite):
+    return RECOVERY_RECIPE % (sha[:12], issue, suite, sha, suite, sha, issue, suite, issue)
 
 
 def gate_check(root):
@@ -285,8 +425,9 @@ def cmd_check(args, expect_driver=frozenset()):
                issue=args.issue)
 
     # Gate wiring is proven, not assumed (PR #270 review finding 3): hooks do
-    # not travel with a clone, and an unwired push boundary would merge on the
-    # focused suite alone.
+    # not travel with a clone. Express itself bypasses the hook on its own pushes
+    # (XYZ_SKIP_PREPUSH=1, lane design); this check keeps the clone's ordinary
+    # pushes gated so the lane cannot be used from an ungated clone.
     wired, detail = gate_check(root)
     if not wired:
         refuse(root, "gate-unwired",
@@ -364,9 +505,7 @@ def cmd_check(args, expect_driver=frozenset()):
                "already-landed probes before re-doing it" % (args.issue, meta.get("state")), issue=args.issue)
 
     # Step 4 — the fix must carry its regression suite, registered in validate.sh.
-    suite = args.suite
-    if not suite.startswith("test/"):
-        suite = "test/" + suite
+    suite = normalize_suite(args.suite)
     if not os.path.isfile(os.path.join(root, suite)):
         refuse(root, "suite-missing", "%s does not exist — a hotfix without its regression suite is a claim, not a fix" % suite, issue=args.issue)
     validate = os.path.join(root, "validate.sh")
@@ -395,6 +534,11 @@ def slugify(title):
 
 def cmd_docs(args):
     root = args.root
+    # GH-592 I8: the scaffold names the suite (Status table, acceptance line, CHANGELOG
+    # bullet); validate it before ANY write so a missing --suite cannot leave a half-born doc.
+    if not (args.suite or "").strip():
+        die("express-docs: --suite is required (the registered regression suite, e.g. test/gh%d-<slug>.sh) — "
+            "nothing was written" % args.issue)
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url"])
     meta = json.loads(iv.stdout)
 
@@ -431,11 +575,11 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix landed via /express; regression suite {suite} registered and green | Reconcile promotes this doc when issue #{n} closes |
+| Fix qualified for /express; regression suite {suite} registered (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #{n} closes |
 
 ## Acceptance Criteria
 
-- [x] Regression suite {suite} green in the gate.
+- [x] Regression suite {suite} registered as the landing gate (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
 - [x] Single-subsystem, risk-bounded diff (express qualification passed).
 
 ## Merge evidence
@@ -454,7 +598,7 @@ goal: >
     # CHANGELOG — newest-first under a fresh dated Unreleased section.
     cl = os.path.join(root, "CHANGELOG.md")
     bullet = ("- **GH-%d: %s.** (express hotfix, GH-267 lane; "
-              "suite %s green.)\n" % (args.issue, meta["title"], args.suite))
+              "suite %s registered as the landing gate.)\n" % (args.issue, meta["title"], normalize_suite(args.suite)))
     entry = "## [Unreleased] - %s\n\n### Fixed\n%s\n" % (today, bullet)
     with open(cl, encoding="utf-8", errors="replace") as f:
         cbody = f.read()
@@ -514,7 +658,7 @@ def cmd_ledger(args):
             if not cands:
                 refuse(root, "no-doc", "run `express docs` first (or pass --doc-path)", issue=args.issue)
             doc = "PROJECT/2-WORKING/" + cands[0]
-        raw = ("- **GH-%d · %s** 🆕 rated 2/2/2 — [doc](%s) · [#%d](%s)" %
+        raw = ("- **GH-%d · %s** 🆕 rated 2/2/2/2 — [doc](%s) · [#%d](%s)" %
                (args.issue, meta["title"], doc, args.issue, meta["url"]))
         run_releases(root, "roadmap", "add",
                      "--issue-num", str(args.issue), "--issue-url", meta["url"],
@@ -565,6 +709,7 @@ def cmd_land(args):
         if r.returncode != 0:
             refuse(root, "suite-red", "%s exited %d — no red suite rides the express lane" % (suite, r.returncode),
                    issue=args.issue)
+        state["suite_rc"] = r.returncode  # the real result; closeout's receipt records exactly this
 
         wired, detail = gate_check(root)
         if not wired:
@@ -597,7 +742,9 @@ def cmd_land(args):
            "CHANGELOG in one motion.\n\nCloses #%d\n" % (args.issue, state["title"], args.issue))
     git(root, "commit", "-m", msg)
     sha = git(root, "rev-parse", "HEAD").stdout.strip()
-    git(root, "push", "origin", "HEAD:development", env={"XYZ_SKIP_PREPUSH": "1"})  # Step 7 verified suite; skip duplicate hook
+    # Step 7 ran the registered suite; the FULL pre-push gate is bypassed by lane design
+    # (GH-267/GH-516) — not a duplicate. The receipt written in closeout says so.
+    git(root, "push", "origin", "HEAD:development", env={"XYZ_SKIP_PREPUSH": "1"})
 
     # ── post-push closeout — from clean, current development (finding 2) ──
     try:
@@ -638,13 +785,18 @@ def closeout(root, args, sha, suite, state):
     A downgraded failure here would leave a closed issue with an active doc and
     a remote manifest still dialed_in — the GH-205 trap with extra steps — so
     every fault exits non-zero with an express-reconcile-failed tick instead."""
+    # Step 9a (GH-592) — the receipt. Written only now: after the clean-development and
+    # reachability checks (so no cleanliness guard ever sees it untracked) and from the
+    # same process that ran Step 7, so `rc` is the suite's real exit status.
+    receipt = write_receipt(root, sha, args.issue, suite, state.get("suite_rc", 0))
     # Step 9 — ship with evidence (post-push, so sha + receipts exist).
     rel = args.release or active_release(root)
     if rel:
         iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "url"])
         url = json.loads(iv.stdout)["url"]
         run_releases(root, "manifest", "ship", url, "--gid", rel,
-                     "--evidence", "%s; %s green in gate; direct development push (express)" % (sha, suite))
+                     "--evidence", "%s; registered suite %s green (express-suite, not the full gate); "
+                     "receipt %s; direct development push (express)" % (sha, suite, receipt))
 
     # Step 10 — the default-branch commit says "Closes #N"; verify closure and
     # close explicitly if GitHub has not processed it.
@@ -657,20 +809,12 @@ def closeout(root, args, sha, suite, state):
     # then reconcile from the clean committed development state.
     persist_closeout(root,
                      "chore(releases): express ship GH-%d (commit %s)" %
-                     (args.issue, sha[:12]))
+                     (args.issue, sha[:12]), extra_paths=(receipt,))
 
-    # Step 11 — reconcile the direct landing by commit identity. Failure is
-    # fatal — never a stderr footnote.
-    wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
-    if not os.path.isfile(wr):
-        die("wave_reconcile.py missing under %s — cannot reconcile commit %s" % (root, sha))
-    base = [sys.executable, wr, "--commit", sha, "--root", root]
-    r = subprocess.run(base, cwd=root, capture_output=True, text=True)
-    if r.returncode != 0:
-        err = r.stderr or r.stdout
-        die("reconcile FAILED for commit %s after the ship transaction was persisted. "
-            "Fix and run `wave_reconcile.py --commit %s` on development:\n%s" %
-            (sha, sha, err[-500:]))
+    # Step 11 — reconcile the direct landing by commit identity, under --gate: the
+    # reconciler must find the receipt just persisted (--gate proves attribution,
+    # not test success). Failure is fatal — never a stderr footnote.
+    reconcile_gated(root, sha)
 
     persist_closeout(root,
                      "chore(pdda): express reconcile GH-%d (commit %s)" %
@@ -683,6 +827,23 @@ def closeout(root, args, sha, suite, state):
     return dict(sha=sha, release=rel)
 
 
+def reconcile_gated(root, sha):
+    """wave_reconcile --commit <sha> --gate from clean development; print its
+    stdout so the gate outcome is visible in the landing output."""
+    wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
+    if not os.path.isfile(wr):
+        die("wave_reconcile.py missing under %s — cannot reconcile commit %s" % (root, sha))
+    base = [sys.executable, wr, "--commit", sha, "--root", root, "--gate"]
+    r = subprocess.run(base, cwd=root, capture_output=True, text=True)
+    if r.returncode != 0:
+        err = r.stderr or r.stdout
+        die("reconcile FAILED for commit %s after the ship transaction was persisted. "
+            "Fix and run `wave_reconcile.py --commit %s --gate` on development:\n%s" %
+            (sha, sha, err[-500:]))
+    if r.stdout.strip():
+        sys.stdout.write(r.stdout if r.stdout.endswith("\n") else r.stdout + "\n")
+
+
 CLOSEOUT_ALLOWLIST_PREFIXES = (
     "PROJECT/2-WORKING/",
     "PROJECT/3-COMPLETED/",
@@ -693,7 +854,6 @@ CLOSEOUT_ALLOWLIST_FILES = {
     "releases.db",
     "releases.sql",
     "ROADMAP-DASHBOARD.md",
-    "RELEASES.generated.md",
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",
@@ -710,12 +870,16 @@ def is_allowed_closeout_path(p):
     return False
 
 
-def persist_closeout(root, message):
-    """Persist one cleanly delimited closeout transaction."""
+def persist_closeout(root, message, extra_paths=()):
+    """Persist one cleanly delimited closeout transaction. `extra_paths` grants
+    exactly the named files (the landing's receipt) for this one transaction;
+    every other path outside the allowlist — including anything else under
+    TESTS-RESULTS/ — is still refused (GH-592)."""
     paths = change_paths(root)
     if not paths:
         return False
-    disallowed = [p for p in paths if not is_allowed_closeout_path(p)]
+    extra = set(extra_paths)
+    disallowed = [p for p in paths if not (is_allowed_closeout_path(p) or p in extra)]
     if disallowed:
         die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
     git(root, "add", "--", *paths)
@@ -863,6 +1027,7 @@ def cmd_resume(args):
 
     # 2. Resolve and validate the landing commit identity and reachability
     sha = resolve_landing_commit(root, issue, args.sha)
+    suite = normalize_suite(args.suite)
 
     if getattr(args, "dry_run", False):
         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))
@@ -876,6 +1041,16 @@ def cmd_resume(args):
         if dirty_after:
             die("development is not clean after pull — refusing resume over: %s" %
                 dirty_after.replace("\n", "; "))
+
+    # 4b (GH-592). Evidence gate BEFORE issue close / ship: resume never writes or
+    # infers a receipt. A COMMITTED receipt (read from HEAD, never the working
+    # tree) satisfying valid_express_receipt must already exist; otherwise refuse
+    # with the recovery recipe. An uncommitted receipt is ordinary dirt — the
+    # cleanliness guards above already refused it and the operator commits it.
+    receipt = find_committed_receipt(root, sha, issue, suite)
+    if not receipt:
+        die("express-resume: " + recovery_recipe(sha, issue, suite))
+    print("express-resume: committed receipt %s attributes commit %s" % (receipt, sha[:12]))
 
     # 4. Check and close issue if still open
     iv = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "state"], check=False)
@@ -898,15 +1073,8 @@ def cmd_resume(args):
         elif mstate == "shipped":
             print("express-resume: manifest item already shipped for issue #%d against %s" % (issue, rel))
 
-    # 6. Reconcile
-    wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
-    if not os.path.isfile(wr):
-        die("wave_reconcile.py missing under %s — cannot reconcile commit %s" % (root, sha))
-    base = [sys.executable, wr, "--commit", sha, "--root", root]
-    r = subprocess.run(base, cwd=root, capture_output=True, text=True)
-    if r.returncode != 0:
-        err = r.stderr or r.stdout
-        die("reconcile FAILED for commit %s: %s" % (sha, err[-500:]))
+    # 6. Reconcile — gated on the receipt above (GH-592)
+    reconcile_gated(root, sha)
 
     persisted = persist_closeout(root, "chore(pdda): express reconcile GH-%d (commit %s)" % (issue, sha[:12]))
     if persisted:
@@ -975,6 +1143,9 @@ def main():
     p = sub.add_parser("resume", help="recover/resume an interrupted express landing and complete reconciliation")
     p.add_argument("--issue", type=int, required=True, help="GH issue number")
     p.add_argument("--sha", help="commit SHA landed on development (resolved from git log if omitted)")
+    p.add_argument("--suite", required=True,
+                   help="the registered regression suite the landing ran (GH-592: resume validates the "
+                        "committed receipt against it; it never runs a suite or writes evidence)")
     p.add_argument("--repo", default=args_repo())
     p.add_argument("--release", help="target release GID (defaults to active release)")
     p.add_argument("--dry-run", action="store_true", default=False, help="preview operations without modifying files or git state")

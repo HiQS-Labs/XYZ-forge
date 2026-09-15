@@ -1,0 +1,19 @@
+== 1. filed: stub gh succeeds ==
+  PASS: compile_issue exits 0 when gh files
+  PASS: gh was invoked
+  PASS: creation reported
+  PASS: body file cleaned up after filing
+== 2. gh-failed: nonzero, body preserved (the #142 defect: was exit 0) ==
+  PASS: compile_issue exits 1 when gh fails
+  PASS: failure named
+  PASS: issue_body.md preserved for manual filing
+== 3. no-records: exit 3, gh never called ==
+  PASS: empty log exits 3 (distinct from filed)
+  PASS: gh not invoked on empty log
+== 4. dry-run: exit 0, gh never called ==
+  PASS: dry-run exits 0
+  PASS: dry-run never calls gh
+  PASS: dedup: two identical failures collapse to one bucket, seen 2x
+== 5. chain: run_variations propagates the filing outcome ==
+  PASS: run_variations exits 1 when the chained filing fails
+  FAIL: no child-failure line

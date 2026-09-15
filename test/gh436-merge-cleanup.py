@@ -382,7 +382,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             ["--primary", str(self.primary), "--integration-branch", "main", "--scan-only"], landing_ready=True)
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
-    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None, ff_rc=0, final_fetch_rc=0):
+    def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None,
+                      ff_rc=0, final_fetch_rc=0, checkouts=None):
         """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues.
 
         Phase 5's tail calls `prune_dangling_skill_symlinks(dry_run=False)`, which walks the REAL
@@ -424,6 +425,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         insp_kwargs = ({"side_effect": [_verdict(v) for v in verdicts]} if verdicts
                        else {"return_value": _verdict(landing_ready)})
 
+        scanned = [] if checkouts is None else checkouts
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
              mock.patch.object(Path, "home", return_value=fake_home), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
@@ -435,12 +437,28 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=True) as merged, \
              mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
              mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
-             mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
+             mock.patch.object(merge_cleanup, "scan_directories", return_value=scanned), \
+             mock.patch.object(merge_cleanup, "refresh_for_teardown", return_value=scanned), \
              mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=prs or []):
             rc = merge_cleanup.main()
         self.pruner = pruner
         self.inspections = insp
         return rc, git_calls, merged, reconcile, teardown
+
+    def _removable_candidate(self):
+        return {
+            "path": str(Path(self.temp_dir) / "finished-clone"),
+            "name": "finished-clone",
+            "checkout_type": "standalone_clone",
+            "current_branch": "done",
+            "is_clean": True,
+            "dirty_count": 0,
+            "stash_count": 0,
+            "has_unpushed": False,
+            "unpushed_branches": [],
+            "disposition": "SAFE_REMOVE_CLONE",
+            "disposition_reason": "synthetic removable clone",
+        }
 
     def test_orchestration_tests_never_prune_the_real_home(self):
         """THE PIN (R3-1): containment. Unmocking the pruner must fail HERE, not on a real machine."""
@@ -527,6 +545,65 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         merged.assert_not_called()
         reconcile.assert_not_called()
         teardown.assert_not_called()
+
+    def test_unready_primary_refuses_zero_pr_cleanup_before_any_mutation(self):
+        """THE PIN (GH-595): zero open PRs must not silently bypass the primary decision."""
+        candidate = self._removable_candidate()
+        rc, _, merged, reconcile, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"],
+            landing_ready=False, checkouts=[candidate])
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_unready_primary_refuses_teardown_only_before_any_mutation(self):
+        """THE PIN (GH-595): teardown-only is still cleanup, so deferral must be explicit."""
+        candidate = self._removable_candidate()
+        rc, _, merged, reconcile, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--teardown-only", "--execute"],
+            landing_ready=False, checkouts=[candidate])
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        reconcile.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_operator_can_explicitly_defer_unready_primary_cleanup(self):
+        candidate = self._removable_candidate()
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--teardown-only", "--execute",
+             "--allow-unready-primary"],
+            landing_ready=False, checkouts=[candidate])
+        self.assertEqual(rc, 0)
+        teardown.assert_called_once_with(candidate, dry_run=False)
+        self.pruner.assert_called_once_with(dry_run=False)
+
+    def test_ready_primary_allows_zero_pr_cleanup(self):
+        candidate = self._removable_candidate()
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--execute"],
+            landing_ready=True, checkouts=[candidate])
+        self.assertEqual(rc, 0)
+        teardown.assert_called_once_with(candidate, dry_run=False)
+        self.pruner.assert_called_once_with(dry_run=False)
+
+    def test_scan_only_does_not_require_primary_override(self):
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--scan-only", "--execute"],
+            landing_ready=False)
+        self.assertEqual(rc, 0)
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
+
+    def test_prs_only_does_not_require_primary_override(self):
+        rc, _, _, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--prs-only", "--execute"],
+            landing_ready=False)
+        self.assertEqual(rc, 0)
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
 
 
 class TestDanglingSymlinkPrune(unittest.TestCase):
