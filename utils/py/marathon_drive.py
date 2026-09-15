@@ -516,8 +516,18 @@ def resolve_force_relay_task(base_task, tick_bin, force, explicit):
     k = 2
     while True:
         candidate = f"{base_task}-R{k}"
-        if _status(candidate) == "not-found":
-            log(f"--force: default token {base_task} is spent ({base_status}) — using fresh relay task {candidate}")
+        candidate_status = _status(candidate)
+        # GH-642 QA: a malformed read mid-scan is an uninterpretable tick, not a free id —
+        # advancing would loop unbounded and then silently seed a guessed identity.
+        if candidate_status == "malformed":
+            die(f"tick info for {candidate} returned no parseable status; refusing to guess — set --relay-task explicitly")
+        if candidate_status == "not-found":
+            # Plan contract: the fresh-id announcement is stderr (log() is stdout, and stdout is
+            # the packet/result surface consumers parse).
+            print(
+                f"marathon-drive: --force: default token {base_task} is spent ({base_status}) — using fresh relay task {candidate}",
+                file=sys.stderr,
+            )
             return candidate
         k += 1
 

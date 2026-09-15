@@ -58,6 +58,11 @@ git init -q --separate-git-dir "$SGD" "$SG"
 "$VENDOR" --no-register "$SG" >/dev/null 2>&1 && pass "vendor runs with --separate-git-dir" || fail "vendor failed with --separate-git-dir"
 grep -Fqx '.xyz/' "$SGD/info/exclude" && pass "exclude: separate-git-dir target writes to its info/exclude" || fail "separate-git-dir exclude not written"
 
+# non-git target: fallback to .gitignore so the rules stay operator-visible (plan item 1)
+NG="$WORK/non-git"; mkdir -p "$NG"
+"$VENDOR" --no-register "$NG" >/dev/null 2>&1 && pass "vendor runs on a non-git directory" || fail "vendor failed on non-git dir"
+grep -Fqx '.xyz/' "$NG/.gitignore" && pass "non-git fallback: rules land in .gitignore" || fail "non-git fallback rules missing"
+
 # direction 2 intact: a repo blocking marathon-commit paths still gets the advisory, never an edit
 B4="$(mkrepo r4-blocked)"; printf '/relay-system\n' > "$B4/.gitignore"
 out="$( "$VENDOR" --no-register "$B4" 2>&1 )"
@@ -75,42 +80,42 @@ STUB="$WORK/stub-tick"; mkdir -p "$STUB"
 cat > "$STUB/tick" <<'STUB'
 #!/usr/bin/env bash
 case "$1 $2" in
-  "info MARATHON-P1-TURN")    printf 'id:       MARATHON-P1-TURN\nstatus:   done\n';;
-  "info MARATHON-P1-TURN-R2") echo "task not found" >&2; exit 1;;
-  "info MARATHON-P1-TURN-R3") printf 'id:       MARATHON-P1-TURN-R3\nstatus:   open\n';;
-  "info GARBAGE")             printf 'no status key here\n';;
-  *) echo "task not found" >&2; exit 1;;
+  "info MARATHON-P1-TURN")    printf 'id:       MARATHON-P1-TURN\nstatus:   done\n'; exit 0;;
+  "info MARATHON-P1-TURN-R2") printf 'id:       MARATHON-P1-TURN-R2\nstatus:   claimed\n'; exit 0;;
+  "info MARATHON-P1-TURN-R3") echo "task not found" >&2; exit 1;;
+  "info MAL")                 printf 'id:       MAL\nstatus:   done\n'; exit 0;;
+  "info MAL-R2")              printf 'no parseable status here\n'; exit 0;;
+  "info GARBAGE")             printf 'no parseable status here\n'; exit 0;;
+  *)                          echo "task not found" >&2; exit 1;;
 esac
 STUB
 chmod +x "$STUB/tick"
-run_resolve() {  # <tick-path> <force> <explicit> -> resolved id (last stdout line; log() may also print)
-  python3 - "$PYDRIVE" "$1" "$2" "$3" <<'PY'
+run_resolve() {  # <tick-path> <base> <force> <explicit> -> "exit:<rc> out:<last-stdout-line>" (stderr NOT suppressed)
+  python3 - "$PYDRIVE" "$1" "$2" "$3" "$4" <<'PY'
 import importlib.util, sys
-path, tick, force, explicit = sys.argv[1:5]
+path, tick, base, force, explicit = sys.argv[1:6]
 spec = importlib.util.spec_from_file_location("marathon_drive", path)
 mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-print(mod.resolve_force_relay_task("MARATHON-P1-TURN", tick, force == "True", explicit == "True"))
+try:
+    print("out:" + mod.resolve_force_relay_task(base, tick, force == "True", explicit == "True"))
+except SystemExit as e:
+    print(f"exit:{e.code}")
 PY
 }
-out="$(run_resolve "$STUB/tick" True False 2>/dev/null | tail -1)"
-[ "$out" = "MARATHON-P1-TURN-R2" ] && pass "spent default + --force → first free -R2" || fail "expected -R2, got: $out"
-out="$(run_resolve "$STUB/tick" False False 2>/dev/null | tail -1)"
-[ "$out" = "MARATHON-P1-TURN" ] && pass "no --force → base id unchanged" || fail "without force the id changed: $out"
-out="$(run_resolve "$STUB/tick" True True 2>/dev/null | tail -1)"
-[ "$out" = "MARATHON-P1-TURN" ] && pass "explicit --relay-task → never rewritten" || fail "explicit id was rewritten: $out"
-out="$(python3 - "$PYDRIVE" <<'PY'
-import importlib.util, sys
-spec = importlib.util.spec_from_file_location("marathon_drive", sys.argv[1])
-mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-try:
-    mod.resolve_force_relay_task("GARBAGE", "$STUB/tick", True, False)
-except SystemExit as e:
-    print(f"exit-{e.code}")
-PY
-)"
-[ "$out" = "exit-2" ] && pass "malformed tick info → refuses (exit 2)" || fail "malformed info not refused: $out"
-out="$(run_resolve "/nonexistent/tick" True False 2>/dev/null)"
-[ -z "$out" ] && pass "missing tick binary → fails fast (no free-id guess)" || fail "missing tick did not fail: $out"
+RES="$(run_resolve "$STUB/tick" MARATHON-P1-TURN True False 2>/dev/null)"
+[ "$RES" = "out:MARATHON-P1-TURN-R3" ] && pass "spent default → skips claimed -R2, takes first free -R3" || fail "monotonic scan wrong: $RES"
+ERR="$(run_resolve "$STUB/tick" MARATHON-P1-TURN True False 2>&1 >/dev/null)"
+grep -q "using fresh relay task MARATHON-P1-TURN-R3" <<<"$ERR" && pass "fresh-id announcement is on stderr (plan contract)" || fail "announcement not on stderr: $ERR"
+RES="$(run_resolve "$STUB/tick" MARATHON-P1-TURN False False 2>/dev/null)"
+[ "$RES" = "out:MARATHON-P1-TURN" ] && pass "no --force → base id unchanged" || fail "without force the id changed: $RES"
+RES="$(run_resolve "$STUB/tick" MARATHON-P1-TURN True True 2>/dev/null)"
+[ "$RES" = "out:MARATHON-P1-TURN" ] && pass "explicit --relay-task → never rewritten" || fail "explicit id was rewritten: $RES"
+RES="$(run_resolve "$STUB/tick" GARBAGE True False 2>/dev/null)"
+[ "$RES" = "exit:2" ] && pass "malformed base info (existing tick) → refuses exit 2" || fail "malformed base not refused: $RES"
+RES="$(run_resolve "$STUB/tick" MAL True False 2>/dev/null)"
+[ "$RES" = "exit:2" ] && pass "malformed info mid-scan → refuses exit 2 (no unbounded loop)" || fail "malformed candidate not refused: $RES"
+RES="$(run_resolve "/nonexistent/tick" MAL True False 2>/dev/null)"
+[ "$RES" = "exit:2" ] && pass "missing tick binary → refuses exit 2 (no free-id guess)" || fail "missing tick not refused: $RES"
 
 # --- item 4: rtl_worktree_begin copies node_modules ---------------------------------------------
 bash -n "$RTL" && pass "relay-turn-lib.sh parses" || fail "relay-turn-lib.sh does not parse"
@@ -126,13 +131,15 @@ out="$(cd "$FIX" && bash -c '
   RTL_ALLOW=("RELAY.md"); RTL_WT_USED=0
   wt="$(rtl_worktree_begin)" || exit 9
   if [ -d "$wt/node_modules" ] && [ ! -L "$wt/node_modules" ] && [ -f "$wt/node_modules/pkg/index.js" ]; then
+    printf 'marker\n' > "$wt/node_modules/pkg/marker.txt"
+    if [ ! -e "'"$FIX"'/node_modules/pkg/marker.txt" ]; then echo "ROOT-CLEAN"; else echo "ROOT-LEAK"; fi
     echo "COPY-OK $wt"; git -C "'"$FIX"'" worktree remove --force "$wt" 2>/dev/null
   else
     echo "COPY-BAD $wt"; [ -L "$wt/node_modules" ] && echo "IS-SYMLINK"
   fi
 ')"
-grep -q "COPY-OK" <<<"$out" && ! grep -q "IS-SYMLINK" <<<"$out" \
-  && pass "isolated worktree receives a real (non-symlink) node_modules copy" \
+grep -q "COPY-OK" <<<"$out" && ! grep -q "IS-SYMLINK" <<<"$out" && grep -q "ROOT-CLEAN" <<<"$out" \
+  && pass "isolated worktree receives a real node_modules COPY; turn writes cannot reach ROOT" \
   || fail "worktree deps copy broken: $out"
 
 # --- item 5: xyz_init_clone.py e2e --------------------------------------------------------------
@@ -160,6 +167,10 @@ python3 "$PYINIT" "file://$BARE" --dir "$CL/nowhere" >/dev/null 2>&1 \
   && fail "init-clone: missing --umbrella was not refused" || pass "init-clone: --umbrella required"
 python3 "$PYINIT" "file://$BARE" --umbrella 5 --slug "Bad_Slug" --dir "$CL/nowhere2" >/dev/null 2>&1 \
   && fail "init-clone: invalid slug was not refused" || pass "init-clone: invalid slug refused"
+python3 "$PYINIT" "file://$BARE" --umbrella 77 --slug a-b-c --dir "$CL/boundary" >/dev/null 2>&1 \
+  && pass "slug: three lowercase words accepted" || fail "slug: three-word slug refused"
+python3 "$PYINIT" "file://$BARE" --umbrella 78 --slug a-b-c-d --dir "$CL/boundary" >/dev/null 2>&1 \
+  && fail "slug: four-word slug was accepted" || pass "slug: four-word slug refused"
 
 # --- item 6: preflight zero-criteria warning ----------------------------------------------------
 python3 -m py_compile "$PYPREFLIGHT" && pass "swarm_preflight.py compiles" || fail "swarm_preflight.py does not compile"

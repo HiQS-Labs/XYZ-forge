@@ -21,8 +21,8 @@ Usage:
 is not ready to start, and the clone name keys off it. `--slug` defaults to the repo basename
 lowercased; it must be <=3 hyphen-separated lowercase words. The destination defaults to
 `~/marathon-clones/marathon-gh-<umbrella>-<slug>`; an occupied derived name retries with the
-documented `-r2` suffix, and an explicitly passed `--dir` that already exists is a refusal —
-this tool never merges into an existing checkout.
+documented `-r2` suffix, and an existing checkout is never merged into or overwritten
+(git clone refuses a non-empty destination).
 
 Exit: 0 cloned+vendored · 2 usage · 1 clone/vendor failure.
 """
