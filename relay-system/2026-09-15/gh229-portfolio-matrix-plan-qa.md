@@ -1,8 +1,8 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: Reviewer (codex)
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ---
 
 # Context
@@ -542,3 +542,33 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex review — 2026-09-15 (Round 9)
+
+**Grade: A- / Approved.** Round 9 closes the remaining writer-serialization, server-affinity, UI-wide mutation-lock, and sequential-revision gaps. The plan is now build-ready within its stated single-user, single-process local-server envelope: one existing writer owns the complete read/check/write/replace critical section, every actionable revision comes from the same primary server that receives the mutation, and both Swift consumers advance or reconcile state without issuing a second POST.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — PASS.** The plan reuses `get_projects()`, `normalize_match_text()`, the goals-file subsystem, the existing completion route/helper, `Focus5Client`, and the existing Focus5Float state/UI system. The only new coordination mechanism is a stdlib, per-path in-process lock inside the existing writer (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:48-93,138-160`). That is commensurate with the operational envelope and adds no database, cache, parallel writer, or external dependency.
+
+2. **Single writer path — PASS.** `complete_goal_in_file()` remains the sole file writer. The plan now holds one path-scoped lock across read, optional revision validation, ambiguity-safe selection, unique temporary-file write, and atomic replacement; a second same-revision request therefore observes the first write and returns 409 instead of overwriting it (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:67-80,191-198`). This directly closes the current helper's unlocked read/fixed-`.tmp`/replace window (`src/rebalance/ingest/goals_file.py:73-116`) while retaining the one route caller (`src/rebalance/web.py:1116-1155`).
+
+3. **Data contract & wire shape — PASS.** Both GET projections bind `line_index` and `goals_revision` to one in-memory read, the optional request field preserves legacy callers, and all revision-bearing mutable-state GETs plus POST/refetch/recovery are primary-only (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:50-87,94-121`). The compact snake-case matrix remains additive and deterministic. Implementation note, not a blocker: perform duplicate-group coalescing on the final matched `(registry name, subproject)` identity—not merely the raw header spelling—so the stated one-row-per-derived-ID guarantee also covers case/spacing variants (`:58-66`).
+
+4. **UI & ergonomics — PASS.** The frozen 130pt identity column, shared 58pt row height, bounded task scroller, dedicated matrix state, primary-pinned recovery GET, and global in-flight mutation guards fit the 340/420pt HUD (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:88-93,122-132`). Advancing `goalsRevision` from both reminders response types fixes sequential completion without a manual reload (`:68-73,145-148,200-209`). Small doc cleanup: line 129 still lists stale `completingTaskKey` while the accepted design and phases use `isMutatingTask` (`:89,147,205`); keep only the global field during implementation.
+
+5. **Gaps / blind spots — NO BLOCKERS.** The verification matrix now covers single-read snapshots, stale and ambiguous no-write outcomes, concurrent same-revision requests, single-dispatch POSTs, exact-origin success/recovery reads, sequential reminder revisions, and global UI locks (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:164-185`). Two implementation hygiene details should be handled in the named helper: canonicalize the path used as the lock-registry key, and remove an orphaned `NamedTemporaryFile` if write or replace raises. Neither changes the architecture or requires another subsystem.
+
+### SWE rubric
+
+| Pillar | Result | Evidence / remaining note |
+|---|---|---|
+| Recon | Pass | Existing goals writer, route caller, generic client failover, reminders consumer, model injection seam, and UI refresh paths are all represented. |
+| Minimal | Pass | Stdlib-only, no persistence, no new completion engine, and a bounded ~520-line additive footprint. |
+| Diagnosable | Pass with note | Typed 409 outcomes, warnings for skipped associations, retained UI errors, and pinned recovery make failure states observable; use the repo's debug-mantra if a focused test fails during execution. |
+| Blast | Pass | Reversibility is Easy; the only mutation is shielded by revision validation, ambiguity refusal, serialization, atomic replace, and primary-origin affinity. |
+| Proof | Pass | Focused Python/Swift tests and manual 340/420pt geometry checks cover the stated contracts, including the negative concurrency and transport paths. |
+
+**Reversibility:** Easy. The route, models, and tab are additive; completion continues through the existing writer, now with stronger refusal and serialization guards.
+
+VERDICT: PASS
