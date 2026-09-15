@@ -1,8 +1,8 @@
 ---
 title: "GH-592: express landings write the provenance receipt they already have and reconcile with --gate"
-status: 2-WORKING
+status: Complete
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-15
 owner: orchestrator
 gh_issue: 592
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/592
