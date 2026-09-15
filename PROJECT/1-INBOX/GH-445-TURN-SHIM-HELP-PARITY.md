@@ -2,7 +2,7 @@
 title: "GH-445: runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0"
 status: Queued
 created: 2026-09-05
-updated: 2026-09-05
+updated: 2026-09-14
 owner: orchestrator (Claude Code)
 gh_issue: 445
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/445
@@ -41,3 +41,9 @@ code 2 and `<shim>: RELAY_AGENT required`, whereas the Python twin succeeds with
 1. In `relay-automation/agy-turn.sh` and `relay-automation/codex-turn.sh`, evaluate `--help` / `-h` before
    enforcing `RELAY_AGENT`. Include frozen-twin-exception trailers per GH-308 / GH-321.
 2. Add regression tests asserting twin agreement on `--help` with `XYZ_PYTHON=0`.
+
+## Held-lane findings (attempt 1, 2026-09-06)
+
+The GH-462 10-day arc held this lane rather than forcing it (frozen-file refusal, GH-308);
+its findings and the two remedy options are tracked in
+[#470](https://github.com/HiQS-Labs/XYZ-forge/issues/470).
