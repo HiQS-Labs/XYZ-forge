@@ -474,6 +474,264 @@ def parity_failures(skill_text: str, cli_help: str, sources=None, run_tests: boo
     return fails
 
 
+# --- GH-623: soft edges, network retry + defer, bounded calls, resume ---------------------------
+
+import toposort_prs as toposort  # noqa: E402
+
+
+class TestGh623Resilience(LedgerFixture):
+    """Collision edges order but never block; transient network failures retry then defer the
+    single PR instead of killing the run; network subprocess calls are bounded; --resume consults
+    the attempt record only after the live refresh."""
+
+    def same_key_conflict(self):
+        self.branch("feat/a", 1, lambda r: _app(r, "roadmap", "update", "--issue-num", "100", "--section", "Completed"))
+        self.branch("feat/b", 2, lambda r: _app(r, "roadmap", "update", "--issue-num", "100", "--section", "In progress"))
+
+    def record_for(self, n):
+        return ar.record_path(self.primary, str(self.origin), n)
+
+    def exhausted_record(self, n, outcomes=("failed", "handoff")):
+        record = self.record_for(n)
+        rec = ar.new_record(n, str(self.origin))
+        rec["attempts"] = [
+            {"by": "caller", "head_sha": str(i) * 40, "rung": "ponytail", "started": "t",
+             "outcome": outcome, "clone_path": ""}
+            for i, outcome in enumerate(outcomes, 1)
+        ]
+        ar.save(record, rec)
+        return record
+
+    def views_for(self, st, n):
+        return [c for c in st["calls"] if c[:2] == ["pr", "view"] and c[2] == str(n)]
+
+    def test_soft_edge_predecessor_does_not_block_a_collision_dependent(self):
+        """RED on current code: PR 3 shares a (stub) file with handed-off PR 2 and is refused as a
+        dependent; GH-623 makes collision edges soft — the landing simulation decides instead."""
+        self.same_key_conflict()  # PR 2 will hand off (same-key ledger conflict)
+        self.branch("feat/c", 3, lambda r: park(r, 300, "soft dependent"))
+        self.branch("feat/d", 4, lambda r: park(r, 301, "hard dependent"))
+        st = self.load()
+        st["prs"]["2"]["files"] = [{"path": "shared.txt"}]
+        st["prs"]["3"]["files"] = [{"path": "shared.txt"}]
+        st["prs"]["4"]["body"] = "Depends on #2"
+        self.save()
+        rc = self.run_main()
+        self.assertEqual(rc, 3, self.err)
+        st = self.load()
+        self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
+                         {"1": "MERGED", "2": "OPEN", "3": "MERGED", "4": "OPEN"})
+        self.assertIn("attempting anyway", self.err)
+        self.assertIn("PR #4: NOT attempted — depends on #2 (handoff)", self.err)
+        self.assertEqual(self.dev_rows(), [100, 101, 300])
+
+    def test_transient_view_failure_defers_and_independents_land(self):
+        """RED on current code: a DNS-flavored pr-view failure stops the whole run (rc 2) and PR 2
+        is never attempted. GH-623: retry x3, defer PR 1, keep landing."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "net"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "plain"))
+        st = self.load()
+        st["view_fail"] = {"1": {"remaining": 99, "msg": "gh: Could not resolve host: github.com"}}
+        self.save()
+        sleeps = []
+        with mock.patch.object(merge_cleanup, "_sleep", side_effect=sleeps.append, create=True):
+            rc = self.run_main()
+        self.assertEqual(rc, 3, self.err)
+        self.assertIn("DEFERRED", self.err)
+        self.assertIn("Could not resolve host", self.err)
+        st = self.load()
+        self.assertEqual((st["prs"]["1"]["state"], st["prs"]["2"]["state"]), ("OPEN", "MERGED"))
+        self.assertEqual(len(self.views_for(st, 1)), 3, "the deferred PR was not retried exactly 3 times")
+        self.assertEqual(sleeps, [2, 4], "the retry schedule is 3 calls with 2s then 4s between them")
+
+    def test_transient_view_failure_retry_then_success_lands(self):
+        """RED on current code: two failures then success still stops the run. GH-623: the third
+        attempt succeeds and the PR lands; the sleep sequence pins the retry contract."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "flaky"))
+        st = self.load()
+        st["view_fail"] = {"1": {"remaining": 2, "msg": "gh: Could not resolve host: github.com"}}
+        self.save()
+        sleeps = []
+        with mock.patch.object(merge_cleanup, "_sleep", side_effect=sleeps.append, create=True):
+            rc = self.run_main()
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "MERGED")
+        self.assertGreaterEqual(len(self.views_for(self.load(), 1)), 3)
+        self.assertEqual(sleeps, [2, 4])
+
+    def test_pr_list_discovery_failure_exits_two_before_teardown(self):
+        """RED on current code: a failing `gh pr list` reads as an empty queue ("No open PRs
+        found", rc 0, teardown runs). GH-623: retried, then exit 2 BEFORE Phase 6."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "queued"))
+        st = self.load()
+        st["list_fail"] = {"remaining": 99, "msg": "gh: Could not resolve host: github.com"}
+        self.save()
+        sleeps = []
+        with mock.patch.object(merge_cleanup, "_sleep", side_effect=sleeps.append, create=True):
+            rc = self.run_main()
+        self.assertEqual(rc, 2)
+        self.assertIn("Could not resolve host", self.err)
+        self.pruner.assert_not_called()
+        self.assertEqual(sleeps, [2, 4])
+
+    def test_pr_list_discovery_is_bounded_in_time(self):
+        """The discovery subprocess must be invoked with a FINITE timeout — handling a
+        TimeoutExpired proves nothing if the call could hang forever."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "queued"))
+
+        def bounded(cmd, **kw):
+            if kw.get("timeout") in (None, 0):
+                raise AssertionError("gh pr list was invoked without a finite timeout")
+            raise subprocess.TimeoutExpired(cmd, kw["timeout"])
+
+        with mock.patch.object(toposort.subprocess, "run", side_effect=bounded):
+            rc = self.run_main()
+        self.assertEqual(rc, 2)
+        self.assertIn("timed out", self.err)
+        self.pruner.assert_not_called()
+
+    def test_net_git_bounds_and_converts_a_hung_call(self):
+        """_net_git forwards a finite timeout and converts TimeoutExpired into the normal
+        failure shape (rc 124, 'timed out' diagnostic) so it reaches the retry loop."""
+        def hung(cwd, args, **kw):
+            if kw.get("timeout") in (None, 0):
+                raise AssertionError("_net_git must forward a finite timeout to run_git")
+            raise subprocess.TimeoutExpired(cmd=["git"] + list(args), timeout=kw["timeout"])
+
+        with mock.patch.object(merge_cleanup, "run_git", side_effect=hung):
+            r = merge_cleanup._net_git(self.primary, ["fetch", "origin", "development"])
+        self.assertEqual(r.returncode, 124)
+        self.assertIn("timed out", r.stderr)
+
+    def test_run_git_default_stays_unbounded(self):
+        """The additive timeout parameter must default to unbounded — every scan/ledger caller
+        keeps today's behavior (the compatibility shield GH-623 relies on)."""
+        with mock.patch.object(scan_clones.subprocess, "run") as m:
+            scan_clones.run_git(self.primary, ["status"])
+        self.assertIsNone(m.call_args.kwargs.get("timeout"))
+        with mock.patch.object(scan_clones.subprocess, "run") as m2:
+            scan_clones.run_git(self.primary, ["status"], timeout=5)
+        self.assertEqual(m2.call_args.kwargs.get("timeout"), 5)
+
+    def test_hung_landing_clone_times_out_and_defers(self):
+        """RED on current code: run_git has no timeout, so the hung clone propagates as an
+        exception and kills the run. GH-623: bounded, retried, deferred, independents continue."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "net"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "plain"))
+        real = merge_cleanup.run_git
+
+        def hung_clone(cwd, args, **kw):
+            if args[:1] == ["clone"]:
+                raise subprocess.TimeoutExpired(cmd=["git", "-C", str(cwd)] + list(args), timeout=kw.get("timeout") or 0)
+            return real(cwd, args, **kw)
+
+        with mock.patch.object(merge_cleanup, "run_git", side_effect=hung_clone), \
+                mock.patch.object(merge_cleanup, "_sleep", side_effect=lambda s: None, create=True):
+            rc = self.run_main()
+        self.assertEqual(rc, 3, self.err)
+        self.assertIn("DEFERRED", self.err)
+        self.assertIn("timed out", self.err)
+        st = self.load()
+        self.assertEqual((st["prs"]["1"]["state"], st["prs"]["2"]["state"]), ("OPEN", "MERGED"))
+
+    def test_resume_skips_a_still_conflicting_exhausted_pr(self):
+        """RED on current code: no --resume flag exists. Green: the exhausted record skips the
+        PR as previously parked WITHOUT running B1 and without consuming a third slot."""
+        self.same_key_conflict()  # PR 2 hands off
+        record = self.exhausted_record(2)
+        rc = self.run_main(extra=["--resume"])
+        self.assertEqual(rc, 3, self.err)
+        self.assertIn("previously parked", self.err)
+        self.assertNotIn("  B1:", self.err, "B1 ran despite --resume seeing an exhausted record")
+        self.assertEqual(len(ar.load(record)["attempts"]), 2, "resume consumed a repair slot")
+        st = self.load()
+        self.assertEqual((st["prs"]["1"]["state"], st["prs"]["2"]["state"]), ("MERGED", "OPEN"))
+
+    def test_resume_lands_a_pr_whose_last_repair_resolved(self):
+        """RED on current code: no --resume flag exists. THE ROUND-3 PIN: a PR whose record shows
+        two finished repairs with the last `resolved` and whose live landing is clean is LANDED —
+        the record is consulted only when a repair would actually be needed."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "first"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "repaired"))
+        self.exhausted_record(2, outcomes=("handoff", "resolved"))
+        rc = self.run_main(extra=["--resume"])
+        self.assertEqual(rc, 0, self.err)
+        st = self.load()
+        self.assertEqual((st["prs"]["1"]["state"], st["prs"]["2"]["state"]), ("MERGED", "MERGED"))
+        self.assertNotIn("previously parked", self.err)
+
+    def test_without_resume_the_park_path_is_unchanged(self):
+        """Without --resume an exhausted record still reaches reserve() and parks — the ceiling
+        authority never moved."""
+        self.same_key_conflict()
+        record = self.exhausted_record(2)
+        rc = self.run_main()
+        self.assertEqual(rc, 3)
+        self.assertIn("PARKED — budget exhausted", self.err)
+        self.assertEqual(len(ar.load(record)["attempts"]), 2)
+        self.assertEqual(self.load()["prs"]["2"]["state"], "OPEN")
+
+    def test_prequeue_fetch_failure_refuses_after_retries(self):
+        """RED (partially) on current code: the refusal exists but fires on the FIRST failure;
+        GH-623 retries a transient failure 3x with [2, 4] sleeps before refusing."""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "queued"))
+        real = merge_cleanup.run_git
+        fetches = []
+
+        def down(cwd, args, **kw):
+            if args == ["fetch", "origin", "development"] and Path(cwd) == self.primary:
+                fetches.append(1)
+                return subprocess.CompletedProcess(args=args, returncode=1, stdout="",
+                                                   stderr="gh: Could not resolve host: github.com")
+            return real(cwd, args, **kw)
+
+        with mock.patch.object(merge_cleanup, "run_git", side_effect=down), \
+                mock.patch.object(merge_cleanup, "_sleep", side_effect=lambda s: None, create=True):
+            rc = self.run_main()
+        self.assertEqual(rc, 2)
+        self.assertIn("could not refresh", self.err)
+        self.assertEqual(len(fetches), 3)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
+
+    def test_prequeue_fetch_failure_proceeds_with_allow_unready_primary(self):
+        """The existing --allow-unready-primary override survives retry exhaustion unchanged —
+        GH-623 removes no escape hatch. (RED on the retry count only: today there is 1 attempt.)"""
+        self.branch("feat/a", 1, lambda r: park(r, 200, "queued"))
+        real = merge_cleanup.run_git
+        fetches = []
+        state = {"remaining": 3}  # network recovers right after the pre-queue retries exhaust
+
+        def flaky(cwd, args, **kw):
+            if args == ["fetch", "origin", "development"] and Path(cwd) == self.primary and state["remaining"] > 0:
+                state["remaining"] -= 1
+                fetches.append(1)
+                return subprocess.CompletedProcess(args=args, returncode=1, stdout="",
+                                                   stderr="gh: Could not resolve host: github.com")
+            return real(cwd, args, **kw)
+
+        with mock.patch.object(merge_cleanup, "run_git", side_effect=flaky), \
+                mock.patch.object(merge_cleanup, "_sleep", side_effect=lambda s: None, create=True):
+            rc = self.run_main(extra=["--allow-unready-primary"])
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "MERGED")
+        self.assertEqual(len(fetches), 3)
+
+    def test_toposort_standalone_reports_fetch_error(self):
+        """RED on current code: the standalone sorter prints 'No open PRs found.' and exits 0 on
+        a failed gh pr list. GH-623: FetchError -> diagnostic, non-zero exit, no traceback."""
+        st = self.load()
+        st["list_fail"] = {"remaining": 99, "msg": "gh: Could not resolve host: github.com"}
+        self.save()
+        r = subprocess.run([sys.executable, str(REPO / "skills" / "merge-cleanup" / "scripts" / "toposort_prs.py"),
+                            "--repo", str(self.primary)],
+                           capture_output=True, text=True,
+                           env={**os.environ, "MERGE_CLEANUP_GH_BIN": str(self.gh), "GH_STATE": str(self.state)})
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("Could not resolve host", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertNotIn("No open PRs found", r.stdout)
+
+
 class TestParityGuard(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
