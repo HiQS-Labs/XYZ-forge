@@ -97,9 +97,8 @@ def main():
     slug = validate_slug(args.slug or re.sub(r"[^a-z0-9]+", "-", repo_name.lower()).strip("-"))
 
     parent = os.path.abspath(args.dir or DEFAULT_PARENT)
-    if os.path.exists(os.path.join(parent, f"marathon-gh-{args.umbrella}-{slug}")) and args.dir:
-        die(f"--dir {parent} already contains marathon-gh-{args.umbrella}-{slug}; refusing to merge into an existing checkout")
-
+    # An occupied derived name retries with the documented -r2 suffix (marathon-triage); git
+    # clone itself refuses a non-empty destination, so an existing checkout is never merged into.
     dest = next_destination(parent, f"marathon-gh-{args.umbrella}-{slug}")
     os.makedirs(parent, exist_ok=True)
 

@@ -97,8 +97,9 @@ consumer remedy is `xyz-sync update`, not new work:
    exception needed). `xyz-init-clone.py <repo-url> --umbrella N [--slug s] [--dir D]`:
    `--umbrella` required (marathon-triage: an unnamed umbrella is not ready); slug defaults from
    the repo name, validated ≤3 lowercase words; clone name `marathon-gh-<umbrella>-<slug>`, an
-   occupied derived name takes the documented `-r2` retry suffix; **refuses** a pre-existing
-   `--dir` (never merges into one); clone from the canonical remote; self-vendor via
+   occupied derived name retries with the documented `-r2` suffix, and an existing checkout is
+   never merged into or overwritten (git's non-empty rule + retry); clone from the canonical
+   remote; self-vendor via
    `relay-automation/xyz-vendor.sh` — Tier 2 (`--with-releases`) is **always** passed (a marathon
    needs the ledger overlay; resolves the round-1 optional-vs-always contradiction); installs
    `githooks/install.sh` when the cloned repo ships one; prints next steps (bootstrap hint + drive

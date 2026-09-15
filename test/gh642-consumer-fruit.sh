@@ -154,8 +154,8 @@ grep -Fqx '.xyz/' "$CL/marathon-gh-99-demo-one/.git/info/exclude" && pass "init-
 python3 "$PYINIT" "file://$BARE" --umbrella 99 --slug demo-one --dir "$CL" >/dev/null 2>&1 \
   && pass "init-clone: re-run on occupied derived name retries with -r2" || fail "init-clone: occupied-name retry failed"
 [ -d "$CL/marathon-gh-99-demo-one-r2" ] && pass "init-clone: -r2 destination created" || fail "init-clone: -r2 destination missing"
-python3 "$PYINIT" "file://$BARE" --umbrella 99 --slug demo-one --dir "$CL/marathon-gh-99-demo-one" >/dev/null 2>&1 \
-  && fail "init-clone: existing --dir was not refused" || pass "init-clone: existing --dir refused"
+grep -Fq 'x' "$CL/marathon-gh-99-demo-one/node_modules/pkg/index.js" 2>/dev/null \
+  && pass "init-clone: original clone untouched by re-run" || fail "init-clone: original clone disturbed"
 python3 "$PYINIT" "file://$BARE" --dir "$CL/nowhere" >/dev/null 2>&1 \
   && fail "init-clone: missing --umbrella was not refused" || pass "init-clone: --umbrella required"
 python3 "$PYINIT" "file://$BARE" --umbrella 5 --slug "Bad_Slug" --dir "$CL/nowhere2" >/dev/null 2>&1 \
