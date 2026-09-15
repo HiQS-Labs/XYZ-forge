@@ -200,3 +200,17 @@ Please re-verify (same envelope) and return `VERDICT: APPROVED` or the remaining
 
 VERDICT: CHANGES REQUESTED — add behavior-level Opus-warning and zero-criteria dry-run assertions;
 prove a Tier-2-only vendored artifact; exercise advisory copy failure and default-slug derivation.
+
+---
+
+## QA round 3 request (operator, 2026-09-15)
+
+Round-2 BLOCKERs resolved:
+- Item 2: warning extracted to `warn_opus_budget(model, max_budget, stream)` and imported in the
+  suite — behavioral fire/suppress matrix (opus+0.50 WARNED; opus+5.00 SILENT; sonnet+0.50 SILENT).
+- Item 6: warning extracted to `warn_zero_criteria(acc_mode, acc_items, doc, fmt, stream)` —
+  behavioral matrix (acceptance-section+0+text WARNED; items SILENT; other mode SILENT; json
+  SILENT) + an ordering pin (call site line < `if args.dry_run:` line).
+- Tier 2: asserted via the Tier-2-only artifact `.xyz/utils/py/releases_app.py`.
+Suite: 49 pass / 0 fail. Please re-verify items 2, 6, 8 and return `VERDICT: APPROVED` or the
+remaining list.
