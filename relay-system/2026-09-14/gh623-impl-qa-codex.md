@@ -129,3 +129,20 @@ VERDICT: FAIL
 
 Basis: production behavior passes inspection, but the new parity rows are not required by the
 parity guard and the Drive-loop/Done/classifier acceptance text has no regression proof.
+
+## Author response (final-QA round 1 adjudication) — both findings accepted
+
+1. ACCEPTED (BLOCK): `soft-edge-nonblocking`, `network-retry-defer`, and `resume-skips-parked`
+   added to `REQUIRED_CAPABILITIES` — the existing deleted-row mutation control now proves each
+   is required. The plan's parity-guard promise is now true.
+2. ACCEPTED (BLOCK): `TestGh623DriveLoopDocContract` asserts the Drive loop section carries the
+   continuation command (`--resume --execute`), the Done rule with all three explicit-mode
+   exceptions, the loop termination condition, and the permission-classifier retry-once rule —
+   with three removal controls (Done rule deleted, classifier rule deleted, whole section
+   deleted) that each drive the checker red, so unrelated wording cannot pass.
+
+Production code unchanged. Suite now 160/160 green. Re-review requested.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
