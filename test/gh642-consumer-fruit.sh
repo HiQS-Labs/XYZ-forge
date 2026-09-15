@@ -83,19 +83,20 @@ case "$1 $2" in
 esac
 STUB
 chmod +x "$STUB/tick"
-run_resolve() { python3 - "$PYDRIVE" "$STUB/tick" "$@" <<'PY'
-import importlib.util, os, sys
-path, tick, *rest = sys.argv[1:]
+run_resolve() {  # <tick-path> <force> <explicit> -> resolved id (last stdout line; log() may also print)
+  python3 - "$PYDRIVE" "$1" "$2" "$3" <<'PY'
+import importlib.util, sys
+path, tick, force, explicit = sys.argv[1:5]
 spec = importlib.util.spec_from_file_location("marathon_drive", path)
 mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-print(mod.resolve_force_relay_task("MARATHON-P1-TURN", tick if tick != "MISSING" else "/nonexistent/tick", *(a == "True" for a in rest[:1]), *(a == "True" for a in rest[1:])))
+print(mod.resolve_force_relay_task("MARATHON-P1-TURN", tick, force == "True", explicit == "True"))
 PY
 }
-out="$(run_resolve "$STUB/tick" True False 2>/dev/null)"
+out="$(run_resolve "$STUB/tick" True False 2>/dev/null | tail -1)"
 [ "$out" = "MARATHON-P1-TURN-R2" ] && pass "spent default + --force → first free -R2" || fail "expected -R2, got: $out"
-out="$(run_resolve "$STUB/tick" False False 2>/dev/null)"
+out="$(run_resolve "$STUB/tick" False False 2>/dev/null | tail -1)"
 [ "$out" = "MARATHON-P1-TURN" ] && pass "no --force → base id unchanged" || fail "without force the id changed: $out"
-out="$(run_resolve "$STUB/tick" True True 2>/dev/null)"
+out="$(run_resolve "$STUB/tick" True True 2>/dev/null | tail -1)"
 [ "$out" = "MARATHON-P1-TURN" ] && pass "explicit --relay-task → never rewritten" || fail "explicit id was rewritten: $out"
 out="$(python3 - "$PYDRIVE" <<'PY'
 import importlib.util, sys
@@ -108,7 +109,7 @@ except SystemExit as e:
 PY
 )"
 [ "$out" = "exit-2" ] && pass "malformed tick info → refuses (exit 2)" || fail "malformed info not refused: $out"
-out="$(run_resolve "MISSING" True False 2>/dev/null)"
+out="$(run_resolve "/nonexistent/tick" True False 2>/dev/null)"
 [ -z "$out" ] && pass "missing tick binary → fails fast (no free-id guess)" || fail "missing tick did not fail: $out"
 
 # --- item 4: rtl_worktree_begin copies node_modules ---------------------------------------------
