@@ -308,3 +308,14 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   CLI — new gid rmi-01M2HWFA214B5R74NZ4ZFRK883, same rating 82/80/50/65; `releases check` clean)
   and CHANGELOG.md (both entries kept). Post-rebase focused suite: 164/164 green (upstream added
   4 tests; no semantic conflicts with the GH-623 changes).
+- 2026-09-15: Qualifying gate story (ci-local.sh, sequential, this clone): run 1 failed ONLY
+  on test/agy-turn.sh — root-caused to #607 (landed 2026-09-14) making utils/py/agy-turn.py
+  authoritative for the real `agy models` TABLE format while the stub fixture still emitted
+  multi-word display names; fixed as a disclosed collateral commit (stub models single-token
+  ids; suite 62/62) plus the relay-pkg.tar.gz regeneration the freshness guard demands. Run 2
+  failed on gh298's zero-state digest because the gate log itself was redirected into temp/
+  (depth-2 non-dot path) — logs moved outside the repo; clean run 3 failed ONLY on
+  gh53-releases-merge-resolve and run 4 ONLY on gh32-releases-app — the flaky releases-rebuild
+  family. Flake attribution: gh53 passes 4/4 on this branch and 3/3 on clean development;
+  gh32 fails 1-of-3 ON CLEAN DEVELOPMENT in the repetition control. Every deterministic
+  failure is fixed; the residual flake reproduces on pristine development at a comparable rate.
