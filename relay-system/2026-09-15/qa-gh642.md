@@ -214,3 +214,33 @@ Round-2 BLOCKERs resolved:
 - Tier 2: asserted via the Tier-2-only artifact `.xyz/utils/py/releases_app.py`.
 Suite: 49 pass / 0 fail. Please re-verify items 2, 6, 8 and return `VERDICT: APPROVED` or the
 remaining list.
+
+### Final QA · codex (round 3)
+
+2. **Item 2 implementation:** correct. `warn_opus_budget()` fires only for `claude-opus*` with the
+   effective `$0.50` default and writes to stderr by default (`utils/py/claude-turn.py:36-47`);
+   `main()` resolves the unset budget to `0.50` and calls the helper before dispatch
+   (`utils/py/claude-turn.py:110-116`). The helper matrix correctly covers fire/suppress semantics
+   (`test/gh642-consumer-fruit.sh:74-87`).
+
+6. **Item 6 implementation:** correct. `warn_zero_criteria()` is text-only, names the document and
+   checklist repair, and defaults to stderr (`utils/py/swarm_preflight.py:1142-1152`). Its runtime
+   call precedes the dry-run exit and changes no exit path (`utils/py/swarm_preflight.py:1701-1711`).
+   The helper matrix correctly covers the intended fire/suppress cases
+   (`test/gh642-consumer-fruit.sh:190-204`).
+
+8. **Tests:** the Tier-2 regression is now real: it asserts the overlay-only
+   `.xyz/utils/py/releases_app.py` (`test/gh642-consumer-fruit.sh:168-170`). **BLOCKER:** the two
+   warning matrices inject `stream=buf`, so they do not prove the contract's stderr destination;
+   changing either helper's default from `sys.stderr` to stdout would leave all 49 assertions green
+   (`test/gh642-consumer-fruit.sh:74-87,190-204`). **BLOCKER:** neither matrix proves that `main()`
+   invokes its helper. Removing `warn_opus_budget(model, max_budget)` at
+   `utils/py/claude-turn.py:114` leaves the item-2 tests green. The item-6 ordering pin is also
+   tautological: `grep ... | head -1` at `test/gh642-consumer-fruit.sh:205-209` resolves to the helper
+   **definition** at `utils/py/swarm_preflight.py:1142`, not the runtime call at `:1703`; removing or
+   moving the call after `if args.dry_run` still passes.
+
+VERDICT: CHANGES REQUESTED — add default-stream assertions that capture stderr (and reject stdout),
+pin the Opus helper's runtime call, and make the zero-criteria ordering assertion select the indented
+call at `:1703` rather than the definition; mutation-check call removal/movement so each assertion is
+known to go red.
