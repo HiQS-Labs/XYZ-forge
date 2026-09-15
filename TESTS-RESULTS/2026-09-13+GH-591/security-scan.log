@@ -1,0 +1,39 @@
+== test: security-scan ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//sec-scan-test.Z8szcb
+  PASS: bad fixture: scanner exits non-zero (1)
+  PASS: bad fixture: findings written to stderr
+  PASS: fail-loud: SECURITY findings go to stderr, not stdout
+  PASS: clean fixture: scanner exits 0
+  PASS: clean fixture: no false positives on stderr
+  PASS: pattern[eval-var]: detected and flagged
+  PASS: pattern[eval-dollar]: detected and flagged
+  PASS: pattern[pipe-curl-sh]: detected and flagged
+  PASS: pattern[pipe-wget-bash]: detected and flagged
+  PASS: pattern[aws-key]: detected and flagged
+  PASS: pattern[pem-rsa]: detected and flagged
+  PASS: pattern[pem-openssh]: detected and flagged
+  PASS: pattern[github-pat]: detected and flagged
+  PASS: pattern[slack-bot]: detected and flagged
+  PASS: pattern[cred-password]: detected and flagged
+  PASS: pattern[cred-api-key]: detected and flagged
+  PASS: no-fp[eval-literal]: correctly clean
+  PASS: no-fp[password-ref]: correctly clean
+  PASS: no-fp[api-key-ref]: correctly clean
+  PASS: no-fp[curl-pipe-grep]: correctly clean
+  PASS: adjacent-ref[same-line-two-assigns]: real secret still caught next to an excluded reference
+  PASS: adjacent-ref[trailing-comment]: real secret still caught next to an excluded reference
+  PASS: unreadable file: scanner fails loud (exit 1), not silently clean
+  PASS: unreadable file: flagged with [scan-error], not silently skipped
+  PASS: unreadable file: scan-error reported once per file, not once per rule
+  PASS: unreadable file: scan CONTINUES to the next file (not silently aborted mid-scan)
+  PASS: quoted value with internal space is caught (previously matched nothing)
+  PASS: baseline: still exits non-zero when a non-baselined finding remains
+  PASS: baseline: baselined finding is still PRINTED (not hidden)
+  PASS: baseline: non-baselined finding still reported as a plain SECURITY line
+  PASS: baseline: fully-baselined fixture exits 0
+  PASS: baseline: --no-baseline ignores the baseline file (raw scan fails)
+  PASS: baseline: --no-baseline output has no 'baselined' labels
+  PASS: baseline: --tsv emits tab-separated file/rule/text
+  PASS: GH-64 active gate: the real repo tree is clean against the checked-in baseline
+
+security-scan: 35 pass, 0 fail

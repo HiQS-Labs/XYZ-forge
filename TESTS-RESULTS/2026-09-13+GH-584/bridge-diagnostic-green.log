@@ -1,0 +1,55 @@
+agent-chorus-bridge (GH-384):
+  PASS: bridge parses with Python 3.8 floor
+  PASS: client parses with Python 3.8 floor
+  PASS: bridge server started on 127.0.0.1:52520
+  PASS: GET / returns HTTP 200
+  PASS: health body reports service name
+  PASS: POST /sessions creates discussion 777001 (HTTP 201)
+  PASS: response contains discussion id
+  PASS: response reports NEXT is agent2
+  PASS: canonical conversation.md created on local filesystem
+  PASS: agent2 join receives take-turn decision
+  PASS: agent2 join receives capability token
+  PASS: agent2 capability token extracted
+  PASS: agent1 join receives wait decision
+  PASS: remote agent2 send succeeds
+  PASS: turn 2 routes to agent1
+  PASS: local agent1 advances to turn 3
+  PASS: turns endpoint returns turn 2
+  PASS: turns endpoint returns turn 3
+  PASS: remote agent2 advances to turn 4
+  PASS: local agent1 closes discussion
+  PASS: remote client observes Closed status
+Testing authentication failure modes:
+  PASS: missing token rejected with HTTP 401
+  PASS: wrong seat capability token rejected with HTTP 403
+  PASS: out of turn write rejected with HTTP 409
+  PASS: stale version rejected with HTTP 409
+  PASS: first send with idempotency key commits turn 2
+  PASS: duplicate send with idempotency key returns identical turn 2
+  PASS: idempotent retry produced exactly one committed turn on disk
+Testing Cloudflare Access Service Token validation:
+  PASS: missing CF Access headers rejected with HTTP 401
+  PASS: invalid CF Access secret rejected with HTTP 401
+  PASS: valid CF Access headers accepted with HTTP 200
+Testing idle lease expiration:
+  PASS: write on expired session rejected with HTTP 410 Gone
+  PASS: canonical transcript preserved after session expiry
+Auditing bridge access logs for zero secret / message content leakage:
+  PASS: access log contains no capability tokens
+  PASS: access log contains no CF Access secret
+  PASS: access log contains no message content
+Testing crash and restart recovery:
+  PASS: restarted bridge recovers status of closed discussion 777001
+  PASS: restarted bridge recovers turn count 5
+
+── unauthenticated-by-default guard (GH-384 review) ──
+  PASS: A1: --tunnel refuses without CF Access credentials
+  PASS: A1b: the refusal exits 2 rather than continuing
+  PASS: A2: --insecure-allow-unauthenticated is available as an explicit opt-out
+  PASS: A3: banner names DISABLED auth on an unauthenticated bridge
+  PASS: A3b: banner names ENABLED when creds come from the ENVIRONMENT (not argv)
+
+==========================================
+AgentChorus Bridge Test Summary: 43 passed, 0 failed
+==========================================

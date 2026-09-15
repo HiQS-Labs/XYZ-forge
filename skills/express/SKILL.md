@@ -50,8 +50,31 @@ python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summa
 # Inspect what would happen without modifying disk, DB, or git state:
 python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summary "<one line>" --dry-run
 
-# Recover/resume an interrupted express run (e.g. dropped network or post-push closeout fault):
-python3 utils/py/express.py resume --issue <N> [--sha <SHA>]
+# Recover/resume an interrupted express run (e.g. dropped network or post-push closeout fault).
+# --suite names the registered suite the landing ran: resume validates the COMMITTED receipt
+# (read from HEAD, never the working tree) against it and never runs a suite or writes evidence
+# (GH-592). With no committed valid receipt it refuses BEFORE closing the issue or shipping and
+# prints the recovery recipe below.
+python3 utils/py/express.py resume --issue <N> --suite test/gh<N>-<slug>.sh [--sha <SHA>]
+
+# Recovery recipe when resume refuses. Run in a FRESH disposable full clone. Every inspection fails
+# closed: `set -euo pipefail` is active (not a comment), cleanliness is asserted with git's own exit
+# codes (never by an empty-stdout test), and snap() aborts on the first failing command.
+set -euo pipefail
+SHA=<SHA>; N=<N>; SUITE=test/gh<N>-<slug>.sh
+git checkout "$SHA"
+git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
+LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
+snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
+BEFORE=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$BEFORE" >"$LOG"
+set +e; bash "$SUITE" >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"                     # 3. record rc at once
+AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$AFTER" >>"$LOG"
+[ "$BEFORE" = "$AFTER" ] || { echo "VOID: identity drifted during the suite — no receipt"; exit 1; }  # 4.
+git checkout development && git diff-index --quiet HEAD --                                       # 5. same helper, actual rc
+python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC))"
+cp "$LOG" TESTS-RESULTS/*+GH-"$N"-express/recovery-run.log                                       # 6. retain the run
+git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)" && git push origin development
+python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA"                    # 7.
 ```
 
 What each phase asserts (all refusals and fired runs write `.tick/events/*` and mirror to `~/.config/xyz/events/`):
@@ -87,23 +110,33 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
 7. **Gate** — the fix's suite runs green, the tree is RE-SNAPSHOTTED afterwards
    by path and content (`tree-drift`: new paths and changed qualified bytes both
    refuse). Gate identity is re-proven after the suite, staging uses explicit
-   pathspecs, and the direct push passes `XYZ_SKIP_PREPUSH=1` (the qualifying
-   suite was already verified and receipted in Step 7).
+   pathspecs, and the direct push passes `XYZ_SKIP_PREPUSH=1`. That bypasses the
+   FULL pre-push gate (`validate.sh`) by lane design (GH-267/GH-516) — it is not a
+   duplicate of Step 7, which ran only the fix's registered suite. The receipt
+   written in Step 9 says exactly that (`gate: express-suite`).
 8. **Land** — one commit of exactly the qualified paths with `Closes #N`, then
    `git push origin HEAD:development`. A concurrent update refuses as a normal
    non-fast-forward; there is no force push and no PR. The closeout switches to clean,
    current `development` (ship/reconcile state never rides the task branch).
-9. **Ship with evidence** — `manifest ship --gid <rel> --evidence "<sha>; <suite>
-   green; direct development push"` — post-push, so the sha and receipts exist when the
-   evidence is written. The GH-205 trap (dialed_in while closed) is structurally
-   impossible in this order.
+9. **Receipt, then ship with evidence** (GH-592) — from clean, current
+   `development`, the driver writes `TESTS-RESULTS/<date>+GH-<N>-express/provenance.jsonl`
+   (`commit` = the landing sha, `command` = the suite, the real `rc`,
+   `gate: express-suite`) and then `manifest ship --gid <rel> --evidence "<sha>;
+   registered suite <suite> green (express-suite, not the full gate); receipt <path>;
+   direct development push"`. Ship precedes the issue close below, so the
+   GH-205 shape (an issue closed while its manifest item is still dialed_in)
+   can only arise if the ship persist itself fails — which exits non-zero with
+   an `express-reconcile-failed` receipt and is what `resume` recovers.
 10. **Close the issue** — the commit message says `Closes #<N>` and lands on the
     default branch; the driver verifies and closes explicitly if GitHub has not.
 11. **Persist, reconcile cleanly, persist — fail closed.** The landing is
     three pushes total: (1) the hotfix land push (step 8), then from
     `development`, (2) the ship outputs are committed and pushed, and only
-    then (3) `wave_reconcile.py --commit <sha>` runs from the clean tree; its
-    outputs form the third commit and push. Every post-push fault exits
+    then (3) `wave_reconcile.py --commit <sha> --gate` runs from the clean tree —
+    `--gate` proves the receipt from step 9 is attributable to this landing (it
+    proves attribution, not test success) and its stdout is printed; its
+    outputs form the third commit and push. The ship commit (2) carries exactly
+    the receipt file and nothing else under `TESTS-RESULTS/`. Every post-push fault exits
     non-zero with an `express-reconcile-failed` receipt; success prints only
     after every boundary.
 
