@@ -54,6 +54,10 @@ import tempfile
 HOLD_LABEL_TOKENS = ("hold", "do not merge", "do-not-merge", "blocked", "wip")
 HOSTED_WAIT_ENV = "MERGE_CLEANUP_HOSTED_WAIT_S"
 HOSTED_POLL_ENV = "MERGE_CLEANUP_HOSTED_POLL_S"
+# GH-629: the run for a just-pushed head can take a few seconds to appear in `gh run list`; an
+# empty answer inside this window is "not yet", not "no hosted workflow". Only after it elapses
+# does an empty list select the local writer.
+HOSTED_GRACE_ENV = "MERGE_CLEANUP_HOSTED_GRACE_S"
 
 
 def _gh_bin() -> str:
@@ -296,7 +300,9 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     """
     wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 1800)
     poll_s = _seconds_from_env(HOSTED_POLL_ENV, 30)
-    deadline = time.monotonic() + wait_s
+    grace_s = _seconds_from_env(HOSTED_GRACE_ENV, 60)
+    started = time.monotonic()
+    deadline = started + wait_s
     query = [
         "run", "list", "--workflow", "wave-reconcile.yml",
         "--branch", integration_branch, "--commit", merged_head,
@@ -319,6 +325,12 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             log_warn(f"Hosted wave-reconcile lookup returned unusable JSON ({exc}); using local reconciliation")
             return "fallback"
         if not runs:
+            grace_left = grace_s - (time.monotonic() - started)
+            if grace_left > 0:
+                log(f"No hosted wave-reconcile run listed yet for {merged_head[:10]}; "
+                    f"waiting up to {grace_left:.0f}s more before assuming there is none")
+                time.sleep(min(poll_s, grace_left) or 0.1)
+                continue
             log(f"No hosted wave-reconcile run found for {merged_head[:10]}; using local reconciliation")
             return "fallback"
 

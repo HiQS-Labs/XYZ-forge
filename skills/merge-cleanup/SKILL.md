@@ -151,7 +151,7 @@ the answer will inform a landing.
 - Executes post-merge reconciliation, **gating** (a failure stops the run before emission, commit, push, the next PR, teardown, and symlink pruning; `--reconcile-pr` propagates the same exit):
   - Query the hosted `wave-reconcile.yml` run for the exact merged head and integration branch (`gh run list --workflow wave-reconcile.yml --branch <integration> --commit <merged-head>`). If it is queued or in progress, poll until completion for at most `MERGE_CLEANUP_HOSTED_WAIT_S` seconds (default 1800); timing out while it remains active stops the landing rather than racing it locally.
   - On hosted success, fetch and fast-forward the primary onto `origin/<integration>`'s reconciliation commit.
-  - If no hosted run/workflow/`gh` exists, or the hosted run completed unsuccessfully, fall back to `python3 utils/py/wave_reconcile.py --pr <PR_NUM>`. Never invoke that local writer while the observed hosted run is queued or in progress (`--force-local-reconcile` remains a manual recovery tool only).
+  - An empty answer inside the first `MERGE_CLEANUP_HOSTED_GRACE_S` seconds (default 60) is "not listed yet", not "no workflow" — the run for a just-pushed head can lag `gh run list` by a few seconds, and reconciling locally in that gap would race the hosted writer. After the grace window, if no hosted run/workflow/`gh` exists, or the hosted run completed unsuccessfully, fall back to `python3 utils/py/wave_reconcile.py --pr <PR_NUM>`. Never invoke that local writer while the observed hosted run is queued or in progress (`--force-local-reconcile` remains a manual recovery tool only).
   - `python3 utils/py/releases_app.py check`
   - Verify with `bash utils/pdda/pdda.sh issue-doc-sync`.
 
