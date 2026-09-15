@@ -27,5 +27,15 @@ Questions, correctness only (no new machinery, no "shoulds"):
 Evidence already run: merge-cleanup unit suite 148/148 (`bash test/gh436-merge-cleanup.sh`), work-events
 124/124, Phase C module 89/89 after the grace change, `bash test/agent-chorus-bridge.sh` green in-lane.
 
-Append `### Round 1 · Reviewer · agy` with findings, then `**Verdict:** Approved` + `STATUS: Approved`,
-or `**Verdict:** Changes requested` + `NEXT: orchestrator (Builder)`. Edit only this file. Do not run git.
+Append `### Round 1 · Reviewer · agy` under `## Log` with your findings, ending the block with
+`Basis: <files/lines you read and what you ran>` and `VERDICT: PASS` (set `STATUS: Approved`) or
+`VERDICT: FAIL` (set `NEXT: orchestrator (Builder)`). Edit only this file. Do not run git.
+
+## Log
+
+### Round 0 · Orchestrator · handoff
+
+Branch `marathon/10days-2026-09-15` at 8d4dff88 (plus this relay commit). Lanes gh-625, gh-624, gh-629
+each approved in-lane by agy; post-approval deltas are the two items in the Ask.
+Basis: lane receipts under relay-system/preflight/2026-09-15/*/marathon-result.json; suites listed above.
+VERDICT: PARKED
