@@ -37,7 +37,7 @@ assert git(src, "checkout", "-q", "-b", "fixture").returncode == 0
 sync = os.path.join(src, "utils/py/xyz_mini_sync.py")
 if MUTANT == "1":
     text = pathlib.Path(sync).read_text()
-    text = text.replace('    ("skills/skills-army-hq", "skills-army-hq", "managed"),\n', "")
+    text = text.replace('    ("skills/skills-army-hq", "", "managed"),\n', "")
     pathlib.Path(sync).write_text(text)
     git(src, "add", sync); git(src, "commit", "-qm", "drop required payload")
 
@@ -51,18 +51,15 @@ r = publish("--push")
 ok("first publication pushes and reads back", r.returncode == 0, r.stderr[-300:])
 expected = {
     ".gitignore", ".xyz-forge-revision", "LICENSE", "LICENSE-COMMERCIAL.md", "MANIFEST.txt", "README.md",
-    "skills-army-hq/README.md", "skills-army-hq/SKILL.md",
-    "skills-army-hq/references/recovery.md", "skills-army-hq/references/targets.md",
-    "skills-army-hq/scripts/intake.py", "skills-army-hq/scripts/sync.py",
+    "SKILL.md", "references/recovery.md", "references/targets.md", "scripts/intake.py", "scripts/sync.py",
 }
 actual = set(filter(None, git(dest, "ls-files").stdout.splitlines()))
 ok("literal inclusion-only payload set", actual == expected, f"missing={sorted(expected-actual)} extra={sorted(actual-expected)}")
 manifest = set(pathlib.Path(dest, "MANIFEST.txt").read_text().splitlines())
-ok("manifest names exactly the ten managed payloads", manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
+ok("manifest names exactly the nine managed payloads", manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
 canonical_readme = pathlib.Path(src, "skills/skills-army-hq/README.md").read_bytes()
-ok("root and package READMEs match their single canonical source",
-   pathlib.Path(dest, "README.md").read_bytes() == canonical_readme
-   and pathlib.Path(dest, "skills-army-hq/README.md").read_bytes() == canonical_readme)
+ok("root README matches its canonical package source",
+   pathlib.Path(dest, "README.md").read_bytes() == canonical_readme)
 if MUTANT == "1":
     print(f"gh620-skills-army-mini-sync mutant: {P} passed, {F} failed")
     sys.exit(1 if F else 0)
@@ -91,7 +88,7 @@ ok("exact retained publisher commit retries push", r.returncode == 0 and git(bar
 # A previously managed path dropped by the new profile must be absent in an exact retry.
 drop_src = os.path.join(WORK, "drop-src"); git(WORK, "clone", "-q", src, drop_src)
 drop_sync = os.path.join(drop_src, "utils/py/xyz_mini_sync.py")
-drop_text = pathlib.Path(drop_sync).read_text().replace('    ("skills/skills-army-hq/README.md", "README.md", "managed"),\n', "")
+drop_text = pathlib.Path(drop_sync).read_text().replace('    ("skills/skills-army-hq", "", "managed"),\n', "")
 pathlib.Path(drop_sync).write_text(drop_text); git(drop_src, "add", drop_sync); git(drop_src, "commit", "-qm", "drop prior managed path")
 drop_dest = os.path.join(WORK, "drop-dest"); git(WORK, "clone", "-q", bare, drop_dest)
 r = sh(sys.executable, drop_sync, "--target", "skills-army-mini", "--dest", drop_dest, "--apply")
@@ -148,13 +145,15 @@ collection = os.path.join(WORK, "collection")
 target = os.path.join(WORK, "target"); os.mkdir(target)
 home = os.path.join(WORK, "home"); os.mkdir(home)
 env = {**os.environ, "HOME": home, "PYTHONDONTWRITEBYTECODE": "1"}
-intake = os.path.join(dest, "skills-army-hq/scripts/intake.py")
-sync_child = os.path.join(dest, "skills-army-hq/scripts/sync.py")
+intake = os.path.join(dest, "scripts/intake.py")
+sync_child = os.path.join(dest, "scripts/sync.py")
 def cli(script, *args): return sh(sys.executable, "-B", script, "--root", collection, *args, env=env)
 r = cli(intake, "init")
 ok("init preview leaves absent collection untouched", r.returncode == 0 and not os.path.exists(collection), r.stderr)
 r = cli(intake, "--apply", "init")
 ok("init apply creates copied manager", r.returncode == 0 and os.path.isfile(os.path.join(collection, "skills-army-hq/SKILL.md")), r.stderr)
+ok("init excludes checkout metadata from the installed manager",
+   r.returncode == 0 and not os.path.exists(os.path.join(collection, "skills-army-hq/.git")))
 fixture_repo = os.path.join(WORK, "fixture-repo"); fixture = os.path.join(fixture_repo, "skills/sample")
 os.makedirs(fixture)
 pathlib.Path(fixture, "SKILL.md").write_text("---\nname: sample\ndescription: fixture\n---\n")
