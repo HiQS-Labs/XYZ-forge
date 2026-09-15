@@ -464,3 +464,8 @@ window/rationale above unchanged: known audit, unknown trend, no invented incide
 - [ ] Required deterministic checks and both final reviewers pass on final implementation.
 - [ ] All skipped/blocked checks disclosed; no private prompts, credentials or machine config in PR.
 - [ ] Status table refreshed with actual PR link and remaining GH-402 work, not marked shipped.
+
+## Lessons Learned (For Future Agents)
+
+- Landed as PR #607; its capture doc reached reconciliation without this mandatory section, so it was added at landing time (merge-cleanup, 2026-09-14) to let the reconciler promote the doc.
+- Reconciled locally with `--force-local-reconcile`: hosted wave-reconcile is red on `development` (#619, #625) and merge-cleanup stops at its own fast-forward (#624).
