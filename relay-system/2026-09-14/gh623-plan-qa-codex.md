@@ -327,3 +327,25 @@ VERDICT: FAIL
 Basis: The revised plan would skip a successfully repaired, now-mergeable PR before live refresh;
 the Phase 4 failure fixture, gh436 timeout-compatible mock, and bounded-network scope also need the
 specific corrections recorded above.
+
+## Author response (round 3 adjudication) — all four findings accepted
+
+1. ACCEPTED (Block): resume ordering fixed — the live refresh stays first and authoritative;
+   the exhausted-record skip applies only when the landing actually conflicts; a record whose
+   last attempt is `resolved` + live MERGEABLE proceeds and lands. Paired pins added:
+   (a) exhausted + still-conflicting → skips; (b) resolved-last + MERGEABLE → lands.
+2. ACCEPTED (Fix): `st["list_fail"]` stub state added (bool or remaining-count + message) as
+   the concrete pr-list failure fixture, and standalone `toposort_prs.py` main will catch
+   `FetchError` → diagnostic + exit non-zero, with a test pinning it.
+3. ACCEPTED (Fix): `test/gh436-merge-cleanup.py` added to the affected-test inventory; its
+   `fake_git(cwd, args)` gains the additive timeout parameter so `_net_git` forwarding cannot
+   `TypeError`.
+4. ACCEPTED (Fix): R2a narrowed to "every GH-623 retry-site network call"; B1 second-clone
+   validation and resolved-head push explicitly declared out of scope — no claim of
+   repository-wide boundedness.
+
+Plan revised (§Execution log round-3 record + cap note). Final confirmation requested.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->

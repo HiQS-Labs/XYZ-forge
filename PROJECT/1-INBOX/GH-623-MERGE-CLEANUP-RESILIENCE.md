@@ -71,7 +71,12 @@ teardown, or the two-repair ceiling.
 4. `skills/merge-cleanup/SKILL.md` — drive loop, Done rule, classifier-retry guidance,
    capability-table rows.
 5. `test/gh534_phase_c_tests.py` — new tests + parity rows; `test/gh534_phase_b_tests.py` —
-   additive gh-stub support (per-PR remaining-failure map, `files` passthrough).
+   additive gh-stub support (per-PR remaining-failure map for view AND list, `files`
+   passthrough); `test/gh436-merge-cleanup.py` — its Phase 5 harness patches
+   `merge_cleanup.run_git` with a two-argument `fake_git(cwd, args)`
+   (test/gh436-merge-cleanup.py:409-418), which would raise `TypeError` the moment `_net_git`
+   forwards `timeout=`; its signature gains the additive timeout parameter and the file stays
+   in the focused run.
 
 ## Requirements (per issue acceptance criteria)
 
@@ -84,16 +89,25 @@ teardown, or the two-repair ceiling.
   (`fetch_open_prs`): today any `gh pr list` failure returns `[]` and reads as "No open PRs" (a
   false success); after the fix, empty-vs-error is distinguished and retry exhaustion exits 2
   before teardown.
-- R2a: every network call is **bounded in time**, including the two that are not today:
-  `run_git` (scan_clones.py:85-100) has no timeout and catches only `OSError`, and
-  `fetch_open_prs` (toposort_prs.py:16-33) calls `subprocess.run` with no timeout and no
+- R2a: every **GH-623 retry-site** network call is **bounded in time**, including the two that
+  are not today: `run_git` (scan_clones.py:85-100) has no timeout and catches only `OSError`,
+  and `fetch_open_prs` (toposort_prs.py:16-33) calls `subprocess.run` with no timeout and no
   exception handling. `run_git` gains an additive `timeout` parameter (default unbounded — no
-  existing caller changes behavior); network call sites bound their calls and convert
+  existing caller changes behavior); the retry-site call sites bound their calls and convert
   `TimeoutExpired` into the same failure-result shape as any other error, so a hung call is
   retried/deferred/stopped like any other failure. Tests must assert the finite timeout is
-  actually forwarded (boundedness), not merely that the exception is handled.
-- R3: `--resume` re-reads attempt records and skips parked (budget-exhausted) PRs; landed PRs
-  are already skipped by the live state re-fetch.
+  actually forwarded (boundedness), not merely that the exception is handled. Deliberately out
+  of scope: B1's second-clone validation (`validate_head_in_second_clone`) and the resolved-head
+  push stay on unbounded `run_git` — they run inside the repair flow, which already owns their
+  stop semantics; this plan does not claim repository-wide boundedness.
+- R3: `--resume` re-reads attempt records and skips parked (budget-exhausted) PRs — **but only
+  after the live refresh**: the PR's authoritative state (`refresh_pr`) is fetched first, and a
+  PR that is OPEN and needs no repair (e.g. its last recorded repair finished `resolved` and the
+  head now merges clean) proceeds and lands normally. The exhausted-record skip applies only
+  when a repair would actually be needed (the landing conflicts), where `--resume` skips the PR
+  as "previously parked" without re-running the B1 machinery. `reserve()` remains the
+  under-lock authority on every non-resume path. Landed PRs are already skipped by the live
+  state re-fetch.
 - R4: SKILL.md gains an explicit drive loop, the rule "Do not report Done unless Phase 5 ran —
   or the operator asked for `--teardown-only`/`--scan-only`", and "on a classifier block of
   `--execute`, retry once before escalating".
@@ -149,10 +163,14 @@ teardown, or the two-repair ceiling.
     (diagnostic "timed out after Ns"), so a hung git call reaches the retry loop instead of
     hanging the run. Post-retry exhaustion: defer-and-continue for the two pre-decision call
     sites; refuse/stop for the pre-queue and post-merge sites (see non-goals).
-- `--resume`: before the live refresh, if a PR's attempt record exists and shows the repair
-  budget exhausted with no in-progress attempt, skip it as `previously parked (resume)`.
-  A missing record proceeds normally; an unreadable one warns and proceeds (reserve still gates
-  under the lock — resume only avoids re-attempting a parked PR, it never bypasses the ceiling).
+- `--resume`: the live refresh stays FIRST and authoritative. Only when the landing merge
+  conflicts — i.e. a repair would actually be needed — does the run consult the attempt record:
+  at-ceiling with no in-progress attempt → skip as `previously parked (resume)` without
+  invoking the B1 machinery; otherwise `reserve()` runs as today (the under-lock authority).
+  A record whose last attempt finished `resolved` with the PR now OPEN/mergeable lands
+  normally — the resume run must complete a successful repair's work, never strand it. A
+  missing record proceeds normally; an unreadable one warns and proceeds (any actual repair
+  still reaches the fail-closed `load()` — resume never bypasses the ceiling).
 - SKILL.md: new "Drive loop" section (dry run → fix the primary, never degrade to
   `--teardown-only` because Phase 0 refused → `--execute` → on exit 3 run the caller ladder and
   RE-RUN with `--resume --execute` → on exit 2 diagnose before reporting), the Done rule, the
@@ -167,8 +185,10 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   a per-PR remaining-failure mechanism — `st["view_fail"]` stays a bare bool for the existing
   global test, and additionally accepts `{ "<pr#>": {"remaining": N, "msg": "<stderr>"}}` so a
   test can fail only PR A with a DNS-flavored message, exactly twice, then succeed (the stub
-  decrements). One small fixture mechanism covers network-defer AND retry-then-success; no new
-  framework.
+  decrements). The same mechanism is added for `pr list` as `st["list_fail"]` (bool, or
+  remaining-count + message) — today the stub's `pr list` branch always succeeds, so without it
+  the pr-list-discovery red control has no concrete failure fixture. One small fixture
+  mechanism covers network-defer AND retry-then-success AND discovery failure; no new framework.
 - `test/gh534_phase_c_tests.py`:
   - soft-edge: PR A hands off (same-key ledger conflict), PR B collides with A on files →
     B **is attempted** (lands if mergeable); an explicitly-annotated dependent C stays blocked;
@@ -189,12 +209,16 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
     The mock asserts `_net_git` forwarded a finite timeout to `run_git`, and a companion
     assertion pins that a plain `run_git` call with no timeout argument stays unbounded by
     default (the compatibility shield for scan/ledger callers).
-  - resume: pre-seed PR A's record with 2 finished repairs → `--resume` skips A as previously
-    parked, B lands, no B1 line for A; without `--resume`, A takes the park path (existing
-    behavior preserved).
+  - resume (paired pins): (a) PR A's record shows two finished unsuccessful repairs and its
+    landing still conflicts → `--resume` skips A as previously parked, B lands, no B1 line for
+    A; (b) PR A's record shows two finished repairs with the last `resolved` and the live
+    refresh reads MERGEABLE → the resume run **lands A** (never strands a successful repair);
+    without `--resume`, A takes the park path (existing behavior preserved).
   - allow-unready-preserved: pre-queue fetch fails persistently (fetch call mocked to fail) with
     `--allow-unready-primary` → the run proceeds past the refusal (pins finding: no escape hatch
     removed); without the flag it still refuses (existing R2-1 behavior).
+  - toposort-standalone: `toposort_prs.py` main catches `FetchError`, prints the diagnostic, and
+    exits non-zero — no traceback, no silent "No open PRs found."
   - parity rows: `soft-edge-nonblocking`, `network-retry-defer`, `resume-skips-parked` (script
     rows naming the tests above) + `--resume` in the documented option list (the parity guard
     checks documented options against argparse).
@@ -242,3 +266,22 @@ Extend the existing gh534 fixture suite; no new frameworks, no synthetic runners
   default-unbounded contract assertion. (3) retry contract said "3 attempts" and "2s/4s/8s"
   backoff, which implies 4 calls; pinned to exactly 3 calls with sleeps [2, 4]. Plan revised
   this commit; no finding rejected.
+- 2026-09-14: Codex plan QA round 3 (fresh token `RELAY-gh623-plan-qa-r3`, exit 5, verdict
+  FAIL). Four findings, all ACCEPTED: (1) BLOCK — the resume skip ran before the live refresh,
+  so a PR whose second repair finished `resolved` (now mergeable) would be labelled "previously
+  parked" and never landed; resolved by reordering — refresh first, record consulted only when
+  a repair is actually needed, with paired test pins (still-conflicting+exhausted skips;
+  resolved-last+MERGEABLE lands). (2) the pr-list red control had no concrete failure fixture;
+  `st["list_fail"]` stub state added, and standalone `toposort_prs.py` main must catch
+  `FetchError` (diagnostic + exit non-zero, no traceback). (3) `test/gh436-merge-cleanup.py`'s
+  two-arg `fake_git` would `TypeError` when `_net_git` forwards `timeout=`; signature made
+  timeout-compatible and the file added to the affected-test inventory. (4) R2a's "every
+  network call is bounded" narrowed to "every GH-623 retry-site network call", with B1's
+  second-clone validation and resolved-head push explicitly out of scope. Plan revised this
+  commit; no finding rejected.
+- 2026-09-14: REVIEW CAP NOTE — the workflow's default cap of three review rounds is reached.
+  Extending by exactly ONE confirmation turn (round 4), deliberately and transparently: all
+  13 findings across three rounds were accepted, the rounds converged monotonically, round 3's
+  blocker carries the reviewer's own prescribed fix language (transcribed verbatim above), and
+  a final "Approved" state cannot be truthfully claimed without one confirmation pass. If
+  round 4 does not approve, implementation STOPS and the group is reported blocked.
