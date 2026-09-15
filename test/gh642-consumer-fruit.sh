@@ -71,8 +71,19 @@ grep -Fqx '/relay-system' "$B4/.gitignore" && pass "direction 2 intact: blocking
 
 # --- item 2: claude-turn.py Opus-budget warning -------------------------------------------------
 python3 -m py_compile "$PYCLAUDE" && pass "claude-turn.py compiles" || fail "claude-turn.py does not compile"
-grep -q 'model.startswith("claude-opus")' "$PYCLAUDE" && grep -q 'CLAUDE_MAX_BUDGET' "$PYCLAUDE" \
-  && pass "Opus-budget warning guards on model class + default budget" || fail "Opus-budget warning guard missing"
+py_warn() {  # <model> <budget> -> prints the warning stdout/stderr capture marker when it fires
+  python3 - "$PYCLAUDE" "$1" "$2" <<'PYW'
+import importlib.util, io, sys
+spec = importlib.util.spec_from_file_location("claude_turn", sys.argv[1])
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+buf = io.StringIO()
+mod.warn_opus_budget(sys.argv[2], sys.argv[3], stream=buf)
+print("WARNED" if buf.getvalue() else "SILENT")
+PYW
+}
+[ "$(py_warn claude-opus-4-8 0.50)" = "WARNED" ] && pass "Opus warning fires for opus + default budget" || fail "Opus warning did not fire"
+[ "$(py_warn claude-opus-4-8 5.00)" = "SILENT" ] && pass "Opus warning silent when budget raised" || fail "Opus warning fired despite raised budget"
+[ "$(py_warn claude-sonnet-4-6 0.50)" = "SILENT" ] && pass "Opus warning silent for Sonnet" || fail "Opus warning fired for Sonnet"
 
 # --- item 3: marathon_drive.resolve_force_relay_task --------------------------------------------
 python3 -m py_compile "$PYDRIVE" && pass "marathon_drive.py compiles" || fail "marathon_drive.py does not compile"
@@ -153,7 +164,8 @@ export XYZ_REGISTRY="$WORK/init-registry.tsv"
 CL="$WORK/init-clones"
 python3 "$PYINIT" "file://$BARE" --umbrella 99 --slug demo-one --dir "$CL" >/dev/null 2>&1 \
   && pass "init-clone: e2e run exits 0" || fail "init-clone e2e failed"
-[ -d "$CL/marathon-gh-99-demo-one/.xyz/relay-automation" ] && pass "init-clone: vendored harness landed (Tier 2)" || fail "init-clone: .xyz missing"
+[ -d "$CL/marathon-gh-99-demo-one/.xyz/relay-automation" ] && pass "init-clone: vendored harness landed" || fail "init-clone: .xyz missing"
+[ -f "$CL/marathon-gh-99-demo-one/.xyz/utils/py/releases_app.py" ] && pass "init-clone: Tier 2 confirmed (releases_app.py present)" || fail "init-clone: Tier 2 overlay missing (releases_app.py)"
 grep -Fqx '.xyz/' "$CL/marathon-gh-99-demo-one/.git/info/exclude" && pass "init-clone: excludes landed in info/exclude" || fail "init-clone: excludes missing"
 [ -x "$CL/marathon-gh-99-demo-one/.git/hooks/pre-push" ] || [ -f "$CL/marathon-gh-99-demo-one/.git/hooks/pre-push" ] \
   && pass "init-clone: cloned-repo hooks installed" || fail "init-clone: hooks not installed"
@@ -174,8 +186,25 @@ python3 "$PYINIT" "file://$BARE" --umbrella 78 --slug a-b-c-d --dir "$CL/boundar
 
 # --- item 6: preflight zero-criteria warning ----------------------------------------------------
 python3 -m py_compile "$PYPREFLIGHT" && pass "swarm_preflight.py compiles" || fail "swarm_preflight.py does not compile"
-grep -q "Acceptance section with no " "$PYPREFLIGHT" && grep -q "acc_mode == \"acceptance-section\" and not acc_items" "$PYPREFLIGHT" \
-  && pass "zero-criteria stderr warning pinned (guard + message)" || fail "zero-criteria warning not found"
+py_zc() {  # <acc_mode> <items_csv-present 1|0> <fmt> -> marker when the warning fires
+  python3 - "$PYPREFLIGHT" "$1" "$2" "$3" <<'PYZ'
+import importlib.util, io, sys
+spec = importlib.util.spec_from_file_location("swarm_preflight", sys.argv[1])
+mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+buf = io.StringIO()
+mod.warn_zero_criteria(sys.argv[2], ["x"] if sys.argv[3] == "1" else [], "DOC.md", sys.argv[4], stream=buf)
+print("WARNED" if buf.getvalue() else "SILENT")
+PYZ
+}
+[ "$(py_zc acceptance-section 0 text)" = "WARNED" ] && pass "zero-criteria warning fires (acceptance-section, 0 items, text)" || fail "zero-criteria warning did not fire"
+[ "$(py_zc acceptance-section 1 text)" = "SILENT" ] && pass "zero-criteria warning silent when items exist" || fail "zero-criteria warning fired despite items"
+[ "$(py_zc whole-document 0 text)" = "SILENT" ] && pass "zero-criteria warning silent outside acceptance-section mode" || fail "warning fired for non-acceptance mode"
+[ "$(py_zc acceptance-section 0 json)" = "SILENT" ] && pass "zero-criteria warning silent for json format" || fail "warning fired for json"
+# ordering pin: the warn call site must precede the dry-run exit (moving it after = regression)
+wc_line=$(grep -n "warn_zero_criteria(acc_mode" "$PYPREFLIGHT" | head -1 | cut -d: -f1)
+dry_line=$(grep -n "if args.dry_run:" "$PYPREFLIGHT" | head -1 | cut -d: -f1)
+[ -n "$wc_line" ] && [ -n "$dry_line" ] && [ "$wc_line" -lt "$dry_line" ] \
+  && pass "zero-criteria warning precedes the dry-run exit" || fail "warning call site moved after dry-run exit"
 grep -q "Acceptance section with no " utils/swarm-preflight.sh 2>/dev/null \
   && fail "bash fallback was edited (frozen twin — keep fixes in the Python twin)" \
   || pass "frozen bash fallback untouched (GH-308)"
