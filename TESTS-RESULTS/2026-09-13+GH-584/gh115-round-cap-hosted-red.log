@@ -1,0 +1,6 @@
+== test: gh115-round-cap ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh115-round-cap.XXXXXX.8l4WPaHVD0
+  PASS: Stalled run exits 4 and reports cap-stalled
+  PASS: Progressing run grants extension, approves, and records it
+  PASS: Progressing run hits hard ceiling and escalates
+  FAIL: marathon-drive ignored brief round-cap: out=marathon-drive: builder binary 'agy' not found on PATH (--builder agent 'agy')

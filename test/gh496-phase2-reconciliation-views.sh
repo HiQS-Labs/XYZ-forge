@@ -7,6 +7,9 @@ set -euo pipefail
 
 source test/_setup.sh "gh496-phase2" || { echo "setup failed"; exit 1; }
 
+# These fixtures model local callers; the hosted override case opts in explicitly below.
+unset GITHUB_ACTIONS
+
 ROOT="$(cd "$HERE/.." && pwd)"
 RECONCILE_PY="$ROOT/utils/py/wave_reconcile.py"
 

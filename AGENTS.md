@@ -279,9 +279,9 @@ local change.
   orchestrator and reviewer, never a default builder.** It plans, dispatches marathon/relay lanes, and
   reviews/verifies their output; it does not drive itself headlessly as a build lane. **Agy CLI and
   Codex CLI are the builders** — the two cost-blind (subscription-billed) headless build lanes
-  `marathon.sh`/`marathon-drive.sh` default to (GH-212). **Claude CLI (billed via the Anthropic API) is
+  `marathon.sh`/`marathon-drive.sh` default to (GH-212). **Claude CLI (subscription or API, according to its authentication route) is
   NOT a builder by default** — `--builder claude` stays fully supported, but only as an explicit,
-  cost-acknowledged choice the *user* makes locally (their own `--builder claude` flag or a local
+  usage-acknowledged choice the *user* makes locally (their own `--builder claude` flag or a local
   settings override), never something a session reaches for on its own reasoning that it's "just
   another supported builder option." If a task calls for a headless build lane and neither agy nor
   codex is available, stop and ask — don't default to spawning a headless Claude CLI turn.

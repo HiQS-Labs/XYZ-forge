@@ -1,0 +1,7 @@
+== test: gh-gen4-phase2-adaptive-ate ==
+  PASS: utils/py/adaptive_ate.py exists and is executable
+  PASS: utils/py/calibrate_tier1.py exists and is executable
+  PASS: reference grid utils/ate/grids/gen4-pairwise-example.yaml shipped
+  PASS: utils/ate/tier1-calibration.json shipped
+  PASS: adaptive_ate.py --mode suite passes
+adaptive_ate: invalid --grid: Expecting value: line 1 column 1 (char 0)

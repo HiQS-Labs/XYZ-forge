@@ -156,7 +156,7 @@ A `/loop`-created cron job is **per-session, in-memory, and auto-expires after 7
 
 - **Bake a deadline / tick-budget into the loop**, not just a stop-on-`Approved`. The loop should end on the *first* of: `STATUS` terminal (`Approved`/`Closed`/`Escalated`), **a wall-clock deadline (e.g. 30 min)**, or N idle ticks. A deadline also kills the "idles forever because the peer window died" failure mode.
 - **The loop deletes its own job on stop.** On a stop decision the polling turn runs `CronList` → finds its job (match it by the relay-file path in the prompt, since the turn doesn't know its own ID at creation) → `CronDelete`s it, then ends. Without this the cron keeps firing (harmlessly idling) until the 7-day expiry or the session closes.
-- **If a tick-driven runner is involved** (e.g. a `poll.sh`-style guard), give it the deadline so it emits the stop decision itself (`--deadline <epoch>` / `--max-idle-ticks N`); then the one stop path (`DECISION: stop → CronDelete self`) covers Approved, expiry, and stall uniformly.
+- **If a tick-driven runner is involved** (a polling guard, if one is wired up), give it the deadline so it emits the stop decision itself (`--deadline <epoch>` / `--max-idle-ticks N`); then the one stop path (`DECISION: stop → CronDelete self`) covers Approved, expiry, and stall uniformly.
 
 **Cross-session caveat (load-bearing).** Cron jobs live in the session that created them. **You cannot stop another window's loop from yours** — `CronList`/`CronDelete` only see the current session. So every window's loop must self-close (deadline + self-delete), or be stopped *in its own window*; there is no central "kill all loops." This is why self-expiry matters more here than for a single-window loop.
 
