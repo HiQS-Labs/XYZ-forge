@@ -1,0 +1,18 @@
+== test: gh53-releases-merge-resolve ==
+  workdir: <temporary-fixture>
+  PASS: releases-merge-resolve.sh is executable
+  PASS: releases.db is marked -diff (its diff is generated noise)
+  PASS: releases.db is marked linguist-generated (collapsed in PR review)
+  PASS: releases.db has NO merge driver — it conflicts on purpose, so the rebuild cannot be skipped silently
+  PASS: releases.sql keeps its normal diff (it is the artifact humans actually merge)
+  PASS: releases.db conflicted, as designed (the conflict is the signal)
+  PASS: resolver completed on disjoint inserts
+  PASS: after resolution, releases check is clean
+  PASS: BOTH sides' releases survived the rebuild (2 rows)
+  PASS: no unmerged paths remain — the merge is ready to commit
+  PASS: the merge is left UNCOMMITTED — the resolver stages, the operator decides
+  PASS: fixture reproduces the union artefact: 2 generation headers in one dump
+  PASS: NEGATIVE CONTROL: a multi-header dump is REFUSED (rc!=0), not silently rebuilt
+  PASS: the refusal names the generation headers, so the operator knows what to fix
+  PASS: NEGATIVE CONTROL: a dump with conflict markers is REFUSED
+  gh53-releases-merge-resolve: 15 pass, 0 fail
