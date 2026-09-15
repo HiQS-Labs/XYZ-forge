@@ -2,7 +2,7 @@
 gh_issue: 642
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/642
 title: "Low-hanging fruit from two foreign-repo marathons: make the consumer-repo SOP turnkey"
-status: Active (2-WORKING — plan authored 2026-09-15, pending Codex plan review)
+status: Active (2-WORKING — plan v2, revised per Codex plan review round 1; re-review pending)
 created: 2026-09-15
 updated: 2026-09-15
 owner: noelsaw1
@@ -11,15 +11,16 @@ effort: 3
 complexity: 3
 risk: 2
 phases: 4
-rating: "pri/sev/appeal/effort 60/35/50/60 · calc 205"
+rating: "pri/sev/appeal/effort 60/35/50/48 · calc 193"
 goal: >
   Land the surgical tranche of #642 so a consumer-repo marathon stops tripping on layout and
   fix-round traps: vendor ignores go to .git/info/exclude (never the target .gitignore), the
-  claude-turn bash twin honors CLAUDE_REASONING_EFFORT and both twins warn on Opus-class models
-  with the Sonnet-sized default budget, --force on a spent token auto-suffixes a fresh relay-task
-  id, isolated worktree turns see ROOT/node_modules, a new xyz-init-clone.sh produces the
-  validated consumer-clone layout in one command, and both preflight twins warn loudly on a
-  zero-item acceptance checklist.
+  claude-turn Python twin warns on Opus-class models with the Sonnet-sized default budget,
+  marathon_drive --force on a spent token auto-suffixes a fresh relay-task id, isolated worktree
+  turns get a disposable copy of ROOT/node_modules, a new utils/py/xyz_init_clone.py produces the
+  validated consumer-clone layout in one command, and swarm_preflight warns loudly on a
+  zero-item acceptance checklist. All behavior fixes land in the Python twins per GH-308; the
+  frozen Bash fallbacks are untouched.
 ---
 
 # GH-642: Consumer-repo fruit — make the foreign-repo marathon SOP turnkey
@@ -28,7 +29,18 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **INTAKE 2026-09-15** — #642 parked (`rmi-01M2KF9N7AE67J6AZHJQQ081M7`, rated 60/35/50/60), recon against `origin/development` @ `d5c18633` split the issue: 3 items already landed upstream (consumer remedy: `xyz-sync update`), 6 surgical items in this arc, 4 feature-sized deferrals with follow-up issues to be filed at deferral time. Plan authored; Codex plan review next. | Plan review (Codex, ≤3 rounds) → implement p1–p4 → full gate once (`ci-local.sh`) → final Codex QA → PR against `development`. |
+| **PLAN v2 2026-09-15** — Codex plan review round 1 returned CHANGES REQUESTED (3 BLOCKER / 3 SHOULD / 1 NIT); all seven findings accepted and applied: item 4 is a disposable **copy** (symlink rejected — containment hole), behavior fixes land **only in the Python twins** (frozen Bash fallbacks untouched, no `Frozen-twin-exception` needed), initializer is `utils/py/xyz_init_clone.py` (no new Bash), gates move to a **disposable full clone**, relay-pkg regen + freshness added, token-identity spec made explicit, initializer contract pinned, rating rationale recorded and effort re-scored 60→48 (`--force`, reason: plan-review evidence — two preflight-adjacent edits + new initializer + cross-Git-layout tests). | Codex re-review round 2 (fresh token) → implement p1–p4 → gates in disposable clone → final Codex QA → PR against `development`. |
+
+## Rating rationale (2026-09-15, noelsaw1 session)
+
+`60/35/50/48`. **sev 35** — no data loss or corruption; consequences are workflow hard-stops,
+wasted rounds, and burned API budget (Opus turns capped mid-flight by a Sonnet-sized default;
+a vendor append that halted a `--require-clean` fire until manually reverted). **pri 60** —
+operator-filed after two field runs in two days; friction recurs on every consumer-repo marathon
+and sits on the product's core promise (the machinery an unattended run needs). **appeal 50** —
+neutral; no operator score supplied. **effort 48** (re-scored from 60 on round-1 review evidence):
+six items, most in dual-runtime-adjacent code with strict twin governance, a new initializer, and
+cross-Git-layout test fixtures.
 
 ## Field evidence
 
@@ -37,95 +49,119 @@ goal: >
 incidence source for every item. Consumer side: umbrella
 [local-addon-nexus-ai#60](https://github.com/jpollock/local-addon-nexus-ai/issues/60), PRs #61–#64.
 
-## Recon findings (task clone @ origin/development d5c18633)
+## Recon findings (task clone @ origin/development d5c18633; Codex-verified round 1)
 
 Already satisfied at HEAD — the Nexus `.xyz` vendor predates them (source 033a48ee, 2026-08-26);
 consumer remedy is `xyz-sync update`, not new work:
 
 | #642 item | State at HEAD | Evidence |
 |---|---|---|
-| Ship `releases_app.py` in `--with-releases` overlay | **Already landed** | `relay-automation/xyz-vendor.sh:344` `RELEASES_OVERLAY` includes `utils/py/releases_app.py` |
-| Claude effort support | **Already landed (Python twin)** | `utils/py/claude_cli.py:19` `effort_flags` reads `CLAUDE_REASONING_EFFORT` (low/medium/high/xhigh/max) |
-| Acceptance-inlining loss protection | **Already hardened** | `utils/py/swarm_preflight.py:779` — GH-399 fails rather than warns on a lossy inline |
+| Ship `releases_app.py` in `--with-releases` overlay | **Already landed** | `relay-automation/xyz-vendor.sh:336-344` `RELEASES_OVERLAY` includes `utils/py/releases_app.py` |
+| Claude effort support | **Already landed (Python twin)** | `utils/py/claude_cli.py:19-24` `effort_flags` reads `CLAUDE_REASONING_EFFORT` (low/medium/high/xhigh/max) |
+| Acceptance-inlining loss protection | **Already hardened** | `utils/py/swarm_preflight.py:1472-1485` — GH-399 makes a lossy inline NOT-READY |
 
 ## Scope — the surgical tranche (this arc)
 
-1. **Vendor ignores → `.git/info/exclude`** (`relay-automation/xyz-vendor.sh:296-303`). Today the
-   vendor appends `.xyz/` + `/.tick/` to the target's `.gitignore` ("direction 1" append) — that
-   dirtied a consumer worktree and hard-stopped the next `--require-clean` fire until manually
-   reverted (run-2 incident). Change the destination to `git -C "$TARGET_REPO" rev-parse
-   --git-path info/exclude` (worktree-safe; honored by `git check-ignore`), creating the dir as
-   needed. The direction-2 refusal (never un-ignore paths marathons must commit) is unchanged, as
-   is the pre-mutation check ordering.
-2. **claude-turn parity + budget warning** (`relay-automation/claude-turn.sh`, `utils/py/claude-turn.py`).
-   The bash twin gains `CLAUDE_REASONING_EFFORT` (same validation set as `claude_cli.effort_flags`:
-   low/medium/high/xhigh/max, appended as `--effort <v>`); both twins emit a **non-fatal stderr
-   warning** when `CLAUDE_MODEL` matches `claude-opus*` and `CLAUDE_MAX_BUDGET` is unset or the
-   0.50 default (field evidence: a bare Opus smoke call is ~$0.68 of cache-write; the default cap
-   hard-stops mid-turn).
-3. **`--force` auto-suffix on a spent token** (`relay-automation/marathon-drive.sh`,
-   `utils/py/marathon_drive.py`). When the relay task was auto-derived (no explicit
-   `--relay-task`), `--force` is set, and `tick info` reports the default token done/not-claimable,
-   derive `MARATHON-<PHASE>-TURN-R<k>` (lowest free k ≥ 2) and announce it on stderr. An explicit
-   `--relay-task` is never rewritten.
-4. **Worktree build deps** (`relay-automation/relay-turn-lib.sh`, `utils/py/rtl.py` — wherever
-   `rtl_worktree_begin` lives per runtime). After worktree creation, symlink `$RTL_ROOT/node_modules`
-   into the worktree when the root has one and the worktree lacks it; teardown needs no special
-   handling (disposable tree). No behavior change when absent.
-5. **`relay-automation/xyz-init-clone.sh`** — thin wrapper over existing pieces:
-   `xyz-init-clone.sh <repo-url> [--umbrella N] [--slug s] [--dir D] [--with-releases]` →
-   deterministic clone name (`marathon-gh-<umbrella>-<slug>`, slug ≤3 lowercase words, default
-   `~/marathon-clones/<name>`), `git clone`, self-vendor (`xyz-vendor.sh --with-releases`),
-   githooks install when the target ships `githooks/install.sh`, printed next steps (bootstrap
-   hint + drive invocation shape). Reuses item 1, so no `.gitignore` revert step exists.
-6. **Preflight zero-criteria warning** (`relay-automation/swarm-preflight.sh`,
-   `utils/py/swarm_preflight.py`): when the acceptance section yields zero `- [ ]` items, emit the
-   existing fallback text **plus a stderr warning** naming the doc and the fix; exit codes unchanged.
+1. **Vendor ignores → `.git/info/exclude`** (`relay-automation/xyz-vendor.sh` — not a frozen twin).
+   Direction 1 (lines ~296-304) currently creates/appends the target `.gitignore`; move that
+   destination to `git -C "$TARGET_REPO" rev-parse --git-path info/exclude` (creates the dir as
+   needed; correct for normal clones, linked worktrees, and `--separate-git-dir`). Direction 2's
+   pre-mutation `git check-ignore` refusal (~:252-294) is untouched — it already honors
+   info/exclude. Blast radius (round-1 SHOULD): update the destination-encoded comments at
+   `xyz-vendor.sh:388-392`, `test/gh312-vendor-preserves-state.sh:5-9`,
+   `skills/vendor-stack/SKILL.md:123-127`, and the `.gitignore`-pinned assertions at
+   `test/xyz-vendor.sh:76-77,105-114,146-150`; add fixtures for all three Git shapes.
+2. **Opus-budget warning, Python twin only** (`utils/py/claude-turn.py`). Non-fatal stderr warning
+   before dispatch when `CLAUDE_MODEL` matches `claude-opus*` and `CLAUDE_MAX_BUDGET` is unset or
+   the 0.50 default (field evidence: bare Opus smoke call ≈ $0.68 of cache-write; the default cap
+   hard-stops mid-turn). **Governance disposition:** the bash twin's missing effort flag is NOT
+   ported — `claude-turn.sh` is a frozen fallback (GH-308) and a missing flag in a fallback is not
+   a safety defect; `CLAUDE_REASONING_EFFORT` works on the default Python runtime. No
+   `Frozen-twin-exception`.
+3. **`--force` auto-suffix on a spent token** (`utils/py/marathon_drive.py` only — bash twin
+   frozen). Token-identity spec: spent ≡ `tick info` reports `status: done|circuit_broken`;
+   missing/malformed tick output fails the fire BEFORE render/commit/seed (never interpreted as
+   free); when the id was auto-derived (no explicit `--relay-task`), `--force` is set, and the
+   default token is spent, scan `MARATHON-<PHASE>-TURN-R2, R3, …` for the first not-found id and
+   use it, announced on stderr. The suffix resolves BEFORE render, receipt, heartbeat, and seed —
+   every downstream consumer (including the receipt's `token` field, `MACHINE-CONTRACTS.md:94-103`,
+   Contract B) sees exactly one resolved id. The lane-attempt-cap key (lane/phase, not token) is
+   unchanged. Explicit `--relay-task` is never rewritten.
+4. **Worktree build deps — disposable copy, NOT a symlink** (`relay-automation/relay-turn-lib.sh`,
+   non-frozen shared Bash runtime). After `rtl_worktree_begin` creates the worktree, if
+   `$RTL_ROOT/node_modules` exists and the worktree lacks it, `cp -R` it in (one-shot; writes stay
+   disposable — a symlink would let turn writes traverse into ROOT's real `node_modules`,
+   reopening the containment gap isolation exists to close, round-1 BLOCKER). Teardown unchanged.
+   The focused suite records copy size/time so the cost is observed, not assumed.
+5. **`utils/py/xyz_init_clone.py`** — new Python executable (no-new-Bash rail, GH-551; no
+   exception needed). `xyz-init-clone.py <repo-url> --umbrella N [--slug s] [--dir D] [--tier2]`:
+   `--umbrella` required (marathon-triage: an unnamed umbrella is not ready); slug defaults from
+   the repo name, validated ≤3 lowercase words; clone name `marathon-gh-<umbrella>-<slug>`, an
+   occupied derived name takes the documented `-r2` retry suffix; **refuses** a pre-existing
+   `--dir` (never merges into one); clone from the canonical remote; self-vendor via
+   `relay-automation/xyz-vendor.sh` — Tier 2 (`--with-releases`) is **always** passed (a marathon
+   needs the ledger overlay; resolves the round-1 optional-vs-always contradiction); installs
+   `githooks/install.sh` when the cloned repo ships one; prints next steps (bootstrap hint + drive
+   invocation shape).
+6. **Preflight zero-criteria warning** (`utils/py/swarm_preflight.py` only — `utils/swarm-preflight.sh`
+   is the frozen Bash fallback; the plan's earlier `relay-automation/swarm-preflight.sh` path was
+   wrong, per round-1). When `acc_items` is known and zero, emit a stderr warning naming the doc
+   and the fix **before the dry-run exit** (~:1688-1694) so dry runs see it too; exit codes
+   unchanged; `SP_ACC_INLINE.criteria` already records the zero truthfully (no new packet field —
+   avoids duplicating truth).
 
 ## Non-goals (deferred — follow-up issues to be filed and parked)
 
-- **Gate-red auto-recycle** (`marathon-drive --fix-rounds N`): touches escalation semantics and
-  token lifecycle of both driver twins; feature-sized arc of its own.
-- **Operator-block preservation across relay re-renders / `--handback`**: render-semantics change
-  in both drivers; interacts with the GH-505 attestation model.
-- **Preflight `--scaffold`**: new intake subcommand; deserves its own contract discussion.
+- **Gate-red auto-recycle** (`--fix-rounds N`): escalation + token lifecycle semantics in both
+  driver runtimes; feature-sized arc of its own.
+- **Operator-block preservation across relay re-renders / `--handback`**: render-semantics change;
+  interacts with the GH-505 attestation model.
+- **Preflight `--scaffold`**: new intake subcommand; own contract discussion.
 - **Dual-home contracts** (issue-body contract fallback): changes the `--gh-issue` resolution
-  contract documented in `MACHINE-CONTRACTS.md`.
+  contract in `MACHINE-CONTRACTS.md`.
+- **claude-turn bash-twin effort parity**: dispositioned by GH-308 — frozen fallback stays frozen.
 
 Also dispositioned: `find-harness.sh` vendored-diff warning polish (minor; fold into any future
-find-harness touch), ledger-absent-in-stale-vendors (consumer remedy is re-vendor; documented in
-#621).
+find-harness touch), ledger-absent-in-stale-vendors (consumer remedy is re-vendor; #621).
 
 ## Implementation order (verification inline)
 
-1. **p1 — vendor excludes + claude-turn parity/warning** (items 1–2). Verify:
-   `bash test/xyz-vendor.sh` updated and green; new focused suite cases for exclude destination,
-   `.gitignore` untouched, effort env validation, Opus-budget warning.
-2. **p2 — drive token auto-suffix + worktree deps** (items 3–4). Verify: focused suite cases with
-   a stub `tick` (spent token → `-R2` announced; explicit id untouched) and a tmp repo with
-   `node_modules` (symlink present in worktree, absent-behavior unchanged).
-3. **p3 — `xyz-init-clone.sh`** (item 5). Verify: e2e against a local bare fixture repo — clone
-   name derivation, vendor ran, excludes present, hooks installed when present, `--help`.
-4. **p4 — preflight zero-criteria warning** (item 6). Verify: both twins emit the stderr warning
-   on a checklist-less doc; existing preflight suites stay green.
-5. **Gate** — `./validate.sh --auto` during development; **`bash ci-local.sh` exactly once on the
-   final commit** (the qualifying run; cite that SHA in the PR).
+1. **p1 — vendor excludes** (item 1). Verify in the **disposable full clone**: updated
+   `test/xyz-vendor.sh` + new focused-suite cases green across the three Git shapes.
+2. **p2 — Opus-budget warning + token auto-suffix + worktree copy** (items 2–4). Verify: focused
+   suite — warning emitted/suppressed correctly; stub `tick` matrix (spent → `-R2` announced;
+   explicit id untouched; missing tick → fail fast); tmp repo with `node_modules` (disposable copy
+   present in worktree, size/time recorded, absent-behavior unchanged).
+3. **p3 — `utils/py/xyz_init_clone.py`** (item 5). Verify: e2e against a local bare fixture repo —
+   name derivation + `-r2` retry, `--umbrella` required, occupied/existing-dir refusals, vendor ran
+   with `--with-releases`, hooks installed when present.
+4. **p4 — preflight zero-criteria warning** (item 6). Verify: warning on a checklist-less doc in
+   both normal and `--dry-run` paths; existing preflight suites green.
+5. **Gates** — implementation edits in the task clone; **all `test/*.sh` runs, `./validate.sh`,
+   and `bash ci-local.sh` run in a separate disposable full clone** (AGENTS.md:15-16) — a sibling
+   `git clone` of the task clone whose origin is the task clone and which never pushes. After any
+   `relay-automation/` edit: regenerate `relay-pkg.tar.gz` (`skills/relay-automation/make-pkg.sh`)
+   and pass the freshness check. **`bash ci-local.sh` exactly once on the final commit** in the
+   disposable clone; cite that SHA in the PR.
 
 ## Bounded test scope
 
-One new focused suite, `test/gh642-consumer-fruit.sh`, covering the six items above with tmp-dir
-fixtures (bare repo, stub tick, stub claude binary). **Test non-scope:** no new test framework, no
-live CLI/network calls, no fuzzing, no hosted-CI simulation. Existing suites that pin touched
-behavior (`test/xyz-vendor.sh`, timeout-parity, preflight suites) must stay green unmodified
-except where item 1 changes pinned `.gitignore` assertions — those assertions move to the exclude
-destination in the same commit.
+One new focused suite, `test/gh642-consumer-fruit.sh`, covering the six items with tmp-dir
+fixtures (bare repo + linked worktree + separate-git-dir shapes, stub `tick`, stub claude binary,
+local bare remote for the initializer e2e). **Test non-scope:** no new test framework, no live
+CLI/network calls, no fuzzing, no hosted-CI simulation. Existing suites pinning touched behavior
+(`test/xyz-vendor.sh`, `test/gh312-vendor-preserves-state.sh`, preflight suites, parity suites)
+stay green, with item-1 destination assertions moved in the same commit.
 
 ## Risks / rollback
 
 - Item 1 changes documented vendor behavior; consumers relying on `.gitignore` semantics lose
-  nothing (exclude is honored by `git check-ignore` and by the driver's own probe). Rollback:
+  nothing (exclude is honored by `git check-ignore` and the driver's committability probe).
+  Rollback: revert one hunk + its assertions.
+- Item 3 changes which token id a forced re-fire claims. Guarded: only auto-derived ids, only
+  spent tokens, `--force` only; explicit ids win; receipt identity stays singular. Rollback:
   revert one hunk.
-- Item 3 changes which token id a forced re-fire claims. Guarded: only when the id was
-  auto-derived and the token is spent; explicit ids win. Rollback: revert one hunk.
-- Items are independent; any can land or revert alone. All additive; no schema/DB format changes
-  beyond the roadmap row this doc already wrote.
+- Item 4 adds per-turn copy cost proportional to `node_modules` size; the test records the
+  observation so the cost is visible. Rollback: revert one hunk.
+- Items are independent; any can land or revert alone. No schema/DB format changes beyond the
+  roadmap row already written.

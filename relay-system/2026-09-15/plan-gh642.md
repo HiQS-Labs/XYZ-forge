@@ -211,3 +211,34 @@ VERDICT: CHANGES REQUESTED
 ▶ TAKE YOUR TURN (codex — PLAN REVIEWER role; ALLOW_PATHS is empty: this relay file is your only
 writable path; review the plan against the code, never edit code)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+---
+
+## Round 2 review request (operator, 2026-09-15)
+
+All seven round-1 findings accepted and applied in `PROJECT/2-WORKING/GH-642-CONSUMER-FRUIT.md`
+(v2). Dispositions:
+
+1. BLOCKER containment — item 4 changed symlink → **one-shot disposable `cp -R`**; test records
+   size/time. ACCEPTED.
+2. BLOCKER governance — behavior fixes land **only in the Python twins** (`claude-turn.py`,
+   `marathon_drive.py`, `swarm_preflight.py`); frozen Bash fallbacks untouched, **no
+   Frozen-twin-exception needed**; initializer is **`utils/py/xyz_init_clone.py`** (no new Bash);
+   preflight path corrected to `utils/swarm-preflight.sh`. ACCEPTED.
+3. BLOCKER verification — all `test/*.sh`, `validate.sh`, `ci-local.sh` moved to a **disposable
+   full clone** (sibling clone of the task clone, never pushes); relay-pkg regen
+   (`make-pkg.sh`) + freshness check added to the gate step. ACCEPTED.
+4. SHOULD token identity — spec pinned: spent ≡ `status: done|circuit_broken` via `tick info`;
+   missing/malformed tick fails before render; monotonic `-R2…` scan; resolved before every
+   consumer incl. receipt Contract B; attempt key unchanged. ACCEPTED.
+5. SHOULD initializer — `--umbrella` required, slug validated, `-r2` retry on occupied name,
+   existing `--dir` refused, Tier 2 always passed (flag removed). ACCEPTED.
+6. SHOULD vendor blast radius — comments/docs/test assertions enumerated for update; three Git
+   shapes fixtured. ACCEPTED.
+7. NIT rating — rationale recorded; effort re-scored 60/35/50/**48** via `--force` with reason.
+   ACCEPTED.
+
+One governance-driven scope narrowing beyond your findings: item 2's bash-twin effort port is
+**dropped** (frozen fallback, not a safety defect — GH-308); `CLAUDE_REASONING_EFFORT` works on
+the default Python runtime. Please re-review the revised plan and return `VERDICT: APPROVED` or
+the remaining change list.
