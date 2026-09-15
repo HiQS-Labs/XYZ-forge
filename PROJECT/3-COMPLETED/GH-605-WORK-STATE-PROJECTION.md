@@ -2,9 +2,9 @@
 gh_issue: 605
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/605
 title: Work-state projection correctness
-status: In progress
+status: Complete
 created: 2026-09-13
-updated: 2026-09-14
+updated: 2026-09-15
 owner: Codex
 goal: Make lifecycle events consistent and expose unknown projection readiness without guessing activity.
 reversibility: Costly
