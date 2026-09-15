@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Root projection is published and read back: six canonical package files are at child root, nine managed files are recorded, retry is idempotent, and live root-level init/update passed. | Inspect exact-head hosted checks on draft PR #622; merge readiness remains gated by the separately recorded full-suite baseline. |
+| Root projection is published and read back, focused gates are green, and the exact-head hosted vendored smoke passed. | Resolve or requalify the known unrelated GH-615 full-suite baseline before moving draft PR #622 toward merge readiness. |
 
 ## Goal and ownership
 
