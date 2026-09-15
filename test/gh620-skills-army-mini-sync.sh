@@ -148,12 +148,34 @@ env = {**os.environ, "HOME": home, "PYTHONDONTWRITEBYTECODE": "1"}
 intake = os.path.join(dest, "scripts/intake.py")
 sync_child = os.path.join(dest, "scripts/sync.py")
 def cli(script, *args): return sh(sys.executable, "-B", script, "--root", collection, *args, env=env)
+unproven = os.path.join(WORK, "unproven-root")
+shutil.copytree(dest, unproven, ignore=shutil.ignore_patterns(".git", ".xyz-forge-revision"))
+r = sh(sys.executable, "-B", os.path.join(unproven, "scripts/intake.py"),
+       "--root", os.path.join(WORK, "unproven-collection"), "init", env=env)
+ok("ordinary mismatched root without publisher proof is rejected",
+   r.returncode == 2 and "Expected regular file" in r.stderr, r.stderr)
+bad_manifest = os.path.join(WORK, "bad-manifest-root")
+shutil.copytree(dest, bad_manifest, ignore=shutil.ignore_patterns(".git"))
+bad_manifest_path = pathlib.Path(bad_manifest, "MANIFEST.txt")
+bad_manifest_path.write_text("\n".join(p for p in bad_manifest_path.read_text().splitlines()
+                                         if p != "scripts/intake.py") + "\n")
+r = sh(sys.executable, "-B", os.path.join(bad_manifest, "scripts/intake.py"),
+       "--root", os.path.join(WORK, "bad-manifest-collection"), "init", env=env)
+ok("generated root missing a required manifest entry is rejected",
+   r.returncode == 2 and "Folder/name mismatch" in r.stderr, r.stderr)
 r = cli(intake, "init")
 ok("init preview leaves absent collection untouched", r.returncode == 0 and not os.path.exists(collection), r.stderr)
 r = cli(intake, "--apply", "init")
 ok("init apply creates copied manager", r.returncode == 0 and os.path.isfile(os.path.join(collection, "skills-army-hq/SKILL.md")), r.stderr)
-ok("init excludes checkout metadata from the installed manager",
-   r.returncode == 0 and not os.path.exists(os.path.join(collection, "skills-army-hq/.git")))
+installed_manager = pathlib.Path(collection, "skills-army-hq")
+repo_only = {".git", ".gitignore", ".xyz-forge-revision", "MANIFEST.txt", "LICENSE", "LICENSE-COMMERCIAL.md"}
+ok("init excludes repository-only metadata from the installed manager",
+   r.returncode == 0 and not any((installed_manager / name).exists() for name in repo_only))
+ok("installed manager is byte-for-byte the canonical package tree",
+   r.returncode == 0 and tree(installed_manager) == tree(os.path.join(src, "skills/skills-army-hq")))
+r = cli(intake, "update", "skills-army-hq", "--source", dest)
+ok("generated repository root remains a valid manager update source",
+   r.returncode == 0 and "Unchanged: skills-army-hq" in r.stdout, r.stderr)
 fixture_repo = os.path.join(WORK, "fixture-repo"); fixture = os.path.join(fixture_repo, "skills/sample")
 os.makedirs(fixture)
 pathlib.Path(fixture, "SKILL.md").write_text("---\nname: sample\ndescription: fixture\n---\n")

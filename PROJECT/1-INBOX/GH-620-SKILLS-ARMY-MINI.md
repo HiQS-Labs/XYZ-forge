@@ -25,7 +25,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| The parent implementation is published as draft PR #622 and the generated child is live. The landing-page correction now gives the root and nested package README one canonical Forge source. | Qualify and republish the correction, then retain the parent PR as draft until its known unrelated full-gate baseline is resolved. |
+| The root-projection contract is implemented with a witnessed pre-fix failure: the canonical package folder maps directly onto the child root while installed payloads retain the `skills-army-hq` name. | Run the focused final-state gates, republish the child, and update draft PR #622 with exact-SHA evidence. |
 
 ## Goal and ownership
 
@@ -47,6 +47,7 @@ and machine-local paths are excluded.
 - [Phase 1 — Parent contract and playbook](#phase-1--parent-contract-and-playbook)
 - [Phase 2 — Surgical verification and review](#phase-2--surgical-verification-and-review)
 - [Phase 3 — Land, publish, and read back](#phase-3--land-publish-and-read-back)
+- [Phase 4 — Root-project the canonical package](#phase-4--root-project-the-canonical-package)
 
 ## Phase 0 — Spike: qualify the split
 
@@ -69,12 +70,7 @@ collection/target.
 
 | XYZ Forge source | Child destination | Ownership |
 |---|---|---|
-| `skills/skills-army-hq/SKILL.md` | `skills-army-hq/SKILL.md` | managed |
-| `skills/skills-army-hq/README.md` | `skills-army-hq/README.md` and `README.md` | managed / single package and landing-page authority |
-| `skills/skills-army-hq/scripts/intake.py` | `skills-army-hq/scripts/intake.py` | managed |
-| `skills/skills-army-hq/scripts/sync.py` | `skills-army-hq/scripts/sync.py` | managed |
-| `skills/skills-army-hq/references/recovery.md` | `skills-army-hq/references/recovery.md` | managed |
-| `skills/skills-army-hq/references/targets.md` | `skills-army-hq/references/targets.md` | managed |
+| `skills/skills-army-hq/**` | `/**` (paths relative to the canonical folder) | managed / package and landing-page authority |
 | `mini/skills-army-gitignore` | `.gitignore` | managed |
 | `LICENSE` | `LICENSE` | managed |
 | `LICENSE-COMMERCIAL.md` | `LICENSE-COMMERCIAL.md` | managed |
@@ -83,17 +79,48 @@ Profile-owned values are limited to manifest, display/commit identity, environme
 default sibling checkout. Calling the CLI with no `--target` must retain XYZ-mini's existing values
 and output. This is a fixed two-profile data seam, not a plugin API.
 
-### README publication recon
+### Recon Map — Skills Army root projection
 
-- Mapping the canonical package directory directly to the child root is mechanically possible, but
-  it violates the manager's current package boundary: initialization requires the containing folder
-  name to equal the skill name (`skills-army-hq`).
-- The flattened candidate reproduced that failure in the detached smoke at initialization. Treating
-  an arbitrary repository root as the skill would also broaden the payload boundary to repository
-  metadata unless the manager's filesystem contract were redesigned.
-- The bounded solution keeps the runnable package at `skills-army-hq/` and publishes its canonical
-  README to both `skills-army-hq/README.md` and the repository-root `README.md`. The regression test
-  compares both byte streams directly with the Forge source.
+Commit: `ca1506778141` · Mode: graph + direct source fallback · Lanes: A–D serial in the driver
+
+#### Subject and change class
+
+Contract change: publish one canonical skill directory at a generated repository root without
+changing the installed skill-folder identity or weakening ordinary import validation.
+
+#### The seams
+
+| Seam | Location | Crosses | Breaks if |
+|---|---|---|---|
+| Manifest expansion | `utils/py/xyz_mini_sync.py:111` | Forge paths → child paths | an empty destination becomes an empty/escaping file path |
+| Source identity | `skills/skills-army-hq/scripts/intake.py:95` | checkout folder → declared skill name | all folder/name mismatches are accepted instead of only generated roots |
+| Payload hashing/copy | `skills/skills-army-hq/scripts/intake.py:130`, `:542` | generated checkout → installed manager | `.git`, licenses, or publisher controls enter the installed skill |
+| Initialization/update | `skills/skills-army-hq/scripts/intake.py:180`, `:575` | root checkout → collection receipt/staging | init works but later manager update rejects the recorded source |
+
+#### Call paths in and state
+
+`xyz_mini_sync.main` → `expand` → managed copy/manifest/provenance writes. In the child,
+`scripts/intake.py init` → `package_info` → filtered digest → `stage_payload` → transaction; later
+`update skills-army-hq` returns through `source_record` and the same package filter. The publisher is
+the single child writer; intake transactions remain the single collection writer.
+
+#### Contracts, failure, and rollback
+
+Normal skill folders still require `folder.name == frontmatter.name`. Only a repository root with
+Forge provenance and a manifest containing the manager entry points may use the declared skill name
+as its installed destination. The deterministic red control is the detached GH-620 test: before the
+change it reports missing root payloads and cannot open `scripts/intake.py`. Runtime failures use the
+debug-mantra sequence. Rollback is Easy: restore the nested destination mapping and republish.
+
+#### Unknowns
+
+None for the bounded v1 package. The graph excluded the manager scripts and playbook by design, so
+their complete source was read directly and the limitation is recorded here.
+
+#### Current-state radius
+
+The Skills Army child layout, its clone-relative quick start, manager init/update receipts, generated
+manifest/provenance, GH-620 regression, and future spin-offs following the canonical playbook.
 
 ### Phase 0 QA gate
 
@@ -147,6 +174,26 @@ and output. This is a fixed two-profile data seam, not a plugin API.
 - Existing `test/gh589-xyz-mini-sync.sh` remains the regression contract for the original profile.
 - One new GH-620 shell test may reuse its throwaway-clone/bare-remote shape and invoke the package's existing scripts; its expected file set is literal and independent of the publisher profile.
 - No new framework, fixture subsystem, matrix, recovery campaign, fuzzing, or mirrored child suite.
+
+## Phase 4 — Root-project the canonical package
+
+**Goal:** The tracked contents of `skills/skills-army-hq/` appear directly at the child repository
+root, while initialization and subsequent manager updates install only the canonical package under
+the declared `skills-army-hq` collection folder.
+
+- [x] Make an empty manifest destination preserve source-relative paths and refuse empty or escaping outputs.
+- [x] Recognize a mismatched repository-root source only when Forge provenance and the publisher manifest prove the generated shape; keep ordinary `skill_info` callers strict.
+- [x] Hash and stage the generated root without `.git`, `.gitignore`, licenses, manifest, or provenance so the installed manager remains the canonical package payload.
+- [x] Update the canonical README, spin-off playbook, ownership map, and clone-relative links for the root layout.
+- [ ] Run the GH-620 and GH-589 focused suites from a disposable full clone, republish, read back exact bytes and modes, and update PR #622.
+
+### Phase 4 — QA checklist
+
+- [ ] Root payload oracle and detached init/update smoke pass after the witnessed pre-fix failure.
+- [ ] Ordinary mismatched skill folders remain rejected; the generated-root proof fails when provenance or required manifest entries are absent.
+- [ ] Existing XYZ-mini publisher behavior remains green.
+- [ ] Blast: **Easy** undo; shield is the existing generated-child profile plus strict projection recognition; tripwire is any payload-set, metadata-exclusion, init/update, or read-back failure before publication.
+- [ ] Status table and `updated:` date reflect the final published SHAs.
 
 ## Rating rationale (2026-09-14)
 

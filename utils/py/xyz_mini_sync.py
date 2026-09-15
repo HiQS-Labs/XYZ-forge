@@ -57,9 +57,8 @@ MANIFEST = (
     ("LICENSE-COMMERCIAL.md", "LICENSE-COMMERCIAL.md", "managed"),
 )
 SKILLS_ARMY_MANIFEST = (
-    ("skills/skills-army-hq", "skills-army-hq", "managed"),
-    # One README authority, published at both the repository and package entry points.
-    ("skills/skills-army-hq/README.md", "README.md", "managed"),
+    # This child repository is the package: project the canonical folder onto its root.
+    ("skills/skills-army-hq", "", "managed"),
     ("mini/skills-army-gitignore", ".gitignore", "managed"),
     ("LICENSE", "LICENSE", "managed"),
     ("LICENSE-COMMERCIAL.md", "LICENSE-COMMERCIAL.md", "managed"),
@@ -116,7 +115,11 @@ def expand(source, manifest=MANIFEST):
         if not files:
             raise Refuse(f"manifest source missing or untracked: {src}")
         for f in files:
-            out.append((f, dest if f == src else dest + f[len(src):], mode))
+            suffix = f[len(src):].lstrip("/")
+            target = dest if f == src else os.path.join(dest, suffix) if dest else suffix
+            if not target or os.path.isabs(target) or target == ".." or target.startswith("../"):
+                raise Refuse(f"manifest destination escapes child root: {src} -> {target or '<empty>'}")
+            out.append((f, target, mode))
     return out
 
 
