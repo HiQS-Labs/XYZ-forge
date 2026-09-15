@@ -139,7 +139,7 @@ grep -q "COPY-OK" <<<"$out" && ! grep -q "IS-SYMLINK" <<<"$out" \
 python3 -m py_compile "$PYINIT" && pass "xyz_init_clone.py compiles" || fail "xyz_init_clone.py does not compile"
 SRC="$WORK/init-src"; mkdir -p "$SRC/githooks"
 git -C "$SRC" init -q
-printf '#!/usr/bin/env bash\nexit 0\n' > "$SRC/githooks/install.sh"; chmod +x "$SRC/githooks/install.sh"
+printf '#!/usr/bin/env bash\nprintf "#!/bin/sh\\nexit 0\\n" > .git/hooks/pre-push\nchmod +x .git/hooks/pre-push\nexit 0\n' > "$SRC/githooks/install.sh"; chmod +x "$SRC/githooks/install.sh"
 ( cd "$SRC" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1 )
 BARE="$WORK/init-bare.git"; git clone -q --bare "$SRC" "$BARE"
 export XYZ_REGISTRY="$WORK/init-registry.tsv"
