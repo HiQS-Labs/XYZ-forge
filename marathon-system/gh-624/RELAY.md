@@ -1,6 +1,6 @@
 # Marathon Phase gh-624
-STATUS: Open
-NEXT: agy (Reviewer)
+STATUS: Approved
+NEXT: None (Relay Closed)
 
 <!-- marathon-drive: task=MARATHON-GH-624-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -109,3 +109,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Added the two-ledger-PR fake-`gh` regression in `test/gh534_phase_c_tests.py`; it requires both PRs to read MERGED, both `pr_merged` events to exist, a clean primary, and `HEAD == origin/development`.
 - Updated the Phase 5 skill contract and capability-table pin, plus a `gh549-work-events.sh` AST ordering guard covering fast-forward, reconcile, emit, commit, and push sequencing.
 - Tests were not run in this isolated turn because the phase scope lock explicitly forbids executing them here; the harness owns the focused gate after handoff.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The implementation correctly fulfills the Phase Brief acceptance criteria:
+1. `emit_pr_merged` now strictly executes only after `git merge --ff-only` and `run_post_merge_reconcile` both succeed.
+2. `commit_and_push_phase5_writes` is used to stage, commit, push, and strictly verify `git status --porcelain` and `HEAD == origin/<integration>` after the event emission and reconciliation outputs.
+3. The fake-`gh` fixture in `test/gh534_phase_c_tests.py` correctly simulates two ledger-touching PRs in a single run and asserts the clean primary state and events.
+4. `SKILL.md` is updated with the correct Phase 5 landing sequence, and `gh549-work-events.sh` has the AST ordering guard to ensure the durability order does not drift.
+
+I found no pre-existing defects in the touched files during the sweep.
+
+**Verdict:** Approved
