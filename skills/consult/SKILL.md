@@ -83,7 +83,9 @@ consult.sh --prompt "Is X sound?"        # inline question
 
 For native Claude, follow [subscription setup](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/README.md#claude-subscription-mode).
 `--models claude` is a single advisory answer, not cross-model consensus. Claude uses read-only
-built-in tools; relay reviews separately retain write access to their protocol file.
+built-in tools in native restricted mode; user/project/local settings are ignored in both
+authentication modes, and outside-checkout reads are denied by the CLI. See the setup guide
+for the CLI requirement and effort settings. Relay reviews separately retain protocol writes.
 
 Each run gets its own `<label>-<HHMMSS>/` subdir, so two consults the same day never overwrite each
 other. Behavior is covered by `test/consult.sh` in XYZ-forge's `validate.sh` (WIP preservation, no advisor leak,

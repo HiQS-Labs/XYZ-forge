@@ -16,7 +16,15 @@ def resolve_binary(env):
                   if os.path.isfile(p) and os.access(p, os.X_OK)), ""))
 
 
-def preflight(binary, env, cwd):
+def effort_flags(env):
+    """Share native effort selection; omission leaves the CLI default intact."""
+    effort = env.get("CLAUDE_REASONING_EFFORT", "")
+    if effort and effort not in ("low", "medium", "high", "xhigh", "max"):
+        raise ValueError("CLAUDE_REASONING_EFFORT must be low, medium, high, xhigh, or max")
+    return ["--effort", effort] if effort else []
+
+
+def preflight(binary, env, cwd, *, cli_flags=()):
     """Validate the request's actual account route; never expose auth JSON/secrets.
 
     inherit preserves existing CLI configuration. subscription requires normal
@@ -35,7 +43,7 @@ def preflight(binary, env, cwd):
     if any(env.get(k) for k in overrides):
         raise ValueError("subscription mode refuses API/provider environment overrides; unset them and retry")
     try:
-        result = run_bounded([binary, "auth", "status"], cwd=cwd, env=env, timeout=20)
+        result = run_bounded([binary, *cli_flags, "auth", "status"], cwd=cwd, env=env, timeout=20)
         if result.timed_out or result.rc != 0:
             raise ValueError()
         account = json.loads(result.stdout)

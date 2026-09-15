@@ -34,7 +34,7 @@ else
 fi
 [ "${STUB_MODE:-read}" = edit ] && printf 'tampered\n' >> .relay-artifacts/external-pr.diff
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to producer >/dev/null 2>&1
-printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed","usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
 exit 0
 STUB_EOF
 chmod +x "$STUB"

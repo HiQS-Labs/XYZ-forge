@@ -38,6 +38,7 @@ cat >"$STUB" <<'STUB_EOF'
 set -u
 export TICK_REPO_ROOT="$A"
 printf '\n### Round 1 · Builder · %s (claude-stub)\nturn body\n' "$RELAY_AGENT" >>"$RELAY_FILE"
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed"}\n'
 case "${STUB_MODE:-crash}" in
   good)  exit 0 ;;
   offlane) printf 'off-lane\n' >>"$A/offlane-$RELAY_TASK.md"; exit 0 ;;

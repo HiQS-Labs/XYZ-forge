@@ -20,6 +20,11 @@ if [[ "${XYZ_PYTHON-1}" == "1" ]]; then
     echo "xyz: XYZ_PYTHON=1 but python3 missing or < 3.8 — falling back to Bash" >&2
   fi
 fi
+# GH-613: subscription opt-in must not enter an unsupported legacy path.
+if [[ "${CLAUDE_AUTH_MODE:-inherit}" == subscription ]]; then
+  echo "xyz: subscription requires the Python runtime (XYZ_PYTHON=1 and python3 >= 3.8)" >&2
+  exit 5
+fi
 #
 # claude-turn.sh — headless turn-taker for the CLAUDE builder agent. Thin dispatch wrapper over the
 # shared safety core (relay-turn-lib.sh) — the SAME containment contract as codex-turn.sh and

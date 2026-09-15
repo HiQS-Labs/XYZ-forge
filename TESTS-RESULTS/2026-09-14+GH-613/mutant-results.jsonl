@@ -1,0 +1,5 @@
+{"case": "legacy-guard", "rc": 1, "rejected": true, "seconds": 12.55}
+{"case": "inherit-result", "rc": 1, "rejected": true, "seconds": 17.82}
+{"case": "consult-restriction", "rc": 1, "rejected": true, "seconds": 11.11}
+{"case": "relay-effort", "rc": 1, "rejected": true, "seconds": 17.3}
+{"case": "descendant-kill", "rc": 1, "rejected": true, "seconds": 8.0}

@@ -24,6 +24,10 @@ server, an account, or an API key for the coordination layer itself.
 
 ---
 
+Claude consult and relay support explicit subscription checks and native reasoning effort.
+See [Claude setup](relay-automation/README.md#claude-subscription-mode) for restricted
+consult reads, supported CLI versions, and failure diagnostics.
+
 ## Status: alpha, single-operator, moving fast
 
 Be clear-eyed about what you are adopting.

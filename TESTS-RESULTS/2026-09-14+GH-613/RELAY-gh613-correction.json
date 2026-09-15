@@ -1,0 +1,19 @@
+{
+  "added_len": 3019,
+  "added_sha256": "27f33dabd3c2ea86849636e3c9a90641fd5fdd0d1959f7622cc457184f6c453d",
+  "added_start": 4727,
+  "artifact_sha256": null,
+  "attested_at": "2026-09-14T01:48:14Z",
+  "driver_pid": 7732,
+  "isolated": true,
+  "relay_file": "<home>/marathon-clones/xyz-claude-review-fixes/relay-system/gh613-correction.md",
+  "relay_file_rel": "relay-system/gh613-correction.md",
+  "reviewed_head": "2cbfc53afd7922e881919612cc78a7b9c2d9eb3d",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "<home>/marathon-clones/xyz-claude-review-fixes",
+  "task": "RELAY-gh613-correction",
+  "trailer_sha256": "95a9d5c164dcef04f34391a41f67ce8dc55b2646b99665284b453d79e418bab5",
+  "transcript_repo": "<home>/marathon-clones/xyz-claude-review-fixes"
+}
