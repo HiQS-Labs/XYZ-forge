@@ -247,6 +247,13 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      - Consult reconciliation takeaways (Rung 4).
      - Preservation proof, reversibility classification, and confirmation result (Rung 5).
      - Test execution and verification results (Rung 6).
+5. **Orchestrator Re-Entry & Autonomous Loop (Batch Execution):**
+   - When `/workhorse` is invoked to diagnose, repair, or resolve an item within a parent orchestrator or multi-item queue (`merge-cleanup`, `jog`, `marathon`, `/10days`):
+     - **A repair is an intermediate checkpoint, never the end of the turn.** Do NOT stop after committing a repair to report to the operator or ask what to do next.
+     - Record the outcome in the item's attempt record (e.g. `finish --outcome resolved` or `parked`).
+     - **Immediately re-invoke the parent orchestrator with `--resume`** (e.g. `python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --execute --resume`).
+     - **Autonomous Loop Invariant:** Repeat the `drive → repair/park → --resume → loop` cycle autonomously until the entire batch is completed, all remaining items are parked/held, or an unresolvable external blocker requires operator escalation.
+     - **Anti-Abandonment:** Completing one sub-item repair while other queue items remain unattempted is an active in-flight state, not a milestone to prompt the operator.
 
 ---
 
@@ -285,3 +292,5 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
 - Execute Rung 0 once per intake, then apply Rungs 1–6 in order for each active queue item. Never skip Rung 1 (ground truth), Rung 3 (governance), or Rung 5 (preservation) to jump to Rung 6 (execution).
 - Keep communication concise and results-driven.
 - If a consult or verification surfaces unexpected failure, loop back to Rung 1 (falsify hypothesis & trace fail path) rather than guessing a patch.
+- **Anti-Downgrade Rail:** If an orchestrator or batch sequence was requested (e.g. merging a series of PRs, clearing an issue queue), never report "Done" or "Complete" if the primary workflow was bypassed or truncated (e.g., Phase 0 refused landing and the agent ran `--teardown-only` to prune clones). The agent must either resolve the blocker within authorized scope, or report the exact blocker stopping the sequence; it must never silently redefine the goal to a safe sub-action and declare victory.
+- **Tripwire to `/unstuck`:** If successive iterations of a batch loop fail to reduce queue depth, or if tools encounter repeated non-zero exit codes without a qualifying state change, immediately invoke `/unstuck` as a blocking interrupt rather than continuing to narrate or halting.
