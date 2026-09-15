@@ -118,6 +118,8 @@ grep -q 'cp -R "$RTL_ROOT/node_modules" "$wt/node_modules"' "$RTL" && pass "work
 FIX="$WORK/rtl-fixture"; mkdir -p "$FIX"; git -C "$FIX" init -q
 mkdir -p "$FIX/node_modules/pkg"; printf 'x' > "$FIX/node_modules/pkg/index.js"
 printf 'relay\n' > "$FIX/RELAY.md"
+# rtl_worktree_begin cuts at HEAD — the fixture needs at least one commit or the add fails.
+( cd "$FIX" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1 )
 out="$(cd "$FIX" && bash -c '
   source "'"$RTL"'"
   RTL_ROOT="'"$FIX"'"
