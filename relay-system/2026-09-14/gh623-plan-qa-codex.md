@@ -2,7 +2,7 @@
 Goal: Plan QA — GH-623 merge-cleanup resilience (soft edges, fetch retry, resume loop)
 Date: 2026-09-14
 NEXT: Producer
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -349,3 +349,60 @@ Plan revised (§Execution log round-3 record + cap note). Final confirmation req
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex final confirmation — approved (round 4)
+
+**Verdict: Approve** — all four round-3 findings are closed, the revised plan is internally
+coherent, and its focused proof surface is commensurate with GH-623.
+
+### Graded findings
+
+1. **Grounding — pass.** The Problem Statement now accurately locates explicit dependency
+   insertion at `toposort_prs.py:75-84`, collision insertion/publication at `:89-121`, hard
+   blocking at `merge_cleanup.py:475-480`, the unbounded landing clone/fetch calls at
+   `merge_cleanup.py:127-154`, and the unbounded `run_git` contract at
+   `scan_clones.py:85-100`.
+2. **Requirement coverage — pass.** The design preserves the ordering union in `_deps` while
+   publishing hard and soft subsets, makes only hard predecessors eligibility-blocking, retries
+   each GH-623 network site exactly three total times with sleeps `[2, 4]`, defers only the two
+   pre-decision per-PR failures, adds `--resume`, and specifies the SKILL.md drive loop, Done rule,
+   and classifier retry. The pre-queue refusal (subject to the unchanged
+   `--allow-unready-primary` override) and post-merge stop remain the correct non-deferral sites
+   (`GH-623-MERGE-CLEANUP-RESILIENCE.md:121-129,154-178`).
+3. **Pinned guarantees — pass.** The explicit `Depends on #2` fixture remains a hard edge
+   (`gh534_phase_c_tests.py:257-273`), while soft collision predecessors proceed to the real
+   landing simulation. A deferred PR is recorded before any ledger gate or merge, blocks only its
+   hard dependents, allows independent PRs to continue, and produces exit 3; stop paths retain
+   exit 2 and clean completion retains exit 0 (`GH-623-MERGE-CLEANUP-RESILIENCE.md:146-165`).
+4. **Resume safety — pass.** Live refresh and landing simulation are authoritative before the
+   exhausted-record shortcut. A now-clean PR lands without consuming another repair; only a PR
+   that still conflicts is skipped as previously parked. `reserve()` still re-loads and counts
+   under `RecordLock` (`attempt_record.py:129-143`), so resume cannot mint repair three. The paired
+   still-conflicting and resolved-now-mergeable pins cover both sides of the round-3 defect
+   (`GH-623-MERGE-CLEANUP-RESILIENCE.md:166-173,212-216`).
+5. **Blast radius — pass.** The production inventory includes `toposort_prs.py`,
+   `scan_clones.py`, `merge_cleanup.py`, and `SKILL.md`; the affected tests include both gh534
+   fixture modules and `test/gh436-merge-cleanup.py`, whose patched `run_git` signature must accept
+   the additive timeout. `_deps` has no additional in-repo runtime consumer; the unrelated
+   `utils/py/_marathon_plan.py::_deps_of` is outside this contract.
+6. **Red controls — pass.** Each named behavioral test fails against current code for the stated
+   reason. The concrete `list_fail` fixture covers Phase 4's current silent-empty defect; timeout
+   cases assert finite forwarding as well as exception handling; the standalone sorter pins a
+   diagnostic non-zero exit; and the paired resume tests prevent both re-running exhausted repair
+   work and stranding a successful final repair (`GH-623-MERGE-CLEANUP-RESILIENCE.md:184-230`).
+
+No source or artifact test was run in this reviewer turn, per the relay containment contract.
+Graph evidence used the `Users-noelsaw-Documents-GH-Repos-XYZ-forge` full index at generation
+`2026-09-15T04:47:51Z` and was confirmed against bounded direct source reads. Every named source
+and test path was metadata-matched with no recorded coverage gap; the revised plan was absent from
+that generation and was read directly. Call tracing was unavailable under the no-approval policy;
+bounded graph search plus direct source inspection supplied the caller/consumer evidence.
+
+## Log
+
+### Codex round 4 handoff
+
+VERDICT: PASS
+
+Basis: The plan now addresses every accepted finding from rounds 1-3, preserves the issue's safety
+and exit-code contracts, and carries specific red controls for the repaired failure paths.
