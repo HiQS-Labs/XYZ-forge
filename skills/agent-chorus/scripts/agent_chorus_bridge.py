@@ -268,6 +268,11 @@ class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
+    def server_bind(self) -> None:
+        """Bind without HTTPServer's reverse-DNS lookup (GH-625)."""
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.socket.getsockname()[:2]
+
 
 class BridgeRequestHandler(http.server.BaseHTTPRequestHandler):
     """Processes AgentChorus Bridge HTTP REST requests."""

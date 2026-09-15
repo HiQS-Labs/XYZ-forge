@@ -1,0 +1,133 @@
+# Marathon Phase gh-624
+STATUS: Approved
+NEXT: None (Relay Closed)
+
+<!-- marathon-drive: task=MARATHON-GH-624-TURN builder=codex reviewer=agy round-cap=5 -->
+
+## Phase Brief
+
+# Marathon preflight packet — gh-624-merge-cleanup-emit-after-ff
+
+- Generated: 2026-09-15T07:03:04Z
+- Mode: gh-bundle
+- Sources: /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/PROJECT/2-WORKING/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md 
+- Target root: /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620 (marathon/10days-2026-09-15 @ dbb10a2bc)
+- Suggested branch: `marathon/gh-624-merge-cleanup-emit-after-ff-2026-09-15` (branch_ready=false — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8)
+- Verdict: ready
+- Source issue state: OPEN.
+- Gate: `bash test/gh436-merge-cleanup.sh && bash test/gh549-work-events.sh`
+
+- Artifacts: skills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/SKILL.md,test/gh534_phase_c_tests.py,test/gh549-work-events.sh
+- Suggested turn budget: `turn_timeout_s: 1800` in this phase's MARATHON.yaml entry (≈ 1600 LOC across 4 artifact(s) — over the 900s default, so it needs headroom). marathon.sh reads that field and applies it to the phase; the value is a starting point, not a measurement.
+- Auto-included covering tests/helpers: test/gh549-work-events.sh
+
+This packet is the producer's output. The orchestrator launches the run; the planner does not
+(GUIDING-PRINCIPLES.md §8).
+
+## Acceptance criteria — the build is DONE when these hold
+*Inlined verbatim from `/Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/PROJECT/2-WORKING/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md` (its `## Acceptance` section, 4 criterion(a)). Continuation lines included; if a
+criterion here reads as a fragment, that is the source text, not a truncation.*
+*Verified against [issue #624](https://github.com/HiQS-Labs/XYZ-forge/issues/624) — 4/4 criteria copied verbatim from issue #624.*
+- [ ] In `skills/merge-cleanup/scripts/merge_cleanup.py` Phase 5, nothing writes into the primary between the remote merge and the fast-forward: `emit_pr_merged` runs only after `git merge --ff-only origin/<integration>` has succeeded (and, per #629, after the reconcile step's own fast-forward).
+- [ ] Every ledger write Phase 5 makes in the primary (the `pr_merged` work event, any local reconcile output) is committed on the integration branch and pushed to `origin/<integration>` before the next PR is attempted; after each landed PR `git status --porcelain` is empty and `HEAD == origin/<integration>`.
+- [ ] A test in `test/gh534_phase_c_tests.py` (existing fake-`gh` fixture) lands two ledger-touching PRs whose bodies say `Closes #<issue>` in one `--execute` run: both read MERGED, the primary is clean, and `HEAD == origin/<integration>`. Red control: the pre-fix ordering fails this test at the second PR's fast-forward.
+- [ ] `bash test/gh436-merge-cleanup.sh` and `bash test/gh549-work-events.sh` are green, and the Phase 5 text in `skills/merge-cleanup/SKILL.md` describes the implemented order (merge → fast-forward → reconcile → emit → commit → push).
+
+## Scope lock — builder, do exactly this and nothing else
+- Edit ONLY: `skills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/SKILL.md,test/gh534_phase_c_tests.py,test/gh549-work-events.sh` (plus the relay file). Any other edit is reverted and FAILS the turn.
+- Do NOT run ANY test or gate yourself — not `bash test/gh436-merge-cleanup.sh && bash test/gh549-work-events.sh`, and NOT `test/gh549-work-events.sh` either. Those tests create temporary git fixtures/files inside your isolated worktree, which containment treats as off-lane edits and can discard your whole turn. Read them as specs instead; the harness runs the real gate after your turn, outside the worktree.
+- Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
+
+## Suggested marathon-drive.sh invocation
+
+```bash
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-624-merge-cleanup-emit-after-ff RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact skills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/SKILL.md,test/gh534_phase_c_tests.py,test/gh549-work-events.sh \
+  --pre-advance-cmd 'bash test/gh436-merge-cleanup.sh && bash test/gh549-work-events.sh' \
+  --require-clean
+```
+
+## Files in this packet
+- `run-candidate.json` — normalized run candidate (provenance + contract + checks)
+- `freshness.json` — branch state + fix-still-required probes
+- `readiness.json` — remediation readiness verdict
+- `lane-plan.json` — Codex / agy / orchestrator lane assignment
+- `marathon-invocation.txt` — the invocation hint above
+- `marathon-invocation.json` — the same invocation as structured data (`swarm-preflight/marathon-invocation@1`, GH-280); supervisors consume this, never the shell text
+
+
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh-624/ESCALATION.md`): `relay-failed-before-gate`. Read it before re-guessing.
+
+---
+
+▶ TAKE YOUR TURN (codex — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+1. Implement the brief by creating/editing the artifact file(s): skills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/SKILL.md,test/gh534_phase_c_tests.py,test/gh549-work-events.sh
+2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/bin/tick
+   - /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/bin/tick claim MARATHON-GH-624-TURN --agent codex --paths "marathon-system/gh-624/RELAY.md,skills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/SKILL.md,test/gh534_phase_c_tests.py,test/gh549-work-events.sh"
+   - /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/bin/tick ping MARATHON-GH-624-TURN --agent codex
+   - /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/bin/tick release MARATHON-GH-624-TURN --agent codex --to agy
+4. Edit ONLY these paths: marathon-system/gh-624/RELAY.md and skills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/SKILL.md,test/gh534_phase_c_tests.py,test/gh549-work-events.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to agy — agy, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: agy (Reviewer)`
+
+---
+
+▶ TAKE YOUR TURN (agy — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: skills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/SKILL.md,test/gh534_phase_c_tests.py,test/gh549-work-events.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/bin/tick release MARATHON-GH-624-TURN --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/bin/tick done MARATHON-GH-624-TURN --agent agy
+4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/marathon-clones/10days-2026-09-14-HiQS-Labs--XYZ-forge-20260914-233620/bin/tick
+   Edit ONLY marathon-system/gh-624/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to codex —
+   codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `merge_cleanup.py` so Phase 5 now orders each successful landing as remote merge → primary fast-forward → gated reconciliation → `pr_merged` emission → commit/push → clean/equal-to-origin verification. Added one fail-closed helper for staging, committing, pushing, and checking all primary-side reconciliation/event writes before the loop advances.
+- Added the two-ledger-PR fake-`gh` regression in `test/gh534_phase_c_tests.py`; it requires both PRs to read MERGED, both `pr_merged` events to exist, a clean primary, and `HEAD == origin/development`.
+- Updated the Phase 5 skill contract and capability-table pin, plus a `gh549-work-events.sh` AST ordering guard covering fast-forward, reconcile, emit, commit, and push sequencing.
+- Tests were not run in this isolated turn because the phase scope lock explicitly forbids executing them here; the harness owns the focused gate after handoff.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The implementation correctly fulfills the Phase Brief acceptance criteria:
+1. `emit_pr_merged` now strictly executes only after `git merge --ff-only` and `run_post_merge_reconcile` both succeed.
+2. `commit_and_push_phase5_writes` is used to stage, commit, push, and strictly verify `git status --porcelain` and `HEAD == origin/<integration>` after the event emission and reconciliation outputs.
+3. The fake-`gh` fixture in `test/gh534_phase_c_tests.py` correctly simulates two ledger-touching PRs in a single run and asserts the clean primary state and events.
+4. `SKILL.md` is updated with the correct Phase 5 landing sequence, and `gh549-work-events.sh` has the AST ordering guard to ensure the durability order does not drift.
+
+I found no pre-existing defects in the touched files during the sweep.
+
+**Verdict:** Approved
+
+### Attestation · relay-drive — 2026-09-15T07:12:17Z
+task: MARATHON-GH-624-TURN
+reviewer: agy
+status: Approved
+reviewed-head: b937ed978e6efda15e0a0286c0712c0a8e75e453
+added-range: 11238+875
+added-sha256: e851c4355709b3dd3cec47772a2f07feffadb6be85e19767c5c8493382ba3ccc

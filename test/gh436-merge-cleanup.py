@@ -411,7 +411,9 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         git_calls = []
         fetches = [0]
 
-        def fake_git(cwd, args):
+        def fake_git(cwd, args, timeout=None):
+            # GH-623: _net_git forwards a finite timeout to run_git; the harness accepts and
+            # ignores it (these tests exercise orchestration, not the network bound).
             git_calls.append(list(args))
             if args and args[0] == "fetch":
                 # The first fetch is the pre-merge refresh (fetch_rc); later ones are the

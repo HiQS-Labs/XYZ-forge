@@ -293,9 +293,20 @@ def agy_validate_model(agy_bin):
 
     try:
         with open(out_file) as f:
-            available = [line.strip().split()[0] for line in f if line.strip()]
+            # GH-630: `agy models` prints `id<TAB>Display name`; accept the id (first token), the
+            # display name, or the whole line, so bare-name listings (the test stub, older CLIs)
+            # and the tabbed rows both validate.
+            available = set()
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                available.add(line)
+                available.add(line.split()[0])
+                if "\t" in line:
+                    available.add(line.split("\t", 1)[1].strip())
     except Exception:
-        available = []
+        available = set()
     finally:
         if os.path.exists(out_file):
             os.remove(out_file)

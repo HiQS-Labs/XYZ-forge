@@ -31,7 +31,7 @@ fi
 if [ "${1:-}" = models ]; then
   [ "${STUB_MODE:-good}" = authfail ] && { printf 'login required\n' >&2; exit 1; }
   [ "${STUB_MODE:-good}" = modelsfail ] && { printf 'models unavailable\n' >&2; exit 1; }
-  printf '%s\n' "${STUB_MODELS:-Gemini 3.5 Flash}"
+  printf '%s\n' "${STUB_MODELS:-gemini-3.5-flash-high}"
   exit 0
 fi
 if [ -n "${STUB_ARGS_LOG:-}" ]; then
@@ -161,7 +161,7 @@ before_relay="$(cksum "$A/relay.md")"
 badmodellog="$WORK/agy-model-bad.$$.log"; : >"$badmodellog"
 RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-model-bad AGY_AGENT=agy \
   AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$badmodellog" STUB_MODE=good \
-  STUB_MODELS=$'Gemini 3.5 Flash\nGPT-OSS 120B' AGY_MODEL='Totally Bogus Model' \
+  STUB_MODELS=$'gemini-3.5-flash-high\ngemini-3.6-flash' AGY_MODEL='totally-bogus-model' \
   bash "$SHIM" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 5 ] && pass "S9: unavailable AGY_MODEL -> shim fails loudly (exit 5)" || fail "unavailable AGY_MODEL should exit 5, got $rc"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "S9: unavailable AGY_MODEL -> no commit" || fail "unavailable AGY_MODEL must not commit"
@@ -174,11 +174,11 @@ goodmodellog="$WORK/agy-model-good.$$.log"; : >"$goodmodellog"
 argslog="$WORK/agy-model-good.$$.args"; rm -f "$argslog"
 RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-model-good AGY_AGENT=agy \
   AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$goodmodellog" STUB_MODE=good \
-  STUB_MODELS=$'Gemini 3.5 Flash\nGPT-OSS 120B' STUB_ARGS_LOG="$argslog" AGY_MODEL='Gemini 3.5 Flash' \
+  STUB_MODELS=$'gemini-3.5-flash-high\ngemini-3.6-flash' STUB_ARGS_LOG="$argslog" AGY_MODEL='gemini-3.5-flash-high' \
   bash "$SHIM" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "S9: listed AGY_MODEL -> shim proceeds" || fail "listed AGY_MODEL should succeed, got $rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "S9: listed AGY_MODEL -> committed normal turn" || fail "listed AGY_MODEL should still commit"
-grep -Fxq -- "--model" "$argslog" && grep -Fxq "Gemini 3.5 Flash" "$argslog" \
+grep -Fxq -- "--model" "$argslog" && grep -Fxq "gemini-3.5-flash-high" "$argslog" \
   && pass "S9: listed AGY_MODEL passed through to agy" || fail "listed AGY_MODEL should be forwarded to agy"
 
 # --- (9) auth pre-flight fail -> exit 5 before the turn mutates anything --------------------------

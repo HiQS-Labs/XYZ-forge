@@ -181,11 +181,38 @@ complexity never lowers this requirement.
 
    None substitutes for another unless it answers the invariant. In particular, a commit not being
    an ancestor is **not** evidence that its content is missing, and a clean diff is not provenance.
-4. **Make recovery or permanent loss explicit:** A Costly operation needs a tested rollback. A true
-   One-way door has none: state the exact permanent loss, residual uncertainty, and resolved target,
-   then obtain fresh, operation-specific operator confirmation. General permission to work
-   unattended is not confirmation of a particular permanent loss.
-5. **Bind and refresh the proof:** Bind evidence to the resolved target and current state. Re-run the
+4. **Make recovery or permanent loss explicit (Preservation Split):**
+   - *Costly Operations:* Require a tested rollback and restoration procedure, explicitly disclosing
+     what intervening writes restoration would lose.
+   - *One-Way Doors:* A true One-way door has no rollback: state the exact permanent loss, residual
+     uncertainty, and resolved target, then obtain fresh, operation-specific operator confirmation.
+     Never claim impossible rollback proofs. General permission to work unattended is not confirmation
+     of a particular permanent loss.
+5. **Durable Operation Identity & Safe Retry (Interrupted-Work Recovery):**
+   - Before dispatching any external side-effecting mutation (cloud resource creation, package
+     publishing, payment/external API mutation, branch/PR creation, or database mutation), record a
+     durable operation identity tuple: `{operation_id, target_arn_or_url, request_fingerprint, idempotency_key}`.
+   - **Reconciliation-Before-Retry:** On resuming after a turn crash, process timeout, or dropped
+     transport, reuse the recorded operation identity and unchanged request fingerprint, evaluating
+     4 distinct remote states:
+     1. *Confirmed Success:* Extract existing receipt/output and advance without re-dispatch.
+     2. *Authoritative Non-Execution:* Safe to re-dispatch using the original idempotency key and unchanged request fingerprint.
+     3. *Pending / In-Flight:* Wait or poll with bounded backoff up to a total reconciliation deadline / attempt cap (e.g., 5 attempts or 300s timeout); do not re-dispatch.
+     4. *Unknown / Unavailable Lookup / Expired Deduplication / Deadline Exhausted:* **STOP and escalate to human decision**; automatic replay is strictly forbidden.
+   - For targets lacking native idempotency, require natural unique constraints or conditional
+     preconditions (e.g. `If-Match`, `version == N`), or stop when non-execution cannot be established.
+6. **Stale-Writer Fence:**
+   - Local process liveness checks (`kill -0`, PID verification) are strictly scoped to operations
+     whose complete write lifetime is demonstrably local (e.g. local repo locks or file mutations).
+   - For remote mutations, an elapsed lease or dead local client process does NOT guarantee remote
+     completion; a true remote stale-writer fence requires target-enforced monotonic fencing tokens /
+     generation numbers that reject stale writers, or else must fall back to the Unknown/Pending stop rule.
+7. **Operational Containment (Secrets & Leakage):**
+   - If an operational defect exposes credentials, tokens, or sensitive material, immediately execute
+     the containment protocol defined in [`ci-debug`](../ci-debug/SKILL.md): Provider-level Revocation/Rotation
+     first → Audit Blast Radius in access logs → Preserve Sanitized Evidence → Explicitly authorized
+     history scrubbing preserving worktree safety.
+8. **Bind and refresh the proof:** Bind evidence to the resolved target and current state. Re-run the
    inventory and preservation checks immediately before mutation; a changed path, ref, worktree,
    process/session, or evidence artifact invalidates the prior proof.
 
@@ -201,9 +228,10 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
 ## Rung 6: Governed Execution & Verification
 
 1. **Execute:** Apply the approved minimal diff to the working branch.
-2. **Verify:**
+2. **Verify (Semantic Post-Mutation Verification):**
    - Run the runnable check left behind in Rung 2.
    - Execute the repository validation suite (e.g., `validate.sh` in XYZ-forge or `pytest` in rebalanceOS).
+   - Verify semantic data content, schema integrity, and state invariants, not merely process exit code `0`.
    - Ensure working tree and tests are green.
    - For destructive work, verify the preservation invariant against the destination or recovery
      artifact. Post-deletion absence alone cannot prove that nothing was lost; the proof must already
@@ -219,6 +247,13 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      - Consult reconciliation takeaways (Rung 4).
      - Preservation proof, reversibility classification, and confirmation result (Rung 5).
      - Test execution and verification results (Rung 6).
+5. **Orchestrator Re-Entry & Autonomous Loop (Batch Execution):**
+   - When `/workhorse` is invoked to diagnose, repair, or resolve an item within a parent orchestrator or multi-item queue (`merge-cleanup`, `jog`, `marathon`, `/10days`):
+     - **A repair is an intermediate checkpoint, never the end of the turn.** Do NOT stop after committing a repair to report to the operator or ask what to do next.
+     - Record the outcome in the item's attempt record (e.g. `finish --outcome resolved` or `parked`).
+     - **Immediately re-invoke the parent orchestrator with `--resume`** (e.g. `python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --execute --resume`).
+     - **Autonomous Loop Invariant:** Repeat the `drive → repair/park → --resume → loop` cycle autonomously until the entire batch is completed, all remaining items are parked/held, or an unresolvable external blocker requires operator escalation.
+     - **Anti-Abandonment:** Completing one sub-item repair while other queue items remain unattempted is an active in-flight state, not a milestone to prompt the operator.
 
 ---
 
@@ -257,3 +292,5 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
 - Execute Rung 0 once per intake, then apply Rungs 1–6 in order for each active queue item. Never skip Rung 1 (ground truth), Rung 3 (governance), or Rung 5 (preservation) to jump to Rung 6 (execution).
 - Keep communication concise and results-driven.
 - If a consult or verification surfaces unexpected failure, loop back to Rung 1 (falsify hypothesis & trace fail path) rather than guessing a patch.
+- **Anti-Downgrade Rail:** If an orchestrator or batch sequence was requested (e.g. merging a series of PRs, clearing an issue queue), never report "Done" or "Complete" if the primary workflow was bypassed or truncated (e.g., Phase 0 refused landing and the agent ran `--teardown-only` to prune clones). The agent must either resolve the blocker within authorized scope, or report the exact blocker stopping the sequence; it must never silently redefine the goal to a safe sub-action and declare victory.
+- **Tripwire to `/unstuck`:** If successive iterations of a batch loop fail to reduce queue depth, or if tools encounter repeated non-zero exit codes without a qualifying state change, immediately invoke `/unstuck` as a blocking interrupt rather than continuing to narrate or halting.

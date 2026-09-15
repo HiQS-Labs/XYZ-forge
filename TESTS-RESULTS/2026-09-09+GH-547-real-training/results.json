@@ -1,0 +1,718 @@
+{
+  "utc": "2026-09-10T05:05:31.442181+00:00",
+  "labels": [
+    "capability",
+    "defect",
+    "investigation",
+    "maintenance",
+    "planning",
+    "unclear"
+  ],
+  "counts": {
+    "train": 72,
+    "validation": 18,
+    "holdout": 25
+  },
+  "created_at_ranges": {
+    "train": [
+      "2026-07-28T15:42:38Z",
+      "2026-09-01T02:00:19Z"
+    ],
+    "validation": [
+      "2026-09-01T07:15:04Z",
+      "2026-09-06T01:56:34Z"
+    ],
+    "holdout": [
+      "2026-09-06T16:04:10Z",
+      "2026-09-10T04:43:10Z"
+    ]
+  },
+  "training_support": {
+    "defect": 29,
+    "capability": 12,
+    "planning": 3,
+    "maintenance": 10,
+    "unclear": 10,
+    "investigation": 8
+  },
+  "reviewer_confidence": {
+    "high": 16,
+    "medium": 9
+  },
+  "controls": {
+    "empty": {
+      "rejected": true,
+      "reason": "empty split"
+    },
+    "duplicate": {
+      "rejected": true,
+      "reason": "duplicate across splits"
+    }
+  },
+  "models": {
+    "majority": {
+      "validation": {
+        "n": 18,
+        "correct": 7,
+        "accuracy": 0.3888888888888889,
+        "macro_f1_all_six": 0.09333333333333334,
+        "macro_f1_present": 0.14,
+        "support": {
+          "defect": 7,
+          "maintenance": 3,
+          "capability": 7,
+          "investigation": 1
+        },
+        "recall": {
+          "capability": 0.0,
+          "defect": 1.0,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            0,
+            7,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            7,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "holdout": {
+        "n": 25,
+        "correct": 9,
+        "accuracy": 0.36,
+        "macro_f1_all_six": 0.08823529411764706,
+        "macro_f1_present": 0.10588235294117647,
+        "support": {
+          "defect": 9,
+          "planning": 5,
+          "maintenance": 6,
+          "capability": 4,
+          "investigation": 1
+        },
+        "recall": {
+          "capability": 0.0,
+          "defect": 1.0,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            0,
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            9,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            6,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            5,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "tfidf": {
+      "validation": {
+        "n": 18,
+        "correct": 7,
+        "accuracy": 0.3888888888888889,
+        "macro_f1_all_six": 0.09333333333333334,
+        "macro_f1_present": 0.14,
+        "support": {
+          "defect": 7,
+          "maintenance": 3,
+          "capability": 7,
+          "investigation": 1
+        },
+        "recall": {
+          "capability": 0.0,
+          "defect": 1.0,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            0,
+            7,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            7,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "holdout": {
+        "n": 25,
+        "correct": 9,
+        "accuracy": 0.36,
+        "macro_f1_all_six": 0.08823529411764706,
+        "macro_f1_present": 0.10588235294117647,
+        "support": {
+          "defect": 9,
+          "planning": 5,
+          "maintenance": 6,
+          "capability": 4,
+          "investigation": 1
+        },
+        "recall": {
+          "capability": 0.0,
+          "defect": 1.0,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            0,
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            9,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            6,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            5,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "high_confidence_holdout": {
+        "n": 16,
+        "correct": 9,
+        "accuracy": 0.5625,
+        "macro_f1_all_six": 0.12,
+        "macro_f1_present": 0.18,
+        "support": {
+          "defect": 9,
+          "capability": 3,
+          "maintenance": 1,
+          "planning": 3
+        },
+        "recall": {
+          "capability": 0.0,
+          "defect": 1.0,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            9,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "modernbert": {
+      "validation": {
+        "n": 18,
+        "correct": 8,
+        "accuracy": 0.4444444444444444,
+        "macro_f1_all_six": 0.16666666666666666,
+        "macro_f1_present": 0.25,
+        "support": {
+          "defect": 7,
+          "maintenance": 3,
+          "capability": 7,
+          "investigation": 1
+        },
+        "recall": {
+          "capability": 0.2857142857142857,
+          "defect": 0.8571428571428571,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            2,
+            4,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            6,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "holdout": {
+        "n": 25,
+        "correct": 10,
+        "accuracy": 0.4,
+        "macro_f1_all_six": 0.18260869565217389,
+        "macro_f1_present": 0.21913043478260869,
+        "support": {
+          "defect": 9,
+          "planning": 5,
+          "maintenance": 6,
+          "capability": 4,
+          "investigation": 1
+        },
+        "recall": {
+          "capability": 0.5,
+          "defect": 0.8888888888888888,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            2,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            2,
+            3,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "high_confidence_holdout": {
+        "n": 16,
+        "correct": 9,
+        "accuracy": 0.5625,
+        "macro_f1_all_six": 0.18796992481203004,
+        "macro_f1_present": 0.28195488721804507,
+        "support": {
+          "defect": 9,
+          "capability": 3,
+          "maintenance": 1,
+          "planning": 3
+        },
+        "recall": {
+          "capability": 0.3333333333333333,
+          "defect": 0.8888888888888888,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            1,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            8,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "shuffled_labels": {
+      "holdout": {
+        "n": 25,
+        "correct": 6,
+        "accuracy": 0.24,
+        "macro_f1_all_six": 0.07407407407407407,
+        "macro_f1_present": 0.08888888888888888,
+        "support": {
+          "defect": 9,
+          "planning": 5,
+          "maintenance": 6,
+          "capability": 4,
+          "investigation": 1
+        },
+        "recall": {
+          "capability": 0.0,
+          "defect": 0.6666666666666666,
+          "investigation": 0.0,
+          "maintenance": 0.0,
+          "planning": 0.0,
+          "unclear": 0.0
+        },
+        "confusion": [
+          [
+            0,
+            4,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            6,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            5,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            3,
+            2,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "timings": {
+    "tfidf_fit_and_both_splits_s": 0.04034929199406179,
+    "train_encode_and_fit_s": 4.066355624992866,
+    "holdout_pass_1_s": 0.8143612909989315,
+    "holdout_pass_2_s": 0.8268117500047083
+  },
+  "versions": {
+    "python": "3.12.13",
+    "torch": "2.14.0",
+    "transformers": "5.17.0",
+    "sklearn": "1.9.0"
+  },
+  "repeat_identical": true
+}
