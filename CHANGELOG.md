@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-15
+
+- **GH-624 / GH-629: merge-cleanup Phase 5 lands more than one ledger-touching PR per run.** The `pr_merged` work emit moved from before the fast-forward to after reconciliation; Phase 5 now runs merge → fast-forward → reconcile → emit → commit → push and asserts the primary is clean at `origin/<integration>` before the next PR (`commit_and_push_phase5_writes`). Reconciliation first looks for the hosted `wave-reconcile.yml` run for the exact merged head (`gh run list --commit`), polls it to completion (`MERGE_CLEANUP_HOSTED_WAIT_S`, `MERGE_CLEANUP_HOSTED_POLL_S`, `MERGE_CLEANUP_HOSTED_GRACE_S`), fast-forwards onto its commit on success, and runs the local `wave_reconcile.py` only when the hosted run is absent or completed red — never while it is queued or in progress. Tests: a two-PR `Closes #N` landing in `test/gh534_phase_c_tests.py` (red under the old order), a hosted-wait test against a fake `gh run list`, and an AST order pin in `test/gh549-work-events.sh`. Landed by marathon `marathon/10days-2026-09-15` (builder codex, reviewer agy).
+- **GH-625: agent-chorus bridge binds without a reverse DNS lookup.** `ThreadingHTTPServer.server_bind` now calls `socketserver.TCPServer.server_bind` and takes `server_name`/`server_port` from the bound socket instead of `HTTPServer`'s `socket.getfqdn()`, which hung past the 4 s probe window on the GitHub-hosted macOS runner and kept `test/agent-chorus-bridge.sh` (and therefore hosted `wave-reconcile.yml`) red. One new check runs the bridge with `socket.getfqdn` patched to raise. Same marathon.
+
 - **GH-605: preserve JSON-native unresolved identities across saved preview/apply.** Normalize planner output once so unchanged unknown evidence survives JSON round-tripping; retain exact drift refusal. Existing real integration fixtures now include a missing-ledger issue, assert it stays untouched, and reject tampered unresolved evidence. Reversibility: Easy, revert the output normalization. Verification: witnessed failing regression before correction and 51/51 focused board tests after.
 
 ## 2026-09-13

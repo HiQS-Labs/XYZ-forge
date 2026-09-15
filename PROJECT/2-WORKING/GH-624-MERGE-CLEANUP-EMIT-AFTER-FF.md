@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/624
 title: "GH-624: merge-cleanup Phase 5 — emit pr_merged after the fast-forward, commit and push the primary's ledger writes, wait for the hosted reconciler"
 status: active
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-15
 owner: orchestrator (Claude Code) · builder codex · reviewer agy
 doc_type: bugfix
 effort: 2
@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| capture doc + preflight contract written by /10days (2026-09-14); acceptance copied verbatim from #624 | marathon lane: builder codex, reviewer agy, on `marathon/10days-2026-09-14` |
+| lane gh-624 approved by agy (round 1) and gate green: emit moved after reconcile, `commit_and_push_phase5_writes` added, two-PR landing test + AST order pin; CHANGELOG entry written | PR from `marathon/10days-2026-09-15` into `development`; lands via /merge-cleanup, which is the first live exercise of the new Phase 5 order |
 
 Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.
 
@@ -87,4 +87,6 @@ simulation beyond the fake `gh run list` answer.
 
 ## Lessons Learned (For Future Agents)
 
-- (filled at closeout by the orchestrator)
+- The defect was invisible while the hosted reconciler committed on `development`; a local-only path exposed it. When a landing tool has two writers (hosted workflow, local script), test the local path with the hosted one absent — the fixture's fake `gh` returning `[]` for `run list` is that test.
+- "Emit after the merge" and "emit after the fast-forward" differ by exactly the ledger files the squash merge also touched; the AST order pin in `test/gh549-work-events.sh` keeps the call order from drifting back without anyone noticing.
+- Lane cost: first codex attempt died on provider capacity (no build); the re-fire built, reviewed and gated in 15 minutes.

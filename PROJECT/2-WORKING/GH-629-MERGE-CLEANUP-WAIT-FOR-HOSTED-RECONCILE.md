@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| lane gh-624 landed the durability order (ff → reconcile → emit → commit → push) but left `run_post_merge_reconcile` with no hosted-run awareness | this lane: hosted wait + local fallback inside the same Phase 5 sequence |
+| lane gh-629 approved by agy; gate went red on a missing `import shutil` in the new test module (fixed by the orchestrator after the relay closed); orchestrator added a 60 s grace window before an empty `gh run list` selects the local writer; Phase C suite 89/89, merge-cleanup suite 148/148, work-events 124/124 | same PR as GH-624 |
 
 Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.
 
@@ -89,4 +89,6 @@ no real GitHub calls, no workflow YAML changes.
 
 ## Lessons Learned (For Future Agents)
 
-- (filled at closeout by the orchestrator)
+- A re-fired marathon phase whose relay already reads `STATUS: Approved` re-runs only the gate — it does not give the builder another turn. A gate-only failure after approval (here a missing import) therefore has to be fixed outside the relay and covered by a fresh review of the delta, not by re-firing.
+- `gh run list --commit <sha>` can be empty for a few seconds after the push that triggers the run; the first empty answer is "not yet", not "no workflow". Without the grace window the local writer starts exactly in the gap where it races the hosted one.
+- Keep `--force-local-reconcile` out of automation: the only safe automatic local path is "hosted absent or completed red"; an active hosted run that outlives the wait is a stop, not a race.

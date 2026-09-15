@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/625
 title: "GH-625: agent-chorus bridge — bind the HTTP server without socket.getfqdn() so the hosted macOS runner's suite goes green"
 status: active
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-15
 owner: orchestrator (Claude Code) · builder codex · reviewer agy
 doc_type: bugfix
 effort: 1
@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| capture doc + preflight contract written by /10days (2026-09-14); acceptance copied verbatim from #625 | marathon lane: builder codex, reviewer agy, on `marathon/10days-2026-09-14` |
+| lane gh-625 approved by agy (round 1), gate green in 5 minutes: 5-line `server_bind` override + one test check with a negative control; CHANGELOG entry written | PR from `marathon/10days-2026-09-15`; post-merge: confirm the first hosted `wave-reconcile.yml` run no longer lists `agent-chorus-bridge.sh` in `failed:` |
 
 Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.
 
@@ -78,4 +78,5 @@ simulation, no DNS mocking framework, no change to the A-series checks themselve
 
 ## Lessons Learned (For Future Agents)
 
-- (filled at closeout by the orchestrator)
+- A suite that is green locally and red only on a hosted runner is usually an environment-dependent stdlib default, not a code regression; the `faulthandler` stack in the issue named the exact frame (`socket.getfqdn` inside `HTTPServer.server_bind`), which made the fix a five-line override with no behaviour change.
+- Test the property, not the runner: patching `socket.getfqdn` to raise and asserting the bridge still reaches its banner proves the bind path never resolves the FQDN anywhere, including on runners we cannot reproduce.
