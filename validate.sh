@@ -499,6 +499,7 @@ TESTS=(
   "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
+  "gh642-consumer-fruit.sh"      # GH-642 (vendor→info/exclude, claude Opus-budget warn, --force token auto-suffix, worktree deps copy, xyz-init-clone, preflight zero-criteria warn)
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
   "gh293-vendored-guard-drift.sh" # GH-293 (safety-guard manifest + safe fleet-update source gate)
   "relay-concurrent-commit.sh"

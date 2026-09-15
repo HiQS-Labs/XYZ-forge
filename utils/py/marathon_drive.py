@@ -484,6 +484,44 @@ def die(msg):
 def log(msg):
     print(f"marathon-drive: {msg}")
 
+def resolve_force_relay_task(base_task, tick_bin, force, explicit):
+    """GH-642: --force on a lane whose default token is already spent used to die at the tick
+    seed with "not claimable — use a fresh per-relay id", AFTER the operator had already chosen
+    to re-fire. When the id was auto-derived (not passed explicitly) and --force is set, scan
+    `<base>-R2, -R3, \u2026` for the first not-found id and return it, announced loudly. Spent ≡
+    tick info status done|circuit_broken; a missing tick binary or an unparseable info response
+    fails BEFORE render/commit/seed — never read as "free". An explicit --relay-task is never
+    rewritten, and an open/claimed token is left alone (the seed's own refusal semantics apply).
+    """
+    if not force or explicit:
+        return base_task
+
+    def _status(task_name):
+        if not tick_bin or not os.path.isfile(tick_bin) or not os.access(tick_bin, os.X_OK):
+            die(f"--force needs a usable tick to probe token state; TICK_BIN={tick_bin!r} is missing or not executable")
+        try:
+            info = subprocess.check_output([tick_bin, "info", task_name], stderr=subprocess.DEVNULL).decode("utf-8", "replace")
+        except subprocess.CalledProcessError:
+            return "not-found"
+        for line in info.splitlines():
+            if line.startswith("status:"):
+                return line.split(":", 1)[1].strip() or "malformed"
+        return "malformed"
+
+    base_status = _status(base_task)
+    if base_status == "malformed":
+        die(f"tick info for {base_task} returned no parseable status; refusing to guess — set --relay-task explicitly")
+    if base_status not in ("done", "circuit_broken"):
+        return base_task
+    k = 2
+    while True:
+        candidate = f"{base_task}-R{k}"
+        if _status(candidate) == "not-found":
+            log(f"--force: default token {base_task} is spent ({base_status}) — using fresh relay task {candidate}")
+            return candidate
+        k += 1
+
+
 def run_tick_loud(cmd_args):
     """Run a tick command, and on failure print what tick said before exiting on it (GH-408).
 
@@ -1338,6 +1376,12 @@ def main():
         pre_advance_cmd = f"bash {shlex.quote(os.path.join(root, 'validate.sh'))}"
     _RESULT["gate_cmd"] = pre_advance_cmd
     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
+    # GH-642: --force on a spent default token auto-suffixes a fresh relay-task id (see
+    # resolve_force_relay_task). Resolved HERE — before render, the receipt
+    # (_RESULT["token"]), heartbeat, and seed — so every downstream consumer sees exactly one
+    # token identity. The lane-attempt key stays lane/phase-keyed.
+    relay_task = resolve_force_relay_task(
+        relay_task, tick_bin, force=bool(args.force), explicit=bool(args.relay_task))
     _RESULT["token"] = relay_task
     # GH-207: a marathon lane namespaces its phase paths + attempt state so two lanes sharing a bare
     # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.

@@ -96,6 +96,18 @@ def main():
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
     max_turns = os.environ.get("CLAUDE_MAX_TURNS", "12")
     max_budget = os.environ.get("CLAUDE_MAX_BUDGET", "0.50")
+
+    # GH-642: the default budget is sized for Sonnet (see the cost-ceilings history in the bash
+    # body). An Opus-class pin with that default hard-stops the turn mid-flight — a bare smoke
+    # call is already ~$0.68 of cache-write. Advisory, not a refusal: Opus is an explicit
+    # operator choice, and refusing would turn a cost mismatch into a new policy gate.
+    if model.startswith("claude-opus") and max_budget == "0.50":
+        print(
+            "claude-turn: WARNING — CLAUDE_MODEL is Opus-class but CLAUDE_MAX_BUDGET is the "
+            "Sonnet-sized default ($0.50); the turn will likely hard-stop on budget. Raise "
+            "CLAUDE_MAX_BUDGET (e.g. 5.00) for Opus lanes.",
+            file=sys.stderr,
+        )
     
     block_cmds_str = os.environ.get("CLAUDE_BLOCK_CMDS", "codex gemini consult consult.sh marathon-drive.sh relay-drive.sh")
     block_cmds = block_cmds_str.split() if block_cmds_str else []

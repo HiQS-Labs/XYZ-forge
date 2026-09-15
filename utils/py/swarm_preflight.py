@@ -1685,6 +1685,18 @@ def main():
             sys.exit(1)
         out_dir = os.path.join(ts_base, "preflight", today, slug)
         
+    # GH-642: a capture doc whose Acceptance section has no `- [ ]` items inline ZERO criteria —
+    # the packet carries only the fallback line further down, and the builder loses its
+    # definition of done. That in-packet note is easy to miss, so say it on stderr too, before
+    # the dry-run exit so both paths surface it. Advisory; exit codes unchanged.
+    if acc_mode == "acceptance-section" and not acc_items and args.format != "json":
+        print(
+            f"swarm-preflight: WARNING — {primary_doc} has an Acceptance section with no "
+            "'- [ ]' checklist items; the packet will inline 0 criteria and the builder gets "
+            "no definition of done. Convert the criteria to a '- [ ]' checklist (or add one).",
+            file=sys.stderr,
+        )
+
     if args.dry_run:
         if args.format != "json":
             emit("")

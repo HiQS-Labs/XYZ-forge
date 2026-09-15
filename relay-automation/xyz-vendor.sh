@@ -239,8 +239,9 @@ write_registry_row() {
 # "fixed" by adding a second `printf >> .gitignore` line, which left GH-440's own direction working
 # and GH-314's completely absent. One function, one invariant, both directions.
 #
-# THE ASYMMETRY IS DELIBERATE. The first half we FIX (appending an ignore rule is additive and
-# reversible). The second half we REFUSE, loudly, and do not touch the target's .gitignore.
+# THE ASYMMETRY IS DELIBERATE. The first half we FIX (adding an ignore rule to the repo-local
+# exclude file is additive and reversible, and never dirties the target's tracked .gitignore —
+# GH-642). The second half we REFUSE, loudly, and do not touch the target's ignore state at all.
 # Auto-un-ignoring would publish builder/reviewer transcripts a repo had explicitly decided to
 # withhold — on a public target that is an irreversible disclosure, made silently, by an install
 # script. `git add -f` is the same mistake one layer down. Refusing is recoverable; publishing is
@@ -294,12 +295,22 @@ reconcile_ignore_state() {
   fi
 
   # --- direction 1: paths that MUST be ignored ------------------------------------------------
-  if [ ! -f "$gitignore" ]; then
-    : > "$gitignore"
+  # GH-642: the destination is the repo-local exclude file ($GIT_DIR/info/exclude), NOT the
+  # target's .gitignore. git check-ignore honors both (and the GH-514 probe above reads through
+  # it), but exclude is machine-local by nature: appending to a tracked .gitignore dirtied a
+  # consumer's worktree and hard-stopped the next --require-clean fire until someone manually
+  # reverted it (local-addon-nexus-ai run 2). `rev-parse --git-path` resolves the right file for
+  # normal clones, linked worktrees, and --separate-git-dir alike. Non-git targets keep the old
+  # .gitignore fallback so the rules stay visible to the operator.
+  local exclude
+  if ! exclude="$(git -C "$TARGET_REPO" rev-parse --git-path info/exclude 2>/dev/null)" \
+     || [ -z "$exclude" ]; then
+    exclude="$gitignore"
   fi
+  mkdir -p "$(dirname "$exclude")"
   for _p in '.xyz/' '/.tick/'; do
-    if ! grep -Fqx "$_p" "$gitignore" 2>/dev/null; then
-      printf '%s\n' "$_p" >> "$gitignore"
+    if ! grep -Fqx "$_p" "$exclude" 2>/dev/null; then
+      printf '%s\n' "$_p" >> "$exclude"
     fi
   done
 }
@@ -388,7 +399,8 @@ materialize_vendor() {
   # GH-312: carry TARGET-owned runtime state across the swap. $STAGE_DIR is mirrored purely from
   # $HARNESS_ROOT, and none of these paths are in VENDOR_DIRS, so the `rm -rf` below would delete
   # whatever the target accumulated -- relay threads, tick event logs, GH-75 telemetry -- unread.
-  # `.xyz/` is gitignored (ensure_gitignore), so nothing under it was ever hashed into a git object:
+  # `.xyz/` is ignored (reconcile_ignore_state → repo-local exclude, GH-642), so nothing under it
+  # was ever hashed into a git object:
   # there is no reflog, stash, or `git fsck --lost-found` recovery. A destroyed relay thread is gone.
   #
   # Preservation rather than a warning or a refusal: both of those still depend on an operator
