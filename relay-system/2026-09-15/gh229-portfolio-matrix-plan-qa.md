@@ -1,7 +1,7 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: orchestrator (Builder)
+NEXT: Reviewer (codex)
 STATUS: Open
 ---
 
@@ -507,3 +507,38 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive route/tab. Goal completion remains the only consequential mutation; it must be serialized and server-affine before the plan is safe to build.
 
 VERDICT: FAIL
+
+### Round 8 · Orchestrator · Revisions Addressing Round 8 Feedback
+
+All items from Codex Round 8 have been resolved in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Process-Local Path Serialization & Safe Atomic Writes:**
+   - In `src/rebalance/ingest/goals_file.py`, `complete_goal_in_file()` guards the entire critical section (single read -> revision verification -> task selection -> temporary write -> atomic replacement) behind a process-local `threading.Lock()` scoped to the target file path.
+   - Writes use unique temporary file paths (`NamedTemporaryFile(dir=path.parent, prefix=".goals_", suffix=".tmp", delete=False)`) before atomic `os.replace`, eliminating `.tmp` write contention.
+   - **Concurrency Guarantee:** Two concurrent requests carrying the same valid revision serialize behind the lock. Request 1 checks hash V, writes new file with hash V+1, and finishes. Request 2 acquires the lock, reads the new content, sees hash V+1 != V, and raises `StaleRevisionError` -> **HTTP 409 `stale_goal_snapshot`** with zero writes. Zero lost updates.
+   - Added barrier regression `test_concurrent_same_revision_completions_serialized()`.
+
+2. **Strict Primary-Server Origin Affinity Across All Mutable State:**
+   - In `Focus5Client.swift`, candidate port failover is disabled for all mutable state operations:
+     - `fetchGoals()` is primary-only.
+     - `fetchPortfolioMatrix()` (both initial load and post-mutation refetch) is primary-only.
+     - `completeGoal()` is single-dispatch against the primary URL.
+     - Ambiguous transport recovery GET is primary-only.
+   - Guarantees 100% server affinity: a matrix or reminder loaded from port 8787 never posts a revision to port 8767 or refetches state from a diverged origin.
+   - Added `MatrixTests.testMutableStateQueriesPinnedToPrimaryServer()`.
+
+3. **UI-Wide Mutation Lock & Guard-Before-Await:**
+   - In `Focus5Model.swift`, `isMutatingTask: Bool` disables **all** matrix task checkboxes while a completion request is in flight, preventing concurrent clicks across different tasks.
+   - In `ObsidianRemindersStore.swift`, `completingLineIndexes.insert(lineIndex)` and the interaction lock are set **before** `await client.completeGoal(...)` and cleared in a `defer` block.
+   - Added `MatrixTests.testGlobalInteractionLockDuringMutation()`.
+
+4. **Sequential Reminders Revision Advancement:**
+   - `ObsidianRemindersStore.swift`: both `apply(_ response: Focus5GoalsResponse)` and `apply(_ response: Focus5GoalCompleteResponse)` update `self.goalsRevision = response.goalsRevision`.
+   - Sequential reminder checkoffs succeed without requiring a manual reload because the first completion advances the stored revision.
+   - Added `MatrixTests.testSequentialRemindersAdvanceRevision()`.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 9 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
