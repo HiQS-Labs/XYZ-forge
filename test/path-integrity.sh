@@ -137,7 +137,7 @@ for f in "${shfiles[@]}" $docs; do
     [ -n "$tok" ] || continue
     # GH-649 checks the generated dot-claude skill in a disposable consumer. The
     # tokenizer strips that prefix; this exact fixture reference is not a root skill.
-    case "$f:$tok" in test/gh649-pdda-migration.sh:skills/pdda/SKILL.md) continue ;; esac
+    case "$f:$tok" in test/gh649-pdda-migration.sh:skills/pdda/SKILL.md|test/path-integrity.sh:skills/pdda/SKILL.md) continue ;; esac
     case "$fixture_literals" in *" $tok "*) continue ;; esac
     if [ ! -e "$ROOT/$tok" ]; then
       echo "  broken path reference '$tok' in $f" >&2
