@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -64,5 +64,19 @@ Grade the stated consumer workflow. Read-only review; change only the relay thre
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1 (2026-09-16)
+
+swept file: yes
+VERDICT: PASS
+Basis: Static review of all 549 lines of ledger_merge.py, the entire regression, and the completed GH-645 doc found no blocking defect in the stated consumer workflow and no additional pre-existing defect requiring a fix in this scope. The four embedded QA questions supply the acceptance criteria; Setup's DoD placeholder is unfilled. No source, artifact, test, or git command was executed. Runtime gate and mutation evidence remain the producer/harness's responsibility. The paginated graph project inventory contains no index for this worktree; exact local source was used rather than relying on another checkout's graph generation. Historical diff size was not independently measured because git is prohibited this turn.
+
+- [Pass] Shell lookup order is clone canonical, clone vendored, primary canonical, primary vendored: skills/merge-cleanup/scripts/ledger_merge.py:256–266. The call at :480 selects directory="utils" and still passes "--root", str(clone), with clone as cwd. Fix: none.
+- [Pass] Python callers retain the default "utils/py" and the existing root argument in skills/merge-cleanup/scripts/ledger_merge.py:256 and :269–270; test/gh645-merge-cleanup-xyz-tools.sh:41–53 and :78–88 retain Python precedence, fallback, missing-tool, and root assertions. Fix: none.
+- [Pass] The new regression executes the selected shell stub, checks its target root against cwd, and asserts the exact selected path and --root command (test/gh645-merge-cleanup-xyz-tools.sh:55–76). By inspection, the original hardcoded clone path has no fixture script, so bash returns nonzero and the resolved assertion at :75 fails. This is static falsifiability analysis, not a claimed mutation run. Fix: none.
+- [Pass] The implementation extends one existing resolver with a defaulted directory parameter and one shell caller (skills/merge-cleanup/scripts/ledger_merge.py:256–270, :480); the focused test adds one consumer-boundary case (:55–76). This is commensurate with the local path repair described in PROJECT/3-COMPLETED/GH-645-MERGE-CLEANUP-LEDGER-GATE-AND-RECONCILE-FAIL-IN-REPOS-THAT-V.md:43–52. Fix: none; no redesign requested.
+- [Should] The completed doc's :59 cites TESTS-RESULTS/2026-09-16+GH-645-qa/provenance.jsonl, which is absent in this review checkout. The available express receipt records the original landing, not the follow-up. Fix: producer must include the actual follow-up passing and original-call failing receipts with the PR, or remove unsupported run claims at :43–48 and correct the evidence pointer. This does not reveal a blocking code defect; this approval does not attest to those runs or to merge readiness.
+
+Relay closed (Approved), no further review turn needed. Producer claude-a owns the evidence follow-up and harness gate before landing.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
