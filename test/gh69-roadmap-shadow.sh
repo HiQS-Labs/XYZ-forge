@@ -240,8 +240,8 @@ ok "  and the next sync is a NO-OP (the mirror agrees with its source; no foreve
    "has \"\$out\" 'already in sync' && [ \"\$(gen_now)\" = \"$G8\" ]"
 
 # the ratings ride the same dump/rebuild machinery as everything else
-ok "the five rating columns ride the dump in fixed trailing order" \
-   "grep -q 'INSERT INTO roadmap_items(.*rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr)' '$R/releases.sql'"
+ok "the five rating columns retain their fixed order before status_label" \
+   "grep -q 'INSERT INTO roadmap_items(.*rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label)' '$R/releases.sql'"
 BEFORE="$(sqlite3 "$R/releases.db" "SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=1")"
 ra check --rebuild >/dev/null 2>&1
 ok "  and survive a dump -> rebuild round trip" \
