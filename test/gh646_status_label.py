@@ -672,18 +672,21 @@ class StatusLabelTests(unittest.TestCase):
                 else:
                     self.fx.conn.execute("UPDATE repos SET slug='foreign/project'")
                 def snapshot():
-                    return {str(p): p.read_bytes() for root in (Path(home),Path(self.fx.root))
-                            for p in root.rglob('*') if p.is_file()}
+                    return {str(p): p.read_bytes() if p.is_file() else None
+                            for root in (Path(home),Path(self.fx.root)) for p in root.rglob('*')}
                 before = snapshot()
                 with mock.patch.dict(os.environ,{"HOME":home}), \
                         mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}), \
                         mock.patch.object(express,"run_releases") as command, self.assertRaises(SystemExit):
                     express.cmd_land(args)
                 command.assert_not_called()
-                self.assertEqual(snapshot(),before)
+                after = snapshot()
+                self.assertEqual(set(after),set(before))
+                self.assertEqual(after,before)
 
     def test_express_resume_committed_receipt_cannot_authorize_foreign_repo(self):
         root = self.fx.root
+        (Path(root)/".gitignore").write_text(".tick/\n")
         express.git(root,"branch","-M","development")
         self.fx.conn.execute("INSERT INTO repos(global_id,slug,updated_at) VALUES(?,?,?)",
                              (app.new_gid("repo-"),"foreign/project",app.now_iso()))
