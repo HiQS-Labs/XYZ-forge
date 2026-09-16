@@ -1,0 +1,20 @@
+ok   - semver-only heading is accepted
+ok   - semver-only heading stays fresh
+ok   - bare-date heading remains accepted
+ok   - bare-date heading stays fresh
+ok   - mixed headings use the top semver entry
+ok   - mixed headings do not fall through to a lower legacy date
+ok   - mixed headings do not false-flag stale freshness
+ok   - bracketless semver heading is accepted
+ok   - bracketless semver heading stays fresh
+ok   - bracketless semver does not trigger missing dated entry warning
+ok   - bracketless quad-version heading is accepted
+ok   - bracketless quad-version does not fall through to legacy date
+ok   - bracketless quad-version stays fresh
+ok   - unbalanced opening bracket is rejected
+ok   - unbalanced closing bracket is rejected
+ok   - date prefix extracts terminal date
+ok   - terminal date used, not prefix date
+ok   - date prefix heading stays fresh
+
+18 passed, 0 failed

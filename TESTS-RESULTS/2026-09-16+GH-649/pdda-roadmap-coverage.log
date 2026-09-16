@@ -1,0 +1,14 @@
+== test: pdda-roadmap-coverage ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-pdda-roadmap-coverage.XXXXXX.TRgjC7RHdp
+  PASS: coverage check fails when a GH inbox capture is not parked in ROADMAP.md
+  PASS: missing parked GH inbox capture reports the correct failure
+  PASS: coverage check passes once the GH inbox capture is parked in ROADMAP.md
+  PASS: a 3-COMPLETED doc with a non-terminal status is flagged (GH-189, restored locally)
+  PASS: issue-doc-sync direction (b) still flags a 2-WORKING doc claiming done while its issue is OPEN (no regression)
+  PASS: issue-doc-sync reports 'state unavailable' for a doc with no cached/live issue state
+  PASS: unevaluable issue state is reported for the no-cached-state doc (WARN since cfd56b0, was INFO)
+  PASS: an unreachable issue state never escalates to ERROR
+  PASS: roadmap-issue-state flags a ledger entry whose non-terminal marker drifted from a CLOSED issue (GH-189)
+  PASS: roadmap-issue-state degrades to INFO 'state unavailable' for a ledger entry with no cached/live issue state
+  PASS: roadmap-issue-state raises no false warning/error for the no-cached-state ledger entry
+  pdda-roadmap-coverage: 11 pass, 0 fail

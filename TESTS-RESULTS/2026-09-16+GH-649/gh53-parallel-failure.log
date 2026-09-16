@@ -1,0 +1,18 @@
+== test: gh53-releases-merge-resolve ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh53-releases-merge-resolve.XXXXXX.pAqgBFPFLn
+  PASS: releases-merge-resolve.sh is executable
+  PASS: releases.db is marked -diff (its diff is generated noise)
+  PASS: releases.db is marked linguist-generated (collapsed in PR review)
+  PASS: releases.db has NO merge driver — it conflicts on purpose, so the rebuild cannot be skipped silently
+  PASS: releases.sql keeps its normal diff (it is the artifact humans actually merge)
+  PASS: releases.db conflicted, as designed (the conflict is the signal)
+    releases-merge-resolve: took either side of releases.db in the working tree (it is regenerated below, so the choice cannot matter)
+    releases-merge-resolve: rebuilding releases.db from the merged releases.sql
+    refused: rule=dump-duplicate-setting: settings key 'generation' appears more than once. `settings` holds one row per key, so a merge that unioned both sides' lines duplicated it. Keep the row that should win (for 'generation', the higher value), delete the other, then rebuild.
+    OK: foreign_keys pragma asserted per connection
+    OK: receipt chain intact (1 receipt(s), business-state digest matches)
+    info: 0 grandfather_entries pending disposition (the strict flip requires none pending)
+    releases-merge-resolve: check --rebuild failed. The merge is left open on purpose — nothing was staged over it.
+      Read the error above: a UNIQUE constraint failure usually means the merged dump contains the same
+      row twice (both sides edited one release), which is a real content conflict a union cannot settle.
+  FAIL: resolver failed on the ordinary case; see /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh53-releases-merge-resolve.XXXXXX.pAqgBFPFLn/r1.out

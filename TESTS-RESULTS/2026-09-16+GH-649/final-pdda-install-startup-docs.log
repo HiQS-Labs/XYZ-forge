@@ -1,0 +1,42 @@
+ok   - templates/ROUTER.target.md exists
+ok   - target template differs from the canonical ROUTER.md
+ok   - target template names zero canonical-only scripts/paths
+ok   - canonical ROUTER.md still documents its own tooling (5 refs)
+ok   - installed ROUTER.md == templates/ROUTER.target.md
+ok   - installed ROUTER.md is NOT the canonical router
+ok   - installed ROUTER.md names zero canonical-only scripts/paths
+ok   - every .sh ref in the installed router exists in the target
+ok   - repo-authored AGENTS.md survives --with-startup-docs (GH-25)
+ok   - repo-authored GUIDING-PRINCIPLES.md survives --with-startup-docs (GH-25)
+ok   - repo-authored ROUTER.md survives --with-startup-docs
+ok   - --force does overwrite the startup docs (guard is real, not a silent skip)
+ok   - --force rewrites ROUTER.md from the template
+ok   - --help names the template ROUTER.md is written from
+ok   - --help states the create-only semantics
+ok   - a fresh --with-startup-docs install reports zero errors in the target
+ok   - self-check runs and passes on the real template
+ok   - a clean install exits 0
+ok   - self-check names the dead bare ref (install.sh)
+ok   - self-check names the dead path ref (pdda-sync.sh)
+ok   - self-check counts the dead refs
+ok   - self-check blames the template, not the target repo
+ok   - a poisoned template makes install.sh exit non-zero
+ok   - install still completes despite the failed self-check
+ok   - the contract still landed
+ok   - self-check catches a dead ref in a non-router startup doc
+ok   - a poisoned non-router startup doc makes install.sh exit non-zero
+ok   - the router is still validated alongside it
+ok   - a .shtml reference does not fail the install
+ok   - a longer suffix (.shtml) is not read as a .sh reference
+ok   - an operator's own ROUTER.md never fails the install
+ok   - self-check skips a kept router and says why
+ok   - the self-check never asserts over a kept router
+ok   - no install-blocking dead-ref failure for a kept router
+ok   - governance still warns (advisory) on the operator's dead ref
+ok   - the operator's router is left untouched
+ok   - a bare filename that resolves elsewhere in the target does not fail the install
+ok   - bare 'pdda-lib.sh' resolves via the repo-wide fallback
+ok   - a plain install exits 0
+ok   - no --with-startup-docs, no self-check
+
+=== pdda-install-startup-docs: 40 passed, 0 failed ===

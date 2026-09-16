@@ -1,5 +1,8 @@
 # Project-Driven Doc Automation (PDDA)
 
+Canonical development: [XYZ Forge](https://github.com/HiQS-Labs/XYZ-forge).
+The shared contract below applies to installed copies; repo-specific adoption policy lives in the target’s startup docs.
+
 PDDA is the document operating layer for this repo. Its job is to keep project plans, bug-fix docs,
 research notes, and roadmap pointers clean enough that an agent can pick up work with minimal drift
 and enough structure that routine hygiene can be automated instead of re-decided every session.
@@ -405,8 +408,8 @@ Purpose:
 - nudge that `CHANGELOG.md` (the first-class end-of-iteration record) was updated this iteration
 
 Minimum behavior:
-- read `CHANGELOG.md` (override via `PDDA_CHANGELOG`); find the newest dated heading, accepting both
-  `## YYYY-MM-DD` and `## [x.y.z] - YYYY-MM-DD`
+- read `CHANGELOG.md` (override via `PDDA_CHANGELOG`); find the newest dated heading, accepting
+  `## YYYY-MM-DD`, `## [x.y.z] - YYYY-MM-DD`, and unbracketed version headings such as `## x.y.z.w - YYYY-MM-DD`
 - `warn` (never `error` — does not block, even in `full`) when that entry predates the latest git
   commit by more than `PDDA_CHANGELOG_STALE_DAYS` days (default `0`)
 - `warn` if `CHANGELOG.md` is missing or has no dated entry; emit `info` (skip the compare) when there
@@ -623,9 +626,6 @@ gh-degrade: none. The check is purely file-driven (no GitHub calls), which is a 
 simplification over the old per-tag-doc check's issue/tag cross-checks against `gh`.
 
 #### RELEASES.md — release ledger
-
-**Note for XYZ-forge (GH-568):** `RELEASES.md` is retired in this repository in favor of `releases.db`
-and `releases_app.py`. Downstream repos adopting PDDA may still use `RELEASES.md` under the contract below.
 
 **`RELEASES.md` is an optional planning aid.** It is not a required artifact, not a checklist, and
 not something to keep topped up. An empty file, a stale file, or no file at all are all valid

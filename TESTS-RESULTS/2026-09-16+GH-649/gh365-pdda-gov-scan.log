@@ -1,0 +1,26 @@
+== test: gh365-pdda-gov-scan ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh365-pdda-gov-scan.XXXXXX.gGZreTxlTX
+== test: gh365-pdda-gov-scan ==
+  PASS: A: ROUTER.md — scanner byte-identical to legacy (93 refs)
+  PASS: A: AGENTS.md — scanner byte-identical to legacy (74 refs)
+  PASS: A: GUIDING-PRINCIPLES.md — scanner byte-identical to legacy (10 refs)
+  PASS: A: README.md — scanner byte-identical to legacy (43 refs)
+  PASS: A: CLAUDE.md — scanner byte-identical to legacy (3 refs)
+  PASS: A: PROJECT/PDDA.md — scanner byte-identical to legacy (148 refs)
+  PASS: A: utils/pdda/PDDA-INSTALL.md — scanner byte-identical to legacy (98 refs)
+  PASS: B1: synthetic corpus — scanner byte-identical to legacy (11 refs)
+  PASS: B2: every pattern shape extracted exactly (10 refs)
+  PASS: B3: console-fence mention NOT extracted (exempt fence)
+  PASS: B4: blockquote mention NOT extracted
+  PASS: B5: GH-<n>-*.md illustrative names filtered
+  PASS: B6: deploy.sh.bak does NOT yield deploy.sh (trailing . is not a terminator)
+  PASS: B7: interpreter-wrapped bash utils/x.sh recovered
+  PASS: C1: dead reference warns on the scanner path
+  PASS: C2: dead reference warns on the forced-legacy fallback path
+  PASS: C3: both paths emit byte-identical governance findings
+  PASS: D1: PDDA_TIMINGS=1 prints 10 PDDA_TIMING lines to stderr
+  PASS: D2: without PDDA_TIMINGS, zero timing lines (default OFF)
+  PASS: D3: stdout byte-identical with and without PDDA_TIMINGS (zero output drift)
+  PASS: E1: scanner invoked 2 time(s) for 2 docs in one run (cache retains across passes)
+  PASS: E2: real-repo governance completed in 5268ms (< 30000ms ceiling; pre-change ~72000ms)
+== gh365-pdda-gov-scan: 22 passed, 0 failed ==
