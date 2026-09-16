@@ -1,0 +1,105 @@
+# Vote: which implementation of GH-349 should this repo merge?
+
+Two branches independently implement **GH-349** — generalising this repo's releases roadmap ledger
+so a vendored `.xyz/` install in a *different* GitHub org can run `releases roadmap sync` against a
+link-style `ROADMAP.md`. Both rewrite `parse_roadmap_ledger` and `cmd_roadmap_sync` in
+`utils/py/releases_app.py`. Only one can merge as-is; they conflict.
+
+You are one of two independent advisors. **Vote, and justify with evidence you gathered yourself.**
+Do not defer to the other advisor, to the PR descriptions, or to either branch's own test counts.
+
+## The two candidates
+
+| | Branch | Commit | Its GH-349 suite |
+|---|---|---|---|
+| **A** | `fix/gh-349-releases-roadmap-vendored` (PR #350) | `d2fb87ba` | `test/gh349-releases-roadmap-vendored.sh` |
+| **B** | `fix/gh351-gh349-releases-ledger-fixes` (PR #352) | `b2f7947f` | `test/gh349-vendored-roadmap-ledger.sh` |
+
+Base for both: `origin/development` (`9d44be35`).
+
+**Your worktree is checked out at A.** Read B, and the common ancestor, with `git show`:
+
+```bash
+git show origin/development:utils/py/releases_app.py             > /tmp/base.py
+git show origin/fix/gh351-gh349-releases-ledger-fixes:utils/py/releases_app.py > /tmp/B.py
+cp utils/py/releases_app.py /tmp/A.py     # your worktree is A
+diff /tmp/base.py /tmp/A.py | head -200
+diff /tmp/base.py /tmp/B.py | head -200
+git show origin/fix/gh351-gh349-releases-ledger-fixes:test/gh349-vendored-roadmap-ledger.sh
+```
+
+**Scope your vote to GH-349 only.** B also adds a `manifest unship` verb (GH-351) and a timestamp
+migration. Those are separate scopes, are not in A, and are not what you are voting on — ignore them.
+
+## Measure, do not reason from the diff alone
+
+The decisive evidence is how each parser behaves on **real ledgers**, not how its regexes read. Two
+real corpora are available:
+
+- `ROADMAP.md` in your worktree — this repo's own ledger, bold-style `- **Title**` bullets. This is
+  the corpus the parser **already served** before either branch, so any change here is a behaviour
+  change that must be justified.
+- `/Users/noelsaw/Documents/GitHub-Repos/LTVera-Pandas/ROADMAP.md` — a real foreign-org, link-style
+  `- [Title](path)` ledger. Read-only; this is the corpus GH-349 exists to support.
+
+A harness that loads both parsers side by side:
+
+```python
+import sys, importlib.util, collections
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    m = importlib.util.module_from_spec(spec); sys.argv = [name]
+    try: spec.loader.exec_module(m)
+    except SystemExit: pass
+    return m
+A = load("A", "/tmp/A.py"); B = load("B", "/tmp/B.py")
+for label, R in (("own", "ROADMAP.md"),
+                 ("foreign", "/Users/noelsaw/Documents/GitHub-Repos/LTVera-Pandas/ROADMAP.md")):
+    for tag, mod in (("A", A), ("B", B)):
+        e = mod.parse_roadmap_ledger(R)
+        c = collections.Counter(x["gh_number"] for x in e if x["gh_number"])
+        print(label, tag, "entries:", len(e),
+              "dupkeys:", {k: v for k, v in c.items() if v > 1})
+        # then inspect: doc_path values, issue_url vs gh_number, entries with empty titles, …
+```
+
+Also write your own fixtures for shapes neither corpus contains.
+
+## Questions your vote must answer
+
+1. **Correctness on the two real ledgers.** For each parser: how many entries, any duplicate
+   `gh_number` (note: `cmd_roadmap_sync` hard-refuses on a duplicate key — so a duplicate means sync
+   is broken for that repo), any `doc_path` that is not a resolvable repo-relative document, any
+   `issue_url` whose trailing number disagrees with the row's `gh_number`, any row with an empty or
+   junk title. Give counts and concrete examples.
+
+2. **Behaviour change on this repo's own ledger.** Diff each parser's output against
+   `origin/development`'s parser over `ROADMAP.md`. Which rows change, and is each change a
+   correction or a regression? Justify each one.
+
+3. **The bullet-matching rule.** What does each treat as a ledger entry? Test markdown task-list
+   items (`- [ ]`, `- [x]`), plain prose bullets, nested/indented sub-bullets, and a `ROADMAP.md`
+   with **no** `## Ledger` header. What gets ingested that should not, or dropped that should not?
+
+4. **Refusal contract.** Both add a guard against a 0-entry parse deleting the mirror. Compare the
+   guard, its rule name, whether the guard's own notion of "the ledger" agrees with the parser's, and
+   whether there is any escape hatch for a genuinely-empty ledger. Can either guard be made to miss?
+
+5. **Test suites.** Judge them on what they would *catch*, not their assertion counts. For each: name
+   one real defect the suite would miss. Does either suite test against a real corpus rather than only
+   synthetic fixtures?
+
+6. **Anything else** — API/contract divergence, cross-caller effects of shared changes, maintainability.
+
+## Your answer
+
+Open with a single line:
+
+`VOTE: A` or `VOTE: B` or `VOTE: NEITHER`
+
+Then the evidence, question by question, with `file:line` citations and the actual command output you
+observed. Then, in one short paragraph: if the losing branch contains anything the winner should
+adopt, name it specifically.
+
+Be concrete and be willing to say a candidate is unsafe. A vote with no measurements behind it is
+worth nothing here.
