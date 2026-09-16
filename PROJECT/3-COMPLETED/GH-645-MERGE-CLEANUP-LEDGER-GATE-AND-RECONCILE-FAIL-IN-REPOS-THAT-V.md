@@ -57,4 +57,7 @@ neutral appeal, small repair. Recent same-subsystem incidents include #623, #624
 is unknown. No operator override was present.
 
 Evidence: `TESTS-RESULTS/2026-09-16+GH-645-qa/provenance.jsonl`.
-Follow-up state: awaiting final QA and PR; the original express fix remains shipped.
+Follow-up state: independent Codex code review Approved; full local qualifying gate passed
+on `a47f1078eab493eed30c0b8cf3920818e7c61e8d`; PR awaiting merge. The original express fix remains shipped.
+The full transcript, telemetry and qualification record are retained beside the focused receipts.
+Post-review additions contain only evidence and documentation; runtime code is unchanged.
