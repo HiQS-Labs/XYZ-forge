@@ -165,7 +165,7 @@ Create a fresh empty file instead.
 ## Install sequence
 
 1. Create the target directories listed above. -> expect `PROJECT/` and `utils/` to exist.
-2. Copy the canonical install-set files verbatim to the same relative paths in the target repo. -> expect `PROJECT/PDDA.md` and all shipped `utils/pdda-*.sh` files to exist.
+2. Expand the shared manifest from the Forge source and copy its files verbatim to the same relative paths in the target repo. -> expect `PROJECT/PDDA.md` and all manifest-listed runtime, scanner and notice files to exist.
 3. Create baseline `ROADMAP.md`, `CHANGELOG.md`, and `RELEASES.md` files if the target repo does not already have them. -> expect the roadmap contract to have a file to guard, the changelog check to warn less, and a release-planning ledger to exist. `RELEASES.md` is the one optional member of that set: `pdda.sh releases` skips a missing file and never blocks, so a repo that never plans a release arc can delete it and stay green. It is seeded only so the format is discoverable — not as a file to keep populated (see `PROJECT/PDDA.md` -> "RELEASES.md — release ledger"). In XYZ-forge, `RELEASES.md` is retired in favor of `releases.db` (GH-568); downstream repos continue to use `RELEASES.md` unless they adopt `releases.db`.
 4. Create an empty `PROJECT/PDDA-ACTIVITY.jsonl` if it does not exist. -> expect a zero- or low-byte log file, not this repo's historical log.
 4a. Add `PROJECT/PDDA-ACTIVITY.jsonl` and `.pdda-gh-state.tsv` to the target's `.gitignore` (and `git rm --cached` any that are already tracked). -> expect the churning runtime state to stop dirtying `git status` on every run.

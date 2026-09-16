@@ -30,7 +30,7 @@ This file is the first entry point for an AI agent working in this repo: it tell
 ## Canonical rules
 
 - Do not put phase checklists, build steps, or deep execution notes in `ROADMAP.md`.
-- Do not edit `utils/pdda/**` in this repo. PDDA's runtime is installed here, not authored here; a local edit is overwritten the next time the runtime is synced from the canonical PDDA repo. Fix it upstream instead.
+- Propose shared runtime changes in [XYZ Forge](https://github.com/HiQS-Labs/XYZ-forge). PDDA is installed here; local adaptations require review when adopting upstream updates. Ordinary sync preserves changed files, while reinstall or explicit forced adoption can replace them.
 - `PROJECT/PDDA-ACTIVITY.jsonl` is runtime output, not source. It starts fresh in this repo and is gitignored.
 - Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer in `ROADMAP.md` — a one-line ledger entry that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` -> "ROADMAP.md contract".
 - Every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be parked in `ROADMAP.md` as a one-line queue entry immediately at intake, then promoted or removed later. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` -> "GitHub issue intake" + "ROADMAP.md contract".
