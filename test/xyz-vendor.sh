@@ -73,8 +73,9 @@ done
 [ "$mcount" = 4 ] && pass "GH-49b: marathon runtime vendored + parses (4 files)" || fail "marathon runtime incomplete ($mcount/4)"
 vfields=$(grep -cE '^(source_commit|tick_version|vendored_utc|tier)=' "$REPO/.xyz/VERSION" 2>/dev/null)
 [ "$vfields" = 4 ] && pass "VERSION has all 4 fields (incl. tier)" || fail "VERSION malformed ($vfields/4 fields)"
-grep -Fqx '.xyz/' "$REPO/.gitignore" && pass ".xyz/ gitignored" || fail ".xyz/ not in .gitignore"
-grep -Fqx '/.tick/' "$REPO/.gitignore" && pass "/.tick/ gitignored (GH-440)" || fail "/.tick/ not in .gitignore"
+grep -Fqx '.xyz/' "$REPO/.git/info/exclude" && pass ".xyz/ excluded (GH-642: repo-local exclude)" || fail ".xyz/ not in info/exclude"
+grep -Fqx '/.tick/' "$REPO/.git/info/exclude" && pass "/.tick/ excluded (GH-440/GH-642)" || fail "/.tick/ not in info/exclude"
+! grep -Fqx '.xyz/' "$REPO/.gitignore" 2>/dev/null && pass "target .gitignore untouched by vendor (GH-642)" || fail "vendor modified the target .gitignore"
 [ "$(grep -vc '^#' "$XYZ_REGISTRY")" = 1 ] && pass "registry has 1 vendored row" || fail "registry row count wrong"
 
 # --- GH-314/GH-440: BOTH directions of the one ignore invariant --------------------------------
@@ -106,12 +107,12 @@ for rule in '/relay-system' 'phases' '/phases/'; do
   grep -Fqx "$rule" "$BR/.gitignore" \
     && pass "  and preserved original ignore rule '$rule'" \
     || fail "  but original rule '$rule' was lost from .gitignore"
-  grep -Fqx '.xyz/' "$BR/.gitignore" \
-    && pass "  and added .xyz/ to .gitignore" \
-    || fail "  but .xyz/ was not added to .gitignore"
-  grep -Fqx '/.tick/' "$BR/.gitignore" \
-    && pass "  and added /.tick/ to .gitignore" \
-    || fail "  but /.tick/ was not added to .gitignore"
+  grep -Fqx '.xyz/' "$BR/.git/info/exclude" \
+    && pass "  and added .xyz/ to the repo-local exclude (GH-642)" \
+    || fail "  but .xyz/ was not added to info/exclude"
+  grep -Fqx '/.tick/' "$BR/.git/info/exclude" \
+    && pass "  and added /.tick/ to the repo-local exclude (GH-642)" \
+    || fail "  but /.tick/ was not added to info/exclude"
   ! grep -q '^!' "$BR/.gitignore" 2>/dev/null \
     && pass "  and left ignored paths un-negated (never un-ignores for you)" \
     || fail "  but wrote a negation rule to un-ignore '$rule'"
@@ -145,9 +146,9 @@ OK_REPO="$(mkignore_repo 'node_modules/')"
 
 # --- idempotent re-run ---
 "$VENDOR" "$REPO" >/dev/null 2>&1
-gi=$(grep -c '^\.xyz/$' "$REPO/.gitignore")
+gi=$(grep -c '^\.xyz/$' "$REPO/.git/info/exclude")
 rr=$(grep -vc '^#' "$XYZ_REGISTRY")
-[ "$gi" = 1 ] && [ "$rr" = 1 ] && pass "idempotent re-run (1 gitignore line, 1 registry row)" || fail "not idempotent (gitignore=$gi rows=$rr)"
+[ "$gi" = 1 ] && [ "$rr" = 1 ] && pass "idempotent re-run (1 exclude line, 1 registry row)" || fail "not idempotent (exclude=$gi rows=$rr)"
 
 # --- --no-register ---
 mkdir -p "$WORK/foreign2"; git init -q "$WORK/foreign2"; REPO2="$(cd "$WORK/foreign2" && pwd -P)"

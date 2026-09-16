@@ -131,6 +131,7 @@ EXEMPT_reason() {
     gh407-gate-ran-attribution.sh)          echo "fixture root: MARATHON_ROOT=\$WORK + stubs" ;;
     gh371-interrupt-snapshot.sh)            echo "copied fixture harness at \$HARNESS: drivers are cp'd into it and MARATHON_ROOT=\$HARNESS puts the lock inside the copy (caught by D2 when development added the suite — the audit working)" ;;
     gh372-escalation-log-tail.sh)           echo "copied fixture harness at \$HARNESS, same shape as gh371: MARATHON_ROOT=\$HARNESS + stub relay-drive (caught by D2 when development added the suite)" ;;
+    gh642-consumer-fruit.sh)                echo "text-analysis + unit import only: greps the twins' source, imports resolve_force_relay_task against a \$STUB tick, and exercises rtl_worktree_begin in a \$FIX fixture repo; the shipped driver is never executed" ;;
     *)                                      return 1 ;;
   esac
 }
