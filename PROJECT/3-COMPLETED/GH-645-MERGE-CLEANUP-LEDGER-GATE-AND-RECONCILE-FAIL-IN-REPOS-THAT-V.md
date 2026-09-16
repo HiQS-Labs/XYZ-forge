@@ -1,6 +1,6 @@
 ---
 title: "GH-645: merge-cleanup: ledger gate and reconcile fail in repos that vendor PRS tools under gitignored .xyz/"
-status: Active
+status: Complete
 created: 2026-09-16
 updated: 2026-09-16
 owner: operator (via /express)
