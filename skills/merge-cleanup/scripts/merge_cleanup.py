@@ -458,7 +458,7 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     reconcile_script = repo_path / "utils" / "py" / "wave_reconcile.py"
     if not reconcile_script.exists():
         return True
-    r_cmd = [sys.executable, str(reconcile_script), "--pr", str(pr_num)]
+    r_cmd = [sys.executable, str(reconcile_script), "--pr", str(pr_num), "--force-local-reconcile"]
     r_res = subprocess.run(r_cmd, cwd=str(repo_path), capture_output=True, text=True, check=False)
     if r_res.returncode == 0:
         log(f"✅ local wave_reconcile for PR #{pr_num} passed")

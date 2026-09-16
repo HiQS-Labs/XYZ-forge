@@ -31,6 +31,8 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-584/GH-591: recover unqualified merges without legacy-row sweep aborts.** Catch-up warns on unattributable closed rows, uses committed validated receipts to recover missing PR events, and gives each issue's lifecycle writes to its newest closer. PR jobs collect the pending batch so one full run can qualify several landings. Shallow history, malformed metadata and API failures remain errors. Verification: witnessed legacy-abort and wrong-closer controls, focused reconciliation suites, live read-only discovery and deterministic PDDA checks; full local gate passes; hosted acceptance remains in the active plan. Reversibility: **Easy** — revert the recovery changes while retaining already committed receipts.
 
+- **GH-606 — End of Week skill:** added a portable seven-day governance review that discovers the GitHub default branch and user configuration, files ranked gaps, corrects verified metadata through existing writers and verifies the configured kanban projection. Script recalibration remains recommendations only. Plan relay Approved; skill validation, targeted PDDA checks and public-path negative controls passed. No live weekly sweep or board update was performed while authoring. Details and remaining verification: `PROJECT/2-WORKING/GH-606-END-OF-WEEK-SKILL.md` and `TESTS-RESULTS/2026-09-13+GH-606/`.
+
 - **GH-546/GH-591: produce full-suite evidence inside automatic reconciliation.** The existing macOS job qualifies a pinned integration snapshot in an independent full clone and commits attributable receipts with lifecycle outputs. Complete sequential telemetry is mandatory; failed, partial, stale-identity or malformed proof cannot authorize closeout. Existing local push checks remain in place. This replaces the proposed receipt commit/repush loop and covers PRs regardless of author-side hook routing. Verification: witnessed missing-producer and wrong-identity controls, focused receipt/workflow/Git-boundary regressions; full candidate local gate passes; hosted acceptance remains pending in the active plan. Reversibility: **Costly** for in-flight closeout; revert the workflow opt-in and producer together while preserving historical receipts. Revisit if the serialized full suite creates a sustained queue or exceeds its bounded timeout.
 
 - **GH-595: merge-cleanup makes primary-checkout deferral an operator decision.** Every executing
@@ -53,6 +55,10 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## 2026-09-11
 
 - **GH-496: Fast-lane direct push optimization (`XYZ_SKIP_PREPUSH=1`) and AST selective routing for append-only `validate.sh` registrations.** `utils/py/express.py` automatically sets `XYZ_SKIP_PREPUSH=1` during express landings to prevent duplicate 4–6 minute local pre-push gating after explicit qualification. `utils/ci-route.sh` introduces structural AST/skeleton parsing (`check_validate_append_only`) to allow fast/Tier-2 routing for append-only test registrations in `validate.sh`, strictly verifying that outside-array code is byte-identical and array comments/tests remain in-order subsequences while failing closed on mutations, syntax errors, or diff errors. Reversibility: **Easy** — revert the routing parser in `utils/ci-route.sh` and express flags. Verification: `test/ci-route.sh` 76/76 (13 positive & falsification cases), `test/gh267-express-skill.sh` 76/76, and Codex QA relay `Approved/Closed`.
+
+## 2026-09-11
+
+- **GH-579 intake:** recorded current consult/role boundaries and parked HiQS integration pending its shared foundation. Scoped PDDA: zero errors; ledger consistency clean (existing warnings retained). No dispatch or live-provider changes.
 
 ## 2026-09-10
 

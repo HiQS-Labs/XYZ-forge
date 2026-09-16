@@ -1,0 +1,1851 @@
+{
+  "utc": "2026-09-10T15:27:45.222592+00:00",
+  "counts": {
+    "train": 136,
+    "validation": 32,
+    "holdout": 40
+  },
+  "description_truncated": {
+    "train": 84,
+    "validation": 17,
+    "holdout": 33
+  },
+  "controls": {
+    "empty": {
+      "rejected": true,
+      "reason": "empty data"
+    },
+    "missing_label": {
+      "rejected": true,
+      "reason": "label IDs"
+    },
+    "duplicate": {
+      "rejected": true,
+      "reason": "duplicate text"
+    },
+    "invalid_purpose": {
+      "rejected": true,
+      "reason": "invalid purpose"
+    }
+  },
+  "versions": {
+    "python": "3.12.13",
+    "torch": "2.14.0",
+    "transformers": "5.17.0",
+    "sklearn": "1.9.0"
+  },
+  "axes": {
+    "purpose": {
+      "support": {
+        "train": {
+          "research_evaluation": 16,
+          "documentation": 15,
+          "bug_fix": 45,
+          "planning_design": 8,
+          "feature_enhancement": 23,
+          "merge_closeout": 8,
+          "maintenance": 9,
+          "testing_validation": 12
+        },
+        "validation": {
+          "bug_fix": 18,
+          "feature_enhancement": 5,
+          "maintenance": 3,
+          "planning_design": 2,
+          "documentation": 1,
+          "research_evaluation": 1,
+          "testing_validation": 2
+        },
+        "holdout": {
+          "planning_design": 4,
+          "merge_closeout": 1,
+          "feature_enhancement": 7,
+          "bug_fix": 17,
+          "research_evaluation": 5,
+          "testing_validation": 2,
+          "documentation": 4
+        }
+      },
+      "models": {
+        "tfidf": {
+          "selected_C": 0.1,
+          "class_weight": "balanced",
+          "grid": [
+            {
+              "C": 0.1,
+              "weight": null,
+              "validation_macro_f1": 0.09
+            },
+            {
+              "C": 0.1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.3472222222222222
+            },
+            {
+              "C": 1,
+              "weight": null,
+              "validation_macro_f1": 0.09
+            },
+            {
+              "C": 1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.2039473684210526
+            },
+            {
+              "C": 10,
+              "weight": null,
+              "validation_macro_f1": 0.16517857142857142
+            },
+            {
+              "C": 10,
+              "weight": "balanced",
+              "validation_macro_f1": 0.2492063492063492
+            },
+            {
+              "C": 100,
+              "weight": null,
+              "validation_macro_f1": 0.16517857142857142
+            },
+            {
+              "C": 100,
+              "weight": "balanced",
+              "validation_macro_f1": 0.2492063492063492
+            }
+          ],
+          "validation": {
+            "labeled_n": 32,
+            "uncertain_truth_n": 0,
+            "correct": 16,
+            "raw_accuracy": 0.5,
+            "macro_f1": 0.3472222222222222,
+            "confusion_labels": [
+              "bug_fix",
+              "documentation",
+              "feature_enhancement",
+              "maintenance",
+              "merge_closeout",
+              "planning_design",
+              "research_evaluation",
+              "testing_validation"
+            ],
+            "confusion": [
+              [
+                10,
+                2,
+                1,
+                0,
+                0,
+                1,
+                1,
+                3
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                2,
+                0,
+                0,
+                1,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                1,
+                0,
+                2,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2
+              ]
+            ],
+            "threshold": "reject_all",
+            "accepted_n": 0,
+            "coverage": 0.0,
+            "accepted_accuracy": null,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 0
+          },
+          "holdout": {
+            "labeled_n": 40,
+            "uncertain_truth_n": 0,
+            "correct": 20,
+            "raw_accuracy": 0.5,
+            "macro_f1": 0.43026477832512317,
+            "confusion_labels": [
+              "bug_fix",
+              "documentation",
+              "feature_enhancement",
+              "maintenance",
+              "merge_closeout",
+              "planning_design",
+              "research_evaluation",
+              "testing_validation"
+            ],
+            "confusion": [
+              [
+                9,
+                0,
+                1,
+                0,
+                0,
+                1,
+                1,
+                5
+              ],
+              [
+                1,
+                2,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                4,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                2,
+                1,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                3,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+              ]
+            ],
+            "threshold": "reject_all",
+            "accepted_n": 0,
+            "coverage": 0.0,
+            "accepted_accuracy": null,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 0
+          },
+          "head_repeat_seconds": [
+            0.0005412500031525269,
+            0.00020804200903512537
+          ],
+          "repeat_identical": true,
+          "secondary": {
+            "trained_labels": [
+              "documentation"
+            ],
+            "unsupported_training_labels": [
+              "maintenance",
+              "merge_closeout",
+              "planning_design",
+              "research_evaluation",
+              "testing_validation"
+            ],
+            "unseen_holdout_labels": [
+              "bug_fix"
+            ],
+            "micro_precision": 0.0,
+            "micro_recall": 0.0,
+            "micro_f1": 0.0,
+            "known_axis_rows": 40,
+            "positive_truth_entries_scored": 2,
+            "note": "No qualification when truth has no positives; unseen labels excluded from matrix and listed explicitly."
+          }
+        },
+        "modernbert": {
+          "selected_C": 10,
+          "class_weight": "balanced",
+          "grid": [
+            {
+              "C": 0.1,
+              "weight": null,
+              "validation_macro_f1": 0.09
+            },
+            {
+              "C": 0.1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.3016381766381766
+            },
+            {
+              "C": 1,
+              "weight": null,
+              "validation_macro_f1": 0.09
+            },
+            {
+              "C": 1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.3032407407407407
+            },
+            {
+              "C": 10,
+              "weight": null,
+              "validation_macro_f1": 0.08854166666666667
+            },
+            {
+              "C": 10,
+              "weight": "balanced",
+              "validation_macro_f1": 0.3114177489177489
+            },
+            {
+              "C": 100,
+              "weight": null,
+              "validation_macro_f1": 0.30208333333333337
+            },
+            {
+              "C": 100,
+              "weight": "balanced",
+              "validation_macro_f1": 0.2786458333333333
+            }
+          ],
+          "validation": {
+            "labeled_n": 32,
+            "uncertain_truth_n": 0,
+            "correct": 13,
+            "raw_accuracy": 0.40625,
+            "macro_f1": 0.3114177489177489,
+            "confusion_labels": [
+              "bug_fix",
+              "documentation",
+              "feature_enhancement",
+              "maintenance",
+              "merge_closeout",
+              "planning_design",
+              "research_evaluation",
+              "testing_validation"
+            ],
+            "confusion": [
+              [
+                9,
+                3,
+                0,
+                0,
+                1,
+                5,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                1,
+                0,
+                2,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                2,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2
+              ]
+            ],
+            "threshold": "reject_all",
+            "accepted_n": 0,
+            "coverage": 0.0,
+            "accepted_accuracy": null,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 0
+          },
+          "holdout": {
+            "labeled_n": 40,
+            "uncertain_truth_n": 0,
+            "correct": 23,
+            "raw_accuracy": 0.575,
+            "macro_f1": 0.3701975108225108,
+            "confusion_labels": [
+              "bug_fix",
+              "documentation",
+              "feature_enhancement",
+              "maintenance",
+              "merge_closeout",
+              "planning_design",
+              "research_evaluation",
+              "testing_validation"
+            ],
+            "confusion": [
+              [
+                14,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                0,
+                1,
+                1,
+                0
+              ],
+              [
+                1,
+                0,
+                4,
+                1,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                0,
+                1,
+                1,
+                0
+              ],
+              [
+                0,
+                2,
+                2,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1
+              ]
+            ],
+            "threshold": "reject_all",
+            "accepted_n": 0,
+            "coverage": 0.0,
+            "accepted_accuracy": null,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 0
+          },
+          "head_repeat_seconds": [
+            0.00014945800649002194,
+            9.470799705013633e-05
+          ],
+          "repeat_identical": true,
+          "secondary": {
+            "trained_labels": [
+              "documentation"
+            ],
+            "unsupported_training_labels": [
+              "maintenance",
+              "merge_closeout",
+              "planning_design",
+              "research_evaluation",
+              "testing_validation"
+            ],
+            "unseen_holdout_labels": [
+              "bug_fix"
+            ],
+            "micro_precision": 0.0,
+            "micro_recall": 0.0,
+            "micro_f1": 0.0,
+            "known_axis_rows": 40,
+            "positive_truth_entries_scored": 2,
+            "note": "No qualification when truth has no positives; unseen labels excluded from matrix and listed explicitly."
+          }
+        }
+      },
+      "majority": {
+        "labeled_n": 40,
+        "uncertain_truth_n": 0,
+        "correct": 17,
+        "raw_accuracy": 0.425,
+        "macro_f1": 0.07456140350877193,
+        "confusion_labels": [
+          "bug_fix",
+          "documentation",
+          "feature_enhancement",
+          "maintenance",
+          "merge_closeout",
+          "planning_design",
+          "research_evaluation",
+          "testing_validation"
+        ],
+        "confusion": [
+          [
+            17,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            7,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "threshold": 0,
+        "accepted_n": 40,
+        "coverage": 1.0,
+        "accepted_accuracy": 0.425,
+        "unknown_false_accepts": 0,
+        "correct_labeled_retained": 17
+      }
+    },
+    "area": {
+      "support": {
+        "train": {
+          "documentation_policy": 15,
+          "uncertain": 21,
+          "ci_cd": 12,
+          "search_retrieval": 10,
+          "core_harness": 35,
+          "ui": 5,
+          "ingestion_sync": 2,
+          "integrations": 9,
+          "model_inference": 1,
+          "skills": 8,
+          "ledger": 13,
+          "telemetry": 5
+        },
+        "validation": {
+          "integrations": 2,
+          "telemetry": 1,
+          "core_harness": 9,
+          "ledger": 4,
+          "ci_cd": 4,
+          "skills": 4,
+          "dependencies": 1,
+          "documentation_policy": 1,
+          "uncertain": 1,
+          "ingestion_sync": 2,
+          "model_inference": 3
+        },
+        "holdout": {
+          "uncertain": 2,
+          "model_inference": 10,
+          "ui": 2,
+          "ingestion_sync": 3,
+          "core_harness": 4,
+          "telemetry": 2,
+          "ci_cd": 6,
+          "skills": 5,
+          "search_retrieval": 2,
+          "documentation_policy": 3,
+          "ledger": 1
+        }
+      },
+      "models": {
+        "tfidf": {
+          "selected_C": 0.1,
+          "class_weight": "balanced",
+          "grid": [
+            {
+              "C": 0.1,
+              "weight": null,
+              "validation_macro_f1": 0.04090909090909091
+            },
+            {
+              "C": 0.1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.293454020726748
+            },
+            {
+              "C": 1,
+              "weight": null,
+              "validation_macro_f1": 0.04090909090909091
+            },
+            {
+              "C": 1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.1883116883116883
+            },
+            {
+              "C": 10,
+              "weight": null,
+              "validation_macro_f1": 0.04090909090909091
+            },
+            {
+              "C": 10,
+              "weight": "balanced",
+              "validation_macro_f1": 0.13903743315508021
+            },
+            {
+              "C": 100,
+              "weight": null,
+              "validation_macro_f1": 0.04090909090909091
+            },
+            {
+              "C": 100,
+              "weight": "balanced",
+              "validation_macro_f1": 0.13903743315508021
+            }
+          ],
+          "validation": {
+            "labeled_n": 31,
+            "uncertain_truth_n": 1,
+            "correct": 15,
+            "raw_accuracy": 0.4838709677419355,
+            "macro_f1": 0.26899951899951896,
+            "confusion_labels": [
+              "ci_cd",
+              "core_harness",
+              "dependencies",
+              "documentation_policy",
+              "ingestion_sync",
+              "integrations",
+              "ledger",
+              "model_inference",
+              "search_retrieval",
+              "skills",
+              "telemetry",
+              "ui"
+            ],
+            "confusion": [
+              [
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                6,
+                0,
+                1,
+                0,
+                0,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                3,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                2,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "threshold": "reject_all",
+            "accepted_n": 0,
+            "coverage": 0.0,
+            "accepted_accuracy": null,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 0
+          },
+          "holdout": {
+            "labeled_n": 38,
+            "uncertain_truth_n": 2,
+            "correct": 12,
+            "raw_accuracy": 0.3157894736842105,
+            "macro_f1": 0.20595427963849017,
+            "confusion_labels": [
+              "ci_cd",
+              "core_harness",
+              "documentation_policy",
+              "ingestion_sync",
+              "integrations",
+              "ledger",
+              "model_inference",
+              "search_retrieval",
+              "skills",
+              "telemetry",
+              "ui"
+            ],
+            "confusion": [
+              [
+                2,
+                2,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                4,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                4,
+                3,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                3,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "threshold": "reject_all",
+            "accepted_n": 0,
+            "coverage": 0.0,
+            "accepted_accuracy": null,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 0
+          },
+          "head_repeat_seconds": [
+            0.00014433400065172464,
+            0.0001296660047955811
+          ],
+          "repeat_identical": true,
+          "secondary": {
+            "trained_labels": [
+              "ci_cd",
+              "documentation_policy",
+              "ledger",
+              "skills",
+              "telemetry"
+            ],
+            "unsupported_training_labels": [
+              "core_harness"
+            ],
+            "unseen_holdout_labels": [
+              "ui"
+            ],
+            "micro_precision": 0.0,
+            "micro_recall": 0.0,
+            "micro_f1": 0.0,
+            "known_axis_rows": 38,
+            "positive_truth_entries_scored": 1,
+            "note": "No qualification when truth has no positives; unseen labels excluded from matrix and listed explicitly."
+          }
+        },
+        "modernbert": {
+          "selected_C": 100,
+          "class_weight": null,
+          "grid": [
+            {
+              "C": 0.1,
+              "weight": null,
+              "validation_macro_f1": 0.04090909090909091
+            },
+            {
+              "C": 0.1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.0606060606060606
+            },
+            {
+              "C": 1,
+              "weight": null,
+              "validation_macro_f1": 0.04090909090909091
+            },
+            {
+              "C": 1,
+              "weight": "balanced",
+              "validation_macro_f1": 0.0606060606060606
+            },
+            {
+              "C": 10,
+              "weight": null,
+              "validation_macro_f1": 0.043062200956937795
+            },
+            {
+              "C": 10,
+              "weight": "balanced",
+              "validation_macro_f1": 0.07727272727272728
+            },
+            {
+              "C": 100,
+              "weight": null,
+              "validation_macro_f1": 0.12962962962962962
+            },
+            {
+              "C": 100,
+              "weight": "balanced",
+              "validation_macro_f1": 0.09402293612819927
+            }
+          ],
+          "validation": {
+            "labeled_n": 31,
+            "uncertain_truth_n": 1,
+            "correct": 10,
+            "raw_accuracy": 0.3225806451612903,
+            "macro_f1": 0.11882716049382715,
+            "confusion_labels": [
+              "ci_cd",
+              "core_harness",
+              "dependencies",
+              "documentation_policy",
+              "ingestion_sync",
+              "integrations",
+              "ledger",
+              "model_inference",
+              "search_retrieval",
+              "skills",
+              "telemetry",
+              "ui"
+            ],
+            "confusion": [
+              [
+                0,
+                4,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                8,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                1,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                3,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "threshold": 0.6000000000000001,
+            "accepted_n": 5,
+            "coverage": 0.15625,
+            "accepted_accuracy": 1.0,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 5
+          },
+          "holdout": {
+            "labeled_n": 38,
+            "uncertain_truth_n": 2,
+            "correct": 10,
+            "raw_accuracy": 0.2631578947368421,
+            "macro_f1": 0.2212396694214876,
+            "confusion_labels": [
+              "ci_cd",
+              "core_harness",
+              "documentation_policy",
+              "ingestion_sync",
+              "integrations",
+              "ledger",
+              "model_inference",
+              "search_retrieval",
+              "skills",
+              "telemetry",
+              "ui"
+            ],
+            "confusion": [
+              [
+                1,
+                5,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                4,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                2,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                5,
+                2,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0
+              ],
+              [
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            "threshold": 0.6000000000000001,
+            "accepted_n": 4,
+            "coverage": 0.1,
+            "accepted_accuracy": 0.25,
+            "unknown_false_accepts": 0,
+            "correct_labeled_retained": 1
+          },
+          "head_repeat_seconds": [
+            8.004200935829431e-05,
+            7.895799353718758e-05
+          ],
+          "repeat_identical": true,
+          "secondary": {
+            "trained_labels": [
+              "ci_cd",
+              "documentation_policy",
+              "ledger",
+              "skills",
+              "telemetry"
+            ],
+            "unsupported_training_labels": [
+              "core_harness"
+            ],
+            "unseen_holdout_labels": [
+              "ui"
+            ],
+            "micro_precision": 0.0,
+            "micro_recall": 0.0,
+            "micro_f1": 0.0,
+            "known_axis_rows": 38,
+            "positive_truth_entries_scored": 1,
+            "note": "No qualification when truth has no positives; unseen labels excluded from matrix and listed explicitly."
+          }
+        }
+      },
+      "majority": {
+        "labeled_n": 38,
+        "uncertain_truth_n": 2,
+        "correct": 4,
+        "raw_accuracy": 0.10526315789473684,
+        "macro_f1": 0.017316017316017316,
+        "confusion_labels": [
+          "ci_cd",
+          "core_harness",
+          "documentation_policy",
+          "ingestion_sync",
+          "integrations",
+          "ledger",
+          "model_inference",
+          "search_retrieval",
+          "skills",
+          "telemetry",
+          "ui"
+        ],
+        "confusion": [
+          [
+            0,
+            6,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            10,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        ],
+        "threshold": 0,
+        "accepted_n": 40,
+        "coverage": 1.0,
+        "accepted_accuracy": 0.1,
+        "unknown_false_accepts": 2,
+        "correct_labeled_retained": 4
+      }
+    }
+  },
+  "timings": {
+    "tfidf_features_s": 0.16364700000849552,
+    "model_load_s": 0.41192941600456834,
+    "modernbert_train_encoding_s": 56.84563166598673,
+    "modernbert_validation_encoding_s": 13.493943417008268,
+    "modernbert_holdout_encoding_s": 17.10901179201028,
+    "tfidf_purpose_search_and_evaluation_s": 2.69068858299579,
+    "modernbert_purpose_search_and_evaluation_s": 0.24672741600079462,
+    "tfidf_area_search_and_evaluation_s": 3.8209073330071988,
+    "modernbert_area_search_and_evaluation_s": 0.3360694579896517
+  },
+  "max_tokens": 775
+}
