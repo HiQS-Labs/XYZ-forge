@@ -1,0 +1,6 @@
+FIRSTHAND_COUNT=0
+ECHOED_COUNT=4
+ECHOED `deepseek-turn.py`
+ECHOED `agy-turn.py`
+ECHOED `agy-turn.py`
+ECHOED `rtl_run_bounded`
