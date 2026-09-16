@@ -2,56 +2,34 @@
 
 phase: p1
 task: MARATHON-P1-TURN
-relay-drive-exit: 6
-reason: containment-violation (off-lane edit reverted by a turn-taker)
+relay-drive-exit: 5
+reason: relay-failed-before-gate
 gate: not-run
 relay-file: marathon-system/gh648-headless-turn-timeout--p1/RELAY.md
 
-turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-25217.log
+turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-98567.log
 
 <details>
-<summary>Last 40 lines of failing turn log</summary>
+<summary>Last 18 lines of failing turn log</summary>
 
 ```text
-- "'`utils/py/turn_diagnostics.py`: quiet CPU/files now classify as
-  `timeout-idle-unknown`; removed the claim that this proves blockage. Kept
-  `REASON_IDLE` as the compatible import name. No network probe: an established
-  connection cannot prove request progress, and missing network tooling should
-  not create a new dependency. All-zero process-count samples now classify as
-  unclassified; nonzero command exits discard partial probe output.
-- Added `termination_record(trigger)` and `emit_termination(trigger, stream)`.
-  The versioned JSON line records explicit idle-kill / wall-cap / child-orphan /
-  unknown, diagnostic reason/detail, root PID, sample count, and unchanged exit
-  code 7. Unknown triggers normalize to unknown. Classification and sink failures
-  do not fail the described turn. Callers must supply the observed termination
-  boundary; this lane does not infer orphaning or wire callers (L3/L5 own adoption).
-- `test/gh648-l1-turn-termination.sh`: hermetic in-memory fixtures, including
-  quiet samples with stubbed established outbound connection, JSON round trips,
-  probe exceptions/nonzero exits, broken log sink, and CPU/progress controls.
-  Four source mutations run in memory and each fails the same contract assertion.
-- `validate.sh`: registered the new suite.
-
-Verification: the focused suite passed all contract checks and rejected all four
-mutants; shell syntax checks passed for the new suite and validate.sh. Before the
-edit, the quiet fixture reproduced the old no-progress overclaim. Captured output:
-`.relay-scratch/gh648-l1-verification.log` (ephemeral harness scratch).
-No full gate was run, per operator instruction; the harness owns that gate.
-No git commands were run. Graph tools were unavailable; inspected source directly.
-"""
-p.write_text(s)
-PY
-TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang" "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick" release MARATHON-P1-TURN --agent codex --to agy' in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.GEW0py
- succeeded in 0ms:
-released: MARATHON-P1-TURN
-
-codex
-Implemented idle-unknown classification and structured termination records. Focused tests passed, including four mutation checks. Full gate left to the harness. Relay updated and token released.
-
-handing off to agy — agy, take your turn.
-tokens used
-53,229
-Implemented idle-unknown classification and structured termination records. Focused tests passed, including four mutation checks. Full gate left to the harness. Relay updated and token released.
-
-handing off to agy — agy, take your turn.
+Reading additional input from stdin...
+OpenAI Codex v0.153.4
+--------
+workdir: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.eDRPsZ
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/.tick]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a0ac23-4138-78f2-9bee-376b955a2173
+--------
+user
+You are agent codex, taking your turn in a file-based relay. Read marathon-system/gh648-headless-turn-timeout--p1/RELAY.md and follow its embedded "▶ TAKE YOUR TURN" steps for your role. For the MARATHON-P1-TURN token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang" "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick". Token sequence: (1) claim it FIRST — claim MARATHON-P1-TURN --agent codex --paths marathon-system/gh648-headless-turn-timeout--p1/RELAY.md — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, release --to agy. Edit ONLY marathon-system/gh648-headless-turn-timeout--p1/RELAY.md and: utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh. NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn. Verification output (probe results, generated JSON, logs) goes under .relay-scratch/ — pre-created for you, exempt from containment, never copied back; scratch files anywhere else in the tree are reverted and FAIL your turn.
+ERROR: Selected model is at capacity. Please try a different model.
+ERROR: Selected model is at capacity. Please try a different model.
+[trace] rtl_enforce: COMMIT none (no tracked changes) agent=codex
+[trace] rtl_enforce: token-handoff branch=release-to-peer peer=agy task=MARATHON-P1-TURN
 ```
 </details>
