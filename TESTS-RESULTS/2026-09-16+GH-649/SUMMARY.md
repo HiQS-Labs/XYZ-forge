@@ -41,3 +41,11 @@ explicit backup/removal guards. It covers both failed backup and failed removal,
 retained target bytes and old manifest snapshot. Earlier successful migration output
 is retained as migration-before-delete.log so every receipt hash remains verifiable.
 The remaining six suites are unchanged by this sync-only correction.
+
+The first full run at de5a871e completed with six test-integration failures (retained
+as validate-initial.log): fixture adoption, temporary-directory validation, two checks
+for early-exit grep pipelines, generated-consumer path classification, and the PDDA
+subsystem census. All corrections are test-only; the approved production scripts,
+manifest, templates and runtime are byte-identical. Focused guard/imported-suite
+rechecks pass. A final full run at f49d51af is in progress in another disposable clone;
+the failed run is not counted as passing validation. Both clone identities are retained.

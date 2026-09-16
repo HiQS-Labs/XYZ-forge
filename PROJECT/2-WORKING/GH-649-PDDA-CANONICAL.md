@@ -110,3 +110,11 @@ Plan Codex relay approved round 2 (reviewed 4bf7c33f). Focused evidence is in
 TESTS-RESULTS/2026-09-16+GH-649/SUMMARY.md. Imported sync uses upstream PR #61 with
 the additional reviewed preservation rule; manifest handles Bash 3 empty arrays and
 vendored sources outside their parent index. No live target or registry was written.
+
+## Lessons learned
+
+Imported regression suites must adopt Forge's fixture guards, pipeline conventions,
+path-token classification and subsystem census before the full gate. Behavioral tests
+alone missed these integration contracts. The first full run exposed six conformance
+failures; focused fixes preserve the reviewed production implementation. Final full
+validation is retained separately rather than relabeling the failed run.
