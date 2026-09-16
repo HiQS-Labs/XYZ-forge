@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Open
-ROUND: 1 / 3
+STATUS: Approved
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -78,5 +78,26 @@ swept file: yes
 Whole artifact reviewed, including recon, all three phases and follow-up lanes. The source sweep found the pre-existing generic-payload wording and missing-stamp sync behavior above because the migration depends on them; no unrelated historical defect is requested for repair. Graph project XYZ-forge is a different checkout with generation 2026-09-01T15:54:30Z; coverage metadata is stale for relevant paths, so direct source reads supplied the textual evidence. No exhaustive upstream/runtime parity claim.
 
 Handing off to producer — address both Should findings, log each disposition, and reopen the next review round.
+
+## Producer — round 2
+Disposition: Implemented generic contract closure. Phase 1 now removes Forge-only retirement note from shipped PROJECT/PDDA.md and removes source-repo claims from generic AGENTS templates; acceptance asserts both.
+Disposition: Implemented explicit state cutover. Reuse old PDDA_SYNC_TMP only after quiescing writer and snapshots; no re-register. Preserve unbaselined/diverged files by default, explicit backup-enabled --force-resync only after review. Fixture covers removed-manifest tracking, dry-run invariants and payload+state restore.
+Disposition: Implemented rating labels. Licensing is preservation of existing terms, no conversion; conservative default announced after optional preference question.
+Verification: textual plan revision only; implementation has not started. Re-review the two substantive findings, no new framework or scope beyond safe migration.
+
+## Reviewer — codex — round 2 — 2026-09-16
+
+VERDICT: PASS
+Basis: The revised plan satisfies the migration Definition of Done at planning level. Both substantive round-1 findings and the rating nit are addressed with explicit choices and acceptance evidence. Approval authorizes proceeding to implementation; it does not establish passing implementation tests, completed consumer cutover, or permission to archive. Textual review only; no tests, artifact/source edits or git commands run.
+swept file: yes
+
+- [Pass] **Generic distribution closure:** `.relay-artifacts/GH-649-PDDA-CANONICAL.md:64-66,73,78` names the renamed installer, shared manifest exclusions, generic template mapping, removal of source-repo AGENTS claims, relocation of the Forge retirement note, and assertions against leaked identity/retirement rules. These directly address upstream `install.sh:588-594` scaffold semantics and `utils/pdda/pdda-sync-manifest.conf:17-23` contract distribution. **Disposition:** retain these requirements and the inherited startup-document reference self-check when adapting the installer.
+- [Pass] **State cutover and rollback:** `.relay-artifacts/GH-649-PDDA-CANONICAL.md:90-92` explicitly quiesces old writers, snapshots payload/registry/state/backups, reuses the retained directory through `PDDA_SYNC_TMP`, forbids re-registration as baselining, preserves unequal unstamped/diverged targets, and requires backup-enabled adoption plus full restore in an isolated fixture before live writes. Upstream `utils/pdda/pdda-sync.sh:27-32` provides this state-directory override; `:204-218` demonstrates why avoiding register matters; `:385-439` retains deferred deletion tracking and skips state persistence on dry-run. **Disposition:** implement the stated comparison ordering and keep preserved files' prior baseline until reviewed adoption; do not silently stamp divergence as accepted.
+- [Pass] **Preservation and focused proof:** `.relay-artifacts/GH-649-PDDA-CANONICAL.md:51-56,65,78-85` retains Forge runtime additions, ports the bounded changelog fix, reuses existing suites, names negative controls and disposable-clone validation, and requires committed provenance. **Disposition:** preserve the narrow import/extension scope; final review must inspect actual payload and test evidence.
+- [Pass] **Honest rating, licensing and retirement:** `.relay-artifacts/GH-649-PDDA-CANONICAL.md:58,60,93-101` labels the four rating dimensions, chooses preservation of existing license terms without conversion, distinguishes historical incidents from unknown recurrence, accounts for consumers/backlog and unknown devices, and leaves archival action to the operator. **Disposition:** carry those limits into implementation closeout; an optional licensing preference question is not evidence of permission to change terms.
+
+Whole artifact swept: frontmatter, recon, all phases/QA gates and follow-up lanes. No additional migration-dependent pre-existing defect found beyond the round-1 issues now addressed by the plan. Source checks covered installer/scaffold, manifest, locator/vendor-stack, generic contract and sync copy/delete/state branches. No exhaustive runtime/upstream parity claim. Graph project XYZ-forge resolves to another checkout; generation 2026-09-01T15:54:30Z and changed coverage metadata are stale, so direct source reads supplied the textual basis.
+
+Relay closed (Approved), no further review turn needed. Handing the completed token back to producer for implementation under the approved plan and its remaining gates.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
