@@ -41,7 +41,9 @@ for mode in observe light; do
 done
 if (cd "$T" && PDDA_MODE=full bash utils/pdda/pdda.sh frontmatter) >"$BOX/full.log" 2>&1; then fail 'invalid full-mode document accepted'; fi
 grep -qi 'error' "$BOX/full.log"
-ok 'observe/light report; full rejects invalid document'
+if bash "$ROOT/utils/pdda/pdda-install.sh" "$T" --mode full --no-register >"$BOX/full-install.log" 2>&1; then fail 'invalid full-mode install accepted'; fi
+grep -q 'errors block' "$BOX/full-install.log"
+ok 'observe/light report; full rejects invalid document and install'
 if PDDA_MANIFEST_CONF="$BOX/missing.conf" bash "$ROOT/utils/pdda/pdda-install.sh" "$T" --no-register >"$BOX/manifest.log" 2>&1; then fail 'missing manifest accepted'; fi
 grep -q 'conf not found' "$BOX/manifest.log"
 : > "$BOX/empty.conf"
@@ -93,6 +95,39 @@ backup="$(find "$PDDA_SYNC_TMP/pdda-sync-backups" -name unbaselined.txt -type f)
 printf 'next upstream\n' > "$S/payload/managed.txt"
 bash "$S/utils/pdda/pdda-sync.sh" push --no-delete --allow-dirty >"$BOX/advance.log" 2>&1
 cmp "$S/payload/managed.txt" "$U/payload/managed.txt"
+# Inject real copy/rename failures into each write branch. Old stamps must survive.
+for branch in new update; do
+  for op in cp mv; do
+    FS="$BOX/fail-source-$branch-$op"; FT="$BOX/fail-target-$branch-$op"
+    cp -R "$S" "$FS"; cp -R "$U" "$FT"
+    FSTATE="$BOX/fail-state-$branch-$op"
+    PDDA_SYNC_TMP="$FSTATE" bash "$FS/utils/pdda/pdda-sync.sh" push "$FT" --force-resync --no-delete --allow-dirty >"$BOX/baseline.log" 2>&1
+    cp -R "$FSTATE/pdda-sync-state" "$BOX/old-stamps-$branch-$op"
+    if [ "$branch" = new ]; then
+      rel=payload/aa-new.txt
+      printf 'file %s\n' "$rel" >> "$FS/utils/pdda/pdda-sync-manifest.conf"
+    else
+      rel=payload/managed.txt
+      cp "$FT/$rel" "$BOX/old-target-$op"
+    fi
+    printf 'uninstalled source\n' > "$FS/$rel"
+    SHIMS="$BOX/shims-$branch-$op"; mkdir "$SHIMS"
+    cat > "$SHIMS/$op" <<SHIM
+#!/bin/bash
+case "\$*" in *.pdda-tmp*) echo 'injected $op failure' >&2; exit 73 ;; esac
+exec /bin/$op "\$@"
+SHIM
+    chmod +x "$SHIMS/$op"
+    if PATH="$SHIMS:$PATH" PDDA_SYNC_TMP="$FSTATE" bash "$FS/utils/pdda/pdda-sync.sh" push "$FT" --no-delete --allow-dirty >"$BOX/failed-write.log" 2>&1; then
+      cat "$BOX/failed-write.log"; fail "$branch/$op write failure reported success"
+    fi
+    grep -q 'injected' "$BOX/failed-write.log"
+    diff -r "$FSTATE/pdda-sync-state" "$BOX/old-stamps-$branch-$op"
+    if [ "$branch" = new ]; then [ ! -e "$FT/$rel" ]; else cmp "$FT/$rel" "$BOX/old-target-$op"; fi
+    if grep -q 'push DONE' "$BOX/failed-write.log"; then fail 'failed write claimed completion'; fi
+  done
+done
+ok 'copy and rename failures in new/update branches leave target and old stamps intact'
 # Restore all three saved surfaces, not just payload bytes. Only fixture paths are removed.
 rm -rf "$U" "$PDDA_SYNC_TMP"
 cp -R "$BOX/saved-payload" "$U"; cp -R "$BOX/saved-state" "$PDDA_SYNC_TMP"; cp "$BOX/saved-registry" "$PDDA_REGISTRY"

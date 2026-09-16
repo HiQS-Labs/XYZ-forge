@@ -1,6 +1,6 @@
 > Canonical source: XYZ Forge. Run `bash utils/pdda/pdda-install.sh <target>` from a Forge checkout.
 > Generic templates and source-only distribution tooling are excluded from target payloads.
-> Existing distributor cutover: [PDDA migration](../../docs/PDDA-MIGRATION.md).
+> Existing distributor cutover: [PDDA migration](https://github.com/HiQS-Labs/XYZ-forge/blob/development/docs/PDDA-MIGRATION.md).
 
 # PDDA Install / Extraction Manifest
 
@@ -103,19 +103,14 @@ Do not install deprecated PDDA companion docs from `PROJECT/4-MISC/`.
 
 ## Canonical install set
 
-Extract these files verbatim from this repo into the target repo at the same relative paths:
-
-```text
-PROJECT/PDDA.md
-utils/pdda/pdda-lib.sh
-utils/pdda/pdda.sh
-utils/pdda/pdda-doc-ready.sh
-utils/pdda/pdda-catchup.sh
-utils/pdda/pdda-gh-refresh.sh
-utils/pdda/pdda-edit-doc-hook.sh
-utils/pdda/pdda-stop-doc-health.sh
-utils/pdda/PDDA-SOURCE.md
-```
+The single authority is `utils/pdda/pdda-sync-manifest.conf` in the Forge source.
+From that checkout, run `bash utils/pdda/pdda-sync.sh manifest` and copy each listed
+file to the same relative path in the target. Do not maintain a second manual file list.
+The expanded set includes the shared contract, runtime checks and documentation,
+`utils/py/pdda_gov_scan.py` and `utils/py/pdda_comment_refs.py` (optional stdlib
+accelerators with shell fallbacks), plus `utils/pdda/LICENSE-APACHE-2.0` and
+`utils/pdda/NOTICE.md`. Preserve those notices. Source-only installer, sync tooling,
+manifest helper/config and generic templates are excluded from the target set.
 
 The shipped runtime lives in its own `utils/pdda/` subfolder so it never mixes with a target repo's
 existing `utils/` files. `utils/pdda/pdda.sh` is the unified entry point — it carries every

@@ -354,7 +354,10 @@ cmd_push() {
       [ -n "$rel" ] || continue
       src="$SOURCE_DIR/$rel"; tgt_f="$tgt/$rel"; src_hash="$(hash_file "$src")"
       if [ ! -e "$tgt_f" ]; then
-        if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$tgt_f")"; cp "$src" "$tgt_f.pdda-tmp" && mv "$tgt_f.pdda-tmp" "$tgt_f"; case "$rel" in *.sh) chmod +x "$tgt_f" ;; esac; fi
+        if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$tgt_f")"; if ! cp "$src" "$tgt_f.pdda-tmp" || ! mv "$tgt_f.pdda-tmp" "$tgt_f"; then
+          rm -f "$tgt_f.pdda-tmp" "$newstate"
+          warn "push: write failed for $rel; sync state not advanced"; return 1
+        fi; case "$rel" in *.sh) chmod +x "$tgt_f" ;; esac; fi
         printf '%s\t%s\n' "$rel" "$src_hash" >> "$newstate"; log_line "    new        $rel"; n_new=$((n_new+1)); continue
       fi
       tgt_hash="$(hash_file "$tgt_f")"; last="$(state_get "$statefile" "$rel")"
@@ -393,7 +396,10 @@ cmd_push() {
         [ "$DRY" -eq 0 ] && { mkdir -p "$(dirname "$BACKUP_DIR/$slug/$utc/$rel")"; cp "$tgt_f" "$BACKUP_DIR/$slug/$utc/$rel"; }
       fi
       if [ "$DRY" -eq 0 ]; then
-        cp "$src" "$tgt_f.pdda-tmp" && mv "$tgt_f.pdda-tmp" "$tgt_f"; case "$rel" in *.sh) chmod +x "$tgt_f" ;; esac
+        if ! cp "$src" "$tgt_f.pdda-tmp" || ! mv "$tgt_f.pdda-tmp" "$tgt_f"; then
+          rm -f "$tgt_f.pdda-tmp" "$newstate"
+          warn "push: write failed for $rel; sync state not advanced"; return 1
+        fi; case "$rel" in *.sh) chmod +x "$tgt_f" ;; esac
       fi
       printf '%s\t%s\n' "$rel" "$src_hash" >> "$newstate"
       # Label by what actually happened, not by a proxy for it: `updated+bak` must mean a backup

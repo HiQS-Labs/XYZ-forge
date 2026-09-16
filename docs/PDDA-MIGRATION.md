@@ -48,8 +48,8 @@ makes GitHub issues and comments read-only, so publish pointers before flipping 
 
 Ten local registry targets had an installed runtime and contract. Nine had a .xyz directory.
 Six had local changes under managed PDDA paths; one registered directory was no longer a
-Git checkout. All are retained/pinned pending individual update review. No PDDA-named
-launchd plist or loaded job was found on this device. Other-device jobs are unverified.
+Git checkout. All are retained/pinned pending individual update review. No PDDA reference was found in user/system launch-agent or launch-daemon plists,
+loaded jobs, or the user crontab on this device. Other-device jobs are unverified.
 This inventory proves an existing footprint, not independent product demand.
 
 ## Historical backlog disposition
@@ -83,3 +83,21 @@ They remain historical receipts; no claim of completion follows from repository 
 | #9 | Deferred progress-counter proposal |
 
 Preserved source license and import provenance: utils/pdda/NOTICE.md.
+
+### Local target dispositions
+
+| Registered repository | Inspection | Disposition and update route |
+|---|---|---|
+| LTVera-Pandas | Managed paths clean | Retain pinned; use Forge preview with retained old sync state when selected |
+| giant-brains-claude-skills | Managed paths clean | Retain pinned; same Forge preview route |
+| aegis-sleuth-slack-bot | Managed paths clean | Retain pinned; same Forge preview route |
+| fast-key-replacement-macos | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| firebase-AI-reports | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| XYZ-code-intelligence | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| mac-buyers-guide-2.0 | Managed paths modified; no .xyz | Retain governance-only use; reconcile before Forge adoption; full harness is not required |
+| AI-design-LA-WP-theme | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| needle-fork | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| rebalance-OS | Runtime present; registered directory is not a Git checkout | Preserve files; resolve the stale checkout identity before any update |
+
+These are retained installs, not a commitment to an independent PDDA product. The
+old checkout/state stays available for rollback; no registry or target was mutated.

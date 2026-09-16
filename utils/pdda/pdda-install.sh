@@ -735,16 +735,18 @@ case "$MODE" in
   light)   MODE_BLURB="reports findings but never blocks; graduate to full when ready" ;;
   full)    MODE_BLURB="on rails — errors block with a non-zero exit" ;;
 esac
+VERIFY_RC=0
 if ( cd "$TARGET" && PDDA_MODE="$MODE" ./utils/pdda/pdda.sh run ); then
   say ""
   say "PDDA installed. Mode: $MODE ($MODE_BLURB)."
   [ "$QUAD" = "on" ] && say "Quad Concepts: ON — plan docs need a '## Quad Concepts' section (1-4 bullets); opt out with quad_exempt: true."
   say "Next: read PROJECT/PDDA.md, then start a doc in PROJECT/2-WORKING and point ROADMAP.md at it."
 else
+  VERIFY_RC=$?
   say ""
   say "PDDA installed, but the first run reported findings or failed — see output above."
   case "$MODE" in
-    observe|light) say "In $MODE mode this never blocks; review the findings and re-run ./utils/pdda/pdda.sh run." ;;
+    observe|light) say "Normal $MODE findings are report-only; verification failed to complete. Re-run ./utils/pdda/pdda.sh run." ;;
     full)          say "In full mode errors block (non-zero exit); review the findings and re-run ./utils/pdda/pdda.sh run." ;;
   esac
 fi
@@ -760,4 +762,5 @@ if [ "$SELFCHECK_FAILED" -eq 1 ]; then
   exit 1
 fi
 
+[ "$VERIFY_RC" -eq 0 ] || exit "$VERIFY_RC"
 exit 0
