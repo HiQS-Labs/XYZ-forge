@@ -2,7 +2,7 @@
 Goal: Medium review — PR #643 final merged state (GH-642 tranche)
 Date: 2026-09-15
 NEXT: agy
-STATUS: Approved
+STATUS: Open
 ---
 
 # Context
@@ -89,3 +89,6 @@ full gate was run in this review checkout; this was a current-source and read-on
 Findings: none (no BLOCKER, SHOULD, or NIT).
 
 VERDICT: APPROVED
+
+### System · relay-drive — 2026-09-16T19:23:01Z
+terminal STATUS Approved written by builder-role turn (codex) — reverted
