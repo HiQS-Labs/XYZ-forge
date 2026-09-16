@@ -148,3 +148,11 @@ The builder correctly addressed the process-boundary gap by querying the full de
 I have thoroughly swept the `utils/py/turn_diagnostics.py` file, as well as `test/gh648-l1-turn-termination.sh` and `validate.sh`. The pre-existing logic for CPU accumulation, process tree traversal (`ps` output parsing), and file modification time checks are robust, gracefully handle errors to prevent failing the turn, and align with the design goals. No pre-existing defects were identified.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-16T22:44:39Z
+task: MARATHON-P1-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 1786bb2ead5046cc819d60fc68b99b83ce861346
+added-range: 11313+921
+added-sha256: b3a8519f7b637e2dcb90dabf8f4924b1c6874c74c9633d8429786234598f98d2
