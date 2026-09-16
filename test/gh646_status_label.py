@@ -196,6 +196,24 @@ class StatusLabelTests(unittest.TestCase):
         self.start()
         self.assertGreater(app.latest_owned_lifecycle(self.fx.conn, 1, 646)["id"], first["id"])
 
+    def test_active_appearance_changes_preserve_original_start(self):
+        self.start()
+        first = app.latest_owned_lifecycle(self.fx.conn, 1, 646)
+        original = app.load_work_evidence(self.fx.db)["issues"][0]
+        self.assertTrue(original["recent_start"])
+        for fields in ({"section": "Queue"},
+                       {"section": "In progress", "status_marker": "🆕"}):
+            with self.subTest(fields=fields):
+                self.fx.update(**fields)
+                self.assertEqual(app.latest_owned_lifecycle(self.fx.conn, 1, 646), first)
+                self.assertEqual(self.fx.row()["status_label"], "in-progress")
+                latest = self.fx.conn.execute("SELECT event,payload FROM work_events ORDER BY id DESC LIMIT 1").fetchone()
+                self.assertEqual(latest["event"], "updated")
+                self.assertFalse(json.loads(latest["payload"])["transition"])
+                current = app.load_work_evidence(self.fx.db)["issues"][0]
+                self.assertEqual(current["recent_start"]["id"], original["recent_start"]["id"])
+                self.assertEqual(current["recent_start"]["at"], original["recent_start"]["at"])
+
     def test_unchanged_legacy_admission_and_dry_run(self):
         # Simulate restored legacy appearance without accepted provenance.
         self.fx.conn.execute("UPDATE roadmap_items SET section='In progress',status_marker='🚧'")

@@ -1471,9 +1471,12 @@ def _extract_roadmap_update(conn, op, gid, previous=None):
         return None
     marker = row["status_marker"] or ""
     accepted = bool(previous and previous.get("accepted_start")) if isinstance(previous, dict) else False
+    # Appearance is not new authority: an active section/marker may change while
+    # the lifecycle stays active. Only a classified transition or explicit
+    # accepted-start witness may replace the original lifecycle id/time.
     changed = accepted or previous is not None and (
-        (previous["status_marker"] or "") != marker
-        or (previous["section"] or "").strip() != (row["section"] or "").strip()
+        _live_roadmap_event(previous["section"], previous["status_marker"], False)
+        != _live_roadmap_event(row["section"], marker, False)
     )
     if not changed:
         return ("updated", row["gh_number"], {
