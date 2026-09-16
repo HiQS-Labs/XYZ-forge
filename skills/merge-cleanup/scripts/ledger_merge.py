@@ -247,8 +247,27 @@ def classify(base_text: str, ours_text: str, theirs_text: str) -> Dict[str, Any]
 
 # --- replay through the writer path ---------------------------------------------------------
 
+# The primary checkout's path, set by merge_cleanup.py at startup. A vendored `.xyz/` install is
+# gitignored, so a disposable landing clone never carries it; the tools take `--root`, so the
+# primary's copy is run against the clone instead.
+TOOL_FALLBACK_ROOT: Optional[Path] = None
+
+
+def tool_path(root: Path, name: str) -> Path:
+    """Resolve a PRS/harness tool: `utils/py/<name>` in the clone, then a vendored
+    `.xyz/utils/py/<name>` there, then the same two under the primary checkout. Falls back to
+    the canonical path so a missing tool still reports the canonical location in its error."""
+    roots = [root] + ([TOOL_FALLBACK_ROOT] if TOOL_FALLBACK_ROOT else [])
+    for base in roots:
+        for rel in (("utils", "py", name), (".xyz", "utils", "py", name)):
+            p = Path(base).joinpath(*rel)
+            if p.is_file():
+                return p
+    return root / "utils" / "py" / name
+
+
 def _app(root: Path) -> List[str]:
-    return [sys.executable, str(root / "utils" / "py" / "releases_app.py"), "--root", str(root)]
+    return [sys.executable, str(tool_path(root, "releases_app.py")), "--root", str(root)]
 
 
 def _run(cmd: List[str], cwd: Path, timeout: int = 300) -> subprocess.CompletedProcess:
