@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# GH-654: offlane_candidates must name the paths that would fail the allowlist,
+# and stay silent on the documented exemptions — before the bash verdict runs.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="$ROOT/utils/py:${PYTHONPATH:-}"
+export REPO_ROOT="$ROOT"
+
+python3 -B - <<'PY'
+import importlib.util
+import os
+import pathlib
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = pathlib.Path(os.environ['REPO_ROOT']).resolve()
+sys.path.insert(0, str(ROOT / 'utils/py'))
+spec = importlib.util.spec_from_file_location('rtl', ROOT / 'utils/py/rtl.py')
+rtl = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(rtl)
+
+
+def make_worktree():
+    wt = tempfile.mkdtemp(prefix='gh654-wt.')
+    def git(*args):
+        subprocess.run(['git', '-C', wt, *args], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    git('init', '-q')
+    git('config', 'user.email', 'gh654@example.invalid')
+    git('config', 'user.name', 'gh654')
+    seed = pathlib.Path(wt, 'allowed-tracked.txt')
+    seed.write_text('seed\n')
+    git('add', 'allowed-tracked.txt')
+    git('commit', '-q', '-m', 'seed')
+    seed.write_text('mutated\n')                      # tracked, allowlisted, modified
+    pathlib.Path(wt, 'allowed-new.txt').write_text('x\n')          # untracked, allowlisted
+    pathlib.Path(wt, 'offlane-probe.txt').write_text('x\n')        # untracked, NOT allowlisted
+    scratch = pathlib.Path(wt, '.relay-scratch'); scratch.mkdir()
+    (scratch / 'v.log').write_text('x\n')                          # exempt (GH-91)
+    tick = pathlib.Path(wt, '.tick', 'events'); tick.mkdir(parents=True)
+    (tick / 'e.json').write_text('{}\n')                           # exempt
+    logs = pathlib.Path(wt, 'relay-system', '2026-09-16'); logs.mkdir(parents=True)
+    (logs / 'turn.md').write_text('x\n')                           # exempt (GH-266)
+    return wt
+
+
+ALLOW = 'allowed-tracked.txt,allowed-new.txt'
+RELAY = 'marathon-system/gh654--p1/RELAY.md'
+
+
+class OfflaneCandidates(unittest.TestCase):
+    def setUp(self):
+        self.wt = make_worktree()
+
+    def tearDown(self):
+        subprocess.run(['rm', '-rf', self.wt], check=True)
+
+    def candidates(self, allow=ALLOW, relay=RELAY):
+        return rtl.offlane_candidates(self.wt, allow, relay)
+
+    def test_reports_only_the_offlane_path(self):
+        found = self.candidates()
+        self.assertEqual(found, ['offlane-probe.txt'],
+                         'exactly the unallowlisted path must be named')
+
+    def test_exemptions_are_silent(self):
+        found = self.candidates()
+        for quiet in ('.relay-scratch/v.log', '.tick/events/e.json',
+                      'relay-system/2026-09-16/turn.md',
+                      'allowed-new.txt', 'allowed-tracked.txt', RELAY):
+            self.assertNotIn(quiet, found, f'{quiet} must not be reported')
+
+    def test_relay_file_itself_is_never_offlane(self):
+        pathlib.Path(self.wt, 'marathon-system', 'gh654--p1').mkdir(parents=True)
+        pathlib.Path(self.wt, RELAY).write_text('relay\n')
+        self.assertNotIn(RELAY, self.candidates())
+
+    def test_widening_the_allowlist_silences_a_path(self):
+        self.assertEqual(self.candidates(allow=ALLOW + ',offlane-probe.txt'), [])
+
+    # Mutation proof: a check that cannot fail is not a check. Rebinding the
+    # exemption tuple to empty MUST make the same fixture report the exempt
+    # dirs — proves the silence above is the code's doing, not the fixture's.
+    def test_mutation_exemptions_are_load_bearing(self):
+        saved = rtl.OFFLANE_EXEMPT
+        rtl.OFFLANE_EXEMPT = ()
+        try:
+            found = self.candidates()
+        finally:
+            rtl.OFFLANE_EXEMPT = saved
+        self.assertIn('.relay-scratch/', found, 'un-exempted scratch dir must surface')
+        self.assertIn('.tick/', found, 'un-exempted tick dir must surface')
+        self.assertIn('relay-system/', found, 'un-exempted transcript dir must surface')
+
+
+if __name__ == '__main__':
+    unittest.main()
+PY
