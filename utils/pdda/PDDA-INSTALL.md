@@ -1,3 +1,7 @@
+> Canonical source: XYZ Forge. Run `bash utils/pdda/pdda-install.sh <target>` from a Forge checkout.
+> Generic templates and source-only distribution tooling are excluded from target payloads.
+> Existing distributor cutover: [PDDA migration](../../docs/PDDA-MIGRATION.md).
+
 # PDDA Install / Extraction Manifest
 
 This file is the portable install manifest for PDDA.
@@ -5,23 +9,23 @@ This file is the portable install manifest for PDDA.
 Use it when an LLM agent needs to extract the PDDA files from this repo and install them into a
 different repo without guessing which files are canonical.
 
-## Fastest path: `install.sh`
+## Fastest path: `utils/pdda/pdda-install.sh`
 
-For a normal install, the repo-root `install.sh` automates this entire manifest — copy the runtime,
+For a normal install, `utils/pdda/pdda-install.sh` automates this entire manifest — copy the runtime,
 create the lifecycle tree, synthesize the blank seed files, `chmod`, and run a verification pass:
 
 ```bash
-./install.sh /path/to/target-repo          # observe mode, idempotent
-./install.sh --with-startup-docs --mode light /path/to/target-repo
+./utils/pdda/pdda-install.sh /path/to/target-repo          # observe mode, idempotent
+./utils/pdda/pdda-install.sh --with-startup-docs --mode light /path/to/target-repo
 ```
 
-The rest of this document is the canonical spec `install.sh` implements — read on when you need to
+The rest of this document is the canonical spec `utils/pdda/pdda-install.sh` implements — read on when you need to
 install by hand, adapt to a non-standard layout, or keep the script honest. Keep the two in lockstep:
 a change to the install surface updates both.
 
 ## Upgrading an existing install
 
-Re-run `install.sh` (no flags) against the target — `copy_runtime` overwrites the runtime + contract
+Re-run `utils/pdda/pdda-install.sh` (no flags) against the target — `copy_runtime` overwrites the runtime + contract
 unconditionally, while seed/state files (`ROADMAP.md`, `CHANGELOG.md`, `.pdda-mode`, `PROJECT/**`,
 the activity log) are create-only and stay untouched. Do **not** pass `--force`: it overwrites seeds
 *and* the startup-doc scaffolds.
@@ -40,7 +44,7 @@ legacy `utils/pdda-phase-out/`). The runtime is relocatable (it sources via `HER
 so both layouts *run* — but a plain re-install **adds** the new `utils/pdda/` subfolder beside the old
 flat files, leaving **two copies** and an ambiguous source of truth.
 
-`install.sh` detects the flat layout and **migrates it automatically** (one canonical `utils/pdda/`):
+`utils/pdda/pdda-install.sh` detects the flat layout and **migrates it automatically** (one canonical `utils/pdda/`):
 it removes the now-duplicate PDDA-owned flat files (`utils/pdda.sh`, `utils/pdda-lib.sh`,
 `utils/pdda-doc-ready.sh`, `utils/pdda-catchup.sh`, `utils/PDDA-INSTALL.md`, the legacy
 `utils/pdda-phase-out/`), repoints old-path references (`utils/pdda.sh` → `utils/pdda/pdda.sh`, etc.)
@@ -53,25 +57,19 @@ part of the upgrade so the maintainer's whole job is "run the script, review the
 PDDA installs two things:
 
 - the canonical document contract in `PROJECT/PDDA.md`
-- the runnable shell checks in `utils/pdda-*.sh`
+- the runnable shell checks in `utils/pdda/`
 
-This standalone repo also carries repo-local startup docs (`ROUTER.md`, `AGENTS.md`,
-`GUIDING-PRINCIPLES.md`, `README.md`) and the `/pdda` re-orient skill
-(`.claude/skills/pdda/SKILL.md`) so the installer source stays self-consistent, but those files are
-not part of the target-repo install surface unless the target explicitly wants them. `install.sh
---with-startup-docs` ships the agent read-order scaffold, and routes each file by **who owns it after
-the install** rather than copying all four the same way:
+Forge keeps generic startup templates under `utils/pdda/templates/`. Its own product
+startup documents are never copied to targets. `utils/pdda/pdda-install.sh --with-startup-docs`
+routes each template by target ownership:
 
 | Semantics | Files | Behavior |
 |---|---|---|
-| **Templated** | `ROUTER.md` | written from `templates/ROUTER.target.md`; **this repo's own `ROUTER.md` is never copied** |
-| **Scaffold** | `AGENTS.md`, `GUIDING-PRINCIPLES.md` | create-only — an existing file is kept (`--force` to overwrite) |
-| **Runtime** | `.claude/skills/pdda/SKILL.md` | PDDA owns it; refreshed verbatim every install |
+| **Scaffold** | `ROUTER.md`, `AGENTS.md`, `GUIDING-PRINCIPLES.md` | generic templates, create-only; existing files kept unless `--force` |
+| **Runtime** | `.claude/skills/pdda/SKILL.md` | refreshed from `utils/pdda/templates/pdda/SKILL.md` |
 
-The template exists because this repo's `ROUTER.md` documents things a target does not have: `install.sh`,
-`utils/pdda/pdda-sync.sh`, the runtime-distribution command rails, and the vendored `.xyz/` harness.
-Copying it verbatim pointed every target's agents at scripts absent from their repo (GH-23). The template
-is the canonical router minus those sections; keep the two in step when either changes.
+Generic templates name only the installed governance surface. They do not inherit
+Forge's source-only distribution commands or product policy.
 
 **Post-install self-check.** For every startup doc `--with-startup-docs` actually *writes* — `ROUTER.md`,
 `AGENTS.md`, `GUIDING-PRINCIPLES.md` — the installer asserts that every `*.sh` path that doc names
@@ -82,11 +80,11 @@ is the assertion that would have caught GH-23 at install time. Two boundaries ma
   (create-only) it is yours and is never checked — the installer will not fail your install over your own
   scripts — while an `AGENTS.md` scaffolded beside it in the same run still is. Each skipped doc says so.
 - It runs against the **written artifact**, not the source template. During GH-23 P1 the first draft of
-  `templates/ROUTER.target.md` reintroduced the very bug it exists to fix; only an assertion on the
+  `utils/pdda/templates/ROUTER.target.md` reintroduced the very bug it exists to fix; only an assertion on the
   *output* caught it. Checking the input would have passed.
 
 Originally this covered `ROUTER.md` alone. The router was never special: GH-23 P3's widened dead-reference
-scan found the identical defect — a dead `install.sh` — sitting in the `GUIDING-PRINCIPLES.md` scaffolded
+scan found the identical defect — a dead `utils/pdda/pdda-install.sh` — sitting in the `GUIDING-PRINCIPLES.md` scaffolded
 into every target. Any doc the installer writes can name a script it does not ship.
 
 A failure here is a bug in PDDA's template, not in your repo. The install still completes — the target is
@@ -225,7 +223,7 @@ doc set it scans; default `ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md C
 utils/pdda/PDDA-INSTALL.md`), `PDDA_GOVERNANCE_INDEX` (the doc every other governance doc must be
 reachable from; default `ROUTER.md`), and three GH-15 exemption-manifest overrides scoped to the docs
 that ship to every target install (`PDDA-INSTALL.md`, `PROJECT/PDDA.md`) so a fresh install's first
-`pdda.sh run` doesn't self-inflict dead-reference/env-var noise from files `install.sh` deliberately
+`pdda.sh run` doesn't self-inflict dead-reference/env-var noise from files `utils/pdda/pdda-install.sh` deliberately
 never copies: `PDDA_GOV_SHIPPED_DOCS` (which shipped docs the exemptions apply to; default
 `utils/pdda/PDDA-INSTALL.md PROJECT/PDDA.md`), `PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS` (basenames/paths
 those docs may dead-reference without a warn — the target's own startup docs, canonical-only skill and
@@ -284,7 +282,7 @@ Expected result:
 
 Once PDDA lives in several repos, keep them current from one canonical source (the "canonical repo" = this clone) with
 `utils/pdda/pdda-sync.sh`. The canonical repo is the only writer; targets opt in via `register`. The synced file set is
-the auto-regenerated manifest (`utils/pdda/pdda-sync-manifest.conf`, shared with `install.sh`), so a new
+the auto-regenerated manifest (`utils/pdda/pdda-sync-manifest.conf`, shared with `utils/pdda/pdda-install.sh`), so a new
 runtime file under `utils/pdda/` propagates with no list edit. Per-repo adapted startup docs
 (`ROUTER.md`, `AGENTS.md`) are never touched. Full design + rationale:
 [`PROJECT/3-COMPLETED/PDDA-SYNC-TO-OTHER-REPOS.md`](../../PROJECT/3-COMPLETED/PDDA-SYNC-TO-OTHER-REPOS.md).
@@ -292,11 +290,11 @@ runtime file under `utils/pdda/` propagates with no list edit. Per-repo adapted 
 > **`push` cannot repair a target's `ROUTER.md`.** The startup docs are outside the sync manifest by
 > design, so a target installed before GH-23 keeps its stale router indefinitely — `push` will never
 > replace it. Repairing an existing target is a deliberate, per-repo act:
-> `install.sh <target> --with-startup-docs --force`, then diff before committing. That command also
+> `pdda-install.sh <target> --with-startup-docs --force`, then diff before committing. That command also
 > overwrites `AGENTS.md` and `GUIDING-PRINCIPLES.md`, so back up any repo-authored versions first.
 
 ```bash
-# Enroll a target (initial install via install.sh, then seeds sync state). Confirms first;
+# Enroll a target (initial install via pdda-install.sh, then seeds sync state). Confirms first;
 # --yes for unattended onboarding.
 utils/pdda/pdda-sync.sh register [--mode observe|light|full] [--with-startup-docs] [--yes] /path/to/repo
 
@@ -316,15 +314,11 @@ utils/pdda/pdda-sync.sh install-agent         # opt-in; --no-load writes the pli
 utils/pdda/pdda-sync.sh uninstall-agent
 ```
 
-**Safety:** `push` only overwrites a file when the canonical repo's copy has genuinely advanced (content hash, not
-mtime), so deliberate local edits between releases are preserved. **A preserved file is reported as
-`diverged`, never as a skip** — a target that changed out-of-band (a manual edit, a `git checkout`, an
-agent-harness containment revert) would otherwise stay stale indefinitely behind a summary line that
-reads clean (GH-59). `push DONE` carries a `diverged=N` count and warns in words when it is non-zero;
-`--force-resync` overwrites them. Note the scope of that promise: **preservation lasts only while
-canonical has not advanced for that file.** Once it does, the normal update overwrites the local copy
-(after backing it up) — `diverged` is a "you have unreconciled local content" signal, not an
-indefinite hold. Any overwrite whose target is **not** provably a previous push of ours — no recorded
+**Safety:** `push` checks target content before its prior stamp. A target matching the
+stamp follows normal source updates. Changed or unbaselined target files are preserved
+and reported as `diverged`, even when the source advances. `push DONE` reports the count
+and warns in words; explicit `--force-resync` adopts source content with a backup.
+Any overwrite whose target is **not** provably a previous push of ours — no recorded
 stamp, or content changed since that stamp — is backed up first, as is any canonical-side deletion,
 under `temp/pdda-sync-backups/` (kept to the last `PDDA_SYNC_BACKUPS`, default 5; a routine
 already-in-sync update is deliberately *not* backed up, so those five slots keep holding the
@@ -335,10 +329,24 @@ if a declared source root resolves to zero files, the manifest is empty, or it s
 
 State lives under the canonical repo's gitignored `temp/` (state stamps, manifest snapshots, backups, log, lock); the
 target **registry** is machine-local at `${XDG_CONFIG_HOME:-$HOME/.config}/pdda/registry.tsv` (written by
-`install.sh`, the single registry writer), never committed.
+`utils/pdda/pdda-install.sh`, the single registry writer), never committed.
 
 ## Notes for adaptation
 
 - `PROJECT/PDDA.md` is the canonical policy doc; if the target repo needs wording changes, edit that file there after install.
 - `pdda-doc-ready.sh` is opt-in for model use; if no model CLI is configured, it self-skips and the deterministic suite still works.
 - `pdda-lib.sh` uses `node` for JSON escaping/parsing helpers, so Node is required even though the checks are shell scripts.
+
+## Forge distribution ownership (GH-649)
+
+The executable manifest is `utils/pdda/pdda-sync-manifest.conf`. It includes the shared contract,
+runtime, notices and two optional Python scanners. It excludes the installer, sync engine,
+manifest helper/config and `utils/pdda/templates/` from ordinary target installs.
+Generic startup templates map to target ROUTER/AGENTS/GUIDING-PRINCIPLES and the pdda skill;
+Forge's own startup policies never ship as target scaffolds.
+
+`push --force-resync` deliberately adopts source bytes over preserved divergence and backs up
+unequal target content first. Default push keeps locally changed or unstamped files and reports
+DIVERGED, including when source advanced. Dry-run preserves target payload, hash stamps and
+manifest snapshots; it may write diagnostic logs and use a temporary lock. Keep existing state
+with `PDDA_SYNC_TMP` during source cutover; never re-register a target just to establish provenance.

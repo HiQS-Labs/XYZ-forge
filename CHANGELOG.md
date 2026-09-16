@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-16 — PDDA canonical migration (GH-649)
+
+Forge now carries PDDA's installer, manifest, sync tooling and generic startup templates.
+Existing Forge runtime adaptations and local checks remain; the upstream changelog parser
+fix is ported. Onboarding resolves Forge without a sibling PDDA clone. Sync preserves
+unbaselined/local changes unless explicitly adopted with a backup. Historical PDDA PR #61
+and Apache notices are retained; no standalone publisher is introduced. Archive readiness
+is tracked separately in docs/PDDA-MIGRATION.md and GH-649. Verification pending.
+
+
 All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-15

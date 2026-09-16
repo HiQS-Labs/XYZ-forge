@@ -191,11 +191,13 @@ PRD-to-task breakdown — and their output can land in `PROJECT/1-INBOX/` as a c
 
 ---
 
-## Two products, honestly described
+## Governance within Forge
 
-XYZ Forge ships alongside **PDDA**, a separate repo-governance project
-([Hypercart-Dev-Tools/pdda](https://github.com/Hypercart-Dev-Tools/pdda)) whose checkers are vendored
-into `utils/pdda/`.
+XYZ Forge owns **PDDA**, its document-governance subsystem in `utils/pdda/`.
+Install governance into a target with `bash utils/pdda/pdda-install.sh /path/to/repo`.
+No separate PDDA clone is required; governance remains optional for Consult/Relay.
+The [historical PDDA repository](https://github.com/Hypercart-Dev-Tools/pdda) retains prior history.
+[Migration and archive gates](docs/PDDA-MIGRATION.md) describe the cutover.
 
 The relationship is not symmetrical, and earlier versions of this README stated it less directly:
 
@@ -206,8 +208,7 @@ The relationship is not symmetrical, and earlier versions of this README stated 
   PDDA is a prerequisite for the unattended path, not an optional enhancement.
 
 The dependency runs one way only: the harness reads governance structure; PDDA never calls the
-harness. [`PROJECT/PDDA.md`](PROJECT/PDDA.md) is an imported document contract adopted here; changes to
-its local adaptations require [XYZ’s sync review policy](PROJECT/PDDA-SYNC-POLICY.md).
+harness. [`PROJECT/PDDA.md`](PROJECT/PDDA.md) is the shared document contract maintained here; distribution changes follow [XYZ’s sync review policy](PROJECT/PDDA-SYNC-POLICY.md).
 The constitution, anti-scope and mode guide are locally maintained PDDA-layer documents inherited
 from XYZ’s predecessor, not a blanket limit on XYZ’s product. The sync review policy is XYZ-owned
 and binding. [ROUTER’s role split](ROUTER.md#role-split) identifies their specific authority.

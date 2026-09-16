@@ -508,6 +508,9 @@ TESTS=(
   "relay-xyz-skill-guard.sh"
   "find-harness.sh"
   "gh292-worktree-vendored-discovery.sh"  # GH-292 (linked worktree resolves main-checkout .xyz/)
+  "gh649-pdda-migration.sh"
+  "pdda-changelog.sh"
+  "pdda-install-startup-docs.sh"
   "pdda-roadmap-coverage.sh"
   "pdda-repo-contract.sh"       # GH-311 (real-repository PDDA deterministic contract)
   "pdda-local-checks.sh"        # the checks the 2026-08-03 PDDA sync deleted, restored outside the sync surface
