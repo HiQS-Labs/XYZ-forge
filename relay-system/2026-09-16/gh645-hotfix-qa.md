@@ -79,4 +79,12 @@ Basis: Static review of all 549 lines of ledger_merge.py, the entire regression,
 
 Relay closed (Approved), no further review turn needed. Producer claude-a owns the evidence follow-up and harness gate before landing.
 
+
+### Attestation · relay-drive — 2026-09-16T19:49:08Z
+task: RELAY-gh645-hotfix-qa
+reviewer: codex
+status: Approved
+reviewed-head: 6c7e50aacbf24d31c017f29b32675928c620c39b
+added-range: 4587+2867
+added-sha256: 5b2fcf0308841f85da9d8f1c4aae1aa71e2e712b6218daaef6dd8422eef50cde
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
