@@ -4048,11 +4048,14 @@ def cmd_roadmap_reconcile_state(args):
             "ORDER BY gh_number, global_id", terminal).fetchall()
         changes = []
         unresolvable = []
+        owned_repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
+        origin = _origin_repo_identity(root)
         for row in rows:
-            # Full URLs preserve repository identity, including imported cross-repo references.
+            # A URL cannot override the row's independently owned repository.
             url = row["issue_url"] or ""
             if (not GH_ISSUE_URL_RE.fullmatch(url)
-                    or url.rsplit("/", 1)[-1] != str(row["gh_number"])):
+                    or url.rsplit("/", 1)[-1] != str(row["gh_number"])
+                    or not resolve_roadmap_identity(row, owned_repos, origin)["identity_valid"]):
                 # Per-row, not per-command: one row whose issue_url disagrees with its gh_number
                 # is a local data defect, and refusing the whole sweep over it strands every other
                 # row (#527). Still never guess this row's state — skip it and name it.
@@ -4085,7 +4088,7 @@ def cmd_roadmap_reconcile_state(args):
             changes.append((row, target))
 
         for gh in unresolvable:
-            print("warn: rule=roadmap-issue-identity: GH-%s has no matching issue URL; skipped "
+            print("warn: rule=roadmap-issue-identity: GH-%s has no matching owned issue URL; skipped "
                   "(fix with `releases roadmap update --issue-num %s --issue-url <url>`)"
                   % (gh, gh))
         if not changes:

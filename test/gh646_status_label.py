@@ -544,6 +544,25 @@ class StatusLabelTests(unittest.TestCase):
                 self.project(batch)
                 self.assertNotIn({"name":"in-progress"}, self.native.issue()["labels"])
 
+    def test_foreign_url_closure_preserves_owned_start_and_sweeps_valid_row(self):
+        self.start()
+        first = app.latest_owned_lifecycle(self.fx.conn, 1, 646)
+        self.fx.update(issue_url="https://github.com/foreign/project/issues/646")
+        other = self.fx.add(647)
+        queried = []
+        def native(argv, **kwargs):
+            if argv[0] == "git":
+                return subprocess.CompletedProcess(argv, 0, "https://github.com/owner/project.git\n", "")
+            queried.append(argv[3])
+            return subprocess.CompletedProcess(argv, 0, json.dumps({"state":"CLOSED", "stateReason":"COMPLETED"}), "")
+        with mock.patch.object(app.subprocess, "run", side_effect=native), contextlib.redirect_stdout(io.StringIO()):
+            app.cmd_roadmap_reconcile_state(argparse.Namespace(root=self.fx.root, apply=True))
+        self.assertEqual(self.fx.row()["section"], "In progress")
+        self.assertEqual(self.fx.row()["status_label"], "in-progress")
+        self.assertEqual(app.latest_owned_lifecycle(self.fx.conn, 1, 646), first)
+        self.assertEqual(self.fx.row(other)["section"], "Completed")
+        self.assertEqual(queried, ["https://github.com/owner/project/issues/647"])
+
     def test_direct_close_with_caught_up_cursor_and_cancellation(self):
         for reason, section in (("COMPLETED","Completed"), ("NOT_PLANNED","Deferred · vision")):
             with self.subTest(reason=reason):
