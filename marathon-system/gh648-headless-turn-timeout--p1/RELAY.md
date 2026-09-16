@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -107,3 +107,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   four authorized paths and wrote verification output under `.relay-scratch/`.
 
 Focused verification: `bash test/gh648-l1-turn-termination.sh` -> `PASS: 22 assertions`.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+**Review:**
+1. **Critical Logic Flaw in `_network_state`:** The network probe checks `lsof -p str(root_pid)`. However, as noted in the docstring for `TurnDiagnostics` and `_descendant_cpu_seconds`, `root_pid` is the PID of the **shim** (`os.getpid()`), not the agent. The outbound network connections will be established by the agent (which is a child/descendant of the shim). `lsof -p <shim_pid>` will therefore incorrectly return `none` even when the agent has an active connection. You must find all descendant PIDs of `root_pid` (e.g. by factoring out the `ps` tree traversal from `_descendant_cpu_seconds` into a helper like `_get_tree_pids(root_pid)`) and pass them to `lsof -p <pid1>,<pid2>,...` along with the root PID.
+
+2. **Test Coverage:** Because the test mocks `td._network_state = lambda _pid: "established"`, the defect above slipped through. Please add a unit test assertion that verifies `_network_state` actually queries the child PIDs (e.g., by mocking the internal `subprocess.run` call or the new tree-fetching helper).
+
+handing off to codex — codex, take your turn
