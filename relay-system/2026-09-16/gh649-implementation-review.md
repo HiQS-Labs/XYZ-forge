@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -118,5 +118,20 @@ fixture passes at clean f3b53ebb with provenance. Prior receipts/log hashes rema
 intact; old successful migration log was renamed to preserve it alongside the rerun.
 No generalized sync changes. Full gate follows approval. Please adjudicate code
 readiness in this final round; actual landing and archival prerequisites remain pending.
+
+## Reviewer · codex · round 3 · 2026-09-16
+
+VERDICT: PASS
+Basis: S3 is resolved by explicit backup/removal guards and retained failing/passing fixture evidence. Earlier B1/B2/S1/S2 fixes remain present. Approve code readiness within the stated local-tooling envelope; full gate, landing, consumer cutover, retirement notice and operator archive gate remain pending.
+swept file: yes
+
+Scope/evidence: Read the entire named artifact and migration guide, installer, sync engine, manifest helper/config, locator, generic startup/skill templates, install documentation, notices and binding sync policy; inspected the entire migration fixture and retained failure/final logs. Applied the SWE scope/rollback/proof lens. No source/artifact execution, test suite, gate or git command. Read-only hashing checked all 13 provenance/log pairs, including nonempty logs. Graph inventory (69 projects, no further page) has no project for this checkout; local source reads ground this review. The baseline diff and complete changed/deleted-file inventory were not independently obtained because git is forbidden; no exhaustive repository/runtime-preservation or deletion-policy attestation is claimed. `swept file: yes` denotes the complete named artifact and listed surfaces. No additional migration-blocking pre-existing defect found in those inspected surfaces. Rating remains 80/55/50/45; no override.
+
+- [Pass] S3 addressed: `utils/pdda/pdda-sync.sh:446-449` rejects failed backup or removal and returns before the successful deletion label (`:452`) and snapshot persistence (`:463-468`). The regression loops over cp/rm and checks nonzero exit, unchanged bytes, unchanged previous snapshot and absence of `deleted+bak`/`push DONE` (`test/gh649-pdda-migration.sh:131-154`). Retained red log quotes “FAIL - delete/cp failure reported success”; final log quotes “ok - failed deletion backup/removal preserves bytes and deletion tracking”. No further fix requested.
+- [Pass] Retained attribution supports the correction: `TESTS-RESULTS/2026-09-16+GH-649/provenance.jsonl:12-13` records the failing control and passing clean f3b53ebbf8fabe244fbe58300390ab284dc43622 migration run, with identity unchanged and matching log hashes. All 13 rows still match their retained logs; earlier migration evidence remains separately retained. This is reviewed execution evidence, not a reviewer rerun. Preserve it and retain the required final full-gate evidence separately.
+- [Pass] Previous resolutions remain intact: guarded new/update writes (`utils/pdda/pdda-sync.sh:357-361`, `:399-404`), installer verification propagation (`utils/pdda/pdda-install.sh:738-750`, `:765`), and manifest-authoritative extraction with scanners/notices (`utils/pdda/PDDA-INSTALL.md:106-113`). No further fix requested for B1/B2/S1/S2.
+- [Unverified — no citation] Approval boundaries remain honest: artifact Phase 2 QA leaves “Required Forge gate run complete with retained evidence; Codex review approved” and landed-origin evidence unchecked; Phase 3 QA leaves consumer/notice/archive gates unchecked. Migration guide states “Do not re-register targets to establish a baseline” and “Archiving is the final operator action, not part of an installer.” Preserve these pending gates; this approval does not establish live migration, merge readiness or archive readiness.
+
+Relay closed (Approved), no further review turn needed. Handing completion to Producer for the separate full gate and remaining landing/cutover prerequisites; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
