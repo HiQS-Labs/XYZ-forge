@@ -22,11 +22,15 @@ check(){ if [ "$1" = "$2" ]; then ok "$3"; else bad "$3 (want '$2', got '$1')"; 
 
 SBOX="$(mktemp -d "${TMPDIR:-/tmp}/pdda-install-startup.XXXXXX")"
 [ -n "$SBOX" ] && [ -d "$SBOX" ] || exit 1
+. "$HERE/lib/fixture-guard.sh"
+fixture_guard_init "$SBOX"
 trap 'rm -rf "$SBOX"' EXIT
 
 new_target() {  # <name> -> prints path
   local d="$SBOX/$1"
-  mkdir -p "$d" && ( cd "$d" && git init -q . )
+  mkdir -p "$d"
+  require_fixture "$d" "new installer target"
+  ( cd "$d" && git init -q . )
   printf '# README\n' > "$d/README.md"
   printf '%s\n' "$d"
 }
@@ -172,6 +176,7 @@ check "$errs" "0" "a fresh --with-startup-docs install reports zero errors in th
 make_source_copy() {  # -> prints path
   local dst="$SBOX/src-$1"
   mkdir -p "$dst"
+  require_fixture "$dst" "installer source fixture"
   ( cd "$REPO" && tar -cf - utils/pdda utils/py/pdda_gov_scan.py utils/py/pdda_comment_refs.py PROJECT/PDDA.md 2>/dev/null ) | ( cd "$dst" && tar -xf - )
   printf '%s\n' "$dst"
 }

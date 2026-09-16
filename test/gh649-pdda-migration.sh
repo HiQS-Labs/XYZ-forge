@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BOX="$(mktemp -d "${TMPDIR:-/tmp}/gh649.XXXXXX")"
 [ -n "$BOX" ] && [ -d "$BOX" ] || exit 1
+. "$ROOT/test/lib/fixture-guard.sh"
+fixture_guard_init "$BOX"
 trap 'rm -rf "$BOX"' EXIT
 export PDDA_REGISTRY="$BOX/registry.tsv" PDDA_GITPULSE_DIR="$BOX/no-git-pulse"
 export PDDA_SYNC_TMP="$BOX/old-state"
@@ -14,7 +16,7 @@ fail() { printf 'FAIL - %s\n' "$*" >&2; exit 1; }
 if PDDA_REPO="$BOX" bash "$ROOT/skills/vendor-stack/find-pdda.sh" >"$BOX/invalid.log" 2>&1; then fail 'missing installer accepted'; fi
 grep -q 'lacks utils/pdda/pdda-install.sh' "$BOX/invalid.log"
 ok 'Forge resolves without sibling PDDA; invalid override fails'
-T="$BOX/target"; mkdir "$T"; git -C "$T" init -q
+T="$BOX/target"; mkdir "$T"; require_fixture "$T"; git -C "$T" init -q
 bash "$ROOT/utils/pdda/pdda-install.sh" "$T" --with-startup-docs --no-register >"$BOX/install.log" 2>&1
 [ -x "$T/utils/pdda/pdda.sh" ] && [ -s "$T/utils/py/pdda_gov_scan.py" ]
 for p in pdda-install.sh pdda-sync.sh pdda-manifest.sh pdda-sync-manifest.conf templates; do
@@ -100,6 +102,7 @@ for branch in new update; do
   for op in cp mv; do
     FS="$BOX/fail-source-$branch-$op"; FT="$BOX/fail-target-$branch-$op"
     cp -R "$S" "$FS"; cp -R "$U" "$FT"
+    require_fixture "$FS"; require_fixture "$FT"
     FSTATE="$BOX/fail-state-$branch-$op"
     PDDA_SYNC_TMP="$FSTATE" bash "$FS/utils/pdda/pdda-sync.sh" push "$FT" --force-resync --no-delete --allow-dirty >"$BOX/baseline.log" 2>&1
     cp -R "$FSTATE/pdda-sync-state" "$BOX/old-stamps-$branch-$op"
@@ -132,6 +135,7 @@ ok 'copy and rename failures in new/update branches leave target and old stamps 
 for op in cp rm; do
   DS="$BOX/delete-source-$op"; DT="$BOX/delete-target-$op"; DST="$BOX/delete-state-$op"
   cp -R "$S" "$DS"; cp -R "$U" "$DT"
+  require_fixture "$DS"; require_fixture "$DT"
   PDDA_SYNC_TMP="$DST" bash "$DS/utils/pdda/pdda-sync.sh" push "$DT" --force-resync --allow-dirty >"$BOX/delete-baseline.log" 2>&1
   cp -R "$DST/pdda-sync-manifest" "$BOX/delete-snapshot-$op"
   cp "$DT/payload/unbaselined.txt" "$BOX/delete-original-$op"
@@ -153,6 +157,7 @@ SHIM
 done
 ok 'failed deletion backup/removal preserves bytes and deletion tracking'
 # Restore all three saved surfaces, not just payload bytes. Only fixture paths are removed.
+require_fixture "$U"; require_fixture "$PDDA_SYNC_TMP"
 rm -rf "$U" "$PDDA_SYNC_TMP"
 cp -R "$BOX/saved-payload" "$U"; cp -R "$BOX/saved-state" "$PDDA_SYNC_TMP"; cp "$BOX/saved-registry" "$PDDA_REGISTRY"
 diff -r "$U" "$BOX/saved-payload"; diff -r "$PDDA_SYNC_TMP" "$BOX/saved-state"; cmp "$PDDA_REGISTRY" "$BOX/saved-registry"

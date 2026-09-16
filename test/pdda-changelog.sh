@@ -15,13 +15,18 @@ fail() { FAIL=$((FAIL + 1)); printf 'FAIL - %s\n' "$1"; }
 assert_contains() { case "$1" in *"$2"*) pass "$3" ;; *) fail "$3 (missing: $2)"; printf -- '----\n%s\n----\n' "$1" ;; esac; }
 assert_absent()   { case "$1" in *"$2"*) fail "$3 (unexpected: $2)"; printf -- '----\n%s\n----\n' "$1" ;; *) pass "$3" ;; esac; }
 
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/pdda-changelog.XXXXXX")"
+[ -n "$WORK" ] && [ -d "$WORK" ] || exit 1
+. "$HERE/lib/fixture-guard.sh"
+fixture_guard_init "$WORK"
 SBOX=""
-cleanup() { [ -n "$SBOX" ] && rm -rf "$SBOX"; }
-trap cleanup EXIT
+cleanup() { if [ -n "$SBOX" ] && [ -d "$SBOX" ]; then require_fixture "$SBOX"; rm -rf "$SBOX"; fi; }
+trap 'cleanup; rm -rf "$WORK"' EXIT
 
 new_sandbox() {
   cleanup
-  SBOX="$(mktemp -d "${TMPDIR:-/tmp}/pdda-changelog.XXXXXX")"
+  SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  require_fixture "$SBOX" "changelog sandbox"
   (
     cd "$SBOX" || exit 1
     git init -q
