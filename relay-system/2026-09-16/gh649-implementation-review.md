@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -89,5 +89,22 @@ Handing off to Producer — address B1/B2 and S1/S2, log each disposition and re
 - Consumer inventory now lists each of ten targets and its pinned/review disposition. Broader local scheduler search found no PDDA references in user/system plists or user crontab. Other devices remain unverified; no archive or closeout claim yet.
 
 Please re-review these changes and approve code readiness if satisfied. Full gate follows approval; PDDA retirement notice and landing remain separate pending gates. No mutation-heavy test execution in the review worktree.
+
+## Reviewer · codex · round 2 · 2026-09-16
+
+VERDICT: FAIL
+Basis: B1/B2 and S1/S2 are addressed on source inspection and retained receipts. One adjacent, pre-existing sync failure path still loses deletion tracking and reports a successful backup/deletion after backup failure; this is within safe update/restore readiness.
+swept file: yes
+
+Scope/evidence: Read the entire named artifact, migration guide, installer, sync engine, manifest helper/config, locator, generic templates, install/source/notice documentation, binding sync policy and migration fixture. Inspected receipt rows, raw migration/failure logs, suite registration and parser references. No source/artifact execution, tests, gate or git commands. Read-only SHA-256 checks of all ten retained logs match their provenance rows. Both pages of graph project inventory contain no project for this checkout; exact source reads supply evidence instead of another checkout's graph. The baseline diff and complete changed-file/deletion inventory were not independently obtained because git is forbidden this turn; no exhaustive repository/runtime-preservation claim. `swept file: yes` denotes the complete named artifact and listed implementation surfaces, not an exhaustive repository audit. Rating remains 80/55/50/45; no override.
+
+- [Should] S3 — Failed delete backup is swallowed and the retained file becomes untracked. `utils/pdda/pdda-sync.sh:444` performs `cp ... && rm -f ...`; failed `cp` is exempt from errexit as the left operand of `&&`. Execution then reports `deleted+bak` and increments the deletion counter (`:445`), leaves `pending_del` empty, replaces the snapshot with the current manifest (`:461`), and reports `push DONE` (`:471`). The target survives but its removed entry is forgotten, so a subsequent run cannot retry or report that pending deletion. This contradicts the documented backup/deferred-delete contract and repeats B1's success-after-failure class in the adjacent imported branch. Fix: explicitly reject backup or removal failure before reporting/counters/snapshot advance; retain the previous snapshot (or explicitly retain failed entries and return nonzero). Add an isolated deletion-backup copy-failure negative control asserting nonzero exit, unchanged target bytes, retained removed entry and no successful deletion/completion claim; cover failed removal as well. Retain authentic final-candidate receipts. Evidence here is textual fail-path analysis, not a newly executed reproduction. Keep the fix within this branch; no generalized sync framework requested.
+- [Pass] B1 addressed: explicit write guards precede stamp advancement in new/update branches (`utils/pdda/pdda-sync.sh:357-361`, `:399-404`). The fixture injects both cp/mv failures into both branches and checks old stamps, target bytes and absence of `push DONE` (`test/gh649-pdda-migration.sh:98-130`). Retained red log quotes “FAIL - new/cp write failure reported success”; final migration log quotes “copy and rename failures in new/update branches leave target and old stamps intact”. Preserve these checks while extending deletion coverage.
+- [Pass] S1 addressed: installer captures the runtime exit code and propagates it (`utils/pdda/pdda-install.sh:738-750`, `:765`). Installer-level rejection is exercised at `test/gh649-pdda-migration.sh:44-45`; retained red log quotes “FAIL - invalid full-mode install accepted” and final log quotes “observe/light report; full rejects invalid document and install”. No further change requested for this finding.
+- [Pass] B2 addressed for the retained focused runs: `TESTS-RESULTS/2026-09-16+GH-649/provenance.jsonl:1-11` ties commands, source revision/diff hashes, return codes, identity results and matching raw-log hashes to the seven passing suites and three failing controls. `SUMMARY.md` explicitly limits focused evidence to clean 71c06a87 and leaves later documentation/full-gate coverage pending. These are retained execution receipts, not tests rerun by this reviewer; refresh affected evidence after S3.
+- [Pass] S2 addressed: `utils/pdda/PDDA-INSTALL.md:106-113` makes the executable manifest the sole extraction authority, names scanners/license/notices and excludes source-only machinery; `:3` uses the Forge migration URL. No further change requested.
+- [Unverified — no citation] Ownership/cutover boundaries remain explicit: migration guide says “Do not re-register targets to establish a baseline” and “Archiving is the final operator action, not part of an installer.” Its ten-target table retains pinned/reconcile dispositions and declares other-device jobs unverified. Artifact Phase 2/3 still leaves full gate, landing, notice and archival verdict pending. Preserve those boundaries; no approval of live migration or archive is implied.
+
+Handing off to Producer — address S3, retain the focused regression/negative-control receipts, and request round 3 review. Full gate remains a separate post-code-approval merge gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
