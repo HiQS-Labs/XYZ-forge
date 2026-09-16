@@ -123,7 +123,7 @@ python3 "$HARNESS/utils/py/router_audit.py" --fix /abs/path/to/target-repo
 ```bash
 cd /abs/path/to/target-repo
 ./.xyz/bin/tick --help >/dev/null && echo "tick OK"        # XYZ runnable
-grep -qx '.xyz/' .gitignore && echo ".xyz gitignored"
+grep -qx '.xyz/' .git/info/exclude && echo ".xyz excluded (repo-local, GH-642)"
 utils/pdda/pdda.sh run && echo "PDDA runs"                  # only if PDDA installed
 ```
 

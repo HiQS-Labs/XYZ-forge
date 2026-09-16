@@ -5,7 +5,8 @@
 #   rm -rf "$VENDOR_DIR"; mv "$STAGE_DIR" "$VENDOR_DIR"
 # The stage is built purely from harness source, so anything the TARGET accumulated at runtime --
 # relay-system/ threads, .tick/ event logs, .relay-driver.lock -- was deleted unread. That state is
-# invisible to git by construction (ensure_gitignore puts .xyz/ in .gitignore), so there is no
+# invisible to git by construction (reconcile_ignore_state puts .xyz/ in the repo-local
+# info/exclude, GH-642), so there is no
 # reflog/stash/fsck recovery: a destroyed relay thread is simply gone.
 #
 # These assertions pin the contract both ways: target-owned RUNTIME STATE survives, and harness
