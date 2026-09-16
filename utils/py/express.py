@@ -656,6 +656,25 @@ goal: >
 
 # ── step 6: ledger ───────────────────────────────────────────────────────────
 
+def qualified_roadmap_row(root, repo, number):
+    """GH-646: number alone never selects another repository's task."""
+    from releases_app import resolve_roadmap_identity, _origin_repo_identity
+    conn = sqlite3.connect(os.path.join(root, "releases.db"))
+    conn.row_factory = sqlite3.Row
+    try:
+        repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
+        matches = []
+        for row in conn.execute("SELECT * FROM roadmap_items WHERE gh_number = ?", (number,)):
+            identity = resolve_roadmap_identity(row, repos, _origin_repo_identity(root))
+            if identity["identity_valid"] and identity["repo"] == repo:
+                matches.append(dict(row))
+        if len(matches) > 1:
+            refuse(root, "roadmap-identity", "multiple owned roadmap rows for exact issue", issue=number)
+        return matches[0] if matches else None
+    finally:
+        conn.close()
+
+
 def cmd_ledger(args):
     root = args.root
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url,createdAt"])
@@ -668,12 +687,7 @@ def cmd_ledger(args):
     db = os.path.join(root, "releases.db")
     if not os.path.isfile(db):
         die("no releases.db under %s — express requires the releases ledger" % root)
-    conn = sqlite3.connect(db)
-    try:
-        row = conn.execute("SELECT global_id FROM roadmap_items WHERE gh_number = ?",
-                           (args.issue,)).fetchone()
-    finally:
-        conn.close()
+    row = qualified_roadmap_row(root, args.repo, args.issue)
 
     if row is None:
         doc = args.doc_path
@@ -692,7 +706,7 @@ def cmd_ledger(args):
                      "--doc-path", doc, "--raw-text", raw)
         print("express-ledger: parked roadmap row for GH-%d -> %s" % (args.issue, doc))
     else:
-        print("express-ledger: roadmap row already parked (%s)" % row[0])
+        print("express-ledger: roadmap row already parked (%s)" % row["global_id"])
 
     # dial-in into the named release (default: the active one from `releases next`)
     rel = args.release
@@ -723,6 +737,14 @@ def cmd_land(args):
     supplied = getattr(args, "_expect_driver", None)
     expect = set(supplied) if supplied is not None else expect_driver_paths(root, args.issue)
     state = cmd_check(args, expect_driver=expect)  # re-qualify at landing time
+    row = qualified_roadmap_row(root, args.repo, args.issue)
+    if row is None:
+        refuse(root, "roadmap-identity", "no exact owned issue row; run express ledger first", issue=args.issue)
+    admission = ["roadmap", "update", "--gid", row["global_id"], "--accepted-start"]
+    if getattr(args, "dry_run", False):
+        admission.append("--dry-run")
+    run_releases(root, *admission)
+    state = cmd_check(args, expect_driver=expect)  # include only existing driver ledger projections
     suite = state["suite"]
     before_paths = set(state["paths"])
     before_content = snapshot_paths(root, before_paths)

@@ -244,6 +244,24 @@ Offer at most one goal-matched follow-up; do not append generic reminders.
 
 ## Guardrails
 
+Schema009 adds nullable exact `roadmap_items.status_label` (`in-progress` or NULL).
+Only accepted starts establish it; metadata/migration/backfill never infer one
+from old markers. NULL is not proof of completion. Use the existing command
+`roadmap update --gid OWNED_ROW --accepted-start` after approved execution admission;
+it validates owned URL/native open issue, refuses PRs and preserves repeated starts.
+Use `--dry-run` to preview. Schema migration and remote projection remain opt-in.
+
+An explicitly configured `work_connectors.github_labels` block with `enabled: true`
+and `repos: ["owner/repository"]` projects only that exact label. No default network
+calls; failures retain replay cursors. Native direct closes require preview-first
+`roadmap reconcile-state`, then `--apply`. For terminal cleanup drift, use
+`work reconcile --connector github_labels --reset` when witnessed events exist;
+for zero-event Completed/Deferred rows, seed `work emit --event label_repair
+--roadmap-gid OWNED_ROW`, then reconcile. This qualified repair is labels-only,
+not a start/completion claim, and unestablished NULL/open issues are preserved.
+Disabling this connector rolls back projection, not the schema; old writers are
+unsupported against migrated ledgers because their digests/dumps omit the field.
+
 - Default to read-only synthesis.
 - In an app-managed repo (`releases.db` present) every mutation goes through the `releases` CLI;
   never edit `RELEASES.md` directly there (`RELEASES.md` is retired in this repo per GH-568).
