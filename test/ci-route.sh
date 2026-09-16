@@ -222,8 +222,8 @@ out="$(bash "$ROUTER" subsystems releases)"
   && pass "subsystems releases lists its 23 suites (GH-496; +gh549-work-events; +gh567-roadmap-dashboard; +gh568-releases-md-retired)" \
   || fail "subsystems releases listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems pdda)"
-[[ "$(wc -w <<<"$out")" -eq 12 ]] \
-  && pass "subsystems pdda lists its 12 suites (GH-496)" \
+[[ "$(wc -w <<<"$out")" -eq 15 ]] \
+  && pass "subsystems pdda lists its 15 suites (GH-649 adds migration, changelog and installer checks)" \
   || fail "subsystems pdda listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems skills-army-hq)"
 [[ "$(wc -w <<<"$out")" -eq 1 ]] \
