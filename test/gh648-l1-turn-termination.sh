@@ -5,6 +5,7 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh648-l1.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$ROOT/utils/py" GH648_MODULE="$ROOT/utils/py/turn_diagnostics.py" GH648_WORK="$WORK" python3 <<'PY'
 import io, json, os, pathlib, subprocess, sys
+from types import SimpleNamespace
 import turn_diagnostics as td
 
 passed = 0
@@ -32,6 +33,18 @@ os.environ["PATH"] = str(stub) + os.pathsep + os.environ.get("PATH", "")
 for mode, expected in (("established", "established"), ("none", "none"), ("fail", "unclassified")):
     os.environ["GH648_LSOF_MODE"] = mode
     check(td._network_state(4242) == expected, f"lsof {mode} maps to {expected}")
+
+real_run, real_tree_pids = td.subprocess.run, td._tree_pids
+seen = {}
+def capture_run(cmd, **_kwargs):
+    seen["cmd"] = cmd
+    return SimpleNamespace(returncode=0, stdout=b"nhttps://api.example.test:443\n")
+td._tree_pids = lambda root_pid: [root_pid, 4343, 4444]
+td.subprocess.run = capture_run
+check(td._network_state(4242) == "established", "descendant probe remains functional")
+check(seen["cmd"][seen["cmd"].index("-p") + 1] == "4242,4343,4444",
+      "lsof queries root and descendant PIDs")
+td.subprocess.run, td._tree_pids = real_run, real_tree_pids
 
 td._network_state = lambda _pid: "established"
 reason, detail = idle_diag().classify()
@@ -79,5 +92,21 @@ assert d.classify()[0] == m.REASON_IDLE_IN_FLIGHT
 '''
 red = subprocess.run([sys.executable, "-c", oracle, str(mutant)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 check(red.returncode != 0, "mutation turns oracle red")
+
+tree_mutated = source.replace('pids = ",".join(str(pid) for pid in _tree_pids(root_pid))',
+                              'pids = str(root_pid)', 1)
+check(tree_mutated != source, "tree mutation changed network probe")
+tree_mutant = pathlib.Path(os.environ["GH648_WORK"]) / "turn_diagnostics_tree_mutant.py"
+tree_mutant.write_text(tree_mutated)
+tree_oracle = '''import importlib.util,sys,types
+s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+seen={};m._tree_pids=lambda root:[root,2,3]
+def run(cmd,**kwargs): seen["cmd"]=cmd;return types.SimpleNamespace(returncode=1,stdout=b"")
+m.subprocess.run=run;m._network_state(1)
+assert seen["cmd"][seen["cmd"].index("-p")+1] == "1,2,3"
+'''
+tree_red = subprocess.run([sys.executable, "-c", tree_oracle, str(tree_mutant)],
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+check(tree_red.returncode != 0, "root-only network mutation turns oracle red")
 print(f"PASS: {passed} assertions")
 PY

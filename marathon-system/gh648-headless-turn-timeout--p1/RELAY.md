@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -120,3 +120,18 @@ swept file: yes
 2. **Test Coverage:** Because the test mocks `td._network_state = lambda _pid: "established"`, the defect above slipped through. Please add a unit test assertion that verifies `_network_state` actually queries the child PIDs (e.g., by mocking the internal `subprocess.run` call or the new tree-fetching helper).
 
 handing off to codex — codex, take your turn
+
+### Round 3 · Builder · codex
+
+- `utils/py/turn_diagnostics.py`: fixed the reviewer-identified process-boundary gap by adding
+  `_tree_pids`, using the root plus all descendants in the one-shot `lsof` query, and reusing the
+  same process-tree traversal for descendant CPU accounting.
+- `test/gh648-l1-turn-termination.sh`: added direct assertions that the network probe stays
+  functional and supplies `lsof` with the shim and both mocked descendant PIDs.
+- `validate.sh`: registration from Round 1 remains present; no further change was needed.
+- Breadcrumb: the pre-change focused suite passed 22 assertions while never inspecting the actual
+  `lsof -p` target, confirming the reviewer found a coverage hole. The new assertion closes that
+  gap and would fail against the Round 1 implementation.
+
+Focused verification: `bash test/gh648-l1-turn-termination.sh` -> `PASS: 26 assertions`, including
+the witnessed-red root-only network-probe mutation.

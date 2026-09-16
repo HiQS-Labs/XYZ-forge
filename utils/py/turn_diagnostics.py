@@ -117,11 +117,38 @@ def _run(cmd: list[str], timeout: float = 5.0) -> str:
         return ""
 
 
+def _tree_pids(root_pid: int, ps_output: str | None = None) -> list[int]:
+    """Return *root_pid* and every descendant visible in one ``ps`` snapshot."""
+    out = ps_output if ps_output is not None else _run(["ps", "-axo", "pid=,ppid="])
+    if not out:
+        return [root_pid]
+    children: dict[int, list[int]] = {}
+    for line in out.splitlines():
+        fields = line.split(None, 2)
+        if len(fields) < 2:
+            continue
+        try:
+            pid, ppid = int(fields[0]), int(fields[1])
+        except ValueError:
+            continue
+        children.setdefault(ppid, []).append(pid)
+    pids, stack, seen = [root_pid], list(children.get(root_pid, [])), {root_pid}
+    while stack:
+        pid = stack.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        pids.append(pid)
+        stack.extend(children.get(pid, []))
+    return pids
+
+
 def _network_state(root_pid: int) -> str:
-    """Return ``established``, ``none``, or ``unclassified`` for *root_pid*."""
+    """Return network state for *root_pid* and its current descendants."""
+    pids = ",".join(str(pid) for pid in _tree_pids(root_pid))
     try:
         probe = subprocess.run(
-            ["lsof", "-a", "-n", "-P", "-p", str(root_pid),
+            ["lsof", "-a", "-n", "-P", "-p", pids,
              "-iTCP", "-sTCP:ESTABLISHED", "-F", "n"],
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
             timeout=5.0, check=False,
@@ -203,7 +230,6 @@ def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
     out = _run(["ps", "-axo", "pid=,ppid=,time="])
     if not out:
         return (0.0, 0)
-    children: dict[int, list[int]] = {}
     cpu: dict[int, float] = {}
     for line in out.splitlines():
         fields = line.split(None, 2)
@@ -213,19 +239,9 @@ def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
             pid, ppid = int(fields[0]), int(fields[1])
         except ValueError:
             continue
-        children.setdefault(ppid, []).append(pid)
         cpu[pid] = _parse_ps_time(fields[2])
-    total, count, stack = 0.0, 0, list(children.get(root_pid, []))
-    seen = set()
-    while stack:
-        pid = stack.pop()
-        if pid in seen:
-            continue
-        seen.add(pid)
-        total += cpu.get(pid, 0.0)
-        count += 1
-        stack.extend(children.get(pid, []))
-    return (total, count)
+    descendants = _tree_pids(root_pid, out)[1:]
+    return (sum(cpu.get(pid, 0.0) for pid in descendants), len(descendants))
 
 
 def _security_dialog_present() -> bool:
