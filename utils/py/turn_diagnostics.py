@@ -31,18 +31,22 @@ The exit code is deliberately unchanged: callers keep seeing 7. This adds a
 reason string next to it.
 
 Deliberately stdlib-only and cheap: one ``ps`` and one ``pgrep`` per interval, so
-it stays affordable on a 30-minute turn. A network probe (``lsof -i``, to prove
-the agent is waiting on its API) was considered and left out — it is slow enough
-to matter at this cadence, and worktree progress already separates "working" from
-"wedged" without it.
+it stays affordable on a 30-minute turn. Network state is sampled once, only when
+an otherwise-idle observation is classified. An established connection proves
+that the turn may still be waiting on its backend; no connection does *not* prove
+that it is wedged. If ``lsof`` is unavailable or fails, attribution degrades to
+``timeout-unclassified`` and never changes the turn's exit code.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
+import sys
 import threading
 import time
+from typing import TextIO
 
 #: How often to sample. Cheap probes, but a turn can run 30+ minutes.
 DEFAULT_INTERVAL_S = 10.0
@@ -87,8 +91,18 @@ IDLE_MIN_SAMPLES = 3
 REASON_SECURITY_DIALOG = "timeout-blocked-security-dialog"
 REASON_CPU_BOUND = "timeout-cpu-bound"
 REASON_SLOW_PROGRESS = "timeout-slow-but-progressing"
-REASON_IDLE = "timeout-idle-no-progress"
+REASON_IDLE = "timeout-idle-unknown"
+REASON_IDLE_IN_FLIGHT = "timeout-idle-in-flight"
 REASON_UNCLASSIFIED = "timeout-unclassified"
+
+TERMINATION_IDLE_KILL = "idle-kill"
+TERMINATION_WALL_CAP = "wall-cap"
+TERMINATION_CHILD_ORPHAN = "child-orphan"
+TERMINATION_UNKNOWN = "unknown"
+TERMINATION_KINDS = frozenset({
+    TERMINATION_IDLE_KILL, TERMINATION_WALL_CAP,
+    TERMINATION_CHILD_ORPHAN, TERMINATION_UNKNOWN,
+})
 
 
 def _run(cmd: list[str], timeout: float = 5.0) -> str:
@@ -101,6 +115,49 @@ def _run(cmd: list[str], timeout: float = 5.0) -> str:
         return out.stdout.decode("utf-8", "replace")
     except Exception:  # noqa: BLE001 — a probe must never fail the turn
         return ""
+
+
+def _network_state(root_pid: int) -> str:
+    """Return ``established``, ``none``, or ``unclassified`` for *root_pid*."""
+    try:
+        probe = subprocess.run(
+            ["lsof", "-a", "-n", "-P", "-p", str(root_pid),
+             "-iTCP", "-sTCP:ESTABLISHED", "-F", "n"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            timeout=5.0, check=False,
+        )
+    except Exception:  # noqa: BLE001 — attribution must not fail the turn
+        return "unclassified"
+    if probe.returncode == 0:
+        return "established" if probe.stdout.strip() else "none"
+    if probe.returncode == 1:
+        return "none"
+    return "unclassified"
+
+
+def termination_record(
+    termination: str, reason: str, detail: str, *, exit_code: int = 7,
+    observed_at: float | None = None,
+) -> dict[str, object]:
+    """Build one stable, JSON-safe termination record for a run log."""
+    kind = termination if termination in TERMINATION_KINDS else TERMINATION_UNKNOWN
+    return {
+        "event": "turn-termination", "termination": kind, "reason": reason,
+        "detail": detail, "exit_code": exit_code,
+        "observed_at": time.time() if observed_at is None else observed_at,
+    }
+
+
+def emit_termination_record(
+    termination: str, reason: str, detail: str, *, exit_code: int = 7,
+    observed_at: float | None = None, stream: TextIO | None = None,
+) -> dict[str, object]:
+    """Write one structured termination record and return the same record."""
+    record = termination_record(
+        termination, reason, detail, exit_code=exit_code, observed_at=observed_at,
+    )
+    print(json.dumps(record, sort_keys=True), file=stream or sys.stderr, flush=True)
+    return record
 
 
 def _parse_ps_time(value: str) -> float:
@@ -416,8 +473,42 @@ class TurnDiagnostics:
                 "the agent was writing files but did not finish — genuinely slow; raising the "
                 f"turn budget is the appropriate response. [{detail}]",
             )
+        network = _network_state(self.root_pid)
+        if network == "unclassified":
+            return (
+                REASON_UNCLASSIFIED,
+                f"idle signals were observed, but the one-shot network probe failed [{detail}]",
+            )
+        if network == "established":
+            return (
+                REASON_IDLE_IN_FLIGHT,
+                "no CPU or file growth was observed, but an established outbound connection "
+                f"means the turn may still be awaiting its backend [{detail}]",
+            )
         return (
             REASON_IDLE,
-            "no CPU and no file progress — the agent was blocked waiting on something external "
-            f"(a lock, a prompt, or a hung network call) rather than working. [{detail}]",
+            "no CPU or file growth was observed and no established connection was visible; "
+            f"without a positive in-flight signal the cause remains unknown [{detail}]",
+        )
+
+    def termination_record(
+        self, termination: str, *, exit_code: int = 7,
+        observed_at: float | None = None,
+    ) -> dict[str, object]:
+        """Classify this observation and package it for the run log."""
+        reason, detail = self.classify()
+        return termination_record(
+            termination, reason, detail,
+            exit_code=exit_code, observed_at=observed_at,
+        )
+
+    def emit_termination_record(
+        self, termination: str, *, exit_code: int = 7,
+        observed_at: float | None = None, stream: TextIO | None = None,
+    ) -> dict[str, object]:
+        """Classify and emit this observation as one structured log line."""
+        reason, detail = self.classify()
+        return emit_termination_record(
+            termination, reason, detail,
+            exit_code=exit_code, observed_at=observed_at, stream=stream,
         )

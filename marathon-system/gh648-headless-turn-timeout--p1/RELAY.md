@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -90,3 +90,20 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- `utils/py/turn_diagnostics.py`: replaced the unsupported `timeout-idle-no-progress` claim with
+  honest `timeout-idle-unknown` / `timeout-idle-in-flight` classifications backed by a one-shot
+  classify-time `lsof` probe; probe failure degrades to `timeout-unclassified` and remains
+  non-throwing. Added JSON-safe termination records that distinguish idle-kill, wall-cap,
+  child-orphan, and unknown while preserving exit code 7.
+- `test/gh648-l1-turn-termination.sh`: added 22 focused assertions covering real hermetic probe
+  outcomes, classification honesty, structured emission, mechanism distinction, and a witnessed
+  red mutation control.
+- `validate.sh`: registered the focused GH-648 suite.
+- Breadcrumb: the preceding attempt implemented the same scoped change and passed its focused test,
+  but the harness discarded it for an off-lane containment violation. This round edited only the
+  four authorized paths and wrote verification output under `.relay-scratch/`.
+
+Focused verification: `bash test/gh648-l1-turn-termination.sh` -> `PASS: 22 assertions`.

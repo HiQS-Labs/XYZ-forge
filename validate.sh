@@ -296,6 +296,7 @@ TESTS=(
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
   "gh608-deepseek-effort.sh"     # GH-608 (DEEPSEEK_REASONING_EFFORT matrix, early claim prevention, telemetry normalization)
+  "gh648-l1-turn-termination.sh" # GH-648 L1 (honest idle attribution + structured termination records)
   "gh654-offlane-log.sh"         # GH-654 (offlane_candidates names allowlist failures before the bash verdict destroys the worktree; exemptions load-bearing)
   "gh660-skill-drift.sh"         # GH-660 (skill_drift_check flags vendored SKILL.md copies diverged from canonical skills/; mutation-proven)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
