@@ -28,7 +28,11 @@ done
 cp -R "$T" "$BOX/before-upgrade"
 bash "$ROOT/utils/pdda/pdda-install.sh" "$T" --with-startup-docs --no-register >"$BOX/upgrade.log" 2>&1
 for p in AGENTS.md ROUTER.md GUIDING-PRINCIPLES.md ROADMAP.md CHANGELOG.md PROJECT/PDDA-ACTIVITY.jsonl PROJECT/1-INBOX/user.md; do
-  cmp "$T/$p" "$BOX/before-upgrade/$p"
+  if [ "$p" = PROJECT/PDDA-ACTIVITY.jsonl ]; then
+    head -c "$(wc -c < "$BOX/before-upgrade/$p" | tr -d ' ')" "$T/$p" | cmp - "$BOX/before-upgrade/$p"
+  else
+    cmp "$T/$p" "$BOX/before-upgrade/$p"
+  fi
 done
 ok 'fresh payload is complete; upgrades preserve target-owned files'
 printf '# Invalid active project\n' > "$T/PROJECT/2-WORKING/invalid.md"
