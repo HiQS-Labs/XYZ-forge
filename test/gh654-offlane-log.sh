@@ -94,6 +94,20 @@ class OfflaneCandidates(unittest.TestCase):
     def test_widening_the_allowlist_silences_a_path(self):
         self.assertEqual(self.candidates(allow=ALLOW + ',offlane-probe.txt'), [])
 
+    # GH-654 root cause #2: the driver's artifact string is "a, b, c" (spaces
+    # after commas). rtl_init's bare IFS split kept " b"/" c" leading spaces in
+    # RTL_ALLOW, making every artifact after the first invisible to the sweep.
+    # The Python bridge must hand the bash lib a TRIMMED csv.
+    def test_normalized_allow_csv_trims_spaces(self):
+        self.assertEqual(rtl.normalized_allow_csv(
+            ' utils/py/turn_diagnostics.py, test/x.sh, validate.sh'),
+            'utils/py/turn_diagnostics.py,test/x.sh,validate.sh')
+
+    def test_spaced_csv_entries_match_porcelain(self):
+        spaced = 'utils/py/turn_diagnostics.py, allowed-new.txt, allowed-tracked.txt'
+        self.assertEqual(self.candidates(allow=spaced), ['offlane-probe.txt'],
+                         'spaced csv entries must still silence their artifacts')
+
     # Mutation proof: a check that cannot fail is not a check. Rebinding the
     # exemption tuple to empty MUST make the same fixture report the exempt
     # dirs — proves the silence above is the code's doing, not the fixture's.

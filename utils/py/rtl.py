@@ -234,6 +234,19 @@ def split_allow_paths(allow_paths):
 OFFLANE_EXEMPT = (".tick", ".relay-scratch", "relay-system")
 
 
+def normalized_allow_csv(allow_paths):
+    """GH-654 root cause #2 — rtl_init splits allow_csv with bare IFS=',': no
+    trim. marathon-drive renders the plan's `artifact:` string verbatim, and a
+    conventionally-formatted "a, b, c" therefore put " b" and " c" into
+    RTL_ALLOW; the leading space can never match worktree-relative porcelain,
+    so every artifact AFTER THE FIRST was invisible to containment and its
+    edit destroyed the turn. Single-artifact plans never tripped it, which is
+    why it survived since 1f0a5bf1. The Python layer trims before handing the
+    CSV to the bridge (tick's own claim parser already trims, bin/tick:100 —
+    which is exactly why the divergence hid so long)."""
+    return ",".join(split_allow_paths(allow_paths))
+
+
 def relay_file_for_allowlist(root, relay_file):
     """GH-654 follow-up — the sweep compares WORKTREE-RELATIVE porcelain paths
     against RTL_ALLOW entries, and rtl_init stored the relay file exactly as
@@ -749,7 +762,7 @@ source {lib} >/dev/null 2>&1
 if [ -s {state} ]; then
   source {state}
 else
-  rtl_init {shlex.quote(self.root)} {shlex.quote(relay_file_for_allowlist(self.root, self.relay_file))} {shlex.quote(self.allow_paths)} >/dev/null 2>&1
+  rtl_init {shlex.quote(self.root)} {shlex.quote(relay_file_for_allowlist(self.root, self.relay_file))} {shlex.quote(normalized_allow_csv(self.allow_paths))} >/dev/null 2>&1
 fi
 
 {cmd_str}
