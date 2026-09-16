@@ -47,6 +47,11 @@ Python twins are authoritative — edit `utils/py/*.py`, never `relay-automation
 `test/gh648-l1-turn-termination.sh`: (a) a stub turn with 0 CPU growth and an established outbound connection classifies as in-flight/unknown, NOT `timeout-idle-no-progress`; (b) termination records distinguish idle-kill / wall-cap / child-orphan; (c) a failing probe degrades to `unclassified` without failing the turn. Mutation-proof the assertions (see AGENTS.md "a check that cannot fail is not a check").
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh648-headless-turn-timeout--p1/ESCALATION.md`): `containment-violation (off-lane edit reverted by a turn-taker)`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (codex — BUILDER role)
