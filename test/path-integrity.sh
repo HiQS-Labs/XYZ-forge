@@ -52,18 +52,10 @@ skills/relay-automation/SKILL.md \
 skills/relay-xyz/SKILL.md"
 
 shfiles=()
-# `utils/pdda/**` is SYNC-MANAGED from Hypercart-Dev-Tools/pdda (utils/pdda/PDDA-SOURCE.md): a sync
-# replaces those files wholesale, so their internal path tokens describe UPSTREAM's tree, not ours,
-# and any edit we make to satisfy this check is reverted by the next sync. The 2026-08-03 sync
-# (cfd56b0) added four such tokens and turned this check — and CI on `development` — red for ~2 days:
-#   utils/pdda/pdda.sh:850     an EXEMPTION-LIST data string naming three upstream skill/test files
-#                              under a dot-claude skills dir that this repo does not vendor
-#   utils/pdda/pdda-lib.sh:467 a COMMENT citing an upstream releases-iterations test file
-# None is a reference this repo can resolve or repair. (Those paths are deliberately DESCRIBED rather
-# than quoted here: this file is itself scanned, so spelling them out would trip the very check.) Excluding the tree is narrower than it looks:
-# every path this repo actually authors and can fix is still scanned, and upstream's tree is
-# upstream's CI's job. Scoped to this one directory so a new vendored tree does not inherit the
-# exemption silently.
+# The portable PDDA runtime describes target-only paths and historical layouts.
+# Preserve its existing exclusion from this repo-root token scanner; the installed
+# payload/startup contract is checked by the PDDA installer/governance suites.
+# Forge owns the source now; this exclusion is about path context, not ownership.
 while IFS= read -r p; do
   case "$p" in utils/pdda/*) continue ;; esac
   shfiles+=("$p")
@@ -143,6 +135,9 @@ for f in "${shfiles[@]}" $docs; do
   [ -f "$ROOT/$f" ] || continue
   while IFS= read -r tok; do
     [ -n "$tok" ] || continue
+    # GH-649 checks the generated dot-claude skill in a disposable consumer. The
+    # tokenizer strips that prefix; this exact fixture reference is not a root skill.
+    case "$f:$tok" in test/gh649-pdda-migration.sh:skills/pdda/SKILL.md) continue ;; esac
     case "$fixture_literals" in *" $tok "*) continue ;; esac
     if [ ! -e "$ROOT/$tok" ]; then
       echo "  broken path reference '$tok' in $f" >&2
