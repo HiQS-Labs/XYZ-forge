@@ -128,6 +128,30 @@ SHIM
   done
 done
 ok 'copy and rename failures in new/update branches leave target and old stamps intact'
+# Deletion must preserve its old manifest entry when backup or removal fails.
+for op in cp rm; do
+  DS="$BOX/delete-source-$op"; DT="$BOX/delete-target-$op"; DST="$BOX/delete-state-$op"
+  cp -R "$S" "$DS"; cp -R "$U" "$DT"
+  PDDA_SYNC_TMP="$DST" bash "$DS/utils/pdda/pdda-sync.sh" push "$DT" --force-resync --allow-dirty >"$BOX/delete-baseline.log" 2>&1
+  cp -R "$DST/pdda-sync-manifest" "$BOX/delete-snapshot-$op"
+  cp "$DT/payload/unbaselined.txt" "$BOX/delete-original-$op"
+  printf 'file payload/managed.txt\n' > "$DS/utils/pdda/pdda-sync-manifest.conf"
+  SHIMS="$BOX/delete-shims-$op"; mkdir "$SHIMS"
+  cat > "$SHIMS/$op" <<SHIM
+#!/bin/bash
+case "\$*" in */payload/unbaselined.txt*) echo 'injected delete $op failure' >&2; exit 74 ;; esac
+exec /bin/$op "\$@"
+SHIM
+  chmod +x "$SHIMS/$op"
+  if PATH="$SHIMS:$PATH" PDDA_SYNC_TMP="$DST" bash "$DS/utils/pdda/pdda-sync.sh" push "$DT" --force-delete --allow-dirty >"$BOX/delete-failure.log" 2>&1; then
+    cat "$BOX/delete-failure.log"; fail "delete/$op failure reported success"
+  fi
+  grep -q 'injected delete' "$BOX/delete-failure.log"
+  cmp "$DT/payload/unbaselined.txt" "$BOX/delete-original-$op"
+  diff -r "$DST/pdda-sync-manifest" "$BOX/delete-snapshot-$op"
+  if grep -Eq 'deleted\+bak|push DONE' "$BOX/delete-failure.log"; then fail 'failed delete claimed completion'; fi
+done
+ok 'failed deletion backup/removal preserves bytes and deletion tracking'
 # Restore all three saved surfaces, not just payload bytes. Only fixture paths are removed.
 rm -rf "$U" "$PDDA_SYNC_TMP"
 cp -R "$BOX/saved-payload" "$U"; cp -R "$BOX/saved-state" "$PDDA_SYNC_TMP"; cp "$BOX/saved-registry" "$PDDA_REGISTRY"

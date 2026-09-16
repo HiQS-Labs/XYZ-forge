@@ -441,7 +441,14 @@ EOF
             [ -n "$rel" ] || continue
             tgt_f="$tgt/$rel"
             if [ -e "$tgt_f" ]; then
-              if [ "$DRY" -eq 0 ]; then mkdir -p "$(dirname "$BACKUP_DIR/$slug/$utc/$rel")"; cp "$tgt_f" "$BACKUP_DIR/$slug/$utc/$rel" && rm -f "$tgt_f"; fi
+              if [ "$DRY" -eq 0 ]; then
+                mkdir -p "$(dirname "$BACKUP_DIR/$slug/$utc/$rel")"
+                if ! cp "$tgt_f" "$BACKUP_DIR/$slug/$utc/$rel" || ! rm -f "$tgt_f"; then
+                  rm -f "$newstate"
+                  warn "push: delete backup/removal failed for $rel; manifest snapshot not advanced"
+                  return 1
+                fi
+              fi
               log_line "    deleted+bak $rel"; n_del=$((n_del+1))
             fi
           done <<EOF
