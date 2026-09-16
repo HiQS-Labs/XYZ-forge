@@ -655,11 +655,84 @@ class StatusLabelTests(unittest.TestCase):
         self.assertIsNone(self.fx.row()["status_label"])
         # Existing receipt-based resume's clean-tree/dry-run path never invokes admission.
         with mock.patch.object(express,"git",return_value=subprocess.CompletedProcess([],0,"", "")), \
+                mock.patch.object(express,"qualify_resume_identity",return_value=self.fx.row()), \
                 mock.patch.object(express,"resolve_landing_commit",return_value="a"*40), \
                 mock.patch.object(express,"run_releases") as command, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(express.cmd_resume(argparse.Namespace(root=self.fx.root,issue=646,
                 sha=None,suite="test/fixture.sh",dry_run=True))["sha"],"a"*40)
         command.assert_not_called()
+
+    def test_express_admission_dry_refusal_has_no_filesystem_writes(self):
+        args = argparse.Namespace(root=self.fx.root, repo="owner/project", issue=646,
+                                  dry_run=True, _expect_driver=set(), release=None)
+        with tempfile.TemporaryDirectory(prefix="gh646-telemetry-") as home:
+            for absent in (False, True):
+                if absent:
+                    args.issue = 999
+                else:
+                    self.fx.conn.execute("UPDATE repos SET slug='foreign/project'")
+                def snapshot():
+                    return {str(p): p.read_bytes() for root in (Path(home),Path(self.fx.root))
+                            for p in root.rglob('*') if p.is_file()}
+                before = snapshot()
+                with mock.patch.dict(os.environ,{"HOME":home}), \
+                        mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}), \
+                        mock.patch.object(express,"run_releases") as command, self.assertRaises(SystemExit):
+                    express.cmd_land(args)
+                command.assert_not_called()
+                self.assertEqual(snapshot(),before)
+
+    def test_express_resume_committed_receipt_cannot_authorize_foreign_repo(self):
+        root = self.fx.root
+        express.git(root,"branch","-M","development")
+        self.fx.conn.execute("INSERT INTO repos(global_id,slug,updated_at) VALUES(?,?,?)",
+                             (app.new_gid("repo-"),"foreign/project",app.now_iso()))
+        foreign = self.fx.row()
+        foreign.pop("id")
+        foreign.update(global_id=app.new_gid("rmi-"),repo_id=2,
+                       issue_url="https://github.com/foreign/project/issues/646")
+        self.fx.conn.execute("INSERT INTO roadmap_items(%s) VALUES(%s)" %
+                             (','.join(foreign),','.join('?' for _ in foreign)),tuple(foreign.values()))
+        for key,value in (("user.name","fixture"),("user.email","fixture@example.test")):
+            express.git(root,"config",key,value)
+        express.git(root,"add",".")
+        express.git(root,"commit","-qm","fix: fixture\n\nCloses #646")
+        sha = express.git(root,"rev-parse","HEAD").stdout.strip()
+        express.write_receipt(root,sha,646,"test/fixture.sh",0)
+        express.git(root,"add",".")
+        express.git(root,"commit","-qm","fixture: real legacy receipt")
+        self.assertTrue(express.find_committed_receipt(root,sha,646,"test/fixture.sh"))
+        args = argparse.Namespace(root=root,repo="foreign/project",issue=646,sha=sha,
+                                  suite="test/fixture.sh",dry_run=False,release=None)
+        repo = subprocess.CompletedProcess([],0,json.dumps({"nameWithOwner":"owner/project"}),"")
+        original = subprocess.run
+        with tempfile.TemporaryDirectory(prefix="gh646-telemetry-") as home, \
+                mock.patch.dict(os.environ,{"HOME":home}), \
+                mock.patch.object(express,"resolve_landing_commit",return_value=sha), \
+                mock.patch.object(express.subprocess,"run",wraps=subprocess.run) as process, \
+                mock.patch.object(express,"gh",return_value=subprocess.CompletedProcess([],0,
+                    json.dumps({"state":"OPEN"}),"")) as remote, \
+                mock.patch.object(express,"active_release",return_value=None), \
+                mock.patch.object(express,"persist_closeout",return_value=False), \
+                mock.patch.object(express,"run_releases") as command, \
+                mock.patch.object(express,"reconcile_gated") as reconcile:
+            def run(argv,**kw):
+                if argv[:2] == ["gh","repo"]:
+                    self.assertEqual(kw["cwd"],root)
+                    return repo
+                return original(argv,**kw)
+            process.side_effect = run
+            with self.assertRaises(SystemExit):
+                express.cmd_resume(args)
+            remote.assert_not_called(); command.assert_not_called(); reconcile.assert_not_called()
+            args.dry_run = True
+            with self.assertRaises(SystemExit):
+                express.cmd_resume(args)
+            args.repo = "owner/project"
+            with mock.patch.object(app,"read_native_issue",self.native.read), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(express.cmd_resume(args)["sha"],sha)
+            remote.assert_not_called(); command.assert_not_called(); reconcile.assert_not_called()
+        self.assertIsNone(self.fx.row()["status_label"])
 
     def test_label_readback_mismatch_and_definition_permission_refuse(self):
         self.start()

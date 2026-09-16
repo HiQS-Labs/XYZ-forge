@@ -17,7 +17,7 @@ commit-based reconciliation replace the former immediately-merged ghost PR. The
 full pre-push gate is bypassed on every express push (XYZ_SKIP_PREPUSH=1).
 
 Exit codes: 0 ok; 3 express-refused (guardrail); 4 environment/dependency.
-Every refusal and every fired run appends a telemetry record under .tick/express/
+Every non-preview refusal and every fired run appends a telemetry record under .tick/express/
 (runtime state, untracked; mirrored to ~/.config/xyz/events/) so standup can report
 the weekly express count. NOT .tick/events/ — that directory is tick's coordination
 log, folded by task, and a record without a `task` crashed every projecting verb in
@@ -91,8 +91,9 @@ def die(msg, code=EXIT_ENV):
     sys.exit(code)
 
 
-def refuse(root, rule, reason, issue=None):
-    write_tick(root, "express-refused", issue=issue, rule=rule, reason=reason)
+def refuse(root, rule, reason, issue=None, dry_run=False):
+    if not dry_run:
+        write_tick(root, "express-refused", issue=issue, rule=rule, reason=reason)
     sys.stderr.write("express-refused: rule=%s — %s\n" % (rule, reason))
     sys.exit(EXIT_REFUSED)
 
@@ -656,7 +657,7 @@ goal: >
 
 # ── step 6: ledger ───────────────────────────────────────────────────────────
 
-def qualified_roadmap_row(root, repo, number):
+def qualified_roadmap_row(root, repo, number, dry_run=False):
     """GH-646: number alone never selects another repository's task."""
     from releases_app import resolve_roadmap_identity, _origin_repo_identity
     conn = sqlite3.connect(os.path.join(root, "releases.db"))
@@ -669,7 +670,7 @@ def qualified_roadmap_row(root, repo, number):
             if identity["identity_valid"] and identity["repo"] == repo:
                 matches.append(dict(row))
         if len(matches) > 1:
-            refuse(root, "roadmap-identity", "multiple owned roadmap rows for exact issue", issue=number)
+            refuse(root, "roadmap-identity", "multiple owned roadmap rows for exact issue", issue=number, dry_run=dry_run)
         return matches[0] if matches else None
     finally:
         conn.close()
@@ -737,9 +738,12 @@ def cmd_land(args):
     supplied = getattr(args, "_expect_driver", None)
     expect = set(supplied) if supplied is not None else expect_driver_paths(root, args.issue)
     state = cmd_check(args, expect_driver=expect)  # re-qualify at landing time
-    row = qualified_roadmap_row(root, args.repo, args.issue)
+    row = qualified_roadmap_row(root, args.repo, args.issue, dry_run=getattr(args, "dry_run", False))
     if row is None:
-        refuse(root, "roadmap-identity", "no exact owned issue row; run express ledger first", issue=args.issue)
+        # Admission preview refusals are read-only, including telemetry. Older
+        # pre-admission diagnostics retain their existing behavior.
+        refuse(root, "roadmap-identity", "no exact owned issue row; run express ledger first", issue=args.issue,
+               dry_run=getattr(args, "dry_run", False))
     admission = ["roadmap", "update", "--gid", row["global_id"], "--accepted-start"]
     if getattr(args, "dry_run", False):
         admission.append("--dry-run")
@@ -1062,6 +1066,25 @@ def check_manifest_state(root, issue, rel):
         return None
 
 
+def qualify_resume_identity(args):
+    """Legacy SHA/number receipts need independent repository and native proof."""
+    from releases_app import read_native_issue
+    dry = getattr(args, "dry_run", False)
+    try:
+        actual = subprocess.run(["gh", "repo", "view", "--json", "nameWithOwner"],
+                                cwd=args.root, capture_output=True, text=True, timeout=10)
+        metadata = json.loads(actual.stdout) if actual.returncode == 0 else None
+        if not isinstance(metadata, dict) or metadata.get("nameWithOwner") != args.repo:
+            raise ValueError("requested repository differs from the landing root repository")
+        row = qualified_roadmap_row(args.root, args.repo, args.issue, dry_run=dry)
+        if row is None:
+            raise ValueError("no exact owned roadmap issue row")
+        read_native_issue(args.repo, args.issue, row["issue_url"])
+        return row
+    except (ValueError, OSError, sqlite3.Error, subprocess.TimeoutExpired) as exc:
+        refuse(args.root, "resume-identity", str(exc), issue=args.issue, dry_run=dry)
+
+
 def cmd_resume(args):
     """Recover/resume an interrupted express run: ensure issue is closed, complete reconciliation,
     and persist/push remaining artifacts."""
@@ -1078,6 +1101,10 @@ def cmd_resume(args):
     # 2. Resolve and validate the landing commit identity and reachability
     sha = resolve_landing_commit(root, issue, args.sha)
     suite = normalize_suite(args.suite)
+
+    # Before preview, checkout, close, ship or reconcile: a number-only receipt
+    # cannot transfer landing authority to another repository. No new start.
+    qualify_resume_identity(args)
 
     if getattr(args, "dry_run", False):
         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))

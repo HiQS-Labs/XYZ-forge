@@ -73,6 +73,9 @@ print(json.dumps(dict(number=number, html_url=issue["url"],
 PY
   exit $?
 fi
+if [ "$1 $2" = "repo view" ]; then
+  printf '{"nameWithOwner":"H/H"}\n'; exit 0
+fi
 if [ "$1 $2" = "issue view" ]; then
   n=""; prev=""
   for a in "$@"; do
@@ -223,9 +226,10 @@ for index in (1, 2, 3):
               "VALUES(?,?,1,?,'dialed_in',?)", (index,canonical.new_gid("mfi-"),index,now))
 c.close()
 # Pre-existing owned registration makes dry-run admission a pure preview, not intake.
-canonical.cmd_roadmap_add(argparse.Namespace(root=root,issue_num=999,
-    issue_url="https://github.com/H/H/issues/999",title="Demo hotfix",created="2026-08-27",
-    doc_path="PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md",raw_text=None,dry_run=False))
+for number in (999, 998, 997):
+    canonical.cmd_roadmap_add(argparse.Namespace(root=root,issue_num=number,
+        issue_url="https://github.com/H/H/issues/%d" % number,title="Demo hotfix",created="2026-08-27",
+        doc_path="PROJECT/2-WORKING/GH-%d-DEMO-HOTFIX.md" % number,raw_text=None,dry_run=False))
 PY
 for projection in RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md; do
   printf 'base projection\n' > "$FX/$projection"
