@@ -253,17 +253,17 @@ def classify(base_text: str, ours_text: str, theirs_text: str) -> Dict[str, Any]
 TOOL_FALLBACK_ROOT: Optional[Path] = None
 
 
-def tool_path(root: Path, name: str) -> Path:
-    """Resolve a PRS/harness tool: `utils/py/<name>` in the clone, then a vendored
-    `.xyz/utils/py/<name>` there, then the same two under the primary checkout. Falls back to
+def tool_path(root: Path, name: str, directory: str = "utils/py") -> Path:
+    """Resolve a PRS/harness tool under directory in the clone, then under `.xyz/`,
+    then the same two under the primary checkout. Python tools default to `utils/py`. Falls back to
     the canonical path so a missing tool still reports the canonical location in its error."""
     roots = [root] + ([TOOL_FALLBACK_ROOT] if TOOL_FALLBACK_ROOT else [])
     for base in roots:
-        for rel in (("utils", "py", name), (".xyz", "utils", "py", name)):
+        for rel in ((directory, name), (".xyz", directory, name)):
             p = Path(base).joinpath(*rel)
             if p.is_file():
                 return p
-    return root / "utils" / "py" / name
+    return root / directory / name
 
 
 def _app(root: Path) -> List[str]:
@@ -477,7 +477,7 @@ def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     if r.returncode != 0:
         res.update(reason=f"git add after replay: {r.stderr.strip()}")
         return res
-    r = _run(["bash", str(clone / "utils" / "releases-merge-resolve.sh"), "--root", str(clone)], clone)
+    r = _run(["bash", str(tool_path(clone, "releases-merge-resolve.sh", directory="utils")), "--root", str(clone)], clone)
     res["log"].append(f"releases-merge-resolve.sh: rc={r.returncode}")
     if r.returncode != 0:
         res.update(reason="resolver refused: " + (r.stderr.strip() or r.stdout.strip())[:600])
