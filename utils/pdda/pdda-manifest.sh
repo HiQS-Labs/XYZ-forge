@@ -51,9 +51,9 @@ pdda_manifest_expand() {
 
   # Emit, applying excludes (glob) last; sort -u for a stable, dedup'd set.
   local p ex skip
-  for p in "${includes[@]}"; do
+  for p in ${includes[@]+"${includes[@]}"}; do
     skip=0
-    for ex in "${excludes[@]}"; do
+    for ex in ${excludes[@]+"${excludes[@]}"}; do
       # shellcheck disable=SC2254  # intentional glob match against the exclude pattern
       case "$p" in $ex) skip=1; break ;; esac
     done

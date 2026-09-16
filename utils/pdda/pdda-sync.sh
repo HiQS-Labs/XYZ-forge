@@ -599,7 +599,7 @@ cmd_status() {
       if [ ! -e "$tgt_f" ]; then missing=$((missing+1)); continue; fi
       tgt_hash="$(hash_file "$tgt_f")"; last="$(state_get "$statefile" "$rel")"
       if [ "$src_hash" = "$tgt_hash" ]; then current=$((current+1))
-      elif [ -n "$last" ] && [ "$tgt_hash" != "$last" ]; then diverged=$((diverged+1))
+      elif [ -z "$last" ] || [ "$tgt_hash" != "$last" ]; then diverged=$((diverged+1))
       else behind=$((behind+1)); fi
     done <<EOF
 $CUR
@@ -682,7 +682,7 @@ pdda-sync.sh — distribute the PDDA runtime from the canonical repo to register
 Usage: pdda-sync.sh <command> [options]
 
 Commands:
-  register <dir>     Enroll a target repo + initial install (delegates to install.sh). [Phase 3]
+  register <dir>     Enroll a target repo + initial install (delegates to pdda-install.sh). [Phase 3]
   push [<dir>]       Distribute current runtime to one target, or all if omitted.      [Phase 2]
   list               List registered targets.
   status [<dir>]     Per-target behind/current/diverged summary.                       [Phase 3]
@@ -694,7 +694,7 @@ Commands:
   help               This message.
 
 push options:
-  --dry-run          Preview copies AND deletions; write nothing.
+  --dry-run          Preview copies AND deletions; leave targets and sync state unchanged (diagnostic log is written).
   --allow-dirty      Push even though the canonical repo has uncommitted manifest files.
   --no-delete        Copy/update only; defer canonical-side deletions (kept in the snapshot).
   --force-delete     Override the manifest-poisoning guard on the delete phase.

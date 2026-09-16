@@ -62,7 +62,7 @@ mkdir -p "$PDDA_SYNC_TMP/pdda-sync-state" "$PDDA_SYNC_TMP/pdda-sync-manifest"
 printf 'payload/managed.txt\told-source-hash\n' > "$PDDA_SYNC_TMP/pdda-sync-state/$slug.tsv"
 printf 'payload/managed.txt\npayload/retired.txt\n' > "$PDDA_SYNC_TMP/pdda-sync-manifest/$slug.tsv"
 cp -R "$U" "$BOX/saved-payload"; cp -R "$PDDA_SYNC_TMP" "$BOX/saved-state"; cp "$PDDA_REGISTRY" "$BOX/saved-registry"
-bash "$S/utils/pdda/pdda-sync.sh" push --dry-run --no-delete --allow-dirty >"$BOX/preview.log" 2>&1
+bash "$S/utils/pdda/pdda-sync.sh" push --dry-run --no-delete --allow-dirty >"$BOX/preview.log" 2>&1 || { cat "$BOX/preview.log"; fail preview; }
 diff -r "$U" "$BOX/saved-payload"
 for d in pdda-sync-state pdda-sync-manifest; do diff -r "$PDDA_SYNC_TMP/$d" "$BOX/saved-state/$d"; done
 cmp "$PDDA_REGISTRY" "$BOX/saved-registry"
@@ -72,6 +72,8 @@ diff -r "$U" "$BOX/saved-payload"
 grep -q 'payload/retired.txt' "$PDDA_SYNC_TMP/pdda-sync-manifest/$slug.tsv"
 grep -q 'old-source-hash' "$PDDA_SYNC_TMP/pdda-sync-state/$slug.tsv"
 if grep -q 'unbaselined' "$PDDA_SYNC_TMP/pdda-sync-state/$slug.tsv"; then fail 'invented baseline'; fi
+bash "$S/utils/pdda/pdda-sync.sh" status >"$BOX/status.log"
+grep -q 'diverged=2' "$BOX/status.log"
 ok 'dry-run preserves payload/state/registry; live default preserves divergence and deferred deletion'
 bash "$S/utils/pdda/pdda-sync.sh" push --force-resync --no-delete --allow-dirty >"$BOX/adopt.log" 2>&1
 cmp "$S/payload/managed.txt" "$U/payload/managed.txt"
