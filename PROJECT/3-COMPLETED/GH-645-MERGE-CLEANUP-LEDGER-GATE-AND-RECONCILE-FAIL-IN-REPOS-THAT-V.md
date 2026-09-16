@@ -61,3 +61,9 @@ Follow-up state: independent Codex code review Approved; full local qualifying g
 on `a47f1078eab493eed30c0b8cf3920818e7c61e8d`; PR awaiting merge. The original express fix remains shipped.
 The full transcript, telemetry and qualification record are retained beside the focused receipts.
 Post-review additions contain only evidence and documentation; runtime code is unchanged.
+
+PR: https://github.com/HiQS-Labs/XYZ-forge/pull/652 (into `development`, awaiting merge).
+After syncing `9e1e9bf4`, the canonical resolver replayed disjoint ledger changes; the
+GH-645 suite (8 tests), real-conflict Phase B suite (30 tests), and ledger check passed
+on `5a4897b7855b61b88a262b44fbfc3aabbfe423de`. See `post-sync-provenance.jsonl` and
+`ledger-resolution.json` beside the full gate evidence. The reviewed runtime fix is unchanged.
