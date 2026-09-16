@@ -7,7 +7,7 @@ reason: containment-violation (off-lane edit reverted by a turn-taker)
 gate: not-run
 relay-file: marathon-system/gh648-headless-turn-timeout--p1/RELAY.md
 
-turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-4931.log
+turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-44666.log
 
 <details>
 <summary>Last 40 lines of failing turn log</summary>
@@ -49,7 +49,7 @@ index d7fbc43f1f4a535884c6099bbcd475e26b5511d8..9ecd7e2f7faf050553cc3c4d1d8d58da
    "gh155-phase1-metamorphic-invariants.sh" # #155 Phase 1 (Metamorphic Invariant Assertions & Sandbox Hardening: zero-mutation, idempotence, realpath containment)
 
 tokens used
-80,255
+60,684
 Implemented GH-648 L1 and verified the focused suite: `PASS: 22 assertions`. Full gate was intentionally not run.
 
 Token released successfully. Handing off to agy — agy, take your turn.
