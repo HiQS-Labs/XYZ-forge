@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -62,5 +62,22 @@ Operational envelope: lightweight local developer tooling. No new publisher, gen
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer · codex · round 1 · 2026-09-16
+
+VERDICT: FAIL
+Basis: The content-preservation branch is sound on inspection, but imported installer/sync failure paths still report success, and retained execution evidence lacks the required provenance receipt. These are migration-relevant defects in the imported files, including pre-existing behavior, rather than unrelated historical cleanup.
+swept file: yes
+
+Scope/evidence: Read the entire named plan artifact, migration guide, installer, manifest helper/config, sync engine, locator and generic templates; inspected distribution metadata, install documentation, policy and focused fixture/receipts. Textual review only: no source/artifact execution, tests, gate or git commands. The baseline diff from 9e1e9bf4 was not independently obtained because this turn forbids git; no claim of a complete changed-file inventory or exhaustive Forge-runtime sweep. Graph project inventory has no entry for this checkout, so exact local source reads ground the findings. `swept file: yes` refers to the entire named artifact, not an exhaustive repository audit. SWE lens: scope and rollback are bounded; proof needs the fixes below. Rating remains 80/55/50/45; no override.
+
+- [Blocker] B1 — Sync can stamp a failed write as successful. `utils/pdda/pdda-sync.sh:357` and `:396` use `cp ... && mv ...; case ...`, then unconditionally record the source hash (`:358`, `:398`) and report an update. Bash errexit does not stop on the left side of `&&`; a failed copy (e.g. an unwritable destination temporary file) can be followed by successful chmod/case and state persistence at `:451`. This falsely establishes provenance for bytes never installed. Fix: explicitly fail the run on copy or rename failure in both new/update branches, before counters or stamps advance; retain old persistent state. Add a fixture with deliberately failed copy/rename and assert nonzero exit, unchanged target/stamp and no successful-update claim. This is textual fail-path evidence, not a newly executed reproduction.
+- [Should] S1 — Full-mode installer failure is swallowed. `utils/pdda/pdda-install.sh:738` places the target check in an `if`; its failure branch only prints messages (`:743-750`), and `:763` exits zero despite `:748` promising “errors block (non-zero exit)”. `pdda-sync.sh:545-550` therefore treats an invalid full-mode install as successful and seeds state. The retained mode test calls `pdda.sh frontmatter` directly (`test/gh649-pdda-migration.sh:38-44`), so it cannot guard installer behavior. Fix: propagate failed full-mode verification from the installer; add an installer-level invalid-full-document negative control and keep observe/light report-only semantics. Treat actual execution/tool failure separately from normal report-only findings.
+- [Blocker] B2 — Evidence is missing the repo-required attribution receipt. `TESTS-RESULTS/2026-09-16+GH-649/SUMMARY.md:3-7` claims disposable-clone execution and tested revisions, but this directory contains summary/logs only, no `provenance.jsonl`. AGENTS §6 requires any run cited as evidence to retain and commit that receipt in the same PR. Fix: retain authentic per-run provenance tying commands, final tested source revision, return codes and identity checks to these logs; rerun any claim whose original provenance cannot be recovered. Do not synthesize an execution receipt after the fact. Recheck the focused suites affected by the fixes above against the final candidate.
+- [Should] S2 — The manual install contract is incomplete. `utils/pdda/PDDA-INSTALL.md:104-118` labels a hardcoded list the canonical install set but omits the explicitly distributed Python scanners and license/NOTICE files; `:170-179` tells manual consumers to use that list. `:3` also links to `docs/PDDA-MIGRATION.md`, which the target manifest does not distribute. Fix: make the shared distribution manifest the authority for manual extraction, document scanners and notice/license inclusion, and use a Forge URL for the source-only migration guide. Keep source-only scripts excluded from ordinary targets.
+- [Pass] Content divergence is explicitly preserved: `pdda-sync.sh:365-375` compares bytes first and retains the prior stamp or its absence; deliberate adoption backs up before overwrite (`:391-396`); blocked deletes remain in the snapshot (`:431-453`). Retained fixture log quotes “dry-run preserves payload/state/registry; live default preserves divergence and deferred deletion”; the fixture checks these surfaces at `test/gh649-pdda-migration.sh:73-91`. This supports the positive behavior but does not cover B1 or replace B2. No change requested to the preservation rule.
+- [Pass] Plan keeps archive separate: artifact Phase 3 QA leaves all retirement gates unchecked, and `docs/PDDA-MIGRATION.md` says “Archiving is the final operator action, not part of an installer.” Preserve that pending status; code approval must not imply cutover, merge or archive authorization.
+
+Handing off to Producer — address B1/B2 and S1/S2, log each disposition and request the next review. Full gate remains a separate post-approval merge gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
