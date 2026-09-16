@@ -1,0 +1,93 @@
+# MARATHON.yaml — GH-648 headless turn-timeout umbrella, two waves.
+# Umbrella/tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/648
+# Radar class: RADAR-class-headless-turn-timeout (#293) — CLAIMED by this plan.
+#
+# Phases run STRICTLY ONE AT A TIME in this chain order (depends_on constrains, never parallelizes).
+# Wave 1 = p1..p6 (primary family members), Wave 2 = p7..p9 (adjacent aftermath).
+# The chain halts on the first phase that fails its review/gate; ESCALATION.md is left behind.
+#
+# Every lane adds a test suite, so validate.sh is in every write-set (gh35 tier guard is
+# bidirectional: an unregistered test/*.sh turns the suite red).
+#
+# ALWAYS --dry-run before firing: relay-automation/marathon.sh --plan <this file> --dry-run
+name: gh648-headless-turn-timeout
+phases:
+  - id: p1
+    name: "L1 instrument + de-claw the idle oracle (foundation)"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L1-oracle.md
+    artifact: utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh
+    turn_timeout_s: 1200
+    max_review_rounds: 2
+
+  - id: p2
+    name: "L2 #241 token aftermath — no peer release on timeout-kill"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L2-token-aftermath.md
+    artifact: utils/py/commandcode-turn.py, test/gh648-l2-token-aftermath.sh, validate.sh
+    turn_timeout_s: 1200
+    depends_on: p1
+    max_review_rounds: 2
+
+  - id: p3
+    name: "L3 #276 + #480 consult cap policy — partial results, bigger default, unknown≠kill"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L3-consult-cap.md
+    artifact: utils/py/consult.py, test/gh648-l3-consult-cap.sh, validate.sh
+    turn_timeout_s: 1200
+    depends_on: p2
+    max_review_rounds: 2
+
+  - id: p4
+    name: "L4 #285 revalidate — does the cap kill the child at HEAD?"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L4-285-revalidate.md
+    artifact: utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh
+    turn_timeout_s: 1200
+    depends_on: p3
+    max_review_rounds: 2
+
+  - id: p5
+    name: "L5 #237 consult agy lane — repro after the oracle fix"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L5-gh237-repro.md
+    artifact: utils/py/consult.py, test/gh648-l5-gh237-repro.sh, validate.sh
+    turn_timeout_s: 1500
+    depends_on: p4
+    max_review_rounds: 2
+
+  - id: p6
+    name: "L6 #521 muse stall attribution (investigation)"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L6-muse-attribution.md
+    artifact: utils/py/muse-turn.py, test/gh648-l6-muse-attribution.sh, validate.sh
+    turn_timeout_s: 1200
+    depends_on: p5
+    max_review_rounds: 2
+
+  - id: p7
+    name: "L7 #242 post-kill checkout state (Wave 2)"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L7-checkout-aftermath.md
+    artifact: utils/py/relay_drive.py, utils/py/rtl.py, test/gh648-l7-checkout-aftermath.sh, validate.sh
+    turn_timeout_s: 1200
+    depends_on: p6
+    max_review_rounds: 2
+
+  - id: p8
+    name: "L8 #397 zero-output handback misclassification (Wave 2)"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L8-zero-output-handback.md
+    artifact: utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, validate.sh
+    turn_timeout_s: 1200
+    depends_on: p7
+    max_review_rounds: 2
+
+  - id: p9
+    name: "L9 #369 regression baseline — verification only (Wave 2)"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L9-369-regression.md
+    artifact: test/gh648-l9-369-regression.sh, validate.sh
+    turn_timeout_s: 1200
+    depends_on: p8
+    max_review_rounds: 2
