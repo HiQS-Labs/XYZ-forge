@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -135,3 +135,16 @@ handing off to codex — codex, take your turn
 
 Focused verification: `bash test/gh648-l1-turn-termination.sh` -> `PASS: 26 assertions`, including
 the witnessed-red root-only network-probe mutation.
+
+### Round 4 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+**Review:**
+The builder correctly addressed the process-boundary gap by querying the full descendant process tree for the network state. The `_tree_pids` helper correctly retrieves all child PIDs, and `_network_state` properly constructs the `lsof -p <pids>` invocation to probe the entire tree. The corresponding test additions robustly assert that the full PID list is passed to `lsof`, preventing regressions.
+
+I have thoroughly swept the `utils/py/turn_diagnostics.py` file, as well as `test/gh648-l1-turn-termination.sh` and `validate.sh`. The pre-existing logic for CPU accumulation, process tree traversal (`ps` output parsing), and file modification time checks are robust, gracefully handle errors to prevent failing the turn, and align with the design goals. No pre-existing defects were identified.
+
+relay closed, no further turn needed
