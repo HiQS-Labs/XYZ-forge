@@ -134,4 +134,12 @@ Scope/evidence: Read the entire named artifact and migration guide, installer, s
 
 Relay closed (Approved), no further review turn needed. Handing completion to Producer for the separate full gate and remaining landing/cutover prerequisites; the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-09-16T21:30:15Z
+task: RELAY-gh649-final
+reviewer: codex
+status: Approved
+reviewed-head: dd7deb12aba862e7f0d3caa0b41df40c363b2915
+added-range: 17915+3552
+added-sha256: 9f84abf9fcb6537f198a1defc4b9d75f88305cb56ea2ad4c31af6318b53353c3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
