@@ -31,6 +31,8 @@
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DRIVER="$HERE/../utils/py/express.py"
+export EXPRESS_CANONICAL_PY="$(cd "$HERE/../utils/py" && pwd)"
+export EXPRESS_REPO="H/H" XYZ_WORK_CONNECTORS=0
 WORK="$(mktemp -d /tmp/gh267-express.XXXXXX)" || { echo "FAIL: mktemp"; exit 1; }
 BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"; export HOME="$WORK/home"
 mkdir -p "$BIN" "$GH_STATE" "$HOME"
@@ -59,6 +61,18 @@ cat > "$BIN/gh" <<'GH'
 #!/usr/bin/env bash
 # gh267 suite stub: issue view/close from $GH_STATE.
 set -u
+if [ "$1" = api ]; then
+  case "$2" in repos/H/H/issues/[0-9]*) ;; *) echo "foreign native issue" >&2; exit 1;; esac
+  python3 - "$2" <<'PY'
+import json, os, sys
+number = int(sys.argv[1].rsplit("/", 1)[-1])
+with open(os.path.join(os.environ["GH_STATE"], "issue-%d.json" % number)) as source:
+    issue = json.load(source)
+print(json.dumps(dict(number=number, html_url=issue["url"],
+                     state=issue["state"].lower(), labels=[{"name":"unrelated"}])))
+PY
+  exit $?
+fi
 if [ "$1 $2" = "issue view" ]; then
   n=""; prev=""
   for a in "$@"; do
@@ -116,23 +130,36 @@ chmod +x "$FX/githooks/install.sh" "$FX/githooks/pre-push"
 # and every adopted projection that production refresh_preview owns.
 cat > "$FX/utils/py/releases_app.py" <<'RA'
 #!/usr/bin/env python3
-import os, sqlite3, sys
+import os, sys
+sys.path.insert(0, os.environ["EXPRESS_CANONICAL_PY"])
+import releases_app as canonical
 a = sys.argv[1:]
 if a[:1] == ["next"]:
-    print("NEXT: stub gid=rel-STUB000000000000000000000008")
-if a[:2] in (["roadmap", "add"], ["manifest", "dial-in"], ["manifest", "ship"]):
-    c = sqlite3.connect("releases.db")
-    c.execute("CREATE TABLE IF NOT EXISTS fixture_writes (id INTEGER PRIMARY KEY, verb TEXT)")
-    c.execute("INSERT INTO fixture_writes(verb) VALUES (?)", (" ".join(a[:2]),))
+    c = canonical.connect("releases.db")
+    print("NEXT: stub gid=" + c.execute("SELECT global_id FROM releases LIMIT 1").fetchone()[0])
+    c.close()
+if a[:2] in (["roadmap", "add"], ["roadmap", "update"], ["manifest", "dial-in"], ["manifest", "ship"]):
+    c = canonical.connect("releases.db")
+    before = canonical.get_generation(c)
+    if a[:1] == ["roadmap"]:
+        # Admission exercises the real ownership/native/schema/locked receipt boundary.
+        canonical.main(["--root", os.getcwd()] + a)
+    else:
+        def mutate(conn):
+            conn.execute("CREATE TABLE IF NOT EXISTS fixture_writes (id INTEGER PRIMARY KEY, verb TEXT)")
+            conn.execute("INSERT INTO fixture_writes(verb) VALUES (?)", (" ".join(a[:2]),))
+            if a[:2] == ["manifest", "ship"]:
+                conn.execute("UPDATE manifest_items SET state='shipped'")
+        canonical.perform_write(os.getcwd(), c,
+                                "manifest-ship" if a[1] == "ship" else "manifest-add", None, mutate)
+    changed = canonical.get_generation(c) != before
+    c.close()
     if a[:2] == ["manifest", "ship"]:
-        c.execute("UPDATE manifest_items SET state='shipped'")
         inject = os.environ.get("STUB_INJECT_PATH")  # GH-592 control (i): dirt after the clean check
         if inject:
             os.makedirs(os.path.dirname(inject), exist_ok=True)
             open(inject, "a").write('{"commit": "deadbeef", "case": "unrelated"}\n')
-    c.commit(); c.close()
-    for name in ("releases.sql", "RELEASES-PREVIEW.html",
-                 "LEADERBOARD.html", "LEADERBOARD.md"):
+    for name in (("RELEASES-PREVIEW.html", "LEADERBOARD.html", "LEADERBOARD.md") if changed else ()):
         with open(name, "a", encoding="utf-8") as f:
             f.write("stub-release-write: %s\n" % " ".join(a[:2]))
 print("stub-releases:", " ".join(a[:2]))
@@ -178,16 +205,28 @@ if os.path.isdir("PROJECT/2-WORKING"):
                 os.makedirs("PROJECT/3-COMPLETED", exist_ok=True)
                 os.replace(src, dst)
 WR
-python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db');
-c.execute('CREATE TABLE IF NOT EXISTS roadmap_items (global_id TEXT, gh_number INTEGER)');
-c.execute('CREATE TABLE IF NOT EXISTS releases (id INTEGER PRIMARY KEY, global_id TEXT)');
-c.execute('INSERT INTO releases (id, global_id) VALUES (1, \"rel-STUB000000000000000000000008\")');
-c.execute('CREATE TABLE IF NOT EXISTS issue_refs (id INTEGER PRIMARY KEY, url TEXT)');
-c.execute('INSERT INTO issue_refs (id, url) VALUES (1, \"https://github.com/H/H/issues/999\"), (2, \"https://github.com/H/H/issues/998\"), (3, \"https://github.com/H/H/issues/997\")');
-c.execute('CREATE TABLE IF NOT EXISTS manifest_items (id INTEGER PRIMARY KEY, release_id INTEGER, issue_ref_id INTEGER, state TEXT)');
-c.execute('INSERT INTO manifest_items (id, release_id, issue_ref_id, state) VALUES (1, 1, 1, \"dialed_in\"), (2, 1, 2, \"dialed_in\"), (3, 1, 3, \"dialed_in\")');
-c.commit(); c.close()"
-printf 'base dump\n' > "$FX/releases.sql"
+python3 - "$FX" <<'PY' || exit 1
+import argparse, os, sys
+sys.path.insert(0, os.environ["EXPRESS_CANONICAL_PY"])
+import releases_app as canonical
+root = sys.argv[1]
+canonical.cmd_init(argparse.Namespace(root=root, slug="H/H"))
+c = canonical.connect(os.path.join(root, "releases.db"))
+now = canonical.now_iso()
+for index, number in enumerate((999, 998, 997), 1):
+    c.execute("INSERT INTO issue_refs(id,global_id,url,created_at,updated_at) VALUES(?,?,?,?,?)",
+              (index,canonical.new_gid("ref-"),"https://github.com/H/H/issues/%d" % number,now,now))
+c.execute("INSERT INTO releases(id,global_id,repo_id,version,status,description,tracking_ref_id,updated_at) "
+          "VALUES(1,?,1,'0.0.1','active','fixture',1,?)", (canonical.new_gid("rel-"),now))
+for index in (1, 2, 3):
+    c.execute("INSERT INTO manifest_items(id,global_id,release_id,issue_ref_id,state,updated_at) "
+              "VALUES(?,?,1,?,'dialed_in',?)", (index,canonical.new_gid("mfi-"),index,now))
+c.close()
+# Pre-existing owned registration makes dry-run admission a pure preview, not intake.
+canonical.cmd_roadmap_add(argparse.Namespace(root=root,issue_num=999,
+    issue_url="https://github.com/H/H/issues/999",title="Demo hotfix",created="2026-08-27",
+    doc_path="PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md",raw_text=None,dry_run=False))
+PY
 for projection in RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md; do
   printf 'base projection\n' > "$FX/$projection"
 done
