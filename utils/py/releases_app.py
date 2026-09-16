@@ -3764,13 +3764,17 @@ def cmd_roadmap_repoint(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
     try:
-        rows = conn.execute("SELECT global_id, doc_path, raw_text FROM roadmap_items "
-                            "WHERE gh_number = ? LIMIT 2", (args.issue_num,)).fetchall()
+        gid = getattr(args, "gid", None)
+        if (args.issue_num is None) == (gid is None):
+            refuse("selector", "pass exactly one of --issue-num or --gid")
+        where, param, label = (("gh_number = ?", args.issue_num, "GH-%d" % args.issue_num)
+                               if args.issue_num is not None else ("global_id = ?", gid, gid))
+        rows = conn.execute("SELECT global_id, gh_number, doc_path, raw_text FROM roadmap_items "
+                            "WHERE %s LIMIT 2" % where, (param,)).fetchall()
         if not rows:
-            refuse("no-such-row", "no roadmap row for GH-%d" % args.issue_num)
+            refuse("no-such-row", "no roadmap row for %s" % label)
         if len(rows) != 1:
-            refuse("selector", "GH-%d matches multiple repositories; repoint by issue number "
-                   "is ambiguous" % args.issue_num)
+            refuse("selector", "%s matches multiple repositories; pass --gid" % label)
         row = rows[0]
         new = args.doc_path
         if not os.path.isfile(os.path.join(root, new)):
@@ -3789,7 +3793,7 @@ def cmd_roadmap_repoint(args):
                          "WHERE global_id = ?", (new, raw_text, now_iso(), row["global_id"]))
 
         perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
-        print("repointed GH-%d -> %s" % (args.issue_num, new))
+        print("repointed GH-%d -> %s" % (row["gh_number"], new))
     finally:
         conn.close()
 
@@ -6688,7 +6692,8 @@ def build_parser():
     sp_rr.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_rp = rsub.add_parser("repoint", help="re-point a parked row's capture doc after the doc moves")
-    sp_rp.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rp.add_argument("--issue-num", type=int, help="GH issue number of the parked row (unique match required)")
+    sp_rp.add_argument("--gid", help="exact roadmap row global ID; pass exactly one selector")
     sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
     sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 

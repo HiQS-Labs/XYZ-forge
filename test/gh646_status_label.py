@@ -16,6 +16,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "utils" / "py"))
 import releases_app as app
 import express
+import wave_reconcile as wave
 import work_connectors as connectors
 from work_connectors import github_labels as labels
 
@@ -773,6 +774,66 @@ class StatusLabelTests(unittest.TestCase):
                 self.assertEqual(snapshot(),before)
                 self.assertFalse(Path(self.fx.db).exists())
         self.fx.conn = app.connect(str(Path(self.fx.root)/"saved-ledger.db"))
+
+    def test_wave_closeout_qualifies_owned_gid_in_both_orders_and_foreign_only(self):
+        owned_gid = self.fx.gid
+        self.start()
+        self.fx.conn.execute("INSERT INTO repos(global_id,slug,updated_at) VALUES(?,?,?)",
+                             (app.new_gid("repo-"),"foreign/project",app.now_iso()))
+        foreign = self.fx.row(owned_gid)
+        foreign.pop("id")
+        foreign.update(global_id=app.new_gid("rmi-"),repo_id=2,
+                       issue_url="https://github.com/foreign/project/issues/646")
+        self.fx.conn.execute("INSERT INTO roadmap_items(%s) VALUES(%s)" %
+                             (','.join(foreign),','.join('?' for _ in foreign)),tuple(foreign.values()))
+        foreign_gid = foreign["global_id"]
+        destination = "PROJECT/3-COMPLETED/GH-646-fixture.md"
+        Path(self.fx.root,destination).parent.mkdir(parents=True)
+        Path(self.fx.root,destination).write_text("# completed fixture\n")
+        source = Path(__file__).resolve().parents[1]
+        original_write = wave.ledger_write
+        for foreign_first in (False,True):
+            self.fx.conn.execute("UPDATE roadmap_items SET id=? WHERE global_id=?",
+                                 (20 if foreign_first else 1,owned_gid))
+            self.fx.conn.execute("UPDATE roadmap_items SET id=? WHERE global_id=?",
+                                 (10 if foreign_first else 30,foreign_gid))
+            self.fx.conn.execute("UPDATE roadmap_items SET section='In progress',status_marker='🚧',"
+                                 "status_label='in-progress',doc_path='PROJECT/fixture.md' WHERE global_id=?",(owned_gid,))
+            before_foreign = self.fx.row(foreign_gid)
+            with mock.patch.object(wave,"github_slug_from_origin",return_value="owner/project"), \
+                    mock.patch.object(wave,"harness_tool",side_effect=lambda root,path: str(source/path)), \
+                    mock.patch.object(wave,"ledger_write",wraps=original_write) as writer, \
+                    contextlib.redirect_stdout(io.StringIO()):
+                self.assertTrue(wave.update_roadmap_entry(self.fx.root,646,"a"*40,"2026-09-16",doc_path=destination))
+            self.assertEqual(writer.call_count,2)
+            for call in writer.call_args_list:
+                self.assertIn(owned_gid,call.args[1]); self.assertNotIn("--issue-num",call.args[1])
+            self.assertEqual(self.fx.row(owned_gid)["section"],"Completed")
+            self.assertIsNone(self.fx.row(owned_gid)["status_label"])
+            self.assertEqual(self.fx.row(owned_gid)["doc_path"],destination)
+            self.assertEqual(self.fx.row(foreign_gid),before_foreign)
+        self.fx.conn.execute("DELETE FROM roadmap_items WHERE global_id=?",(owned_gid,))
+        before_foreign = self.fx.row(foreign_gid)
+        with mock.patch.object(wave,"github_slug_from_origin",return_value="owner/project"), \
+                mock.patch.object(wave,"ledger_write") as writer, contextlib.redirect_stdout(io.StringIO()):
+            self.assertFalse(wave.update_roadmap_entry(self.fx.root,646,"a"*40,"2026-09-16"))
+        writer.assert_not_called()
+        self.assertEqual(self.fx.row(foreign_gid),before_foreign)
+
+    def test_wave_foreign_only_row_cannot_be_completed_by_root_issue_number(self):
+        self.start()
+        gid = self.fx.gid
+        self.fx.conn.execute("UPDATE repos SET slug='foreign/project'")
+        self.fx.conn.execute("UPDATE roadmap_items SET issue_url='https://github.com/foreign/project/issues/646'")
+        before = self.fx.row(gid)
+        generation = app.get_generation(self.fx.conn)
+        source = Path(__file__).resolve().parents[1]
+        with mock.patch.object(wave,"github_slug_from_origin",return_value="owner/project"), \
+                mock.patch.object(wave,"harness_tool",side_effect=lambda root,path: str(source/path)), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertFalse(wave.update_roadmap_entry(self.fx.root,646,"a"*40,"2026-09-16"))
+        self.assertEqual(self.fx.row(gid),before)
+        self.assertEqual(app.get_generation(self.fx.conn),generation)
 
     def test_express_admission_dry_refusal_has_no_filesystem_writes(self):
         args = argparse.Namespace(root=self.fx.root, repo="owner/project", issue=646,

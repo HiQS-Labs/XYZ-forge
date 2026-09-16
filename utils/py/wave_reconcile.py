@@ -1289,7 +1289,7 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
     return sorted(found, key=int)
 
 
-def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None):
+def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None, repo_slug=None):
     """Move entry in ROADMAP.md and/or releases.db to Completed/Deferred section with shipping badge."""
     roadmap_path = os.path.join(repo_root, "ROADMAP.md")
     db_path = os.path.join(repo_root, "releases.db")
@@ -1303,7 +1303,20 @@ def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=Tru
     if os.path.isfile(db_path):
         rows = ledger_rows(repo_root, "SELECT * FROM roadmap_items WHERE gh_number = ?", (issue_num,))
         if rows:
-            row = rows[0]
+            from releases_app import resolve_roadmap_identity
+            repo_slug = repo_slug or github_slug_from_origin(repo_root)
+            if not repo_slug:
+                die("Cannot qualify reconciliation ledger against the root repository", code=6)
+            repos = {r["id"]: r["slug"] for r in ledger_rows(repo_root, "SELECT id,slug FROM repos")}
+            qualified = [row for row in rows
+                         if (identity := resolve_roadmap_identity(row, repos, repo_slug))["identity_valid"]
+                         and identity["repo"] == repo_slug]
+            if len(qualified) > 1:
+                die(f"Multiple exact owned roadmap rows for {repo_slug}#{issue_num}", code=6)
+            if not qualified:
+                log(f"No qualified owned roadmap row for {repo_slug}#{issue_num}; leaving foreign/invalid rows unchanged")
+                return False
+            row = qualified[0]
             raw_text = row["raw_text"] or ""
             title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", raw_text)
             title_part = title_match.group(1).strip() if title_match else f"GH-{issue_num} · {row['title']}"
@@ -1314,10 +1327,10 @@ def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=Tru
             new_raw_text = f"- **{title_part}** {badge_sub} —{rest}".strip()
             marker = "✅" if is_merged else "⛔"
             if doc_path and row["doc_path"] != doc_path:
-                ledger_write(repo_root, ["roadmap", "repoint", "--issue-num", str(issue_num),
+                ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
                              "--doc-path", doc_path], dry_run, journal)
             if (row["section"], row["status_marker"], raw_text) != (target_section_db, marker, new_raw_text):
-                ledger_write(repo_root, ["roadmap", "update", "--issue-num", str(issue_num),
+                ledger_write(repo_root, ["roadmap", "update", "--gid", row["global_id"],
                              "--section", target_section_db, "--status-marker", marker,
                              "--raw-text", new_raw_text], dry_run, journal)
             updated = True
@@ -2131,6 +2144,7 @@ def main():
                             dry_run=args.dry_run,
                             journal=journal,
                             doc_path=os.path.relpath(dest_path, repo_root),
+                            repo_slug=repo_slug,
                         )
                         if updated:
                             log(f"  ROADMAP.md entry updated for GH-{issue_num}")
@@ -2148,6 +2162,7 @@ def main():
                                 is_merged=is_merged,
                                 dry_run=args.dry_run,
                                 journal=journal,
+                                repo_slug=repo_slug,
                             )
                             if updated:
                                 log(f"  ROADMAP.md entry updated for GH-{issue_num}")

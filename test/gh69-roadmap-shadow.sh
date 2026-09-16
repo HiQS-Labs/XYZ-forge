@@ -14,7 +14,7 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$HERE/.." && pwd)"
-APP="$ROOT_DIR/utils/py/releases_app.py"
+APP="${GH69_APP:-$ROOT_DIR/utils/py/releases_app.py}"
 
 pass=0; fail=0
 ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
@@ -204,7 +204,8 @@ refuses "two rated tokens"   rating-duplicate '- **GH-1 · x** — body. rated 7
 refuses "two ovr tokens"     ovr-duplicate '- **GH-1 · x** — body. rated 70/40/55/60 ovr 350 ovr 360'
 refuses "a mistyped ovr"     ovr-shape     '- **GH-1 · x** — body. rated 70/40/55/60 ovr 35O'
 refuses "an out-of-scale ovr" ovr-range    '- **GH-1 · x** — body. rated 70/40/55/60 ovr 401'
-refuses "an ovr with no rated" ovr-orphan  '- **GH-1 · x** — body. ovr 350'refuses "both vocabularies on one entry" rating-vocabulary-clash \
+refuses "an ovr with no rated" ovr-orphan  '- **GH-1 · x** — body. ovr 350'
+refuses "both vocabularies on one entry" rating-vocabulary-clash \
         '- **GH-1 · x** — body. cx/risk/eff 2/3/2 and rated 70/40/55/60'
 ok "  and not one of those refusals wrote anything" "[ \"\$(gen_now)\" = \"$G7\" ]"
 # The two false positives an independent QA pass (aider/qwen3.8-max r1) reproduced. Both refused a

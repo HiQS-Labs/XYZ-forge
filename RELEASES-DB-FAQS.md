@@ -108,7 +108,9 @@ instead of mistaking invalid evidence for an absent ledger row.
 `roadmap rate --force` removes the complete prior canonical rating and optional override before
 writing the replacement, so `raw_text` continues to parse back to the stored rating columns.
 Number-only `roadmap repoint` refuses when more than one repository owns that issue number and, for
-a unique match, updates only its resolved global row ID.
+a unique match, updates only its resolved global row ID. Pass `--gid <rmi-id>` instead of
+`--issue-num` to repoint an exact row. Wave reconciliation qualifies the root repository and
+full issue URL before repointing/updating that GID; foreign same-number rows remain untouched.
 
 ## Re-pointing a release's tracking issue (GH-222)
 
