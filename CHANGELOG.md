@@ -2,7 +2,7 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
-## Unreleased — GH-645 QA follow-up
+## 2026-09-16 — GH-645 QA follow-up
 
 - Ledger conflict recovery now finds its shell resolver in a consumer repo's vendored XYZ tools, including the primary-checkout fallback used by disposable landing clones.
 - Added a regression that reproduces the missing-tool failure and verifies the resolver runs against the landing clone.
