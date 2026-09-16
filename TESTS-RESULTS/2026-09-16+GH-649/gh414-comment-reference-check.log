@@ -1,0 +1,15 @@
+== test: gh414-comment-reference-check ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh414-comment-reference-check.XXXXXX.QWBOxumreI
+  PASS: red control: missing ADR citations in the built artifact fail governance
+  PASS: red control names dropped artifact citation decisions/2026-06-18-epoch-fencing.md
+  PASS: red control names dropped artifact citation decisions/2026-07-01-cross-agent-dep-conflict.md
+  PASS: the same comments pass once both cited ADRs are retained in the built artifact
+  PASS: a nonexistent source-comment path fails the check
+  PASS: the source-tree failure identifies the dead comment reference
+  PASS: the observed pre-fix artifact failure is recorded
+  PASS: gitignored runtime citation (.tick/STATE.md) is not a dead reference
+  PASS: red control: the same citation fails without the ignore rule (check can fail)
+  PASS: a re-included (negation-rule) missing reference still fails — not swallowed by the exemption
+  PASS: generated-state exemption is reported as an INFO finding, not invisible
+  PASS: a failing Python scanner degrades to the bash builder and still catches the dead ref
+== gh414-comment-reference-check: 12 passed, 0 failed ==

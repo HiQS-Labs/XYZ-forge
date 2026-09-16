@@ -7,7 +7,10 @@ Existing Forge runtime adaptations and local checks remain; the upstream changel
 fix is ported. Onboarding resolves Forge without a sibling PDDA clone. Sync preserves
 unbaselined/local changes unless explicitly adopted with a backup. Historical PDDA PR #61
 and Apache notices are retained; no standalone publisher is introduced. Archive readiness
-is tracked separately in docs/PDDA-MIGRATION.md and GH-649. Verification pending.
+is tracked separately in docs/PDDA-MIGRATION.md and GH-649. Reversibility: Costly —
+retain the previous source and consumer payload/registry/state snapshots. Focused
+install, upgrade, mode, divergence, backup/restore and existing core tests pass;
+full gate and final review remain pending. Evidence: TESTS-RESULTS/2026-09-16+GH-649/.
 
 
 All notable changes to this repo. Newest first. Dates are PDT.

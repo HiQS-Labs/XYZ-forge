@@ -30,7 +30,7 @@ Operator requested execution and evidence-based closeout on 2026-09-16. Archive 
 
 | What was just completed | What's next |
 |---|---|
-| Research accepted; source and consumer seams inspected; isolated task clone registered | Review the migration plan, then implement and verify before any archival |
+| Plan relay approved; implementation and focused tests complete | Final Codex review, full gate, landing, then retirement notice and archive verdict |
 
 ## Table of contents
 
@@ -68,10 +68,10 @@ Rating 2026-09-16: priority 80 / severity 55 / appeal 50 / effort-cheapness 45. 
 
 ### Phase 1 QA
 
-- [ ] Fresh Forge checkout contains the complete installer and template source set.
-- [ ] Runtime/contract differences reconciled; no Forge-local check removed.
-- [ ] Target manifest omits all source-only machinery; source paths and executable bits exist.
-- [ ] Existing license terms and provenance preserved without conversion.
+- [x] Fresh Forge checkout contains the complete installer and template source set.
+- [x] Runtime/contract differences reconciled; no Forge-local check removed.
+- [x] Target manifest omits all source-only machinery; source paths and executable bits exist.
+- [x] Existing license terms and provenance preserved without conversion.
 
 ## Phase 2: verification and review
 
@@ -81,7 +81,7 @@ Rating 2026-09-16: priority 80 / severity 55 / appeal 50 / effort-cheapness 45. 
 
 ### Phase 2 QA
 
-- [ ] Focused tests green, negative controls fail for the intended reason.
+- [x] Focused tests green, negative controls fail for the intended reason.
 - [ ] Required Forge gate run complete with retained evidence; Codex review approved.
 - [ ] Landed origin commit contains imported assets, contract, templates and authority pointers.
 
@@ -103,3 +103,10 @@ Rating 2026-09-16: priority 80 / severity 55 / appeal 50 / effort-cheapness 45. 
 ## Scheduled follow-up lanes
 
 Review findings, fixture dogfood findings and conformance are sequential Phase 2 checkpoints in this single migration arc, not independent parallel projects. Escalate a finding to its own issue only if outside this migration's scope; no speculative framework or separate publisher.
+
+## Execution evidence
+
+Plan Codex relay approved round 2 (reviewed 4bf7c33f). Focused evidence is in
+TESTS-RESULTS/2026-09-16+GH-649/SUMMARY.md. Imported sync uses upstream PR #61 with
+the additional reviewed preservation rule; manifest handles Bash 3 empty arrays and
+vendored sources outside their parent index. No live target or registry was written.
