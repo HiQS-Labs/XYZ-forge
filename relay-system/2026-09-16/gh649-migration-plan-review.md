@@ -100,4 +100,12 @@ Whole artifact swept: frontmatter, recon, all phases/QA gates and follow-up lane
 
 Relay closed (Approved), no further review turn needed. Handing the completed token back to producer for implementation under the approved plan and its remaining gates.
 
+
+### Attestation · relay-drive — 2026-09-16T21:02:40Z
+task: RELAY-gh649-plan
+reviewer: codex
+status: Approved
+reviewed-head: 4bf7c33f4a00f3c792787693041973d47b19054f
+added-range: 10212+3545
+added-sha256: 7b0c83ac54a86e360e9aa5e0dbd4048a121d756d3b77a370ed730df0b6fab0a7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
