@@ -26,6 +26,7 @@ trap 'cleanup; rm -rf "$WORK"' EXIT
 new_sandbox() {
   cleanup
   SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  [ -n "$SBOX" ] && [ -d "$SBOX" ] || exit 1
   require_fixture "$SBOX" "changelog sandbox"
   (
     cd "$SBOX" || exit 1
