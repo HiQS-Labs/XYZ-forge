@@ -417,6 +417,28 @@ FIRED="$(ls "$FX/.tick/express/"*express-fired*.jsonl 2>/dev/null | head -1)"
 [ -n "$FIRED" ] && ok "express-fired telemetry written on full success" || bad "express-fired telemetry missing"
 TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project >/dev/null 2>"$ERR" && ok "tick project folded cleanly after express-fired telemetry (GH-694)" || { bad "tick project failed after express-fired telemetry (GH-694)"; cat "$ERR"; }
 grep -qE '^- (GH-999|lane|undefined) ' "$FX/.tick/STATE.md" && bad "express-fired telemetry seeded a phantom task (GH-694)" || ok "no phantom task from express-fired telemetry (GH-694)"
+ADMISSION_PROOF="$(python3 - "$FX" <<'PY'
+import json, os, sqlite3, sys
+c = sqlite3.connect(os.path.join(sys.argv[1], "releases.db"))
+c.row_factory = sqlite3.Row
+assert c.execute("SELECT 1 FROM schema_migrations WHERE version=9").fetchone()
+row = c.execute("SELECT ri.* FROM roadmap_items ri JOIN repos r ON r.id=ri.repo_id "
+                "WHERE r.slug='H/H' AND ri.gh_number=999 AND ri.issue_url='https://github.com/H/H/issues/999'").fetchone()
+assert row and row["status_label"] == "in-progress"
+events = list(c.execute("SELECT * FROM work_events WHERE repo_id=? AND gh_number=999 AND event='in_flight'", (row["repo_id"],)))
+assert len(events) == 1
+event = events[0]
+payload = json.loads(event["payload"])
+assert payload["source"] == "roadmap-update" and payload["transition"] is True and payload["accepted_start"] is True
+receipt = c.execute("SELECT * FROM op_receipts WHERE op='roadmap-update' AND target_gid=? AND txn_id=?",
+                    (row["global_id"],event["txn_id"])).fetchone()
+assert receipt and receipt["state_digest_before"] != receipt["state_digest_after"]
+assert len(receipt["state_digest_before"]) == len(receipt["state_digest_after"]) == 64
+print("owned-start-receipt")
+c.close()
+PY
+)"
+[ "$ADMISSION_PROOF" = owned-start-receipt ] && ok "schema009 owned admission has exactly one real writer start and matching digest receipt" || bad "owned admission receipt missing"
 
 echo "== GH-592: the landing writes its provenance receipt and reconciles under --gate =="
 FIX_SHA="$(git -C "$FX" log --format=%H --grep='\[express\]' -1)"
@@ -460,7 +482,8 @@ rm -rf "$FX/TESTS-RESULTS/unrelated"; git -C "$FX" checkout -q -- . 2>/dev/null;
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-mut\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2m\n' > "$FX/test/gh999-demo.sh"
 issue_json OPEN "Demo hotfix" 999
 python3 - "$DRIVER" "$FX" <<'PY' >/dev/null 2>"$ERR" && bad "no-write mutation must fail closed" || { grep -q "express-reconcile-failed" "$ERR" && grep -q "No provenance.jsonl" "$ERR" && ok "control (ii): driver without a real receipt write fails the gate (missing-receipt oracle reached)" || bad "control (ii) wrong failure: $(tail -2 "$ERR")"; }
-import importlib.util, sys
+import importlib.util, os, sys
+sys.path.insert(0, os.environ["EXPRESS_CANONICAL_PY"])
 spec = importlib.util.spec_from_file_location("express", sys.argv[1]); express = importlib.util.module_from_spec(spec); spec.loader.exec_module(express)
 express.write_receipt = lambda root, sha, issue, suite, rc: "TESTS-RESULTS/mutant+GH-999-express/provenance.jsonl"
 sys.argv = ["express.py", "--root", sys.argv[2], "run", "--issue", "999", "--suite", "test/gh999-demo.sh", "--summary", "demo"]
@@ -518,12 +541,14 @@ FAILED_TICK="$(ls -t "$FX/.tick/express/"*express-reconcile-failed*.jsonl 2>/dev
 echo "== dry-run mode (GH-516) =="
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-dry\n' > "$FX/utils/py/foo.py"
 issue_json OPEN "Demo hotfix" 999
+DRY_LEDGER_BEFORE="$(shasum -a 256 "$FX/releases.db" "$FX/releases.sql")"
 DRYOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary "dry run demo" --dry-run 2>"$ERR")"
 grep -q "express-check \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports check pass" || bad "run --dry-run check missing: $DRYOUT"
 grep -q "express-land \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports land pass" || bad "run --dry-run land missing: $DRYOUT"
 [ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && ok "dry-run created no capture doc" || bad "dry-run created capture doc"
 [ "$(git -C "$FX" branch --show-current)" = task/gh-999 ] && ok "dry-run left task branch intact" || bad "dry-run switched branch"
 [ -z "$(git -C "$FX" status --porcelain=v1)" ] && bad "working tree changes were wiped by dry-run" || ok "dry-run preserved uncommitted working tree"
+[ "$(shasum -a 256 "$FX/releases.db" "$FX/releases.sql")" = "$DRY_LEDGER_BEFORE" ] && ok "dry-run accepted admission preserves exact DB/dump bytes" || bad "dry-run mutated admission ledger"
 
 echo "== resume subcommand & central telemetry (GH-516) =="
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-resume\n' > "$FX/utils/py/foo.py"
