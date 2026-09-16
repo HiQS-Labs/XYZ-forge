@@ -47,6 +47,14 @@ grep -q 'conf not found' "$BOX/manifest.log"
 : > "$BOX/empty.conf"
 if PDDA_MANIFEST_CONF="$BOX/empty.conf" bash "$ROOT/utils/pdda/pdda-install.sh" "$T" --no-register >"$BOX/empty.log" 2>&1; then fail 'empty manifest accepted'; fi
 ok 'missing and empty manifests fail'
+# A vendored source belongs to a different parent index; its runtime must not disappear.
+mkdir -p "$T/.xyz/utils/pdda"
+printf 'dir utils/pdda\n' > "$T/.xyz/utils/pdda/pdda-sync-manifest.conf"
+printf 'runtime fixture\n' > "$T/.xyz/utils/pdda/pdda.sh"
+. "$ROOT/utils/pdda/pdda-manifest.sh"
+pdda_manifest_expand "$T/.xyz" > "$BOX/nested-manifest"
+grep -qx 'utils/pdda/pdda.sh' "$BOX/nested-manifest"
+ok 'vendored source uses its own payload rather than the parent repository index'
 # A tiny source fixture exercises the real engine with inherited state from the old distributor.
 S="$BOX/source"; U="$BOX/sync-target"; mkdir -p "$S/utils/pdda" "$S/payload" "$U/payload"
 cp "$ROOT/utils/pdda/pdda-sync.sh" "$ROOT/utils/pdda/pdda-manifest.sh" "$S/utils/pdda/"

@@ -35,7 +35,7 @@ pdda_manifest_expand() {
       dir)
         # git-tracked files under this dir; fall back to a pruned find for a non-git canonical repo.
         local f
-        if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        if [ "$(git -C "$root" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$root" && pwd -P)" ]; then
           while IFS= read -r f; do includes+=("$f"); done < <(git -C "$root" ls-files -- "$arg")
         else
           while IFS= read -r f; do
