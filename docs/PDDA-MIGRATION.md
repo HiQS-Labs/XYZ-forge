@@ -86,18 +86,21 @@ Preserved source license and import provenance: utils/pdda/NOTICE.md.
 
 ### Local target dispositions
 
-| Registered repository | Inspection | Disposition and update route |
+Identifiers below map to the retained machine-local inventory; registry names and paths
+are not published. Each disposition follows the observed managed-path state.
+
+| Local inventory identifier | Inspection | Disposition and update route |
 |---|---|---|
-| LTVera-Pandas | Managed paths clean | Retain pinned; use Forge preview with retained old sync state when selected |
-| giant-brains-claude-skills | Managed paths clean | Retain pinned; same Forge preview route |
-| aegis-sleuth-slack-bot | Managed paths clean | Retain pinned; same Forge preview route |
-| fast-key-replacement-macos | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
-| firebase-AI-reports | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
-| XYZ-code-intelligence | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
-| mac-buyers-guide-2.0 | Managed paths modified; no .xyz | Retain governance-only use; reconcile before Forge adoption; full harness is not required |
-| AI-design-LA-WP-theme | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
-| needle-fork | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
-| rebalance-OS | Runtime present; registered directory is not a Git checkout | Preserve files; resolve the stale checkout identity before any update |
+| Target 01 | Managed paths clean | Retain pinned; use Forge preview with retained old sync state when selected |
+| Target 02 | Managed paths clean | Retain pinned; same Forge preview route |
+| Target 03 | Managed paths clean | Retain pinned; same Forge preview route |
+| Target 04 | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| Target 05 | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| Target 06 | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| Target 07 | Managed paths modified; no .xyz | Retain governance-only use; reconcile before Forge adoption; full harness is not required |
+| Target 08 | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| Target 09 | Managed paths modified | Preserve local work; reconcile diff before Forge adoption |
+| Target 10 | Runtime present; registered directory is not a Git checkout | Preserve files; resolve the stale checkout identity before any update |
 
 These are retained installs, not a commitment to an independent PDDA product. The
 old checkout/state stays available for rollback; no registry or target was mutated.
