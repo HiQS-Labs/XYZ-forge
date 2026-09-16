@@ -2,34 +2,56 @@
 
 phase: p1
 task: MARATHON-P1-TURN
-relay-drive-exit: 5
-reason: relay-failed-before-gate
+relay-drive-exit: 6
+reason: containment-violation (off-lane edit reverted by a turn-taker)
 gate: not-run
 relay-file: marathon-system/gh648-headless-turn-timeout--p1/RELAY.md
 
-turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-98567.log
+turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-36046.log
 
 <details>
-<summary>Last 18 lines of failing turn log</summary>
+<summary>Last 40 lines of failing turn log</summary>
 
 ```text
-Reading additional input from stdin...
-OpenAI Codex v0.153.4
---------
-workdir: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.eDRPsZ
-model: gpt-5.6-sol
-provider: openai
-approval: never
-sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/.tick]
-reasoning effort: low
-reasoning summaries: none
-session id: 01a0ac23-4138-78f2-9bee-376b955a2173
---------
-user
-You are agent codex, taking your turn in a file-based relay. Read marathon-system/gh648-headless-turn-timeout--p1/RELAY.md and follow its embedded "▶ TAKE YOUR TURN" steps for your role. For the MARATHON-P1-TURN token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang" "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick". Token sequence: (1) claim it FIRST — claim MARATHON-P1-TURN --agent codex --paths marathon-system/gh648-headless-turn-timeout--p1/RELAY.md — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, release --to agy. Edit ONLY marathon-system/gh648-headless-turn-timeout--p1/RELAY.md and: utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh. NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn. Verification output (probe results, generated JSON, logs) goes under .relay-scratch/ — pre-created for you, exempt from containment, never copied back; scratch files anywhere else in the tree are reverted and FAIL your turn.
-ERROR: Selected model is at capacity. Please try a different model.
-ERROR: Selected model is at capacity. Please try a different model.
-[trace] rtl_enforce: COMMIT none (no tracked changes) agent=codex
-[trace] rtl_enforce: token-handoff branch=release-to-peer peer=agy task=MARATHON-P1-TURN
++    ) -> dict[str, object]:
++        """Classify this observation and package it for the run log."""
++        reason, detail = self.classify()
++        return termination_record(
++            termination, reason, detail,
++            exit_code=exit_code, observed_at=observed_at,
++        )
++
++    def emit_termination_record(
++        self,
++        termination: str,
++        *,
++        exit_code: int = 7,
++        observed_at: float | None = None,
++        stream: TextIO | None = None,
++    ) -> dict[str, object]:
++        """Classify and emit this observation as one structured log line."""
++        reason, detail = self.classify()
++        return emit_termination_record(
++            termination, reason, detail,
++            exit_code=exit_code, observed_at=observed_at, stream=stream,
+         )
+diff --git a/validate.sh b/validate.sh
+index bfa4e7d230fb06fb42cdc418134bc62ff3fc2116..ca91da80c026aa056c55639fee2b2c09a9e8fc9d
+--- a/validate.sh
++++ b/validate.sh
+@@ -296,6 +296,7 @@
+   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
+   "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
+   "gh608-deepseek-effort.sh"     # GH-608 (DEEPSEEK_REASONING_EFFORT matrix, early claim prevention, telemetry normalization)
++  "gh648-l1-turn-termination.sh" # GH-648 L1 (honest idle attribution + structured termination records)
+   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
+   "gh155-phase1-metamorphic-invariants.sh" # #155 Phase 1 (Metamorphic Invariant Assertions & Sandbox Hardening: zero-mutation, idempotence, realpath containment)
+   "gh155-phase2-differential-oracle.sh" # #155 Phase 2 (Differential Multi-Harness Cross-Testing Oracle across all 7 turn shims)
+
+tokens used
+90,104
+Implemented and verified Round 1. Focused test passed with 18 assertions; mutation control failed as expected. Full gate was intentionally not run.
+
+Handing off to agy — agy, take your turn.
 ```
 </details>
