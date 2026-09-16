@@ -33,9 +33,13 @@ def make_worktree():
     git('config', 'user.name', 'gh654')
     seed = pathlib.Path(wt, 'allowed-tracked.txt')
     seed.write_text('seed\n')
-    git('add', 'allowed-tracked.txt')
+    relay = pathlib.Path(wt, 'marathon-system', 'gh654--p1')
+    relay.mkdir(parents=True)
+    (relay / 'RELAY.md').write_text('seed relay\n')
+    git('add', 'allowed-tracked.txt', 'marathon-system/gh654--p1/RELAY.md')
     git('commit', '-q', '-m', 'seed')
     seed.write_text('mutated\n')                      # tracked, allowlisted, modified
+    (relay / 'RELAY.md').write_text('seed relay\n### Round 1\n')  # tracked relay edit
     pathlib.Path(wt, 'allowed-new.txt').write_text('x\n')          # untracked, allowlisted
     pathlib.Path(wt, 'offlane-probe.txt').write_text('x\n')        # untracked, NOT allowlisted
     scratch = pathlib.Path(wt, '.relay-scratch'); scratch.mkdir()
@@ -74,9 +78,18 @@ class OfflaneCandidates(unittest.TestCase):
             self.assertNotIn(quiet, found, f'{quiet} must not be reported')
 
     def test_relay_file_itself_is_never_offlane(self):
-        pathlib.Path(self.wt, 'marathon-system', 'gh654--p1').mkdir(parents=True)
-        pathlib.Path(self.wt, RELAY).write_text('relay\n')
         self.assertNotIn(RELAY, self.candidates())
+
+    # GH-654 follow-up: the shims pass the relay file ABSOLUTE; the sweep
+    # compares worktree-relative porcelain. The normalized form must match.
+    def test_absolute_relay_file_normalizes_to_relative(self):
+        # real callers pass git-rev-parse output on both sides — abspath, no symlink resolution
+        absolute = os.path.join(os.path.abspath(self.wt), RELAY)
+        found = rtl.offlane_candidates(self.wt, ALLOW, absolute)
+        self.assertNotIn(absolute, found, 'absolute relay path must not be reported')
+        self.assertNotIn(RELAY, found, 'relay edit must not be reported')
+        self.assertEqual(found, ['offlane-probe.txt'],
+                         'the real off-lane file must still be the only finding')
 
     def test_widening_the_allowlist_silences_a_path(self):
         self.assertEqual(self.candidates(allow=ALLOW + ',offlane-probe.txt'), [])

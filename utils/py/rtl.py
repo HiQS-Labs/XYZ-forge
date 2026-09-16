@@ -234,6 +234,21 @@ def split_allow_paths(allow_paths):
 OFFLANE_EXEMPT = (".tick", ".relay-scratch", "relay-system")
 
 
+def relay_file_for_allowlist(root, relay_file):
+    """GH-654 follow-up — the sweep compares WORKTREE-RELATIVE porcelain paths
+    against RTL_ALLOW entries, and rtl_init stored the relay file exactly as
+    passed. The Python shims pass it ABSOLUTE, so the instructed relay-file edit
+    could never match and every builder turn tripped exit-6 (the GH-648 p1
+    blockade). Root-relative when the file lives under root; untouched
+    otherwise (cross-repo review keeps today's behavior)."""
+    rf = os.path.abspath(relay_file)
+    try:
+        rel = os.path.relpath(rf, os.path.abspath(root))
+    except ValueError:
+        return rf
+    return rf if rel.startswith("..") else rel
+
+
 def offlane_candidates(wt_path, allow_paths, relay_file):
     try:
         proc = subprocess.run(
@@ -246,7 +261,23 @@ def offlane_candidates(wt_path, allow_paths, relay_file):
     entries = proc.stdout.decode("utf-8", "replace").split("\0")
     allow = split_allow_paths(allow_paths)
     allow.append(relay_file)
-    allow = [a.rstrip("/") for a in allow if a]
+    # GH-654 follow-up: the shims pass the relay file ABSOLUTE while porcelain
+    # is worktree-relative. Normalize ABSOLUTE entries against the worktree;
+    # relative entries are already root-relative (same layout) and must not be
+    # touched — abspath would resolve them against this process's cwd.
+    normalized = []
+    for entry in allow:
+        entry = entry.strip().rstrip("/")
+        if not entry:
+            continue
+        if os.path.isabs(entry):
+            try:
+                rel = os.path.relpath(entry, os.path.abspath(wt_path))
+            except ValueError:
+                rel = None
+            entry = rel if (rel and not rel.startswith("..")) else entry
+        normalized.append(entry)
+    allow = normalized
     found, i = [], 0
     while i < len(entries):
         entry = entries[i]
@@ -718,7 +749,7 @@ source {lib} >/dev/null 2>&1
 if [ -s {state} ]; then
   source {state}
 else
-  rtl_init {shlex.quote(self.root)} {shlex.quote(self.relay_file)} {shlex.quote(self.allow_paths)} >/dev/null 2>&1
+  rtl_init {shlex.quote(self.root)} {shlex.quote(relay_file_for_allowlist(self.root, self.relay_file))} {shlex.quote(self.allow_paths)} >/dev/null 2>&1
 fi
 
 {cmd_str}
@@ -794,10 +825,11 @@ exit $RC
         # over-reports rather than stays silent (it skips only the exemptions
         # the bash sweep documents: .tick, .relay-scratch, transcript root).
         try:
-            for cand in offlane_candidates(wt_path, self.allow_paths, self.relay_file):
+            for cand in offlane_candidates(wt_path, self.allow_paths, relay_file_for_allowlist(self.root, self.relay_file)):
                 sys.stderr.write("rtl: GH-654 off-lane candidate: %s\n" % cand)
             sys.stderr.write("rtl: GH-654 allowlist: [%s] relay_file: %s\n" % (
-                ", ".join(split_allow_paths(self.allow_paths)), self.relay_file))
+                ", ".join(split_allow_paths(self.allow_paths)),
+                relay_file_for_allowlist(self.root, self.relay_file)))
         except Exception:
             pass  # diagnostics must never fail the turn they describe
         cmd = f"""

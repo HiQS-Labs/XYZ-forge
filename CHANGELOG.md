@@ -166,6 +166,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-16
 
 ### Fixed
+- **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-654: Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-645: merge-cleanup: ledger gate and reconcile fail in repos that vendor PRS tools under gitignored .xyz/.** (express hotfix, GH-267 lane; suite test/gh645-merge-cleanup-xyz-tools.sh registered as the landing gate.)
 
