@@ -1,0 +1,33 @@
+marathon: run log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/run-logs/2026-09-16/marathon-MARATHON_-143303-96726.log
+marathon: plan: PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/MARATHON.yaml — 9 phase(s) in execution order
+marathon: ── phase 1/9: p1 (reviewer=agy, round-cap=5, artifact=utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh, turn-timeout=1200s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/run-logs/2026-09-16/marathon-MARATHON_-143303-96726.log
+marathon-drive: relay file committed: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/marathon-system/gh648-headless-turn-timeout--p1/RELAY.md
+marathon-drive: reconciled leaked open handoff: MARATHON-P1-TURN (cleared stale reservation for agy)
+marathon-drive: tick token seeded: MARATHON-P1-TURN → codex
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-start boundary — compressor=3329MB, swap_free=0MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang) changed-files=1
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.eDRPsZ)
+codex-turn: codex exec failed (exit 1)
+codex-turn: codex turn produced no tracked changes (token-only move?)
+codex-turn: handed off token MARATHON-P1-TURN → agy (tick release --to)
+marathon-drive: relay escalated: relay-failed-before-gate (gate: not-run)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/2026-09-16/marathon-p1-213311.md
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=3327MB, swap_free=0MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/marathon-system/gh648-headless-turn-timeout--p1/ESCALATION.md (reason: relay-failed-before-gate)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 1h 24m
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 6797MB, swap free min: 0MB
+  turn peak RSS: codex: 260MB peak RSS
+
+marathon: HALT: phase p1 failed (marathon-drive exit 5) — chain stops; later phases NOT started
