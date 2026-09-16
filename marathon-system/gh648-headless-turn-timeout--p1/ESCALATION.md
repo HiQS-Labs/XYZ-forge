@@ -7,7 +7,7 @@ reason: containment-violation (off-lane edit reverted by a turn-taker)
 gate: not-run
 relay-file: marathon-system/gh648-headless-turn-timeout--p1/RELAY.md
 
-turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-36046.log
+turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-system/logs/2026-09-16/codex-turn-MARATHON-P1-TURN-62647.log
 
 <details>
 <summary>Last 40 lines of failing turn log</summary>
@@ -36,7 +36,7 @@ turn-log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/relay-syst
 +            exit_code=exit_code, observed_at=observed_at, stream=stream,
          )
 diff --git a/validate.sh b/validate.sh
-index bfa4e7d230fb06fb42cdc418134bc62ff3fc2116..ca91da80c026aa056c55639fee2b2c09a9e8fc9d
+index 613266c988eb227bb6adf510acf2851df315d7fc..0c717ac9d6884e0b63f22291c8f9366b24020861
 --- a/validate.sh
 +++ b/validate.sh
 @@ -296,6 +296,7 @@
@@ -49,9 +49,9 @@ index bfa4e7d230fb06fb42cdc418134bc62ff3fc2116..ca91da80c026aa056c55639fee2b2c09
    "gh155-phase2-differential-oracle.sh" # #155 Phase 2 (Differential Multi-Harness Cross-Testing Oracle across all 7 turn shims)
 
 tokens used
-90,104
-Implemented and verified Round 1. Focused test passed with 18 assertions; mutation control failed as expected. Full gate was intentionally not run.
+58,222
+Implemented GH-648 L1 and verified the focused suite: `PASS: 22 assertions`, including a witnessed failing mutation control. Full gate was intentionally not run.
 
-Handing off to agy — agy, take your turn.
+Token released successfully. Handing off to agy — agy, take your turn.
 ```
 </details>
