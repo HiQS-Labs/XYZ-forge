@@ -1,5 +1,5 @@
 == test: pdda-roadmap-coverage ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-pdda-roadmap-coverage.XXXXXX.UbLOzYHATf
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-pdda-roadmap-coverage.XXXXXX.TRgjC7RHdp
   PASS: coverage check fails when a GH inbox capture is not parked in ROADMAP.md
   PASS: missing parked GH inbox capture reports the correct failure
   PASS: coverage check passes once the GH inbox capture is parked in ROADMAP.md

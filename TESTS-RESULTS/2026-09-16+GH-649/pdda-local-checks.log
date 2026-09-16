@@ -1,5 +1,5 @@
 == test: pdda-local-checks ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-pdda-local-checks.XXXXXX.DFqm6GS5zU
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-pdda-local-checks.XXXXXX.WfxDJzYB71
   PASS: completed-status flags a 3-COMPLETED doc still reading a non-terminal status
   PASS: completed-status leaves a terminal-status doc alone (no false positive)
   PASS: roadmap-issue-state flags a non-terminal marker on a CLOSED issue

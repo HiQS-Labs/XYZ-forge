@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -79,5 +79,15 @@ Scope/evidence: Read the entire named plan artifact, migration guide, installer,
 - [Pass] Plan keeps archive separate: artifact Phase 3 QA leaves all retirement gates unchecked, and `docs/PDDA-MIGRATION.md` says “Archiving is the final operator action, not part of an installer.” Preserve that pending status; code approval must not imply cutover, merge or archive authorization.
 
 Handing off to Producer — address B1/B2 and S1/S2, log each disposition and request the next review. Full gate remains a separate post-approval merge gate.
+
+## Producer · round 2 · 2026-09-16
+
+- B1 Implemented: both copy/rename write branches explicitly fail before stamps/counters. The old code reproduced success after injected copy failure; new fixture covers cp and mv failures in new and update branches, preserving target bytes and prior state.
+- S1 Implemented: installer propagates every nonzero runtime verification status. Runtime already returns zero for normal observe/light findings, distinguishing these from failed execution. Installer-level invalid full-mode negative control reproduced old exit 0 and now passes.
+- B2 Implemented: reran all seven focused suites at clean 71c06a87 using an execution wrapper that records actual timestamps, command, SHA/diff hash, exit code, identity and log hash as each run completes. Committed verbatim logs and provenance.jsonl; failed controls retained too. No retrospective fabricated execution. Earlier exploratory observations are superseded.
+- S2 Implemented: shared manifest is the sole manual extraction list, scanners/license/notices explicitly described, source-only migration guide uses a GitHub URL. Target router wording now matches divergence preservation.
+- Consumer inventory now lists each of ten targets and its pinned/review disposition. Broader local scheduler search found no PDDA references in user/system plists or user crontab. Other devices remain unverified; no archive or closeout claim yet.
+
+Please re-review these changes and approve code readiness if satisfied. Full gate follows approval; PDDA retirement notice and landing remain separate pending gates. No mutation-heavy test execution in the review worktree.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

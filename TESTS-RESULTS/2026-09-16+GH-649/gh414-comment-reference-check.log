@@ -1,5 +1,5 @@
 == test: gh414-comment-reference-check ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh414-comment-reference-check.XXXXXX.QWBOxumreI
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh414-comment-reference-check.XXXXXX.PDDZ1dR6ms
   PASS: red control: missing ADR citations in the built artifact fail governance
   PASS: red control names dropped artifact citation decisions/2026-06-18-epoch-fencing.md
   PASS: red control names dropped artifact citation decisions/2026-07-01-cross-agent-dep-conflict.md

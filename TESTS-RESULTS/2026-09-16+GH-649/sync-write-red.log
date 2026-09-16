@@ -4,6 +4,9 @@ ok - observe/light report; full rejects invalid document and install
 ok - missing and empty manifests fail
 ok - vendored source uses its own payload rather than the parent repository index
 ok - dry-run preserves payload/state/registry; live default preserves divergence and deferred deletion
-ok - copy and rename failures in new/update branches leave target and old stamps intact
-ok - explicit adoption backs up both divergent files; normal advances work; full restore verified
-GH-649 migration checks passed
+2026-09-16T21:20:01Z push START — 1 target(s), 3 manifest files
+2026-09-16T21:20:01Z   TARGET /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh649.TjJ70y/fail-target-new-cp
+injected cp failure
+2026-09-16T21:20:01Z     new        payload/aa-new.txt
+2026-09-16T21:20:01Z push DONE — new=1 updated=0 updated+bak=0 skip=2 diverged=0 deleted=0 missing=0
+FAIL - new/cp write failure reported success
