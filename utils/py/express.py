@@ -1071,8 +1071,10 @@ def qualify_resume_identity(args):
     from releases_app import read_native_issue
     dry = getattr(args, "dry_run", False)
     try:
+        repo_env = os.environ.copy()
+        repo_env.pop("GH_REPO", None)  # an override is not proof of this landing root
         actual = subprocess.run(["gh", "repo", "view", "--json", "nameWithOwner"],
-                                cwd=args.root, capture_output=True, text=True, timeout=10)
+                                cwd=args.root, env=repo_env, capture_output=True, text=True, timeout=10)
         metadata = json.loads(actual.stdout) if actual.returncode == 0 else None
         if not isinstance(metadata, dict) or metadata.get("nameWithOwner") != args.repo:
             raise ValueError("requested repository differs from the landing root repository")

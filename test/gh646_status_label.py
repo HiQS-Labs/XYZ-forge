@@ -710,7 +710,7 @@ class StatusLabelTests(unittest.TestCase):
         repo = subprocess.CompletedProcess([],0,json.dumps({"nameWithOwner":"owner/project"}),"")
         original = subprocess.run
         with tempfile.TemporaryDirectory(prefix="gh646-telemetry-") as home, \
-                mock.patch.dict(os.environ,{"HOME":home}), \
+                mock.patch.dict(os.environ,{"HOME":home,"GH_REPO":"foreign/project"}), \
                 mock.patch.object(express,"resolve_landing_commit",return_value=sha), \
                 mock.patch.object(express.subprocess,"run",wraps=subprocess.run) as process, \
                 mock.patch.object(express,"gh",return_value=subprocess.CompletedProcess([],0,
@@ -722,6 +722,7 @@ class StatusLabelTests(unittest.TestCase):
             def run(argv,**kw):
                 if argv[:2] == ["gh","repo"]:
                     self.assertEqual(kw["cwd"],root)
+                    self.assertNotIn("GH_REPO",kw["env"])
                     return repo
                 return original(argv,**kw)
             process.side_effect = run
