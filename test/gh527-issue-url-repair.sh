@@ -37,7 +37,8 @@ fixture_guard_init "$WORK"       # GH-10: pin the sandbox root
 git init -q "$WORK"
 git -C "$WORK" config user.email t@example.com
 git -C "$WORK" config user.name t
-python3 "$APP" --root "$WORK" init >/dev/null
+# Closure now independently qualifies the row's owner; the fixture owns o/r.
+python3 "$APP" --root "$WORK" init --slug o/r >/dev/null
 # GH-10: every path this suite writes must be provably inside the pinned sandbox, never a real repo.
 require_fixture "$WORK/.git" "gh527 fixture git dir"
 require_fixture_file "$WORK/releases.db" "gh527 fixture ledger DB"
@@ -150,7 +151,7 @@ out="$(RELEASES_GH_BIN="$WORK/fake-gh" python3 "$APP" --root "$WORK" \
        roadmap reconcile-state --dry-run 2>&1)"; rc=$?
 set -e
 check "$rc" "0" "reconcile-state no longer refuses the whole run over one bad row"
-case "$out" in *"GH-900"*) ok "the healthy row is still reconciled" ;;
+case "$out" in *"would move GH-900:"*) ok "the healthy row is still reconciled" ;;
                *) bad "healthy row GH-900 was stranded: $out" ;; esac
 case "$out" in *"GH-901"*) ok "the unresolvable row is named, not silently dropped" ;;
                *) bad "unresolvable row GH-901 was not reported: $out" ;; esac
