@@ -10,7 +10,7 @@ retained verbatim; the commit alias mirrors source_head for Forge receipt attrib
 
 | Suite | Result |
 |---|---|
-| gh649-pdda-migration | All eight groups passed: resolver, install/upgrade, modes, invalid manifests, vendored source, cutover preservation, backup/restore, failed-copy/rename preservation |
+| gh649-pdda-migration | All nine groups passed: resolver, install/upgrade, modes, invalid manifests, vendored source, cutover preservation, backup/restore, failed-copy/rename preservation, failed deletion tracking |
 | pdda-changelog | 18 passed, 0 failed |
 | pdda-install-startup-docs | 40 passed, 0 failed |
 | pdda-roadmap-coverage | 11 passed, 0 failed |
@@ -34,3 +34,10 @@ runs are superseded by these receipts for acceptance purposes.
 Identity after the focused reruns: core.bare=false; origin remains the local task clone;
 HEAD=71c06a876c912160a988dd6dbcab7a3ed2af262e; tracked tree clean. Full gate and final
 Codex review remain required before merge. No live consumers or registries changed.
+
+Round 2 follow-up: delete-backup-red.log reproduces the same swallowed failure in the
+delete phase. The final migration fixture reran successfully at clean f3b53ebb after
+explicit backup/removal guards. It covers both failed backup and failed removal,
+retained target bytes and old manifest snapshot. Earlier successful migration output
+is retained as migration-before-delete.log so every receipt hash remains verifiable.
+The remaining six suites are unchanged by this sync-only correction.

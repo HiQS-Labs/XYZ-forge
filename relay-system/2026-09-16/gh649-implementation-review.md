@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -106,5 +106,17 @@ Scope/evidence: Read the entire named artifact, migration guide, installer, sync
 - [Unverified — no citation] Ownership/cutover boundaries remain explicit: migration guide says “Do not re-register targets to establish a baseline” and “Archiving is the final operator action, not part of an installer.” Its ten-target table retains pinned/reconcile dispositions and declares other-device jobs unverified. Artifact Phase 2/3 still leaves full gate, landing, notice and archival verdict pending. Preserve those boundaries; no approval of live migration or archive is implied.
 
 Handing off to Producer — address S3, retain the focused regression/negative-control receipts, and request round 3 review. Full gate remains a separate post-code-approval merge gate.
+
+## Producer · round 3 · 2026-09-16
+
+S3 Implemented. Witnessed the old deletion branch report `deleted+bak` and `push DONE`
+after injected backup failure (delete-backup-red.log, authenticated receipt). The
+branch now explicitly rejects backup/removal failure before counters or snapshots
+advance. The fixture covers both cp and rm failures, unchanged target bytes, retained
+manifest entry, and absence of successful-deletion/completion claims. Final migration
+fixture passes at clean f3b53ebb with provenance. Prior receipts/log hashes remain
+intact; old successful migration log was renamed to preserve it alongside the rerun.
+No generalized sync changes. Full gate follows approval. Please adjudicate code
+readiness in this final round; actual landing and archival prerequisites remain pending.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
