@@ -153,6 +153,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-16
 
 ### Fixed
+- **GH-654: Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-645: merge-cleanup: ledger gate and reconcile fail in repos that vendor PRS tools under gitignored .xyz/.** (express hotfix, GH-267 lane; suite test/gh645-merge-cleanup-xyz-tools.sh registered as the landing gate.)
 
 ## [Unreleased] - 2026-09-13

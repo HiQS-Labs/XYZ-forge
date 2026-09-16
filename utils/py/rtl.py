@@ -221,6 +221,51 @@ def split_allow_paths(allow_paths):
     return paths
 
 
+# GH-654 — mirror of rtl_worktree_end's sweep, just far enough to NAME the
+# candidates. The bash function was born silent (1f0a5bf1, initial public
+# release): the general rtl_in_allow-fail branch sets RTL_WT_OFFLANE=1 with no
+# path record and destroys the only copy of the evidence. This reports every
+# porcelain path that would fail the allowlist so the verdict is diagnosable.
+# Exemptions mirror the bash sweep's documented set: .tick/, .relay-scratch/
+# (GH-91), and the transcript root top dir "relay-system" (GH-266, the default
+# rtl_transcript_root basename; only when XYZ_ARCHIVE_ROOT is unset). Deliberate
+# approximation: exotic bash corners (rename second fields, artifact-signature
+# checks) resolve toward REPORTING, never toward silence.
+OFFLANE_EXEMPT = (".tick", ".relay-scratch", "relay-system")
+
+
+def offlane_candidates(wt_path, allow_paths, relay_file):
+    try:
+        proc = subprocess.run(
+            ["git", "-C", wt_path, "status", "--porcelain", "-z"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            timeout=15, check=False,
+        )
+    except Exception:
+        return []
+    entries = proc.stdout.decode("utf-8", "replace").split("\0")
+    allow = split_allow_paths(allow_paths)
+    allow.append(relay_file)
+    allow = [a.rstrip("/") for a in allow if a]
+    found, i = [], 0
+    while i < len(entries):
+        entry = entries[i]
+        i += 1
+        if not entry or len(entry) < 4:
+            continue
+        xy, path = entry[:2], entry[3:]
+        if xy[0] in "RC":
+            i += 1  # rename/copy: consume the second NUL field
+        if path.startswith(OFFLANE_EXEMPT):
+            continue
+        bare = path.rstrip("/")
+        if any(bare == a or bare.startswith(a + "/") or path.startswith(a + "/")
+               for a in allow):
+            continue
+        found.append(path)
+    return found
+
+
 def rtl_run_bounded(timeout_secs, cmd, *, cwd=None, env=None, stdout=None, stderr=None):
     """Run *cmd* under a wall-clock cap, reaping its entire process group on timeout.
 
@@ -741,6 +786,20 @@ exit $RC
         return None
         
     def worktree_end(self, wt_path):
+        # GH-654: the bash sweep answers a bare yes/no and then destroys the
+        # worktree, so a false positive was undiagnosable after the fact — three
+        # marathon turns were lost to an off-lane verdict nobody could inspect.
+        # Name the evidence BEFORE the verdict runs. Diagnostic only: the bash
+        # verdict below stays authoritative, and this mirror deliberately
+        # over-reports rather than stays silent (it skips only the exemptions
+        # the bash sweep documents: .tick, .relay-scratch, transcript root).
+        try:
+            for cand in offlane_candidates(wt_path, self.allow_paths, self.relay_file):
+                sys.stderr.write("rtl: GH-654 off-lane candidate: %s\n" % cand)
+            sys.stderr.write("rtl: GH-654 allowlist: [%s] relay_file: %s\n" % (
+                ", ".join(split_allow_paths(self.allow_paths)), self.relay_file))
+        except Exception:
+            pass  # diagnostics must never fail the turn they describe
         cmd = f"""
 rtl_worktree_end {shlex.quote(wt_path)}
 echo -n "${{RTL_WT_OFFLANE:-0}}"
