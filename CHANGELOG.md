@@ -10,7 +10,7 @@ and Apache notices are retained; no standalone publisher is introduced. Archive 
 is tracked separately in docs/PDDA-MIGRATION.md and GH-649. Reversibility: Costly —
 retain the previous source and consumer payload/registry/state snapshots. Focused
 install, upgrade, mode, divergence, backup/restore and existing core tests pass;
-full gate and final review remain pending. Evidence: TESTS-RESULTS/2026-09-16+GH-649/.
+full gate passes (390/390, one suite passed on isolated retry) and final review is approved. Evidence: TESTS-RESULTS/2026-09-16+GH-649/.
 
 
 All notable changes to this repo. Newest first. Dates are PDT.

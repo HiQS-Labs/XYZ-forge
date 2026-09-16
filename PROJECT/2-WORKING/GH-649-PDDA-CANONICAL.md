@@ -30,7 +30,7 @@ Operator requested execution and evidence-based closeout on 2026-09-16. Archive 
 
 | What was just completed | What's next |
 |---|---|
-| Plan relay approved; implementation and focused tests complete | Final Codex review, full gate, landing, then retirement notice and archive verdict |
+| Plan and implementation relays approved; full gate passed | Land migration, publish retirement notice, then record archive verdict |
 
 ## Table of contents
 
@@ -82,7 +82,7 @@ Rating 2026-09-16: priority 80 / severity 55 / appeal 50 / effort-cheapness 45. 
 ### Phase 2 QA
 
 - [x] Focused tests green, negative controls fail for the intended reason.
-- [ ] Required Forge gate run complete with retained evidence; Codex review approved.
+- [x] Required Forge gate run complete with retained evidence; Codex review approved.
 - [ ] Landed origin commit contains imported assets, contract, templates and authority pointers.
 
 ## Phase 3: cutover and archive gate
@@ -95,8 +95,8 @@ Rating 2026-09-16: priority 80 / severity 55 / appeal 50 / effort-cheapness 45. 
 
 ### Phase 3 QA
 
-- [ ] No competing active source writer remains among inspected devices; unknown devices called out.
-- [ ] Each registered target has a reviewed disposition and replacement update route.
+- [x] No competing active source writer remains among inspected devices; unknown devices called out.
+- [x] Each registered target has a reviewed disposition and replacement update route.
 - [ ] PDDA backlog and migration notice point at Forge, without discarded historical work.
 - [ ] Explicit archival verdict cites evidence; #66 mirrors #649's actual state.
 
