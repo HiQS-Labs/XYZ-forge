@@ -43,10 +43,12 @@ from toposort_prs import (
 )
 from scan_clones import GH_BIN_ENV
 import attempt_record
+import ledger_merge
 from ledger_merge import (
     LEDGER_DUMP,
     pre_merge_ledger_gate,
     resolve_ledger_conflict,
+    tool_path,
 )
 import json
 import tempfile
@@ -287,7 +289,7 @@ def validate_head_in_second_clone(primary_repo: Path, source_clone: Path, sha: s
     r = run_git(second, ["checkout", "--quiet", "--detach", sha])
     if r.returncode != 0:
         return False, f"checkout in the second clone failed: {r.stderr.strip()[:200]}"
-    chk = subprocess.run([sys.executable, str(second / "utils" / "py" / "releases_app.py"), "--root", str(second), "check"],
+    chk = subprocess.run([sys.executable, str(tool_path(second, "releases_app.py")), "--root", str(second), "check"],
                          capture_output=True, text=True, check=False)
     if chk.returncode != 0:
         return False, "releases check red in the second clone: " + (chk.stderr.strip() or chk.stdout.strip())[-300:]
@@ -348,7 +350,7 @@ def emit_pr_merged(repo_path, pr, dry_run=False):
     """
     if dry_run or not pr:
         return 0
-    app = os.path.join(repo_path, "utils", "py", "releases_app.py")
+    app = str(tool_path(Path(repo_path), "releases_app.py"))
     if not os.path.isfile(app):
         return 0
     emitted = 0
@@ -455,10 +457,15 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
 
 def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     """Run the local writer after hosted reconciliation is known absent or completed red."""
-    reconcile_script = repo_path / "utils" / "py" / "wave_reconcile.py"
+    reconcile_script = tool_path(repo_path, "wave_reconcile.py")
     if not reconcile_script.exists():
         return True
-    r_cmd = [sys.executable, str(reconcile_script), "--pr", str(pr_num), "--force-local-reconcile"]
+    r_cmd = [sys.executable, str(reconcile_script), "--root", str(repo_path), "--pr", str(pr_num)]
+    # Older / vendored reconcilers do not know --force-local-reconcile; pass it only when advertised.
+    helptext = subprocess.run([sys.executable, str(reconcile_script), "--help"], cwd=str(repo_path),
+                              capture_output=True, text=True, check=False).stdout
+    if "--force-local-reconcile" in helptext:
+        r_cmd.append("--force-local-reconcile")
     r_res = subprocess.run(r_cmd, cwd=str(repo_path), capture_output=True, text=True, check=False)
     if r_res.returncode == 0:
         log(f"✅ local wave_reconcile for PR #{pr_num} passed")
@@ -507,7 +514,7 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
         ok = False
 
     # 2. releases_app.py check
-    releases_app = repo_path / "utils" / "py" / "releases_app.py"
+    releases_app = tool_path(repo_path, "releases_app.py")
     if releases_app.exists():
         c_res = subprocess.run([sys.executable, str(releases_app), "check"], cwd=str(repo_path), capture_output=True, text=True, check=False)
         if c_res.returncode == 0:
@@ -980,6 +987,7 @@ def main():
 
     try:
         primary_repo = Path(args.primary).expanduser().resolve()
+        ledger_merge.TOOL_FALLBACK_ROOT = primary_repo
     except (OSError, RuntimeError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2

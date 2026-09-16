@@ -1,8 +1,8 @@
 ---
 Goal: QA Plan for GH-229 Executive Portfolio Planning Matrix View
 Date: 2026-09-15
-NEXT: orchestrator (Builder)
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ---
 
 # Context
@@ -507,3 +507,68 @@ Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS
 **Reversibility:** Easy for the additive route/tab. Goal completion remains the only consequential mutation; it must be serialized and server-affine before the plan is safe to build.
 
 VERDICT: FAIL
+
+### Round 8 · Orchestrator · Revisions Addressing Round 8 Feedback
+
+All items from Codex Round 8 have been resolved in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md`:
+
+1. **Process-Local Path Serialization & Safe Atomic Writes:**
+   - In `src/rebalance/ingest/goals_file.py`, `complete_goal_in_file()` guards the entire critical section (single read -> revision verification -> task selection -> temporary write -> atomic replacement) behind a process-local `threading.Lock()` scoped to the target file path.
+   - Writes use unique temporary file paths (`NamedTemporaryFile(dir=path.parent, prefix=".goals_", suffix=".tmp", delete=False)`) before atomic `os.replace`, eliminating `.tmp` write contention.
+   - **Concurrency Guarantee:** Two concurrent requests carrying the same valid revision serialize behind the lock. Request 1 checks hash V, writes new file with hash V+1, and finishes. Request 2 acquires the lock, reads the new content, sees hash V+1 != V, and raises `StaleRevisionError` -> **HTTP 409 `stale_goal_snapshot`** with zero writes. Zero lost updates.
+   - Added barrier regression `test_concurrent_same_revision_completions_serialized()`.
+
+2. **Strict Primary-Server Origin Affinity Across All Mutable State:**
+   - In `Focus5Client.swift`, candidate port failover is disabled for all mutable state operations:
+     - `fetchGoals()` is primary-only.
+     - `fetchPortfolioMatrix()` (both initial load and post-mutation refetch) is primary-only.
+     - `completeGoal()` is single-dispatch against the primary URL.
+     - Ambiguous transport recovery GET is primary-only.
+   - Guarantees 100% server affinity: a matrix or reminder loaded from port 8787 never posts a revision to port 8767 or refetches state from a diverged origin.
+   - Added `MatrixTests.testMutableStateQueriesPinnedToPrimaryServer()`.
+
+3. **UI-Wide Mutation Lock & Guard-Before-Await:**
+   - In `Focus5Model.swift`, `isMutatingTask: Bool` disables **all** matrix task checkboxes while a completion request is in flight, preventing concurrent clicks across different tasks.
+   - In `ObsidianRemindersStore.swift`, `completingLineIndexes.insert(lineIndex)` and the interaction lock are set **before** `await client.completeGoal(...)` and cleared in a `defer` block.
+   - Added `MatrixTests.testGlobalInteractionLockDuringMutation()`.
+
+4. **Sequential Reminders Revision Advancement:**
+   - `ObsidianRemindersStore.swift`: both `apply(_ response: Focus5GoalsResponse)` and `apply(_ response: Focus5GoalCompleteResponse)` update `self.goalsRevision = response.goalsRevision`.
+   - Sequential reminder checkoffs succeed without requiring a manual reload because the first completion advances the stored revision.
+   - Added `MatrixTests.testSequentialRemindersAdvanceRevision()`.
+
+Please review the revised plan in `/Users/noelsaw/Documents/GH Repos/rebalanceOS/PROJECT/2-WORKING/GH-229-PORTFOLIO-PLANNING-MATRIX.md` and provide your Round 9 verdict.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Codex review — 2026-09-15 (Round 9)
+
+**Grade: A- / Approved.** Round 9 closes the remaining writer-serialization, server-affinity, UI-wide mutation-lock, and sequential-revision gaps. The plan is now build-ready within its stated single-user, single-process local-server envelope: one existing writer owns the complete read/check/write/replace critical section, every actionable revision comes from the same primary server that receives the mutation, and both Swift consumers advance or reconcile state without issuing a second POST.
+
+### Graded answers
+
+1. **DRY & subsystem reuse — PASS.** The plan reuses `get_projects()`, `normalize_match_text()`, the goals-file subsystem, the existing completion route/helper, `Focus5Client`, and the existing Focus5Float state/UI system. The only new coordination mechanism is a stdlib, per-path in-process lock inside the existing writer (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:48-93,138-160`). That is commensurate with the operational envelope and adds no database, cache, parallel writer, or external dependency.
+
+2. **Single writer path — PASS.** `complete_goal_in_file()` remains the sole file writer. The plan now holds one path-scoped lock across read, optional revision validation, ambiguity-safe selection, unique temporary-file write, and atomic replacement; a second same-revision request therefore observes the first write and returns 409 instead of overwriting it (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:67-80,191-198`). This directly closes the current helper's unlocked read/fixed-`.tmp`/replace window (`src/rebalance/ingest/goals_file.py:73-116`) while retaining the one route caller (`src/rebalance/web.py:1116-1155`).
+
+3. **Data contract & wire shape — PASS.** Both GET projections bind `line_index` and `goals_revision` to one in-memory read, the optional request field preserves legacy callers, and all revision-bearing mutable-state GETs plus POST/refetch/recovery are primary-only (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:50-87,94-121`). The compact snake-case matrix remains additive and deterministic. Implementation note, not a blocker: perform duplicate-group coalescing on the final matched `(registry name, subproject)` identity—not merely the raw header spelling—so the stated one-row-per-derived-ID guarantee also covers case/spacing variants (`:58-66`).
+
+4. **UI & ergonomics — PASS.** The frozen 130pt identity column, shared 58pt row height, bounded task scroller, dedicated matrix state, primary-pinned recovery GET, and global in-flight mutation guards fit the 340/420pt HUD (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:88-93,122-132`). Advancing `goalsRevision` from both reminders response types fixes sequential completion without a manual reload (`:68-73,145-148,200-209`). Small doc cleanup: line 129 still lists stale `completingTaskKey` while the accepted design and phases use `isMutatingTask` (`:89,147,205`); keep only the global field during implementation.
+
+5. **Gaps / blind spots — NO BLOCKERS.** The verification matrix now covers single-read snapshots, stale and ambiguous no-write outcomes, concurrent same-revision requests, single-dispatch POSTs, exact-origin success/recovery reads, sequential reminder revisions, and global UI locks (`GH-229-PORTFOLIO-PLANNING-MATRIX.md:164-185`). Two implementation hygiene details should be handled in the named helper: canonicalize the path used as the lock-registry key, and remove an orphaned `NamedTemporaryFile` if write or replace raises. Neither changes the architecture or requires another subsystem.
+
+### SWE rubric
+
+| Pillar | Result | Evidence / remaining note |
+|---|---|---|
+| Recon | Pass | Existing goals writer, route caller, generic client failover, reminders consumer, model injection seam, and UI refresh paths are all represented. |
+| Minimal | Pass | Stdlib-only, no persistence, no new completion engine, and a bounded ~520-line additive footprint. |
+| Diagnosable | Pass with note | Typed 409 outcomes, warnings for skipped associations, retained UI errors, and pinned recovery make failure states observable; use the repo's debug-mantra if a focused test fails during execution. |
+| Blast | Pass | Reversibility is Easy; the only mutation is shielded by revision validation, ambiguity refusal, serialization, atomic replace, and primary-origin affinity. |
+| Proof | Pass | Focused Python/Swift tests and manual 340/420pt geometry checks cover the stated contracts, including the negative concurrency and transport paths. |
+
+**Reversibility:** Easy. The route, models, and tab are additive; completion continues through the existing writer, now with stronger refusal and serialization guards.
+
+VERDICT: PASS
