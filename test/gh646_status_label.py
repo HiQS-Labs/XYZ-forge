@@ -587,7 +587,8 @@ class StatusLabelTests(unittest.TestCase):
     def test_express_refuses_before_activation_and_requalifies_before_snapshot(self):
         args = argparse.Namespace(root=self.fx.root, repo="owner/project", issue=646,
                                   dry_run=False, _expect_driver=set(), release=None)
-        with mock.patch.object(express,"cmd_check",side_effect=SystemExit(3)), \
+        with mock.patch.object(express,"qualify_root_repository"), \
+                mock.patch.object(express,"cmd_check",side_effect=SystemExit(3)), \
                 mock.patch.object(express,"run_releases") as command:
             with self.assertRaises(SystemExit):
                 express.cmd_land(args)
@@ -606,7 +607,8 @@ class StatusLabelTests(unittest.TestCase):
         def snapshot(*a):
             order.append(("snapshot",None))
             raise SnapshotStop()
-        with mock.patch.object(express,"cmd_check",side_effect=check), \
+        with mock.patch.object(express,"qualify_root_repository"), \
+                mock.patch.object(express,"cmd_check",side_effect=check), \
                 mock.patch.object(express,"run_releases",side_effect=admission), \
                 mock.patch.object(express,"snapshot_paths",side_effect=snapshot), \
                 contextlib.redirect_stdout(io.StringIO()):
@@ -627,7 +629,8 @@ class StatusLabelTests(unittest.TestCase):
             self.assertIn("--dry-run",argv)
             with mock.patch.object(app,"read_native_issue",self.native.read):
                 app.main(["--root",root]+list(argv))
-        with mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}) as check, \
+        with mock.patch.object(express,"qualify_root_repository"), \
+                mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}) as check, \
                 mock.patch.object(express,"run_releases",side_effect=admission), \
                 mock.patch.object(express,"snapshot_paths",return_value={}), \
                 mock.patch.object(express,"change_paths",return_value=[]), contextlib.redirect_stdout(io.StringIO()):
@@ -636,7 +639,8 @@ class StatusLabelTests(unittest.TestCase):
         self.assertEqual(app.get_generation(self.fx.conn),before)
         self.assertIsNone(self.fx.row()["status_label"])
         self.fx.conn.execute("UPDATE repos SET slug='foreign/project'")
-        with mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}), \
+        with mock.patch.object(express,"qualify_root_repository"), \
+                mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}), \
                 mock.patch.object(express,"run_releases") as command, \
                 mock.patch.object(express,"refuse",side_effect=SystemExit(3)), self.assertRaises(SystemExit):
             express.cmd_land(args)
@@ -662,6 +666,114 @@ class StatusLabelTests(unittest.TestCase):
                 sha=None,suite="test/fixture.sh",dry_run=True))["sha"],"a"*40)
         command.assert_not_called()
 
+    def test_express_land_and_run_reject_second_owned_foreign_repository(self):
+        self.fx.conn.execute("INSERT INTO repos(global_id,slug,updated_at) VALUES(?,?,?)",
+                             (app.new_gid("repo-"),"foreign/project",app.now_iso()))
+        foreign = self.fx.row()
+        foreign.pop("id")
+        foreign.update(global_id=app.new_gid("rmi-"),repo_id=2,
+                       issue_url="https://github.com/foreign/project/issues/646")
+        self.fx.conn.execute("INSERT INTO roadmap_items(%s) VALUES(%s)" %
+                             (','.join(foreign),','.join('?' for _ in foreign)),tuple(foreign.values()))
+        self.assertIsNotNone(express.qualified_roadmap_row(self.fx.root,"foreign/project",646))
+        args = argparse.Namespace(root=self.fx.root,repo="foreign/project",issue=646,
+                                  dry_run=True,_expect_driver=set(),release=None)
+        for action in (express.cmd_land,express.cmd_run):
+            with self.subTest(action=action.__name__), tempfile.TemporaryDirectory() as home:
+                def snapshot():
+                    return {str(p):p.read_bytes() if p.is_file() else None
+                            for root in (Path(home),Path(self.fx.root)) for p in root.rglob('*')}
+                before = snapshot()
+                with mock.patch.dict(os.environ,{"HOME":home}), \
+                        mock.patch.object(express.subprocess,"run",return_value=subprocess.CompletedProcess([],0,
+                            json.dumps({"nameWithOwner":"owner/project"}),"")) as process, \
+                        mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}), \
+                        mock.patch.object(express,"cmd_docs") as docs, \
+                        mock.patch.object(express,"cmd_ledger") as ledger, \
+                        mock.patch.object(express,"run_releases") as command, \
+                        mock.patch.object(express,"gh") as remote, \
+                        mock.patch.object(express,"reconcile_gated") as reconcile, \
+                        mock.patch.object(express,"snapshot_paths",return_value={}), \
+                        mock.patch.object(express,"change_paths",return_value=[]), \
+                        self.assertRaises(SystemExit):
+                    action(args)
+                docs.assert_not_called(); ledger.assert_not_called(); command.assert_not_called()
+                remote.assert_not_called(); reconcile.assert_not_called()
+                self.assertEqual(process.call_args.kwargs["cwd"],self.fx.root)
+                self.assertNotIn("GH_REPO",process.call_args.kwargs["env"])
+                self.assertEqual(snapshot(),before)
+
+    def test_express_manifest_state_uses_exact_issue_url_in_both_orders(self):
+        # Minimal pre-existing state-reader schema: deliberately same issue number.
+        with tempfile.TemporaryDirectory(prefix="gh646-manifest-") as root:
+            conn = sqlite3.connect(str(Path(root)/"releases.db"))
+            conn.executescript("CREATE TABLE releases(id INTEGER, global_id TEXT);"
+                               "CREATE TABLE issue_refs(id INTEGER, url TEXT);"
+                               "CREATE TABLE manifest_items(id INTEGER,release_id INTEGER,issue_ref_id INTEGER,state TEXT);"
+                               "INSERT INTO releases VALUES(1,'rel-fixture');"
+                               "INSERT INTO issue_refs VALUES(1,'https://github.com/owner/project/issues/646');"
+                               "INSERT INTO issue_refs VALUES(2,'https://github.com/foreign/project/issues/646');")
+            for owned,foreign in (("dialed_in","shipped"),("shipped","dialed_in")):
+                for order in ((1,2),(2,1)):
+                    conn.execute("DELETE FROM manifest_items")
+                    for index,ref in enumerate(order,1):
+                        conn.execute("INSERT INTO manifest_items VALUES(?,?,?,?)",
+                                     (index,1,ref,owned if ref==1 else foreign))
+                    conn.commit()
+                    self.assertEqual(express.check_manifest_state(root,
+                        "https://github.com/owner/project/issues/646","rel-fixture"),owned)
+                    self.assertEqual(express.check_manifest_state(root,
+                        "https://github.com/foreign/project/issues/646","rel-fixture"),foreign)
+                    args = argparse.Namespace(root=root,repo="owner/project",issue=646,
+                        dry_run=False,release="rel-fixture",sha="a"*40,suite="test/fixture.sh")
+                    owned_url = "https://github.com/owner/project/issues/646"
+                    def ship(_root,*argv,**kw):
+                        self.assertEqual(argv[:3],("manifest","ship",owned_url))
+                        conn.execute("UPDATE manifest_items SET state='shipped' WHERE issue_ref_id=1")
+                        conn.commit()
+                    with mock.patch.object(express,"git",return_value=subprocess.CompletedProcess([],0,"","")), \
+                            mock.patch.object(express,"resolve_landing_commit",return_value="a"*40), \
+                            mock.patch.object(express,"qualify_resume_identity",return_value={"issue_url":owned_url}), \
+                            mock.patch.object(express,"find_committed_receipt",return_value="fixture-receipt"), \
+                            mock.patch.object(express,"gh",return_value=subprocess.CompletedProcess([],0,'{"state":"CLOSED"}',"")), \
+                            mock.patch.object(express,"run_releases",side_effect=ship) as command, \
+                            mock.patch.object(express,"persist_closeout",return_value=False), \
+                            mock.patch.object(express,"reconcile_gated"), \
+                            mock.patch.object(express,"write_tick"), contextlib.redirect_stdout(io.StringIO()):
+                        express.cmd_resume(args)
+                    self.assertEqual(command.call_count,1 if owned=="dialed_in" else 0)
+                    self.assertEqual(conn.execute("SELECT state FROM manifest_items WHERE issue_ref_id=1").fetchone()[0],"shipped")
+                    self.assertEqual(conn.execute("SELECT state FROM manifest_items WHERE issue_ref_id=2").fetchone()[0],foreign)
+            conn.close()
+
+    def test_express_missing_ledger_identity_preview_never_creates_database(self):
+        self.fx.conn.close()
+        Path(self.fx.db).rename(Path(self.fx.root)/"saved-ledger.db")
+        for action in (express.cmd_land,express.cmd_resume):
+            args = argparse.Namespace(root=self.fx.root,repo="owner/project",issue=646,
+                                      dry_run=True,_expect_driver=set(),release=None,sha=None,suite="test/fixture.sh")
+            with self.subTest(action=action.__name__), tempfile.TemporaryDirectory() as home:
+                def snapshot():
+                    return {str(p):p.read_bytes() if p.is_file() else None
+                            for root in (Path(home),Path(self.fx.root)) for p in root.rglob('*')}
+                before = snapshot()
+                with mock.patch.dict(os.environ,{"HOME":home}), \
+                        mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}), \
+                        mock.patch.object(express,"git",return_value=subprocess.CompletedProcess([],0,"development","")) as git, \
+                        mock.patch.object(express,"resolve_landing_commit",return_value="a"*40), \
+                        mock.patch.object(express.subprocess,"run",return_value=subprocess.CompletedProcess([],0,
+                            json.dumps({"nameWithOwner":"owner/project"}),"")), \
+                        mock.patch.object(express,"run_releases") as command, \
+                        self.assertRaises(SystemExit):
+                    # Resume's cleanliness query must be empty; root git identity remains explicit.
+                    git.side_effect = lambda root,*argv,**kw: subprocess.CompletedProcess([],0,
+                        "development" if argv==("branch","--show-current") else "","")
+                    action(args)
+                command.assert_not_called()
+                self.assertEqual(snapshot(),before)
+                self.assertFalse(Path(self.fx.db).exists())
+        self.fx.conn = app.connect(str(Path(self.fx.root)/"saved-ledger.db"))
+
     def test_express_admission_dry_refusal_has_no_filesystem_writes(self):
         args = argparse.Namespace(root=self.fx.root, repo="owner/project", issue=646,
                                   dry_run=True, _expect_driver=set(), release=None)
@@ -676,6 +788,7 @@ class StatusLabelTests(unittest.TestCase):
                             for root in (Path(home),Path(self.fx.root)) for p in root.rglob('*')}
                 before = snapshot()
                 with mock.patch.dict(os.environ,{"HOME":home}), \
+                        mock.patch.object(express,"qualify_root_repository"), \
                         mock.patch.object(express,"cmd_check",return_value={"suite":"test/fixture.sh","paths":[]}), \
                         mock.patch.object(express,"run_releases") as command, self.assertRaises(SystemExit):
                     express.cmd_land(args)

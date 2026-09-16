@@ -33,6 +33,7 @@ import subprocess
 import sys
 import datetime
 import sqlite3
+from pathlib import Path
 
 EXIT_OK = 0
 EXIT_REFUSED = 3
@@ -660,7 +661,11 @@ goal: >
 def qualified_roadmap_row(root, repo, number, dry_run=False):
     """GH-646: number alone never selects another repository's task."""
     from releases_app import resolve_roadmap_identity, _origin_repo_identity
-    conn = sqlite3.connect(os.path.join(root, "releases.db"))
+    try:
+        conn = sqlite3.connect(Path(root, "releases.db").resolve().as_uri() + "?mode=ro", uri=True)
+    except sqlite3.Error as exc:
+        refuse(root, "roadmap-identity", "existing ledger unavailable: %s" % exc,
+               issue=number, dry_run=dry_run)
     conn.row_factory = sqlite3.Row
     try:
         repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
@@ -672,6 +677,9 @@ def qualified_roadmap_row(root, repo, number, dry_run=False):
         if len(matches) > 1:
             refuse(root, "roadmap-identity", "multiple owned roadmap rows for exact issue", issue=number, dry_run=dry_run)
         return matches[0] if matches else None
+    except sqlite3.Error as exc:
+        refuse(root, "roadmap-identity", "ledger identity source unsupported: %s" % exc,
+               issue=number, dry_run=dry_run)
     finally:
         conn.close()
 
@@ -731,6 +739,7 @@ def args_repo():
 
 def cmd_land(args):
     root = args.root
+    qualify_root_repository(args, "roadmap-identity")
     # `run` sets `_expect_driver` in-process; a bare `land` invocation never has
     # it (fresh argparse Namespace) and must recompute the same allowlist itself
     # so the documented four-step flow isn't refused for what its own earlier
@@ -1041,13 +1050,13 @@ def resolve_landing_commit(root, issue, explicit_sha=None):
     die("Could not automatically resolve landing commit for GH-%d. Pass --sha <SHA> explicitly." % issue)
 
 
-def check_manifest_state(root, issue, rel):
+def check_manifest_state(root, issue_url, rel):
     """Safely query manifest state for an issue in a release without assuming schema existence."""
     db = os.path.join(root, "releases.db")
     if not os.path.isfile(db):
         return None
     try:
-        conn = sqlite3.connect(db)
+        conn = sqlite3.connect(Path(db).resolve().as_uri() + "?mode=ro", uri=True)
         try:
             cur = conn.cursor()
             tables = {row[0] for row in cur.execute("SELECT name FROM sqlite_master WHERE type='table'")}
@@ -1056,9 +1065,9 @@ def check_manifest_state(root, issue, rel):
             row = cur.execute("""SELECT mi.state FROM manifest_items mi
                                  JOIN issue_refs ir ON ir.id = mi.issue_ref_id
                                  JOIN releases r ON r.id = mi.release_id
-                                 WHERE r.global_id = ? AND (ir.url LIKE ? OR ir.url LIKE ?)
+                                 WHERE r.global_id = ? AND ir.url = ?
                                  ORDER BY mi.id DESC LIMIT 1""",
-                              (rel, "%issues/" + str(issue), "%issues/" + str(issue) + "#%")).fetchone()
+                              (rel, issue_url)).fetchone()
             return row[0] if row else None
         finally:
             conn.close()
@@ -1066,9 +1075,8 @@ def check_manifest_state(root, issue, rel):
         return None
 
 
-def qualify_resume_identity(args):
-    """Legacy SHA/number receipts need independent repository and native proof."""
-    from releases_app import read_native_issue
+def qualify_root_repository(args, code="resume-identity"):
+    """A separately owned ledger row cannot authorize landing another repo's code."""
     dry = getattr(args, "dry_run", False)
     try:
         repo_env = os.environ.copy()
@@ -1078,6 +1086,16 @@ def qualify_resume_identity(args):
         metadata = json.loads(actual.stdout) if actual.returncode == 0 else None
         if not isinstance(metadata, dict) or metadata.get("nameWithOwner") != args.repo:
             raise ValueError("requested repository differs from the landing root repository")
+    except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+        refuse(args.root, code, str(exc), issue=args.issue, dry_run=dry)
+
+
+def qualify_resume_identity(args):
+    """Legacy SHA/number receipts need independent repository and native proof."""
+    from releases_app import read_native_issue
+    dry = getattr(args, "dry_run", False)
+    qualify_root_repository(args)
+    try:
         row = qualified_roadmap_row(args.root, args.repo, args.issue, dry_run=dry)
         if row is None:
             raise ValueError("no exact owned roadmap issue row")
@@ -1106,7 +1124,7 @@ def cmd_resume(args):
 
     # Before preview, checkout, close, ship or reconcile: a number-only receipt
     # cannot transfer landing authority to another repository. No new start.
-    qualify_resume_identity(args)
+    owned_row = qualify_resume_identity(args)
 
     if getattr(args, "dry_run", False):
         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))
@@ -1141,11 +1159,9 @@ def cmd_resume(args):
     # 5. Ship manifest item if still dialed_in
     rel = args.release or active_release(root)
     if rel:
-        mstate = check_manifest_state(root, issue, rel)
+        mstate = check_manifest_state(root, owned_row["issue_url"], rel)
         if mstate == "dialed_in":
-            iv_url = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "url"])
-            url = json.loads(iv_url.stdout)["url"]
-            run_releases(root, "manifest", "ship", url, "--gid", rel,
+            run_releases(root, "manifest", "ship", owned_row["issue_url"], "--gid", rel,
                          "--evidence", "%s; direct development push (express resume)" % sha)
             persist_closeout(root, "chore(releases): express ship GH-%d (commit %s)" % (issue, sha[:12]))
             print("express-resume: shipped manifest item for issue #%d against %s" % (issue, rel))
@@ -1167,6 +1183,7 @@ def cmd_resume(args):
 
 def cmd_run(args):
     root = args.root
+    qualify_root_repository(args, "roadmap-identity")
     cmd_check(args)  # first qualification: the operator's diff, nothing else
     cmd_docs(args)
     cmd_ledger(args)
