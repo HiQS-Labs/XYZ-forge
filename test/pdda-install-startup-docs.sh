@@ -139,12 +139,12 @@ fi
 # 6. --help tells the truth: it must not promise an "adapted" copy of files it copies verbatim.
 # ---------------------------------------------------------------------------------------------------
 help_txt="$("$REPO/utils/pdda/pdda-install.sh" --help 2>&1 || true)"
-if printf '%s' "$help_txt" | grep -q 'templates/ROUTER.target.md'; then
+if grep -q 'templates/ROUTER.target.md' <<< "$help_txt"; then
   ok "--help names the template ROUTER.md is written from"
 else
   bad "--help does not name the template"
 fi
-if printf '%s' "$help_txt" | grep -qi 'create-only'; then
+if grep -qi 'create-only' <<< "$help_txt"; then
   ok "--help states the create-only semantics"
 else
   bad "--help does not state create-only semantics"
