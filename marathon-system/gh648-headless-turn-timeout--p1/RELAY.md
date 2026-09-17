@@ -161,3 +161,11 @@ swept file: yes
 I reviewed the whole file and the diff. Both defects (the missing probe guard and the per-PID CPU retention) were correctly addressed. The missing probe guard correctly catches a `None` network state and degrades to `timeout-unclassified`, and tracking peak CPU per PID reliably retains the accumulated CPU of exited children. The tests have also been expanded effectively and pass.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T01:24:57Z
+task: MARATHON-P1-TURN-R3
+reviewer: agy
+status: Approved
+reviewed-head: ec7be8ca77dae3587f19b61747ff78af493ceb51
+added-range: 15601+494
+added-sha256: 4d78b3db91c79889d5de5942e8042111432eca1159178fd7779c0317b95b5e34
