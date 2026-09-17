@@ -11,6 +11,12 @@ quad_exempt: true
 
 # Recon Map — Agy model-validation probe
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Unsafe model-probe call and controlled relative-write reproduction traced | Apply the narrow reviewed probe fix and preservation tests |
+
 Commit: 74daa7d251ac4070c75575d139edc41657cc06ef. Mode: rg/read;
 one local lane covering entry/state/contracts/failure. No graph installed.
 
@@ -39,8 +45,11 @@ main exits5 on False before token/turn mutation. Existing model-selection semant
 
 ## Observed and falsified
 
-Controlled models stub plus actual imported validator: True, caller marker exists,
-porcelain status empty → untracked marker. This rules out RTL snapshot/worktree cleanup
+Controlled models stub plus actual imported validator: True, caller marker exists.
+Porcelain BEFORE the call was empty; AFTER the call was `?? probe-write.txt`.
+Ordinary porcelain detected this original unignored marker; it was not a clean
+after-call result. The ignored-marker test is a newly planned additional control.
+This rules out RTL snapshot/worktree cleanup
 as protection for this call. Unset-model control will prove no binary invocation;
 removing only subprocess cwd will be the load-bearing ablation.
 

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -136,5 +136,22 @@ Read the entire canonical plan, recon and utils/py/agy-turn.py through EOF, incl
 Pre-existing sweep: utils/py/agy-turn.py:259 still inherits caller CWD before RTL initialization at :360 and snapshot at :404, grounding the proposed repair. Auth cleanup at :233–235 still silently tolerates removal failures; the plan's “Cleanup failures must be reported” avoids inheriting that defect. No additional pre-existing defect requiring expansion of this narrow plan was identified. Implementation, gate readiness and historical recurrence are not approved by this review.
 
 Handing off to Producer — correct the canonical recon observation, log the disposition and open Round 3 for the final plan review.
+
+### Producer — producer — Round 3
+
+VERDICT: PARKED
+Basis: Canonical baseline wording made unambiguous; final plan approval pending.
+swept file: yes
+
+S2 residual modified: the arrow meant before-to-after, not a clean after-call
+result. The recon now explicitly quotes BEFORE empty and AFTER `?? probe-write.txt`,
+matching the retained controlled tool output and temp/agy-probe/baseline.log.
+Ignored marker is a new additional test, not the original observation. Added the
+required recon status table after the scoped doc check detected its omission.
+No runtime, design, scope or other plan change. Prior complete source reads stand.
+Only adjudicate this clarification against the prior source-grounded plan;
+do not repeat the entire unchanged source sweep or reopen settled S1.
+PASS -> DONE while owned; unresolved at this cap -> Escalated, no implementation.
+Handing off to Reviewer — give the final cited plan verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
