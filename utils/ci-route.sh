@@ -30,7 +30,7 @@ SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
 SUBSYSTEM_TESTS_pdda="gh649-pdda-migration.sh pdda-changelog.sh pdda-install-startup-docs.sh pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh400-acceptance-fidelity.sh gh400-source-url.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh wave-reconcile.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh gh358-wave-reconcile-vendored-paths.sh gh496-phase2-reconciliation-views.sh"
 SUBSYSTEM_TESTS_agent_chorus="agent-chorus.sh"
 SUBSYSTEM_TESTS_standup="gh77-standup-triage.sh"
-SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh"
+SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh gh620-skills-army-mini-sync.sh"
 
 subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
   case "$1" in
@@ -42,7 +42,7 @@ subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
     utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh|utils/py/wave_reconcile.py) printf '%s\n' pdda ;;
     skills/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
     skills/standup/*)                                                                      printf '%s\n' standup ;;
-    skills/skills-army-hq/*|test/test_deploy_skills.py|test/skills-army-hq.sh)             printf '%s\n' skills-army-hq ;;
+    skills/skills-army-hq/*|skills/push-to-skills-army-mini/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
   esac
 }
 

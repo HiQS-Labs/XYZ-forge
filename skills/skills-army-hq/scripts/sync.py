@@ -139,7 +139,7 @@ def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=Non
 
 def retirement(root, state, config, source_arg, archive_directories, apply):
     """Explicit old-name migration only, not a generic foreign-entry deletion switch."""
-    source, source_receipt = shared.source_record(source_arg)
+    source, source_receipt, _ = shared.source_record(source_arg)
     shared.require(source_receipt["name"] == "skills-sync-trinity", "Expected retired skills-sync-trinity source")
     actions, errors, changes = [], [], []
     for parent in sorted({shared.location(t["path"]) for t in config["targets"] if t["enabled"]}):
