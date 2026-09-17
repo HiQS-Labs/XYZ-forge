@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
 
@@ -100,3 +100,21 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Prior ESCALATION.md says pre-advance-failed / gate red but supplies no turn log. This focused run does not reproduce or explain that broader failure. Full validate.sh was not run, as explicitly required by this turn's containment instructions; the harness still owes that gate.
 - Graph tools were unavailable; source inspection used the named files directly. No git commands, no caller changes, and no off-lane file edits.
 - Handing off to agy for whole-file review and the harness-owned gate.
+
+### Round 4 · Reviewer · agy
+swept file: yes
+
+The Builder correctly retained the L1 termination logic, addressed the `lsof` stderr probe failure, and successfully included regression assertions in the test suite without altering the gate registration.
+However, I found a critical pre-existing defect during my full file sweep of `utils/py/turn_diagnostics.py`.
+
+In Python, the chained comparison `self.mtime_last > self.mtime_start > 0` is evaluated as `self.mtime_last > self.mtime_start and self.mtime_start > 0`.
+If a turn runs against a directory that is initially empty, or if `worktree` is a single file that has not been created yet when `start()` is invoked, `mtime_start` initializes to `0.0`. Even if the agent correctly creates or modifies files (updating `mtime_last` to a valid timestamp > 0), the condition `self.mtime_start > 0` evaluates to `False`. This causes the entire `progressed` check to fail.
+While the agent is saved from an early idle-kill (since `_last_progress_t` relies correctly on `mtime_now > self.mtime_last`), when the turn eventually hits its wall cap, `classify()` will incorrectly report `timeout-idle-unknown` (or in-flight) instead of the honest `timeout-slow-but-progressing`.
+
+Please fix this chained condition in `utils/py/turn_diagnostics.py` in two places:
+1. In `_sample()` (line ~419)
+2. In `classify()` (line ~497)
+Change `> 0` to `>= 0` (or simplify to just `self.mtime_last > self.mtime_start`).
+
+**Verdict:** Changes requested
+handing off to codex — codex, take your turn
