@@ -1,5 +1,5 @@
 import {snapshotFresh, progressTone} from './presentation.mjs';
-import {numbers, laneIssues, issueCards} from './issue-context.mjs';
+import {numbers, laneIssues, issueCards, issueStatus} from './issue-context.mjs';
 'use strict';
 
 const $ = id => document.getElementById(id);
@@ -70,6 +70,7 @@ function addIssues(parent, issues) {
     const badge = node('span', 'badge', `#${issue.number}`);
     const copy = node('p', '', issue.title || 'Issue');
     if (issue.inferred) copy.append(node('small', '', 'Inferred from agent intent'));
+    if (issue.workflow) copy.append(node('small', '', `${issue.workflow.label} · ${issue.workflow.reason} · GitHub observed ${ageLabel(issue.workflow.native_at)} ago`));
     row.append(badge, copy); parent.append(row);
   });
 }
@@ -83,13 +84,16 @@ function addPrs(parent, prs) {
     row.append(copy); parent.append(row);
   });
 }
+function statusCards(repo) {
+  return issueCards(repo, Date.now(), state.failures === 0 && snapshotFresh(state.snapshot));
+}
 function repoCard(repo, index, total, issue = null) {
   const card = refs.template.content.firstElementChild.cloneNode(true);
   const cardId = issue ? `${repo.id}#${issue.number}` : repo.id;
   const events = recent(repo.events || [], 'occurred_at').filter(event => !issue || laneIssues(event, repo).includes(issue.number));
   const allLanes = issue ? (repo.lanes || []).filter(lane => laneIssues(lane, repo).includes(issue.number)) : (repo.lanes || []);
   const lanes = issue ? allLanes : recent(allLanes, 'last_prompt_at');
-  const issues = issue ? [issue] : issueCards(repo);
+  const issues = issue ? [issue] : statusCards(repo);
   const prs = issue ? (repo.prs || []).filter(pr => numbers(pr).includes(issue.number)) : (repo.prs || []);
   const status = issue ? health({...repo,
     last_progress_at: (repo.events || []).find(e => laneIssues(e, repo).includes(issue.number))?.occurred_at,
@@ -102,7 +106,7 @@ function repoCard(repo, index, total, issue = null) {
   card.querySelector('.repo-mark').textContent = issue ? `#${issue.number}` : initials(repo.name);
   card.querySelector('.position').textContent = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
   card.querySelector('.repo-name').textContent = issue ? (issue.title || `Issue #${issue.number}`) : repo.name;
-  card.querySelector('.repo-summary').textContent = issue ? `${repo.name} · ${issue.context_reason} · ${ageLabel(issue.context_at)} ago` : (repo.summary || 'Keep this lane visible and moving.');
+  card.querySelector('.repo-summary').textContent = issue ? `${repo.name} · ${issue.workflow.label} · ${issue.workflow.reason}` : (repo.summary || 'Keep this lane visible and moving.');
   const healthEl = card.querySelector('.health');
   healthEl.classList.add(status.tone);
   healthEl.querySelector('strong').textContent = status.label;
@@ -115,8 +119,8 @@ function repoCard(repo, index, total, issue = null) {
   addMetric(metrics, prs.length, 'cached open PRs');
   card.querySelector('.hour-count').textContent = `${events.length} updates`;
   addTimeline(card.querySelector('.timeline'), events);
-  card.querySelector('.issues-title').textContent = issue ? 'Agents on issue' : 'Issues in flight';
-  card.querySelector('.issue-count').textContent = issue ? `${lanes.length} lanes` : `${issues.length} observed`;
+  card.querySelector('.issues-title').textContent = issue ? 'Agents on issue' : 'Work and issue context';
+  card.querySelector('.issue-count').textContent = issue ? `${lanes.length} lanes` : `${issues.filter(i => i.workflow.kind === 'in-progress').length} in progress · ${issues.length} shown${state.snapshot?.coverage !== 'complete' || state.snapshot?.truncated ? ' · partial' : ''}`;
   if (issue) {
     const issueBox = card.querySelector('.issues');
     if (!lanes.length) addEmpty(issueBox, 'No agent lane linked to this issue.');
@@ -161,6 +165,8 @@ function renderSources() {
     const availability = fresh ? source.availability : 'stale';
     const pill = node('span', `source-pill ${availability}`);
     pill.title = source.error || `Coverage: ${source.coverage}; observed ${source.observed_through || 'unknown'}`;
+    const excluded = (source.roots || []).reduce((count, root) => count + (root.excluded_rows || 0), 0);
+    if (excluded) pill.title += `; ${excluded} unresolvable ledger row(s) excluded`;
     pill.append(node('i'), node('span', '', `${source.id} · ${availability}`));
     refs.sourceStrip.append(pill);
   });
@@ -199,6 +205,13 @@ function savePosition() {
   });
 }
 function render(preserve = true) {
+  if (refs.detail.open) {
+    const saved = state.detail;
+    const repo = (state.snapshot?.repos || []).find(item => item.id === saved?.repoId);
+    const issue = repo && saved?.issueNumber !== null ? statusCards(repo).find(item => item.number === saved?.issueNumber) : null;
+    const current = repo && (saved?.issueNumber === null || issue) ? detailContent(repo, issue) : null;
+    if (!current || current.text !== saved.text || current.title !== saved.title || current.sourceHealthy !== saved.sourceHealthy) refs.detail.close();
+  }
   if (preserve) savePosition();
   document.body.classList.toggle('focus-view', state.view === 'b');
   document.body.classList.toggle('issue-view', state.view === 'c');
@@ -213,7 +226,7 @@ function render(preserve = true) {
   if (state.view === 'c') {
     const repo = (state.snapshot?.repos || []).find(item => item.id === state.repoId);
     refs.viewTitle.textContent = repo ? `${repo.name} issues` : 'Repository unavailable';
-    cards = repo ? issueCards(repo).map((issue, index, all) => repoCard(repo, index, all.length, issue)) : [];
+    cards = repo ? statusCards(repo).map((issue, index, all) => repoCard(repo, index, all.length, issue)) : [];
   } else {
     const repos = selectedRepos();
     refs.viewTitle.textContent = state.view === 'b' ? 'Repository focus' : 'Active repositories';
@@ -226,7 +239,8 @@ function render(preserve = true) {
     $('emptyCopy').textContent = repo ? `${repo.name} remains selected. No issue context was observed today or linked to a cached open PR. Source coverage may be incomplete.` : 'The selected repository is unavailable in this snapshot.';
   } else {
     $('emptyTitle').textContent = 'Flightdeck is ready for connectors.';
-    $('emptyCopy').textContent = 'Start or configure any incoming connector. The dashboard itself remains available.';
+    $('emptyCopy').textContent = state.snapshot?.truncated ? 'Inventory was truncated; no displayed repositories is not proof of no active work.' :
+      'Start or configure an incoming connector. Missing or partial inventory is not proof of no active work.';
   }
   refs.empty.hidden = cards.length > 0;
   refs.repos.hidden = cards.length === 0;
@@ -256,20 +270,35 @@ function backOneLevel() {
   if (state.view === 'c') return navigate('b', state.repoId);
   if (state.view === 'b') return navigate('a');
 }
-function openDetail(repo, issue = null) {
+function detailContent(repo, issue = null) {
+  const sourceHealthy = state.failures === 0 && snapshotFresh(state.snapshot);
+  if (issue) {
+    const current = (repo.issues || []).find(value => value.number === issue.number) || {};
+    issue = {...issue, workflow: issueStatus(current, Date.now(), sourceHealthy)};
+  }
   const lanes = issue ? (repo.lanes || []).filter(lane => laneIssues(lane, repo).includes(issue.number)) : (repo.lanes || []);
   const lane = lanes[0];
-  refs.detailEyebrow.textContent = `${repo.name}${issue ? ` · #${issue.number}` : ''}`;
-  refs.detailTitle.textContent = lane?.agent ? `Continue with ${lane.agent}` : 'Re-establish this lane';
-  refs.detailBody.replaceChildren();
-  const summary = node('section', 'drawer-section');
   const action = lane?.task || (issue ? issue.title || `Issue #${issue.number}` : repo.next_actions?.[0]?.title || repo.summary) || 'No agent context is available.';
   const progress = issue ? (repo.events || []).find(e => laneIssues(e, repo).includes(issue.number))?.occurred_at : repo.last_progress_at;
-  summary.append(node('h3', '', 'Current context'), node('p', '', action));
+  const workflow = issue ? `${issue.workflow.label}: ${issue.workflow.reason}. GitHub observed ${issue.workflow.native_at || 'unknown'}; task established ${issue.workflow.established_at || 'unknown'}.` :
+    statusCards(repo).map(i => `#${i.number} ${i.workflow.label}: ${i.workflow.reason}`).join('\n') || 'Issue status unavailable.';
+  const title = lane?.agent ? `Continue with ${lane.agent}` : 'Re-establish this lane';
+  const text = `Resume ${repo.name}${issue ? ` issue #${issue.number}` : ''}.\n\nLast known context: ${action}\nRecorded status: ${workflow}\nInventory: ${state.snapshot?.coverage || 'unknown'}${state.snapshot?.truncated ? ' (truncated)' : ''}.\nLast meaningful progress: ${progress || 'unknown'}.\n\nConfirm the current branch, issue and PR head before continuing. Report the next concrete milestone.`;
+  return {sourceHealthy, action, workflow, title, text};
+}
+function openDetail(repo, issue = null) {
+  const content = detailContent(repo, issue);
+  state.detail = {repoId: repo.id, issueNumber: issue?.number ?? null, text: content.text, title: content.title, sourceHealthy: content.sourceHealthy};
+  refs.detailEyebrow.textContent = `${repo.name}${issue ? ` · #${issue.number}` : ''}`;
+  refs.detailTitle.textContent = content.title;
+  refs.detailBody.replaceChildren();
+  const summary = node('section', 'drawer-section');
+  summary.append(node('h3', '', 'Current context'), node('p', '', content.action));
+  summary.append(node('h3', '', 'Recorded issue status'), node('p', '', content.workflow));
   const handoff = node('section', 'drawer-section');
   handoff.append(node('h3', '', 'Copyable handoff'));
   const text = node('textarea'); text.readOnly = true;
-  text.value = `Resume ${repo.name}${issue ? ` issue #${issue.number}` : ''}.\n\nLast known context: ${action}\nLast meaningful progress: ${progress || 'unknown'}.\n\nConfirm the current branch, issue and PR head before continuing. Report the next concrete milestone.`;
+  text.value = content.text;
   const copy = node('button', 'details copy', 'Copy handoff'); copy.type = 'button';
   copy.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(text.value); copy.textContent = 'Copied'; }

@@ -57,7 +57,7 @@ class ConnectorTests(unittest.TestCase):
         )
 
     def test_registry_is_the_expected_static_first_party_set(self) -> None:
-        self.assertEqual(set(REGISTRY), {"rebalance", "clio", "git_pulse", "topology", "continuity"})
+        self.assertEqual(set(REGISTRY), {"rebalance", "clio", "git_pulse", "topology", "continuity", "xyz_work"})
 
     def test_clio_reads_intent_without_counting_progress(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -113,7 +113,7 @@ class ConnectorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             batches = read_connectors(config(root, frozenset()), time.monotonic() + 1)
-            self.assertEqual(len(batches), 5)
+            self.assertEqual(len(batches), 6)
             self.assertTrue(all(batch["source"]["availability"] == "disabled" for batch in batches))
             snapshot = FlightdeckAggregator(config(root, frozenset())).snapshot()
             self.assertEqual(snapshot["repos"], [])

@@ -111,11 +111,18 @@ class FlightdeckAggregator:
                     lanes[identity] = incoming
             for incoming in batch["issues"][:MAX_ITEMS]:
                 incoming = dict(incoming)
-                key, number = canonical(incoming.get("repo_id")), incoming.get("number")
+                raw = incoming.get("repo_id")
+                key = raw if isinstance(raw, str) and raw.startswith("github.com/") else canonical(raw)
+                number = incoming.get("number")
                 if key and isinstance(number, int):
                     incoming["repo_id"] = key
                     repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [], "source_refs": []})
-                    issues[(key, number)] = incoming
+                    current = issues.setdefault((key, number), {"repo_id": key, "number": number})
+                    evidence = current.get("work_evidence", []) + incoming.pop("work_evidence", [])
+                    if incoming.get("source_ref") != "xyz_work":
+                        if not current.get("fetched_at") or _timestamp(incoming.get("fetched_at")) >= _timestamp(current.get("fetched_at")):
+                            current.update(incoming)
+                    current["work_evidence"] = sorted(evidence, key=lambda value: json.dumps(value, sort_keys=True))
             for incoming in batch["prs"][:MAX_ITEMS]:
                 incoming = dict(incoming)
                 key, number = canonical(incoming.get("repo_id")), incoming.get("number")
@@ -146,7 +153,8 @@ class FlightdeckAggregator:
             checkout_count = len(groups["checkouts"])
             for name in detail_caps:
                 group = groups[name]
-                group.sort(key=lambda item: _timestamp(item.get("occurred_at") or item.get("last_prompt_at") or item.get("updated_at")), reverse=True)
+                group.sort(key=lambda item: (any(e.get("status_label") == "in-progress" and e.get("start") for e in item.get("work_evidence", [])),
+                                            _timestamp(item.get("occurred_at") or item.get("last_prompt_at") or item.get("updated_at"))), reverse=True)
                 if len(group) > detail_caps[name]:
                     detail_truncated = True
                     groups[name] = group[:detail_caps[name]]
@@ -158,7 +166,8 @@ class FlightdeckAggregator:
             repo["checkout_count"] = checkout_count if any(b["connector"] == "topology" and b["source"]["coverage"] == "complete" and 0 <= time.time() - _timestamp(b["source"].get("observed_through")) <= 300 for b in batches) else None
             output_repos.append(repo)
 
-        output_repos.sort(key=lambda repo: max(_timestamp(repo.get("last_progress_at")), _timestamp(repo.get("last_intent_at"))), reverse=True)
+        output_repos.sort(key=lambda repo: (any(any(e.get("status_label") == "in-progress" and e.get("start") for e in item.get("work_evidence", [])) for item in repo.get("issues", [])),
+                                           max(_timestamp(repo.get("last_progress_at")), _timestamp(repo.get("last_intent_at")))), reverse=True)
         self.sequence += 1
         snapshot = {
             "schema_version": SCHEMA_VERSION,
@@ -169,6 +178,8 @@ class FlightdeckAggregator:
             "coverage": "partial" if any(batch["source"]["coverage"] != "complete" for batch in batches) else "complete",
             "truncated": len(output_repos) > MAX_REPOS or detail_truncated,
         }
+        if detail_truncated:
+            snapshot["coverage"] = "partial"
         encoded = json.dumps(snapshot, separators=(",", ":")).encode()
         while len(encoded) > MAX_BYTES and snapshot["repos"]:
             snapshot["repos"].pop()

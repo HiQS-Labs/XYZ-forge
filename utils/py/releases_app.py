@@ -5257,6 +5257,7 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
     db_path = os.path.abspath(os.fspath(db_path))
     root = os.path.dirname(db_path)
     result = {"schema_ready": False, "schema_version": None, "generation": None,
+              "status_label_supported": False,
               "as_of": as_of or now_iso(), "stale_days": stale_days,
               "issues": [], "cursors": [], "warnings": []}
     if not os.path.isfile(db_path):
@@ -5323,8 +5324,11 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
         if _table_exists(conn, "jog_queue"):
             for jog in conn.execute("SELECT id,repo_id,gh_number,status FROM jog_queue ORDER BY id"):
                 jog_state.setdefault((jog["repo_id"], jog["gh_number"]), []).append(jog["status"])
+        label_ready = result["schema_version"] >= 9 and _has_column(conn, "roadmap_items", "status_label")
+        result["status_label_supported"] = label_ready
         rows = conn.execute("SELECT global_id,repo_id,gh_number,issue_url,section,status_marker,"
                             "rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr "
+                            + (",status_label " if label_ready else "") +
                             "FROM roadmap_items WHERE gh_number IS NOT NULL ORDER BY gh_number,global_id")
         for row in rows:
             url_repo, url_number = _repo_from_issue_url(row["issue_url"])
@@ -5388,6 +5392,8 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
                 "number": int(row["gh_number"]),
                 "identity_valid": repo_matches,
                 "section": row["section"], "marker": row["status_marker"],
+                "status_label_supported": label_ready,
+                "status_label": row["status_label"] if label_ready else None,
                 "ratings": {k.replace("rating_", ""): row[k] for k in RATING_COLUMNS},
                 "latest_event": latest, "latest_lifecycle": latest_lifecycle,
                 "recent_start": start,

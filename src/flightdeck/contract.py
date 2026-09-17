@@ -73,6 +73,9 @@ class ConnectorConfig:
     topology_json: Path | None
     continuity_json: Path | None
     enabled: frozenset[str]
+    xyz_roots: tuple[Path, ...] = ()
+    native_max_age_seconds: int = 7200
+    established_issues: tuple[tuple[str, int], ...] = ()
 
     @classmethod
     def from_environment(cls) -> "ConnectorConfig":
@@ -99,6 +102,15 @@ class ConnectorConfig:
             enabled_raw if isinstance(enabled_raw, list) else
             ("rebalance", "clio", "git_pulse", "topology", "continuity")
         )
+        roots_raw = os.environ.get("FLIGHTDECK_XYZ_ROOTS")
+        roots = roots_raw.split(os.pathsep) if roots_raw is not None else configured.get("xyz_roots", [])
+        if not isinstance(roots, list) or any(not isinstance(root, str) for root in roots):
+            raise ValueError("xyz_roots must be a list of explicitly configured paths")
+        age = int(os.environ.get("FLIGHTDECK_NATIVE_MAX_AGE_SECONDS") or configured.get("native_max_age_seconds", 7200))
+        if not 1 <= age <= 86400:
+            raise ValueError("native_max_age_seconds must be between1 and86400")
+        if roots and enabled_raw is None:
+            enabled = enabled | {"xyz_work"}
         return cls(
             rebalance_db=source("rebalance_db", "FLIGHTDECK_REBALANCE_DB", default_db),
             clio_jsonl=source("clio_jsonl", "FLIGHTDECK_CLIO_JSONL", home / ".claude" / "prompt-log.jsonl"),
@@ -106,6 +118,8 @@ class ConnectorConfig:
             topology_json=source("topology_json", "FLIGHTDECK_TOPOLOGY_JSON", None),
             continuity_json=source("continuity_json", "FLIGHTDECK_CONTINUITY_JSON", None),
             enabled=enabled,
+            xyz_roots=tuple(Path(root).expanduser() for root in roots if root),
+            native_max_age_seconds=age,
         )
 
 
