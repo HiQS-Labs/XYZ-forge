@@ -20,7 +20,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Plan and final scoped QA approved; draft PR #669 published with explicit local push-check bypass approval | Verify integration with current development and actual hosted checks; keep draft until remaining verification is green. No merge authorized |
+| Scoped QA approved; PR #669 draft; development integrated with both ledger histories preserved. Full local attempt: 390/393 passed; bundle and backup failures then cleared by focused checks | Keep draft: GH-642 worktree fixture also fails on clean development. Require fresh full local green and current hosted checks before ready status. No merge authorized |
 
 ## Quad Concepts
 
@@ -84,9 +84,9 @@ No operator override.
 
 ### Phase 1 — QA checklist
 
-- [ ] Registered preservation assertions fail on unchanged base and cwd ablation.
-- [ ] Probe result/model forms and absent-model behavior preserved; completed-path cleanup verified.
-- [ ] Creation/launch/timeout/nonzero/unavailable failures preserve caller and report refusal.
+- [x] Registered preservation assertions fail on unchanged base and cwd ablation.
+- [x] Probe result/model forms and absent-model behavior preserved; completed-path cleanup verified.
+- [x] Creation/launch/timeout/nonzero/unavailable failures preserve caller and report refusal.
 - [ ] Full source-pinned gate, static checks and final independent QA pass.
 - [ ] PR base/head/scope verified; issue stays open awaiting merge.
 

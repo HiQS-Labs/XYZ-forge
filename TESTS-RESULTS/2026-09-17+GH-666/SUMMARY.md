@@ -56,6 +56,32 @@ diagnostics remain; this result does not prove a fully clean token lifecycle.
 
 ## Publication hold
 
+### Current-base integration and remaining draft gate
+
+Development 011113f6 was merged into this topic branch, not landed into development.
+Only SQL conflict markers/generation selection needed judgment; disjoint receipt
+and event rows from both parents were retained. The existing merge resolver rebuilt
+and verified the DB and regenerated its adopted view; approved runtime/test sources
+were unchanged. Separate disposable integration clone used for all heavy checks.
+
+Normal gated push at c917f8b1 was refused: full local validation passed 390/393
+checks. Remaining failures: stale relay package, resolver-created backup at the
+checked location, and GH-642 worktree fixture. Releases-app failed in the pool but
+passed its automatic isolated retry; this is contention evidence, not a suite red.
+
+Then the existing package generator regenerated the bundle: freshness 3/3 passed.
+The resolver backup was moved intact to temp/gh666/releases-before-ledger-merge.db,
+not deleted: artifact check 10/10 passed, including its divergence negative control.
+These focused checks do not erase the earlier full-gate red or qualify a new full run.
+GH-642 also fails on clean development 011113f6 (same missing worktree fixture).
+No unrelated fixture repair is included; no ready-status, promotion or merge claim.
+
+Manual hosted run 35250764054 at original draft head a19d3fc7 passed the blocking
+smoke job, but advisory PDDA failed and macOS promotion was skipped. Its overall
+green workflow is not full green evidence. Current PR-head checks must be queried
+separately after the conflict-free draft update. Operator approval covers disclosed
+draft push bypass only; retain draft until fresh full local and hosted checks pass.
+
 ### 2026-09-17 authorized draft publication
 
 Operator explicitly approved skipping the local pre-push check for disclosed WIP
