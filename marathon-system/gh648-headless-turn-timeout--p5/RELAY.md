@@ -103,3 +103,11 @@ I have reviewed the entire `utils/py/consult.py` file, verified the stubbed herm
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T07:13:21Z
+task: MARATHON-P5-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 6c8b1dc5b2906e8ce33958f49873b3ee6ddcff14
+added-range: 9174+654
+added-sha256: b08b1590df0a9c4e0ca2313da90a7fb2e76a43e638ddcf1540bb5c5936b8dc0a
