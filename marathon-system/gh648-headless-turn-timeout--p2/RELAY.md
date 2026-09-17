@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -80,3 +80,43 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-648 L2 in `utils/py/commandcode-turn.py`, added
+`test/gh648-l2-token-aftermath.sh`, and registered it in `validate.sh` TESTS.
+
+The timeout now retains its own boolean even if worktree containment changes the
+exit code to 6. During enforcement only, it clears the `RELAY_FILE` environment
+value that gates the shared core's completion handoff, restoring it in `finally`.
+The previously initialized allowlist still drives containment and file-scoped
+commits. This also prevents an interrupted Approved transcript from closing the
+token. The existing GH-409 ownership-checked exit cleanup releases the claim
+without handing it to the peer; the incoming role can reclaim the same task ID.
+Healthy enforcement and its release/done behavior are unchanged.
+
+Reversibility: Costly coordination surface; rollback is the adapter change and
+its registered guard. No shared kernel or frozen Bash twin was edited. Scope is
+shim-initiated completion: this does not undo a worker's own premature token
+release or terminal event. Graph tools were unavailable; source evidence was
+`commandcode-turn.py`, `rtl.py` claim/exit cleanup, and the current shared core's
+`rtl_enforce` handoff branch.
+
+Focused evidence (session logs in `.relay-scratch/`):
+- Before the fix, the new test failed on the timeout case with the real token
+  showing `status: open`, `handoff-to: agy` (`gh648-l2-before.log`).
+- After the fix, all six cases passed (`gh648-l2-after.log`): timeout,
+  timeout with Approved transcript, timeout plus worktree violation, timeout
+  plus enforcement exit 6, healthy peer release, and healthy terminal close.
+  Timeout cases assert an open non-peer token and actually reclaim the same ID.
+- Test uses a real one-second subprocess cap, real tick claim/cleanup/projection,
+  and the production shell handoff branch extracted from the shared core.
+  Git/containment boundaries and diagnostics/telemetry are stubbed; this is not
+  a full shim integration or full-gate claim. Assertions failed on the unfixed
+  source, so the negative control is observed rather than assumed.
+- Bash syntax checks passed for the new suite and `validate.sh`; Python AST parse
+  passed for the shim. No git commands or full project gate were run. The harness
+  owns the final gate and commit, per the turn instructions.
+
+Ready for agy review.
