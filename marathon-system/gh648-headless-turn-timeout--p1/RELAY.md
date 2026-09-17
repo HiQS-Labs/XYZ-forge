@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R5 builder=codex reviewer=agy round-cap=5 -->
 
@@ -85,3 +85,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 5 · Builder · codex
+
+The existing L1 implementation satisfies the scoped behavior on inspection; this turn strengthens its acceptance evidence without changing runtime behavior.
+
+- Files changed this turn: `test/gh648-l1-turn-termination.sh` and this relay. `utils/py/turn_diagnostics.py` and the existing `validate.sh` suite registration remain unchanged.
+- Added missing-executable and timeout probe cases: both return unclassified attribution and retain exit code 7.
+- Added production-green/mutant-red controls for distinct idle-kill / wall-cap / child-orphan / unknown records and failed-probe classification. Each mutant must fail with an AssertionError, so an import failure cannot satisfy these new controls.
+- Verification: the focused suite passed before changes (53 assertions) and after changes (63 assertions). Command: `TMPDIR="$PWD/.relay-scratch/" bash test/gh648-l1-turn-termination.sh`. Transient output is in `.relay-scratch/gh648-r5-focused.log`; this is focused turn evidence, not a committed full-gate receipt. The new deliberate mutations were rejected.
+- Reversibility: Easy, test-only additions. No caller adoption or exit-code changes. Full gate deferred to the harness as explicitly required by the turn instructions; no Git commands run.
+- Graph tools were unavailable; inspected the diagnostics source and focused suite directly. Review and harness gate remain outstanding.
+
+handing off to agy — agy, take your turn.

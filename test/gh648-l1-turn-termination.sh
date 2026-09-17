@@ -67,6 +67,15 @@ for mode, expected in (("established", "established"), ("none", "none"), ("error
     check(td._network_state(4242) == expected, f"lsof {mode} maps to {expected}")
 
 real_run, real_tree_pids = td.subprocess.run, td._tree_pids
+for failure in (FileNotFoundError("lsof unavailable"),
+                subprocess.TimeoutExpired("lsof", 5.0)):
+    with patch.object(td, "_tree_pids", return_value=[4242]), \
+         patch.object(td.subprocess, "run", side_effect=failure):
+        state = td._network_state(4242)
+    check(state == "unclassified", f"{type(failure).__name__}: probe fails safely")
+    record = observed_idle(state).termination_record(td.TERMINATION_IDLE_KILL)
+    check(record["reason"] == td.REASON_UNCLASSIFIED and record["exit_code"] == 7,
+          f"{type(failure).__name__}: attribution preserves exit 7")
 seen = {}
 def capture_run(cmd, **_kwargs):
     seen["cmd"] = cmd
@@ -220,5 +229,42 @@ pid_peak_red = subprocess.run(
     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
 )
 check(pid_peak_red.returncode != 0, "per-PID retention mutation turns oracle red")
+
+# Run each acceptance oracle on production first, then on a deliberate defect.
+# Requiring AssertionError also prevents import/runtime failures counting as red.
+acceptance_mutations = (
+    ("termination-kinds",
+     'kind = termination if termination in TERMINATION_KINDS else TERMINATION_UNKNOWN',
+     'kind = TERMINATION_UNKNOWN',
+     '''kinds = ("idle-kill", "wall-cap", "child-orphan", "unknown")
+records = [m.termination_record(k, "r", "d") for k in kinds]
+assert [r["termination"] for r in records] == list(kinds)
+assert all(r["exit_code"] == 7 for r in records)
+'''),
+    ("failed-probe",
+     'if network == "unclassified":', 'if False:',
+     '''d=m.TurnDiagnostics(root_pid=1)
+d.samples=[(1.,0.,1),(2.,0.,1),(3.,0.,1)]
+d._network_probe_attempted=True;d._network_state_observed="unclassified"
+r=d.termination_record("idle-kill")
+assert r["reason"] == m.REASON_UNCLASSIFIED
+assert r["exit_code"] == 7
+'''),
+)
+for label, original, replacement, assertions in acceptance_mutations:
+    oracle = '''import importlib.util,sys
+s=importlib.util.spec_from_file_location("subject",sys.argv[1])
+m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+''' + assertions
+    green = subprocess.run([sys.executable, "-c", oracle, os.environ["GH648_MODULE"]],
+                           capture_output=True, text=True)
+    check(green.returncode == 0, f"{label}: production oracle passes: {green.stderr}")
+    check(source.count(original) == 1, f"{label}: mutation has one target")
+    mutant = pathlib.Path(os.environ["GH648_WORK"]) / f"{label}.py"
+    mutant.write_text(source.replace(original, replacement, 1))
+    red = subprocess.run([sys.executable, "-c", oracle, str(mutant)],
+                         capture_output=True, text=True)
+    check(red.returncode != 0 and "AssertionError" in red.stderr,
+          f"{label}: assertion rejects mutation")
 print(f"PASS: {passed} assertions")
 PY
