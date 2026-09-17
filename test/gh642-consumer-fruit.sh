@@ -10,6 +10,7 @@
 #   xyz_init_clone.py e2e against a local bare remote (name, -r2 retry, refusals, vendor, hooks),
 #   swarm_preflight.py zero-criteria stderr warning (source pin + compile).
 source "$(dirname "$0")/_setup.sh" gh642-consumer-fruit
+set -e
 
 ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
 VENDOR="$ROOT/relay-automation/xyz-vendor.sh"
@@ -20,13 +21,56 @@ PYPREFLIGHT="$ROOT/utils/py/swarm_preflight.py"
 RTL="$ROOT/relay-automation/relay-turn-lib.sh"
 
 # --- item 1: vendor ignore rules → repo-local info/exclude --------------------------------------
-mkrepo() {  # <name> [git-init-extra...] -> canonical path of a fresh git repo
-  local d="$WORK/$1"; mkdir -p "$d"; git init -q "$d"; shift
-  [ $# -gt 0 ] && git -C "$d" "$@"
-  ( cd "$d" && pwd -P )
+mkrepo() {  # <name> [git-init-extra...] -> guarded path of a fresh git repo
+  local name="${1:-}" d
+  case "$name" in
+    ''|.|..|*/*) echo "mkrepo: REFUSING invalid fixture name '$name'" >&2; return 2 ;;
+  esac
+  d="$WORK/$name"
+  mkdir -p "$d" || { echo "mkrepo: REFUSING failed creation" >&2; return 2; }
+  require_fixture "$d" mkrepo
+  git init -q "$d" || { echo "mkrepo: REFUSING failed git init" >&2; return 2; }
+  shift
+  if [ $# -gt 0 ]; then git -C "$d" "$@" || return 2; fi
+  printf '%s\n' "$d"
 }
 
-R1="$(mkrepo r1-normal)"
+# GH-653/GH-665: failed substitutions must never seed the caller's checkout.
+# Keep the caller inside _setup's sandbox, but outside the smaller guarded root.
+require_fixture "$A" guard-caller
+GUARD_ROOT="$WORK/guard-root"; mkdir -p "$GUARD_ROOT"
+require_fixture "$GUARD_ROOT" guard-root
+ln -s "$A" "$GUARD_ROOT/escape"
+caller_before="$(git -C "$A" rev-parse HEAD)"
+caller_identity="$(git -C "$A" rev-parse --absolute-git-dir --is-bare-repository)"
+for fault in empty traversal symlink mkdir-failure init-failure; do
+  rc=0
+  (
+    cd "$A" || exit 2
+    WORK="$GUARD_ROOT"; fixture_guard_init "$WORK"
+    name=failed
+    case "$fault" in
+      empty) name='' ;;
+      traversal) name='../agent-a' ;;
+      symlink) name=escape ;;
+      mkdir-failure) mkdir() { return 17; } ;;
+      init-failure) git() { if [ "$1" = init ]; then return 18; else command git "$@"; fi; } ;;
+    esac
+    R1="$(mkrepo "$name")" || exit 2
+    require_fixture "$R1" seed-repo
+    git -C "$R1" -c user.name=fixture -c user.email=fixture@test.invalid commit -q --allow-empty -m 'must not seed caller'
+  ) > "$GUARD_ROOT/refusal.log" 2>&1 || rc=$?
+  out="$(<"$GUARD_ROOT/refusal.log")"
+  [ "$rc" -eq 2 ] && pass "fixture guard refuses $fault" || fail "fixture guard accepted $fault (rc=$rc): $out"
+  [ "$(git -C "$A" rev-parse HEAD)" = "$caller_before" ] \
+    && [ "$(git -C "$A" rev-parse --absolute-git-dir --is-bare-repository)" = "$caller_identity" ] \
+    && [ -z "$(git -C "$A" status --porcelain)" ] \
+    && pass "caller identity/HEAD/tree unchanged after $fault" || fail "caller changed after $fault"
+done
+
+R1="$(mkrepo r1-normal)" || exit 2
+require_fixture "$R1" seed-repo
+git -C "$R1" -c user.name=fixture -c user.email=fixture@test.invalid commit -q --allow-empty -m 'seed vendor fixture' || exit 2
 printf 'node_modules/\n' > "$R1/.gitignore"
 "$VENDOR" --no-register "$R1" >/dev/null 2>&1 && pass "vendor runs on a normal clone" || fail "vendor failed on normal clone"
 grep -Fqx '.xyz/' "$R1/.git/info/exclude" && pass "exclude: .xyz/ in info/exclude" || fail ".xyz/ missing from info/exclude"
@@ -39,8 +83,13 @@ grep -Fqx 'node_modules/' "$R1/.gitignore" && pass "exclude: pre-existing .gitig
 [ "$(grep -c '^\.xyz/$' "$R1/.git/info/exclude")" = 1 ] && pass "exclude: idempotent re-run (1 .xyz/ line)" || fail "exclude: duplicate lines after re-run"
 
 # linked-worktree shape: vendor inside a worktree of a bare-parented repo
-BR="$WORK/r2-bare.git"; git init -q --bare "$BR"
+BR="$WORK/r2-bare.git"; mkdir -p "$BR"; require_fixture "$BR" bare-repo
+git init -q --bare "$BR"
 WT="$WORK/r2-wt"
+mkdir -p "$WT-main" "$WT"
+require_fixture "$R1" push-source
+require_fixture "$WT-main" clone-target
+require_fixture "$WT" worktree-target
 git -C "$R1" push -q "$BR" HEAD 2>/dev/null
 git clone -q "$BR" "$WT-main" 2>/dev/null
 git -C "$WT-main" worktree add -q "$WT" 2>/dev/null
@@ -54,17 +103,23 @@ fi
 
 # --separate-git-dir shape
 SG="$WORK/r3-sg"; SGD="$WORK/r3-gitdir"
+mkdir -p "$SG" "$SGD"
+require_fixture "$SG" separate-worktree
+require_fixture "$SGD" separate-gitdir
 git init -q --separate-git-dir "$SGD" "$SG"
 "$VENDOR" --no-register "$SG" >/dev/null 2>&1 && pass "vendor runs with --separate-git-dir" || fail "vendor failed with --separate-git-dir"
 grep -Fqx '.xyz/' "$SGD/info/exclude" && pass "exclude: separate-git-dir target writes to its info/exclude" || fail "separate-git-dir exclude not written"
 
 # non-git target: fallback to .gitignore so the rules stay operator-visible (plan item 1)
 NG="$WORK/non-git"; mkdir -p "$NG"
+require_fixture "$NG" non-git-target
 "$VENDOR" --no-register "$NG" >/dev/null 2>&1 && pass "vendor runs on a non-git directory" || fail "vendor failed on non-git dir"
 grep -Fqx '.xyz/' "$NG/.gitignore" && pass "non-git fallback: rules land in .gitignore" || fail "non-git fallback rules missing"
 
 # direction 2 intact: a repo blocking marathon-commit paths still gets the advisory, never an edit
-B4="$(mkrepo r4-blocked)"; printf '/relay-system\n' > "$B4/.gitignore"
+B4="$(mkrepo r4-blocked)" || exit 2
+require_fixture "$B4" blocked-target
+printf '/relay-system\n' > "$B4/.gitignore"
 out="$( "$VENDOR" --no-register "$B4" 2>&1 )"
 grep -q "WARNING" <<<"$out" && pass "direction 2 intact: blocking rule still warns" || fail "direction 2 warning vanished"
 grep -Fqx '/relay-system' "$B4/.gitignore" && pass "direction 2 intact: blocking rule preserved" || fail "blocking rule was edited"
@@ -86,7 +141,8 @@ PYW
 [ "$(py_warn claude-opus-4-8 5.00)" = "SILENT" ] && pass "Opus warning silent when budget raised" || fail "Opus warning fired despite raised budget"
 [ "$(py_warn claude-sonnet-4-6 0.50)" = "SILENT" ] && pass "Opus warning silent for Sonnet" || fail "Opus warning fired for Sonnet"
 # DEFAULT-stream contract: with no stream= injection the message must land on stderr, not stdout.
-DBG="$(mktemp -d)"
+DBG="$(mktemp -d "$WORK/warnings.XXXXXX")" || exit 2
+require_fixture "$DBG" warning-output
 python3 - "$PYCLAUDE" "$DBG/out.txt" "$DBG/err.txt" <<'PYD'
 import importlib.util, os, sys
 sys.path.insert(0, os.path.dirname(sys.argv[1]))
@@ -109,6 +165,7 @@ grep -qE '^    warn_opus_budget\(model, max_budget\)' "$PYCLAUDE" \
 # --- item 3: marathon_drive.resolve_force_relay_task --------------------------------------------
 python3 -m py_compile "$PYDRIVE" && pass "marathon_drive.py compiles" || fail "marathon_drive.py does not compile"
 STUB="$WORK/stub-tick"; mkdir -p "$STUB"
+require_fixture "$STUB" tick-stub
 cat > "$STUB/tick" <<'STUB'
 #!/usr/bin/env bash
 case "$1 $2" in
@@ -152,16 +209,20 @@ RES="$(run_resolve "/nonexistent/tick" MAL True False 2>/dev/null)"
 # --- item 4: rtl_worktree_begin copies node_modules ---------------------------------------------
 bash -n "$RTL" && pass "relay-turn-lib.sh parses" || fail "relay-turn-lib.sh does not parse"
 grep -q 'cp -R "$RTL_ROOT/node_modules" "$wt/node_modules"' "$RTL" && pass "worktree deps are a COPY (containment: no symlink into ROOT)" || fail "worktree deps are not a copy"
-FIX="$WORK/rtl-fixture"; mkdir -p "$FIX"; git -C "$FIX" init -q
+FIX="$WORK/rtl-fixture"; mkdir -p "$FIX"; require_fixture "$FIX" rtl-fixture
+git -C "$FIX" init -q
 mkdir -p "$FIX/node_modules/pkg"; printf 'x' > "$FIX/node_modules/pkg/index.js"
 printf 'relay\n' > "$FIX/RELAY.md"
 # rtl_worktree_begin cuts at HEAD — the fixture needs at least one commit or the add fails.
 ( cd "$FIX" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1 )
-out="$(cd "$FIX" && bash -c '
+out="$(cd "$FIX" && TMPDIR="$FIXTURE_GUARD_RESOLVED" bash -c '
   source "'"$RTL"'"
+  source "'"$ROOT"'/test/lib/fixture-guard.sh"
+  fixture_guard_init "$TMPDIR"
   RTL_ROOT="'"$FIX"'"
   RTL_ALLOW=("RELAY.md"); RTL_WT_USED=0
   wt="$(rtl_worktree_begin)" || exit 9
+  require_fixture "$wt" isolated-worktree
   if [ -d "$wt/node_modules" ] && [ ! -L "$wt/node_modules" ] && [ -f "$wt/node_modules/pkg/index.js" ]; then
     printf 'marker\n' > "$wt/node_modules/pkg/marker.txt"
     if [ ! -e "'"$FIX"'/node_modules/pkg/marker.txt" ]; then echo "ROOT-CLEAN"; else echo "ROOT-LEAK"; fi
@@ -177,12 +238,15 @@ grep -q "COPY-OK" <<<"$out" && ! grep -q "IS-SYMLINK" <<<"$out" && grep -q "ROOT
 # --- item 5: xyz_init_clone.py e2e --------------------------------------------------------------
 python3 -m py_compile "$PYINIT" && pass "xyz_init_clone.py compiles" || fail "xyz_init_clone.py does not compile"
 SRC="$WORK/init-src"; mkdir -p "$SRC/githooks"
+require_fixture "$SRC" init-source
 git -C "$SRC" init -q
 printf '#!/usr/bin/env bash\nprintf "#!/bin/sh\\nexit 0\\n" > .git/hooks/pre-push\nchmod +x .git/hooks/pre-push\nexit 0\n' > "$SRC/githooks/install.sh"; chmod +x "$SRC/githooks/install.sh"
 ( cd "$SRC" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1 )
-BARE="$WORK/init-bare.git"; git clone -q --bare "$SRC" "$BARE"
+BARE="$WORK/init-bare.git"; mkdir -p "$BARE"; require_fixture "$BARE" init-bare
+git clone -q --bare "$SRC" "$BARE"
 export XYZ_REGISTRY="$WORK/init-registry.tsv"
 CL="$WORK/init-clones"
+mkdir -p "$CL"; require_fixture "$CL" init-clones
 python3 "$PYINIT" "file://$BARE" --umbrella 99 --slug demo-one --dir "$CL" >/dev/null 2>&1 \
   && pass "init-clone: e2e run exits 0" || fail "init-clone e2e failed"
 [ -d "$CL/marathon-gh-99-demo-one/.xyz/relay-automation" ] && pass "init-clone: vendored harness landed" || fail "init-clone: .xyz missing"
