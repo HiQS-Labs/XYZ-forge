@@ -101,4 +101,12 @@ swept file: no
 
 Relay closed (Approved), no further review turn needed. Handing off to terra-gh646-writer — obtain Python-driver approval attestation, then complete the separately required disposable-clone qualification and inspect its result before publication.
 
+
+### Attestation · relay-drive — 2026-09-17T22:57:59Z
+task: RELAY-GH646-WRITER-REPLACEMENT-20260917
+reviewer: codex-gh646-review2
+status: Approved
+reviewed-head: 54b478de17bdec88eedfcd2f4cb3be7fa8407f91
+added-range: 13814+4784
+added-sha256: cdea911f51fa7262931418943723407ab0d3ad5afaf522e568a72ec1c3ed1c29
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
