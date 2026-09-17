@@ -21,3 +21,24 @@ Workhorse consult: SINGLE-MODEL, NOT RECONCILED. Codex design answer has no qual
 firsthand-verification receipt. Agy failed idle-progress detection (>=90 seconds),
 then consult reported failed/exceeded 180-second cap. Its failure is not agreement.
 Raw preserved transcripts are local scratch, not a final QA verdict.
+
+Additional checks: the manual fixture/server/production UI harness passes. Deleting
+the selector per-row error guard fails (`conflict` instead of `unknown`); deleting
+per-row finalization preservation fails at the intended marker assertion
+(`None != 'unqualified-ledger-row'`). No production files were mutated for these
+controls. An initial mutation-run setup copied globals and bypassed its mock; its
+availability failure was discarded, then the live-globals version proved the
+intended error-preservation assertion.
+
+Synthetic writer-to-reader comparison uses reviewed writer candidate `ecb39a10`
+and reader runtime `95b3cc24`: accepted start + projected mock label -> In progress;
+native closure before label cleanup -> Completed, cleanup pending; completed writer
+and mock label cleanup -> Completed without warning; reopen without accepted restart
+-> Not marked active. Every phase has one nonempty issue and unchanged source DB
+bytes across reads. GitHub is mocked; this is not real-world end-to-end qualification.
+
+Full harness preflight was deliberately stopped with exit143 after source inspection
+confirmed the newly reported GH-678/PR680 baseline installer-test HOME escape.
+All three real Gemini links were read before/after and remained unchanged. No green
+broad run or final QA approval is claimed. Safer follow-up redirects all five
+installer target variables to owned scratch, without changing HOME or source code.
