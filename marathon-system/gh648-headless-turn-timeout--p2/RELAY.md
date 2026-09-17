@@ -1,8 +1,8 @@
 # Marathon Phase p2
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-P2-TURN builder=codex reviewer=agy round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-P2-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
 
 ## Phase Brief
 
@@ -50,9 +50,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): utils/py/commandcode-turn.py, test/gh648-l2-token-aftermath.sh, validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P2-TURN --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p2/RELAY.md,utils/py/commandcode-turn.py, test/gh648-l2-token-aftermath.sh, validate.sh"
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P2-TURN --agent codex
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P2-TURN --agent codex --to agy
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P2-TURN-R2 --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p2/RELAY.md,utils/py/commandcode-turn.py, test/gh648-l2-token-aftermath.sh, validate.sh"
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P2-TURN-R2 --agent codex
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P2-TURN-R2 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/gh648-headless-turn-timeout--p2/RELAY.md and utils/py/commandcode-turn.py, test/gh648-l2-token-aftermath.sh, validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -65,8 +65,8 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/commandcode-turn.py, test/gh648-l2-token-aftermath.sh, validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P2-TURN --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P2-TURN --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P2-TURN-R2 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P2-TURN-R2 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
    Edit ONLY marathon-system/gh648-headless-turn-timeout--p2/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -80,64 +80,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-
-### Round 1 · Builder · codex
-
-Implemented GH-648 L2 in `utils/py/commandcode-turn.py`, added
-`test/gh648-l2-token-aftermath.sh`, and registered it in `validate.sh` TESTS.
-
-The timeout now retains its own boolean even if worktree containment changes the
-exit code to 6. During enforcement only, it clears the `RELAY_FILE` environment
-value that gates the shared core's completion handoff, restoring it in `finally`.
-The previously initialized allowlist still drives containment and file-scoped
-commits. This also prevents an interrupted Approved transcript from closing the
-token. The existing GH-409 ownership-checked exit cleanup releases the claim
-without handing it to the peer; the incoming role can reclaim the same task ID.
-Healthy enforcement and its release/done behavior are unchanged.
-
-Reversibility: Costly coordination surface; rollback is the adapter change and
-its registered guard. No shared kernel or frozen Bash twin was edited. Scope is
-shim-initiated completion: this does not undo a worker's own premature token
-release or terminal event. Graph tools were unavailable; source evidence was
-`commandcode-turn.py`, `rtl.py` claim/exit cleanup, and the current shared core's
-`rtl_enforce` handoff branch.
-
-Focused evidence (session logs in `.relay-scratch/`):
-- Before the fix, the new test failed on the timeout case with the real token
-  showing `status: open`, `handoff-to: agy` (`gh648-l2-before.log`).
-- After the fix, all six cases passed (`gh648-l2-after.log`): timeout,
-  timeout with Approved transcript, timeout plus worktree violation, timeout
-  plus enforcement exit 6, healthy peer release, and healthy terminal close.
-  Timeout cases assert an open non-peer token and actually reclaim the same ID.
-- Test uses a real one-second subprocess cap, real tick claim/cleanup/projection,
-  and the production shell handoff branch extracted from the shared core.
-  Git/containment boundaries and diagnostics/telemetry are stubbed; this is not
-  a full shim integration or full-gate claim. Assertions failed on the unfixed
-  source, so the negative control is observed rather than assumed.
-- Bash syntax checks passed for the new suite and `validate.sh`; Python AST parse
-  passed for the shim. No git commands or full project gate were run. The harness
-  owns the final gate and commit, per the turn instructions.
-
-Ready for agy review.
-
-### Round 1 · Reviewer · agy
-swept file: yes
-
-**Verdict:** Approved
-
-I have performed a whole-file review of `utils/py/commandcode-turn.py`, `test/gh648-l2-token-aftermath.sh`, and `validate.sh`.
-The change correctly clears `RELAY_FILE` during `rtl.enforce()` when a timeout is detected, preventing `tick release --to <peer>` while retaining the token logic, effectively keeping it claimable by the same role.
-The fallback paths and exceptions handling correctly avoid altering the environment un-safely (via the try/finally wrapper).
-The new test suite covers the success and timeout paths natively, including worktree isolation and enforce failures, without triggering cross-contamination bugs.
-No latent issues were observed in the original file scope.
-
-relay closed, no further turn needed
-
-### Attestation · relay-drive — 2026-09-17T04:38:31Z
-task: MARATHON-P2-TURN
-reviewer: agy
-status: Approved
-reviewed-head: 307fc592a6c3e6b8ab473ae5eff16d19026ab0d6
-added-range: 8931+797
-added-sha256: 998afe1da489331f2f0f6c800f9acff0920317b02118a82349c95719c5d598bb
