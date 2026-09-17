@@ -122,3 +122,11 @@ The test script is well-written and isolates the `_kill_turn_group` logic correc
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T15:55:10Z
+task: MARATHON-P4-TURN-R2
+reviewer: agy
+status: Approved
+reviewed-head: 097214d35f552b017f4b078c0dc0879b61b0ae58
+added-range: 8424+815
+added-sha256: 7e84f04798e7d8ff2c36893cdb662e40c0f6ea04f819c41cee45bcd78ea12319
