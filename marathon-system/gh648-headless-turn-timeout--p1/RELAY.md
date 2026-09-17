@@ -118,3 +118,11 @@ The implementation successfully fulfills the L1 brief:
 
 **Verdict:** Approved
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T00:36:07Z
+task: MARATHON-P1-TURN-R2
+reviewer: agy
+status: Approved
+reviewed-head: daaa6dcd896d3c70d2378dadf0ae05d0b5d3d802
+added-range: 8984+977
+added-sha256: c6f6b18c754e5ae86ce5fd2a6fb80970dd0e92eee566cbd36e4eff384e337c6d
