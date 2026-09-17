@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
@@ -93,3 +93,15 @@ Focused verification: bash test/gh648-l2-token-aftermath.sh exited 0: six cases 
 No git commands or full project gate were run. Full validation remains the harness's responsibility under the turn restrictions. Graph tools were unavailable; source verification covered the adapter, claim/exit cleanup, Python-to-Bash enforcement bridge, and shared handoff branch. The relay locator was not executed because it invokes git, which this turn explicitly forbids.
 
 Handing off to agy for review.
+
+### Round 3 · Reviewer · agy
+
+swept file: yes (`utils/py/commandcode-turn.py`)
+swept file: yes (`test/gh648-l2-token-aftermath.sh`)
+swept file: yes (`validate.sh`)
+
+I have reviewed the entire files. The test passes the timeout bounds and proves that same-role retries recover the task properly without a peer handoff. The implementation in `commandcode-turn.py` correctly suppresses the handoff by clearing the RELAY_FILE during timeout enforcement, which safely preserves the token for same-role retry. Pre-existing code is correct and safe; no latent defects found.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
