@@ -105,3 +105,11 @@ I have reviewed the entire files. The test passes the timeout bounds and proves 
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-09-17T15:12:38Z
+task: MARATHON-P2-TURN-R3
+reviewer: agy
+status: Approved
+reviewed-head: 94039e5559ab0ea7952f805abf0091ad9873dd05
+added-range: 8402+633
+added-sha256: 20e755d57f57b2228547660466e3d58e38a253a7f1115ab9b274356467f6a730
