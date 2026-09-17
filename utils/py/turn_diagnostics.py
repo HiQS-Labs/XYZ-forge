@@ -357,6 +357,11 @@ class TurnDiagnostics:
         # SOMETHING — CPU growth past the jitter epsilon, or a file newer than the
         # one we last saw. `idle_seconds()` measures forward from here.
         self._last_progress_t: float | None = None
+        # The process tree is reaped before classify() runs, so an in-flight
+        # signal must be captured while the turn is alive. Probe at most once,
+        # after enough otherwise-idle samples exist to justify the cost.
+        self._network_probe_attempted = False
+        self._network_state_observed: str | None = None
 
     def _sample(self) -> None:
         cpu, nproc = _descendant_cpu_seconds(self.root_pid)
@@ -381,6 +386,15 @@ class TurnDiagnostics:
         ):
             self._last_progress_t = now
         self.mtime_last = mtime_now
+        if (
+            not self._network_probe_attempted
+            and len(self.samples) >= IDLE_MIN_SAMPLES
+            and self.cpu_ratio() is not None
+            and self.cpu_ratio() < CPU_BUSY_RATIO
+            and not (self.mtime_last > self.mtime_start > 0)
+        ):
+            self._network_probe_attempted = True
+            self._network_state_observed = _network_state(self.root_pid)
 
     def _loop(self) -> None:
         while not self._stop.is_set():
@@ -404,7 +418,7 @@ class TurnDiagnostics:
     def cpu_ratio(self) -> float | None:
         """CPU seconds per wall second over the sampled window, or None.
 
-        Anchored on the PEAK observed cumulative CPU, not the last sample. A
+        Uses the PEAK observed cumulative CPU, not the last sample. A
         process's accounting disappears from ``ps`` the moment it exits, and the
         final sample is taken *after* the timeout kill — so reading the last
         sample scores a dead runaway as 0.00s/s and reports it as idle, which is
@@ -414,17 +428,14 @@ class TurnDiagnostics:
         if len(self.samples) < 2:
             return None
         t0, c0, _ = self.samples[0]
-        t_peak, c_peak = t0, c0
-        for t, c, _ in self.samples:
+        c_peak = c0
+        for _, c, _ in self.samples:
             if c > c_peak:
-                t_peak, c_peak = t, c
-        # A process that never accumulates CPU leaves the peak at sample 0, so
-        # the peak window is zero-length. That is the BLOCKED case — the one this
-        # module exists to name — and returning None there would file it as
-        # `unclassified` instead of `idle-no-progress`. Measure a flat trace over
-        # the full observed window so it scores a real 0.0, and reserve the peak
-        # window for traces that actually grew.
-        span = (t_peak - t0) if c_peak > c0 else (self.samples[-1][0] - t0)
+                c_peak = c
+        # The denominator is the full observed window. Using the timestamp of
+        # the CPU peak makes a brief startup burst look continuously busy after
+        # a long idle hang.
+        span = self.samples[-1][0] - t0
         if span <= 0:
             return None
         return max(0.0, (c_peak - c0)) / span
@@ -489,7 +500,10 @@ class TurnDiagnostics:
                 "the agent was writing files but did not finish — genuinely slow; raising the "
                 f"turn budget is the appropriate response. [{detail}]",
             )
-        network = _network_state(self.root_pid)
+        # Never probe here: timeout handling has already reaped the child tree.
+        # A missing cached observation means live sampling never established a
+        # safe idle window, so attribution must remain unclassified.
+        network = self._network_state_observed
         if network == "unclassified":
             return (
                 REASON_UNCLASSIFIED,

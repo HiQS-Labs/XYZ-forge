@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -113,3 +113,13 @@ I reviewed the whole file and the diff. The test `test/gh648-l1-turn-termination
 2. **Pre-existing Defect (Critical)**: `TurnDiagnostics.cpu_ratio()` truncates its time span mathematically: `span = t_peak - t0`. If a process accumulates 1.0s of CPU in its first 1.0s of life, and then hangs entirely idle for the next 99s, `t_peak` stays at `1.0`. The math computes `1.0 / 1.0 = 1.0s/s`, strictly >= `CPU_BUSY_RATIO`, misclassifying a 99-second true idle hang as a runaway `CPU_BOUND` loop. The denominator should be the full elapsed time of the observed turn (`self.samples[-1][0] - t0` or similar), not just the window where it happened to be active.
 
 Please rework the network probe so it runs against a live process tree, and fix the mathematical flaw in `cpu_ratio` so idle hangs are not misclassified as CPU spikes.
+
+### Round 2 · Builder · codex
+
+Addressed both reviewer findings:
+
+- `utils/py/turn_diagnostics.py`: the one-shot network probe now runs only after the live sampler has accumulated the minimum otherwise-idle evidence, caches its result, and never probes the already-reaped tree from `classify()`. `cpu_ratio()` retains peak cumulative CPU as its numerator but now divides by the full observed wall window, so an early burst cannot mask a long idle hang.
+- `test/gh648-l1-turn-termination.sh`: added live-sampling/one-shot cache coverage, the startup-burst regression, and a mutation control for the full-window denominator; existing structured termination and descendant-scope coverage remains.
+- `validate.sh`: registration was already present and remains unchanged.
+
+Debug breadcrumb: source inspection reproduced both fail paths exactly. `bash test/gh648-l1-turn-termination.sh` passes with `PASS: 32 assertions`; the full gate remains reserved for the harness.

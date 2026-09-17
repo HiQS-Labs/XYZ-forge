@@ -17,6 +17,11 @@ def idle_diag():
     d = td.TurnDiagnostics(root_pid=4242)
     d.samples = [(1.0, 0.0, 1), (2.0, 0.0, 1), (3.0, 0.0, 1)]
     return d
+def observed_idle(network):
+    d = idle_diag()
+    d._network_probe_attempted = True
+    d._network_state_observed = network
+    return d
 
 stub = pathlib.Path(os.environ["GH648_WORK"]) / "bin"
 stub.mkdir()
@@ -46,18 +51,15 @@ check(seen["cmd"][seen["cmd"].index("-p") + 1] == "4242,4343,4444",
       "lsof queries root and descendant PIDs")
 td.subprocess.run, td._tree_pids = real_run, real_tree_pids
 
-td._network_state = lambda _pid: "established"
-reason, detail = idle_diag().classify()
+reason, detail = observed_idle("established").classify()
 check(reason == td.REASON_IDLE_IN_FLIGHT, "established connection is in-flight")
 check("established outbound connection" in detail, "in-flight detail preserves evidence")
 check(reason != "timeout-idle-no-progress", "idle trace never overclaims no-progress")
-td._network_state = lambda _pid: "none"
-reason, detail = idle_diag().classify()
+reason, detail = observed_idle("none").classify()
 check(reason == td.REASON_IDLE, "successful empty probe is idle-unknown")
 check(reason == "timeout-idle-unknown", "idle label is explicit")
 check("cause remains unknown" in detail, "idle detail stays honest")
-td._network_state = lambda _pid: "unclassified"
-reason, detail = idle_diag().classify()
+reason, detail = observed_idle("unclassified").classify()
 check(reason == td.REASON_UNCLASSIFIED, "probe failure degrades to unclassified")
 check("probe failed" in detail, "probe failure is observable")
 
@@ -68,8 +70,7 @@ check(all(r["event"] == "turn-termination" for r in records), "event named")
 check(all(r["exit_code"] == 7 for r in records), "exit remains 7")
 check(all(r["observed_at"] == 123.0 for r in records), "timestamp preserved")
 check(td.termination_record("surprise", "r", "d")["termination"] == "unknown", "foreign kind closes")
-td._network_state = lambda _pid: "none"
-d = idle_diag()
+d = observed_idle("none")
 record = d.termination_record(td.TERMINATION_IDLE_KILL, observed_at=456.0)
 check(record["reason"] == td.REASON_IDLE, "record classified")
 check(record["termination"] == "idle-kill", "record mechanism")
@@ -79,6 +80,25 @@ decoded = json.loads(stream.getvalue())
 check(decoded == emitted, "JSON matches return")
 check(decoded["termination"] == "wall-cap", "wall cap differs")
 
+# The live sampler, not post-reap classify(), owns the one-shot probe.
+probe_calls = []
+td._network_state = lambda pid: probe_calls.append(pid) or "established"
+d = td.TurnDiagnostics(root_pid=4242)
+td._descendant_cpu_seconds = lambda _pid: (0.0, 1)
+td._security_dialog_present = lambda: False
+td._newest_mtime = lambda _root: 0.0
+times = iter((1.0, 2.0, 3.0, 4.0))
+td.time.monotonic = lambda: next(times)
+d._sample(); d._sample(); d._sample(); d._sample()
+check(probe_calls == [4242], "idle network probe runs once while tree is live")
+check(d.classify()[0] == td.REASON_IDLE_IN_FLIGHT, "cached live probe drives classification")
+
+# A startup CPU burst followed by a long hang is idle overall, not CPU-bound.
+d = observed_idle("none")
+d.samples = [(0.0, 0.0, 1), (1.0, 1.0, 1), (100.0, 1.0, 1)]
+check(d.cpu_ratio() == 0.01, "CPU ratio uses full observed wall window")
+check(d.classify()[0] == td.REASON_IDLE, "startup burst does not mask long idle hang")
+
 source = pathlib.Path(os.environ["GH648_MODULE"]).read_text()
 mutated = source.replace('if network == "established":', 'if network == "none":', 1)
 check(mutated != source, "mutation changed classifier")
@@ -86,8 +106,8 @@ mutant = pathlib.Path(os.environ["GH648_WORK"]) / "turn_diagnostics_mutant.py"
 mutant.write_text(mutated)
 oracle = '''import importlib.util,sys
 s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
-m._network_state=lambda _pid:"established"
 d=m.TurnDiagnostics(root_pid=1);d.samples=[(1.,0.,1),(2.,0.,1),(3.,0.,1)]
+d._network_probe_attempted=True;d._network_state_observed="established"
 assert d.classify()[0] == m.REASON_IDLE_IN_FLIGHT
 '''
 red = subprocess.run([sys.executable, "-c", oracle, str(mutant)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -108,5 +128,19 @@ assert seen["cmd"][seen["cmd"].index("-p")+1] == "1,2,3"
 tree_red = subprocess.run([sys.executable, "-c", tree_oracle, str(tree_mutant)],
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 check(tree_red.returncode != 0, "root-only network mutation turns oracle red")
+
+ratio_mutated = source.replace('span = self.samples[-1][0] - t0',
+                               'span = 1.0', 1)
+check(ratio_mutated != source, "mutation changed CPU denominator")
+ratio_mutant = pathlib.Path(os.environ["GH648_WORK"]) / "turn_diagnostics_ratio_mutant.py"
+ratio_mutant.write_text(ratio_mutated)
+ratio_oracle = '''import importlib.util,sys
+s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+d=m.TurnDiagnostics(root_pid=1);d.samples=[(0.,0.,1),(1.,1.,1),(100.,1.,1)]
+assert d.cpu_ratio() == .01
+'''
+ratio_red = subprocess.run([sys.executable, "-c", ratio_oracle, str(ratio_mutant)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+check(ratio_red.returncode != 0, "CPU-window mutation turns oracle red")
 print(f"PASS: {passed} assertions")
 PY
