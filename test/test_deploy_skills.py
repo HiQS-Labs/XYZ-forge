@@ -472,6 +472,61 @@ raise SystemExit(mod.main(sys.argv[3:]))
         self.assertTrue(description)
         self.assertLessEqual(len(description), 1024)
 
+    # GH-660 remediation item 3: sync.py runs the forge's skill_drift_check.py and refuses to
+    # deploy a forge-owned skill whose vendored SKILL.md diverges from canonical.
+    def forge(self):
+        """A minimal canonical forge: skills/<name> + utils/py/skill_drift_check.py, inside the fixture repo."""
+        checker = self.repo / "utils" / "py" / "skill_drift_check.py"
+        checker.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(REPO / "utils" / "py" / "skill_drift_check.py", checker)
+        return self.repo
+
+    def test_gh660_no_canonical_is_a_warning_not_a_pass(self):
+        self.env.pop("XYZ_FORGE_ROOT", None)
+        self.cli("--apply", "add", self.source()); self.enable()
+        out = json.loads(self.cli("--apply", sync=True).stdout)
+        self.assertIsNone(out["drift"])
+        self.assertTrue(any("drift check skipped" in w for w in out["warnings"]))
+
+    def test_gh660_drifted_deploy_refused_citing_canonical_then_allowed_loudly(self):
+        self.cli("--apply", "add", self.source()); self.enable()
+        forge = self.forge()
+        self.env["XYZ_FORGE_ROOT"] = str(forge)
+        clean = json.loads(self.cli("--status", sync=True).stdout)
+        self.assertEqual(clean["drift"]["drifted"], []); self.assertIn("sample", clean["drift"]["ok"])
+        self.assertEqual(clean["drift"]["origin"], "XYZ_FORGE_ROOT")
+        (self.root / "sample" / "SKILL.md").open("a").write("\nlocal hack\n")
+        refused = self.cli("--apply", sync=True, code=2)
+        self.assertIn("REFUSED", refused.stderr); self.assertIn("DRIFTED sample", refused.stderr)
+        self.assertIn(str(forge / "skills"), refused.stderr)
+        self.assertFalse((self.target / "sample").exists(), "refusal must deploy nothing")
+        allowed = json.loads(self.cli("--apply", "--allow-drift", sync=True).stdout)
+        self.assertEqual([e["skill"] for e in allowed["drift"]["drifted"]], ["sample"])
+        self.assertTrue(any(w.startswith("--allow-drift") for w in allowed["warnings"]))
+        self.assertTrue((self.target / "sample").is_symlink())
+
+    def test_gh660_collection_only_skill_is_unrecognized_never_refused(self):
+        self.cli("--apply", "add", self.source("collection-only")); self.enable()
+        forge = self.forge()
+        shutil.rmtree(forge / "skills" / "collection-only")  # vendored, but the forge never owned it
+        self.env["XYZ_FORGE_ROOT"] = str(forge)
+        out = json.loads(self.cli("--apply", sync=True).stdout)
+        self.assertEqual(out["drift"]["unrecognized"], ["collection-only"]); self.assertEqual(out["drift"]["drifted"], [])
+
+    def test_gh660_explicit_bad_canonical_is_an_error(self):
+        self.cli("--apply", "add", self.source())
+        run = self.cli("--status", "--canonical", str(self.work / "nowhere"), sync=True, code=2)
+        self.assertIn("Canonical root from --canonical lacks", run.stderr)
+
+    def test_gh660_targets_json_canonical_key(self):
+        self.env.pop("XYZ_FORGE_ROOT", None)
+        self.cli("--apply", "add", self.source()); self.enable()
+        forge = self.forge()
+        cfg = self.root / "targets.json"; data = json.loads(cfg.read_text()); data["canonical"] = str(forge)
+        cfg.write_text(json.dumps(data))
+        out = json.loads(self.cli("--status", sync=True).stdout)
+        self.assertEqual(out["drift"]["origin"], 'targets.json "canonical"')
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
