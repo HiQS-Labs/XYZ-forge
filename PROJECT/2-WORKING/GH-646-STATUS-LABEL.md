@@ -21,7 +21,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| The replacement reviewer approved the focused writer source after it fixed a wave closeout path that could terminalize a still-open or unknown-state issue. 41 focused tests pass and three restored-bypass mutants fail as intended. The first full gate was safely aborted. | Land/verify GH-678 / PR #680 installer safety (or authorize HOME isolation), then run one new disposable-clone full gate before a PR is opened. |
+| The replacement reviewer approved the focused writer source after it fixed a wave closeout path that could terminalize a still-open or unknown-state issue. 41 focused tests pass and three restored-bypass mutants fail as intended. The first full gate was safely aborted. | Land/verify GH-678 / PR #680 installer safety, or use the already validated per-target installer isolation that redirects every managed skill target to owned scratch without changing `HOME`; then run one new disposable-clone full gate before a PR is opened. |
 
 ## Goal and scope
 

@@ -36,8 +36,10 @@ user link was edited or repointed. The aborted run produced no `.gate-evidence` 
 
 ## Remaining gates
 
-1. Land or otherwise verify the GH-678 / PR #680 installer-safety repair, or obtain explicit
-   authorization for an equivalent HOME-isolated full gate.
+1. Land or otherwise verify the GH-678 / PR #680 installer-safety repair, or use the already
+   validated installer-target isolation: redirect all managed app skill-target variables to owned
+   scratch while leaving `HOME` unchanged. This is normal disposable verification, not a live-link
+   edit or a whole-home mutation.
 2. From a new disposable full clone of the final source plus any required documentation commits,
    run `bash ci-local.sh` once with shellcheck available and preserve its actual result.
 3. Inspect the exact final diff and source/receipt relationship. Only a green gate plus the
