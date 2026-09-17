@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -80,3 +80,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 2 · Builder · codex
+
+The timeout guard and six-case regression suite were already present on entry. Retained the implementation: timeout suppresses the shared core's token handoff/done branch while still calling enforcement; ownership-checked atexit cleanup opens the token for a same-role retry. The timeout flag remains independent of exit-code overrides from containment.
+
+This turn changed `utils/py/commandcode-turn.py` only to correct the cleanup comment, and strengthened `test/gh648-l2-token-aftermath.sh` to require an empty handoff target after timeout, before actually claiming the same task as commandcode. `validate.sh` already registers this suite and needed no edit.
+
+Focused verification: `bash test/gh648-l2-token-aftermath.sh` passed all six cases (timeout, interrupted Approved, off-lane exit 6, enforcement exit 6, healthy handoff, healthy Approved). A scratch adapter with the timeout guard disabled failed the timeout assertion with `handoff-to: agy`. An intermediate assertion requiring `handoff-to: commandcode` also failed: production cleanup clears the target, which prompted the comment correction and exact empty-target assertion. Final six-case run passed. Logs and mutant are under `.relay-scratch/`; these are ephemeral local checks, not committed gate/provenance evidence.
+
+Scope is the Commandcode adapter's post-timeout behavior; shared enforcement and token code remain unchanged. Rollback is the scoped adapter/test change, with peer-handoff regression detectable by the negative control. Graph tools were unavailable; source fallback traced `claim_task_or_exit`, its atexit cleanup, `RelayTurnLib._run_rtl`, and the shared Bash handoff branch. The suite uses a real short-cap child and real tick operations, with git/diagnostic boundaries stubbed. No git commands or full gate were run; the harness owns final gate and commit. Review and full-gate readiness remain outstanding.
+
+handing off to agy — agy, take your turn.

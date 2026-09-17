@@ -100,7 +100,7 @@ with patch.object(adapter, 'RelayTurnLib', Boundary), patch.object(adapter, 'Tur
         fields = {k: v.strip() for k, v in fields.items()}
         if mode == 'timeout':
             assert fields['status'] == 'open', (name, info)
-            assert fields.get('handoff-to') != 'agy', (name, info)
+            assert not fields.get('handoff-to'), (name, info)
             assert 'NEXT: commandcode' in relay.read_text(), name
             claim = tick('claim', 'RETRY-TURN', '--agent', 'commandcode', '--paths', 'relay.md')
             assert 'won:' in claim, (name, claim)

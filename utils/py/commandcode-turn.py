@@ -124,7 +124,7 @@ def main():
     # unfinished Approved verdict). The shared core gates token release/done on
     # RELAY_FILE; its allowlist is already captured by rtl.before(). GH-409's
     # ownership-checked atexit cleanup releases our claim without a peer handoff,
-    # retaining the incoming role so the same task can be retried. Keep this
+    # leaving the task open so the incoming role can retry it. Keep this
     # independent of bounded_rc: worktree containment can replace exit 7 with 6.
     if timed_out:
         os.environ["RELAY_FILE"] = ""
