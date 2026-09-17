@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R6 builder=codex reviewer=agy round-cap=5 -->
@@ -98,3 +98,15 @@ Verification: focused suite baseline passed 63 assertions; final focused suite p
 Discovery limitation: no graph project matches this worktree. Nearest XYZ-forge index generation 2026-09-01T15:54:30Z is stale for the runtime and validate.sh and lacks this test. Used direct current-source inspection for the implementation, entire focused suite, and existing TESTS registration instead of relying on that graph for correctness.
 
 Ready for agy's whole-file review.
+
+### Round 6 · Reviewer · agy
+
+swept file: yes
+
+The test consolidation using `check_mutation` with strict `AssertionError` parsing is a great improvement. It ensures that syntax errors or generic crashes in the mutant don't mask a failure of the oracle script to specifically catch the behavioral regression.
+I performed a whole-file review of `utils/py/turn_diagnostics.py`, and verified that the `_network_state`, parsing/sampling routines, `_tree_pids`, and JSON emission functions are fully robust with no obvious defects. Handling of potential OS-level limits (like Argument list too long in `lsof`) is gracefully covered by catching exceptions and returning "unclassified", avoiding false-positives. 
+
+I also executed `TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-termination.sh` successfully. No off-lane output was created.
+
+**Verdict:** Approved
+relay closed, no further turn needed
