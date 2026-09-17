@@ -1,4 +1,21 @@
+---
+title: Recon — skills/*/install.sh symlink replacement and the gate-time leak
+status: Reference
+created: 2026-09-17
+updated: 2026-09-17
+owner: noel
+goal: Trace every surface the installer link-steal fix touches before choosing the fix (GH-678).
+roadmap_exempt: true
+quad_exempt: true
+---
+
 # Recon Map — skills/*/install.sh symlink replacement and the gate-time leak (GH-678)
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Three lanes reconciled: 10 seams, 3 unknowns, root cause confirmed as the gate's partial sandbox plus the installers' unconditional `rm -f` | Fix lands via the GH-678 PR; retire or rebase stale task clones that still carry the leaky test |
 Commit: 7374a1d2 (XYZ-forge development) · Mode: grep-only (no codebase-memory) · Lanes: A, B+C, D (three parallel read-only sub-agents) plus the debug-mantra trace in-session
 
 ## Subject and change class
