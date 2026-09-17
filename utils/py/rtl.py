@@ -247,21 +247,6 @@ def normalized_allow_csv(allow_paths):
     return ",".join(split_allow_paths(allow_paths))
 
 
-def relay_file_for_allowlist(root, relay_file):
-    """GH-654 follow-up — the sweep compares WORKTREE-RELATIVE porcelain paths
-    against RTL_ALLOW entries, and rtl_init stored the relay file exactly as
-    passed. The Python shims pass it ABSOLUTE, so the instructed relay-file edit
-    could never match and every builder turn tripped exit-6 (the GH-648 p1
-    blockade). Root-relative when the file lives under root; untouched
-    otherwise (cross-repo review keeps today's behavior)."""
-    rf = os.path.abspath(relay_file)
-    try:
-        rel = os.path.relpath(rf, os.path.abspath(root))
-    except ValueError:
-        return rf
-    return rf if rel.startswith("..") else rel
-
-
 def offlane_candidates(wt_path, allow_paths, relay_file):
     try:
         proc = subprocess.run(
@@ -762,7 +747,7 @@ source {lib} >/dev/null 2>&1
 if [ -s {state} ]; then
   source {state}
 else
-  rtl_init {shlex.quote(self.root)} {shlex.quote(relay_file_for_allowlist(self.root, self.relay_file))} {shlex.quote(normalized_allow_csv(self.allow_paths))} >/dev/null 2>&1
+  rtl_init {shlex.quote(self.root)} {shlex.quote(self.relay_file)} {shlex.quote(normalized_allow_csv(self.allow_paths))} >/dev/null 2>&1
 fi
 
 {cmd_str}
@@ -838,11 +823,10 @@ exit $RC
         # over-reports rather than stays silent (it skips only the exemptions
         # the bash sweep documents: .tick, .relay-scratch, transcript root).
         try:
-            for cand in offlane_candidates(wt_path, self.allow_paths, relay_file_for_allowlist(self.root, self.relay_file)):
+            for cand in offlane_candidates(wt_path, self.allow_paths, self.relay_file):
                 sys.stderr.write("rtl: GH-654 off-lane candidate: %s\n" % cand)
             sys.stderr.write("rtl: GH-654 allowlist: [%s] relay_file: %s\n" % (
-                ", ".join(split_allow_paths(self.allow_paths)),
-                relay_file_for_allowlist(self.root, self.relay_file)))
+                ", ".join(split_allow_paths(self.allow_paths)), self.relay_file))
         except Exception:
             pass  # diagnostics must never fail the turn they describe
         cmd = f"""
