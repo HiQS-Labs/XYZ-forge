@@ -1,6 +1,6 @@
 # GH-653 / GH-665 verification
 
-Status: fixture full gate green and independent final source QA Approved; combined #669 full run pending.
+Status: fixture full gate green and independent final source QA Approved; combined #669 full run green (393/393).
 Fixture PR: https://github.com/HiQS-Labs/XYZ-forge/pull/671 (no merge authorized).
 No merge authorized. GH-661 source clone untouched. No published #669 qualification claim.
 
@@ -50,11 +50,25 @@ found no remaining pre-existing safety defect. Nit: future scaffold Setup should
 carry the actual criteria; current Producer R1 supplied them. No code change needed.
 The full run is pinned to 82f786f9, not later documentation-only commits.
 
-Latest fixture hosted checks and separate combined candidate
-+ #669 local verification. Combined clone ae56f400151631b3a3fb0a2fce97dd4ca0c7fb1e
+Separate combined candidate + #669 local verification is complete. Combined clone
+ae56f400151631b3a3fb0a2fce97dd4ca0c7fb1e
 has both parents (published #669 aa634155 and fixture 82f786f9). Existing resolver
 preserved all three issue records/receipts, generation 749; displaced DB moved
 intact under temp before testing. Focused 62 fixture checks, 14 validator tests,
-65 Agy assertions and eight --fast stages pass; full run pending. These results
+65 Agy assertions and eight --fast stages pass; ./validate.sh full run is 393/393,
+exit 0, with unchanged HEAD/origin/bare=false/clean tracked tree. Nonempty combined-*
+transcripts retained. Coverage used separate --fast and full validate calls; no
+ci-local full-run gate record or promotion qualification is claimed. Code pins:
+fixture SHA256 38be8fac37eb657ec65d174e77d502f1b26b4916bbc249d3d5e046131c8d4f09;
+agy-turn.py 512465da0f09acccf3b4805e860c028dca991cf129021115c38bc15b9dc440ee;
+gh666_agy_model_probe.py 30e8d149d81b4f2458270f08ab2373fc0f599772cbb23f19cfe87e6e6ac34fde.
+All commands were run in XYZ-forge-gh669-fixture-recheck. These results
 are not qualification of published #669. #669 remains draft until fixture prerequisite
 lands. Current hosted smoke passes; advisory platform jobs are skipped, not passed.
+
+## Next gates (no merge authorized)
+
+1. Approve and land fixture PR #671 → verify merge/issue closure using existing follow-up.
+2. Refresh #669 against current development using existing ledger resolver → preserve
+   both ledgers/receipts, rerun its exact-head normal checks and hosted checks, then
+   reassess draft readiness. Do not resume held #661 or readers automatically.

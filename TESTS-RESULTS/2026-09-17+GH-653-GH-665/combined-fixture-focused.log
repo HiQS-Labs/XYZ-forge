@@ -1,0 +1,65 @@
+== test: gh642-consumer-fruit ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh642-consumer-fruit.XXXXXX.NWlpKJyfx1
+  PASS: fixture guard refuses empty
+  PASS: caller identity/HEAD/tree unchanged after empty
+  PASS: fixture guard refuses traversal
+  PASS: caller identity/HEAD/tree unchanged after traversal
+  PASS: fixture guard refuses symlink
+  PASS: caller identity/HEAD/tree unchanged after symlink
+  PASS: fixture guard refuses mkdir-failure
+  PASS: caller identity/HEAD/tree unchanged after mkdir-failure
+  PASS: fixture guard refuses init-failure
+  PASS: caller identity/HEAD/tree unchanged after init-failure
+  PASS: vendor runs on a normal clone
+  PASS: exclude: .xyz/ in info/exclude
+  PASS: exclude: /.tick/ in info/exclude
+  PASS: exclude: target .gitignore untouched
+  PASS: exclude: pre-existing .gitignore rule preserved
+  PASS: exclude: idempotent re-run (1 .xyz/ line)
+  PASS: vendor runs inside a linked worktree
+  PASS: exclude: worktree target writes to its resolved info/exclude
+  PASS: vendor runs with --separate-git-dir
+  PASS: exclude: separate-git-dir target writes to its info/exclude
+  PASS: vendor runs on a non-git directory
+  PASS: non-git fallback: rules land in .gitignore
+  PASS: direction 2 intact: blocking rule still warns
+  PASS: direction 2 intact: blocking rule preserved
+  PASS: claude-turn.py compiles
+  PASS: Opus warning fires for opus + default budget
+  PASS: Opus warning silent when budget raised
+  PASS: Opus warning silent for Sonnet
+  PASS: Opus warning defaults to stderr (not stdout)
+  PASS: main() calls warn_opus_budget (runtime call pinned)
+  PASS: marathon_drive.py compiles
+  PASS: spent default → skips claimed -R2, takes first free -R3
+  PASS: fresh-id announcement is on stderr (plan contract)
+  PASS: no --force → base id unchanged
+  PASS: explicit --relay-task → never rewritten
+  PASS: malformed base info (existing tick) → refuses exit 2
+  PASS: malformed info mid-scan → refuses exit 2 (no unbounded loop)
+  PASS: missing tick binary → refuses exit 2 (no free-id guess)
+  PASS: relay-turn-lib.sh parses
+  PASS: worktree deps are a COPY (containment: no symlink into ROOT)
+  PASS: isolated worktree receives a real node_modules COPY; turn writes cannot reach ROOT
+  PASS: xyz_init_clone.py compiles
+  PASS: init-clone: e2e run exits 0
+  PASS: init-clone: vendored harness landed
+  PASS: init-clone: Tier 2 confirmed (releases_app.py present)
+  PASS: init-clone: excludes landed in info/exclude
+  PASS: init-clone: cloned-repo hooks installed
+  PASS: init-clone: re-run on occupied derived name retries with -r2
+  PASS: init-clone: -r2 destination created
+  PASS: init-clone: original clone untouched by re-run
+  PASS: init-clone: --umbrella required
+  PASS: init-clone: invalid slug refused
+  PASS: slug: three lowercase words accepted
+  PASS: slug: four-word slug refused
+  PASS: swarm_preflight.py compiles
+  PASS: zero-criteria warning fires (acceptance-section, 0 items, text)
+  PASS: zero-criteria warning silent when items exist
+  PASS: zero-criteria warning silent outside acceptance-section mode
+  PASS: zero-criteria warning silent for json format
+  PASS: zero-criteria warning defaults to stderr (not stdout)
+  PASS: zero-criteria runtime call (indented) precedes the dry-run exit
+  PASS: frozen bash fallback untouched (GH-308)
+  gh642-consumer-fruit: 62 pass, 0 fail

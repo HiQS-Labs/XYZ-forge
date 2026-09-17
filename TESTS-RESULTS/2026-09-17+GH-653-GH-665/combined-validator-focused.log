@@ -1,0 +1,28 @@
+test_absolute_path_entry (__main__.ModelProbeTests.test_absolute_path_entry) ... ok
+test_cleanup_failure_is_reported_and_refuses (__main__.ModelProbeTests.test_cleanup_failure_is_reported_and_refuses) ... ok
+test_directory_creation_failure_refuses (__main__.ModelProbeTests.test_directory_creation_failure_refuses) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_ignored_marker_still_detected (__main__.ModelProbeTests.test_ignored_marker_still_detected) ... ok
+test_launch_failure (__main__.ModelProbeTests.test_launch_failure) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_listed_forms (__main__.ModelProbeTests.test_listed_forms) ... ok
+test_missing_path_does_not_use_caller_binary (__main__.ModelProbeTests.test_missing_path_does_not_use_caller_binary) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_nonzero (__main__.ModelProbeTests.test_nonzero) ... agy-turn: agy models probe failed (exit 9) while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+agy-turn: models probe: model-id	Display Model
+ok
+test_post_allocation_launch_error (__main__.ModelProbeTests.test_post_allocation_launch_error) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_relative_executable (__main__.ModelProbeTests.test_relative_executable) ... ok
+test_relative_path_entry (__main__.ModelProbeTests.test_relative_path_entry) ... ok
+test_timeout (__main__.ModelProbeTests.test_timeout) ... agy-turn: agy models probe timed out after 1s while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+agy-turn: models probe: model-id	Display Model
+ok
+test_unavailable (__main__.ModelProbeTests.test_unavailable) ... agy-turn: requested AGY_MODEL='not-listed' is unavailable on this agy account. Run `agy models` to choose a listed model; refusing to fall back silently.
+ok
+test_unset_model_skips_probe (__main__.ModelProbeTests.test_unset_model_skips_probe) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 4.621s
+
+OK

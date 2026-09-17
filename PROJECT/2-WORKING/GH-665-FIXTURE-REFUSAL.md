@@ -16,7 +16,7 @@ goal: Prevent failed GH-642 fixture construction from committing into caller che
 
 | What was just completed | What's next |
 |---|---|
-| Combined delivery with GH-653 registered and rated 95/95/50/85 | Execute shared reviewed plan; caller-preserving fault checks and normal gated PR |
+| Caller-preserving fault checks and red controls verified; full gate 393/393; independent source QA Approved; PR #671 ready | Await merge approval; then refresh and qualify #669's own branch |
 
 Canonical execution, recon, rating rationale and acceptance:
 [GH-653-FIXTURE-SAFETY.md](GH-653-FIXTURE-SAFETY.md). One test file/clone/branch/PR

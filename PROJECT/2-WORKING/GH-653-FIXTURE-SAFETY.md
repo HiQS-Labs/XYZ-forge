@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan/final source QA Approved; fixture 62/62 and red controls; normal full gate 393/393; PR #671 published | Push review receipts, confirm hosted checks; conditional combined #669 full run |
+| Plan/final source QA Approved; fixture 62/62 and red controls; both full runs 393/393; PR #671 review-ready | Await fixture merge approval, then refresh/requalify #669's exact branch; held #661 untouched |
 
 ## Quad Concepts
 
@@ -106,8 +106,8 @@ base repairs, merge, deployment, #661 resumption, or stacked-PR publication.
 - [x] Original unborn fixture red retained and actual linked-worktree coverage green.
 - [x] All five fault refusals and caller checks pass; guard/caller controls witnessed red.
 - [x] Focused/static/full gate green at 82f786f9; final code hash unchanged, clone identity stable, provenance committed.
-- [ ] Independent plan/final QA Approved; separate PR base/head/scope verified.
-- [ ] Combined #669 checks recorded separately; prerequisite and merge hold explicit.
+- [x] Independent plan/final QA Approved; PR #671 into development, scope/head verified and review-ready, unmerged.
+- [x] Combined #669 393/393 at ae56f400 recorded separately; published aa634155 stays draft, prerequisite/merge hold explicit.
 
 ## Lessons Learned (For Future Agents)
 
