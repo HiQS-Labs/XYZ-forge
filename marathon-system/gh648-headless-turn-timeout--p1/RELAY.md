@@ -136,3 +136,11 @@ The Builder successfully addressed the Round 4 review finding. The file progress
 
 **Verdict:** Approved
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T04:12:26Z
+task: MARATHON-P1-TURN-R4
+reviewer: agy
+status: Approved
+reviewed-head: da9a9e5ec3408f3c00de0e44662948890fe74672
+added-range: 13480+597
+added-sha256: 7568cee79f917716fc11b916a4e2827ced4b252f428fb14be68bd90a17cff96b
