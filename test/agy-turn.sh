@@ -6,6 +6,7 @@
 source "$(dirname "$0")/_setup.sh" agy-turn
 export TICK_BIN="$TICK"
 SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
+python3 "$HERE/gh666_agy_model_probe.py" || fail "GH-666: model-probe caller preservation"
 tick_a init >/dev/null
 
 # committed relay-file baseline; mirror the real repo's .tick/ gitignore (invisible to git status).
