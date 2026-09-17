@@ -133,3 +133,11 @@ The new test suite covers the success and timeout paths natively, including work
 No latent issues were observed in the original file scope.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T04:38:31Z
+task: MARATHON-P2-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 307fc592a6c3e6b8ab473ae5eff16d19026ab0d6
+added-range: 8931+797
+added-sha256: 998afe1da489331f2f0f6c800f9acff0920317b02118a82349c95719c5d598bb
