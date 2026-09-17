@@ -25,7 +25,10 @@ EXIT_OK, EXIT_DRIFT, EXIT_USAGE = 0, 1, 2
 
 
 def _digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    # GH-663 finding 3: normalize CRLF before hashing — a vendor that differs
+    # only in line endings is content-identical for a Markdown loader, and
+    # flagging it would be a false positive.
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def scan(canonical: Path, collection: Path) -> dict:
@@ -55,7 +58,8 @@ def scan(canonical: Path, collection: Path) -> dict:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--canonical", required=True,
-                        help="canonical skills/ directory (this repo)")
+                        help="this repo's root (skills/ is appended) OR its "
+                             "skills/ directory directly — both accepted")
     parser.add_argument("--collection", required=True,
                         help="vendored collection directory to check")
     parser.add_argument("--json", action="store_true", dest="as_json",
@@ -63,10 +67,11 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     canonical, collection = Path(args.canonical), Path(args.collection)
-    if not (canonical / "skills").is_dir() or not collection.is_dir():
+    skills_dir = canonical / "skills" if (canonical / "skills").is_dir() else canonical
+    if not skills_dir.is_dir() or not collection.is_dir():
         parser.print_usage(sys.stderr)
         return EXIT_USAGE
-    result = scan(canonical / "skills", collection)
+    result = scan(skills_dir, collection)
     if args.as_json:
         print(json.dumps(result, indent=2))
     else:

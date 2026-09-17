@@ -91,6 +91,20 @@ class OfflaneCandidates(unittest.TestCase):
         self.assertEqual(found, ['offlane-probe.txt'],
                          'the real off-lane file must still be the only finding')
 
+    # GH-663 finding 4: a rename's SOURCE path must be checked too — a move
+    # out of a non-allowlisted location may not stay silent.
+    def test_rename_source_path_is_reported(self):
+        # R porcelain entries require a TRACKED source — track the probe first.
+        subprocess.run(['git', '-C', self.wt, 'add', 'offlane-probe.txt'], check=True)
+        subprocess.run(['git', '-C', self.wt, 'commit', '-q', '-m', 'track probe'],
+                       check=True, stdout=subprocess.DEVNULL)
+        subprocess.run(['git', '-C', self.wt, 'mv', 'offlane-probe.txt',
+                        'offlane-moved.txt'], check=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        found = self.candidates()
+        self.assertIn('offlane-moved.txt', found, 'rename destination must be reported')
+        self.assertIn('offlane-probe.txt', found, 'rename SOURCE must also be reported')
+
     def test_widening_the_allowlist_silences_a_path(self):
         self.assertEqual(self.candidates(allow=ALLOW + ',offlane-probe.txt'), [])
 
