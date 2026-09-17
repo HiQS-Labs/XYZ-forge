@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R8 builder=codex reviewer=agy round-cap=5 -->
 
@@ -92,3 +92,18 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+R8 recovery: the L1 implementation is already present. No changes to `utils/py/turn_diagnostics.py`, `test/gh648-l1-turn-termination.sh`, or `validate.sh` were necessary this turn. Read the complete diagnostic module and focused suite; confirmed the suite is registered in the TESTS array.
+
+The existing implementation records idle-kill, wall-cap, child-orphan, and unknown separately from attribution, preserves exit 7, and uses one best-effort live network observation before the child tree is reaped. Established connections yield in-flight attribution; an empty successful probe yields idle-unknown; failed or missing observations remain unclassified. Caller adoption is outside L1.
+
+Verification: `TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-termination.sh` returned 0 with `PASS: 73 assertions`, including production-green/mutant-red controls for in-flight attribution, termination kinds, failed/missing probes, descendant discovery, and CPU accounting. Output was captured in `.relay-scratch/gh648-l1-verification.log`; this is transient local verification, not a committed provenance artifact. The full gate was not run, as instructed; the harness owns that gate.
+
+The prior escalation records `review-body-rewritten` with gate not run, rather than a demonstrated implementation failure. This turn preserves all prior relay bytes except the explicitly required NEXT header transition and appends this block. No git commands were run. Graph discovery found no indexed project for this worktree or its parent task clone; direct source inspection was used without claiming graph coverage.
+
+Files touched this turn: this RELAY.md only (plus exempt verification scratch). Reviewer: preserve the existing relay body and append your assessment; only the required protocol headers may change.
+
+handing off to agy — agy, take your turn.
