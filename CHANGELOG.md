@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-17 — Skill installers stop stealing symlinks; gate no longer writes real HOME (GH-678)
+
+Every `skills/*/install.sh` deleted any symlink not already pointing at its own clone and relinked
+to itself, with no record of the old target. `test/agent-chorus.sh` ran that installer inside the
+gate with only two of its five target directories sandboxed, so every gate run on every clone
+repointed the three real `~/.gemini/**/skills/agent-chorus` links to that clone (three times on
+2026-09-17 alone; regression since the 2026-08-23 AgentChorus rename added the Gemini targets
+without extending the test's env). Now: the test sets `HOME` to its sandbox on every installer
+call and asserts the HOME-relative targets landed there; all 22 installers refuse to replace a
+live link they do not own, naming its current target, while still cleaning dangling links;
+`relay-xyz/install.sh` propagates a refused target in its exit code like its siblings. New
+`test/gh678-installer-live-links.sh` runs all 22 in a sandbox HOME against a live foreign link
+(must refuse, 22/22 originals failed this) and a dangling one (must replace). README tells
+Skills Army HQ machines to skip the installers. Recon map at
+`PROJECT/2-WORKING/recon-install-sh-link-steal.md`. Reversibility: Easy — ordinary revert.
+
 ## 2026-09-17 — Retire the forge's copy of the daily skill (GH-672 follow-up)
 
 `skills/daily` is removed. The skill reads rebalanceOS internals directly and rebalanceOS is its

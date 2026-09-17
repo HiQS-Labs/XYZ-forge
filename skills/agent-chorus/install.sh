@@ -58,6 +58,13 @@ install_one() {
       echo "$SKILL_NAME: already installed for $_label → $_link -> $SELF_DIR"
       return 0
     fi
+    if [ -L "$_link" ] && [ -e "$_link" ]; then
+      # GH-678: a live link that is not ours belongs to another installer or to a managed
+      # Skills Army collection. Only a dangling link is stale enough to replace.
+      echo "$SKILL_NAME: $_link already points at $(readlink "$_link") — not replacing a live link." >&2
+      echo "  Remove it yourself if that is intended." >&2
+      return 1
+    fi
     rm -f "$_link"
   elif [ -e "$_link" ]; then
     _backup="${_link}.bak-$(date +%Y%m%d%H%M%S)"

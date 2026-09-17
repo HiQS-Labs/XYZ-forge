@@ -677,15 +677,22 @@ case "$fsync_probe" in
   *) pass "atomic_write fsyncs both the file and its parent directory (the rename survives power loss)" ;;
 esac
 
-# The installer is cross-agent and never writes to real user skill directories in this test.
+# The installer is cross-agent. It writes five discovery directories, three of them only via
+# $HOME defaults, so every run below sets HOME to a sandbox: overriding the two named env vars
+# alone leaked three real ~/.gemini/**/skills/agent-chorus writes per suite run (GH-678).
+SANDBOX_HOME="$WORK/home"
 CLAUDE_DIR="$WORK/claude-skills"
 CODEX_DIR="$WORK/codex-skills"
-install_out="$(CLAUDE_SKILLS_DIR="$CLAUDE_DIR" CODEX_SKILLS_DIR="$CODEX_DIR" \
+install_out="$(HOME="$SANDBOX_HOME" CLAUDE_SKILLS_DIR="$CLAUDE_DIR" CODEX_SKILLS_DIR="$CODEX_DIR" \
   bash "$REPO/skills/agent-chorus/install.sh" 2>&1)"
 install_rc=$?
 [ "$install_rc" -eq 0 ] && pass "installer completes for Claude and Codex" || fail "installer exits $install_rc: $install_out"
 [ -L "$CLAUDE_DIR/agent-chorus" ] && [ -L "$CODEX_DIR/agent-chorus" ] \
   && pass "installer exposes the same skill to both agents" || fail "installer symlinks missing"
+# GH-678 containment: the three HOME-relative targets must land in the sandbox, never in real $HOME.
+[ -L "$SANDBOX_HOME/.gemini/config/skills/agent-chorus" ] \
+&& pass "installer's HOME-relative targets stay inside the test sandbox" \
+|| fail "installer's HOME-relative targets escaped the sandbox (HOME override missing?)"
 
 # Legacy symlink migration (#193 Phase 0): a machine that installed the old agent2agent skill
 # holds a symlink whose target dies with this rename. The installer must repoint it (old-name
@@ -693,7 +700,7 @@ install_rc=$?
 MIG_DIR="$WORK/legacy-skills"
 mkdir -p "$MIG_DIR"
 ln -s "$REPO/skills/agent2agent" "$MIG_DIR/agent2agent"   # the pre-rename install shape (now dangling)
-mig_out="$(CLAUDE_SKILLS_DIR="$MIG_DIR" CODEX_SKILLS_DIR="$WORK/mig-codex" \
+mig_out="$(HOME="$SANDBOX_HOME" CLAUDE_SKILLS_DIR="$MIG_DIR" CODEX_SKILLS_DIR="$WORK/mig-codex" \
   bash "$REPO/skills/agent-chorus/install.sh" 2>&1)"
 mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"
 # GH-458/GH-463: compare the two paths as DIRECTORIES, not as path spellings. install.sh derives
@@ -716,7 +723,7 @@ mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"
 
 MIG_DIR2="$WORK/legacy-realdir"
 mkdir -p "$MIG_DIR2/agent2agent"
-CLAUDE_SKILLS_DIR="$MIG_DIR2" CODEX_SKILLS_DIR="$WORK/mig2-codex" \
+HOME="$SANDBOX_HOME" CLAUDE_SKILLS_DIR="$MIG_DIR2" CODEX_SKILLS_DIR="$WORK/mig2-codex" \
   bash "$REPO/skills/agent-chorus/install.sh" >/dev/null 2>&1
 [ -d "$MIG_DIR2/agent2agent" ] && [ ! -L "$MIG_DIR2/agent2agent" ] \
   && pass "installer leaves a real agent2agent directory untouched" \
