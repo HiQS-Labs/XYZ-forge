@@ -20,7 +20,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Controlled caller-write reproduction; issue/intake/rating and recon | Independent plan QA, narrow implementation and verified PR |
+| Plan QA approved; narrow validator fix and witnessed red/green regression checks | Final-source gates/review; PR publication held if base checks remain red |
 
 ## Quad Concepts
 

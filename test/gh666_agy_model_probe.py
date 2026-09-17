@@ -137,6 +137,18 @@ if mode == "timeout": time.sleep(10)
         with mock.patch.object(agy.tempfile, "mkdtemp", side_effect=OSError("injected allocation failure")):
             self.check_probe(False, invoked=False)
 
+    def test_cleanup_failure_is_reported_and_refuses(self):
+        original_exit = tempfile.TemporaryDirectory.__exit__
+
+        def failed_exit(directory, *args):
+            original_exit(directory, *args)
+            raise OSError("injected cleanup failure after removal")
+
+        with mock.patch.object(tempfile.TemporaryDirectory, "__exit__", failed_exit):
+            with mock.patch("builtins.print") as report:
+                self.check_probe(False)
+                self.assertTrue(any("probe failed" in str(call) for call in report.call_args_list))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
