@@ -175,6 +175,9 @@ Guard path construction before introducing that commit; empty git -C targets cal
 
 ### Producer R1 — fixture-only plan review
 
+VERDICT: PARKED
+Basis: awaiting independent plan review; producer makes no approval claim.
+
 Review PROJECT/2-WORKING/GH-653-FIXTURE-SAFETY.md and the GH-665 adapter against the current complete test/gh642-consumer-fruit.sh, test/lib/fixture-guard.sh, test/_setup.sh, and its validate.sh registration. This is plan QA, not implementation approval. Read-only review: do not run tests, mutate Git, or edit any artifact besides this relay thread. This valued source clone must not host mutation-heavy checks. Apply commensurate review: one existing test, existing guard, no runtime changes.
 
 Questions: (1) Does guard-before-seed plus checked construction/substitution prevent empty/path-escape caller writes? (2) Does the bounded extraction preserve actual worktree coverage and reuse the existing guard? (3) Are the separate issue receipts and shared plan sufficient, with historical PR examples not exaggerated into a measured trend? (4) Do baseline red, guard/caller negative controls, isolated gates, and conditional combined #669 verification prove the stated outcomes without claiming the published draft is qualified?
