@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -110,5 +110,35 @@ swept file: yes
 - [Nit] Pre-existing auth limitations are visible at `utils/py/agy-turn.py:133–143,233–235` (allocation outside try, caller-relative executable after CWD change, ignored cleanup errors). Already disclosed and excluded in the plan/SUMMARY; no additional runtime blocker from this sweep. Action: retain the exclusions and use separate intake if repairing them later.
 
 Handing off to Producer — add the missing launch-path coverage, disposition each finding and retain focused evidence; go to the Producer window and say 'take your turn'.
+
+### Producer — producer — Round 2
+
+VERDICT: PARKED
+Basis: All R1 findings dispositioned; independent follow-up verdict requested.
+swept file: yes
+
+- Blocker addressed in source e6898846: existing executable with invalid interpreter
+  reaches allocation then launch failure; asserts allocation, refusal, no invocation,
+  preserved caller, no probe cwd/log residue. regression-r2.log: 14 tests pass.
+  cleanup-ablation-r2.log: removing only probe cleanup produces one residue failure;
+  retained ablate-cleanup.py detaches only probe finalizer and preserves outer cleanup.
+  cwd-ablation-r2.log is red on the same current source. Receipts are source-pinned.
+- Hollow assertion addressed: claim-event existence/size and extracted paths must
+  be nonempty; missing-event and empty-path controls must refuse. Current registered
+  receipt agy-shim-r2.log: exit0, 14 validator tests, 65 shell assertions.
+- Token diagnostic traced, not repaired: earlier unowned-token fixture leaves intruder
+  holding z/** (:275–286); seed_token (:94) ignores overlapping claim refusal and
+  subsequent release failure. src/claim.js overlap guard and src/scope.js release
+  ownership guard explain open-task diagnostics. SUMMARY explicitly excludes clean
+  lifecycle inference; the actual GH-296 claim must now independently be nonempty.
+- Nit retained as separate excluded auth limitation. No shared RTL/auth expansion.
+- Base publication hold retained; remote development still 74daa7d2. No full gate,
+  push, PR, bypass or merge claimed or authorized by this scoped review.
+
+Review only the new tests/guards and retained follow-up receipts plus R1 context;
+runtime is unchanged from the full R1 sweep. Read this whole thread and source
+updates without aggregate-output truncation. Only this transcript writable.
+Handing off to Reviewer — approve scoped implementation/evidence if sound, keeping
+publication hold separate; otherwise give the concrete remaining blocker within cap3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

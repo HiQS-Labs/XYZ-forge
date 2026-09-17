@@ -32,6 +32,28 @@ The existing auth-probe relative-binary/cleanup limitations are not repaired her
 Each log is nonempty, source-pinned and SHA256-addressed in provenance.jsonl.
 Mutation-heavy tests run only in the separate disposable full validation clone.
 
+## Review follow-up
+
+Source e6898846 adds an existing executable with an invalid interpreter, proving
+launch refusal after temporary-directory allocation, caller preservation and
+directory/log removal. All 14 validator tests pass. Disabling only probe cleanup
+in memory makes this single launch-error test fail on directory residue; the
+outer controlled sandbox still cleans up. Missing-event and empty-path negative
+controls now guard the registered suite's GH-296 claim-path assertion.
+
+The registered suite's older token diagnostics are not clean bookkeeping evidence.
+Its unowned-token fixture leaves an intruder holding z/** (test/agy-turn.sh:275–286).
+Later seed_token calls request overlapping z/** and ignore claim/release results
+(:94); src/claim.js rejects overlap and src/scope.js release rejects an open task.
+Thus these are failed seeding diagnostics, not expected teardown. The actual
+GH-296 prelaunch claim is independently required nonempty; model tests and
+specific behavior assertions are retained, not a blanket token-lifecycle claim.
+Repairing that older fixture is excluded from this runtime fix.
+
+Current e6898846 registered suite exits 0: 14 validator tests and 65 shell
+assertions pass, including missing-event/empty-path refusals. The failed seeding
+diagnostics remain; this result does not prove a fully clean token lifecycle.
+
 ## Publication hold
 
 Full validation and gated topic push/PR are not complete. Known required base
