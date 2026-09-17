@@ -113,3 +113,11 @@ No pre-existing defects were found during the sweep of the modified files.
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-09-17T05:03:28Z
+task: MARATHON-P3-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 3000fc533ad3237cf5c05a8eea4356ee5b1ce5f2
+added-range: 8810+651
+added-sha256: 03c5b39767060a67b38c760a3847221e0ada8ecf872f2af03566fa08f05f60f5
