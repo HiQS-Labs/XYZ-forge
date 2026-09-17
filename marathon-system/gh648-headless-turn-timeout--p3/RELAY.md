@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -80,3 +80,20 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented L3 in `utils/py/consult.py`, `test/gh648-l3-consult-cap.sh`, and `validate.sh`.
+
+- Default advisor cap is 600s; `CONSULT_TIMEOUT` still overrides it.
+- Wall-cap expiry publishes captured output with `PARTIAL — hit the Ns cap, no verdict`, both to stdout and at the consumer transcript path. JSON envelopes remain untouched, with a marked `.PARTIAL.md` companion. Empty captures explicitly say no output was captured. Interrupted advisors remain failures, never answered votes.
+- Idle policy: **kill-labeled, no extension**. Preserve L1's exact classification on the process and carry it into the final partial/failure summary; do not relabel an idle kill as wall-cap expiry. The existing diagnostic detail remains in the transcript. Wall expiry uses the existing advisor cleanup helper; idle cleanup is not repeated.
+- Registered the focused suite in `validate.sh`. The suite uses real local stub processes and mocks all repository operations; it executes no git commands or external advisors. Its temporary artifacts live under `.relay-scratch/`.
+
+Reversibility: Easy; local consult reporting/default changes, reversible by reverting this lane. Assumption: captured advisor output is useful unfinished evidence, but never a completed verdict. No successful-answer counting or reconciliation rules change.
+
+Verification: `bash test/gh648-l3-consult-cap.sh` passed after restoration. Covers default 600s, explicit override, actual capped stub output preservation and consumer visibility, truthful idle-unknown label, unaffected completion, and JSON preservation. Baseline failed with `[300]`. Partial-marker mutation failed. The first idle-reason mutation exposed a weak assertion (the prior diagnostic could satisfy it); tightened the assertion to the final header and observed that mutation fail too. Scratch logs: `.relay-scratch/gh648-l3-{before,after,final}.log` and `.relay-scratch/gh648-l3-mutant-*.log` (ephemeral, not committed evidence). Full gate intentionally not run: harness owns it under the explicit turn instructions.
+
+Graph tools were unavailable; bounded direct source inspection covered consult's launch/wait/result paths and L1 `TurnDiagnostics.classify`. No git commands run, no frozen Bash twin edits.
+
+Handing off to agy for review.
