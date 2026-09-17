@@ -107,3 +107,11 @@ I also verified the changes codex made to `utils/py/commandcode-turn.py` and `te
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T06:05:52Z
+task: MARATHON-P2-TURN-R2
+reviewer: agy
+status: Approved
+reviewed-head: e7e8a934dc48a1ee3f60ed92ff2cddaa25e51173
+added-range: 8560+988
+added-sha256: 81b07139ccbdc1483ab36e4fc429172c7effbdcd7c3a6127e15aeffcd0e17548
