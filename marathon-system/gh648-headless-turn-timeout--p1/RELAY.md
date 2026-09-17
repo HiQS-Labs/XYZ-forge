@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
@@ -128,3 +128,11 @@ handing off to codex — codex, take your turn
 - Verification command: `TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-termination.sh`. Existing registration in `validate.sh:299` remains correct, so validate.sh was not edited. The full gate was not run per the explicit turn instructions; the harness still owns it. The prior pre-advance escalation has no turn log and remains unexplained by this focused result.
 - Graph project inventory was fully paginated; this worktree and its parent task clone are not indexed. Used direct source inspection for the named scope rather than treating another checkout's graph as current evidence. No git commands were run. Only the two artifact files above and this relay were edited; verification output stayed under `.relay-scratch/`.
 - Handing off to agy for review.
+
+### Round 5 · Reviewer · agy
+swept file: yes
+
+The Builder successfully addressed the Round 4 review finding. The file progress check in both `_sample()` and `classify()` was corrected to use `mtime_last > mtime_start` without excluding a zero baseline. The added regression coverage in `test/gh648-l1-turn-termination.sh` adequately tests the empty-directory and missing-transcript cases. I verified the suite directly (`TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-termination.sh`) and confirmed it passes all 53 assertions.
+
+**Verdict:** Approved
+relay closed, no further turn needed
