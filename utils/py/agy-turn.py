@@ -116,7 +116,7 @@ def agy_auth_preflight(agy_bin):
     # GH-426: run the probe in a THROWAWAY directory, never in whatever repo happens to be the
     # caller's CWD.
     #
-    # This pre-flight is the only place the harness executes the agent binary OUTSIDE the turn's
+    # Pre-flight probes execute the agent binary OUTSIDE the turn's
     # containment. `subprocess.run` with no `cwd=` inherits the parent's, which for a driven turn is
     # the harness clone — so anything this invocation writes lands in the harness working tree, is
     # never seen by `rtl_check` (which inspects RTL_ROOT, a different repo), and is never reverted.
@@ -255,8 +255,16 @@ def agy_validate_model(agy_bin):
     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
     out_file = os.path.join(tempfile.gettempdir(), f"agy-models-{os.getpid()}.log")
     try:
-        with open(out_file, "w") as out_f:
-            subprocess.run([agy_bin, "models"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
+        # GH-666: resolve in caller CWD first; relative binaries/PATH entries must
+        # not start resolving against the disposable probe CWD instead.
+        probe_bin = os.path.abspath(shutil.which(agy_bin) or agy_bin)
+        # Reuse the auth probe's disposable-CWD pattern. Context ownership also
+        # cleans nonzero/timeout/launch failures and reports cleanup errors below.
+        with tempfile.TemporaryDirectory(prefix="agy-model-probe.") as probe_cwd:
+            with open(out_file, "w") as out_f:
+                subprocess.run([probe_bin, "models"], timeout=secs, stdout=out_f,
+                               stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                               check=True, cwd=probe_cwd)
     except subprocess.TimeoutExpired:
         print(f"agy-turn: agy models probe timed out after {secs}s while validating AGY_MODEL={model!r}. Refusing to fall back silently.", file=sys.stderr)
         try:
