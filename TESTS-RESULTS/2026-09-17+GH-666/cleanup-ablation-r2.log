@@ -1,0 +1,26 @@
+test_post_allocation_launch_error (probe_tests.ModelProbeTests.test_post_allocation_launch_error) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+FAIL
+
+======================================================================
+FAIL: test_post_allocation_launch_error (probe_tests.ModelProbeTests.test_post_allocation_launch_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 123, in test_post_allocation_launch_error
+    self.check_probe(False, str(broken), invoked=False)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 90, in check_probe
+    self.assertEqual(list(self.probes.iterdir()), [], "probe cwd/log residue")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [PosixPath('/private/var/folders/z0/92pfvh[71 chars]mh')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+PosixPath('/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh666.gbnfwrwe/probes/agy-model-probe.gtjr1zmh')
+
+- [PosixPath('/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh666.gbnfwrwe/probes/agy-model-probe.gtjr1zmh')]
++ [] : probe cwd/log residue
+
+----------------------------------------------------------------------
+Ran 1 test in 0.140s
+
+FAILED (failures=1)

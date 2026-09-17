@@ -1,0 +1,462 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0aed47e1..aacbdf0c 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,18 @@
+ # Changelog
+ 
++## 2026-09-17 — Agy model-probe CWD isolation (GH-666)
++
++- Model validation now resolves its executable in caller CWD, then runs in an owned
++  stdlib temporary directory. Relative probe writes no longer land in the caller;
++  cleanup/allocation failures refuse through the existing error path. Existing
++  model ID/display/full-line parsing and turn forwarding remain unchanged.
++- Added real-validator caller/marker/sentinel/cleanup and failure-path checks to
++  the registered Agy suite. Baseline and cwd-only ablation fail; the focused fix
++  passes. Full gate and final review remain pending; existing base path/PDDA
++  failures are not bundled. Refs GH-661; no merge or deployed/live-model claim.
++  Reversibility: Costly under containment policy; reviewed focused revert. This
++  bounds relative writes only, not absolute access or detached child lifetimes.
++
+ ## 2026-09-16 — PDDA canonical migration (GH-649)
+ 
+ Forge now carries PDDA's installer, manifest, sync tooling and generic startup templates.
+diff --git a/PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md b/PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md
+new file mode 100644
+index 00000000..46d3526f
+--- /dev/null
++++ b/PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md
+@@ -0,0 +1,93 @@
++---
++title: Isolate Agy model-validation probe
++status: Active
++created: 2026-09-17
++updated: 2026-09-17
++owner: noel
++goal: Prevent relative model-probe writes in caller checkouts using existing temporary-directory ownership.
++effort: 1
++complexity: 2
++risk: 3
++phases: 1
++gh_issue: 666
++source: https://github.com/HiQS-Labs/XYZ-forge/issues/666
++doc_type: bugfix
++---
++
++# GH-666 — Agy model probe
++
++## Status
++
++| What was just completed | What's next |
++|---|---|
++| Plan QA approved; narrow validator fix and witnessed red/green regression checks | Final-source gates/review; PR publication held if base checks remain red |
++
++## Quad Concepts
++
++- A model-list probe inherits caller CWD → reuse the existing disposable-probe pattern.
++
++## Diagnosis and scope
++
++See recon-agy-model-probe.md. At base 74daa7d2, a relative-writing models stub
++dirties a temporary Git caller while the actual validator returns True. Baseline
++source is unchanged; no live CLI write or damage to operator files is claimed.
++Protocol: debug-mantra, controlled temp caller; no instrumentation in shared RTL.
++Hypotheses ranked: inherited CWD (observed), log capture protecting writes (falsified
++by marker outside log), later RTL cleanup protecting caller (falsified by call order),
++unset-model invocation (negative control specified). No new layer or dependency.
++
++## Decision, limits and rating
++
++Costly under shared-containment policy; focused code rollback is easy but a bad
++preflight could damage work. Bet: stdlib temporary-directory ownership plus explicit
++subprocess cwd removes inherited-relative writes while preserving model parsing.
++Shield: controlled stub, fail closed on folder creation, existing shim tests,
++disposable full-clone gates and independent QA. Tripwire: any changed caller or
++model-selection/forwarding result stops delivery; rollback through reviewed revert.
++No shared RTL, frozen Bash, process lifecycle, absolute-write sandbox, deployment,
++GH-661 repair/merge, Daily or Flight Deck work. Cleanup failures must be reported,
++not silently treated as clean success.
++
++Persisted rating 90/85/50/85: potential caller corruption plus blocked review is
++urgent/high severity; appeal neutral; one local probe is cheap to repair. Observed
++recurrence is one reproduced defect, related historical auth-probe repair GH-426
++is a different call. Search windows 2026-09-03..16 versus 2026-08-20..09-02 found
++broader containment incidents GH-654/GH-658 and GH-285, not repeated measurements
++of this validator. Search coverage is incomplete: trend unknown, no growing rate claim.
++No operator override.
++
++## Phase 1 — Surgical fix and PR
++
++1. Independent Codex plan QA, cap three rounds → actual cited approval before code edits.
++2. Add a registered stdlib regression suite against the real validator. Controlled
++   relative-writing stub covers listed ID/display/full-line, unavailable, nonzero,
++   timeout and launch failure. Assert nonempty invocation records, caller Git identity,
++   HEAD/tree unchanged, explicit marker absent (including Git-ignored marker),
++   pre-existing sentinel bytes unchanged and temporary CWD removed. Invocation
++   records must prove the stub wrote the marker in its recorded cwd before exit.
++   Unset model invokes nothing;
++   creation failure returns False before invocation → baseline failures retained.
++3. Use the existing disposable-probe-directory pattern with explicit cwd and
++   cleanup on all returns, retaining timeout/errors/parsing/forwarding. Resolve the
++   validator executable in caller CWD with shutil.which and make its result absolute
++   before switching child cwd; test absolute, caller-relative and bare PATH forms
++   including a relative PATH entry. This preserves validator resolution only;
++   the existing auth probe's relative-executable limitation is not repaired here.
++   No helper
++   framework. Remove cwd via an in-memory ablation only → same preservation checks red.
++4. Commit code/docs, run focused/shim/static and full gates in a separate full clone,
++   pin logs/source/hash/exit and assert clone identity/tracked-tree unchanged → actual
++   green results or explicit pre-existing base blockers. No silent skipping or bypass.
++5. Final independent Codex QA (cap three), inspect scope, actual gated push and one PR
++   into development → ready only on approval/passing checks; otherwise record hold.
++   Merge is not authorized. Existing unrelated gate defects are not bundled.
++
++### Phase 1 — QA checklist
++
++- [ ] Registered preservation assertions fail on unchanged base and cwd ablation.
++- [ ] Probe result/model forms and absent-model behavior preserved; completed-path cleanup verified.
++- [ ] Creation/launch/timeout/nonzero/unavailable failures preserve caller and report refusal.
++- [ ] Full source-pinned gate, static checks and final independent QA pass.
++- [ ] PR base/head/scope verified; issue stays open awaiting merge.
++
++Evidence destination: TESTS-RESULTS/2026-09-17+GH-666/ with committed provenance.jsonl.
+diff --git a/PROJECT/2-WORKING/recon-agy-model-probe.md b/PROJECT/2-WORKING/recon-agy-model-probe.md
+new file mode 100644
+index 00000000..3ef08ce3
+--- /dev/null
++++ b/PROJECT/2-WORKING/recon-agy-model-probe.md
+@@ -0,0 +1,67 @@
++---
++title: Recon — Agy model-validation probe
++status: Reference
++created: 2026-09-17
++updated: 2026-09-17
++owner: noel
++goal: Trace the existing probe before narrowing the repair.
++roadmap_exempt: true
++quad_exempt: true
++---
++
++# Recon Map — Agy model-validation probe
++
++## Status
++
++| What was just completed | What's next |
++|---|---|
++| Unsafe model-probe call and controlled relative-write reproduction traced | Apply the narrow reviewed probe fix and preservation tests |
++
++Commit: 74daa7d251ac4070c75575d139edc41657cc06ef. Mode: rg/read;
++one local lane covering entry/state/contracts/failure. No graph installed.
++
++## Subject and current radius
++
++Local developer CLI preflight execution location, not a new authority/source of truth.
++Only Python Agy model validation changes; normal turns and shared RTL stay intact.
++
++## Seams and state
++
++| Seam | Location | Contract |
++|---|---|---|
++| Runtime dispatch | relay-automation/agy-turn.sh:9–24 | Python default; frozen fallback untouched |
++| Preflight sequence | utils/py/agy-turn.py:350–360,404 | auth then model validation precede RTL and snapshot |
++| Existing safe pattern | utils/py/agy-turn.py:133–143,222–234 | temporary auth CWD, cleanup on returns |
++| Unsafe probe | utils/py/agy-turn.py:250–318 | AGY_MODEL unset bypasses; otherwise models inherits CWD |
++| Model contract | utils/py/agy-turn.py:299–317,397–398 | ID/display/full-line accepted, explicit model forwarded |
++| Regression consumer | test/agy-turn.sh:157–182 | unavailable blocks turn; listed proceeds and forwards model |
++| Gate registration | validate.sh:94 | Agy shim suite registered; independent new probe suite will register adjacent |
++
++Writes: models stdout/stderr goes to a temporary log; relative child writes currently
++go to caller CWD. Successful parser and exception branches remove logs. No ledger,
++queue or Git state writer is added. Temp directory ownership will cover all return paths.
++Timeout uses AGY_AUTH_TIMEOUT_S; nonzero, timeout and launch errors return False.
++main exits5 on False before token/turn mutation. Existing model-selection semantics remain.
++
++## Observed and falsified
++
++Controlled models stub plus actual imported validator: True, caller marker exists.
++Porcelain BEFORE the call was empty; AFTER the call was `?? probe-write.txt`.
++Ordinary porcelain detected this original unignored marker; it was not a clean
++after-call result. The ignored-marker test is a newly planned additional control.
++This rules out RTL snapshot/worktree cleanup
++as protection for this call. Unset-model control will prove no binary invocation;
++removing only subprocess cwd will be the load-bearing ablation.
++
++## Failure and rollback
++
++Stdlib temporary folder creation must fail closed before invocation. Reuse existing
++probe ownership, no process-group/OS-sandbox redesign. Focused revert restores old
++behavior, so stop on any caller-preservation/model-routing regression before landing.
++
++## Unknowns
++
++No observed write by the real CLI. Absolute writes and detached child lifetimes are
++not solved by cwd; existing timeout-family GH-648 remains separate. Existing base
++path/PDDA failures observed during GH-661 may block full publication; run the real
++gate and report, do not bundle unrelated pending repairs or bypass it silently.
+diff --git a/releases.sql b/releases.sql
+index a58f7637..4ec2c9ea 100644
+--- a/releases.sql
++++ b/releases.sql
+@@ -1,6 +1,6 @@
+ -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
+ -- no integer PKs/FKs as values; rebuild renumbers deterministically)
+--- generation: 738
++-- generation: 742
+ -- table: schema_migrations
+ INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
+ INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
+@@ -12,7 +12,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('7', '2026-09-08T05:45
+ INSERT INTO schema_migrations(version, applied_at) VALUES('8', '2026-09-12T16:07:23Z');
+ -- table: settings
+ INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
+-INSERT INTO settings(key, value, updated_at) VALUES('generation', '738', '2026-09-17T00:48:35Z');
++INSERT INTO settings(key, value, updated_at) VALUES('generation', '742', '2026-09-17T03:27:22Z');
+ INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
+ -- table: repos
+ INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
+@@ -631,6 +631,7 @@ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, positi
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr) VALUES('rmi-01M2P5NEQXJG7QXR2PE86W55C7', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '659', 'rtl_init splits allow_csv with bare IFS='','' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654)', 'Queue / parked intake', '87', '🆕', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/659', '- **GH-659 · rtl_init splits allow_csv with bare IFS='','' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654)** 🆕 rated 2/2/2/2 — [doc](PROJECT/2-WORKING/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md) · [#659](https://github.com/HiQS-Labs/XYZ-forge/issues/659)', '2026-09-16T22:33:42Z', '2026-09-16T22:33:42Z', '2', '2', '2', '2', NULL);
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr) VALUES('rmi-01M2PC70NWJZM6X21ZWPWC8B4P', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '660', 'Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git-pulse-sync) instead of re-vendoring from canonical skills/express — deployed copy missing GH-592 resume recipe', 'Completed', '88', '✅', NULL, NULL, NULL, 'PROJECT/3-COMPLETED/GH-660-DEPLOYED-SKILLS-DRIFT-EXPRESS-SKILL-MD-HOT-FIXED-DIRECTLY-IN.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/660', '- **GH-660 · Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git-pulse-sync) instead of re-vendoring from canonical skills/express — deployed copy missing GH-592 resume recipe** ✅ **SHIPPED 2026-09-16 (commit 99b376d97862)** — deployed copy missing GH-592 resume recipe** 🆕 rated 2/2/2/2 — [doc](PROJECT/3-COMPLETED/GH-660-DEPLOYED-SKILLS-DRIFT-EXPRESS-SKILL-MD-HOT-FIXED-DIRECTLY-IN.md) · [#660](https://github.com/HiQS-Labs/XYZ-forge/issues/660)', '2026-09-17T00:28:09Z', '2026-09-17T00:28:19Z', '2', '2', '2', '2', NULL);
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr) VALUES('rmi-01M2PD8AVRRQZDFT25JS5VJATA', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '663', 'QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission', 'Queue / parked intake', '88', '🆕', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/663', '- **GH-663 · QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission** 🆕 rated 2/2/2/2 — [doc](PROJECT/2-WORKING/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md) · [#663](https://github.com/HiQS-Labs/XYZ-forge/issues/663)', '2026-09-17T00:46:21Z', '2026-09-17T00:46:21Z', '2', '2', '2', '2', NULL);
++INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr) VALUES('rmi-01M2PPE9YK1891QJP8RFN1MEBH', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '666', 'GH-666 · Isolate Agy model probe', 'Queue / parked intake', '89', '🆕', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/666', '- **GH-666 · Isolate Agy model probe** — rated 90/85/50/85 — [plan](PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md)', '2026-09-17T03:26:53Z', '2026-09-17T03:27:22Z', '90', '85', '50', '85', NULL);
+ -- table: jog_queue
+ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M122D1G6F8AWEKQHKFPCFD37', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '275', '1', 'completed', '2026-08-27T16:56:10Z', '2026-08-27T18:11:04Z', '5', NULL, 'preflight: already-landed');
+ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M122D1WM4Z659A8N591AR0H8', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '269', '1', 'failed', '2026-08-27T16:56:10Z', '2026-08-27T18:39:22Z', '3', NULL, 'drive failed (exit 7)');
+@@ -1480,6 +1481,10 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M2NHM95K3P653QZEAE9E54F7', '2026-09-17T00:48:34Z', '13bf41d4f0e2413583486a2605d38aef', 'default', 'c7a3a505391e48c8ea01f1311837e449a3c7649823ae30049e82b3243138b093', '40d7e580e033192bda8457b9af8d17b1378d590c04a26ef1914dcc66d0fc69a4');
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-rate', 'rmi-01M2NHM95K3P653QZEAE9E54F7', '2026-09-17T00:48:34Z', '90c39371e16b4c2b8d00443ceb58df61', 'default', '40d7e580e033192bda8457b9af8d17b1378d590c04a26ef1914dcc66d0fc69a4', '40d7e580e033192bda8457b9af8d17b1378d590c04a26ef1914dcc66d0fc69a4');
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', 'reanchor:99', '2026-09-17T00:48:35Z', '59d8cae43fff425e93fe28ce5eeebfe0', 'default', 'd162db5b14418bc3a649cc411882f2d8be00e09df3dcf6b53543a4940ccadaa0', '40d7e580e033192bda8457b9af8d17b1378d590c04a26ef1914dcc66d0fc69a4');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-add', 'rmi-01M2PPE9YK1891QJP8RFN1MEBH', '2026-09-17T03:26:53Z', '644e5e5829dd4b86825a582f73a5149a', 'default', '40d7e580e033192bda8457b9af8d17b1378d590c04a26ef1914dcc66d0fc69a4', 'b9d1dc7d9e1e3d41fe8746b08df520d35013b9791813fb4090367e6914b43adf');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-rate', 'rmi-01M2PPE9YK1891QJP8RFN1MEBH', '2026-09-17T03:26:54Z', 'e0eb756008884c4290c1951d0c7782d5', 'default', 'b9d1dc7d9e1e3d41fe8746b08df520d35013b9791813fb4090367e6914b43adf', '4ec6cd2d34e79bc47a6b3025ae2f4e5a0d99f28db97323c776bcd2f954971a0f');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-repoint', 'rmi-01M2PPE9YK1891QJP8RFN1MEBH', '2026-09-17T03:26:54Z', 'd12cc7f747b244858762621fb10a4a86', 'default', '4ec6cd2d34e79bc47a6b3025ae2f4e5a0d99f28db97323c776bcd2f954971a0f', '7c46d8d525a8fdae4682ca61bbb2ce8239ea1e4118a977db05621b0207bf146f');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M2PPE9YK1891QJP8RFN1MEBH', '2026-09-17T03:27:22Z', '218dc04ad3474edca5654e20a68f5e47', 'default', '7c46d8d525a8fdae4682ca61bbb2ce8239ea1e4118a977db05621b0207bf146f', 'a564ee35b6fe1a55d44874b56ab6b261a0e091bbb4b8c9b30d6d50fa0587e3b5');
+ -- table: work_events
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CBC3C2HSWRSBY81TAZHYY0', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '568', 'df2ee890077d486dbe23311c5dd74d82', 'updated', '{"marker": "\u2705", "section": "Completed"}', '2026-09-13T03:01:02Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CGH1A7Z979TG5DQJHN8DX6', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '591', '6d3d7a7619c247b5a85a039ea98756bd', 'parked', '{"section": "Queue / parked intake"}', '2026-09-13T04:31:07Z');
+@@ -1555,3 +1560,6 @@ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload,
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2PD8AW70J32ZTQY6MNMPDPT', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '663', '1007448f0f214723bdbd4386b0a1372c', 'parked', '{"section": "Queue / parked intake"}', '2026-09-17T00:46:21Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2PDCD0JRR25DBJCHPHVMYHZ', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '645', '13bf41d4f0e2413583486a2605d38aef', 'updated', '{"marker": "\u2705", "section": "Completed", "source": "roadmap-update", "transition": false}', '2026-09-17T00:48:34Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2PDCD9CMA9J49QHQ7G0RMPT', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '645', '90c39371e16b4c2b8d00443ceb58df61', 'rated', '{"rated": "85/80/50/90"}', '2026-09-17T00:48:34Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2PPE9Z28WB4Z8DHKGFT8AK1', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '666', '644e5e5829dd4b86825a582f73a5149a', 'parked', '{"section": "Queue / parked intake"}', '2026-09-17T03:26:53Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2PPEA896C4KX5PXQ02VG1E9', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '666', 'e0eb756008884c4290c1951d0c7782d5', 'rated', '{"rated": "90/85/50/85"}', '2026-09-17T03:26:54Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2PPF5E52SDXAVJ6BV8SG0H1', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '666', '218dc04ad3474edca5654e20a68f5e47', 'updated', '{"marker": "\ud83c\udd95", "section": "Queue / parked intake", "source": "roadmap-update", "transition": false}', '2026-09-17T03:27:22Z');
+diff --git a/test/agy-turn.sh b/test/agy-turn.sh
+index e627e2fe..7696218a 100644
+--- a/test/agy-turn.sh
++++ b/test/agy-turn.sh
+@@ -6,6 +6,7 @@
+ source "$(dirname "$0")/_setup.sh" agy-turn
+ export TICK_BIN="$TICK"
+ SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
++python3 "$HERE/gh666_agy_model_probe.py" || fail "GH-666: model-probe caller preservation"
+ tick_a init >/dev/null
+ 
+ # committed relay-file baseline; mirror the real repo's .tick/ gitignore (invisible to git status).
+diff --git a/test/gh666_agy_model_probe.py b/test/gh666_agy_model_probe.py
+new file mode 100644
+index 00000000..3a2c48df
+--- /dev/null
++++ b/test/gh666_agy_model_probe.py
+@@ -0,0 +1,167 @@
++"""Actual-validator regression; no live Agy/model calls or valued checkout writes."""
++import importlib.util
++import json
++import os
++import shutil
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++from unittest import mock
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "utils/py"))
++spec = importlib.util.spec_from_file_location(
++    "agy_turn", Path(__file__).resolve().parents[1] / "utils/py/agy-turn.py")
++agy = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(agy)
++
++
++class ModelProbeTests(unittest.TestCase):
++    def setUp(self):
++        self.sandbox = tempfile.TemporaryDirectory(prefix="gh666.", dir=os.environ.get("WORK"))
++        self.addCleanup(self.sandbox.cleanup)
++        self.root = Path(self.sandbox.name).resolve()
++        self.caller = self.root / "caller"
++        self.caller.mkdir()
++        self.probes = self.root / "probes"
++        self.probes.mkdir()
++        self.record = self.root / "invocations.jsonl"
++        self.stub = self.caller / "tools" / "agy"
++        self.stub.parent.mkdir()
++        self.stub.write_text("#!" + sys.executable + "\n" + '''
++import json, os, sys, time
++from pathlib import Path
++assert sys.argv[1:] == ["models"]
++marker = Path("probe-write.txt")
++marker.write_text("relative probe write")
++with open(os.environ["PROBE_RECORD"], "a") as out:
++    out.write(json.dumps({"cwd": str(Path.cwd()), "wrote": marker.read_text()}) + "\\n")
++print("model-id\\tDisplay Model", flush=True)
++mode = os.environ.get("PROBE_MODE", "ok")
++if mode == "nonzero": sys.exit(9)
++if mode == "timeout": time.sleep(10)
++''')
++        self.stub.chmod(0o700)
++        (self.caller / "sentinel.txt").write_bytes(b"caller work must survive\n")
++        self.git("init", "-q")
++        self.git("config", "user.name", "GH666 fixture")
++        self.git("config", "user.email", "fixture@example.test")
++        self.git("add", ".")
++        self.git("commit", "-q", "-m", "controlled caller seed")
++        self.cwd_before = os.getcwd()
++        os.chdir(self.caller)
++        self.addCleanup(os.chdir, self.cwd_before)
++        self.env = mock.patch.dict(os.environ, {
++            "AGY_MODEL": "model-id", "AGY_AUTH_TIMEOUT_S": "1",
++            "PROBE_RECORD": str(self.record), "PROBE_MODE": "ok"})
++        self.env.start()
++        self.addCleanup(self.env.stop)
++        temp_root = mock.patch.object(tempfile, "tempdir", str(self.probes))
++        temp_root.start()
++        self.addCleanup(temp_root.stop)
++
++    def git(self, *args):
++        return subprocess.check_output(["git", "-C", str(self.caller), *args], stderr=subprocess.DEVNULL)
++
++    def snapshot(self):
++        return (self.git("rev-parse", "HEAD", "--absolute-git-dir", "--is-bare-repository"),
++                self.git("status", "--porcelain", "--untracked-files=all"),
++                (self.caller / "sentinel.txt").read_bytes())
++
++    def check_probe(self, expected, binary=None, invoked=True):
++        before = self.snapshot()
++        result = agy.agy_validate_model(binary or str(self.stub))
++        self.assertEqual(result, expected)
++        self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
++        self.assertFalse((self.caller / "probe-write.txt").exists(), "probe wrote into caller")
++        if invoked:
++            self.assertTrue(self.record.is_file() and self.record.stat().st_size > 0)
++            rows = [json.loads(row) for row in self.record.read_text().splitlines()]
++            self.assertTrue(rows)
++            for row in rows:
++                cwd = Path(row["cwd"])
++                self.assertEqual(row["wrote"], "relative probe write")
++                self.assertNotEqual(cwd, self.caller)
++                self.assertEqual(cwd.parent, self.probes)
++                self.assertFalse(cwd.exists(), "completed probe cwd not cleaned")
++        else:
++            self.assertFalse(self.record.exists(), "failed creation/launch invoked stub")
++        self.assertEqual(list(self.probes.iterdir()), [], "probe cwd/log residue")
++
++    def test_listed_forms(self):
++        for model in ("model-id", "Display Model", "model-id\tDisplay Model"):
++            with self.subTest(model=model):
++                os.environ["AGY_MODEL"] = model
++                self.check_probe(True)
++
++    def test_ignored_marker_still_detected(self):
++        (self.caller / ".gitignore").write_text("probe-write.txt\n")
++        self.check_probe(True)
++
++    def test_unavailable(self):
++        os.environ["AGY_MODEL"] = "not-listed"
++        self.check_probe(False)
++
++    def test_nonzero(self):
++        os.environ["PROBE_MODE"] = "nonzero"
++        self.check_probe(False)
++
++    def test_timeout(self):
++        os.environ["PROBE_MODE"] = "timeout"
++        self.check_probe(False)
++
++    def test_launch_failure(self):
++        self.check_probe(False, str(self.root / "missing-agy"), invoked=False)
++
++    def test_relative_executable(self):
++        self.check_probe(True, "./tools/agy")
++
++    def test_relative_path_entry(self):
++        os.environ["PATH"] = "tools" + os.pathsep + os.environ["PATH"]
++        self.check_probe(True, "agy")
++
++    def test_absolute_path_entry(self):
++        os.environ["PATH"] = str(self.stub.parent) + os.pathsep + os.environ["PATH"]
++        self.check_probe(True, "agy")
++
++    def test_missing_path_does_not_use_caller_binary(self):
++        # A bare command absent from PATH must not fall back to a caller file.
++        local_binary = self.caller / "agy"
++        shutil.copy2(self.stub, local_binary)
++        empty_bin = self.root / "empty-bin"
++        empty_bin.mkdir()
++        real_git = shutil.which("git")
++        self.assertIsNotNone(real_git)
++        (empty_bin / "git").symlink_to(real_git)
++        os.environ["PATH"] = str(empty_bin)
++        self.check_probe(False, "agy", invoked=False)
++
++    def test_unset_model_skips_probe(self):
++        os.environ.pop("AGY_MODEL")
++        with mock.patch.object(agy.subprocess, "run") as run:
++            self.assertTrue(agy.agy_validate_model(str(self.stub)))
++            run.assert_not_called()
++        self.assertFalse(self.record.exists())
++        self.assertEqual(list(self.probes.iterdir()), [])
++
++    def test_directory_creation_failure_refuses(self):
++        # Raising at the existing stdlib allocation seam must prevent invocation.
++        with mock.patch.object(agy.tempfile, "mkdtemp", side_effect=OSError("injected allocation failure")):
++            self.check_probe(False, invoked=False)
++
++    def test_cleanup_failure_is_reported_and_refuses(self):
++        original_exit = tempfile.TemporaryDirectory.__exit__
++
++        def failed_exit(directory, *args):
++            original_exit(directory, *args)
++            raise OSError("injected cleanup failure after removal")
++
++        with mock.patch.object(tempfile.TemporaryDirectory, "__exit__", failed_exit):
++            with mock.patch("builtins.print") as report:
++                self.check_probe(False)
++                self.assertTrue(any("probe failed" in str(call) for call in report.call_args_list))
++
++
++if __name__ == "__main__":
++    unittest.main(verbosity=2)
+diff --git a/utils/py/agy-turn.py b/utils/py/agy-turn.py
+index db71af80..f329fcc7 100644
+--- a/utils/py/agy-turn.py
++++ b/utils/py/agy-turn.py
+@@ -116,7 +116,7 @@ def agy_auth_preflight(agy_bin):
+     # GH-426: run the probe in a THROWAWAY directory, never in whatever repo happens to be the
+     # caller's CWD.
+     #
+-    # This pre-flight is the only place the harness executes the agent binary OUTSIDE the turn's
++    # Pre-flight probes execute the agent binary OUTSIDE the turn's
+     # containment. `subprocess.run` with no `cwd=` inherits the parent's, which for a driven turn is
+     # the harness clone — so anything this invocation writes lands in the harness working tree, is
+     # never seen by `rtl_check` (which inspects RTL_ROOT, a different repo), and is never reverted.
+@@ -255,8 +255,19 @@ def agy_validate_model(agy_bin):
+     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
+     out_file = os.path.join(tempfile.gettempdir(), f"agy-models-{os.getpid()}.log")
+     try:
+-        with open(out_file, "w") as out_f:
+-            subprocess.run([agy_bin, "models"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
++        # GH-666: resolve in caller CWD first; relative binaries/PATH entries must
++        # not start resolving against the disposable probe CWD instead.
++        probe_bin = shutil.which(agy_bin)
++        if probe_bin is None:
++            raise FileNotFoundError(agy_bin)
++        probe_bin = os.path.abspath(probe_bin)
++        # Reuse the auth probe's disposable-CWD pattern. Context ownership also
++        # cleans nonzero/timeout/launch failures and reports cleanup errors below.
++        with tempfile.TemporaryDirectory(prefix="agy-model-probe.") as probe_cwd:
++            with open(out_file, "w") as out_f:
++                subprocess.run([probe_bin, "models"], timeout=secs, stdout=out_f,
++                               stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
++                               check=True, cwd=probe_cwd)
+     except subprocess.TimeoutExpired:
+         print(f"agy-turn: agy models probe timed out after {secs}s while validating AGY_MODEL={model!r}. Refusing to fall back silently.", file=sys.stderr)
+         try:

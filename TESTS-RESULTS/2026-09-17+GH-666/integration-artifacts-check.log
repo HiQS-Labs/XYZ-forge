@@ -1,0 +1,13 @@
+== test: gh32-releases-artifacts ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh32-releases-artifacts.XXXXXX.5gF66NH5VV
+  PASS: releases.db is present in this clone
+  PASS: releases.sql is present in this clone
+  PASS: releases check is clean against the committed artifacts (rc=0)
+  PASS: the generation trio is consistent (DB <-> dump)
+  PASS: the op_receipt digest chain is intact
+  PASS: the clone's artifacts are byte-identical after the check (the gate did not write to the repo it checks)
+  PASS: no releases.db.bak was produced (this suite never runs --rebuild)
+  PASS: NEGATIVE CONTROL: a divergent dump makes check fail (rc=1) — the assertion above is falsifiable
+  PASS: NEGATIVE CONTROL: the failure names rule=dump-divergence (the operator is told which rule broke)
+  PASS: the clone is still byte-identical after the negative control
+  gh32-releases-artifacts: 10 pass, 0 fail

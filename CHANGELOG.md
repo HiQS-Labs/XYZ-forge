@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-17 — Agy model-probe CWD isolation (GH-666)
+
+- Model validation now resolves its executable in caller CWD, then runs in an owned
+  stdlib temporary directory. Relative probe writes no longer land in the caller;
+  cleanup/allocation failures refuse through the existing error path. Existing
+  model ID/display/full-line parsing and turn forwarding remain unchanged.
+- Added real-validator caller/marker/sentinel/cleanup and failure-path checks to
+  the registered Agy suite. Baseline and cwd-only ablation fail; the focused fix
+  passes. Full gate and final review remain pending; existing base path/PDDA
+  failures are not bundled. Refs GH-661; no merge or deployed/live-model claim.
+  Reversibility: Costly under containment policy; reviewed focused revert. This
+  bounds relative writes only, not absolute access or detached child lifetimes.
+
 ## 2026-09-17 — GH-653 / GH-665 fixture safety
 
 The GH-642 suite seeds its owned repository before creating linked worktrees and

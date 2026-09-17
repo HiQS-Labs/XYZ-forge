@@ -6,6 +6,7 @@
 source "$(dirname "$0")/_setup.sh" agy-turn
 export TICK_BIN="$TICK"
 SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
+python3 "$HERE/gh666_agy_model_probe.py" || fail "GH-666: model-probe caller preservation"
 tick_a init >/dev/null
 
 # committed relay-file baseline; mirror the real repo's .tick/ gitignore (invisible to git status).
@@ -306,6 +307,20 @@ pygh296log="$WORK/agy-gh296.$$.log"; : >"$pygh296log"
 # (different agent segment in the filename).
 first_claim_file="$(find "$A/.tick/events" -maxdepth 1 -name '*-agy-claimed-RELAY-TURN-gh296agy.jsonl' 2>/dev/null | sort | head -1)"
 claimed_paths="$(cat "$first_claim_file" 2>/dev/null | sed -n 's/.*"paths":\[\([^]]*\)\].*/\1/p')"
+claim_evidence_nonempty() { [ -n "$1" ] && [ -s "$1" ] && [ -n "$2" ]; }
+claim_evidence_nonempty "$first_claim_file" "$claimed_paths" \
+  && pass "GH-296: claim event and extracted paths are nonempty" \
+  || fail "GH-296: missing claim event or empty extracted paths"
+if claim_evidence_nonempty "$WORK/missing-claim-event" "$claimed_paths"; then
+  fail "GH-296: missing-event control incorrectly accepted"
+else
+  pass "GH-296: missing-event control refused"
+fi
+if claim_evidence_nonempty "$first_claim_file" ""; then
+  fail "GH-296: empty-path control incorrectly accepted"
+else
+  pass "GH-296: empty-path control refused"
+fi
 case "$claimed_paths" in
   *..*) fail "GH-296: agy-turn.py's claim --paths escaped root (got: $claimed_paths) — root did not resolve to the CWD's git toplevel" ;;
   *) pass "GH-296: agy-turn.py's claim --paths stayed repo-relative, no root-escaping '..' (got: $claimed_paths)" ;;
