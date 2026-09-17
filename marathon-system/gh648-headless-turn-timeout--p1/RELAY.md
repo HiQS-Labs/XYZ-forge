@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -90,3 +90,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented and inspected the GH-648 L1 artifacts:
+
+- `utils/py/turn_diagnostics.py`: idle attribution now uses a one-shot, descendant-aware established-TCP probe; an established connection reports `timeout-idle-in-flight`, a successful empty probe reports the honest `timeout-idle-unknown`, and probe failure degrades to `timeout-unclassified`. Added stable JSON termination records distinguishing `idle-kill`, `wall-cap`, `child-orphan`, and `unknown` while preserving exit code 7.
+- `test/gh648-l1-turn-termination.sh`: covers established/empty/failing probes, descendant PID scope, distinct termination mechanisms, JSON emission, and two mutation controls that demonstrate the classifier and descendant-scope assertions turn red.
+- `validate.sh`: registers the focused GH-648 suite.
+
+Debug breadcrumb: the prior escalation only reported `pre-advance-failed` and supplied no turn log. On the current tree, `bash test/gh648-l1-turn-termination.sh` passes with `PASS: 26 assertions`; no full gate was run because the turn contract reserves it for the harness. Direct source inspection was used because graph coverage reported changed/missing freshness for all three artifact paths.
