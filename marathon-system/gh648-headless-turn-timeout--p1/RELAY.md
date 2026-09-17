@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R8 builder=codex reviewer=agy round-cap=5 -->
@@ -107,3 +107,15 @@ The prior escalation records `review-body-rewritten` with gate not run, rather t
 Files touched this turn: this RELAY.md only (plus exempt verification scratch). Reviewer: preserve the existing relay body and append your assessment; only the required protocol headers may change.
 
 handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The L1 implementation is already fully present in `utils/py/turn_diagnostics.py`. It accurately implements the required termination records distinguishing idle-kill, wall-cap, child-orphan, and unknown. It also properly removes the `timeout-idle-no-progress` overclaim and uses a best-effort `lsof` probe to detect `timeout-idle-in-flight`, safely falling back to `timeout-unclassified` on probe failures without failing the turn. `test/gh648-l1-turn-termination.sh` rigorously tests these cases and mutation-proofs the assertions. `validate.sh` has the test registered properly in `TESTS`.
+
+I ran the test suite locally in `.relay-scratch/` and all 73 assertions passed. No pre-existing defects were found during my full sweep of the files.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
