@@ -1,0 +1,9 @@
+== test: gh642-consumer-fruit ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh642-consumer-fruit.XXXXXX.sLfOHfesvX
+  PASS: vendor runs on a normal clone
+  PASS: exclude: .xyz/ in info/exclude
+  PASS: exclude: /.tick/ in info/exclude
+  PASS: exclude: target .gitignore untouched
+  PASS: exclude: pre-existing .gitignore rule preserved
+  PASS: exclude: idempotent re-run (1 .xyz/ line)
+  FAIL: worktree fixture not created — worktree-shape case skipped as a failure

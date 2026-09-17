@@ -1,3 +1,51 @@
+# RELAY · GH653 GH665 final fixture code QA
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 1 / 3
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why),
+     make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(gh653-gh665-final-fixture-code-qa): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: **gh642-consumer-fruit.sh** (embedded below — read it here).
+- Reviewer: codex   ·   Producer: producer
+- Started: 2026-09-17
+
+### Artifact — gh642-consumer-fruit.sh
+```
 #!/usr/bin/env bash
 # GH-642 — consumer-repo fruit: make the foreign-repo marathon SOP turnkey.
 # Covers:
@@ -314,3 +362,55 @@ grep -q "Acceptance section with no " utils/swarm-preflight.sh 2>/dev/null \
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
+```
+- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+### Producer R1 — final fixture code review
+
+VERDICT: PARKED
+Basis: awaiting independent whole-file source review.
+
+Review the COMPLETE current test/gh642-consumer-fruit.sh and its base diff, shared fixture guard/setup contracts (unchanged), negative-controls.py, shared plan/GH-665 adapter, CHANGELOG, and committed verification README/transcripts. The embedded artifact is the actual repaired suite, not a proposal. Review-only: do not run mutation-heavy tests or mutate Git/source in this valued clone; the harness owns the thread commit. Do not edit any artifact besides this thread. All tests were run in disposable full clones, never this clone or linked worktrees.
+
+Grade guard-before-seed, checked construction/substitution under Bash 3.2, physical path ownership at writes/cleanup, five refusal/caller-preservation cases, real worktree and RTL-copy coverage, bounded temporary roots, and negative-control validity. Sweep pre-existing writes in the whole touched file; report any remaining safety defect with exact source citations. Preserve source/test scope: one existing test plus witness/evidence/docs/CLI ledger receipts, no runtime/shared-guard/setup/frozen-twin changes. Use commensurate QA, not speculative OS sandbox/process supervision requirements.
+
+Definition of Done: code safe within the existing owned-fixture contract, unchanged real feature assertions, original-base red and repaired 62/62, guard-disabled and caller-damage controls failing at the intended assertions, static/full fixture gate receipts auditable with source/hash/exit provenance and clone identity preserved. Read the current README for gate status and exact pins. Combined #669 verification is a separate conditional integration record, not qualification of its published draft; its pending run is not a code-review blocker for this fixture-only repair. Neither merging, promotion, closing issues nor #661 resumption is authorized. PASS means bounded fixture code Approved, not these separate permissions. Give graded precise blockers if unsatisfied; cap3.
+
+### Reviewer R1 — codex final source QA
+
+VERDICT: PASS
+Basis: bounded fixture repair satisfies the Producer R1 Definition of Done within the existing owned-fixture contract. Whole current suite, shared guard/setup, negative-control witness, shared plan/adapter, CHANGELOG and retained transcripts reviewed. No remaining pre-existing safety defect found in the touched suite. This is source/evidence review, not a new test run or permission to merge/promote/close issues/resume #661.
+
+swept file: yes
+
+- [Pass] Construction and seeding fail closed under the Bash 3.2 command-substitution semantics: invalid names refuse, mkdir/init have explicit failure returns, physical ownership is checked before init, and both mkrepo substitutions are checked before guarded writes (test/gh642-consumer-fruit.sh:24–35, :59–61, :71–74, :120–122). The explicit checks do not rely on inherited errexit. Fix: none.
+- [Pass] All five controlled faults assert exit 2 plus caller HEAD/git-dir/bare state/clean tree preservation (test/gh642-consumer-fruit.sh:40–68). The caller remains inside the outer owned sandbox while outside guard-root; the symlink control therefore cannot reach a valued checkout. Fix: none.
+- [Pass] Whole-file write/cleanup sweep: bare, linked-worktree, separate-git-dir, non-git, stub, RTL and init-clone fixture targets are guarded descendants before their dangerous uses; warning output uses a checked mktemp under WORK; RTL uses a separately guarded temporary root and guards its returned worktree before marker writes/removal (test/gh642-consumer-fruit.sh:86–116, :144–146, :167–169, :212–250). Shared require_fixture physically resolves traversal/symlinks and exits 2 on refusal (test/lib/fixture-guard.sh, quoted span: “OUTSIDE the resolved fixture root”). No speculative concurrent path replacement threat model added. Fix: none.
+- [Pass] Real feature coverage retained: seed precedes push/clone/worktree add, and RTL marker checks test copy isolation (test/gh642-consumer-fruit.sh:71–99, :225–237). Nonempty baseline.log ends “worktree fixture not created”; repaired.log ends “62 pass, 0 fail” and includes linked-worktree and ROOT copy assertions. Fix: none.
+- [Pass] Negative controls mutate the actual suite in memory, require a unique anchor, preserve the original Bash $0, and propagate its exit status (TESTS-RESULTS/2026-09-17+GH-653-GH-665/negative-controls.py:12–27). guard-disabled.log records “fixture guard accepted symlink (rc=0)”; caller-damaged.log records “caller changed after empty”. Both log source hashes match the current suite hash independently read this turn: 38be8fac37eb657ec65d174e77d502f1b26b4916bbc249d3d5e046131c8d4f09. Witness hash also matches README: c3f53eb85350410c52682a370b89df24821e83ca20c21e567af0eb79f54c99e6. Fix: none.
+- [Pass] Retained static/full gate evidence is consistent with the bounded approval: ci-fast.log pins HEAD 82f786f9 and explicitly skips the full suite; prepush.log:295 records this suite rc=0, :439 records unchanged runner identity/tree/worktrees/lock, :449 records 393/393, and :843 records normal gated push GREEN. README.md:9–33 supplies source pins and exit attribution; :44–53 preserves pending hosted/combined qualification boundaries. Fix: none.
+- [Nit] The Setup Definition of Done still says “<fill in the acceptance criteria the Reviewer grades against>”; Producer R1 supplies the actual criteria. Fix: use those criteria in Setup when scaffolding future relays; no source change required.
+
+Review limits: no Git commands, base diff extraction, test execution or external live PR-state verification performed, as required by this turn's containment instructions. Original-base behavior and unchanged-scope claims are assessed from the retained evidence and cited source, not independently retrieved Git history. No artifact/source edits made; harness owns the relay commit.
+
+relay closed (Approved), no further turn needed.
+
+
+### Attestation · relay-drive — 2026-09-17T18:14:35Z
+task: RELAY-GH653-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: b703148fd3b3263241889a5cd814a02d4aab76c6
+added-range: 26419+3965
+added-sha256: 8998537764010d4b530cf7ff5f76c7e3fafb4ab00b4369ef19ca93523f8fde20
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
