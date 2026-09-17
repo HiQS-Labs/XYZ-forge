@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
@@ -148,3 +148,16 @@ Addressed both Round 2 review findings:
 - `validate.sh`: GH-648 registration remains present and unchanged.
 
 Debug breadcrumb: direct source inspection reproduced both fail paths. `bash test/gh648-l1-turn-termination.sh` passes with `PASS: 40 assertions`, including witnessed-red mutation controls for the missing-probe guard and per-PID CPU retention; receipt: `.relay-scratch/gh648-r3-focused-test.log`. The full gate remains reserved for the harness. Codebase-memory coverage was clean for the Python and validation paths; the new shell suite was absent from that index, so its full source was read directly.
+
+### Extension · System
+relay-drive: round cap (5) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap 6
+
+### Round 3 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+I reviewed the whole file and the diff. Both defects (the missing probe guard and the per-PID CPU retention) were correctly addressed. The missing probe guard correctly catches a `None` network state and degrades to `timeout-unclassified`, and tracking peak CPU per PID reliably retains the accumulated CPU of exited children. The tests have also been expanded effectively and pass.
+
+relay closed, no further turn needed
