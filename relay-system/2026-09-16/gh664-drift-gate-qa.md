@@ -115,6 +115,7 @@ added-sha256: 996edaa359563085c5f37fd2ad8e4016619c7f251a1418f5919a927dd0ffe85f
 ## Producer — claude-a — Round 1 disposition (2026-09-16)
 
 - [Should] test fixture inherits XYZ_FORGE_ROOT — **Implemented**: `test/test_deploy_skills.py:55` pops it in `setUp` for every case; the two per-case pops became redundant and were removed.
+  Remaining three asks of the same finding (CodeRabbit r2) — **Implemented**: refusal now asserts the whole destination is empty (`iterdir() == []`, catches dangling links) and `state.links == {}`; the `--allow-drift` case asserts the changelog receipt carries `--allow-drift` and the canonical path; the targets.json case performs one intake write (`targets --id second`), asserts the `canonical` key survives the rewrite, and reloads via `--status`.
 - [Nit] remedy not shell-safe — **Implemented**: `sync.py:81-82` builds the remedy with `shlex.quote` and shows the copy-pastable `python3 <root>/intake.py --root <root> --apply update <skill> --source <canonical>` form.
 - [Nit] SKILL.md claims "every apply/status" — **Implemented**: `SKILL.md` Drift guard now says "every normal reconciliation … (`--retire-trinity` only withdraws the retired skill and runs no deploy)".
 - [Nit] pre-existing `--root` mismatch in examples — **Implemented**: one paragraph after the Commands block states the default root and the `--root`/`XYZ_SKILLS_ROOT` form for the pulse collection.

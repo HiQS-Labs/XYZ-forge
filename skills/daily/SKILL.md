@@ -36,7 +36,7 @@ Then begin work.
 - **Reuse Existing Subsystems**: Do not create parallel pipelines or bespoke ad-hoc trackers. Query the resolved SQLite database (`src/rebalance/paths.py:resolve_db()`), `get_next_actions()`, `clio_prompts`, `calendar_events`, `sleuth_reminders`, Apple Reminders snapshots, and `.claude/skills/rebalance/collect.sh`.
 - **Read-Only Against Repositories & External Stores**: Synthesis inspects files and SQLite tables; it never mutates git state, resets branches, alters worktrees, or writes to external stores. Apple Reminders access uses the read-only Core Data snapshot extractor with graceful degradation.
 - **Deterministic Daily Logging**: Output records append to `temp/daily-log/YYYY-MM-DD.log` (gitignored under `temp/`) matching the fixed log-entry schema.
-- **Debug Mantra Ground-Truth Calibration**: Never report unclosed loops, open PRs, or stalled branches from unverified memory, stale logs, or un-refreshed ledgers. Always verify against live GitHub/git state (`state == 'OPEN'`). A merged or closed PR is not an open loop. Inspect the fresh output of `scan_unclosed_loops.py` before citing telemetry.
+- **Debug Mantra Ground-Truth Calibration**: Never report unclosed loops, open PRs, or stalled branches from unverified memory, stale logs, or un-refreshed ledgers. Always verify against live GitHub/git state (`state == 'OPEN'`). A merged or closed PR is not an open loop. Inspect the fresh output of `scan_unclosed_loops.py` before citing telemetry. Do not report `0 open PRs` unless GitHub query success is established. In shutdown JSON, treat non-empty `pr_query_errors` or any `pr_status == "unknown"` as unavailable affected counts, not zero.
 
 ---
 

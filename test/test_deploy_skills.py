@@ -499,11 +499,16 @@ raise SystemExit(mod.main(sys.argv[3:]))
         refused = self.cli("--apply", sync=True, code=2)
         self.assertIn("REFUSED", refused.stderr); self.assertIn("DRIFTED sample", refused.stderr)
         self.assertIn(str(forge / "skills"), refused.stderr)
-        self.assertFalse((self.target / "sample").exists(), "refusal must deploy nothing")
+        self.assertEqual(list(self.target.iterdir()) if self.target.exists() else [], [],
+                         "refusal must deploy nothing — no links, not even dangling")
+        self.assertEqual(self.state()["links"], {}, "refusal must record no owned links")
         allowed = json.loads(self.cli("--apply", "--allow-drift", sync=True).stdout)
         self.assertEqual([e["skill"] for e in allowed["drift"]["drifted"]], ["sample"])
         self.assertTrue(any(w.startswith("--allow-drift") for w in allowed["warnings"]))
         self.assertTrue((self.target / "sample").is_symlink())
+        receipt = (self.root / "changelog.md").read_text()
+        self.assertIn("--allow-drift", receipt, "override must leave a drift receipt in the changelog")
+        self.assertIn(str(forge / "skills" / "sample" / "SKILL.md"), receipt)
 
     def test_gh660_collection_only_skill_is_unrecognized_never_refused(self):
         self.cli("--apply", "add", self.source("collection-only")); self.enable()
@@ -525,6 +530,11 @@ raise SystemExit(mod.main(sys.argv[3:]))
         cfg.write_text(json.dumps(data))
         out = json.loads(self.cli("--status", sync=True).stdout)
         self.assertEqual(out["drift"]["origin"], 'targets.json "canonical"')
+        # one intake write rewrites targets.json; the key must survive and still resolve
+        self.cli("--apply", "targets", "--id", "second", "--path", self.work / "second app", "--consumer", "Fixture 2")
+        self.assertEqual(json.loads(cfg.read_text())["canonical"], str(forge))
+        again = json.loads(self.cli("--status", sync=True).stdout)
+        self.assertEqual(again["drift"]["origin"], 'targets.json "canonical"')
 
 
 if __name__ == "__main__":
