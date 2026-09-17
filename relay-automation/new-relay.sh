@@ -89,8 +89,19 @@ ROUND: 1 / $ROUND_CAP
      Any \`[Pass]\` or "verified"/"confirmed" finding MUST
      carry a quoted span or a \`file:line\` citation — an uncited one is mechanically downgraded to
      \`[Unverified — no citation]\` (GH-173 B3). Do **not** edit the artifact; only append findings here.
-   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why),
-     make the change, then add new work.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a \`file:line\` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat \`[Pass]\`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every \`[Blocker]\` or \`[Should]\` requesting a behaviour
+     change MUST carry three lines: \`Observed input:\` (the failing input you saw), \`Affected scope:\`
+     (the input predicate the change would govern), \`Falsifier:\` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A \`[Blocker]\` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as \`Declined — unproven generalization\`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including \`Declined — unproven generalization\` for a behaviour-change request that carries no
+     \`Observed input:\` / \`Affected scope:\` / \`Falsifier:\`), make the change, then add new work.
 4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
 5. **Update the header:** flip \`NEXT\`; set \`STATUS\` (\`Approved\` closes — Reviewer only; else \`Open\`);
    the Producer bumps \`ROUND\` when opening a new cycle. If the max \`ROUND\` ends without \`Approved\`,
