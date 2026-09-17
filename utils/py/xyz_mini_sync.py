@@ -31,6 +31,7 @@ MANIFEST = (
     ("skills/ponytail", "skills/ponytail", "managed"),
     ("skills/honest", "skills/honest", "managed"),
     ("skills/debug-mantra", "skills/debug-mantra", "managed"),
+    ("skills/unstuck", "skills/unstuck", "managed"),
     # agent-chorus runtime only (its standalone publish pipeline stays behind)
     ("skills/agent-chorus/SKILL.md", "skills/agent-chorus/SKILL.md", "managed"),
     ("skills/agent-chorus/README.md", "skills/agent-chorus/README.md", "managed"),

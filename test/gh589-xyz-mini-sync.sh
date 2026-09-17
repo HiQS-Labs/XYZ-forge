@@ -58,7 +58,7 @@ reset_src()
 r = run("--push"); ok("first publication --push exits 0", r.returncode == 0, r.stderr[-300:])
 h = git(DEST, "rev-parse", "HEAD").stdout.strip(); ok("remote main == local HEAD", bool(h) and remote() == h)
 names = sorted(os.listdir(os.path.join(DEST, "skills")))
-ok("skill set is exactly the seven expected", names == ["agent-chorus", "consult", "debug-mantra", "honest", "ponytail", "relay", "skill-viewer"], str(names))
+ok("skill set is exactly the eight expected", names == ["agent-chorus", "consult", "debug-mantra", "honest", "ponytail", "relay", "skill-viewer", "unstuck"], str(names))
 v = sh(sys.executable, os.path.join(DEST, "skills/skill-viewer/scripts/list_skills.py"), "--json")
 vn = sorted(x["name"] for x in json.loads(v.stdout)["skills"]) if v.returncode == 0 else []
 ok("6. viewer names == skills on disk", vn == names, str(vn))
