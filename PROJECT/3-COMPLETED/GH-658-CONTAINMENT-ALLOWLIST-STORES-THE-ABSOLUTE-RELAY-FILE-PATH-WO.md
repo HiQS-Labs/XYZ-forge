@@ -1,6 +1,6 @@
 ---
 title: "GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654)"
-status: Active
+status: Complete
 created: 2026-09-16
 updated: 2026-09-16
 owner: operator (via /express)
