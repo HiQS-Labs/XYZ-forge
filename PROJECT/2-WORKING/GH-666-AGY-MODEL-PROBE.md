@@ -62,10 +62,18 @@ No operator override.
 2. Add a registered stdlib regression suite against the real validator. Controlled
    relative-writing stub covers listed ID/display/full-line, unavailable, nonzero,
    timeout and launch failure. Assert nonempty invocation records, caller Git identity,
-   HEAD/tree unchanged and temporary CWD removed. Unset model invokes nothing;
+   HEAD/tree unchanged, explicit marker absent (including Git-ignored marker),
+   pre-existing sentinel bytes unchanged and temporary CWD removed. Invocation
+   records must prove the stub wrote the marker in its recorded cwd before exit.
+   Unset model invokes nothing;
    creation failure returns False before invocation → baseline failures retained.
 3. Use the existing disposable-probe-directory pattern with explicit cwd and
-   cleanup on all returns, retaining timeout/errors/parsing/forwarding. No helper
+   cleanup on all returns, retaining timeout/errors/parsing/forwarding. Resolve the
+   validator executable in caller CWD with shutil.which and make its result absolute
+   before switching child cwd; test absolute, caller-relative and bare PATH forms
+   including a relative PATH entry. This preserves validator resolution only;
+   the existing auth probe's relative-executable limitation is not repaired here.
+   No helper
    framework. Remove cwd via an in-memory ablation only → same preservation checks red.
 4. Commit code/docs, run focused/shim/static and full gates in a separate full clone,
    pin logs/source/hash/exit and assert clone identity/tracked-tree unchanged → actual

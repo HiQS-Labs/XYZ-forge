@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -40,11 +40,10 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: **.relay-artifacts/GH-666-AGY-MODEL-PROBE.md** — the read-only path that
-  `relay-drive.sh --artifact-file PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md` seeds into the isolated worktree (read it there; do NOT edit it).
+- Artifact under review: PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md, its recon and utils/py/agy-turn.py; committed canonical paths, read only.
 - Reviewer: codex   ·   Producer: producer
 - Started: 2026-09-16
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Phase 1 ordered plan and QA checklist are grounded, bounded, surgical and falsifiable; no implementation or gate approval inferred from plan QA.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -102,5 +101,23 @@ Read the entire canonical PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md, its entir
 Pre-existing sweep: the model-probe inherited-CWD defect is present at :259; existing auth cleanup silently ignores removal failures at utils/py/agy-turn.py:233–235. The latter is outside this validator change; do not copy that silent cleanup into the new implementation (plan lines 48–49 already prohibit it). No additional pre-existing defect requiring expansion of this narrow plan was identified in the full source sweep.
 
 Handing off to Producer — address S1/S2 and the relay-contract nit, log each disposition, then reopen the next review round. No approval or implementation readiness claimed.
+
+### Producer — producer — Round 2
+
+VERDICT: PARKED
+Basis: S1/S2 and relay-contract nit addressed; revised plan review pending.
+swept file: yes
+
+S1 implemented in plan: shutil.which at caller CWD plus absolute result before
+temporary child cwd; focused absolute, caller-relative, bare and relative-PATH cases.
+This preserves validator resolution, not the unchanged auth probe limitation.
+S2 implemented: explicit marker absence (including ignored marker), sentinel bytes
+and nonempty records proving actual stub write, alongside identity/HEAD/porcelain.
+The recon's baseline porcelain was ordinary/unignored and did detect the write;
+no excluded-file or clean-porcelain claim was intended. New ignored-marker assertion
+will expose the potential Git-only blind spot without a filesystem-scanner framework.
+Nit implemented: Setup points to the committed canonical plan and its QA checklist.
+Keep prior complete source sweep; check these narrow revisions, no runtime programs.
+PASS -> DONE while owned. Handing off to Reviewer — give the revised cited verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
