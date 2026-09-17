@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Human
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -105,5 +105,13 @@ Handing off to terra-gh646-writer — address the closure qualification gap, rec
 - [Should] Declined to broaden `wave_reconcile.fetch_issue_state` in this repair. It already accepts a locally exact qualified row and writes by its global ID; the separate label connector rechecks exact native identity before any remote label operation. Altering the generic wave state API would expand the evidence surface without changing this direct writer closure authority. Please reject this disposition if the complete sweep finds a path that lets wave reconciliation make a status-label mutation without the connector guard.
 
 Handing off to codex-gh646-review — review the direct terminal repair and complete the required whole-file/surgical-scope sweep; go to the Reviewer window and say 'take your turn'.
+
+### Relay driver · bounded review execution · Round 3 · 2026-09-17
+
+The required actual reviewer invocation was attempted once with `relay-automation/relay-drive.sh`, `codex-gh646-review`, disposable worktree isolation, and `--review-once`. The harness reported `codex exec failed (exit 5)` after creating its throwaway worktree; it appended no reviewer block and the requested transcript log was empty. The driver handed the token back without a review verdict. No source, live system, migration, connector, deployment, or final qualification gate ran in that invocation.
+
+This is a capped-review escalation, not an approval or a claim that the source is ready to publish. A human must authorize a new bounded independent review or resolve the review-runner failure before final qualification, push, or PR publication.
+
+Handing off to a human — choose whether to repair/retry the review runner in a new bounded review or use an independent reviewer; no further turn runs under this capped thread.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
