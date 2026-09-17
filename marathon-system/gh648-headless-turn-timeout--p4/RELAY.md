@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -81,3 +81,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented `test/gh648-l4-285-revalidate.sh` and registered it in `validate.sh` TESTS. `utils/py/agy-turn.py` is unchanged: the reported five-second sleeper failure did not reproduce at the tested source.
+
+The fixture runs the real Python adapter main paths and real subprocess timeout/kill operations with `RELAY_TURN_TIMEOUT_S=1`, idle detection disabled, and a five-second sleeping executable. Coordination, repository lookup, authentication/model preflight, diagnostics and telemetry boundaries are stubbed so no git, real advisors, or shared token operations run. agy is covered with both `AGY_PTY=0` and `AGY_PTY=1`; codex uses its normal pipe path. Assertions require a nonempty started-PID artifact and transcript, exit 7 with wall-cap attribution, child death before cleanup, no natural completion, and elapsed time below four seconds. agy additionally checks its process group no longer exists. This is the original single-sleeper fixture, not a claim about arbitrary detached or signal-resistant descendants.
+
+Focused verification: `bash test/gh648-l4-285-revalidate.sh` passed. Measured codex 1.005s, agy pipe 2.008s, agy PTY 2.014s; all returned 7 with the child dead before cleanup. A deliberate no-op replacement of agy's `_kill_turn_group` returned 7 in 2.008s with the child still alive; the same containment assertion rejected it. Cleanup then killed/reaped the fixture. The test preserves this negative control on every run.
+
+Run output is `.relay-scratch/gh648-l4-run.log`; machine receipt is `.relay-scratch/gh648-l4-receipt.json` (ephemeral, not committed provenance). Source SHA-256: agy `7ba49c671f963cc420fade4ed98bec78f2ed51b076d02488a33b253205878c38`; codex `f5c7dfc0f4332a0adc9917cc26cc3300c4168761b0b1aade0050b4bdc2cabb84`. No full gate was run; the harness owns that gate after handoff.
+
+**Remaining closeout:** outcome is already-fixed for this fixture, but the historical fixing commit SHA has NOT been established and #285 has NOT been closed. The direct turn instruction forbids all git commands and limits mutations to the allowlisted files. The receipt explicitly marks history attribution unresolved rather than inventing a fixing SHA. The outer orchestrator must identify the fixing commit, preserve qualifying provenance, and close #285 after review/gate approval. Graph tools were unavailable, so exact source inspection was used. The skill locator was not executed because it invokes git, also forbidden this turn.
+
+Handing off to agy for review.
