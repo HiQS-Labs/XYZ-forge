@@ -29,8 +29,8 @@ phases: 1
 ## Recon, diagnosis and recent PRs
 
 Base: development 011113f6. validate.sh:505 registers the existing suite. Its
-test/gh642-consumer-fruit.sh:24–29 mkrepo initializes a repository but makes no
-commit; :49–53 pushes HEAD then clones/adds a worktree with errors suppressed.
+Original-base test/gh642-consumer-fruit.sh:23–27 mkrepo initializes a repository but makes no
+commit; :44–46 pushes HEAD then clones/adds a worktree with errors suppressed.
 Fresh full-clone reproduction fails after six checks, before real worktree coverage.
 Protocol: debug-mantra. Ranked causes: missing commit (source/observed); worktree
 feature unsupported (not demonstrated; setup never seeded); full-clone isolation
@@ -49,7 +49,7 @@ Recent PR sample: #643 (merged Sep16) introduced this suite; #614 (Sep15) repair
 Claude isolation/routing tests, related class but not this cause; #652 (Sep17)
 fixed vendored ledger-conflict tool lookup, separate failure path. Historical #6
 (Aug16) introduced the reusable guard, #89 expanded adoption. Existing #669
-repairs a different inherited-CWD probe. Search windows Sep03–17 vs Aug20–Sep02:
+repairs a different inherited-CWD probe. Bounded Sep03–17 merged-PR sample and older fixture examples:
 examples, not exhaustive incident counts; recurrence trend unknown. No other
 published PR specifically repairing #653/#665 found. Existing unpublished repair
 remains held under #661; extract only this test file, preserving that clone/branch.
