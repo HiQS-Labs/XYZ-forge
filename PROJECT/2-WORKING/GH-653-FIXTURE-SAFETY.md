@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan/final source QA Approved; fixture 62/62 and red controls; both full runs 393/393; PR #671 review-ready | Await fixture merge approval, then refresh/requalify #669's exact branch; held #661 untouched |
+| Plan/final QA Approved; fixture 62/62/red controls; full runs 393/393; latest-base affected gate 29/29; PR #671 review-ready | Await merge approval, then refresh/requalify #669's exact branch; held #661 untouched |
 
 ## Quad Concepts
 

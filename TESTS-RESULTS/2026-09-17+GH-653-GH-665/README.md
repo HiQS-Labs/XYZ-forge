@@ -68,6 +68,20 @@ lands. Current hosted smoke passes; advisory platform jobs are skipped, not pass
 
 ## Next gates (no merge authorized)
 
+### Latest-base refresh
+
+Development advanced to 92462d50 during verification (GH-672 skills deployment).
+Its ledger writes conflicted with this topic; existing resolver preserved #653,
+#665 and completed #672, rebuilt generation 749, and displaced DB/own regenerated
+views were preserved under temp. Incidental rendered-view changes were excluded;
+topic diff contains no skills/shared-guard/setup changes. Refresh commit a17490b1:
+fixture remains 62/62 with the same code hash. Normal hook selected releases and
+skills-army-hq affected suites: 29/29, exit 0, 392 seconds, no bypass (base-refresh-push.log).
+This is affected-subsystem evidence on the latest base, not a new 393-check run
+or promotion qualification. Earlier full/combined results retain their exact pins.
+
+### Remaining landing gates
+
 1. Approve and land fixture PR #671 → verify merge/issue closure using existing follow-up.
 2. Refresh #669 against current development using existing ledger resolver → preserve
    both ledgers/receipts, rerun its exact-head normal checks and hosted checks, then
