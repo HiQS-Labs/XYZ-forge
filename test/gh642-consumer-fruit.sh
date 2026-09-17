@@ -215,7 +215,8 @@ mkdir -p "$FIX/node_modules/pkg"; printf 'x' > "$FIX/node_modules/pkg/index.js"
 printf 'relay\n' > "$FIX/RELAY.md"
 # rtl_worktree_begin cuts at HEAD — the fixture needs at least one commit or the add fails.
 ( cd "$FIX" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1 )
-out="$(cd "$FIX" && TMPDIR="$FIXTURE_GUARD_RESOLVED" bash -c '
+RTLTMP="$WORK/rtl-temp"; mkdir -p "$RTLTMP"; require_fixture "$RTLTMP" rtl-temp
+out="$(cd "$FIX" && TMPDIR="$RTLTMP" bash -c '
   source "'"$RTL"'"
   source "'"$ROOT"'/test/lib/fixture-guard.sh"
   fixture_guard_init "$TMPDIR"
