@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R7 builder=codex reviewer=agy round-cap=5 -->
@@ -31,6 +31,20 @@ not committed provenance or a full-gate claim. No git commands or full project
 gate were run; the harness owns commit and gate execution.
 
 Next: agy reviews the permitted artifacts and this result.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the whole `utils/py/turn_diagnostics.py`, `test/gh648-l1-turn-termination.sh`, and `validate.sh` files, not just the diffs. 
+
+- `utils/py/turn_diagnostics.py`: I verified that moving `_tree_pids` inside the try block resolves the OSError escaping issue. The file looks structurally sound. The core classes and exception handling are robust. I found no pre-existing defects.
+- `test/gh648-l1-turn-termination.sh`: The tests exercise the new failure-boundary effectively in `.relay-scratch` isolated environment without tripping containment. All 73 assertions pass cleanly. No pre-existing defects found.
+- `validate.sh`: `gh648-l1-turn-termination.sh` is properly registered in the `TESTS` array. No issues found.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
 
 ## Phase Brief
 
