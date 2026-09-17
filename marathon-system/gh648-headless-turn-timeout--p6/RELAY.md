@@ -1,5 +1,5 @@
 # Marathon Phase p6
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P6-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -50,6 +50,11 @@ Write-set: `utils/py/muse-turn.py` + suite. Python twin authoritative; register 
 - Investigation limit: this confirms the reporting gap, not the cause of the historical #521 stall. The registry documents four ruled-out hypotheses and a residual turn-prompt hypothesis; no live Muse replay was performed, so that residual remains unconfirmed.
 - Full gate deliberately not run per this turn's instructions; harness verification and independent agy review remain outstanding.
 
+### Round 1 · Reviewer · agy
+swept file: yes
+The builder correctly modified `utils/py/muse-turn.py` to add a termination record with `termination=wall-cap` and the observed L1 reason when `bounded_rc == 7` (timeout). It correctly uses the `TurnDiagnostics.emit_termination_record()` method to write this out to the log, which handles the reporting cleanly without changing kill policy. The test script verifies this behavior robustly across the different scenarios, and it's properly hooked up in `validate.sh`. I manually verified the test suite output passes cleanly via a scratch probe execution.
+
+**Verdict:** Approved
 
 ---
 
