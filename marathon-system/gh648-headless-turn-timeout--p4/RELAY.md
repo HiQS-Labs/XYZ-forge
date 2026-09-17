@@ -1,5 +1,5 @@
 # Marathon Phase p4
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -95,3 +95,12 @@ Run output is `.relay-scratch/gh648-l4-run.log`; machine receipt is `.relay-scra
 **Remaining closeout:** outcome is already-fixed for this fixture, but the historical fixing commit SHA has NOT been established and #285 has NOT been closed. The direct turn instruction forbids all git commands and limits mutations to the allowlisted files. The receipt explicitly marks history attribution unresolved rather than inventing a fixing SHA. The outer orchestrator must identify the fixing commit, preserve qualifying provenance, and close #285 after review/gate approval. Graph tools were unavailable, so exact source inspection was used. The skill locator was not executed because it invokes git, also forbidden this turn.
 
 Handing off to agy for review.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+I have reviewed the whole file `utils/py/agy-turn.py` and there are no pre-existing defects related to this change or glaring issues that need fixing within the scope. I have also verified the test `test/gh648-l4-285-revalidate.sh` and `validate.sh` and they are correct. The test passes correctly, verifying that the issue is already fixed and that the python twin properly kills the child process group.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
