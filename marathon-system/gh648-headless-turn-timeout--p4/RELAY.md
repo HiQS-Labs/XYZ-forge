@@ -1,0 +1,83 @@
+# Marathon Phase p4
+STATUS: Open
+NEXT: codex (Builder)
+
+<!-- marathon-drive: task=MARATHON-P4-TURN builder=codex reviewer=agy round-cap=5 -->
+
+## Phase Brief
+
+---
+title: "L4 brief — #285 revalidate whether the cap kills the child at HEAD"
+status: "Brief (input to the GH-648 headless turn-timeout marathon — not a tracked plan)"
+created: 2026-09-16
+updated: 2026-09-16
+owner: Noel Saw
+goal: >
+  Fixture-prove agy-turn's cap behavior at HEAD; close #285 as already-fixed or fix what still reproduces.
+roadmap_exempt: true
+related:
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/648
+---
+
+# L4 — #285 revalidate: does the cap kill the child at HEAD?
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Brief authored at marathon plan time (2026-09-16) | Lane fires when the marathon chain reaches this phase |
+
+Umbrella: #648 · Issue: #285 · Wave 1 · depends_on L3
+
+## Goal
+#285 claimed `agy-turn` returns exit 7 at the cap but never kills the child (fixture: `RELAY_TURN_TIMEOUT_S=1` vs 5s stub; codex-turn killed, agy didn't). At HEAD, `utils/py/agy-turn.py` ~`:500` calls `_kill_turn_group(proc)` at the wall cap, so the issue may already be fixed in the Python twin.
+
+First build `test/gh648-l4-285-revalidate.sh` (same fixture shape: short cap vs sleeping stub, both agy and codex twins). Then:
+- If agy's cap fires fast (child group dead well before the stub's natural end): close #285 citing the commit that fixed it — put the sha in the suite receipt and the issue close. NO production change.
+- If it still reproduces: fix in `utils/py/agy-turn.py` (Python twin only) and keep the suite red→green.
+
+## Rules
+`utils/py/agy-turn.py` is in your write-set ONLY for the still-reproduces branch. Register the suite in `validate.sh` TESTS. `bash validate.sh` green.
+
+## Acceptance / Guard
+The suite asserts the cap fires fast for BOTH twins (agy, codex) and records which case happened (already-fixed close vs fix landed).
+
+
+---
+
+▶ TAKE YOUR TURN (codex — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+1. Implement the brief by creating/editing the artifact file(s): utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh
+2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P4-TURN --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p4/RELAY.md,utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh"
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P4-TURN --agent codex
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN --agent codex --to agy
+4. Edit ONLY these paths: marathon-system/gh648-headless-turn-timeout--p4/RELAY.md and utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to agy — agy, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: agy (Reviewer)`
+
+---
+
+▶ TAKE YOUR TURN (agy — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P4-TURN --agent agy
+4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
+   Edit ONLY marathon-system/gh648-headless-turn-timeout--p4/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to codex —
+   codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
