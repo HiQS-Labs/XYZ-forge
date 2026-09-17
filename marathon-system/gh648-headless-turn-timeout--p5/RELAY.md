@@ -1,6 +1,6 @@
 # Marathon Phase p5
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P5-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -81,3 +81,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+- Added `test/gh648-l5-gh237-repro.sh` and registered it in `validate.sh` TESTS. `utils/py/consult.py` is unchanged: L1/L3 already provide the required honest idle labels and partial-failure output. No cap-policy changes.
+- The hermetic suite runs consult's actual main/launch/wait/classification/result path with a substantial agy prompt and a real silent child holding a socketpair. Repository operations and auth preflight are stubbed; CPU/time/network observations are deterministic inputs to the real shared classifier. This proves consult's attribution plumbing, not OS socket discovery or live backend connectivity. No Git commands, real advisor tokens, network listeners, or writes outside `.relay-scratch/` occur in the suite.
+- Focused verification: `bash test/gh648-l5-gh237-repro.sh` exited 0. Cases: slow completion; idle in-flight; idle unknown; deliberate old `timeout-idle` / `no progress` mutation rejected by the same transcript/stdout attribution assertion. Each failure asserts exit 5, nonempty output, and a reaped child. Log: `.relay-scratch/gh648-l5-test.log` (ephemeral, not durable release evidence).
+- One manual real-agy probe used consult's actual launcher and wait loop from this existing relay worktree, with a substantial source-review prompt, idle=5s and wall=20s. Observed exit 1 after 0.416s, zero transcript bytes, no idle kill. This provides no evidence of a backend hang or specific startup blocker; the cause remains unknown. Receipt: `.relay-scratch/gh648-l5-live-receipt.txt`; raw empty transcript: `.relay-scratch/gh648-l5-live-agy.md` (ephemeral).
+- **Outstanding acceptance:** the exact real-advisor repro through consult's worktree creation and auth preflight, plus a durable PR receipt, remains required. Running that path invokes Git, prohibited in this turn; the partial live probe is not a substitute and must not be cited as full scenario success. The outer operator/harness must run it under appropriate authorization and attach the receipt before phase closure. Full gate intentionally not run; it belongs to the harness.
+- Graph tools were unavailable; source fallback covered consult's main, launch, idle-bound, partial surfacing, and shared diagnostic classifier. Reversibility: Easy — a test and one registration line. Existing kill policy is preserved.
+
+Handing off to agy for review, with the live repro limitation explicit.
