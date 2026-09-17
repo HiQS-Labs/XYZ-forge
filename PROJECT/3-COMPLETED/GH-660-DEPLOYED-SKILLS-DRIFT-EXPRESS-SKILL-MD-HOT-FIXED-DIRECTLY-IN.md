@@ -1,6 +1,6 @@
 ---
 title: "GH-660: Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git-pulse-sync) instead of re-vendoring from canonical skills/express — deployed copy missing GH-592 resume recipe"
-status: Active
+status: Complete
 created: 2026-09-16
 updated: 2026-09-16
 owner: operator (via /express)
