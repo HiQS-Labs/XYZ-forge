@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -120,3 +120,16 @@ Focused evidence (session logs in `.relay-scratch/`):
   owns the final gate and commit, per the turn instructions.
 
 Ready for agy review.
+
+### Round 1 · Reviewer · agy
+swept file: yes
+
+**Verdict:** Approved
+
+I have performed a whole-file review of `utils/py/commandcode-turn.py`, `test/gh648-l2-token-aftermath.sh`, and `validate.sh`.
+The change correctly clears `RELAY_FILE` during `rtl.enforce()` when a timeout is detected, preventing `tick release --to <peer>` while retaining the token logic, effectively keeping it claimable by the same role.
+The fallback paths and exceptions handling correctly avoid altering the environment un-safely (via the try/finally wrapper).
+The new test suite covers the success and timeout paths natively, including worktree isolation and enforce failures, without triggering cross-contamination bugs.
+No latent issues were observed in the original file scope.
+
+relay closed, no further turn needed
