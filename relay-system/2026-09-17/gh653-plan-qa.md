@@ -201,4 +201,12 @@ Whole-file sweep: read the complete embedded/canonical GH-653 plan, GH-665 adapt
 
 Relay closed (Approved), no further review turn needed. Producer proceeds with the approved extraction and verification; the harness owns the relay commit.
 
+
+### Attestation · relay-drive — 2026-09-17T17:49:37Z
+task: RELAY-GH653-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: f81f6b872c9df9ef0272e13a5507993bc4b43d4d
+added-range: 12076+3587
+added-sha256: c26a5af0e6b1ba12c6e67c5189b857e57bfba1b44b5ab4438c46e8a9824a46bc
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
