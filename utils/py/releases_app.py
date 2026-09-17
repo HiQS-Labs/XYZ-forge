@@ -4056,14 +4056,20 @@ def cmd_roadmap_reconcile_state(args):
         for row in rows:
             # A URL cannot override the row's independently owned repository.
             url = row["issue_url"] or ""
+            identity = resolve_roadmap_identity(row, owned_repos, origin)
             if (not GH_ISSUE_URL_RE.fullmatch(url)
                     or url.rsplit("/", 1)[-1] != str(row["gh_number"])
-                    or not resolve_roadmap_identity(row, owned_repos, origin)["identity_valid"]):
+                    or not identity["identity_valid"]):
                 # Per-row, not per-command: one row whose issue_url disagrees with its gh_number
                 # is a local data defect, and refusing the whole sweep over it strands every other
                 # row (#527). Still never guess this row's state — skip it and name it.
                 unresolvable.append(row["gh_number"])
                 continue
+            try:
+                native = read_native_issue(identity["repo"], row["gh_number"], url)
+            except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+                refuse("roadmap-issue-state", "%s native identity/state unavailable (%s); refusing to guess "
+                       "issue state" % (url, exc))
             try:
                 result = subprocess.run(
                     [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", url,
@@ -4082,7 +4088,13 @@ def cmd_roadmap_reconcile_state(args):
             if not isinstance(issue, dict) or issue.get("state") not in ("OPEN", "CLOSED"):
                 refuse("roadmap-issue-state", "%s returned invalid state; refusing to guess issue state" % url)
             if issue["state"] == "OPEN":
+                if native["state"] != "open":
+                    refuse("roadmap-issue-state", "%s changed from native closed to open during lookup; retry "
+                           "the sweep" % url)
                 continue
+            if native["state"] != "closed":
+                refuse("roadmap-issue-state", "%s changed from native open to closed during lookup; retry "
+                       "the sweep" % url)
             reason = issue.get("stateReason")
             if reason not in ("COMPLETED", "NOT_PLANNED"):
                 refuse("roadmap-issue-state", "%s returned unknown closure reason; refusing to guess "

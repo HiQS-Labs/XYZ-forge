@@ -582,6 +582,13 @@ class StatusLabelTests(unittest.TestCase):
         def native(argv, **kwargs):
             if argv[0] == "git":
                 return subprocess.CompletedProcess(argv, 0, "https://github.com/owner/project.git\n", "")
+            if argv[1] == "api":
+                number = int(argv[2].rsplit("/", 1)[-1])
+                return subprocess.CompletedProcess(argv, 0, json.dumps({
+                    "number": number,
+                    "html_url": "https://github.com/owner/project/issues/%d" % number,
+                    "state": "closed", "labels": [],
+                }), "")
             queried.append(argv[3])
             return subprocess.CompletedProcess(argv, 0, json.dumps({"state":"CLOSED", "stateReason":"COMPLETED"}), "")
         with mock.patch.object(app.subprocess, "run", side_effect=native), contextlib.redirect_stdout(io.StringIO()):
@@ -600,18 +607,45 @@ class StatusLabelTests(unittest.TestCase):
                 connectors._persist(self.fx.db, {"github_labels":(cursor,None)}, app.now_iso())
                 self.native.issue()["state"] = "closed"
                 issue = subprocess.CompletedProcess([],0,json.dumps({"state":"CLOSED","stateReason":reason}),"")
+                def native(argv, **kwargs):
+                    if argv[0] == "git":
+                        return subprocess.CompletedProcess(argv, 0, "https://github.com/owner/project.git\n", "")
+                    if argv[1] == "api":
+                        return subprocess.CompletedProcess(argv, 0, json.dumps(self.native.issue()), "")
+                    return issue
                 args = argparse.Namespace(root=self.fx.root, apply=False)
-                with mock.patch.object(app.subprocess,"run",return_value=issue), contextlib.redirect_stdout(io.StringIO()):
+                with mock.patch.object(app.subprocess,"run",side_effect=native), contextlib.redirect_stdout(io.StringIO()):
                     app.cmd_roadmap_reconcile_state(args)
                 self.assertEqual(self.fx.row()["status_label"],"in-progress")
                 args.apply = True
-                with mock.patch.object(app.subprocess,"run",return_value=issue), contextlib.redirect_stdout(io.StringIO()):
+                with mock.patch.object(app.subprocess,"run",side_effect=native), contextlib.redirect_stdout(io.StringIO()):
                     app.cmd_roadmap_reconcile_state(args)
                 self.assertEqual(self.fx.row()["section"],section)
                 self.assertIsNone(self.fx.row()["status_label"])
                 self.project(self.fx.batch(cursor))
                 self.assertEqual(self.native.mutations[-1][2],"remove")
                 self.native.issue()["state"] = "open"
+
+    def test_direct_close_refuses_mismatched_native_identity(self):
+        self.start()
+        self.native.issue()["state"] = "closed"
+        for change in ({"pull_request": {}}, {"number": 42},
+                       {"html_url": "https://github.com/foreign/project/issues/646"}):
+            with self.subTest(change=change):
+                payload = dict(self.native.issue(), **change)
+                def native(argv, **kwargs):
+                    if argv[0] == "git":
+                        return subprocess.CompletedProcess(argv, 0, "https://github.com/owner/project.git\n", "")
+                    if argv[1] == "api":
+                        return subprocess.CompletedProcess(argv, 0, json.dumps(payload), "")
+                    return subprocess.CompletedProcess(argv, 0,
+                        json.dumps({"state": "CLOSED", "stateReason": "COMPLETED"}), "")
+                with mock.patch.object(app.subprocess, "run", side_effect=native), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        app.cmd_roadmap_reconcile_state(argparse.Namespace(root=self.fx.root, apply=True))
+                self.assertEqual(self.fx.row()["section"], "In progress")
+                self.assertEqual(self.fx.row()["status_label"], "in-progress")
 
     def test_express_refuses_before_activation_and_requalifies_before_snapshot(self):
         args = argparse.Namespace(root=self.fx.root, repo="owner/project", issue=646,
@@ -978,7 +1012,7 @@ class StatusLabelTests(unittest.TestCase):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mutant", choices=("metadata", "terminal", "identity", "cursor", "appearance"))
+    parser.add_argument("--mutant", choices=("metadata", "terminal", "identity", "cursor", "appearance", "closure_identity"))
     opts, extra = parser.parse_known_args()
     # Each optional isolated-process mutant must turn its named falsifiable assertion red.
     target = None
@@ -1014,6 +1048,12 @@ def main():
                                    for name,(advance,error) in results.items()}, at)
         connectors._persist = broken
         target = "test_failed_removal_reopen_replay_and_cursor_retention"
+    elif opts.mutant == "closure_identity":
+        app.read_native_issue = lambda *args, **kwargs: {
+            "number": 646, "html_url": "https://github.com/owner/project/issues/646",
+            "state": "closed", "labels": [],
+        }
+        target = "test_direct_close_refuses_mismatched_native_identity"
     suite = (unittest.defaultTestLoader.loadTestsFromName("StatusLabelTests." + target, sys.modules[__name__])
              if target else unittest.defaultTestLoader.loadTestsFromTestCase(StatusLabelTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)

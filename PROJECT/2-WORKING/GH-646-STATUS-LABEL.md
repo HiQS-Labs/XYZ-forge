@@ -21,7 +21,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| A fresh review found and the branch fixed the ordinary-update admission bypass; 39 focused label tests pass and the restored bypass mutant fails as intended. | Finish the reopened bounded review, then run one final qualifying gate in a disposable clone before a PR is opened. |
+| A fresh review found and the branch fixed both ordinary-update admission and direct terminal-cleanup identity gaps; 40 focused label tests pass and both restored-bypass mutants fail as intended. | Finish the reopened bounded review, then run one final qualifying gate in a disposable clone before a PR is opened. |
 
 ## Goal and scope
 
@@ -53,6 +53,6 @@ Reader safety is settled separately: normal SQLite coordination sidecars are all
 
 ## Current evidence and stop rules
 
-The refreshed branch contains a selective replay of the original writer implementation and late identity fixes. The reviewer found that ordinary legacy active appearance could establish the new label without qualified admission; the repair limits establishment to `accepted_start=True`. The focused suite now passes 39 Python tests and its deliberate appearance-bypass mutant fails. This is implementation evidence only. The final qualifying gate has not yet run on this refreshed branch.
+The refreshed branch contains a selective replay of the original writer implementation and late identity fixes. The reviewer found that ordinary legacy active appearance could establish the new label without qualified admission; the repair limits establishment to `accepted_start=True`. The reopened review also found that direct terminal cleanup did not prove the returned native issue identity; the repair reuses the native issue guard before a closure reason can queue the exact-row terminal mutation. The focused suite now passes 40 Python tests; deliberate appearance and closure-identity mutants both fail. This is implementation evidence only. The final qualifying gate has not yet run on this refreshed branch.
 
 Stop and report rather than expand scope if qualified identity cannot reach the existing connector, a migration/dump contract is ambiguous, the bounded reviewer finds a correctness gap, or the final gate fails after one scoped repair/retest. Do not resolve hosted reconciliation debt, merge-cleanup race conditions, Flight Deck rendering, or Daily integration in this producer lane.
