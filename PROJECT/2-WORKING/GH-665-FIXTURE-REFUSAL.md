@@ -26,3 +26,17 @@ No caller damage is claimed outside prior controlled reproductions.
 ## Quad Concepts
 
 - Failed setup can retarget a seed commit → validate at write boundaries and refuse.
+
+## Lessons Learned (For Future Agents)
+
+- Guard fixture paths at the write boundary, not at derivation: `mkrepo` refuses empty, `.`, `..`
+  and slashed names and checks `mkdir`/`git init` before any seed commit, because an empty
+  `git -C` target silently resolves to the caller's checkout.
+- A refusal is only proven by the caller-preservation assertion that follows it. Each fault case
+  runs in a subshell so its `exit 2` is captured in `rc` and the outer HEAD/git-dir/clean-tree
+  check always executes; the committed `caller-damaged` control fails at exactly that assertion,
+  which is what makes the control falsifiable (an automated review that read the `exit 2` as
+  top-level concluded the opposite — verify subshell scope before trusting that reading).
+- An adapter doc that points execution at a canonical sibling (GH-653) still needs its own
+  Lessons Learned: the reconciler validates every doc it moves to `3-COMPLETED`, and a missing
+  section stops the whole post-merge reconciliation, not just this doc.
