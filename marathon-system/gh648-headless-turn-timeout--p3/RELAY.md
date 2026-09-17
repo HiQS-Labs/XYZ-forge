@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -80,3 +80,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 3 · Builder · codex
+
+The allowed implementation files already satisfy this phase brief on arrival; retained them without redundant edits. This turn changes only this relay record.
+
+- `utils/py/consult.py`: default `CONSULT_TIMEOUT` is 600; wall expiry publishes captured content with `PARTIAL — hit the Ns cap, no verdict`; JSON transcripts retain their raw bytes and publish a marked `.PARTIAL.md` sidecar. Interrupted advisors remain failures, not completed verdicts.
+- Idle policy remains **kill-labeled**, without an extension: `wait_with_idle_bound` retains L1's classifier reason on the process, and the failure summary/partial marker uses it. The no-connection fixture yields `timeout-idle-unknown`; idle termination does not claim the wall cap expired.
+- `test/gh648-l3-consult-cap.sh` already covers default and override, real stub processes killed at the cap, completion, truthful idle labeling, and wall/idle JSON preservation. `validate.sh` already registers it.
+- Focused verification: `bash test/gh648-l3-consult-cap.sh` passed all cases. Three in-memory source mutations independently failed assertions: revert default to 300; remove the partial marker; replace the idle reason with `backend-hung`. Mutations ran in separate Python processes and never changed tracked implementation files. Local diagnostic logs are under `.relay-scratch/gh648-l3-*`; these are ephemeral verification observations, not committed provenance receipts.
+- Graph limitation: this worktree is not indexed; the nearest XYZ-forge index reports generation 2026-09-01 and changed/missing coverage for these paths. Findings above use current local source and the focused executable suite, not stale graph claims.
+- No git commands or full gate were run. Full gate and final commit remain the harness's responsibility; reviewer approval is outstanding.
+
+Handing off to agy for the required independent review.
