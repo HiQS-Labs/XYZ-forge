@@ -1,6 +1,7 @@
 # GH-653 / GH-665 verification
 
-Status: focused proof complete; full gate/final QA and conditional #669 checks pending.
+Status: fixture full gate green; independent final QA and combined #669 full run pending.
+Draft fixture PR: https://github.com/HiQS-Labs/XYZ-forge/pull/671.
 No merge authorized. GH-661 source clone untouched. No published #669 qualification claim.
 
 ## Source and results
@@ -22,6 +23,8 @@ Nonempty transcripts accompany each result:
 | Guard-disabled control | 1 | `fixture guard accepted symlink (rc=0)` |
 | Caller-damage control | 1 | `caller changed after empty` |
 | bash -n / shellcheck -S error | 0 / 0 | Parse/static checks pass |
+| ci-local.sh --fast --base origin/development at 82f786f9 | 0 | Eight static/doc/frozen-twin/npm stages pass; full suite explicitly skipped in this invocation |
+| Normal gated topic push at 82f786f9 | 0 | 393/393 full checks, 1082 seconds; no bypass; prepush.log retained |
 
 Controls execute the actual suite with one in-memory edit, using its original path
 as Bash $0. They never rewrite tracked source; deliberately damaged callers are
@@ -40,6 +43,11 @@ fixture repair, extracted here without its unrelated changes.
 
 ## Remaining qualification
 
-Full pre-push, independent final QA, fixture PR/hosted checks, then separate combined
-candidate + #669 local verification. #669 remains draft until fixture prerequisite
+Independent final QA and fixture hosted checks, plus separate combined candidate
++ #669 local verification. Combined clone ae56f400151631b3a3fb0a2fce97dd4ca0c7fb1e
+has both parents (published #669 aa634155 and fixture 82f786f9). Existing resolver
+preserved all three issue records/receipts, generation 749; displaced DB moved
+intact under temp before testing. Focused 62 fixture checks, 14 validator tests,
+65 Agy assertions and eight --fast stages pass; full run pending. These results
+are not qualification of published #669. #669 remains draft until fixture prerequisite
 lands. Current hosted smoke passes; advisory platform jobs are skipped, not passed.
