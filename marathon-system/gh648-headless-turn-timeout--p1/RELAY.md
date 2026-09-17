@@ -1,8 +1,8 @@
 # Marathon Phase p1
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-P1-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-P1-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
 ## Phase Brief
 
@@ -47,7 +47,7 @@ Python twins are authoritative — edit `utils/py/*.py`, never `relay-automation
 `test/gh648-l1-turn-termination.sh`: (a) a stub turn with 0 CPU growth and an established outbound connection classifies as in-flight/unknown, NOT `timeout-idle-no-progress`; (b) termination records distinguish idle-kill / wall-cap / child-orphan; (c) a failing probe degrades to `unclassified` without failing the turn. Mutation-proof the assertions (see AGENTS.md "a check that cannot fail is not a check").
 
 
-## Debug mantra (auto-triggered — 7 prior attempt(s) on this phase did not reach Approved)
+## Debug mantra (auto-triggered — 8 prior attempt(s) on this phase did not reach Approved)
 
 Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
 Last recorded reason (`marathon-system/gh648-headless-turn-timeout--p1/ESCALATION.md`): `pre-advance-failed`. Read it before re-guessing.
@@ -60,9 +60,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P1-TURN-R2 --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p1/RELAY.md,utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh"
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P1-TURN-R2 --agent codex
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P1-TURN-R2 --agent codex --to agy
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P1-TURN-R3 --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p1/RELAY.md,utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh"
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P1-TURN-R3 --agent codex
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P1-TURN-R3 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/gh648-headless-turn-timeout--p1/RELAY.md and utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -75,8 +75,8 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/turn_diagnostics.py, test/gh648-l1-turn-termination.sh, validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P1-TURN-R2 --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P1-TURN-R2 --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P1-TURN-R3 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P1-TURN-R3 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
    Edit ONLY marathon-system/gh648-headless-turn-timeout--p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -90,39 +90,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · codex
-
-- Recovered and reviewed the scoped implementation left on disk after the prior orchestration-level
-  `pre-advance-failed` attempt; no additional code rewrite was needed.
-- `utils/py/turn_diagnostics.py` now uses a one-shot, descendant-aware established-connection probe,
-  reports honest `timeout-idle-in-flight` / `timeout-idle-unknown` / `timeout-unclassified` reasons,
-  and provides structured termination records for idle-kill, wall-cap, child-orphan, and unknown while
-  preserving exit code 7.
-- `test/gh648-l1-turn-termination.sh` covers probe outcomes, descendant PID scope, distinct termination
-  mechanisms, JSON emission, and two mutation controls; `validate.sh` registers the focused suite.
-- Focused verification: `bash test/gh648-l1-turn-termination.sh` -> `PASS: 26 assertions`.
-- Full `validate.sh` intentionally not run in this relay worktree; the harness owns the gate.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-
-I have reviewed the entire artifact (`utils/py/turn_diagnostics.py`), the test script (`test/gh648-l1-turn-termination.sh`), and the registry addition (`validate.sh`). No pre-existing defects were found in the scope of `turn_diagnostics.py`; the logic for tree traversal, CPU peak sampling, and mtime bounds is sound and defensively written.
-
-The implementation successfully fulfills the L1 brief:
-- Structured termination records correctly distinguish `idle-kill`, `wall-cap`, `child-orphan`, and `unknown` while preserving exit code 7.
-- The `lsof` network probe serves as a positive in-flight check, degrading safely to `unclassified` on failure.
-- The overclaim is stopped: by default, blocked turns report `timeout-idle-unknown`, accurately reflecting that without positive confirmation, the state is unknown. 
-- The focused test suite passes all 26 assertions.
-
-**Verdict:** Approved
-relay closed, no further turn needed
-
-### Attestation · relay-drive — 2026-09-17T00:36:07Z
-task: MARATHON-P1-TURN-R2
-reviewer: agy
-status: Approved
-reviewed-head: daaa6dcd896d3c70d2378dadf0ae05d0b5d3d802
-added-range: 8984+977
-added-sha256: c6f6b18c754e5ae86ce5fd2a6fb80970dd0e92eee566cbd36e4eff384e337c6d
