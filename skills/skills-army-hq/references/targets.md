@@ -13,6 +13,7 @@ are written once, while each consuming app is verified separately.
 | Codex desktop app | same `~/.agents/skills` | [Codex skills](https://developers.openai.com/codex/skills/) |
 | Antigravity app | `~/.gemini/config/skills` | [Antigravity skills](https://antigravity.google/docs/skills) |
 | Zcode GLM app | `~/.zcode/skills` | [ZCode skills](https://zcode.z.ai/en/docs/skill) |
+| Grok Bot | Runtime (box): `/home/box/agent-data/workflows`; staging (Mac): `~/.grok-bot/skills` | Operator-verified runtime path; Skills Army HQ manages Mac staging only. |
 
 Some Codex installations also discover `~/.codex/skills`; inspect existing selected
 entries to avoid duplicate names or stale overrides. Do not deploy to both by
@@ -25,3 +26,5 @@ For each consumer, observe its skill picker/settings or a read-only agent invoca
 ZCode documents Settings → Skills → Refresh and supports symlink imports. Distinguish
 unsupported/unavailable app verification from successful link creation. Never infer
 VS Code extension behavior solely from a similarly named CLI.
+
+A healthy symlink under `~/.grok-bot/skills` does **not** prove Grok Bot has loaded the skill. Box import is a separate step: ask Grok Bot to import the staging folder (or Deployed Skills) via Grok Bot / `update_state` into `/home/box/agent-data/workflows`; Mac paths are not box paths.
