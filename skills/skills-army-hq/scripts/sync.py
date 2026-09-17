@@ -7,6 +7,8 @@ import contextlib
 import json
 import os
 from pathlib import Path
+import shlex
+import subprocess
 import sys
 import uuid
 
@@ -18,6 +20,76 @@ import intake as shared
 def owned_record(root, state, target, name, previous=None):
     return {"collection": state["collection"], "root": str(target), "name": name,
             "text": str(root / name), **({"previous": previous} if previous is not None else {})}
+
+
+# GH-660 remediation item 3: the collection is a distribution artifact of XYZ-forge's
+# canonical skills/. A deploy that ships a vendored SKILL.md diverging from canonical is
+# silent drift, so sync runs the forge-side checker (utils/py/skill_drift_check.py) and
+# refuses --apply while any forge-owned skill is drifted. Only names present in the forge's
+# skills/ are judged; collection-only skills stay informational ("unrecognized").
+CHECKER = Path("utils") / "py" / "skill_drift_check.py"
+
+
+def canonical_root(explicit, config, state):
+    """Resolve the XYZ-forge checkout whose skills/ is canonical for this collection.
+
+    Order: --canonical, XYZ_FORGE_ROOT, targets.json "canonical", then the repository the
+    manager itself was vendored from. An explicit setting that does not resolve is an error;
+    a stale provenance path is skipped. Returns (path, origin) or (None, None)."""
+    candidates = [("--canonical", explicit), ("XYZ_FORGE_ROOT", os.environ.get("XYZ_FORGE_ROOT")),
+                  ('targets.json "canonical"', config.get("canonical")),
+                  ("skills-army-hq provenance", state["skills"].get("skills-army-hq", {}).get("repository"))]
+    for origin, raw in candidates:
+        if not raw:
+            continue
+        path = Path(raw).expanduser()
+        if (path / CHECKER).is_file() and (path / "skills").is_dir():
+            return path.resolve(), origin
+        shared.require(origin == "skills-army-hq provenance",
+                       f"Canonical root from {origin} lacks {CHECKER} or skills/: {path}")
+    return None, None
+
+
+def drift_report(root, canonical):
+    """Ingest the forge checker's --json; exit 0/1 are both reports, anything else is a failure."""
+    run = subprocess.run([sys.executable, "-B", str(canonical / CHECKER), "--canonical", str(canonical),
+                          "--collection", str(root), "--json"], text=True, capture_output=True)
+    shared.require(run.returncode in (0, 1), f"skill_drift_check failed ({run.returncode}): {run.stderr.strip()}")
+    report = json.loads(run.stdout)
+    return {"canonical": str(canonical), "ok": [e["skill"] for e in report["ok"]],
+            "drifted": [{"skill": e["skill"], "vendored_path": e["vendored_path"], "canonical_path": e["canonical_path"]}
+                        for e in report["drifted"]],
+            "unrecognized": [e["skill"] for e in report["unrecognized"]]}
+
+
+def warn(warnings, message):
+    """Loud and immediate (stderr) so a refusal that follows still shows every finding."""
+    warnings.append(message)
+    print(f"skills-army-hq sync: WARN {message}", file=sys.stderr)
+
+
+def drift_gate(root, state, config, found, explicit, apply, allow_drift, warnings):
+    """WARN on every drifted forge-owned skill; REFUSE an apply that would deploy one."""
+    canonical, origin = canonical_root(explicit, config, state)
+    if canonical is None:
+        warn(warnings, "drift check skipped: no canonical XYZ-forge root resolved "
+                       "(set --canonical, XYZ_FORGE_ROOT, or targets.json \"canonical\")")
+        return None
+    drift = {**drift_report(root, canonical), "origin": origin}
+    drifted = [e for e in drift["drifted"] if e["skill"] in found]
+    for entry in drifted:
+        remedy = (f"python3 {shlex.quote(str(root / 'intake.py'))} --root {shlex.quote(str(root))} --apply "
+                  f"update {entry['skill']} --source {shlex.quote(str(Path(entry['canonical_path']).parent))}")
+        warn(warnings, f"DRIFTED {entry['skill']}: vendored {entry['vendored_path']} != canonical "
+                       f"{entry['canonical_path']} — re-vendor: {remedy}")
+    deploying = any(t["enabled"] for t in config["targets"])
+    if apply and drifted and deploying and not allow_drift:
+        names = ", ".join(e["skill"] for e in drifted)
+        shared.require(False, f"REFUSED: deploy would ship drifted vendored SKILL.md for {names}; "
+                              f"canonical is {canonical / 'skills'} — re-vendor from it (or --allow-drift, loudly)")
+    if apply and drifted and allow_drift:
+        warn(warnings, f"--allow-drift: deploying {len(drifted)} drifted skill(s) against canonical {canonical}")
+    return drift
 
 
 def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=None):
@@ -117,6 +189,10 @@ def main(argv=None):
                    help="Explicitly replace a selected alternative source link; preserve old link text")
     p.add_argument("--retire-trinity", metavar="LOCAL_SOURCE", help="Withdraw only the known replaced skill")
     p.add_argument("--archive-legacy", action="store_true", help="Explicitly archive a matching real legacy folder")
+    p.add_argument("--canonical", metavar="FORGE_ROOT",
+                   help="XYZ-forge checkout whose skills/ is canonical (else XYZ_FORGE_ROOT, targets.json \"canonical\")")
+    p.add_argument("--allow-drift", action="store_true",
+                   help="Deploy despite drifted vendored skills; the drift is still reported and recorded")
     args = p.parse_args(argv)
     try:
         root = shared.location(args.root)
@@ -143,14 +219,17 @@ def main(argv=None):
             state, config = shared.load(root)
             shared.validate_history(root)
             found = shared.inventory(root, state)
+            warnings, drift = [], None
             if args.retire_trinity:
                 actions, errors, changes = retirement(root, state, config, args.retire_trinity,
                                                      args.archive_legacy, apply)
             else:
                 shared.require(not args.archive_legacy, "--archive-legacy requires --retire-trinity")
+                drift = drift_gate(root, state, config, found, args.canonical, apply, args.allow_drift, warnings)
                 actions, errors, changes = reconcile(root, state, config, found, args.adopt, args.migrate, migrate_from)
             result = {"apply": apply, "skills": sorted(found), "actions": actions, "changes": changes,
-                      "errors": errors, "prerequisites": {n: r.get("prerequisites", []) for n, r in state["skills"].items()}}
+                      "errors": errors, "warnings": warnings, "drift": drift,
+                      "prerequisites": {n: r.get("prerequisites", []) for n, r in state["skills"].items()}}
             print(json.dumps(result, indent=2))
             if apply and (actions or changes or errors):
                 shared.transact(root, state, config, actions, "sync-partial" if errors else "sync", result)
