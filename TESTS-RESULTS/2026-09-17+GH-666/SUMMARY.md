@@ -19,6 +19,11 @@ The existing auth-probe relative-binary/cleanup limitations are not repaired her
 - Same final source, remove only model-subprocess cwd in memory: exit1, 11 failure
   events in 13 tests. Ignored marker is detected despite unchanged Git porcelain.
   ablate-cwd.py is the retained ablation source; no tracked source was mutated.
+- Final-source registered Agy suite: exit0, all 13 validator cases and 62 existing
+  assertions pass; model refusal/forwarding and normal turns are preserved.
+  Owned plan frontmatter/status checks also pass with zero errors/warnings.
+- Final-source required path check: exit1, same base missing-reference failures.
+  Clone HEAD, non-bare identity, GitHub origin and tracked tree show no drift.
 - Static-only f25de3fe run: exit1, seven code/config stages pass; existing GH-658
   supporting-document coverage fails. Not a final b6 static or full-suite receipt.
 - Preimplementation path-integrity: exit1 on the same base fixture-reference
