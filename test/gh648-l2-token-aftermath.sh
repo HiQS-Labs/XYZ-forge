@@ -61,11 +61,12 @@ with patch.object(adapter, 'RelayTurnLib', Boundary), patch.object(adapter, 'Tur
     adapter.main()
 ''')
     stub = work / 'cmd'
-    stub.write_text('#!' + sys.executable + '\nimport os, time\nprint("fixture output", flush=True)\nif os.environ["GH648_MODE"] == "timeout": time.sleep(30)\n')
+    stub.write_text('#!' + sys.executable + '\nimport os, time\nif os.environ["GH648_MODE"] != "timeout-empty": print("fixture output", flush=True)\nif os.environ["GH648_MODE"].startswith("timeout"): time.sleep(30)\n')
     stub.chmod(0o755)
     adapter = os.environ.get('GH648_ADAPTER', str(root / 'utils/py/commandcode-turn.py'))
     for name, mode, status, offlane, enforce_rc, expected_rc in (
         ('timeout', 'timeout', 'Open', False, 0, 7),
+        ('timeout-empty', 'timeout-empty', 'Open', False, 0, 7),
         ('timeout-approved', 'timeout', 'Approved', False, 0, 7),
         ('timeout-offlane', 'timeout', 'Open', True, 0, 6),
         ('timeout-enforce', 'timeout', 'Open', False, 6, 6),
@@ -98,7 +99,9 @@ with patch.object(adapter, 'RelayTurnLib', Boundary), patch.object(adapter, 'Tur
         assert info.strip(), name
         fields = dict(line.split(':', 1) for line in info.splitlines() if ':' in line)
         fields = {k: v.strip() for k, v in fields.items()}
-        if mode == 'timeout':
+        if mode.startswith('timeout'):
+            if mode == 'timeout-empty':
+                assert (fixture / 'turn.log').stat().st_size == 0, name
             assert fields['status'] == 'open', (name, info)
             assert not fields.get('handoff-to'), (name, info)
             assert 'NEXT: commandcode' in relay.read_text(), name
@@ -123,5 +126,5 @@ with patch.object(adapter, 'RelayTurnLib', Boundary), patch.object(adapter, 'Tur
         else:
             assert fields['status'] == 'open' and fields.get('handoff-to') == 'agy', (name, info)
         print('PASS:', name, flush=True)
-print('gh648-l2-token-aftermath: 6 cases passed')
+print('gh648-l2-token-aftermath: 7 cases passed')
 PY

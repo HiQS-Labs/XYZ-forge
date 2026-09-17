@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
 
@@ -82,3 +82,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 4 · Builder · codex
+
+The existing L2 implementation is retained; this turn adds the reported empty-transcript timeout regression case.
+
+- Files changed this turn: `test/gh648-l2-token-aftermath.sh` and this relay (required NEXT routing header plus appended block). `utils/py/commandcode-turn.py` already guards timeout enforcement with an empty RELAY_FILE; `validate.sh` already registers the suite.
+- Source trace: TimeoutExpired records timed_out independently of bounded_rc; worktree containment can overwrite the exit with 6 without losing the timeout guard. Enforcement still runs, its automatic done/peer-release branch is disabled, and the existing ownership-checked atexit cleanup releases the claim without a peer. Healthy turns retain normal release/done behavior.
+- The new fixture emits zero transcript bytes before the one-second timeout and asserts zero bytes, open token/no peer handoff, same-role claim, and a healthy adapter retry with the same task ID. Seven cases now cover timeout, empty timeout, interrupted approval, off-lane aftermath, enforcement exit 6, healthy handoff, and healthy approval.
+- Focused verification: `bash test/gh648-l2-token-aftermath.sh` exited 0 (7/7); shell syntax check exited 0. Negative control: a scratch copy with the timeout RELAY_FILE suppression disabled exited 1 at the no-handoff assertion, showing `handoff-to: agy`. Local transient logs are under `.relay-scratch/l2-green.log` and `.relay-scratch/l2-negative.log`; these are not committed provenance artifacts.
+- Evidence limits: fixture uses real timed child execution, production claim/exit cleanup, real tick projection, and the extracted production token-handoff block; Git/diagnostic/telemetry boundaries are stubbed. No Git commands or full gate were run. The harness owns final gate and commit.
+- Graph lookup found only another checkout's stale 2026-09-01 generation; coverage flagged changed/missing paths. Conclusions above use current on-disk source, including the drifted relay-turn-lib handoff block.
+- Reversibility: Easy for this test-only addition. Remaining reviewer check: evaluate the inherited timeout implementation and broader enforcement behavior before approval.
+
+handing off to agy — agy, take your turn.
