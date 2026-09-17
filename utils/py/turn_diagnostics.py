@@ -31,8 +31,8 @@ The exit code is deliberately unchanged: callers keep seeing 7. This adds a
 reason string next to it.
 
 Deliberately stdlib-only and cheap: one ``ps`` and one ``pgrep`` per interval, so
-it stays affordable on a 30-minute turn. Network state is sampled once, only when
-an otherwise-idle observation is classified. An established connection proves
+it stays affordable on a 30-minute turn. Network state is sampled once during live sampling, when
+enough otherwise-idle observations exist. An established connection proves
 that the turn may still be waiting on its backend; no connection does *not* prove
 that it is wedged. If ``lsof`` is unavailable or fails, attribution degrades to
 ``timeout-unclassified`` and never changes the turn's exit code.
@@ -150,10 +150,14 @@ def _network_state(root_pid: int) -> str:
         probe = subprocess.run(
             ["lsof", "-a", "-n", "-P", "-p", pids,
              "-iTCP", "-sTCP:ESTABLISHED", "-F", "n"],
-            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             timeout=5.0, check=False,
         )
     except Exception:  # noqa: BLE001 — attribution must not fail the turn
+        return "unclassified"
+    # lsof uses status 1 for both no matches and errors. An error/warning
+    # means visibility may be incomplete; never call that a clean empty probe.
+    if probe.stderr.strip():
         return "unclassified"
     if probe.returncode == 0:
         return "established" if probe.stdout.strip() else "none"

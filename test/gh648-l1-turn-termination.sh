@@ -30,12 +30,13 @@ lsof.write_text('''#!/bin/sh
 case "$GH648_LSOF_MODE" in
  established) printf 'nhttps://api.example.test:443\n'; exit 0;;
  none) exit 1;;
+ error) printf 'lsof: probe failed\n' >&2; exit 1;;
  *) exit 2;;
 esac
 ''')
 lsof.chmod(0o755)
 os.environ["PATH"] = str(stub) + os.pathsep + os.environ.get("PATH", "")
-for mode, expected in (("established", "established"), ("none", "none"), ("fail", "unclassified")):
+for mode, expected in (("established", "established"), ("none", "none"), ("error", "unclassified"), ("fail", "unclassified")):
     os.environ["GH648_LSOF_MODE"] = mode
     check(td._network_state(4242) == expected, f"lsof {mode} maps to {expected}")
 
@@ -43,7 +44,7 @@ real_run, real_tree_pids = td.subprocess.run, td._tree_pids
 seen = {}
 def capture_run(cmd, **_kwargs):
     seen["cmd"] = cmd
-    return SimpleNamespace(returncode=0, stdout=b"nhttps://api.example.test:443\n")
+    return SimpleNamespace(returncode=0, stdout=b"nhttps://api.example.test:443\n", stderr=b"")
 td._tree_pids = lambda root_pid: [root_pid, 4343, 4444]
 td.subprocess.run = capture_run
 check(td._network_state(4242) == "established", "descendant probe remains functional")
@@ -137,7 +138,7 @@ tree_mutant.write_text(tree_mutated)
 tree_oracle = '''import importlib.util,sys,types
 s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
 seen={};m._tree_pids=lambda root:[root,2,3]
-def run(cmd,**kwargs): seen["cmd"]=cmd;return types.SimpleNamespace(returncode=1,stdout=b"")
+def run(cmd,**kwargs): seen["cmd"]=cmd;return types.SimpleNamespace(returncode=1,stdout=b"",stderr=b"")
 m.subprocess.run=run;m._network_state(1)
 assert seen["cmd"][seen["cmd"].index("-p")+1] == "1,2,3"
 '''

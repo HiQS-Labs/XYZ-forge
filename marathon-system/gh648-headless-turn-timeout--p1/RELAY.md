@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
 
@@ -90,3 +90,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 4 · Builder · codex
+
+- Retained the existing L1 implementation: structured termination records distinguish idle-kill, wall-cap, child-orphan, and unknown; live one-shot network observations avoid the no-progress overclaim; exit code remains 7. Suite registration is already present in validate.sh (line 299), so that file needed no edit.
+- Fixed a reproduced probe-failure gap in utils/py/turn_diagnostics.py: lsof status 1 can accompany an error, but stderr was discarded and the result labeled no connection. Capture stderr and conservatively return unclassified when it contains a diagnostic. This is an Easy, reversible attribution-only change; no caller or timeout policy changed. Corrected the module docstring to describe live sampling rather than post-reap classification.
+- Extended test/gh648-l1-turn-termination.sh with an executable lsof stub that emits an error and exits 1; updated subprocess stubs to include stderr.
+- Focused verification only, with TMPDIR pinned to .relay-scratch: baseline passed 40 assertions; the new error-exit-1 regression failed before the fix (AssertionError: lsof error maps to unclassified); final suite passed 41 assertions, including its existing five mutation controls. Logs: .relay-scratch/gh648-focused-before.log, gh648-probe-red.log, gh648-focused-after.log (ephemeral, not committed evidence).
+- Prior ESCALATION.md says pre-advance-failed / gate red but supplies no turn log. This focused run does not reproduce or explain that broader failure. Full validate.sh was not run, as explicitly required by this turn's containment instructions; the harness still owes that gate.
+- Graph tools were unavailable; source inspection used the named files directly. No git commands, no caller changes, and no off-lane file edits.
+- Handing off to agy for whole-file review and the harness-owned gate.
