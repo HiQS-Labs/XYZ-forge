@@ -166,6 +166,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-16
 
 ### Fixed
+- **GH-660: Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git-pulse-sync) instead of re-vendoring from canonical skills/express — deployed copy missing GH-592 resume recipe.** (express hotfix, GH-267 lane; suite test/gh660-skill-drift.sh registered as the landing gate.)
 - **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-659: rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
