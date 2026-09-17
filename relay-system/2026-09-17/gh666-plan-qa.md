@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -119,5 +119,22 @@ will expose the potential Git-only blind spot without a filesystem-scanner frame
 Nit implemented: Setup points to the committed canonical plan and its QA checklist.
 Keep prior complete source sweep; check these narrow revisions, no runtime programs.
 PASS -> DONE while owned. Handing off to Reviewer — give the revised cited verdict.
+
+### Reviewer — codex — Round 2
+
+VERDICT: FAIL
+Basis: S1 and the planned preservation oracle are addressed, but S2's canonical recon correction remains unapplied and contradicts the Producer's disposition. One small evidence correction is needed; no scope expansion.
+swept file: yes
+
+Read the entire canonical plan, recon and utils/py/agy-turn.py through EOF, including failure/cleanup and final containment paths. Read-only review; no artifact execution, tests, Git commands or artifact edits. Reproduction and historical searches remain Producer-reported evidence.
+
+- [Should] S2 residual — PROJECT/2-WORKING/recon-agy-model-probe.md, “Observed and falsified,” still states “porcelain status empty → untracked marker.” Round 2 instead states “baseline porcelain was ordinary/unignored and did detect the write.” These are contradictory observations in the canonical evidence chain. Cheapest fix: correct the recon to the actual observed porcelain result, quote the marker's status entry if available, and distinguish the newly planned ignored-marker control from the original baseline. If baseline output is unavailable, label its porcelain result unknown. No new scanner or runtime review machinery is required.
+- [Pass] S1 resolved at PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md:70–75: caller-CWD shutil.which plus an absolute result precedes child cwd; absolute, caller-relative, bare PATH and relative PATH cases are explicitly required. The auth-probe limitation remains expressly outside scope. Implement this decision and its focused cases as written.
+- [Pass] The planned oracle is falsifiable at PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md:64–69: nonempty records, explicit marker absence including ignored files, sentinel bytes and removed temporary cwd. Step 3 requires the same preservation checks red under cwd ablation; the QA checklist requires unchanged-base failures. Keep these assertions and the committed provenance destination; plan approval cannot substitute for witnessed red controls.
+- [Pass] Bounded delivery remains explicit in the plan: “Independent Codex plan QA, cap three rounds”; “full gates in a separate full clone”; “ready only on approval/passing checks; otherwise record hold”; “Merge is not authorized.” Setup now names the canonical artifact and a substantive Definition of Done. Keep those limits.
+
+Pre-existing sweep: utils/py/agy-turn.py:259 still inherits caller CWD before RTL initialization at :360 and snapshot at :404, grounding the proposed repair. Auth cleanup at :233–235 still silently tolerates removal failures; the plan's “Cleanup failures must be reported” avoids inheriting that defect. No additional pre-existing defect requiring expansion of this narrow plan was identified. Implementation, gate readiness and historical recurrence are not approved by this review.
+
+Handing off to Producer — correct the canonical recon observation, log the disposition and open Round 3 for the final plan review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
