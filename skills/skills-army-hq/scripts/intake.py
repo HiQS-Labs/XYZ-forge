@@ -23,6 +23,9 @@ STATE = ".deploy-skills.json"
 PENDING = ".deploy-skills-pending.json"
 NAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 RESERVED = {"backups", "catalog", "changelog", "targets", "intake", "sync"}
+PROJECTED_ROOT_IGNORES = frozenset({
+    ".git", ".gitignore", ".xyz-forge-revision", "MANIFEST.txt", "LICENSE", "LICENSE-COMMERCIAL.md",
+})
 
 
 class DeployError(Exception):
@@ -92,7 +95,7 @@ def atomic_json(path, value):
     atomic_bytes(path, (json.dumps(value, indent=2, sort_keys=True) + "\n").encode())
 
 
-def skill_info(folder):
+def skill_info(folder, require_folder_name=True):
     """Read the two discovery fields; leave the rest of the author's YAML untouched."""
     text = regular_bytes(folder / "SKILL.md").decode("utf-8")
     require(text.startswith("---\n") and "\n---" in text[4:], f"Missing frontmatter: {folder}/SKILL.md")
@@ -121,18 +124,35 @@ def skill_info(folder):
                 value = value[1:-1].replace("''", "'")
             fields[key] = value
     name = safe_name(fields.get("name"))
-    require(folder.name == name, f"Folder/name mismatch: {folder.name} != {name}")
+    if require_folder_name:
+        require(folder.name == name, f"Folder/name mismatch: {folder.name} != {name}")
     require(isinstance(fields.get("description"), str) and fields["description"].strip(),
             f"Missing description: {folder}/SKILL.md")
     return fields
 
 
-def snapshot(folder):
+def package_info(folder):
+    """Recognize either a normal skill folder or a generated repository-root projection."""
+    info = skill_info(folder, require_folder_name=False)
+    if folder.name == info["name"]:
+        return info, frozenset()
+    revision = regular_bytes(folder / ".xyz-forge-revision").decode("utf-8")
+    manifest = set(regular_bytes(folder / "MANIFEST.txt").decode("utf-8").splitlines())
+    required = {"README.md", "SKILL.md", "scripts/intake.py", "scripts/sync.py"}
+    require("source_repo=XYZ-forge\n" in revision and required <= manifest,
+            f"Folder/name mismatch: {folder.name} != {info['name']}")
+    return info, PROJECTED_ROOT_IGNORES
+
+
+def snapshot(folder, ignored=()):
     """Hash bytes, modes and internal relative link text without traversing links."""
     require(folder.is_dir() and not folder.is_symlink(), f"Expected real skill folder: {folder}")
     entries = {"": {"kind": "dir", "mode": stat.S_IMODE(folder.stat().st_mode)}}
     directory_edges = {}
     for base, dirs, files in os.walk(folder, followlinks=False, onerror=lambda e: (_ for _ in ()).throw(e)):
+        if Path(base) == folder:
+            dirs[:] = [name for name in dirs if name not in ignored]
+            files = [name for name in files if name not in ignored]
         directory_edges[Path(base).resolve()] = []
         for name in sorted(dirs + files):
             path = Path(base) / name
@@ -173,18 +193,19 @@ def snapshot(folder):
     return entries
 
 
-def digest(folder):
-    return hashlib.sha256(json.dumps(snapshot(folder), sort_keys=True).encode()).hexdigest()
+def digest(folder, ignored=()):
+    return hashlib.sha256(json.dumps(snapshot(folder, ignored), sort_keys=True).encode()).hexdigest()
 
 
 def source_record(raw):
     source = Path(raw).expanduser().resolve(strict=True)
-    info = skill_info(source)
+    info, ignored = package_info(source)
     result = subprocess.run(["git", "--no-optional-locks", "-C", str(source), "rev-parse", "--show-toplevel"],
                             text=True, capture_output=True)
     require(result.returncode == 0, f"Source must be in a local Git repository: {source}")
     repo = Path(result.stdout.strip()).resolve()
-    require(within(source, repo), f"Select a skill folder inside the repository: {source}")
+    require(within(source, repo) or source == repo and ignored,
+            f"Select a skill folder inside the repository: {source}")
     def git(*args):
         run = subprocess.run(["git", "--no-optional-locks", "-C", str(repo), *args], text=True, capture_output=True)
         require(run.returncode == 0, f"Cannot inspect source repository: {run.stderr.strip()}")
@@ -192,7 +213,7 @@ def source_record(raw):
     return source, {**info, "source": str(source), "repository": str(repo),
                     "commit": git("rev-parse", "HEAD"),
                     "dirty": bool(git("status", "--porcelain", "--", str(source))),
-                    "digest": digest(source), "updated": utc(), "prerequisites": []}
+                    "digest": digest(source, ignored), "updated": utc(), "prerequisites": []}, ignored
 
 
 def defaults():
@@ -539,25 +560,74 @@ def validate_history(root):
                 "Corrupt changelog; inspect before mutation")
 
 
-def stage_payload(root, source, before, after):
+def stage_payload(root, source, before, after, name=None, ignored=()):
     op = uuid.uuid4().hex
     stage = root / ".staging" / op
     location(stage)
     stage.mkdir(parents=True)
     if source is not None:
-        shutil.copytree(source, stage / "new", symlinks=True)
-        require(digest(stage / "new") == after and digest(source) == after, "Source changed during staging")
-    return {"kind": "payload", "name": source.name if source else "", "op": op, "before": before, "after": after}
+        source = Path(source)
+        def exclude(current, names):
+            return [item for item in names if Path(current) == source and item in ignored]
+        shutil.copytree(source, stage / "new", symlinks=True, ignore=exclude)
+        require(digest(stage / "new") == after and digest(source, ignored) == after,
+                "Source changed during staging")
+    action_name = name or (source.name if source else "")
+    return {"kind": "payload", "name": action_name, "op": op,
+            "before": before, "after": after}
+
+
+def default_root():
+    return os.environ.get("XYZ_SKILLS_ROOT") or str(Path.home() / "git-pulse-sync" / "Deployed Skills")
+
+
+def adopt_existing(root, apply):
+    """Attach local receipts to a clean Git-carried collection without copying payloads."""
+    if (root / STATE).exists():
+        load(root)
+        print("Collection already initialized")
+        return
+    local = [STATE, PENDING, "targets.json", "catalog.md", "changelog.md",
+             ".deploy-skills.lock", "backups/", ".staging/"]
+    require(not any((root / p).exists() or (root / p).is_symlink()
+                    for p in (PENDING, "targets.json")), "Existing local state; inspect or recover before adoption")
+    def git(*args):
+        result = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
+        require(result.returncode == 0, f"Cannot adopt collection ({' '.join(args)}): {result.stderr.strip()}")
+        return result.stdout.strip()
+    require(not git("ls-files", "--", *local), "Machine state is tracked; untrack it before adoption")
+    for name in local:
+        git("check-ignore", "--quiet", "--no-index", name + "probe" if name.endswith("/") else name)
+    require(not git("status", "--porcelain", "--", "."), "Pulse collection must be clean before adoption")
+    found = inventory(root, {"skills": {}})
+    require("skills-army-hq" in found, "Collection lacks skills-army-hq")
+    git("ls-files", "--error-unmatch", "--", *(f"{name}/SKILL.md" for name in found))
+    for name in ("intake.py", "sync.py"):
+        require(link_text(root / name) == f"skills-army-hq/scripts/{name}"
+                and (root / name).is_file(), f"Missing or foreign manager entry: {name}")
+    require(regular_bytes(root / "README.md") == regular_bytes(root / "skills-army-hq" / "README.md"),
+            "Collection README differs from manager; refresh it on the publisher")
+    state = {"schema": SCHEMA, "root": str(root), "collection": uuid.uuid4().hex,
+             "skills": {name: source_record(root / name)[1] for name in found}, "links": {}}
+    validate_history(root)
+    print(json.dumps({"operation": "adopt-existing", "root": str(root), "skills": sorted(found), "apply": apply}))
+    if apply:
+        with locked(root):
+            require(not (root / STATE).exists() and not (root / "targets.json").exists(),
+                    "Local state appeared during adoption; inspect before retrying")
+            require(inventory(root, {"skills": {}}) == found, "Payload changed during adoption")
+            transact(root, state, defaults(), [], "adopt-existing", {"skills": sorted(found)})
 
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--root", default=os.environ.get("XYZ_SKILLS_ROOT") or str(Path.home() / "Documents" / "Deployed Skills"),
+    p.add_argument("--root", default=default_root(),
                    help="Collection root (env: XYZ_SKILLS_ROOT)")
     p.add_argument("--apply", action="store_true", help="Apply the requested mutation; default is preview")
     p.add_argument("--dry-run", action="store_true", help="Write nothing")
     sub = p.add_subparsers(dest="command", required=True)
-    sub.add_parser("init")
+    init = sub.add_parser("init")
+    init.add_argument("--adopt-existing", action="store_true", help="Attach local state to a clean Pulse collection in place")
     sub.add_parser("activate-manager", help="Switch legacy collection entry links to the installed Skills Army HQ")
     add = sub.add_parser("add"); add.add_argument("source")
     update = sub.add_parser("update"); update.add_argument("name"); update.add_argument("--source")
@@ -578,10 +648,13 @@ def main(argv=None):
         root = location(args.root)
         apply = args.apply and not args.dry_run
         if args.command == "init":
+            if args.adopt_existing:
+                adopt_existing(root, apply)
+                return 0
             source = Path(__file__).resolve().parent.parent
-            info = skill_info(source)
+            info, ignored = package_info(source)
             require((source / "scripts" / "sync.py").is_file(), "Manager is incomplete: missing scripts/sync.py")
-            initial_digest = digest(source)
+            initial_digest = digest(source, ignored)
             require(not within(root, source) and not within(source, root) and root != source, "Source/collection overlap")
             if (root / STATE).exists():
                 load(root)
@@ -598,7 +671,7 @@ def main(argv=None):
                 state = {"schema": SCHEMA, "root": str(root), "collection": uuid.uuid4().hex,
                          "skills": {"skills-army-hq": {**info, "source": str(source), "digest": initial_digest,
                                                       "updated": utc(), "prerequisites": []}}, "links": {}}
-                action = stage_payload(root, source, None, initial_digest)
+                action = stage_payload(root, source, None, initial_digest, info["name"], ignored)
                 links = [{"kind": "link", "root": str(root), "name": f"{n}.py", "before": None,
                           "after": f"skills-army-hq/scripts/{n}.py"} for n in ("intake", "sync")]
                 transact(root, state, defaults(), [action, *links], "init", {"manager_digest": initial_digest})
@@ -636,7 +709,7 @@ def main(argv=None):
             elif args.command in ("add", "update"):
                 raw = args.source if args.command == "add" else args.source or state["skills"].get(args.name, {}).get("source")
                 require(raw, "No source receipt; provide --source")
-                source, record = source_record(raw)
+                source, record, ignored = source_record(raw)
                 name = record["name"]
                 if args.command == "update":
                     require(name == safe_name(args.name) and name in found, "Update name/source mismatch or absent skill")
@@ -649,7 +722,7 @@ def main(argv=None):
                 if apply:
                     if before:
                         details["backup"] = archive(root, root / name)
-                    actions.append(stage_payload(root, source, before, record["digest"]))
+                    actions.append(stage_payload(root, source, before, record["digest"], name, ignored))
                 record["prerequisites"] = state["skills"].get(name, {}).get("prerequisites", [])
                 state["skills"][name] = record
             elif args.command == "remove":

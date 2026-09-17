@@ -1,21 +1,20 @@
-> **XYZ Forge policy: binding review rules for this repository’s PDDA dependency updates.**
+> **XYZ Forge policy: binding review rules for this repository’s PDDA distribution updates.**
 
 # PDDA sync review policy
 
 Maintained here from the [XYZ predecessor’s version](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/blob/67dd324487c1fc470b2c539f1cebe2a9c3fb3651/PROJECT/PDDA-SYNC-POLICY.md).
-PDDA itself is a separate project: [Hypercart-Dev-Tools/pdda](https://github.com/Hypercart-Dev-Tools/pdda).
+PDDA development is now owned by XYZ Forge. [The historical source](https://github.com/Hypercart-Dev-Tools/pdda) remains provenance, not an update authority.
 
 ## Purpose and scope
 
-This is the review policy for a dependency sync that changes `utils/pdda/**` or another
+This is the review policy for importing historical PDDA work or distributing updates that change `utils/pdda/**` or another
 imported PDDA surface. It applies to every such sync — one that **adds, modifies, or deletes**
 files, not only one whose diff is obviously destructive, because the incident that produced this
 policy arrived inside a sync that looked like an ordinary update. It protects repo-owned behaviour
 from being mistaken for a stale upstream artifact.
 
 This file is deliberately repo-owned. Neither `PROJECT/PDDA.md` nor anything under `utils/pdda/**`
-can be the durable home for a policy about reviewing a sync: both are sync **inputs** and may be
-replaced wholesale by the next one. That is not hypothetical — `cfd56b0` replaced the sync-managed
+can be the durable home for a policy about reviewing a sync: both are distribution **inputs** copied into targets. That is not hypothetical — `cfd56b0` replaced the sync-managed
 `utils/pdda/**` tree in exactly that way, which is how the guardrails went missing.
 
 ## Before a sync is approved
@@ -34,8 +33,7 @@ a rename or a replacement still counts as a deletion until the replacement is id
    remove, the replacement (or why none is needed), and the verification to run.
 3. A sync must not delete repo-owned checks merely because they sit near an imported tree. In
    particular, `utils/pdda-local-checks.sh` and `test/pdda-local-checks.sh` are local seams, not
-   sync input. New local behaviour belongs outside `utils/pdda/**` so a later sync cannot silently
-   remove it.
+   sync input. Target-owned behavior stays outside the managed distribution set. Forge-owned core changes are authored here; existing local checks remain protected until deliberately consolidated.
 
 ## Classifying a deletion
 

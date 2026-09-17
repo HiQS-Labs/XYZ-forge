@@ -755,6 +755,21 @@ rtl_worktree_begin() {
   if [ -n "${RTL_ROOT:-}" ] && [ -f "$RTL_ROOT/utils/py/workspace_manager.py" ]; then
     python3 "$RTL_ROOT/utils/py/workspace_manager.py" register --repo "$RTL_ROOT" --path "$wt" --type worktree >/dev/null 2>&1 || true
   fi
+  # GH-642: hand the turn its build dependencies. Isolated worktrees check out tracked files
+  # only, so a consumer repo's node_modules never exists here and the turn-taker cannot run the
+  # project's real test suites (observed 2026-09-15: an isolated codex builder validated through
+  # a scratch workaround and shipped a write-set violation the gate then caught). One-shot COPY,
+  # not a symlink: a link would let turn writes traverse into the real ROOT/node_modules,
+  # reopening the containment gap isolation exists to close. Cost scales with the tree and is
+  # traced; teardown removes it with the disposable worktree. Copy failure is advisory — the
+  # turn proceeds, the gate still decides.
+  if [ -d "$RTL_ROOT/node_modules" ] && [ ! -e "$wt/node_modules" ]; then
+    if cp -R "$RTL_ROOT/node_modules" "$wt/node_modules" 2>/dev/null; then
+      rtl_trace "rtl_worktree_begin: copied ROOT/node_modules into the worktree (GH-642)"
+    else
+      rtl_trace "rtl_worktree_begin: node_modules copy failed — turn proceeds without build deps (GH-642)"
+    fi
+  fi
   rtl_trace "rtl_worktree_begin: WT=$wt"
   for a in "${RTL_ALLOW[@]}"; do       # seed current content (overwrite HEAD versions)
     # GH-30 Phase 3: an ABSOLUTE allowlist entry is the archive relay file — it lives in a DIFFERENT

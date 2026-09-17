@@ -1,0 +1,52 @@
+ok   - semver-only heading is accepted
+ok   - semver-only heading stays fresh
+ok   - bare-date heading remains accepted
+ok   - bare-date heading stays fresh
+ok   - mixed headings use the top semver entry
+ok   - mixed headings do not fall through to a lower legacy date
+ok   - mixed headings do not false-flag stale freshness
+FAIL - bracketless semver heading is accepted (missing: errors=0 warns=0 info=0)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 no dated '## YYYY-MM-DD' or '## [x.y.z] - YYYY-MM-DD' entry at the top of CHANGELOG.md — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+ok   - bracketless semver heading stays fresh
+FAIL - bracketless semver does not trigger missing dated entry warning (unexpected: no dated)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 no dated '## YYYY-MM-DD' or '## [x.y.z] - YYYY-MM-DD' entry at the top of CHANGELOG.md — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+FAIL - bracketless quad-version heading is accepted (missing: errors=0 warns=0 info=0)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2026-03-28) predates the latest commit (2026-06-30) by 94 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+FAIL - bracketless quad-version does not fall through to legacy date (unexpected: 2026-03-28)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2026-03-28) predates the latest commit (2026-06-30) by 94 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+FAIL - bracketless quad-version stays fresh (unexpected: predates the latest commit)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2026-03-28) predates the latest commit (2026-06-30) by 94 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+ok   - unbalanced opening bracket is rejected
+ok   - unbalanced closing bracket is rejected
+FAIL - date prefix extracts terminal date (missing: errors=0 warns=0 info=0)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2025-01-01) predates the latest commit (2026-06-30) by 544 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+FAIL - terminal date used, not prefix date (unexpected: 2025-01-01)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2025-01-01) predates the latest commit (2026-06-30) by 544 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+FAIL - date prefix heading stays fresh (unexpected: predates the latest commit)
+----
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2025-01-01) predates the latest commit (2026-06-30) by 544 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+----
+
+10 passed, 8 failed

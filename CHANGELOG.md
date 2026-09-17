@@ -1,6 +1,48 @@
 # Changelog
 
+## 2026-09-17 — Agy model-probe CWD isolation (GH-666)
+
+- Model validation now resolves its executable in caller CWD, then runs in an owned
+  stdlib temporary directory. Relative probe writes no longer land in the caller;
+  cleanup/allocation failures refuse through the existing error path. Existing
+  model ID/display/full-line parsing and turn forwarding remain unchanged.
+- Added real-validator caller/marker/sentinel/cleanup and failure-path checks to
+  the registered Agy suite. Baseline and cwd-only ablation fail; the focused fix
+  passes. Full gate and final review remain pending; existing base path/PDDA
+  failures are not bundled. Refs GH-661; no merge or deployed/live-model claim.
+  Reversibility: Costly under containment policy; reviewed focused revert. This
+  bounds relative writes only, not absolute access or detached child lifetimes.
+
+## 2026-09-17 — GH-653 / GH-665 fixture safety
+
+The GH-642 suite seeds its owned repository before creating linked worktrees and
+reuses the existing physical-containment guard before fixture writes. Failed
+construction/substitution refuses rather than committing into the caller. Five
+fault cases check caller preservation; warning and RTL temporary paths stay in
+the owned sandbox. Runtime commands, shared guard/setup and frozen Bash twins are
+unchanged. Easy rollback: reviewed revert of this test-only repair. Focused suite:
+62/62; guard-disabled and caller-damage controls witnessed red. Full verification
+and independent final QA are tracked in TESTS-RESULTS/2026-09-17+GH-653-GH-665/.
+
+## 2026-09-16 — PDDA canonical migration (GH-649)
+
+Forge now carries PDDA's installer, manifest, sync tooling and generic startup templates.
+Existing Forge runtime adaptations and local checks remain; the upstream changelog parser
+fix is ported. Onboarding resolves Forge without a sibling PDDA clone. Sync preserves
+unbaselined/local changes unless explicitly adopted with a backup. Historical PDDA PR #61
+and Apache notices are retained; no standalone publisher is introduced. Archive readiness
+is tracked separately in docs/PDDA-MIGRATION.md and GH-649. Reversibility: Costly —
+retain the previous source and consumer payload/registry/state snapshots. Focused
+install, upgrade, mode, divergence, backup/restore and existing core tests pass;
+full gate passes (390/390, one suite passed on isolated retry) and final review is approved. Evidence: TESTS-RESULTS/2026-09-16+GH-649/.
+
+
 All notable changes to this repo. Newest first. Dates are PDT.
+
+## 2026-09-16 — GH-645 QA follow-up
+
+- Ledger conflict recovery now finds its shell resolver in a consumer repo's vendored XYZ tools, including the primary-checkout fallback used by disposable landing clones.
+- Added a regression that reproduces the missing-tool failure and verifies the resolver runs against the landing clone.
 
 ## 2026-09-15
 
@@ -14,6 +56,17 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-623: merge-cleanup survives transient network failures; collision edges no longer cascade handoffs.** File-collision toposort edges are now SOFT (`_soft_deps`): they order the sequence but never produce "NOT attempted" — only explicit `depends on #N` edges (`_hard_deps`) block on a failed predecessor, so one handoff no longer removes most of the queue (the incident's S3; PR #601-style MERGEABLE dependents are attempted and their own landing simulation decides). Every retry-site network call is bounded in time (`run_git` gains an additive timeout, default unbounded; `fetch_open_prs` bounded + raises `FetchError` instead of silently returning `[]`), transient failures (DNS/refused/timed-out/TLS/rate-limit) are retried 3× (2s, 4s), and a pre-decision failure that survives the retries DEFERS that PR while the queue continues (the incident's S4). A failed `gh pr list` now exits 2 before teardown instead of reading as "No open PRs found". New `--resume` consults attempt records only after the live refresh: a PR whose repair resolved and now merges cleanly lands; a still-conflicting exhausted PR skips as parked (the incident's S5). SKILL.md gains a Drive loop with a Done rule ("do not report Done unless Phase 5 ran — or the operator asked for teardown/scan") and a retry-once rule for permission-classifier blocks of `--execute` (S1/S2). Reversibility: **Easy** — revert the PR; no schema or data changes; `_deps` remains in the standalone JSON output as the sorted union. Verification: 13 witnessed red controls failing on pre-change code (soft-edge, retry+defer, discovery, bounded calls, both resume pins), then the merge-cleanup unit suite 156/156 green including the parity guard; full qualifying gate in a disposable clone recorded in the PR.
 - **GH-605: preserve JSON-native unresolved identities across saved preview/apply.** Normalize planner output once so unchanged unknown evidence survives JSON round-tripping; retain exact drift refusal. Existing real integration fixtures now include a missing-ledger issue, assert it stays untouched, and reject tampered unresolved evidence. Reversibility: Easy, revert the output normalization. Verification: witnessed failing regression before correction and 51/51 focused board tests after.
+## 2026-09-14
+
+- **GH-620: project the canonical Skills Army package directly onto the child root.** The generated
+  repository now gets `skills/skills-army-hq/` without a redundant wrapper or landing-page source.
+  Manager initialization and update recognize only the publisher-proven root shape, install it under
+  the declared `skills-army-hq` name, and exclude VCS and repository-only metadata; ordinary skill
+  folder/name validation stays strict. Reversibility: **Easy** — restore the nested destination map
+  and republish. Verification: witnessed pre-fix root-payload/init failure; GH-620 27/27, GH-589
+  18/18, Skills Army HQ 25/25 plus four subtests; exact live root payload/mode read-back and detached
+  root init/update smoke.
+- **GH-620: generated XYZ Skills Army mini and reusable spin-off playbook.** The existing GH-589 publisher now has one fixed `skills-army-mini` profile for the closed Skills Army HQ package, child landing files, licenses, provenance, and remote read-back; its default remains XYZ-mini. A pre-write live `origin/main` comparison refuses wrong-branch, stale, ahead, behind, or divergent destinations while permitting an unborn child or the exact retained publisher commit needed to retry a failed push. `/push-to-skills-army-mini` documents the manual operator flow, and `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md` records the parent-authoritative recipe for future generated children. Reversibility: **Easy** — revert the parent PR and generated child commit. Verification: existing GH-589 and Skills Army suites plus `test/gh620-skills-army-mini-sync.sh` with a witnessed missing-manifest red control, literal payload oracle, detached init/add/target/sync smoke, idempotence, provenance, and stale-remote refusal.
 
 ## 2026-09-13
 
@@ -150,9 +203,20 @@ All notable changes to this repo. Newest first. Dates are PDT.
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
 
+## [Unreleased] - 2026-09-17
+
+### Fixed
+- **GH-672: fix(skills): one Pulse collection per device and consistent deployment SOP.** (express hotfix, GH-267 lane; suite test/skills-army-hq.sh registered as the landing gate.)
+
 ## [Unreleased] - 2026-09-16
 
 ### Fixed
+- **GH-663: QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission.** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-660: Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git-pulse-sync) instead of re-vendoring from canonical skills/express — deployed copy missing GH-592 resume recipe.** (express hotfix, GH-267 lane; suite test/gh660-skill-drift.sh registered as the landing gate.)
+- **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-659: rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-654: Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-645: merge-cleanup: ledger gate and reconcile fail in repos that vendor PRS tools under gitignored .xyz/.** (express hotfix, GH-267 lane; suite test/gh645-merge-cleanup-xyz-tools.sh registered as the landing gate.)
 
 ## [Unreleased] - 2026-09-13

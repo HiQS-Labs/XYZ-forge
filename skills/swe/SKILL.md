@@ -100,6 +100,8 @@ When planning online schema changes, state re-encodings, or persistent data migr
 
 ---
 
+## How this differs from the sibling skills
+
 - **swe** — "Does this *plan* embody our engineering standards before we build?" The standard/rubric, applied to a whole document.
 - **recon** — "What is actually there?" The read-only trace of the current system that Pillar 0 grades the doc against. It supplies the current-state radius; Blast extends that radius per proposed step. Run recon first in author mode when the plan changes an existing system.
 - **phase-0-spike** (an external workflow at `~/.claude/workflows/phase-0-spike.js`, not a skill in this repo) — the deep seam map, contract owners, and rollout invariants for a refactor that is already committed to. `recon` is the cheap universal pass before any plan; phase-0-spike is the expensive one after the refactor is approved. A v1.x doc for a subsystem refactor cites one or the other, never neither.

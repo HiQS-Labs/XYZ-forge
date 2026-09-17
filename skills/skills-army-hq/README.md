@@ -1,29 +1,42 @@
 # Skills Army HQ
 
-## Primary Use Case
+Your coding agents should share the same skills—not drift into separate, forgotten copies.
 
-You're a developer working across three or more agentic coding environments:
-Claude Code in VS Code, the Codex app, ZCode, and Antigravity. You've built an army
-of skills you love, but they're scattered across different installations. Some
-are up to date, some are older copies, and others never made it to every app.
+Skills Army HQ gives Claude Code, Codex, Antigravity, ZCode, and other compatible tools one durable
+headquarters for reusable agent skills. Ask an agent to import or update a local skill once, preview
+the rollout, and deploy directory links to every app you have chosen.
 
-Then you discover a great new skill. You ask Claude Code to install it for itself
-and Codex, but forget Antigravity. Days later, you try to invoke that shiny new
-skill in Antigravity—only to discover it isn't available.
+## What it gives you
 
-Or you're fine-tuning a skill and forget to copy the latest version into every
-target folder. Now each agent is working from different instructions.
-Frustrating, right?
+- **One skill collection:** every configured app reads the same durable copy.
+- **Conversational operations:** ask an agent to list, import, update, remove, deploy, or inspect
+  skills instead of hand-copying folders.
+- **Preview-first safety:** writes require `--apply`; foreign folders, unrelated links, and ownership
+  conflicts are reported rather than overwritten.
+- **Health checks:** identify missing or stale links, pending changes, conflicts, and recorded runtime
+  prerequisites without changing the filesystem.
+- **Recoverable updates:** replaced skills receive verified ZIP backups and transaction receipts;
+  interrupted operations have an explicit recovery path.
+- **Multi-app reach:** configure only the discovery folders you actually use. Targets begin disabled,
+  and app discovery is verified separately from filesystem deployment.
 
-Skills Army HQ gives your skill army one headquarters. Talk to one system to
-import and update your skills, then deploy them to your configured apps. It knows
-your target folders and updates their links on your command.
+The result is simple: improve a skill once, then deliberately roll that exact version across your
+agent tools without wondering which copy each one loaded.
 
-The actual skill folders stay in one collection — since GH-536, `~/git-pulse-sync/Deployed Skills`, carried by the hourly Git Pulse writer (see SKILL.md → "Adopting the collection on another machine").
-Each app points to those same copies through directory symlinks, so you can see
-exactly what's deployed without maintaining separate versions for every agent.
-Run a health check to spot missing links or conflicts; app discovery and runtime
-readiness are verified separately.
+## The problem it solves
+
+Without a shared collection, a useful new skill reaches Claude Code but not Codex, or yesterday's
+copy remains in Antigravity after today's fix. Manual copying creates invisible version drift.
+Skills Army HQ keeps the payloads in one place and makes deployment state inspectable.
+
+The default collection on every Pulse-enabled device lives at `~/git-pulse-sync/Deployed Skills`, where Git Pulse
+can carry the portable skill payloads between machines. Machine-specific targets, receipts, history,
+backups, catalog, and configuration remain local and excluded from publication.
+
+The workflow is **owning source repo → Git Pulse Sync `Deployed Skills/` → app symlinks**.
+There is no second deployed collection on a device. The operational SOP lives in the bundled
+`skills-army-hq/SKILL.md` (`SKILL.md` in the standalone package); `references/recovery.md`
+covers migration and transport hygiene. These files ship in both Pulse and Skills Army mini.
 
 ## Origin
 
@@ -36,9 +49,18 @@ durable collection of local skills. Ask it to “list my deployed skills”, “
 this local skill folder”, or “preview syncing my skills to the configured apps”.
 The agent instructions live in the skill folder's `SKILL.md`.
 
-## Where this copy lives
+## Source ownership
 
-Initialization copies the **entire skill folder**, including this README, into
+XYZ Forge is the authoritative source for this managed package. The
+[`HiQS-Labs/XYZ-skills-army-mini`](https://github.com/HiQS-Labs/XYZ-skills-army-mini) repository is a generated
+projection: change managed files in
+XYZ Forge, merge them, and republish. Do not maintain equivalent patches in both repositories.
+Local collections and their receipts, targets, catalogs, history, backups, and imported skills are
+operator-owned state and are never part of the generated repository.
+
+## Where an installed copy lives
+
+For a new empty collection, initialization copies the **entire skill folder**, including this README, into
 `~/git-pulse-sync/Deployed Skills/skills-army-hq/`. Updating the manager refreshes this
 README along with its scripts and instructions. The installer also writes a real
 copy at **`~/git-pulse-sync/Deployed Skills/README.md`**, beside `catalog.md`.
@@ -55,14 +77,34 @@ the upstream project. Keep local receipts and imported private skills private.
 
 ## Getting started
 
-Requires Python 3.9+; macOS is the supported alpha platform. From an existing local
-checkout, preview initialization, then apply it:
+Requires Python 3.9+; macOS is the supported alpha platform. Clone the standalone repository, choose
+one empty collection directory (the Pulse path by default), preview initialization, then apply it.
+If Pulse already contains the deployed payloads, follow the adoption instructions below instead:
 
 ```bash
-python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py init
-python3 /path/to/XYZ-forge/skills/skills-army-hq/scripts/intake.py --apply init
+git clone https://github.com/HiQS-Labs/XYZ-skills-army-mini.git
+cd XYZ-skills-army-mini
+python3 ./scripts/intake.py init
+python3 ./scripts/intake.py --apply init
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
 ```
+
+On another device, pull your Pulse checkout and adopt the existing collection **in place**:
+
+```bash
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" init --adopt-existing
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply init --adopt-existing
+```
+
+Adoption requires a clean collection, portable manager links/README, ignored machine state,
+and no tracked machine state. It preserves payloads and creates this device's own receipts.
+Future pulls update the same files that app symlinks read; no second import is needed.
+See the bundled SOP for additions, removals, and migration from the former Documents root.
+`--root` takes precedence over `XYZ_SKILLS_ROOT`, which takes precedence over the Pulse default;
+check for an old environment override. Without Pulse, choose one custom root and use it consistently.
+
+For a new publisher collection, establish the exclusions in `references/recovery.md`
+before its first Git commit or push. Plain `init` itself requires an empty directory.
 
 Targets start disabled. Ask your agent to configure the apps you choose, preview
 the changes, and sync them. Operations preview by default; `--apply` writes.
@@ -95,5 +137,7 @@ This is a filesystem deployment health check, not proof that an app or extension
 has loaded a skill or that its runtime dependencies work. Report app discovery and
 runtime readiness separately as verified or unverified.
 
-Inside the `skills-army-hq` folder, see `references/targets.md` for app-specific
-verification and `references/recovery.md` for backups, interruptions and migration.
+See [target setup](https://github.com/HiQS-Labs/XYZ-skills-army-mini/blob/main/references/targets.md)
+for app-specific discovery guidance and
+[recovery](https://github.com/HiQS-Labs/XYZ-skills-army-mini/blob/main/references/recovery.md)
+for backups, interruptions, relocation, and migration.

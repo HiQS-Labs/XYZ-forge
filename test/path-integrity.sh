@@ -52,18 +52,10 @@ skills/relay-automation/SKILL.md \
 skills/relay-xyz/SKILL.md"
 
 shfiles=()
-# `utils/pdda/**` is SYNC-MANAGED from Hypercart-Dev-Tools/pdda (utils/pdda/PDDA-SOURCE.md): a sync
-# replaces those files wholesale, so their internal path tokens describe UPSTREAM's tree, not ours,
-# and any edit we make to satisfy this check is reverted by the next sync. The 2026-08-03 sync
-# (cfd56b0) added four such tokens and turned this check — and CI on `development` — red for ~2 days:
-#   utils/pdda/pdda.sh:850     an EXEMPTION-LIST data string naming three upstream skill/test files
-#                              under a dot-claude skills dir that this repo does not vendor
-#   utils/pdda/pdda-lib.sh:467 a COMMENT citing an upstream releases-iterations test file
-# None is a reference this repo can resolve or repair. (Those paths are deliberately DESCRIBED rather
-# than quoted here: this file is itself scanned, so spelling them out would trip the very check.) Excluding the tree is narrower than it looks:
-# every path this repo actually authors and can fix is still scanned, and upstream's tree is
-# upstream's CI's job. Scoped to this one directory so a new vendored tree does not inherit the
-# exemption silently.
+# The portable PDDA runtime describes target-only paths and historical layouts.
+# Preserve its existing exclusion from this repo-root token scanner; the installed
+# payload/startup contract is checked by the PDDA installer/governance suites.
+# Forge owns the source now; this exclusion is about path context, not ownership.
 while IFS= read -r p; do
   case "$p" in utils/pdda/*) continue ;; esac
   shfiles+=("$p")
@@ -75,6 +67,11 @@ done < <(cd "$ROOT" && git ls-files '*.sh')
 # placeholders (relay-system/<date>/<slug>.md) are skipped by construction.
 ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.gz)'
 
+# GH-660: test/gh660-skill-drift.sh builds a THROWAWAY canonical tree (skills/alpha|beta|gamma/
+# SKILL.md under a mktemp root) to exercise the drift guard; test/gh654-offlane-log.sh's trim test
+# uses the synthetic csv entry test/x.sh. Fixture literals, not references to files in this tree —
+# these names can never exist here (real skills are named per-skill, not demo-greek), so skipping
+# them cannot mask a real path break.
 # Intentional FIXTURE LITERALS — path-like tokens that are test DATA (a file a test creates in a
 # throwaway temp repo at runtime), NOT references to a real file in this tree. Check B must skip them,
 # otherwise it false-positives on a case-sensitive filesystem: e.g. test/swarm-preflight.sh T22a asserts
@@ -136,13 +133,16 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # negative receipt) — fixture literals of the same class, never files in this tree. Likewise
 # test/gh425-gate-provenance-pr.sh's synthetic express receipts name `test/gh592-demo.sh` /
 # `test/gh590-demo.sh` as the suite `command` under a mktemp root.
-fixture_literals=" test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh "
+fixture_literals=" test/x.sh skills/alpha/SKILL.md skills/beta/SKILL.md test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do
   [ -f "$ROOT/$f" ] || continue
   while IFS= read -r tok; do
     [ -n "$tok" ] || continue
+    # GH-649 checks the generated dot-claude skill in a disposable consumer. The
+    # tokenizer strips that prefix; this exact fixture reference is not a root skill.
+    case "$f:$tok" in test/gh649-pdda-migration.sh:skills/pdda/SKILL.md|test/path-integrity.sh:skills/pdda/SKILL.md) continue ;; esac
     case "$fixture_literals" in *" $tok "*) continue ;; esac
     if [ ! -e "$ROOT/$tok" ]; then
       echo "  broken path reference '$tok' in $f" >&2

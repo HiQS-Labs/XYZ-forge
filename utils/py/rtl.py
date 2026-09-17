@@ -221,6 +221,86 @@ def split_allow_paths(allow_paths):
     return paths
 
 
+# GH-654 — mirror of rtl_worktree_end's sweep, just far enough to NAME the
+# candidates. The bash function was born silent (1f0a5bf1, initial public
+# release): the general rtl_in_allow-fail branch sets RTL_WT_OFFLANE=1 with no
+# path record and destroys the only copy of the evidence. This reports every
+# porcelain path that would fail the allowlist so the verdict is diagnosable.
+# Exemptions mirror the bash sweep's documented set: .tick/, .relay-scratch/
+# (GH-91), and the transcript root top dir "relay-system" (GH-266, the default
+# rtl_transcript_root basename; only when XYZ_ARCHIVE_ROOT is unset). Deliberate
+# approximation: exotic bash corners (rename second fields, artifact-signature
+# checks) resolve toward REPORTING, never toward silence.
+OFFLANE_EXEMPT = (".tick", ".relay-scratch", "relay-system")
+
+
+def normalized_allow_csv(allow_paths):
+    """GH-654 root cause #2 — rtl_init splits allow_csv with bare IFS=',': no
+    trim. marathon-drive renders the plan's `artifact:` string verbatim, and a
+    conventionally-formatted "a, b, c" therefore put " b" and " c" into
+    RTL_ALLOW; the leading space can never match worktree-relative porcelain,
+    so every artifact AFTER THE FIRST was invisible to containment and its
+    edit destroyed the turn. Single-artifact plans never tripped it, which is
+    why it survived since 1f0a5bf1. The Python layer trims before handing the
+    CSV to the bridge (tick's own claim parser already trims, bin/tick:100 —
+    which is exactly why the divergence hid so long)."""
+    return ",".join(split_allow_paths(allow_paths))
+
+
+def offlane_candidates(wt_path, allow_paths, relay_file):
+    try:
+        proc = subprocess.run(
+            ["git", "-C", wt_path, "status", "--porcelain", "-z"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            timeout=15, check=False,
+        )
+    except Exception:
+        return []
+    entries = proc.stdout.decode("utf-8", "replace").split("\0")
+    allow = split_allow_paths(allow_paths)
+    allow.append(relay_file)
+    # GH-654 follow-up: the shims pass the relay file ABSOLUTE while porcelain
+    # is worktree-relative. Normalize ABSOLUTE entries against the worktree;
+    # relative entries are already root-relative (same layout) and must not be
+    # touched — abspath would resolve them against this process's cwd.
+    normalized = []
+    for entry in allow:
+        entry = entry.strip().rstrip("/")
+        if not entry:
+            continue
+        if os.path.isabs(entry):
+            try:
+                rel = os.path.relpath(entry, os.path.abspath(wt_path))
+            except ValueError:
+                rel = None
+            entry = rel if (rel and not rel.startswith("..")) else entry
+        normalized.append(entry)
+    allow = normalized
+    found, i = [], 0
+    while i < len(entries):
+        entry = entries[i]
+        i += 1
+        if not entry or len(entry) < 4:
+            continue
+        xy, path = entry[:2], entry[3:]
+        paths = [path]
+        if xy[0] in "RC":
+            # rename/copy: the second NUL field is the SOURCE path — a rename
+            # out of a non-allowlisted location is exactly the deletion/move the
+            # mirror must not stay silent about (GH-663 finding 4).
+            paths.append(entries[i])
+            i += 1
+        for path in paths:
+            if path.startswith(OFFLANE_EXEMPT):
+                continue
+            bare = path.rstrip("/")
+            if any(bare == a or bare.startswith(a + "/") or path.startswith(a + "/")
+                   for a in allow):
+                continue
+            found.append(path)
+    return found
+
+
 def rtl_run_bounded(timeout_secs, cmd, *, cwd=None, env=None, stdout=None, stderr=None):
     """Run *cmd* under a wall-clock cap, reaping its entire process group on timeout.
 
@@ -673,7 +753,7 @@ source {lib} >/dev/null 2>&1
 if [ -s {state} ]; then
   source {state}
 else
-  rtl_init {shlex.quote(self.root)} {shlex.quote(self.relay_file)} {shlex.quote(self.allow_paths)} >/dev/null 2>&1
+  rtl_init {shlex.quote(self.root)} {shlex.quote(self.relay_file)} {shlex.quote(normalized_allow_csv(self.allow_paths))} >/dev/null 2>&1
 fi
 
 {cmd_str}
@@ -710,7 +790,7 @@ exit $RC
         return res.stdout.strip()
 
     def turn_prompt(self, agent, task, peer):
-        cmd = f"rtl_turn_prompt {shlex.quote(agent)} {shlex.quote(self.relay_file)} {shlex.quote(task)} {shlex.quote(self.allow_paths)} {shlex.quote(peer)}"
+        cmd = f"rtl_turn_prompt {shlex.quote(agent)} {shlex.quote(self.relay_file)} {shlex.quote(task)} {shlex.quote(normalized_allow_csv(self.allow_paths))} {shlex.quote(peer)}"
         res = self._run_checked(cmd)
         return res.stdout.strip()
 
@@ -741,6 +821,20 @@ exit $RC
         return None
         
     def worktree_end(self, wt_path):
+        # GH-654: the bash sweep answers a bare yes/no and then destroys the
+        # worktree, so a false positive was undiagnosable after the fact — three
+        # marathon turns were lost to an off-lane verdict nobody could inspect.
+        # Name the evidence BEFORE the verdict runs. Diagnostic only: the bash
+        # verdict below stays authoritative, and this mirror deliberately
+        # over-reports rather than stays silent (it skips only the exemptions
+        # the bash sweep documents: .tick, .relay-scratch, transcript root).
+        try:
+            for cand in offlane_candidates(wt_path, self.allow_paths, self.relay_file):
+                sys.stderr.write("rtl: GH-654 off-lane candidate: %s\n" % cand)
+            sys.stderr.write("rtl: GH-654 allowlist: [%s] relay_file: %s\n" % (
+                ", ".join(split_allow_paths(self.allow_paths)), self.relay_file))
+        except Exception:
+            pass  # diagnostics must never fail the turn they describe
         cmd = f"""
 rtl_worktree_end {shlex.quote(wt_path)}
 echo -n "${{RTL_WT_OFFLANE:-0}}"

@@ -422,8 +422,8 @@ check_changelog() {
     return "$(pdda_gated_exit "$rc")"
   fi
 
-  cl_line="$(grep -Em1 '^##[[:space:]]+(\[[^][]*\][[:space:]]*[-–][[:space:]]*)?[0-9]{4}-[0-9]{2}-[0-9]{2}' "$PDDA_CHANGELOG" 2>/dev/null || true)"
-  cl_date="$(printf '%s' "$cl_line" | grep -Eo '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1)"
+  cl_line="$(grep -Em1 '^##[[:space:]]+((\[[^][[:space:]]+\]|[^][[:space:]]+)[[:space:]]*(-|–)[[:space:]]*)?[0-9]{4}-[0-9]{2}-[0-9]{2}' "$PDDA_CHANGELOG" 2>/dev/null || true)"
+  cl_date="$(printf '%s\n' "$cl_line" | sed -E 's/^##[[:space:]]+((\[[^][[:space:]]+\]|[^][[:space:]]+)[[:space:]]*(-|–)[[:space:]]*)?([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\4/' | grep -Eo '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' || true)"
 
   if [ -z "$cl_date" ] || ! pdda_is_real_date "$cl_date"; then
     pdda_record_finding warn "$CHECK_NAME" "$PDDA_CHANGELOG" 1 \
@@ -905,7 +905,7 @@ PDDA_GOVERNANCE_INDEX_DEFAULT="ROUTER.md"
 #     suffix widened.
 #   - config.sh, which belongs to git-pulse, a separate program. It is not ours and never will be here.
 PDDA_GOV_SHIPPED_DOCS_DEFAULT="utils/pdda/PDDA-INSTALL.md PROJECT/PDDA.md"
-PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS_DEFAULT="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md .claude/skills/pdda/SKILL.md .claude/skills/governance-audit/SKILL.md .claude/skills/releases/SKILL.md PROJECT/3-COMPLETED/PDDA-SYNC-TO-OTHER-REPOS.md utils/PDDA-INSTALL.md install.sh templates/ROUTER.target.md test/pdda-doc-health-hooks.sh pdda-sync.sh utils/pdda/pdda-sync.sh utils/pdda/pdda-manifest.sh utils/pdda.sh utils/pdda-lib.sh utils/pdda-doc-ready.sh utils/pdda-catchup.sh config.sh"
+PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS_DEFAULT="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md .claude/skills/pdda/SKILL.md .claude/skills/governance-audit/SKILL.md .claude/skills/releases/SKILL.md PROJECT/3-COMPLETED/PDDA-SYNC-TO-OTHER-REPOS.md utils/PDDA-INSTALL.md install.sh utils/pdda/pdda-install.sh pdda-install.sh templates/ROUTER.target.md utils/pdda/templates/ROUTER.target.md utils/pdda/templates/pdda/SKILL.md test/pdda-doc-health-hooks.sh pdda-sync.sh utils/pdda/pdda-sync.sh utils/pdda/pdda-manifest.sh utils/pdda.sh utils/pdda-lib.sh utils/pdda-doc-ready.sh utils/pdda-catchup.sh config.sh"
 PDDA_GOV_SHIPPED_DOC_ENVVAR_EXEMPTIONS_DEFAULT="PDDA_REGISTRY PDDA_GITPULSE_DIR PDDA_SYNC_MAX_SHRINK"
 
 # Print "<line>\t<text>" for lines outside an exempt fence/blockquote — same carve-out convention as
@@ -1461,7 +1461,7 @@ check_governance() {
   # target install. That's expected, not drift, so a false flag must cost one ignorable line, not a
   # blocked build (same calibration as the dead-reference check above).
   local shipped_vars doc_vars install_sh
-  install_sh="$PDDA_REPO_ROOT/install.sh"
+  install_sh="$PDDA_REPO_ROOT/utils/pdda/pdda-install.sh"
   shipped_vars="$(grep -ohE 'PDDA_[A-Z0-9_]+' "$HERE"/*.sh "$install_sh" 2>/dev/null | LC_ALL=C sort -u)"
   for doc in $present_docs; do
     abs_file="$PDDA_REPO_ROOT/$doc"

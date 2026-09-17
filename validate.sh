@@ -296,6 +296,8 @@ TESTS=(
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
   "gh608-deepseek-effort.sh"     # GH-608 (DEEPSEEK_REASONING_EFFORT matrix, early claim prevention, telemetry normalization)
+  "gh654-offlane-log.sh"         # GH-654 (offlane_candidates names allowlist failures before the bash verdict destroys the worktree; exemptions load-bearing)
+  "gh660-skill-drift.sh"         # GH-660 (skill_drift_check flags vendored SKILL.md copies diverged from canonical skills/; mutation-proven)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
   "gh155-phase1-metamorphic-invariants.sh" # #155 Phase 1 (Metamorphic Invariant Assertions & Sandbox Hardening: zero-mutation, idempotence, realpath containment)
   "gh155-phase2-differential-oracle.sh" # #155 Phase 2 (Differential Multi-Harness Cross-Testing Oracle across all 7 turn shims)
@@ -495,10 +497,12 @@ TESTS=(
   "new-relay.sh"
   "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
   "skills-army-hq.sh"           # GH-487 (bash wrapper running the skills-army-hq dedicated pytest; carries it into tier 2 AND the full gate)
+  "gh620-skills-army-mini-sync.sh" # GH-620 generated child publisher + detached package smoke
   "agent-chorus-bridge.sh"      # GH-384 (cross-device bridge over Cloudflare Tunnel)
   "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
+  "gh642-consumer-fruit.sh"      # GH-642 (vendor→info/exclude, claude Opus-budget warn, --force token auto-suffix, worktree deps copy, xyz-init-clone, preflight zero-criteria warn)
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
   "gh293-vendored-guard-drift.sh" # GH-293 (safety-guard manifest + safe fleet-update source gate)
   "relay-concurrent-commit.sh"
@@ -507,6 +511,9 @@ TESTS=(
   "relay-xyz-skill-guard.sh"
   "find-harness.sh"
   "gh292-worktree-vendored-discovery.sh"  # GH-292 (linked worktree resolves main-checkout .xyz/)
+  "gh649-pdda-migration.sh"
+  "pdda-changelog.sh"
+  "pdda-install-startup-docs.sh"
   "pdda-roadmap-coverage.sh"
   "pdda-repo-contract.sh"       # GH-311 (real-repository PDDA deterministic contract)
   "pdda-local-checks.sh"        # the checks the 2026-08-03 PDDA sync deleted, restored outside the sync surface

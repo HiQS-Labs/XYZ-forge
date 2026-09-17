@@ -1139,6 +1139,19 @@ def build_marathon_invocation_artifact(now, root, drive_cmd, target_root, out_di
     }
 
 
+def warn_zero_criteria(acc_mode, acc_items, primary_doc, fmt, stream=None):
+    """GH-642: a capture doc whose Acceptance section has no `- [ ]` items inline ZERO criteria —
+    the packet carries only a fallback line, and the builder loses its definition of done. That
+    in-packet note is easy to miss, so say it on stderr too. Advisory; exit codes unchanged."""
+    if acc_mode == "acceptance-section" and not acc_items and fmt != "json":
+        print(
+            f"swarm-preflight: WARNING — {primary_doc} has an Acceptance section with no "
+            "'- [ ]' checklist items; the packet will inline 0 criteria and the builder gets "
+            "no definition of done. Convert the criteria to a '- [ ]' checklist (or add one).",
+            file=stream or sys.stderr,
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description="swarm-preflight", add_help=False)
     parser.add_argument("--project-doc", dest="project_doc")
@@ -1685,6 +1698,10 @@ def main():
             sys.exit(1)
         out_dir = os.path.join(ts_base, "preflight", today, slug)
         
+    # GH-642: zero-item acceptance inlines 0 criteria — warn on stderr before the dry-run exit
+    # so BOTH the dry-run and packet paths surface it. Advisory; exit codes unchanged.
+    warn_zero_criteria(acc_mode, acc_items, primary_doc, args.format)
+
     if args.dry_run:
         if args.format != "json":
             emit("")

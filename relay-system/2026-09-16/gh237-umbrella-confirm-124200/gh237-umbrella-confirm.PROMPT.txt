@@ -1,0 +1,43 @@
+# Consult: confirm the idle/timeout whack-a-mole classification before an umbrella issue is filed
+
+Context: a churn scan (2026-08-16 → 2026-09-16) classified #237 as whack-a-mole, score 25.
+Before we file a phased umbrella issue and run a two-wave marathon, confirm or refute each
+finding below. You may read the repo files and cited issues/commits yourself.
+
+## Findings to confirm — answer AGREE or DISAGREE on each, with one-line reasons
+
+**F1 — #237 is one member of a recurring family, not a surgical one-off.**
+The idle/timeout kill machinery was patched per-symptom at least 4 times without touching the
+consult path: `8029c866` (agy TTY takeover), `36694572` (GH-114 pty + idle-kill attribution),
+`0b37c36f` (GH-502 dialog-detector false positives), `c9c3f21b` (GH-608 false idle attribution —
+touched only `utils/py/deepseek-turn.py`). Verify with `git show --stat <sha>`.
+
+**F2 — Two entangled root defects share one trigger surface.**
+(A) The progress oracle in `utils/py/turn_diagnostics.py` (REASON_IDLE, ~line 90) classifies
+sustained cpu=0 + no transcript growth as "locally blocked", conflating an in-flight backend
+wait with a local stall. (B) Each shim built its own kill/aftermath semantics on top:
+commandcode releases the peer token on a killed turn (#241), agy-turn reports the cap but never
+kills the child (#285), consult discards the advisor's entire turn at the cap (#480, #276).
+
+**F3 — Family membership and phasing.**
+Phase 1 (primary): #237, #241, #276, #285, #480, #521.
+Phase 2 (adjacent): #242 (timeout-kill leaves checkout switched), #397 (zero-output turn reads
+as review handback), #369 (PID-only kill lets a CLI outlive its cap).
+Specifically check: is #521 (muse-turn stall) really the same cause, or separate? Is the
+Phase 2 split right?
+
+**F4 — Remediation shape.**
+First instrument/guard the shared oracle (make idle-kill, wall-cap, child-orphan, and
+in-flight-wait distinguishable; loud attribution), then unify kill semantics at the shim
+contract seam, then sweep the per-symptom patches. Roughly the radar class's existing task
+plus the split.
+
+## Key paths
+`utils/py/turn_diagnostics.py`, `relay-automation/consult.sh`,
+`relay-automation/` turn shims (agy/codex/commandcode/muse/deepseek), issue #293 section
+"RADAR-class-headless-turn-timeout".
+
+## Output format
+Per finding: `F<n>: AGREE|DISAGREE — <one to three lines>`. Then `MISSED: <anything the
+classification got wrong or omitted>` (or "none"). Be adversarial: if the family is actually
+unrelated bugs sharing a symptom, say so — that changes whether an umbrella is filed at all.

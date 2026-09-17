@@ -49,18 +49,37 @@ from a real leak or wedge:
 
 1. **Exclude machine state before the first push.** The collection's `.gitignore`
    must carry at minimum: `.deploy-skills.json`, `.deploy-skills-pending.json`,
-   `targets.json`, `backups/`, `*.zip`, `.lock`, `*.lock`, `.staging/`, `__pycache__/`,
+   `targets.json`, `catalog.md`, `changelog.md`, `backups/`, `*.zip`, `.lock`, `*.lock`, `.staging/`, `__pycache__/`,
    `*.pyc`. Note `*.lock`, not `.lock` — the first push leaked
    `.deploy-skills.lock` on exactly that distinction.
-2. **Commit immediately after every mutation.** The carrier's pre-write
+   If any are already tracked, the publisher uses `git rm --cached -- <exact paths>`
+   to remove only their index entries, retaining local files, then commits that hygiene
+   change. Existing consumer copies must preserve local state before pulling a commit
+   that removes tracked state; Git may remove their formerly tracked files.
+2. **Commit immediately after every portable-payload mutation.** The carrier's pre-write
    `pull --rebase` refuses on uncommitted tracked changes, wedging its whole
    cycle (observed: exit 128, the documented 229-run failure class).
 3. **Verify cross-device digests against the checkout's copy, not the
    publisher's live folder** — git normalizes file modes (only the executable
    bit survives), so byte-identical payloads can digest differently.
 
-Adoption on other machines does NOT bootstrap state inside the shared checkout;
-see SKILL.md → "Adopting the collection on another machine".
+Adoption on every device uses the existing Pulse payloads directly; see SKILL.md →
+"SOP: one deployed collection per device". `init --adopt-existing` creates ignored local
+receipts and targets in that directory without copying any skill. Local target/catalog/
+history changes must leave the tracked tree clean; never publish them to clear a dirty tree.
+The old GH-508/536 secondary-device copy procedure is superseded.
+
+### Retiring a second local collection
+
+Preserve any differing payloads in their owning source repositories first. With the old
+root explicitly selected via `--root`, disable its targets and sync to withdraw only its
+owned links. Keep the old collection and backups intact while adopting the Pulse root
+in place (or reusing its existing local state). Configure the selected targets there,
+sync, and verify every migrated link reads through to Pulse and the tracked tree stays
+clean. Clear obsolete `XYZ_SKILLS_ROOT` overrides. Only then archive the old collection
+outside app discovery roots; do not rewrite receipts, merge collection identities, or
+remove a copy containing unique work. Existing foreign links follow the explicit link
+migration procedure below; never replace them silently.
 
 Previews deliberately take no write lock. Do not run them during an apply: they
 can observe intermediate state and report transient conflicts. Wait for the writer

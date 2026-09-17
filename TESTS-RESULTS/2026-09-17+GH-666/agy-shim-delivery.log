@@ -1,0 +1,98 @@
+== test: agy-turn ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-agy-turn.XXXXXX.e5hsfCcpnC
+test_absolute_path_entry (__main__.ModelProbeTests.test_absolute_path_entry) ... ok
+test_cleanup_failure_is_reported_and_refuses (__main__.ModelProbeTests.test_cleanup_failure_is_reported_and_refuses) ... ok
+test_directory_creation_failure_refuses (__main__.ModelProbeTests.test_directory_creation_failure_refuses) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_ignored_marker_still_detected (__main__.ModelProbeTests.test_ignored_marker_still_detected) ... ok
+test_launch_failure (__main__.ModelProbeTests.test_launch_failure) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_listed_forms (__main__.ModelProbeTests.test_listed_forms) ... ok
+test_missing_path_does_not_use_caller_binary (__main__.ModelProbeTests.test_missing_path_does_not_use_caller_binary) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_nonzero (__main__.ModelProbeTests.test_nonzero) ... agy-turn: agy models probe failed (exit 9) while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+agy-turn: models probe: model-id	Display Model
+ok
+test_relative_executable (__main__.ModelProbeTests.test_relative_executable) ... ok
+test_relative_path_entry (__main__.ModelProbeTests.test_relative_path_entry) ... ok
+test_timeout (__main__.ModelProbeTests.test_timeout) ... agy-turn: agy models probe timed out after 1s while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+agy-turn: models probe: model-id	Display Model
+ok
+test_unavailable (__main__.ModelProbeTests.test_unavailable) ... agy-turn: requested AGY_MODEL='not-listed' is unavailable on this agy account. Run `agy models` to choose a listed model; refusing to fall back silently.
+ok
+test_unset_model_skips_probe (__main__.ModelProbeTests.test_unset_model_skips_probe) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 4.714s
+
+OK
+  PASS: non-agy actor -> shim defers, no commit
+  PASS: agy turn (good) exits 0
+  PASS: agy turn committed (file-scoped)
+  PASS: commit touched the relay file
+  PASS: commit message names the agy tool
+  PASS: off-allowlist edit -> shim fails (exit 6)
+  PASS: off-lane file was reverted/removed
+  PASS: no commit on a violating turn
+  PASS: agy commit during turn -> shim fails (exit 6)
+  PASS: sneaked commit reset to BEFORE_HEAD
+  PASS: off-lane committed file removed by reset
+  PASS: off-lane path with space -> shim fails (exit 6)
+  PASS: spaced off-lane file reverted (-z parsing)
+  PASS: empty-output-on-exit-0 (sandbox-blocked) -> shim fails (exit 5)
+  PASS: no commit on a phantom/empty turn
+  PASS: S9: unavailable AGY_MODEL -> shim fails loudly (exit 5)
+  PASS: S9: unavailable AGY_MODEL -> no commit
+  PASS: S9: unavailable AGY_MODEL -> no relay edit
+  PASS: S9: listed AGY_MODEL -> shim proceeds
+  PASS: S9: listed AGY_MODEL -> committed normal turn
+  PASS: S9: listed AGY_MODEL passed through to agy
+  PASS: auth pre-flight fail -> shim exits 5 with no turn
+  PASS: no commit on auth pre-flight failure
+  PASS: pre-existing dirty file -> turn still succeeds
+  PASS: pre-existing ambient WIP left untouched (not reverted)
+  PASS: reviewer turn: artifact on ALLOW_PATHS dropped -> edit reverted (exit 6)
+  PASS: reviewer's artifact edit reverted to original
+  PASS: no commit on a reviewer-scoping violation
+  PASS: wt-iso: absolute-ROOT write turn exits 0
+  PASS: wt-iso: agy's relay block PRESERVED (GH-22)
+  PASS: wt-iso: turn committed (output not silently dropped)
+  PASS: GH-183: tick-command narration -> turn succeeds (not a breach)
+  PASS: GH-183: tick-narration turn committed relay block
+  PASS: GH-187: markdown file:// citation -> turn succeeds (not a breach)
+  PASS: GH-187: markdown-cite turn committed relay block
+  PASS: GH-410: plain $ROOT citation -> turn survives (exit 0), not exit 5
+  PASS: GH-410: the completed review is NOT discarded
+  PASS: GH-410: the advisory is still recorded on the transcript
+  PASS: GH-172/GH-174: XYZ_PYTHON=1 agy turn refuses an unowned token (exit 5)
+  PASS: GH-172/GH-174: python agy guard blocks commits before mutation
+  PASS: GH-172/GH-174: python agy guard leaves relay file untouched
+tick: error: task RELAY-TURN-gh296agy is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: GH-296: Python agy turn (AGY_TURN_ROOT unset) exits 0
+  PASS: GH-296: agy-turn.py's claim --paths stayed repo-relative, no root-escaping '..' (got: "relay.md")
+tick: error: task RELAY-TURN-role-good is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: S2: assigned-role-compliant agy turn exits 0
+  PASS: S2: agy wrote its ASSIGNED role's block (Producer)
+  PASS: S2: agy flipped NEXT to the other role (Reviewer)
+tick: error: task RELAY-TURN-role-drift is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: S2: role-drift turn still exits 0 today (honor-system gap, not enforced)
+  PASS: S2: KNOWN GAP reproduced — agy wrote the WRONG role's block (Reviewer, was assigned Producer)
+  PASS: S2: KNOWN GAP reproduced — NEXT was NOT flipped (still Producer) and nothing caught it
+tick: error: task RELAY-TURN-distract is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: S5: distracted-by-stray-files off-lane edit -> shim fails (exit 6)
+  PASS: S5: distraction-driven off-lane edit reverted
+  PASS: S5: no commit on a distraction-driven violation
+  PASS: S5: pre-existing stray brief files left untouched (not reverted as if agent-owned)
+tick: error: task RELAY-TURN-cost is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: S8: normal agy turn exits 0 (baseline for cost-blindness check)
+  PASS: S8: agy turn emits no cost.tokens event (no misleading exact-0 lands in the coordination log)
+  PASS: S8: loop-cost.sh flags agy token spend as a FLOOR (cost-blind), never a misleading exact 0
+tick: error: task RELAY-TURN-offprompt is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: S10: KNOWN GAP reproduced — off-prompt-nonempty turn still exits 0 (F1's empty-output guard can't see it)
+  PASS: S10: transcript is nonempty but entirely off-topic (defeats the byte-emptiness guard)
+  PASS: S10: KNOWN GAP reproduced — off-prompt turn performed ZERO real work (relay file untouched, uncaught)
+  PASS: S10: no commit on an off-prompt no-op turn
+tick: error: task RELAY-TURN-tickexempt is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: .tick writes exempted when host doesn't gitignore .tick (turn succeeds)
+  PASS: .tick state dir preserved (not rm-rf'd)
+  agy-turn: 62 pass, 0 fail
