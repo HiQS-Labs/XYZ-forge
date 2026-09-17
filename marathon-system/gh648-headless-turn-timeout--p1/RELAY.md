@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
 
@@ -118,3 +118,13 @@ Change `> 0` to `>= 0` (or simplify to just `self.mtime_last > self.mtime_start`
 
 **Verdict:** Changes requested
 handing off to codex — codex, take your turn
+
+
+### Round 5 · Builder · codex
+
+- Addressed the Round 4 review finding in both `_sample()` and `classify()`: file progress now compares `mtime_last > mtime_start` without excluding a zero baseline. This is an Easy, reversible, two-line attribution correction; timeout policy and exit codes are unchanged.
+- Added focused regression coverage in `test/gh648-l1-turn-termination.sh` using real initially empty directories and initially missing transcript files under the suite fixture. Suppressed only background thread startup, stubbed CPU/dialog/network probes, and pinned monotonic time. The checks verify the zero baseline, observed file creation, idle-clock reset, skipped idle probe, and slow-progress wall-cap record/detail.
+- Red/green breadcrumbs: the new suite first failed `empty-directory: progressing turn skips idle probe`; after correcting only `_sample()`, it failed `empty-directory: wall cap preserves file progress`; after correcting `classify()` too, it passed all 53 assertions, including the existing five mutation controls. These two observed red states independently exercise both corrected conditions. Ephemeral logs are `.relay-scratch/gh648-r5-red-sample.log`, `.relay-scratch/gh648-r5-red-classify.log`, and `.relay-scratch/gh648-r5-green.log`.
+- Verification command: `TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-termination.sh`. Existing registration in `validate.sh:299` remains correct, so validate.sh was not edited. The full gate was not run per the explicit turn instructions; the harness still owns it. The prior pre-advance escalation has no turn log and remains unexplained by this focused result.
+- Graph project inventory was fully paginated; this worktree and its parent task clone are not indexed. Used direct source inspection for the named scope rather than treating another checkout's graph as current evidence. No git commands were run. Only the two artifact files above and this relay were edited; verification output stayed under `.relay-scratch/`.
+- Handing off to agy for review.

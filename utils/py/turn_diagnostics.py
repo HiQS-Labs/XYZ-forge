@@ -416,7 +416,7 @@ class TurnDiagnostics:
             and len(self.samples) >= IDLE_MIN_SAMPLES
             and self.cpu_ratio() is not None
             and self.cpu_ratio() < CPU_BUSY_RATIO
-            and not (self.mtime_last > self.mtime_start > 0)
+            and not (self.mtime_last > self.mtime_start)
         ):
             self._network_probe_attempted = True
             self._network_state_observed = _network_state(self.root_pid)
@@ -494,7 +494,7 @@ class TurnDiagnostics:
         change fixes it and the operator action is specific.
         """
         ratio = self.cpu_ratio()
-        progressed = self.mtime_last > self.mtime_start > 0
+        progressed = self.mtime_last > self.mtime_start
         bits = []
         if ratio is not None:
             bits.append(f"cpu={ratio:.2f}s/s")

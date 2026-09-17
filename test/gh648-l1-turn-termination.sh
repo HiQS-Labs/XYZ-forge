@@ -6,6 +6,7 @@ trap 'rm -rf "$WORK"' EXIT
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$ROOT/utils/py" GH648_MODULE="$ROOT/utils/py/turn_diagnostics.py" GH648_WORK="$WORK" python3 <<'PY'
 import io, json, os, pathlib, subprocess, sys
 from types import SimpleNamespace
+from unittest.mock import patch
 import turn_diagnostics as td
 
 passed = 0
@@ -22,6 +23,31 @@ def observed_idle(network):
     d._network_probe_attempted = True
     d._network_state_observed = network
     return d
+
+# New files count as progress even when start() observed an empty baseline.
+for kind in ("empty-directory", "missing-transcript"):
+    target = pathlib.Path(os.environ["GH648_WORK"]) / kind
+    if kind == "empty-directory":
+        target.mkdir()
+    with patch.object(td.threading.Thread, "start"), \
+         patch.object(td, "_descendant_cpu_seconds", return_value=(0.0, 1)), \
+         patch.object(td, "_security_dialog_present", return_value=False), \
+         patch.object(td, "_network_state", return_value="established") as probe, \
+         patch.object(td.time, "monotonic", side_effect=(1.0, 2.0, 3.0, 4.0)):
+        d = td.TurnDiagnostics(worktree=str(target), root_pid=4242)
+        d.start()
+        check(d.mtime_start == 0.0, f"{kind}: real empty baseline")
+        d._sample(); d._sample()
+        output = target / "output.txt" if target.is_dir() else target
+        output.write_text("turn made progress\n")
+        d._sample()
+        check(d.mtime_last > 0.0, f"{kind}: file creation observed")
+        check(d.idle_seconds() == 1.0, f"{kind}: creation resets idle clock")
+        check(not probe.called, f"{kind}: progressing turn skips idle probe")
+        record = d.termination_record(td.TERMINATION_WALL_CAP)
+        check(record["reason"] == td.REASON_SLOW_PROGRESS,
+              f"{kind}: wall cap preserves file progress")
+        check("worktree-progress=yes" in record["detail"], f"{kind}: honest detail")
 
 stub = pathlib.Path(os.environ["GH648_WORK"]) / "bin"
 stub.mkdir()
