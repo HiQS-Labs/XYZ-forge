@@ -114,7 +114,10 @@ python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --apply --allow-drift    
 ```
 
 Both scripts accept `--root /chosen/collection` for redirected Documents or another
-explicit collection. Home/path values are computed locally, never copied from a
+explicit collection. The default root is `~/Documents/Deployed Skills` (or `XYZ_SKILLS_ROOT`)
+even when you invoke the script through the pulse checkout's `intake.py`/`sync.py` links — pass
+`--root "$HOME/git-pulse-sync/Deployed Skills"` (or export `XYZ_SKILLS_ROOT`) to operate on that
+collection. Home/path values are computed locally, never copied from a
 different user's configuration. Source intake is restricted to local Git repos;
 dirty and unmerged working folders are allowed and recorded with commit and digest.
 External, absolute, dangling and cyclic payload links are refused. Copies retain
@@ -132,7 +135,7 @@ its still-matching links. Foreign folders and retargeted links remain untouched.
 ## Drift guard: deploying a drifted skill fails loudly (GH-660)
 
 `sync.py` runs XYZ-forge's own checker (`utils/py/skill_drift_check.py`, ingested as
-`--json`) on every preview, `--status` and `--apply`, comparing each vendored `SKILL.md`
+`--json`) on every normal reconciliation — preview, `--status` and `--apply` (`--retire-trinity` only withdraws the retired skill and runs no deploy) — comparing each vendored `SKILL.md`
 with the forge's canonical `skills/<name>/SKILL.md`. Only names that exist in the forge's
 `skills/` are judged; collection-only skills (e.g. `buffer-doctor`, `hiqs-register`) are
 reported as `unrecognized` and never fail.

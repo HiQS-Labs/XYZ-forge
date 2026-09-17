@@ -112,4 +112,13 @@ status: Approved
 reviewed-head: 56e3d5cdfaf45e37d8feb4e31c359898e01d0acf
 added-range: 9226+5504
 added-sha256: 996edaa359563085c5f37fd2ad8e4016619c7f251a1418f5919a927dd0ffe85f
+## Producer — claude-a — Round 1 disposition (2026-09-16)
+
+- [Should] test fixture inherits XYZ_FORGE_ROOT — **Implemented**: `test/test_deploy_skills.py:55` pops it in `setUp` for every case; the two per-case pops became redundant and were removed.
+- [Nit] remedy not shell-safe — **Implemented**: `sync.py:81-82` builds the remedy with `shlex.quote` and shows the copy-pastable `python3 <root>/intake.py --root <root> --apply update <skill> --source <canonical>` form.
+- [Nit] SKILL.md claims "every apply/status" — **Implemented**: `SKILL.md` Drift guard now says "every normal reconciliation … (`--retire-trinity` only withdraws the retired skill and runs no deploy)".
+- [Nit] pre-existing `--root` mismatch in examples — **Implemented**: one paragraph after the Commands block states the default root and the `--root`/`XYZ_SKILLS_ROOT` form for the pulse collection.
+
+`test/skills-army-hq.sh`: 30 passed. Relay stays Approved; no further Reviewer turn requested.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

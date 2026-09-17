@@ -52,6 +52,7 @@ class DeploySkillsTest(unittest.TestCase):
         self.home.mkdir()
         self.target = self.work / "app skills"
         self.env = {**os.environ, "HOME": str(self.home), "PYTHONDONTWRITEBYTECODE": "1"}
+        self.env.pop("XYZ_FORGE_ROOT", None)  # GH-660: never inherit the operator's canonical root into a fixture
         self.cli("--apply", "init")
 
     def git(self, *args):
@@ -482,7 +483,6 @@ raise SystemExit(mod.main(sys.argv[3:]))
         return self.repo
 
     def test_gh660_no_canonical_is_a_warning_not_a_pass(self):
-        self.env.pop("XYZ_FORGE_ROOT", None)
         self.cli("--apply", "add", self.source()); self.enable()
         out = json.loads(self.cli("--apply", sync=True).stdout)
         self.assertIsNone(out["drift"])
@@ -519,7 +519,6 @@ raise SystemExit(mod.main(sys.argv[3:]))
         self.assertIn("Canonical root from --canonical lacks", run.stderr)
 
     def test_gh660_targets_json_canonical_key(self):
-        self.env.pop("XYZ_FORGE_ROOT", None)
         self.cli("--apply", "add", self.source()); self.enable()
         forge = self.forge()
         cfg = self.root / "targets.json"; data = json.loads(cfg.read_text()); data["canonical"] = str(forge)

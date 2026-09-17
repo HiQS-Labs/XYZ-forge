@@ -7,6 +7,7 @@ import contextlib
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import uuid
@@ -77,9 +78,10 @@ def drift_gate(root, state, config, found, explicit, apply, allow_drift, warning
     drift = {**drift_report(root, canonical), "origin": origin}
     drifted = [e for e in drift["drifted"] if e["skill"] in found]
     for entry in drifted:
+        remedy = (f"python3 {shlex.quote(str(root / 'intake.py'))} --root {shlex.quote(str(root))} --apply "
+                  f"update {entry['skill']} --source {shlex.quote(str(Path(entry['canonical_path']).parent))}")
         warn(warnings, f"DRIFTED {entry['skill']}: vendored {entry['vendored_path']} != canonical "
-                       f"{entry['canonical_path']} — re-vendor: intake.py --apply update {entry['skill']} "
-                       f"--source {Path(entry['canonical_path']).parent}")
+                       f"{entry['canonical_path']} — re-vendor: {remedy}")
     deploying = any(t["enabled"] for t in config["targets"])
     if apply and drifted and deploying and not allow_drift:
         names = ", ".join(e["skill"] for e in drifted)
