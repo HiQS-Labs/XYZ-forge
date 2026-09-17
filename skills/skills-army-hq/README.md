@@ -29,9 +29,14 @@ Without a shared collection, a useful new skill reaches Claude Code but not Code
 copy remains in Antigravity after today's fix. Manual copying creates invisible version drift.
 Skills Army HQ keeps the payloads in one place and makes deployment state inspectable.
 
-The default collection used by XYZ Forge lives at `~/git-pulse-sync/Deployed Skills`, where Git Pulse
+The default collection on every Pulse-enabled device lives at `~/git-pulse-sync/Deployed Skills`, where Git Pulse
 can carry the portable skill payloads between machines. Machine-specific targets, receipts, history,
-backups, and configuration remain local and excluded from publication.
+backups, catalog, and configuration remain local and excluded from publication.
+
+The workflow is **owning source repo → Git Pulse Sync `Deployed Skills/` → app symlinks**.
+There is no second deployed collection on a device. The operational SOP lives in the bundled
+`skills-army-hq/SKILL.md` (`SKILL.md` in the standalone package); `references/recovery.md`
+covers migration and transport hygiene. These files ship in both Pulse and Skills Army mini.
 
 ## Origin
 
@@ -55,7 +60,7 @@ operator-owned state and are never part of the generated repository.
 
 ## Where an installed copy lives
 
-Initialization copies the **entire skill folder**, including this README, into
+For a new empty collection, initialization copies the **entire skill folder**, including this README, into
 `~/git-pulse-sync/Deployed Skills/skills-army-hq/`. Updating the manager refreshes this
 README along with its scripts and instructions. The installer also writes a real
 copy at **`~/git-pulse-sync/Deployed Skills/README.md`**, beside `catalog.md`.
@@ -73,15 +78,33 @@ the upstream project. Keep local receipts and imported private skills private.
 ## Getting started
 
 Requires Python 3.9+; macOS is the supported alpha platform. Clone the standalone repository, choose
-a separate empty collection directory, preview initialization, then apply it:
+one empty collection directory (the Pulse path by default), preview initialization, then apply it.
+If Pulse already contains the deployed payloads, follow the adoption instructions below instead:
 
 ```bash
 git clone https://github.com/HiQS-Labs/XYZ-skills-army-mini.git
 cd XYZ-skills-army-mini
-python3 ./scripts/intake.py --root "/path/to/Deployed Skills" init
-python3 ./scripts/intake.py --root "/path/to/Deployed Skills" --apply init
+python3 ./scripts/intake.py init
+python3 ./scripts/intake.py --apply init
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
 ```
+
+On another device, pull your Pulse checkout and adopt the existing collection **in place**:
+
+```bash
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" init --adopt-existing
+python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply init --adopt-existing
+```
+
+Adoption requires a clean collection, portable manager links/README, ignored machine state,
+and no tracked machine state. It preserves payloads and creates this device's own receipts.
+Future pulls update the same files that app symlinks read; no second import is needed.
+See the bundled SOP for additions, removals, and migration from the former Documents root.
+`--root` takes precedence over `XYZ_SKILLS_ROOT`, which takes precedence over the Pulse default;
+check for an old environment override. Without Pulse, choose one custom root and use it consistently.
+
+For a new publisher collection, establish the exclusions in `references/recovery.md`
+before its first Git commit or push. Plain `init` itself requires an empty directory.
 
 Targets start disabled. Ask your agent to configure the apps you choose, preview
 the changes, and sync them. Operations preview by default; `--apply` writes.

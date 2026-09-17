@@ -178,7 +178,7 @@ def retirement(root, state, config, source_arg, archive_directories, apply):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--root", default=os.environ.get("XYZ_SKILLS_ROOT") or str(Path.home() / "Documents" / "Deployed Skills"),
+    p.add_argument("--root", default=shared.default_root(),
                    help="Collection root (env: XYZ_SKILLS_ROOT)")
     p.add_argument("--apply", action="store_true")
     p.add_argument("--dry-run", action="store_true")

@@ -577,14 +577,57 @@ def stage_payload(root, source, before, after, name=None, ignored=()):
             "before": before, "after": after}
 
 
+def default_root():
+    return os.environ.get("XYZ_SKILLS_ROOT") or str(Path.home() / "git-pulse-sync" / "Deployed Skills")
+
+
+def adopt_existing(root, apply):
+    """Attach local receipts to a clean Git-carried collection without copying payloads."""
+    if (root / STATE).exists():
+        load(root)
+        print("Collection already initialized")
+        return
+    local = [STATE, PENDING, "targets.json", "catalog.md", "changelog.md",
+             ".deploy-skills.lock", "backups/", ".staging/"]
+    require(not any((root / p).exists() or (root / p).is_symlink()
+                    for p in (PENDING, "targets.json")), "Existing local state; inspect or recover before adoption")
+    def git(*args):
+        result = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
+        require(result.returncode == 0, f"Cannot adopt collection ({' '.join(args)}): {result.stderr.strip()}")
+        return result.stdout.strip()
+    require(not git("ls-files", "--", *local), "Machine state is tracked; untrack it before adoption")
+    for name in local:
+        git("check-ignore", "--quiet", "--no-index", name + "probe" if name.endswith("/") else name)
+    require(not git("status", "--porcelain", "--", "."), "Pulse collection must be clean before adoption")
+    found = inventory(root, {"skills": {}})
+    require("skills-army-hq" in found, "Collection lacks skills-army-hq")
+    git("ls-files", "--error-unmatch", "--", *(f"{name}/SKILL.md" for name in found))
+    for name in ("intake.py", "sync.py"):
+        require(link_text(root / name) == f"skills-army-hq/scripts/{name}"
+                and (root / name).is_file(), f"Missing or foreign manager entry: {name}")
+    require(regular_bytes(root / "README.md") == regular_bytes(root / "skills-army-hq" / "README.md"),
+            "Collection README differs from manager; refresh it on the publisher")
+    state = {"schema": SCHEMA, "root": str(root), "collection": uuid.uuid4().hex,
+             "skills": {name: source_record(root / name)[1] for name in found}, "links": {}}
+    validate_history(root)
+    print(json.dumps({"operation": "adopt-existing", "root": str(root), "skills": sorted(found), "apply": apply}))
+    if apply:
+        with locked(root):
+            require(not (root / STATE).exists() and not (root / "targets.json").exists(),
+                    "Local state appeared during adoption; inspect before retrying")
+            require(inventory(root, {"skills": {}}) == found, "Payload changed during adoption")
+            transact(root, state, defaults(), [], "adopt-existing", {"skills": sorted(found)})
+
+
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--root", default=os.environ.get("XYZ_SKILLS_ROOT") or str(Path.home() / "Documents" / "Deployed Skills"),
+    p.add_argument("--root", default=default_root(),
                    help="Collection root (env: XYZ_SKILLS_ROOT)")
     p.add_argument("--apply", action="store_true", help="Apply the requested mutation; default is preview")
     p.add_argument("--dry-run", action="store_true", help="Write nothing")
     sub = p.add_subparsers(dest="command", required=True)
-    sub.add_parser("init")
+    init = sub.add_parser("init")
+    init.add_argument("--adopt-existing", action="store_true", help="Attach local state to a clean Pulse collection in place")
     sub.add_parser("activate-manager", help="Switch legacy collection entry links to the installed Skills Army HQ")
     add = sub.add_parser("add"); add.add_argument("source")
     update = sub.add_parser("update"); update.add_argument("name"); update.add_argument("--source")
@@ -605,6 +648,9 @@ def main(argv=None):
         root = location(args.root)
         apply = args.apply and not args.dry_run
         if args.command == "init":
+            if args.adopt_existing:
+                adopt_existing(root, apply)
+                return 0
             source = Path(__file__).resolve().parent.parent
             info, ignored = package_info(source)
             require((source / "scripts" / "sync.py").is_file(), "Manager is incomplete: missing scripts/sync.py")

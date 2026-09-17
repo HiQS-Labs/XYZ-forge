@@ -1,0 +1,5 @@
+mode=caller-damaged suite_sha256=38be8fac37eb657ec65d174e77d502f1b26b4916bbc249d3d5e046131c8d4f09
+== test: gh642-consumer-fruit ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh642-consumer-fruit.XXXXXX.tviCzFLSyT
+  PASS: fixture guard refuses empty
+  FAIL: caller changed after empty

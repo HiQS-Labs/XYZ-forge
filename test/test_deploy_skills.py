@@ -82,6 +82,90 @@ class DeploySkillsTest(unittest.TestCase):
     def state(self):
         return json.loads((self.root / intake.STATE).read_text())
 
+    def pulse_fixture(self):
+        pulse = self.repo / "Deployed Skills"
+        pulse.mkdir()
+        shutil.copytree(self.bundle, pulse / "skills-army-hq")
+        shutil.copyfile(self.bundle / "README.md", pulse / "README.md")
+        shutil.copytree(self.source(), pulse / "sample")
+        for name in ("intake.py", "sync.py"):
+            (pulse / name).symlink_to(f"skills-army-hq/scripts/{name}")
+        (pulse / ".gitignore").write_text(".deploy-skills*\ntargets.json\ncatalog.md\nchangelog.md\nbackups/\n.staging/\n*.zip\n*.lock\n__pycache__/\n*.pyc\n")
+        self.git("add", "Deployed Skills")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "pulse payloads")
+        self.root = pulse
+        return pulse
+
+    def test_pulse_adoption_two_devices_and_pull_readthrough(self):
+        first = self.pulse_fixture()
+        second_repo = self.work / "device-b" / "git-pulse-sync"
+        run = subprocess.run(["git", "clone", "-q", str(self.repo), str(second_repo)], capture_output=True)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        second = second_repo / "Deployed Skills"
+        identities = []
+        for i, root in enumerate((first, second)):
+            self.root = root
+            before = tree(root)
+            self.cli("init", "--adopt-existing", copied=True)
+            self.assertEqual(tree(root), before)
+            payload = tree(root / "sample")
+            self.cli("--apply", "init", "--adopt-existing", copied=True)
+            self.assertEqual(tree(root / "sample"), payload)
+            identities.append(self.state()["collection"])
+            self.assertEqual(set(self.state()["skills"]), {"skills-army-hq", "sample"})
+            self.assertFalse(any(t["enabled"] for t in json.loads((root / "targets.json").read_text())["targets"]))
+            self.enable(self.work / f"app-{i}")
+            self.cli("--apply", sync=True, copied=True)
+            link = self.work / f"app-{i}" / "sample"
+            self.assertEqual(link.resolve(), root / "sample")
+            before = tree(root)
+            self.cli("--apply", "init", "--adopt-existing", copied=True)
+            self.assertEqual(tree(root), before)
+            run = subprocess.run(["git", "-C", str(root), "status", "--porcelain", "--", "."], capture_output=True, text=True)
+            self.assertEqual((run.returncode, run.stdout), (0, ""), run.stderr)
+        self.assertNotEqual(*identities)
+        (first / "sample" / "run.py").write_text("print('updated upstream')\n")
+        self.git("add", "Deployed Skills/sample/run.py")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "publish update")
+        run = subprocess.run(["git", "-C", str(second_repo), "pull", "--ff-only"], capture_output=True)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertEqual((self.work / "app-1" / "sample" / "run.py").read_bytes(), (first / "sample" / "run.py").read_bytes())
+        self.assertEqual(self.state()["collection"], identities[1])
+
+    def test_pulse_adoption_refuses_unprotected_or_foreign_state(self):
+        root = self.pulse_fixture()
+        ignore = root / ".gitignore"
+        original = ignore.read_text()
+        ignore.write_text(original.replace("targets.json\n", ""))
+        before = tree(root)
+        run = self.cli("--apply", "init", "--adopt-existing", copied=True, code=2)
+        self.assertIn("Cannot adopt collection", run.stderr)
+        self.assertEqual(tree(root), before)
+        ignore.write_text(original)
+        (root / "targets.json").write_text("{}\n")
+        before = tree(root)
+        run = self.cli("--apply", "init", "--adopt-existing", copied=True, code=2)
+        self.assertIn("Existing local state", run.stderr)
+        self.assertEqual(tree(root), before)
+        (root / "targets.json").unlink()
+        self.git("add", "-f", "Deployed Skills/.gitignore")
+        (root / "catalog.md").write_text("foreign tracked catalog\n")
+        self.git("add", "-f", "Deployed Skills/catalog.md")
+        before = tree(root)
+        run = self.cli("--apply", "init", "--adopt-existing", copied=True, code=2)
+        self.assertIn("Machine state is tracked", run.stderr)
+        self.assertEqual(tree(root), before)
+
+    def test_pulse_default_root(self):
+        env = {**self.env}
+        env.pop("XYZ_SKILLS_ROOT", None)
+        for name, args in (("intake.py", ["init"]), ("sync.py", ["--status"])):
+            run = subprocess.run([sys.executable, str(self.bundle / "scripts" / name), *args],
+                                 env=env, capture_output=True, text=True)
+            self.assertIn(str(self.home / "git-pulse-sync" / "Deployed Skills"), run.stdout + run.stderr)
+        with patch.dict(os.environ, {"XYZ_SKILLS_ROOT": str(self.root)}):
+            self.assertEqual(intake.default_root(), str(self.root))
+
     def test_a1_copied_manager_and_no_source_dependency(self):
         self.repo.rename(self.work / "source hidden")
         self.cli("list", copied=True)
