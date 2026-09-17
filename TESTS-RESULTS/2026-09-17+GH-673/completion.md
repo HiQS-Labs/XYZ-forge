@@ -42,3 +42,11 @@ confirmed the newly reported GH-678/PR680 baseline installer-test HOME escape.
 All three real Gemini links were read before/after and remained unchanged. No green
 broad run or final QA approval is claimed. Safer follow-up redirects all five
 installer target variables to owned scratch, without changing HOME or source code.
+
+Extended comparison adds explicit restart, native cancellation before cleanup,
+and cancellation after cleanup: seven populated phases pass, with both Completed
+and Cancelled labels asserted and source bytes unchanged. The retained recipe is
+`writer-reader-crosscheck.py --writer-root <full reviewed writer clone>`; only the
+GitHub test double and owned temporary ledgers are mutated. The independent
+Codex turn shim test passes 43/43 in a disposable full clone; this is not yet the
+complete harness preflight or a reader approval.
