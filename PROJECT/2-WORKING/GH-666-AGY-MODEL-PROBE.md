@@ -20,7 +20,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Plan and final scoped QA approved; 14 validator tests and 65 shell assertions pass with witnessed negative controls | Full-gate and PR publication held on unrelated base failures; no bypass or merge authorized |
+| Plan and final scoped QA approved; draft PR #669 published with explicit local push-check bypass approval | Verify integration with current development and actual hosted checks; keep draft until remaining verification is green. No merge authorized |
 
 ## Quad Concepts
 

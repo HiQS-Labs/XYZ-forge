@@ -13,6 +13,7 @@ effort: 2
 ratings_provisional: true
 goal: >
   Express hotfix (GH-267 lane): Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654)
+roadmap_exempt: true
 ---
 
 # GH-658 — Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654)

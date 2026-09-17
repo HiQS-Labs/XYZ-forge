@@ -56,6 +56,15 @@ diagnostics remain; this result does not prove a fully clean token lifecycle.
 
 ## Publication hold
 
+### 2026-09-17 authorized draft publication
+
+Operator explicitly approved skipping the local pre-push check for disclosed WIP
+publication. Draft PR #669 was published at a19d3fc7 with XYZ_SKIP_PREPUSH=1;
+the entire local gate was skipped, not a single failing stage. No merge authorized.
+The following hold describes the earlier reviewed/tested base; development has
+since advanced. Current-base integration and hosted evidence are separate and
+must not be inferred from the older receipts.
+
 Full validation and gated topic push/PR are not complete. Known required base
 checks are red; no bypass, hosted promotion, PR readiness, merge or deployment
 is claimed. Plan QA and final scoped implementation QA are Approved. Final review

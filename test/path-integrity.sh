@@ -67,6 +67,11 @@ done < <(cd "$ROOT" && git ls-files '*.sh')
 # placeholders (relay-system/<date>/<slug>.md) are skipped by construction.
 ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.gz)'
 
+# GH-660: test/gh660-skill-drift.sh builds a THROWAWAY canonical tree (skills/alpha|beta|gamma/
+# SKILL.md under a mktemp root) to exercise the drift guard; test/gh654-offlane-log.sh's trim test
+# uses the synthetic csv entry test/x.sh. Fixture literals, not references to files in this tree —
+# these names can never exist here (real skills are named per-skill, not demo-greek), so skipping
+# them cannot mask a real path break.
 # Intentional FIXTURE LITERALS — path-like tokens that are test DATA (a file a test creates in a
 # throwaway temp repo at runtime), NOT references to a real file in this tree. Check B must skip them,
 # otherwise it false-positives on a case-sensitive filesystem: e.g. test/swarm-preflight.sh T22a asserts
@@ -128,7 +133,7 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # negative receipt) — fixture literals of the same class, never files in this tree. Likewise
 # test/gh425-gate-provenance-pr.sh's synthetic express receipts name `test/gh592-demo.sh` /
 # `test/gh590-demo.sh` as the suite `command` under a mktemp root.
-fixture_literals=" test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh "
+fixture_literals=" test/x.sh skills/alpha/SKILL.md skills/beta/SKILL.md test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do
