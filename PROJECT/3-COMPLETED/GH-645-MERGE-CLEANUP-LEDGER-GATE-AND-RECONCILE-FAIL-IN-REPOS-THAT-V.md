@@ -37,3 +37,33 @@ goal: >
 - Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
   CHANGELOG entry moved as one motion; consult the .tick express-fired event for the
   run's receipts. Operator-supplied summary: merge-cleanup resolves vendored .xyz PRS tools via the primary and passes --force-local-reconcile only when advertised
+
+## Post-hotfix QA (2026-09-16)
+
+The Python lookup and advertised-flag tests pass, but conflict recovery retained a hardcoded
+`clone/utils/releases-merge-resolve.sh` invocation. A consumer landing clone omits the
+gitignored `.xyz/` tree. The added regression reaches this boundary and executes the selected
+shell tool: the original hotfix refuses with exit 127; the follow-up resolves the primary's
+vendored shell script and preserves `--root <landing clone>`. Surrounding ledger/Git operations
+are mocked in this focused test; the existing Phase B suite exercises real ledger conflicts.
+
+The follow-up is an obvious path fix using the existing resolver, so separate plan QA is
+exempt under start-task's simple-change rule. Final independent Codex QA and the full local
+gate remain required. Reversibility: Easy, confined to tool lookup and its regression.
+
+Rating: 85/80/50/90, persisted through `roadmap rate`; a reproducible recovery blocker,
+neutral appeal, small repair. Recent same-subsystem incidents include #623, #624, #629, and
+#645 (September 2–16); these have different mechanisms, so a shared-root recurrence trend
+is unknown. No operator override was present.
+
+Evidence: `TESTS-RESULTS/2026-09-16+GH-645-qa/provenance.jsonl`.
+Follow-up state: independent Codex code review Approved; full local qualifying gate passed
+on `a47f1078eab493eed30c0b8cf3920818e7c61e8d`; PR awaiting merge. The original express fix remains shipped.
+The full transcript, telemetry and qualification record are retained beside the focused receipts.
+Post-review additions contain only evidence and documentation; runtime code is unchanged.
+
+PR: https://github.com/HiQS-Labs/XYZ-forge/pull/652 (into `development`, awaiting merge).
+After syncing `9e1e9bf4`, the canonical resolver replayed disjoint ledger changes; the
+GH-645 suite (8 tests), real-conflict Phase B suite (30 tests), and ledger check passed
+on `5a4897b7855b61b88a262b44fbfc3aabbfe423de`. See `post-sync-provenance.jsonl` and
+`ledger-resolution.json` beside the full gate evidence. The reviewed runtime fix is unchanged.

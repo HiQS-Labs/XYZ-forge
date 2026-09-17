@@ -12,7 +12,12 @@ description: >-
 Keep actual skill folders in the user's `~/git-pulse-sync/Deployed Skills` (GH-536:
 the collection lives inside the live Git Pulse Sync checkout — the hourly pulse writer
 stages it, and machine-local state is excluded by the collection's own `.gitignore`). Apps discover
-directory symlinks to these stable copies, not disposable task clones. This skill is
+directory symlinks to these stable copies, not disposable task clones. **The collection is a
+projection, not a source:** every skill's canonical source is the repository it was vendored
+from — XYZ-forge `skills/<name>/` for forge-owned skills, another repo for the rest — and the
+collection is the convenient deploy-side copy of them (GH-660). A vendored copy that differs
+from its source is either stale (re-vendor it) or carries an improvement that belongs in a PR
+to that source repo first — never hand-edit a vendored copy to "fix" it. This skill is
 the conversational interface for existing agents/extensions; no extension install
 or background service is required. macOS/Python 3.9+ is the supported alpha; other
 POSIX devices need local verification. Windows locking is not implemented.
@@ -34,8 +39,10 @@ installer-managed landing document. Keep personal notes in a separate file.
 
 ## Adopting the collection on another machine (GH-536)
 
-The collection's canonical home lives inside a checkout of the private Git Sync Pulse
-remote, carried by that machine's hourly pulse writer. A second machine does NOT
+The collection's distribution home lives inside a checkout of the private Git Sync Pulse
+remote, carried by that machine's hourly pulse writer (the *canonical* home of each skill is
+the repo it was vendored from — XYZ-forge `skills/` for forge-owned skills; the pulse checkout
+is transport, not source). A second machine does NOT
 bootstrap state inside its pulse checkout (it is a shared writer's tree — dirtying it
 wedges the writer, and machine state must never be pushed). Each machine keeps its own
 collection and imports from its pulse checkout as the source:
@@ -102,10 +109,15 @@ python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply targets --id ch
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply targets --id chosen-app --disable
 python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --status
 python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --apply
+python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --status --canonical /path/to/XYZ-forge   # drift report vs canonical
+python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --apply --allow-drift                    # loud, disclosed exception
 ```
 
 Both scripts accept `--root /chosen/collection` for redirected Documents or another
-explicit collection. Home/path values are computed locally, never copied from a
+explicit collection. The default root is `~/Documents/Deployed Skills` (or `XYZ_SKILLS_ROOT`)
+even when you invoke the script through the pulse checkout's `intake.py`/`sync.py` links — pass
+`--root "$HOME/git-pulse-sync/Deployed Skills"` (or export `XYZ_SKILLS_ROOT`) to operate on that
+collection. Home/path values are computed locally, never copied from a
 different user's configuration. Source intake is restricted to local Git repos;
 dirty and unmerged working folders are allowed and recorded with commit and digest.
 External, absolute, dangling and cyclic payload links are refused. Copies retain
@@ -119,6 +131,28 @@ adopted by `catalog`; unexplained missing folders stop sync until explicit `remo
 acknowledges them. The manager itself is protected from removal to preserve recovery.
 Disabling/removing a target does not erase its ownership receipts: sync withdraws
 its still-matching links. Foreign folders and retargeted links remain untouched.
+
+## Drift guard: deploying a drifted skill fails loudly (GH-660)
+
+`sync.py` runs XYZ-forge's own checker (`utils/py/skill_drift_check.py`, ingested as
+`--json`) on every normal reconciliation — preview, `--status` and `--apply` (`--retire-trinity` only withdraws the retired skill and runs no deploy) — comparing each vendored `SKILL.md`
+with the forge's canonical `skills/<name>/SKILL.md`. Only names that exist in the forge's
+`skills/` are judged; collection-only skills (e.g. `buffer-doctor`, `hiqs-register`) are
+reported as `unrecognized` and never fail.
+
+- The forge root resolves in this order: `--canonical FORGE_ROOT`, `XYZ_FORGE_ROOT`,
+  a top-level `"canonical"` key in `targets.json` (machine-local, editable — the
+  recommended place), then the repository `skills-army-hq` itself was vendored from.
+  An explicit setting that lacks the checker or `skills/` is an error; no setting at all
+  is a `WARN drift check skipped`, never a silent pass.
+- Preview / `--status`: every drifted forge-owned skill is a `WARN DRIFTED <name>` line on
+  stderr citing the vendored and canonical paths and the re-vendor command; the JSON result
+  carries `warnings` and a `drift` block (`ok`, `drifted`, `unrecognized`, `origin`).
+- `--apply` with an enabled target and any drifted forge-owned skill is **REFUSED** (exit 2)
+  naming the skills and the canonical `skills/` path. Remedy is always the same:
+  `intake.py --apply update <name> --source <forge>/skills/<name>`, then sync again.
+  `--allow-drift` deploys anyway, loudly, and records the drift in the result — a
+  disclosed exception for a WIP branch, never a way to silence the checker.
 
 ## Runtime dependencies are separate
 

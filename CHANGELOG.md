@@ -15,6 +15,11 @@ full gate passes (390/390, one suite passed on isolated retry) and final review 
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-16 — GH-645 QA follow-up
+
+- Ledger conflict recovery now finds its shell resolver in a consumer repo's vendored XYZ tools, including the primary-checkout fallback used by disposable landing clones.
+- Added a regression that reproduces the missing-tool failure and verifies the resolver runs against the landing clone.
+
 ## 2026-09-15
 
 - **GH-624 / GH-629: merge-cleanup Phase 5 lands more than one ledger-touching PR per run.** The `pr_merged` work emit moved from before the fast-forward to after reconciliation; Phase 5 now runs merge → fast-forward → reconcile → emit → commit → push and asserts the primary is clean at `origin/<integration>` before the next PR (`commit_and_push_phase5_writes`). Reconciliation first looks for the hosted `wave-reconcile.yml` run for the exact merged head (`gh run list --commit`), polls it to completion (`MERGE_CLEANUP_HOSTED_WAIT_S`, `MERGE_CLEANUP_HOSTED_POLL_S`, `MERGE_CLEANUP_HOSTED_GRACE_S`), fast-forwards onto its commit on success, and runs the local `wave_reconcile.py` only when the hosted run is absent or completed red — never while it is queued or in progress. Tests: a two-PR `Closes #N` landing in `test/gh534_phase_c_tests.py` (red under the old order), a hosted-wait test against a fake `gh run list`, and an AST order pin in `test/gh549-work-events.sh`. Landed by marathon `marathon/10days-2026-09-15` (builder codex, reviewer agy).
