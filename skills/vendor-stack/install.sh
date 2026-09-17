@@ -53,6 +53,6 @@ if [ -x "$SELF_DIR/find-pdda.sh" ]; then
     echo "vendor-stack: PDDA repo resolves → $P"
   else
     echo "vendor-stack: note — PDDA repo not resolved (XYZ-only until set)." >&2
-    echo "  Set PDDA_REPO=/path/to/your/pdda clone to enable the PDDA step." >&2
+    echo "  Set PDDA_REPO=/path/to/XYZ-forge to enable the PDDA step." >&2
   fi
 fi

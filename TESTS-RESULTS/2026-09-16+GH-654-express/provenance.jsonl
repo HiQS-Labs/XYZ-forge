@@ -1,0 +1,1 @@
+{"timestamp": "2026-09-16T22:09:00.961Z", "commit": "8ee53a1edeff7d8ac963d85dd8882edaf5ca8317", "issue": 654, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh654-offlane-log.sh", "rc": 0, "result": "pass", "environment": "express driver, direct development push"}

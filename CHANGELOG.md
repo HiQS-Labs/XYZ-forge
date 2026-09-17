@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-16 — PDDA canonical migration (GH-649)
+
+Forge now carries PDDA's installer, manifest, sync tooling and generic startup templates.
+Existing Forge runtime adaptations and local checks remain; the upstream changelog parser
+fix is ported. Onboarding resolves Forge without a sibling PDDA clone. Sync preserves
+unbaselined/local changes unless explicitly adopted with a backup. Historical PDDA PR #61
+and Apache notices are retained; no standalone publisher is introduced. Archive readiness
+is tracked separately in docs/PDDA-MIGRATION.md and GH-649. Reversibility: Costly —
+retain the previous source and consumer payload/registry/state snapshots. Focused
+install, upgrade, mode, divergence, backup/restore and existing core tests pass;
+full gate passes (390/390, one suite passed on isolated retry) and final review is approved. Evidence: TESTS-RESULTS/2026-09-16+GH-649/.
+
+
 All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-09-16 — GH-645 QA follow-up
@@ -158,6 +171,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-16
 
 ### Fixed
+- **GH-663: QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission.** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-660: Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git-pulse-sync) instead of re-vendoring from canonical skills/express — deployed copy missing GH-592 resume recipe.** (express hotfix, GH-267 lane; suite test/gh660-skill-drift.sh registered as the landing gate.)
+- **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-659: rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
+- **GH-654: Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-645: merge-cleanup: ledger gate and reconcile fail in repos that vendor PRS tools under gitignored .xyz/.** (express hotfix, GH-267 lane; suite test/gh645-merge-cleanup-xyz-tools.sh registered as the landing gate.)
 
 ## [Unreleased] - 2026-09-13
