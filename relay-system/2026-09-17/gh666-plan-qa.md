@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -84,5 +84,23 @@ Only append a cited verdict here. Claim the env-pinned token; on PASS set STATUS
 Approved and tick DONE while owned (do not release Producer). Otherwise hand back
 findings within cap3. No source edits, Git commands or heavy tests.
 Handing off to Reviewer — review the narrow plan and give the cited verdict.
+
+### Reviewer — codex — Round 1
+
+VERDICT: FAIL
+Basis: The narrow stdlib design is justified, but executable-resolution compatibility and the caller-preservation oracle need explicit decisions before implementation. Graded against the Producer's four questions and the plan's Phase 1 QA checklist; Setup's Definition of Done remains a placeholder.
+swept file: yes
+
+Read the entire canonical PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md, its entire recon, and utils/py/agy-turn.py through EOF. The Setup artifact .relay-artifacts/GH-666-AGY-MODEL-PROBE.md is absent; the canonical plan and the env-pinned parent copy have identical text. Read-only source review only: no programs/tests, Git commands, artifact edits, or runtime reproduction this turn. Historical reproduction/search results remain producer-reported evidence.
+
+- [Should] S1 — Preserve or explicitly bound executable resolution. Plan lines 67–69 promise retained behavior while adding cwd; utils/py/agy-turn.py:259 currently passes agy_bin directly, and :333 accepts AGY_BIN unchanged. A relative path such as ./tools/agy resolves against the new temporary directory after this change; bare commands with relative PATH entries have the same risk. Cheapest fix: state supported executable forms and add validator cases for absolute and PATH-resolved binaries; either preserve caller-relative resolution before changing cwd with stdlib and a focused test, or explicitly document why these forms are unsupported. The existing auth probe already has this limitation (utils/py/agy-turn.py:142–143), so do not claim the entire shim previously supported relative paths or broaden this into a shared resolver redesign.
+- [Should] S2 — Make preservation detect the actual write. Recon lines 42–43 report "caller marker exists, porcelain status empty → untracked marker"; plan lines 64–65 only specify "HEAD/tree unchanged." A tracked-tree/HEAD check can pass while the defect persists, and ordinary porcelain normally includes untracked files, so the recon needs the exact exclusion/ignore explanation. Cheapest fix: explicitly require the known marker absent in the caller (including an ignored/untracked marker case), a pre-existing caller sentinel byte-identical, and invocation evidence proving the stub wrote the marker in its recorded cwd. Require these exact assertions to fail on base and cwd ablation and land their red evidence at the existing line-85 destination. No generalized filesystem scanner is needed.
+- [Pass] The unsafe call precedes containment: utils/py/agy-turn.py:351–360 invokes auth/model validation before constructing RTL; :259 has no cwd. Plan lines 41–49 price the bet, rollback, refusal and cleanup reporting while excluding process-lifecycle and absolute-write sandbox scope; recon lines 55–56 explicitly exclude detached children. Keep this scope.
+- [Pass] Plan lines 61, 70–75 cap independent reviews, require full-clone gates, hold readiness on failures, target development and exclude unrelated repairs/merge. Persisted rating is present in releases.sql:634 as 90/85/50/85; plan lines 53–56 distinguish one observed defect from an unknown trend. Keep these limits; this is plan adequacy, not gate or historical-search attestation.
+- [Nit] Repair the relay contract for the next turn: Setup names a missing seeded artifact and leaves DoD as "<fill in the acceptance criteria the Reviewer grades against>". Point at the canonical plan actually reviewed (or seed the intended snapshot through the harness) and name its Phase 1 checklist as DoD. No second plan is needed.
+
+Pre-existing sweep: the model-probe inherited-CWD defect is present at :259; existing auth cleanup silently ignores removal failures at utils/py/agy-turn.py:233–235. The latter is outside this validator change; do not copy that silent cleanup into the new implementation (plan lines 48–49 already prohibit it). No additional pre-existing defect requiring expansion of this narrow plan was identified in the full source sweep.
+
+Handing off to Producer — address S1/S2 and the relay-contract nit, log each disposition, then reopen the next review round. No approval or implementation readiness claimed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
