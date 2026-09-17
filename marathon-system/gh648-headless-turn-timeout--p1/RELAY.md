@@ -111,3 +111,11 @@ I have reviewed the entire artifact (`utils/py/turn_diagnostics.py`), the test s
 The test controls robustly capture expected behaviors, and properly assert on deliberate mutations (expecting `AssertionError` specifically, bypassing masking from import errors). I successfully ran the focused test locally under `.relay-scratch/` and verified that 63 assertions passed successfully. 
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T05:43:24Z
+task: MARATHON-P1-TURN-R5
+reviewer: agy
+status: Approved
+reviewed-head: 7e931a9b8c144b6b9491286a04d3379a718b96bb
+added-range: 9044+914
+added-sha256: 9967b8df036435536cf961db171c00610a78b4b52d0f6c28e924f833d6e9f1a0
