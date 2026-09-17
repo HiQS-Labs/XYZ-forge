@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-17 — Retire the forge's copy of the daily skill (GH-672 follow-up)
+
+`skills/daily` is removed. The skill reads rebalanceOS internals directly and rebalanceOS is its
+sole owning repository under the one-owner-per-skill SOP landed in GH-672. The forge copy had
+forked from it: created on 2026-09-14 from a snapshot that predated rebalanceOS's 2026-09-13
+ledger fix, it silently reverted the close-the-loop ledger sync, and that reverted copy is what
+Pulse deployed. The merged version lands in rebalanceOS PR #234 and publishes to Pulse from
+there. Nothing in the forge referenced this copy: it was not in the mini projection, no test
+named it, and the drift checker now reports `daily` as collection-only (unrecognized) rather
+than judging it against a forge path. Reversibility: Easy — ordinary revert.
+
 ## 2026-09-17 — Agy model-probe CWD isolation (GH-666)
 
 - Model validation now resolves its executable in caller CWD, then runs in an owned
