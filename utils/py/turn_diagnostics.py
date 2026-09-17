@@ -220,28 +220,38 @@ def _parse_ps_time(value: str) -> float:
     return days * 86400 + h * 3600 + m * 60 + s
 
 
-def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
-    """Total CPU seconds and process count for root_pid's descendants.
-
-    Excludes root_pid itself — the shim's own CPU is not the agent's. Returns
-    (0.0, 0) if the ps probe fails, which classify() treats as "no signal"
-    rather than "idle".
-    """
+def _descendant_cpu_by_pid(root_pid: int) -> dict[int, float]:
+    """Latest cumulative CPU seconds for each visible descendant."""
     out = _run(["ps", "-axo", "pid=,ppid=,time="])
     if not out:
-        return (0.0, 0)
+        return {}
     cpu: dict[int, float] = {}
     for line in out.splitlines():
         fields = line.split(None, 2)
         if len(fields) < 3:
             continue
         try:
-            pid, ppid = int(fields[0]), int(fields[1])
+            pid = int(fields[0])
         except ValueError:
             continue
         cpu[pid] = _parse_ps_time(fields[2])
-    descendants = _tree_pids(root_pid, out)[1:]
-    return (sum(cpu.get(pid, 0.0) for pid in descendants), len(descendants))
+    return {pid: cpu.get(pid, 0.0) for pid in _tree_pids(root_pid, out)[1:]}
+
+
+def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
+    """Total CPU seconds and process count for root_pid's live descendants.
+
+    Excludes root_pid itself — the shim's own CPU is not the agent's. Returns
+    (0.0, 0) if the ps probe fails, which classify() treats as "no signal"
+    rather than "idle".
+    """
+    cpu = _descendant_cpu_by_pid(root_pid)
+    return (sum(cpu.values()), len(cpu))
+
+
+# Existing suites monkeypatch the stable two-tuple probe above. Keep that seam
+# while the production sampler uses the richer per-PID snapshot.
+_ORIGINAL_DESCENDANT_CPU_SECONDS = _descendant_cpu_seconds
 
 
 def _security_dialog_present() -> bool:
@@ -351,6 +361,9 @@ class TurnDiagnostics:
         self.security_dialog_seen = False
         self._dialog_streak = 0
         self.samples: list[tuple[float, float, int]] = []   # (wall, cpu_seconds, nproc)
+        # A child disappears from ps when it exits. Retain each PID's peak so a
+        # workload made of short-lived children cannot erase CPU already spent.
+        self._pid_cpu_peaks: dict[int, float] = {}
         self.mtime_start = 0.0
         self.mtime_last = 0.0
         # GH-492: monotonic timestamp of the last sample that showed the tree doing
@@ -364,7 +377,15 @@ class TurnDiagnostics:
         self._network_state_observed: str | None = None
 
     def _sample(self) -> None:
-        cpu, nproc = _descendant_cpu_seconds(self.root_pid)
+        if _descendant_cpu_seconds is _ORIGINAL_DESCENDANT_CPU_SECONDS:
+            current_cpu = _descendant_cpu_by_pid(self.root_pid)
+            for pid, seconds in current_cpu.items():
+                self._pid_cpu_peaks[pid] = max(self._pid_cpu_peaks.get(pid, 0.0), seconds)
+            cpu, nproc = sum(self._pid_cpu_peaks.values()), len(current_cpu)
+        else:
+            # Backward-compatible test/probe seam: callers have long replaced
+            # this helper with a two-tuple stub.
+            cpu, nproc = _descendant_cpu_seconds(self.root_pid)
         now = time.monotonic()
         prev_cpu = self.samples[-1][1] if self.samples else None
         self.samples.append((now, cpu, nproc))
@@ -504,6 +525,11 @@ class TurnDiagnostics:
         # A missing cached observation means live sampling never established a
         # safe idle window, so attribution must remain unclassified.
         network = self._network_state_observed
+        if network is None:
+            return (
+                REASON_UNCLASSIFIED,
+                f"live sampling never established a safe idle window for the network probe [{detail}]",
+            )
         if network == "unclassified":
             return (
                 REASON_UNCLASSIFIED,

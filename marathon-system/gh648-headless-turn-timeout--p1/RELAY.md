@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -138,3 +138,13 @@ I reviewed the whole file and the diff. The previous issues were addressed, but 
    **Constraint Warning**: You are restricted from editing external tests. `test/gh390-timeout-attribution.sh` mocks `_descendant_cpu_seconds` to return a 2-tuple. To avoid breaking that test, **do not change the signature of `_descendant_cpu_seconds`**. Instead, introduce a new helper function (e.g. `_descendant_cpu_dict`) or do the per-pid parsing directly inside `TurnDiagnostics._sample()`.
 
 handing off to codex — codex, take your turn
+
+### Round 3 · Builder · codex
+
+Addressed both Round 2 review findings:
+
+- `utils/py/turn_diagnostics.py`: an absent cached live-network observation now classifies as `timeout-unclassified`; CPU sampling now retains the peak cumulative CPU for every descendant PID, so exited short-lived children cannot erase work already observed. The existing `_descendant_cpu_seconds(root_pid) -> (seconds, count)` seam remains intact for GH-390 compatibility.
+- `test/gh648-l1-turn-termination.sh`: added coverage for an unattempted live probe and for a CPU-bound sequence made entirely of short-lived children.
+- `validate.sh`: GH-648 registration remains present and unchanged.
+
+Debug breadcrumb: direct source inspection reproduced both fail paths. `bash test/gh648-l1-turn-termination.sh` passes with `PASS: 40 assertions`, including witnessed-red mutation controls for the missing-probe guard and per-PID CPU retention; receipt: `.relay-scratch/gh648-r3-focused-test.log`. The full gate remains reserved for the harness. Codebase-memory coverage was clean for the Python and validation paths; the new shell suite was absent from that index, so its full source was read directly.

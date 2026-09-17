@@ -62,6 +62,9 @@ check("cause remains unknown" in detail, "idle detail stays honest")
 reason, detail = observed_idle("unclassified").classify()
 check(reason == td.REASON_UNCLASSIFIED, "probe failure degrades to unclassified")
 check("probe failed" in detail, "probe failure is observable")
+reason, detail = idle_diag().classify()
+check(reason == td.REASON_UNCLASSIFIED, "unattempted probe remains unclassified")
+check("never established" in detail, "missing live observation is observable")
 
 records = [td.termination_record(k, "r", "d", observed_at=123.0) for k in
            (td.TERMINATION_IDLE_KILL, td.TERMINATION_WALL_CAP, td.TERMINATION_CHILD_ORPHAN)]
@@ -84,6 +87,7 @@ check(decoded["termination"] == "wall-cap", "wall cap differs")
 probe_calls = []
 td._network_state = lambda pid: probe_calls.append(pid) or "established"
 d = td.TurnDiagnostics(root_pid=4242)
+real_cpu_probe = td._descendant_cpu_seconds
 td._descendant_cpu_seconds = lambda _pid: (0.0, 1)
 td._security_dialog_present = lambda: False
 td._newest_mtime = lambda _root: 0.0
@@ -92,6 +96,18 @@ td.time.monotonic = lambda: next(times)
 d._sample(); d._sample(); d._sample(); d._sample()
 check(probe_calls == [4242], "idle network probe runs once while tree is live")
 check(d.classify()[0] == td.REASON_IDLE_IN_FLIGHT, "cached live probe drives classification")
+td._descendant_cpu_seconds = real_cpu_probe
+
+# CPU spent by exited children remains in the cumulative sampled total.
+snapshots = iter(({11: 0.0}, {11: 1.0}, {22: 1.0}, {33: 1.0}))
+td._descendant_cpu_by_pid = lambda _pid: next(snapshots)
+d = td.TurnDiagnostics(root_pid=4242)
+times = iter((0.0, 1.0, 2.0, 3.0))
+td.time.monotonic = lambda: next(times)
+d._sample(); d._sample(); d._sample(); d._sample()
+check([sample[1] for sample in d.samples] == [0.0, 1.0, 2.0, 3.0],
+      "exited descendants retain their peak CPU")
+check(d.cpu_ratio() == 1.0, "short-lived CPU-bound children remain CPU-bound")
 
 # A startup CPU burst followed by a long hang is idle overall, not CPU-bound.
 d = observed_idle("none")
@@ -142,5 +158,40 @@ assert d.cpu_ratio() == .01
 ratio_red = subprocess.run([sys.executable, "-c", ratio_oracle, str(ratio_mutant)],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 check(ratio_red.returncode != 0, "CPU-window mutation turns oracle red")
+
+missing_probe_mutated = source.replace('if network is None:', 'if False:', 1)
+check(missing_probe_mutated != source, "mutation removed missing-probe guard")
+missing_probe_mutant = pathlib.Path(os.environ["GH648_WORK"]) / "turn_diagnostics_missing_probe_mutant.py"
+missing_probe_mutant.write_text(missing_probe_mutated)
+missing_probe_oracle = '''import importlib.util,sys
+s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+d=m.TurnDiagnostics(root_pid=1);d.samples=[(1.,0.,1),(2.,0.,1),(3.,0.,1)]
+assert d.classify()[0] == m.REASON_UNCLASSIFIED
+'''
+missing_probe_red = subprocess.run(
+    [sys.executable, "-c", missing_probe_oracle, str(missing_probe_mutant)],
+    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+)
+check(missing_probe_red.returncode != 0, "missing-probe mutation turns oracle red")
+
+pid_peak_mutated = source.replace(
+    'self._pid_cpu_peaks[pid] = max(self._pid_cpu_peaks.get(pid, 0.0), seconds)',
+    'self._pid_cpu_peaks = {pid: seconds}', 1,
+)
+check(pid_peak_mutated != source, "mutation removed per-PID CPU retention")
+pid_peak_mutant = pathlib.Path(os.environ["GH648_WORK"]) / "turn_diagnostics_pid_peak_mutant.py"
+pid_peak_mutant.write_text(pid_peak_mutated)
+pid_peak_oracle = '''import importlib.util,sys
+s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+snapshots=iter(({11:0.},{11:1.},{22:1.},{33:1.}));m._descendant_cpu_by_pid=lambda _pid:next(snapshots)
+m._security_dialog_present=lambda:False;m._newest_mtime=lambda _root:0.;times=iter((0.,1.,2.,3.));m.time.monotonic=lambda:next(times)
+d=m.TurnDiagnostics(root_pid=1);d._sample();d._sample();d._sample();d._sample()
+assert [x[1] for x in d.samples] == [0.,1.,2.,3.]
+'''
+pid_peak_red = subprocess.run(
+    [sys.executable, "-c", pid_peak_oracle, str(pid_peak_mutant)],
+    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+)
+check(pid_peak_red.returncode != 0, "per-PID retention mutation turns oracle red")
 print(f"PASS: {passed} assertions")
 PY
