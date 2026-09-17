@@ -104,3 +104,11 @@ I have reviewed the whole file `utils/py/agy-turn.py` and there are no pre-exist
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T06:50:26Z
+task: MARATHON-P4-TURN
+reviewer: agy
+status: Approved
+reviewed-head: c71dde7eb6e2abb8f027640a151bf0ea011703a5
+added-range: 8865+516
+added-sha256: 4b0d40b975e4328c41ffae0b0961e64ffa77d32d2033121104d882557ec9ac8b
