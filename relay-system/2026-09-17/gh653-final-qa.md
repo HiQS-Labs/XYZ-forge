@@ -405,4 +405,12 @@ Review limits: no Git commands, base diff extraction, test execution or external
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-17T18:14:35Z
+task: RELAY-GH653-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: b703148fd3b3263241889a5cd814a02d4aab76c6
+added-range: 26419+3965
+added-sha256: 8998537764010d4b530cf7ff5f76c7e3fafb4ab00b4369ef19ca93523f8fde20
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
