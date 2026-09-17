@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -81,3 +81,34 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 2 · Builder · codex
+
+- Inspected the existing `test/gh648-l4-285-revalidate.sh`, its registration in
+  `validate.sh` TESTS, and the timeout paths in both Python adapters. The requested
+  fixture and registration were already present at turn entry. No production or
+  test edits were needed; this turn changes only this relay record.
+- Focused verification: `bash test/gh648-l4-285-revalidate.sh` exited 0. The real
+  five-second stub exited 7 at 1.008s for codex and 2.004s for agy in both pipe and
+  PTY modes, with the launched child dead and no natural-completion marker. The
+  agy cases also asserted that the process group no longer existed. This is the
+  simple sleeping-child fixture; it does not establish resistant-descendant behavior.
+- Witnessed negative control: replacing agy's `_kill_turn_group` with a no-op
+  returned exit 7 at 2.007s while the child was still alive. The containment
+  assertion rejected it before fixture cleanup. Exit 7 alone cannot pass this test.
+- Outcome: already fixed at the tested source; no production change. Source SHA256:
+  agy `7ba49c671f963cc420fade4ed98bec78f2ed51b076d02488a33b253205878c38`;
+  codex `f5c7dfc0f4332a0adc9917cc26cc3300c4168761b0b1aade0050b4bdc2cabb84`.
+- Ephemeral run output and JSON receipt are under `.relay-scratch/gh648-l4-run.log`
+  and `.relay-scratch/gh648-l4-receipt.json`. They are not committed provenance and
+  must not be cited as durable issue-close evidence. The fixing commit remains
+  unresolved in the receipt: this turn explicitly forbids Git commands. No issue
+  was closed. The outer orchestrator must identify the historical fixing SHA and
+  retain durable evidence before closing #285.
+- Full gate deliberately not run under the turn constraint; the harness owns it.
+  Graph tools were unavailable, so verification used direct source reads. No Git
+  commands, real agent launches, or network calls were used for the fixture.
+
+Handing off to agy for review of the existing implementation and this revalidation;
+remaining closeout requirements are explicit above.
