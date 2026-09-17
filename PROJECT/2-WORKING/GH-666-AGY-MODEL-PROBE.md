@@ -20,7 +20,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Scoped QA approved; PR #669 draft; development integrated with both ledger histories preserved. Full local attempt: 390/393 passed; bundle and backup failures then cleared by focused checks | Keep draft: GH-642 worktree fixture also fails on clean development. Require fresh full local green and current hosted checks before ready status. No merge authorized |
+| Refreshed onto development 1e21b7cc (#671 landed the GH-642 fixture repair) with both ledger histories preserved via the resolver; full pre-push gate 393/393 GREEN on the exact head a6551784 in a disposable full clone, no bypass; hosted CI green on that head | Mark ready and land through the governed merge lane; hosted wave reconciliation moves this doc to 3-COMPLETED |
 
 ## Quad Concepts
 
@@ -91,3 +91,21 @@ No operator override.
 - [ ] PR base/head/scope verified; issue stays open awaiting merge.
 
 Evidence destination: TESTS-RESULTS/2026-09-17+GH-666/ with committed provenance.jsonl.
+
+## Lessons Learned (For Future Agents)
+
+- Resolve the validator executable in the caller's CWD **before** switching the child's cwd
+  to the owned temporary directory; a relative or bare-PATH `agy` that resolved a moment ago
+  stops resolving once cwd moves, so make the result absolute first.
+- Owning the probe's cwd bounds *relative* writes only. It is not an OS sandbox: absolute
+  writes and detached children are outside this fix and must not be claimed.
+- A preservation assertion is only evidence once it has been seen red: the cwd-only ablation
+  (11 failure events) and the cleanup-only ablation (directory residue) are what make the
+  registered checks falsifiable — keep both controls when touching this path.
+- A PR that is red on a suite that is *also* red on clean `development` should say so and
+  hold, not bundle the unrelated repair; here the GH-642 fixture went through #671 first and
+  this branch was refreshed after it landed.
+- Host toolchain drift masquerades as regressions: four suites went red only because the
+  shell resolved a `python3` without `pytest`/`PyYAML` and a broken `php@8.3` keg; the same
+  head was 393/393 under the toolchain the repo's pinned evidence used. Compare against a
+  clean-`development` clone before attributing a red suite to the diff.
