@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -85,5 +85,20 @@ Basis: The Round 1 fail path reproduced in a new caller-level focused test befor
 - Focused evidence this round: corrected 41-case Python suite passes; `wave_terminal` red control fails as expected. The appearance and direct-closure mutants remain retained prior evidence and will be re-run with the focused wrapper before any qualification. No final gate, live migration, connector enablement, label write, deployment, push, or PR occurred.
 
 Handing off to codex-gh646-review2 — review the wave terminal-authority repair and the now-complete focused scope inventory; if no concrete in-scope defect remains, issue an attested approval or explicitly escalate at this two-round cap. Go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · codex-gh646-review2 · Round 2 · 2026-09-17
+
+VERDICT: PASS
+Basis: The Round 1 terminal-authority blocker is resolved in both direct wave closeout branches. No additional concrete reachable defect found in the authorized changed-function-and-direct-callers scope, including inspected pre-existing caller code. This approves source review only; exact-turn Python-driver attestation and final disposable-clone qualification remain required.
+swept file: no
+
+- [Pass] **Confirmed closure now gates terminal writes regardless of PR disposition.** `utils/py/wave_reconcile.py:303–305` permits only CLOSED or the explicit force override. The active-doc branch at `:2049–2050` preserves OPEN/missing/invalid state before either terminal writer; the no-doc branch at `:2075–2091` applies the same predicate. The merged-open evidence-only branch at `:2043–2048` remains separate. Round 1 blocker: closed; no further runtime fix requested.
+- [Pass] **The new regression exercises the actual declined-PR caller.** `test/gh646_status_label.py:900` supplies a CLOSED, unmerged PR linked to the accepted issue, tests OPEN/absent/UNKNOWN issue evidence, asserts neither terminal writer is called, and checks row/event preservation. The `wave_terminal` mutation at `:1094–1096` restores permissive authority and selects that test. These are source observations; the Producer's reported 41-case pass and witnessed red remain Producer evidence, not independent execution by this Reviewer. No test change required for approval.
+- [Pass] **Adjacent source seams retain the intended authority boundaries.** Accepted admission checks schema, owned identity and native OPEN state and rechecks the row inside the writer transaction (`utils/py/releases_app.py:3928–3940`, `:3981–3993`); label establishment remains restricted to accepted admission (`:1634–1647`). Direct cleanup uses the native issue-versus-PR/URL/number guard before closure reasons (`:4072–4116`, `:5401–5423`). Exact-row Express admission and wave routing remain qualified (`utils/py/express.py:635–661`, `:716–734`; `utils/py/wave_reconcile.py:1250–1282`). No additional defect found in these inspected functions/callers; no change requested.
+- [Pass] **Compatibility, projection and replay remain bounded.** Nullable constrained migration, dump field and old-dump NULL restoration are explicit (`utils/py/releases_app.py:1016–1020`, `:1260–1262`, `:6183–6201`). The complete labels adapter requires opt-in qualified identity, writes only the literal label and checks unrelated-label preservation (`utils/py/work_connectors/github_labels.py:62–90`, `:98–118`). Parent failure persistence retains the cursor, and label-specific current-state payloads do not replace raw board events (`utils/py/work_connectors/__init__.py:132–176`, `:304–338`, `:460–476`). The focused wrapper remains registered and mapped (`validate.sh:249`; `utils/ci-route.sh:26`, `:38`). No additional in-scope defect found; no change requested.
+- [Nit] **Stale unknown-state documentation.** `utils/py/wave_reconcile.py:273–275` still says “None means PROMOTE as before”; `:282` repeats that claim. It now contradicts the confirmed-close caller policy. Concrete follow-up: describe None as unknown evidence preserved by ordinary terminal closeout, with explicit force as the override. This comment-only correction is not a condition of approval.
+- [Should] **Evidence boundaries remain explicit.** This is the operator-authorized focused sweep, not a whole-file sweep of large runtime files. Fully read the labels adapter and focused wrapper; read the repaired wave caller/predicate and regression/mutant, and re-inspected the writer, schema/dump/restore, direct cleanup, identity, connector batching/persistence/dispatch, Express admission and routing sections. Inspected task scope and selected compatibility assertions in the listed shell tests. Unreviewed portions of large files, the binary `releases.db`, complete ancillary shell-test files, the three unnamed skill docs, unspecified receipt contents and historical capped relay remain unknown; no whole-23-file or independently executed evidence claim is made. Those unknowns are outside this focused runtime verdict and must not be presented as qualified evidence. No source/artifact execution, test/gate execution, git command or edit outside this relay file occurred. Producer must obtain exact-turn driver attestation and the final disposable-clone qualifying gate before claiming readiness.
+
+Relay closed (Approved), no further review turn needed. Handing off to terra-gh646-writer — obtain Python-driver approval attestation, then complete the separately required disposable-clone qualification and inspect its result before publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
