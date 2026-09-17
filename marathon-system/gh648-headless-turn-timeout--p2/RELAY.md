@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
@@ -93,3 +93,17 @@ Focused verification: `bash test/gh648-l2-token-aftermath.sh` passed all six cas
 Scope is the Commandcode adapter's post-timeout behavior; shared enforcement and token code remain unchanged. Rollback is the scoped adapter/test change, with peer-handoff regression detectable by the negative control. Graph tools were unavailable; source fallback traced `claim_task_or_exit`, its atexit cleanup, `RelayTurnLib._run_rtl`, and the shared Bash handoff branch. The suite uses a real short-cap child and real tick operations, with git/diagnostic boundaries stubbed. No git commands or full gate were run; the harness owns final gate and commit. Review and full-gate readiness remain outstanding.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+I conducted a full file sweep of `utils/py/commandcode-turn.py` looking for pre-existing defects. I found no major defects, only two minor things:
+- `commandcode-turn.py:62`: `int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))` will crash with a `ValueError` if the user exports an empty string (`export RELAY_TURN_TIMEOUT_S=""`). This is a pre-existing fragility but not a blocking issue for this phase.
+- `commandcode-turn.py:166`: `print(f"commandcode-turn: telemetry not recorded: %r" % (_telemetry_exc,), file=sys.stderr)` mixes `f""` and `%` formatting, though it functions fine.
+
+I also verified the changes codex made to `utils/py/commandcode-turn.py` and `test/gh648-l2-token-aftermath.sh`. The regression suite passed all 6 cases on execution. The fix is well isolated, handles empty target correctly after a timeout, and `validate.sh` is already properly registered. 
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
