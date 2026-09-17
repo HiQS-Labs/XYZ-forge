@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -153,5 +153,21 @@ Only adjudicate this clarification against the prior source-grounded plan;
 do not repeat the entire unchanged source sweep or reopen settled S1.
 PASS -> DONE while owned; unresolved at this cap -> Escalated, no implementation.
 Handing off to Reviewer — give the final cited plan verdict.
+
+### Reviewer — codex — Round 3
+
+VERDICT: PASS
+Basis: The canonical recon clarification resolves the final S2 finding. Phase 1 is grounded, bounded, surgical and falsifiable; approval is for the plan only.
+swept file: yes
+
+Read the whole canonical plan and recon and utils/py/agy-turn.py through EOF. Read-only review; no runtime reproduction, tests, Git commands or artifact edits. Baseline execution and historical searches remain Producer-reported evidence.
+
+- [Pass] S2 residual resolved: PROJECT/2-WORKING/recon-agy-model-probe.md:48–51 explicitly separates BEFORE empty from AFTER `?? probe-write.txt` and identifies the ignored-marker case as a new control. This removes the contradictory clean-after-call reading. Keep this wording and retain the actual baseline output with implementation provenance.
+- [Pass] The preservation oracle and executable decision remain explicit at PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md:62–77: nonempty invocation records proving a write, explicit marker absence including ignored files, sentinel bytes, removed temporary CWD, caller-CWD executable resolution and cwd-only ablation. Implement these focused requirements as written; witnessed base/ablation failures remain required by :87.
+- [Pass] Scope and readiness are bounded at PROJECT/2-WORKING/GH-666-AGY-MODEL-PROBE.md:41–49,78–93: rollback/tripwire, reported cleanup failures, separate full-clone gates, committed provenance, final independent QA and a development PR held on failures. “Merge is not authorized.” Keep those limits; this approval supplies no implementation, gate, publication or recurrence attestation.
+
+Pre-existing sweep: the inherited model-probe CWD at utils/py/agy-turn.py:259 remains the target defect, before RTL initialization at :360 and snapshot at :404. Auth cleanup at :233–235 still suppresses cleanup errors; the plan explicitly avoids copying that behavior. No additional pre-existing defect requiring expansion of this narrow plan was identified.
+
+Relay closed (Approved), no further review turn needed. Producer may proceed with the approved plan; implementation verification and final QA remain outstanding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
