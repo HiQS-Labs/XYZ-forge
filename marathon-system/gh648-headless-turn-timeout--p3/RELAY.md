@@ -1,5 +1,5 @@
 # Marathon Phase p3
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -97,3 +97,19 @@ Verification: `bash test/gh648-l3-consult-cap.sh` passed after restoration. Cove
 Graph tools were unavailable; bounded direct source inspection covered consult's launch/wait/result paths and L1 `TurnDiagnostics.classify`. No git commands run, no frozen Bash twin edits.
 
 Handing off to agy for review.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The changes successfully implement the brief's requirements:
+- The default timeout in `utils/py/consult.py` was increased to 600s.
+- `surface_partial` correctly publishes partial answers with the expected markers.
+- The idle kill leverages `TurnDiagnostics` to preserve the truthful kill reason instead of relabeling it as a wall-cap timeout.
+- The test script `test/gh648-l3-consult-cap.sh` covers all functionality and is correctly registered in `validate.sh`.
+
+No pre-existing defects were found during the sweep of the modified files.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
