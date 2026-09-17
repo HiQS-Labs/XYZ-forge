@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
@@ -103,3 +103,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   mechanisms, JSON emission, and two mutation controls; `validate.sh` registers the focused suite.
 - Focused verification: `bash test/gh648-l1-turn-termination.sh` -> `PASS: 26 assertions`.
 - Full `validate.sh` intentionally not run in this relay worktree; the harness owns the gate.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the entire artifact (`utils/py/turn_diagnostics.py`), the test script (`test/gh648-l1-turn-termination.sh`), and the registry addition (`validate.sh`). No pre-existing defects were found in the scope of `turn_diagnostics.py`; the logic for tree traversal, CPU peak sampling, and mtime bounds is sound and defensively written.
+
+The implementation successfully fulfills the L1 brief:
+- Structured termination records correctly distinguish `idle-kill`, `wall-cap`, `child-orphan`, and `unknown` while preserving exit code 7.
+- The `lsof` network probe serves as a positive in-flight check, degrading safely to `unclassified` on failure.
+- The overclaim is stopped: by default, blocked turns report `timeout-idle-unknown`, accurately reflecting that without positive confirmation, the state is unknown. 
+- The focused test suite passes all 26 assertions.
+
+**Verdict:** Approved
+relay closed, no further turn needed
