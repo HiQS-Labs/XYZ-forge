@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -153,7 +153,7 @@ base repairs, merge, deployment, #661 resumption, or stacked-PR publication.
 - [ ] Original unborn fixture red retained and actual linked-worktree coverage green.
 - [ ] All five fault refusals and caller checks pass; guard/caller controls witnessed red.
 - [ ] Focused/static/full gate green at final source, clone identity stable, provenance committed.
-- [ ] Independent plan/final QA Approved; separate PR base/head/scope verified.
+- [ ] Independent plan/final QA Approved; separate PR base/head/scope verified.  [Unverified — no citation]
 - [ ] Combined #669 checks recorded separately; prerequisite and merge hold explicit.
 
 ## Lessons Learned (For Future Agents)
@@ -183,5 +183,22 @@ Review PROJECT/2-WORKING/GH-653-FIXTURE-SAFETY.md and the GH-665 adapter against
 Questions: (1) Does guard-before-seed plus checked construction/substitution prevent empty/path-escape caller writes? (2) Does the bounded extraction preserve actual worktree coverage and reuse the existing guard? (3) Are the separate issue receipts and shared plan sufficient, with historical PR examples not exaggerated into a measured trend? (4) Do baseline red, guard/caller negative controls, isolated gates, and conditional combined #669 verification prove the stated outcomes without claiming the published draft is qualified?
 
 Definition of Done: approve this bounded plan only when these four questions are satisfied; otherwise give precise graded blockers. Source extraction starts only after Approved. Final code QA is a separate relay. No merge or draft-to-ready authorization. On approval set STATUS Approved and finish the tick task through the existing protocol.
+
+### Reviewer R1 — Codex bounded plan QA
+
+VERDICT: PASS
+Basis: All four Producer review questions are satisfied at plan level. Approval authorizes bounded extraction only; implementation, historical run receipts, and published PR qualification are not approved by this read-only review.
+swept file: yes
+
+- [Pass] Guard-before-seed and checked substitutions address the caller-write failure: current `test/gh642-consumer-fruit.sh:23–30` has unchecked construction, while `test/lib/fixture-guard.sh` explicitly rejects empty paths and physically resolves descendants. Plan step 2 requires “nonempty/owned paths at writes, explicit seed identity, checked substitutions, and fail-closed construction.” Preserve those requirements throughout extraction; a subshell refusal must propagate to the parent before any write.
+- [Pass] Coverage remains real: `test/gh642-consumer-fruit.sh:41–53` requires a created worktree and fails when creation fails; `:152–175` exercises dependency copying through RTL. Plan steps 2–3 retain feature assertions and require original red/repaired green. Keep both cases and check setup commands instead of suppressing setup failure.
+- [Pass] Distinct issue identity with one implementation plan is sufficient: `PROJECT/2-WORKING/GH-665-FIXTURE-REFUSAL.md` says “One test file/clone/branch/PR” and links the canonical GH-653 plan. The embedded plan labels history “examples, not exhaustive incident counts; recurrence trend unknown.” Retain that qualification; this review does not independently verify remote history or persisted ratings.
+- [Pass] Proof obligations are falsifiable and isolated: plan step 3 specifies guard-disabled and caller-commit red controls; step 4 requires committed source/hash/exit provenance and disposable-clone gates; step 5 labels combined results “combined proposed-change evidence” and retains the draft/merge hold. Execute and retain these receipts before final code QA; no tests were run during this turn.
+- [Should] Make the existing temporary-path obligations explicit during extraction/final QA: `test/gh642-consumer-fruit.sh:89` creates DBG outside WORK, and `:164–168` writes/removes an RTL-returned worktree whose helper defaults to ambient TMPDIR (`relay-automation/relay-turn-lib.sh:733–744`). Place DBG under the owned sandbox, pin RTL TMPDIR to a validated sandbox descendant outside FIX, and validate returned wt before marker writes/removal. These are applications of the plan's existing “all generated fixtures remain inside _setup's owned outer sandbox” requirement, not added runtime scope. For directories not yet created, validate the existing parent before construction and validate the resulting directory before use.
+- [Nit] Correct the recon citations: mkrepo is currently `test/gh642-consumer-fruit.sh:23–27`, and push/clone/worktree creation is `:44–46`, rather than the embedded plan's `:24–29` and `:49–53`. Keep the diagnosis unchanged.
+
+Whole-file sweep: read the complete embedded/canonical GH-653 plan, GH-665 adapter, GH-642 suite, fixture guard, and shared setup. The unborn fixture, unchecked setup, and temporary-path defects above are pre-existing and covered by the repair requirements; no additional blocking defect was found in this bounded plan. Shared setup/guard remain unchanged. Final source QA must inspect the actual extracted file, including every pre-existing write and cleanup site.
+
+Relay closed (Approved), no further review turn needed. Producer proceeds with the approved extraction and verification; the harness owns the relay commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
