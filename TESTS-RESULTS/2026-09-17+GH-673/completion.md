@@ -62,3 +62,16 @@ Deleting either fix in memory fails its intended assertion. GH492 helper/caller
 state-sweep tests also pass, in an isolated full clone with installer targets isolated.
 The seven-phase writer-reader comparison was rerun after these repairs and passes.
 None of this is an attested final reviewer approval or qualifying broad-gate result.
+
+Batch handoff: the safer broad preflight at c77b3a05 was stopped with exit143
+before the 23:18:02 UTC wall deadline. Its log records 272 suite completions, not
+a complete result; no broad pass, final-candidate qualification or reader approval
+is claimed. Clone identity remained c77b3a05, core.bare=false, expected local origin
+before stopping. Real Gemini links remained on their pre-existing pr235 clone.
+The final candidate includes later audit repairs; this partial run does not attest it.
+Prepared replacement relay remains Open, ROUND1/2, token handed to Codex, no
+reviewer turn dispatched. Next: safe complete harness preflight, actual replacement
+review, then fresh final-tip sequential qualification and gated separate PRs.
+No push/bypass, PR, merge, live task/label write, migration or deployment in this batch.
+The task clone preserves one uncommitted CLI-generated LEADERBOARD view; routine
+views are intentionally not included in task commits under repository policy.
