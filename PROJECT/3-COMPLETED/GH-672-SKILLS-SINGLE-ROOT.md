@@ -1,6 +1,6 @@
 ---
 title: "GH-672: fix(skills): one Pulse collection per device and consistent deployment SOP"
-status: Active
+status: Complete
 created: 2026-09-17
 updated: 2026-09-17
 owner: operator (via /express)
@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix qualified for /express; regression suite test/skills-army-hq.sh registered (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #672 closes |
+| Express hotfix landed; 33 tests passed; Pulse and mini published and verified; scoped reconciliation completed | Other devices follow the bundled in-place adoption/migration SOP |
 
 ## Acceptance Criteria
 
@@ -30,13 +30,18 @@ goal: >
 
 ## Merge evidence
 
-- (recorded at landing by the /express driver)
+- Forge landing: `6402944968cff1d2231aacbdbfe5604ba5d818e2`; express receipt committed by `6d91ed8ff4fe71164b1bdef070161a90dc713f07`.
+- Pulse publication: `ad3a275adcadb548c3a4f2aabec5c3a5e8556899`; local catalog/history preserved and untracked.
+- Skills Army mini: `bbf9a92a381048eda05e199338408a6d49888494`; generated from landed Forge `6d91ed8ff4fe71164b1bdef070161a90dc713f07`.
+- Both projection payloads match all six package files and executable modes; six managed manager links resolve directly into Pulse. The existing mini publisher/detached-package suite passed 28 checks.
+- Hosted reconciliation run `35250738446` was already running on pre-hotfix `011113f6` for over an hour. Its one fast-forward push cannot overwrite the new head. Used the documented `--force-local-reconcile` fallback scoped to this landing, with its committed express receipt; no hosted job was canceled.
+- Evidence: `TESTS-RESULTS/2026-09-17+GH-672/provenance.jsonl` and `TESTS-RESULTS/2026-09-17+GH-672-express/provenance.jsonl`. Full validation was not run; qualification used the express suite.
 
 ## Lessons Learned (For Future Agents)
 
 - Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
-  CHANGELOG entry moved as one motion; consult the .tick express-fired event for the
-  run's receipts. Operator-supplied summary: One Pulse payload collection per device; device-local ignored receipts and direct app symlinks. Preserve the SOP in the manager bundle and publish the generated mini.
+  CHANGELOG entry moved as one motion; consult the committed TESTS-RESULTS receipts for the
+  qualification and the scoped reconciliation evidence above. Operator-supplied summary: One Pulse payload collection per device; device-local ignored receipts and direct app symlinks. Preserve the SOP in the manager bundle and publish the generated mini.
 
 ## Recon Map — existing collection adoption
 
