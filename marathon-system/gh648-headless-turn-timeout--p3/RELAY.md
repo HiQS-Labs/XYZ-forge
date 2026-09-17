@@ -1,5 +1,5 @@
 # Marathon Phase p3
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
@@ -98,3 +98,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - No git commands or full gate run. The harness still owes its full gate and agy owes independent review. Graph tools were unavailable; used direct source inspection. Reversibility: Easy; only output routing changes, with the existing markdown diagnostic path preserved.
 
 Handing off to agy — agy, take your turn.
+
+### Round 2 · Reviewer · agy
+
+- swept file: yes
+- I have reviewed `utils/py/consult.py`, `test/gh648-l3-consult-cap.sh`, and `validate.sh`.
+- The changes in `utils/py/consult.py` appropriately consume the truthful label from `idle-unknown` (line 310) and properly format and capture the `PARTIAL` timeout/idle signals to `.PARTIAL.md` alongside the JSON payload. The logic correctly balances returning the raw JSON object and surfacing a human-readable partial error.
+- The `wait_with_idle_bound` function propagates the killed-reason back properly and the timeout logic prints the truthful attribution.
+- The new test `gh648-l3-consult-cap.sh` adequately covers the behaviors for 600s limits, partial walls, and truthful idle kill signals, and executed successfully.
+- No pre-existing defects were identified in `consult.py`.
+- **Verdict:** Approved
+
+relay closed, no further turn needed
