@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -100,3 +100,16 @@ Implemented and inspected the GH-648 L1 artifacts:
 - `validate.sh`: registers the focused GH-648 suite.
 
 Debug breadcrumb: the prior escalation only reported `pre-advance-failed` and supplied no turn log. On the current tree, `bash test/gh648-l1-turn-termination.sh` passes with `PASS: 26 assertions`; no full gate was run because the turn contract reserves it for the harness. Direct source inspection was used because graph coverage reported changed/missing freshness for all three artifact paths.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+I reviewed the whole file and the diff. The test `test/gh648-l1-turn-termination.sh` passes successfully in isolation, but there are two significant defects in `turn_diagnostics.py` — one introduced by the new design, and one pre-existing critical flaw in the surrounding code that misclassifies hangs.
+
+1. **New Defect (High)**: `_network_state` is executed inside `classify()`. But `classify()` is only called *after* the turn has timed out and the process tree has been reaped (either by `subprocess.run(timeout=)` in a wall cap, or by `_kill_turn_group()` in an idle kill). At `classify()` time, the agent processes no longer exist, so `_tree_pids` only finds the shim itself, and `lsof` will never find the agent's established connections. The probe will always silently return "none" (`REASON_IDLE`), defeating the entire purpose of the feature. The network state must be sampled while the process is still alive (e.g., by intercepting the state during `_sample()` in the background thread when an otherwise-idle condition is suspected, or caching it).
+2. **Pre-existing Defect (Critical)**: `TurnDiagnostics.cpu_ratio()` truncates its time span mathematically: `span = t_peak - t0`. If a process accumulates 1.0s of CPU in its first 1.0s of life, and then hangs entirely idle for the next 99s, `t_peak` stays at `1.0`. The math computes `1.0 / 1.0 = 1.0s/s`, strictly >= `CPU_BUSY_RATIO`, misclassifying a 99-second true idle hang as a runaway `CPU_BOUND` loop. The denominator should be the full elapsed time of the observed turn (`self.samples[-1][0] - t0` or similar), not just the window where it happened to be active.
+
+Please rework the network probe so it runs against a live process tree, and fix the mathematical flaw in `cpu_ratio` so idle hangs are not misclassified as CPU spikes.
