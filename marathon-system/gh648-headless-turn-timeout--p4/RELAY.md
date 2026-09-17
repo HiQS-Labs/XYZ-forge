@@ -1,8 +1,8 @@
 # Marathon Phase p4
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-P4-TURN builder=codex reviewer=agy round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-P4-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
 
 ## Phase Brief
 
@@ -51,9 +51,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P4-TURN --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p4/RELAY.md,utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh"
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P4-TURN --agent codex
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN --agent codex --to agy
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P4-TURN-R2 --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p4/RELAY.md,utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh"
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P4-TURN-R2 --agent codex
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN-R2 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/gh648-headless-turn-timeout--p4/RELAY.md and utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -66,8 +66,8 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P4-TURN --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN-R2 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P4-TURN-R2 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
    Edit ONLY marathon-system/gh648-headless-turn-timeout--p4/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -81,34 +81,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · codex
-
-Implemented `test/gh648-l4-285-revalidate.sh` and registered it in `validate.sh` TESTS. `utils/py/agy-turn.py` is unchanged: the reported five-second sleeper failure did not reproduce at the tested source.
-
-The fixture runs the real Python adapter main paths and real subprocess timeout/kill operations with `RELAY_TURN_TIMEOUT_S=1`, idle detection disabled, and a five-second sleeping executable. Coordination, repository lookup, authentication/model preflight, diagnostics and telemetry boundaries are stubbed so no git, real advisors, or shared token operations run. agy is covered with both `AGY_PTY=0` and `AGY_PTY=1`; codex uses its normal pipe path. Assertions require a nonempty started-PID artifact and transcript, exit 7 with wall-cap attribution, child death before cleanup, no natural completion, and elapsed time below four seconds. agy additionally checks its process group no longer exists. This is the original single-sleeper fixture, not a claim about arbitrary detached or signal-resistant descendants.
-
-Focused verification: `bash test/gh648-l4-285-revalidate.sh` passed. Measured codex 1.005s, agy pipe 2.008s, agy PTY 2.014s; all returned 7 with the child dead before cleanup. A deliberate no-op replacement of agy's `_kill_turn_group` returned 7 in 2.008s with the child still alive; the same containment assertion rejected it. Cleanup then killed/reaped the fixture. The test preserves this negative control on every run.
-
-Run output is `.relay-scratch/gh648-l4-run.log`; machine receipt is `.relay-scratch/gh648-l4-receipt.json` (ephemeral, not committed provenance). Source SHA-256: agy `7ba49c671f963cc420fade4ed98bec78f2ed51b076d02488a33b253205878c38`; codex `f5c7dfc0f4332a0adc9917cc26cc3300c4168761b0b1aade0050b4bdc2cabb84`. No full gate was run; the harness owns that gate after handoff.
-
-**Remaining closeout:** outcome is already-fixed for this fixture, but the historical fixing commit SHA has NOT been established and #285 has NOT been closed. The direct turn instruction forbids all git commands and limits mutations to the allowlisted files. The receipt explicitly marks history attribution unresolved rather than inventing a fixing SHA. The outer orchestrator must identify the fixing commit, preserve qualifying provenance, and close #285 after review/gate approval. Graph tools were unavailable, so exact source inspection was used. The skill locator was not executed because it invokes git, also forbidden this turn.
-
-Handing off to agy for review.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-I have reviewed the whole file `utils/py/agy-turn.py` and there are no pre-existing defects related to this change or glaring issues that need fixing within the scope. I have also verified the test `test/gh648-l4-285-revalidate.sh` and `validate.sh` and they are correct. The test passes correctly, verifying that the issue is already fixed and that the python twin properly kills the child process group.
-
-**Verdict:** Approved
-
-relay closed, no further turn needed
-
-### Attestation · relay-drive — 2026-09-17T06:50:26Z
-task: MARATHON-P4-TURN
-reviewer: agy
-status: Approved
-reviewed-head: c71dde7eb6e2abb8f027640a151bf0ea011703a5
-added-range: 8865+516
-added-sha256: 4b0d40b975e4328c41ffae0b0961e64ffa77d32d2033121104d882557ec9ac8b
