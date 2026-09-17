@@ -119,3 +119,11 @@ I ran the test suite locally in `.relay-scratch/` and all 73 assertions passed. 
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T23:38:14Z
+task: MARATHON-P1-TURN-R8
+reviewer: agy
+status: Approved
+reviewed-head: 67f36b6948523d1e5e3876145802cc64f882e8b6
+added-range: 10401+853
+added-sha256: 517a4d1fd9fa6fc22d2bc49635ab9c8deaa379fb4a3ccc78cdabcec2a947bb02
