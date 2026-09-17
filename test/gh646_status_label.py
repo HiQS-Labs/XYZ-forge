@@ -182,6 +182,34 @@ class StatusLabelTests(unittest.TestCase):
         self.project()
         self.assertEqual(len(self.native.mutations), 1)
 
+    def test_ordinary_active_appearance_never_establishes_label(self):
+        # Legacy section/marker transitions retain their event compatibility, but
+        # only an explicitly qualified admission establishes the new label.
+        self.fx.conn.execute(
+            "UPDATE roadmap_items SET issue_url='https://github.com/foreign/project/issues/646'"
+        )
+        self.fx.update(section="In progress", status_marker="🚧")
+        self.assertIsNone(self.fx.row()["status_label"])
+        self.assertEqual(app.latest_owned_lifecycle(self.fx.conn, 1, 646)["event"], "in_flight")
+
+        self.fx.conn.execute(
+            "UPDATE roadmap_items SET issue_url='https://github.com/owner/project/issues/646', "
+            "section='Queue / parked intake', status_marker='🆕'"
+        )
+        self.native.issue()["state"] = "closed"
+        self.fx.update(section="In progress", status_marker="🚧")
+        self.assertIsNone(self.fx.row()["status_label"])
+
+        self.native.issue()["state"] = "open"
+        self.native.issue()["pull_request"] = {}
+        self.fx.update(section="Queue / parked intake", status_marker="🆕")
+        self.fx.update(section="In progress", status_marker="🚧")
+        self.assertIsNone(self.fx.row()["status_label"])
+
+        del self.native.issue()["pull_request"]
+        self.start()
+        self.assertEqual(self.fx.row()["status_label"], "in-progress")
+
     def test_duplicate_metadata_and_restart_authority(self):
         self.fx.update(section="In progress", status_marker="🚧")
         self.start()
@@ -950,15 +978,15 @@ class StatusLabelTests(unittest.TestCase):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mutant", choices=("metadata", "terminal", "identity", "cursor"))
+    parser.add_argument("--mutant", choices=("metadata", "terminal", "identity", "cursor", "appearance"))
     opts, extra = parser.parse_known_args()
     # Each optional isolated-process mutant must turn its named falsifiable assertion red.
     target = None
-    if opts.mutant in ("metadata", "terminal"):
+    if opts.mutant in ("metadata", "terminal", "appearance"):
         original = app._sync_status_labels
         def broken(conn, before, op, gid, accepted_start=False):
             original(conn, before, op, gid, accepted_start)
-            if opts.mutant == "metadata":
+            if opts.mutant in ("metadata", "appearance"):
                 conn.execute("UPDATE roadmap_items SET status_label='in-progress' WHERE section='In progress'")
             else:
                 for row_gid, row in before.items():
@@ -968,8 +996,9 @@ def main():
                         conn.execute("UPDATE roadmap_items SET status_label=? WHERE global_id=?",
                                      (row["status_label"], row_gid))
         app._sync_status_labels = broken
-        target = ("test_migration_metadata_never_establishes_label" if opts.mutant == "metadata"
-                  else "test_terminal_precedence_and_nonempty_lifecycle_loop")
+        target = ({"metadata": "test_migration_metadata_never_establishes_label",
+                   "appearance": "test_ordinary_active_appearance_never_establishes_label",
+                   "terminal": "test_terminal_precedence_and_nonempty_lifecycle_loop"}[opts.mutant])
     elif opts.mutant == "identity":
         original = app.resolve_roadmap_identity
         def broken(row, repos, origin=None):

@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -62,5 +62,26 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · codex-gh646-review · Round 1 · 2026-09-17
+
+swept file: no
+
+Verdict: Changes requested
+
+- [Blocker] Ordinary roadmap updates bypass accepted-start admission. `utils/py/releases_app.py:1642–1645` sets `status_label = "in-progress"` when a target transitions into `in_flight`, even with `accepted_start=False`. The ownership/native-issue/open-state checks at `utils/py/releases_app.py:3929–3941` run only under `if accepted:`. Consequently a queued row with a foreign/malformed URL, a native PR, or a closed issue can receive the authoritative local label through `roadmap update --gid <gid> --section "In progress"` (or a 🚧 marker) without admission. This is a static fail-path finding, not an executed reproduction. Fix: restrict establishment of this new label to the qualified accepted-start path; retain legacy marker/section and event compatibility without letting those alone establish the label. If legacy explicit transitions must establish it, route them through the same qualification and stale-row checks instead. Add focused negative cases for each identity/native-state defect through ordinary update and move, with a valid accepted-start positive control and a mutant that restores the bypass.
+- [Pass] The dedicated accepted-start path checks owned identity, native issue state, and stale row identity inside its mutation (`utils/py/releases_app.py:3932–3941`, `utils/py/releases_app.py:3982–4000`); the shared writer places label maintenance inside its transaction before the receipt and commit (`utils/py/releases_app.py:1688–1699`, quoted seam: `_sync_status_labels(conn, before_rows, op, target_gid, accepted_start)`). These protections do not cover the ordinary-update bypass above.
+- [Pass] Remote writes name only the literal owned label: `utils/py/work_connectors/github_labels.py`, quoted calls `"--add-label", LABEL` and `"--remove-label", LABEL`, with `LABEL = "in-progress"`; readback checks unrelated labels via `after - {LABEL} != before - {LABEL}`. Native REST identity rejects `"pull_request" in issue` and mismatching `html_url`/number (`utils/py/releases_app.py:5399–5414`). Focused test coverage is present in `test/gh646_status_label.py:test_owned_identity_and_pr_refusal` and `test_failed_removal_reopen_replay_and_cursor_retention`; these were read, not run this turn.
+- [Should] Final QA remains open. This turn inspected the complete plan and label connector plus relevant writer, connector-parent, Express, reconciliation, and focused-test paths; it did not complete the mandated whole-file sweep of the large artifacts. Remaining schema/dump compatibility, unrelated/pre-existing defects, and surgical diff scope receive no approval from this turn. Finish that sweep after the blocker is resolved. No tests, gates, git commands, source edits, live migration, enablement, or deployment were performed; the producer's reported 38-case run is not independently re-attested here, and final qualification remains pending.
+
+Handing off to terra-gh646-writer — address the admission bypass, record the disposition, and reopen Reviewer QA; go to the Producer window and say 'take your turn'.
+
+### Producer · terra-gh646-writer · Round 1 disposition · 2026-09-17
+
+- [Blocker] Implemented. `_sync_status_labels` now establishes `in-progress` only when the existing `roadmap-update` call carries `accepted_start=True`. Existing active rows retain a previously established label; inactive/terminal rows still clear it. Legacy appearance transitions retain their existing lifecycle event compatibility but cannot create this new authority.
+- Added `test_ordinary_active_appearance_never_establishes_label`: foreign repository identity, native closed state, and native pull-request state each make ordinary `In progress` / `🚧` appearance without a label; a valid explicit accepted start remains the positive control.
+- Red control witnessed: `python3 test/gh646_status_label.py --mutant appearance` fails the new assertion after deliberately restoring the old appearance-based label mutation. The corrected suite passes 39 tests; the wrapper also passes. This is focused evidence only, not final qualification.
+
+Handing off to codex-gh646-review — review the narrow repair and decide whether the remaining bounded sweep can approve; go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

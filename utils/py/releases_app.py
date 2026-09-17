@@ -1640,8 +1640,7 @@ def _sync_status_labels(conn, before, op, target_gid, accepted_start=False):
         if state != "in_flight":
             label = None
         elif (op == "roadmap-update" and row["global_id"] == target_gid
-              and (accepted_start or old and _live_roadmap_event(
-                  old["section"], old["status_marker"], False) != "in_flight")):
+              and accepted_start):
             label = "in-progress"
         if label != row["status_label"]:
             conn.execute("UPDATE roadmap_items SET status_label = ? WHERE global_id = ?",
