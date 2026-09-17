@@ -8,7 +8,8 @@ not change source task records, labels or schema; normal SQLite coordination fil
 allowed. Invalid helper-owned rows are per-issue gaps, while unresolvable rows are
 counted without poisoning unrelated tasks. Healthy unchanged handoffs stay open;
 changed context/status, vanished targets, failed reads or expired snapshots invalidate
-them. 37 populated Python checks, production-selector checks and real Chrome tests
+them. Equal-time native duplicates include identity in conflict detection, and
+issue/root diagnostics survive together. 39 populated Python checks, production-selector checks and real Chrome tests
 pass; replacement independent review and full qualifying gate remain pending.
 Easy rollback: disable the optional reader or reviewed revert; no source migration.
 

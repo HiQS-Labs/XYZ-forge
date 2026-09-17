@@ -40,7 +40,9 @@ ROUND: 1 / 2
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: GH-673 reader candidate `95b3cc24` versus origin/development `0389dc6e`.
+- Artifact under review: GH-673 reader candidate at the driver's current pinned HEAD
+  versus origin/development `0389dc6e`; initial runtime `95b3cc24` plus scoped
+  equal-time identity and simultaneous row/root diagnostic repairs.
   Read `PROJECT/2-WORKING/GH-673-FLIGHTDECK-STATUS.md` and the changed runtime files:
   `src/flightdeck/{contract,connectors,aggregate}.py`, `utils/py/releases_cycle.py`,
   `web/flightdeck/{app.js,issue-context.mjs}`, plus focused tests and manual harness.
@@ -73,9 +75,15 @@ ROUND: 1 / 2
    handoff content/title, vanished current targets, failed reads and expiry invalidate
    copyable stale context? Does recomputation use current cards rather than saved objects?
 4. Are positive and negative populated tests meaningful and scope/rollback honest?
-   37 Python tests, selector and Chrome checks pass. Two original regressions failed
+   39 Python tests, selector and Chrome checks pass. Original and audit regressions failed
    before repair; selector error-guard mutation fails. These are focused evidence,
    not the qualifying full gate, writer landing or release readiness.
+
+Pre-review advisory audit is retained in TESTS-RESULTS/2026-09-17+GH-673/.
+It requested two fixes (equal-time native identity conflicts; preserving simultaneous
+root/row errors). Both reproduced, repaired and witnessed red again when deleted.
+That one-shot advisory answer is not a driven reviewer turn or final approval;
+ROUND remains 1/2 and no actual replacement reviewer turn has yet been dispatched.
 
 Report [Blocker]/[Should]/[Nit]/[Pass] with file:line citations; exact VERDICT PASS,
 FAIL or PARKED and Basis. Only real PASS with no unresolved blocker/should may set

@@ -109,7 +109,8 @@ def read_xyz_work(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
     finalized = {s["id"]: s for s in sources}
     for row in batch["issues"]:
         for evidence in row["work_evidence"]:
-            evidence["error"] = finalized[evidence["id"]]["error"] or evidence.get("error")
+            evidence["root_error"] = finalized[evidence["id"]]["error"]
+            evidence["error"] = evidence.get("error") or evidence["root_error"]
             evidence["roots_complete"] = not incomplete
     batch["repos"] = [{"id": key, "source_refs": ["xyz_work"]} for key in sorted({row["repo_id"] for row in batch["issues"]})]
     batch["source"].update({"availability": "ok" if any(s["supported"] and not s["error"] for s in sources) else "unavailable",
@@ -339,7 +340,7 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
         conflicting = set()
         for row in items:
             identity = (repo_key(row["repo_full_name"]), row["item_type"], row["number"])
-            signature = (row["state"], row.get("labels_json"), row.get("state_reason"))
+            signature = (row["state"], row.get("labels_json"), row.get("state_reason"), native_item_identity(row))
             prior = latest.setdefault(identity, (observed(row), signature))
             if observed(row) == prior[0] and signature != prior[1]:
                 conflicting.add(identity)

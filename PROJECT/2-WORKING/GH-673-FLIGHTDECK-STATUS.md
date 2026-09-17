@@ -21,7 +21,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Original final QA remains escalated at cap3. Operator approved reader coordination files and a focused replacement review. Two reproduced defects repaired; 37 Python tests and expanded real-browser regressions pass. | Review changed functions and their callers independently; #646 landing, final-tip broad gate and end-to-end comparison remain release gates. |
+| Original final QA remains escalated at cap3. Operator approved reader coordination files and a focused replacement review. Original defects plus two advisory audit gaps repaired; 39 Python tests and expanded real-browser regressions pass. | Finish safe harness preflight, then drive the prepared independent replacement review; #646 landing, final-tip qualifying gate and landed-producer comparison remain release gates. |
 
 ## Approved reader safety contract
 
@@ -117,3 +117,14 @@ Workhorse advisory consult was degraded: Codex answered, Agy was killed after
 or final approval is claimed. Codex's inferred-card and explicit health-change
 warnings were implemented and tested. Raw advisor logs remain in ignored local scratch;
 committed test provenance records commands, outcomes and limits.
+
+Implementation audit (advisory, not a driven approval) found two further gaps.
+Equal-time native duplicate signatures now include qualified identity, so a foreign
+URL cannot silently win or lose by row order. Per-issue `error` retains the identity
+gap while separate `root_error` retains a simultaneous cap/failure. Both new tests
+failed before repair, then 39/39 passed; deleting each fix again fails its intended
+assertion in memory. Final replacement review remains prepared, not approved.
+GH-678/PR680 tracks baseline installer tests escaping into real Gemini directories.
+Safe preflight redirects all five existing installer target variables to owned
+scratch, HOME unchanged; the isolated installer suite passes 212/212 and real
+Gemini links are unchanged. No partial/aborted broad run qualifies a push or release.

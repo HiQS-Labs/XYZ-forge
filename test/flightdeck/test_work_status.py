@@ -188,6 +188,47 @@ class WorkStatusTests(unittest.TestCase):
             self.assertTrue(all(e[k] is None for e in by_number[3] for k in ("status_label", "start", "lifecycle")))
             self.assertEqual(before, (root / "releases.db").read_bytes())
 
+    def test_row_identity_gap_and_root_failure_both_survive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            good = {"identity_valid": True, "repo": "Example/Project", "number": 2,
+                    "status_label_supported": True, "status_label": "in-progress",
+                    "recent_start": {"at": AS_OF, "event": "in_flight"}}
+            bad = {**good, "identity_valid": False, "number": 1}
+            report = {"schema_ready": True, "status_label_supported": True,
+                      "issues": [bad] + [good] * 2000}
+            config = ConnectorConfig(None, None, None, None, None, frozenset(), xyz_roots=(root,))
+            with patch("src.flightdeck.connectors.read_work_status", return_value=report):
+                batch = read_xyz_work(config, time.monotonic() + 1)
+            marker = next(row for row in batch["issues"] if row["number"] == 1)["work_evidence"][0]
+            self.assertEqual(marker["error"], "unqualified-ledger-row")
+            self.assertEqual(marker["root_error"], "issue-cap")
+            self.assertFalse(marker["roots_complete"])
+
+    def test_equal_time_native_identity_disagreement_is_order_independent(self):
+        from src.flightdeck.connectors import _sqlite_rows
+        with tempfile.TemporaryDirectory() as tmp:
+            config = write_fixtures(Path(tmp))
+            cx = sqlite3.connect(config.rebalance_db)
+            cx.execute("UPDATE github_items SET fetched_at=? WHERE number=440", (AS_OF,))
+            row = list(cx.execute("SELECT * FROM github_items WHERE number=440 AND item_type='issue'").fetchone())
+            row[0] = row[0].upper()
+            row[11] = "https://github.com/foreign/project/issues/440"
+            cx.execute("INSERT INTO github_items VALUES(" + ",".join("?" for _ in row) + ")", row)
+            cx.commit(); cx.close()
+            before = config.rebalance_db.read_bytes()
+            for valid_first in (True, False):
+                def ordered(conn, sql, params=()):
+                    rows = _sqlite_rows(conn, sql, params)
+                    if "FROM github_items" in sql:
+                        rows.sort(key=native_item_identity, reverse=valid_first)
+                    return rows
+                with patch("src.flightdeck.connectors._sqlite_rows", side_effect=ordered):
+                    batch = read_rebalance(config, time.monotonic() + 2)
+                issue = next(row for row in batch["issues"] if row["number"] == 440)
+                self.assertTrue(issue["native_conflict"], (valid_first, issue))
+            self.assertEqual(before, config.rebalance_db.read_bytes())
+
     def test_newest_native_case_variant_wins_before_quiet_lookup_cap(self):
         with tempfile.TemporaryDirectory() as tmp:
             config = write_fixtures(Path(tmp))

@@ -50,3 +50,15 @@ and Cancelled labels asserted and source bytes unchanged. The retained recipe is
 GitHub test double and owned temporary ledgers are mutated. The independent
 Codex turn shim test passes 43/43 in a disposable full clone; this is not yet the
 complete harness preflight or a reader approval.
+
+Bounded one-shot implementation audit answered (Codex only, 1 answer / 0 failures),
+but remains advisory and mechanically stamped NO FIRSTHAND VERIFICATION CITED.
+It found two real Should gaps: equal-time native identity disagreement was omitted
+from the duplicate signature, and a root cap overwrote the row identity diagnosis.
+Both populated regression tests failed before repair. Identity joins the signature;
+row `error` and independent `root_error` now survive together. Full focused suite
+then passes 39/39; production selector, real Chrome and manual harness still pass.
+Deleting either fix in memory fails its intended assertion. GH492 helper/caller
+state-sweep tests also pass, in an isolated full clone with installer targets isolated.
+The seven-phase writer-reader comparison was rerun after these repairs and passes.
+None of this is an attested final reviewer approval or qualifying broad-gate result.
