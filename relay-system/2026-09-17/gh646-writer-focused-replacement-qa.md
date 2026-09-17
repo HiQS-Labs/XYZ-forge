@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -73,5 +73,17 @@ swept file: no
 - [Should] **Review/evidence limits:** fully read the relay, task doc, focused wrapper, and labels adapter; inspected the relevant shared-writer, migration/dump/restore, admission, direct cleanup, lifecycle/identity, connector batching/dispatch, Express admission/resume/manifest, wave closeout/caller, and routing sections. This is the authorized focused sweep, not an entire-file sweep of the large runtime files; hence `swept file: no`. Some large combined reads were output-truncated. No complete 23-file changed-path inventory or GH-646 receipt set was available from the relay's Setup, and I did not invoke git to obtain one; unlisted changed tests/receipts and uninspected portions remain unknown. Producer should list the exact candidate paths and receipt paths in its disposition so the final review can close those boundaries. No artifact/source execution, test execution, gate execution, git command, or edit outside this relay file occurred. Driver attestation and final disposable-clone qualification remain outstanding.
 
 Handing off to terra-gh646-writer — disposition the blocker, repair the focused wave terminal-authority seam and add caller regressions, provide the candidate/evidence path inventory, then reopen Reviewer Round 2. Go to the Producer window and say 'take your turn'.
+
+### Producer · terra-gh646-writer · Round 1 disposition · 2026-09-17
+
+VERDICT: PASS
+Basis: The Round 1 fail path reproduced in a new caller-level focused test before repair. The minimal repair preserves the existing explicit `--force-promote` override but otherwise requires a positively confirmed CLOSED issue state before wave closeout can invoke the terminal document/roadmap writer.
+
+- [Blocker] Implemented in `utils/py/wave_reconcile.py`. `_may_terminalize_issue(issue_state, force_promote)` is the one shared terminal-authority predicate. The active-doc and no-doc closeout branches now preserve an OPEN, absent, or invalid issue state rather than calling `validate_and_update_doc`/`update_roadmap_entry`; the pre-existing merged-open merge-evidence path remains unchanged. Explicit `--force-promote` remains the documented override.
+- Added `test_wave_requires_confirmed_closed_issue_before_terminalizing_label` in `test/gh646_status_label.py`. A declined PR with its owned issue `OPEN`, absent from the offline evidence, or `UNKNOWN` leaves the accepted row, event count, and label unchanged and never calls either terminal writer. Before the repair, all three cases entered `validate_and_update_doc`, reproducing the reviewer’s fail path. Red control witnessed: `python3 test/gh646_status_label.py --mutant wave_terminal` restores permissive terminal admission and fails all three `assert_not_called` protections. Corrected suite: 41 tests pass.
+- Candidate path inventory: runtime `utils/py/releases_app.py`, `utils/py/express.py`, `utils/py/wave_reconcile.py`, `utils/py/work_connectors/__init__.py`, `utils/py/work_connectors/github_labels.py`, `utils/ci-route.sh`, `validate.sh`; schema/ledger `releases.sql`, `releases.db`; focused tests `test/gh646_status_label.py`, `test/gh646-status-label.sh`, `test/gh267-express-skill.sh`, `test/gh32-releases-app.sh`, `test/gh424-roadmap-status-marker.sh`, `test/gh492-roadmap-state-sweep.sh`, `test/gh527-issue-url-repair.sh`, `test/gh69-roadmap-shadow.sh`; scope/receipts `PROJECT/2-WORKING/GH-646-STATUS-LABEL.md`, `RELEASES-DB-FAQS.md`, three skill docs, this relay, and the preserved capped relay. Historical full-gate receipt 393 is provenance only; it is not qualification for this candidate.
+- Focused evidence this round: corrected 41-case Python suite passes; `wave_terminal` red control fails as expected. The appearance and direct-closure mutants remain retained prior evidence and will be re-run with the focused wrapper before any qualification. No final gate, live migration, connector enablement, label write, deployment, push, or PR occurred.
+
+Handing off to codex-gh646-review2 — review the wave terminal-authority repair and the now-complete focused scope inventory; if no concrete in-scope defect remains, issue an attested approval or explicitly escalate at this two-round cap. Go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -21,7 +21,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| A fresh review found and the branch fixed both ordinary-update admission and direct terminal-cleanup identity gaps; 40 focused label tests pass and both restored-bypass mutants fail as intended. The first final-review runner failed before it wrote a verdict. | Run the operator-authorized replacement focused changed-function/callers review, then one final qualifying gate in a disposable clone before a PR is opened. |
+| The replacement focused review found a wave closeout path that could terminalize a still-open or unknown-state issue; the branch now requires confirmed CLOSED state (or explicit force) before terminal writer authority. 41 focused tests pass, with three restored-bypass mutants failing as intended. | Complete replacement Reviewer Round 2, then one final qualifying gate in a disposable clone before a PR is opened. |
 
 ## Goal and scope
 
@@ -53,7 +53,7 @@ Reader safety is settled separately: normal SQLite coordination sidecars are all
 
 ## Current evidence and stop rules
 
-The refreshed branch contains a selective replay of the original writer implementation and late identity fixes. The reviewer found that ordinary legacy active appearance could establish the new label without qualified admission; the repair limits establishment to `accepted_start=True`. The reopened review also found that direct terminal cleanup did not prove the returned native issue identity; the repair reuses the native issue guard before a closure reason can queue the exact-row terminal mutation. The focused suite now passes 40 Python tests; deliberate appearance and closure-identity mutants both fail. This is implementation evidence only. The final qualifying gate has not yet run on this refreshed branch.
+The refreshed branch contains a selective replay of the original writer implementation and late identity fixes. The reviewer found that ordinary legacy active appearance could establish the new label without qualified admission; the repair limits establishment to `accepted_start=True`. The reopened review also found that direct terminal cleanup did not prove the returned native issue identity; the repair reuses the native issue guard before a closure reason can queue the exact-row terminal mutation. The replacement focused reviewer then found that wave reconciliation could terminalize a declined PR's linked issue when its state was open, absent, or invalid; the repair requires a confirmed CLOSED state unless the existing explicit `--force-promote` override is used. The focused suite now passes 41 Python tests; deliberate appearance, closure-identity, and wave-terminal mutants all fail. This is implementation evidence only. The final qualifying gate has not yet run on this refreshed branch.
 
 Stop and report rather than expand scope if qualified identity cannot reach the existing connector, a migration/dump contract is ambiguous, the bounded reviewer finds a correctness gap, or the final gate fails after one scoped repair/retest. Do not resolve hosted reconciliation debt, merge-cleanup race conditions, Flight Deck rendering, or Daily integration in this producer lane.
 

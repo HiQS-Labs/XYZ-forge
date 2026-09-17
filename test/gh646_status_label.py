@@ -897,6 +897,43 @@ class StatusLabelTests(unittest.TestCase):
         self.assertEqual(self.fx.row(gid),before)
         self.assertEqual(app.get_generation(self.fx.conn),generation)
 
+    def test_wave_requires_confirmed_closed_issue_before_terminalizing_label(self):
+        """A declined PR is not terminal authority for an active owned issue."""
+        self.start()
+        doc = Path(self.fx.root, "PROJECT/2-WORKING/GH-646-fixture.md")
+        doc.parent.mkdir(parents=True)
+        doc.write_text("---\ngh_issue: 646\n---\n# fixture\n")
+        manifest_path = Path(self.fx.root, "offline-wave.json")
+        pr = {"number": 42, "state": "CLOSED", "baseRefName": "development",
+              "title": "declined fixture", "body": "Closes #646", "mergedAt": None}
+        for state in ("OPEN", None, "UNKNOWN"):
+            with self.subTest(issue_state=state):
+                manifest = {"prs": [pr], "issues": ([] if state is None else
+                                                     [{"number": 646, "state": state}])}
+                manifest_path.write_text(json.dumps(manifest))
+                before = self.fx.row()
+                event_count = self.fx.conn.execute("SELECT count(*) FROM work_events").fetchone()[0]
+                argv = ["wave", "--root", self.fx.root, "--pr", "42", "--offline",
+                        str(manifest_path), "--skip-pull", "--skip-branch-check"]
+                with mock.patch.object(sys, "argv", argv), \
+                        mock.patch.object(wave, "check_porcelain_cleanliness", return_value=""), \
+                        mock.patch.object(wave, "github_slug_from_origin", return_value="owner/project"), \
+                        mock.patch.object(wave, "find_active_doc_for_issue", return_value=str(doc)), \
+                        mock.patch.object(wave, "validate_and_update_doc") as update_doc, \
+                        mock.patch.object(wave, "update_roadmap_entry") as update_row, \
+                        mock.patch.object(wave, "record_merge_evidence") as record_evidence, \
+                        mock.patch.object(wave, "run_subprocesses"), \
+                        mock.patch.object(wave, "run_validation_gate"), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    update_doc.return_value = (str(doc), "2026-09-17")
+                    wave.main()
+                update_doc.assert_not_called()
+                update_row.assert_not_called()
+                record_evidence.assert_not_called()
+                self.assertEqual(self.fx.row(), before)
+                self.assertEqual(self.fx.conn.execute("SELECT count(*) FROM work_events").fetchone()[0],
+                                 event_count)
+
     def test_express_admission_dry_refusal_has_no_filesystem_writes(self):
         args = argparse.Namespace(root=self.fx.root, repo="owner/project", issue=646,
                                   dry_run=True, _expect_driver=set(), release=None)
@@ -1012,7 +1049,7 @@ class StatusLabelTests(unittest.TestCase):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mutant", choices=("metadata", "terminal", "identity", "cursor", "appearance", "closure_identity"))
+    parser.add_argument("--mutant", choices=("metadata", "terminal", "identity", "cursor", "appearance", "closure_identity", "wave_terminal"))
     opts, extra = parser.parse_known_args()
     # Each optional isolated-process mutant must turn its named falsifiable assertion red.
     target = None
@@ -1054,6 +1091,9 @@ def main():
             "state": "closed", "labels": [],
         }
         target = "test_direct_close_refuses_mismatched_native_identity"
+    elif opts.mutant == "wave_terminal":
+        wave._may_terminalize_issue = lambda issue_state, force_promote: True
+        target = "test_wave_requires_confirmed_closed_issue_before_terminalizing_label"
     suite = (unittest.defaultTestLoader.loadTestsFromName("StatusLabelTests." + target, sys.modules[__name__])
              if target else unittest.defaultTestLoader.loadTestsFromTestCase(StatusLabelTests))
     result = unittest.TextTestRunner(verbosity=2).run(suite)
