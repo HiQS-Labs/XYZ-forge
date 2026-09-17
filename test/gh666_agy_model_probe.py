@@ -114,6 +114,15 @@ if mode == "timeout": time.sleep(10)
     def test_launch_failure(self):
         self.check_probe(False, str(self.root / "missing-agy"), invoked=False)
 
+    def test_post_allocation_launch_error(self):
+        broken = self.caller / "tools" / "broken-agy"
+        broken.write_text("#!" + str(self.root / "missing-interpreter") + "\n")
+        broken.chmod(0o700)
+        factory = tempfile.TemporaryDirectory
+        with mock.patch.object(agy.tempfile, "TemporaryDirectory", wraps=factory) as allocation:
+            self.check_probe(False, str(broken), invoked=False)
+            allocation.assert_called_once_with(prefix="agy-model-probe.")
+
     def test_relative_executable(self):
         self.check_probe(True, "./tools/agy")
 
