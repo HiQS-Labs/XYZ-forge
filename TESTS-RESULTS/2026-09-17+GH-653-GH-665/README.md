@@ -1,7 +1,7 @@
 # GH-653 / GH-665 verification
 
-Status: fixture full gate green; independent final QA and combined #669 full run pending.
-Draft fixture PR: https://github.com/HiQS-Labs/XYZ-forge/pull/671.
+Status: fixture full gate green and independent final source QA Approved; combined #669 full run pending.
+Fixture PR: https://github.com/HiQS-Labs/XYZ-forge/pull/671 (no merge authorized).
 No merge authorized. GH-661 source clone untouched. No published #669 qualification claim.
 
 ## Source and results
@@ -43,7 +43,14 @@ fixture repair, extracted here without its unrelated changes.
 
 ## Remaining qualification
 
-Independent final QA and fixture hosted checks, plus separate combined candidate
+Plan and final source QA are independently Approved in relay-system/2026-09-17/gh653-plan-qa.md
+and gh653-final-qa.md (driver-attested; final reviewed b703148f). Final reviewer
+read the whole touched suite and witness/source/evidence, ran no new tests, and
+found no remaining pre-existing safety defect. Nit: future scaffold Setup should
+carry the actual criteria; current Producer R1 supplied them. No code change needed.
+The full run is pinned to 82f786f9, not later documentation-only commits.
+
+Latest fixture hosted checks and separate combined candidate
 + #669 local verification. Combined clone ae56f400151631b3a3fb0a2fce97dd4ca0c7fb1e
 has both parents (published #669 aa634155 and fixture 82f786f9). Existing resolver
 preserved all three issue records/receipts, generation 749; displaced DB moved

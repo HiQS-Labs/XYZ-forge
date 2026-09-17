@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved; fixture 62/62 and red controls; normal full gate 393/393; draft PR #671 | Independent final QA, hosted checks and conditional combined #669 full run |
+| Plan/final source QA Approved; fixture 62/62 and red controls; normal full gate 393/393; PR #671 published | Push review receipts, confirm hosted checks; conditional combined #669 full run |
 
 ## Quad Concepts
 
@@ -115,7 +115,9 @@ Plan QA Approved (relay-system/2026-09-17/gh653-plan-qa.md). Should implemented:
 DBG is under WORK; RTL uses a separately guarded rtl-temp descendant outside FIX
 and guards the returned worktree. Existing WORK is pinned by _setup before derived
 fixture construction, then each created directory is guarded before use. Nit:
-original-base recon citations corrected. Final source QA remains outstanding.
+original-base recon citations corrected. Final whole-file source QA Approved,
+driver-attested at reviewed b703148f, no remaining touched-suite safety defect.
+Nit noted for future relay scaffolds; actual R1 criteria used in this review.
 
 An initial commit is a prerequisite of worktree coverage, not a reason to skip it.
 Guard path construction before introducing that commit; empty git -C targets caller.
