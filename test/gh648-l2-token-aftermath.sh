@@ -105,6 +105,19 @@ with patch.object(adapter, 'RelayTurnLib', Boundary), patch.object(adapter, 'Tur
             claim = tick('claim', 'RETRY-TURN', '--agent', 'commandcode', '--paths', 'relay.md')
             assert 'won:' in claim, (name, claim)
             tick('release', 'RETRY-TURN', '--agent', 'commandcode')
+            # Prove recovery through the adapter, not just a standalone claim.
+            # Reuse the exact task ID and role after the interrupted review.
+            relay.write_text('STATUS: Open\nNEXT: commandcode (Reviewer)\n')
+            retry_env = dict(env, GH648_MODE='healthy', GH648_OFFLANE='0',
+                             GH648_ENFORCE_RC='0', RELAY_WORKTREE_ISOLATION='0')
+            retry = subprocess.run([sys.executable, str(driver)], env=retry_env,
+                                   text=True, capture_output=True)
+            assert retry.returncode == 0, (name, retry.returncode, retry.stderr)
+            retry_info = tick('info', 'RETRY-TURN')
+            retry_fields = dict(line.split(':', 1) for line in retry_info.splitlines() if ':' in line)
+            retry_fields = {k: v.strip() for k, v in retry_fields.items()}
+            assert retry_fields.get('status') == 'open', (name, retry_info)
+            assert retry_fields.get('handoff-to') == 'agy', (name, retry_info)
         elif status == 'Approved':
             assert fields['status'] == 'done', (name, info)
         else:

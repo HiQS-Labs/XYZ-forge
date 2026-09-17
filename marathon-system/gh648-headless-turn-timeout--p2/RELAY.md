@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -80,3 +80,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 3 · Builder · codex
+
+The existing L2 implementation already suppresses peer handoff and terminal completion after a caught timeout by clearing RELAY_FILE only during enforcement. Its separate timed_out flag survives containment changing exit 7 to exit 6; ownership-checked exit cleanup leaves the task open. The suite is already registered in validate.sh. Those two files needed no additional edits.
+
+Changed test/gh648-l2-token-aftermath.sh to execute a healthy adapter retry with the SAME task ID and role after each of the four timeout cases, and assert the eventual normal peer handoff. The prior standalone claim check remains. This is an Easy, reversible test-only strengthening; production containment and token behavior are unchanged. The test stubs git/diagnostic boundaries and executes the production token-handoff branch and real tick operations in isolated scratch fixtures; it is not full containment integration coverage.
+
+Focused verification: bash test/gh648-l2-token-aftermath.sh exited 0: six cases passed, including four complete same-role retries. Negative control: a scratch copy of commandcode-turn.py with the timeout RELAY_FILE suppression removed exited 1 on the first timeout case, observing handoff-to: agy. Logs are session-local .relay-scratch/gh648-l2-final.log and .relay-scratch/gh648-l2-negative.log; they are not committed provenance or full-gate evidence.
+
+No git commands or full project gate were run. Full validation remains the harness's responsibility under the turn restrictions. Graph tools were unavailable; source verification covered the adapter, claim/exit cleanup, Python-to-Bash enforcement bridge, and shared handoff branch. The relay locator was not executed because it invokes git, which this turn explicitly forbids.
+
+Handing off to agy for review.
