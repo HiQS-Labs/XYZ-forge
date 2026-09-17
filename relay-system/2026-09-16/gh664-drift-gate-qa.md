@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -83,5 +83,25 @@ Output: graded findings ([Blocker]/[Should]/[Nit]/[Pass]) each with file:line, a
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Static approval within the stated local CLI envelope; no blocking defect found in the normal deployment gate or the pre-existing reconciliation/retirement code swept. This is not a claim of passing execution. Read the complete named files (including intake's persistence path and the full test module). The current worktree is absent from both pages of the graph project inventory, so evidence is direct source, not another checkout's graph. Per the operator's explicit restrictions, no Git command, source execution, test run, mutation probe, or historical diff was performed; the three-commit diff and exact historical equivalence to 731ae5f0 remain unverified. Harness validation remains outstanding.
+
+- [Pass] Gate ordering and scope: `skills/skills-army-hq/scripts/sync.py:197` makes status/dry-run non-applying; `sync.py:219` inventories before `sync.py:226` gates, and reconciliation/transaction follow at lines 227/233. Lines 78–87 refuse drift in deployable inventory with an enabled target before link writes, naming the canonical skills path; lines 88–90 disclose overrides. `intake.py:268` includes every valid immediate skill folder, including unregistered additions, and rejects invalid/missing payloads rather than silently deploying them. Unrecognized names never enter refusal (`utils/py/skill_drift_check.py:34`, `sync.py:78`). No fix required.
+- [Pass] Resolution/subprocess: `sync.py:38` implements the documented priority, errors on a nonempty broken explicit root, skips stale provenance, and emits the skipped-check warning at line 74. This is a reasonable compatibility boundary: absent canonical coverage is disclosed, not represented as clean. `sync.py:54` uses argv elements and the current interpreter, preserving spaces; the repo root matches the checker's normalization at `utils/py/skill_drift_check.py:70`. Its report keys match `sync.py:58`; malformed JSON/missing keys fail before deployment through `sync.py:235`. No fix required.
+- [Pass] Persistence: `intake.py:229` returns the original config, `intake.py:671` changes only its targets member, and `intake.py:522` / `intake.py:510` carry/write the whole config, preserving canonical. `sync.py:58` emits only JSON-compatible strings/lists/dicts; `sync.py:228` includes warnings/drift in the transaction details. History is written only when actions/changes/errors exist (line 232); a no-op reports drift without a new receipt. Local paths are consistent with the existing local receipt contract. No fix required.
+- [Pass] Tests use the real checker: `test/test_deploy_skills.py:481` copies the production checker, and line 64 executes the CLI in a subprocess. Lines 499–506 assert refusal, the canonical path, an absent sample destination, and explicit override deployment. Removing the gate would contradict the refusal exit assertion and report assertions; this conclusion is source-derived, not mutation-tested. Each case gets a fresh env dict at line 54, so test-local env assignments do not leak into another case. No mock substitutes for the drift checker.
+- [Should] Test isolation and proof can be tightened without adding machinery: `test/test_deploy_skills.py:54` inherits the operator's XYZ_FORGE_ROOT, so existing tests that expect an unconstrained deployment can instead fail against an unrelated or broken host canonical checkout. Clear that key in setUp; individual drift cases already set their own. At line 502, check the whole destination/owned-link state (including dangling symlinks), not only sample.exists(). Extend line 527 through one intake write and reload canonical, and assert the override's changelog drift receipt after line 506. These are nonblocking coverage improvements; source inspection supports the behavior.
+- [Nit] Printed remedy is not shell-safe for the explicitly supported space-containing paths: `sync.py:81` interpolates an unquoted --source path. Use shlex.quote for that argument (and show python3 plus the intended intake path/root if meant to be copy-pastable). The checker invocation itself is correctly quoted by argv.
+- [Nit] `skills/skills-army-hq/SKILL.md:135` says the checker runs on every apply/status, but `sync.py:221` skips it for --retire-trinity. Qualify the sentence as normal reconciliation; retirement only withdraws the old skill (`sync.py:154`, `sync.py:169`) and is not a deployment bypass.
+- [Nit] Pre-existing documentation mismatch: `skills/skills-army-hq/SKILL.md:12` names the pulse collection, while the no-root examples at lines 98–99 initialize the scripts' default Documents/Deployed Skills (`intake.py:555`, `sync.py:179`). Add --root to examples intended to operate on the pulse collection; invoking a script through that collection's path does not change its default root.
+- [Pass] Port placement and framing: `skills/daily/SKILL.md:39` puts fresh-state calibration in Guardrails; `skills/swe/SKILL.md:103` contains the exact requested sibling heading immediately above the sibling list; `skills/skills-army-hq/references/targets.md:16` adds the Grok row and line 30 distinguishes Mac staging from box import. `skills/skills-army-hq/SKILL.md:16` and line 43 distinguish canonical source from transport consistently. Current placement is sound; historical restoration was not checked. No fix required.
+
+Relay closed (Approved), no further turn needed. Nonblocking findings are available to Producer (claude-a); the harness owns commit and gate execution.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
