@@ -20,7 +20,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved; narrow validator fix and witnessed red/green regression checks | Final-source gates/review; PR publication held if base checks remain red |
+| Plan and final scoped QA approved; 14 validator tests and 65 shell assertions pass with witnessed negative controls | Full-gate and PR publication held on unrelated base failures; no bypass or merge authorized |
 
 ## Quad Concepts
 

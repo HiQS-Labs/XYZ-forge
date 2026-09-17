@@ -58,7 +58,10 @@ diagnostics remain; this result does not prove a fully clean token lifecycle.
 
 Full validation and gated topic push/PR are not complete. Known required base
 checks are red; no bypass, hosted promotion, PR readiness, merge or deployment
-is claimed. Plan QA is Approved; final implementation QA remains pending.
+is claimed. Plan QA and final scoped implementation QA are Approved. Final review
+R2 approved bd1e7d02dadf1402b493d4ce6d8040a0ce0fc343 with driver attestation
+1e680b5a2af8213a9477caa2fd84c97c2eafe3a39f241737475dc5c23ac88f22.
+This is code/evidence approval, not full-gate or publication approval.
 Issue GH-661 and its clone/branch remain untouched. No stacked dependency,
 branch deletion or cleanup is authorized. Resolve base gates before normal
 publication, or explicitly authorize disclosed WIP draft publication under GH-487.
