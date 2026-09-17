@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -85,3 +85,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 2 · Builder · codex
+
+- Read the prior escalation: `pre-advance-failed`, gate red, no turn log. The existing focused suite passed before edits; the prior full-gate failure is not reproduced or explained by that result.
+- Existing implementation already supplies the 600s default, env override, marked PARTIAL transcripts/stdout, and truthful L1 idle reason. Kept the documented kill-labeled policy: idle-unknown kills at the configured idle threshold rather than extending once.
+- Fixed a demonstrated preservation gap in `utils/py/consult.py`: idle diagnostics previously appended plain text to JSON transcripts. JSON diagnostics now go to stderr; the existing PARTIAL sidecar and summary retain the reason and captured output, while raw JSON stays byte-identical.
+- Extended `test/gh648-l3-consult-cap.sh` with a real stub-advisor idle JSON case asserting exact raw bytes, marked sidecar/stdout, and failure exit 5. Observed this assertion fail before the fix (exit 1), then the complete focused suite pass after it (exit 0).
+- `validate.sh` already registers the focused suite at line 299; no registration edit needed. Files changed this round: consult.py, its focused test, and this relay file.
+- Verification: `bash test/gh648-l3-consult-cap.sh` passed default 600s, override, wall partial, truthful idle kill, normal completion, and wall/idle JSON preservation. Local ephemeral logs: `.relay-scratch/gh648-l3-baseline.log`, `gh648-l3-red.log`, `gh648-l3-green.log`; these are not committed gate/provenance evidence.
+- No git commands or full gate run. The harness still owes its full gate and agy owes independent review. Graph tools were unavailable; used direct source inspection. Reversibility: Easy; only output routing changes, with the existing markdown diagnostic path preserved.
+
+Handing off to agy — agy, take your turn.

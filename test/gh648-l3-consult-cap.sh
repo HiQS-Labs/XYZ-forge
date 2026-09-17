@@ -89,5 +89,9 @@ with tempfile.TemporaryDirectory(dir=root / '.relay-scratch', prefix='gh648-l3-'
     assert json.loads(transcript.read_text())['response'] == 'audit finding at source.py:42'
     assert marker in stdout and marker in pathlib.Path(str(transcript) + '.PARTIAL.md').read_text()
     assert rc == 5
-print('PASS: default 600s, override, wall partial, truthful idle kill, completion, JSON preservation')
+    rc, stdout, transcript, _ = run_case('json-idle', 'idle', 10, True)
+    assert transcript.read_text() == '{"response":"audit finding at source.py:42"}\n'
+    assert idle_marker in stdout and idle_marker in pathlib.Path(str(transcript) + '.PARTIAL.md').read_text()
+    assert rc == 5
+print('PASS: default 600s, override, wall partial, truthful idle kill, completion, wall/idle JSON preservation')
 PY

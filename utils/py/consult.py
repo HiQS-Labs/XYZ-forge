@@ -308,14 +308,19 @@ def wait_with_idle_bound(proc, out_path, remaining_s):
                 _reason, detail = diag.classify()
                 # GH-648: kill-labeled policy; never infer a backend hang from silence.
                 proc.xyz_idle_reason = _reason
-                try:
-                    with open(out_path, "a") as f:
-                        f.write(f"\nconsult: advisor was IDLE for >={idle_cap}s (no CPU, no transcript "
-                                f"growth) and was killed before the {int(remaining_s)}s wall cap "
-                                f"[{_reason}: {detail}]. This is an EXTERNAL condition consult "
-                                f"detected and contained, not one it prevented.\n")
-                except OSError:
-                    pass
+                diagnostic = (f"advisor was IDLE for >={idle_cap}s (no CPU, no transcript "
+                              f"growth) and was killed before the {int(remaining_s)}s wall cap "
+                              f"[{_reason}: {detail}]. This is an EXTERNAL condition consult "
+                              f"detected and contained, not one it prevented.")
+                if out_path.endswith(".json"):
+                    # Keep the raw envelope parseable for cost capture on idle kills too.
+                    warn(diagnostic)
+                else:
+                    try:
+                        with open(out_path, "a") as f:
+                            f.write(f"\nconsult: {diagnostic}\n")
+                    except OSError:
+                        pass
                 _kill_advisor_group(proc)
                 return True
             time.sleep(CONSULT_POLL_S)
