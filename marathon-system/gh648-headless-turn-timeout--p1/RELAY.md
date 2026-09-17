@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R6 builder=codex reviewer=agy round-cap=5 -->
 
@@ -85,3 +85,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 6 · Builder · codex
+
+The L1 runtime implementation and validate.sh registration were already present at turn entry. Retained the honest idle-unknown/in-flight attribution, one-shot live network observation, structured idle-kill/wall-cap/child-orphan/unknown records, and unchanged default exit code 7. No caller adoption or runtime expansion was needed.
+
+Changed `test/gh648-l1-turn-termination.sh`: consolidated mutation execution into `check_mutation`. All seven mutation oracles now run successfully against production before requiring an AssertionError from the mutant. Five older checks previously accepted any nonzero status (including an import/runtime error); the two newer checks already enforced assertion failures. This is an Easy, reversible test-only change. `utils/py/turn_diagnostics.py` and `validate.sh` remain unchanged.
+
+Verification: focused suite baseline passed 63 assertions; final focused suite passed 68 assertions, including seven witnessed assertion-failing mutations. Command: `TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-termination.sh`. Ephemeral output was confined to `.relay-scratch/gh648-baseline.log` and `.relay-scratch/gh648-final.log`; these are local turn observations, not committed gate receipts. Full gate remains for the harness, as explicitly required by the operator. No git commands were run.
+
+Discovery limitation: no graph project matches this worktree. Nearest XYZ-forge index generation 2026-09-01T15:54:30Z is stale for the runtime and validate.sh and lacks this test. Used direct current-source inspection for the implementation, entire focused suite, and existing TESTS registration instead of relying on that graph for correctness.
+
+Ready for agy's whole-file review.

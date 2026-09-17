@@ -14,6 +14,19 @@ def check(value, label):
     global passed
     if not value: raise AssertionError(label)
     passed += 1
+def check_mutation(oracle, mutant, label):
+    green = subprocess.run(
+        [sys.executable, "-c", oracle, os.environ["GH648_MODULE"]],
+        capture_output=True, text=True,
+    )
+    check(green.returncode == 0, f"{label}: production oracle passes: {green.stderr}")
+    red = subprocess.run(
+        [sys.executable, "-c", oracle, str(mutant)],
+        capture_output=True, text=True,
+    )
+    check(red.returncode != 0 and "AssertionError" in red.stderr,
+          f"{label}: assertion rejects mutation: {red.stderr}")
+
 def idle_diag():
     d = td.TurnDiagnostics(root_pid=4242)
     d.samples = [(1.0, 0.0, 1), (2.0, 0.0, 1), (3.0, 0.0, 1)]
@@ -162,8 +175,7 @@ d=m.TurnDiagnostics(root_pid=1);d.samples=[(1.,0.,1),(2.,0.,1),(3.,0.,1)]
 d._network_probe_attempted=True;d._network_state_observed="established"
 assert d.classify()[0] == m.REASON_IDLE_IN_FLIGHT
 '''
-red = subprocess.run([sys.executable, "-c", oracle, str(mutant)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-check(red.returncode != 0, "mutation turns oracle red")
+check_mutation(oracle, mutant, "in-flight classification")
 
 tree_mutated = source.replace('pids = ",".join(str(pid) for pid in _tree_pids(root_pid))',
                               'pids = str(root_pid)', 1)
@@ -177,9 +189,7 @@ def run(cmd,**kwargs): seen["cmd"]=cmd;return types.SimpleNamespace(returncode=1
 m.subprocess.run=run;m._network_state(1)
 assert seen["cmd"][seen["cmd"].index("-p")+1] == "1,2,3"
 '''
-tree_red = subprocess.run([sys.executable, "-c", tree_oracle, str(tree_mutant)],
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-check(tree_red.returncode != 0, "root-only network mutation turns oracle red")
+check_mutation(tree_oracle, tree_mutant, "root-only network probe")
 
 ratio_mutated = source.replace('span = self.samples[-1][0] - t0',
                                'span = 1.0', 1)
@@ -191,9 +201,7 @@ s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.
 d=m.TurnDiagnostics(root_pid=1);d.samples=[(0.,0.,1),(1.,1.,1),(100.,1.,1)]
 assert d.cpu_ratio() == .01
 '''
-ratio_red = subprocess.run([sys.executable, "-c", ratio_oracle, str(ratio_mutant)],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-check(ratio_red.returncode != 0, "CPU-window mutation turns oracle red")
+check_mutation(ratio_oracle, ratio_mutant, "CPU window")
 
 missing_probe_mutated = source.replace('if network is None:', 'if False:', 1)
 check(missing_probe_mutated != source, "mutation removed missing-probe guard")
@@ -204,11 +212,7 @@ s=importlib.util.spec_from_file_location("mutant",sys.argv[1]);m=importlib.util.
 d=m.TurnDiagnostics(root_pid=1);d.samples=[(1.,0.,1),(2.,0.,1),(3.,0.,1)]
 assert d.classify()[0] == m.REASON_UNCLASSIFIED
 '''
-missing_probe_red = subprocess.run(
-    [sys.executable, "-c", missing_probe_oracle, str(missing_probe_mutant)],
-    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-)
-check(missing_probe_red.returncode != 0, "missing-probe mutation turns oracle red")
+check_mutation(missing_probe_oracle, missing_probe_mutant, "missing live probe")
 
 pid_peak_mutated = source.replace(
     'self._pid_cpu_peaks[pid] = max(self._pid_cpu_peaks.get(pid, 0.0), seconds)',
@@ -224,11 +228,7 @@ m._security_dialog_present=lambda:False;m._newest_mtime=lambda _root:0.;times=it
 d=m.TurnDiagnostics(root_pid=1);d._sample();d._sample();d._sample();d._sample()
 assert [x[1] for x in d.samples] == [0.,1.,2.,3.]
 '''
-pid_peak_red = subprocess.run(
-    [sys.executable, "-c", pid_peak_oracle, str(pid_peak_mutant)],
-    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-)
-check(pid_peak_red.returncode != 0, "per-PID retention mutation turns oracle red")
+check_mutation(pid_peak_oracle, pid_peak_mutant, "per-PID CPU retention")
 
 # Run each acceptance oracle on production first, then on a deliberate defect.
 # Requiring AssertionError also prevents import/runtime failures counting as red.
@@ -256,15 +256,9 @@ for label, original, replacement, assertions in acceptance_mutations:
 s=importlib.util.spec_from_file_location("subject",sys.argv[1])
 m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
 ''' + assertions
-    green = subprocess.run([sys.executable, "-c", oracle, os.environ["GH648_MODULE"]],
-                           capture_output=True, text=True)
-    check(green.returncode == 0, f"{label}: production oracle passes: {green.stderr}")
     check(source.count(original) == 1, f"{label}: mutation has one target")
     mutant = pathlib.Path(os.environ["GH648_WORK"]) / f"{label}.py"
     mutant.write_text(source.replace(original, replacement, 1))
-    red = subprocess.run([sys.executable, "-c", oracle, str(mutant)],
-                         capture_output=True, text=True)
-    check(red.returncode != 0 and "AssertionError" in red.stderr,
-          f"{label}: assertion rejects mutation")
+    check_mutation(oracle, mutant, label)
 print(f"PASS: {passed} assertions")
 PY
