@@ -103,3 +103,11 @@ The implementation in `utils/py/consult.py`, `test/gh648-l3-consult-cap.sh`, and
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T15:33:25Z
+task: MARATHON-P3-TURN-R3
+reviewer: agy
+status: Approved
+reviewed-head: 7360fc27b7e1a57cf7d2501c82ac14cec70ccf21
+added-range: 8436+621
+added-sha256: 95f4844ce1f9498082fe2e91fe2d5bf16a401d794f27dd483ec778ae71ac1c48
