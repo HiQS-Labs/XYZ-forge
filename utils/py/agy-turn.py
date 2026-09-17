@@ -257,7 +257,10 @@ def agy_validate_model(agy_bin):
     try:
         # GH-666: resolve in caller CWD first; relative binaries/PATH entries must
         # not start resolving against the disposable probe CWD instead.
-        probe_bin = os.path.abspath(shutil.which(agy_bin) or agy_bin)
+        probe_bin = shutil.which(agy_bin)
+        if probe_bin is None:
+            raise FileNotFoundError(agy_bin)
+        probe_bin = os.path.abspath(probe_bin)
         # Reuse the auth probe's disposable-CWD pattern. Context ownership also
         # cleans nonzero/timeout/launch failures and reports cleanup errors below.
         with tempfile.TemporaryDirectory(prefix="agy-model-probe.") as probe_cwd:

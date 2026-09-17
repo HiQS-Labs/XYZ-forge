@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -123,6 +124,18 @@ if mode == "timeout": time.sleep(10)
     def test_absolute_path_entry(self):
         os.environ["PATH"] = str(self.stub.parent) + os.pathsep + os.environ["PATH"]
         self.check_probe(True, "agy")
+
+    def test_missing_path_does_not_use_caller_binary(self):
+        # A bare command absent from PATH must not fall back to a caller file.
+        local_binary = self.caller / "agy"
+        shutil.copy2(self.stub, local_binary)
+        empty_bin = self.root / "empty-bin"
+        empty_bin.mkdir()
+        real_git = shutil.which("git")
+        self.assertIsNotNone(real_git)
+        (empty_bin / "git").symlink_to(real_git)
+        os.environ["PATH"] = str(empty_bin)
+        self.check_probe(False, "agy", invoked=False)
 
     def test_unset_model_skips_probe(self):
         os.environ.pop("AGY_MODEL")
