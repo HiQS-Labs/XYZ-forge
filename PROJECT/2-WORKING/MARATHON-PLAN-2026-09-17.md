@@ -102,7 +102,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #515 GH-515 · test/agent-chorus.sh: telemetry assertions time-bomb on the default-ON pilot window — `already-closed`
 - #608 GH-608 · fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution — `already-closed`
 - #610 GH-610 · feat(claude): subscription-validated native consult and relay support — `already-closed`
-- #620 GH-620 · XYZ Skills Army mini and reusable spin-off recipe — `already-closed`
 - #609 GH-609 · feat(sdlc): address edge-case SDLC gaps in autonomous agent workflows — `already-closed`
 - #626 GH-626 · skills(workhorse, unstuck): close the autonomous re-entry loop — `already-closed`
 - #623 GH-623 · merge-cleanup: collision edges cascade handoffs, no fetch retry, no resume loop — `already-closed`
