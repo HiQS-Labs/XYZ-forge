@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -140,5 +140,20 @@ runtime is unchanged from the full R1 sweep. Read this whole thread and source
 updates without aggregate-output truncation. Only this transcript writable.
 Handing off to Reviewer — approve scoped implementation/evidence if sound, keeping
 publication hold separate; otherwise give the concrete remaining blocker within cap3.
+
+### Reviewer — codex — Round 2
+
+VERDICT: PASS
+Basis: The R1 launch-path blocker and evidence guards are addressed with retained positive and witnessed negative receipts. Scoped implementation/evidence approved; publication remains held. No source, test, artifact program or Git command was run; verification consisted of source/log reads and read-only receipt hashing.
+swept file: yes
+
+- [Pass] Post-allocation launch coverage: `test/gh666_agy_model_probe.py:117–124` creates an executable with a nonexistent interpreter and asserts exactly one probe allocation. Its shared checks at `:73–90` require refusal, unchanged caller/sentinel, no invocation and no directory/log residue. `regression-r2.log` contains "Ran 14 tests" / "OK"; `cleanup-ablation-r2.log` points to line 90 and reports "probe cwd/log residue" / "FAILED (failures=1)". `ablate-cleanup.py` detaches only the model-probe finalizer and preserves outer cleanup. Action: retain this coverage and witnessed cleanup control; R1 blocker closed.
+- [Pass] Nonempty evidence guards: `test/agy-turn.sh:309–323` rejects absent/empty event evidence and empty extracted paths, with explicit negative controls. `agy-shim-r2.log` contains "claim event and extracted paths are nonempty", both "control refused" messages and `got: "relay.md"`. Action: retain these guards; R1 hollow-assertion finding closed.
+- [Pass] Receipt integrity: all fourteen artifacts addressed by `provenance.jsonl` are nonempty and their SHA256 values match on this turn's read-only hash check. Current receipts record e6898846; `cwd-ablation-r2.log` contains "Ran 14 tests" / "FAILED (failures=11)", and `agy-shim-r2.log` contains "65 pass, 0 fail". Source attribution remains the recorded producer attribution; no independent Git ancestry claim. Action: retain the source-pinned receipts.
+- [Pass] Evidence qualification: SUMMARY's "failed seeding diagnostics, not expected teardown" agrees with the persistent open-task errors in `agy-shim-r2.log`, the intruder claim at `test/agy-turn.sh:275–286`, ignored seed results at `:94`, and ownership refusal at `src/scope.js:29–32`. SUMMARY explicitly says the receipt "does not prove a fully clean token lifecycle". Action: preserve this exclusion; R1 qualification finding closed, older fixture repair remains separate.
+- [Pass] Whole-file sweep: reread the current runtime and both test files through EOF, plus plan/recon/SUMMARY and follow-up ablation source. `utils/py/agy-turn.py:250–329` retains unset-model bypass, caller-side binary resolution, owned CWD, refusal and parser semantics; forwarding remains at `:408–409`. No additional blocking pre-existing defect found. Previously cited auth allocation/relative-binary/cleanup limitations at `:133–143,233–235` and shell fixture bookkeeping remain disclosed exclusions. Action: keep the repair bounded.
+- [Pass] Publication remains held: SUMMARY states "Full validation and gated topic push/PR are not complete" and "Known required base checks are red"; the plan's full-gate/PR checklist remains unchecked and CHANGELOG's GH-666 entry bounds relative writes and excludes detached children. Action: resolve required gates and obtain actual final-state publication evidence before claiming PR readiness; this approval authorizes no bypass, push, merge or promotion.
+
+Relay closed (Approved), no further review turn needed. Producer receives completion for the scoped review; preserve the publication hold.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
