@@ -1,0 +1,7 @@
+== test: path-integrity ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-path-integrity.XXXXXX.ALS204CWmd
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  broken path reference 'test/x.sh' in test/gh654-offlane-log.sh
+  broken path reference 'skills/alpha/SKILL.md' in test/gh660-skill-drift.sh
+  broken path reference 'skills/beta/SKILL.md' in test/gh660-skill-drift.sh
+  FAIL: one or more referenced paths do not exist (see above) — fix the path or the reference

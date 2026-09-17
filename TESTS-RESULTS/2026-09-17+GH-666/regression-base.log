@@ -1,0 +1,227 @@
+test_absolute_path_entry (__main__.ModelProbeTests.test_absolute_path_entry) ... FAIL
+test_directory_creation_failure_refuses (__main__.ModelProbeTests.test_directory_creation_failure_refuses) ... FAIL
+test_ignored_marker_still_detected (__main__.ModelProbeTests.test_ignored_marker_still_detected) ... FAIL
+test_launch_failure (__main__.ModelProbeTests.test_launch_failure) ... agy-turn: agy models probe failed while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+ok
+test_listed_forms (__main__.ModelProbeTests.test_listed_forms) ... 
+  test_listed_forms (__main__.ModelProbeTests.test_listed_forms) (model='model-id') ... FAIL
+  test_listed_forms (__main__.ModelProbeTests.test_listed_forms) (model='Display Model') ... FAIL
+  test_listed_forms (__main__.ModelProbeTests.test_listed_forms) (model='model-id\tDisplay Model') ... FAIL
+test_nonzero (__main__.ModelProbeTests.test_nonzero) ... agy-turn: agy models probe failed (exit 9) while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+agy-turn: models probe: model-id	Display Model
+FAIL
+test_relative_executable (__main__.ModelProbeTests.test_relative_executable) ... FAIL
+test_relative_path_entry (__main__.ModelProbeTests.test_relative_path_entry) ... FAIL
+test_timeout (__main__.ModelProbeTests.test_timeout) ... agy-turn: agy models probe timed out after 1s while validating AGY_MODEL='model-id'. Refusing to fall back silently.
+agy-turn: models probe: model-id	Display Model
+FAIL
+test_unavailable (__main__.ModelProbeTests.test_unavailable) ... agy-turn: requested AGY_MODEL='not-listed' is unavailable on this agy account. Run `agy models` to choose a listed model; refusing to fall back silently.
+FAIL
+test_unset_model_skips_probe (__main__.ModelProbeTests.test_unset_model_skips_probe) ... ok
+
+======================================================================
+FAIL: test_absolute_path_entry (__main__.ModelProbeTests.test_absolute_path_entry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 125, in test_absolute_path_entry
+    self.check_probe(True, "agy")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 75, in check_probe
+    self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (b'9f[127 chars]lse\n', b'?? probe-write.txt\n', b'caller work must survive\n') != (b'9f[127 chars]lse\n', b'', b'caller work must survive\n')
+
+First differing element 1:
+b'?? probe-write.txt\n'
+b''
+
+  (b'9f782dfe85f09d368a14b25ec0d61499ca73ade4\n/private/var/folders/z0/92pfvhn'
+   b'n06z2_7hnpdb4kkbw0000gn/T/gh666.clrbenkq/caller/.git\nfalse\n',
+-  b'?? probe-write.txt\n',
++  b'',
+   b'caller work must survive\n') : caller identity/HEAD/tree/sentinel changed
+
+======================================================================
+FAIL: test_directory_creation_failure_refuses (__main__.ModelProbeTests.test_directory_creation_failure_refuses)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 138, in test_directory_creation_failure_refuses
+    self.check_probe(False, invoked=False)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 74, in check_probe
+    self.assertEqual(result, expected)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: True != False
+
+======================================================================
+FAIL: test_ignored_marker_still_detected (__main__.ModelProbeTests.test_ignored_marker_still_detected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 99, in test_ignored_marker_still_detected
+    self.check_probe(True)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 76, in check_probe
+    self.assertFalse((self.caller / "probe-write.txt").exists(), "probe wrote into caller")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : probe wrote into caller
+
+======================================================================
+FAIL: test_listed_forms (__main__.ModelProbeTests.test_listed_forms) (model='model-id')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 95, in test_listed_forms
+    self.check_probe(True)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 75, in check_probe
+    self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (b'6b[127 chars]lse\n', b'?? probe-write.txt\n', b'caller work must survive\n') != (b'6b[127 chars]lse\n', b'', b'caller work must survive\n')
+
+First differing element 1:
+b'?? probe-write.txt\n'
+b''
+
+  (b'6b4c9939bb5dd4322837644fa1d3c232455aacb3\n/private/var/folders/z0/92pfvhn'
+   b'n06z2_7hnpdb4kkbw0000gn/T/gh666.8t1j5dw8/caller/.git\nfalse\n',
+-  b'?? probe-write.txt\n',
++  b'',
+   b'caller work must survive\n') : caller identity/HEAD/tree/sentinel changed
+
+======================================================================
+FAIL: test_listed_forms (__main__.ModelProbeTests.test_listed_forms) (model='Display Model')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 95, in test_listed_forms
+    self.check_probe(True)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 76, in check_probe
+    self.assertFalse((self.caller / "probe-write.txt").exists(), "probe wrote into caller")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : probe wrote into caller
+
+======================================================================
+FAIL: test_listed_forms (__main__.ModelProbeTests.test_listed_forms) (model='model-id\tDisplay Model')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 95, in test_listed_forms
+    self.check_probe(True)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 76, in check_probe
+    self.assertFalse((self.caller / "probe-write.txt").exists(), "probe wrote into caller")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false : probe wrote into caller
+
+======================================================================
+FAIL: test_nonzero (__main__.ModelProbeTests.test_nonzero)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 107, in test_nonzero
+    self.check_probe(False)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 75, in check_probe
+    self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (b'6b[127 chars]lse\n', b'?? probe-write.txt\n', b'caller work must survive\n') != (b'6b[127 chars]lse\n', b'', b'caller work must survive\n')
+
+First differing element 1:
+b'?? probe-write.txt\n'
+b''
+
+  (b'6b4c9939bb5dd4322837644fa1d3c232455aacb3\n/private/var/folders/z0/92pfvhn'
+   b'n06z2_7hnpdb4kkbw0000gn/T/gh666.j4n_tvwz/caller/.git\nfalse\n',
+-  b'?? probe-write.txt\n',
++  b'',
+   b'caller work must survive\n') : caller identity/HEAD/tree/sentinel changed
+
+======================================================================
+FAIL: test_relative_executable (__main__.ModelProbeTests.test_relative_executable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 117, in test_relative_executable
+    self.check_probe(True, "./tools/agy")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 75, in check_probe
+    self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (b'e8[127 chars]lse\n', b'?? probe-write.txt\n', b'caller work must survive\n') != (b'e8[127 chars]lse\n', b'', b'caller work must survive\n')
+
+First differing element 1:
+b'?? probe-write.txt\n'
+b''
+
+  (b'e8cd51d1207b190dd8e48b8b2a79ab926fe857fb\n/private/var/folders/z0/92pfvhn'
+   b'n06z2_7hnpdb4kkbw0000gn/T/gh666.jk6kkgat/caller/.git\nfalse\n',
+-  b'?? probe-write.txt\n',
++  b'',
+   b'caller work must survive\n') : caller identity/HEAD/tree/sentinel changed
+
+======================================================================
+FAIL: test_relative_path_entry (__main__.ModelProbeTests.test_relative_path_entry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 121, in test_relative_path_entry
+    self.check_probe(True, "agy")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 75, in check_probe
+    self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (b'e8[127 chars]lse\n', b'?? probe-write.txt\n', b'caller work must survive\n') != (b'e8[127 chars]lse\n', b'', b'caller work must survive\n')
+
+First differing element 1:
+b'?? probe-write.txt\n'
+b''
+
+  (b'e8cd51d1207b190dd8e48b8b2a79ab926fe857fb\n/private/var/folders/z0/92pfvhn'
+   b'n06z2_7hnpdb4kkbw0000gn/T/gh666.b3vriq5k/caller/.git\nfalse\n',
+-  b'?? probe-write.txt\n',
++  b'',
+   b'caller work must survive\n') : caller identity/HEAD/tree/sentinel changed
+
+======================================================================
+FAIL: test_timeout (__main__.ModelProbeTests.test_timeout)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 111, in test_timeout
+    self.check_probe(False)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 75, in check_probe
+    self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (b'e8[127 chars]lse\n', b'?? probe-write.txt\n', b'caller work must survive\n') != (b'e8[127 chars]lse\n', b'', b'caller work must survive\n')
+
+First differing element 1:
+b'?? probe-write.txt\n'
+b''
+
+  (b'e8cd51d1207b190dd8e48b8b2a79ab926fe857fb\n/private/var/folders/z0/92pfvhn'
+   b'n06z2_7hnpdb4kkbw0000gn/T/gh666.h3uy5zoa/caller/.git\nfalse\n',
+-  b'?? probe-write.txt\n',
++  b'',
+   b'caller work must survive\n') : caller identity/HEAD/tree/sentinel changed
+
+======================================================================
+FAIL: test_unavailable (__main__.ModelProbeTests.test_unavailable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 103, in test_unavailable
+    self.check_probe(False)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-agy-model-probe-validation/test/gh666_agy_model_probe.py", line 75, in check_probe
+    self.assertEqual(self.snapshot(), before, "caller identity/HEAD/tree/sentinel changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: (b'04[127 chars]lse\n', b'?? probe-write.txt\n', b'caller work must survive\n') != (b'04[127 chars]lse\n', b'', b'caller work must survive\n')
+
+First differing element 1:
+b'?? probe-write.txt\n'
+b''
+
+  (b'04786aa4b77e6480e08efae6cc23d995e6c0a792\n/private/var/folders/z0/92pfvhn'
+   b'n06z2_7hnpdb4kkbw0000gn/T/gh666.kkoe3yjm/caller/.git\nfalse\n',
+-  b'?? probe-write.txt\n',
++  b'',
+   b'caller work must survive\n') : caller identity/HEAD/tree/sentinel changed
+
+----------------------------------------------------------------------
+Ran 11 tests in 4.636s
+
+FAILED (failures=11)

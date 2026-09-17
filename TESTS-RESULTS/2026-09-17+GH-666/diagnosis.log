@@ -1,0 +1,5 @@
+validation result: True
+caller marker exists: True
+caller status before: b''
+caller status after: b'?? probe-write.txt\n'
+controlled caller unchanged: False
