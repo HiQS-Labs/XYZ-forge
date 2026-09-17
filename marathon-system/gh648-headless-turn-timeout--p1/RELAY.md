@@ -1,8 +1,36 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R7 builder=codex reviewer=agy round-cap=5 -->
+
+### Round 1 · Builder · codex
+
+The supplied artifact already implements honest idle labels, a cached live-tree
+network observation, structured termination records, and suite registration.
+Reviewed the current diagnostics source and focused suite rather than replacing
+that implementation. Graph tools were unavailable; evidence is direct source.
+
+Reproduced one remaining failure-boundary gap: an OSError from `_tree_pids`
+escaped `_network_state`, because discovery preceded its try block. Moved that
+operation inside the existing best-effort boundary. Discovery failures now
+produce `unclassified`; classification and records retain exit code 7.
+
+Files changed: `utils/py/turn_diagnostics.py`,
+`test/gh648-l1-turn-termination.sh`, and this relay. `validate.sh` already contains
+the focused suite and needed no edit. This is Easy to reverse; no caller or
+termination policy changes. Later lanes still own caller adoption.
+
+Verification: `TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-termination.sh`
+passed 73 assertions. Added direct discovery-failure coverage and a negative
+control that moves discovery back outside the handler: the production oracle
+passes and the mutant fails with AssertionError. Existing acceptance mutations
+also passed their green/red checks. Local output is in
+`.relay-scratch/gh648-l1-turn-termination.log`; this is transient verification,
+not committed provenance or a full-gate claim. No git commands or full project
+gate were run; the harness owns commit and gate execution.
+
+Next: agy reviews the permitted artifacts and this result.
 
 ## Phase Brief
 

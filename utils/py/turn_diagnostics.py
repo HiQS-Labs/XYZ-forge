@@ -145,8 +145,8 @@ def _tree_pids(root_pid: int, ps_output: str | None = None) -> list[int]:
 
 def _network_state(root_pid: int) -> str:
     """Return network state for *root_pid* and its current descendants."""
-    pids = ",".join(str(pid) for pid in _tree_pids(root_pid))
     try:
+        pids = ",".join(str(pid) for pid in _tree_pids(root_pid))
         probe = subprocess.run(
             ["lsof", "-a", "-n", "-P", "-p", pids,
              "-iTCP", "-sTCP:ESTABLISHED", "-F", "n"],

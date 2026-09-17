@@ -80,6 +80,12 @@ for mode, expected in (("established", "established"), ("none", "none"), ("error
     check(td._network_state(4242) == expected, f"lsof {mode} maps to {expected}")
 
 real_run, real_tree_pids = td.subprocess.run, td._tree_pids
+with patch.object(td, "_tree_pids", side_effect=OSError("process discovery failed")):
+    state = td._network_state(4242)
+check(state == "unclassified", "process discovery failure is best-effort")
+record = observed_idle(state).termination_record(td.TERMINATION_IDLE_KILL)
+check(record["reason"] == td.REASON_UNCLASSIFIED and record["exit_code"] == 7,
+      "process discovery failure preserves exit 7")
 for failure in (FileNotFoundError("lsof unavailable"),
                 subprocess.TimeoutExpired("lsof", 5.0)):
     with patch.object(td, "_tree_pids", return_value=[4242]), \
@@ -233,6 +239,17 @@ check_mutation(pid_peak_oracle, pid_peak_mutant, "per-PID CPU retention")
 # Run each acceptance oracle on production first, then on a deliberate defect.
 # Requiring AssertionError also prevents import/runtime failures counting as red.
 acceptance_mutations = (
+    ("discovery-failure",
+     '    try:\n        pids = ",".join(str(pid) for pid in _tree_pids(root_pid))',
+     '    pids = ",".join(str(pid) for pid in _tree_pids(root_pid))\n    try:',
+     '''def fail(_pid): raise OSError("process discovery failed")
+m._tree_pids=fail
+try:
+    result=m._network_state(1)
+except OSError:
+    result="escaped"
+assert result == "unclassified"
+'''),
     ("termination-kinds",
      'kind = termination if termination in TERMINATION_KINDS else TERMINATION_UNKNOWN',
      'kind = TERMINATION_UNKNOWN',
