@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-17 — GH-653 / GH-665 fixture safety
+
+The GH-642 suite seeds its owned repository before creating linked worktrees and
+reuses the existing physical-containment guard before fixture writes. Failed
+construction/substitution refuses rather than committing into the caller. Five
+fault cases check caller preservation; warning and RTL temporary paths stay in
+the owned sandbox. Runtime commands, shared guard/setup and frozen Bash twins are
+unchanged. Easy rollback: reviewed revert of this test-only repair. Focused suite:
+62/62; guard-disabled and caller-damage controls witnessed red. Full verification
+and independent final QA are tracked in TESTS-RESULTS/2026-09-17+GH-653-GH-665/.
+
 ## 2026-09-16 — PDDA canonical migration (GH-649)
 
 Forge now carries PDDA's installer, manifest, sync tooling and generic startup templates.

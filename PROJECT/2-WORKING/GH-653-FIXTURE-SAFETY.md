@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Existing repair located in held GH-661 clone; current development failure observed; both issues registered/rated | Independent plan QA, extract only fixture changes, verify and open separate PR; test combined with #669 without publishing a stack |
+| Independent plan QA Approved; scoped fixture repair 62/62; guard/caller negative controls witnessed red | Full isolated gate, independent final QA, separate PR; conditional combined #669 checks |
 
 ## Quad Concepts
 
@@ -89,8 +89,9 @@ base repairs, merge, deployment, #661 resumption, or stacked-PR publication.
    bounded in-memory controls: disable fixture guard → symlink refusal turns red;
    inject controlled caller commit → caller-preservation check turns red. No tracked
    mutation; all generated fixtures remain inside _setup's owned outer sandbox.
-4. Commit code/docs/evidence with source/hash/exit provenance; focused suite and
-   static/full local gate in independent disposable clone → green and identity stable.
+4. Commit code/docs/evidence with source/hash/exit provenance; focused/static checks
+   and normal pre-push full gate in independent disposable clone → green and identity stable.
+   A draft fixture PR may retain verification while final QA is outstanding.
    Independent final Codex QA cap3 → Approved or explicit blocker, no silent retry.
 5. Normal gated push and one PR into development → exact head/base/scope/CI checked,
    issues remain open. In a separate disposable combined-verification clone, merge
@@ -102,13 +103,19 @@ base repairs, merge, deployment, #661 resumption, or stacked-PR publication.
 
 ### Phase 1 — QA checklist
 
-- [ ] Original unborn fixture red retained and actual linked-worktree coverage green.
-- [ ] All five fault refusals and caller checks pass; guard/caller controls witnessed red.
+- [x] Original unborn fixture red retained and actual linked-worktree coverage green.
+- [x] All five fault refusals and caller checks pass; guard/caller controls witnessed red.
 - [ ] Focused/static/full gate green at final source, clone identity stable, provenance committed.
 - [ ] Independent plan/final QA Approved; separate PR base/head/scope verified.
 - [ ] Combined #669 checks recorded separately; prerequisite and merge hold explicit.
 
 ## Lessons Learned (For Future Agents)
+
+Plan QA Approved (relay-system/2026-09-17/gh653-plan-qa.md). Should implemented:
+DBG is under WORK; RTL uses a separately guarded rtl-temp descendant outside FIX
+and guards the returned worktree. Existing WORK is pinned by _setup before derived
+fixture construction, then each created directory is guarded before use. Nit:
+original-base recon citations corrected. Final source QA remains outstanding.
 
 An initial commit is a prerequisite of worktree coverage, not a reason to skip it.
 Guard path construction before introducing that commit; empty git -C targets caller.
