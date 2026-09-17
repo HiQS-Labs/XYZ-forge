@@ -1,0 +1,1 @@
+{"timestamp": "2026-09-17T00:28:13.486Z", "commit": "99b376d97862025ddf515650302f680f70fbd3cf", "issue": 660, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh660-skill-drift.sh", "rc": 0, "result": "pass", "environment": "express driver, direct development push"}

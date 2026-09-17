@@ -103,6 +103,7 @@ TESTS=(
   "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
   "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
   "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
+  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, expand-contract migrations, containment)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
@@ -278,7 +279,8 @@ TESTS=(
   "gh131-marathon-target-root.sh" # #131 (cross-repo --target-root + target --phases-dir: render and escalation commits land in the TARGET repo; in-repo control byte-identical; phase_commit_root unit) — 12/0; pool-safe: marathon's fixture-rooted lock + the relay-drive child inherits RELAY_DRIVER_LOCKED=1
   "gh139-pipe-grep-guard.sh"     # #139 (static inventory guard: no NEW `| grep -q` pipes in test/ — the GH-460 SIGPIPE shape; baseline of unconverted stragglers beside it)
   # #141 Phase 1: every test/synthetic/ suite is owned by THIS registry (single selector).
-  # Direct entries — the runner invokes bash test/<entry>, wrappers would only add indirection.
+  # Direct entries — the runner dispatches .py with Python and everything else with Bash;
+  # wrappers would only add indirection.
   "synthetic/gh101-consult-programmatic.sh"   # GH-101 (programmatic tool mode: consult adapters fail closed without a sandbox backend)
   "synthetic/gh101-relay-programmatic-stress.sh" # GH-101 (relay-drive PGID process cleanup + fail-closed sandbox checks under --tool-mode programmatic)
   "synthetic/gh102-telemetry-schema.sh"       # GH-102 (Telemetry 1.0 shared schema invariants across fuzz-loop and ATE emitters; #141 Phase 2 extends it with mixed-outcome fixtures + rendered-group assertions)
@@ -294,6 +296,8 @@ TESTS=(
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
   "gh608-deepseek-effort.sh"     # GH-608 (DEEPSEEK_REASONING_EFFORT matrix, early claim prevention, telemetry normalization)
+  "gh654-offlane-log.sh"         # GH-654 (offlane_candidates names allowlist failures before the bash verdict destroys the worktree; exemptions load-bearing)
+  "gh660-skill-drift.sh"         # GH-660 (skill_drift_check flags vendored SKILL.md copies diverged from canonical skills/; mutation-proven)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
   "gh155-phase1-metamorphic-invariants.sh" # #155 Phase 1 (Metamorphic Invariant Assertions & Sandbox Hardening: zero-mutation, idempotence, realpath containment)
   "gh155-phase2-differential-oracle.sh" # #155 Phase 2 (Differential Multi-Harness Cross-Testing Oracle across all 7 turn shims)
@@ -498,6 +502,7 @@ TESTS=(
   "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
+  "gh642-consumer-fruit.sh"      # GH-642 (vendor→info/exclude, claude Opus-budget warn, --force token auto-suffix, worktree deps copy, xyz-init-clone, preflight zero-criteria warn)
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
   "gh293-vendored-guard-drift.sh" # GH-293 (safety-guard manifest + safe fleet-update source gate)
   "relay-concurrent-commit.sh"
@@ -506,6 +511,9 @@ TESTS=(
   "relay-xyz-skill-guard.sh"
   "find-harness.sh"
   "gh292-worktree-vendored-discovery.sh"  # GH-292 (linked worktree resolves main-checkout .xyz/)
+  "gh649-pdda-migration.sh"
+  "pdda-changelog.sh"
+  "pdda-install-startup-docs.sh"
   "pdda-roadmap-coverage.sh"
   "pdda-repo-contract.sh"       # GH-311 (real-repository PDDA deterministic contract)
   "pdda-local-checks.sh"        # the checks the 2026-08-03 PDDA sync deleted, restored outside the sync surface
@@ -551,7 +559,10 @@ TESTS=(
   "gh421-auto-wave-reconcile.sh"      # GH-421 (post-merge CI auto-trigger for wave_reconcile.py; idempotent repeat, no re-shipped ledger writes)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
+  "gh605-work-state.sh"               # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
+  "gh605-board-policy.sh"              # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
   "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
+  "gh645-merge-cleanup-xyz-tools.sh"  # GH-645 (/merge-cleanup: PRS tools resolved from .xyz/ and the primary; reconcile flag only when advertised)
   "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
@@ -1303,7 +1314,7 @@ if [ -n "$PARALLEL_JOBS" ]; then
     echo "$why: $t — re-running it alone to see if that verdict survives"
     echo "==============================="
     _s="$(rt_now_ms)"
-    if bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
+    if $NICE_CMD bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
       rc_alone=0
       PASSED+=("$t")
       CONTENDED+=("$t")

@@ -116,6 +116,22 @@ Apply Ponytail to engineer the **least-mechanism, foundationally sound resolutio
 
 ---
 
+## Operational Containment Protocol (Secrets, Leakage & Incident Response)
+
+If a defect, failed workflow, test artifact, or prompt transcript exposes API keys, service tokens, or private credentials:
+
+1. **Priority 1 — Provider Revocation & Rotation First:**
+   - Immediately revoke or rotate the compromised credential in the identity/cloud provider console or CLI before attempting git history manipulation.
+2. **Priority 2 — Blast Radius Audit in Access Logs:**
+   - Query provider audit and access logs for the compromised key's token ID during the exposure window to identify unauthorized accesses.
+3. **Priority 3 — Preserve Sanitized Evidence:**
+   - Never copy raw credentials, secret tokens, or decrypted payloads into issues, PR descriptions, or prompt logs. Replace all secret instances with deterministic redactions (`[REDACTED_API_KEY]`).
+4. **Priority 4 — Explicitly Authorized History Scrubbing:**
+   - History rewriting tools (`git-filter-repo` / BFG) require explicit operator confirmation.
+   - Strictly comply with `WORKTREE-SAFETY.md`: verify that no linked worktrees depend on the rewritten refs, take a full backup of `.git` beforehand, and coordinate ref updates across active clones.
+
+---
+
 ## Phase 4: Governed Verification & Receipts
 
 1. **Preflight in Disposable Clone:**

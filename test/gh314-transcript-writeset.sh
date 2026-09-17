@@ -46,6 +46,7 @@ cat >"$STUB" <<STUB_EOF
 #!/usr/bin/env bash
 echo "DISPATCHED" >>"$DISPATCH_LOG"
 printf '\n### Round 1 · Builder\nwork\n' >>"\${RELAY_FILE:-/dev/null}" 2>/dev/null || true
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed"}\n'
 exit 0
 STUB_EOF
 chmod +x "$STUB"

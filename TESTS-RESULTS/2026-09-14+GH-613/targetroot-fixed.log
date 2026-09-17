@@ -1,0 +1,15 @@
+== test: relay-target-root ==
+  workdir: <tmp>/tick-relay-target-root.XXXXXX.tHnsr94Ltz
+  PASS: foreign repo target: commit created in foreign repo B
+  PASS: foreign repo target: harness repo A untouched
+  PASS: foreign repo target: artifact edited in B
+  PASS: foreign repo target: artifact in A untouched
+  PASS: default path: commit created in harness repo A
+  PASS: default path: foreign repo B untouched
+  PASS: default path: artifact edited in A
+  PASS: GH-51 [1-kernel]: same-repo --target-root . commits (relay file no longer off-lane)
+  PASS: GH-51 [1-kernel]: same-repo --target-root . — relay-file edit landed
+  PASS: GH-160: vendored-subdir TURN_ROOT commits (relay file no longer off-lane)
+  PASS: GH-160: vendored-subdir TURN_ROOT — relay-file edit landed
+  PASS: GH-160: vendored-subdir TURN_ROOT — artifact survived worktree seeding
+  relay-target-root: 12 pass, 0 fail

@@ -115,15 +115,16 @@ diverge() { # <name> <extra writes on side A>, leaves a real merge conflict on s
   git -C "$r" branch s-a
   git -C "$r" branch s-b
   git -C "$r" checkout -q s-a
-  add_release "$r" 1.0.0 101 'side A.'
+  RELEASES_APP_NOW='2026-09-13T00:00:01Z' add_release "$r" 1.0.0 101 'side A.'
   while [ "$i" -lt "$extra" ]; do
-    add_release "$r" "1.$((i + 1)).0" "$((110 + i))" "side A extra $i."
+    RELEASES_APP_NOW='2026-09-13T00:00:01Z' \
+      add_release "$r" "1.$((i + 1)).0" "$((110 + i))" "side A extra $i."
     i=$((i + 1))
   done
   git -C "$r" add releases.db releases.sql
   git -C "$r" commit -qm side-a
   git -C "$r" checkout -q s-b
-  add_release "$r" 2.0.0 201 'side B.'
+  RELEASES_APP_NOW='2026-09-13T00:00:02Z' add_release "$r" 2.0.0 201 'side B.'
   git -C "$r" add releases.db releases.sql
   git -C "$r" commit -qm side-b
   git -C "$r" merge s-a -m merge >"$WORK/$name.merge.out" 2>&1 || true
@@ -142,7 +143,7 @@ refused_rebuild() { # <root> <rule> <label>
 # ── Scenario 1: divergent branches merge through GID rows, not physical ids ─────────────────────
 printf '%s\n' '-- Scenario 1: concurrent branch divergence and GID-keyed merge'
 R1="$(diverge s1 0)"
-union_dump "$R1" s-b
+resolved_union_dump "$R1" s-b
 ra "$R1" check --rebuild >"$WORK/s1.rebuild.out" 2>&1; RC=$?
 ok 'disjoint branch dumps rebuild successfully' "$RC"
 COUNT="$(sql "$R1" 'SELECT COUNT(*) FROM releases')"

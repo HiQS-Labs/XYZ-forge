@@ -8,7 +8,7 @@ import json
 import shutil
 from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root, rtl_default_log
 from turn_diagnostics import TurnDiagnostics
-from claude_cli import resolve_binary, preflight, read_result
+from claude_cli import resolve_binary, preflight, read_result, effort_flags
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -32,6 +32,20 @@ def warn_if_workspace_untrusted(root):
             f"projects[{root!r}][\"hasTrustDialogAccepted\"] to true in {config_path}.",
             file=sys.stderr,
         )
+
+def warn_opus_budget(model, max_budget, stream=None):
+    """GH-642: the default budget is sized for Sonnet (see the cost-ceilings history in the bash
+    body). An Opus-class pin with that default hard-stops the turn mid-flight — a bare smoke
+    call is already ~$0.68 of cache-write. Advisory, not a refusal: Opus is an explicit operator
+    choice, and refusing would turn a cost mismatch into a new policy gate."""
+    if model.startswith("claude-opus") and max_budget == "0.50":
+        print(
+            "claude-turn: WARNING — CLAUDE_MODEL is Opus-class but CLAUDE_MAX_BUDGET is the "
+            "Sonnet-sized default ($0.50); the turn will likely hard-stop on budget. Raise "
+            "CLAUDE_MAX_BUDGET (e.g. 5.00) for Opus lanes.",
+            file=stream or sys.stderr,
+        )
+
 
 def main():
     if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
@@ -65,6 +79,10 @@ def main():
         sys.exit(3)
         
     allow_paths = os.environ.get("ALLOW_PATHS", "")
+    try:
+        native_effort = effort_flags(os.environ)
+    except ValueError as error:
+        die(str(error))
     peer = os.environ.get("RELAY_PEER", "")
     tick_repo_root = os.environ.get("TICK_REPO_ROOT", root)
     
@@ -87,9 +105,13 @@ def main():
     # with the machine. Stays pure JSON (the cost block is json.load-parsed below), so no rtl
     # trace lines are pointed here — unlike the codex/agy logs, which are plain text.
     claude_log = os.environ.get("CLAUDE_LOG") or rtl_default_log(root, "claude-turn", t)
+    # Keep diagnostics beside the selected JSON transcript, including custom/archive paths.
+    claude_stderr = claude_log + ".stderr"
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
     max_turns = os.environ.get("CLAUDE_MAX_TURNS", "12")
     max_budget = os.environ.get("CLAUDE_MAX_BUDGET", "0.50")
+
+    warn_opus_budget(model, max_budget)
     
     block_cmds_str = os.environ.get("CLAUDE_BLOCK_CMDS", "codex gemini consult consult.sh marathon-drive.sh relay-drive.sh")
     block_cmds = block_cmds_str.split() if block_cmds_str else []
@@ -105,6 +127,14 @@ def main():
                 stub_f.write("exit 127\n")
             os.chmod(stub_path, 0o755)
 
+    # The parent owns this diagnostic file; snapshot it before agent changes so
+    # custom in-tree logs are preserved without counting as an agent edit.
+    stderr_setup_error = None
+    try:
+        with open(claude_stderr, "a"):
+            pass
+    except OSError as error:
+        stderr_setup_error = error
     rtl.before()
     
         # GH-320: this default MUST match the Bash twin's `${RELAY_TURN_TIMEOUT_S:-N}` and the
@@ -127,7 +157,9 @@ def main():
     # a turn EARLY when it is genuinely stuck, and it is builder-agnostic; the wall cap is the
     # backstop behind it and has no reason to vary by agent.
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))
-    bounded_rc = 0
+    bounded_rc = 5 if stderr_setup_error else 0
+    if stderr_setup_error:
+        print(f"claude-turn: cannot prepare CLI diagnostics: {claude_stderr}: {stderr_setup_error}", file=sys.stderr)
     
     wt = ""
     run_cwd = root
@@ -174,7 +206,7 @@ def main():
         "--output-format", "json",
         "--max-turns", str(max_turns),
         "--max-budget-usd", str(max_budget)
-    ]
+    ] + native_effort
     cmd = [resolved_claude, "-p", prompt] + claude_cli_flags
     
     # Sample the turn while it runs so an exit-7 timeout can be attributed to a
@@ -182,12 +214,12 @@ def main():
     # nothing can be probed after the fact — see turn_diagnostics.
     diag = TurnDiagnostics(worktree=run_cwd)
     if bounded_rc == 0:
+        print(f"claude-turn: CLI diagnostics: {claude_stderr}", file=sys.stderr)
         diag.start()
         try:
-            with open(claude_log, "w") as log_f:
-                subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stdin=subprocess.DEVNULL, check=True)
-            if run_env.get("CLAUDE_AUTH_MODE") == "subscription":
-                read_result(claude_log)
+            with open(claude_log, "w") as log_f, open(claude_stderr, "w") as err_f:
+                subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=err_f, stdin=subprocess.DEVNULL, check=True)
+            read_result(claude_log)
         except ValueError as error:
             print(f"claude-turn: {error}", file=sys.stderr)
             bounded_rc = 5
@@ -281,7 +313,7 @@ def main():
             # anthropic/claude-3-7-sonnet in harnesses.db.
             model_id=model,
             gateway=os.environ.get("CLAUDE_GATEWAY", "anthropic"),
-            reasoning_effort=os.environ.get("CLAUDE_REASONING_EFFORT", "high"),
+            reasoning_effort=native_effort[1] if native_effort else "cli-default",
             cli_flags=claude_cli_flags,
             repo_root=xyz_root,
         ) as logger:

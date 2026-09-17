@@ -14,6 +14,7 @@ import json
 import subprocess
 import shutil
 import tempfile
+import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
@@ -82,20 +83,29 @@ def is_safe_deletable_path(path: Path, safe_roots: Optional[List[Path]] = None, 
     return True, "OK"
 
 
-def run_git(cwd: Path, args: List[str]) -> subprocess.CompletedProcess:
+def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subprocess.CompletedProcess:
     """Runs a git command in the target directory.
 
     Callers treat a non-zero return code as "git said no". A git that cannot be LAUNCHED at all
     (missing binary, unreadable cwd, OS refusal) is the same answer as far as they are concerned,
     so it is reported the same way rather than escaping as an exception (R1-F5).
+
+    `timeout` is additive (GH-623) and defaults to None = unbounded, so every existing scan and
+    ledger caller keeps today's behavior; network call sites pass a finite value (see
+    merge_cleanup._net_git). A timeout is reported as a non-zero exit — the same "git said no"
+    shape — never as an exception.
     """
     try:
         return subprocess.run(
             ["git", "-C", str(cwd)] + args,
             capture_output=True,
             text=True,
-            check=False
+            check=False,
+            timeout=timeout
         )
+    except subprocess.TimeoutExpired as exc:
+        return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
+                                           stderr=f"timed out after {exc.timeout}s: git {' '.join(args)}")
     except OSError as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=f"{exc}")
 
@@ -495,6 +505,274 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
     return out
 
 
+# --- Activity Window Ladder & Completion Scan Heuristics --------------------
+
+IGNORE_ACTIVITY_DIRS = {
+    ".git", "node_modules", ".venv", "venv", ".build", "build", "dist",
+    ".next", ".turbo", ".cache", "__pycache__", ".claude", ".gemini", ".codex"
+}
+
+IGNORE_ACTIVITY_FILES = {
+    ".DS_Store", ".relay-driver.lock"
+}
+
+IGNORE_ACTIVITY_SUFFIXES = (
+    ".sqlite-shm", ".sqlite-wal", ".pyc"
+)
+
+
+def inspect_file_activity(repo_path: Path, max_depth: int = 4, now_ts: Optional[float] = None) -> Dict[str, Any]:
+    """Inspects recent file modification times within 10m and 60m windows.
+
+    Prunes ephemeral directories (.git, node_modules, .venv, etc.) and ignores
+    SQLite WAL/SHM touch timestamps.
+    """
+    now = now_ts if now_ts is not None else time.time()
+    res: Dict[str, Any] = {
+        "activity_tier": "DORMANT",
+        "modified_10m_count": 0,
+        "modified_10m_files": [],
+        "modified_60m_count": 0,
+        "modified_60m_files": [],
+        "latest_mtime": 0.0,
+        "latest_file": "",
+    }
+
+    try:
+        root_path = repo_path.resolve()
+        root_depth = len(root_path.parts)
+    except Exception:
+        return res
+
+    mod_10m = []
+    mod_60m = []
+    latest_mtime = 0.0
+    latest_file = ""
+
+    try:
+        for root, dirs, files in os.walk(str(root_path), topdown=True):
+            curr_path = Path(root)
+            depth = len(curr_path.parts) - root_depth
+            if depth >= max_depth:
+                dirs.clear()
+                continue
+
+            # Prune ignored directories in-place
+            dirs[:] = [
+                d for d in dirs
+                if d not in IGNORE_ACTIVITY_DIRS and not d.startswith(".git")
+            ]
+
+            for f in files:
+                if f in IGNORE_ACTIVITY_FILES:
+                    continue
+                if any(f.endswith(suf) for suf in IGNORE_ACTIVITY_SUFFIXES):
+                    continue
+
+                full_path = curr_path / f
+                try:
+                    st = full_path.stat()
+                    mtime = st.st_mtime
+                    if mtime > latest_mtime:
+                        latest_mtime = mtime
+                        try:
+                            latest_file = str(full_path.relative_to(root_path))
+                        except ValueError:
+                            latest_file = str(full_path)
+
+                    age_s = now - mtime
+                    if 0 <= age_s <= 600.0:  # 10 minutes
+                        try:
+                            rel = str(full_path.relative_to(root_path))
+                        except ValueError:
+                            rel = str(full_path)
+                        mod_10m.append(rel)
+                    elif 0 <= age_s <= 3600.0:  # 60 minutes
+                        try:
+                            rel = str(full_path.relative_to(root_path))
+                        except ValueError:
+                            rel = str(full_path)
+                        mod_60m.append(rel)
+                except (OSError, PermissionError):
+                    continue
+    except Exception:
+        pass
+
+    res["modified_10m_count"] = len(mod_10m)
+    res["modified_10m_files"] = mod_10m[:10]
+    res["modified_60m_count"] = len(mod_10m) + len(mod_60m)
+    res["modified_60m_files"] = (mod_10m + mod_60m)[:10]
+    res["latest_mtime"] = latest_mtime
+    res["latest_file"] = latest_file
+
+    if mod_10m:
+        res["activity_tier"] = "ACTIVE_WRITING"
+    elif mod_60m:
+        res["activity_tier"] = "RECENT_IDLE"
+    else:
+        res["activity_tier"] = "DORMANT"
+
+    return res
+
+
+QA_APPROVAL_PATTERNS = [
+    re.compile(r"relay-drive:\s*attest\s+.*approved", re.IGNORECASE),
+    re.compile(r"status\s*—\s*final\s+qa\s+approved", re.IGNORECASE),
+    re.compile(r"final\s+qa\s+approved", re.IGNORECASE),
+    re.compile(r"qa\s+approved", re.IGNORECASE),
+    re.compile(r"\blgtm\b", re.IGNORECASE),
+]
+
+
+def inspect_completion_confidence(repo_path: Path, inspect_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Evaluates whether work in a clone appears completed via Medium Scan heuristics."""
+    res = {
+        "confidence": "HIGH",
+        "completed": True,
+        "summary": "Clean working tree and landed refs",
+        "qa_attestation": False,
+        "qa_commit": "",
+        "pdda_open_tasks": 0,
+        "pdda_done_tasks": 0,
+        "recommend_deep_scan": False,
+    }
+
+    # 1. Inspect recent commit logs for QA attestations
+    log_res = run_git(repo_path, ["log", "-n", "10", "--format=%h %s"])
+    if log_res.returncode == 0:
+        for line in log_res.stdout.splitlines():
+            for pat in QA_APPROVAL_PATTERNS:
+                if pat.search(line):
+                    res["qa_attestation"] = True
+                    res["qa_commit"] = line.strip()
+                    break
+            if res["qa_attestation"]:
+                break
+
+    # 2. Inspect PDDA checklists under PROJECT/2-WORKING/ if present
+    pdda_dir = repo_path / "PROJECT" / "2-WORKING"
+    if pdda_dir.exists() and pdda_dir.is_dir():
+        for doc in pdda_dir.glob("*.md"):
+            try:
+                content = doc.read_text(encoding="utf-8", errors="replace")
+                res["pdda_open_tasks"] += len(re.findall(r"^-\s*\[\s*\]", content, re.MULTILINE))
+                res["pdda_done_tasks"] += len(re.findall(r"^-\s*\[[xX]\]", content, re.MULTILINE))
+            except Exception:
+                continue
+
+    dirty_count = inspect_data.get("dirty_count", 0)
+    has_unpushed = inspect_data.get("has_unpushed", False)
+    is_clean = inspect_data.get("is_clean", False)
+
+    if res["qa_attestation"] and is_clean:
+        res["confidence"] = "HIGH"
+        res["completed"] = True
+        res["summary"] = f"QA approval attestation found ('{res['qa_commit']}'); code complete"
+    elif dirty_count > 0:
+        res["confidence"] = "HIGH"
+        res["completed"] = False
+        res["summary"] = f"In-flight uncommitted modifications ({dirty_count} dirty files); code incomplete"
+    elif res["pdda_open_tasks"] > 0 and not res["qa_attestation"]:
+        res["confidence"] = "HIGH"
+        res["completed"] = False
+        res["summary"] = f"Open task checklists ({res['pdda_open_tasks']} remaining); code incomplete"
+    elif has_unpushed:
+        if res["qa_attestation"]:
+            res["confidence"] = "HIGH"
+            res["completed"] = True
+            res["summary"] = "Unlanded commits carry QA approval attestation; ready for PR/landing"
+        else:
+            res["confidence"] = "MEDIUM"
+            res["completed"] = False
+            res["recommend_deep_scan"] = True
+            res["summary"] = "Unlanded commits present without QA attestation; recommend deeper scan (/recon or /debug-mantra)"
+    else:
+        res["confidence"] = "HIGH"
+        res["completed"] = True
+        res["summary"] = "100% clean and landed"
+
+    return res
+
+
+def derive_agent_followup(repo_path: Path, inspect_data: Dict[str, Any], completion_data: Dict[str, Any]) -> Optional[str]:
+    """Generates an actionable follow-up recommendation if work is incomplete."""
+    if completion_data.get("completed") is True:
+        return None
+
+    agent = None
+    # 1. Tick claim holder
+    tick = inspect_data.get("tick_claims", {})
+    if tick.get("has_claims"):
+        details = tick.get("details", "")
+        m = re.search(r"by\s+([a-zA-Z0-9_\-]+)", details)
+        if m:
+            agent = f"@{m.group(1)}"
+
+    # 2. Process holders
+    if not agent:
+        handles = inspect_data.get("open_handles", {}).get("holders", [])
+        if handles:
+            cmds = [h.get("command") for h in handles if h.get("command")]
+            if cmds:
+                agent = f"active process ({', '.join(set(cmds))})"
+
+    # 3. Last commit author
+    if not agent:
+        author_res = run_git(repo_path, ["log", "-1", "--format=%an"])
+        if author_res.returncode == 0 and author_res.stdout.strip():
+            agent = f"last author ({author_res.stdout.strip()})"
+
+    agent_str = agent if agent else "the owning agent"
+    return f"Follow up with {agent_str} in `{repo_path.name}` to close or finish remaining tasks."
+
+
+def resolve_canonical_issue(repo_path: Path, branch_name: str = "") -> Optional[int]:
+    """Resolves the canonical GitHub issue number linked to a clone or branch."""
+    # 1. Branch name pattern (e.g. feat/gh593-..., fix/gh-440-...)
+    if branch_name:
+        m = re.search(r"(?:gh-?|issue-?|pr-?)(\d+)", branch_name, re.IGNORECASE)
+        if m:
+            return int(m.group(1))
+
+    # 2. Repo path directory name (e.g. XYZ-forge-gh595, gh592-express-receipt)
+    m = re.search(r"(?:gh-?|issue-?)(\d+)", repo_path.name, re.IGNORECASE)
+    if m:
+        return int(m.group(1))
+
+    # 3. Recent commit messages (e.g. GH-593, gh-440, #593)
+    log_res = run_git(repo_path, ["log", "-n", "5", "--format=%s"])
+    if log_res.returncode == 0:
+        for line in log_res.stdout.splitlines():
+            m = re.search(r"(?:GH-|gh-|#)(\d+)", line)
+            if m:
+                return int(m.group(1))
+
+    return None
+
+
+def format_issue_marker_body(checkout_info: Dict[str, Any]) -> str:
+    """Formats a structured status marker comment for a canonical GitHub issue."""
+    act = checkout_info.get("activity", {})
+    comp = checkout_info.get("completion", {})
+    clean_str = "✅ Clean" if checkout_info.get("is_clean") else f"❌ Dirty ({checkout_info.get('dirty_count')} modified paths)"
+    last_file = act.get("latest_file") or "none"
+    tier = act.get("activity_tier", "UNKNOWN")
+
+    body = [
+        "### 🔍 Automated Merge-Cleanup Status Marker",
+        "",
+        f"- **Checkout**: `{checkout_info.get('name')}`",
+        f"- **Branch**: `{checkout_info.get('current_branch')}` (@ `{checkout_info.get('head_sha')}`)",
+        f"- **Working Tree**: {clean_str}",
+        f"- **Activity Window**: `{tier}` (10m modified: {act.get('modified_10m_count', 0)}, 60m: {act.get('modified_60m_count', 0)}, latest: `{last_file}`)",
+        f"- **Completion Assessment**: {comp.get('summary', 'N/A')}",
+    ]
+    followup = checkout_info.get("agent_followup")
+    if followup:
+        body.append(f"- **Recommended Next Action**: {followup}")
+    return "\n".join(body)
+
+
 def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
                      exclude_patterns: Optional[List[str]] = None,
                      integration_branch: str = "development") -> Dict[str, Any]:
@@ -525,6 +803,10 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         "driver_lock": {"locked": False},
         "tick_claims": {"has_claims": False, "verified": False},
         "open_handles": {"verified": False, "active": False},
+        "activity": {"activity_tier": "DORMANT", "modified_10m_count": 0, "modified_60m_count": 0},
+        "completion": {"confidence": "HIGH", "completed": True, "summary": ""},
+        "agent_followup": None,
+        "canonical_issue": None,
         "query_failures": [],
         "safe_deletable": False,
         "safe_deletable_reason": "",
@@ -616,6 +898,12 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
     # Driver lock check
     res["driver_lock"] = inspect_driver_lock(path)
 
+    # Activity window & Completion heuristics
+    res["activity"] = inspect_file_activity(path)
+    res["canonical_issue"] = resolve_canonical_issue(path, res["current_branch"])
+    res["completion"] = inspect_completion_confidence(path, res)
+    res["agent_followup"] = derive_agent_followup(path, res, res["completion"])
+
     # Check exclusions
     if exclude_patterns:
         for pat in exclude_patterns:
@@ -655,8 +943,16 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
 
     res["open_handles"] = inspect_open_handles(path)
     if res["open_handles"].get("active"):
+        tier = res["activity"].get("activity_tier", "DORMANT")
+        if tier == "ACTIVE_WRITING":
+            act_note = f" (Active writing: {res['activity'].get('modified_10m_count')} file(s) in last 10m)"
+        elif tier == "RECENT_IDLE":
+            act_note = f" (Recent idle: {res['activity'].get('modified_60m_count')} file(s) in last 60m)"
+        else:
+            act_note = " (Dormant handle: 0 files modified in >60m)"
+
         res["disposition"] = "ACTIVE_PROCESS"
-        res["disposition_reason"] = f"Open file handles inside the checkout: {res['open_handles'].get('details')}"
+        res["disposition_reason"] = f"Open file handles inside the checkout: {res['open_handles'].get('details')}{act_note}"
         return res
     if not res["open_handles"].get("verified"):
         res["disposition"] = "PRESERVE_UNVERIFIED_SESSION"
@@ -909,17 +1205,52 @@ def format_primary_landing(info: Dict[str, Any]) -> str:
 def format_scan_table(checkouts: List[Dict[str, Any]]) -> str:
     """Formats checkout audit as a readable markdown table."""
     lines = [
-        "| Directory | Type | Branch | Clean | Stashes | Unpushed | Disposition | Reason |",
-        "|---|---|---|:---:|:---:|:---:|---|---|",
+        "| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |",
+        "|---|---|---|:---:|:---:|:---:|:---:|---|---|",
     ]
     for c in checkouts:
         clean_str = "✅" if c["is_clean"] else f"❌ ({c['dirty_count']})"
         stash_str = "0" if c["stash_count"] == 0 else f"⚠️ {c['stash_count']}"
         unpushed_str = "0" if not c["has_unpushed"] else f"⚠️ {len(c['unpushed_branches'])}"
+        act = c.get("activity", {})
+        tier = act.get("activity_tier", "DORMANT")
+        if tier == "ACTIVE_WRITING":
+            act_str = f"🔥 Active ({act.get('modified_10m_count', 0)} in 10m)"
+        elif tier == "RECENT_IDLE":
+            act_str = f"⏳ Idle ({act.get('modified_60m_count', 0)} in 60m)"
+        else:
+            act_str = "💤 Dormant"
+
         lines.append(
-            f"| `{c['name']}` | {c['checkout_type']} | `{c['current_branch']}` | {clean_str} | {stash_str} | {unpushed_str} | **{c['disposition']}** | {c['disposition_reason']} |"
+            f"| `{c['name']}` | {c['checkout_type']} | `{c['current_branch']}` | {clean_str} | {act_str} | {stash_str} | {unpushed_str} | **{c['disposition']}** | {c['disposition_reason']} |"
         )
     return "\n".join(lines)
+
+
+def format_completion_and_followup_summary(checkouts: List[Dict[str, Any]]) -> str:
+    """Formats actionable recommendations for incomplete or in-flight checkouts."""
+    sections = []
+    for c in checkouts:
+        comp = c.get("completion", {})
+        followup = c.get("agent_followup")
+        rec_deep = comp.get("recommend_deep_scan", False)
+        issue = c.get("canonical_issue")
+        issue_str = f" (Linked Issue: GH-#{issue})" if issue else ""
+
+        if followup or rec_deep or (comp.get("completed") is False and c.get("disposition") != "PRIMARY_CHECKOUT"):
+            block = [f"#### `{c['name']}`{issue_str}"]
+            block.append(f"- **Completion Status**: {comp.get('summary', 'In-flight')}")
+            if rec_deep:
+                block.append(f"- **Assessment Confidence**: Low / Ambiguous — *recommend deeper scan (`/recon` or `/debug-mantra`)*")
+            if followup:
+                block.append(f"- **Actionable Next Step**: {followup}")
+            sections.append("\n".join(block))
+
+    if not sections:
+        return ""
+
+    header = "### 📋 In-Flight Checkouts & Follow-up Guidance\n\n"
+    return header + "\n\n".join(sections) + "\n"
 
 
 def main():
@@ -943,7 +1274,10 @@ def main():
         print(json.dumps(checkouts, indent=2))
     else:
         print(f"### Git Checkout Audit ({len(checkouts)} found)\n")
-        print(format_scan_table(checkouts))
+        print(format_scan_table(checkouts) + "\n")
+        summary = format_completion_and_followup_summary(checkouts)
+        if summary:
+            print(summary)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,3 @@
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+ImportError: cannot import name 'effort_flags' from 'claude_cli' (<home>/marathon-clones/xyz-claude-review-fixes-test/utils/py/claude_cli.py)

@@ -61,12 +61,21 @@ Pro, Max, Team, or Enterprise Claude.ai account. API-key/helper authentication,
 API/provider environment overrides, failed probes, and unrecognized account shapes
 stop the Claude lane with an actionable error. Credentials remain managed by Claude Code;
 XYZ does not extract OAuth tokens, run a proxy, or retry through an API billing route.
-Use a CLI version that supports JSON `auth status`; older versions fail the preflight.
+Use a CLI version that supports JSON `auth status` and `--restricted` for consult
+(validated with 2.1.270); unsupported versions fail rather than bypass the checks.
 
-`CLAUDE_AUTH_MODE=inherit` (the default) preserves the CLI's existing authentication and
-settings, including API/provider configurations. It does **not** validate subscription use.
-Native consult supports Claude only in the default Python runtime; `XYZ_PYTHON=0` selects
-the frozen legacy implementation and does not provide these new account checks.
+`CLAUDE_AUTH_MODE=inherit` (the default) skips subscription validation. Relay retains
+the CLI's existing authentication/settings. Claude consult uses native `--restricted`
+in both modes: file tools stay within its temporary checkout, configured MCP tools
+are excluded, and user/project/local settings are ignored. The account preflight uses
+the same restriction settings as the request. Managed CLI configuration still applies;
+this is a native tool boundary, not an operating-system sandbox. Use repository-relative
+paths in consult prompts. Claude consult remains read-only in programmatic mode too.
+
+Native Claude consult requires the Python runtime. An explicit subscription request
+is refused before legacy dispatch when `XYZ_PYTHON=0`, empty, or Python is unavailable.
+If Git cannot remove a consult worktree, XYZ preserves it, reports its recovery command,
+and exits with failure rather than silently deleting it.
 
 | Task | Existing XYZ route |
 |---|---|
@@ -78,15 +87,24 @@ Load the relay skill before driving a relay. Relay reviewers still need to write
 review block and hand off the tick token; the shared reviewer contract limits artifact
 changes. Marathon reviewers remain restricted to Codex/Agy. Default builders are unchanged.
 
+`CLAUDE_REASONING_EFFORT` optionally sends native `--effort` to both consult and relay:
+`low`, `medium`, `high`, `xhigh`, or `max`. Invalid values fail before dispatch; omission
+leaves the CLI default untouched and relay telemetry records `cli-default`. For example,
+set `CLAUDE_MODEL=opus CLAUDE_REASONING_EFFORT=high` for an Opus high-effort request.
+
 `CLAUDE_MODEL` selects the model (default `claude-sonnet-4-6`), `CLAUDE_MAX_TURNS` limits
 turns (default 12), and `CLAUDE_MAX_BUDGET` supplies an API dollar budget (default $0.50).
 Consult uses `CONSULT_TIMEOUT` (default 300 seconds); relay uses `RELAY_TURN_TIMEOUT_S`
 (default 900). Subscription quotas and any account-enabled extra usage still apply:
 a successful preflight verifies the account route, not remaining quota or a billing ceiling.
-JSON error, exhausted-turn, or empty results fail the new Claude consult and subscription
-relay paths even if the CLI exits zero. Inspect the local transcript before retrying.
+JSON error, exhausted-turn, or empty results fail Claude consult and relay in both
+authentication modes, even if the CLI exits zero. Inspect the local transcript before retrying.
 Consult retains raw JSON beside its answer as `.md.json` and CLI diagnostics as `.md.stderr`;
-failed-Claude messages point to that stderr file. Keep private prompts and account
+failed-Claude messages point to that stderr file. Relay keeps CLI diagnostics beside
+its JSON transcript as `<CLAUDE_LOG>.stderr` and prints that path before dispatch.
+The default transcript location is durable; a custom `CLAUDE_LOG` controls both files.
+Use a regular file for `CLAUDE_LOG`; discarding JSON prevents success validation.
+Keep private prompts and account
 details out of published evidence.
 
 Provider policy is time-sensitive. As of 2026-09-13, Anthropic's

@@ -41,7 +41,7 @@ def xyz_write_ops_log_append(pattern, cmd):
 from rtl import (RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict,
                  agy_auth_timeout_verdict, AGY_AUTH_TIMEOUT_DEFAULT_S)
 from turn_diagnostics import TurnDiagnostics
-from claude_cli import resolve_binary as resolve_claude, preflight as claude_preflight, read_result as claude_result
+from claude_cli import resolve_binary as resolve_claude, preflight as claude_preflight, read_result as claude_result, effort_flags
 from proc_group import kill_existing
 
 # GH-492: how long an advisor may show no CPU and no transcript growth before it is killed,
@@ -598,20 +598,26 @@ def main():
                 f_out = os.path.join(run_dir, f"{label}.claude.md")
                 cenv = dict(base_env)
                 claude_bin = resolve_claude(cenv)
+                # Resolve identical settings/account routes for the probe and request.
+                claude_settings = ["--restricted", "--strict-mcp-config"]
                 try:
                     if not claude_bin:
                         raise ValueError("claude CLI not found; set CLAUDE_BIN")
-                    claude_preflight(claude_bin, cenv, wt)
+                    native_effort = effort_flags(cenv)
+                    claude_preflight(claude_bin, cenv, wt, cli_flags=claude_settings)
                 except ValueError as error:
                     with open(f_out, "w") as stream:
                         stream.write(f"consult: {error}\n")
                     procs.append((None, m, f_out, time.time(), None))
                     continue
-                cmd = [claude_bin, "-p", full_prompt, "--output-format", "json",
+                claude_prompt = full_prompt
+                if tool_mode == "programmatic":
+                    claude_prompt += "\nClaude advisory seat: only Read/Grep/Glob are available; inspect source without executing probe scripts."
+                cmd = [claude_bin, "-p", claude_prompt, "--output-format", "json",
                        "--model", cenv.get("CLAUDE_MODEL", "claude-sonnet-4-6"),
                        "--tools", "Read,Grep,Glob", "--allowedTools", "Read,Grep,Glob",
-                       "--strict-mcp-config", "--max-turns", cenv.get("CLAUDE_MAX_TURNS", "12"),
-                       "--max-budget-usd", cenv.get("CLAUDE_MAX_BUDGET", "0.50")]
+                       "--max-turns", cenv.get("CLAUDE_MAX_TURNS", "12"),
+                       "--max-budget-usd", cenv.get("CLAUDE_MAX_BUDGET", "0.50")] + claude_settings + native_effort
                 proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, cenv, own_group=True)
                 procs.append((proc, m, f_out, time.time(), cmd))
             elif m == "codex":
@@ -882,14 +888,17 @@ def main():
                         warn("gemini tokens not captured (no parseable stats)")
                 
     finally:
-        if subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL).returncode == 0:
+        try:
+            removed = subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt],
+                                     stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, timeout=20)
+        except (OSError, subprocess.TimeoutExpired):
+            removed = None
+        if removed is not None and removed.returncode == 0:
             xyz_write_ops_log_append("git worktree remove", f"git -C {root} worktree remove --force {wt}")
-        subprocess.run(["git", "-C", root, "worktree", "prune"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-        xyz_write_ops_log_append("git worktree prune", f"git -C {root} worktree prune")
-        if os.path.exists(wt):
-            shutil.rmtree(wt, ignore_errors=True)
-            xyz_write_ops_log_append("rm force", f"rm -rf {wt}")
-        
+        else:
+            warn(f"could not remove consult worktree; preserved at {wt}. Recover with git -C {shlex.quote(root)} worktree remove --force {shlex.quote(wt)}")
+            sys.exit(5)
+
     print(f"consult: {answered} answered, {failed} failed -> {run_dir}{summary}")
     if degraded:
         warn(f"SINGLE-MODEL — NOT RECONCILED (stamped into {survivor_out} and {os.path.join(run_dir, 'DEGRADED-SINGLE-MODEL.txt')})")

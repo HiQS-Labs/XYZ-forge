@@ -1,0 +1,3 @@
+ok - Forge resolves without sibling PDDA; invalid override fails
+ok - fresh payload is complete; upgrades preserve target-owned files
+FAIL - invalid full-mode install accepted

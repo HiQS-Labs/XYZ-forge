@@ -32,6 +32,7 @@ export TICK_REPO_ROOT="$A"
 "$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
 printf '\n### Round 1 · %s (fast-stub)\n' "$RELAY_AGENT" >>"$RELAY_FILE"
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to other >/dev/null 2>&1
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed"}\n'
 exit 0
 STUB_EOF
 chmod +x "$FAST_STUB"
@@ -128,7 +129,7 @@ CLAUDE_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/claude-turn.sh"
 seed_token RELAY-TURN-claude-slow claude-a
 t_start="$(date +%s)"
 RELAY_AGENT=claude-a RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-claude-slow \
-  CLAUDE_AGENT=claude-a CLAUDE_BIN="$SLOW_STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+  CLAUDE_AGENT=claude-a CLAUDE_BIN="$SLOW_STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" \
   CLAUDE_BLOCK_CMDS="" \
   RELAY_TURN_TIMEOUT_S=1 \
   bash "$CLAUDE_SHIM" >/dev/null 2>&1; rc=$?
@@ -140,7 +141,7 @@ elapsed=$(( t_end - t_start ))
 # --- (6) FAST claude: completes before cap -> exit 0 -------------------------
 seed_token RELAY-TURN-claude-fast claude-a
 RELAY_AGENT=claude-a RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-claude-fast \
-  CLAUDE_AGENT=claude-a CLAUDE_BIN="$FAST_STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+  CLAUDE_AGENT=claude-a CLAUDE_BIN="$FAST_STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude-result.json" \
   CLAUDE_BLOCK_CMDS="" \
   RELAY_TURN_TIMEOUT_S=1 \
   bash "$CLAUDE_SHIM" >/dev/null 2>&1; rc=$?

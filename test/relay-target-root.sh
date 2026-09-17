@@ -45,7 +45,7 @@ printf '\n### Round 1 · Agent\n' >> relay.md
 # Release token to finish turn
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to reviewer >/dev/null 2>&1
 
-printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed","usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
 exit 0
 STUB_EOF
 chmod +x "$STUB"

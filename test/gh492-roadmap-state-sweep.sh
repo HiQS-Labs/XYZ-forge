@@ -39,7 +39,7 @@ elif mode == 'unknown':
     print(json.dumps({'state': 'CLOSED', 'stateReason': None}))
 else:
     data = {'1': ('CLOSED', 'COMPLETED'), '2': ('OPEN', None),
-            '3': ('CLOSED', 'NOT_PLANNED')}
+            '3': ('CLOSED', 'NOT_PLANNED'), '5': ('CLOSED', 'COMPLETED')}
     state, reason = data[number]
     print(json.dumps({'state': state, 'stateReason': reason}))
 ''')
@@ -68,19 +68,20 @@ else:
             return conn.execute('SELECT gh_number,section,updated_at,raw_text FROM roadmap_items ORDER BY gh_number').fetchall()
 
     run('init', '--slug', 'example/repo')
-    for number in (1, 2, 3, 4):
+    for number in (1, 2, 3, 4, 5):
         run('roadmap', 'add', '--issue-num', str(number), '--issue-url',
             f'https://github.com/example/repo/issues/{number}', '--title', f'Issue {number}',
             '--created', '2026-09-08', '--doc-path', f'PROJECT/1-INBOX/GH-{number}.md')
         run('roadmap', 'move', '--issue-num', str(number), '--section',
             'Completed' if number == 4 else 'In progress')
     before_rows = rows()
-    assert len(before_rows) == 4
+    assert len(before_rows) == 5
     before = snapshot()
     for flags in ((), ('--dry-run',)):
         output = run('roadmap', 'reconcile-state', *flags)
         assert 'would move GH-1: In progress -> Completed' in output, output
         assert 'would move GH-3: In progress -> Deferred · vision' in output, output
+        assert 'would move GH-5: In progress -> Completed' in output, output
         assert 'GH-2' not in output and 'GH-4' not in output, output
         assert snapshot() == before, 'dry run changed DB/dump digest or mtime'
     print('PASS: default and explicit dry-run preserve DB/dump bytes and mtime')
@@ -95,7 +96,7 @@ else:
 
     # Cached PDDA warning shares its issue table and never performs a remote lookup.
     cache = root / 'cache.tsv'
-    cache.write_text('1\tCLOSED\n2\tOPEN\n3\tCLOSED\n4\tCLOSED\n')
+    cache.write_text('1\tCLOSED\n2\tOPEN\n3\tCLOSED\n4\tCLOSED\n5\tCLOSED\n')
     def pdda():
         result = subprocess.run(['bash', str(source / 'utils/pdda/pdda.sh'), 'issue-doc-sync'],
             env=dict(env, PDDA_REPO_ROOT=str(root), PDDA_ISSUE_SYNC_SOURCE='cache',
@@ -109,13 +110,43 @@ else:
     assert snapshot() == before
     print('PASS: cached section drift warns without changing the ledger or blocking full mode')
 
+    # GH-605: the sweep's row changes, one receipt and all per-row terminal events are one
+    # transaction. Fail the second event insert and prove every surface rolls back.
+    with sqlite3.connect(root / 'releases.db') as conn:
+        baseline_counts = (
+            conn.execute("SELECT value FROM settings WHERE key='generation'").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM op_receipts").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM work_events").fetchone()[0],
+        )
+        conn.execute("""CREATE TRIGGER gh605_fail_deferred BEFORE INSERT ON work_events
+                        WHEN NEW.event='deferred' BEGIN SELECT RAISE(ABORT,'gh605 injected'); END""")
+        conn.commit()
+    output = run('roadmap', 'reconcile-state', '--apply', expected=1)
+    with sqlite3.connect(root / 'releases.db') as conn:
+        after_failure = (
+            conn.execute("SELECT value FROM settings WHERE key='generation'").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM op_receipts").fetchone()[0],
+            conn.execute("SELECT COUNT(*) FROM work_events").fetchone()[0],
+        )
+        conn.execute('DROP TRIGGER gh605_fail_deferred')
+        conn.commit()
+    assert after_failure == baseline_counts, (baseline_counts, after_failure, output)
+    assert rows() == before_rows, 'event insert failure left roadmap row mutations behind'
+    assert not list((root / '.git').glob('*journal*.json')), 'precommit journal survived rollback'
+    print('PASS: injected second terminal-event failure rolls back rows, receipt, events and generation')
+
     output = run('roadmap', 'reconcile-state', '--apply')
     after_rows = rows()
-    assert [r[1] for r in after_rows] == ['Completed', 'In progress', 'Deferred · vision', 'Completed'], after_rows
+    assert [r[1] for r in after_rows] == ['Completed', 'In progress', 'Deferred · vision', 'Completed', 'Completed'], after_rows
     assert after_rows[1] == before_rows[1] and after_rows[3] == before_rows[3]
     assert [r[3] for r in after_rows] == [r[3] for r in before_rows], 'raw text changed'
     with sqlite3.connect(root / 'releases.db') as conn:
         assert conn.execute("SELECT COUNT(*) FROM op_receipts WHERE op='roadmap-reconcile-state'").fetchone()[0] == 1
+        terminal_events = conn.execute("""SELECT event,txn_id,payload FROM work_events
+                                          WHERE json_extract(payload,'$.source')='roadmap-reconcile-state'
+                                          ORDER BY id""").fetchall()
+        assert [r[0] for r in terminal_events] == ['completed', 'deferred', 'completed'], terminal_events
+        assert len({r[1] for r in terminal_events}) == 1, terminal_events
     assert 'reconcile-roadmap-state' not in pdda()
     print('PASS: apply corrects both closure reasons, preserves open/terminal rows and records one transaction')
 

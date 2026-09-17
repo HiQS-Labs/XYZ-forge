@@ -1,0 +1,12 @@
+== test: gh308-turn-shim-parity ==
+  workdir: <tmp>/tick-gh308-turn-shim-parity.XXXXXX.eYfsLksVlP
+  PASS: claude-turn default lane: turn still completes with a peer drift pending (exit 0)
+  PASS: claude-turn default lane: the GH-68 peer drift brief is prepended to the turn prompt
+  PASS: claude-turn: no drift block when no peer drift is pending
+  PASS: claude-turn.py resolves ROOT via resolve_turn_root (CWD git-toplevel fallback), like its Bash twin
+  PASS: codex-turn.py resolves ROOT via resolve_turn_root (CWD git-toplevel fallback), like its Bash twin
+  PASS: pi-turn.py resolves ROOT via resolve_turn_root (CWD git-toplevel fallback), like its Bash twin
+  PASS: agy-turn.py resolves ROOT via resolve_turn_root (CWD git-toplevel fallback), like its Bash twin
+  PASS: aider-turn.py resolves ROOT via resolve_turn_root (CWD git-toplevel fallback), like its Bash twin
+  PASS: agy-turn.py sets TICK_REPO_ROOT for the agy child unconditionally (before the worktree branch)
+  gh308-turn-shim-parity: 9 pass, 0 fail

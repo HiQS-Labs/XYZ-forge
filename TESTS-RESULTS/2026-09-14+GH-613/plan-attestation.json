@@ -1,0 +1,19 @@
+{
+  "added_len": 3436,
+  "added_sha256": "24f48a3e4141d0d28e180cacd2ea7a6d6752f63669a81ac344d0514362d0b4ed",
+  "added_start": 8945,
+  "artifact_sha256": null,
+  "attested_at": "2026-09-14T01:28:05Z",
+  "driver_pid": 70845,
+  "isolated": true,
+  "relay_file": "<home>/marathon-clones/xyz-claude-review-fixes/relay-system/gh613-plan.md",
+  "relay_file_rel": "relay-system/gh613-plan.md",
+  "reviewed_head": "819683a44ed4a71c5ecd67de0dd05b735648dc6e",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "<home>/marathon-clones/xyz-claude-review-fixes",
+  "task": "RELAY-gh613-plan",
+  "trailer_sha256": "d42c55710c2d3e8b8293c27b155266aa6dcef8b7957242980be925523919be99",
+  "transcript_repo": "<home>/marathon-clones/xyz-claude-review-fixes"
+}

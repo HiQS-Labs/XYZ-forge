@@ -1,0 +1,19 @@
+== test: archive-commit ==
+  workdir: <tmp>/tick-archive-commit.XXXXXX.ewyDDESwoJ
+  PASS: archive-mode isolated turn exits 0
+  PASS: code artifact committed to the target repo
+  PASS: artifact edit landed in the target tree
+  PASS: transcript committed to the archive repo
+  PASS: archive commit contains the relay file
+  PASS: relay-file append persisted in the archive
+  PASS: target tree is free of relay-system/
+  PASS: no transcript commit in the target history
+  PASS: in-tree (default) turn exits 0
+  PASS: in-tree turn committed to the target (relay + artifact together)
+  PASS: in-tree relay edit committed to the target
+  PASS: archive repo untouched when var unset (default unchanged)
+  PASS: peer-case direct-lib enforce exits 0 (no reset+fail)
+  PASS: concurrent target commit PRESERVED (not orphaned) with archive transcript
+  PASS: turn's allowlist edit committed on top of the peer commit
+  PASS: transcript still committed to the archive under a moved target HEAD
+  archive-commit: 16 pass, 0 fail

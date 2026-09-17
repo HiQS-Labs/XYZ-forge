@@ -1,0 +1,21 @@
+lane-attempt-cap: --force override — lane RELAY-gh613-sidecar at 2 attempt(s) (cap 2), proceeding.
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to <home>/marathon-clones/xyz-claude-review-fixes (#129)
+relay-drive: GH-370 progress (main tree fallback: <home>/marathon-clones/xyz-claude-review-fixes) changed-files=0
+codex-turn: worktree isolation ON (<tmp>//rtl-wt.S0yidw)
+relay-drive: GH-370 progress (turn worktree: <tmp>/rtl-wt.S0yidw) changed-files=0
+relay-drive: GH-370 progress (turn worktree: <tmp>/rtl-wt.S0yidw) changed-files=0
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: review body was REWRITTEN above the reviewer's own block (first divergence at byte 8319):
+  before: b'ull-gate qualification and final publication bookkeeping.\n\n\n### System \xc2\xb7 relay-drive \xe2\x80\x94 2026-09-14T02:03:56Z\nterminal '
+  after:  b'ull-gate qualification and final publication bookkeeping.\n\n\n\n### System \xc2\xb7 relay-drive \xe2\x80\x94 2026-09-14T02:03:56Z\nterminal'
+relay-drive: terminal STATUS Approved by reviewer codex REFUSED — review-body-rewritten
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/4 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 46m 48s
+per done-task: ≥0 tokens, 11m 42s wall-clock
+  turn peak RSS: codex: 257MB peak RSS
+

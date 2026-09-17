@@ -35,6 +35,7 @@ STUB="$WORK/builder-stub"
 cat >"$STUB" <<STUB_EOF
 #!/usr/bin/env bash
 echo DISPATCHED >>"$DISPATCH_LOG"
+printf '{"type":"result","subtype":"success","is_error":false,"result":"fixture completed"}\n'
 exit 0
 STUB_EOF
 chmod +x "$STUB"
