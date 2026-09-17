@@ -110,3 +110,11 @@ I also executed `TMPDIR="$PWD/.relay-scratch" bash test/gh648-l1-turn-terminatio
 
 **Verdict:** Approved
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T14:51:26Z
+task: MARATHON-P1-TURN-R6
+reviewer: agy
+status: Approved
+reviewed-head: d000f6dc5fc8c29b78702a77c4f69d127dbbe782
+added-range: 9327+902
+added-sha256: 411b58bd7690a9673420136e426ae8dcfa0cf374a9c31f07dfeb2d087b8b1266
