@@ -170,4 +170,12 @@ Pre-existing sweep: the inherited model-probe CWD at utils/py/agy-turn.py:259 re
 
 Relay closed (Approved), no further review turn needed. Producer may proceed with the approved plan; implementation verification and final QA remain outstanding.
 
+
+### Attestation · relay-drive — 2026-09-17T03:33:38Z
+task: RELAY-GH666-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 8418974f4f0851758335bfbf4f40c219087d99a4
+added-range: 14801+2162
+added-sha256: 019456cd4b3be937cc6570605640742ea49541fa353fb825503b3c471b7aa4a1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
