@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -94,5 +94,21 @@ Only this transcript writable. PASS on scoped implementation -> STATUS Approved,
 tick DONE while owned; explicitly preserve publication hold. Otherwise give cited
 concrete findings and hand back within cap3. Do not manufacture full-gate approval.
 Handing off to Reviewer — give the focused cited code/evidence verdict.
+
+### Reviewer — codex — Round 1
+
+VERDICT: FAIL
+Basis: The scoped runtime fix is sound on inspection and the retained relative-write controls support it, but required post-allocation launch-failure coverage is absent. Publication remains held independently of this verdict. Review was read-only except this transcript; no source, reproduction, test suite or Git command was executed.
+swept file: yes
+
+- [Pass] Runtime scope: `utils/py/agy-turn.py:260–270` resolves with `shutil.which`, rejects missing binaries, makes the result absolute before allocating the owned CWD, and supplies `cwd=probe_cwd`. Existing unset-model bypass, parser and forwarding remain at `:250–253`, `:305–329`, and `:408–409`. No runtime dependency or shared RTL change appears in `source-diff-b6c973e4.patch`. Action: retain this narrow implementation.
+- [Pass] Relative-write evidence: `test/gh666_agy_model_probe.py:72–92` checks caller snapshot/sentinel, explicit marker absence, nonempty invocation rows, recorded writes, owned CWD and removal. The retained `regression-delivery.log` says "Ran 13 tests" / "OK"; `ablation-delivery.log` says "Ran 13 tests" / "FAILED (failures=11)"; `ablate-cwd.py` removes only the models command's `cwd` in memory. All ten provenance-addressed logs are nonempty and their SHA256 hashes match `provenance.jsonl` on a read-only hash check. Action: retain these receipts; source SHA attribution is the recorded producer attribution, not independently established ancestry.
+- [Blocker] Required launch-error cleanup is not exercised. `test/gh666_agy_model_probe.py:114–115` supplies a nonexistent executable, so `utils/py/agy-turn.py:260–262` raises before `TemporaryDirectory` or `subprocess.run`. This duplicates resolution refusal and does not prove the plan's post-allocation launch-failure path. Fix: keep the missing-binary case, add an existing executable with an invalid interpreter (or inject an OSError specifically at the models subprocess call), and assert refusal, no invocation/caller change, and removal of the allocated probe CWD/log. Retain a source-pinned focused receipt and witness the cleanup assertion fail under a bounded cleanup ablation in the disposable validation clone.
+- [Should] Pre-existing hollow assertion found in the whole-file sweep: `test/agy-turn.sh:308–312` passes when event extraction or `claimed_paths` is empty. Fix: require an existing nonempty claim event and nonempty parsed paths before testing for escaping `..`; witness missing-event/empty-path controls fail. The current receipt happens to contain `got: "relay.md"`, so this finding does not invalidate that particular extraction.
+- [Should] Qualify the registered-suite evidence. `agy-shim-delivery.log` includes repeated "task ... is open (never claimed)" errors starting at GH-296 despite "62 pass, 0 fail". Fix: explicitly record this limitation in SUMMARY/provenance rather than implying all token bookkeeping is clean; determine whether these are expected teardown diagnostics or failed seeding before treating token-sensitive cases as evidence. No speculative runtime repair is requested.
+- [Pass] Publication is honestly separate: SUMMARY's "Full validation and gated topic push/PR are not complete" agrees with `path-delivery.log`'s missing `test/x.sh` and `skills/alpha,beta` references and the historical static receipt's failed PDDA stage. The plan's limits and CHANGELOG explicitly bound relative writes, excluding absolute access, detached children and unchanged auth-probe limitations. Action: preserve this hold; scoped QA does not authorize bypass, push, merge or promotion.
+- [Nit] Pre-existing auth limitations are visible at `utils/py/agy-turn.py:133–143,233–235` (allocation outside try, caller-relative executable after CWD change, ignored cleanup errors). Already disclosed and excluded in the plan/SUMMARY; no additional runtime blocker from this sweep. Action: retain the exclusions and use separate intake if repairing them later.
+
+Handing off to Producer — add the missing launch-path coverage, disposition each finding and retain focused evidence; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
