@@ -21,7 +21,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| A fresh review found and the branch fixed both ordinary-update admission and direct terminal-cleanup identity gaps; 40 focused label tests pass and both restored-bypass mutants fail as intended. | Finish the reopened bounded review, then run one final qualifying gate in a disposable clone before a PR is opened. |
+| A fresh review found and the branch fixed both ordinary-update admission and direct terminal-cleanup identity gaps; 40 focused label tests pass and both restored-bypass mutants fail as intended. The first final-review runner failed before it wrote a verdict. | Run the operator-authorized replacement focused changed-function/callers review, then one final qualifying gate in a disposable clone before a PR is opened. |
 
 ## Goal and scope
 
@@ -56,3 +56,7 @@ Reader safety is settled separately: normal SQLite coordination sidecars are all
 The refreshed branch contains a selective replay of the original writer implementation and late identity fixes. The reviewer found that ordinary legacy active appearance could establish the new label without qualified admission; the repair limits establishment to `accepted_start=True`. The reopened review also found that direct terminal cleanup did not prove the returned native issue identity; the repair reuses the native issue guard before a closure reason can queue the exact-row terminal mutation. The focused suite now passes 40 Python tests; deliberate appearance and closure-identity mutants both fail. This is implementation evidence only. The final qualifying gate has not yet run on this refreshed branch.
 
 Stop and report rather than expand scope if qualified identity cannot reach the existing connector, a migration/dump contract is ambiguous, the bounded reviewer finds a correctness gap, or the final gate fails after one scoped repair/retest. Do not resolve hosted reconciliation debt, merge-cleanup race conditions, Flight Deck rendering, or Daily integration in this producer lane.
+
+## Review authorization record
+
+On 2026-09-17, the operator authorized one replacement final-review lane after the first real headless reviewer failed before producing a verdict. The replacement is deliberately limited to every changed writer/runtime function and relevant direct callers in the 23-file GH-646 candidate, plus its schema/dump, focused-test, and receipt boundaries. This is a review-scope waiver only: it does not permit a live migration, connector enablement, label write, deployment, merge, or a skipped final qualification gate.
