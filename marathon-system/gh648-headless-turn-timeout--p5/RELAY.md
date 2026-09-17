@@ -1,5 +1,5 @@
 # Marathon Phase p5
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P5-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -93,3 +93,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Graph tools were unavailable; source fallback covered consult's main, launch, idle-bound, partial surfacing, and shared diagnostic classifier. Reversibility: Easy — a test and one registration line. Existing kill policy is preserved.
 
 Handing off to agy for review, with the live repro limitation explicit.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the entire `utils/py/consult.py` file, verified the stubbed hermetic test suite `test/gh648-l5-gh237-repro.sh`, and confirmed it executes properly and tests what it claims (truthful attribution without false positive idle kills). The test registration in `validate.sh` is correct. The requirement to avoid mutating `consult.py` was adhered to, as L1/L3 indeed already cover the honest idle labels and partial-failure output required for the GH-237 scenario. Pre-existing code is functionally correct for this lane's objective.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
