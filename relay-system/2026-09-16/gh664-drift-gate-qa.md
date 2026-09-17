@@ -104,4 +104,12 @@ Basis: Static approval within the stated local CLI envelope; no blocking defect 
 
 Relay closed (Approved), no further turn needed. Nonblocking findings are available to Producer (claude-a); the harness owns commit and gate execution.
 
+
+### Attestation · relay-drive — 2026-09-17T03:53:55Z
+task: RELAY-gh664-drift-gate-qa
+reviewer: codex
+status: Approved
+reviewed-head: 56e3d5cdfaf45e37d8feb4e31c359898e01d0acf
+added-range: 9226+5504
+added-sha256: 996edaa359563085c5f37fd2ad8e4016619c7f251a1418f5919a927dd0ffe85f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
