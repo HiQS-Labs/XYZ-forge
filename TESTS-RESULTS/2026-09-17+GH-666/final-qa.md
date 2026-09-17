@@ -156,4 +156,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Producer receives completion for the scoped review; preserve the publication hold.
 
+
+### Attestation · relay-drive — 2026-09-17T03:51:53Z
+task: RELAY-GH666-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: bd1e7d02dadf1402b493d4ce6d8040a0ce0fc343
+added-range: 12951+3460
+added-sha256: 1e680b5a2af8213a9477caa2fd84c97c2eafe3a39f241737475dc5c23ac88f22
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
