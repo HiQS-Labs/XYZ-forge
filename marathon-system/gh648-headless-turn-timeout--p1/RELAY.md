@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -123,3 +123,18 @@ Addressed both reviewer findings:
 - `validate.sh`: registration was already present and remains unchanged.
 
 Debug breadcrumb: source inspection reproduced both fail paths exactly. `bash test/gh648-l1-turn-termination.sh` passes with `PASS: 32 assertions`; the full gate remains reserved for the harness.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+I reviewed the whole file and the diff. The previous issues were addressed, but I found two more defects — one in the newly added logic, and one pre-existing critical flaw in the CPU tracking logic that misclassifies hangs.
+
+1. **New Defect (High)**: In `TurnDiagnostics.classify()`, if the one-shot network probe was never attempted (because the turn never met the idleness criteria), `network` is `None`. The code currently falls through and returns `REASON_IDLE`. This directly contradicts the explicit comment stating: `A missing cached observation means live sampling never established a safe idle window, so attribution must remain unclassified.` You must explicitly check `if network is None:` and return `REASON_UNCLASSIFIED`.
+2. **Pre-existing Defect (High/Critical)**: In `TurnDiagnostics`, `cpu_ratio()` relies on `c_peak`, which is the maximum instantaneous sum of CPU times for *currently living* descendants. If an agent spawns many short-lived processes (e.g. `git`, `grep`, `pytest`), their accumulated CPU time instantly vanishes from `ps` the moment they exit. Because the instantaneous sum drops, `c_peak` never captures the true cumulative CPU time. A 100% CPU-bound loop of short processes will report a near-zero `c_peak` and falsely classify a runaway loop as an `idle` hang.
+   **To fix this**: `TurnDiagnostics` must track the peak CPU time *per PID* across all samples (e.g., maintaining a `pid_cpu_peaks: dict[int, float]` across `_sample()` calls) and sum those peak values. This ensures the total cumulative CPU time is strictly monotonically increasing and never forgets dead children.
+   **Constraint Warning**: You are restricted from editing external tests. `test/gh390-timeout-attribution.sh` mocks `_descendant_cpu_seconds` to return a 2-tuple. To avoid breaking that test, **do not change the signature of `_descendant_cpu_seconds`**. Instead, introduce a new helper function (e.g. `_descendant_cpu_dict`) or do the per-pid parsing directly inside `TurnDiagnostics._sample()`.
+
+handing off to codex — codex, take your turn
