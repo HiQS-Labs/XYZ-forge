@@ -1,0 +1,75 @@
+# Re-consult (agy only): adjudicate the CORRECTED findings — evidence is pasted inline, do not navigate
+
+GROUNDING RULE (a previous answer of yours cited `~/.gemini/antigravity-cli/scratch/xyz-audit/...`
+— that is a DIFFERENT, STALE tree, not this repository, and every "fact" taken from it was wrong).
+All evidence you need is pasted below, captured today from this repo at HEAD `4ba9d504`.
+If you want to check a file, first run `git rev-parse --show-toplevel` and cite only paths under it.
+If you cannot verify a finding from the pasted evidence, answer UNCERTAIN for that finding — do not
+invent facts.
+
+## Pasted evidence (all verified in THIS tree just now)
+
+Shims present in `utils/py/`: `agy-turn.py`, `commandcode-turn.py`, `consult.py`,
+`deepseek-turn.py`, `muse-turn.py` (+ legacy Bash twins in `relay-automation/`).
+
+The four cited commits exist here (`git log -1` output):
+```
+8029c866 2026-08-20 fix(agy): a mute terminal takeover is the TTY cause, not a silent hang
+36694572 2026-08-24 fix(harness): GH-114 — provision a pty for headless agy -p and attribute idle kills to the real blocker
+0b37c36f 2026-09-08 fix(GH-502): security-dialog detector requires a visible window, not just a live process
+c9c3f21b 2026-09-13 fix(GH-608): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution
+```
+GH-608's diff touched ONLY `utils/py/deepseek-turn.py` (9-file stat checked).
+
+Issue titles (GitHub API, this repo): #237 "consult.sh agy lane hangs idle in throwaway worktree
+(2/2, idle-killed before 300s cap)" · #241 "Turn shim releases token to peer after a timeout-killed
+zero-output turn" · #276 "consult.sh default per-advisor wall cap (300s) kills progressing codex
+advisors" · #285 "agy-turn.sh reports exit 7 at the timeout cap but never kills the child" ·
+#480 "consult.sh: 300s default cap is too short, and hitting it discards the advisor's entire turn"
+· #521 "muse-turn: driven relay turns stall at cpu=0.00..." · #242 "Timeout-killed driven run
+leaves the operator checkout switched to development" · #397 "relay-drive --review-once reports a
+shim that wrote nothing as exit 5" · #369 "rtl_run_bounded's PID-only kill lets a multi-process CLI
+outlive its turn cap" (CLOSED 09-02).
+
+Key code (verbatim, HEAD):
+`utils/py/turn_diagnostics.py` docstring: "A network probe (`lsof -i`, to prove the agent is
+waiting on its API) was considered and left out — it is slow enough to matter at this cadence..."
+→ the idle oracle has NO way to distinguish an in-flight API wait from a local wedge;
+`REASON_IDLE = "timeout-idle-no-progress"` (~:90) is emitted on sustained cpu=0 + no transcript
+growth. `utils/py/consult.py:306` kills an advisor when `idle >= idle_cap` on that same signal.
+`utils/py/agy-turn.py:~500` NOW calls `_kill_turn_group(proc)` at the wall cap (so #285's
+"never kills the child" appears fixed in the Python twin; the Bash twin and the issue are
+unverified). `utils/py/muse-turn.py:~279` delegates the wall cap to `rtl_run_bounded`
+(process-group kill), so #521's stall has no idle-oracle kill path. #369 closed 09-02 as the
+shared process-group primitive (GH-478).
+
+## The CORRECTED findings — AGREE / DISAGREE / UNCERTAIN on each
+
+**F1 — #237 belongs to a recurring family, not a surgical one-off.** The idle/timeout machinery
+was patched per-symptom ≥4× (the four commits above; none touched the consult path or the oracle's
+network-blindness), and 6+ open issues share the trigger surface. Churn score 25 (repeat fixes 9,
+cluster size 13, time-open 3).
+
+**F2 — Root cause has two separable layers on one trigger surface.**
+(A) Classification: the idle oracle cannot distinguish in-flight backend wait from local stall
+(its own docstring admits the probe was left out), yet consult.py and turn shims KILL on it —
+`timeout-idle-no-progress` is an overclaim; the honest label is "unknown". (B) Aftermath: what a
+timeout-kill does next is per-shim — commandcode releases the peer token (#241), consult surfaces
+nothing but a failure line (#276/#480), post-kill state handling diverges (#242, #397).
+
+**F3 — Membership/phasing (operator's two waves, with corrections from the grounded advisor).**
+Wave 1 (Phase 1): #237, #241, #276, #480 live fixes; #285 = revalidate-first lane (fix only if the
+repro still fails at HEAD, else close as already-fixed); #521 = attribution investigation (no
+idle-oracle kill path found at HEAD). Wave 2 (Phase 2): #242, #397, and #369 as regression-baseline
+verification only (it closed as the fix pattern).
+
+**F4 — Remediation shape.** Instrument first (idle-kill / wall-cap / child-orphan / unknown
+distinguishable in logs; make ambiguity non-destructive — do not kill on an unclassifiable idle
+signal without a provider-specific in-flight signal), converge supervision on `rtl_run_bounded`,
+reconcile aftermath contracts, sweep redundant per-symptom patches last. Preserve useful
+provider-specific work (PTY provisioning, blocker probes) rather than sweeping it away.
+
+## Output format
+`F<n>: AGREE|DISAGREE|UNCERTAIN — <one to three lines, cite the pasted evidence or your worktree
+paths only>`. Then `VERDICT: FILE-UMBRELLA | DO-NOT-FILE — one line`. Be adversarial; a genuine
+disagreement grounded in THIS tree is exactly what we want.
