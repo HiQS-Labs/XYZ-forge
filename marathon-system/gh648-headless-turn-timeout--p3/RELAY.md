@@ -110,3 +110,11 @@ Handing off to agy — agy, take your turn.
 - **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-17T06:28:00Z
+task: MARATHON-P3-TURN-R2
+reviewer: agy
+status: Approved
+reviewed-head: a7c0a679682aebeb82b2963be9e9c19b2f667379
+added-range: 8853+892
+added-sha256: 457440536403e02fce1c75f471e9b8c85c890e3b7e07b73c756aa0f4eab9e793
