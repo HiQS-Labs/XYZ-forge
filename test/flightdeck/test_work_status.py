@@ -210,7 +210,9 @@ class WorkStatusTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config = write_fixtures(Path(tmp))
             cx = sqlite3.connect(config.rebalance_db)
-            cx.execute("UPDATE github_items SET fetched_at=? WHERE number=440", (AS_OF,))
+            cx.execute("ALTER TABLE github_items ADD COLUMN labels_json TEXT")
+            cx.execute("UPDATE github_items SET fetched_at=?, labels_json=? WHERE number=440",
+                       (AS_OF, '["in-progress"]'))
             row = list(cx.execute("SELECT * FROM github_items WHERE number=440 AND item_type='issue'").fetchone())
             row[0] = row[0].upper()
             row[11] = "https://github.com/foreign/project/issues/440"
@@ -226,6 +228,7 @@ class WorkStatusTests(unittest.TestCase):
                 with patch("src.flightdeck.connectors._sqlite_rows", side_effect=ordered):
                     batch = read_rebalance(config, time.monotonic() + 2)
                 issue = next(row for row in batch["issues"] if row["number"] == 440)
+                self.assertEqual(issue["labels"], ["in-progress"])
                 self.assertTrue(issue["native_conflict"], (valid_first, issue))
             self.assertEqual(before, config.rebalance_db.read_bytes())
 
