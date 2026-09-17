@@ -1,5 +1,5 @@
 # Marathon Phase p3
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
@@ -94,3 +94,12 @@ The allowed implementation files already satisfy this phase brief on arrival; re
 - No git commands or full gate were run. Full gate and final commit remain the harness's responsibility; reviewer approval is outstanding.
 
 Handing off to agy for the required independent review.
+
+### Round 3 · Reviewer · agy
+
+swept file: yes
+The implementation in `utils/py/consult.py`, `test/gh648-l3-consult-cap.sh`, and `validate.sh` has been reviewed in full. No pre-existing defects were found in the scope of this turn. The default cap is correctly set to 600s, the partial transcript is published when caps are hit, and idle reason labels are correctly passed down and preserved in the final output. The focused verification test `test/gh648-l3-consult-cap.sh` passes successfully in an isolated scratch directory without triggering containment.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
