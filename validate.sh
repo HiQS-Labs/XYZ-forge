@@ -296,6 +296,7 @@ TESTS=(
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
   "gh608-deepseek-effort.sh"     # GH-608 (DEEPSEEK_REASONING_EFFORT matrix, early claim prevention, telemetry normalization)
+  "gh648-l6-muse-attribution.sh" # GH-648 L6 (#521 Muse wall-cap attribution + mutation controls)
   "gh648-l5-gh237-repro.sh" # GH-648 L5 (#237 silent backend attribution + old-label mutation)
   "gh648-l4-285-revalidate.sh" # GH-648 L4 (#285 real child cap + no-kill mutation)
   "gh648-l3-consult-cap.sh" # GH-648 L3 (600s cap, partial answers, honest idle kills)

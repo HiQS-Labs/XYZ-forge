@@ -1,6 +1,6 @@
 # Marathon Phase p6
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P6-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -39,6 +39,16 @@ Write-set: `utils/py/muse-turn.py` + suite. Python twin authoritative; register 
 
 ## Acceptance / Guard
 `test/gh648-l6-muse-attribution.sh`: a stubbed muse-shaped stall produces a termination record whose label matches what happened (stall-unknown, not "no progress" and not a bare cap); a healthy muse turn is unaffected.
+
+### Round 1 · Builder · codex
+
+- Changed `utils/py/muse-turn.py`, `test/gh648-l6-muse-attribution.sh`, and the TESTS registration in `validate.sh`.
+- Source trace: Muse uses `rtl_run_bounded` for its wall cap and `TurnDiagnostics` for attribution; it has no idle-kill policy. Previously its classification appeared only on stderr, leaving no structured termination in the Muse run log. Graph tools were unavailable; inspected the adapter, bounded runner, and L1 diagnostics source directly.
+- Reused L1's emitter to append one `turn-termination` record to the Muse log: `termination=wall-cap`, with the observed reason (`timeout-idle-unknown` for the brief's stall-unknown case). The same record supplies stderr attribution. Emission precedes worktree cleanup so containment exit 6 does not erase an observed cap. Exit precedence and kill policy are unchanged. Reversibility: Easy, localized reporting change.
+- Focused verification: `bash test/gh648-l6-muse-attribution.sh` passed (exit 0): seven behavior cases covering unknown stall, possible backend wait, failed/missing probe, cap followed by containment, healthy completion, and banner-only failure; two mutations rejected (old no-progress label and missing record). The pre-fix run failed at `termination record count` with zero records, establishing the regression oracle. Local output is in `.relay-scratch/l6-before.log` and `.relay-scratch/l6-after.log` (scratch is not durable or committed evidence).
+- Test boundary: real Muse-shaped subprocesses and the actual bounded runner; deterministic observations exercise the real L1 classifier/serializer. Coordination, worktree operations, telemetry, and visibility lookup are stubbed; no git, live model, or network calls. All test artifacts stay under `.relay-scratch/`.
+- Investigation limit: this confirms the reporting gap, not the cause of the historical #521 stall. The registry documents four ruled-out hypotheses and a residual turn-prompt hypothesis; no live Muse replay was performed, so that residual remains unconfirmed.
+- Full gate deliberately not run per this turn's instructions; harness verification and independent agy review remain outstanding.
 
 
 ---

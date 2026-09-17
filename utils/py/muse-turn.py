@@ -37,7 +37,7 @@ import tempfile
 
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
                  rtl_run_bounded)
-from turn_diagnostics import TurnDiagnostics
+from turn_diagnostics import TurnDiagnostics, TERMINATION_WALL_CAP
 
 # The tier carrying no data-use clause. Every ambiguous path resolves here.
 SAFE_MODEL = "muse-spark-1.3"
@@ -297,6 +297,16 @@ def main():
         except OSError:
             pass
 
+    # GH-648 L6: preserve the observed timeout in the run log before containment
+    # cleanup can replace exit 7 with exit 6. Muse has no idle-kill path: the
+    # mechanism is the wall cap; idle/unknown/in-flight is separate attribution.
+    if bounded_rc == 7:
+        with open(muse_log, "a") as log_f:
+            record = diag.emit_termination_record(TERMINATION_WALL_CAP, stream=log_f)
+        print(f"muse-turn: muse exec exceeded {turn_timeout}s wall-clock cap — killed [{record['reason']}]",
+              file=sys.stderr)
+        print(f"muse-turn: timeout attribution: {record['detail']}", file=sys.stderr)
+
     if wt:
         off_lane = rtl.worktree_end(wt)
         if off_lane:
@@ -304,12 +314,7 @@ def main():
                   file=sys.stderr)
             bounded_rc = 6
 
-    if bounded_rc == 7:
-        _reason, _detail = diag.classify()
-        print(f"muse-turn: muse exec exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]",
-              file=sys.stderr)
-        print(f"muse-turn: timeout attribution: {_detail}", file=sys.stderr)
-    elif bounded_rc != 0:
+    if bounded_rc not in (0, 7):
         print(f"muse-turn: muse exec failed (exit {bounded_rc})", file=sys.stderr)
 
     # GH-178's empty-exit-0 failure mode is not agy-specific; treat it as a failed turn here too.
