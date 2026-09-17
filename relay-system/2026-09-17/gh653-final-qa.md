@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -385,5 +385,24 @@ Review the COMPLETE current test/gh642-consumer-fruit.sh and its base diff, shar
 Grade guard-before-seed, checked construction/substitution under Bash 3.2, physical path ownership at writes/cleanup, five refusal/caller-preservation cases, real worktree and RTL-copy coverage, bounded temporary roots, and negative-control validity. Sweep pre-existing writes in the whole touched file; report any remaining safety defect with exact source citations. Preserve source/test scope: one existing test plus witness/evidence/docs/CLI ledger receipts, no runtime/shared-guard/setup/frozen-twin changes. Use commensurate QA, not speculative OS sandbox/process supervision requirements.
 
 Definition of Done: code safe within the existing owned-fixture contract, unchanged real feature assertions, original-base red and repaired 62/62, guard-disabled and caller-damage controls failing at the intended assertions, static/full fixture gate receipts auditable with source/hash/exit provenance and clone identity preserved. Read the current README for gate status and exact pins. Combined #669 verification is a separate conditional integration record, not qualification of its published draft; its pending run is not a code-review blocker for this fixture-only repair. Neither merging, promotion, closing issues nor #661 resumption is authorized. PASS means bounded fixture code Approved, not these separate permissions. Give graded precise blockers if unsatisfied; cap3.
+
+### Reviewer R1 — codex final source QA
+
+VERDICT: PASS
+Basis: bounded fixture repair satisfies the Producer R1 Definition of Done within the existing owned-fixture contract. Whole current suite, shared guard/setup, negative-control witness, shared plan/adapter, CHANGELOG and retained transcripts reviewed. No remaining pre-existing safety defect found in the touched suite. This is source/evidence review, not a new test run or permission to merge/promote/close issues/resume #661.
+
+swept file: yes
+
+- [Pass] Construction and seeding fail closed under the Bash 3.2 command-substitution semantics: invalid names refuse, mkdir/init have explicit failure returns, physical ownership is checked before init, and both mkrepo substitutions are checked before guarded writes (test/gh642-consumer-fruit.sh:24–35, :59–61, :71–74, :120–122). The explicit checks do not rely on inherited errexit. Fix: none.
+- [Pass] All five controlled faults assert exit 2 plus caller HEAD/git-dir/bare state/clean tree preservation (test/gh642-consumer-fruit.sh:40–68). The caller remains inside the outer owned sandbox while outside guard-root; the symlink control therefore cannot reach a valued checkout. Fix: none.
+- [Pass] Whole-file write/cleanup sweep: bare, linked-worktree, separate-git-dir, non-git, stub, RTL and init-clone fixture targets are guarded descendants before their dangerous uses; warning output uses a checked mktemp under WORK; RTL uses a separately guarded temporary root and guards its returned worktree before marker writes/removal (test/gh642-consumer-fruit.sh:86–116, :144–146, :167–169, :212–250). Shared require_fixture physically resolves traversal/symlinks and exits 2 on refusal (test/lib/fixture-guard.sh, quoted span: “OUTSIDE the resolved fixture root”). No speculative concurrent path replacement threat model added. Fix: none.
+- [Pass] Real feature coverage retained: seed precedes push/clone/worktree add, and RTL marker checks test copy isolation (test/gh642-consumer-fruit.sh:71–99, :225–237). Nonempty baseline.log ends “worktree fixture not created”; repaired.log ends “62 pass, 0 fail” and includes linked-worktree and ROOT copy assertions. Fix: none.
+- [Pass] Negative controls mutate the actual suite in memory, require a unique anchor, preserve the original Bash $0, and propagate its exit status (TESTS-RESULTS/2026-09-17+GH-653-GH-665/negative-controls.py:12–27). guard-disabled.log records “fixture guard accepted symlink (rc=0)”; caller-damaged.log records “caller changed after empty”. Both log source hashes match the current suite hash independently read this turn: 38be8fac37eb657ec65d174e77d502f1b26b4916bbc249d3d5e046131c8d4f09. Witness hash also matches README: c3f53eb85350410c52682a370b89df24821e83ca20c21e567af0eb79f54c99e6. Fix: none.
+- [Pass] Retained static/full gate evidence is consistent with the bounded approval: ci-fast.log pins HEAD 82f786f9 and explicitly skips the full suite; prepush.log:295 records this suite rc=0, :439 records unchanged runner identity/tree/worktrees/lock, :449 records 393/393, and :843 records normal gated push GREEN. README.md:9–33 supplies source pins and exit attribution; :44–53 preserves pending hosted/combined qualification boundaries. Fix: none.
+- [Nit] The Setup Definition of Done still says “<fill in the acceptance criteria the Reviewer grades against>”; Producer R1 supplies the actual criteria. Fix: use those criteria in Setup when scaffolding future relays; no source change required.
+
+Review limits: no Git commands, base diff extraction, test execution or external live PR-state verification performed, as required by this turn's containment instructions. Original-base behavior and unchanged-scope claims are assessed from the retained evidence and cited source, not independently retrieved Git history. No artifact/source edits made; harness owns the relay commit.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
