@@ -908,17 +908,25 @@ def extract_linked_issues(pr_meta, repo_slug=None):
     return sorted(closers), sorted(mentions)
 
 
+# GH-698 item 2 (LTVera#511 finding 8, 1-INBOX slice): reconcile scans must see the
+# whole PROJECT tree — 1-INBOX docs whose issues closed were invisible to a
+# 2-WORKING-only scan (12 of 27 offenders in the consuming-repo audit). Order
+# matters: the ACTIVE doc wins, so 2-WORKING is searched first.
+RECONCILE_FOLDERS = ("2-WORKING", "1-INBOX", "3-COMPLETED")
+
+
 def find_active_doc_for_issue(repo_root, issue_num):
-    """Find matching active doc in PROJECT/2-WORKING/."""
-    working_dir = os.path.join(repo_root, "PROJECT", "2-WORKING")
-    if not os.path.isdir(working_dir):
-        return None
-    for fname in sorted(os.listdir(working_dir)):
-        if not fname.endswith(".md"):
+    """Find an issue's doc across the reconciled PROJECT folders (2-WORKING first)."""
+    for folder in RECONCILE_FOLDERS:
+        working_dir = os.path.join(repo_root, "PROJECT", folder)
+        if not os.path.isdir(working_dir):
             continue
-        # Match GH-123-*.md or 123-*.md
-        if re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
-            return os.path.join(working_dir, fname)
+        for fname in sorted(os.listdir(working_dir)):
+            if not fname.endswith(".md"):
+                continue
+            # Match GH-123-*.md or 123-*.md
+            if re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
+                return os.path.join(working_dir, fname)
     return None
 
 
@@ -1228,10 +1236,11 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
         expected = f"https://github.com/{repo_slug}/issues/{row['gh_number']}"
         if repo_slug and (row["issue_url"] or "").lower() == expected.lower():
             issues.add(row["gh_number"])
-    for path in Path(repo_root, "PROJECT/2-WORKING").glob("GH-*.md"):
-        match = re.match(r"GH-([0-9]+)-", path.name)
-        if match:
-            issues.add(int(match[1]))
+    for folder in RECONCILE_FOLDERS:
+        for path in Path(repo_root, "PROJECT", folder).glob("GH-*.md"):
+            match = re.match(r"GH-([0-9]+)-", path.name)
+            if match:
+                issues.add(int(match[1]))
     found = set(unreconciled_prs(repo_root, repo_slug, qualification_metadata)) if qualification_metadata is not None else set()
     for issue in sorted(issues):
         if fetch_issue_state(repo_root, issue, offline_manifest) != "CLOSED":

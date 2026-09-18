@@ -837,6 +837,9 @@ class Engine:
             if db_rank is not None:
                 # GH-698 F2: the DB's canonical four-axis rating satisfies `rated`
                 # even when the capture doc lacks legacy cx/risk/effort frontmatter.
+                # DECLARED PRECEDENCE: when a row carries BOTH vocabularies, the
+                # DB's rating_* wins (scoring uses dbRank; legacy frontmatter is
+                # ignored) — the two scales must not coexist in one score.
                 rated = True
             ratings_exempt = str(fm.get("ratings_exempt", "")).lower() == "true"
             contract = self._extract_contract(doc_abs) if doc_exists else None

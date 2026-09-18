@@ -35,6 +35,19 @@ title: alpha
 {"artifacts": ["docs/alpha.md"], "lanes": {}}
 ```
 EOF
+cat > docs/gamma.md <<'EOF'
+---
+title: gamma
+complexity: 3
+risk: 4
+effort: 2
+---
+## Swarm Preflight Contract
+
+```json
+{"artifacts": ["docs/gamma.md"], "lanes": {}}
+```
+EOF
 cat > docs/beta.md <<'EOF'
 ---
 title: beta
@@ -60,6 +73,10 @@ conn.execute("""INSERT INTO roadmap_items VALUES('g101', 101, 'alpha rated row',
              NULL, 'Queue / parked intake', 1, NULL, 'docs/alpha.md',
              'https://example.invalid/issues/101', NULL, NULL, NULL,
              50, 50, 50, 50, NULL)""")
+conn.execute("""INSERT INTO roadmap_items VALUES('g103', 103, 'gamma both-vocab row',
+             NULL, 'Queue / parked intake', 3, NULL, 'docs/gamma.md',
+             'https://example.invalid/issues/103', 3, 4, 2,
+             70, 60, 50, 40, NULL)""")
 conn.execute("""INSERT INTO roadmap_items VALUES('g102', 102, 'beta unrated row',
              NULL, 'Queue / parked intake', 2, NULL, 'docs/beta.md',
              'https://example.invalid/issues/102', NULL, NULL, NULL,
@@ -93,6 +110,8 @@ assert_absent_from_unrated() {
 assert_present "rated row (GH-101) reaches the plan"        "GH-101"
 assert_present "unrated row held with the unrated flag"     "unrated"
 assert_present "unrated flag names GH-102 (red control)"    "GH-102"
+assert_present "both-vocab row (GH-103) reaches the plan"   "GH-103"
+assert_absent_from_unrated "both-vocab row never flagged unrated (DB precedence)" "GH-103"
 assert_absent_from_unrated "rated row never carries the unrated flag" "GH-101"
 
 echo "gh698-planner-db-ratings: $pass pass, $fail fail"
