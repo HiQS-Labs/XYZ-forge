@@ -1,8 +1,8 @@
 # Marathon Phase p4
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-P4-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-P4-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
 ## Phase Brief
 
@@ -43,17 +43,23 @@ First build `test/gh648-l4-285-revalidate.sh` (same fixture shape: short cap vs 
 The suite asserts the cap fires fast for BOTH twins (agy, codex) and records which case happened (already-fixed close vs fix landed).
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh648-headless-turn-timeout--p4/ESCALATION.md`): `pre-advance-failed`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (codex — BUILDER role)
 
 You are the BUILDER for this phase. Read the phase brief above and implement it.
+APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. Implement the brief by creating/editing the artifact file(s): utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P4-TURN-R2 --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p4/RELAY.md,utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh"
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P4-TURN-R2 --agent codex
-   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN-R2 --agent codex --to agy
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick claim MARATHON-P4-TURN-R3 --agent codex --paths "marathon-system/gh648-headless-turn-timeout--p4/RELAY.md,utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh"
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick ping MARATHON-P4-TURN-R3 --agent codex
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN-R3 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/gh648-headless-turn-timeout--p4/RELAY.md and utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -65,9 +71,10 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 ▶ TAKE YOUR TURN (agy — REVIEWER role)
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/agy-turn.py, test/gh648-l4-285-revalidate.sh, validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN-R2 --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P4-TURN-R2 --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick release MARATHON-P4-TURN-R3 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick done MARATHON-P4-TURN-R3 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh237-idle-hang/bin/tick
    Edit ONLY marathon-system/gh648-headless-turn-timeout--p4/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -81,52 +88,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-
-### Round 2 · Builder · codex
-
-- Inspected the existing `test/gh648-l4-285-revalidate.sh`, its registration in
-  `validate.sh` TESTS, and the timeout paths in both Python adapters. The requested
-  fixture and registration were already present at turn entry. No production or
-  test edits were needed; this turn changes only this relay record.
-- Focused verification: `bash test/gh648-l4-285-revalidate.sh` exited 0. The real
-  five-second stub exited 7 at 1.008s for codex and 2.004s for agy in both pipe and
-  PTY modes, with the launched child dead and no natural-completion marker. The
-  agy cases also asserted that the process group no longer existed. This is the
-  simple sleeping-child fixture; it does not establish resistant-descendant behavior.
-- Witnessed negative control: replacing agy's `_kill_turn_group` with a no-op
-  returned exit 7 at 2.007s while the child was still alive. The containment
-  assertion rejected it before fixture cleanup. Exit 7 alone cannot pass this test.
-- Outcome: already fixed at the tested source; no production change. Source SHA256:
-  agy `7ba49c671f963cc420fade4ed98bec78f2ed51b076d02488a33b253205878c38`;
-  codex `f5c7dfc0f4332a0adc9917cc26cc3300c4168761b0b1aade0050b4bdc2cabb84`.
-- Ephemeral run output and JSON receipt are under `.relay-scratch/gh648-l4-run.log`
-  and `.relay-scratch/gh648-l4-receipt.json`. They are not committed provenance and
-  must not be cited as durable issue-close evidence. The fixing commit remains
-  unresolved in the receipt: this turn explicitly forbids Git commands. No issue
-  was closed. The outer orchestrator must identify the historical fixing SHA and
-  retain durable evidence before closing #285.
-- Full gate deliberately not run under the turn constraint; the harness owns it.
-  Graph tools were unavailable, so verification used direct source reads. No Git
-  commands, real agent launches, or network calls were used for the fixture.
-
-Handing off to agy for review of the existing implementation and this revalidation;
-remaining closeout requirements are explicit above.
-
-### Round 2 · Reviewer · agy
-
-swept file: yes
-Reviewed the whole files `test/gh648-l4-285-revalidate.sh`, `utils/py/agy-turn.py`, and `validate.sh`.
-The test script is well-written and isolates the `_kill_turn_group` logic correctly by using a sleeper stub and tracking the processes explicitly. The mutation testing ensures that the test isn't trivially passing. I ran the test outside the containment boundaries by manually invoking `bash test/gh648-l4-285-revalidate.sh` and it passed. The assertions about process deaths were correct. The `_kill_turn_group` implementations in the Python adapters correctly reap the process groups, showing the bug does not reproduce on HEAD. No pre-existing defects or missing pieces found in the reviewed scope.
-
-**Verdict:** Approved
-
-relay closed, no further turn needed
-
-### Attestation · relay-drive — 2026-09-17T15:55:10Z
-task: MARATHON-P4-TURN-R2
-reviewer: agy
-status: Approved
-reviewed-head: 097214d35f552b017f4b078c0dc0879b61b0ae58
-added-range: 8424+815
-added-sha256: 7e84f04798e7d8ff2c36893cdb662e40c0f6ea04f819c41cee45bcd78ea12319
