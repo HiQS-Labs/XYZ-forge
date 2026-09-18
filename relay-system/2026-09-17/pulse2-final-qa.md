@@ -115,4 +115,12 @@ No merge is authorized. PR #680 remains unmerged per the supplied artifact. Full
 
 Relay closed (Approved), no further review turn needed. Producer resumes the outstanding verification/projection work and final reporting; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-18T02:10:37Z
+task: RELAY-pulse2-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 403924d8e8c6c7248cbd5192eb7eb8492f5b7829
+added-range: 13294+4403
+added-sha256: 14a0f05178dc76f30de8c9e1843b319d25939475fefa20e1769f41501bb8a609
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
