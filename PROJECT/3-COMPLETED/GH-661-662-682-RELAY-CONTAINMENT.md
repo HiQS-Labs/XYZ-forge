@@ -1,6 +1,6 @@
 ---
 title: "GH-661/662/682: relay containment verification, offlane diagnostic lookalike fix, and reviewer probe environment injection"
-status: In Progress
+status: Complete
 created: 2026-09-18
 updated: 2026-09-18
 owner: operator
