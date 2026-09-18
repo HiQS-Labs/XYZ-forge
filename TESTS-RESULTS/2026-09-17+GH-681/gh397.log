@@ -1,0 +1,14 @@
+== test: gh397-reviewer-turn-role ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh397-reviewer-turn-role.XXXXXX.F8eokMXLsW
+  PASS: marathon reviewer turn is recognized as a REVIEWER turn
+  PASS: marathon builder turn is not a reviewer turn
+  PASS: reviewer stays scoped even when the builder never flipped NEXT (fails CLOSED)
+  PASS: plain relay thread with NEXT: Reviewer is still a reviewer turn
+  PASS: plain relay thread with NEXT: Producer is not a reviewer turn
+  PASS: with no acting agent, the NEXT: header still decides (hand-run turns keep working)
+  PASS: builder==reviewer lane falls back to the NEXT: header rather than guessing
+  PASS: reviewer prompt carries the REVIEWER scope note
+  PASS: reviewer prompt drops the artifact from the editable set
+relay-turn: REVIEWER turn — scoping allowlist to the relay file only (ignoring ALLOW_PATHS=src/thing.py)
+  PASS: rtl_init records the reviewer turn (allowlist scoped to the relay file only)
+  PASS: reviewer allowlist holds the relay file and nothing else
