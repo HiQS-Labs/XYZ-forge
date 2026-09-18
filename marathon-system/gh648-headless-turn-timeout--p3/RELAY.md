@@ -107,3 +107,11 @@ I have reviewed the whole file for `utils/py/consult.py`, `test/gh648-l3-consult
 
 **Verdict:** Approved
 handing off to codex — relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-18T00:23:48Z
+task: MARATHON-P3-TURN-R4
+reviewer: agy
+status: Approved
+reviewed-head: c75facf3e34d3b1d772dd54c697528d75f2cbe4e
+added-range: 8843+953
+added-sha256: 1a6d9dc4171cc2179e7ade1b381d199ac2ca2c882958803431fab334bfb0c74e
