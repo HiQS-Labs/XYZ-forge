@@ -14,7 +14,8 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path, resolve_turn_root, rtl_default_log  # noqa: E402
+from rtl import (driver_lock_path, resolve_turn_root, rtl_default_log,
+                 checkout_snapshot, restore_checkout_after_timeout)  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
 
 def eprint(*args, **kwargs):
@@ -827,6 +828,9 @@ def main():
         except ValueError:
             progress_interval_s = 60.0
         last_progress_at = 0.0
+        # GH-648 L7 / #242: the child can switch the operator checkout even when
+        # its own worktree is detached. Capture before dispatch, not after the kill.
+        checkout_before = checkout_snapshot(progress_main_tree)
         if os.access(args.agent_cmd, os.X_OK):
             proc = subprocess.Popen([args.agent_cmd], start_new_session=True)
         else:
@@ -889,6 +893,8 @@ def main():
             verdict = judge_terminal(file_status(), role, pre_turn, shim_ok=False)
             if verdict[0] == "forged":
                 write_escalation_reason(("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed")
+            if res_code == 7:
+                restore_checkout_after_timeout(progress_main_tree, checkout_before)
             sys.exit(res_code)
 
         round_idx += 1

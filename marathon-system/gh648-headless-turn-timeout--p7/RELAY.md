@@ -1,6 +1,6 @@
 # Marathon Phase p7
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P7-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -79,3 +79,24 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented timeout checkout recovery in the Python driver boundary.
+
+- `utils/py/relay_drive.py`: capture the driven checkout's branch and HEAD immediately before dispatch; after a child returns timeout exit 7, recover checkout identity before propagating that exit. Healthy turns retain their existing switching behavior. The target root is the same explicit target/main tree used by the driver's progress observer.
+- `utils/py/rtl.py`: add shared snapshot/recovery helpers. Recovery uses non-forced `git switch`, handles detached HEAD, verifies the result, and never rewinds a ref or stashes/resets local work. A moved original branch or conflicting local edits yields an explicit manual-recovery diagnostic, retaining timeout exit 7.
+- `test/gh648-l7-checkout-aftermath.sh`: registered in `validate.sh`. Runs a real child under a 0.5-second cap and executes the driver's actual AST capture/failure blocks against a modeled Git boundary. Covers branch recovery, detached HEAD, healthy switching, unchanged checkout, moved ref, dirty conflict, and a no-restoration mutation rejected by the same preservation assertion.
+
+Evidence / limitations:
+- Focused suite passed all seven cases; Python source syntax parsing passed. Logs: `.relay-scratch/gh648-l7-before.log` and `.relay-scratch/gh648-l7-after.log` (ephemeral, not committed provenance).
+- The initial test failed because the capture block did not exist. The behavioral red control is the later no-restoration mutation: the child switches the modeled checkout, times out, and the preservation assertion rejects the remaining wrong branch/HEAD.
+- No Git commands were run by this builder or its test: the test mocks Git, while the child process and timeout kill are real. Consequently **real Git checkout semantics and the full fixture acceptance remain unverified**. The full project gate was not run, per turn instructions; the harness owns it. Do not treat this as full gate evidence.
+- Source inspection found no branch-switch site in either allowed Python file; the Bash worktree setup creates a separate checkout. The patch covers switches performed inside a driven child; it does not establish the historical #242 switch's origin or recover a switch before this driver launches, a killed supervisor, or concurrent branch writes.
+
+Bet / reversibility: Costly because this is checkout recovery on the relay boundary. Assume the supervisor survives and the original branch ref remains unchanged. Failure mode: a conflicting edit, ref movement, or Git failure prevents automatic recovery; preserve work and name manual recovery rather than force restoration. Rollback is removal of the two driver calls and helper functions; no data/schema migration. This relay records the bet because CHANGELOG is outside the turn allowlist.
+
+Graph tools were unavailable; evidence is direct bounded source inspection. Peer-drift paths were read where relevant, never edited. No commits or full gate were run. Only the authorized artifact paths and this relay were edited; scratch is confined to `.relay-scratch/`.
+
+Reviewer: please assess the non-forced recovery boundary and the explicitly outstanding real-Git fixture proof. NEXT updated as explicitly required by the turn steps; all other existing relay content preserved.
