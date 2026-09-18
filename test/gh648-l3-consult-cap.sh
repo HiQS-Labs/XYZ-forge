@@ -12,6 +12,7 @@ import consult as c
 import turn_diagnostics as td
 
 root = pathlib.Path(os.environ['GH648_ROOT'])
+assert '"gh648-l3-consult-cap.sh"' in (root / 'validate.sh').read_text()
 class Idle:
     def __init__(self, **kwargs): pass
     def start(self): pass
@@ -62,6 +63,8 @@ with tempfile.TemporaryDirectory(dir=root / '.relay-scratch', prefix='gh648-l3-'
                  patch.object(c, 'TurnDiagnostics', Idle), contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
                 try: c.main()
                 except SystemExit as exc: rc = exc.code
+                # Observe termination BEFORE cleanup, which otherwise masks a missed kill.
+                assert launched and all(proc.poll() is not None for proc in launched), name
         finally:
             for proc in launched:
                 if proc.poll() is None: proc.kill()
@@ -73,6 +76,7 @@ with tempfile.TemporaryDirectory(dir=root / '.relay-scratch', prefix='gh648-l3-'
     assert caps == [600], caps
     assert rc == 0 and '1 answered, 0 failed' in stdout
     assert transcript.read_text() == 'audit finding at source.py:42\n'
+    assert 'PARTIAL' not in stdout and not list(transcript.parent.glob('*.PARTIAL.md'))
     rc, stdout, transcript, caps = run_case('wall', 'wall', 1)
     marker = 'PARTIAL — hit the 1s cap, no verdict'
     assert caps == [1] and rc == 5

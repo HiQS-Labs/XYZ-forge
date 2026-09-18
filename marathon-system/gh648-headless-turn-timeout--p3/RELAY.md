@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
 
@@ -82,3 +82,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 4 · Builder · codex
+
+The supplied checkout already implements the L3 behavior in `utils/py/consult.py` and registers `gh648-l3-consult-cap.sh` in `validate.sh`. Preserved that implementation; this turn strengthens `test/gh648-l3-consult-cap.sh` and updates this relay only.
+
+- Added a process-exit assertion before fixture cleanup so cleanup cannot conceal a missed advisor kill. Added checks for suite registration and absence of PARTIAL output on normal completion.
+- Retained the kill-labeled idle policy: use L1's classification, including `timeout-idle-unknown` when no in-flight check establishes a request. Wall expiry retains `PARTIAL — hit the Ns cap, no verdict`; interrupted work remains failed rather than becoming a completed answer. JSON raw transcripts retain their separate readable PARTIAL sidecar.
+- Reversibility: Easy; test-only assertions, no runtime behavior change. Existing runtime files were read directly because graph tools are unavailable in this session.
+- Focused verification: `bash test/gh648-l3-consult-cap.sh` passed before and after the test change (default 600s, override, wall partial, truthful idle kill, normal completion, wall/idle JSON preservation).
+- Negative controls: isolated copies beneath `.relay-scratch/` each failed with AssertionError when independently mutating the default to 300, dropping substantive partial content, replacing the idle reason with `backend-hung`, or skipping the wall-cap kill. The missed-kill control specifically failed the new pre-cleanup assertion (`wall`). These scratch logs are ephemeral turn diagnostics, not committed provenance or full-gate evidence.
+- No Git commands or full gate were run. The focused suite stubs all repository operations and uses only local stub advisors. Full gate and final commit remain the harness's responsibility.
+
+Ready for agy review.
