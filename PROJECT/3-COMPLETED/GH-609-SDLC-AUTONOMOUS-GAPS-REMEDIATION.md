@@ -1,10 +1,10 @@
 ---
 id: GH-609
 title: 'feat(sdlc): address edge-case SDLC gaps in autonomous agent workflows'
-status: active
+status: Complete
 owner: agent-b
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-15
 goal: 'Codify durable interrupted-operation recovery, zero-downtime expand-contract migrations, operational containment, and bounded flake/performance fences across core skills.'
 labels: [enhancement, sdlc, architecture]
 rated: 75/80/50/60

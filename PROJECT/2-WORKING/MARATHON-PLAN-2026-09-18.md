@@ -90,16 +90,12 @@ the other lane's source), or the split can stall when the consumer waits on the 
 
 ### ✅ Likely done — verify-and-close, not a build lane
 - #141 GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison — `already-landed`
-- #505 GH-505 · Builder can approve and close its own relay; no merge path checks for a reviewer — `already-closed`
-- #509 GH-509 · Relay terminal authorization: prove a review happened without trusting builder-writable state — `already-closed`
 - #275 GH-275 · medium-level write-ops logging of agent disk-write commands — `already-landed`
 - #416 GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer — `already-landed`
 - #423 GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on — `already-landed`
 - #424 GH-424 · roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕 — `already-landed`
 - #492 GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR — `already-landed`
 - #608 GH-608 · fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution — `already-closed`
-- #609 GH-609 · feat(sdlc): address edge-case SDLC gaps in autonomous agent workflows — `already-closed`
-- #642 GH-642 · Low-hanging fruit: consumer-repo SOP turnkey — `already-closed`
 - #654 GH-654 · Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns) — `already-closed`
 - #659 GH-659 · rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654) — `already-closed`
 - #663 GH-663 · QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission — `already-closed`

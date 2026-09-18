@@ -1,8 +1,8 @@
 ---
 title: "GH-509: Relay terminal authorization — prove a review happened without trusting builder-writable state"
-status: In progress
+status: Complete
 created: 2026-09-08
-updated: 2026-09-08
+updated: 2026-09-09
 owner: agent-b
 goal: a terminal relay status counts only when the driver watched a reviewer-role turn write it, and the driver stamps that observation with the reviewed head and a digest of the reviewer's block
 gh_issue: 509
