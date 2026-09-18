@@ -114,3 +114,7 @@ single-file authoring with an existing QA loop (calibrated against GH-514 keel a
 ## Merge evidence
 
 - PR #542 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #545 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

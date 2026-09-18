@@ -2,7 +2,7 @@
 gh_issue: 649
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/649
 title: PDDA canonical source migration
-status: In progress
+status: Complete
 created: 2026-09-16
 updated: 2026-09-16
 doc_type: project

@@ -1,8 +1,8 @@
 ---
 title: "GH-610: feat(claude): subscription-validated native consult and relay support"
-status: Active
+status: Complete
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-14
 owner: operator (via /express)
 gh_issue: 610
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/610
