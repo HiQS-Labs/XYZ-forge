@@ -2,9 +2,9 @@
 gh_issue: 642
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/642
 title: "Low-hanging fruit from two foreign-repo marathons: make the consumer-repo SOP turnkey"
-status: Active (2-WORKING — implemented on feat/gh642-consumer-fruit; QA'd 3 rounds; gate evidence on final SHA)
+status: Complete
 created: 2026-09-15
-updated: 2026-09-15
+updated: 2026-09-16
 owner: noelsaw1
 doc_type: plan
 effort: 3

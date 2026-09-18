@@ -94,7 +94,7 @@ git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA"                    # 7.
 ```
 
-What each phase asserts (all refusals and fired runs write `.tick/events/*` and mirror to `~/.config/xyz/events/`):
+What each phase asserts (all refusals and fired runs write `.tick/express/*` — a sibling of tick's coordination log, never inside it (GH-694) — and mirror to `~/.config/xyz/events/`):
 
 0. **Tree of execution** — task branch based on origin/development with $\le 2$
    local commits (GH-516; $> 2$ refuses with `too-many-commits`; diverged branches
@@ -118,7 +118,8 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
    `validate.sh` TESTS. A hotfix without its suite is a claim, not a fix.
 5. **Docs born complete** — capture doc scaffolded in `2-WORKING` with Status,
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
-   present from birth (the 08-26 reconcile gate refuses promotion otherwise),
+   present from birth (highly recommended — since GH-693 the reconciler warns
+   rather than refuses promotion when it is missing; fill it in anyway),
    plus the CHANGELOG entry appended in the same motion.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The

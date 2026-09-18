@@ -235,7 +235,9 @@ else
   fail "Direct-commit reconciliation preserves commit identity" "$out" "Processing commit c0ffee123456"
 fi
 
-# Test 4: Missing ## Lessons Learned rejection
+# Test 4: Missing ## Lessons Learned is advisory (GH-693) — WARN, promotion proceeds, exit 0.
+# (Was a fail-closed exit 5 from GH-165 to GH-693.) --dry-run keeps the fixture in 2-WORKING for Test 5;
+# test/gh693-lessons-learned-advisory.sh proves the real move.
 cat << 'EOF' > "$REPO/PROJECT/2-WORKING/GH-999-TEST.md"
 ---
 gh_issue: 999
@@ -248,10 +250,20 @@ EOF
 git -C "$REPO" add -A && git -C "$REPO" commit -q -m "missing lessons"
 
 set +e
-out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 1001 --offline "$REPO/manifest.json" --skip-pull 2>&1)"
+out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 1001 --offline "$REPO/manifest.json" --skip-pull --dry-run 2>&1)"
 rc=$?
 set -e
-assert_eq "Missing lessons learned is rejected (exit 5)" "$rc" "5"
+assert_eq "Missing lessons learned is a WARN, not a refusal (exit 0)" "$rc" "0"
+if grep -q "wave-reconcile: WARN — Doc GH-999-TEST.md has no '## Lessons Learned" <<< "$out"; then
+  pass "WARN names the doc and the missing section"
+else
+  fail "WARN names the doc and the missing section" "$out" "wave-reconcile: WARN — Doc GH-999-TEST.md has no '## Lessons Learned"
+fi
+if grep -q "Moved -> GH-999-TEST.md" <<< "$out"; then
+  pass "promotion proceeds past the WARN"
+else
+  fail "promotion proceeds past the WARN" "$out" "Moved -> GH-999-TEST.md"
+fi
 
 # Restore valid doc
 cat << 'EOF' > "$REPO/PROJECT/2-WORKING/GH-999-TEST.md"

@@ -148,6 +148,18 @@ RAISES="$(GH549_ROOT="$ROOT" python3 "$WORK/raises.py")"
 PRISTINE="$WORK/pristine"; mkdir -p "$PRISTINE"
 require_fixture "$PRISTINE" "gh549 pre-rebuild ledger snapshot"
 cp "$FX/releases.db" "$FX/releases.sql" "$PRISTINE/"
+# GH-695: $PRISTINE is a copy of the LIVE ledger, whose work_events grows with every reconcile. The
+# legs that drive the real github_board connector replay every event past the cursor through the
+# mock -- one subprocess each -- inside CONNECTOR_WINDOW_S (5s). With the cursor deleted, the replay
+# crossed the window at ~124 rows (green at 101) and leg 17 went red on development with no code
+# change; leg 26 followed at ~133. Pin every real-mock fixture's cursor to the pristine ledger's tail
+# so a leg replays exactly the events it emits itself: the assertions are "the connector moves a card",
+# never "it can drain N months of history in 5s". A red-variant copy re-seeds to the SAME tail so its
+# re-replay covers the leg's own events again. Stub-connector legs keep their plain DELETE (fast).
+PRISTINE_TAIL="$(sqlite3 "$PRISTINE/releases.db" "SELECT COALESCE(MAX(id),0) FROM work_events;")"
+seed_cursor_tail() {  # <releases.db>  -> cursor for github_board = $PRISTINE_TAIL (insert or reset)
+  sqlite3 "$1" "INSERT INTO connector_cursors(connector,last_event_id,updated_at) VALUES('github_board',$PRISTINE_TAIL,'2026-09-18T00:00:00Z') ON CONFLICT(connector) DO UPDATE SET last_event_id=$PRISTINE_TAIL;"
+}
 
 echo "8. rebuild round-trips work_events"
 BEFORE="$(sqlite3 "$FX/releases.db" "SELECT count(*) FROM work_events;")"
@@ -652,7 +664,8 @@ PYCFG
 FXB="$WORK/fx_board"; rm -rf "$FXB"; mkdir -p "$FXB"
 ( cd "$FXB" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
 cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXB/"
-sqlite3 "$FXB/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+seed_cursor_tail "$FXB/releases.db"   # GH-695: replay only this leg's own event (see the helper)
+TAIL17="$PRISTINE_TAIL"
 XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXB" work emit \
   --event pr_merged --gh-number 405 --payload-json '{"pr":559}' >/dev/null 2>&1
 NEV="$(sqlite3 "$FXB/releases.db" "SELECT count(*) FROM work_events WHERE event='pr_merged';")"
@@ -686,9 +699,10 @@ print('absent' if it is None else names.get(next(iter((it.get('field_values') or
   && ok "and it MOVED THE CARD to the configured column (was '$B4', now '$AFTER')" \
   || bad "the card did not reach the configured column (was '$B4', now '$AFTER')"
 CUR17="$(sqlite3 "$FXB/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
-[ -n "$CUR17" ] && [ "$CUR17" -gt 0 ] \
-  && ok "and its cursor advanced, so the batch is acknowledged" \
-  || bad "the cursor did not advance (last_event_id=$CUR17)"
+NEW17="$(sqlite3 "$FXB/releases.db" "SELECT MAX(id) FROM work_events;")"
+[ -n "$CUR17" ] && [ "$CUR17" -gt "$TAIL17" ] && [ "$CUR17" = "$NEW17" ] \
+  && ok "and its cursor advanced past the seeded tail to this leg's own event ($TAIL17 -> $CUR17)" \
+  || bad "the cursor did not advance to this leg's event (seeded $TAIL17, now '$CUR17', newest $NEW17)"
 # The column mapping is user config, not code: an empty mapping means 'do not place this one'.
 python3 - "$ROOT" <<'PYMAP'
 import sys, os
@@ -1059,7 +1073,7 @@ WRAP="$ROOT/test/lib/gh-prlist-wrapper.sh"
 FXR="$WORK/fx_rr"; rm -rf "$FXR"; mkdir -p "$FXR"
 ( cd "$FXR" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
 cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR/"
-sqlite3 "$FXR/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+seed_cursor_tail "$FXR/releases.db"   # GH-695
 python3 "$MOCK" --reset --state "$WORK/mock22.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock22.json" >/dev/null 2>&1
 cat > "$WORK/rr_cfg.json" <<'PYCFG'
 {"board_sync": {"project_owner": "noelsaw1", "project_number": 3, "repos": ["HiQS-Labs/XYZ-forge"], "status_field": "Status", "in_progress": "In progress"},
@@ -1099,7 +1113,7 @@ N405B="$(sqlite3 "$FXR/releases.db" "SELECT count(*) FROM work_events WHERE gh_n
 # 21f — interleave, both directions, on a fresh fixture.
 FXI="$WORK/fx_interleave"; rm -rf "$FXI"; mkdir -p "$FXI"
 ( cd "$FXI" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXI/"; sqlite3 "$FXI/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXI/"; seed_cursor_tail "$FXI/releases.db"   # GH-695
 python3 "$MOCK" --reset --state "$WORK/mock21f.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock21f.json" >/dev/null 2>&1
 prs21f() { cat > "$WORK/prs.json" <<'PYJ'
 [{"number": 710, "isDraft": false, "title": "feat: y", "body": "Closes #9920"}]
@@ -1154,7 +1168,7 @@ PYMUT
 [ $? -eq 0 ] || bad "21f red(iii) mutation failed"
 FXR7="$WORK/fx_rr_noexc"; rm -rf "$FXR7"; mkdir -p "$FXR7"
 ( cd "$FXR7" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR7/"; sqlite3 "$FXR7/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR7/"; seed_cursor_tail "$FXR7/releases.db"   # GH-695
 rr python3 "$APP" --root "$FXR7" roadmap add --issue-num 9920 --issue-url "https://example.invalid/9920" --title "interleave" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
 prs21f
 MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXR7" work reconcile >/dev/null 2>&1   # review_ready
@@ -1196,7 +1210,7 @@ PYMUT
 prs3
 FXR4="$WORK/fx_rr_red"; rm -rf "$FXR4"; mkdir -p "$FXR4"
 ( cd "$FXR4" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR4/"; sqlite3 "$FXR4/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR4/"; seed_cursor_tail "$FXR4/releases.db"   # GH-695
 python3 "$MOCK" --reset --state "$WORK/mock22r.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock22r.json" >/dev/null 2>&1
 MOCKSTATE="$WORK/mock22r.json" rr python3 "$EVN/releases_app.py" --root "$FXR4" work reconcile >/dev/null 2>&1
 [ -z "$(sqlite3 "$FXR4/releases.db" "SELECT 1 FROM work_events WHERE gh_number=405 AND event='review_ready';")" ] \
@@ -1207,7 +1221,7 @@ MOCKSTATE="$WORK/mock22r.json" rr python3 "$EVN/releases_app.py" --root "$FXR4" 
   && ok "22b red: with linked_issues bypassed, the closes-nothing PR DOES emit for its own number" || bad "22b red (linked) did not reproduce"
 # 22d — gh fails → reconcile still replays, exit 0.
 prs3; : > "$CALLS"
-sqlite3 "$FXR/releases.db" "DELETE FROM connector_cursors;"
+seed_cursor_tail "$FXR/releases.db"   # GH-695: re-replay this leg's own events, not the ledger
 R22D="$(GH549_PRLIST_RC=1 rr python3 "$APP" --root "$FXR" work reconcile 2>&1)"; RC22D=$?
 [ "$RC22D" = "0" ] && ok "22d with gh pr list failing, reconcile exits 0" || bad "22d rc=$RC22D: $R22D"
 case "$R22D" in *"review-ready scan skipped"*"exited 1"*) ok "22d ...and says why" ;; *) bad "22d no reason printed: $R22D" ;; esac
@@ -1228,7 +1242,7 @@ cat > "$WORK/prs.json" <<'PYJ'
 PYJ
 FXR5="$WORK/fx_rr_emitfail"; rm -rf "$FXR5"; mkdir -p "$FXR5"
 ( cd "$FXR5" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR5/"; sqlite3 "$FXR5/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR5/"; seed_cursor_tail "$FXR5/releases.db"   # GH-695
 python3 "$MOCK" --reset --state "$WORK/mock22f.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock22f.json" >/dev/null 2>&1
 R22F="$(MOCKSTATE="$WORK/mock22f.json" rr python3 "$EMF/releases_app.py" --root "$FXR5" work reconcile 2>&1)"; RC22F=$?
 [ "$RC22F" = "0" ] && ok "22f one emission raising: reconcile still exits 0" || bad "22f rc=$RC22F: $R22F"
@@ -1236,7 +1250,7 @@ R22F="$(MOCKSTATE="$WORK/mock22f.json" rr python3 "$EMF/releases_app.py" --root 
   && ok "22f ...the OTHER issue's event still landed" || bad "22f 9905 did not land: $R22F"
 case "$R22F" in *"GH-9904: FAILED"*) ok "22f ...and the failure was named" ;; *) bad "22f failure not reported: $R22F" ;; esac
 CUR22F="$(sqlite3 "$FXR5/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
-[ -n "$CUR22F" ] && [ "$CUR22F" -gt 0 ] && ok "22f ...and dispatch still ran (cursor $CUR22F)" || bad "22f dispatch did not run"
+[ -n "$CUR22F" ] && [ "$CUR22F" -gt "$PRISTINE_TAIL" ] && ok "22f ...and dispatch still ran (cursor $PRISTINE_TAIL -> $CUR22F)" || bad "22f dispatch did not run (cursor '$CUR22F', seeded $PRISTINE_TAIL)"
 python3 - "$EMF/releases_app.py" <<'PYMUT'
 import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
 a='            except (SystemExit, Exception) as exc:    # noqa: BLE001 — one issue must not stop the scan\n'
@@ -1245,7 +1259,7 @@ io.open(p,"w",encoding="utf-8").write(s)
 PYMUT
 [ $? -eq 0 ] || bad "22f red mutation failed"
 python3 -m py_compile "$EMF/releases_app.py" || bad "22f red: mutated copy does not compile"
-FXR6="$WORK/fx_rr_emitfail_red"; rm -rf "$FXR6"; cp -R "$FXR5" "$FXR6"; sqlite3 "$FXR6/releases.db" "DELETE FROM connector_cursors;"
+FXR6="$WORK/fx_rr_emitfail_red"; rm -rf "$FXR6"; cp -R "$FXR5" "$FXR6"; seed_cursor_tail "$FXR6/releases.db"   # GH-695
 MOCKSTATE="$WORK/mock22f.json" rr python3 "$EMF/releases_app.py" --root "$FXR6" work reconcile >/dev/null 2>&1; RC22FR=$?
 [ "$RC22FR" != "0" ] && ok "22f red: without the per-emission except, the verb FAILS (rc=$RC22FR)" || bad "22f red did not reproduce (rc=0)"
 # 22e — kill switch: no gh call at all.
@@ -1414,14 +1428,14 @@ cat > "$WORK/prs.json" <<'PYJ'
 PYJ
 FXS="$WORK/fx_refuse"; rm -rf "$FXS"; mkdir -p "$FXS"
 ( cd "$FXS" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXS/"; sqlite3 "$FXS/releases.db" "DELETE FROM connector_cursors;" 2>/dev/null
+cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXS/"; seed_cursor_tail "$FXS/releases.db"   # GH-695
 python3 "$MOCK" --reset --state "$WORK/mock26.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock26.json" >/dev/null 2>&1
 R26="$(MOCKSTATE="$WORK/mock26.json" rr python3 "$REF/releases_app.py" --root "$FXS" work reconcile 2>&1)"; RC26=$?
 [ "$RC26" = "0" ] && ok "26 with one emission REFUSING (SystemExit), reconcile still exits 0" || bad "26 rc=$RC26: $R26"
 [ -n "$(sqlite3 "$FXS/releases.db" "SELECT 1 FROM work_events WHERE gh_number=9907 AND event='review_ready';")" ] && ok "26 ...the other issue's event landed" || bad "26 9907 did not land: $R26"
 case "$R26" in *"GH-9906: FAILED"*) ok "26 ...and the refusal was named" ;; *) bad "26 refusal not reported: $R26" ;; esac
 CUR26="$(sqlite3 "$FXS/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
-[ -n "$CUR26" ] && [ "$CUR26" -gt 0 ] && ok "26 ...and dispatch still ran (cursor $CUR26)" || bad "26 dispatch did not run"
+[ -n "$CUR26" ] && [ "$CUR26" -gt "$PRISTINE_TAIL" ] && ok "26 ...and dispatch still ran (cursor $PRISTINE_TAIL -> $CUR26)" || bad "26 dispatch did not run (cursor '$CUR26', seeded $PRISTINE_TAIL)"
 # Red: re-raise SystemExit in the copy → the verb dies before dispatch.
 python3 - "$REF/releases_app.py" <<'PYMUT'
 import io,sys; p=sys.argv[1]; s=io.open(p,encoding="utf-8").read()
@@ -1432,10 +1446,10 @@ io.open(p,"w",encoding="utf-8").write(s)
 PYMUT
 [ $? -eq 0 ] || bad "26 red mutation failed"
 python3 -m py_compile "$REF/releases_app.py" || bad "26 red: mutated copy does not compile"
-FXS2="$WORK/fx_refuse_red"; rm -rf "$FXS2"; cp -R "$FXS" "$FXS2"; sqlite3 "$FXS2/releases.db" "DELETE FROM connector_cursors;"
+FXS2="$WORK/fx_refuse_red"; rm -rf "$FXS2"; cp -R "$FXS" "$FXS2"; seed_cursor_tail "$FXS2/releases.db"   # GH-695
 MOCKSTATE="$WORK/mock26.json" rr python3 "$REF/releases_app.py" --root "$FXS2" work reconcile >/dev/null 2>&1; RC26R=$?
-CUR26R="$(sqlite3 "$FXS2/releases.db" "SELECT count(*) FROM connector_cursors;")"
-[ "$RC26R" != "0" ] && [ "$CUR26R" = "0" ] && ok "26 red: re-raising SystemExit takes the verb down (rc=$RC26R) with NO dispatch — the catch is load-bearing" || bad "26 red did not reproduce (rc=$RC26R, cursors=$CUR26R)"
+CUR26R="$(sqlite3 "$FXS2/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
+[ "$RC26R" != "0" ] && [ "$CUR26R" = "$PRISTINE_TAIL" ] && ok "26 red: re-raising SystemExit takes the verb down (rc=$RC26R) with NO dispatch — the catch is load-bearing" || bad "26 red did not reproduce (rc=$RC26R, cursors=$CUR26R)"
 # A pre-migration ledger: the scan skips with a reason; the verb does not die.
 FXO="$WORK/fx_old"; rm -rf "$FXO"; mkdir -p "$FXO"
 ( cd "$FXO" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
