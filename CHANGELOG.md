@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-17 — Installer containment follow-up (GH-678 / Pulse #2)
+
+Installer tests clear inherited Gemini target overrides as well as redirecting HOME;
+all three sandbox paths and untouched sentinel roots are checked. AgentChorus preserves
+live foreign legacy aliases, and the installer matrix discovers its nonempty input set
+rather than assuming 22 skills. These changes do not alter configured IDE selection.
+Correction to the earlier entry: Gemini targets were added on August 20 in `3c820f06`;
+August 23's `9be6f70f` renamed the already-affected skill. Focused evidence is retained
+under `test/baselines/gh678-pulse2/`; full-gate status remains separate. Reversibility: Easy.
+
 ## 2026-09-17 — Skill installers stop stealing symlinks; gate no longer writes real HOME (GH-678)
 
 Every `skills/*/install.sh` deleted any symlink not already pointing at its own clone and relinked

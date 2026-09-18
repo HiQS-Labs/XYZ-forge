@@ -26,7 +26,7 @@ goal: >
 ## Root cause (debug-mantra, all four steps)
 
 1. **Reproduced** in a sandbox in one second: three managed symlinks stolen with an "installed" message and no record of the old target; a real directory backed up. Same result from the single-target template.
-2. **Fail path.** `test/agent-chorus.sh:683,696,719` run the real installer with `CLAUDE_SKILLS_DIR` and `CODEX_SKILLS_DIR` sandboxed and nothing else. `skills/agent-chorus/install.sh:75-77` also writes three `$HOME/.gemini/**` defaults. The Gemini targets and the two-variable override landed in the same commit, `9be6f70f` (2026-08-23, #193).
+2. **Fail path.** `test/agent-chorus.sh:683,696,719` run the real installer with `CLAUDE_SKILLS_DIR` and `CODEX_SKILLS_DIR` sandboxed and nothing else. `skills/agent-chorus/install.sh:75-77` also writes three `$HOME/.gemini/**` defaults. The Gemini targets were added in `3c820f06` (2026-08-20), leaving the pre-existing two-variable test override unchanged. `9be6f70f` (2026-08-23, #193) subsequently renamed the affected skill.
 3. **Falsified.** No `HOME` redirect anywhere in `validate.sh` or the test; the test's exact env writes three Gemini links under whatever HOME is; the clone that owned the 11:24 steal had a gate artifact at 11:27.
 4. **Breadcrumbs.** Three steals on 2026-09-17 (10:21 gh666, 11:24 gh669, 14:26 pr235), each minutes before that clone's gate artifact, and each time Claude Code and Codex links stayed on the collection because those two are the sandboxed ones.
 
@@ -58,3 +58,28 @@ Latent underneath: all 22 installers `rm -f` any symlink not already theirs. Rea
 
 - #676 names foreign links as the drift that matters under the one-collection-per-device SOP (GH-672).
 - Stale task clones on disk still carry the leaky test until rebased or retired; each gate run there can still steal until then.
+
+## Pulse issue 2 follow-up (2026-09-17)
+
+Source issue: https://github.com/Hypercart-Dev-Tools/rebalance-git-pulse/issues/2.
+The existing PR #680 is reused. Easy to reverse: revert the follow-up commit;
+projection updates retain an intake backup, and link migrations retain prior link text.
+
+Rating: `rated 85/80/50/85` (RELEASES read-back). Repeated recoverable app-link corruption
+can remove skills when a clone is retired; a small installer/test correction is cheap.
+Appeal stays neutral. Reports #678 and Pulse #2 describe the same defect, not two independent
+classes. Three September 17 occurrences are documented. The September 4–17 versus
+August 21–September 3 trend is unknown: no comprehensive incident history exists.
+
+The review found two concrete gaps: inherited Gemini target variables bypass sandbox HOME,
+and a live legacy alias is repointed before the current-name refusal. The existing installer
+wrapper now clears those three variables in a subshell, with sentinel destinations and
+assertions for all three default Gemini paths. Legacy links now preserve live foreign owners
+and propagate refusal, while the existing dangling-link migration stays covered. The matrix
+uses the discovered nonempty installer set instead of requiring exactly 22, and drops an
+observation that confused pre-existing real installations with writes during a test.
+
+Scope stays device-independent: HQ derives skills and enabled targets from local configuration.
+No additional IDE targets, global HOME policy, task-clone name heuristic, or doctor subsystem
+is introduced. `sync.py --status` is the documented health check. Its configured-target scope
+and app-discovery limits still apply.

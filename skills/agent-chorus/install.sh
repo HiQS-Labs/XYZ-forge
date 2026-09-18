@@ -27,6 +27,11 @@ migrate_legacy_link() {
   _legacy="$_dest/$LEGACY_SKILL_NAME"
   [ -L "$_legacy" ] || return 0    # only ever touch a symlink, never a real dir/file
   _target="$(readlink "$_legacy")"
+  if [ -e "$_legacy" ]; then
+    [ "$_legacy" -ef "$SELF_DIR" ] && return 0
+    echo "$SKILL_NAME: $_legacy already points at $_target — not replacing a live link." >&2
+    return 1
+  fi
   case "$_target" in
     *"/skills/$LEGACY_SKILL_NAME"|*"/skills/$SKILL_NAME")
       ln -sfn "$SELF_DIR" "$_legacy"
@@ -51,7 +56,7 @@ install_one() {
     return 1
   fi
   mkdir -p "$_dest"
-  migrate_legacy_link "$_label" "$_dest"
+  migrate_legacy_link "$_label" "$_dest" || return 1
 
   if [ -L "$_link" ]; then
     if [ -e "$_link" ] && [ "$(cd -P "$_link" >/dev/null 2>&1 && pwd)" = "$SELF_DIR" ]; then

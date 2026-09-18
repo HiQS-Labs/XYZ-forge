@@ -681,16 +681,27 @@ esac
 # $HOME defaults, so every run below sets HOME to a sandbox: overriding the two named env vars
 # alone leaked three real ~/.gemini/**/skills/agent-chorus writes per suite run (GH-678).
 SANDBOX_HOME="$WORK/home"
+# Simulate user-selected IDE roots. Installer tests must ignore inherited overrides.
+export GEMINI_CONFIG_SKILLS_DIR="$WORK/ambient-config"
+export ANTIGRAVITY_SKILLS_DIR="$WORK/ambient-antigravity"
+export ANTIGRAVITY_CLI_SKILLS_DIR="$WORK/ambient-cli"
+run_installer() (
+  export HOME="$SANDBOX_HOME"
+  unset GEMINI_CONFIG_SKILLS_DIR ANTIGRAVITY_SKILLS_DIR ANTIGRAVITY_CLI_SKILLS_DIR
+  bash "$REPO/skills/agent-chorus/install.sh"
+)
 CLAUDE_DIR="$WORK/claude-skills"
 CODEX_DIR="$WORK/codex-skills"
-install_out="$(HOME="$SANDBOX_HOME" CLAUDE_SKILLS_DIR="$CLAUDE_DIR" CODEX_SKILLS_DIR="$CODEX_DIR" \
-  bash "$REPO/skills/agent-chorus/install.sh" 2>&1)"
+install_out="$(CLAUDE_SKILLS_DIR="$CLAUDE_DIR" CODEX_SKILLS_DIR="$CODEX_DIR" \
+  run_installer 2>&1)"
 install_rc=$?
 [ "$install_rc" -eq 0 ] && pass "installer completes for Claude and Codex" || fail "installer exits $install_rc: $install_out"
 [ -L "$CLAUDE_DIR/agent-chorus" ] && [ -L "$CODEX_DIR/agent-chorus" ] \
   && pass "installer exposes the same skill to both agents" || fail "installer symlinks missing"
 # GH-678 containment: the three HOME-relative targets must land in the sandbox, never in real $HOME.
 [ -L "$SANDBOX_HOME/.gemini/config/skills/agent-chorus" ] \
+&& [ -L "$SANDBOX_HOME/.gemini/antigravity/skills/agent-chorus" ] \
+&& [ -L "$SANDBOX_HOME/.gemini/antigravity-cli/skills/agent-chorus" ] \
 && pass "installer's HOME-relative targets stay inside the test sandbox" \
 || fail "installer's HOME-relative targets escaped the sandbox (HOME override missing?)"
 
@@ -700,8 +711,8 @@ install_rc=$?
 MIG_DIR="$WORK/legacy-skills"
 mkdir -p "$MIG_DIR"
 ln -s "$REPO/skills/agent2agent" "$MIG_DIR/agent2agent"   # the pre-rename install shape (now dangling)
-mig_out="$(HOME="$SANDBOX_HOME" CLAUDE_SKILLS_DIR="$MIG_DIR" CODEX_SKILLS_DIR="$WORK/mig-codex" \
-  bash "$REPO/skills/agent-chorus/install.sh" 2>&1)"
+mig_out="$(CLAUDE_SKILLS_DIR="$MIG_DIR" CODEX_SKILLS_DIR="$WORK/mig-codex" \
+  run_installer 2>&1)"
 mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"
 # GH-458/GH-463: compare the two paths as DIRECTORIES, not as path spellings. install.sh derives
 # its target with `cd -P` (physical) while $REPO above is a plain `cd` (logical), so on a clone
@@ -723,11 +734,27 @@ mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"
 
 MIG_DIR2="$WORK/legacy-realdir"
 mkdir -p "$MIG_DIR2/agent2agent"
-HOME="$SANDBOX_HOME" CLAUDE_SKILLS_DIR="$MIG_DIR2" CODEX_SKILLS_DIR="$WORK/mig2-codex" \
-  bash "$REPO/skills/agent-chorus/install.sh" >/dev/null 2>&1
+CLAUDE_SKILLS_DIR="$MIG_DIR2" CODEX_SKILLS_DIR="$WORK/mig2-codex" \
+  run_installer >/dev/null 2>&1
 [ -d "$MIG_DIR2/agent2agent" ] && [ ! -L "$MIG_DIR2/agent2agent" ] \
   && pass "installer leaves a real agent2agent directory untouched" \
   || fail "installer touched a real (non-symlink) agent2agent directory"
+
+# A live legacy alias is owned by its existing source, just like the current name.
+LEGACY_SOURCE="$WORK/foreign/skills/agent2agent"
+mkdir -p "$LEGACY_SOURCE" "$WORK/live-legacy"
+ln -s "$LEGACY_SOURCE" "$WORK/live-legacy/agent2agent"
+CLAUDE_SKILLS_DIR="$WORK/live-legacy" CODEX_SKILLS_DIR="$WORK/legacy-codex" \
+  run_installer >"$WORK/live-legacy.out" 2>&1
+legacy_rc=$?
+[ "$legacy_rc" -ne 0 ] && [ "$(readlink "$WORK/live-legacy/agent2agent")" = "$LEGACY_SOURCE" ] \
+  && pass "installer refuses and preserves a live foreign legacy alias" \
+  || fail "installer replaced or accepted a live foreign legacy alias"
+[ ! -e "$GEMINI_CONFIG_SKILLS_DIR" ] && [ ! -e "$ANTIGRAVITY_SKILLS_DIR" ] \
+  && [ ! -e "$ANTIGRAVITY_CLI_SKILLS_DIR" ] \
+  && pass "all installer calls leave inherited IDE roots untouched" \
+  || fail "installer wrote an inherited IDE root"
+unset GEMINI_CONFIG_SKILLS_DIR ANTIGRAVITY_SKILLS_DIR ANTIGRAVITY_CLI_SKILLS_DIR
 
 # Deprecated agent2agent.py shim: warns and delegates to agent_chorus.py (Gen 2 Phase 0, #193)
 shim_out="$(python3 "$(dirname "$CLI")/agent2agent.py" --help 2>&1)"; shim_rc=$?

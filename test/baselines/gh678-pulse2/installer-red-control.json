@@ -1,0 +1,12 @@
+[
+  {
+    "version": "before",
+    "returncode": 0,
+    "managed_link_preserved": false
+  },
+  {
+    "version": "fixed",
+    "returncode": 1,
+    "managed_link_preserved": true
+  }
+]

@@ -39,8 +39,6 @@ for installer in "$REPO"/skills/*/install.sh; do
     fail "$skill: dangling link not replaced (exit $rc, now -> $(readlink "$A/claude/$skill" 2>/dev/null)): $(tail -3 "$WORK/out-$skill")"
   fi
 
-  # 3. containment: nothing outside the sandbox HOME was written
-  [ -e "$HOME/.claude/skills/$skill" ] && [ "$(readlink "$HOME/.claude/skills/$skill" 2>/dev/null)" -ef "$(dirname "$installer")" ] \
-    && fail "$skill: wrote the real ~/.claude/skills (sandbox escaped)" || true
+
 done
-[ "$n" -eq 22 ] && pass "matrix covered all 22 installers" || fail "expected 22 installers, found $n"
+[ "$n" -gt 0 ] && pass "matrix covered all $n discovered installers" || fail "no installers discovered"
