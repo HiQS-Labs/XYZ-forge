@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -66,5 +66,21 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Turn 1: agy (Reviewer)
+
+- **Q1:** `[Pass]` There is no remaining path where a missing/placeholder Lessons Learned causes a `die`, `SKIPPED` line, or skipped lifecycle write. The three call sites are: `utils/py/wave_reconcile.py:1041` (in `validate_and_update_doc`), `utils/py/wave_reconcile.py:1809` (in `run_pre_merge`), and the catch-up block which now cleanly loops without skipping (`~L2054` removes the old skip machinery). All sites now defer to `warn_lessons_learned()`.
+- **Q2:** `[Nit]` Keeping the GH-684 skip-and-report shape is the right call under the /ponytail principle and the operational envelope. Removing `SKIP_MARKER` reporting would break `test/gh684-hosted-lane-report.sh` which explicitly checks for it, and require touching `utils/py/hosted_lane_report.py` which was stated as a Non-goal.
+- **Q3:** `[Pass]` The consequence is correct. A lessons-less backlog doc is now reconciled completely (moves to `3-COMPLETED`, `ROADMAP.md` updated). This eliminates its planner drift on subsequent runs. If planner drift is still found for a successfully reconciled issue, it's a genuine failure of the ledger update (attributable and fatal, exit 6), which does not recreate the #691 shape (where skipped docs stayed in `2-WORKING` and red the lane every run).
+- **Q4:** `[Pass]` `test/gh693-lessons-learned-advisory.sh` DOES fail on the parent commit. It fails at Case A's first assertion (`[ "$rc" = 0 ]`), immediately exiting the suite, which successfully proves the parent commit is red. The flipped Test 4 in `wave-reconcile.sh` is not weaker because the new suite performs the real promotion test (`test/gh693-lessons-learned-advisory.sh`). Case C (`--pre-merge`) is a real pin because it commits a new `HEAD` after generating the test receipt; if the doc-contract (exit 5) did not pass, it would exit 5 before reaching the receipt check. By asserting `[ "$rc" != 5 ]`, it correctly proves the doc-contract no longer fails.
+- **Q5:** `[Nit]` `utils/py/wave_reconcile.py:1024` has a stale docstring `"""Assert ## Lessons Learned..."""` that should be updated to reflect it only warns now.
+  `[Pass]` The wording in `PDDA.md`, `HOW-TO-USE.md`, `express SKILL.md`, and `pr-emit.sh` consistently labels the section "highly recommended". No other non-test document states it is required.
+- **Q6:** `[Pass]` Commensurate complexity. The change is extremely minimal. It replaces `die()` with `log()`, removes the `catch_up` skipping logic cleanly, and correctly updates the tests. No speculative abstraction was added.
+
+swept file: yes
+VERDICT: PASS
+Basis: The implementation cleanly downgrades the Lessons Learned section to an advisory warning across all paths without breaking downstream contracts. All questions addressed; only minor nits found (docstring update).
+
+handing off to done — relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
