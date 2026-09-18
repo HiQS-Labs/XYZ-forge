@@ -831,6 +831,8 @@ def closeout(root, args, sha, suite, state):
                suite=suite, release=rel, files=len(state["paths"]), insertions=state["insertions"])
     print("express-land: commit %s pushed to development, issue #%d closed, mfi shipped against %s, reconcile persisted"
           % (sha[:12], args.issue, rel or "(none)"))
+    # GH-690: the task clone outlives this run; point at the sanctioned retirement tool
+    print("clone retirement: this task clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified")
     return dict(sha=sha, release=rel)
 
 
