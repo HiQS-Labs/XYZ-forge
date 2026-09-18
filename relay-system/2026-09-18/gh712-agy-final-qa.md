@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -144,5 +144,33 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) with `file:lin
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## 2026-09-18 — Reviewer (agy)
+
+swept file: yes
+
+1. **Untouched surfaces:** `git diff --stat origin/development...HEAD` confirms `utils/ate/scripts/run_variations.py`, `utils/py/adaptive_ate.py`, `utils/py/calibrate_tier1.py` and `utils/ate/tier1-calibration.json` are unchanged. `[Pass]`
+2. **Requirements 1-2:**
+   - Choice questions & labels (`env_missing` present): `utils/py/jev_triage.py:8-11`, `144-146`.
+   - `expects_edits` rule selection: `utils/py/jev_triage.py:74-75`.
+   - 1,500-char tails: `utils/py/jev_triage.py:47`, `96`.
+   - `urllib`-only with 3-attempt retry honoring `retry-after`: `utils/py/jev_triage.py:103-114`.
+   - `--mock-responses` ordered replay: `utils/py/jev_triage.py:130-133`.
+   - `fn_zero_threshold`: `utils/py/jev_triage.py:188`.
+   - empty input → exit 2: `utils/py/jev_triage.py:257-259`.
+   - `rows.jsonl` without stderr: `utils/py/jev_triage.py:183-184`, `214-215` explicitly select output fields. `[Pass]`
+3. **Gate arithmetic:**
+   - `benchmark/summary.json`: `confusion["fail"]` is `{"fail": 23, "pass": 1}` so FN=1; `confusion["pass"]` is `{"pass": 50}` so FP=0; `fn_zero_threshold` is 0.48. Consistent.
+   - `errorlog/summary.json`: Pair counts (`103+23+9+5+2+1 = 143` for category, `70+73 = 143` for severity, `143` for status) match. Agreement percentages (100% status, 48.95% severity, 4.2% category) precisely match the receipt. `[Pass]`
+4. **Test adequacy:** `test/gh712-jev-triage.sh` contains the green control (`fn_floor_met` true on lines 28-32), red control (FN=1 on lines 34-37), hash/model contract (lines 39-48), no-stderr (line 49), empty input refusal (lines 57-63), and no-key live-path refusal (lines 65-70). `[Pass]`
+5. **Receipt honesty:** `SUMMARY.md` explicitly states gates missed, Phase 3 not started, diagnoses the Gemma reference problem without claiming a pass, and notes confidence without substituting it as a re-gate. `[Pass]`
+6. **Publication safety:** `rows.jsonl` contains only `category`, `confidence`, `index`, `label`/`gemma`, `model`, `request_sha256`, `response_sha256`, `severity`, `status`, and `tier1`/`run_id`. No keys or stderr text. `[Pass]`
+7. **Surface and machinery:** `git diff --name-only origin/development...HEAD` shows no files modified outside the plan envelope. `[Pass]`
+8. **Plan status and changelog:** The QA gates table in `PROJECT/2-WORKING/GH-712-JEV-ATE-TRIAGE.md` and the entry in `CHANGELOG.md` accurately and transparently reflect the negative result. `[Pass]`
+
+**VERDICT:** PASS
+**Basis:** Implementation perfectly mirrors the plan, aborts at Phase 2 as required by the missed gates, includes comprehensive tests for the offline replay path, and transparently documents the negative result without making unauthorized changes to the live ATE loop.
+
+handing off to claude-a — relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
