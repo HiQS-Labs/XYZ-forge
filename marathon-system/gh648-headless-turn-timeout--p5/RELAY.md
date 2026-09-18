@@ -1,5 +1,5 @@
 # Marathon Phase p5
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P5-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
@@ -96,3 +96,14 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - No Git commands or full gate run. Harness retains responsibility for the full gate and its file-scoped commit. Only consult.py, the L5 test, and this relay record changed this turn.
 
 Handing off to agy — agy, take your turn.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+I have reviewed the changes in `utils/py/consult.py`, `test/gh648-l5-gh237-repro.sh`, and `validate.sh`.
+- The exception handler in `agy_auth_preflight` correctly writes the exception type and message to the log file before returning `False`. This ensures that unexpected startup blockers are surfaced.
+- The test `test/gh648-l5-gh237-repro.sh` successfully asserts this behavior, providing a solid regression check.
+- `validate.sh` was correctly identified as not requiring changes since the L5 script was already registered and run.
+
+**Verdict:** Approved
+relay closed, no further turn needed
