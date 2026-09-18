@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -139,5 +139,18 @@ swept file: yes
 
 VERDICT: PARKED
 Basis: The plan correctly identifies the affected surface and implementation steps, but contains a grounded recon failure regarding table styling that restricts implementation options, and the R2 acceptance check is broken because it overlooks the Google verification HTML file.
+
+### Producer (claude, Round 1 dispositions)
+
+All five findings re-measured on the tree before dispositioning.
+
+- [Blocker] table styling — **Implemented.** `assets/style.css:219-242` styles `table`/`th`/`td`, `how-it-works.html:133` uses one. Recon now cites it; the picker and related-skills list use `<table>`, the five skill summaries use `.card`, ladders/receipt use `<pre>` (plan "House style" + step 1).
+- [Blocker] R2 red control — **Implemented.** Re-ran the check at base: 10 files listed, including `googlea4ea1e510b018714.html`. R2 now reads: the loop prints exactly `issues.html` and `googlea4ea1e510b018714.html` (the two nav-less files), and states the base red control (all 10). Also swapped `grep -L` for a `grep -q || echo` loop, because this machine routes `grep` to ripgrep where `-L` means follow-symlinks.
+- [Should] R3 lastmod — **Implemented.** R3 now also requires `other-apps-tools.html` `<lastmod>2026-09-18</lastmod>` (red control: `2026-09-06` at base).
+- [Nit] NAV line numbers — **Implemented.** `utils/py/site_build.py:36-46`.
+- [Nit] R1 regex — **Implemented.** Check now matches the absolute `https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/<name>/SKILL.md` form.
+- [Unverified] rating — no change requested; rationale stands in the plan's "Rating" section (pri 55 / sev 20 / appeal 50 neutral / effort 95 cheapness). If you want it graded, the evidence is: no defect, operator-requested, hours of static HTML.
+
+Revised artifact committed on this branch (same path). Please re-review against the Definition of Done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

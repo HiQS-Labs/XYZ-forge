@@ -38,7 +38,7 @@ risk: 1
   `models-harnesses.html` are baked by `site_build.py` at deploy time and must never be hand-edited.
 - **Nav has two writers today.** Static pages carry a literal `<nav>` block (9 links, e.g.
   `PAGES/other-apps-tools.html:16-26`); the generated pages get theirs from `NAV` in
-  `utils/py/site_build.py:44-54`. Adding a page means editing both, or the two drift.
+  `utils/py/site_build.py:36-46`. Adding a page means editing both, or the two drift.
   `issues.html` is a redirect stub with no nav (deliberate, per SOP) — untouched.
 - **Sitemap is static** (`PAGES/sitemap.xml`, 8 `<url>` rows, hand-maintained `lastmod`);
   `site_build.py` does not write it (`grep sitemap utils/py/site_build.py` → 0).
@@ -46,9 +46,10 @@ risk: 1
   pushes to `development`/`main`; it re-runs the builder, so the committed generated copies are a
   convenience snapshot.
 - **House style.** `assets/style.css` styles `.card-grid`/`.card`, `pre`/`code`, `main h2/h3`,
-  `.page-intro`; `how-it-works.html` uses `<ul>` + `<strong>` lead-ins, `use-cases.html` uses
-  `.card` with `<h3>`. No table styling exists — use `.card-grid` for the picker and `<ul>` for
-  lists instead of `<table>`.
+  `.page-intro`, and `table`/`th`/`td` (`assets/style.css:219-242`, used by
+  `how-it-works.html:133`); `how-it-works.html` uses `<ul>` + `<strong>` lead-ins, `use-cases.html`
+  uses `.card` with `<h3>`. Use `<table>` for the symptom→skill picker and the related-skills list,
+  `.card` for the five skill summaries, `<pre>` for ladders and the receipt.
 - **No tests pin `PAGES/` or `site_build.NAV`** (`grep -rl site_build test/` → 0). `--check` is
   the only existing verifier and is informational.
 - **No open PR touches `PAGES/`** (checked 2026-09-18); no existing issue covers a skills page.
@@ -59,9 +60,9 @@ risk: 1
 
 | # | Requirement | Acceptance check (falsifiable) |
 |---|---|---|
-| R1 | New `PAGES/skills.html` covering the five skills, a symptom→skill picker, how they chain, and a related-skills list, each linking `skills/<name>/SKILL.md` on `development` | File exists; `grep -c 'skills/[a-z-]*/SKILL.md' PAGES/skills.html` ≥ 14 (5 + 9 related); page opens with the site header and `aria-current="page"` on its own nav link |
-| R2 | Nav parity: **Skills** link on every static page with a nav and on both generated pages | `grep -L 'href="skills.html"' PAGES/*.html` prints only `issues.html`; `python3 utils/py/site_build.py --check` reports no drift after regeneration. Red control: before the change the same grep lists every page |
-| R3 | `sitemap.xml` lists `skills.html`; `other-apps-tools.html` `lastmod` bumped | `grep -c skills.html PAGES/sitemap.xml` = 1 |
+| R1 | New `PAGES/skills.html` covering the five skills, a symptom→skill picker, how they chain, and a related-skills list, each linking `skills/<name>/SKILL.md` on `development` | File exists; `grep -c 'https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/[a-z0-9-]*/SKILL.md' PAGES/skills.html` ≥ 14 (5 + 9 related; absolute URLs, since `skills/` is not under `PAGES/`); page opens with the site header and `aria-current="page"` on its own nav link |
+| R2 | Nav parity: **Skills** link on every static page with a nav and on both generated pages | `for f in PAGES/*.html; do grep -q 'href="skills.html"' "$f" \|\| echo "$f"; done` prints exactly `PAGES/issues.html` and `PAGES/googlea4ea1e510b018714.html` (the two nav-less files: redirect stub and Google verification token); `python3 utils/py/site_build.py --check` reports no drift after regeneration. Red control: at base the loop lists all 10 pages |
+| R3 | `sitemap.xml` lists `skills.html`; `other-apps-tools.html` `lastmod` bumped | `grep -c skills.html PAGES/sitemap.xml` = 1 **and** `grep 'other-apps-tools.html' PAGES/sitemap.xml` shows `<lastmod>2026-09-18</lastmod>` (red control: `2026-09-06` at base) |
 | R4 | Model Catalog card → https://resolve.hiqs.ai/ | `grep -c 'resolve.hiqs.ai' PAGES/other-apps-tools.html` = 1 (red control: 0 at base) |
 | R5 | Renders locally | `python3 -m http.server --bind 127.0.0.1` from `PAGES/`; page loads, relative links resolve |
 
@@ -80,8 +81,8 @@ generated nav). No new writer, no new generator responsibility.
 
 ## Ordered implementation
 
-1. Write `PAGES/skills.html` from the wiki content in house markup (cards for the picker, `<pre>`
-   for the ladders and receipt, `<ul>` elsewhere). Verify R1.
+1. Write `PAGES/skills.html` from the wiki content in house markup (`<table>` for the picker and
+   related-skills list, `.card` per skill, `<pre>` for the ladders and receipt). Verify R1.
 2. Insert `<a href="skills.html">Skills</a>` after "How it Works" in each static nav; add
    `("skills.html", "Skills")` at the same position in `site_build.NAV`; run
    `python3 utils/py/site_build.py` and `--check`. Verify R2.
