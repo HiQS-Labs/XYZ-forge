@@ -22,6 +22,15 @@ scratch = root / '.relay-scratch'
 scratch.mkdir(exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='gh648-l5-', dir=scratch) as tmp:
     work = Path(tmp)
+    # A launch blocker must leave an actionable transcript, not just False.
+    auth_log = work / 'startup.md'
+    with patch.object(c.subprocess, 'run', side_effect=FileNotFoundError('missing agy executable')):
+        assert c.agy_auth_preflight('/missing/agy', str(auth_log)) is False
+    assert auth_log.is_file() and auth_log.stat().st_size > 0
+    assert 'FileNotFoundError: missing agy executable' in auth_log.read_text()
+    assert 'auth pre-flight could not run' in auth_log.read_text()
+    print('PASS: startup exception surfaced', flush=True)
+
     advisor = work / 'agy-stub'
     advisor.write_text('#!' + sys.executable + '''
 import os, pathlib, socket, sys, time

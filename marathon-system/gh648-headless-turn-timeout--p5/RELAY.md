@@ -1,6 +1,6 @@
 # Marathon Phase p5
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P5-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -83,3 +83,16 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 2 · Builder · codex
+
+- Existing L5 implementation was already present: the substantial-prompt, socket-holding stub exercises consult's main path, slow completion, in-flight/unknown attribution and old-label mutation. `validate.sh` already registers it; no registration or cap-policy change was needed.
+- Changed `utils/py/consult.py` to preserve unexpected auth-preflight exceptions in the advisor transcript with exception type and message. Previously this branch silently returned False, potentially leaving an empty transcript for a real startup blocker. Easy reversibility: diagnostic output only; timeout and termination policy unchanged.
+- Extended `test/gh648-l5-gh237-repro.sh` with a missing-executable startup regression. Focused run: five PASS lines (startup exception surfaced, slow completion, silent in-flight, silent unknown, old-label mutation rejected). Separate in-memory mutation restored the swallowed exception and the startup assertion failed as expected. Shell syntax checks passed. Output remains in `.relay-scratch/l5-test.log` and `.relay-scratch/l5-startup-mutation.log`; these are ephemeral observations, not committed provenance receipts.
+- Real-advisor probe, 2026-09-17: invoked installed `/Users/noelsaw/.local/bin/agy` once with `--dangerously-skip-permissions --print-timeout 20s -p <substantial supplied-text prompt>`, using consult's launcher in this existing throwaway relay worktree. It exited 1 after 0.28 seconds; stdout 0 bytes, stderr 1597 bytes. Concrete diagnostics: log/crash-file opens under `~/.gemini/antigravity-cli` were denied, and startup failed with `listen tcp 127.0.0.1:0: bind: operation not permitted` (reported language server version 1.2.5). No idle kill occurred. Receipt and raw output: `.relay-scratch/l5-real-receipt.json`, `l5-real-agy.md`, `l5-real-agy.md.stderr`.
+- Real-probe limitation: this used the launcher directly with an owned process group, not full consult worktree creation/auth preflight, because this turn forbids Git. Sandbox startup denial prevented reaching a queued backend. Do not claim the full real-consult acceptance or a PR-attached receipt is complete; the outer harness/operator must perform that check in an environment permitting CLI startup and preserve its provenance. No workaround or permission escalation attempted.
+- Graph evidence limitation: no graph project matches this checkout; the closest XYZ-forge index is generation 2026-09-01T15:54:30Z and coverage marks consult/validate changed and L5 missing. Used direct source for this bounded check.
+- No Git commands or full gate run. Harness retains responsibility for the full gate and its file-scoped commit. Only consult.py, the L5 test, and this relay record changed this turn.
+
+Handing off to agy — agy, take your turn.

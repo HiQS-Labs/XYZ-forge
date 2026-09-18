@@ -448,7 +448,8 @@ def agy_auth_preflight(agy_bin, log_file):
                 with open(tmp) as tf: f.write(tf.read())
             f.write(f"\nconsult: agy auth pre-flight failed (exit {e.returncode}); {detail or 'no recognizable diagnostic'}. Run `agy login` in a normal terminal, then retry.\n")
     except Exception as e:
-        pass
+        with open(log_file, "a") as f:
+            f.write(f"\nconsult: agy auth pre-flight could not run: {type(e).__name__}: {e}\n")
 
     if os.path.exists(tmp): os.remove(tmp)
     return False
