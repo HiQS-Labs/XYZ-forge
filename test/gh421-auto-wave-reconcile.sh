@@ -110,12 +110,12 @@ class ReconcileTests(unittest.TestCase):
             if args[:1] == ['--root']:
                 args = args[2:]
             self.cli(*args)
-        elif 'marathon-plan.sh' in cmd[1] and '--dry-run' not in cmd:
-            (self.root / 'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md').write_text('plan\n')
         elif 'marathon-plan.sh' in cmd[1] and self.planner_finding is not None:
             # GH-684: the planner reports closed-issue drift the way _marathon_plan.py emits it (exit 4,
             # one JSON finding per line) so ownership attribution is exercised, not a green stub.
             return SimpleNamespace(returncode=4, stdout=json.dumps(self.planner_finding) + '\n', stderr='')
+        elif 'marathon-plan.sh' in cmd[1] and '--dry-run' not in cmd:
+            (self.root / 'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md').write_text('plan\n')
         elif 'pdda' in cmd[1] or '--dry-run' in cmd:
             pass
         else:
