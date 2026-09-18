@@ -235,9 +235,9 @@ TICK_REPO_ROOT="$FX" "$TICK_BIN" info GH267-PIN >/dev/null 2>&1 && ok "GH-694: t
 # The fold buckets the taskless record under `undefined`: `tick next` then offers a phantom task
 # named "undefined" (deterministic), and the STATE sort dies with `localeCompare of undefined` as
 # soon as that phantom is compared first (what #694 observed). Assert the deterministic symptom.
-TICK_REPO_ROOT="$FX" "$TICK_BIN" next --agent pin2 2>/dev/null | grep -q '^undefined' && bad "GH-694 control: phantom task present BEFORE the leak — fixture is dirty" || true
+grep -q '^undefined' <<<"$(TICK_REPO_ROOT="$FX" "$TICK_BIN" next --agent pin2 2>/dev/null)" && bad "GH-694 control: phantom task present BEFORE the leak — fixture is dirty" || true
 cp "$EV" "$FX/.tick/events/$(basename "$EV")"
-TICK_REPO_ROOT="$FX" "$TICK_BIN" next --agent pin2 2>/dev/null | grep -q '^undefined' && ok "GH-694 control: the same record inside .tick/events/ folds into a phantom 'undefined' task (pin is load-bearing)" || bad "GH-694 control: a taskless record in .tick/events/ should pollute the fold but did not"
+grep -q '^undefined' <<<"$(TICK_REPO_ROOT="$FX" "$TICK_BIN" next --agent pin2 2>/dev/null)" && ok "GH-694 control: the same record inside .tick/events/ folds into a phantom 'undefined' task (pin is load-bearing)" || bad "GH-694 control: a taskless record in .tick/events/ should pollute the fold but did not"
 rm -f "$FX/.tick/events/$(basename "$EV")"
 
 new_task_branch
