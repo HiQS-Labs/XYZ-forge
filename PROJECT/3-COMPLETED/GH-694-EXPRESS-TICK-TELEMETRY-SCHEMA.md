@@ -1,6 +1,6 @@
 ---
 title: "GH-694: express telemetry in .tick/events/ breaks tick's fold in the same clone (localeCompare of undefined)"
-status: active
+status: Complete
 created: 2026-09-18
 updated: 2026-09-18
 owner: unassigned
