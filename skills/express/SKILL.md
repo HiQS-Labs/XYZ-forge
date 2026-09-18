@@ -118,7 +118,8 @@ What each phase asserts (all refusals and fired runs write `.tick/events/*` and 
    `validate.sh` TESTS. A hotfix without its suite is a claim, not a fix.
 5. **Docs born complete** — capture doc scaffolded in `2-WORKING` with Status,
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
-   present from birth (the 08-26 reconcile gate refuses promotion otherwise),
+   present from birth (highly recommended — since GH-693 the reconciler warns
+   rather than refuses promotion when it is missing; fill it in anyway),
    plus the CHANGELOG entry appended in the same motion.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The

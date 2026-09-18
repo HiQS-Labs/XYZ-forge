@@ -302,7 +302,9 @@ else
   fail "Pre-merge did not output PASSED confirmation: $out"
 fi
 
-# Case B: Red Control 1 - Empty/placeholder lessons learned -> exit 5
+# Case B: Empty/placeholder lessons learned -> WARN, never the doc-contract exit 5 (GH-693; was a red control
+# from GH-496 to GH-693). The commit below moves HEAD off the committed receipt, so the run still fails on
+# receipts (exit 6) — which is the point: the doc contract passed, only the receipt check is red.
 cat << 'DOC_LL' > "$REPO/PROJECT/2-WORKING/GH-999-TEST.md"
 ---
 title: Test Task
@@ -322,11 +324,15 @@ DOC_LL
 git -C "$REPO" add "$REPO/PROJECT/2-WORKING/GH-999-TEST.md"
 git -C "$REPO" commit -q -m "fix: closes #999 with empty lessons learned"
 rc=0; out="$(python3 "$RECONCILE_PY" --root "$REPO" --pre-merge 2>&1)" || rc=$?
-assert_eq "Placeholder lessons learned is rejected (exit 5)" "$rc" "5"
-if grep -q "empty/placeholder '## Lessons Learned'" <<< "$out"; then
-  pass "Error message cites empty/placeholder lessons learned"
+if [ "$rc" != "5" ]; then
+  pass "Placeholder lessons learned is not a doc-contract failure (exit $rc, not 5)"
 else
-  fail "Error message missing placeholder explanation: $out"
+  fail "Placeholder lessons learned still exits 5 (doc contract): $out"
+fi
+if grep -q "wave-reconcile: WARN — Doc GH-999-TEST.md has empty/placeholder '## Lessons Learned'" <<< "$out"; then
+  pass "WARN cites empty/placeholder lessons learned"
+else
+  fail "WARN missing placeholder explanation: $out"
 fi
 
 # Case C: Red Control 2 - Missing required frontmatter field -> exit 5

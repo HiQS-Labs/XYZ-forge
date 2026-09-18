@@ -302,42 +302,40 @@ class ReconcileTests(unittest.TestCase):
     def manifest_states(self):
         return [row['state'] for row in self.rows('SELECT state FROM manifest_items ORDER BY id')]
 
-    def test_catch_up_skips_defective_backlog_doc_reports_it_and_retries(self):
+    # GH-693: Lessons Learned is advisory. The GH-684 skip-and-report shape stays in the code for the next
+    # real backlog-doc defect, but its one trigger is gone: a doc without the section now promotes with a
+    # WARN on the catch-up path and on an explicit landing alike.
+    def test_catch_up_promotes_a_lessons_less_backlog_doc_with_a_warning(self):
         doc = self.add_backlog_issue(lessons=False)
-        out = self.apply('--catch-up')                       # exits normally: the rest of the batch lands
-        self.assertEqual(out.count('wave-reconcile: ' + wave.SKIP_MARKER), 1)
-        self.assertIn('wave-reconcile: ' + wave.SKIP_MARKER + 'GH-422 — Doc GH-422-fixture.md is missing', out)
-        self.assertIn('1 backlog item(s) skipped — GH-422', out)
-        self.assertEqual(self.manifest_states(), ['shipped', 'dialed_in'])     # 421 shipped, 422 untouched
-        self.assertTrue((self.root / 'PROJECT/3-COMPLETED/GH-421-fixture.md').exists())
-        self.assertTrue((self.root / doc).exists())                            # still active, no lifecycle write
-        # Retry source intact — with the receipt present — until the doc is repaired.
-        self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), ['43'])
-        self.assertIn(wave.SKIP_MARKER + 'GH-422', self.apply('--catch-up'))
-        (self.root / doc).write_text('---\nstatus: 2-WORKING\nupdated: 2026-09-01\n---\n' + self.LESSONS)
         out = self.apply('--catch-up')
         self.assertNotIn(wave.SKIP_MARKER, out)
-        self.assertEqual(self.manifest_states(), ['shipped', 'shipped'])
+        self.assertIn('wave-reconcile: ' + wave.WARN_MARKER + 'Doc GH-422-fixture.md has no', out)
+        self.assertIn('Highly recommended, not required (GH-693)', out)
+        self.assertEqual(self.manifest_states(), ['shipped', 'shipped'])      # both landed
         self.assertTrue((self.root / 'PROJECT/3-COMPLETED/GH-422-fixture.md').exists())
+        self.assertFalse((self.root / doc).exists())
         self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), [])
 
-    def test_explicit_landing_with_defective_doc_still_fails_closed(self):
-        # Preservation pin: naming the landing on the command line keeps the fail-closed exit 5.
-        self.add_backlog_issue(lessons=False)
-        before = self.snapshot()
-        with self.assertRaises(SystemExit) as stopped:
-            self.apply(targets=['--pr', '43'])
-        self.assertEqual(stopped.exception.code, 5)
-        self.assertEqual(before, self.snapshot())
+    def test_explicit_landing_with_a_lessons_less_doc_warns_and_lands(self):
+        # Was the GH-684 preservation pin for exit 5; the explicit path now warns and lands too.
+        doc = self.add_backlog_issue(lessons=False)
+        out = self.apply(targets=['--pr', '43'])
+        self.assertIn('wave-reconcile: ' + wave.WARN_MARKER + 'Doc GH-422-fixture.md has no', out)
+        self.assertTrue((self.root / 'PROJECT/3-COMPLETED/GH-422-fixture.md').exists())
+        self.assertFalse((self.root / doc).exists())
 
-    def test_planner_drift_for_a_skipped_issue_is_unrelated(self):
+    def test_planner_drift_for_a_lessons_less_issue_is_owned(self):
+        # GH-693: a lessons-less backlog doc is reconciled like any other, so it is IN the ownership
+        # set — its own planner drift is attributable and fatal (exit 6, rolled back), no longer
+        # "pre-existing unrelated" as it was while GH-684 skipped it.
         doc = self.add_backlog_issue(lessons=False)
         self.planner_finding = {"check": "marathon-plan/already-closed", "file": doc,
                                 "message": 'issue #422 is CLOSED but the ledger lists it under "In progress"'}
-        out = self.apply('--catch-up')                       # the skipped issue left the ownership set
-        self.assertIn(wave.SKIP_MARKER + 'GH-422', out)
-        self.assertIn('pre-existing unrelated drift', out)
-        self.assertEqual(self.manifest_states(), ['shipped', 'dialed_in'])
+        before = self.snapshot()
+        with self.assertRaises(SystemExit) as stopped:
+            self.apply('--catch-up')
+        self.assertEqual(stopped.exception.code, 6)
+        self.assertEqual(before, self.snapshot())
 
     def test_planner_drift_for_a_reconciled_issue_stays_fatal(self):
         # Red control for the ownership exclusion: the same finding naming the issue this run DID

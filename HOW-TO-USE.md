@@ -23,9 +23,10 @@ never duplicating either's state by hand, and letting each oracle catch the othe
   shipping evidence was deferred — the op_receipts audit trail is only as good as its timeliness.
 - **Never hand-edit `ROADMAP.md` ledger rows, `releases.sql`, or the DB.** Every hand edit breaks
   the DB↔dump↔generated triangle that `releases check` guards. Verbs only.
-- **At merge time**, the rhythm is mechanized (`wave_reconcile.py --pr N`) — remember the two
-  gates: capture docs need their Lessons Learned section *before* merge, and PR bodies citing a
-  foreign tracker need an offline `issues[]` manifest.
+- **At merge time**, the rhythm is mechanized (`wave_reconcile.py --pr N`) — remember the gate:
+  PR bodies citing a foreign tracker need an offline `issues[]` manifest. A capture doc's
+  `## Lessons Learned (For Future Agents)` section is *highly recommended* (the reconciler warns
+  when it is missing or a placeholder) but never blocks promotion (GH-693).
 - **For the immediate "run today" queue**, use jog once landed (GH-259 Phase 1): `jog GH-<n>`
   queues without wave-planning ceremony; full contracts are owed at fire time, not capture time.
 
