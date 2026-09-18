@@ -215,7 +215,9 @@ Then begin work.
    requires landing first. Do not close issues or run post-merge reconciliation
    prematurely. Report each issue/group's PR or blocker, QA/gate result, and retained
    clone path. Hand off merging, reconciliation and safe teardown to `merge-cleanup`
-   when requested; preserve the clone and its evidence until then.
+   when requested; preserve the clone and its evidence until then. At PR-ready time,
+   surface the retirement pointer: the retained clone can be retired via
+   `/merge-cleanup` once its landings are verified (GH-690).
 
 ## Task rating policy
 

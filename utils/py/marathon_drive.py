@@ -1727,6 +1727,9 @@ def main():
         if not block_lines:
             return
         print("\nmarathon-drive: end-of-run cost summary (tick analyze) —\n" + "\n".join(block_lines))
+        # GH-690: the campaign clone outlives this run (success OR halt); point at the
+        # sanctioned retirement tool so finished clones do not accumulate on disk
+        print("clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified")
 
     def _marathon_drive_on_exit(code):
         # Same order as the Bash EXIT trap: log first (so the run log can still read a live

@@ -122,6 +122,7 @@ releases jog run [--executor relay|marathon] [--reviewer <agent>] [--builder agy
 
 8. **Teardown Cleanliness:**
    Verifies clean worktree disposal, clean working tree status, and gate receipts between serial items.
+   At campaign end, point the operator at `/merge-cleanup` to retire the task clone (GH-690).
 
 ## Recovery Verbs
 
