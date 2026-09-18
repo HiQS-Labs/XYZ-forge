@@ -107,3 +107,11 @@ I have reviewed the changes in `utils/py/consult.py`, `test/gh648-l5-gh237-repro
 
 **Verdict:** Approved
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-18T01:14:16Z
+task: MARATHON-P5-TURN-R2
+reviewer: agy
+status: Approved
+reviewed-head: 63e9cf0a7ba11360826dfd2226d28a499bf2bfef
+added-range: 10020+644
+added-sha256: 316471371643d30150406695cfc81dc8359a93cb10252c92dc9b60fb6271e13b
