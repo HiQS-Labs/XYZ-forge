@@ -496,6 +496,7 @@ TESTS=(
   "relay-dep-drift.sh"
   "new-relay.sh"
   "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
+  "gh678-installer-live-links.sh" # GH-678 (no installer replaces a live symlink it does not own; dangling still cleaned; sandboxed HOME)
   "skills-army-hq.sh"           # GH-487 (bash wrapper running the skills-army-hq dedicated pytest; carries it into tier 2 AND the full gate)
   "gh620-skills-army-mini-sync.sh" # GH-620 generated child publisher + detached package smoke
   "agent-chorus-bridge.sh"      # GH-384 (cross-device bridge over Cloudflare Tunnel)

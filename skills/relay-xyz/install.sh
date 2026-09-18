@@ -44,6 +44,13 @@ install_one() {
       echo "$SKILL_NAME: already installed for $_label → $_link -> $SELF_DIR"
       return 0
     fi
+    if [ -L "$_link" ] && [ -e "$_link" ]; then
+      # GH-678: a live link that is not ours belongs to another installer or to a managed
+      # Skills Army collection. Only a dangling link is stale enough to replace.
+      echo "$SKILL_NAME: $_link already points at $(readlink "$_link") — not replacing a live link." >&2
+      echo "  Remove it yourself if that is intended." >&2
+      return 1
+    fi
     rm -f "$_link"
   elif [ -e "$_link" ]; then
     _backup="${_link}.bak-$(date +%Y%m%d%H%M%S)"
@@ -55,11 +62,12 @@ install_one() {
   echo "$SKILL_NAME: installed for $_label → $_link -> $SELF_DIR"
 }
 
-install_one "Claude Code" "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
-install_one "Codex" "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}"
-install_one "Gemini (Config)" "${GEMINI_CONFIG_SKILLS_DIR:-$HOME/.gemini/config/skills}"
-install_one "Gemini (Antigravity)" "${ANTIGRAVITY_SKILLS_DIR:-$HOME/.gemini/antigravity/skills}"
-install_one "Gemini (Antigravity CLI)" "${ANTIGRAVITY_CLI_SKILLS_DIR:-$HOME/.gemini/antigravity-cli/skills}"
+rc=0   # GH-678: a refused or skipped target must be visible in the exit code, as in the sibling installers
+install_one "Claude Code" "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" || rc=1
+install_one "Codex" "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}" || rc=1
+install_one "Gemini (Config)" "${GEMINI_CONFIG_SKILLS_DIR:-$HOME/.gemini/config/skills}" || rc=1
+install_one "Gemini (Antigravity)" "${ANTIGRAVITY_SKILLS_DIR:-$HOME/.gemini/antigravity/skills}" || rc=1
+install_one "Gemini (Antigravity CLI)" "${ANTIGRAVITY_CLI_SKILLS_DIR:-$HOME/.gemini/antigravity-cli/skills}" || rc=1
 
 # --- verify the chain the skill actually depends on ---
 if [ -x "$SELF_DIR/find-harness.sh" ]; then
@@ -71,3 +79,4 @@ if [ -x "$SELF_DIR/find-harness.sh" ]; then
     echo "  Set XYZ_HARNESS=/path/to/your/xyz-3-agents-swarm clone." >&2
   fi
 fi
+exit "$rc"
