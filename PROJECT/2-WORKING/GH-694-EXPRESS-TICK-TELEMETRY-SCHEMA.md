@@ -44,13 +44,14 @@ TypeError: Cannot read properties of undefined (reading 'localeCompare')
 1. **Producer (`utils/py/express.py`):**
    - Emit canonical Tick event envelope (`schema_version: "0.2.0"`, `ts: now_iso()`, `type: "express." + verb.replace("express-", "")`, `task: "GH-<n>"` if issue else `"lane"`, `agent: "express"`).
 2. **Consumer (`src/project.js`):**
-   - Add defensive check in `foldWithMeta()`: `if (!ev || typeof ev.task !== 'string' || !ev.task) continue; if (!ev.type || !ev.type.startsWith('task.')) continue;`.
+   - Add defensive check in `foldWithMeta()`: `if (!ev || typeof ev.task !== 'string' || !ev.task) continue; if (typeof ev.type !== 'string' || !ev.type.startsWith('task.')) continue;`.
 3. **Verification (`test/gh267-express-skill.sh`):**
    - Add consumer coexistence assertion: run `TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project` after express refusal/landing/resume fixtures and assert exit code 0.
 
 ## Acceptance Criteria
-- [x] `test/gh267-express-skill.sh` passes (98/98) and validates `tick project` exits 0 after express telemetry writes.
+- [x] `test/gh267-express-skill.sh` passes (101/101) and validates `tick project` exits 0 after express telemetry writes with zero phantom tasks.
 - [x] `npm test` passes (23/23).
 - [x] Plan QA approved & attested by agy.
 - [x] Final QA approved & attested by agy.
+- [x] Opus 5 QA approved & attested by claude-opus.
 
