@@ -110,3 +110,11 @@ The changes to `utils/py/muse-turn.py` properly implement the attribution tracki
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-18T01:37:12Z
+task: MARATHON-P6-TURN-R2
+reviewer: agy
+status: Approved
+reviewed-head: e5b381313754a5f579eabef39acd5ad9ac7a60bd
+added-range: 9581+433
+added-sha256: 5cd276f376901fa8fa5857e9b77fd7a7f309b317ad89d296148f7bb084670a94
