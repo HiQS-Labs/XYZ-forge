@@ -313,6 +313,14 @@ reconcile_ignore_state() {
     exclude="$gitignore"
   fi
   mkdir -p "$(dirname "$exclude")"
+  # GH-644: `printf '%s\n' >>` assumes the file already ends in a newline. A hand-edited exclude
+  # or .gitignore often does not, and the append then FUSES onto the last rule (`*.cact` became
+  # `*.cact.xyz/` on Needle-fork — silently disabling that rule and defeating the grep guard
+  # below, which re-appended on the next run). Terminate the file first when its last byte is
+  # not `\n`; `$(...)` strips a trailing newline, so the substitution is empty exactly then.
+  if [ -s "$exclude" ] && [ -n "$(tail -c 1 "$exclude")" ]; then
+    printf '\n' >> "$exclude"
+  fi
   for _p in '.xyz/' '/.tick/'; do
     if ! grep -Fqx "$_p" "$exclude" 2>/dev/null; then
       printf '%s\n' "$_p" >> "$exclude"
