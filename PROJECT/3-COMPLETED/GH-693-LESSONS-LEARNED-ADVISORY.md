@@ -1,6 +1,6 @@
 ---
 title: "GH-693: Lessons Learned: make the capture-doc section optional (highly recommended), not a promotion gate"
-status: Active
+status: Complete
 created: 2026-09-18
 updated: 2026-09-18
 owner: operator (via /express)
