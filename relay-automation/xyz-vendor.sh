@@ -223,6 +223,18 @@ write_registry_row() {
   return 0
 }
 
+# XYZ_RUNTIME_PATHS — the ONE list of per-device runtime state that lives under `.xyz/` and belongs
+# to the TARGET, never to git. Two consumers, one definition (GH-644 part B, DRY):
+#   materialize_vendor()     preserves each across the destructive swap (GH-312)
+#   reconcile_ignore_state() ignores each individually on a target that deliberately tracks .xyz/
+# A new runtime artifact under .xyz/ is added HERE, once; both behaviours follow.
+#   relay-system          relay threads (what vendoring is sold on -- per-repo isolation)
+#   .tick                 tick event logs / claim state
+#   .relay-driver.lock    live driver lock (a running relay or marathon)
+#   XYZ.json{,.lock}      GH-75 completion telemetry + its mkdir advisory lock
+#   XYZ.heartbeat.json    liveness stamp
+XYZ_RUNTIME_PATHS="relay-system .tick .relay-driver.lock XYZ.json XYZ.json.lock XYZ.heartbeat.json"
+
 # reconcile_ignore_state — ONE function owning BOTH directions of one invariant. (GH-314, GH-440)
 #
 # Vendoring is the only step that knows the harness is about to start writing to specific paths in
@@ -321,7 +333,60 @@ reconcile_ignore_state() {
   if [ -s "$exclude" ] && [ -n "$(tail -c 1 "$exclude")" ]; then
     printf '\n' >> "$exclude"
   fi
-  for _p in '.xyz/' '/.tick/'; do
+  # GH-644 part B: `.xyz/` is two things -- harness code (refreshable, and on a turnkey consumer
+  # DELIBERATELY committed, GH-642) and runtime state (never committable). The #314 invariant is
+  # about the second half. When git already tracks something under .xyz/, re-asserting the whole-
+  # directory rule does not untrack anything (ignore rules never touch the index) but it does hide
+  # every NEW harness file the next re-vendor brings, so the tracked copy drifts, and the operator
+  # fights a rule that reappears on every run (GP #8: the operator decides). On such a target ignore
+  # only the runtime subpaths; on every other target the blanket rule is exactly as before. The
+  # signal is observed git state, not a flag: `ls-files --error-unmatch -- .xyz` succeeds only when
+  # the index holds a path under .xyz/. Non-git targets fall through to the blanket rule.
+  local _tracked_xyz=0 _rules
+  if git -C "$TARGET_REPO" ls-files --error-unmatch -- .xyz >/dev/null 2>&1; then
+    _tracked_xyz=1
+  fi
+  if [ "$_tracked_xyz" -eq 1 ]; then
+    _rules='/.tick/'
+    for _p in $XYZ_RUNTIME_PATHS; do _rules="$_rules .xyz/$_p"; done
+    # Guard 1 -- an existing rule that ignores .xyz/ wholesale is NEVER removed: every append this
+    # function has ever made is additive, and deleting an operator-owned line would be the same
+    # class of mistake as un-ignoring for them (see the refusal above). Report it with the remedy.
+    # `check-ignore --no-index` asks the RULES, not the index (a tracked path is never "ignored" to
+    # plain check-ignore), against the vendor's own marker file so a subpath rule cannot match.
+    local _blanket
+    if _blanket="$(git -C "$TARGET_REPO" check-ignore -v --no-index -- .xyz/VERSION 2>/dev/null)" \
+       && [ -n "$_blanket" ]; then
+      {
+        printf 'xyz-vendor.sh: WARNING -- this repo TRACKS .xyz/ but an ignore rule still hides it:\n'
+        printf '%s\n' "$_blanket" | sed 's/^/    /'
+        printf '  Already-indexed harness files stay tracked, but every NEW file this vendor brings\n'
+        printf '  under .xyz/ will be skipped by `git add`, so the committed copy drifts from the\n'
+        printf '  installed one. Not removing that rule for you: if the harness is meant to be\n'
+        printf '  tracked, delete it from the file named above; only the runtime subpaths need to\n'
+        printf '  stay ignored, and this run has written those.\n\n'
+      } >&2
+    fi
+    # Guard 2 -- tracked content under a RUNTIME path passes the probe above but is not evidence
+    # the harness was deliberately vendored (someone committed `.xyz/.tick/` by accident). Name it;
+    # the subpath ignores below still apply, so nothing more of it will stage.
+    local _rt_tracked
+    _rt_tracked="$(cd "$TARGET_REPO" && for _p in $XYZ_RUNTIME_PATHS; do
+                     git ls-files --error-unmatch -- ".xyz/$_p" >/dev/null 2>&1 && printf '.xyz/%s\n' "$_p"
+                   done; :)"   # `:` so an untracked last path is not a failing exit under set -e
+    if [ -n "$_rt_tracked" ]; then
+      {
+        printf 'xyz-vendor.sh: WARNING -- runtime state under .xyz/ is COMMITTED in this repo:\n'
+        printf '%s\n' "$_rt_tracked" | sed 's/^/    /'
+        printf '  These paths are per-device state (relay threads, tick logs, locks, telemetry) and\n'
+        printf '  are meaningless when shared. They are now ignored so nothing further stages; what is\n'
+        printf '  already committed is yours to `git rm --cached` if it was not meant to be published.\n\n'
+      } >&2
+    fi
+  else
+    _rules='.xyz/ /.tick/'
+  fi
+  for _p in $_rules; do
     if ! grep -Fqx "$_p" "$exclude" 2>/dev/null; then
       printf '%s\n' "$_p" >> "$exclude"
     fi
@@ -412,21 +477,18 @@ materialize_vendor() {
   # GH-312: carry TARGET-owned runtime state across the swap. $STAGE_DIR is mirrored purely from
   # $HARNESS_ROOT, and none of these paths are in VENDOR_DIRS, so the `rm -rf` below would delete
   # whatever the target accumulated -- relay threads, tick event logs, GH-75 telemetry -- unread.
-  # `.xyz/` is ignored (reconcile_ignore_state → repo-local exclude, GH-642), so nothing under it
-  # was ever hashed into a git object:
+  # These paths are ignored on every target (reconcile_ignore_state → repo-local exclude, GH-642;
+  # individually on a tracked-.xyz/ target, GH-644), so nothing under them was ever hashed into a
+  # git object:
   # there is no reflog, stash, or `git fsck --lost-found` recovery. A destroyed relay thread is gone.
   #
   # Preservation rather than a warning or a refusal: both of those still depend on an operator
   # reading output at the right moment, and this script's own docs frame `update` as deliberate
   # (pinned + manual) but never as destructive. This makes it non-destructive by default.
   #
-  # The list is state that BELONGS TO THE TARGET, not harness code:
-  #   relay-system/         relay threads (what vendoring is sold on -- per-repo isolation)
-  #   .tick/                tick event logs / claim state
-  #   .relay-driver.lock    live driver lock (a running relay or marathon)
-  #   XYZ.json{,.lock/}     GH-75 completion telemetry + its mkdir advisory lock
-  #   XYZ.heartbeat.json    liveness stamp
-  for _keep in relay-system .tick .relay-driver.lock XYZ.json XYZ.json.lock XYZ.heartbeat.json; do
+  # The list is state that BELONGS TO THE TARGET, not harness code: XYZ_RUNTIME_PATHS (defined
+  # once, above reconcile_ignore_state, which ignores the same paths on a tracked-.xyz/ target).
+  for _keep in $XYZ_RUNTIME_PATHS; do
     [ -e "$VENDOR_DIR/$_keep" ] || continue
     rm -rf "$STAGE_DIR/$_keep"
     cp -Rp "$VENDOR_DIR/$_keep" "$STAGE_DIR/$_keep" \

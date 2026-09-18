@@ -140,6 +140,94 @@ grep -Fqx '*.cact' "$NL/.git/info/exclude" \
   && pass "  and .xyz/ was appended exactly once as its own line" \
   || fail "  but .xyz/ count is $(grep -Fcx '.xyz/' "$NL/.git/info/exclude")"
 
+# GH-644 part B: a target that DELIBERATELY tracks .xyz/ (turnkey consumer, GH-642) must not get
+# the whole directory re-ignored on every run. An ignore rule never untracks indexed files, so the
+# harm is quieter than the issue first claimed: NEW harness files from a re-vendor are silently
+# not staged (the tracked copy drifts) and the operator fights a reappearing rule. Ignore only the
+# runtime-state subpaths there — the half of the #314 invariant that is actually about runtime
+# state — and leave harness code trackable. Every other target keeps the blanket `.xyz/` rule.
+mktracked_repo() {  # prints a fresh repo that has COMMITTED a stub .xyz/bin/tick
+  local d
+  d="$(mktemp -d "$WORK/tracked.XXXXXX")"
+  git init -q "$d"
+  mkdir -p "$d/.xyz/bin"; printf 'stub\n' > "$d/.xyz/bin/tick"; printf 'x\n' > "$d/README"
+  ( cd "$d" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm vendored >/dev/null 2>&1 )
+  ( cd "$d" && pwd -P )
+}
+TR="$(mktracked_repo)"
+cp "$TR/.git/info/exclude" "$WORK/tracked.exclude.before" 2>/dev/null || : > "$WORK/tracked.exclude.before"
+"$VENDOR" --no-register "$TR" >/dev/null 2>&1 \
+  && pass "GH-644B: vendors into a repo that already tracks .xyz/" \
+  || fail "GH-644B: vendor failed on a repo that tracks .xyz/"
+"$VENDOR" --no-register "$TR" >/dev/null 2>&1 || fail "GH-644B: second vendor run failed"
+! grep -Fqx '.xyz/' "$TR/.git/info/exclude" \
+  && pass "  and did NOT add the blanket .xyz/ rule to the exclude (harness code stays trackable)" \
+  || fail "  but re-asserted the blanket .xyz/ rule on a repo that tracks .xyz/"
+[ ! -e "$TR/.gitignore" ] \
+  && pass "  and left .gitignore untouched" \
+  || fail "  but wrote a .gitignore: $(cat "$TR/.gitignore" | tr '\n' '|')"
+_b_ok=1
+for _rp in relay-system .tick .relay-driver.lock XYZ.json XYZ.json.lock XYZ.heartbeat.json; do
+  n="$(grep -Fcx ".xyz/$_rp" "$TR/.git/info/exclude")"
+  [ "$n" = 1 ] || { _b_ok=0; fail "  runtime path .xyz/$_rp appears $n times in the exclude (want exactly 1)"; }
+done
+[ "$_b_ok" = 1 ] && pass "  and every runtime subpath is ignored exactly once (idempotent across two runs)"
+[ "$(grep -Fcx '/.tick/' "$TR/.git/info/exclude")" = 1 ] \
+  && pass "  and /.tick/ at the target root is still ignored exactly once" \
+  || fail "  but /.tick/ count is $(grep -Fcx '/.tick/' "$TR/.git/info/exclude")"
+# Observable consequence: new harness code stages, runtime state never does, tracked code stays.
+printf 'new\n' > "$TR/.xyz/bin/new-harness-file"
+mkdir -p "$TR/.xyz/relay-system" "$TR/.xyz/.tick" "$TR/.xyz/XYZ.json.lock"
+for _s in relay-system/s.md .tick/s.log XYZ.json.lock/s; do printf 'x\n' > "$TR/.xyz/$_s"; done
+for _s in .relay-driver.lock XYZ.json XYZ.heartbeat.json; do printf 'x\n' > "$TR/.xyz/$_s"; done
+( cd "$TR" && git add -A >/dev/null 2>&1 )
+staged="$(git -C "$TR" diff --cached --name-only)"
+git -C "$TR" ls-files --error-unmatch -- .xyz/bin/tick >/dev/null 2>&1 \
+  && pass "  and the previously committed .xyz/bin/tick is still tracked" \
+  || fail "  but .xyz/bin/tick fell out of the index"
+grep -Fqx '.xyz/bin/new-harness-file' <<<"$staged" \
+  && pass "  and a NEW harness file under .xyz/ stages on git add -A" \
+  || fail "  but the new harness file did not stage (blanket ignore still in effect)"
+! grep -q '^\.xyz/\(relay-system\|\.tick\|\.relay-driver\.lock\|XYZ\.json\|XYZ\.heartbeat\.json\)' <<<"$staged" \
+  && pass "  and no runtime-state sentinel staged" \
+  || fail "  but runtime state staged: $(grep '^\.xyz/' <<<"$staged" | tr '\n' '|')"
+
+# Guard 1: an operator-owned blanket `.xyz/` line already in the exclude is NEVER removed (the
+# append has always been additive-only) — it is reported, with the remediation, and left alone.
+TR2="$(mktracked_repo)"
+printf '.xyz/\n' > "$TR2/.git/info/exclude"
+out="$( "$VENDOR" --no-register "$TR2" 2>&1 )"; rc=$?
+[ "$rc" = 0 ] && pass "GH-644B: vendors (exit 0) when a tracked-.xyz/ repo already carries a blanket .xyz/ rule" \
+  || fail "GH-644B: exit $rc on a tracked-.xyz/ repo with a pre-existing blanket rule"
+grep -Fqx '.xyz/' "$TR2/.git/info/exclude" \
+  && pass "  and left the operator's blanket .xyz/ line in place (never deletes an ignore rule)" \
+  || fail "  but removed the operator's .xyz/ line"
+grep -Fq 'WARNING' <<<"$out" && grep -Fq '.xyz/' <<<"$out" \
+  && pass "  and WARNED that the blanket rule will hide new harness files" \
+  || fail "  but emitted no WARNING about the blanket rule: $(printf '%s' "$out" | tail -n 3 | tr '\n' '|')"
+
+# Guard 2: tracked RUNTIME content (someone committed .xyz/.tick/) passes the tracked-.xyz/ probe
+# but is not evidence the harness was deliberately vendored — warn, naming the path, and still
+# apply the subpath ignores.
+TR3="$(mktracked_repo)"
+mkdir -p "$TR3/.xyz/.tick"; printf 'x\n' > "$TR3/.xyz/.tick/events.log"
+( cd "$TR3" && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm tick >/dev/null 2>&1 )
+out="$( "$VENDOR" --no-register "$TR3" 2>&1 )"
+grep -Fq 'WARNING' <<<"$out" && grep -Fq '.xyz/.tick' <<<"$out" \
+  && pass "GH-644B: WARNS when tracked .xyz/ content intersects the runtime paths (names .xyz/.tick)" \
+  || fail "GH-644B: no WARNING naming tracked runtime content .xyz/.tick"
+grep -Fqx '.xyz/.tick' "$TR3/.git/info/exclude" \
+  && pass "  and still wrote the runtime subpath ignores" \
+  || fail "  but skipped the runtime subpath ignores"
+
+# NEGATIVE CONTROL for part B: a repo that does NOT track .xyz/ still gets the blanket rule, so the
+# subpath branch cannot silently become the default.
+NT="$(mkignore_repo 'node_modules/')"
+"$VENDOR" --no-register "$NT" >/dev/null 2>&1 || true
+grep -Fqx '.xyz/' "$NT/.git/info/exclude" && ! grep -Fqx '.xyz/relay-system' "$NT/.git/info/exclude" \
+  && pass "  control: a non-tracking repo still gets the blanket .xyz/ rule and no subpath rules" \
+  || fail "  control: non-tracking repo lost the blanket .xyz/ rule or gained subpath rules"
+
 # It must NOT auto-un-ignore: doing so would publish builder/reviewer transcripts the repo chose to
 # withhold, irreversibly on a public target. This assertion is what stops a future "helpful" fix.
 BR="$(mkignore_repo '/relay-system')"
