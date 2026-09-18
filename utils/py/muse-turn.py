@@ -233,6 +233,8 @@ def main():
                   file=sys.stderr)
             bounded_rc = 5
 
+    rtl.apply_reviewer_turn_env(muse_env, run_cwd, me)
+
     # --prompt-file rather than a positional argument: a relay prompt carries the whole thread
     # plus a drift brief and routinely exceeds a comfortable argv size, and a file keeps the
     # turn text out of the process table.
