@@ -75,3 +75,18 @@ review, then fresh final-tip sequential qualification and gated separate PRs.
 No push/bypass, PR, merge, live task/label write, migration or deployment in this batch.
 The task clone preserves one uncommitted CLI-generated LEADERBOARD view; routine
 views are intentionally not included in task commits under repository policy.
+
+Refreshed continuation integrates development `ba1f58e8` without changing reader
+runtime. Fresh 39/39 Python checks, production selectors, real Chrome, manual
+harness and seven-phase comparison against refreshed writer `99c5e7b5` pass.
+The safer broad preflight on `eb3815a2` was stopped deliberately with exit143
+after GH142 returned1. Isolated reproduction gives the same assertion failure;
+raw child output is ModuleNotFoundError for requests, not a failed filing contract.
+Selected Homebrew Python3.14 also lacks PyYAML and pytest. No green broad run or
+actual final reviewer approval is claimed. Both interrupted gate clones remain
+preserved and will not be reused for qualification. An owned temporary venv now
+supplies the three dependencies used by hosted CI, with imports checked first.
+All five installer targets stay in scratch, HOME unchanged. Three installed
+Gemini AgentChorus links still target the deployment folder. Continue complete
+safe harness preflight, actual replacement review, full final-candidate gate,
+normal gated publication and inspection of actual hosted checks; no bypass.
