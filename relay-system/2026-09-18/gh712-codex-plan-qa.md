@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -184,5 +184,57 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a c
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+* **[Pass]** Recon grounding:
+  - `tier1_classify` verdict set (`pass|fail|anomaly`) verified at `utils/py/adaptive_ate.py:317`.
+  - `score()` FN/FP definitions verified at `utils/py/calibrate_tier1.py:108-112`.
+  - The `mock_classifier or not lmstudio_model` branch verified at `utils/ate/scripts/run_variations.py:490`.
+  - 1,500-char tails verified at `utils/ate/scripts/run_variations.py:504-505`.
+  - GH-141 row shape verified, including `edited=False` (observed `edited: false` on head of `TESTS-RESULTS/2026-08-22+GH-141/error_log.jsonl`).
+* **[Pass]** Extends, not duplicates: Phase 3 routes through the existing `classification` dict injected into the row before the JSONL append (`utils/ate/scripts/run_variations.py:547`). `likely_cause=None` is acceptable; `utils/ate/scripts/compile_issue.py:64` safely handles it with `c.get('likely_cause') or ''`.
+* **[Should]** FN floor decision rule:
+  * Observed input: "scores Jev's pass/fail Choice at argmax and requires FN = 0"
+  * Affected scope: `jev_triage.py benchmark` FN calculation.
+  * Falsifier: Jev returns pass with 51% confidence on a known-fail; argmax yields FN=1. Lowering the threshold to P(fail)>0.05 would yield FN=0, but a hardcoded argmax rule rejects this.
+  * Fix: Record the probability threshold at which FN reaches 0 in the summary, rather than forcing argmax.
+* **[Should]** Category set omitted an observed value:
+  * Observed input: "category Choice crash/auth_failure/bad_diff/timeout/no_edit/config_error/env_failure/ok"
+  * Affected scope: `build_questions` category Choice.
+  * Falsifier: The GH-141 log has 1 occurrence of `env_missing`, which would map to an invalid category under this set.
+  * Fix: Add `env_missing` to the category Choice set to honestly cover the GH-141 union.
+* **[Nit]** Severity as a Score vs Choice:
+  * Observed input: "severity Score none/low/medium/high/critical"
+  * Affected scope: `build_questions` severity API schema.
+  * Falsifier: Comparing a rounded Score float to a string label is lossy.
+  * Fix: Use a `Choice` for severity (`none/low/medium/high/critical`) to compare exact string labels natively.
+* **[Should]** Mock design over-engineering:
+  * Observed input: "the mock is --mock-dir DIR returning canned JSON per request hash"
+  * Affected scope: `jev_triage.py` mock implementation and `test/gh712-jev-triage.sh`.
+  * Falsifier: A hash-based mock requires injecting SHA256 logic into a 120-line bash test and managing hashed filenames.
+  * Fix: Use a simpler ordered `--mock-responses FILE` (JSONL), popping one response per request.
+* **[Blocker]** Acceptance checks lack a clean-control assertion:
+  * Observed input: "red control (known-fail forced pass) counted as FN = 1"
+  * Affected scope: `test/gh712-jev-triage.sh` Phase 1 gate.
+  * Falsifier: A broken scorer that always outputs FN=1 for any input would pass the test.
+  * Fix: Require the test to also assert `FN = 0` on a known-fail with a canned `fail` (a green control) to prove the scorer isn't hardcoded.
+* **[Blocker]** Phase 3 gate threshold is subjective:
+  * Observed input: "no per-field systematic disagreement that the operator would reject"
+  * Affected scope: Phase 3 condition.
+  * Falsifier: The gate is unfalsifiable and cannot be evaluated mechanically by the PR verification script.
+  * Fix: Set a concrete numeric threshold, e.g., `>= 90% agreement on status and >= 80% on category`.
+* **[Pass]** Secrets and publication: Safe. The key is in `--key-file` (never committed), and `rows.jsonl` containing only hashes and verdicts (no stderr text) prevents leaking anything not already in GH-141.
+* **[Pass]** Rating: `rated 55/25/50/70` is grounded. Priority 55 / Severity 25 is appropriate for offline triage research, Appeal 50 is default, Effort 70 (cheap) aligns with the complexity=2 frontmatter.
+* **[Should]** Over-engineering (retries / urllib):
+  * Observed input: "Retries on 429/5xx with backoff honoring retry-after" and "falls back to urllib"
+  * Affected scope: `jev_triage.py` dependencies and networking.
+  * Falsifier: `requests` is already guaranteed by `run_variations.py`. Adding `urllib` fallback is dead code. Backoff logic expands the 220-line budget unnecessarily for an offline CLI.
+  * Fix: Drop the `urllib` fallback. Replace backoff with a simple 3-retry static sleep loop or fail-fast.
+
+swept file: yes
+
+**VERDICT**: FAIL
+**Basis**: The plan contains subjective gating criteria and incomplete mock testing assertions that would allow a broken scorer to pass. It also omits an observed category (`env_missing`) and specifies over-engineered network handling for a local offline CLI.
+
+handing off to claude-a — go to the claude-a window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
