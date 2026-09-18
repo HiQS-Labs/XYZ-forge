@@ -52,12 +52,11 @@ function foldWithMeta(events) {
   // filename, which encodes ISO ts).
   const byTask = new Map();
   for (const ev of events) {
-    // dependency.drift (GH-68) is a purely informational cross-agent signal: it claims no task and is
-    // not a coordination event, so it must never seed or mutate a projected task — its synthetic task
-    // id (e.g. 'post-commit') would otherwise surface as a phantom `open` task in `tick project`/`next`.
-    // It is consumed directly from .tick/events/ by the shims' drift-brief reader, never via the fold.
-    // See decisions/2026-07-01-cross-agent-dep-conflict.md.
-    if (ev.type === 'dependency.drift') continue;
+    // Non-coordination events (dependency.drift GH-68, telemetry signals such as express.*,
+    // cost.*, marathon.*) do not claim tasks or transition task states; skip them so they never
+    // seed phantom `open` tasks in `tick project`/`next` or corrupt the task projection.
+    if (!ev || typeof ev.task !== 'string' || !ev.task) continue;
+    if (!ev.type || !ev.type.startsWith('task.')) continue;
     if (!byTask.has(ev.task)) byTask.set(ev.task, []);
     byTask.get(ev.task).push(ev);
   }

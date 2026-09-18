@@ -225,6 +225,7 @@ new_task_branch; git -C "$FX" checkout -q development
 run_check > /dev/null 2> "$ERR" && bad "on-development must refuse" || { check_rule task-branch "$ERR" && ok "task-branch refusal" || bad "task-branch rule"; }
 EV="$(ls "$FX/.tick/events/"*express-refused*.jsonl 2>/dev/null | head -1)"
 [ -n "$EV" ] && grep -q '"verb": "express-refused"' "$EV" && ok "express-refused tick event written" || bad "tick telemetry missing"
+TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project >/dev/null 2>&1 && ok "tick project folded cleanly after express-refused telemetry (GH-694)" || bad "tick project failed after express-refused telemetry"
 
 new_task_branch
 for i in 1 2 3; do
@@ -356,6 +357,7 @@ grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json" && ok "run closed GitHub i
 [ -z "$(git -C "$FX" status --porcelain)" ] && ok "successful closeout leaves development clean" || bad "successful closeout left drift: $(git -C "$FX" status --short | tr '\n' ';')"
 FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
 [ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
+TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project >/dev/null 2>&1 && ok "tick project folded cleanly after express-fired telemetry (GH-694)" || bad "tick project failed after express-fired telemetry"
 
 echo "== GH-592: the landing writes its provenance receipt and reconciles under --gate =="
 FIX_SHA="$(git -C "$FX" log --format=%H --grep='\[express\]' -1)"
@@ -589,6 +591,7 @@ LOCAL_DEV_SHA="$(git -C "$FX" rev-parse HEAD)"
 [ "$REMOTE_DEV_SHA" = "$LOCAL_DEV_SHA" ] && ok "resume persisted and pushed closeout to origin/development" || bad "remote development out of sync"
 RESUMED_TICK="$(ls -t "$FX/.tick/events/"*express-resumed*.jsonl 2>/dev/null | head -1)"
 [ -n "$RESUMED_TICK" ] && ok "express-resumed event receipt written" || bad "express-resumed tick missing"
+TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project >/dev/null 2>&1 && ok "tick project folded cleanly after express-resumed telemetry (GH-694)" || bad "tick project failed after express-resumed telemetry"
 
 # --- Happy Path 2: Idempotent second resume ---
 RECEIPT_LINES_BEFORE="$(cat "$FX"/TESTS-RESULTS/*+GH-999-express/provenance.jsonl | wc -l | tr -d ' ')"

@@ -99,7 +99,18 @@ def write_tick(root, verb, **fields):
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3] + "Z"
     target = "gh-%s" % fields.get("issue") if fields.get("issue") else "lane"
     filename = "%s-%s-%s.jsonl" % (ts, verb, target)
-    rec = dict(at=now_iso(), actor="express", verb=verb)
+    ev_type = "express." + verb.replace("express-", "")
+    task_id = "GH-%s" % fields.get("issue") if fields.get("issue") else "lane"
+    rec = dict(
+        schema_version="0.2.0",
+        ts=now_iso(),
+        type=ev_type,
+        task=task_id,
+        agent="express",
+        at=now_iso(),
+        actor="express",
+        verb=verb,
+    )
     rec.update({k: v for k, v in fields.items() if v is not None})
     payload = json.dumps(rec) + "\n"
     try:

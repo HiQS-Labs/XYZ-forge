@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-18 — Express telemetry schema alignment & Tick fold resilience (GH-694)
+
+`utils/py/express.py`'s `write_tick()` telemetry writer emitted ad-hoc JSON records (`at`, `actor`, `verb`, `issue`) missing canonical Tick 0.2.0 event envelope fields (`schema_version`, `ts`, `type`, `task`, `agent`). When `./bin/tick` commands subsequently projected state in task clones where `/express` had fired, `src/project.js` `foldWithMeta()` bucketed events by `ev.task` (`undefined`), instantiating a task with `id: undefined` that crashed `renderState()` on `a.id.localeCompare`. Now: (1) `write_tick()` constructs the canonical Tick envelope (`schema_version: "0.2.0"`, `type: "express.<verb>"`, `task: "GH-<issue>"`, `agent: "express"`), preserving all existing payload fields for backward compatibility; (2) `src/project.js` `foldWithMeta()` defensively filters out non-coordination signals and events lacking a valid string `task` id so telemetry and non-`task.*` events never seed phantom tasks or crash the task projection. Regression: `test/gh267-express-skill.sh` pins `tick project` clean exit across express refusals, landings, and resumes; `npm test` passes 23/23.
+
 ## 2026-09-18 — Hosted wave-reconcile lane: alert on red, skip-and-report a defective backlog item; gh53 fixture made deterministic (GH-684, GH-686)
 
 The hosted `wave-reconcile.yml` lane had 0 successes since 2026-09-11 (59 straight failures) and
