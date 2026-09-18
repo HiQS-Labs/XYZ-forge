@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: write
-      issues: read
+      issues: write   # GH-684: the final step opens/closes the one hosted-reconcile-attention issue
       pull-requests: read
     env:
       GH_TOKEN: ${{ github.token }}
@@ -51,15 +51,19 @@ jobs:
       - name: Install Python dependencies for complete qualification
         run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
       - name: Reconcile merged PR or catch up
+        id: reconcile
         env:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+        # GH-684: the log is tee'd OUTSIDE the tree ($RUNNER_TEMP) — the commit step below refuses
+        # undeclared in-tree files — and stderr is folded in because the terminal
+        # `wave-reconcile: ERROR — …` line is written there. pipefail keeps the reconciler's exit.
         run: |
           set -euo pipefail
           if [ "$EVENT_NAME" = pull_request ]; then
-            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --catch-up --gate --qualify
+            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --catch-up --gate --qualify 2>&1 | tee "$RUNNER_TEMP/reconcile.log"
           else
-            python3 utils/py/wave_reconcile.py --catch-up --gate --qualify
+            python3 utils/py/wave_reconcile.py --catch-up --gate --qualify 2>&1 | tee "$RUNNER_TEMP/reconcile.log"
           fi
       - name: Commit declared artifacts and push
         shell: python3 {0}
@@ -95,3 +99,12 @@ jobs:
           # A concurrent merge rejects this push and fails the job. The next scheduled/manual
           # catch-up starts from fresh development and recomputes the unlanded transitions.
           git('push', 'origin', 'HEAD:development')
+      - name: Report hosted lane
+        # GH-684: always runs, after the job's status is known. `job.status` reflects every preceding
+        # step — a successful reconcile followed by a rejected fast-forward push is still red here.
+        # One labelled issue is opened/commented on red or on any skipped backlog item, and closed
+        # on the next green run with no skips. See utils/py/hosted_lane_report.py.
+        if: always()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python3 utils/py/hosted_lane_report.py --status "${{ job.status }}" --log "$RUNNER_TEMP/reconcile.log" --run-url "$RUN_URL"

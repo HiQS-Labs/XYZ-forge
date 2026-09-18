@@ -37,6 +37,12 @@ def log(msg):
     print(f"wave-reconcile: {msg}", flush=True)
 
 
+# GH-684: the one skip literal. A catch-up-recovered landing whose doc fails hygiene is reported as
+# `wave-reconcile: SKIPPED GH-<n> — <reason>`; utils/py/hosted_lane_report.py imports this marker so
+# the emitter and the consumer cannot drift. The end-of-run summary deliberately does NOT start with it.
+SKIP_MARKER = "SKIPPED "
+
+
 def log_err(msg):
     print(f"wave-reconcile: ERROR — {msg}", file=sys.stderr, flush=True)
 
@@ -1944,6 +1950,10 @@ def main():
             reconciled_issues = set()
             repo_slug = github_slug_from_origin(repo_root)  # GH-429: URL-form closers, this repo only
             metadata = {}
+            # GH-684: landings named on the command line (or manifest) fail closed as before; only the
+            # ones --catch-up recovers may be skipped-and-reported when their doc is defective.
+            explicit_items = {(kind, str(value)) for kind, value in landing_items}
+            skipped_issues = set()
             if args.catch_up:
                 landing_items.extend(("pr", str(n)) for n in catch_up_prs(
                     repo_root, repo_slug, offline_manifest, qualification_metadata=metadata if args.qualify else None))
@@ -2029,6 +2039,22 @@ def main():
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
                         log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
                     elif doc_path:
+                        if is_merged and (landing_kind, landing_id) not in explicit_items:
+                            # GH-684: a defective BACKLOG doc stops only itself. Check hygiene before
+                            # this issue's first lifecycle write (manifest ship, doc move, roadmap
+                            # update) and leave it for the next run — catch_up_prs re-finds it from
+                            # the doc still in 2-WORKING and the row still not Completed. Explicit
+                            # landings keep the fail-closed die() in validate_and_update_doc. The
+                            # issue also leaves the planner-ownership set, so its own retained
+                            # already-closed drift is reported as unrelated instead of fatal.
+                            with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
+                                ll_err = validate_lessons_learned(f.read(), os.path.basename(doc_path))
+                            if ll_err:
+                                log(f"{SKIP_MARKER}GH-{issue_num} — {ll_err} "
+                                    "(backlog item recovered by --catch-up; fix the doc and the next run retries)")
+                                reconciled_issues.discard(issue_num)
+                                skipped_issues.add(issue_num)
+                                continue
                         if is_merged:
                             ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, args.dry_run, journal)
                         log(f"  Found active doc: {os.path.basename(doc_path)}")
@@ -2108,6 +2134,10 @@ def main():
                 log("Nothing to reconcile; no artifacts written")
                 journal.cleanup()
                 return
+
+            if skipped_issues:
+                log(f"{len(skipped_issues)} backlog item(s) skipped — "
+                    + ", ".join(f"GH-{n}" for n in sorted(skipped_issues)))
 
             # Subprocess orchestration
             run_subprocesses(
