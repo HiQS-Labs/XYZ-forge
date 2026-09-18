@@ -28,7 +28,7 @@ risk: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue #694 filed & updated with recommendations, task clone initialized | Grounded recon, implementation plan & Codex relay QA |
+| Dual-sided fix implemented in express.py and src/project.js; regression tests pinned in test/gh267-express-skill.sh; Plan QA attested by agy | Final QA round 2 with agy, push & PR |
 
 ## Background & Observed Friction
 
@@ -44,10 +44,13 @@ TypeError: Cannot read properties of undefined (reading 'localeCompare')
 1. **Producer (`utils/py/express.py`):**
    - Emit canonical Tick event envelope (`schema_version: "0.2.0"`, `ts: now_iso()`, `type: "express." + verb.replace("express-", "")`, `task: "GH-<n>"` if issue else `"lane"`, `agent: "express"`).
 2. **Consumer (`src/project.js`):**
-   - Add defensive check in `foldWithMeta()`: `if (!ev || typeof ev.task !== 'string' || !ev.task) continue;`.
+   - Add defensive check in `foldWithMeta()`: `if (!ev || typeof ev.task !== 'string' || !ev.task) continue; if (!ev.type || !ev.type.startsWith('task.')) continue;`.
 3. **Verification (`test/gh267-express-skill.sh`):**
-   - Add consumer coexistence assertion: run `./bin/tick info` after express refusal/landing fixtures and assert exit code 0.
+   - Add consumer coexistence assertion: run `TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project` after express refusal/landing/resume fixtures and assert exit code 0.
 
 ## Acceptance Criteria
-- `test/gh267-express-skill.sh` passes and validates `tick info` exits 0 after express telemetry writes.
-- `npm test` passes.
+- [x] `test/gh267-express-skill.sh` passes (98/98) and validates `tick project` exits 0 after express telemetry writes.
+- [x] `npm test` passes (23/23).
+- [x] Plan QA approved & attested by agy.
+- [x] Final QA approved & attested by agy.
+
