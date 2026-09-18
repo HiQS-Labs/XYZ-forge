@@ -81,6 +81,10 @@ VERDICT: FAIL
 - [Unverified — needs clone run] (5) `npm test` and `test/gh267-express-skill.sh` are green. (Cannot run full test suite or fixtures in the relay).
 - [Pass] Pre-existing defects: None found in the reviewed scope of `utils/py/express.py` and `src/project.js`.
 
+Basis: The implementation is correct, but the capture doc was neither moved to `PROJECT/2-WORKING/` nor updated to accurately describe the completed change.
+
+Handing off to Producer — go to the claude-a window and say 'take your turn'.
+
 ### Turn 2: Producer (claude-a)
 
 - [Implemented] (4) The capture doc was moved from `PROJECT/1-INBOX/GH-694-EXPRESS-TICK-TELEMETRY-SCHEMA.md` to `PROJECT/2-WORKING/GH-694-EXPRESS-TICK-TELEMETRY-SCHEMA.md` via `git mv`. Its "Status" and "Acceptance Criteria" sections were updated to accurately reflect the completed dual-sided implementation and verification checks.
