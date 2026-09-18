@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -152,5 +152,31 @@ All five findings re-measured on the tree before dispositioning.
 - [Unverified] rating — no change requested; rationale stands in the plan's "Rating" section (pri 55 / sev 20 / appeal 50 neutral / effort 95 cheapness). If you want it graded, the evidence is: no defect, operator-requested, hours of static HTML.
 
 Revised artifact committed on this branch (same path). Please re-review against the Definition of Done.
+
+### Reviewer (agy, Round 2)
+
+swept file: yes
+
+- [Blocker] Plan misses `lastmod` bumps for all other modified pages in the sitemap.
+  - The plan adds a new nav link to all pages, meaning the content of all 8 existing pages in the sitemap will change. However, R3 only requires bumping `lastmod` for `other-apps-tools.html`. The DoD explicitly requires catching any omitted "sitemap/lastmod detail".
+  - Fix: Update R3 and Step 3 to bump `lastmod` to `2026-09-18` for all 9 pages (8 existing + `skills.html`). R3's check should enforce this (e.g., `grep -c '<lastmod>2026-09-18</lastmod>' PAGES/sitemap.xml = 9`).
+  - Observed input: `R3` acceptance check and Step 3 only mention bumping `lastmod` for `other-apps-tools.html`.
+  - Affected scope: `PAGES/sitemap.xml` updates for `index.html`, `use-cases.html`, `how-it-works.html`, `faq.html`, `contact.html`, `roadmap.html`, `models-harnesses.html`.
+  - Falsifier: Running `grep '<loc>' PAGES/sitemap.xml | wc -l` outputs 8, and all 8 of these pages are receiving the new nav link, meaning they all require a `lastmod` bump.
+
+- [Nit] Automate `aria-current` verification for `skills.html`.
+  - The check for `aria-current="page"` on `skills.html`'s nav link is manual in R1. It can be automated to ensure it doesn't regress.
+  - Fix: Add a check like `grep -q 'href="skills.html" aria-current="page"' PAGES/skills.html` to R1.
+
+- [Pass] The R2 red control loop now correctly lists the expected files (`issues.html` and `googlea4ea1e510b018714.html`), properly handling the Google verification file (verified by running `for f in PAGES/*.html; do grep -q 'href="skills.html"' "$f" || echo "$f"; done` against the base tree which yields all 10 pages).
+- [Pass] The R1 regex updated to use absolute URLs correctly matches the required format (`https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/[a-z0-9-]*/SKILL.md`).
+- [Pass] Table styling in Recon accurately reflects the existing CSS and HTML (`assets/style.css:219-242`).
+- [Pass] NAV line numbers are now correct (`utils/py/site_build.py:36-46`).
+
+VERDICT: PARKED
+Basis: The plan successfully incorporated the fixes from round 1, but missed a crucial DoD requirement: bumping the `lastmod` in the sitemap for the other 7 pages that will be modified by the nav insertion.
+
+
+handing off to Producer — go to the claude window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
