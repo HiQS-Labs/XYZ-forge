@@ -73,7 +73,8 @@ UNMERGED="$(git -C "$ROOT" diff --name-only --diff-filter=U 2>/dev/null || true)
 if printf '%s\n' "$UNMERGED" | grep -qx 'releases.sql'; then
   die "releases.sql is still unresolved. That is the one file here that needs judgment — the
   derived artifacts do not. Resolve it first (union both sides' rows, keeping ONE '-- generation:'
-  header), then re-run this script. See RELEASES-DB-FAQS.md."
+  header AND one 'settings' row per key — for 'generation' the higher value, then the later
+  updated_at; GH-686), then re-run this script. See RELEASES-DB-FAQS.md."
 fi
 
 if [ -f "$DUMP" ] && grep -q '^<<<<<<< ' "$DUMP"; then

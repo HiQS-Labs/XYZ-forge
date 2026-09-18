@@ -69,17 +69,36 @@ mk_diverged() { # <dir> <extra writes on side A> — leaves the repo mid-merge, 
   done
   $G -C "$R" commit -qam a
   $G -C "$R" checkout -q s-b
+  # GH-686: force side B's write across a wall-clock second so its `generation` settings row differs
+  # from side A's by `updated_at`. That is the shape a real two-branch ledger conflict has, and the
+  # shape that used to make this fixture a coin-flip when the sides happened to share a second.
+  sleep 1.1
   python3 "$APP" --root "$R" add --version 2.0.0 --status draft --tracking-issue TMP-BBBBBB --description "B one." > /dev/null
   $G -C "$R" commit -qam b
   $G -C "$R" merge s-a -m merge > "$R/../merge.out" 2>&1 || true
 }
 
-# union both dumps the way the documented procedure does: ONE header, dedupe the rest
+# union both dumps the way the documented procedure does: ONE header, ONE `settings` row per key,
+# dedupe the rest. GH-686: `settings` holds one row per key and each side's `generation` row carries
+# its own `updated_at`, so a byte-level dedupe keeps both whenever the sides straddled a second — the
+# resolver then refuses (dump-duplicate-setting), correctly. Keep the winning row (higher generation,
+# then later timestamp) and make the single header agree with it (the resolver rejects a header below
+# either parent).
+gen_rows() { # <repo> — every side's `generation` settings row
+  { $G -C "$1" show s-a:releases.sql; $G -C "$1" show s-b:releases.sql; } \
+    | grep "^INSERT INTO settings(key, value, updated_at) VALUES('generation', " || true
+}
 union_dump() { # <repo>
-  local R="$1"
-  { $G -C "$R" show s-b:releases.sql | grep '^-- generation'
+  local R="$1" win gen
+  win="$(gen_rows "$R" | sort -t"'" -k4,4n -k6,6 | tail -n 1)"   # fields split on ': value=4, updated_at=6
+  gen="$(printf '%s\n' "$win" | sed -n "s/.*VALUES('generation', '\([0-9][0-9]*\)'.*/\1/p")"
+  [ -n "$win" ] && [ -n "$gen" ] || { echo "union_dump: no generation settings row found in $R" >&2; exit 2; }
+  { printf -- '-- generation: %s\n' "$gen"
     { $G -C "$R" show s-b:releases.sql; $G -C "$R" show s-a:releases.sql; } \
-      | grep -v '^-- generation' | awk '!seen[$0]++'
+      | grep -v '^-- generation' \
+      | awk -v win="$win" '
+          /^INSERT INTO settings\(key, value, updated_at\) VALUES\(\x27generation\x27, / { if (!done) { print win; done = 1 }; next }
+          !seen[$0]++'
   } > "$R/releases.sql"
   $G -C "$R" add releases.sql
 }
@@ -93,7 +112,16 @@ case "$UNMERGED1" in
   *) fail "releases.db did not conflict; the derived-artifact contract changed" ;;
 esac
 
+# GH-686: the fixture must exercise the second-boundary shape every run, not by luck.
+GEN_TS="$(gen_rows "$R1" | sed -n "s/.*VALUES('generation', '[0-9]*', '\([^']*\)').*/\1/p" | sort -u | wc -l | tr -d ' ')"
+[ "$GEN_TS" = "2" ] \
+  && pass "fixture: the two sides' generation rows carry distinct timestamps (the GH-686 shape is exercised)" \
+  || fail "fixture: expected 2 distinct generation timestamps across the sides, got $GEN_TS — the control degraded to luck"
+
 union_dump "$R1"
+[ "$(grep -c "VALUES('generation', " "$R1/releases.sql")" = "1" ] \
+  && pass "union keeps ONE generation settings row (the higher value, then the later timestamp)" \
+  || fail "union kept $(grep -c "VALUES('generation', " "$R1/releases.sql") generation settings rows"
 if bash "$RESOLVE" --root "$R1" > "$WORK/r1.out" 2>&1; then
   pass "resolver completed on disjoint inserts"
 else
