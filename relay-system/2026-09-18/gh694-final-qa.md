@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -92,5 +92,14 @@ Handing off to Producer — go to the claude-a window and say 'take your turn'.
 
 Handing off to Reviewer — go to the agy window and say 'take your turn'.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+### Turn 3: Reviewer (agy)
+swept file: yes
+VERDICT: PASS
 
+- [Pass] (4) The capture doc was moved to `PROJECT/2-WORKING/GH-694-EXPRESS-TICK-TELEMETRY-SCHEMA.md`. Its "Status" and "Acceptance Criteria" sections were updated to accurately reflect the completed dual-sided implementation and verification checks. Verified by checking the file at `PROJECT/2-WORKING/GH-694-EXPRESS-TICK-TELEMETRY-SCHEMA.md`.
+
+Basis: The blocker has been resolved and the capture doc accurately reflects the completed changes. All criteria are met.
+
+relay closed (Approved), no further turn needed
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
