@@ -21,8 +21,9 @@ source = ast.parse((root / 'utils/py/relay_drive.py').read_text())
 main = next(n for n in source.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
 loop = next(n for n in main.body if isinstance(n, ast.While))
 # Execute the driver's actual capture and failed-turn blocks, with surrounding IO stubbed.
-capture = next(n for n in loop.body if isinstance(n, ast.Assign)
-               and any(isinstance(t, ast.Name) and t.id == 'checkout_before' for t in n.targets))
+capture = next(n for n in loop.body if isinstance(n, (ast.Assign, ast.Try))
+               and any(isinstance(t, ast.Name) and t.id == 'checkout_before'
+                       for t in ast.walk(n)))
 failure = next(n for n in loop.body if isinstance(n, ast.If)
                and ast.unparse(n.test) == 'res_code != 0')
 launch = next(n for n in loop.body if isinstance(n, ast.If)
@@ -78,7 +79,7 @@ with tempfile.TemporaryDirectory(prefix='gh648-l7-', dir=scratch) as tmp:
         state.write_text('\n'.join(start) + '\n')
         namespace = dict(checkout_snapshot=rtl.checkout_snapshot,
                          restore_checkout_after_timeout=rtl.restore_checkout_after_timeout,
-                         progress_main_tree=str(fixture), sys=sys,
+                         progress_main_tree=str(fixture), sys=sys, subprocess=subprocess,
                          judge_terminal=lambda *a, **kw: ('none', True),
                          file_status=lambda: 'Open', role='builder', pre_turn={},
                          write_escalation_reason=lambda reason: None)
@@ -131,4 +132,34 @@ with tempfile.TemporaryDirectory(prefix='gh648-l7-', dir=scratch) as tmp:
                 assert 'manual recovery' in output.getvalue()
                 assert state.read_text().startswith('refs/heads/development\n')
         print('PASS:', name)
+    # Snapshot failure must not prevent dispatch or replace the timeout exit.
+    for error in [RuntimeError('not a repository'),
+                  subprocess.CalledProcessError(128, ['git'], stderr='unborn HEAD'),
+                  OSError('git unavailable'), ValueError('invalid root'),
+                  subprocess.TimeoutExpired(['git'], 10)]:
+        namespace['checkout_snapshot'] = lambda root, error=error: (_ for _ in ()).throw(error)
+        namespace['restore_checkout_after_timeout'] = rtl.restore_checkout_after_timeout
+        namespace['checkout_before'] = ('stale', 'stale')
+        namespace['res_code'] = 7
+        output = io.StringIO()
+        with contextlib.redirect_stderr(output), patch.object(
+                rtl.subprocess, 'run', side_effect=AssertionError('unexpected Git operation')):
+            execute(capture, namespace)
+            assert namespace['checkout_before'] is None
+            try:
+                execute(failure, namespace)
+            except SystemExit as exc:
+                assert exc.code == 7
+            else:
+                raise AssertionError('timeout exit lost')
+        assert 'snapshot unavailable' in output.getvalue()
+        assert 'manual recovery' in output.getvalue()
+        print('PASS: snapshot failure:', type(error).__name__)
+
+    with contextlib.redirect_stderr(io.StringIO()), patch.object(
+            rtl.subprocess, 'run', side_effect=AssertionError('unexpected Git operation')):
+        assert rtl.restore_checkout_after_timeout(str(fixture), None) is False
+    print('PASS: missing snapshot recovery performs no Git operations')
+
 PYTEST
+

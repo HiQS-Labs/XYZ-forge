@@ -830,7 +830,14 @@ def main():
         last_progress_at = 0.0
         # GH-648 L7 / #242: the child can switch the operator checkout even when
         # its own worktree is detached. Capture before dispatch, not after the kill.
-        checkout_before = checkout_snapshot(progress_main_tree)
+        try:
+            checkout_before = checkout_snapshot(progress_main_tree)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            checkout_before = None
+            detail = getattr(exc, "stderr", None) or str(exc)
+            print(f"relay-drive: checkout snapshot unavailable at {progress_main_tree}: "
+                  f"{detail}; timeout checkout recovery will require manual inspection",
+                  file=sys.stderr)
         if os.access(args.agent_cmd, os.X_OK):
             proc = subprocess.Popen([args.agent_cmd], start_new_session=True)
         else:

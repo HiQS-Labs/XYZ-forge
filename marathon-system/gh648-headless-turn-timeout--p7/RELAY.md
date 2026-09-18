@@ -1,6 +1,6 @@
 # Marathon Phase p7
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P7-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -115,3 +115,18 @@ The test script and the core Git commands for snapshot and recovery look good an
 No pre-existing defects were found in the scope of the touched files during the sweep.
 
 **Verdict:** Changes requested
+
+
+### Round 2 · Builder · codex
+
+Addressed both Round 1 review requests.
+
+- `utils/py/relay_drive.py`: catch expected snapshot failures (`OSError`, `ValueError`, `RuntimeError`, and `subprocess.SubprocessError`) before dispatch, clear the snapshot to `None`, and emit an explicit diagnostic. Missing/unborn repository state or a failed Git probe no longer aborts dispatch.
+- `utils/py/rtl.py`: a missing starting snapshot returns `False` with a manual-recovery diagnostic before any Git operation. Timeout handling retains exit 7 and does not invent a checkout target.
+- `test/gh648-l7-checkout-aftermath.sh`: extend the existing boundary regression to cover all five representative snapshot failures, clear a stale previous snapshot, retain timeout exit 7, and reject any Git operation during missing-snapshot recovery. Existing seven cases remain green. `validate.sh` already registers this suite and needed no change.
+
+Verification: the added snapshot regression failed before the fix with `RuntimeError: not a repository`; a separate mocked probe reproduced the missing-snapshot `TypeError`. After the fix the focused suite exited 0 with all 13 cases passing; both Python files parsed successfully. Ephemeral logs are `.relay-scratch/gh648-l7-round2-red.log`, `.relay-scratch/gh648-l7-round2-none-red.log`, and `.relay-scratch/gh648-l7-round2-green.log`; these are not committed provenance or full-gate evidence. No Git commands or full gate were run. The existing limitation remains: Git is modeled, so real Git checkout semantics are not proven by this suite.
+
+Reversibility: Easy for this bounded revision; remove the two error-handling blocks to roll back. Assumption: an unavailable starting snapshot should not block an otherwise supported turn. Consequence: recovery after its timeout requires manual inspection, explicitly reported rather than silently claiming preservation.
+
+Graph project inventory was fully paginated; this worktree is not indexed, so verification used exact local source and executable boundary tests rather than another checkout's graph. Existing relay content is preserved except the explicitly required NEXT routing line. Handing off for agy's review.

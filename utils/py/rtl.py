@@ -365,6 +365,11 @@ def restore_checkout_after_timeout(root, before):
     Only the supervisor calls this, after the timed-out child has exited. A moved
     starting ref or conflicting edits requires manual recovery; never reset/stash.
     """
+    if before is None:
+        print(f"relay-drive: timeout checkout restoration skipped at {root}: "
+              "starting snapshot unavailable; manual recovery required "
+              "(no checkout change attempted)", file=sys.stderr)
+        return False
     try:
         if checkout_snapshot(root) == before:
             return True
