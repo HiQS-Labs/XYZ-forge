@@ -29,6 +29,7 @@ class Boundary:
     def drift_brief(self, *args): return ''
     def before(self): return 0
     def enforce(self, *args): return 0
+    def apply_reviewer_turn_env(self, *args, **kwargs): pass
 
 class Diagnostics:
     def __init__(self, **kwargs): pass

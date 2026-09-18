@@ -81,6 +81,8 @@ def main():
             # it is released and the failed-turn outcome is durable (GH-432).
             bounded_rc = 5
 
+    rtl.apply_reviewer_turn_env(commandcode_env, run_cwd, me)
+
     cmd = [commandcode_bin] + cflags + ["--model", commandcode_model, "--print", prompt]
 
     diag = TurnDiagnostics(worktree=run_cwd)

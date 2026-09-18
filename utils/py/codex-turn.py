@@ -93,6 +93,7 @@ def main():
     codex_env = dict(os.environ)
     if os.environ.get("CODEX_ALLOW_API_KEY", "0") != "1":
         codex_env.pop("OPENAI_API_KEY", None)
+    rtl.apply_reviewer_turn_env(codex_env, run_cwd, me)
 
     cmd = [codex_bin, "exec"] + cflags + codex_extra_flags + [prompt]
     

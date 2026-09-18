@@ -61,6 +61,7 @@ elif os.environ['L6_MODE'] == 'healthy':
             def enforce(self, *args):
                 calls.append('enforce')
                 return 0
+            def apply_reviewer_turn_env(self, *args, **kwargs): pass
 
         class Diagnostics(td.TurnDiagnostics):
             # Stub observations, retain the real L1 classifier and serializer.
