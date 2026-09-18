@@ -108,3 +108,11 @@ The implementation correctly leverages `timed_out` to blank `RELAY_FILE`, bypass
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-09-18T00:01:17Z
+task: MARATHON-P2-TURN-R4
+reviewer: agy
+status: Approved
+reviewed-head: e5a559cc3bacb52f6ed25477019c590dc005ec38
+added-range: 9295+548
+added-sha256: 58896cfdf66221828cd39bbc601a160035fdfd1eda8530123671587f28b2bd4b
