@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -93,5 +93,51 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer (agy, Round 1)
+
+swept file: yes
+
+- [Blocker] Recon is not grounded (false claim about table styling).
+  - The plan claims "No table styling exists — use `.card-grid` for the picker and `<ul>` for lists instead of `<table>`."
+  - This contradicts `PAGES/assets/style.css:219` which defines `table { ... }` and `PAGES/how-it-works.html:134` which uses a natively styled `<table>`.
+  - Fix: Update the Recon to acknowledge existing table styling, and allow the use of `<table>` for the picker if appropriate.
+  - Observed input: `No table styling exists...` in Recon.
+  - Affected scope: Implementation of the symptom->skill picker markup.
+  - Falsifier: `grep 'table {' PAGES/assets/style.css` returns a match, proving the style exists.
+
+- [Blocker] R2 acceptance check is not falsifiable / fails on red control.
+  - The check `grep -L 'href="skills.html"' PAGES/*.html` is claimed to print "only `issues.html`".
+  - However, `PAGES/googlea4ea1e510b018714.html` also lacks a nav and will be printed by this command, causing the check to falsely fail.
+  - Fix: Update the R2 acceptance check to account for `googlea4ea1e510b018714.html` (e.g., state that it prints both `issues.html` and `googlea4ea1e510b018714.html`).
+  - Observed input: `grep -L 'href="skills.html"' PAGES/*.html prints only issues.html`
+  - Affected scope: R2 acceptance check.
+  - Falsifier: Running the command today outputs both `PAGES/issues.html` and `PAGES/googlea4ea1e510b018714.html`.
+
+- [Should] R3 acceptance check is incomplete.
+  - Requirement R3 includes "other-apps-tools.html lastmod bumped", but the acceptance check `grep -c skills.html PAGES/sitemap.xml = 1` only verifies the new file insertion.
+  - Fix: Add a check for the lastmod bump on `other-apps-tools.html` (e.g., verify its date changed in `PAGES/sitemap.xml` or use a `git diff` check).
+  - Observed input: R3 acceptance check missing lastmod validation.
+  - Affected scope: R3 acceptance check.
+  - Falsifier: If the producer forgets to bump the lastmod of `other-apps-tools.html`, the current R3 check would still pass.
+
+- [Nit] Incorrect line numbers in Recon.
+  - The plan claims `NAV` is at `utils/py/site_build.py:44-54`.
+  - It is actually at `utils/py/site_build.py:36-46`.
+  - Fix: Update the line numbers in the Recon section.
+
+- [Nit] R1 acceptance check could be more precise.
+  - The check `grep -c 'skills/[a-z-]*/SKILL.md' PAGES/skills.html` matches relative paths, which would 404 on the live site since `skills/` is not in `PAGES/`.
+  - Fix: Consider updating the regex to ensure it matches the absolute GitHub URL (e.g., `https://github.com/.*/skills/[a-z-]*/SKILL.md`).
+
+- [Pass] Static vs generated split matches `SOP.md` and `utils/py/site_build.py:16-17`.
+- [Pass] Nav parity requirement matches the repo's convention (two writers: `utils/py/site_build.py:36` and static html files like `PAGES/other-apps-tools.html:16`).
+- [Pass] Sitemap is static (confirmed via `PAGES/sitemap.xml:2-3` having `lastmod` and no builder reference).
+- [Pass] Deploy trigger matches `.github/workflows/pages.yml:5`.
+- [Pass] R4 repoint of the Model Catalog card accurately targets the existing link at `PAGES/other-apps-tools.html:36` (`https://github.com/HiQS-Labs/Model-catalog`).
+- [Unverified — no citation] Rating is grounded (Pri 55, Sev 20, Appeal 50, Effort 95).
+
+VERDICT: PARKED
+Basis: The plan correctly identifies the affected surface and implementation steps, but contains a grounded recon failure regarding table styling that restricts implementation options, and the R2 acceptance check is broken because it overlooks the Google verification HTML file.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
