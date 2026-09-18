@@ -27,14 +27,14 @@ Lane B of [GH-709](https://github.com/HiQS-Labs/XYZ-forge/issues/709). Issue: [G
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked + rated 55/25/50/70; promoted; recon of the Tier-1 classifier, the Gemma classify seam and both replay datasets done; plan drafted. | Codex relay plan QA → Phase 1 module + test → Phase 2 live replays → Phase 3 shadow flag only if gates pass → final QA → PR to `development`. |
+| Plan QA round 1 (agy, Codex out of quota): 2 blockers + 4 shoulds dispositioned, plan revised (severity as Choice, `env_missing`, ordered mock, urllib-only, 3-attempt retry, `fn_zero_threshold`, concrete Phase 3 gate ≥ 90% status / ≥ 80% category). | Plan QA round 2 → Phase 1 module + test → Phase 2 live replays → Phase 3 shadow flag only if the gate passes → final QA → PR to `development`. |
 
 ## QA gates
 
 | Phase | Gate | Evidence |
 |---|---|---|
-| 1 | `bash test/gh712-jev-triage.sh` green with a mocked endpoint: FN/FP/agreement math on a fixture, empty benchmark refused (exit ≠ 0), red control (known-fail forced `pass`) counted as FN = 1 | pending |
-| 2 | `TESTS-RESULTS/2026-09-18+GH-712/SUMMARY.md`: benchmark replay FN = 0 on 24 known-fail rows (else Phase 3 does not start); GH-141 agreement table per field with the homogeneity caveat; model pinned `jev-1.13.0`; token totals; hashes | pending |
+| 1 | `bash test/gh712-jev-triage.sh` green with a mocked endpoint: green control (every canned answer matches its label → FN = 0, FP = 0, floor met), red control (the same fixture with one known-fail answered `pass` → FN = 1, floor not met), empty benchmark refused (exit 2), rows carry `model` + 64-hex hashes and no stderr text, severity/category agreement counted per row | pending |
+| 2 | `TESTS-RESULTS/2026-09-18+GH-712/SUMMARY.md`: benchmark FN = 0 on 24 known-fail rows at argmax + recorded `fn_zero_threshold`; GH-141 agreement ≥ 90% status and ≥ 80% category (severity reported, not gating); homogeneity caveat; model pinned `jev-1.13.0`; token totals; hashes | pending |
 | 3 | `bash test/ate-run-variations.sh` green; `--classifier gemma` (default) produces the same `classification` keys as before; `--classifier jev` exercised by the Phase 1 test via the mock, never live in CI | pending / conditional |
 
 ## Observed problem
@@ -52,15 +52,15 @@ Lane B of [GH-709](https://github.com/HiQS-Labs/XYZ-forge/issues/709). Issue: [G
 
 ## Requirements
 
-1. `utils/py/jev_triage.py`: `build_questions(expects_edits)` (status Choice pass/fail, severity Score none/low/medium/high/critical, category Choice crash/auth_failure/bad_diff/timeout/no_edit/config_error/env_failure/ok — the category set is the union of the prompt's examples and what Gemma actually emitted in GH-141), `build_state(row)` (command, exit_code, edit_applied, expects_edits, 1,500-char tails — same tails as the Gemma prompt), `classify(state, *, endpoint, key, model="jev-1.13.0") -> dict` returning the Gemma-shaped dict with `likely_cause=None` plus `classifier="jev"`, `model`, `confidence`, `probabilities`, `usage`. Endpoint and key come from `TYPESAFE_API_URL` / `TYPESAFE_API_KEY` or `--key-file`; the mock is `--mock-dir DIR` returning canned JSON per request hash (no network). Retries on 429/5xx with backoff honoring `retry-after`, 5 attempts, then raise.
-2. CLI replays: `jev_triage.py benchmark --rows FILE --out DIR` → confusion vs label, FN, FP, and agreement with `tier1_classify` (anomaly rows listed); `jev_triage.py errorlog --log FILE --out DIR` → per-field agreement with the row's existing `classification`. Both write `<out>/rows.jsonl` (index/run_id, verdicts, confidence, request/response sha256) and `<out>/summary.json`; empty input exits 2.
+1. `utils/py/jev_triage.py`: `build_questions(expects_edits)` — three **Choice** questions: status pass/fail; severity none/low/medium/high/critical (Choice, not Score, so agreement compares exact labels — QA r1 nit); category crash/auth_failure/bad_diff/timeout/no_edit/config_error/env_failure/env_missing/ok (the union of the prompt's examples and every value Gemma emitted in GH-141 — QA r1). `build_state(row)` (command, exit_code, signal, edit_applied, expects_edits, 1,500-char tails — same tails as the Gemma prompt). `Client.classify(state, expects_edits) -> dict` returning the Gemma-shaped dict with `likely_cause=None` plus `classifier="jev"`, `model`, per-field `confidence` and `probabilities`, request/response sha256. Stdlib `urllib` only (no `requests`, no dual path — QA r1); key from `TYPESAFE_API_KEY` or `--key-file`; endpoint override `TYPESAFE_API_URL`. Retry: at most 3 attempts on 429/5xx, sleeping `retry-after` when present else 2 s, then raise. The mock is `--mock-responses FILE`, a JSON list of canned response bodies replayed in order (QA r1).
+2. CLI replays: `jev_triage.py benchmark --rows FILE --out DIR` → confusion vs label at argmax, FN, FP, agreement with `tier1_classify` (anomaly rows listed), **and** `fn_zero_threshold` = the minimum P(fail) Jev assigned to any known-fail row (the highest decision threshold at which FN = 0) with the FP count at that threshold — one recorded number, no calibration subsystem (QA r1). `jev_triage.py errorlog --log FILE --out DIR` → per-field agreement with the row's existing `classification` plus the Gemma→Jev pair counts. Both write `<out>/rows.jsonl` (index/run_id, verdicts, confidence, request/response sha256; never stderr text) and `<out>/summary.json`; empty input exits 2.
 3. Phase 3 (conditional): `run_variations.py --classifier {gemma,jev}` default `gemma`; `jev` path calls `jev_triage.classify` and stores `classifier`/`model` on the row; the `gemma` path is untouched byte-for-byte except reading the new arg.
 
 ## Non-goals
 
 - Changing `tier1_classify`, its calibration JSON, or the FN floor; changing `CLASSIFY_PROMPT`; any Gen 4 file.
 - A live ATE run, LM Studio, or a soak in this issue.
-- A TypeSafe SDK, a queue, or a retry framework beyond the five-attempt loop.
+- A TypeSafe SDK, `requests`, a queue, or any retry beyond the three-attempt loop.
 - Replacing `likely_cause`; Jev cannot generate it.
 
 ## Smallest affected surface
@@ -79,13 +79,13 @@ Lane B of [GH-709](https://github.com/HiQS-Labs/XYZ-forge/issues/709). Issue: [G
 
 1. Phase 1: write `jev_triage.py` + fixtures + `test/gh712-jev-triage.sh`; run it → green; red control (fixture known-fail with canned `pass`) → FN = 1 and test asserts it.
 2. Phase 2: emit the 74-row benchmark to `$TMPDIR`; live `benchmark` replay → `TESTS-RESULTS/2026-09-18+GH-712/benchmark/`; live `errorlog` replay on GH-141 → `.../errorlog/`; write `SUMMARY.md`.
-3. Gate: FN = 0 on 24 known-fail rows and no per-field systematic disagreement that the operator would reject (report it either way). If not met: stop after step 2, record it here and on the issue.
+3. Gate (concrete, QA r1): benchmark FN = 0 on the 24 known-fail rows at argmax; GH-141 agreement with Gemma ≥ 90% on `status` and ≥ 80% on `category`. Severity agreement is reported but does not gate: Gemma itself split 126 identical auth failures 73 high / 70 critical, so its severity labels are not a consistent reference. If any gating number is missed: stop after step 2, record it here and on the issue, Phase 3 not started.
 4. Phase 3 (conditional): `--classifier` flag; extend `test/gh712-jev-triage.sh` with a mocked `run_variations.py --classifier jev --mock…` row check; `bash test/ate-run-variations.sh` green.
 5. Focused checks during iteration: `bash test/gh712-jev-triage.sh`, `bash test/ate-run-variations.sh`. Full gate once on the final commit: `./validate.sh` from a separate disposable clone.
 6. Final Codex relay QA; `CHANGELOG.md`; push through the pre-push gate; PR to `development`.
 
 ## Acceptance checks
 
-- `bash test/gh712-jev-triage.sh` fails on: empty benchmark accepted, FN math wrong on the red-control fixture, mock responses missing a `model` field, or hashes absent from `rows.jsonl`.
+- `bash test/gh712-jev-triage.sh` fails on: empty benchmark accepted, FN ≠ 0 on the green control, FN ≠ 1 on the red control, a response missing `model`, hashes absent from `rows.jsonl`, or stderr text present in `rows.jsonl`.
 - `SUMMARY.md` states FN/FP/anomaly-agreement for the benchmark, per-field agreement for GH-141 with the homogeneity caveat, `jev-1.13.0` on every row, total input tokens, and the Phase 3 decision.
 - Phase 3 (if landed): `test/ate-run-variations.sh` green; a mocked `--classifier jev` run writes `classifier: "jev"` and `likely_cause: null` on the row; default run unchanged.

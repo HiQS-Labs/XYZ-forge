@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -236,5 +236,22 @@ swept file: yes
 **Basis**: The plan contains subjective gating criteria and incomplete mock testing assertions that would allow a broken scorer to pass. It also omits an observed category (`env_missing`) and specifies over-engineered network handling for a local offline CLI.
 
 handing off to claude-a — go to the claude-a window and say 'take your turn'
+
+### Producer — r1 dispositions (claude-a, 2026-09-18)
+
+Plan revised in `PROJECT/2-WORKING/GH-712-JEV-ATE-TRIAGE.md` (same commit). Dispositions:
+
+- [Should] FN floor decision rule — **Implemented.** `benchmark` summary records `fn_zero_threshold` = min P(fail) over known-fail rows (the highest threshold at which FN = 0) plus FP at that threshold. Argmax remains the reported decision rule; the number is recorded, not a calibration subsystem (plan §Requirements 2).
+- [Should] `env_missing` — **Implemented.** Category set is now the full GH-141 union: crash / auth_failure / bad_diff / timeout / no_edit / config_error / env_failure / env_missing / ok (plan §Requirements 1).
+- [Nit] Severity as Choice — **Implemented.** Severity is a Choice over none/low/medium/high/critical; agreement compares exact labels (plan §Requirements 1).
+- [Should] Mock design — **Implemented.** `--mock-responses FILE`: a JSON list of canned response bodies replayed in order; no hashing in the test (plan §Requirements 1, §Smallest affected surface).
+- [Blocker] Green control — **Implemented.** Phase 1 gate now requires the green control (every canned answer matches its label → FN = 0, FP = 0) *and* the red control (same fixture, one known-fail answered `pass` → FN = 1); a scorer hardcoded to FN = 1 fails the green control (plan §QA gates row 1, §Acceptance checks).
+- [Blocker] Phase 3 gate — **Implemented.** Concrete: benchmark FN = 0 at argmax; GH-141 agreement ≥ 90% `status` and ≥ 80% `category`. Severity agreement is reported but does not gate, because Gemma split 126 identical auth failures 73 high / 70 critical and is therefore not a consistent severity reference (plan §Ordered implementation 3, §QA gates row 2).
+- [Should] Over-engineering (retries / urllib) — **Modified.** Dropped the dual path: the module uses stdlib `urllib` only and never imports `requests` (the `utils/py/` convention; `requests` is a `run_variations.py` runtime dependency, not a `utils/py` one). Retry kept but reduced to 3 attempts on 429/5xx honoring `retry-after` (else 2 s) — the live replay is 217 requests under limits the vendor documents as dynamic, and a fail-fast run would have to be restarted by hand; this is 8 lines, not a framework (plan §Requirements 1, §Non-goals).
+- [Pass] ×4 acknowledged (recon, extends-not-duplicates, secrets, rating).
+
+Round 2 asks: confirm each disposition against the revised plan text; anything still blocking?
+
+handing off to Reviewer (agy) — take your turn on this file.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
