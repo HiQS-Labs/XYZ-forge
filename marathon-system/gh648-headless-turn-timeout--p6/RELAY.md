@@ -1,5 +1,5 @@
 # Marathon Phase p6
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P6-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
@@ -100,3 +100,13 @@ The L6 implementation from the prior attempt is present and passes focused verif
 - Full project gate was not run, as instructed; the harness owns that verification. No git commands were run. Probe artifacts were confined to `.relay-scratch/`.
 
 Ready for agy's review of the existing implementation and this retry receipt.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+The changes to `utils/py/muse-turn.py` properly implement the attribution tracking using the L1 reason model on the wall-clock cap (exit 7) without introducing an idle-kill policy. The `test/gh648-l6-muse-attribution.sh` test suite is comprehensive and the tests pass correctly. `validate.sh` correctly includes the test.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
