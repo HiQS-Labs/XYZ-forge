@@ -1,0 +1,248 @@
+test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing) ... wave-reconcile: Qualifying 2 landing(s) in integrated snapshot 523087d54d67f777c20549d99ba0549251be2799 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+ERROR
+test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 530cb8a9197a3e37d3fcc79eb21efa31cda4f525 with the full sequential suite
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh591-qualification-m37eig67/source', '/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/wave-qualification-8rxqkv3q/repo']' returned non-zero exit status 124.
+ok
+test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 530cb8a9197a3e37d3fcc79eb21efa31cda4f525 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+ERROR
+test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 530cb8a9197a3e37d3fcc79eb21efa31cda4f525 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+ERROR
+test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot d1e6a247442f040cc24e624cb66e1dbdb55f088a with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+ERROR
+test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot d1e6a247442f040cc24e624cb66e1dbdb55f088a with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+ERROR
+test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot d1e6a247442f040cc24e624cb66e1dbdb55f088a with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+ERROR
+test_red_partial_and_identity_drift_produce_no_receipt (__main__.Qualification.test_red_partial_and_identity_drift_produce_no_receipt) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 8e0f62ad69a167f267e5b8ec04e2547023480ff1 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 8e0f62ad69a167f267e5b8ec04e2547023480ff1 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 8e0f62ad69a167f267e5b8ec04e2547023480ff1 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 8e0f62ad69a167f267e5b8ec04e2547023480ff1 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 8e0f62ad69a167f267e5b8ec04e2547023480ff1 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 8e0f62ad69a167f267e5b8ec04e2547023480ff1 with the full sequential suite
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pytest
+ModuleNotFoundError: No module named 'pytest'
+wave-reconcile: ERROR — Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+ok
+test_wrong_landing_fails_before_qualification (__main__.Qualification.test_wrong_landing_fails_before_qualification) ... wave-reconcile: ERROR — Qualification refuses PR #425: merge not in the tested development snapshot
+ok
+test_cli_commit_landing_gate_express_receipt (__main__.Receipts.test_cli_commit_landing_gate_express_receipt)
+GH-592 red control: --commit <sha> --gate on a direct (express) landing. ... ok
+test_cli_gate_and_ungated_path (__main__.Receipts.test_cli_gate_and_ungated_path) ... ok
+test_empty_or_malformed_receipts_fail (__main__.Receipts.test_empty_or_malformed_receipts_fail) ... ok
+test_later_record_and_error_log (__main__.Receipts.test_later_record_and_error_log) ... ok
+test_matching_pr_names_receipt_and_field (__main__.Receipts.test_matching_pr_names_receipt_and_field) ... ok
+test_merge_commit_matches_exactly (__main__.Receipts.test_merge_commit_matches_exactly) ... ok
+test_metadata_requests_merge_commit (__main__.Receipts.test_metadata_requests_merge_commit) ... ok
+test_missing_directory_fails (__main__.Receipts.test_missing_directory_fails) ... ok
+test_missing_identity_cannot_match_null (__main__.Receipts.test_missing_identity_cannot_match_null) ... ok
+test_names_and_symlinks_are_not_evidence (__main__.Receipts.test_names_and_symlinks_are_not_evidence) ... ok
+test_short_sha_matches_candidate_prefix (__main__.Receipts.test_short_sha_matches_candidate_prefix) ... ok
+test_squashed_branch_commit_lineage_matches (__main__.Receipts.test_squashed_branch_commit_lineage_matches) ... ok
+test_unattributable_receipts_fail (__main__.Receipts.test_unattributable_receipts_fail) ... ok
+test_wrong_pr_is_rejected (__main__.Receipts.test_wrong_pr_is_rejected) ... ok
+
+======================================================================
+ERROR: test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 556, in qualify_landings
+    command(["python3", "-c", "import pytest"])
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 545, in command
+    raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                        result.stdout, result.stderr)
+subprocess.CalledProcessError: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 419, in test_batch_qualifies_once_and_retains_each_landing
+  File "<stdin>", line 340, in qualify
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 573, in qualify_landings
+    die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+======================================================================
+ERROR: test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 556, in qualify_landings
+    command(["python3", "-c", "import pytest"])
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 545, in command
+    raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                        result.stdout, result.stderr)
+subprocess.CalledProcessError: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 370, in test_committed_proof_makes_replay_idempotent
+  File "<stdin>", line 340, in qualify
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 573, in qualify_landings
+    die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+======================================================================
+ERROR: test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 556, in qualify_landings
+    command(["python3", "-c", "import pytest"])
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 545, in command
+    raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                        result.stdout, result.stderr)
+subprocess.CalledProcessError: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 348, in test_full_gate_produces_attributable_retained_proof
+  File "<stdin>", line 340, in qualify
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 573, in qualify_landings
+    die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+======================================================================
+ERROR: test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 556, in qualify_landings
+    command(["python3", "-c", "import pytest"])
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 545, in command
+    raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                        result.stdout, result.stderr)
+subprocess.CalledProcessError: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 392, in test_incomplete_or_quarantined_telemetry_is_rejected
+  File "<stdin>", line 340, in qualify
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 573, in qualify_landings
+    die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+======================================================================
+ERROR: test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 556, in qualify_landings
+    command(["python3", "-c", "import pytest"])
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 545, in command
+    raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                        result.stdout, result.stderr)
+subprocess.CalledProcessError: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 378, in test_new_schema_cannot_fall_through_to_legacy_pr_match
+  File "<stdin>", line 340, in qualify
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 573, in qualify_landings
+    die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+======================================================================
+ERROR: test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 556, in qualify_landings
+    command(["python3", "-c", "import pytest"])
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 545, in command
+    raise subprocess.CalledProcessError(124 if result.timed_out else result.rc, args,
+                                        result.stdout, result.stderr)
+subprocess.CalledProcessError: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 413, in test_receipts_participate_in_rollback
+  File "<stdin>", line 340, in qualify
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 573, in qualify_landings
+    die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/pulse2-baseline-7p5cioi8/repo/utils/py/wave_reconcile.py", line 46, in die
+    raise ReconcileError(msg, code=code)
+wave_reconcile.ReconcileError: Full-suite qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+
+----------------------------------------------------------------------
+Ran 23 tests in 3.874s
+
+FAILED (errors=6)

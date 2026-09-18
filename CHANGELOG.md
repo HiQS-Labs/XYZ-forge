@@ -43,6 +43,31 @@ workflow pins; the publication-script extraction is now bounded to its step). Ev
 single-site red controls and the base flake witnessed 7/40 in `TESTS-RESULTS/2026-09-18+GH-684/`.
 Reversibility: Easy — revert S2 and the run is fail-closed again; revert the step and permission
 and the lane is silent again. Not here: #674, the 35 docs missing Lessons Learned, GH-505's doc.
+## 2026-09-17 — Installer containment follow-up (GH-678 / Pulse #2)
+
+Installer tests clear inherited Gemini target overrides as well as redirecting HOME;
+all three sandbox paths and untouched sentinel roots are checked. AgentChorus preserves
+live foreign legacy aliases, and the installer matrix discovers its nonempty input set
+rather than assuming 22 skills. These changes do not alter configured IDE selection.
+Correction to the earlier entry: Gemini targets were added on August 20 in `3c820f06`;
+August 23's `9be6f70f` renamed the already-affected skill. Focused evidence is retained
+under `test/baselines/gh678-pulse2/`; full-gate status remains separate. Reversibility: Easy.
+
+## 2026-09-17 — Skill installers stop stealing symlinks; gate no longer writes real HOME (GH-678)
+
+Every `skills/*/install.sh` deleted any symlink not already pointing at its own clone and relinked
+to itself, with no record of the old target. `test/agent-chorus.sh` ran that installer inside the
+gate with only two of its five target directories sandboxed, so every gate run on every clone
+repointed the three real `~/.gemini/**/skills/agent-chorus` links to that clone (three times on
+2026-09-17 alone; regression since the 2026-08-23 AgentChorus rename added the Gemini targets
+without extending the test's env). Now: the test sets `HOME` to its sandbox on every installer
+call and asserts the HOME-relative targets landed there; all 22 installers refuse to replace a
+live link they do not own, naming its current target, while still cleaning dangling links;
+`relay-xyz/install.sh` propagates a refused target in its exit code like its siblings. New
+`test/gh678-installer-live-links.sh` runs all 22 in a sandbox HOME against a live foreign link
+(must refuse, 22/22 originals failed this) and a dangling one (must replace). README tells
+Skills Army HQ machines to skip the installers. Recon map at
+`PROJECT/2-WORKING/recon-install-sh-link-steal.md`. Reversibility: Easy — ordinary revert.
 
 ## 2026-09-17 — Relay Reviewer may measure read-only; generalizations carry a falsifier (GH-681)
 

@@ -126,7 +126,14 @@ class ClaudeSubscription(unittest.TestCase):
                     status=subprocess.run(['ps','-o','stat=','-p',str(child_pid)],capture_output=True,text=True).stdout.strip()
                     self.assertTrue(not status or status.startswith('Z'),'consult child still running')
                     answers=list(out.rglob('*.claude.md')); self.assertEqual(len(answers),1)
-                    self.assertIn('IDLE' if mode=='idle' else 'exceeded the 2s cap',answers[0].read_text())
+                    # GH-648 L3: capped consults emit a truthful PARTIAL marker;
+                    # idle kills carry the honest `idle-unknown` label (L1).
+                    transcript = answers[0].read_text()
+                    if mode == 'idle':
+                        self.assertIn('idle-unknown', transcript)
+                    else:
+                        self.assertIn('PARTIAL', transcript)
+                        self.assertIn('2s cap', transcript)
                     trees=subprocess.check_output(['git','worktree','list','--porcelain'],cwd=repo,text=True)
                     self.assertEqual(trees.count('worktree '),1)
                 finally:
