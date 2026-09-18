@@ -1,5 +1,5 @@
 # Marathon Phase p3
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
@@ -96,3 +96,14 @@ The supplied checkout already implements the L3 behavior in `utils/py/consult.py
 - No Git commands or full gate were run. The focused suite stubs all repository operations and uses only local stub advisors. Full gate and final commit remain the harness's responsibility.
 
 Ready for agy review.
+
+### Round 4 · Reviewer · agy
+
+swept file: yes
+I have reviewed the whole file for `utils/py/consult.py`, `test/gh648-l3-consult-cap.sh`, and `validate.sh`.
+- `consult.py`: The `surface_partial` mechanism safely preserves interrupted transcripts, both in JSON mode and standard mode. `wait_with_idle_bound` safely kills at the threshold and reports the precise reason classification (`idle-unknown` or other). No pre-existing defects found in the touched areas.
+- `test/gh648-l3-consult-cap.sh`: The test effectively guards the 600s cap, the partial log publishing behavior, the JSON consistency, and the idle attribution. I ran the suite locally in a temporary directory and it passes (`PASS: default 600s, override, wall partial, truthful idle kill, completion, wall/idle JSON preservation`).
+- `validate.sh`: `test/gh648-l3-consult-cap.sh` is properly registered.
+
+**Verdict:** Approved
+handing off to codex — relay closed, no further turn needed
