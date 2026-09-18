@@ -1,6 +1,6 @@
 ---
 title: Repair unborn fixture and fail closed on unsafe fixture paths
-status: Active
+status: Complete
 created: 2026-09-17
 updated: 2026-09-17
 gh_issue: 653

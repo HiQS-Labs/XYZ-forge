@@ -564,6 +564,7 @@ TESTS=(
   "gh605-board-policy.sh"              # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
   "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
   "gh645-merge-cleanup-xyz-tools.sh"  # GH-645 (/merge-cleanup: PRS tools resolved from .xyz/ and the primary; reconcile flag only when advertised)
+  "gh681-reviewer-probe-rules.sh"     # GH-681 (reviewer prompt allows narrow non-mutating probes with one role-consistent verification clause; scaffold + mirrors carry the generalization/falsifier rule; scratch sanctioned, .pytest_cache residue still off-lane)
   "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)

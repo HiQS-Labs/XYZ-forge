@@ -26,6 +26,20 @@ live link they do not own, naming its current target, while still cleaning dangl
 Skills Army HQ machines to skip the installers. Recon map at
 `PROJECT/2-WORKING/recon-install-sh-link-steal.md`. Reversibility: Easy — ordinary revert.
 
+## 2026-09-17 — Relay Reviewer may measure read-only; generalizations carry a falsifier (GH-681)
+
+A headless relay Reviewer may now run narrow, non-mutating probes against the seeded artifact
+(output under `.relay-scratch/` or `$TMPDIR`, evidence quoted in the finding; `validate.sh`,
+`test/*.sh`, pytest and fixtures stay in a disposable clone), and the shared "verify ONLY with the
+specific test" clause is Producer-only so each role gets one verification instruction. A finding
+that asks for a behaviour change must carry `Observed input:` / `Affected scope:` / `Falsifier:`
+before the Producer implements it — codified in `new-relay.sh`, the marathon reviewer brief,
+`skills/relay`, and `skills/relay-xyz`. Containment is unchanged. Motivated by the gh673 final QA
+relay, whose Round-1 `[Blocker]` generalized one observation into a rule that blanks every issue on
+real data and was `[Pass]`ed by the same seat next round. Regression:
+`test/gh681-reviewer-probe-rules.sh`. Follow-up: #682. Landed via the fresh-clone PR lane —
+`/express` refuses `relay-turn-lib.sh` (`shared-runtime`) by design.
+
 ## 2026-09-17 — Retire the forge's copy of the daily skill (GH-672 follow-up)
 
 `skills/daily` is removed. The skill reads rebalanceOS internals directly and rebalanceOS is its

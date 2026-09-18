@@ -121,6 +121,25 @@ for rule in '/relay-system' 'phases' '/phases/'; do
     || fail "  but failed to materialize .xyz/"
 done
 
+# GH-644: the append must not fuse onto a last line that has no trailing newline. The fixture
+# above always writes `\n`, which is the one shape where the fusion cannot happen — a check that
+# could not fail (AGENTS.md §6). Write the exclude WITHOUT a trailing newline and assert the
+# original rule survives as its own exact line and `.xyz/` lands as its own exact line.
+NL="$(mkignore_repo '/relay-system')"
+printf '%s' '*.cact' > "$NL/.git/info/exclude"      # no trailing newline, hand-edited shape
+"$VENDOR" --no-register "$NL" >/dev/null 2>&1 \
+  && pass "GH-644: vendors into a repo whose info/exclude lacks a trailing newline" \
+  || fail "GH-644: vendor failed on a no-trailing-newline info/exclude"
+grep -Fqx '*.cact' "$NL/.git/info/exclude" \
+  && pass "  and the last rule '*.cact' survived as its own line (no fusion)" \
+  || fail "  but the last rule was fused: $(tail -n 3 "$NL/.git/info/exclude" | tr '\n' '|')"
+! grep -q 'cact\.xyz/' "$NL/.git/info/exclude" \
+  && pass "  and no '*.cact.xyz/' fused line exists" \
+  || fail "  but a fused '*.cact.xyz/' line exists"
+[ "$(grep -Fcx '.xyz/' "$NL/.git/info/exclude")" = 1 ] \
+  && pass "  and .xyz/ was appended exactly once as its own line" \
+  || fail "  but .xyz/ count is $(grep -Fcx '.xyz/' "$NL/.git/info/exclude")"
+
 # It must NOT auto-un-ignore: doing so would publish builder/reviewer transcripts the repo chose to
 # withhold, irreversibly on a public target. This assertion is what stops a future "helpful" fix.
 BR="$(mkignore_repo '/relay-system')"

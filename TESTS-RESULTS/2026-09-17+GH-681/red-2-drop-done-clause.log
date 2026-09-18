@@ -1,0 +1,11 @@
+== test: gh681-reviewer-probe-rules ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh681-reviewer-probe-rules.XXXXXX.iHrLTPUMKe
+  PASS: case 1: reviewer prompt carries: You are the REVIEWER this turn
+  PASS: case 1: reviewer prompt carries: MAY run narrow, non-mutating probes
+  PASS: case 1: reviewer prompt carries: .relay-scratch/
+  PASS: case 1: reviewer prompt carries: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  PASS: case 1: reviewer prompt carries: quote the command, exit status and decisive output
+  PASS: case 1: reviewer prompt carries: Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures
+  PASS: case 1: reviewer prompt carries: [Unverified — needs clone run]
+  FAIL: case 1: reviewer prompt lacks: hand the token off with done and set STATUS: Approved
+exit=1

@@ -1,0 +1,29 @@
+== test: gh681-reviewer-probe-rules ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh681-reviewer-probe-rules.XXXXXX.1kUhrU3MHN
+  PASS: case 1: reviewer prompt carries: You are the REVIEWER this turn
+  PASS: case 1: reviewer prompt carries: MAY run narrow, non-mutating probes
+  PASS: case 1: reviewer prompt carries: .relay-scratch/
+  PASS: case 1: reviewer prompt carries: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  PASS: case 1: reviewer prompt carries: quote the command, exit status and decisive output
+  PASS: case 1: reviewer prompt carries: Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures
+  PASS: case 1: reviewer prompt carries: [Unverified — needs clone run]
+  PASS: case 1: reviewer prompt carries: hand the token off with done and set STATUS: Approved
+  PASS: case 2: reviewer prompt no longer says: or run any artifact
+  PASS: case 2: reviewer prompt no longer says: verify ONLY with the specific test
+  PASS: case 3: producer prompt keeps its own verification clause
+  PASS: case 3: producer prompt does not carry: You are the REVIEWER this turn
+  PASS: case 3: producer prompt does not carry: MAY run narrow, non-mutating probes
+  PASS: case 4: scaffold carries: Observed input:
+  PASS: case 4: scaffold carries: Affected scope:
+  PASS: case 4: scaffold carries: Falsifier:
+  PASS: case 4: scaffold carries: Declined — unproven generalization
+  PASS: case 4: scaffold carries: must cite an observed failure
+  PASS: case 5: rtl_scratch_relocate still refuses .pytest_cache (a probe that leaves it fails the turn)
+  PASS: case 6: skills/relay-xyz/SKILL.md carries the generalization rule
+  PASS: case 6: skills/relay/SKILL.md carries the generalization rule
+  PASS: case 6: utils/py/marathon_drive.py carries the generalization rule
+  PASS: case 6: skills/relay-xyz/SKILL.md carries the probe allowance
+  PASS: case 7: reviewer worktree begins with .relay-scratch/ pre-created
+  PASS: case 7: a probe that writes only under .relay-scratch/ is not off-lane
+  PASS: case 7: a probe that leaves .pytest_cache/ in the worktree is off-lane (residue still fails the turn)
+gh681-reviewer-probe-rules: all cases passed
