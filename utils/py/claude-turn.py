@@ -181,6 +181,8 @@ def main():
             # this dead turn.
             bounded_rc = 5
 
+    rtl.apply_reviewer_turn_env(run_env, run_cwd, me)
+
     # GH-380: trust is a per-directory Claude Code setting. This is deliberately warn-only:
     # no config is modified and an untrusted (or unreadable) workspace still runs.
     # Claude evaluates the directory it is launched in; under worktree isolation that is `wt`,

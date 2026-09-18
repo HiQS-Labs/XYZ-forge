@@ -17,7 +17,7 @@ record, GitHub as the live signal stream, and deterministic preflight output as 
 
 ## Guardrails
 
-- Read `ROUTER.md`, `AGENTS.md`, `GUIDING-PRINCIPLES.md`, `ROADMAP.md`, and `PROJECT/PDDA.md` first.
+- Read `ROUTER.md`, `AGENTS.md`, `GUIDING-PRINCIPLES.md`, the RELEASES DB (`releases roadmap list`), and `PROJECT/PDDA.md` first.
 - Default to read-only. Do not move docs, promote intake, author contracts, close issues, generate a
   plan file, cut a branch, or fire a marathon without explicit operator confirmation.
 - Never override a deterministic PDDA or preflight finding with narrative judgment.
@@ -129,7 +129,7 @@ find PROJECT/1-INBOX PROJECT/2-WORKING -maxdepth 1 -type f \
   -name 'GH-[0-9]*.md' -print | LC_ALL=C sort -V
 ```
 
-Read `ROADMAP.md` pointers and each candidate's frontmatter, status table, acceptance criteria, and
+Read the ledger's parked pointers (`releases roadmap list`) and each candidate's frontmatter, status table, acceptance criteria, and
 `Swarm Preflight Contract`. Do not treat a title match as a contract.
 
 ### 2. Reconcile each issue document
@@ -177,7 +177,7 @@ Apply the PDDA selection rule: gate on `risk <= 2`, then rank by lowest `effort 
 fewest `phases`. Do not store a new composite score.
 
 Place lanes together only when their declared and audited write-sets are disjoint and all zone caps
-hold. Shared ledgers such as `ROADMAP.md` and `CHANGELOG.md` collide. Kernel paths obey the repo's
+hold. Shared ledgers such as the RELEASES DB and `CHANGELOG.md` collide. Kernel paths obey the repo's
 one-kernel-lane-per-wave cap.
 
 ### 5. Report

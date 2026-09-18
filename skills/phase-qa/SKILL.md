@@ -66,7 +66,7 @@ user stands.
 ## Step 2 — Find the plan doc
 
 Locate the phased planning doc: the file the user names, or search for `PLAN.md`,
-`ROADMAP.md`, `docs/plan*.md`, or any doc with phase headings. If multiple candidates
+`docs/plan*.md`, or any doc with phase headings (ROADMAP.md is retired, GH-269). If multiple candidates
 exist, ask the user which one. If no phased plan exists, tell the user plainly and
 stop — this skill requires a plan doc to write to.
 

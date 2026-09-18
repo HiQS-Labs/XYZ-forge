@@ -16,7 +16,7 @@ step, never the evidence that work completed.
 
 ## Guardrails
 
-- Read `ROUTER.md`, `AGENTS.md`, `GUIDING-PRINCIPLES.md`, `ROADMAP.md`, `PROJECT/PDDA.md`, and the
+- Read `ROUTER.md`, `AGENTS.md`, `GUIDING-PRINCIPLES.md`, the RELEASES DB (`releases roadmap list`), `PROJECT/PDDA.md`, and the
   candidate marathon in full before classifying it.
 - Default to audit-only. Do not edit, move, close issues, create commits, or change ROADMAP or
   CHANGELOG until the operator confirms the exact proposed move set.
@@ -66,7 +66,7 @@ gh issue view <n> --json number,title,state,stateReason,closedAt,url,comments
 gh pr list --state all --search '<n>' --json number,title,state,mergedAt,mergeCommit,url
 git log --all --decorate --oneline --grep='GH-<n>\|#<n>'
 git merge-base --is-ancestor <commit> development
-rg -n "GH-<n>|#<n>" CHANGELOG.md PROJECT ROADMAP.md
+rg -n "GH-<n>|#<n>" CHANGELOG.md PROJECT
 ```
 
 Use the actual target branch from repo policy or the marathon contract in place of `development`

@@ -128,6 +128,9 @@ def main():
             print("pi-turn: worktree isolation requested but `git worktree add` failed — failing turn", file=sys.stderr)
             sys.exit(5)
 
+    run_env = dict(os.environ)
+    rtl.apply_reviewer_turn_env(run_env, run_cwd, me)
+
     cmd = [pi_bin] + pi_args + ["-p", prompt]
 
     bounded_rc = 0
@@ -135,7 +138,7 @@ def main():
         # GH-161: append (not truncate) — rtl_init already wrote its decision-trace line into pi_log
         # via the exported RTL_LOG; a truncating open here would silently wipe it.
         with open(pi_log, "a") as log_f:
-            subprocess.run(cmd, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT,
+            subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT,
                             stdin=subprocess.DEVNULL, check=True)
     except subprocess.TimeoutExpired:
         bounded_rc = 7

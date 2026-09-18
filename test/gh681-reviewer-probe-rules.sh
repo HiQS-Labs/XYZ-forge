@@ -132,6 +132,48 @@ if [ "$rc" -eq 0 ] && [ -n "$wt" ]; then
 else
   fail "case 7: second rtl_worktree_begin failed (rc=$rc, wt=$wt)"
 fi
-git -C "$A" worktree prune >/dev/null 2>&1 || true
+# --- Case 8 (GH-682): harness-set environment injection on reviewer turns -------------------------
+PYTHONPATH="$ROOT/utils/py:${PYTHONPATH:-}" python3 -B - <<PY
+import os, sys, tempfile, shutil
+sys.path.insert(0, "$ROOT/utils/py")
+from rtl import RelayTurnLib
+
+root = "$A"
+xyz_root = "$ROOT"
+relay_path = "$RELAY"
+wt_dir = tempfile.mkdtemp(prefix="gh682-test-wt.")
+try:
+    # 1. Reviewer turn
+    with open(relay_path, "w") as f:
+        f.write("STATUS: Open\nNEXT: Reviewer\n\nbody\n")
+    rtl = RelayTurnLib(root, xyz_root, relay_path, "")
+    assert rtl.is_reviewer_turn("codex") is True, "must be classified as reviewer turn"
+
+    rev_env = {"EXISTING": "1"}
+    rtl.apply_reviewer_turn_env(rev_env, wt_dir, "codex")
+    assert rev_env.get("PYTHONDONTWRITEBYTECODE") == "1", "PYTHONDONTWRITEBYTECODE must be set to 1"
+    expected_tmp = os.path.join(wt_dir, ".relay-scratch", "tmp")
+    assert rev_env.get("TMPDIR") == expected_tmp, f"TMPDIR must be {expected_tmp}, got {rev_env.get('TMPDIR')}"
+    assert os.path.isdir(expected_tmp), "TMPDIR directory must be created on disk"
+
+    # 2. Builder turn (must NOT inject)
+    with open(relay_path, "w") as f:
+        f.write("STATUS: Open\nNEXT: Producer\n\nbody\n")
+    rtl_prod = RelayTurnLib(root, xyz_root, relay_path, "")
+    assert rtl_prod.is_reviewer_turn("claude-a") is False, "producer must not be reviewer turn"
+
+    prod_env = {"EXISTING": "1"}
+    rtl_prod.apply_reviewer_turn_env(prod_env, wt_dir, "claude-a")
+    assert "PYTHONDONTWRITEBYTECODE" not in prod_env, "PYTHONDONTWRITEBYTECODE must NOT be set on builder turn"
+    assert "TMPDIR" not in prod_env, "TMPDIR must NOT be set on builder turn"
+finally:
+    shutil.rmtree(wt_dir, ignore_errors=True)
+PY
+
+if [ $? -eq 0 ]; then
+  pass "case 8: apply_reviewer_turn_env injects PYTHONDONTWRITEBYTECODE and TMPDIR for reviewer turns only"
+else
+  fail "case 8: apply_reviewer_turn_env failed assertions"
+fi
 
 echo "gh681-reviewer-probe-rules: all cases passed"

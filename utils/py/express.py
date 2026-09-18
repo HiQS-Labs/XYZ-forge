@@ -99,21 +99,38 @@ def refuse(root, rule, reason, issue=None):
 
 def write_tick(root, verb, **fields):
     # GH-694: a sibling of tick's log, never inside it. `readAllEvents` parses every *.jsonl under
-    # .tick/events/ with no schema check and `project.js` folds by `task`; this analytics record has
-    # neither `type` nor `task`, so one express run left `tick info`/`release`/`relay-drive.sh` dead
-    # in the clone (`localeCompare of undefined`). The central mirror below keeps the same shape.
+    # .tick/events/ with no schema check and `project.js` folds by `task`; the bare analytics record
+    # once written there left `tick info`/`release`/`relay-drive.sh` dead in the clone
+    # (`localeCompare of undefined`). The record now carries the tick 0.2.0 envelope for parity with
+    # the central mirror below (#702), and `project.js` skips non-`task.*` types as defense in depth —
+    # but it is analytics, not coordination, so it never lands in .tick/events/ (#699).
     events = os.path.join(root, ".tick", "express")
-    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3] + "Z"
+    now_dt = datetime.datetime.now(datetime.timezone.utc)
+    ts = now_dt.strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3] + "Z"
+    now_str = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
     target = "gh-%s" % fields.get("issue") if fields.get("issue") else "lane"
     filename = "%s-%s-%s.jsonl" % (ts, verb, target)
-    rec = dict(at=now_iso(), actor="express", verb=verb)
+    ev_type = "express." + verb.replace("express-", "")
+    task_id = "GH-%s" % fields.get("issue") if fields.get("issue") else "lane"
+    rec = dict(
+        schema_version="0.2.0",
+        ts=now_str,
+        type=ev_type,
+        task=task_id,
+        agent="express",
+        at=now_str,
+        actor="express",
+        verb=verb,
+    )
     rec.update({k: v for k, v in fields.items() if v is not None})
     payload = json.dumps(rec) + "\n"
     try:
         os.makedirs(events, exist_ok=True)
         path = os.path.join(events, filename)
-        with open(path, "w", encoding="utf-8") as f:
+        tmp_path = path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(payload)
+        os.replace(tmp_path, path)
     except OSError as exc:  # telemetry must never block the lane, only complain
         sys.stderr.write("express: tick write failed (%s)\n" % exc)
 
@@ -122,8 +139,10 @@ def write_tick(root, verb, **fields):
         central = os.path.expanduser("~/.config/xyz/events")
         os.makedirs(central, exist_ok=True)
         cpath = os.path.join(central, filename)
-        with open(cpath, "w", encoding="utf-8") as f:
+        ctmp = cpath + ".tmp"
+        with open(ctmp, "w", encoding="utf-8") as f:
             f.write(payload)
+        os.replace(ctmp, cpath)
     except OSError:
         pass
 

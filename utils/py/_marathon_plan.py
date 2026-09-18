@@ -771,7 +771,20 @@ class Engine:
                 conn.row_factory = sqlite3.Row
                 if not conn.execute("SELECT name FROM sqlite_master WHERE name='roadmap_items' AND type='table'").fetchone():
                     raise EngineExit(3, "marathon-plan: releases.db has no roadmap_items table")
-                return self._parse_ledger(roadmap_render(conn))
+                ledger = self._parse_ledger(roadmap_render(conn))
+                # GH-698 F2: carry the canonical four-axis ratings so the planner
+                # ranks by the DB's own rank (the four-axis sum) instead of
+                # requiring legacy cx/risk/effort doc frontmatter.
+                db_ranks, db_axes = {}, {}
+                for row in conn.execute(
+                    "SELECT gh_number, rating_pri, rating_sev, rating_appeal, rating_effort "
+                    "FROM roadmap_items WHERE gh_number IS NOT NULL"
+                ):
+                    axes = [row[1], row[2], row[3], row[4]]
+                    if all(a is not None for a in axes):
+                        db_ranks[int(row[0])] = sum(int(a) for a in axes)
+                        db_axes[int(row[0])] = tuple(int(a) for a in axes)
+                return ledger, db_ranks, db_axes
         except sqlite3.Error as exc:
             raise EngineExit(3, "marathon-plan: cannot read releases.db roadmap_items: %s" % exc) from exc
 
@@ -794,11 +807,13 @@ class Engine:
             if raw is None:
                 raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
             ledger = self._parse_ledger(raw)
+            db_ranks, db_axes = {}, {}  # explicit ROADMAP fixtures carry no DB ratings
         elif is_releases_mode:
             self.SOURCE_NAME = "releases.db (roadmap_items)"
             self.SOURCE_LINK = os.path.relpath(db_path, self.QUEUE_DIR)
-            ledger = self._load_ledger_from_db(db_path)
+            ledger, db_ranks, db_axes = self._load_ledger_from_db(db_path)
         else:
+            db_ranks, db_axes = {}, {}
             raw = self._read_file_safe(self.ROADMAP)
             if raw is not None:
                 ledger = self._parse_ledger(raw)
@@ -818,7 +833,16 @@ class Engine:
             fm = self._frontmatter(doc_abs) if doc_exists else {}
             ratings = {"complexity": _L(fm.get("complexity")),
                        "risk": _L(fm.get("risk")), "effort": _L(fm.get("effort"))}
+            db_rank = db_ranks.get(gh)
+            db_axes_item = db_axes.get(gh)
             rated = all(ratings[k] is not None for k in ("complexity", "risk", "effort"))
+            if db_rank is not None:
+                # GH-698 F2: the DB's canonical four-axis rating satisfies `rated`
+                # even when the capture doc lacks legacy cx/risk/effort frontmatter.
+                # DECLARED PRECEDENCE: when a row carries BOTH vocabularies, the
+                # DB's rating_* wins (scoring uses dbRank; legacy frontmatter is
+                # ignored) — the two scales must not coexist in one score.
+                rated = True
             ratings_exempt = str(fm.get("ratings_exempt", "")).lower() == "true"
             contract = self._extract_contract(doc_abs) if doc_exists else None
             z = self._zone_of(contract, item)
@@ -832,6 +856,7 @@ class Engine:
                 "deps": self._deps_of(item), "goGated": self._is_go_gated(item),
                 "suggestedBranch": suggested_branch,
                 "flags": [], "signals": [], "state": None, "score": None,
+                "dbRank": db_rank, "dbAxes": db_axes_item,
                 "wave": None, "ghState": None,
             })
 
@@ -931,10 +956,15 @@ class Engine:
                 continue
             if r["docExists"] and not r["rated"]:
                 r["state"] = "unrated"
-                missing = [k for k in ("complexity", "risk", "effort") if r["ratings"][k] is None]
-                self._flag("info", "unrated", r,
-                           "project doc missing rating key(s): %s" % ", ".join(missing),
-                           "add complexity/risk/effort frontmatter (see PDDA.md)")
+                if is_releases_mode:
+                    self._flag("info", "unrated", r,
+                               "ledger row has no four-axis rating in releases.db",
+                               "rate via: releases roadmap rate --issue-num %d --rated P/S/A/E" % r["gh"])
+                else:
+                    missing = [k for k in ("complexity", "risk", "effort") if r["ratings"][k] is None]
+                    self._flag("info", "unrated", r,
+                               "project doc missing rating key(s): %s" % ", ".join(missing),
+                               "add complexity/risk/effort frontmatter (see PDDA.md)")
                 continue
             if r["docExists"] and not r["contract"]:
                 r["state"] = "needs-contract"
@@ -1012,6 +1042,13 @@ class Engine:
         risk_w = 4 if self.POLICY == "derisk-first" else W["risk"]
 
         def score_of(r):
+            if r.get("dbRank") is not None:
+                # GH-698 F2: the ledger's own rank IS the canonical ordering (the
+                # four-axis sum). Lower planner score = earlier, so negate; the
+                # deps/zone/gated adjustments below keep their existing meaning.
+                base = -r["dbRank"]
+                zone_penalty = r["zoneRule"]["penalty"] if (r["zoneRule"] and math.isfinite(_js_number(r["zoneRule"]["penalty"]))) else 0
+                return base + W["dep"] * len(r["deps"]) + W["zone"] * zone_penalty + (100 if r["state"] == "gated" else 0)
             if not r["rated"]:
                 return None
             s = W["eff"] * r["ratings"]["effort"] + W["cx"] * r["ratings"]["complexity"] \
@@ -1288,18 +1325,28 @@ class Engine:
         o.append("")
         o.append("Every input is shown so the ordering is verifiable by hand (lower score = earlier).")
         o.append("")
-        o.append("| Item | cx | risk | eff | zone | deps | score | wave |")
-        o.append("|---|---|---|---|---|---|---|---|")
+        # GH-698: DB-ranked rows render the ACTIVE DB inputs (four-axis + rank),
+        # never the legacy cx/risk/effort that did not produce their score.
+        o.append("| Item | ratings (active inputs) | zone | deps | score | wave |")
+        o.append("|---|---|---|---|---|---|---|")
         for r in active:
             ident = ("[#%d] %s" % (r["gh"], r["title"])) if r["gh"] else r["title"]
             deps_cell = ",".join("#" + str(d) for d in r["deps"]) if r["deps"] else "—"
-            o.append("| %s | %s | %s | %s | %s%s | %s | %s | %s |"
-                     % (_cell(ident), _rating_num(r["ratings"]["complexity"]),
-                        _rating_num(r["ratings"]["risk"]), _rating_num(r["ratings"]["effort"]),
+            if r.get("dbRank") is not None:
+                a = r.get("dbAxes") or (None, None, None, None)
+                ratings_cell = "db pri/sev/app/eff = %s/%s/%s/%s · rank %s" % (
+                    _rating_num(a[0]), _rating_num(a[1]), _rating_num(a[2]),
+                    _rating_num(a[3]), r["dbRank"])
+            else:
+                ratings_cell = "cx/risk/eff = %s/%s/%s" % (
+                    _rating_num(r["ratings"]["complexity"]),
+                    _rating_num(r["ratings"]["risk"]), _rating_num(r["ratings"]["effort"]))
+            o.append("| %s | %s | %s%s | %s | %s | %s |"
+                     % (_cell(ident), _cell(ratings_cell),
                         r["zone"], "*" if r["zoneInferred"] else "", deps_cell,
                         _cell(r["score"]), _cell(r["wave"])))
         if not active:
-            o.append("| (no active, ready, rated items) | — | — | — | — | — | — | — |")
+            o.append("| (no active, ready, rated items) | — | — | — | — | — |")
         o.append("")
         o.append("`*` = zone inferred from keywords (no preflight contract write-set to prove it).")
         o.append("")

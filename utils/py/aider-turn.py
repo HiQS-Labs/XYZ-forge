@@ -177,6 +177,8 @@ def main():
             print("aider-turn: worktree isolation requested but `git worktree add` failed — failing turn", file=sys.stderr)
             sys.exit(5)
 
+    rtl.apply_reviewer_turn_env(aider_env, run_cwd, me)
+
     cmd = [aider_bin] + aider_args + ["--message", prompt]
     
     bounded_rc = 0
