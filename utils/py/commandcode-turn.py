@@ -62,6 +62,7 @@ def main():
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))
 
     bounded_rc = 0
+    timed_out = False
     wt = ""
     run_cwd = root
     commandcode_env = dict(os.environ)
@@ -89,6 +90,7 @@ def main():
             with open(commandcode_log, "a") as log_f:
                 subprocess.run(cmd, env=commandcode_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
         except subprocess.TimeoutExpired:
+            timed_out = True
             bounded_rc = 7
         except subprocess.CalledProcessError as exc:
             bounded_rc = exc.returncode
@@ -117,7 +119,20 @@ def main():
         print("commandcode-turn: commandcode exited 0 but produced NO output — failing the turn.", file=sys.stderr)
         bounded_rc = 5
 
-    rc = rtl.enforce(t, me, commandcode_log, "commandcode")
+    # GH-648 L2: enforce containment/commit even after a timeout, but do not
+    # interpret an interrupted transcript as a completed turn (including an
+    # unfinished Approved verdict). The shared core gates token release/done on
+    # RELAY_FILE; its allowlist is already captured by rtl.before(). GH-409's
+    # ownership-checked atexit cleanup releases our claim without a peer handoff,
+    # leaving the task open so the incoming role can retry it. Keep this
+    # independent of bounded_rc: worktree containment can replace exit 7 with 6.
+    if timed_out:
+        os.environ["RELAY_FILE"] = ""
+    try:
+        rc = rtl.enforce(t, me, commandcode_log, "commandcode")
+    finally:
+        if timed_out:
+            os.environ["RELAY_FILE"] = f
 
     try:
         from harness_turn_logger import HarnessTurnLogger

@@ -1,0 +1,48 @@
+== test: gh678-installer-live-links ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh678-installer-live-links.XXXXXX.bxYDFTf3gO
+== test: gh678-installer-live-links ==
+  PASS: 10days: refuses a live foreign link (exit 1, link untouched)
+  PASS: 10days: replaces a dangling link
+  PASS: agent-chorus: refuses a live foreign link (exit 1, link untouched)
+  PASS: agent-chorus: replaces a dangling link
+  PASS: browserbase: refuses a live foreign link (exit 1, link untouched)
+  PASS: browserbase: replaces a dangling link
+  PASS: consult: refuses a live foreign link (exit 1, link untouched)
+  PASS: consult: replaces a dangling link
+  PASS: file-xyz-bug: refuses a live foreign link (exit 1, link untouched)
+  PASS: file-xyz-bug: replaces a dangling link
+  PASS: hq: refuses a live foreign link (exit 1, link untouched)
+  PASS: hq: replaces a dangling link
+  PASS: marathon-cleanup: refuses a live foreign link (exit 1, link untouched)
+  PASS: marathon-cleanup: replaces a dangling link
+  PASS: marathon-triage: refuses a live foreign link (exit 1, link untouched)
+  PASS: marathon-triage: replaces a dangling link
+  PASS: open-router: refuses a live foreign link (exit 1, link untouched)
+  PASS: open-router: replaces a dangling link
+  PASS: ponytail: refuses a live foreign link (exit 1, link untouched)
+  PASS: ponytail: replaces a dangling link
+  PASS: radar: refuses a live foreign link (exit 1, link untouched)
+  PASS: radar: replaces a dangling link
+  PASS: relay-automation: refuses a live foreign link (exit 1, link untouched)
+  PASS: relay-automation: replaces a dangling link
+  PASS: relay-to-issue: refuses a live foreign link (exit 1, link untouched)
+  PASS: relay-to-issue: replaces a dangling link
+  PASS: relay-xyz: refuses a live foreign link (exit 1, link untouched)
+  PASS: relay-xyz: replaces a dangling link
+  PASS: releases: refuses a live foreign link (exit 1, link untouched)
+  PASS: releases: replaces a dangling link
+  PASS: review-xyz: refuses a live foreign link (exit 1, link untouched)
+  PASS: review-xyz: replaces a dangling link
+  PASS: standup: refuses a live foreign link (exit 1, link untouched)
+  PASS: standup: replaces a dangling link
+  PASS: swe: refuses a live foreign link (exit 1, link untouched)
+  PASS: swe: replaces a dangling link
+  PASS: vendor-stack: refuses a live foreign link (exit 1, link untouched)
+  PASS: vendor-stack: replaces a dangling link
+  PASS: weekly-shipped: refuses a live foreign link (exit 1, link untouched)
+  PASS: weekly-shipped: replaces a dangling link
+  PASS: workhorse: refuses a live foreign link (exit 1, link untouched)
+  PASS: workhorse: replaces a dangling link
+  PASS: xyz: refuses a live foreign link (exit 1, link untouched)
+  PASS: xyz: replaces a dangling link
+  PASS: matrix covered all 22 discovered installers

@@ -94,7 +94,7 @@ git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA"                    # 7.
 ```
 
-What each phase asserts (all refusals and fired runs write `.tick/events/*` and mirror to `~/.config/xyz/events/`):
+What each phase asserts (all refusals and fired runs write `.tick/express/*` — a sibling of tick's coordination log, never inside it (GH-694) — and mirror to `~/.config/xyz/events/`):
 
 0. **Tree of execution** — task branch based on origin/development with $\le 2$
    local commits (GH-516; $> 2$ refuses with `too-many-commits`; diverged branches

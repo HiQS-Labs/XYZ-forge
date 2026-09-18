@@ -1,0 +1,20 @@
+== test: gh268-relay-cue-and-target-checks ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh268-relay-cue-and-target-checks.XXXXXX.HD0rZVmBZv
+  PASS: new-relay template carries the hand-off cue
+  PASS: new-relay cue says EVERY turn (the reported defect was first-turn-only)
+  PASS: new-relay cue names the words to say to the other window
+  PASS: marathon relay template carries the hand-off cue
+  PASS: the cue appears in both the builder and reviewer blocks
+  PASS: new-relay template tells the reviewer to sweep the whole file
+  PASS: marathon relay template tells the reviewer to sweep the whole file
+  PASS: the prompt states pre-existing defects are in scope
+  PASS: new-relay requires an explicit 'swept file: yes/no' declaration
+  PASS: marathon template requires the same declaration
+  PASS: target-checks.sh exists and is executable
+  PASS: detect exits 3 when the target has no checks
+  PASS: the no-checks message says an empty gate is not a pass
+  PASS: detect exits 0 when the target has checks
+  PASS: a PHP target is gated on php -l (the report's own example)
+  PASS: a wpcs composer dep asks for the WordPress ruleset by name
+  PASS: a real PHP syntax error FAILS the gate (exit 1)
+  FAIL: clean PHP did not pass (exit 1)

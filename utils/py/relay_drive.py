@@ -14,7 +14,9 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path, resolve_turn_root, rtl_default_log  # noqa: E402
+from rtl import driver_lock_path  # noqa: E402  GH-376: the shared lock resolver, called not copied
+from rtl import (resolve_turn_root, rtl_default_log, checkout_snapshot,
+                 restore_checkout_after_timeout)  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
 
 def eprint(*args, **kwargs):
@@ -26,6 +28,18 @@ def get_env(key, default=None):
 def die(msg):
     eprint(f"relay-drive: {msg}")
     sys.exit(2)
+
+def review_blocks_added(before: str, after: str) -> int:
+    """GH-397: count reviewer round-blocks appended between two relay-file texts.
+
+    A zero-output reviewer turn can still flip NEXT/STATUS or move the token, and
+    the old oracle read any file mutation as "completed a review" — a failed turn
+    masquerading as review coverage. Coverage means an appended review block.
+    """
+    pat = re.compile(r"^### (Round .*\u00b7 Reviewer \u00b7|Reviewer \u00b7 Round )", re.M)  # relay threads write ROLE first; marathon phases write Round first
+
+    return len(pat.findall(after or "")) - len(pat.findall(before or ""))
+
 
 def main():
     parser = argparse.ArgumentParser(description="relay-drive", add_help=False)
@@ -763,6 +777,11 @@ def main():
         cost_summary_state["started"] = True   # GH-331: past here a turn is really being driven — arm the summary
         prev = f"{tstatus}:{actor}"
         rfsig = relay_content_sig()   # GH-245: relay-file content signature BEFORE the turn
+        try:
+            with open(relay_file, "r", encoding="utf-8", errors="replace") as _rf:
+                rf_text_before = _rf.read()
+        except Exception:
+            rf_text_before = ""  # GH-397: unreadable before-text => no block-count evidence
         nextp = next_pointer()        # GH-245: NEXT: handoff pointer BEFORE the turn
         head_before = get_head_commit()
         resolved_before = count_resolved_items()
@@ -827,6 +846,16 @@ def main():
         except ValueError:
             progress_interval_s = 60.0
         last_progress_at = 0.0
+        # GH-648 L7 / #242: the child can switch the operator checkout even when
+        # its own worktree is detached. Capture before dispatch, not after the kill.
+        try:
+            checkout_before = checkout_snapshot(progress_main_tree)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            checkout_before = None
+            detail = getattr(exc, "stderr", None) or str(exc)
+            print(f"relay-drive: checkout snapshot unavailable at {progress_main_tree}: "
+                  f"{detail}; timeout checkout recovery will require manual inspection",
+                  file=sys.stderr)
         if os.access(args.agent_cmd, os.X_OK):
             proc = subprocess.Popen([args.agent_cmd], start_new_session=True)
         else:
@@ -889,6 +918,8 @@ def main():
             verdict = judge_terminal(file_status(), role, pre_turn, shim_ok=False)
             if verdict[0] == "forged":
                 write_escalation_reason(("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed")
+            if res_code == 7:
+                restore_checkout_after_timeout(progress_main_tree, checkout_before)
             sys.exit(res_code)
 
         round_idx += 1
@@ -1030,9 +1061,18 @@ def main():
             # (findings appended), the NEXT: pointer flipped, or the STATUS word changed — NOT on token
             # movement alone. Token state is deliberately dropped from the oracle here.
             if nrfsig != rfsig or nnextp != nextp or ns != s:
-                print(f"relay-drive: review-once — reviewer completed a turn (STATUS: {ns}, token {ntstatus}:{nactor}; relay-file/NEXT changed); non-approval handback, not a stall")
-                xyz_relay_emit("orange")
-                sys.exit(5)
+                try:
+                    with open(relay_file, "r", encoding="utf-8", errors="replace") as _rf:
+                        rf_text_after = _rf.read()
+                except Exception:
+                    rf_text_after = ""
+                if review_blocks_added(rf_text_before, rf_text_after) > 0:
+                    print(f"relay-drive: review-once — reviewer completed a turn (review block appended; STATUS: {ns}); non-approval handback, not a stall")
+                    xyz_relay_emit("orange")
+                    sys.exit(5)
+                eprint("relay-drive: review-once — the relay file moved but the reviewer appended NO review block: a zero-output turn is not review coverage (GH-397) — genuine stall")
+                xyz_relay_emit("red")
+                sys.exit(3)
             eprint(f"relay-drive: review-once — reviewer took no action (relay file unchanged, NEXT unchanged, STATUS still {ns}, token {ntstatus}:{nactor}) — genuine stall")
             xyz_relay_emit("red")
             sys.exit(3)

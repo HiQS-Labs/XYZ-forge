@@ -127,6 +127,8 @@ TESTS=(
   "gh374-drift-path-filter.sh"  # GH-374 (drift-brief path-existence filter)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "gh610-claude-subscription.sh" # account routes and native Claude JSON results
+  "gh648-l8-zero-output-handback.sh"  # GH-648 L8/GH-397 (zero-output reviewer turn is not review coverage: review_blocks_added oracle)
+  "gh648-l9-369-regression.sh"        # GH-648 L9/GH-369 baseline (rtl_run_bounded kills the whole process group at the cap; verification-only)
   "gh698-planner-db-ratings.sh"       # GH-698 F2/F4 (planner reads DB four-axis ratings: rated row sequences, unrated holds — red control)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
@@ -297,6 +299,13 @@ TESTS=(
   "gh142-ate-exit-contract.sh"   # #142 (ATE filing exit contract: 0 filed/dry-run · 3 no-records · 1 gh-failed, propagated through run_variations; hermetic stub gh; also #141 Phase 4's three outcomes + dedup seen-Nx)
   "gh148-deepseek-turn.sh"       # #148 + #399 (DeepSeek shim: turn safety core, provider routing table, key-file fallback, 30/30 assertions)
   "gh608-deepseek-effort.sh"     # GH-608 (DEEPSEEK_REASONING_EFFORT matrix, early claim prevention, telemetry normalization)
+  "gh648-l7-checkout-aftermath.sh" # GH-648 L7 (#242 timeout checkout recovery)
+  "gh648-l6-muse-attribution.sh" # GH-648 L6 (#521 Muse wall-cap attribution + mutation controls)
+  "gh648-l5-gh237-repro.sh" # GH-648 L5 (#237 silent backend attribution + old-label mutation)
+  "gh648-l4-285-revalidate.sh" # GH-648 L4 (#285 real child cap + no-kill mutation)
+  "gh648-l3-consult-cap.sh" # GH-648 L3 (600s cap, partial answers, honest idle kills)
+  "gh648-l2-token-aftermath.sh" # GH-648 L2 (timeout preserves same-role token retry)
+  "gh648-l1-turn-termination.sh" # GH-648 L1 (honest idle attribution + structured termination records)
   "gh654-offlane-log.sh"         # GH-654 (offlane_candidates names allowlist failures before the bash verdict destroys the worktree; exemptions load-bearing)
   "gh660-skill-drift.sh"         # GH-660 (skill_drift_check flags vendored SKILL.md copies diverged from canonical skills/; mutation-proven)
   "gh156-turn-shims-help.sh"     # #156 (All 7 turn shims cleanly handle --help and -h before requiring RELAY_AGENT, 14/14 assertions)
@@ -497,6 +506,7 @@ TESTS=(
   "relay-dep-drift.sh"
   "new-relay.sh"
   "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
+  "gh678-installer-live-links.sh" # GH-678 (no installer replaces a live symlink it does not own; dangling still cleaned; sandboxed HOME)
   "skills-army-hq.sh"           # GH-487 (bash wrapper running the skills-army-hq dedicated pytest; carries it into tier 2 AND the full gate)
   "gh620-skills-army-mini-sync.sh" # GH-620 generated child publisher + detached package smoke
   "agent-chorus-bridge.sh"      # GH-384 (cross-device bridge over Cloudflare Tunnel)

@@ -87,20 +87,35 @@ print("OK" if r == REASON_CPU_BOUND else f"BAD {r} :: {detail}")
 [ "$out" = "OK" ] && ok "a runaway that exited before the last sample still reads cpu-bound" \
                   || bad "dead-runaway anchoring: $out"
 
-# --- a perfectly flat CPU trace must classify, not fall through ------------
-# Regression: peak-anchoring left t_peak == t0 when CPU never grew, producing a
-# zero-length window and `unclassified`. That is exactly the blocked-process
-# case this module exists to name — a turn stalled on a modal dialog burns no
-# CPU at all — so a flat trace has to score a real 0.0 over the full window.
+# --- a perfectly flat CPU trace must score 0.0 and classify HONESTLY --------
+# Regression (kept): peak-anchoring left t_peak == t0 when CPU never grew, so
+# the window was zero-length and the trace scored None. A flat trace must score
+# a real 0.0 over the full window.
+# GH-648 L1 updated the CONTRACT: with no live-sampled network observation, a
+# flat trace is `timeout-unclassified` (the old `idle-no-progress` claim is what
+# L1 exists to retire — an in-flight backend wait looks identical). The reason
+# only sharpens when a network observation WAS cached by live sampling:
+#   established -> idle-in-flight · none -> idle-unknown · never sampled -> unclassified
 out="$(pyrun '
-from turn_diagnostics import TurnDiagnostics, REASON_IDLE
+from turn_diagnostics import TurnDiagnostics, REASON_IDLE, REASON_IDLE_IN_FLIGHT, REASON_UNCLASSIFIED
 d = TurnDiagnostics(worktree=None)
 d.samples = [(0.0, 0.0, 1), (5.0, 0.0, 1), (10.0, 0.0, 1)]   # flat: zero CPU throughout
 ratio = d.cpu_ratio()
 r, _ = d.classify()
-print("OK" if ratio == 0.0 and r == REASON_IDLE else f"BAD ratio={ratio} reason={r}")
+ok1 = ratio == 0.0 and r == REASON_UNCLASSIFIED
+d2 = TurnDiagnostics(worktree=None)
+d2.samples = d.samples
+d2._network_state_observed = "established"
+r2, _ = d2.classify()
+ok2 = r2 == REASON_IDLE_IN_FLIGHT
+d3 = TurnDiagnostics(worktree=None)
+d3.samples = d.samples
+d3._network_state_observed = "none"
+r3, _ = d3.classify()
+ok3 = r3 == REASON_IDLE
+print("OK" if (ok1 and ok2 and ok3) else f"BAD ratio={ratio} r={r} r2={r2} r3={r3}")
 ')"
-[ "$out" = "OK" ] && ok "a flat zero-CPU trace scores 0.0 and classifies as idle (not unclassified)" \
+[ "$out" = "OK" ] && ok "flat trace scores 0.0; classify is honest per cached network state (unclassified / in-flight / idle-unknown)" \
                   || bad "flat-trace anchoring: $out"
 
 # --- idle: a real sleeping child, no file progress -------------------------
