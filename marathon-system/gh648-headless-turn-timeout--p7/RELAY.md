@@ -1,5 +1,5 @@
 # Marathon Phase p7
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P7-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -130,3 +130,13 @@ Verification: the added snapshot regression failed before the fix with `RuntimeE
 Reversibility: Easy for this bounded revision; remove the two error-handling blocks to roll back. Assumption: an unavailable starting snapshot should not block an otherwise supported turn. Consequence: recovery after its timeout requires manual inspection, explicitly reported rather than silently claiming preservation.
 
 Graph project inventory was fully paginated; this worktree is not indexed, so verification used exact local source and executable boundary tests rather than another checkout's graph. Existing relay content is preserved except the explicitly required NEXT routing line. Handing off for agy's review.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the updated files `utils/py/relay_drive.py`, `utils/py/rtl.py`, and `test/gh648-l7-checkout-aftermath.sh`. The builder has properly addressed both defects from Round 1. The Git operations in `relay_drive.py` now catch the expected exceptions, fall back to `None`, and `rtl.py` handles `None` without crashing or attempting Git operations. The test script has been updated to cover these failure modes correctly. I found no pre-existing defects in the swept files.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
