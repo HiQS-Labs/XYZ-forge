@@ -53,7 +53,7 @@ ROUND: 1 / 3
 ## Setup
 - Artifact under review: **.relay-artifacts/GH-700-PAGES-SKILLS.md** — the read-only path that
   `relay-drive.sh --artifact-file PROJECT/1-INBOX/GH-700-PAGES-SKILLS.md` seeds into the isolated worktree (read it there; do NOT edit it).
-- Reviewer: codex   ·   Producer: claude
+- Reviewer: agy (Codex at usage limit until 2026-09-19 01:26)   ·   Producer: claude
 - Started: 2026-09-18
 - Operational envelope: a static GitHub Pages site (`PAGES/`, hand-written HTML + one Python
   generator for two data pages). Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/700. Grade
