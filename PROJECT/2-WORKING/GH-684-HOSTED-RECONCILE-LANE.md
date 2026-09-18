@@ -84,7 +84,7 @@ New-behaviour proofs (each with its witnessed red control):
 
 Preservation checks (expected green on base too — regression evidence, not proof):
 - [x] `gh496`, `gh202`, `gh232`, `wave-reconcile.sh`, `gh358` green (`neighbour-*.log`); `gh421`'s 23 pre-existing cases green; GH-308 twin guard clean against `ba1f58e8`.
-- [ ] Full `validate.sh` in the disposable clone; receipts (green and red outputs with provenance) in `TESTS-RESULTS/<date>+GH-684/`.
+- [x] Full `validate.sh` in the disposable clone at `08c5f6b0`: 389/394 in 28 m 44 s; the five reds are the environment's baseline set (identical on unmodified `development`, GH-681 receipts); `gh549` red in the pool, green alone (driver-lock contention). Receipts in `TESTS-RESULTS/2026-09-18+GH-684/`.
 
 Hosted proof (post-merge, recorded on #684, in this order):
 - [ ] The workflow stays disabled until this PR merges. After merge: `gh workflow enable wave-reconcile.yml`, then one `workflow_dispatch` run as the recovery proof — it runs `--catch-up` with the new code, must complete green, land its reconcile (this PR's docs promoted), **report GH-505 as `SKIPPED`** (its doc is still defective) and open the `hosted-reconcile-attention` issue naming it. That dispatch is the first hosted success since 2026-09-11. The next PR-close event then proves the PR path; the next scheduled run proves the retry (GH-505 skipped again until its doc is fixed).
