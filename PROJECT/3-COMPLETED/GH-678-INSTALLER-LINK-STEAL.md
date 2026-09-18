@@ -1,8 +1,8 @@
 ---
 title: "GH-678: skills/*/install.sh steals app symlinks from the managed Skills Army collection"
-status: Active
+status: Complete
 created: 2026-09-17
-updated: 2026-09-17
+updated: 2026-09-18
 owner: operator
 gh_issue: 678
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/678
