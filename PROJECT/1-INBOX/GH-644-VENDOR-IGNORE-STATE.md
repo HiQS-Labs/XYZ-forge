@@ -29,17 +29,17 @@ risk: 2
 
 | What was just completed | What's next |
 |---|---|
-| Part A landed: PR #685 (4af5bcfc) terminates the exclude file before appending; red-before/green-after fixture in `test/xyz-vendor.sh`; full gate 394/394 | Operator decides the #314 refinement (below); if yes, land B with its own fixture (tracked-`.xyz/` target → `.xyz/` absent from the exclude, runtime subpaths present); re-vendor Needle-fork and confirm `git diff .gitignore` is empty |
+| Decision made (cross-model consult, Codex + agy, synthesis on #644): refinement A + one shared runtime-path list + two guards. Part B built: `XYZ_RUNTIME_PATHS` hoisted (one definition for preserve + ignore), tracked-`.xyz/` targets get only the runtime subpath ignores, an operator-owned blanket `.xyz/` line is never removed (WARNING + remedy), tracked runtime content is WARNED by path; 14 new assertions in `test/xyz-vendor.sh` (red before, green after; suite 94/94) | PR review + merge; then re-vendor Needle-fork from merged `development` and confirm the exclude gains only `.xyz/<runtime>` lines and `git diff .gitignore` is empty |
 
 ## Quad Concepts
 - `.xyz/` is two things → harness code (refreshable, sometimes deliberately committed) vs runtime state (never committable)
-- Unconditional re-assert → on a repo that tracks `.xyz/`, every vendor run re-adds the ignore; left in place it would untrack ~1,470 files on the next `git add`
-- Detection by observed git state → `git -C "$TARGET_REPO" ls-files --error-unmatch -- .xyz` succeeding means the operator already committed the harness; ignore only the runtime subpaths then
+- Unconditional re-assert → on a repo that tracks `.xyz/`, every vendor run re-adds the ignore. Corrected premise (Codex, consult): an ignore rule never untracks indexed files, so nothing is lost; the harm is that every NEW harness file a re-vendor brings is silently not staged (the committed copy drifts) and the operator fights a reappearing rule
+- Detection by observed git state → `git -C "$TARGET_REPO" ls-files --error-unmatch -- .xyz` succeeding means something under `.xyz/` is indexed; ignore only the runtime subpaths then. It is not proof the harness was deliberately vendored, so tracked content under a runtime path is WARNED by name (still ignored going forward)
 - Recorded decision → this refines #314 / GH-440, so the operator who recorded it says yes before it lands
 
-## Decision needed
+## Decision (recorded 2026-09-17)
 
-If the target has already committed `.xyz/`, should `reconcile_ignore_state` ignore only `.xyz/relay-system/`, `.xyz/.tick/`, `.xyz/.relay-driver.lock`, `.xyz/XYZ.json*`, `.xyz/XYZ.heartbeat.json` instead of the whole directory? Current behaviour stays exactly as-is for every other target.
+Yes — refinement A. If the target already tracks `.xyz/`, `reconcile_ignore_state` ignores only the runtime subpaths (`.xyz/<p>` for each entry of `XYZ_RUNTIME_PATHS`, the same list `materialize_vendor` preserves) plus `/.tick/`; every other target keeps the blanket `.xyz/` rule unchanged. Guards from the consult: an existing blanket `.xyz/` ignore is never deleted (report + remedy), and tracked runtime content is named in a WARNING. Ranking A > B (refuse to vendor) > C (leave as-is): C fights the operator every run (GUIDING-PRINCIPLES #8), B blocks a valid turnkey workflow (GH-642). No new flag.
 
 ## Lessons Learned (For Future Agents)
 - A `.gitignore`/exclude append is a mutation of the consumer's policy; guard the file shape (trailing newline) and the operator's intent (already-tracked paths) separately — they are different failure classes and different lanes (hotfix vs decision).
