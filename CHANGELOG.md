@@ -208,6 +208,19 @@ issue/root diagnostics survive together. 39 populated Python checks, production-
 pass; replacement independent review and full qualifying gate remain pending.
 Easy rollback: disable the optional reader or reviewed revert; no source migration.
 
+## 2026-09-20 — Explicit task starts and confirmed endings (GH-646)
+
+The existing roadmap writer gains schema 009's nullable `in-progress` label,
+established only by an explicitly accepted, repository-qualified task start.
+The opt-in GitHub connector projects only that label through existing replay;
+confirmed completion/cancellation clears it, and reopening requires a fresh start.
+Metadata, migration, quiet activity and PR merge alone do not establish task state.
+Existing Express and reconciliation paths preserve exact issue identity and
+read-only previews. Focused source review is approved and 41 tests pass; complete
+qualification remains required before landing. No live migration or connector
+enablement is included. Costly schema rollback: disable projection and retain a
+verified pre-migration backup; never restore it over newer task records.
+
 ## 2026-09-18 — Offline Jev vs Tier-1/Gemma ATE triage replay; shadow flag not started (GH-712)
 
 Lane B of the GH-709 TypeSafe Jev recon. Added `utils/py/jev_triage.py` (stdlib only): three Choice
