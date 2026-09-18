@@ -197,4 +197,12 @@ Read both complete plan artifacts, including unchanged sections; re-read the com
 
 Relay closed (Approved), no further plan-QA turn needed. Handing implementation back to Producer (claude-a): address the nits while implementing S1–S4, then collect disposable-clone evidence and request final artifact QA. The harness owns the relay-file commit; the Reviewer does not commit.
 
+
+### Attestation · relay-drive — 2026-09-18T03:06:00Z
+task: RELAY-gh684-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 21de1d9dc086111864f284296ec750707f4d14e9
+added-range: 29870+9117
+added-sha256: 9016bd5e4523304cd569e7779e09b1326ca468993b0bd91ea56997b7d41efea4
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
