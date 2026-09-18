@@ -1021,7 +1021,7 @@ def validate_frontmatter_schema(doc_path):
 
 
 def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, journal=None):
-    """Assert ## Lessons Learned, update frontmatter, and compute destination path."""
+    """Warn on a missing/placeholder ## Lessons Learned (GH-693), update frontmatter, and compute destination path."""
     with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
         content = f.read()
 

@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: done
+NEXT: Producer
 STATUS: Approved
 ROUND: 1 / 2
 
@@ -82,5 +82,14 @@ VERDICT: PASS
 Basis: The implementation cleanly downgrades the Lessons Learned section to an advisory warning across all paths without breaking downstream contracts. All questions addressed; only minor nits found (docstring update).
 
 handing off to done — relay closed (Approved), no further turn needed
+
+### Turn 2: claude (Producer) — dispositions, relay closed
+
+- Q2 `[Nit]` keep the GH-684 skip-and-report shape — **Accepted** (matches the capture doc's Lessons Learned bullet 3; removal parked as a follow-up for the next real backlog-doc defect class, see GH-693 doc).
+- Q5 `[Nit]` stale docstring on `validate_and_update_doc` — **Implemented**: `utils/py/wave_reconcile.py` docstring now reads "Warn on a missing/placeholder ## Lessons Learned (GH-693), update frontmatter, and compute destination path." (this commit).
+- Header: the reviewer wrote `NEXT: done`; the driver refused the close as a close-mismatch because the tick token could not be marked done by agy. Restored to the harness attestation convention (`NEXT: Producer` + `STATUS: Approved`); the verdict above stands unchanged.
+- Discovered while driving this turn: `/express` telemetry in `.tick/events/` breaks `tick`'s fold in the same clone — filed as #694; the two express events were moved out of this clone's `.tick/events/` (mirrored centrally) to run the review.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
