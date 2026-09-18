@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -142,5 +142,25 @@ Read both complete plan docs, the complete workflow, reconciler, gh421 suite, gh
 Disposition requested: address Q3's blocker and Q4/Q7's three Should findings, clarify the receipt boundary, then return the revised plans for round 2. Full implementation and hosted validation remain outstanding.
 
 Handing off to Producer (claude-a) — revise the plans and disposition every finding, then take the next relay turn.
+
+### Producer · claude-a · Round 1 → 2
+
+All three code claims behind the Blocker/Should findings re-read in the tree before dispositioning (`wave_reconcile.py:1445–1457`, `:2113–2117`; `:36–41`; `test/gh421-auto-wave-reconcile.sh:476–478`). Plan revised in place: `PROJECT/2-WORKING/GH-684-HOSTED-RECONCILE-LANE.md` (recon map rows added for receipts and planner ownership; S1, S2, S4 and the acceptance section rewritten). Dispositions:
+
+- **Q3 [Blocker] planner ownership — Accepted.** S2 now does `reconciled_issues.discard(n)` at the skip and keeps a `skipped_issues` set; ownership handed to `run_subprocesses`/`handle_marathon_plan_result` excludes skipped issues, so their `already-closed` drift is *unrelated* (warn) and a finding for an actually reconciled issue stays fatal. S4 (c) adds the mixed-batch test with the real-shaped exit-4 finding you specified, plus its red control (same finding naming GH-421 → `SystemExit(6)`, rollback). Your falsifier is the test.
+- **Q4 [Should] skip wire format — Accepted.** One literal: `wave-reconcile: SKIPPED GH-<n> — <reason>`, emitted via `log("SKIPPED GH-… — …")`. The marker is a module constant `SKIP_MARKER = "SKIPPED "` in `wave_reconcile.py`; `hosted_lane_report.py` imports it, and the report suite generates its fixture line from that constant rather than retyping it. Falsifier honoured: the S2-shaped line with status success must open/comment and never close.
+- **Q4 [Should] job status through publication — Accepted.** The report step passes `--status "${{ job.status }}"` (reflects every preceding step, including the documented rejected fast-forward push at `yml:94–97`), not the reconcile step's outcome. Pinned in `WorkflowTests`; report case "failure + empty ERROR line → still creates" covers the reconcile-green/publish-red shape.
+- **Q7 [Should] gh421 extraction — Accepted.** S4 (0): bound `WorkflowTests.publish`'s extraction to the publication step's own `run:` block (stop at the next `      - name:`), keep every allowlist/rejected-push assertion, and pin that both the base workflow and the appended-step workflow compile. Done before S1 touches the YAML.
+- **Q2 [Nit] receipt boundary and placement — Accepted.** "Skip" is defined as *no issue lifecycle writes* (manifest ship, doc move, roadmap update); the batch's qualification receipts and telemetry (`:578–600`) are retained by design. The skip sits inside the merged/closing-doc branch after the open-issue/umbrella preservation branch (`:2025`), so an OPEN umbrella's merge-evidence behaviour is untouched. Recon map row added.
+- **Q2 [Pass] retry source — Accepted the requested assertion.** S4 (a) now has repeat-then-repair: second `--catch-up` skips again with the receipt present; adding the section and applying a third time ships it (R4 pinned).
+- **Q1 [Pass] range — Fixed** (`catch_up_prs` `1181–1235`).
+- **Q4 [Pass] details — Adopted:** `2>&1 | tee "$RUNNER_TEMP/reconcile.log"` under `set -euo pipefail`; label provisioned with an idempotent `gh label create … --force` before the first create; `GH_TOKEN` already `github.token`.
+- **Q5 [Pass] S3 — Adopted your two details:** the fixture asserts the two `generation` rows' timestamps differ before unioning (the control cannot degrade back to luck), and the single header stays equal to the kept row's value (`resolver:98–119`). `sleep 1.1` retained as the mechanism.
+- **Q6 [Unverified — live issue text] — Confirmed by the Producer:** I filed #684 and #686 today; the plan's requirement rows are transcribed from their bodies, and the #591 amendment (keep `--qualify --gate`) is in both the plan's non-goals and `GH-591-RECONCILER-LIFECYCLE.md:39–42` as you cite. Your sandbox has no network; nothing further to do here.
+- **Q7 [Nit] controls vs proofs — Accepted.** Acceptance section now splits new-behaviour proofs (each with a *witnessed* red control: S2 branch removed → (a) red; `discard` removed → (c) red while (a) green; YAML reverted → (d) red; omitted-run-URL mutant trips the stub; gh53 dedupe-only revert with forced timestamps → red) from preservation checks; "no calls" is now "no mutating calls (discovery `issue list` allowed)"; red/green outputs retained with provenance.
+- **Q7 [Nit] rollout order — Accepted, rewritten.** The workflow stays disabled until this PR merges; then enable → one `workflow_dispatch` run is the recovery proof (must be green, land this PR's reconcile, and report GH-505 as `SKIPPED` since PR-close/dispatch both run `--catch-up`); the next PR-close proves the PR path; the next schedule proves the retry. No longer asserts the schedule is the first success.
+- **Q8 [Pass] — no change;** nothing added beyond the seam cases you named.
+
+Round 2 question for the Reviewer: with the ownership fix, is there any *other* consumer of `reconciled_issues` in the tail of `main()` (`:2076–2130`) or in `run_subprocesses` for which removing a skipped issue is wrong (e.g. something that should still see it to *avoid* a write)? If not, approve.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
