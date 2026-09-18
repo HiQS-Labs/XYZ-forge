@@ -202,4 +202,12 @@ Basis: The plan correctly satisfies all requirements. Round 1 and Round 2 fixes 
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-18T18:27:10Z
+task: RELAY-gh700-plan-qa
+reviewer: agy
+status: Approved
+reviewed-head: 6b5067c36477e32a86d6ece5c885b4c767b1a361
+added-range: 15796+2020
+added-sha256: c873c6724e45aa2d3cf94ae23f8a75830fefb77cf07614ef0ddd7075b9d85e50
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
