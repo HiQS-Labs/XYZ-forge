@@ -66,7 +66,11 @@ Every doc in `PROJECT/2-WORKING` should have:
 6. for any discovery or spike phase, its findings written **back into this doc** before its QA gate can
    pass (see [Discovery & spike phases (Memory Injection)](#discovery--spike-phases-memory-injection))
 7. repo-relative paths only; no hardcoded absolute local paths
-8. before moving to `PROJECT/3-COMPLETED`, a `## Lessons Learned (For Future Agents)` section appended to capture quirks and gotchas
+
+**Highly recommended** (not a gate since GH-693): before moving to `PROJECT/3-COMPLETED`, a
+`## Lessons Learned (For Future Agents)` section capturing quirks and gotchas. `wave_reconcile.py`
+warns when it is missing or a placeholder and promotes the doc anyway — the warning is in every
+hosted-lane log, so a doc without one is visible, never blocked.
 
 Recommended fields when relevant:
 

@@ -2,7 +2,7 @@
 gh_issue: 625
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/625
 title: "GH-625: agent-chorus bridge — bind the HTTP server without socket.getfqdn() so the hosted macOS runner's suite goes green"
-status: active
+status: Complete
 created: 2026-09-14
 updated: 2026-09-15
 owner: orchestrator (Claude Code) · builder codex · reviewer agy

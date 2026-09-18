@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-18 — Hosted wave-reconcile lane: alert on red, skip-and-report a defective backlog item; gh53 fixture made deterministic (GH-684, GH-686)
+
+The hosted `wave-reconcile.yml` lane had 0 successes since 2026-09-11 (59 straight failures) and
+nothing told anyone: each run reconciled its PR *and* the whole backlog in one motion and died on the
+first defect anywhere in it — one stale doc from 8 September blocked every merge after it — and the
+local tools treated a red hosted run as the normal fallback. Now (S1) a final `if: always()` step runs
+`utils/py/hosted_lane_report.py` with the **job's** status: it keeps exactly one open issue labelled
+`hosted-reconcile-attention` (opened or commented on red or on any skipped item, closed on the next
+green run), with the run URL, the terminal `wave-reconcile: ERROR — …` line and every skip line; the
+reconcile log is tee'd to `$RUNNER_TEMP`, outside the tree the commit step guards; job permission
+`issues: write`. (S2) `wave_reconcile.py`: a landing recovered by `--catch-up` whose active doc fails
+`validate_lessons_learned` is reported as `wave-reconcile: SKIPPED GH-<n> — <reason>` **before** its
+first lifecycle write, leaves the marathon-plan ownership set (so its own retained drift is unrelated,
+not fatal), and is retried next run; landings named on the command line keep the fail-closed exit 5.
+`SKIP_MARKER` is the one literal, imported by the report tool. The full-suite qualification is
+untouched — #591 chose it. (S3, #686) the qualification's one red suite was a coin-flip:
+`test/gh53-releases-merge-resolve.sh` unioned the two sides byte-for-byte, and each side's
+`generation` settings row carries its own `updated_at`, so sides that straddled a second kept both
+rows and the resolver refused — correctly. The fixture now keeps one `settings` row per key, forces
+the second boundary and asserts it; the resolver's procedure comment names the row. Regression:
+`test/gh684-hosted-lane-report.sh` (new) and four cases in `test/gh421-auto-wave-reconcile.sh`
+(mixed batch with repeat-then-repair, explicit fail-closed pin, planner ownership with red control,
+workflow pins; the publication-script extraction is now bounded to its step). Evidence with four
+single-site red controls and the base flake witnessed 7/40 in `TESTS-RESULTS/2026-09-18+GH-684/`.
+Reversibility: Easy — revert S2 and the run is fail-closed again; revert the step and permission
+and the lane is silent again. Not here: #674, the 35 docs missing Lessons Learned, GH-505's doc.
 ## 2026-09-17 — Installer containment follow-up (GH-678 / Pulse #2)
 
 Installer tests clear inherited Gemini target overrides as well as redirecting HOME;
@@ -253,6 +279,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
+
+## [Unreleased] - 2026-09-18
+
+### Fixed
+- **GH-693: Lessons Learned: make the capture-doc section optional (highly recommended), not a promotion gate.** (express hotfix, GH-267 lane; suite test/gh693-lessons-learned-advisory.sh registered as the landing gate.)
 
 ## [Unreleased] - 2026-09-17
 

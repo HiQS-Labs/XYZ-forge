@@ -2,7 +2,7 @@
 gh_issue: 629
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/629
 title: "GH-629: merge-cleanup Phase 5 — wait for the hosted wave-reconcile run before reconciling locally; local fallback only when hosted failed or is absent"
-status: active
+status: Complete
 created: 2026-09-15
 updated: 2026-09-15
 owner: orchestrator (Claude Code) · builder codex · reviewer agy

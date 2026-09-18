@@ -1,8 +1,8 @@
 ---
 title: "GH-505 / GH-509: Approved means a reviewer approved — driver-attested terminal status"
-status: In progress
+status: Complete
 created: 2026-09-08
-updated: 2026-09-08
+updated: 2026-09-09
 owner: agent-b
 goal: relay-drive is the only process that can make STATUS Approved count — it knows the roles from its own invocation, pins the revision the reviewer reads, attests only an approval it watched a reviewer-role turn write, records exactly which bytes the reviewer added, and every consumer (jog, marathon success and recovery, jog's merge) validates that record against the file, the expected reviewer, the done token and the merge candidate instead of trusting the word in the file
 gh_issue: 505
@@ -94,7 +94,7 @@ Check **J**: `run_single_phase_drive` with a stub `relay-drive.sh` exiting 4 and
 ### Attestation · relay-drive — <utc ts>
 task: <relay_task>
 reviewer: <actor>
-status: <ns>
+status: Complete
 reviewed-head: <reviewed_head>
 added-range: <added_start>+<added_len>
 added-sha256: <digest>

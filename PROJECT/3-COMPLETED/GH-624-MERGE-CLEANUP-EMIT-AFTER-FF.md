@@ -2,7 +2,7 @@
 gh_issue: 624
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/624
 title: "GH-624: merge-cleanup Phase 5 — emit pr_merged after the fast-forward, commit and push the primary's ledger writes, wait for the hosted reconciler"
-status: active
+status: Complete
 created: 2026-09-14
 updated: 2026-09-15
 owner: orchestrator (Claude Code) · builder codex · reviewer agy

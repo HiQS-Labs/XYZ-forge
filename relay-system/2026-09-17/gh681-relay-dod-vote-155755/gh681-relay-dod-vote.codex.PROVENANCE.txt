@@ -1,0 +1,16 @@
+FIRSTHAND_COUNT=72
+ECHOED_COUNT=14
+ECHOED `[Pass]`
+ECHOED "A finding that asks for a **design change** (not a fix to a defect you observed) MUST state its falsifier: the concrete input or fixture that would show the requested design is wrong. A design request without a falsifier is downgraded to `[Should — no falsifier]`; the Producer may Decline it on that basis alone, and a later `[Pass]` on it must cite the falsifier having been run."
+ECHOED "defects"
+ECHOED `relay-turn-lib.sh`
+ECHOED `[Pass]`
+ECHOED `[Pass]`
+ECHOED `[Pass]`
+ECHOED `[Pass]`
+ECHOED `[Pass]`
+ECHOED `[Pass]`
+ECHOED `.relay-scratch/`
+ECHOED `.relay-scratch/`
+ECHOED `.relay-scratch/`
+ECHOED `.relay-scratch/`
