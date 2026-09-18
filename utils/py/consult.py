@@ -45,7 +45,7 @@ from claude_cli import resolve_binary as resolve_claude, preflight as claude_pre
 from proc_group import kill_existing
 
 # GH-492: how long an advisor may show no CPU and no transcript growth before it is killed,
-# independent of CONSULT_TIMEOUT. Deliberately well under the 300s default wall cap — a consult that
+# independent of CONSULT_TIMEOUT. Deliberately well under the 600s default wall cap — a consult that
 # has silently lost one advisor should degrade to the survivors promptly, since the whole point of
 # fanning out is that one model's failure is not the run's failure. CONSULT_IDLE_S=0 disables it.
 CONSULT_IDLE_DEFAULT_S = 90
@@ -280,9 +280,8 @@ def guarded_with_timeout(cmd, cwd, log_file, timeout_s, env=None, *, own_group=F
 def wait_with_idle_bound(proc, out_path, remaining_s):
     """Wait for one advisor, bounded by BOTH its wall remainder and an idle threshold.
 
-    Returns True if the advisor was killed for being idle, False if it exited on its own or hit
-    the wall remainder (the caller raises TimeoutExpired for both of those, preserving the
-    existing failure shape exactly).
+    Returns True if killed for idleness (reason retained on the process), False on
+    normal exit. Wall-cap expiry raises TimeoutExpired.
 
     GH-492. CONSULT_IDLE_S=0 disables the idle bound and restores pure wall-cap behaviour.
 
@@ -307,14 +306,21 @@ def wait_with_idle_bound(proc, out_path, remaining_s):
             # None is "not measured yet" and must never mean "kill" — see idle_seconds().
             if idle is not None and idle >= idle_cap:
                 _reason, detail = diag.classify()
-                try:
-                    with open(out_path, "a") as f:
-                        f.write(f"\nconsult: advisor was IDLE for >={idle_cap}s (no CPU, no transcript "
-                                f"growth) and was killed before the {int(remaining_s)}s wall cap "
-                                f"[{_reason}: {detail}]. This is an EXTERNAL condition consult "
-                                f"detected and contained, not one it prevented.\n")
-                except OSError:
-                    pass
+                # GH-648: kill-labeled policy; never infer a backend hang from silence.
+                proc.xyz_idle_reason = _reason
+                diagnostic = (f"advisor was IDLE for >={idle_cap}s (no CPU, no transcript "
+                              f"growth) and was killed before the {int(remaining_s)}s wall cap "
+                              f"[{_reason}: {detail}]. This is an EXTERNAL condition consult "
+                              f"detected and contained, not one it prevented.")
+                if out_path.endswith(".json"):
+                    # Keep the raw envelope parseable for cost capture on idle kills too.
+                    warn(diagnostic)
+                else:
+                    try:
+                        with open(out_path, "a") as f:
+                            f.write(f"\nconsult: {diagnostic}\n")
+                    except OSError:
+                        pass
                 _kill_advisor_group(proc)
                 return True
             time.sleep(CONSULT_POLL_S)
@@ -352,6 +358,23 @@ def _kill_advisor_group(proc):
             proc.wait(timeout=2)
         except Exception:  # noqa: BLE001
             pass
+
+def surface_partial(out_path, model, marker):
+    """Publish captured work without turning an interrupted advisor into a verdict.
+
+    Keep JSON envelopes byte-identical for cost capture; their marked readable copy
+    lives alongside the raw transcript. Other transcripts carry the warning first.
+    """
+    with open(out_path, "r", errors="replace") as stream:
+        body = stream.read()
+    partial_path = out_path + ".PARTIAL.md" if out_path.endswith(".json") else out_path
+    text = f"**{marker}**\n\n{body}"
+    if not body.strip():
+        text += "(No output captured.)\n"
+    with open(partial_path, "w") as stream:
+        stream.write(text)
+    print(f"consult: {model} -> {partial_path}\n{text}", flush=True)
+    return partial_path
 
 def agy_auth_preflight(agy_bin, log_file):
     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
@@ -425,7 +448,8 @@ def agy_auth_preflight(agy_bin, log_file):
                 with open(tmp) as tf: f.write(tf.read())
             f.write(f"\nconsult: agy auth pre-flight failed (exit {e.returncode}); {detail or 'no recognizable diagnostic'}. Run `agy login` in a normal terminal, then retry.\n")
     except Exception as e:
-        pass
+        with open(log_file, "a") as f:
+            f.write(f"\nconsult: agy auth pre-flight could not run: {type(e).__name__}: {e}\n")
 
     if os.path.exists(tmp): os.remove(tmp)
     return False
@@ -588,7 +612,7 @@ def main():
             base_env["CONSULT_TOOL_MODE"] = "programmatic"
             base_env["RELAY_SCRATCH_DIR"] = os.path.join(wt, ".relay-scratch")
 
-        timeout_s = int(os.environ.get("CONSULT_TIMEOUT", 300))
+        timeout_s = int(os.environ.get("CONSULT_TIMEOUT", 600))
         models = [m.strip() for m in models_str.split(",") if m.strip()]
         
         procs = []
@@ -770,15 +794,14 @@ def main():
                             f.write(f"consult: CLI diagnostics: {out}.stderr\n")
                     results.append((m, out, False))
             except subprocess.TimeoutExpired:
-                if getattr(proc, "xyz_own_group", False):
+                idle_reason = getattr(proc, "xyz_idle_reason", None)
+                if not idle_reason:  # The idle path already killed and reaped the advisor.
                     _kill_advisor_group(proc)
-                else:
-                    proc.kill()
-                    proc.wait()
                 failed += 1
-                summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
-                with open(out, "a") as f:
-                    f.write(f"\nconsult: advisor failed or exceeded the {timeout_s}s cap\n")
+                marker = (f"PARTIAL — killed at idle threshold [{idle_reason}], no verdict"
+                          if idle_reason else f"PARTIAL — hit the {timeout_s}s cap, no verdict")
+                partial_path = surface_partial(out, m, marker)
+                summary += f"\n  [FAIL] {m} -> {partial_path} ({marker})"
                 results.append((m, out, False))
 
         # GH-178 A4 / GH-223 (Python port): mechanically stamp any ANSWERED advisor whose transcript

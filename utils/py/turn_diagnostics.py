@@ -31,18 +31,22 @@ The exit code is deliberately unchanged: callers keep seeing 7. This adds a
 reason string next to it.
 
 Deliberately stdlib-only and cheap: one ``ps`` and one ``pgrep`` per interval, so
-it stays affordable on a 30-minute turn. A network probe (``lsof -i``, to prove
-the agent is waiting on its API) was considered and left out — it is slow enough
-to matter at this cadence, and worktree progress already separates "working" from
-"wedged" without it.
+it stays affordable on a 30-minute turn. Network state is sampled once during live sampling, when
+enough otherwise-idle observations exist. An established connection proves
+that the turn may still be waiting on its backend; no connection does *not* prove
+that it is wedged. If ``lsof`` is unavailable or fails, attribution degrades to
+``timeout-unclassified`` and never changes the turn's exit code.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
+import sys
 import threading
 import time
+from typing import TextIO
 
 #: How often to sample. Cheap probes, but a turn can run 30+ minutes.
 DEFAULT_INTERVAL_S = 10.0
@@ -87,8 +91,18 @@ IDLE_MIN_SAMPLES = 3
 REASON_SECURITY_DIALOG = "timeout-blocked-security-dialog"
 REASON_CPU_BOUND = "timeout-cpu-bound"
 REASON_SLOW_PROGRESS = "timeout-slow-but-progressing"
-REASON_IDLE = "timeout-idle-no-progress"
+REASON_IDLE = "timeout-idle-unknown"
+REASON_IDLE_IN_FLIGHT = "timeout-idle-in-flight"
 REASON_UNCLASSIFIED = "timeout-unclassified"
+
+TERMINATION_IDLE_KILL = "idle-kill"
+TERMINATION_WALL_CAP = "wall-cap"
+TERMINATION_CHILD_ORPHAN = "child-orphan"
+TERMINATION_UNKNOWN = "unknown"
+TERMINATION_KINDS = frozenset({
+    TERMINATION_IDLE_KILL, TERMINATION_WALL_CAP,
+    TERMINATION_CHILD_ORPHAN, TERMINATION_UNKNOWN,
+})
 
 
 def _run(cmd: list[str], timeout: float = 5.0) -> str:
@@ -101,6 +115,80 @@ def _run(cmd: list[str], timeout: float = 5.0) -> str:
         return out.stdout.decode("utf-8", "replace")
     except Exception:  # noqa: BLE001 — a probe must never fail the turn
         return ""
+
+
+def _tree_pids(root_pid: int, ps_output: str | None = None) -> list[int]:
+    """Return *root_pid* and every descendant visible in one ``ps`` snapshot."""
+    out = ps_output if ps_output is not None else _run(["ps", "-axo", "pid=,ppid="])
+    if not out:
+        return [root_pid]
+    children: dict[int, list[int]] = {}
+    for line in out.splitlines():
+        fields = line.split(None, 2)
+        if len(fields) < 2:
+            continue
+        try:
+            pid, ppid = int(fields[0]), int(fields[1])
+        except ValueError:
+            continue
+        children.setdefault(ppid, []).append(pid)
+    pids, stack, seen = [root_pid], list(children.get(root_pid, [])), {root_pid}
+    while stack:
+        pid = stack.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        pids.append(pid)
+        stack.extend(children.get(pid, []))
+    return pids
+
+
+def _network_state(root_pid: int) -> str:
+    """Return network state for *root_pid* and its current descendants."""
+    try:
+        pids = ",".join(str(pid) for pid in _tree_pids(root_pid))
+        probe = subprocess.run(
+            ["lsof", "-a", "-n", "-P", "-p", pids,
+             "-iTCP", "-sTCP:ESTABLISHED", "-F", "n"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            timeout=5.0, check=False,
+        )
+    except Exception:  # noqa: BLE001 — attribution must not fail the turn
+        return "unclassified"
+    # lsof uses status 1 for both no matches and errors. An error/warning
+    # means visibility may be incomplete; never call that a clean empty probe.
+    if probe.stderr.strip():
+        return "unclassified"
+    if probe.returncode == 0:
+        return "established" if probe.stdout.strip() else "none"
+    if probe.returncode == 1:
+        return "none"
+    return "unclassified"
+
+
+def termination_record(
+    termination: str, reason: str, detail: str, *, exit_code: int = 7,
+    observed_at: float | None = None,
+) -> dict[str, object]:
+    """Build one stable, JSON-safe termination record for a run log."""
+    kind = termination if termination in TERMINATION_KINDS else TERMINATION_UNKNOWN
+    return {
+        "event": "turn-termination", "termination": kind, "reason": reason,
+        "detail": detail, "exit_code": exit_code,
+        "observed_at": time.time() if observed_at is None else observed_at,
+    }
+
+
+def emit_termination_record(
+    termination: str, reason: str, detail: str, *, exit_code: int = 7,
+    observed_at: float | None = None, stream: TextIO | None = None,
+) -> dict[str, object]:
+    """Write one structured termination record and return the same record."""
+    record = termination_record(
+        termination, reason, detail, exit_code=exit_code, observed_at=observed_at,
+    )
+    print(json.dumps(record, sort_keys=True), file=stream or sys.stderr, flush=True)
+    return record
 
 
 def _parse_ps_time(value: str) -> float:
@@ -136,39 +224,38 @@ def _parse_ps_time(value: str) -> float:
     return days * 86400 + h * 3600 + m * 60 + s
 
 
-def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
-    """Total CPU seconds and process count for root_pid's descendants.
-
-    Excludes root_pid itself — the shim's own CPU is not the agent's. Returns
-    (0.0, 0) if the ps probe fails, which classify() treats as "no signal"
-    rather than "idle".
-    """
+def _descendant_cpu_by_pid(root_pid: int) -> dict[int, float]:
+    """Latest cumulative CPU seconds for each visible descendant."""
     out = _run(["ps", "-axo", "pid=,ppid=,time="])
     if not out:
-        return (0.0, 0)
-    children: dict[int, list[int]] = {}
+        return {}
     cpu: dict[int, float] = {}
     for line in out.splitlines():
         fields = line.split(None, 2)
         if len(fields) < 3:
             continue
         try:
-            pid, ppid = int(fields[0]), int(fields[1])
+            pid = int(fields[0])
         except ValueError:
             continue
-        children.setdefault(ppid, []).append(pid)
         cpu[pid] = _parse_ps_time(fields[2])
-    total, count, stack = 0.0, 0, list(children.get(root_pid, []))
-    seen = set()
-    while stack:
-        pid = stack.pop()
-        if pid in seen:
-            continue
-        seen.add(pid)
-        total += cpu.get(pid, 0.0)
-        count += 1
-        stack.extend(children.get(pid, []))
-    return (total, count)
+    return {pid: cpu.get(pid, 0.0) for pid in _tree_pids(root_pid, out)[1:]}
+
+
+def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
+    """Total CPU seconds and process count for root_pid's live descendants.
+
+    Excludes root_pid itself — the shim's own CPU is not the agent's. Returns
+    (0.0, 0) if the ps probe fails, which classify() treats as "no signal"
+    rather than "idle".
+    """
+    cpu = _descendant_cpu_by_pid(root_pid)
+    return (sum(cpu.values()), len(cpu))
+
+
+# Existing suites monkeypatch the stable two-tuple probe above. Keep that seam
+# while the production sampler uses the richer per-PID snapshot.
+_ORIGINAL_DESCENDANT_CPU_SECONDS = _descendant_cpu_seconds
 
 
 def _security_dialog_present() -> bool:
@@ -278,15 +365,31 @@ class TurnDiagnostics:
         self.security_dialog_seen = False
         self._dialog_streak = 0
         self.samples: list[tuple[float, float, int]] = []   # (wall, cpu_seconds, nproc)
+        # A child disappears from ps when it exits. Retain each PID's peak so a
+        # workload made of short-lived children cannot erase CPU already spent.
+        self._pid_cpu_peaks: dict[int, float] = {}
         self.mtime_start = 0.0
         self.mtime_last = 0.0
         # GH-492: monotonic timestamp of the last sample that showed the tree doing
         # SOMETHING — CPU growth past the jitter epsilon, or a file newer than the
         # one we last saw. `idle_seconds()` measures forward from here.
         self._last_progress_t: float | None = None
+        # The process tree is reaped before classify() runs, so an in-flight
+        # signal must be captured while the turn is alive. Probe at most once,
+        # after enough otherwise-idle samples exist to justify the cost.
+        self._network_probe_attempted = False
+        self._network_state_observed: str | None = None
 
     def _sample(self) -> None:
-        cpu, nproc = _descendant_cpu_seconds(self.root_pid)
+        if _descendant_cpu_seconds is _ORIGINAL_DESCENDANT_CPU_SECONDS:
+            current_cpu = _descendant_cpu_by_pid(self.root_pid)
+            for pid, seconds in current_cpu.items():
+                self._pid_cpu_peaks[pid] = max(self._pid_cpu_peaks.get(pid, 0.0), seconds)
+            cpu, nproc = sum(self._pid_cpu_peaks.values()), len(current_cpu)
+        else:
+            # Backward-compatible test/probe seam: callers have long replaced
+            # this helper with a two-tuple stub.
+            cpu, nproc = _descendant_cpu_seconds(self.root_pid)
         now = time.monotonic()
         prev_cpu = self.samples[-1][1] if self.samples else None
         self.samples.append((now, cpu, nproc))
@@ -308,6 +411,15 @@ class TurnDiagnostics:
         ):
             self._last_progress_t = now
         self.mtime_last = mtime_now
+        if (
+            not self._network_probe_attempted
+            and len(self.samples) >= IDLE_MIN_SAMPLES
+            and self.cpu_ratio() is not None
+            and self.cpu_ratio() < CPU_BUSY_RATIO
+            and not (self.mtime_last > self.mtime_start)
+        ):
+            self._network_probe_attempted = True
+            self._network_state_observed = _network_state(self.root_pid)
 
     def _loop(self) -> None:
         while not self._stop.is_set():
@@ -331,7 +443,7 @@ class TurnDiagnostics:
     def cpu_ratio(self) -> float | None:
         """CPU seconds per wall second over the sampled window, or None.
 
-        Anchored on the PEAK observed cumulative CPU, not the last sample. A
+        Uses the PEAK observed cumulative CPU, not the last sample. A
         process's accounting disappears from ``ps`` the moment it exits, and the
         final sample is taken *after* the timeout kill — so reading the last
         sample scores a dead runaway as 0.00s/s and reports it as idle, which is
@@ -341,17 +453,14 @@ class TurnDiagnostics:
         if len(self.samples) < 2:
             return None
         t0, c0, _ = self.samples[0]
-        t_peak, c_peak = t0, c0
-        for t, c, _ in self.samples:
+        c_peak = c0
+        for _, c, _ in self.samples:
             if c > c_peak:
-                t_peak, c_peak = t, c
-        # A process that never accumulates CPU leaves the peak at sample 0, so
-        # the peak window is zero-length. That is the BLOCKED case — the one this
-        # module exists to name — and returning None there would file it as
-        # `unclassified` instead of `idle-no-progress`. Measure a flat trace over
-        # the full observed window so it scores a real 0.0, and reserve the peak
-        # window for traces that actually grew.
-        span = (t_peak - t0) if c_peak > c0 else (self.samples[-1][0] - t0)
+                c_peak = c
+        # The denominator is the full observed window. Using the timestamp of
+        # the CPU peak makes a brief startup burst look continuously busy after
+        # a long idle hang.
+        span = self.samples[-1][0] - t0
         if span <= 0:
             return None
         return max(0.0, (c_peak - c0)) / span
@@ -385,7 +494,7 @@ class TurnDiagnostics:
         change fixes it and the operator action is specific.
         """
         ratio = self.cpu_ratio()
-        progressed = self.mtime_last > self.mtime_start > 0
+        progressed = self.mtime_last > self.mtime_start
         bits = []
         if ratio is not None:
             bits.append(f"cpu={ratio:.2f}s/s")
@@ -416,8 +525,50 @@ class TurnDiagnostics:
                 "the agent was writing files but did not finish — genuinely slow; raising the "
                 f"turn budget is the appropriate response. [{detail}]",
             )
+        # Never probe here: timeout handling has already reaped the child tree.
+        # A missing cached observation means live sampling never established a
+        # safe idle window, so attribution must remain unclassified.
+        network = self._network_state_observed
+        if network is None:
+            return (
+                REASON_UNCLASSIFIED,
+                f"live sampling never established a safe idle window for the network probe [{detail}]",
+            )
+        if network == "unclassified":
+            return (
+                REASON_UNCLASSIFIED,
+                f"idle signals were observed, but the one-shot network probe failed [{detail}]",
+            )
+        if network == "established":
+            return (
+                REASON_IDLE_IN_FLIGHT,
+                "no CPU or file growth was observed, but an established outbound connection "
+                f"means the turn may still be awaiting its backend [{detail}]",
+            )
         return (
             REASON_IDLE,
-            "no CPU and no file progress — the agent was blocked waiting on something external "
-            f"(a lock, a prompt, or a hung network call) rather than working. [{detail}]",
+            "no CPU or file growth was observed and no established connection was visible; "
+            f"without a positive in-flight signal the cause remains unknown [{detail}]",
+        )
+
+    def termination_record(
+        self, termination: str, *, exit_code: int = 7,
+        observed_at: float | None = None,
+    ) -> dict[str, object]:
+        """Classify this observation and package it for the run log."""
+        reason, detail = self.classify()
+        return termination_record(
+            termination, reason, detail,
+            exit_code=exit_code, observed_at=observed_at,
+        )
+
+    def emit_termination_record(
+        self, termination: str, *, exit_code: int = 7,
+        observed_at: float | None = None, stream: TextIO | None = None,
+    ) -> dict[str, object]:
+        """Classify and emit this observation as one structured log line."""
+        reason, detail = self.classify()
+        return emit_termination_record(
+            termination, reason, detail,
+            exit_code=exit_code, observed_at=observed_at, stream=stream,
         )
