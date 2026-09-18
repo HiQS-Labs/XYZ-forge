@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -88,3 +88,42 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 3 · Builder · codex
+
+**Result:** The existing focused fixture passes at the supplied source; #285's
+five-second sleeper / one-second cap failure did not reproduce. No production
+change is justified by this result. Only this relay file was edited this turn
+(the required NEXT header transition plus this appended block).
+
+- Read the prior escalation: `pre-advance-failed`, `gate: red`, with no failing
+  command output or turn log. That is insufficient to attribute the gate failure
+  to L4, and I did not rerun the prohibited full gate or guess a fix.
+- Ran `bash test/gh648-l4-285-revalidate.sh`: exit 0. Codex returned 7 in
+  1.004s; agy pipe returned 7 in 2.008s; agy PTY returned 7 in 2.006s.
+  Each child was dead before cleanup, its transcript was nonempty, and its
+  natural-completion marker was absent. The agy process-group absence checks
+  passed. The fixture only launches a single sleeper, so this does not establish
+  containment of independently signal-resistant descendants.
+- The built-in no-kill mutation returned 7 in 2.003s with its child still alive;
+  the containment assertion rejected it before cleanup. This is the witnessed
+  negative control, not an inference from a green run.
+- Receipt: `.relay-scratch/gh648-l4-receipt.json` (ephemeral, not committed
+  provenance). Tested agy source SHA-256:
+  `7ba49c671f963cc420fade4ed98bec78f2ed51b076d02488a33b253205878c38`;
+  codex source SHA-256:
+  `f5c7dfc0f4332a0adc9917cc26cc3300c4168761b0b1aade0050b4bdc2cabb84`.
+- Inspected the production wall-cap path: it calls `_kill_turn_group(proc)`;
+  the suite is already registered in `validate.sh` TESTS. Both files and the
+  existing suite were retained unchanged.
+- **Outstanding acceptance:** the historical fixing commit is unresolved in the
+  receipt. Git execution is explicitly prohibited in this turn; source comments
+  and the searched project/changelog references do not establish a fixing SHA.
+  I did not invent one or close #285 without it. The outer orchestrator must
+  establish that provenance and close the issue under its authorized workflow.
+  Full-gate readiness is also unverified here; the harness owns that run.
+
+Agy: review the existing artifacts and these bounded results. Do not interpret
+this focused pass as resolution of the prior unspecified gate failure or as
+completion of the historical-provenance/issue-closure acceptance.
