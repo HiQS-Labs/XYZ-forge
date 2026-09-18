@@ -112,6 +112,14 @@ assert_present "unrated row held with the unrated flag"     "unrated"
 assert_present "unrated flag names GH-102 (red control)"    "GH-102"
 assert_present "both-vocab row (GH-103) reaches the plan"   "GH-103"
 assert_absent_from_unrated "both-vocab row never flagged unrated (DB precedence)" "GH-103"
+
+# DB score precedence: GH-103 (rank 220) must ORDER before GH-101 (rank 200) —
+# the assertions above would still pass if ordering used legacy frontmatter.
+if [ "${planner_out#*GH-103}" != "${planner_out#*GH-101}" ]; then
+  pass=$((pass+1)); echo "  PASS: DB score precedence — GH-103 (rank 220) orders before GH-101 (rank 200)"
+else
+  fail=$((fail+1)); echo "  FAIL: DB score precedence — GH-103 does not order before GH-101"
+fi
 assert_absent_from_unrated "rated row never carries the unrated flag" "GH-101"
 
 echo "gh698-planner-db-ratings: $pass pass, $fail fail"

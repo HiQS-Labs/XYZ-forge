@@ -103,9 +103,11 @@ you are standing in.
    - Park the ROADMAP pointer (Step 5).
    - **Do not commit and do not push.** See Guardrails — this is the rule most likely to bite.
 
-5. **Park the intake in the RELEASES DB** (`python3 utils/py/releases_app.py roadmap add …`,
-   or `hq park`) — required at capture time (`ROUTER.md`, `PROJECT/PDDA.md` → RELEASES DB
-   contract; ROADMAP.md is retired, GH-269):
+5. **Park the intake in the RELEASES DB** — run against the resolved XYZ checkout, never
+   the caller's repo (the CLI writes that repo's `releases.db`): 
+   `(cd "$XYZ_REPO" && python3 utils/py/releases_app.py --root "$XYZ_REPO" roadmap add …)`;
+   or `hq park <project> …`, which resolves the target itself — required at capture time
+   (`ROUTER.md`, `PROJECT/PDDA.md` → RELEASES DB contract; ROADMAP.md is retired, GH-269):
 
    ```md
    - **GH-<n> — <short title>** (<YYYY-MM-DD>) - <one-line symptom>. Bug filed via /file-xyz-bug

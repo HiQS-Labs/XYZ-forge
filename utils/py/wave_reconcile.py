@@ -152,7 +152,10 @@ def check_hosted_reconciler_in_flight(repo_root, repo_slug=None, force=False):
 class RollbackJournal:
     """Snapshots pre-mutation file states and rolls back on failure."""
 
-    def __init__(self):
+    def __init__(self, repo_root=None):
+        # GH-698 finding 4: rollback telemetry must land in the TARGET repo's
+        # .tick/events even when reconciliation runs from another cwd.
+        self.repo_root = os.path.abspath(repo_root) if repo_root else os.getcwd()
         self.backups = {}  # original_path -> backup_temp_path
         self.created_files = set()
         self.deleted_files = set()
@@ -174,7 +177,7 @@ class RollbackJournal:
         # .tick/events/ so radar (and any .tick reader) sees the failure without
         # reading CI logs — the same surface the drivers already use.
         try:
-            events_dir = os.path.join(os.getcwd(), ".tick", "events")
+            events_dir = os.path.join(self.repo_root, ".tick", "events")
             if os.path.isdir(events_dir):
                 evt = os.path.join(events_dir, "%s-wave-reconcile-rollback.jsonl"
                                    % time.strftime("%Y-%m-%dT%H-%M-%SZ", time.gmtime()))
@@ -1939,7 +1942,7 @@ def main():
         return
 
     lock_file = os.path.join(repo_root, ".git", "wave-reconcile.lock")
-    journal = RollbackJournal()
+    journal = RollbackJournal(repo_root=repo_root)
     baseline = None
 
     try:
