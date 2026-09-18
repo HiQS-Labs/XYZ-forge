@@ -37,6 +37,12 @@ def log(msg):
     print(f"wave-reconcile: {msg}", flush=True)
 
 
+# GH-684: the one skip literal. A catch-up-recovered landing whose doc fails hygiene is reported as
+# `wave-reconcile: SKIPPED GH-<n> — <reason>`; utils/py/hosted_lane_report.py imports this marker so
+# the emitter and the consumer cannot drift. The end-of-run summary deliberately does NOT start with it.
+SKIP_MARKER = "SKIPPED "
+
+
 def log_err(msg):
     print(f"wave-reconcile: ERROR — {msg}", file=sys.stderr, flush=True)
 
@@ -923,10 +929,13 @@ def parse_doc_frontmatter(doc_path):
 
 
 def validate_lessons_learned(content, doc_name):
-    """Assert ## Lessons Learned section exists and contains substantive content (GH-496)."""
+    """Detect a missing or placeholder ## Lessons Learned section (GH-496). Returns the finding or None.
+
+    GH-693: the section is highly recommended, never a promotion gate. Every caller routes the
+    finding through warn_lessons_learned() — nothing dies, skips, or exits non-zero on it."""
     m = re.search(r"##\s+Lessons\s+Learned.*?(?=\n##\s+(?!#)|\Z)", content, re.IGNORECASE | re.DOTALL)
     if not m:
-        return f"Doc {doc_name} is missing mandatory '## Lessons Learned (For Future Agents)' section."
+        return f"Doc {doc_name} has no '## Lessons Learned (For Future Agents)' section."
 
     section_text = m.group(0)
     lines = section_text.splitlines()
@@ -946,8 +955,21 @@ def validate_lessons_learned(content, doc_name):
         substantive_lines.append(trimmed)
 
     if not substantive_lines:
-        return f"Doc {doc_name} has empty/placeholder '## Lessons Learned' section. Substantive reflections are required before closeout."
+        return f"Doc {doc_name} has empty/placeholder '## Lessons Learned' section."
     return None
+
+
+# GH-693: the one advisory emitter. The operator demoted Lessons Learned from a mandatory section
+# (enforced since GH-165, tightened in GH-496, skip-and-report since GH-684) to a highly recommended
+# one: a reflection field the reconciler cannot evaluate must not block lifecycle writes or red a
+# hosted lane (#691). It is said loudly in every log and the promotion proceeds.
+WARN_MARKER = "WARN — "
+
+
+def warn_lessons_learned(content, doc_name):
+    finding = validate_lessons_learned(content, doc_name)
+    if finding:
+        log(f"{WARN_MARKER}{finding} Highly recommended, not required (GH-693) — promotion proceeds.")
 
 
 def validate_frontmatter_schema(doc_path):
@@ -999,7 +1021,7 @@ def validate_frontmatter_schema(doc_path):
 
 
 def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, journal=None):
-    """Assert ## Lessons Learned, update frontmatter, and compute destination path."""
+    """For merged docs, warn on a missing/placeholder ## Lessons Learned (GH-693); update frontmatter and compute destination path."""
     with open(doc_path, "r", encoding="utf-8", errors="replace") as f:
         content = f.read()
 
@@ -1015,10 +1037,8 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
         ship_date = datetime.now().strftime("%Y-%m-%d")
 
     if is_merged:
-        # Assert lessons learned section exists and has substantive content for merged docs (GH-496)
-        ll_err = validate_lessons_learned(content, os.path.basename(doc_path))
-        if ll_err:
-            die(ll_err, code=5)
+        # Lessons Learned is advisory (GH-693): report, never die.
+        warn_lessons_learned(content, os.path.basename(doc_path))
 
         new_status = "Complete"
         dest_folder = "3-COMPLETED"
@@ -1785,11 +1805,8 @@ def run_pre_merge(repo_root, args):
             errors.append(fm_err)
             doc_contract_failed = True
 
-        # 2. Lessons Learned
-        ll_err = validate_lessons_learned(content, doc_name)
-        if ll_err:
-            errors.append(ll_err)
-            doc_contract_failed = True
+        # 2. Lessons Learned — advisory (GH-693); frontmatter above stays the doc contract.
+        warn_lessons_learned(content, doc_name)
 
     # 3. Test receipts
     receipt_err = validate_pre_merge_receipts(repo_root, head_sha, pr_num)
@@ -1944,6 +1961,10 @@ def main():
             reconciled_issues = set()
             repo_slug = github_slug_from_origin(repo_root)  # GH-429: URL-form closers, this repo only
             metadata = {}
+            # GH-684: landings named on the command line (or manifest) fail closed as before; only the
+            # ones --catch-up recovers may be skipped-and-reported when their doc is defective.
+            explicit_items = {(kind, str(value)) for kind, value in landing_items}
+            skipped_issues = set()
             if args.catch_up:
                 landing_items.extend(("pr", str(n)) for n in catch_up_prs(
                     repo_root, repo_slug, offline_manifest, qualification_metadata=metadata if args.qualify else None))
@@ -2029,6 +2050,12 @@ def main():
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
                         log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
                     elif doc_path:
+                        # GH-684 kept the shape "a defective BACKLOG doc stops only itself" (log
+                        # `SKIP_MARKER`, discard from reconciled_issues, add to skipped_issues,
+                        # continue) for a hygiene check run before this issue's first lifecycle
+                        # write. Its only check was Lessons Learned, which GH-693 made advisory —
+                        # validate_and_update_doc now warns instead — so no backlog item is skipped
+                        # for it any more; the marker and skipped_issues stay for the next real defect.
                         if is_merged:
                             ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, args.dry_run, journal)
                         log(f"  Found active doc: {os.path.basename(doc_path)}")
@@ -2108,6 +2135,10 @@ def main():
                 log("Nothing to reconcile; no artifacts written")
                 journal.cleanup()
                 return
+
+            if skipped_issues:
+                log(f"{len(skipped_issues)} backlog item(s) skipped — "
+                    + ", ".join(f"GH-{n}" for n in sorted(skipped_issues)))
 
             # Subprocess orchestration
             run_subprocesses(

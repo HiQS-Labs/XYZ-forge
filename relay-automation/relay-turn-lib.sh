@@ -1035,11 +1035,28 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # not edit the artifact — so the prompt matches the relay-file-only allowlist rtl_init enforces (an
   # agent told it MAY edit X and then reverted is needless friction; tell it the truth up front).
   local role_note=""
+  # GH-681: the verification clause is role-specific. A Producer verifies with the focused test for
+  # the file it changed; a Reviewer changes no source file, so that sentence would only contradict
+  # the probe allowance below. Each role gets exactly one verification instruction.
+  local verify_note=' Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.'
   # GH-397: pass the acting agent explicitly — $1 here is the turn's real actor, so the role lookup
   # never has to fall back to the RELAY_AGENT env or to agent-maintained NEXT: prose.
   if rtl_is_reviewer_turn "$f" "$agent"; then
     csv_rel=""
-    role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn. When approving, hand the token off with done and set STATUS: Approved.'
+    # GH-681: a reviewer forbidden to execute anything cannot measure a claim, and the gh673 final
+    # QA relay showed what that costs — a Round-1 [Blocker] generalized one observation into a rule
+    # that blanks every issue on real data, and the same seat [Pass]ed it next round; the defect was
+    # a row count nobody was allowed to run. Reviewers may now run narrow, non-mutating probes.
+    # Containment is unchanged: rtl_enforce / rtl_worktree_end still revert anything a probe leaves
+    # outside the relay file and the sanctioned scratch dirs. Test suites stay out of the worktree
+    # (AGENTS.md: never run validate.sh or test/*.sh from a linked worktree), and the -B flag alone is
+    # not enough — it does not reach child interpreters, and _rtl_sig hashes .relay-artifacts/ with
+    # find(1), so bytecode written under the seeded artifact flips its signature regardless of
+    # .gitignore. Hence the exported env in the recipe. Scratch is discarded after the turn, so the
+    # evidence must be quoted in the finding. The first and last sentences are asserted by
+    # test/gh397 and test/gh505 respectively — keep them verbatim.
+    verify_note=''
+    role_note=' You are the REVIEWER this turn: do NOT edit or create any artifact or source file; the relay file is the only tracked file you may change. You MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim. Put probe output and temp files under .relay-scratch/ or $TMPDIR, never elsewhere in the tree: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR". Scratch is discarded after your turn, so quote the command, exit status and decisive output in the finding itself. Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures here — those belong in a disposable full clone; a claim that can only be measured that way is graded [Unverified — needs clone run], and the harness gate runs after your turn. Any other change to the tree is reverted and fails your turn. When approving, hand the token off with done and set STATUS: Approved.'
   fi
   # GH-31 / #15: point the reviewer at the seeded read-only artifact (worktree-relative; it is NOT a
   # writable edit target — an edit fails the turn).
@@ -1052,8 +1069,8 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   if [[ "${XYZ_TOOL_MODE:-${RELAY_TOOL_MODE:-}}" == "programmatic" ]]; then
     prog_note=" Programmatic tool mode is enabled: diagnostic Python scripts may be executed via script_runner.py with output directed to .relay-scratch/."
   fi
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s. Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.%s%s' \
-    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$scratch_note" "$prog_note"
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s. Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.%s%s%s' \
+    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$verify_note" "$scratch_note" "$prog_note"
 }
 
 rtl_before() {

@@ -17,8 +17,11 @@ commit-based reconciliation replace the former immediately-merged ghost PR. The
 full pre-push gate is bypassed on every express push (XYZ_SKIP_PREPUSH=1).
 
 Exit codes: 0 ok; 3 express-refused (guardrail); 4 environment/dependency.
-Every refusal and every fired run appends a .tick event under .tick/events/
-(runtime state, untracked) so standup can report the weekly express count.
+Every refusal and every fired run appends a telemetry record under .tick/express/
+(runtime state, untracked; mirrored to ~/.config/xyz/events/) so standup can report
+the weekly express count. NOT .tick/events/ — that directory is tick's coordination
+log, folded by task, and a record without a `task` crashed every projecting verb in
+the clone (GH-694).
 """
 
 import argparse
@@ -95,7 +98,11 @@ def refuse(root, rule, reason, issue=None):
 
 
 def write_tick(root, verb, **fields):
-    events = os.path.join(root, ".tick", "events")
+    # GH-694: a sibling of tick's log, never inside it. `readAllEvents` parses every *.jsonl under
+    # .tick/events/ with no schema check and `project.js` folds by `task`; this analytics record has
+    # neither `type` nor `task`, so one express run left `tick info`/`release`/`relay-drive.sh` dead
+    # in the clone (`localeCompare of undefined`). The central mirror below keeps the same shape.
+    events = os.path.join(root, ".tick", "express")
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3] + "Z"
     target = "gh-%s" % fields.get("issue") if fields.get("issue") else "lane"
     filename = "%s-%s-%s.jsonl" % (ts, verb, target)
@@ -824,6 +831,8 @@ def closeout(root, args, sha, suite, state):
                suite=suite, release=rel, files=len(state["paths"]), insertions=state["insertions"])
     print("express-land: commit %s pushed to development, issue #%d closed, mfi shipped against %s, reconcile persisted"
           % (sha[:12], args.issue, rel or "(none)"))
+    # GH-690: the task clone outlives this run; point at the sanctioned retirement tool
+    print("clone retirement: this task clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified")
     return dict(sha=sha, release=rel)
 
 

@@ -30,6 +30,13 @@ if [ -L "$LINK" ]; then
     echo "$SKILL_NAME: already installed → $LINK -> $SELF_DIR"
     exit 0
   fi
+  if [ -L "$LINK" ] && [ -e "$LINK" ]; then
+    # GH-678: a live link that is not ours belongs to another installer or to a managed
+    # Skills Army collection. Only a dangling link is stale enough to replace.
+    echo "$SKILL_NAME: $LINK already points at $(readlink "$LINK") — not replacing a live link." >&2
+    echo "  Remove it yourself if that is intended." >&2
+    exit 1
+  fi
   rm -f "$LINK"
 elif [ -e "$LINK" ]; then
   echo "$SKILL_NAME: $LINK exists as a real file or directory — not overwriting." >&2

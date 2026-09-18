@@ -33,5 +33,5 @@ sentinel_gh pr create --base "$BASE" --head "$BRANCH" --title "$title" \
 if [ -n "$DOC" ] && [ -f "$DOC" ]; then
   mkdir -p PROJECT/3-COMPLETED
   git mv "$DOC" "PROJECT/3-COMPLETED/$(basename "$DOC")" 2>/dev/null || mv "$DOC" "PROJECT/3-COMPLETED/$(basename "$DOC")"
-  echo "pr-emit: moved $(basename "$DOC") → 3-COMPLETED (add a ## Lessons Learned before completion)"
+  echo "pr-emit: moved $(basename "$DOC") → 3-COMPLETED (a ## Lessons Learned section is highly recommended)"
 fi

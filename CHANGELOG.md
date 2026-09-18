@@ -1,5 +1,106 @@
 # Changelog
 
+## 2026-09-18 — Hosted wave-reconcile lane: alert on red, skip-and-report a defective backlog item; gh53 fixture made deterministic (GH-684, GH-686)
+
+The hosted `wave-reconcile.yml` lane had 0 successes since 2026-09-11 (59 straight failures) and
+nothing told anyone: each run reconciled its PR *and* the whole backlog in one motion and died on the
+first defect anywhere in it — one stale doc from 8 September blocked every merge after it — and the
+local tools treated a red hosted run as the normal fallback. Now (S1) a final `if: always()` step runs
+`utils/py/hosted_lane_report.py` with the **job's** status: it keeps exactly one open issue labelled
+`hosted-reconcile-attention` (opened or commented on red or on any skipped item, closed on the next
+green run), with the run URL, the terminal `wave-reconcile: ERROR — …` line and every skip line; the
+reconcile log is tee'd to `$RUNNER_TEMP`, outside the tree the commit step guards; job permission
+`issues: write`. (S2) `wave_reconcile.py`: a landing recovered by `--catch-up` whose active doc fails
+`validate_lessons_learned` is reported as `wave-reconcile: SKIPPED GH-<n> — <reason>` **before** its
+first lifecycle write, leaves the marathon-plan ownership set (so its own retained drift is unrelated,
+not fatal), and is retried next run; landings named on the command line keep the fail-closed exit 5.
+`SKIP_MARKER` is the one literal, imported by the report tool. The full-suite qualification is
+untouched — #591 chose it. (S3, #686) the qualification's one red suite was a coin-flip:
+`test/gh53-releases-merge-resolve.sh` unioned the two sides byte-for-byte, and each side's
+`generation` settings row carries its own `updated_at`, so sides that straddled a second kept both
+rows and the resolver refused — correctly. The fixture now keeps one `settings` row per key, forces
+the second boundary and asserts it; the resolver's procedure comment names the row. Regression:
+`test/gh684-hosted-lane-report.sh` (new) and four cases in `test/gh421-auto-wave-reconcile.sh`
+(mixed batch with repeat-then-repair, explicit fail-closed pin, planner ownership with red control,
+workflow pins; the publication-script extraction is now bounded to its step). Evidence with four
+single-site red controls and the base flake witnessed 7/40 in `TESTS-RESULTS/2026-09-18+GH-684/`.
+Reversibility: Easy — revert S2 and the run is fail-closed again; revert the step and permission
+and the lane is silent again. Not here: #674, the 35 docs missing Lessons Learned, GH-505's doc.
+## 2026-09-17 — Installer containment follow-up (GH-678 / Pulse #2)
+
+Installer tests clear inherited Gemini target overrides as well as redirecting HOME;
+all three sandbox paths and untouched sentinel roots are checked. AgentChorus preserves
+live foreign legacy aliases, and the installer matrix discovers its nonempty input set
+rather than assuming 22 skills. These changes do not alter configured IDE selection.
+Correction to the earlier entry: Gemini targets were added on August 20 in `3c820f06`;
+August 23's `9be6f70f` renamed the already-affected skill. Focused evidence is retained
+under `test/baselines/gh678-pulse2/`; full-gate status remains separate. Reversibility: Easy.
+
+## 2026-09-17 — Skill installers stop stealing symlinks; gate no longer writes real HOME (GH-678)
+
+Every `skills/*/install.sh` deleted any symlink not already pointing at its own clone and relinked
+to itself, with no record of the old target. `test/agent-chorus.sh` ran that installer inside the
+gate with only two of its five target directories sandboxed, so every gate run on every clone
+repointed the three real `~/.gemini/**/skills/agent-chorus` links to that clone (three times on
+2026-09-17 alone; regression since the 2026-08-23 AgentChorus rename added the Gemini targets
+without extending the test's env). Now: the test sets `HOME` to its sandbox on every installer
+call and asserts the HOME-relative targets landed there; all 22 installers refuse to replace a
+live link they do not own, naming its current target, while still cleaning dangling links;
+`relay-xyz/install.sh` propagates a refused target in its exit code like its siblings. New
+`test/gh678-installer-live-links.sh` runs all 22 in a sandbox HOME against a live foreign link
+(must refuse, 22/22 originals failed this) and a dangling one (must replace). README tells
+Skills Army HQ machines to skip the installers. Recon map at
+`PROJECT/2-WORKING/recon-install-sh-link-steal.md`. Reversibility: Easy — ordinary revert.
+
+## 2026-09-17 — Relay Reviewer may measure read-only; generalizations carry a falsifier (GH-681)
+
+A headless relay Reviewer may now run narrow, non-mutating probes against the seeded artifact
+(output under `.relay-scratch/` or `$TMPDIR`, evidence quoted in the finding; `validate.sh`,
+`test/*.sh`, pytest and fixtures stay in a disposable clone), and the shared "verify ONLY with the
+specific test" clause is Producer-only so each role gets one verification instruction. A finding
+that asks for a behaviour change must carry `Observed input:` / `Affected scope:` / `Falsifier:`
+before the Producer implements it — codified in `new-relay.sh`, the marathon reviewer brief,
+`skills/relay`, and `skills/relay-xyz`. Containment is unchanged. Motivated by the gh673 final QA
+relay, whose Round-1 `[Blocker]` generalized one observation into a rule that blanks every issue on
+real data and was `[Pass]`ed by the same seat next round. Regression:
+`test/gh681-reviewer-probe-rules.sh`. Follow-up: #682. Landed via the fresh-clone PR lane —
+`/express` refuses `relay-turn-lib.sh` (`shared-runtime`) by design.
+
+## 2026-09-17 — Retire the forge's copy of the daily skill (GH-672 follow-up)
+
+`skills/daily` is removed. The skill reads rebalanceOS internals directly and rebalanceOS is its
+sole owning repository under the one-owner-per-skill SOP landed in GH-672. The forge copy had
+forked from it: created on 2026-09-14 from a snapshot that predated rebalanceOS's 2026-09-13
+ledger fix, it silently reverted the close-the-loop ledger sync, and that reverted copy is what
+Pulse deployed. The merged version lands in rebalanceOS PR #234 and publishes to Pulse from
+there. Nothing in the forge referenced this copy: it was not in the mini projection, no test
+named it, and the drift checker now reports `daily` as collection-only (unrecognized) rather
+than judging it against a forge path. Reversibility: Easy — ordinary revert.
+
+## 2026-09-17 — Agy model-probe CWD isolation (GH-666)
+
+- Model validation now resolves its executable in caller CWD, then runs in an owned
+  stdlib temporary directory. Relative probe writes no longer land in the caller;
+  cleanup/allocation failures refuse through the existing error path. Existing
+  model ID/display/full-line parsing and turn forwarding remain unchanged.
+- Added real-validator caller/marker/sentinel/cleanup and failure-path checks to
+  the registered Agy suite. Baseline and cwd-only ablation fail; the focused fix
+  passes. Full gate and final review remain pending; existing base path/PDDA
+  failures are not bundled. Refs GH-661; no merge or deployed/live-model claim.
+  Reversibility: Costly under containment policy; reviewed focused revert. This
+  bounds relative writes only, not absolute access or detached child lifetimes.
+
+## 2026-09-17 — GH-653 / GH-665 fixture safety
+
+The GH-642 suite seeds its owned repository before creating linked worktrees and
+reuses the existing physical-containment guard before fixture writes. Failed
+construction/substitution refuses rather than committing into the caller. Five
+fault cases check caller preservation; warning and RTL temporary paths stay in
+the owned sandbox. Runtime commands, shared guard/setup and frozen Bash twins are
+unchanged. Easy rollback: reviewed revert of this test-only repair. Focused suite:
+62/62; guard-disabled and caller-damage controls witnessed red. Full verification
+and independent final QA are tracked in TESTS-RESULTS/2026-09-17+GH-653-GH-665/.
+
 ## 2026-09-16 — PDDA canonical migration (GH-649)
 
 Forge now carries PDDA's installer, manifest, sync tooling and generic startup templates.
@@ -15,6 +116,11 @@ full gate passes (390/390, one suite passed on isolated retry) and final review 
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-09-16 — GH-645 QA follow-up
+
+- Ledger conflict recovery now finds its shell resolver in a consumer repo's vendored XYZ tools, including the primary-checkout fallback used by disposable landing clones.
+- Added a regression that reproduces the missing-tool failure and verifies the resolver runs against the landing clone.
+
 ## 2026-09-15
 
 - **GH-624 / GH-629: merge-cleanup Phase 5 lands more than one ledger-touching PR per run.** The `pr_merged` work emit moved from before the fast-forward to after reconciliation; Phase 5 now runs merge → fast-forward → reconcile → emit → commit → push and asserts the primary is clean at `origin/<integration>` before the next PR (`commit_and_push_phase5_writes`). Reconciliation first looks for the hosted `wave-reconcile.yml` run for the exact merged head (`gh run list --commit`), polls it to completion (`MERGE_CLEANUP_HOSTED_WAIT_S`, `MERGE_CLEANUP_HOSTED_POLL_S`, `MERGE_CLEANUP_HOSTED_GRACE_S`), fast-forwards onto its commit on success, and runs the local `wave_reconcile.py` only when the hosted run is absent or completed red — never while it is queued or in progress. Tests: a two-PR `Closes #N` landing in `test/gh534_phase_c_tests.py` (red under the old order), a hosted-wait test against a fake `gh run list`, and an AST order pin in `test/gh549-work-events.sh`. Landed by marathon `marathon/10days-2026-09-15` (builder codex, reviewer agy).
@@ -27,6 +133,17 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-623: merge-cleanup survives transient network failures; collision edges no longer cascade handoffs.** File-collision toposort edges are now SOFT (`_soft_deps`): they order the sequence but never produce "NOT attempted" — only explicit `depends on #N` edges (`_hard_deps`) block on a failed predecessor, so one handoff no longer removes most of the queue (the incident's S3; PR #601-style MERGEABLE dependents are attempted and their own landing simulation decides). Every retry-site network call is bounded in time (`run_git` gains an additive timeout, default unbounded; `fetch_open_prs` bounded + raises `FetchError` instead of silently returning `[]`), transient failures (DNS/refused/timed-out/TLS/rate-limit) are retried 3× (2s, 4s), and a pre-decision failure that survives the retries DEFERS that PR while the queue continues (the incident's S4). A failed `gh pr list` now exits 2 before teardown instead of reading as "No open PRs found". New `--resume` consults attempt records only after the live refresh: a PR whose repair resolved and now merges cleanly lands; a still-conflicting exhausted PR skips as parked (the incident's S5). SKILL.md gains a Drive loop with a Done rule ("do not report Done unless Phase 5 ran — or the operator asked for teardown/scan") and a retry-once rule for permission-classifier blocks of `--execute` (S1/S2). Reversibility: **Easy** — revert the PR; no schema or data changes; `_deps` remains in the standalone JSON output as the sorted union. Verification: 13 witnessed red controls failing on pre-change code (soft-edge, retry+defer, discovery, bounded calls, both resume pins), then the merge-cleanup unit suite 156/156 green including the parity guard; full qualifying gate in a disposable clone recorded in the PR.
 - **GH-605: preserve JSON-native unresolved identities across saved preview/apply.** Normalize planner output once so unchanged unknown evidence survives JSON round-tripping; retain exact drift refusal. Existing real integration fixtures now include a missing-ledger issue, assert it stays untouched, and reject tampered unresolved evidence. Reversibility: Easy, revert the output normalization. Verification: witnessed failing regression before correction and 51/51 focused board tests after.
+## 2026-09-14
+
+- **GH-620: project the canonical Skills Army package directly onto the child root.** The generated
+  repository now gets `skills/skills-army-hq/` without a redundant wrapper or landing-page source.
+  Manager initialization and update recognize only the publisher-proven root shape, install it under
+  the declared `skills-army-hq` name, and exclude VCS and repository-only metadata; ordinary skill
+  folder/name validation stays strict. Reversibility: **Easy** — restore the nested destination map
+  and republish. Verification: witnessed pre-fix root-payload/init failure; GH-620 27/27, GH-589
+  18/18, Skills Army HQ 25/25 plus four subtests; exact live root payload/mode read-back and detached
+  root init/update smoke.
+- **GH-620: generated XYZ Skills Army mini and reusable spin-off playbook.** The existing GH-589 publisher now has one fixed `skills-army-mini` profile for the closed Skills Army HQ package, child landing files, licenses, provenance, and remote read-back; its default remains XYZ-mini. A pre-write live `origin/main` comparison refuses wrong-branch, stale, ahead, behind, or divergent destinations while permitting an unborn child or the exact retained publisher commit needed to retry a failed push. `/push-to-skills-army-mini` documents the manual operator flow, and `docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md` records the parent-authoritative recipe for future generated children. Reversibility: **Easy** — revert the parent PR and generated child commit. Verification: existing GH-589 and Skills Army suites plus `test/gh620-skills-army-mini-sync.sh` with a witnessed missing-manifest red control, literal payload oracle, detached init/add/target/sync smoke, idempotence, provenance, and stale-remote refusal.
 
 ## 2026-09-13
 
@@ -163,9 +280,20 @@ All notable changes to this repo. Newest first. Dates are PDT.
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
 
+## [Unreleased] - 2026-09-18
+
+### Fixed
+- **GH-693: Lessons Learned: make the capture-doc section optional (highly recommended), not a promotion gate.** (express hotfix, GH-267 lane; suite test/gh693-lessons-learned-advisory.sh registered as the landing gate.)
+
+## [Unreleased] - 2026-09-17
+
+### Fixed
+- **GH-672: fix(skills): one Pulse collection per device and consistent deployment SOP.** (express hotfix, GH-267 lane; suite test/skills-army-hq.sh registered as the landing gate.)
+
 ## [Unreleased] - 2026-09-16
 
 ### Fixed
+- **GH-663: QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission.** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-660: Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git-pulse-sync) instead of re-vendoring from canonical skills/express — deployed copy missing GH-592 resume recipe.** (express hotfix, GH-267 lane; suite test/gh660-skill-drift.sh registered as the landing gate.)
 - **GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)
 - **GH-659: rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654).** (express hotfix, GH-267 lane; suite test/gh654-offlane-log.sh registered as the landing gate.)

@@ -1,0 +1,52 @@
+# Consult: vote on HiQS-Labs/XYZ-forge#681 — two edits to the relay-automation harness
+
+You are one of two independent advisors. Read the files named below yourself (you are in a throwaway worktree of XYZ-forge at `development`), then give a **separate vote on A and on B**: `YES`, `NO`, or `YES-WITH-CHANGE` (state the change). A coordinator will reconcile both advisors' answers and break ties. Advisory only; write nothing.
+
+## What happened (the case that motivates the issue)
+
+The capped final-QA relay for issue #673 (`relay-system/2026-09-17/gh673-final-qa.md` on branch `feat/gh646-flightdeck-reader` — not in this worktree; the transcript is summarised here) ran three Reviewer/Producer rounds and escalated without approval, while carrying a design it had itself requested in Round 1 that makes the feature unusable on real data:
+
+- Round 1 Reviewer `[Blocker]`: "Root errors discovered after rows are copied … *or a later invalid identity* … never reach those copied evidence dictionaries. Fix: carry finalized root completeness … conservatively withhold confirmation where configured evidence is unresolved." This conflated an unreadable *root* (we don't know what it holds) with one unqualifiable *row* (already neutralised by the helper: no events attach to it).
+- The Producer implemented it literally. Round 2, the same Reviewer marked its own request `[Pass]`.
+- Effect: one historical roadmap row with `issue_url NULL` (GH-135 — 1 of 202 rows in this repo's own `releases.db`) flags the whole ledger root incomplete, and every issue's status becomes "Unavailable".
+- Every Reviewer turn opened with "no code, artifact, test or git command was executed." The defect was found only by an out-of-relay review that *measured* (counted the rows), then reconciled with the Producer in a two-lab discussion where falsify-by-fixture ran in both directions.
+
+## The two proposed edits (prose in prompt/template text only; no shell logic)
+
+**A. Let the Reviewer measure, read-only.**
+File: `relay-automation/relay-turn-lib.sh`, the reviewer `role_note` string (around line 1042). Current text:
+> "You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn."
+
+Proposed:
+> "You are the REVIEWER this turn: do NOT edit or create any artifact or source file. You MAY run existing tests, fixtures, and read-only probes against the seeded artifact to measure a claim; write all output under `.relay-scratch/`. Any change to the tree outside the relay file is reverted and fails your turn."
+
+Context to check yourself: the `.relay-scratch/` affordance and its exemption (`scratch_note`, ~line 1050); the `XYZ_TOOL_MODE=programmatic` note (~1052-1054); the containment enforcement `rtl_enforce` and how it computes the dirty set (does it see gitignored files such as `__pycache__`?); the existing prohibition on running the *full* gate in the same prompt (~1056) — which stays as written; `decisions/2026-06-15-unattended-agent-containment.md` if present; `relay-automation/README.md` rows for `relay-turn-lib.sh`.
+
+**B. Reviewer-requested design changes must carry their own falsifier.**
+File: `relay-automation/new-relay.sh`, the Reviewer bullet in the `▶ TAKE YOUR TURN` block (~lines 79-92). Proposed addition after the GH-173 citation sentence:
+> "A finding that asks for a **design change** (not a fix to a defect you observed) MUST state its falsifier: the concrete input or fixture that would show the requested design is wrong. A design request without a falsifier is downgraded to `[Should — no falsifier]`; the Producer may Decline it on that basis alone, and a later `[Pass]` on it must cite the falsifier having been run."
+Plus a one-line mirror in the Producer bullet's disposition list.
+
+Context to check yourself: the existing GH-268 whole-file rule and GH-173 B3 citation rule in the same block (they guard *observations*, not *requests*); `ROUND_CAP` default (line 24) — round budgets are 3-4.
+
+## Counter-arguments already on the table (engage with them; add your own)
+
+1. A measuring reviewer can leave files (`__pycache__`, temp fixture dirs) that trip `rtl_enforce` and discard the turn — the reason the full-gate ban exists. Is scratch-only output plus gitignore exclusion actually sufficient, or does A need a mechanism (e.g. `PYTHONDONTWRITEBYTECODE`, a scratch-cwd), not just prose?
+2. "Read-only execution" — is that a category the harness can *enforce*, or only *ask for*? If only ask for, does A widen the blast radius meaningfully given the worktree seed + Codex `-s read-only`?
+3. B adds friction to every design-shaped finding and may push reviewers to phrase design requests as "defects". Is the observed/requested distinction crisp enough to be enforced by a reviewer, or by the harness's mechanical downgrade (as GH-173 does for uncited `[Pass]`)?
+4. B may consume a round from a 3-4 round cap.
+5. Alternative to both: leave the harness alone and rely on out-of-relay cross-lab review (which is what caught this). Is that cheaper and just as good?
+
+## Answer format (strict)
+
+```
+VOTE A: YES | NO | YES-WITH-CHANGE
+Reason (≤5 bullets, cite file:line you actually read):
+Change (if YES-WITH-CHANGE):
+
+VOTE B: YES | NO | YES-WITH-CHANGE
+Reason (≤5 bullets, cite file:line):
+Change (if YES-WITH-CHANGE):
+
+One risk the other advisor will probably miss:
+```

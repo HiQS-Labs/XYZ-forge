@@ -52,6 +52,7 @@ class DeploySkillsTest(unittest.TestCase):
         self.home.mkdir()
         self.target = self.work / "app skills"
         self.env = {**os.environ, "HOME": str(self.home), "PYTHONDONTWRITEBYTECODE": "1"}
+        self.env.pop("XYZ_FORGE_ROOT", None)  # GH-660: never inherit the operator's canonical root into a fixture
         self.cli("--apply", "init")
 
     def git(self, *args):
@@ -80,6 +81,90 @@ class DeploySkillsTest(unittest.TestCase):
 
     def state(self):
         return json.loads((self.root / intake.STATE).read_text())
+
+    def pulse_fixture(self):
+        pulse = self.repo / "Deployed Skills"
+        pulse.mkdir()
+        shutil.copytree(self.bundle, pulse / "skills-army-hq")
+        shutil.copyfile(self.bundle / "README.md", pulse / "README.md")
+        shutil.copytree(self.source(), pulse / "sample")
+        for name in ("intake.py", "sync.py"):
+            (pulse / name).symlink_to(f"skills-army-hq/scripts/{name}")
+        (pulse / ".gitignore").write_text(".deploy-skills*\ntargets.json\ncatalog.md\nchangelog.md\nbackups/\n.staging/\n*.zip\n*.lock\n__pycache__/\n*.pyc\n")
+        self.git("add", "Deployed Skills")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "pulse payloads")
+        self.root = pulse
+        return pulse
+
+    def test_pulse_adoption_two_devices_and_pull_readthrough(self):
+        first = self.pulse_fixture()
+        second_repo = self.work / "device-b" / "git-pulse-sync"
+        run = subprocess.run(["git", "clone", "-q", str(self.repo), str(second_repo)], capture_output=True)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        second = second_repo / "Deployed Skills"
+        identities = []
+        for i, root in enumerate((first, second)):
+            self.root = root
+            before = tree(root)
+            self.cli("init", "--adopt-existing", copied=True)
+            self.assertEqual(tree(root), before)
+            payload = tree(root / "sample")
+            self.cli("--apply", "init", "--adopt-existing", copied=True)
+            self.assertEqual(tree(root / "sample"), payload)
+            identities.append(self.state()["collection"])
+            self.assertEqual(set(self.state()["skills"]), {"skills-army-hq", "sample"})
+            self.assertFalse(any(t["enabled"] for t in json.loads((root / "targets.json").read_text())["targets"]))
+            self.enable(self.work / f"app-{i}")
+            self.cli("--apply", sync=True, copied=True)
+            link = self.work / f"app-{i}" / "sample"
+            self.assertEqual(link.resolve(), root / "sample")
+            before = tree(root)
+            self.cli("--apply", "init", "--adopt-existing", copied=True)
+            self.assertEqual(tree(root), before)
+            run = subprocess.run(["git", "-C", str(root), "status", "--porcelain", "--", "."], capture_output=True, text=True)
+            self.assertEqual((run.returncode, run.stdout), (0, ""), run.stderr)
+        self.assertNotEqual(*identities)
+        (first / "sample" / "run.py").write_text("print('updated upstream')\n")
+        self.git("add", "Deployed Skills/sample/run.py")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "publish update")
+        run = subprocess.run(["git", "-C", str(second_repo), "pull", "--ff-only"], capture_output=True)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertEqual((self.work / "app-1" / "sample" / "run.py").read_bytes(), (first / "sample" / "run.py").read_bytes())
+        self.assertEqual(self.state()["collection"], identities[1])
+
+    def test_pulse_adoption_refuses_unprotected_or_foreign_state(self):
+        root = self.pulse_fixture()
+        ignore = root / ".gitignore"
+        original = ignore.read_text()
+        ignore.write_text(original.replace("targets.json\n", ""))
+        before = tree(root)
+        run = self.cli("--apply", "init", "--adopt-existing", copied=True, code=2)
+        self.assertIn("Cannot adopt collection", run.stderr)
+        self.assertEqual(tree(root), before)
+        ignore.write_text(original)
+        (root / "targets.json").write_text("{}\n")
+        before = tree(root)
+        run = self.cli("--apply", "init", "--adopt-existing", copied=True, code=2)
+        self.assertIn("Existing local state", run.stderr)
+        self.assertEqual(tree(root), before)
+        (root / "targets.json").unlink()
+        self.git("add", "-f", "Deployed Skills/.gitignore")
+        (root / "catalog.md").write_text("foreign tracked catalog\n")
+        self.git("add", "-f", "Deployed Skills/catalog.md")
+        before = tree(root)
+        run = self.cli("--apply", "init", "--adopt-existing", copied=True, code=2)
+        self.assertIn("Machine state is tracked", run.stderr)
+        self.assertEqual(tree(root), before)
+
+    def test_pulse_default_root(self):
+        env = {**self.env}
+        env.pop("XYZ_SKILLS_ROOT", None)
+        for name, args in (("intake.py", ["init"]), ("sync.py", ["--status"])):
+            run = subprocess.run([sys.executable, str(self.bundle / "scripts" / name), *args],
+                                 env=env, capture_output=True, text=True)
+            self.assertIn(str(self.home / "git-pulse-sync" / "Deployed Skills"), run.stdout + run.stderr)
+        with patch.dict(os.environ, {"XYZ_SKILLS_ROOT": str(self.root)}):
+            self.assertEqual(intake.default_root(), str(self.root))
 
     def test_a1_copied_manager_and_no_source_dependency(self):
         self.repo.rename(self.work / "source hidden")
@@ -471,6 +556,69 @@ raise SystemExit(mod.main(sys.argv[3:]))
         description = intake.skill_info(REPO / "skills" / "swe")["description"]
         self.assertTrue(description)
         self.assertLessEqual(len(description), 1024)
+
+    # GH-660 remediation item 3: sync.py runs the forge's skill_drift_check.py and refuses to
+    # deploy a forge-owned skill whose vendored SKILL.md diverges from canonical.
+    def forge(self):
+        """A minimal canonical forge: skills/<name> + utils/py/skill_drift_check.py, inside the fixture repo."""
+        checker = self.repo / "utils" / "py" / "skill_drift_check.py"
+        checker.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(REPO / "utils" / "py" / "skill_drift_check.py", checker)
+        return self.repo
+
+    def test_gh660_no_canonical_is_a_warning_not_a_pass(self):
+        self.cli("--apply", "add", self.source()); self.enable()
+        out = json.loads(self.cli("--apply", sync=True).stdout)
+        self.assertIsNone(out["drift"])
+        self.assertTrue(any("drift check skipped" in w for w in out["warnings"]))
+
+    def test_gh660_drifted_deploy_refused_citing_canonical_then_allowed_loudly(self):
+        self.cli("--apply", "add", self.source()); self.enable()
+        forge = self.forge()
+        self.env["XYZ_FORGE_ROOT"] = str(forge)
+        clean = json.loads(self.cli("--status", sync=True).stdout)
+        self.assertEqual(clean["drift"]["drifted"], []); self.assertIn("sample", clean["drift"]["ok"])
+        self.assertEqual(clean["drift"]["origin"], "XYZ_FORGE_ROOT")
+        (self.root / "sample" / "SKILL.md").open("a").write("\nlocal hack\n")
+        refused = self.cli("--apply", sync=True, code=2)
+        self.assertIn("REFUSED", refused.stderr); self.assertIn("DRIFTED sample", refused.stderr)
+        self.assertIn(str(forge / "skills"), refused.stderr)
+        self.assertEqual(list(self.target.iterdir()) if self.target.exists() else [], [],
+                         "refusal must deploy nothing — no links, not even dangling")
+        self.assertEqual(self.state()["links"], {}, "refusal must record no owned links")
+        allowed = json.loads(self.cli("--apply", "--allow-drift", sync=True).stdout)
+        self.assertEqual([e["skill"] for e in allowed["drift"]["drifted"]], ["sample"])
+        self.assertTrue(any(w.startswith("--allow-drift") for w in allowed["warnings"]))
+        self.assertTrue((self.target / "sample").is_symlink())
+        receipt = (self.root / "changelog.md").read_text()
+        self.assertIn("--allow-drift", receipt, "override must leave a drift receipt in the changelog")
+        self.assertIn(str(forge / "skills" / "sample" / "SKILL.md"), receipt)
+
+    def test_gh660_collection_only_skill_is_unrecognized_never_refused(self):
+        self.cli("--apply", "add", self.source("collection-only")); self.enable()
+        forge = self.forge()
+        shutil.rmtree(forge / "skills" / "collection-only")  # vendored, but the forge never owned it
+        self.env["XYZ_FORGE_ROOT"] = str(forge)
+        out = json.loads(self.cli("--apply", sync=True).stdout)
+        self.assertEqual(out["drift"]["unrecognized"], ["collection-only"]); self.assertEqual(out["drift"]["drifted"], [])
+
+    def test_gh660_explicit_bad_canonical_is_an_error(self):
+        self.cli("--apply", "add", self.source())
+        run = self.cli("--status", "--canonical", str(self.work / "nowhere"), sync=True, code=2)
+        self.assertIn("Canonical root from --canonical lacks", run.stderr)
+
+    def test_gh660_targets_json_canonical_key(self):
+        self.cli("--apply", "add", self.source()); self.enable()
+        forge = self.forge()
+        cfg = self.root / "targets.json"; data = json.loads(cfg.read_text()); data["canonical"] = str(forge)
+        cfg.write_text(json.dumps(data))
+        out = json.loads(self.cli("--status", sync=True).stdout)
+        self.assertEqual(out["drift"]["origin"], 'targets.json "canonical"')
+        # one intake write rewrites targets.json; the key must survive and still resolve
+        self.cli("--apply", "targets", "--id", "second", "--path", self.work / "second app", "--consumer", "Fixture 2")
+        self.assertEqual(json.loads(cfg.read_text())["canonical"], str(forge))
+        again = json.loads(self.cli("--status", sync=True).stdout)
+        self.assertEqual(again["drift"]["origin"], 'targets.json "canonical"')
 
 
 if __name__ == "__main__":

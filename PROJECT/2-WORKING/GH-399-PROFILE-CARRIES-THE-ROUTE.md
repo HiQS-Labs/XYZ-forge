@@ -245,3 +245,7 @@ it with an assertion, or it will be re-derived wrongly later.
 - Should `base_url` be allowed at the top level of the device config as a default for a gateway named
   by several profiles? Probably not — a fourth place a route can live is the thing this plan exists to
   stop. Recorded so it is not re-proposed.
+
+## Merge evidence
+
+- PR #643 merged 2026-09-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -505,7 +505,9 @@ TESTS=(
   "relay-dep-drift.sh"
   "new-relay.sh"
   "agent-chorus.sh"             # GH-497 (compact six-digit rendezvous + serialized 2+ agent routing)
+  "gh678-installer-live-links.sh" # GH-678 (no installer replaces a live symlink it does not own; dangling still cleaned; sandboxed HOME)
   "skills-army-hq.sh"           # GH-487 (bash wrapper running the skills-army-hq dedicated pytest; carries it into tier 2 AND the full gate)
+  "gh620-skills-army-mini-sync.sh" # GH-620 generated child publisher + detached package smoke
   "agent-chorus-bridge.sh"      # GH-384 (cross-device bridge over Cloudflare Tunnel)
   "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
   "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
@@ -565,12 +567,14 @@ TESTS=(
   "gh418-planner-ledger-source.sh"    # GH-418 (marathon planner reads releases.db via GH-423's renderer in releases mode; fails closed on a missing/corrupt DB)
   "gh425-gate-provenance-pr.sh"       # GH-425 (wave_reconcile --gate verifies a receipt actually attributes to the PR, not just that TESTS-RESULTS/ is non-empty)
   "gh421-auto-wave-reconcile.sh"      # GH-421 (post-merge CI auto-trigger for wave_reconcile.py; idempotent repeat, no re-shipped ledger writes)
+  "gh684-hosted-lane-report.sh"       # GH-684 (hosted lane report: one labelled issue opened/commented on red or skips, closed on green; stub gh; red control = body without the run URL)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
   "gh605-work-state.sh"               # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
   "gh605-board-policy.sh"              # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
   "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
   "gh645-merge-cleanup-xyz-tools.sh"  # GH-645 (/merge-cleanup: PRS tools resolved from .xyz/ and the primary; reconcile flag only when advertised)
+  "gh681-reviewer-probe-rules.sh"     # GH-681 (reviewer prompt allows narrow non-mutating probes with one role-consistent verification clause; scaffold + mirrors carry the generalization/falsifier rule; scratch sanctioned, .pytest_cache residue still off-lane)
   "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)
   "jog-queue.sh"                      # GH-259 (Jog serial queue schema, CRUD operations, lease recovery, and execution runner)
@@ -626,6 +630,7 @@ TESTS=(
   "relay-uncited-findings.sh"       # GH-173 B3 (rtl_check_uncited_findings downgrades uncited review claims)
   "wave-reconcile.sh"               # GH-165 (canonical post-merge reconciler behavior)
   "gh496-phase2-reconciliation-views.sh" # GH-496 (hosted reconciler in-flight collision detection, pre-merge checks, marathon plan fingerprinting)
+  "gh693-lessons-learned-advisory.sh" # GH-693 (Lessons Learned is a WARN, never a promotion gate: explicit, --pre-merge, catch-up; frontmatter control)
   "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
   "gh298-ate-gen4-ci-smoke.sh"      # GH-298 (ATE Gen 4 CI smoke — fuzz/oracle wiring against the real runner)
   "gh-gen4-phase1-domain-oracles.sh" # GH-299 Phase 1 (Gen 4 semantic domain oracles: zero-state, containment, idempotence, crash-recovery; +/- controls)

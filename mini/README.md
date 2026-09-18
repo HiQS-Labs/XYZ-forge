@@ -17,6 +17,7 @@ to its forge source at the revision named in `.xyz-forge-revision`. `TODO.md` is
 | `consult` | Ask Codex and Gemini (agy) the same question in parallel, in isolated worktrees, and get both answers with provenance stamps. |
 | `agent-chorus` | A structured multi-agent discussion with named seats and a transcript. |
 | `debug-mantra` | Four steps that keep a debugging session honest: reproduce, trace, falsify, cross-reference. |
+| `unstuck` | A mid-flight interrupt for a stalled agent session: freeze the machinery, re-anchor the goal, test the claimed blocker, take the one smallest move that changes task state. |
 | `ponytail` | The laziest solution that actually works. Cuts scope, dependencies and abstraction. |
 | `honest` | A read-only maturity check that says what a repo actually does versus what it claims. |
 | `skill-viewer` | Lists the skills in this repo from their frontmatter. |
@@ -54,6 +55,7 @@ bash "$(git rev-parse --show-toplevel)/skills/consult/install.sh"
    writes both answers under `relay-system/<date>/`.
 2. `relay`: open two agent windows, have one run `/relay` to scaffold a thread, and take turns.
 3. `debug-mantra`: paste a stack trace and run `/debug-mantra`.
+4. `unstuck`: when a session is narrating instead of moving, run `/unstuck`.
 
 ## Where the rest lives
 

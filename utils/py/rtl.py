@@ -283,15 +283,21 @@ def offlane_candidates(wt_path, allow_paths, relay_file):
         if not entry or len(entry) < 4:
             continue
         xy, path = entry[:2], entry[3:]
+        paths = [path]
         if xy[0] in "RC":
-            i += 1  # rename/copy: consume the second NUL field
-        if path.startswith(OFFLANE_EXEMPT):
-            continue
-        bare = path.rstrip("/")
-        if any(bare == a or bare.startswith(a + "/") or path.startswith(a + "/")
-               for a in allow):
-            continue
-        found.append(path)
+            # rename/copy: the second NUL field is the SOURCE path — a rename
+            # out of a non-allowlisted location is exactly the deletion/move the
+            # mirror must not stay silent about (GH-663 finding 4).
+            paths.append(entries[i])
+            i += 1
+        for path in paths:
+            if path.startswith(OFFLANE_EXEMPT):
+                continue
+            bare = path.rstrip("/")
+            if any(bare == a or bare.startswith(a + "/") or path.startswith(a + "/")
+                   for a in allow):
+                continue
+            found.append(path)
     return found
 
 
@@ -841,7 +847,7 @@ exit $RC
         return res.stdout.strip()
 
     def turn_prompt(self, agent, task, peer):
-        cmd = f"rtl_turn_prompt {shlex.quote(agent)} {shlex.quote(self.relay_file)} {shlex.quote(task)} {shlex.quote(self.allow_paths)} {shlex.quote(peer)}"
+        cmd = f"rtl_turn_prompt {shlex.quote(agent)} {shlex.quote(self.relay_file)} {shlex.quote(task)} {shlex.quote(normalized_allow_csv(self.allow_paths))} {shlex.quote(peer)}"
         res = self._run_checked(cmd)
         return res.stdout.strip()
 

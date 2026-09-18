@@ -9,7 +9,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export XYZ_TEST_SCRIPTS="$HERE/../skills/merge-cleanup/scripts"
 
 exec python3 - <<'PY'
-import os, stat, sys, tempfile, unittest
+import os, stat, sys, tempfile, unittest, subprocess
 import unittest.mock as mock
 from pathlib import Path
 
@@ -51,6 +51,29 @@ class ToolPathResolution(unittest.TestCase):
         prim = _touch(self.primary / ".xyz" / "utils" / "py" / "releases_app.py")
         ledger_merge.TOOL_FALLBACK_ROOT = self.primary
         self.assertEqual(tool_path(self.clone, "releases_app.py"), prim)
+
+    def test_vendored_shell_resolver_runs_against_the_landing_clone(self):
+        resolver = self.primary / ".xyz" / "utils" / "releases-merge-resolve.sh"
+        _touch(resolver)
+        resolver.write_text('test "$1" = "--root" && test "$(cd "$2" && pwd -P)" = "$(pwd -P)"\n')
+        _touch(self.primary / ".xyz" / "utils" / "py" / "releases_app.py")
+        ledger_merge.TOOL_FALLBACK_ROOT = self.primary
+        commands = []
+
+        def run(cmd, cwd):
+            commands.append(cmd)
+            if cmd[0] == "bash":
+                return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+
+        sem = {"ok": True, "classification": None}
+        with mock.patch.object(ledger_merge, "extract_conflict_set", return_value=(True, {"LEADERBOARD.md"}, "")), \
+             mock.patch.object(ledger_merge, "ledger_semantic_check", return_value=sem), \
+             mock.patch.object(ledger_merge, "run_git", return_value=subprocess.CompletedProcess([], 0, "", "")), \
+             mock.patch.object(ledger_merge, "_run", side_effect=run):
+            result = ledger_merge.resolve_ledger_conflict(self.clone, execute=True)
+        self.assertTrue(result["resolved"], result)
+        self.assertIn(["bash", str(resolver), "--root", str(self.clone)], commands)
 
     def test_missing_everywhere_reports_the_canonical_path(self):
         ledger_merge.TOOL_FALLBACK_ROOT = self.primary

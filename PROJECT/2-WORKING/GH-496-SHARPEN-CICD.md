@@ -139,3 +139,27 @@ Testing that an exact git commit hash is recorded in a committed receipt file cr
 
 ### 4. Hermetic Mock Isolation
 When adding downstream tool invocations to central orchestrators (like calling `leaderboard.sh` in `wave_reconcile.py`), existing test suites with mock file trees can fail if they only mocked the legacy toolset. Making adopted views opt-in by presence (`os.path.exists`) ensures downstream repositories and minimal test fixtures remain functional without forcing unnecessary mock scaffolding.
+
+## Merge evidence
+
+- PR #543 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #545 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #548 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #550 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #553 merged 2026-09-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #580 merged 2026-09-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

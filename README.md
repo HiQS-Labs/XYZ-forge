@@ -250,6 +250,10 @@ bash skills/hq/install.sh            # multi-repo command center
 bash skills/agent-chorus/install.sh  # multi-session discussions
 ```
 
+On a machine that runs the Skills Army HQ collection (`skills/skills-army-hq`), skip these: the
+collection owns those symlinks and deploys every skill at once. An installer now refuses to
+replace a live link it does not own (GH-678), so running one there is a no-op with a message.
+
 ---
 
 ## Hardware sizing for unattended runs

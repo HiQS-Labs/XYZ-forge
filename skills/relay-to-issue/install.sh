@@ -35,7 +35,14 @@ elif [ -e "$LINK" ] && [ ! -L "$LINK" ]; then
   echo "  Move it aside and re-run, or set CLAUDE_SKILLS_DIR." >&2
   exit 1
 else
-  [ -L "$LINK" ] && rm -f "$LINK"   # stale / dangling / wrong-target symlink
+  if [ -L "$LINK" ] && [ -e "$LINK" ]; then
+    # GH-678: a live link that is not ours belongs to another installer or to a managed
+    # Skills Army collection. Only a dangling link is stale enough to replace.
+    echo "relay-to-issue: $LINK already points at $(readlink "$LINK") — not replacing a live link." >&2
+    echo "  Remove it yourself if that is intended." >&2
+    exit 1
+  fi
+  [ -L "$LINK" ] && rm -f "$LINK"   # dangling symlink
   ln -s "$SELF_DIR" "$LINK"
   echo "relay-to-issue: installed → $LINK -> $SELF_DIR"
 fi
