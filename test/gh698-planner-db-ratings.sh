@@ -5,14 +5,21 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# GH-1 adoption: this suite creates mktemp fixtures and drives git through them —
+# arm the shared fixture guard and require_fixture at the use boundary.
+. "$ROOT/test/lib/fixture-guard.sh"
 export QUEUE_PLAN_ROOT FIX
 FIX="$(mktemp -d)"
-# GH-177/GH-567: validate the sandbox at the USE boundary — cd on an empty or
-# failed mktemp would silently target the script's own cwd.
-[ -n "$FIX" ] && [ -d "$FIX" ] || exit 1  # GH-177: the ; -split guard brace defeats mktemp-trap-guard's segment scan
+# GH-177/GH-567: non-empty + directory checks chained to an abort, before the cd —
+# the shape mktemp-trap-guard's segment scan recognizes.
+[ -n "$FIX" ] && [ -d "$FIX" ] || exit 1
+fixture_guard_init "$FIX"
+FX="$FIX/planner-root"
+mkdir "$FX"
+require_fixture "$FX" "planner fixture root"
 trap 'rm -rf "$FIX"' EXIT
 
-cd "$FIX"
+cd "$FX"
 git init -q
 git config user.email gh698@example.invalid
 git config user.name gh698
@@ -64,7 +71,7 @@ PY
 pass=0; fail=0
 # The planner exits 4 (drift) / 5 (items held) by design on fixture data — capture
 # the report either way; the assertions below judge the CONTENT, not the rc.
-planner_out="$(QUEUE_PLAN_ROOT="$FIX" bash "$ROOT/utils/marathon-plan.sh" --dry-run 2>&1 || true)"
+planner_out="$(QUEUE_PLAN_ROOT="$FX" bash "$ROOT/utils/marathon-plan.sh" --dry-run 2>&1 || true)"
 
 assert_present() {
   if grep -q "$2" <<<"$planner_out"; then
