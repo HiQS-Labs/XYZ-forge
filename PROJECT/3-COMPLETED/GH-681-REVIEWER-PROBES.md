@@ -1,6 +1,6 @@
 ---
 title: "GH-681: relay Reviewer may measure read-only; generalizations carry a falsifier"
-status: Active
+status: Complete
 created: 2026-09-17
 updated: 2026-09-18
 owner: operator (via fresh-clone PR lane; /express refused — shared-runtime)

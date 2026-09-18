@@ -112,7 +112,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #654 GH-654 · Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns) — `already-closed`
 - #659 GH-659 · rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654) — `already-closed`
 - #663 GH-663 · QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission — `already-closed`
-- #681 GH-681 · Relay Reviewer may measure read-only; generalizations carry a falsifier — `already-closed`
 
 ### 🔧 Reconcile — undocumented partial completion
 - #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`
