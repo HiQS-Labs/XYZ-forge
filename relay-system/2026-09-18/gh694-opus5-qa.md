@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,6 +113,26 @@ Handing off to Producer — go to the claude-a window and say 'take your turn'.
 - Verification evidence: `npm run test:unit` passed 14/14 tests cleanly; `bash test/gh267-express-skill.sh` passed 101/101 assertions cleanly (`pass=101 fail=0`), confirming both exit-0 clean folds and zero phantom tasks across all express telemetry paths.
 
 Handing off to Reviewer — go to the claude-opus window and say 'take your turn'.
+
+### Turn 3: Reviewer (claude-opus)
+swept file: yes — r2 delta read in full (`git show HEAD`, +22/-11 across 4 files); `src/project.js:49-63` and `utils/py/express.py:82-137` re-read; test helpers `test/gh267-express-skill.sh:46-47,222` read; every non-fold `.tick/events` reader re-checked for `.tmp` exposure. Probes ran under `.relay-scratch/tmp/r2probe` with `HOME` redirected; scratch is discarded, decisive output quoted below.
+VERDICT: PASS
+
+- [Pass] (r1 Should, DoD 2 comment) `src/project.js:58-59` restores both dropped sentences verbatim: `(See decisions/2026-07-01-cross-agent-dep-conflict.md; dependency.drift is consumed directly from .tick/events/ by the shims' drift-brief reader, never via the fold.)`. Clause met.
+- [Pass] (r1 Should, DoD 3 strength) `test/gh267-express-skill.sh:228-229,360-361,594-595`. Falsifier run: current consumer over {legacy pre-fix record, `task.created T-1`, `{"type":5,"task":"GH-1"}`, current-envelope `express.fired GH-999` + `express.refused lane`, stray `…jsonl.tmp`} → `tick project` rc=0, STATE.md `## Open | - T-1 (priority: 0)`, `grep -qE '^- (GH-999|lane) '` rc=1 (→ `ok`). Same events through PRE-fix `60dd24ee~1:src/project.js` → `## Open | - GH-1 | - GH-999 | - lane | - T-1 | - undefined`, grep matches (→ `bad`). The assertion now pins the consumer half. `bad()` at `:47` ends in `echo` (returns 0) so `&& bad || ok` cannot double-fire — 28 precedents of the idiom in the file; `$ERR` is defined at `:222` before its first use at `:228`.
+- [Pass] (r1 Should, atomic publish) `utils/py/express.py:120-123` and `:133-136` write `path + ".tmp"` then `os.replace`, both inside the pre-existing `except OSError` (`:124`, `:137`). Probe: two `write_tick()` calls → `tmp leftovers: []`, central mirror `byte-equal: True`. A stray `.jsonl.tmp` is invisible to every reader: `src/events.js:207` filters `.endsWith('.jsonl')` (seeded one in the probe above, rc=0); the drift-brief reader `relay-automation/relay-turn-lib.sh:1640-1647` selects by the `dependency.drift` filename token; the central-mirror check `test/gh267-express-skill.sh:654` globs `*express*.jsonl`.
+- [Pass] (r1 Nit, type guard) `src/project.js:61` `typeof ev.type !== 'string' || !ev.type.startsWith('task.')` — probe record `{"type":5,"task":"GH-1",…}` skipped with rc=0 (pre-fix seeded `- GH-1`).
+- [Pass] (r1 Nit, clock) `utils/py/express.py:99-101` one `now_dt`; probe filename `2026-09-18T18-57-22.550Z-express-fired-gh-999.jsonl` ↔ record `"ts": "2026-09-18T18:57:22.550Z"`. `now_str` uses the identical format string to `now_iso()` (`:82-83`), so the wire format is unchanged; `now_iso()` is still live at `:277`, no dead code.
+- [Pass] (r1 Nit, DoD 4) Capture doc `:18` non-goal reworded to "Restructuring the central mirror (it receives the same additive envelope)"; `:31` status row no longer contradicts `:55`.
+- [Pass] (DoD 5) r2 stays commensurate: no new module, no governance edit, the atomic write is the two-line idiom Tick itself uses (`src/events.js:184-186`).
+- [Should] (DoD 4, docs-only — no behaviour change requested, so no Observed/Affected/Falsifier lines apply) `CHANGELOG.md:5` omits the two behaviours r2 shipped: atomic publish and the phantom-task pin (it still reads "pins `tick project` clean exit" only). Fix: append one sentence — "`write_tick()` now publishes each `.jsonl` atomically (`.tmp` + `os.replace`) so a same-clone `tick` reader never observes a torn file; the regression additionally asserts no `GH-999`/`lane` phantom task appears in `STATE.md`." Fold into the PR-update commit the capture doc `:31` already schedules; this does not gate Approved.
+- [Nit] (DoD 4) Capture doc `:48` still quotes the old guard `!ev.type || !ev.type.startsWith('task.')` (code is `typeof ev.type !== 'string' || …` at `src/project.js:61`); `:52` says "passes (98/98)" while r2 reports 101/101 after the +3 assertions. Update both in the same commit.
+- [Unverified — needs clone run] `npm test` is `./validate.sh` (`package.json:11`), not the unit suite; `CHANGELOG.md:5` "23/23" and the Producer's r2 `npm run test:unit` 14/14 measure different things. The harness gate after this turn is the measurement; if `validate.sh` is red this approval does not stand.
+- Pre-existing defects in the swept scope: none beyond the r1 non-atomic publish, now fixed. None in the r2 delta.
+
+Basis: Every r1 `[Should]` and `[Nit]` is Implemented and probe-verified against its own falsifier — the strengthened assertions go red on the pre-fix consumer and green on the current one, the publish is torn-file-free, and no reader can see the `.tmp`. No `[Blocker]`; the one open `[Should]` is a CHANGELOG sentence with no code impact, routed to the already-planned PR-update commit. DoD 1-3 and 5 met; DoD 4 met for the code-describing prose, stale only in counts and one quoted line.
+
+Relay closed (Approved), no further turn needed — Producer: fold the CHANGELOG sentence and the two capture-doc nits into the PR-update commit, then push & PR.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
