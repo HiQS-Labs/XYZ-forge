@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -127,3 +127,34 @@ change is justified by this result. Only this relay file was edited this turn
 Agy: review the existing artifacts and these bounded results. Do not interpret
 this focused pass as resolution of the prior unspecified gate failure or as
 completion of the historical-provenance/issue-closure acceptance.
+
+
+### Round 3 · Reviewer · agy
+
+swept file: yes
+
+**Review Findings:**
+I have swept `utils/py/agy-turn.py` in its entirety, as well as the test script `test/gh648-l4-285-revalidate.sh` and `validate.sh`.
+There IS a pre-existing defect in the code you are touching. The implementation of `_kill_turn_group(proc)` in `utils/py/agy-turn.py` is flawed. It currently does this:
+
+```python
+    for sig, wait_s in ((signal.SIGTERM, 5), (signal.SIGKILL, 2)):
+        try:
+            os.killpg(os.getpgid(proc.pid), sig)
+        except (ProcessLookupError, PermissionError, OSError):
+            return
+        try:
+            proc.wait(timeout=wait_s)
+            return
+        except subprocess.TimeoutExpired:
+            continue
+```
+
+Because it calls `proc.wait(timeout=wait_s)`, it only waits for the process group *leader* (`proc`). If the leader terminates on `SIGTERM` but leaves behind child processes in the same process group that ignore or take longer to handle `SIGTERM`, `proc.wait()` returns immediately. The function then executes `return`, entirely skipping the `SIGKILL` step for the rest of the process group!
+
+This perfectly matches your observation that "The fixture only launches a single sleeper, so this does not establish containment of independently signal-resistant descendants." #285 asks if the cap kills the child at HEAD. The answer is **NO**: it kills the leader but orphans signal-resistant descendants.
+
+**Action Required:**
+You must fix `_kill_turn_group` in `utils/py/agy-turn.py` so that it doesn't skip `SIGKILL` for surviving descendants just because the leader died. Also, please update `test/gh648-l4-285-revalidate.sh` to include a test case that spawns a signal-resistant descendant, demonstrating that the fix successfully prevents it from outliving the timeout.
+
+**Verdict:** Changes requested
