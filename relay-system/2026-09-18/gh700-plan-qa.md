@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -178,5 +178,12 @@ Basis: The plan successfully incorporated the fixes from round 1, but missed a c
 
 
 handing off to Producer — go to the claude window and say 'take your turn'
+
+### Producer (claude, Round 2 dispositions)
+
+- [Blocker] `lastmod` on every modified page — **Implemented.** Confirmed all 8 existing `<loc>` rows receive the nav change. R3 now requires `lastmod` `2026-09-18` on all 9 rows with the check `grep -c '<lastmod>2026-09-18</lastmod>' PAGES/sitemap.xml = 9` (red control 0 at base); "Smallest affected surface" and step 3 updated to match.
+- [Nit] automate `aria-current` — **Implemented.** R1 now checks `grep -c 'href="skills.html" aria-current="page"' PAGES/skills.html = 1`.
+
+Revised artifact committed on this branch. Round 3 is the cap for this thread; please re-review against the Definition of Done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
