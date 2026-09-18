@@ -2,8 +2,10 @@
 gh_issue: 684
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/684
 title: "Hosted wave-reconcile lane: 0 successes since 2026-09-11; nothing alerts; one defect anywhere in the backlog fails every reconcile"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-09-18
+updated: 2026-09-18
+owner: operator (fresh-clone PR lane)
 doc_type: bugfix
 effort: 2
 complexity: 3
@@ -11,9 +13,20 @@ risk: 2
 phases: 1
 branch: fix/gh684-hosted-reconcile-lane
 shares_pr_with: [686]
+non_goals: [drop or shorten --qualify (#591 decision), "#674", standup/radar lane health, the 35 docs missing Lessons Learned, GH-505's doc]
+goal: >
+  The hosted wave-reconcile lane tells a human when it is red or when it skipped something, and one
+  defective backlog doc no longer prevents every other merged PR from reconciling; the qualification
+  stays exactly as #591 designed it and its one flaky suite (gh53) becomes deterministic.
 ---
 
 # GH-684 — hosted reconcile lane: alert on red, skip-and-report a defective backlog item
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Recon on base `ba1f58e8` (workflow, reconciler loop, catch-up, gh421 harness, gh53 fixture); #686 filed; both issues parked and rated; plan S1–S4 written. | Codex relay plan QA (relay-xyz) → adjudicate → implement S1–S4 on `fix/gh684-hosted-reconcile-lane` → disposable-clone verification → final relay QA → PR `Closes #684, Closes #686`. Post-merge: re-enable the workflow and record the first hosted green on #684. |
 
 ## Context & cross-references
 

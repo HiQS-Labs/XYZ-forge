@@ -2,8 +2,13 @@
 gh_issue: 686
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/686
 title: "test/gh53-releases-merge-resolve.sh is a coin-flip: the fixture's union keeps two 'generation' settings rows when the sides straddle a second boundary"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-09-18
+updated: 2026-09-18
+owner: operator (fresh-clone PR lane, shared with GH-684)
+goal: >
+  test/gh53-releases-merge-resolve.sh passes deterministically: the fixture keeps one settings row per key
+  and exercises the second-boundary shape every run; the resolver's refusal is unchanged.
 doc_type: bugfix
 branch: fix/gh684-hosted-reconcile-lane
 shares_pr_with: [684]
@@ -11,6 +16,12 @@ plan: PROJECT/1-INBOX/GH-684-HOSTED-RECONCILE-LANE.md
 ---
 
 # GH-686 — gh53 fixture flake (shares the GH-684 PR; plan item S3)
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Flake reproduced by hand (same value, `updated_at` one second apart); captured, parked, rated. | Implemented as S3 of the GH-684 plan; verified 10/10 in a disposable clone with the base's red witnessed. |
 
 ## Capture
 
