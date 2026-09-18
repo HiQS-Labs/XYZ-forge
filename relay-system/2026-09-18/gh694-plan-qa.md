@@ -55,7 +55,7 @@ ROUND: 1 / 4
   `relay-drive.sh --artifact-file relay-system/2026-09-18/gh694-plan.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-18
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: the plan is sound if (1) Root cause and failure path are accurately grounded in utils/py/express.py and src/project.js; (2) The proposed event envelope for write_tick() adheres to the canonical Tick 0.2.0 format (schema_version, ts, type, task, agent) while preserving backward-compatible payload fields; (3) The defensive filter in src/project.js (foldWithMeta) safely skips malformed/non-task events without breaking existing task coordination; (4) The verification plan includes a concrete consumer coexistence test in test/gh267-express-skill.sh testing ./bin/tick info exit code; (5) Scope is minimal and DRY (no ceremonial middleware or governance edits). Grade each; PASS only when no [Blocker] remains.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
