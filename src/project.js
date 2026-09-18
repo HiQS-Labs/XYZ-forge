@@ -55,8 +55,10 @@ function foldWithMeta(events) {
     // Non-coordination events (dependency.drift GH-68, telemetry signals such as express.*,
     // cost.*, marathon.*) do not claim tasks or transition task states; skip them so they never
     // seed phantom `open` tasks in `tick project`/`next` or corrupt the task projection.
+    // (See decisions/2026-07-01-cross-agent-dep-conflict.md; dependency.drift is consumed directly
+    // from .tick/events/ by the shims' drift-brief reader, never via the fold.)
     if (!ev || typeof ev.task !== 'string' || !ev.task) continue;
-    if (!ev.type || !ev.type.startsWith('task.')) continue;
+    if (typeof ev.type !== 'string' || !ev.type.startsWith('task.')) continue;
     if (!byTask.has(ev.task)) byTask.set(ev.task, []);
     byTask.get(ev.task).push(ev);
   }

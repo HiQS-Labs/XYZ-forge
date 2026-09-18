@@ -15,7 +15,7 @@ related:
 context_tags: [express, tick, telemetry, schema, project, fold]
 non_goals:
   - Cross-language schema validation engines or complex middleware
-  - Modifying the central telemetry format at ~/.config/xyz/events/
+  - Restructuring the central mirror (it receives the same additive envelope)
   - Changes to governance documents
 effort: 1
 complexity: 1
@@ -28,7 +28,7 @@ risk: 1
 
 | What was just completed | What's next |
 |---|---|
-| Dual-sided fix implemented in express.py and src/project.js; regression tests pinned in test/gh267-express-skill.sh; Plan QA attested by agy | Final QA round 2 with agy, push & PR |
+| Dual-sided fix implemented in express.py and src/project.js; regression tests pinned in test/gh267-express-skill.sh; Plan QA & Final QA attested | Opus 5 QA round 2 & PR update |
 
 ## Background & Observed Friction
 

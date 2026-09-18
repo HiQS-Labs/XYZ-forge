@@ -96,18 +96,20 @@ def refuse(root, rule, reason, issue=None):
 
 def write_tick(root, verb, **fields):
     events = os.path.join(root, ".tick", "events")
-    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3] + "Z"
+    now_dt = datetime.datetime.now(datetime.timezone.utc)
+    ts = now_dt.strftime("%Y-%m-%dT%H-%M-%S.%f")[:-3] + "Z"
+    now_str = now_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
     target = "gh-%s" % fields.get("issue") if fields.get("issue") else "lane"
     filename = "%s-%s-%s.jsonl" % (ts, verb, target)
     ev_type = "express." + verb.replace("express-", "")
     task_id = "GH-%s" % fields.get("issue") if fields.get("issue") else "lane"
     rec = dict(
         schema_version="0.2.0",
-        ts=now_iso(),
+        ts=now_str,
         type=ev_type,
         task=task_id,
         agent="express",
-        at=now_iso(),
+        at=now_str,
         actor="express",
         verb=verb,
     )
@@ -116,8 +118,10 @@ def write_tick(root, verb, **fields):
     try:
         os.makedirs(events, exist_ok=True)
         path = os.path.join(events, filename)
-        with open(path, "w", encoding="utf-8") as f:
+        tmp_path = path + ".tmp"
+        with open(tmp_path, "w", encoding="utf-8") as f:
             f.write(payload)
+        os.replace(tmp_path, path)
     except OSError as exc:  # telemetry must never block the lane, only complain
         sys.stderr.write("express: tick write failed (%s)\n" % exc)
 
@@ -126,8 +130,10 @@ def write_tick(root, verb, **fields):
         central = os.path.expanduser("~/.config/xyz/events")
         os.makedirs(central, exist_ok=True)
         cpath = os.path.join(central, filename)
-        with open(cpath, "w", encoding="utf-8") as f:
+        ctmp = cpath + ".tmp"
+        with open(ctmp, "w", encoding="utf-8") as f:
             f.write(payload)
+        os.replace(ctmp, cpath)
     except OSError:
         pass
 
