@@ -140,3 +140,11 @@ I have reviewed the updated files `utils/py/relay_drive.py`, `utils/py/rtl.py`, 
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-18T02:06:50Z
+task: MARATHON-P7-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 8a4d2cdec08866e026c54d650c0c159dfc416835
+added-range: 13584+591
+added-sha256: dbc07f8b367432dd46af5f11881a496e0896bd9928c6dac0870fe08f036959c0
