@@ -2,7 +2,7 @@
 title: "GH-681: relay Reviewer may measure read-only; generalizations carry a falsifier"
 status: Active
 created: 2026-09-17
-updated: 2026-09-17
+updated: 2026-09-18
 owner: operator (via fresh-clone PR lane; /express refused — shared-runtime)
 gh_issue: 681
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/681
@@ -43,16 +43,20 @@ goal: >
 
 ## Acceptance Criteria
 
-- [ ] `bash test/gh681-reviewer-probe-rules.sh` green in a disposable full clone; red controls (revert S1 → cases 1–2 red; drop the closing sentence → case 1 red; revert S2 → case 4 red; delete the `.relay-scratch` exemption → case 7 red) witnessed with receipts.
-- [ ] `test/gh397-reviewer-turn-role.sh`, `test/gh505-relay-attest.sh` unchanged and green; `bash test/gh308-frozen-twin-guard.sh --check` clean (the lib is not a twin; no new `.sh` under `relay-automation/`; `marathon_drive.py` is the authoritative Python).
-- [ ] `validate.sh` green in the disposable clone.
-- [ ] `/express` refusal receipt kept (`shared-runtime`) — the lane decision is the driver's, not an opinion.
-- [ ] PR merged; `relay-xyz` re-vendored to `~/git-pulse-sync/Deployed Skills` from the landed source.
+- [x] `bash test/gh681-reviewer-probe-rules.sh` green in a disposable full clone; red controls (revert S1 → cases 1–2 red; drop the closing sentence → case 1 red; revert S2 → case 4 red; delete the `.relay-scratch` exemption → case 7 red) witnessed with receipts.
+- [x] `test/gh397-reviewer-turn-role.sh`, `test/gh505-relay-attest.sh` unchanged and green; `bash test/gh308-frozen-twin-guard.sh --check` clean (the lib is not a twin; no new `.sh` under `relay-automation/`; `marathon_drive.py` is the authoritative Python).
+- [ ] `validate.sh` green in the disposable clone — 389/393; the four red suites (`gh425`, `gh-gen4`, `gh142`, `gh268`) fail identically on unmodified `development` there; disclosed in the PR body and `validate-full.log`.
+- [x] `/express` refusal receipt kept (`shared-runtime`) — the lane decision is the driver's, not an opinion.
+- [x] PR merged; `relay-xyz` re-vendored to `~/git-pulse-sync/Deployed Skills` from the landed source.
 - [ ] Post-merge smoke: one driven relay whose Reviewer turn writes a probe into `.relay-scratch/` and is attested (shim exit 0), recorded on #681.
 
 ## Merge evidence
 
-- (recorded at landing)
+- PR [#683](https://github.com/HiQS-Labs/XYZ-forge/pull/683) squash-merged to `development` as `55d8ab47` on 2026-09-18T01:05Z; `Closes #681` fired (issue closed 01:05:20Z). Hosted CI on the bypassed push: blocking job green (macOS promotion job runs only on `main`; canary advisory).
+- Receipts: `TESTS-RESULTS/2026-09-17+GH-681/` — `provenance.jsonl` (9 rows, log sha256s), focused suite 26/0, four red controls, `gh397` 11/0, `gh505` 63/0, GH-308 guard clean, `express-refusal.log`, `validate-full.log` (389/393; the red suites fail identically on unmodified `development` in that environment — baselined in the same disposable clone).
+- Consults: `relay-system/2026-09-17/gh681-relay-dod-vote-155755/` (Codex + agy, A/B vote), `gh681-plan-qa-163853/` (Codex Astra high), `gh681-plan-qa-fable-164327/` (Fable high).
+- `relay-xyz` re-vendored from `55d8ab47` into the Pulse collection (`rebalance-git-pulse` commit `e001ee00`); deployed copy byte-identical; `sync.py --apply` zero actions, read-through confirmed on all three enabled targets.
+- Reconciled locally: the hosted `wave-reconcile.yml` lane had 0 successes since 2026-09-11 and was disabled 2026-09-18 pending [#684](https://github.com/HiQS-Labs/XYZ-forge/issues/684).
 
 ## Lessons Learned (For Future Agents)
 

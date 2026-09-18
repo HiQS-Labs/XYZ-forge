@@ -1,0 +1,116 @@
+# QA consult: falsify this implementation plan for HiQS-Labs/XYZ-forge#681
+
+You are one of two independent advisors (the other is a different model). You are in a throwaway worktree of XYZ-forge at `development`. **Read the cited files yourself** before answering; do not trust the plan's quotations. Advisory only; write nothing.
+
+Your job is not to approve. It is to find where this plan is wrong, under-scoped, or unfalsifiable. The plan already survived one consult (Codex + agy) whose findings it incorporates; look for what *that* round missed.
+
+Answer the five questions in §8 of the plan, then give a verdict. Strict format at the end.
+
+---
+
+# GH-681 — Reviewer may probe read-only; generalizations carry a falsifier
+
+Refined implementation plan after the first consult (Codex + agy, adjudicated 2026-09-17, recorded on #681). Every `file:line` below was read on `development` at the time of writing.
+
+## 1. Ground truth (recon)
+
+| Fact | Where | Why it matters |
+|---|---|---|
+| The reviewer role note is a single bash string; every runtime uses it. `utils/py/rtl.py:792 turn_prompt` shells out to `rtl_turn_prompt`, so Python (authoritative) and `XYZ_PYTHON=0` bash lanes share one source. | `relay-automation/relay-turn-lib.sh:1040-1043` | Exactly one edit point for A. No twin to keep in sync. |
+| The current note forbids running anything: "do NOT edit, create, or **run** any artifact or source file". It ends with "When approving, hand the token off with done and set STATUS: Approved." | `:1042` | The second sentence is what driver attestation keys on (GH-505/509/510). `test/gh505-relay-attest.sh` case G asserts the reviewer prompt contains "set STATUS: Approved" — the first draft of A dropped it and would have gone red there. |
+| `.relay-scratch/` is pre-created per worktree, named in the prompt, exempt from containment, never copied back. | `:820-826`, scratch_note `:1050` | Home for probe output. |
+| `rtl_scratch_relocate` refuses dot-directories (`.*`), so `.pytest_cache/` (not gitignored — `.gitignore:36` has only `__pycache__/`) is off-lane → `RTL_WT_OFFLANE=1` (`:924`) → exit 6. | `:1128` | Test suites in the worktree discard the turn. Scope A to probes. |
+| Ignored-file residue is invisible to enforcement by design: "ignored-file safety belongs to the agent sandbox, tracked as future." | `:1357` | `__pycache__` from a probe is harmless in a throwaway worktree, but note it. |
+| Relay Codex runs `-s workspace-write -c approval_policy=never`; agy runs with permissions skipped. | `codex-turn.sh:138`, `utils/py/codex-turn.py:17` | "Read-only execution" is behavioural. The post-turn porcelain diff is the backstop. |
+| `AGENTS.md:15-16`: never run `validate.sh` or `test/*.sh` from a linked worktree; mutation-heavy gates only in a disposable full clone. | `AGENTS.md:15` | A must not contradict a written rule. |
+| GH-173 B3's downgrade of uncited `[Pass]` is a real awk rewrite in `rtl_check_uncited_findings`, run from `rtl_enforce` on reviewer turns. | `:1217-1242`, `:1391-1393` | B must not claim a mechanical downgrade it doesn't have. |
+| The `TAKE YOUR TURN` reviewer bullet lives in the scaffold; `--print` emits it. | `relay-automation/new-relay.sh:79-92`, `:35` | Edit point for B; testable via `--print`. |
+| `skills/relay-xyz/SKILL.md:604-609` is a "Reviewers … commensurate complexity" standard; `relay-xyz` is the skill deployed on this device (`~/git-pulse-sync/Deployed Skills/relay-xyz`). | | Second codification point; the deployable unit. |
+| `/express` refuses this change mechanically: `SHARED_RUNTIME = relay-turn-lib.sh` (`shared-runtime`), and any edited `.sh` under `relay-automation/` (`no-new-bash`, GH-551). | `utils/py/express.py:41-61`, `:454-470` | Lane is the fresh-clone PR, per the skill's own fallback. |
+
+## 2. Diagnosis (what this fixes)
+
+In `relay-system/2026-09-17/gh673-final-qa.md` the Reviewer, forbidden to execute, generalized a real late-error observation (`connectors.py:92-93`) into "or a later invalid identity", the Producer implemented it, and the same Reviewer `[Pass]`ed it next round. One historical `NULL`-URL ledger row then blanks every issue. Two harness properties allowed it: the reviewer cannot measure (`:1042`), and a reviewer-authored generalization carries no falsifier and is self-certified (`new-relay.sh:79-92` guards observations, not requests).
+
+## 3. Change set (minimal)
+
+All prose unless marked. No shell or Python logic changes.
+
+**S1 — A, the role note** (`relay-turn-lib.sh:1042`, replace the string):
+> You are the REVIEWER this turn: do NOT edit or create any artifact or source file. You MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim (for Python use `python3 -B`; put all output and any temp files under `.relay-scratch/`, e.g. `mkdir -p .relay-scratch/tmp && TMPDIR=.relay-scratch/tmp`). Do NOT run `validate.sh`, `test/*.sh`, or executable fixtures here — those belong in a separate disposable full clone. Never modify a tracked file, including databases. Any change to the tree outside the relay file is reverted and fails your turn. When approving, hand the token off with done and set STATUS: Approved.
+
+Kept verbatim: the opening phrase (`test/gh397` asserts it) and the closing sentence (`test/gh505` case G asserts it).
+
+**S2 — B, the scaffold** (`new-relay.sh` reviewer bullet, after the GH-173 sentence; plus the Producer bullet):
+> A finding whose requested behaviour applies to inputs beyond its cited reproduction or the Definition of Done is a **generalization** and MUST carry three lines: `Observed input:` (what you actually saw), `Affected scope:` (the inputs the change would govern), `Falsifier:` (the fixture or data that would show the generalization is unnecessary or wrong). A `[Blocker]` must cite an observed failure — a failing run, probe output, or a concrete counterexample in existing data or fixtures. The Producer may disposition a generalization lacking these as `Declined — unproven generalization`.
+
+Producer bullet: `(Implemented / Modified / Declined + why)` → `(Implemented / Modified / Declined + why — including "Declined — unproven generalization")`.
+
+**S3 — second codification** (`skills/relay-xyz/SKILL.md`, in the Reviewers standard at `:604-609`): two numbered items restating S1's allowance/limits and S2's generalization rule, each pointing at the harness text as canonical.
+
+**S4 — README row** (`relay-automation/README.md`, the `relay-turn-lib.sh` row): one sentence — reviewers may run non-mutating probes into `.relay-scratch/`; containment is unchanged and ignored-file residue remains a known gap.
+
+**S5 — regression suite** `test/gh681-reviewer-probe-rules.sh`, registered in `validate.sh` `TESTS=(…)`. Mirrors `test/gh304-vendored-relay-path.sh` (sources the lib, `rtl_init` on a temp relay, calls `rtl_turn_prompt`). Asserts:
+1. reviewer prompt contains "MAY run narrow, non-mutating probes", "`.relay-scratch/`", "Do NOT run `validate.sh`, `test/*.sh`", "hand the token off with done and set STATUS: Approved";
+2. reviewer prompt does **not** contain "or run any artifact";
+3. producer prompt contains none of the reviewer-only sentences;
+4. `new-relay.sh --print` output contains `Observed input:`, `Affected scope:`, `Falsifier:`, `Declined — unproven generalization`;
+5. `rtl_scratch_relocate` still returns 1 for `.pytest_cache` (backstop unchanged);
+6. `skills/relay-xyz/SKILL.md` contains both rule phrases (drift guard, like `gh660`).
+Red controls (run once, receipts in `TESTS-RESULTS/<date>+GH-681/`): revert S1 → cases 1-2 red; drop the closing sentence → case 1 red (the consult Blocker, now mechanical); revert S2 → case 4 red.
+
+**S6 — paperwork**: `PROJECT/2-WORKING/GH-681-REVIEWER-PROBES.md` (Status / Acceptance / Merge evidence / Lessons Learned), `CHANGELOG.md` entry.
+
+**Deferred to a follow-up issue (not this change):** harness-set `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR` for reviewer turns. It would touch the five Python shims that launch CLIs (`utils/py/{codex,agy,claude,pi,aider}-turn.py`) — a logic change across Tier-A twins, not commensurate here. S1's prose guidance covers the common case.
+
+## 4. Blast radius and reversibility
+
+- S1 changes the prompt every headless *reviewer* turn receives, in every lane that sources the lib (Codex, agy, Claude, Pi, Aider) and both runtimes. Producer turns unchanged. `rtl_enforce`, `rtl_worktree_end`, the allowlist scoping (`:368-380`) and the GH-173 rewrite are untouched — the containment backstop is exactly what it was.
+- S2 changes only newly scaffolded relay files; existing relays keep their embedded block.
+- S3/S4 are documentation; S3 propagates to devices on the next `relay-xyz` re-vendor.
+- Reversibility: **Easy** — revert the commit; no state, schema, or generated artifacts. AGENTS classes containment-surface edits as at least Costly, which is why it goes through review rather than express.
+
+## 5. Lane
+
+1. Fresh task clone off `origin/development` (SOP §4), branch `fix/gh681-reviewer-probe-rules`.
+2. Run `python3 utils/py/express.py check --issue 681 --suite test/gh681-reviewer-probe-rules.sh --dry-run` **first** and keep its refusal output as the receipt that express is not the lane (expected: `shared-runtime` on `relay-turn-lib.sh`, `no-new-bash` on `new-relay.sh`).
+3. Implement S1-S6; run the suite; run `bash test/gh308-frozen-twin-guard.sh --check --staged` (expect clean — the lib is not a twin, and no new `.sh` is added under `relay-automation/`; `test/` is exempt).
+4. Full `validate.sh` in a separate disposable clone, per `AGENTS.md:15`.
+5. Push the branch; open a PR with `Closes #681`, the consult links, and the express-refusal receipt. Merge is the operator's call.
+
+## 6. Acceptance (verifiable)
+
+- `bash test/gh681-reviewer-probe-rules.sh` → all cases pass; red-control receipts show the three intended failures.
+- `test/gh397` and `test/gh505` still pass unchanged (the kept phrases are their assertions).
+- `validate.sh` green in a disposable clone; GH-308 guard clean.
+- Post-merge smoke (integration, not a gate): one driven relay in which a reviewer turn runs a probe into `.relay-scratch/` and the turn is attested (shim exit 0, no containment revert). Record it on #681.
+
+## 7. Deploy (after merge)
+
+`python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" update relay-xyz --source "<XYZ-forge>/skills/relay-xyz"` — preview, then apply; commit the reviewed portable paths in the Pulse checkout; sync targets. Per the skills-army-hq SOP the source must be *landed* first; a deploy from an unmerged branch is refused by the process, not just discouraged.
+
+## 8. Questions for the QA consult
+
+1. Is scoping A to "narrow, non-mutating probes" (excluding test suites in the worktree) the right cut, or does it leave the reviewer unable to measure the cases that matter? Give one concrete measurement a reviewer would need that this wording forbids.
+2. S2's trigger is *scope* ("inputs beyond the cited reproduction or DoD"). Is that determinable by a headless reviewer from the finding alone? Propose a sharper test if not.
+3. Is deferring the harness-set env (`PYTHONDONTWRITEBYTECODE`, `TMPDIR`) safe, or does prose guidance leave a turn-discarding residue path open in the probes-only scope?
+4. Does the test suite (S5) actually falsify the change, or only its wording? Name a mutant that passes S5 but breaks the intent.
+5. Anything in S1 that contradicts `skills/relay/SKILL.md:249` (the generic protocol's "Do not edit the artifact") or `AGENTS.md`?
+
+---
+
+## Answer format (strict; put this block LAST)
+
+```
+Q1: <answer, ≤4 lines, cite file:line you read>
+Q2: <…>
+Q3: <…>
+Q4: <name one mutant that passes S5 but breaks intent, or state none exists and why>
+Q5: <…>
+NEW DEFECTS (things the plan does not know about; each with file:line and a fix): 
+- …
+VERDICT: PROCEED | PROCEED-WITH-CHANGES | STOP
+Changes required before proceeding (if any):
+- …
+One thing the other advisor will probably get wrong:
+```
