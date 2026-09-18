@@ -42,10 +42,13 @@ def write_tick(root, verb, **fields):
 
 ### Component B: Consumer — Defensive Task Filter in Tick Fold
 **File:** `src/project.js` (`foldWithMeta()`)
-Tick is a task coordination kernel; events without a valid `task` string or non-task coordination events must never mutate the task projection or instantiate phantom tasks.
-Update `foldWithMeta(events)` in `src/project.js:54-63`:
+Tick is a task coordination kernel; non-task coordination events (e.g. `dependency.drift`, `cost.*`, `marathon.*`, `express.*`) and malformed events without a valid string `task` identity must never seed phantom tasks or mutate the task projection in `STATE.md`.
+Retain and update the explanatory rationale comment above the filter in `src/project.js:54-63`:
 ```javascript
   for (const ev of events) {
+    // Non-coordination events (dependency.drift GH-68, telemetry signals such as express.*,
+    // cost.*, marathon.*) do not claim tasks or transition task states; skip them so they never
+    // seed phantom `open` tasks in `tick project`/`next` or corrupt the task projection.
     if (!ev || typeof ev.task !== 'string' || !ev.task) continue;
     if (!ev.type || !ev.type.startsWith('task.')) continue;
     if (!byTask.has(ev.task)) byTask.set(ev.task, []);
@@ -57,9 +60,17 @@ Update `foldWithMeta(events)` in `src/project.js:54-63`:
 **File:** `test/gh267-express-skill.sh`
 In `test/gh267-express-skill.sh`:
 - In the `== refusals ==` section after `express-refused tick event written`:
-  Add assertion that `./bin/tick info` exits 0 in `$FX`.
+  Add assertion:
+  ```bash
+  TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project >/dev/null 2>&1
+  assert_eq "$?" "0" "tick project must fold cleanly after express-refused telemetry"
+  ```
 - In the `== run ==` happy-path section after `tick event written on run happy path`:
-  Add assertion that `./bin/tick info` exits 0 in `$FX`.
+  Add assertion:
+  ```bash
+  TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project >/dev/null 2>&1
+  assert_eq "$?" "0" "tick project must fold cleanly after express-fired telemetry"
+  ```
 
 ## 3. Blast Radius & Non-Goals
 - **Blast Radius:** 2 production files (`utils/py/express.py`, `src/project.js`), 1 test suite (`test/gh267-express-skill.sh`).
@@ -71,4 +82,4 @@ In `test/gh267-express-skill.sh`:
 ## 4. Verification Plan
 1. **Focused Test:** `bash test/gh267-express-skill.sh` (all 98+ assertions PASS).
 2. **Tick Engine Test:** `npm test` (all 23 tests PASS).
-3. **Negative Control:** With the pre-fix `write_tick()` and without the `src/project.js` guard, `./bin/tick info` fails with `TypeError: Cannot read properties of undefined (reading 'localeCompare')`. With the fix, it exits 0 cleanly.
+3. **Negative Control:** With the pre-fix `write_tick()` and without the `src/project.js` guard, `TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project` fails with `TypeError: Cannot read properties of undefined (reading 'localeCompare')`. With the fix, it exits 0 cleanly.
