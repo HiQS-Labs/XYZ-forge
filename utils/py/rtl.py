@@ -291,9 +291,9 @@ def offlane_candidates(wt_path, allow_paths, relay_file):
             paths.append(entries[i])
             i += 1
         for path in paths:
-            if path.startswith(OFFLANE_EXEMPT):
-                continue
             bare = path.rstrip("/")
+            if any(bare == e or path.startswith(e + "/") for e in OFFLANE_EXEMPT):
+                continue
             if any(bare == a or bare.startswith(a + "/") or path.startswith(a + "/")
                    for a in allow):
                 continue
@@ -850,6 +850,20 @@ exit $RC
         cmd = f"rtl_turn_prompt {shlex.quote(agent)} {shlex.quote(self.relay_file)} {shlex.quote(task)} {shlex.quote(normalized_allow_csv(self.allow_paths))} {shlex.quote(peer)}"
         res = self._run_checked(cmd)
         return res.stdout.strip()
+
+    def is_reviewer_turn(self, agent=""):
+        cmd = f"rtl_is_reviewer_turn {shlex.quote(self.relay_file)} {shlex.quote(agent)}"
+        res = self._run_rtl(cmd)
+        return res.returncode == 0
+
+    def apply_reviewer_turn_env(self, env_dict, run_cwd, agent=""):
+        """GH-682: automatically inject PYTHONDONTWRITEBYTECODE=1 and TMPDIR=<run_cwd>/.relay-scratch/tmp
+        into the process environment on reviewer turns, ensuring the scratch tmp dir exists."""
+        if self.is_reviewer_turn(agent):
+            env_dict["PYTHONDONTWRITEBYTECODE"] = "1"
+            tmp_dir = os.path.join(run_cwd, ".relay-scratch", "tmp")
+            os.makedirs(tmp_dir, exist_ok=True)
+            env_dict["TMPDIR"] = tmp_dir
 
     def drift_brief(self, agent, tick_repo_root):
         # GH-374: the tick event registry can be shared by a harness and a foreign turn root.

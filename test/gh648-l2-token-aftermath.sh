@@ -48,6 +48,7 @@ class Boundary:
         pathlib.Path(os.environ['GH648_ENFORCED']).write_text('enforced')
         subprocess.run(['bash', os.environ['GH648_HANDOFF']], check=True)
         return int(os.environ.get('GH648_ENFORCE_RC', '0'))
+    def apply_reviewer_turn_env(self, *args, **kwargs): pass
 class Diagnostics:
     def __init__(self, **kwargs): pass
     def start(self): pass

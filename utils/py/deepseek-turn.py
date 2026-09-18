@@ -272,6 +272,8 @@ def main():
             )
             bounded_rc = 5
 
+    rtl.apply_reviewer_turn_env(deepseek_env, run_cwd, me)
+
     # Build runner command
     if deepseek_bin.endswith(".js"):
         cmd = ["node", deepseek_bin, "--profile", "headless", "--patch", patch_file] + dflags + [prompt]

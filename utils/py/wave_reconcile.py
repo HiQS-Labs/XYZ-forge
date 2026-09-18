@@ -915,7 +915,7 @@ def extract_linked_issues(pr_meta, repo_slug=None):
 # whole PROJECT tree — 1-INBOX docs whose issues closed were invisible to a
 # 2-WORKING-only scan (12 of 27 offenders in the consuming-repo audit). Order
 # matters: the ACTIVE doc wins, so 2-WORKING is searched first.
-RECONCILE_FOLDERS = ("2-WORKING", "1-INBOX", "3-COMPLETED")
+RECONCILE_FOLDERS = ("2-WORKING", "1-INBOX")
 
 
 def find_active_doc_for_issue(repo_root, issue_num):
@@ -1097,7 +1097,8 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
         os.makedirs(dest_dir, exist_ok=True)
         with open(dest_path, "w", encoding="utf-8") as f:
             f.write(new_content)
-        os.unlink(doc_path)
+        if doc_path != dest_path:
+            os.unlink(doc_path)
 
     return dest_path, ship_date
 

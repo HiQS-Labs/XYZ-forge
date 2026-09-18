@@ -435,6 +435,8 @@ def main():
             print("agy-turn: worktree isolation requested but `git worktree add` failed — failing turn", file=sys.stderr)
             sys.exit(5)
 
+    rtl.apply_reviewer_turn_env(run_env, run_cwd, me)
+
     cmd = [agy_bin] + agy_args + ["-p", prompt]
     bounded_rc = 0
     

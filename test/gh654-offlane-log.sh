@@ -122,6 +122,16 @@ class OfflaneCandidates(unittest.TestCase):
         self.assertEqual(self.candidates(allow=spaced), ['offlane-probe.txt'],
                          'spaced csv entries must still silence their artifacts')
 
+    # GH-662: prefix lookalike files (.tick-other.txt, relay-system-other.txt,
+    # .relay-scratch-other.txt) must NOT be hidden by OFFLANE_EXEMPT directory prefixes.
+    def test_prefix_lookalike_files_are_reported(self):
+        lookalikes = ['.tick-other.txt', 'relay-system-other.txt', '.relay-scratch-other.txt']
+        for name in lookalikes:
+            pathlib.Path(self.wt, name).write_text('content\n')
+        found = self.candidates()
+        for name in lookalikes:
+            self.assertIn(name, found, f'lookalike file {name} must be reported as off-lane')
+
     # Mutation proof: a check that cannot fail is not a check. Rebinding the
     # exemption tuple to empty MUST make the same fixture report the exempt
     # dirs — proves the silence above is the code's doing, not the fixture's.
