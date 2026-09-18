@@ -27,15 +27,15 @@ Lane B of [GH-709](https://github.com/HiQS-Labs/XYZ-forge/issues/709). Issue: [G
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (agy, Codex out of quota): 2 blockers + 4 shoulds dispositioned, plan revised (severity as Choice, `env_missing`, ordered mock, urllib-only, 3-attempt retry, `fn_zero_threshold`, concrete Phase 3 gate ≥ 90% status / ≥ 80% category). | Plan QA round 2 → Phase 1 module + test → Phase 2 live replays → Phase 3 shadow flag only if the gate passes → final QA → PR to `development`. |
+| Plan approved r2 (agy). Phase 1 landed (`utils/py/jev_triage.py`, `test/gh712-jev-triage.sh` 16/16). Phase 2 live replays done: benchmark FN = 1 of 24 (gate missed), GH-141 status 100% / category 4.2% (gate missed against a Gemma reference that is itself wrong on inspection). Phase 3 not started. | Final relay QA on the committed diff + evidence → full `./validate.sh` once in a disposable clone → push through the gate → PR to `development` with the negative result. Any re-gate (threshold 0.48, confidence floor, hand-labelled category reference) is a separate operator decision. |
 
 ## QA gates
 
 | Phase | Gate | Evidence |
 |---|---|---|
-| 1 | `bash test/gh712-jev-triage.sh` green with a mocked endpoint: green control (every canned answer matches its label → FN = 0, FP = 0, floor met), red control (the same fixture with one known-fail answered `pass` → FN = 1, floor not met), empty benchmark refused (exit 2), rows carry `model` + 64-hex hashes and no stderr text, severity/category agreement counted per row | pending |
-| 2 | `TESTS-RESULTS/2026-09-18+GH-712/SUMMARY.md`: benchmark FN = 0 on 24 known-fail rows at argmax + recorded `fn_zero_threshold`; GH-141 agreement ≥ 90% status and ≥ 80% category (severity reported, not gating); homogeneity caveat; model pinned `jev-1.13.0`; token totals; hashes | pending |
-| 3 | `bash test/ate-run-variations.sh` green; `--classifier gemma` (default) produces the same `classification` keys as before; `--classifier jev` exercised by the Phase 1 test via the mock, never live in CI | pending / conditional |
+| 1 | `bash test/gh712-jev-triage.sh` green with a mocked endpoint: green control (every canned answer matches its label → FN = 0, FP = 0, floor met), red control (the same fixture with one known-fail answered `pass` → FN = 1, floor not met), empty benchmark refused (exit 2), rows carry `model` + 64-hex hashes and no stderr text, severity/category agreement counted per row | 16/16 on 2026-09-18 (commit `8ef27a2a`) |
+| 2 | `TESTS-RESULTS/2026-09-18+GH-712/SUMMARY.md`: benchmark FN = 0 on 24 known-fail rows at argmax + recorded `fn_zero_threshold`; GH-141 agreement ≥ 90% status and ≥ 80% category (severity reported, not gating); homogeneity caveat; model pinned `jev-1.13.0`; token totals; hashes | **Missed** 2026-09-18: FN = 1 (`fn_zero_threshold` 0.48; the rc=0 `Segmentation fault` row, status confidence 0.05); status 100%, category 4.2% (Gemma's `auth_failure` vs Jev's `env_missing` on `RELAY_AGENT required` — Gemma's reference is wrong on inspection), severity 49%. [SUMMARY](../../TESTS-RESULTS/2026-09-18+GH-712/SUMMARY.md) |
+| 3 | `bash test/ate-run-variations.sh` green; `--classifier gemma` (default) produces the same `classification` keys as before; `--classifier jev` exercised by the Phase 1 test via the mock, never live in CI | **Not started** — Phase 2 gate missed; `run_variations.py` untouched |
 
 ## Observed problem
 

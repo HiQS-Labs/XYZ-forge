@@ -1,0 +1,29 @@
+{
+  "confusion": {
+    "fail": {
+      "fail": 23,
+      "pass": 1
+    },
+    "pass": {
+      "pass": 50
+    }
+  },
+  "false_negative_pct": 4.17,
+  "false_negatives": 1,
+  "false_positives": 0,
+  "false_positives_at_fn_zero_threshold": 0,
+  "fn_floor_met": false,
+  "fn_zero_threshold": 0.48,
+  "input_tokens": 73208,
+  "kind": "benchmark",
+  "mock": false,
+  "model_requested": "jev-1.13.0",
+  "models_seen": {
+    "jev-1.13.0": 74
+  },
+  "rows": 74,
+  "tier1_agreement": {
+    "agree": 65,
+    "anomaly": 9
+  }
+}
