@@ -223,8 +223,22 @@ ERR="$WORK/err"; : > "$ERR"
 
 new_task_branch; git -C "$FX" checkout -q development
 run_check > /dev/null 2> "$ERR" && bad "on-development must refuse" || { check_rule task-branch "$ERR" && ok "task-branch refusal" || bad "task-branch rule"; }
-EV="$(ls "$FX/.tick/events/"*express-refused*.jsonl 2>/dev/null | head -1)"
-[ -n "$EV" ] && grep -q '"verb": "express-refused"' "$EV" && ok "express-refused tick event written" || bad "tick telemetry missing"
+EV="$(ls "$FX/.tick/express/"*express-refused*.jsonl 2>/dev/null | head -1)"
+[ -n "$EV" ] && grep -q '"verb": "express-refused"' "$EV" && ok "express-refused telemetry written under .tick/express/" || bad "express telemetry missing"
+# GH-694: the record must never land in tick's coordination log — one taskless record there and every
+# projecting verb in the clone dies. Pin: tick still projects after a refusal; negative control: the
+# same record copied INTO .tick/events/ reproduces the crash, so the pin is not vacuous.
+[ -z "$(ls "$FX/.tick/events/"*express*.jsonl 2>/dev/null)" ] && ok "GH-694: nothing express-shaped in .tick/events/" || bad "GH-694: express telemetry leaked into .tick/events/"
+TICK_BIN="$HERE/../bin/tick"
+TICK_REPO_ROOT="$FX" "$TICK_BIN" claim GH267-PIN --agent pin --paths x >/dev/null 2>&1 || bad "GH-694 pin: tick claim failed in the fixture"
+TICK_REPO_ROOT="$FX" "$TICK_BIN" info GH267-PIN >/dev/null 2>&1 && ok "GH-694: tick still projects after an express refusal" || bad "GH-694: tick cannot project after an express refusal"
+# The fold buckets the taskless record under `undefined`: `tick next` then offers a phantom task
+# named "undefined" (deterministic), and the STATE sort dies with `localeCompare of undefined` as
+# soon as that phantom is compared first (what #694 observed). Assert the deterministic symptom.
+TICK_REPO_ROOT="$FX" "$TICK_BIN" next --agent pin2 2>/dev/null | grep -q '^undefined' && bad "GH-694 control: phantom task present BEFORE the leak — fixture is dirty" || true
+cp "$EV" "$FX/.tick/events/$(basename "$EV")"
+TICK_REPO_ROOT="$FX" "$TICK_BIN" next --agent pin2 2>/dev/null | grep -q '^undefined' && ok "GH-694 control: the same record inside .tick/events/ folds into a phantom 'undefined' task (pin is load-bearing)" || bad "GH-694 control: a taskless record in .tick/events/ should pollute the fold but did not"
+rm -f "$FX/.tick/events/$(basename "$EV")"
 
 new_task_branch
 for i in 1 2 3; do
@@ -354,8 +368,8 @@ grep -q "express ship GH-999" <<<"$RECENT_LOG" && ok "ship transaction persisted
 grep -q "express reconcile GH-999" <<<"$RECENT_LOG" && ok "reconcile persisted as a separate clean-tree transaction" || bad "reconcile commit missing"
 grep -q '"state":"CLOSED"' "$GH_STATE/issue-999.json" && ok "run closed GitHub issue #999 before reconciling" || bad "run left issue #999 open"
 [ -z "$(git -C "$FX" status --porcelain)" ] && ok "successful closeout leaves development clean" || bad "successful closeout left drift: $(git -C "$FX" status --short | tr '\n' ';')"
-FIRED="$(ls "$FX/.tick/events/"*express-fired*.jsonl 2>/dev/null | head -1)"
-[ -n "$FIRED" ] && ok "express-fired tick written on full success" || bad "express-fired tick missing"
+FIRED="$(ls "$FX/.tick/express/"*express-fired*.jsonl 2>/dev/null | head -1)"
+[ -n "$FIRED" ] && ok "express-fired telemetry written on full success" || bad "express-fired telemetry missing"
 
 echo "== GH-592: the landing writes its provenance receipt and reconciles under --gate =="
 FIX_SHA="$(git -C "$FX" log --format=%H --grep='\[express\]' -1)"
@@ -451,7 +465,7 @@ issue_json OPEN "Demo hotfix" 999
 WR_FAIL=1 python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary demo >/dev/null 2>"$ERR" \
   && bad "forced reconcile failure must fail closed" \
   || { grep -q "express-reconcile-failed" "$ERR" && ok "SystemExit closeout failure is reported" || bad "closeout failure not reported"; }
-FAILED_TICK="$(ls -t "$FX/.tick/events/"*express-reconcile-failed*.jsonl 2>/dev/null | head -1)"
+FAILED_TICK="$(ls -t "$FX/.tick/express/"*express-reconcile-failed*.jsonl 2>/dev/null | head -1)"
 [ -n "$FAILED_TICK" ] && grep -q '"verb": "express-reconcile-failed"' "$FAILED_TICK" && ok "every closeout failure writes its receipt" || bad "closeout failure tick missing"
 
 echo "== dry-run mode (GH-516) =="
@@ -587,7 +601,7 @@ M_STATE="$(python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db'); pri
 REMOTE_DEV_SHA="$(git -C "$REMOTE" rev-parse development)"
 LOCAL_DEV_SHA="$(git -C "$FX" rev-parse HEAD)"
 [ "$REMOTE_DEV_SHA" = "$LOCAL_DEV_SHA" ] && ok "resume persisted and pushed closeout to origin/development" || bad "remote development out of sync"
-RESUMED_TICK="$(ls -t "$FX/.tick/events/"*express-resumed*.jsonl 2>/dev/null | head -1)"
+RESUMED_TICK="$(ls -t "$FX/.tick/express/"*express-resumed*.jsonl 2>/dev/null | head -1)"
 [ -n "$RESUMED_TICK" ] && ok "express-resumed event receipt written" || bad "express-resumed tick missing"
 
 # --- Happy Path 2: Idempotent second resume ---
