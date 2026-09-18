@@ -216,3 +216,11 @@ The fix to `_kill_turn_group` correctly preserves the session PGID and proceeds 
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-18T00:51:39Z
+task: MARATHON-P4-TURN-R3
+reviewer: agy
+status: Approved
+reviewed-head: 653fce5e013d8a9a6ec5eff06b12125e5e03978e
+added-range: 14395+532
+added-sha256: 006ed865019da21be1ad0e6694eeedb0098c0f7d802eb16b2e9e246fd8304084
