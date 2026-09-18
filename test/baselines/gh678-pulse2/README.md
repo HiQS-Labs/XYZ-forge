@@ -18,3 +18,11 @@ link; the fixed script preserved it and returned 1. No real app directory was us
 
 These focused checks do not represent a full validation gate. Relay approval is recorded in
 `relay-system/2026-09-17/pulse2-final-qa.md`; its scope is implementation and recovery procedure.
+
+Full gate at `f04893a7`: 389/393 passed; four failures. All four reproduce on unchanged
+`development@4af5bcfc` (baseline logs alongside this file). `gh32-releases-app.sh` initially
+failed in parallel, then passed the gate's isolated retry; a separate baseline run passed too.
+Git identity remained unchanged. After resolving concurrent development changes, candidate
+`ba22bc53` passed both focused suites and the three PDDA checks; the reviewed installer/test
+files are byte-identical across the merge. No passing full gate is claimed for that candidate.
+The PR is published as a draft with an explicit known-red-baseline pre-push bypass disclosure.

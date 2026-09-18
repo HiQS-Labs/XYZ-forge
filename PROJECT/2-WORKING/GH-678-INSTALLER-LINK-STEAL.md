@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Root cause reproduced and confirmed against three same-day incidents; 22 installers guarded; test sandboxed with a containment assertion; matrix regression added and registered; PR open | Land; recover this device's three stolen Gemini links; retire stale task clones that still carry the leaky test |
+| Installer follow-up approved; 215 agent-chorus and 45 installer assertions pass; two mutation controls witnessed red; Pulse projection and three links repaired; full gate 389/393 with all four failures reproduced on development | PR #680 is draft: resolve baseline gate failures before merge; stale clones still require refresh or retirement |
 
 ## Root cause (debug-mantra, all four steps)
 
