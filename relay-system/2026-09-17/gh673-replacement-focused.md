@@ -41,7 +41,7 @@ ROUND: 1 / 2
 
 ## Setup
 - Artifact under review: GH-673 reader candidate at the driver's current pinned HEAD
-  versus origin/development `0389dc6e`; initial runtime `95b3cc24` plus scoped
+  versus origin/development `ba1f58e8`; refreshed candidate `eb3815a2`, initial runtime `95b3cc24` plus scoped
   equal-time identity and simultaneous row/root diagnostic repairs.
   Read `PROJECT/2-WORKING/GH-673-FLIGHTDECK-STATUS.md` and the changed runtime files:
   `src/flightdeck/{contract,connectors,aggregate}.py`, `utils/py/releases_cycle.py`,
@@ -88,8 +88,10 @@ ROUND remains 1/2 and no actual replacement reviewer turn has yet been dispatche
 Report [Blocker]/[Should]/[Nit]/[Pass] with file:line citations; exact VERDICT PASS,
 FAIL or PARKED and Basis. Only real PASS with no unresolved blocker/should may set
 STATUS Approved. Read-only reviewer; modify/commit only this relay file. Do not run
-mutation-heavy validate.sh/test/*.sh in the isolated reviewer worktree. Focused
-fixture Python/Node checks are safe. No push. Time bounded by the driver.
+validate.sh, test/*.sh, pytest or executable fixtures in the isolated reviewer worktree.
+Tests belong in disposable full clones. Narrow non-mutating probes are permitted
+under the landed GH-681 reviewer contract, with cited input, command and output.
+No push. Time bounded by the driver.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
