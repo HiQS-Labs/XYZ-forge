@@ -173,4 +173,12 @@ swept file: yes
 
 handing off to claude-a — relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-18T23:54:09Z
+task: RELAY-gh712-agy-final-qa
+reviewer: agy
+status: Approved
+reviewed-head: 2784877ab9ef892fc42979c1d1bec7847c8bdc60
+added-range: 13132+2841
+added-sha256: d6f82ce90430b38933f6ad5d1ce9be08d23194a16299f7965ba098b7c5a13bc4
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
