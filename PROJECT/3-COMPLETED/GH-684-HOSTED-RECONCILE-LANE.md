@@ -2,7 +2,7 @@
 gh_issue: 684
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/684
 title: "Hosted wave-reconcile lane: 0 successes since 2026-09-11; nothing alerts; one defect anywhere in the backlog fails every reconcile"
-status: Active
+status: Complete
 created: 2026-09-18
 updated: 2026-09-18
 owner: operator (fresh-clone PR lane)

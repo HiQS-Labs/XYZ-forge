@@ -2,7 +2,7 @@
 gh_issue: 686
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/686
 title: "test/gh53-releases-merge-resolve.sh is a coin-flip: the fixture's union keeps two 'generation' settings rows when the sides straddle a second boundary"
-status: Active
+status: Complete
 created: 2026-09-18
 updated: 2026-09-18
 owner: operator (fresh-clone PR lane, shared with GH-684)
