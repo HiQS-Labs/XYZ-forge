@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-18 — Hosted wave-reconcile lane: alert on red, skip-and-report a defective backlog item; gh53 fixture made deterministic (GH-684, GH-686)
+
+The hosted `wave-reconcile.yml` lane had 0 successes since 2026-09-11 (59 straight failures) and
+nothing told anyone: each run reconciled its PR *and* the whole backlog in one motion and died on the
+first defect anywhere in it — one stale doc from 8 September blocked every merge after it — and the
+local tools treated a red hosted run as the normal fallback. Now (S1) a final `if: always()` step runs
+`utils/py/hosted_lane_report.py` with the **job's** status: it keeps exactly one open issue labelled
+`hosted-reconcile-attention` (opened or commented on red or on any skipped item, closed on the next
+green run), with the run URL, the terminal `wave-reconcile: ERROR — …` line and every skip line; the
+reconcile log is tee'd to `$RUNNER_TEMP`, outside the tree the commit step guards; job permission
+`issues: write`. (S2) `wave_reconcile.py`: a landing recovered by `--catch-up` whose active doc fails
+`validate_lessons_learned` is reported as `wave-reconcile: SKIPPED GH-<n> — <reason>` **before** its
+first lifecycle write, leaves the marathon-plan ownership set (so its own retained drift is unrelated,
+not fatal), and is retried next run; landings named on the command line keep the fail-closed exit 5.
+`SKIP_MARKER` is the one literal, imported by the report tool. The full-suite qualification is
+untouched — #591 chose it. (S3, #686) the qualification's one red suite was a coin-flip:
+`test/gh53-releases-merge-resolve.sh` unioned the two sides byte-for-byte, and each side's
+`generation` settings row carries its own `updated_at`, so sides that straddled a second kept both
+rows and the resolver refused — correctly. The fixture now keeps one `settings` row per key, forces
+the second boundary and asserts it; the resolver's procedure comment names the row. Regression:
+`test/gh684-hosted-lane-report.sh` (new) and four cases in `test/gh421-auto-wave-reconcile.sh`
+(mixed batch with repeat-then-repair, explicit fail-closed pin, planner ownership with red control,
+workflow pins; the publication-script extraction is now bounded to its step). Evidence with four
+single-site red controls and the base flake witnessed 7/40 in `TESTS-RESULTS/2026-09-18+GH-684/`.
+Reversibility: Easy — revert S2 and the run is fail-closed again; revert the step and permission
+and the lane is silent again. Not here: #674, the 35 docs missing Lessons Learned, GH-505's doc.
+
 ## 2026-09-17 — Relay Reviewer may measure read-only; generalizations carry a falsifier (GH-681)
 
 A headless relay Reviewer may now run narrow, non-mutating probes against the seeded artifact

@@ -1,0 +1,16 @@
+== test: gh358-wave-reconcile-vendored-paths ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh358-wave-reconcile-vendored-paths.XXXXXX.LM47InmgUM
+== test: gh358-wave-reconcile-vendored-paths ==
+-- section 1: the four harness tools resolve under .xyz --
+  PASS: vendored reconcile exits 0
+  PASS: no 'can't open file' — every harness tool was found
+  PASS: releases_app ran from .xyz
+  PASS: export_timeline ran from .xyz
+  PASS: marathon-plan ran from .xyz
+-- section 2: PDDA is a TARGET-repo tool and must NOT be redirected into .xyz --
+  PASS: pdda gate ran from the repo root
+  PASS: harness pdda decoy never ran
+-- section 3: a canonical (non-vendored) checkout still prefers its own tools --
+  PASS: repo-owned tool stays repo-relative (mock seam + canonical checkout preserved)
+
+  gh358: 8 passed, 0 failed
