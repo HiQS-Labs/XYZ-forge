@@ -99,3 +99,18 @@ Hosted proof (post-merge, recorded on #684, in this order):
 ## RELEASES rating (2026-09-18)
 
 `rated 80/75/50/60` — **pri 80**: blocks #591's acceptance and every merge's paperwork; growing backlog (≥9 closed issues stranded in `2-WORKING`). **sev 75**: work-blocking for governance, recoverable (manual local reconcile works), no data loss; recurrence is 59 incidents in 6 days of one class — assessed, not multiplied. **appeal 50**: neutral, no user preference given. **effort 60**: ~250 insertions across a YAML step, one new ~70-line tool, ~25 lines in the reconciler, fixture fix, tests; no schema or kernel change. Recurrence window: 2026-09-04→09-17 vs 08-21→09-03 — the hosted lane only exists since 09-10 (#421/#591), so the earlier window has no data (unknown trend, not zero).
+
+## Merge evidence
+
+- (recorded at landing)
+
+## Lessons Learned (For Future Agents)
+
+- **A lane with no failure signal is a lane nobody watches.** 59 red runs in six days, and every local tool logged "using local reconciliation" and moved on. The first fix is not the reconciler; it is one place a human sees red — and "green" must mean the *job* was green, not one step.
+- **Batch-and-die is how one stale doc blocks everyone.** A catch-up that processes the whole backlog and rolls everything back on the first defect turns a governance nit on a 10-day-old PR into a total outage. Skip-and-report the item that is wrong; land the rest; retry it every run; keep fail-closed for the landing the run was actually asked to reconcile.
+- **Removing an item from the writes is not enough — remove it from the ownership set too.** The planner check attributes every closed-issue drift to the issues this run "reconciled"; a skipped issue left in that set dies one step later. Codex's probe found this in plan review; the mixed-batch test with a real-shaped planner finding now pins it.
+- **The emitter and the consumer of a log line must share the literal.** A `WARNING — SKIPPED` from `log()` would never have matched a `SKIPPED` parser; `SKIP_MARKER` is imported, and the report suite builds its fixture line from it.
+- **A flaky gate suite is a lane outage in disguise** (see GH-686): 17 % red in a 393-suite gate that must be 100 % green fails roughly one full run in six, in every lane that runs the full gate.
+- **A test that reads a YAML block "to end of file" breaks the moment a step is appended.** Bound extractions to their own step; the appended-step pin now proves it.
+- **Check your own capture doc for the sections the reconciler enforces before you open the PR.** This doc was missing exactly the section its own S2 skips over — caught by `wave_reconcile.py --pre-merge` after the PR was already ready.
+
