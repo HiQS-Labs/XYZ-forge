@@ -103,8 +103,9 @@ you are standing in.
    - Park the ROADMAP pointer (Step 5).
    - **Do not commit and do not push.** See Guardrails — this is the rule most likely to bite.
 
-5. **Park a one-line ROADMAP.md pointer** in the intake repo under `### Queue / parked intake`
-   (required at capture time — `ROUTER.md`, `PROJECT/PDDA.md` → ROADMAP.md contract):
+5. **Park the intake in the RELEASES DB** (`python3 utils/py/releases_app.py roadmap add …`,
+   or `hq park`) — required at capture time (`ROUTER.md`, `PROJECT/PDDA.md` → RELEASES DB
+   contract; ROADMAP.md is retired, GH-269):
 
    ```md
    - **GH-<n> — <short title>** (<YYYY-MM-DD>) - <one-line symptom>. Bug filed via /file-xyz-bug

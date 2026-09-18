@@ -127,6 +127,7 @@ TESTS=(
   "gh374-drift-path-filter.sh"  # GH-374 (drift-brief path-existence filter)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "gh610-claude-subscription.sh" # account routes and native Claude JSON results
+  "gh698-planner-db-ratings.sh"       # GH-698 F2/F4 (planner reads DB four-axis ratings: rated row sequences, unrated holds — red control)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
   "worktree-isolation.sh"

@@ -11,6 +11,7 @@ import fcntl
 import glob
 import hashlib
 import json
+import time
 import os
 import re
 import shutil
@@ -169,6 +170,20 @@ class RollbackJournal:
 
     def rollback(self):
         log("Rolling back all uncommitted mutations...")
+        # GH-698 F8: a rollback is a silent red. Emit a structured event into
+        # .tick/events/ so radar (and any .tick reader) sees the failure without
+        # reading CI logs — the same surface the drivers already use.
+        try:
+            events_dir = os.path.join(os.getcwd(), ".tick", "events")
+            if os.path.isdir(events_dir):
+                evt = os.path.join(events_dir, "%s-wave-reconcile-rollback.jsonl"
+                                   % time.strftime("%Y-%m-%dT%H-%M-%SZ", time.gmtime()))
+                with open(evt, "a", encoding="utf-8") as fh:
+                    fh.write(json.dumps({"event": "wave-reconcile-rollback",
+                                         "reason": "uncommitted-mutations",
+                                         "at": time.time()}) + "\n")
+        except Exception:
+            pass  # the event must never worsen the rollback
         for created in self.created_files:
             if os.path.exists(created):
                 try:

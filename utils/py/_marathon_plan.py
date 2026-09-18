@@ -771,7 +771,19 @@ class Engine:
                 conn.row_factory = sqlite3.Row
                 if not conn.execute("SELECT name FROM sqlite_master WHERE name='roadmap_items' AND type='table'").fetchone():
                     raise EngineExit(3, "marathon-plan: releases.db has no roadmap_items table")
-                return self._parse_ledger(roadmap_render(conn))
+                ledger = self._parse_ledger(roadmap_render(conn))
+                # GH-698 F2: carry the canonical four-axis ratings so the planner
+                # ranks by the DB's own rank (the four-axis sum) instead of
+                # requiring legacy cx/risk/effort doc frontmatter.
+                db_ranks = {}
+                for row in conn.execute(
+                    "SELECT gh_number, rating_pri, rating_sev, rating_appeal, rating_effort "
+                    "FROM roadmap_items WHERE gh_number IS NOT NULL"
+                ):
+                    axes = [row[1], row[2], row[3], row[4]]
+                    if all(a is not None for a in axes):
+                        db_ranks[int(row[0])] = sum(int(a) for a in axes)
+                return ledger, db_ranks
         except sqlite3.Error as exc:
             raise EngineExit(3, "marathon-plan: cannot read releases.db roadmap_items: %s" % exc) from exc
 
@@ -794,11 +806,13 @@ class Engine:
             if raw is None:
                 raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
             ledger = self._parse_ledger(raw)
+            db_ranks = {}  # explicit ROADMAP fixtures carry no DB ratings
         elif is_releases_mode:
             self.SOURCE_NAME = "releases.db (roadmap_items)"
             self.SOURCE_LINK = os.path.relpath(db_path, self.QUEUE_DIR)
-            ledger = self._load_ledger_from_db(db_path)
+            ledger, db_ranks = self._load_ledger_from_db(db_path)
         else:
+            db_ranks = {}
             raw = self._read_file_safe(self.ROADMAP)
             if raw is not None:
                 ledger = self._parse_ledger(raw)
@@ -818,7 +832,12 @@ class Engine:
             fm = self._frontmatter(doc_abs) if doc_exists else {}
             ratings = {"complexity": _L(fm.get("complexity")),
                        "risk": _L(fm.get("risk")), "effort": _L(fm.get("effort"))}
+            db_rank = db_ranks.get(gh)
             rated = all(ratings[k] is not None for k in ("complexity", "risk", "effort"))
+            if db_rank is not None:
+                # GH-698 F2: the DB's canonical four-axis rating satisfies `rated`
+                # even when the capture doc lacks legacy cx/risk/effort frontmatter.
+                rated = True
             ratings_exempt = str(fm.get("ratings_exempt", "")).lower() == "true"
             contract = self._extract_contract(doc_abs) if doc_exists else None
             z = self._zone_of(contract, item)
@@ -832,6 +851,7 @@ class Engine:
                 "deps": self._deps_of(item), "goGated": self._is_go_gated(item),
                 "suggestedBranch": suggested_branch,
                 "flags": [], "signals": [], "state": None, "score": None,
+                "dbRank": db_rank,
                 "wave": None, "ghState": None,
             })
 
@@ -931,10 +951,15 @@ class Engine:
                 continue
             if r["docExists"] and not r["rated"]:
                 r["state"] = "unrated"
-                missing = [k for k in ("complexity", "risk", "effort") if r["ratings"][k] is None]
-                self._flag("info", "unrated", r,
-                           "project doc missing rating key(s): %s" % ", ".join(missing),
-                           "add complexity/risk/effort frontmatter (see PDDA.md)")
+                if is_releases_mode:
+                    self._flag("info", "unrated", r,
+                               "ledger row has no four-axis rating in releases.db",
+                               "rate via: releases roadmap rate --issue-num %d --rated P/S/A/E" % r["gh"])
+                else:
+                    missing = [k for k in ("complexity", "risk", "effort") if r["ratings"][k] is None]
+                    self._flag("info", "unrated", r,
+                               "project doc missing rating key(s): %s" % ", ".join(missing),
+                               "add complexity/risk/effort frontmatter (see PDDA.md)")
                 continue
             if r["docExists"] and not r["contract"]:
                 r["state"] = "needs-contract"
@@ -1012,6 +1037,13 @@ class Engine:
         risk_w = 4 if self.POLICY == "derisk-first" else W["risk"]
 
         def score_of(r):
+            if r.get("dbRank") is not None:
+                # GH-698 F2: the ledger's own rank IS the canonical ordering (the
+                # four-axis sum). Lower planner score = earlier, so negate; the
+                # deps/zone/gated adjustments below keep their existing meaning.
+                base = -r["dbRank"]
+                zone_penalty = r["zoneRule"]["penalty"] if (r["zoneRule"] and math.isfinite(_js_number(r["zoneRule"]["penalty"]))) else 0
+                return base + W["dep"] * len(r["deps"]) + W["zone"] * zone_penalty + (100 if r["state"] == "gated" else 0)
             if not r["rated"]:
                 return None
             s = W["eff"] * r["ratings"]["effort"] + W["cx"] * r["ratings"]["complexity"] \
