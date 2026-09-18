@@ -1,0 +1,5 @@
+== test: gh681-reviewer-probe-rules ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh681-reviewer-probe-rules.XXXXXX.t1sGyiYnz9
+  PASS: case 1: reviewer prompt carries: You are the REVIEWER this turn
+  FAIL: case 1: reviewer prompt lacks: MAY run narrow, non-mutating probes
+exit=1

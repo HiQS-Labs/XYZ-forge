@@ -1,0 +1,1 @@
+express-refused: rule=no-new-bash — relay-automation/new-relay.sh — new/edited .sh under utils/ or relay-automation/ is rejected by the GH-551 guard; express will not carry it
