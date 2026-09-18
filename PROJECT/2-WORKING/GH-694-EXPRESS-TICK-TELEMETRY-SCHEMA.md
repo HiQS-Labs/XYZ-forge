@@ -42,11 +42,13 @@ TypeError: Cannot read properties of undefined (reading 'localeCompare')
 ## Required Changes
 
 1. **Producer (`utils/py/express.py`):**
+   - Write under `.tick/express/`, never inside tick's coordination log — landed first by #699 (`91353ee0`); this lane's envelope and atomic writes were re-based onto it (resolution: AgentChorus #458167).
    - Emit canonical Tick event envelope (`schema_version: "0.2.0"`, `ts: now_iso()`, `type: "express." + verb.replace("express-", "")`, `task: "GH-<n>"` if issue else `"lane"`, `agent: "express"`).
 2. **Consumer (`src/project.js`):**
    - Add defensive check in `foldWithMeta()`: `if (!ev || typeof ev.task !== 'string' || !ev.task) continue; if (typeof ev.type !== 'string' || !ev.type.startsWith('task.')) continue;`.
 3. **Verification (`test/gh267-express-skill.sh`):**
    - Add consumer coexistence assertion: run `TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project` after express refusal/landing/resume fixtures and assert exit code 0.
+   - Defense-in-depth control (replaces #699's crash witness, which the kernel filter makes unreachable): copy the refusal record into `.tick/events/` and assert the fold skips it — `tick project` exits 0, no `GH-999`/`lane`/`undefined` phantom in `STATE.md` or `tick next`, and a genuine `task.*` claim still projects.
 
 ## Acceptance Criteria
 - [x] `test/gh267-express-skill.sh` passes (101/101) and validates `tick project` exits 0 after express telemetry writes with zero phantom tasks.

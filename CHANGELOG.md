@@ -2,7 +2,7 @@
 
 ## 2026-09-18 — Express telemetry schema alignment & Tick fold resilience (GH-694)
 
-`utils/py/express.py`'s `write_tick()` telemetry writer emitted ad-hoc JSON records (`at`, `actor`, `verb`, `issue`) missing canonical Tick 0.2.0 event envelope fields (`schema_version`, `ts`, `type`, `task`, `agent`). When `./bin/tick` commands subsequently projected state in task clones where `/express` had fired, `src/project.js` `foldWithMeta()` bucketed events by `ev.task` (`undefined`), instantiating a task with `id: undefined` that crashed `renderState()` on `a.id.localeCompare`. Now: (1) `write_tick()` constructs the canonical Tick envelope (`schema_version: "0.2.0"`, `type: "express.<verb>"`, `task: "GH-<issue>"`, `agent: "express"`), preserving all existing payload fields for backward compatibility; (2) `src/project.js` `foldWithMeta()` defensively filters out non-coordination signals and events lacking a valid string `task` id so telemetry and non-`task.*` events never seed phantom tasks or crash the task projection. `write_tick()` now publishes each `.jsonl` atomically (`.tmp` + `os.replace`) so a same-clone `tick` reader never observes a torn file; the regression in `test/gh267-express-skill.sh` pins `tick project` clean exit and additionally asserts no `GH-999`/`lane` phantom task appears in `STATE.md` (101/101 pass); `npm test` passes 23/23.
+`utils/py/express.py`'s `write_tick()` telemetry writer emitted ad-hoc JSON records (`at`, `actor`, `verb`, `issue`) missing canonical Tick 0.2.0 event envelope fields (`schema_version`, `ts`, `type`, `task`, `agent`). When `./bin/tick` commands subsequently projected state in task clones where `/express` had fired, `src/project.js` `foldWithMeta()` bucketed events by `ev.task` (`undefined`), instantiating a task with `id: undefined` that crashed `renderState()` on `a.id.localeCompare`. Now: (1) `write_tick()` writes under `.tick/express/` — a sibling of tick's log, never inside it (#699) — and constructs the canonical Tick envelope there (`schema_version: "0.2.0"`, `type: "express.<verb>"`, `task: "GH-<issue>"`, `agent: "express"`) for parity with the central mirror `~/.config/xyz/events/`, preserving all existing payload fields for backward compatibility; (2) `src/project.js` `foldWithMeta()` defensively filters out non-coordination signals and events lacking a valid string `task` id so telemetry and non-`task.*` events never seed phantom tasks or crash the task projection. `write_tick()` now publishes each `.jsonl` atomically (`.tmp` + `os.replace`) so a same-clone `tick` reader never observes a torn file; the regression in `test/gh267-express-skill.sh` pins the `.tick/express/` destination, `tick project` clean exit, no `GH-999`/`lane`/`undefined` phantom task in `STATE.md`, and — as the defense-in-depth control — that the same record copied into `.tick/events/` is skipped by the fold (no crash, no phantom, a genuine claim still projects). Resolution of the #699/#702 collision recorded in AgentChorus #458167.
 
 ## 2026-09-18 — Hosted wave-reconcile lane: alert on red, skip-and-report a defective backlog item; gh53 fixture made deterministic (GH-684, GH-686)
 
@@ -30,6 +30,31 @@ workflow pins; the publication-script extraction is now bounded to its step). Ev
 single-site red controls and the base flake witnessed 7/40 in `TESTS-RESULTS/2026-09-18+GH-684/`.
 Reversibility: Easy — revert S2 and the run is fail-closed again; revert the step and permission
 and the lane is silent again. Not here: #674, the 35 docs missing Lessons Learned, GH-505's doc.
+## 2026-09-17 — Installer containment follow-up (GH-678 / Pulse #2)
+
+Installer tests clear inherited Gemini target overrides as well as redirecting HOME;
+all three sandbox paths and untouched sentinel roots are checked. AgentChorus preserves
+live foreign legacy aliases, and the installer matrix discovers its nonempty input set
+rather than assuming 22 skills. These changes do not alter configured IDE selection.
+Correction to the earlier entry: Gemini targets were added on August 20 in `3c820f06`;
+August 23's `9be6f70f` renamed the already-affected skill. Focused evidence is retained
+under `test/baselines/gh678-pulse2/`; full-gate status remains separate. Reversibility: Easy.
+
+## 2026-09-17 — Skill installers stop stealing symlinks; gate no longer writes real HOME (GH-678)
+
+Every `skills/*/install.sh` deleted any symlink not already pointing at its own clone and relinked
+to itself, with no record of the old target. `test/agent-chorus.sh` ran that installer inside the
+gate with only two of its five target directories sandboxed, so every gate run on every clone
+repointed the three real `~/.gemini/**/skills/agent-chorus` links to that clone (three times on
+2026-09-17 alone; regression since the 2026-08-23 AgentChorus rename added the Gemini targets
+without extending the test's env). Now: the test sets `HOME` to its sandbox on every installer
+call and asserts the HOME-relative targets landed there; all 22 installers refuse to replace a
+live link they do not own, naming its current target, while still cleaning dangling links;
+`relay-xyz/install.sh` propagates a refused target in its exit code like its siblings. New
+`test/gh678-installer-live-links.sh` runs all 22 in a sandbox HOME against a live foreign link
+(must refuse, 22/22 originals failed this) and a dangling one (must replace). README tells
+Skills Army HQ machines to skip the installers. Recon map at
+`PROJECT/2-WORKING/recon-install-sh-link-steal.md`. Reversibility: Easy — ordinary revert.
 
 ## 2026-09-17 — Relay Reviewer may measure read-only; generalizations carry a falsifier (GH-681)
 

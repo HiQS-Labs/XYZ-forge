@@ -1727,6 +1727,9 @@ def main():
         if not block_lines:
             return
         print("\nmarathon-drive: end-of-run cost summary (tick analyze) —\n" + "\n".join(block_lines))
+        # GH-690: the campaign clone outlives this run (success OR halt); point at the
+        # sanctioned retirement tool so finished clones do not accumulate on disk
+        print("clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified")
 
     def _marathon_drive_on_exit(code):
         # Same order as the Bash EXIT trap: log first (so the run log can still read a live
@@ -2926,6 +2929,7 @@ NEXT: {args.builder} (Builder)
 ▶ TAKE YOUR TURN ({args.builder} — BUILDER role)
 
 You are the BUILDER for this phase. Read the phase brief above and implement it.
+APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. {builder_impl_line}
 2. Append a build block to this relay file: `### Round N · Builder · {args.builder}` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): {tick_cli}
@@ -2943,6 +2947,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 ▶ TAKE YOUR TURN ({args.reviewer} — REVIEWER role)
 
 You are the REVIEWER for this phase. {reviewer_read_line}
+APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. Append a review block: `### Round N · Reviewer · {args.reviewer}` followed by your assessment.
 2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: {args.builder} (Builder)`, then: {tick_cli} release {relay_task} --agent {args.reviewer} --to {args.builder}
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: {tick_cli} done {relay_task} --agent {args.reviewer}

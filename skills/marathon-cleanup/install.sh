@@ -23,6 +23,13 @@ elif [ -e "$LINK" ] && [ ! -L "$LINK" ]; then
   echo "Move it aside after preserving any unique files, then re-run this installer." >&2
   exit 1
 else
+  if [ -L "$LINK" ] && [ -e "$LINK" ]; then
+    # GH-678: a live link that is not ours belongs to another installer or to a managed
+    # Skills Army collection. Only a dangling link is stale enough to replace.
+    echo "$SKILL_NAME: $LINK already points at $(readlink "$LINK") — not replacing a live link." >&2
+    echo "  Remove it yourself if that is intended." >&2
+    exit 1
+  fi
   [ ! -L "$LINK" ] || rm -f "$LINK"
   ln -s "$SELF_DIR" "$LINK"
   echo "$SKILL_NAME: installed -> $LINK -> $SELF_DIR"

@@ -345,6 +345,63 @@ def rtl_run_bounded(timeout_secs, cmd, *, cwd=None, env=None, stdout=None, stder
             pass
         return 7
 
+def checkout_snapshot(root):
+    """Capture this checkout's branch (empty when detached) and exact HEAD."""
+    if not root or not os.path.isabs(root) or not os.path.isdir(root):
+        raise ValueError("checkout root must be an existing absolute directory")
+    branch = subprocess.run(
+        ["git", "-C", root, "symbolic-ref", "--quiet", "HEAD"],
+        capture_output=True, text=True, timeout=10,
+    )
+    if branch.returncode not in (0, 1):  # 1 means detached; other failures are not snapshots
+        raise RuntimeError(branch.stderr.strip() or "cannot read checkout branch")
+    head = subprocess.run(
+        ["git", "-C", root, "rev-parse", "--verify", "HEAD"],
+        capture_output=True, text=True, check=True, timeout=10,
+    ).stdout.strip()
+    ref = branch.stdout.strip() if branch.returncode == 0 else ""
+    if not head or (branch.returncode == 0 and not ref.startswith("refs/heads/")):
+        raise RuntimeError("cannot capture checkout branch/HEAD")
+    return ref, head
+
+
+def restore_checkout_after_timeout(root, before):
+    """Restore checkout identity without rewinding refs or forcing away local edits.
+
+    Only the supervisor calls this, after the timed-out child has exited. A moved
+    starting ref or conflicting edits requires manual recovery; never reset/stash.
+    """
+    if before is None:
+        print(f"relay-drive: timeout checkout restoration skipped at {root}: "
+              "starting snapshot unavailable; manual recovery required "
+              "(no checkout change attempted)", file=sys.stderr)
+        return False
+    try:
+        if checkout_snapshot(root) == before:
+            return True
+        ref, head = before
+        if ref:
+            tip = subprocess.run(
+                ["git", "-C", root, "rev-parse", "--verify", ref],
+                capture_output=True, text=True, check=True, timeout=10,
+            ).stdout.strip()
+            if tip != head:
+                raise RuntimeError(f"starting branch {ref} moved from {head} to {tip}")
+            args = ["switch", "--no-guess", "--", ref[len("refs/heads/"):]]
+        else:
+            args = ["switch", "--detach", head]
+        subprocess.run(["git", "-C", root, *args], capture_output=True,
+                       text=True, check=True, timeout=10)
+        if checkout_snapshot(root) != before:
+            raise RuntimeError("checkout branch/HEAD changed during recovery")
+        return True
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+        detail = getattr(exc, "stderr", None) or str(exc)
+        print(f"relay-drive: timeout checkout restoration failed at {root}: {detail}; "
+              f"manual recovery required to {before!r} (no forced reset attempted)", file=sys.stderr)
+        return False
+
+
 def claim_paths_for_turn(root, relay_file, allow_paths):
     # Resolve both through realpath before computing the relative path. `root` and `relay_file` can
     # come from different resolution paths — e.g. root via resolve_turn_root's `git rev-parse
