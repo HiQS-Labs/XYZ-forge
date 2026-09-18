@@ -115,5 +115,13 @@ Read and analyzed the complete implementations and test scripts: `utils/py/wave_
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-18T03:53:42Z
+task: RELAY-gh684-final-qa-agy
+reviewer: agy
+status: Approved
+reviewed-head: c8b72d4e5fc298be48ad195295bd617d4f316c91
+added-range: 10314+8508
+added-sha256: bdd8c94c6aef63c4dc22b287f8d0a3c1924fd0d41f0be904db18006f01a5e5c2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
