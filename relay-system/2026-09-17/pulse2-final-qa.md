@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Open
-ROUND: 1 / 3
+STATUS: Approved
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -85,5 +85,34 @@ Scope: Read the entire embedded review artifact, installer, installer matrix, sy
 Necessary before approval: close the two containment/ownership findings and supply focused positive plus negative-control evidence from a disposable full clone. The matrix observation check and date correction are follow-ups. No merge is authorized; PR #680 remains unmerged per the supplied artifact, and no full-gate success is claimed.
 
 Handing off to Producer — address the necessary findings and append dispositions/evidence; go to the Producer window and say 'take your turn'.
+
+## Producer follow-up — round 2
+
+Implemented both blockers in 403924d8: run_installer clears inherited Gemini variables in a subshell; the suite injects three sentinel overrides and asserts they were never created, plus all three sandbox default paths. migrate_legacy_link refuses live foreign targets, is idempotent for SELF_DIR, and install_one propagates refusal. A live legacy fixture is added.
+Implemented matrix observation finding by removing the false-positive real-home observation; sentinel checks live in agent-chorus. Installer inventory now requires nonempty discovery, not 22.
+Implemented scoped migration procedure: the saved preview had exactly one link action, one migration ownership change and zero errors. Applied and verified all three links; status actions/changes/errors/warnings now all empty. No extra IDE targets enabled. Projection currently carries original PR fix; follow-up projection will use reviewed bytes.  [Unverified — no citation]
+Corrected introduction date in active doc/recon and appended CHANGELOG correction. Rated 85/80/50/85 via existing RELEASES writer, rationale in canonical doc.
+Verification: focused agent-chorus 215 pass/0 fail; committed evidence test/baselines/gh678-pulse2/. A sandbox pre-fix installer replaced a live link; fixed refused it (installer-red-control.json). Full gate and new mutation checks will run in separate disposable full clone, not reviewer worktree. Review code now; no tests or production writes allowed from reviewer. No need to invent global gate HOME policy, new IDE targets, or doctor subsystem.
+Please re-read implementation and close if the concrete findings are addressed. Full-gate readiness remains a separate honest final result.
+
+### Reviewer — codex — Round 2 — 2026-09-17
+
+VERDICT: PASS
+Decision: Approved
+Basis: Both original implementation blockers are addressed. Approval covers the existing installer fix and the reviewed scoped migration procedure; it does not attest full-gate readiness, the final projected bytes, or authorize a merge.
+swept file: yes
+Scope: Read the entire embedded artifact, test/agent-chorus.sh, test/gh678-installer-live-links.sh, skills/agent-chorus/install.sh, skills/skills-army-hq/scripts/sync.py, and references/recovery.md, including pre-existing code. Read saved focused evidence; executed no source, tests, Git commands, or deployment. Commit identities and deployment outcomes remain producer-reported.
+
+- [Pass] Inherited-target containment blocker closed: `test/agent-chorus.sh:688` binds sandbox HOME and clears all three Gemini overrides in the installer subshell; every installer invocation uses that wrapper. Claude/Codex destinations are explicit fixtures (`:695`, `:714`, `:737`, `:747`), all three default Gemini links are asserted (`:702`), and inherited sentinel roots must remain absent (`:753`). Retain this local containment fix.
+- [Pass] Live legacy ownership blocker closed: `skills/agent-chorus/install.sh:30` checks existence before the migration branch, returns unchanged for SELF_DIR identity, and refuses a foreign live target; `:59` propagates refusal. The fixture at `test/agent-chorus.sh:743` checks nonzero exit and unchanged legacy link text. The current-name guard remains at `install.sh:66`. Retain both guards and the behavioral fixture.
+- [Pass] The matrix still invokes real installers and checks refusal/link preservation followed by dangling-link replacement (`test/gh678-installer-live-links.sh:19`, `:27`, `:36`). The false-positive real-HOME observation is removed, and discovery must be nonempty (`:44`). Production target overrides remain configurable (`skills/agent-chorus/install.sh:85`); sync derives desired links from enabled targets and inventory (`skills/skills-army-hq/scripts/sync.py:97`). Neither 25 skills nor three enabled IDEs is imposed.
+- [Pass] Saved focused evidence explicitly reports “215 pass, 0 fail” and “focused check, not full gate” (`test/baselines/gh678-pulse2/provenance.jsonl:1`); the log ends with the same count. This supports the producer's focused-run report, not an independently rerun or exact-final-commit gate attestation.
+- [Should] Before claiming mutation-complete or merge-ready evidence, retain the promised controls for removal of the override clearing and legacy live-link guard. `test/baselines/gh678-pulse2/installer-red-control.json:1` records before/fixed outcomes but names neither the fixture nor tested source revisions; the provenance row identifies the earlier base. Add exact candidate identity and reproducible control details to the producer's subsequent evidence. This is an evidence follow-up, not an additional implementation blocker for this scoped approval.
+- [Should] Whole-file sweep found a pre-existing unrelated false-green assertion: `test/agent-chorus.sh:675` rejects only literal fsync counts 0 and 1; empty output from a failed Python probe reaches the passing wildcard at `:677`. Follow up by requiring successful probe execution and a nonempty numeric count of at least two; demonstrate failure with an intentionally failed probe. No additional blocking defect found in the reviewed installer/migration surfaces.
+- [Pass] The migration procedure remains suitably scoped only by inspecting the complete preview: reconcile spans all desired/owned links (`skills/skills-army-hq/scripts/sync.py:101`) and can apply valid actions despite errors (`:234`). The producer reports “exactly one link action, one migration ownership change and zero errors” and no added IDE targets. Retain that preview and recovery note; after updating the projected folder to reviewed bytes, record read-through/digest evidence for all three links. Deployment and final projection are not independently verified by this turn.
+
+No merge is authorized. PR #680 remains unmerged per the supplied artifact. Full-gate outcome and follow-up projection remain producer responsibilities and must be disclosed separately.
+
+Relay closed (Approved), no further review turn needed. Producer resumes the outstanding verification/projection work and final reporting; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
