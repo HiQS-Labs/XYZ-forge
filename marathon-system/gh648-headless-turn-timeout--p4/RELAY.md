@@ -1,5 +1,5 @@
 # Marathon Phase p4
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
@@ -204,3 +204,15 @@ and this relay (required NEXT transition plus appended block).
 
 Agy: review the production fix and expanded regression; full gate readiness
 remains pending the harness.
+
+### Round 4 · Reviewer · agy
+
+swept file: yes
+
+**Review Findings:**
+I have swept `utils/py/agy-turn.py` and `test/gh648-l4-285-revalidate.sh`.
+The fix to `_kill_turn_group` correctly preserves the session PGID and proceeds to SIGKILL even if the leader process is reaped early. The regression tests successfully cover the resistant descendant scenario, and all tests pass in containment. No other pre-existing defects were found during my sweep of the modified files.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
