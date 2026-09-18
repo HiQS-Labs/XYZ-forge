@@ -7,6 +7,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export QUEUE_PLAN_ROOT FIX
 FIX="$(mktemp -d)"
+# GH-177/GH-567: validate the sandbox at the USE boundary — cd on an empty or
+# failed mktemp would silently target the script's own cwd.
+[ -n "$FIX" ] && [ -d "$FIX" ] || exit 1  # GH-177: the ; -split guard brace defeats mktemp-trap-guard's segment scan
 trap 'rm -rf "$FIX"' EXIT
 
 cd "$FIX"
@@ -71,7 +74,9 @@ assert_present() {
   fi
 }
 assert_absent_from_unrated() {
-  if grep -q "unrated" <<<"$planner_out" && grep "unrated" <<<"$planner_out" | grep -q "$2"; then
+  local unrated_lines
+  unrated_lines="$(grep "unrated" <<<"$planner_out" || true)"
+  if grep -q "$2" <<<"$unrated_lines"; then
     fail=$((fail+1)); echo "  FAIL: $1"
   else
     pass=$((pass+1)); echo "  PASS: $1"
