@@ -1,6 +1,6 @@
 # Marathon Phase p6
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P6-TURN-R2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -86,3 +86,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 2 · Builder · codex
+
+The L6 implementation from the prior attempt is present and passes focused verification; this retry needs no additional runtime change. Only this relay file was edited (the mandated NEXT routing field and this appended block); all prior body content is preserved.
+
+- Inspected `utils/py/muse-turn.py`, `test/gh648-l6-muse-attribution.sh`, the TESTS registration in `validate.sh`, and the relevant `rtl_run_bounded` / L1 classification and serialization paths. Graph tools are unavailable in this session, so evidence is from direct source reads.
+- Muse uses the existing wall-clock bound, with no idle-kill policy added. On exit 7 it writes L1's structured `wall-cap` record into the run log before containment cleanup. Observed idle with no visible connection is `timeout-idle-unknown`; a visible connection is `timeout-idle-in-flight`; failed or absent network observations stay `timeout-unclassified`.
+- Verification: `bash test/gh648-l6-muse-attribution.sh` exited 0. Seven positive cases passed: stall-unknown, backend-in-flight, probe-failed, probe-not-observed, cap-then-containment, healthy, and banner-only. Both negative controls were rejected at their expected assertions: old-label (truthful attribution) and missing-record (termination record count).
+- Test boundary: a real stub child reaches the real one-second wall cap; diagnostics observations and relay boundaries are stubbed. No live Muse request was made, so this does not establish the historical prompt as the cause of #521. The inherited bounded-runner API also does not distinguish a child returning 7 itself from a timeout; this lane preserves that existing contract.
+- Prior-attempt breadcrumb: `ESCALATION.md` reports `review-body-rewritten`, relay-drive exit 4, gate not run. It does not report a failed attribution test. Preserve the existing relay body during review; append the review block and change only the required routing/status metadata.
+- Full project gate was not run, as instructed; the harness owns that verification. No git commands were run. Probe artifacts were confined to `.relay-scratch/`.
+
+Ready for agy's review of the existing implementation and this retry receipt.
