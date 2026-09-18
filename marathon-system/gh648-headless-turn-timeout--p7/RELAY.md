@@ -1,6 +1,6 @@
 # Marathon Phase p7
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-P7-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -100,3 +100,18 @@ Bet / reversibility: Costly because this is checkout recovery on the relay bound
 Graph tools were unavailable; evidence is direct bounded source inspection. Peer-drift paths were read where relevant, never edited. No commits or full gate were run. Only the authorized artifact paths and this relay were edited; scratch is confined to `.relay-scratch/`.
 
 Reviewer: please assess the non-forced recovery boundary and the explicitly outstanding real-Git fixture proof. NEXT updated as explicitly required by the turn steps; all other existing relay content preserved.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the files `utils/py/relay_drive.py`, `utils/py/rtl.py`, `test/gh648-l7-checkout-aftermath.sh`, and `validate.sh` in full.
+The test script and the core Git commands for snapshot and recovery look good and pass successfully. However, there are critical defects in how the new Python code handles edge cases where Git operations fail.
+
+**Defects Found in the Builder's Changes:**
+1. **Uncaught Git Failures Crash the Driver:** In `utils/py/relay_drive.py`, `checkout_before = checkout_snapshot(progress_main_tree)` is called unconditionally without a `try-except` block. If `progress_main_tree` is not a valid git repository (e.g. an archive-routed relay file with a vendored harness, which falls back to the non-repo `.xyz` root), or if it is an empty repository (where `HEAD` does not exist), `checkout_snapshot` raises `RuntimeError` or `subprocess.CalledProcessError`. This will crash `relay_drive.py` completely before dispatching the turn. You must catch these exceptions and handle the missing snapshot gracefully.
+2. **Missing `None` check in recovery:** When you fix the crash in #1 by catching exceptions and setting `checkout_before = None` (or similar), `restore_checkout_after_timeout` in `utils/py/rtl.py` will crash with a `TypeError` when it attempts to unpack `ref, head = before`. It must handle a missing snapshot cleanly (e.g., return `False` or gracefully skip recovery).
+
+No pre-existing defects were found in the scope of the touched files during the sweep.
+
+**Verdict:** Changes requested
