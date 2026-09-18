@@ -1,0 +1,40 @@
+== positives at 08c5f6b01babe5b2b8e374ca906be8293f26d049
+gh421 rc=0 wall=3s
+gh684-report rc=0 wall=2s
+gh53 head 10x: 10 pass / 0 fail
+neighbour-gh496-phase2-reconciliation-views rc=0 wall=7s
+neighbour-gh202-wave-reconcile-issue-state rc=0 wall=4s
+neighbour-gh232-wave-reconcile-multiphase rc=0 wall=1s
+neighbour-wave-reconcile rc=0 wall=1s
+neighbour-gh358-wave-reconcile-vendored-paths rc=0 wall=1s
+gh308-guard rc=0 wall=0s
+== red controls (each mutation applied in the probe, then restored)
+R1 mutation not applied
+red1-skip-branch-removed rc=0 wall=4s
+red2-ownership-exclusion-removed rc=1 wall=3s
+test_catch_up_skips_defective_backlog_doc_reports_it_and_retries (__main__.ReconcileTests.test_catch_up_skips_defective_backlog_doc_reports_it_and_retries) ... ok
+ERROR: test_planner_drift_for_a_skipped_issue_is_unrelated (__main__.ReconcileTests.test_planner_drift_for_a_skipped_issue_is_unrelated)
+red3-workflow-reverted rc=1 wall=3s
+FAIL: test_report_step_and_permissions (__main__.WorkflowTests.test_report_step_and_permissions)
+RESTORE FAILED
+red4-gh53-dedupe-removed rc=1 wall=2s
+  FAIL: union kept 2 generation settings rows
+RESTORE FAILED
+gh53 base (ba1f58e8) 10x: 10 pass / 0 fail
+final identity: 08c5f6b01babe5b2b8e374ca906be8293f26d049 dirty=0
+== R1 redo (portable sed)
+red1-skip-branch-removed rc=1
+ERROR: test_planner_drift_for_a_skipped_issue_is_unrelated (__main__.ReconcileTests.test_planner_drift_for_a_skipped_issue_is_unrelated)
+FAIL: test_catch_up_skips_defective_backlog_doc_reports_it_and_retries (__main__.ReconcileTests.test_catch_up_skips_defective_backlog_doc_reports_it_and_retries)
+FAIL: test_explicit_landing_with_defective_doc_still_fails_closed (__main__.ReconcileTests.test_explicit_landing_with_defective_doc_still_fails_closed)
+== base flake witness, 40 runs
+gh53 base (ba1f58e8) 40x: 33 pass / 7 fail
+final identity: 08c5f6b01babe5b2b8e374ca906be8293f26d049 dirty=0
+== R1 redo (single-site mutation: S2 skip only)
+mutant sites: 1
+red1-skip-branch-removed rc=1
+test_explicit_landing_with_defective_doc_still_fails_closed (__main__.ReconcileTests.test_explicit_landing_with_defective_doc_still_fails_closed) ... ok
+ERROR: test_catch_up_skips_defective_backlog_doc_reports_it_and_retries (__main__.ReconcileTests.test_catch_up_skips_defective_backlog_doc_reports_it_and_retries)
+ERROR: test_planner_drift_for_a_skipped_issue_is_unrelated (__main__.ReconcileTests.test_planner_drift_for_a_skipped_issue_is_unrelated)
+FAIL: test_planner_drift_for_a_reconciled_issue_stays_fatal (__main__.ReconcileTests.test_planner_drift_for_a_reconciled_issue_stays_fatal)
+identity: 08c5f6b0 dirty=0

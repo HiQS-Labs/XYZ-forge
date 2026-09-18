@@ -53,6 +53,7 @@ class ReconcileTests(unittest.TestCase):
         (self.root / 'TESTS-RESULTS/provenance.jsonl').write_text('{"pr":42}\n')
         self.calls = []
         self.fail_after = None
+        self.planner_finding = None  # GH-684: a real-shaped marathon-plan exit-4 finding, when set
 
     def test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs(self):
         for stage in ('2-WORKING', '3-COMPLETED'):
@@ -109,6 +110,10 @@ class ReconcileTests(unittest.TestCase):
             if args[:1] == ['--root']:
                 args = args[2:]
             self.cli(*args)
+        elif 'marathon-plan.sh' in cmd[1] and self.planner_finding is not None:
+            # GH-684: the planner reports closed-issue drift the way _marathon_plan.py emits it (exit 4,
+            # one JSON finding per line) so ownership attribution is exercised, not a green stub.
+            return SimpleNamespace(returncode=4, stdout=json.dumps(self.planner_finding) + '\n', stderr='')
         elif 'marathon-plan.sh' in cmd[1] and '--dry-run' not in cmd:
             (self.root / 'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md').write_text('plan\n')
         elif 'pdda' in cmd[1] or '--dry-run' in cmd:
@@ -119,8 +124,9 @@ class ReconcileTests(unittest.TestCase):
             rc = 1
         return SimpleNamespace(returncode=rc, stdout='', stderr='injected' if rc else '')
 
-    def apply(self, *flags):
-        targets = [] if '--commit' in flags else ['--pr', '42']
+    def apply(self, *flags, targets=None):
+        if targets is None:
+            targets = [] if '--commit' in flags else ['--pr', '42']
         argv = ['wave', '--root', str(self.root), *targets, '--offline', str(self.root / 'offline.json'),
                 '--skip-pull', '--skip-branch-check', '--gate', *flags]
         output = io.StringIO()
@@ -273,6 +279,77 @@ class ReconcileTests(unittest.TestCase):
         self.apply('--catch-up')
         self.assertEqual(self.rows('SELECT state FROM manifest_items')[0]['state'], 'shipped')
         self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), [])
+
+    # ── GH-684: a defective BACKLOG doc stops only itself ──────────────────────────────────────────
+    LESSONS = '## Lessons Learned\nFixture.\n'
+
+    def add_backlog_issue(self, lessons):
+        """A second closed issue (#422) whose only closer, PR 43, is recovered by --catch-up alone."""
+        doc = 'PROJECT/2-WORKING/GH-422-fixture.md'
+        (self.root / doc).write_text('---\nstatus: 2-WORKING\nupdated: 2026-09-01\n---\n' + (self.LESSONS if lessons else ''))
+        self.cli('roadmap', 'add', '--issue-num', '422', '--title', 'backlog',
+                 '--created', '2026-09-01', '--issue-url', 'https://github.com/test/repo/issues/422',
+                 '--doc-path', doc)
+        self.cli('manifest', 'dial-in', '--gid', self.gid, 'https://github.com/test/repo/issues/422')
+        self.offline['prs'].append(dict(number=43, state='MERGED', baseRefName='development', title='backlog',
+                                        body='Closes #422', mergedAt='2026-09-09T00:00:00Z', mergeCommit={'oid': 'c'*40}))
+        self.offline['issues'].append({'number': 422, 'state': 'CLOSED'})
+        (self.root / 'offline.json').write_text(json.dumps(self.offline))
+        with open(self.root / 'TESTS-RESULTS/provenance.jsonl', 'a') as f:
+            f.write('{"pr":43}\n')   # --gate evidence exists for the recovered landing, as --qualify would leave it
+        return doc
+
+    def manifest_states(self):
+        return [row['state'] for row in self.rows('SELECT state FROM manifest_items ORDER BY id')]
+
+    def test_catch_up_skips_defective_backlog_doc_reports_it_and_retries(self):
+        doc = self.add_backlog_issue(lessons=False)
+        out = self.apply('--catch-up')                       # exits normally: the rest of the batch lands
+        self.assertEqual(out.count('wave-reconcile: ' + wave.SKIP_MARKER), 1)
+        self.assertIn('wave-reconcile: ' + wave.SKIP_MARKER + 'GH-422 — Doc GH-422-fixture.md is missing', out)
+        self.assertIn('1 backlog item(s) skipped — GH-422', out)
+        self.assertEqual(self.manifest_states(), ['shipped', 'dialed_in'])     # 421 shipped, 422 untouched
+        self.assertTrue((self.root / 'PROJECT/3-COMPLETED/GH-421-fixture.md').exists())
+        self.assertTrue((self.root / doc).exists())                            # still active, no lifecycle write
+        # Retry source intact — with the receipt present — until the doc is repaired.
+        self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), ['43'])
+        self.assertIn(wave.SKIP_MARKER + 'GH-422', self.apply('--catch-up'))
+        (self.root / doc).write_text('---\nstatus: 2-WORKING\nupdated: 2026-09-01\n---\n' + self.LESSONS)
+        out = self.apply('--catch-up')
+        self.assertNotIn(wave.SKIP_MARKER, out)
+        self.assertEqual(self.manifest_states(), ['shipped', 'shipped'])
+        self.assertTrue((self.root / 'PROJECT/3-COMPLETED/GH-422-fixture.md').exists())
+        self.assertEqual(wave.catch_up_prs(str(self.root), 'test/repo', self.offline), [])
+
+    def test_explicit_landing_with_defective_doc_still_fails_closed(self):
+        # Preservation pin: naming the landing on the command line keeps the fail-closed exit 5.
+        self.add_backlog_issue(lessons=False)
+        before = self.snapshot()
+        with self.assertRaises(SystemExit) as stopped:
+            self.apply(targets=['--pr', '43'])
+        self.assertEqual(stopped.exception.code, 5)
+        self.assertEqual(before, self.snapshot())
+
+    def test_planner_drift_for_a_skipped_issue_is_unrelated(self):
+        doc = self.add_backlog_issue(lessons=False)
+        self.planner_finding = {"check": "marathon-plan/already-closed", "file": doc,
+                                "message": 'issue #422 is CLOSED but the ledger lists it under "In progress"'}
+        out = self.apply('--catch-up')                       # the skipped issue left the ownership set
+        self.assertIn(wave.SKIP_MARKER + 'GH-422', out)
+        self.assertIn('pre-existing unrelated drift', out)
+        self.assertEqual(self.manifest_states(), ['shipped', 'dialed_in'])
+
+    def test_planner_drift_for_a_reconciled_issue_stays_fatal(self):
+        # Red control for the ownership exclusion: the same finding naming the issue this run DID
+        # reconcile is still attributable, still fatal, still rolled back.
+        self.add_backlog_issue(lessons=False)
+        self.planner_finding = {"check": "marathon-plan/already-closed", "file": self.doc,
+                                "message": 'issue #421 is CLOSED but the ledger lists it under "In progress"'}
+        before = self.snapshot()
+        with self.assertRaises(SystemExit) as stopped:
+            self.apply('--catch-up')
+        self.assertEqual(stopped.exception.code, 6)
+        self.assertEqual(before, self.snapshot())
 
     def test_doc_write_failure_and_legacy(self):
         before = self.snapshot()
@@ -473,9 +550,17 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(data['permissions'], {'contents':'read'})
         self.assertIn('run: bash test/gh421-auto-wave-reconcile.sh', (source / '.github/workflows/ci.yml').read_text())
 
-    def publish(self, paths, reject_push=False):
+    PUBLISH_HEAD = 'shell: python3 {0}\n        run: |\n'
+
+    def publish_script(self, workflow=None):
+        # GH-684: bounded to the publication step's own run: block — a step appended after it (the
+        # hosted-lane report) must not leak into the compiled Python.
         import textwrap
-        script = textwrap.dedent(self.workflow.split('shell: python3 {0}\n        run: |\n', 1)[1])
+        block = (workflow or self.workflow).split(self.PUBLISH_HEAD, 1)[1].split('      - name:', 1)[0]
+        return textwrap.dedent(block)
+
+    def publish(self, paths, reject_push=False):
+        script = self.publish_script()
         calls = []
         def command(argv):
             calls.append(argv[1:])
@@ -489,6 +574,34 @@ class WorkflowTests(unittest.TestCase):
         with patch.object(wave.subprocess, 'check_output', side_effect=command):
             exec(compile(script, 'workflow-publish', 'exec'), {})
         return calls
+
+    def test_publish_extraction_is_bounded_to_its_step(self):
+        appended = self.workflow.rstrip('\n') + '\n      - name: Something after publication\n        run: echo later\n'
+        for label, text in (('base', self.workflow), ('appended', appended)):
+            with self.subTest(label=label):
+                script = self.publish_script(text)
+                self.assertIn("git('push', 'origin', 'HEAD:development')", script)
+                compile(script, 'workflow-publish', 'exec')
+
+    def test_report_step_and_permissions(self):
+        # GH-684: the reconcile log is tee'd outside the tree, the final step always runs, and it
+        # reports the JOB's status (a rejected push after a green reconcile is still red).
+        for marker in ('issues: write', 'id: reconcile', '2>&1 | tee "$RUNNER_TEMP/reconcile.log"',
+                       '- name: Report hosted lane', 'if: always()', '--status "${{ job.status }}"',
+                       'python3 utils/py/hosted_lane_report.py', '--log "$RUNNER_TEMP/reconcile.log"',
+                       '--run-url "$RUN_URL"'):
+            self.assertIn(marker, self.workflow)
+        self.assertNotIn('issues: read', self.workflow)
+        self.assertLess(self.workflow.index(self.PUBLISH_HEAD), self.workflow.index('- name: Report hosted lane'))
+        try:
+            import yaml
+        except ImportError:
+            return
+        data = yaml.safe_load(self.workflow)
+        job = data['jobs']['reconcile']
+        self.assertEqual(job['permissions']['issues'], 'write')
+        self.assertEqual(job['steps'][-1]['name'], 'Report hosted lane')
+        self.assertEqual(job['steps'][-1]['if'], 'always()')
 
     def test_publish_allowlist_and_plan_lands(self):
         paths = ['releases.db', 'releases.sql',

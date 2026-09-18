@@ -1,0 +1,17 @@
+== test: gh232-wave-reconcile-multiphase ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh232-wave-reconcile-multiphase.XXXXXX.ITrLSY6O2C
+== test: gh232-wave-reconcile-multiphase ==
+  PASS: reconcile exits 0 on mixed open/closed PR
+  PASS: OPEN-issue multi-phase doc stays in 2-WORKING
+  PASS: OPEN-issue multi-phase doc records merge evidence in place
+  PASS: OPEN-issue multi-phase entry stays under '### In progress' in ROADMAP.md
+  PASS: OPEN-issue entry NOT present in '### Completed' in ROADMAP.md
+  PASS: CLOSED-issue doc promotes to 3-COMPLETED
+  PASS: CLOSED-issue entry moves to '### Completed' in ROADMAP.md
+  PASS: reconcile with --force-promote exits 0
+  PASS: --force-promote successfully promotes 5001 doc to 3-COMPLETED
+  PASS: --force-promote moves 5001 entry to '### Completed' in ROADMAP.md
+  PASS: reconcile with frontmatter umbrella and legacy manifest exits 0
+  PASS: Frontmatter umbrella: true keeps doc in 2-WORKING under legacy manifest
+  PASS: Frontmatter umbrella: true preserves entry under '### In progress' in ROADMAP.md
+  gh232-wave-reconcile-multiphase: 13 pass, 0 fail

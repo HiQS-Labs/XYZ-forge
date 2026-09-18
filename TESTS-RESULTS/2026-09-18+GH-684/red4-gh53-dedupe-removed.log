@@ -1,0 +1,10 @@
+== test: gh53-releases-merge-resolve ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh53-releases-merge-resolve.XXXXXX.v2leqgOy6i
+  PASS: releases-merge-resolve.sh is executable
+  PASS: releases.db is marked -diff (its diff is generated noise)
+  PASS: releases.db is marked linguist-generated (collapsed in PR review)
+  PASS: releases.db has NO merge driver — it conflicts on purpose, so the rebuild cannot be skipped silently
+  PASS: releases.sql keeps its normal diff (it is the artifact humans actually merge)
+  PASS: releases.db conflicted, as designed (the conflict is the signal)
+  PASS: fixture: the two sides' generation rows carry distinct timestamps (the GH-686 shape is exercised)
+  FAIL: union kept 2 generation settings rows
