@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -162,5 +162,39 @@ All three code claims behind the Blocker/Should findings re-read in the tree bef
 - **Q8 [Pass] — no change;** nothing added beyond the seam cases you named.
 
 Round 2 question for the Reviewer: with the ownership fix, is there any *other* consumer of `reconciled_issues` in the tail of `main()` (`:2076–2130`) or in `run_subprocesses` for which removing a skipped issue is wrong (e.g. something that should still see it to *avoid* a write)? If not, approve.
+
+### Reviewer · codex · Round 2
+
+VERDICT: PASS
+
+Basis: The revised plan resolves the prior Blocker and all three Should findings. The ownership exclusion has no other downstream consumer that requires skipped issues to remain present. S1–S4 now cover the observed failure paths and specify causal red controls. Approval is for the plan; implementation, clone-run evidence and hosted recovery remain outstanding.
+
+swept file: yes
+
+Read both complete plan artifacts, including unchanged sections; re-read the complete workflow, gh421 suite, gh53 suite and merge resolver, and traced the reconciler's qualification, recovery, lifecycle, ownership and downstream paths plus the planner and merge-cleanup consumers. The stale companion-doc pointer/status wording below is an additional pre-existing documentation nit; no additional established source defect was found in the reviewed paths. No git command, suite, executable fixture, or artifact/source edit was run. Only this relay file was edited; scratch setup stayed under `.relay-scratch/`.
+
+- **Q1 — [Pass] Grounding remains accurate.** Explicit targets are assembled at `utils/py/wave_reconcile.py:1930`, recovery extends them at `:1948`, and normalization/deduplication occurs at `:1950`. Manifest shipping still precedes document validation at `:2033–2035`, with the Lessons Learned failure at `:1019`. The revised recon map includes receipts and planner ownership (`PROJECT/2-WORKING/GH-684-HOSTED-RECONCILE-LANE.md:54–55`).
+
+- **Q2 — [Pass] Skip boundary and retry are now explicit.** S2 (`PROJECT/2-WORKING/GH-684-HOSTED-RECONCILE-LANE.md:74`) places the check after open-issue preservation and before lifecycle writes; retained qualification evidence is deliberately outside that exclusion (`utils/py/wave_reconcile.py:578–600`). Recovery independently reads nonterminal rows and active docs (`:1187–1200`). S4's repeat-then-repair case (`plan:76`) pins retry with a receipt present. This answers the prior receipt-boundary nit without changing qualification policy.
+
+- **Q3 — [Pass] No other ownership consumer needs a skipped issue retained.** Every `reconciled_issues` reference is in `main` (initialization `:1944`, accumulation `:1999`, argument `:2117`), `run_subprocesses` (forwarding `:1612`), or `handle_marathon_plan_result` (classification `:1445`). It does not select ledger writes, exports, fingerprints, PDDA checks or rollback snapshots. Removing skipped issues therefore only changes attribution of planner findings. Qualification validates the tested snapshot (`:451–484`); recovery retains the independent drift sources above; idempotency still forbids repeated lifecycle writes (`test/gh421-auto-wave-reconcile.sh:153–174`); merge-cleanup's triggering-run success and later checks remain intact (`skills/merge-cleanup/scripts/merge_cleanup.py:437–440`, `:516–534`). S4(c) now exercises the exact planner seam (`plan:76`).
+  Probe command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with `ast.parse(Path('utils/py/wave_reconcile.py').read_text())`, compiling only `ReconcileError`, `log`, `log_err`, `die`, `marathon_plan_findings`, `finding_issue_numbers`, `describe_finding`, and `handle_marathon_plan_result`; invoke the last function with `SimpleNamespace(returncode=4, stdout=json.dumps(finding), stderr='')`. Input finding: `{"check":"marathon-plan/already-closed","file":"PROJECT/2-WORKING/GH-422-fixture.md","message":"issue #422 is CLOSED but the ledger lists it under \"In progress\""}`. Exit 0 with expected exceptions caught. Decisive output: `finding GH-422; ownership [421, 422] -> ReconcileError 6`; `finding GH-422; ownership [421] -> accepted with WARNING`; changing the finding to GH-421 gives `finding GH-421; ownership [421] -> ReconcileError 6`. This is a pure classifier probe, not a full mixed-batch execution: **[Unverified — needs clone run]**.
+
+- **Q4 — [Pass] Reporting contract now spans publication and uses one skip format.** S1/S2 specify `wave-reconcile: SKIPPED GH-<n> — <reason>`, captured stderr, `pipefail`, a runner-temp log and the final job status (`plan:73–74`). This addresses the existing rejected-push path (`.github/workflows/wave-reconcile.yml:94–97`) as well as reconcile failures. The helper is a reasonable seam for issue reporting without adding notification writes to the local reconciler. The current job already supplies `GH_TOKEN` (`workflow:34`); GitHub documents [job.status](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#job-context) and [issue creation with issues: write](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token). Actual hosted execution remains unverified.
+
+- **Q5 — [Pass] Fixture-only deduplication is appropriate.** S3 (`plan:75`) preserves one settings row per key, consistent generation/header selection and an asserted distinct-timestamp control. The fixture initializes settings before branching (`test/gh53-releases-merge-resolve.sh:60–74`); initialization fixes `enforcement`/`repo_slug` (`utils/py/releases_app.py:2141–2144`), and subsequent writes update generation/timestamp (`:1657–1668`). The resolver's highest-parent generation check remains unchanged (`utils/releases-merge-resolve.sh:98–119`). `sleep 1.1` is proportionate for this fixture. Ten-run and causal-red outcomes: **[Unverified — needs clone run]**.
+
+- **Q6 — [Pass] Recorded requirements are covered without expanding scope.** R1–R4 map to S1–S4 (`plan:65–76`); GH-686's requirements remain fixture-only (`PROJECT/2-WORKING/GH-686-GH53-FIXTURE-FLAKE.md:34–40`), and full qualification agrees with `PROJECT/2-WORKING/GH-591-RECONCILER-LIFECYCLE.md:39–42`. I accept the Producer's issue-text confirmation as attributed evidence. Independent live verification remains unavailable: `gh issue view 684 --repo HiQS-Labs/XYZ-forge --json number,title,body` exited 1, `error connecting to api.github.com`. Historical counts and enabled state are not independently confirmed by this review.
+
+- **Q7 — [Pass] Acceptance can distinguish the proposed fixes from preservation.** S4 and acceptance (`plan:76–90`) now specify skip-branch, ownership, YAML, omitted-URL and dedupe-only mutants, preserve existing allowlist/rejected-push assertions, and retain red/green outputs with provenance. Explicit-landing case (b), existing neighbor suites and aggregate full-suite checks remain preservation evidence; they need not fail on base. The rollout now uses enable → dispatch → later PR-close → schedule, resolving the disabled-workflow ordering problem.
+  Syntax-only probe command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'`, reading the current workflow into `content`, then `script = textwrap.dedent(content.split('shell: python3 {0}\n        run: |\n', 1)[1].split('      - name:', 1)[0]); assert script.strip(); compile(script, '<publish-syntax-only>', 'exec')`. Run for the current text and that text plus `      - name: Report hosted lane\n        if: always()\n        run: python3 utils/py/hosted_lane_report.py\n`. Exit 0; decisive output: `bounded publication extraction base -> compiles (31 lines)` and `bounded publication extraction appended -> compiles (31 lines)`. No publication code executed. Full acceptance execution: **[Unverified — needs clone run]**.
+
+- **Q8 — [Pass] Complexity remains proportionate.** One small report helper, an existing-validator skip branch, a fixture correction and focused seam cases (`plan:73–76`) reuse the workflow, ledger writers and retry discovery. No queue, service or second ledger is introduced. Plan edits are **Easy** to reverse; implementation rollback is stated at `plan:94–96`.
+
+- **[Nit] Refresh the companion pointer and future-tense status during implementation.** `PROJECT/2-WORKING/GH-686-GH53-FIXTURE-FLAKE.md:15` still points into `PROJECT/1-INBOX/`; point it to the existing `PROJECT/2-WORKING/GH-684-HOSTED-RECONCILE-LANE.md`. Its What's-next cell (`:24`) says “Implemented ... verified 10/10”; use “Implement ... then verify” until those results exist. Probe command: the same read-only `python3 - <<'PY'` invocation extracted `pointer = re.search(r'^plan: (.+)$', plan, re.M).group(1)` and evaluated `Path(pointer).exists()`. Exit 0; output: `GH-686 plan pointer exists -> False: PROJECT/1-INBOX/GH-684-HOSTED-RECONCILE-LANE.md`.
+
+- **[Nit] Treat S2's snippets as pseudocode when implementing.** `plan:74` abbreviates `validate_lessons_learned(content)` although the existing signature requires `doc_name` (`utils/py/wave_reconcile.py:925`), and switches from `skipped_issues` to `len(skipped)` in its summary example. Use the actual signature and one set name; make the emitting code consume `SKIP_MARKER` too. These are straightforward implementation details, not outstanding design decisions.
+
+Relay closed (Approved), no further plan-QA turn needed. Handing implementation back to Producer (claude-a): address the nits while implementing S1–S4, then collect disposable-clone evidence and request final artifact QA. The harness owns the relay-file commit; the Reviewer does not commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
