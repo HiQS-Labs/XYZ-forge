@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-09-18 — Project site: Skills page for the agent-driving skills; Model Catalog card → resolve.hiqs.ai (GH-700)
+
+The GitHub Pages site had no page for the skills that push a stalled agent forward — the write-up
+lived only on the repo wiki, which the site never linked. New static `PAGES/skills.html` documents
+`/workhorse`, `/unstuck`, `/merge-cleanup`, `/radar` and `/whack-a-mole` (use-when, triggers, the
+ladder, the self-firing tripwires, how they chain) plus a related-skills table, every entry linking
+its `skills/<name>/SKILL.md` on `development`. A **Skills** nav link is added on the six hand-written
+pages and to `NAV` in `utils/py/site_build.py`, so the two generated pages carry it too (regenerated;
+they also picked up the ledger drift since their 09-06 snapshot, which is what the deploy would do
+anyway). `sitemap.xml` gains the page and every row's `lastmod` moves to 2026-09-18, since every page's
+nav changed. On `other-apps-tools.html` the Model Catalog card now opens the hosted resolver at
+<https://resolve.hiqs.ai/> with the GitHub repo as the secondary link. Plan QA: agy relay, approved
+round 3 (`relay-system/2026-09-18/gh700-plan-qa.md`; Codex was at its usage limit). Acceptance is the
+five grep/`--check` probes in `PROJECT/1-INBOX/GH-700-PAGES-SKILLS.md`, all red at base and green now.
+Reversibility: Easy — one revert; the Pages workflow republishes the previous tree. Not here: any
+style change, a link checker, or JavaScript.
+
 ## 2026-09-18 — Hosted wave-reconcile lane: alert on red, skip-and-report a defective backlog item; gh53 fixture made deterministic (GH-684, GH-686)
 
 The hosted `wave-reconcile.yml` lane had 0 successes since 2026-09-11 (59 straight failures) and
