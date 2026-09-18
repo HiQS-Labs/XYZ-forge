@@ -53,14 +53,16 @@ def _kill_turn_group(proc):
     started with start_new_session=True so its pgid is its own pid and this cannot
     reach the harness. SIGTERM first so the CLI can flush its transcript, then SIGKILL.
     """
+    # Both launch paths create a new session: retain its group ID even after
+    # wait() reaps the leader. Leader exit does not prove descendants exited.
+    pgid = proc.pid
     for sig, wait_s in ((signal.SIGTERM, 5), (signal.SIGKILL, 2)):
         try:
-            os.killpg(os.getpgid(proc.pid), sig)
+            os.killpg(pgid, sig)
         except (ProcessLookupError, PermissionError, OSError):
             return
         try:
             proc.wait(timeout=wait_s)
-            return
         except subprocess.TimeoutExpired:
             continue
 

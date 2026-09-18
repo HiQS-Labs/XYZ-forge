@@ -46,16 +46,27 @@ with tempfile.TemporaryDirectory(prefix='gh648-l4-', dir=scratch) as tmp:
     work = Path(tmp)
     stub = work / 'sleeper'
     stub.write_text('#!' + sys.executable + '''
-import os, pathlib, time
+import os, pathlib, signal, time
 pathlib.Path(os.environ['GH648_STARTED']).write_text(str(os.getpid()))
+if os.environ.get('GH648_DESCENDANT') == '1':
+    child = os.fork()
+    if child == 0:
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+        pathlib.Path(os.environ['GH648_STARTED'] + '.child').write_text(str(os.getpid()))
+        time.sleep(5)
+        pathlib.Path(os.environ['GH648_FINISHED']).write_text('descendant natural completion')
+        os._exit(0)
+    while not pathlib.Path(os.environ['GH648_STARTED'] + '.child').exists():
+        time.sleep(0.01)
 print('sleeping for five seconds', flush=True)
 time.sleep(5)
 pathlib.Path(os.environ['GH648_FINISHED']).write_text('natural completion')
 ''')
     stub.chmod(0o755)
 
-    def run_case(lane, pty_mode, mutant=False):
-        name = f'{lane}-pty{pty_mode}' + ('-no-kill' if mutant else '')
+    def run_case(lane, pty_mode, mutant=False, descendant=False):
+        name = f'{lane}-pty{pty_mode}' + ('-descendant' if descendant else '') + ('-no-kill' if mutant else '')
         fixture = work / name
         fixture.mkdir()
         source = root / 'utils/py' / f'{lane}-turn.py'
@@ -79,7 +90,7 @@ pathlib.Path(os.environ['GH648_FINISHED']).write_text('natural completion')
                    XYZ_ROOT=str(root), RELAY_AGENT=lane, RELAY_TASK='FIXTURE',
                    RELAY_FILE=str(fixture / 'relay.md'), RELAY_TURN_TIMEOUT_S='1',
                    RELAY_TURN_IDLE_S='0', RELAY_WORKTREE_ISOLATION='0',
-                   AGY_PTY=str(pty_mode), GH648_STARTED=str(fixture / 'started'),
+                   AGY_PTY=str(pty_mode), GH648_DESCENDANT=str(int(descendant)), GH648_STARTED=str(fixture / 'started'),
                    GH648_FINISHED=str(fixture / 'finished'))
         env.update({f'{lane.upper()}_BIN': str(stub), f'{lane.upper()}_AGENT': lane,
                     f'{lane.upper()}_TURN_ROOT': str(fixture),
@@ -124,12 +135,21 @@ pathlib.Path(os.environ['GH648_FINISHED']).write_text('natural completion')
                                  source_sha256=hashlib.sha256(source.read_bytes()).hexdigest()))
             assert dead and fast and not natural, ('cap containment', name, dead, elapsed, natural)
             if lane == 'agy':
-                try:
-                    os.killpg(proc.pid, 0)
-                except ProcessLookupError:
-                    pass
-                else:
-                    raise AssertionError(('process group remains', name))
+                if descendant:
+                    child_pid = int((fixture / 'started.child').read_text())
+                    assert child_pid != proc.pid and child_pid > 1, name
+                # SIGKILL delivery/reaping is asynchronous; bound the observation wait.
+                deadline = time.monotonic() + 1
+                while True:
+                    try:
+                        os.killpg(proc.pid, 0)
+                    except ProcessLookupError:
+                        receipts[-1]['group_absent'] = True
+                        break
+                    if time.monotonic() >= deadline:
+                        receipts[-1]['group_absent'] = False
+                        raise AssertionError(('process group remains', name))
+                    time.sleep(0.01)
         finally:
             for proc in launched:
                 if lane == 'agy':
@@ -142,6 +162,9 @@ pathlib.Path(os.environ['GH648_FINISHED']).write_text('natural completion')
     for lane, mode in (('codex', 0), ('agy', 0), ('agy', 1)):
         run_case(lane, mode)
         print('PASS:', lane, 'pty=' + str(mode), flush=True)
+    for mode in (0, 1):
+        run_case('agy', mode, descendant=True)
+        print('PASS: resistant descendant pty=' + str(mode), flush=True)
     try:
         run_case('agy', 0, mutant=True)
     except AssertionError as exc:
@@ -150,8 +173,8 @@ pathlib.Path(os.environ['GH648_FINISHED']).write_text('natural completion')
         print('PASS: no-kill mutation rejected for a live child', flush=True)
     else:
         raise AssertionError('no-kill mutation escaped the oracle')
-receipt = dict(outcome='already-fixed-at-tested-source; no production change',
-               fixing_commit='unresolved: requires authorized history inspection before issue closure',
+receipt = dict(outcome='fix-required: resistant descendants survived leader exit; fixed in this lane',
+               fixing_commit='pending harness commit; production fix and regression in this lane',
                cases=receipts)
 (scratch / 'gh648-l4-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
 print(json.dumps(receipt, sort_keys=True))

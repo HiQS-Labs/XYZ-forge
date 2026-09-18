@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN-R3 builder=codex reviewer=agy round-cap=5 -->
 
@@ -158,3 +158,49 @@ This perfectly matches your observation that "The fixture only launches a single
 You must fix `_kill_turn_group` in `utils/py/agy-turn.py` so that it doesn't skip `SIGKILL` for surviving descendants just because the leader died. Also, please update `test/gh648-l4-285-revalidate.sh` to include a test case that spawns a signal-resistant descendant, demonstrating that the fix successfully prevents it from outliving the timeout.
 
 **Verdict:** Changes requested
+
+### Round 4 · Builder · codex
+
+**Result:** Reproduced and fixed the reviewer's resistant-descendant leak.
+Files changed: `utils/py/agy-turn.py`, `test/gh648-l4-285-revalidate.sh`,
+and this relay (required NEXT transition plus appended block).
+`validate.sh` already registers the focused suite and was left unchanged.
+
+- Reproduction: added a forked descendant that installs SIGTERM and SIGHUP
+  ignore handlers, publishes readiness, and sleeps five seconds. Its leader
+  waits for readiness before sleeping. The unchanged production helper passed
+  the three original cases, then failed with
+  `('process group remains', 'agy-pty0-descendant')`.
+  Captured output: `.relay-scratch/l4-r4-red.log`.
+- Fail path: both agy launch modes use `start_new_session=True`; wall and idle
+  caps call the same helper. Waiting for the leader returned early and skipped
+  SIGKILL. Looking up its group after reaping would also lose the group ID.
+- Fix: retain `proc.pid` as the known session group ID and continue to SIGKILL
+  after the leader wait. Preserve the existing five-second leader grace and
+  two-second final wait. A promptly exiting leader no longer exempts surviving
+  descendants from escalation.
+- Costly containment change: affects agy wall/idle termination only; the bet is
+  that these two session-creating launch sites own the target group. Source
+  confirms that assumption. Rollback is the helper change, but restores the
+  demonstrated leak. No event/token shape or Bash twin changed.
+- Verification: `bash test/gh648-l4-285-revalidate.sh` exited 0.
+  Codex single child: 1.005s; agy pipe/PTY single child: 2.008s/2.010s;
+  resistant descendant pipe/PTY: 2.008s/2.013s. All positive cases returned 7
+  before natural completion. Both descendant groups were absent before test
+  cleanup (bounded one-second observation allowance for asynchronous reaping).
+  The no-kill mutation returned 7 with its child alive and was rejected.
+- Logs and JSON are ephemeral under `.relay-scratch/`, not committed
+  provenance. The fixture now records the fix-required branch and leaves the
+  fixing commit pending the harness commit, instead of claiming already-fixed.
+  Tested agy SHA-256:
+  `6aac5b234e7d858fcde62560244ea230ef0462932d9de4b7aa33085515255127`.
+- The graph project list contains no index for this worktree; exact source
+  fallback was used. No git commands or full gates were run. The earlier
+  unspecified pre-advance failure remains unattributed; the harness owns the
+  final gate, commit attribution, and any subsequent issue closure.
+- Scope of proof: same-process-group resistant descendants on the wall cap,
+  in both pipe and PTY modes. Descendants that create their own sessions and
+  a separate idle-cap integration run are not covered by this fixture.
+
+Agy: review the production fix and expanded regression; full gate readiness
+remains pending the harness.
