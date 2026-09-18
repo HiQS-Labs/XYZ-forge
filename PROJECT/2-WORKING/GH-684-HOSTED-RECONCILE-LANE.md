@@ -26,7 +26,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon on base `ba1f58e8`; #686 filed; both issues parked and rated; plan S1–S4 written; **Codex plan QA round 1 (`relay-system/2026-09-18/gh684-plan-qa.md`): 1 Blocker + 3 Should + nits, all dispositioned into this revision.** | Codex round 2 → Approved → implement S1–S4 on `fix/gh684-hosted-reconcile-lane` → disposable-clone verification → final relay QA → PR `Closes #684, Closes #686`. Post-merge: re-enable the workflow and record the first hosted green on #684. |
+| Plan approved by Codex in round 2 (attested, `reviewed-head 21de1d9d`). S1–S4 implemented on `fix/gh684-hosted-reconcile-lane`. Disposable-clone evidence at `08c5f6b0`: `gh421` 31/0, `gh684-hosted-lane-report` 8/0, `gh53` 10/10, five neighbour suites green, GH-308 guard clean; four single-site red controls witnessed; base flake witnessed 7/40. | Full `validate.sh` receipt → CHANGELOG + `TESTS-RESULTS/2026-09-18+GH-684/` → final Codex relay QA on the diff → push through the gate → PR `Closes #684, Closes #686`. Post-merge (on #684): enable the workflow → one `workflow_dispatch` run as the recovery proof (green, lands this PR's reconcile, reports GH-505 as `SKIPPED`, opens the attention issue). |
 
 ## Context & cross-references
 
@@ -78,12 +78,12 @@ Untraced: the hosted runner's `gh` auth scope for issue writes (`github.token` w
 ## Acceptance checks (falsifiable)
 
 New-behaviour proofs (each with its witnessed red control):
-- [ ] `gh421` (a)(c)(d) green at the PR head; removing the S2 skip branch turns (a) red; removing the `reconciled_issues.discard` turns (c) red while (a) stays green; reverting the YAML turns (d) red. (b) is a preservation pin and stays green on base.
-- [ ] `gh684-hosted-lane-report` green; the omitted-run-URL mutant is witnessed red; the skip line the suite feeds is produced from `SKIP_MARKER`, not retyped.
-- [ ] `gh53` 10/10 green at the PR head; ≥1 red witnessed in the same loop at the base; the dedupe-only revert (timestamps still forced apart) is witnessed red.
+- [x] `gh421` 31/0 at `08c5f6b0`; single-site mutants witnessed: S2 skip disabled → (a) and (c) red, (b) green (`red1-skip-branch-removed.log`); `discard` removed → (c) red, (a) green (`red2-…`); YAML reverted → (d) red (`red3-…`).
+- [x] `gh684-hosted-lane-report` 8/0; the omitted-run-URL mutant is an in-suite case (`test_red_control_mutant_without_run_url_is_caught`); the skip line is built from `wave_reconcile.SKIP_MARKER`.
+- [x] `gh53` 10/10 at the PR head (`gh53-head-10x.log`); base `ba1f58e8` 33/40 — 7 red (`gh53-base-40x.log`); dedupe-only revert → `union kept 2 generation settings rows` (`red4-gh53-dedupe-removed.log`).
 
 Preservation checks (expected green on base too — regression evidence, not proof):
-- [ ] `gh496`, `gh202`, `gh232`, `wave-reconcile.sh`, `gh358`, `gh421`'s pre-existing cases unchanged and green.
+- [x] `gh496`, `gh202`, `gh232`, `wave-reconcile.sh`, `gh358` green (`neighbour-*.log`); `gh421`'s 23 pre-existing cases green; GH-308 twin guard clean against `ba1f58e8`.
 - [ ] Full `validate.sh` in the disposable clone; receipts (green and red outputs with provenance) in `TESTS-RESULTS/<date>+GH-684/`.
 
 Hosted proof (post-merge, recorded on #684, in this order):
