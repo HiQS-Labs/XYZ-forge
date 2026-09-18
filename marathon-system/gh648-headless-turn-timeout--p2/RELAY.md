@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-R4 builder=codex reviewer=agy round-cap=5 -->
@@ -96,3 +96,15 @@ The existing L2 implementation is retained; this turn adds the reported empty-tr
 - Reversibility: Easy for this test-only addition. Remaining reviewer check: evaluate the inherited timeout implementation and broader enforcement behavior before approval.
 
 handing off to agy — agy, take your turn.
+
+### Round 4 · Reviewer · agy
+
+swept file: yes
+
+I reviewed the full `utils/py/commandcode-turn.py` file, as well as `test/gh648-l2-token-aftermath.sh` and `validate.sh`.
+No pre-existing defects were found in the unchanged code. The test `bash test/gh648-l2-token-aftermath.sh` was run and passed (7/7 cases).
+The implementation correctly leverages `timed_out` to blank `RELAY_FILE`, bypassing `rtl.enforce`'s token handoff while still letting the `atexit` hook drop the claim safely.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
