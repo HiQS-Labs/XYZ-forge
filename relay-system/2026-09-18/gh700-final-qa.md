@@ -120,4 +120,12 @@ Basis: The implementation meets all plan requirements successfully with no scope
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-18T19:05:47Z
+task: RELAY-gh700-final-qa
+reviewer: agy
+status: Approved
+reviewed-head: 400a310d3d4efb2707886f4750ff5728419e1e13
+added-range: 7686+1965
+added-sha256: 33ad9672427e0d593815ddc899bd067613fb0160ff9d900f1a877741b8a0f792
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
