@@ -1,6 +1,6 @@
 ---
 title: Refuse unsafe GH-642 fixture construction before writes
-status: Active
+status: Complete
 created: 2026-09-17
 updated: 2026-09-17
 gh_issue: 665

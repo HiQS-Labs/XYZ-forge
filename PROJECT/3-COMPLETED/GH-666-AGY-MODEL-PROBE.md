@@ -1,6 +1,6 @@
 ---
 title: Isolate Agy model-validation probe
-status: Active
+status: Complete
 created: 2026-09-17
 updated: 2026-09-17
 owner: noel
