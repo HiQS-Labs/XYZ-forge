@@ -127,6 +127,8 @@ TESTS=(
   "gh374-drift-path-filter.sh"  # GH-374 (drift-brief path-existence filter)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "gh610-claude-subscription.sh" # account routes and native Claude JSON results
+  "gh648-l8-zero-output-handback.sh"  # GH-648 L8/GH-397 (zero-output reviewer turn is not review coverage: review_blocks_added oracle)
+  "gh648-l9-369-regression.sh"        # GH-648 L9/GH-369 baseline (rtl_run_bounded kills the whole process group at the cap; verification-only)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
   "worktree-isolation.sh"
