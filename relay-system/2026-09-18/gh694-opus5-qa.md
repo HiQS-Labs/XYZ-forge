@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -71,5 +71,35 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Turn 1: Reviewer (claude-opus)
+swept file: yes — `src/project.js` read end-to-end (1-386); `utils/py/express.py` swept at `write_tick()` (97-133), `refuse()` (91-94) and the three call sites (779, 834, 1096); the remaining ~1000 lines of the express driver sit outside this change's blast radius and were not read line-by-line. Probes ran under `.relay-scratch/tmp` with `HOME` redirected so the central mirror never touched `~/.config`.
+VERDICT: FAIL
+
+- [Pass] (DoD 1) `write_tick()` emits the canonical envelope — `utils/py/express.py:104-112` (`schema_version="0.2.0"`, `ts=now_iso()`, `type=ev_type`, `task=task_id`, `agent="express"`), legacy `at/actor/verb` kept, payload merged at :114. Probe (`write_tick(root,"express-fired",issue=999,sha="abc123")`) wrote `{"schema_version": "0.2.0", "ts": "2026-09-18T18:50:45.524Z", "type": "express.fired", "task": "GH-999", "agent": "express", "at": …, "actor": "express", "verb": "express-fired", "issue": 999, "sha": "abc123"}`; the no-issue refusal wrote `"type": "express.refused", "task": "lane"`. Envelope keys do not collide with any field passed at the three call sites.
+- [Pass] (DoD 2, guard) `src/project.js:58-59` skips no-task and non-`task.*` events. Probe: events dir holding a legacy pre-fix record (`{"at":…,"actor":"express","verb":"express-fired","issue":998}` — what already-fired clones have on disk), both new-envelope express events above, and one `task.created T-1` → current `project()` gives `tasks: ["T-1"] rejections: 0`, STATE.md `## Open | - T-1 (priority: 0)`, exit 0. Every other raw-event consumer routes through `fold` (`src/claim.js:34`, `src/take.js:25`, `src/next.js:22`, `src/scope.js:28,54,168`, `bin/tick:441`); `nextEpoch` (`src/project.js:271-280`) compares by equality; `src/analyze.js:284,420` self-guards. Covered.
+- [Should] (DoD 2, comment) The "institutional rationale comment intact" clause is not met. Commit 60dd24ee deleted the 5-line GH-68 comment (old `src/project.js:52-57`) and replaced it with `src/project.js:55-57`, dropping two load-bearing pieces: the pointer `See decisions/2026-07-01-cross-agent-dep-conflict.md` (the file exists) and the note that drift is "consumed directly from .tick/events/ by the shims' drift-brief reader, never via the fold". The gh694-final-qa r1 `[Pass]` "comment is intact" was inaccurate. Fix (no behaviour change): keep the new generalized paragraph and append the two dropped sentences to it.
+- [Should] (DoD 3, strength) The three `tick project` assertions pin only exit 0, which the express.py half alone now guarantees — a revert of the `src/project.js:58-59` guard stays green.
+  Observed input: PRE-fix `src/project.js` (`git show 60dd24ee~1:src/project.js`) run over the current-envelope express events from the probe above → `tasks: ["T-1","GH-999","lane"]`, STATE.md `## Open | - GH-999 (priority: 0) | - lane (priority: 0) | - T-1 …`, exit 0. Both phantom tasks are back and `test/gh267-express-skill.sh:228,360,594` would still print `ok`.
+  Affected scope: only the three GH-694 assertions; no product code.
+  Falsifier: restore `if (ev.type === 'dependency.drift') continue;` in place of :58-59 and run the suite — if any GH-694 assertion goes red, this finding is wrong.
+  Fix: after each `tick project` add `grep -qE '^- (GH-999|lane) ' "$FX/.tick/STATE.md" && bad "express telemetry seeded a phantom task (GH-694)" || ok "no phantom task from express telemetry (GH-694)"`; and stop discarding diagnostics — `2>"$ERR"` instead of `2>&1 >/dev/null`, echo `$ERR` in the `bad` branch.
+- [Should] (pre-existing, GH-268 sweep) `write_tick()` publishes non-atomically: `open(path, "w")` then `f.write` (`utils/py/express.py:118-119`), so a same-clone reader can observe an empty `.jsonl` — the same "express telemetry breaks tick's fold" class this issue fixes, narrower window.
+  Observed input: zero-byte `.tick/events/2026-09-18T18-21-00.000Z-express-fired-gh-997.jsonl` (the on-disk state between the `open` and the `write`) → `project()` throws `SyntaxError: Unexpected end of JSON input` from `readAllEvents` (`src/events.js:207-210`), exit 1.
+  Affected scope: only a `tick` reader racing an in-flight express write in the same clone; every complete file is unaffected.
+  Falsifier: same zero-byte file present and `tick project` exits 0 → finding wrong.
+  Fix (least mechanism, mirrors Tick's own GH-14 discipline at `src/events.js:184-186`): write to `path + ".tmp"` then `os.replace(tmp, path)` — `readAllEvents`' `.endsWith('.jsonl')` filter never sees the `.tmp`. Same two lines for the central mirror if wanted; it is not read by `tick`.
+- [Nit] `src/project.js:59` still throws on a non-string `type`: `{"type":5,"task":"GH-1","agent":"x",…}` → `TypeError: ev.type.startsWith is not a function`. No writer emits this; align with the idiom the repo already uses at `src/analyze.js:284,420`: `typeof ev.type !== 'string' || !ev.type.startsWith('task.')`.
+- [Nit] `utils/py/express.py:99,105,110` take three separate clock reads, so the filename and the record disagree — probe: filename `…T18-50-45.523Z-express-fired-gh-999.jsonl`, record `"ts": "…T18:50:45.524Z"`. Tick derives filename and `ts` from one read (`src/events.js:147-149`); compute `now = now_iso()` once and derive the filename from it (`at` can share it).
+- [Pass] (DoD 3, placement) Each new assertion sits directly after the assertion proving the express event file exists (`test/gh267-express-skill.sh:226-228`, `:358-360`, `:592-594`), so the exit-0 pin is not vacuous.
+- [Pass] (DoD 4) `CHANGELOG.md:1-3` describes both halves and the regression accurately. Capture doc `PROJECT/2-WORKING/GH-694-EXPRESS-TICK-TELEMETRY-SCHEMA.md:44-48` matches the code (`type`, `task` derivation, guard text, test placement).
+- [Nit] (DoD 4) Capture doc `:31` "What's next | Final QA round 2 with agy, push & PR" contradicts `:55` "[x] Final QA approved & attested by agy" — update to "push & PR". `:18` non-goal "Modifying the central telemetry format at ~/.config/xyz/events/" is no longer true: the mirror at `utils/py/express.py:125-131` writes the identical new envelope (probe: both files byte-equal in the redirected `HOME`). Reword to "restructuring the central mirror (it receives the same additive envelope)".
+- [Pass] (DoD 5) Commensurate: +12/-1 in express.py, +5/-6 in project.js, +3 in the test, no new module, no governance edits (`git diff --stat 60dd24ee~1..HEAD`).
+- [Unverified — needs clone run] `npm test` 23/23 and `test/gh267-express-skill.sh` 98/98 as stated in `CHANGELOG.md:3` and the capture doc `:52-53`; the harness gate after this turn is the measurement.
+- Pre-existing defects in the swept scope: one found (the non-atomic publish, graded above); none other in `src/project.js`.
+
+Basis: No `[Blocker]` — the fix is correct and the crash is gone. FAIL routes three `[Should]`s to a Producer disposition: the DoD 2 comment clause is literally unmet, the regression does not pin the consumer half it claims to guard, and the same-clone torn-write is the same failure class as GH-694 with a two-line fix. Approve expected in r2 on Implemented or reasoned Declined.
+
+Handing off to Producer — go to the claude-a window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
