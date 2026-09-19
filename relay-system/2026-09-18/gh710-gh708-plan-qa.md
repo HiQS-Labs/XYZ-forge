@@ -187,4 +187,12 @@ Basis: All critical logic gaps in GH-710 have been closed. The missed suites for
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-19T00:19:00Z
+task: RELAY-gh710-gh708-plan-r3
+reviewer: agy
+status: Approved
+reviewed-head: 807dad70c3113eba2505ba2253d500dbde2c56ae
+added-range: 13127+638
+added-sha256: 3f1d491cb1792c5b8f947af1b366bcb4b6d75289d0db6a9abb85c4f755f6e9c4
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
