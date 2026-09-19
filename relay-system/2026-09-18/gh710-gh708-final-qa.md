@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -66,5 +66,24 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+## TURN 1 — Reviewer (agy)
+
+swept file: yes
+
+*   `[Pass]` Q1 (GH-710 key order/resolution): The record build matches the approved key order (`utils/py/_marathon_plan.py:863-865`, using `doc_rel` first then other `.md` links). A true duplicate resolves to gids only, returning `("one of ...", None, None)` where `db_rank` is explicitly `None` (`utils/py/_marathon_plan.py:798-800`), thus never resolving to a rating.
+*   `[Pass]` Q2 (GH-710 precedence): The "DB rating wins over legacy frontmatter" precedence is unchanged. If a `NULL-gh` row has legacy frontmatter but no DB rating, `hit` is not found, `db_rank` remains `None` (`utils/py/_marathon_plan.py:858`), bypassing the precedence branch (`:873`), leaving `rated = True` (`:872`) and scoring via legacy frontmatter in `score_of` (`:1095`).
+*   `[Pass]` Q3 (GH-710 test): Pre-existing assertions are real and `GH-102` correctly reaches the unrated branch (`test/gh698-planner-db-ratings.sh:124`, `INFO [unrated]  GH-102`). The suite correctly reads lanes/ranks from the written plan doc (`plan_doc="$(cat "$FX"/PROJECT/2-WORKING/MARATHON-PLAN-*.md ...)"` at `:109`). The crash assertion explicitly expects 4 or 5 (`case "$planner_rc" in 4|5)` at `:141`), so a crash (like the pre-fix rc 1) hits the `*)` fallback (`:143`) and cannot pass.
+*   `[Pass]` Q4 (GH-708 helper): The marker check `sed -n 's/^source_commit=//p'` (`test/lib/fixture-guard.sh:96`) ensures a safe exit 2 on a non-vendored tree. `BASH_SOURCE[1]` correctly points to the caller suite (`test/lib/fixture-guard.sh:89`) regardless of whether it is called at the top level or after `_setup.sh`, because sourcing `_setup.sh` does not shift the caller frame for subsequent calls in the suite.
+*   `[Pass]` Q5 (GH-708 spot-checks): Spot-checked `test/gh267-express-skill.sh:41`, `test/gh544-pre-push-gate.sh:62`, `test/ci-workflow.sh:13`, `test/gh35-test-tiers.sh:43`, and `test/gh365-tier-fail-closed.sh:14`. All calls are correctly placed at the top level or right after `_setup.sh`, before first use. No double-sourcing of `fixture-guard.sh` was found in `_setup.sh` callers. The paths named are indeed read by the suites.
+*   `[Pass]` Q6 (GH-708 acceptance): The 62 skips and 11 tracked leftovers completely answer the issue questions. The vendor decision to skip rather than vendor `githooks/` is correct, as vendoring `pre-push` without `validate.sh` would break the consumer pushes.
+*   `[Pass]` Q7 (Ratings): Both sets of ratings are still grounded. GH-710 90/90/50/85 correctly reflects the crash blocking `LTVera#551` reconciles; GH-708 65/55/50/80 correctly sizes the false-red noise blocking acceptance.
+
+VERDICT: PASS
+STATUS: Approved
+Basis: All acceptance criteria from the plan are met, both the test suite additions and code modifications implement the required fixes and safety guards accurately. Pre-existing code swept and no issues were found.  [Unverified — no citation]
+
+handing off to Producer — relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
