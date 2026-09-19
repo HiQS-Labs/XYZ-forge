@@ -1,8 +1,8 @@
 ---
 title: "GH-700: pages — add a Skills page to the project site; repoint the Model Catalog card to resolve.hiqs.ai"
-status: "Proposed (1-INBOX — in execution on feat/gh700-pages-skills)"
+status: Complete
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-19
 owner: unassigned
 goal: publish the agent-driving skills (workhorse, unstuck, merge-cleanup, radar, whack-a-mole) on the GitHub Pages site with a nav entry on every page, and point the Model Catalog card at the hosted resolver
 gh_issue: 700
