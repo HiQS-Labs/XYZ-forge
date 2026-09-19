@@ -48,26 +48,35 @@ non_goals:
 
 ## Plan (smallest surface: one module, one suite)
 
-1. `_load_ledger_from_db`: drop the `WHERE gh_number IS NOT NULL`, select `global_id` and
-   `doc_path` alongside the four axes, and build a second index `db_by_doc[doc_path] = (global_id,
-   rank|None, axes|None)` for rows with `gh_number IS NULL` and a `doc_path`. A `doc_path` that two
-   NULL-gh rows share is ambiguous: index it as `None` so neither row is silently rated by the
-   other's score. Return it as a fourth tuple element; the three callers (`:810-816`) unpack it.
-   *Why doc_path:* the planner's own identity for a NULL-gh row is already
-   `doc:<path>|title:<title>` (`:867`), and the rendered line for a sparse row is
-   `- **title** → [doc](doc_path)` (`releases_app.py roadmap_render`), so `_doc_of` yields exactly
-   the DB's `doc_path`. No renderer change.
-2. Record build (`:834-860`): when `gh is None and doc_rel`, look up `db_by_doc.get(doc_rel)`; take
-   `gid`, `db_rank`, `db_axes_item` from the hit. Store `"gid"` on the record.
+1. `_load_ledger_from_db`: drop the `WHERE gh_number IS NOT NULL`, select `global_id`, `title` and
+   `doc_path` alongside the four axes, and build a second index for rows with `gh_number IS NULL`
+   and a `doc_path`: `db_by_doc[(doc_path, title)] = (global_id, rank|None, axes|None)` plus
+   `db_by_doc[(doc_path, None)]` when the `doc_path` is unique among NULL-gh rows. Two rows that
+   share BOTH doc and title are true duplicates: neither is indexed and the flag hint names both
+   gids (r1 finding 2 — a `--gid`-rated row that merely shares a doc with another row is matched by
+   its title and counts as rated). Return it as a fourth tuple element; the three callers
+   (`:810-816`) unpack it.
+   *Why doc_path + title:* the planner's own identity for a NULL-gh row is already
+   `doc:<path>|title:<title>` (`:867`); the rendered line for a sparse row is
+   `- **title** → [doc](doc_path)` and an HQ-intake line is `- **title** … [basename](doc_path)`
+   (`releases_app.py roadmap_render`), so the item's title and link target are exactly the DB's
+   `title` and `doc_path`. No renderer change.
+2. Record build (`:834-860`): when `gh is None`, look up `(doc_rel, title)`, then `(doc_rel, None)`,
+   then the same two keys for every other `.md` link target on the item (r1 finding 1 — do not
+   depend on `_doc_of`'s pick alone); take `gid`, `db_rank`, `db_axes_item` from the first hit.
+   Store `"gid"` on the record. Rows whose doc lives outside `PROJECT/` are not capture docs by the
+   planner's existing rule (`_doc_of`, `:621-624`) and never reach the `unrated` branch — unchanged,
+   and a non-goal here.
 3. The hint (`:962`): one conditional expression — `--issue-num %d` when `r["gh"]` is set, else
    `--gid <gid> … (row has no gh_number)` using the record's `gid` (fallback literal `<rmi-…>` only
    if the row was not indexed).
-4. `test/gh698-planner-db-ratings.sh`: two fixture rows — `g104` (`gh_number NULL`, `docs/delta.md`,
-   no rating) → planner exits 4/5, not 1, and its `unrated` flag carries `--gid g104` and `(row has
-   no gh_number)`; `g105` (`gh_number NULL`, `docs/epsilon.md`, rated 60/60/50/60) → listed in the
-   plan, never under `unrated`. Red control: the suite must fail on the pre-fix planner (the
-   TypeError leaves the output empty, so every `assert_present` goes red — witnessed once in the
-   task clone before the fix and recorded below).
+4. `test/gh698-planner-db-ratings.sh`: two fixture rows with `PROJECT/2-WORKING/` docs (the
+   planner's capture-doc rule; r1 finding 1) — `g104` (`gh_number NULL`, no rating) → its `unrated`
+   flag carries `--gid g104` and `(row has no gh_number)`; `g105` (`gh_number NULL`, rated
+   60/60/50/60) → listed in the plan, never under `unrated`. The suite records the planner's exit
+   code and asserts it is 4 or 5, never 1 (r1 finding 4). Red control witnessed on the pre-fix
+   planner (2026-09-18, task clone): one such row → `rc=1`, `TypeError: %d format: a real number is
+   required, not NoneType`, no flag printed.
 5. Verification (unsandboxed): `bash test/gh698-planner-db-ratings.sh`, `bash test/marathon-plan.sh`
    (70), `bash test/wave-reconcile.sh` (18); consumer proof on LTVera after re-vendor (see #551).
 
@@ -97,7 +106,7 @@ sequences it is its own.
 
 ## Status
 
-active — plan under review (relay), implementation pending.
+active — plan r1 reviewed by agy (`relay-system/2026-09-18/gh710-gh708-plan-qa.md`): findings 1, 2, 4 accepted and folded in above; r2 pending.
 
 ## Merge evidence
 

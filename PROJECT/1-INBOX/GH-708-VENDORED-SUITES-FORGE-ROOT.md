@@ -46,12 +46,17 @@ forge" is a false signal.
 
 | forge-root path | suites |
 |---|---|
-| `validate.sh` | ballast-release, ci-workflow, gh365-driver-lane-registry, gh365-runner-envelope, gh365-validate-telemetry, gh379-canary-uses-validate, meter-release, nightwatch-release, oracle-guard |
+| `validate.sh` | ballast-release, ci-workflow, gh365-driver-lane-registry, gh365-runner-envelope, gh365-validate-telemetry, gh379-canary-uses-validate, gh4-ungated-clone-warning (copies the whole tree, then runs `validate.sh` from the copy), meter-release, nightwatch-release |
 | `ci-local.sh` | ci-workflow, gh35-test-tiers, gh365-runner-envelope, gh365-shellcheck-parallel, gh365-validate-telemetry, gh536-evidence-detail, gh544-parallel-default |
 | `githooks/` | gh267-express-skill, gh35-test-tiers, gh544-pre-push-gate |
 | `.github/` | gh544-parallel-default, gh544-pre-push-gate |
 | `sentinel-overlay/` | sentinel-overlay |
 | `AGENTS.md` / `ROUTER.md` / `README.md` | gh527-destructive-git-guard / pdda-install-startup-docs / runner-loop |
+
+Not in the list: `oracle-guard.sh` — it already skips only its one sub-test when `$ROOT/validate.sh`
+is absent (`test/oracle-guard.sh:59`, "absent in a vendored copy"), the wording this helper adopts;
+`swe-diagram.sh` names `ARCHITECTURE/` only in a comment. (r1: one false positive removed, one
+false negative added.)
 
 Method: every `$VAR/<path>` reference in `test/*.sh` whose `VAR` is assigned from `$HERE/..`,
 `cd "$HERE/.." && pwd`, `cd -P "$(dirname "$0")/.."`, or `git rev-parse --show-toplevel`; fixture
@@ -110,7 +115,7 @@ vendored tree; the witness in 3(d) plus the per-suite line naming a checked-in p
 
 ## Status
 
-active — plan under review (relay), implementation pending.
+active — plan r1 reviewed by agy (`relay-system/2026-09-18/gh710-gh708-plan-qa.md`): sweep corrected (−oracle-guard, +gh4-ungated-clone-warning); decision and marker passed; r2 pending.
 
 ## Merge evidence
 
