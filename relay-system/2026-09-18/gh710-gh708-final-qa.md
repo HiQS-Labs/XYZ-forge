@@ -86,4 +86,12 @@ Basis: All acceptance criteria from the plan are met, both the test suite additi
 
 handing off to Producer — relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-19T02:16:30Z
+task: RELAY-gh710-gh708-final-r1
+reviewer: agy
+status: Approved
+reviewed-head: 1e6eec7025b1d8cd5a1c14b8dbb0b7df7a2ed9be
+added-range: 5129+2995
+added-sha256: 521b655edf42778c4058eabc6569d1f16443279dc489d8bea3482b223c7f9c7c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
