@@ -12,6 +12,8 @@
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root .gitignore .git   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 IL="$REPO/relay-automation/improve-loop.sh"
 PASS=0; FAIL=0
 pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }

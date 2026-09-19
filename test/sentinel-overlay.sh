@@ -9,6 +9,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OV="$HERE/../sentinel-overlay"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root sentinel-overlay   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 [ -d "$OV" ] || { echo "  FAIL: overlay dir missing: $OV" >&2; exit 1; }
 pass(){ echo "  PASS: $*"; }
 fail(){ echo "  FAIL: $*" >&2; exit 1; }

@@ -12,6 +12,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root install.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 

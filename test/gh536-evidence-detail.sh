@@ -30,6 +30,7 @@ echo "== test: gh536-evidence-detail =="
 # transcript written inside it would trip the refusal instead of exercising the record.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh536.XXXXXX")"
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+require_forge_root ci-local.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 
 mkrepo() {

@@ -16,6 +16,7 @@
 source "$(dirname "$0")/_setup.sh" gh441-gate-env-contract
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 GE="$ROOT/utils/py/gate_env.py"
 HELPER="$ROOT/relay-automation/gate-env.sh"
 

@@ -5,6 +5,7 @@
 source "$(dirname "$0")/_setup.sh" gh379-claude-builder-diagnosis
 export TICK_BIN="$TICK"
 ROOT_REPO="$(cd "$(dirname "$0")/.." && pwd)"
+require_forge_root README.md   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 DRIVER="$ROOT_REPO/utils/py/marathon_drive.py"
 
 ROOT="$WORK/target"

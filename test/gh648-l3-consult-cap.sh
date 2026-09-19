@@ -3,6 +3,8 @@
 # Policy: idle-unknown kills at the existing idle threshold, with its honest label.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+. "$ROOT/test/lib/fixture-guard.sh"
+require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 mkdir -p "$ROOT/.relay-scratch"
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$ROOT/utils/py" GH648_ROOT="$ROOT" python3 <<'PY'
 import contextlib, io, os, pathlib, subprocess, sys, tempfile

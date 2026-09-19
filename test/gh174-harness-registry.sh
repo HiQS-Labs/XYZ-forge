@@ -4,6 +4,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root harnesses.db harnesses.sql   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 # Source shared fixture-guard (GH-1 / GH-10 / GH-564 / GH-567)
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh174-harness-registry.XXXXXX")"

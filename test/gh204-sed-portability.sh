@@ -6,7 +6,7 @@
 # the exit code. Exit code is exactly what masks the loss, so every assertion here diffs the
 # destination file's CONTENT before and after, never the return status.
 set -eu
-source test/_setup.sh "GH-204" || { echo "setup failed"; exit 1; }
+source "$(dirname "$0")/_setup.sh" "GH-204" || { echo "setup failed"; exit 1; }
 
 root="$(cd "$HERE/.." && pwd)"
 F="$WORK/fixture"; mkdir -p "$F"

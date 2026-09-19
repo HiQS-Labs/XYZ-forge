@@ -15,6 +15,8 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 FUZZ="$ROOT/utils/fuzzing/fuzz-loop.sh"
 SYN="$ROOT/test/synthetic"
 

@@ -17,6 +17,7 @@
 #      in a runnable command fails here — in scripts OR docs).
 source "$(dirname "$0")/_setup.sh" path-integrity
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+require_forge_root validate.sh ci-local.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 # --- Check A: package manifest == tarball contents (no source/package drift) ---
 MKPKG="$ROOT/skills/relay-automation/make-pkg.sh"

@@ -2,6 +2,8 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root .git .gitignore   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 # GH-401: this audit exists for GH-209 — "every test invocation of the marathon driver is
 # MARATHON_ROOT-scoped" — but its scope was two hardcoded filenames. An unscoped `--dry-run`

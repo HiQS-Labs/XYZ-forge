@@ -38,6 +38,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root validate.sh .github/workflows   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 WF="$REPO/.github/workflows/ci.yml"
 V="$REPO/validate.sh"
 

@@ -40,33 +40,42 @@ forge" is a false signal.
   **witnessed skip** in a vendored install and keep refusing loudly in a forge checkout where the
   path is unexpectedly missing.
 
-## Sweep (anchored on the forge root, not on fixtures; comments excluded)
+## Sweep — final, empirical (the static anchor sweep missed three times)
 
-25 suites reach a path outside `VENDOR_DIRS` through `$HERE/..` (or a ROOT derived from it):
+Two static passes found 19, then 25 suites. The acceptance witness — vendor this checkout into a
+throwaway consumer (`xyz-vendor.sh --with-releases`) and run **every** shipped suite from
+`.xyz/test/` — is what settled it: **397 suites → 323 pass, 60 witnessed skips, 14 fail**
+(`relay-system/2026-09-18/gh708-vendored-run.txt`; three of the 14 skip on a clean tree and failed
+only because an earlier suite had created `.git` under the vendored root — see follow-ups).
+
+62 suites now call `require_forge_root`, naming the checked-in forge-root path each one reads:
 
 | forge-root path | suites |
 |---|---|
-| `validate.sh` | ballast-release, ci-workflow, gh141-synthetic-registry, gh182-healer-facade-safety, gh251-validate-pytest-skip, gh298-ate-gen4-ci-smoke (clones the tree, then runs `validate.sh` from the clone), gh306-registry-bidirectional, gh365-driver-lane-registry, gh365-runner-envelope, gh365-validate-telemetry, gh379-canary-uses-validate, gh4-ungated-clone-warning (copies the tree, then runs `validate.sh` from the copy), gh-gen4-phase1-domain-oracles (`--cwd $ROOT`, `bash validate.sh --print-mode`), meter-release, nightwatch-release |
-| `ci-local.sh` | ci-workflow, gh35-test-tiers, gh365-runner-envelope, gh365-shellcheck-parallel, gh365-validate-telemetry, gh536-evidence-detail, gh544-parallel-default |
-| `githooks/` | gh267-express-skill, gh35-test-tiers, gh544-pre-push-gate |
-| `.github/` | gh544-parallel-default, gh544-pre-push-gate |
-| `sentinel-overlay/` | sentinel-overlay |
-| `AGENTS.md` / `ROUTER.md` / `README.md` | gh527-destructive-git-guard / pdda-install-startup-docs / runner-loop |
+| `validate.sh` (± `ci-local.sh`) | ballast-release, ci-route, ci-workflow, gh141-synthetic-registry, gh182-healer-facade-safety, gh251-validate-pytest-skip, gh298-ate-gen4-ci-smoke, gh306-registry-bidirectional, gh365-driver-lane-registry, gh365-runner-envelope, gh365-tier-fail-closed, gh365-validate-telemetry, gh379-canary-uses-validate, gh4-ungated-clone-warning, gh419-gate-inventory, gh441-gate-env-contract, gh528-parallel-contention-retry, gh648-l3-consult-cap, gh77-standup-triage, gh-gen4-phase1-domain-oracles, meter-release, nightwatch-release, path-integrity |
+| `ci-local.sh` only | gh35-test-tiers (+githooks), gh365-shellcheck-parallel, gh536-evidence-detail, gh544-parallel-default |
+| `githooks/` | gh267-express-skill, gh544-pre-push-gate |
+| `.github/workflows/*` | gh421-auto-wave-reconcile, gh509-gate-evidence, gh567, gh568 |
+| `releases.db` / `.gitattributes` | gh107-timeline-json-seam, gh153-releases-sidebar-rollup, gh269-roadmap-retired, gh32-releases-artifacts, gh53-releases-merge-resolve, gh549-work-events, gh567-roadmap-dashboard-retired, gh568-releases-md-retired |
+| `harnesses.db` | gh174-harness-registry, gh205-gate-idempotency, gh496-telemetry-isolation |
+| the forge as a git repo (`.git`, `.gitignore`) | gh-gen4-phase3-fuzz-engine, gh-gen4-phase5-campaign, gh413-launch-artifact-destination-guard, gh430-state-dir-tracked-default, gh436-merge-cleanup (+`.gitattributes`, `WORKTREE-SAFETY.md`), gh589-consult-no-tick, gh589-xyz-mini-sync (+`mini/`), gh620-skills-army-mini-sync, marathon-root-audit |
+| governance / docs | gh378 (`decisions/…`), gh379-claude-builder-diagnosis + gh384-crash-recovery + runner-loop (`README.md`), gh415 + gh527 (`AGENTS.md`), pdda-install-startup-docs + releases-skill (`ROUTER.md`, `PROJECT/PDDA.md`), sentinel-overlay (`sentinel-overlay/`), swe-diagram (`ARCHITECTURE/`), registry-lock-concurrency (`install.sh`) |
 
-Not in the list: `oracle-guard.sh` — it already skips only its one sub-test when `$ROOT/validate.sh`
-is absent (`test/oracle-guard.sh:59`, "absent in a vendored copy"), the wording this helper adopts;
-`swe-diagram.sh` names `ARCHITECTURE/` only in a comment. (r1: one false positive removed, one
-false negative added. r2: six more `validate.sh` suites added — the anchor regex had missed
-`HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"`-derived roots and commands run *inside* a
-copy of the tree. Because the static sweep has now missed twice, the acceptance adds an empirical
-witness: from a vendored copy of this checkout, every suite that mentions `validate.sh`,
-`ci-local.sh`, `githooks`, `.github`, `sentinel-overlay`, `ROUTER.md`, `AGENTS.md` or `README.md`
-in code must either pass or print the skip line — any other exit is a missed suite.)
+Also fixed in passing (same failure surface, one-line each): eight suites sourced `test/_setup.sh`
+relative to the **CWD** and so only ran from the repo root — `gh204`, `gh205`, `gh238`, `gh239`,
+`gh257`, `gh269`, `gh413`, `gh496-phase2` now source it script-relative like their siblings.
 
-Method: every `$VAR/<path>` reference in `test/*.sh` whose `VAR` is assigned from `$HERE/..`,
-`cd "$HERE/.." && pwd`, `cd -P "$(dirname "$0")/.."`, or `git rev-parse --show-toplevel`; fixture
-roots (`$FIX`, `$WORK/...`) are excluded; `swe-diagram.sh` mentions `ARCHITECTURE/` only in a
-comment. Sweep transcript: `relay-system/2026-09-18/gh708-sweep.txt`.
+Not in the list: `oracle-guard.sh` already skips its one sub-test when `$ROOT/validate.sh` is
+absent (the wording this helper adopts).
+
+**Follow-ups (not this issue — filed as one tracker):** 11 suites still fail in a vendored copy
+for other reasons: python module paths that assume the forge layout (`agent-chorus`,
+`gh-gen4-phase4-repro-synth`, `gh478-runaway-guard`, `gh589-skill-viewer`) and behavioural
+differences (`gh141-fuzz-inputs`, `gh155-phase1-metamorphic-invariants`,
+`gh273-marathon-root-audit-python-shape`, `gh649-pdda-migration`, `relay-xyz-skill-guard`,
+`swarm-preflight`, `test-agy-isolation`). Two suites write into the vendored root while running
+(`gh218-synthetic-nested-driver-lock` creates `.git/`; `hq-promote` creates `PROJECT/`) — a
+containment defect that also masks the `.git` skips of later suites.
 
 ## Plan
 
@@ -77,7 +86,7 @@ comment. Sweep transcript: `relay-system/2026-09-18/gh708-sweep.txt`.
    and `exit 0`; absent in a non-vendored tree → `forge-root: REFUSING — …` on stderr, `exit 2`
    (a check that cannot fail is not a check). One helper, same file the issue proposed, same
    fail-closed voice as its neighbours.
-2. Each of the 25 suites calls it once, right after sourcing the guard, naming exactly the paths it
+2. Each affected suite (62 at landing) calls it once, right after sourcing the guard, naming exactly the paths it
    needs (e.g. `require_forge_root githooks/install.sh`). Suites that do not source fixture-guard
    today source it for this call only.
 3. New `test/gh708-vendored-suite-skips.sh` (registered in `validate.sh`): (a) a fixture tree with
@@ -103,9 +112,9 @@ vendored tree; the witness in 3(d) plus the per-suite line naming a checked-in p
 
 ## Acceptance
 
-- [ ] `gh708-vendored-suite-skips.sh` green, its red control witnessed.
-- [ ] Forge gate unchanged: the 25 suites still run (no skip line) in the forge.
-- [ ] Empirical witness (one-off, recorded in the PR): from a vendored copy, every candidate suite passes or prints `skip: not vendored`.
+- [x] `gh708-vendored-suite-skips.sh` green (17/17), its red control witnessed.
+- [x] Forge gate unchanged: every touched suite still runs (no skip line) in the forge — verified per suite, 62/62 green.
+- [x] Empirical witness: 397 vendored suites → 323 pass, 60 skip, 14 fail (3 of them skip on a clean tree); the 11 true leftovers are named above and tracked separately.
 - [ ] Consumer: `bash .xyz/test/gh267-express-skill.sh` on LTVera prints the skip and exits 0.
 
 ## Rating (2026-09-18) — `rated 65/55/50/80`
@@ -115,7 +124,7 @@ vendored tree; the witness in 3(d) plus the per-suite line naming a checked-in p
 - pri 65: blocks LTVera#551 Step 2 acceptance ("failures block Step 3+"); ordered after #710 which
   breaks the consumer's reconcile.
 - appeal 50: neutral.
-- effort 80: one helper, 25 one-line call sites, one suite with a vendor witness.
+- effort 80: one helper, 62 one-line call sites, one suite with a vendor witness.
 - Recurrence: first report of this class (vendored suite red for a forge-only path); GH-197 (tier
   split) and GH-312 (preserve list) were vendor-manifest issues of a different class.
 

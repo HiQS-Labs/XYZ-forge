@@ -23,6 +23,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_setup.sh" "GH-568" || { echo "setup failed"; exit 1; }
 
 root="$(cd "$HERE/.." && pwd)"
+require_forge_root releases.db .github/workflows githooks   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 MUTATE_EVIDENCE=0
 if [ "${1:-}" = "--mutate-evidence" ]; then

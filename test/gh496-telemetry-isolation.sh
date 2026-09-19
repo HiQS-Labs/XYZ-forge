@@ -18,6 +18,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "$ROOT/test/lib/fixture-guard.sh"
+require_forge_root harnesses.db harnesses.sql   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh496-telemetry.XXXXXX")"
 [ -n "$WORK" ] || exit 1
 [ -d "$WORK" ] || exit 1

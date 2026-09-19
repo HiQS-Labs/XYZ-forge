@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eu
-source test/_setup.sh "GH-238" || { echo "setup failed"; exit 1; }
+source "$(dirname "$0")/_setup.sh" "GH-238" || { echo "setup failed"; exit 1; }
 
 root="$(cd "$HERE/.." && pwd)"
 

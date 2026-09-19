@@ -17,6 +17,7 @@ echo "== test: gh4-ungated-clone-warning =="
 
 W="$(mktemp -d -t gh4-ungated-clone-warning.XXXXXX)" || { echo "  FAIL: mktemp failed" >&2; exit 1; }
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$W"   # GH-10: pin the sandbox root
 case "$W" in "") echo "  FAIL: mktemp returned EMPTY — refusing" >&2; exit 1 ;; esac
 trap 'rm -rf "$W"' EXIT
