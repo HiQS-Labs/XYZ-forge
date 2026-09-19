@@ -20,6 +20,7 @@ source "$(dirname "$0")/_setup.sh" gh365-runner-envelope
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
+require_forge_root validate.sh ci-local.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 LIB="$REPO/test/lib/runner-envelope.sh"
 
 mkclone() {  # -> prints a fixture clone path with a committed tracked file + harnesses.db

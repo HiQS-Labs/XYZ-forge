@@ -17,6 +17,7 @@
 #      in a runnable command fails here — in scripts OR docs).
 source "$(dirname "$0")/_setup.sh" path-integrity
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+require_forge_root validate.sh ci-local.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 # --- Check A: package manifest == tarball contents (no source/package drift) ---
 MKPKG="$ROOT/skills/relay-automation/make-pkg.sh"
@@ -132,7 +133,7 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # negative receipt) — fixture literals of the same class, never files in this tree. Likewise
 # test/gh425-gate-provenance-pr.sh's synthetic express receipts name `test/gh592-demo.sh` /
 # `test/gh590-demo.sh` as the suite `command` under a mktemp root.
-fixture_literals=" test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh skills/alpha/SKILL.md skills/beta/SKILL.md skills/gamma/SKILL.md test/x.sh "
+fixture_literals=" test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh skills/alpha/SKILL.md skills/beta/SKILL.md skills/gamma/SKILL.md test/x.sh test/probe.sh test/probe-empty.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

@@ -25,6 +25,8 @@
 #
 # Usage: bash test/gh32-releases-artifacts.sh
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root releases.db   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 ROOT_DIR="$(cd "$HERE/.." && pwd)"
 # shellcheck source=/dev/null
 source "$HERE/_setup.sh" gh32-releases-artifacts

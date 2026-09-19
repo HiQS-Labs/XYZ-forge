@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # GH-413 — a copied launch-artifact marker must never authorize recursive deletion.
 set -euo pipefail
-source test/_setup.sh "GH-413" || { echo "setup failed"; exit 1; }
+source "$(dirname "$0")/_setup.sh" "GH-413" || { echo "setup failed"; exit 1; }
+require_forge_root .git   # GH-708: forge-root only — witnessed skip in a vendored .xyz/ (_setup.sh sourced the guard lib)
 
 root="$(cd "$HERE/.." && pwd)"
 builder="$root/utils/build-launch-artifact.sh"

@@ -3,7 +3,7 @@
 # Tests GH-239: hq status and rollup read from releases DB in releases-mode repos.
 
 set -eu
-source test/_setup.sh "GH-239" || { echo "setup failed"; exit 1; }
+source "$(dirname "$0")/_setup.sh" "GH-239" || { echo "setup failed"; exit 1; }
 
 root="$(cd "$HERE/.." && pwd)"
 

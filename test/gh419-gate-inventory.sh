@@ -4,6 +4,8 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
+. "$HERE/test/lib/fixture-guard.sh"
+require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/gh419-gate-inventory.XXXXXX")"
 trap 'rm -rf "$FIXTURE"' EXIT
 

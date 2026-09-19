@@ -9,6 +9,7 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh589-notick.XXXXXX")"
 cleanup(){ [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
 trap cleanup EXIT
 . "$HERE/lib/fixture-guard.sh"
+require_forge_root .git   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$WORK"
 PASS=0; FAIL=0
 pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }

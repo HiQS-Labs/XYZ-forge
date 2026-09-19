@@ -38,6 +38,7 @@ mkdir -p "$BIN" "$GH_STATE" "$HOME"
 # GH-1 adoption: the central fixture guard (GH-564 kill conditions + GH-567
 # use-boundary resolution), armed at source time — no private copies.
 . "$HERE/lib/fixture-guard.sh"
+require_forge_root githooks/install.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$WORK"
 
 case "$WORK" in /tmp/gh267-express.*) ;; *) echo "FAIL: unsafe WORK=$WORK"; exit 1;; esac

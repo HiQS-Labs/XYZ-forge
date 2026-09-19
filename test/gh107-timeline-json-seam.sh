@@ -4,6 +4,8 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root releases.db   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 EXPORTER="$HERE/../utils/timeline/export_timeline.py"
 
 pass=0; fail=0

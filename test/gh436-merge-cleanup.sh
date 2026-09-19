@@ -6,4 +6,6 @@
 # Python file (and the GH-534 Phase A module it collects) is the suite.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root .git .gitattributes WORKTREE-SAFETY.md   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 exec python3 "$HERE/gh436-merge-cleanup.py"

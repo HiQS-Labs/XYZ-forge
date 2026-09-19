@@ -20,6 +20,8 @@
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "$ROOT/test/lib/fixture-guard.sh"
+require_forge_root releases.db   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 APP="$ROOT/utils/py/releases_app.py"
 
 . "$ROOT/test/lib/fixture-guard.sh"

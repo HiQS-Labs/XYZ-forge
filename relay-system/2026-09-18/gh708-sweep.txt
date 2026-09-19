@@ -1,0 +1,761 @@
+ballast-release.sh
+  L81: local base="${1##*/}" validate="${2:-$ROOT/validate.sh}"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L112: local validate="${1:-$ROOT/validate.sh}" root="${2:-$ROOT}"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L298: printf 'TESTS=(\n  "fixture-gate.sh"\n)\n' > "$FIX/validate.sh"
+      via FIX=FIX="$TMP/fixture"
+  L306: audit_manifest "$FIX/validate.sh" "$FIX" >/dev/null 2>&1
+      via FIX=FIX="$TMP/fixture"
+  L319: printf 'TESTS=(\n)\n' > "$FIX/validate.sh"
+      via FIX=FIX="$TMP/fixture"
+  L326: printf 'TESTS=(\n  "fixture-gate.sh"\n)\n' > "$FIX/validate.sh"
+      via FIX=FIX="$TMP/fixture"
+ci-route.sh
+  L244: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n)\n' >"$VALIDATE_REPO/validate.sh"
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L245: chmod +x "$VALIDATE_REPO/validate.sh"
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L254: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh" # GH-496 (new test)\n)\n' >"$VALID
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L272: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh" # GH-496 (new test)\n  "skills-arm
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L284: printf '#!/usr/bin/env bash\nMAX_JOBS=4\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$VALIDATE_REPO
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L296: printf '#!/usr/bin/env bash\nTESTS=(\n  "new-test.sh"\n)\n' >"$VALIDATE_REPO/validate.sh"
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L308: printf '#!/usr/bin/env bash\nTESTS=(\n  "new-test.sh"\n' >"$VALIDATE_REPO/validate.sh"
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L320: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n"payload.sh"\n' >"$VALIDATE_RE
+      via VALIDATE_REPO=VALIDATE_REPO="$WORK/validate-fixture"
+  L337: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n)\n' >"$MULTI_REPO/validate.sh"
+      via MULTI_REPO=MULTI_REPO="$WORK/multi-commit-fixture"
+  L338: chmod +x "$MULTI_REPO/validate.sh"
+      via MULTI_REPO=MULTI_REPO="$WORK/multi-commit-fixture"
+  L345: printf '#!/usr/bin/env bash\nRUNNER_MODE=custom\nTESTS=(\n  "existing-test.sh"\n)\n' >"$MULTI_REPO/validate.sh
+      via MULTI_REPO=MULTI_REPO="$WORK/multi-commit-fixture"
+  L350: printf '#!/usr/bin/env bash\nRUNNER_MODE=custom\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$MULTI
+      via MULTI_REPO=MULTI_REPO="$WORK/multi-commit-fixture"
+  L398: printf '#!/usr/bin/env bash\nTESTS=(\n  "new.sh"\n)\n' >"$NON_GIT_DIR/validate.sh"
+      via NON_GIT_DIR=NON_GIT_DIR="$WORK/non-git-fixture"
+  L412: printf '#!/usr/bin/env bash\nTESTS=(\n  # Section 1\n  "existing-test.sh"\n)\n' >"$COMMENT_REPO/validate.sh"
+      via COMMENT_REPO=COMMENT_REPO="$WORK/comment-fixture"
+  L413: chmod +x "$COMMENT_REPO/validate.sh"
+      via COMMENT_REPO=COMMENT_REPO="$WORK/comment-fixture"
+  L420: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$COMMENT_REPO/validate.sh"
+      via COMMENT_REPO=COMMENT_REPO="$WORK/comment-fixture"
+  L439: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n)\n' >"$FORCED_DIFF_REPO/validate.sh"
+      via FORCED_DIFF_REPO=FORCED_DIFF_REPO="$WORK/forced-diff-fixture"
+  L440: chmod +x "$FORCED_DIFF_REPO/validate.sh"
+      via FORCED_DIFF_REPO=FORCED_DIFF_REPO="$WORK/forced-diff-fixture"
+  L446: printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh"\n)\n' >"$FORCED_DIFF_REPO/validate
+      via FORCED_DIFF_REPO=FORCED_DIFF_REPO="$WORK/forced-diff-fixture"
+ci-workflow.sh
+  L12: WORKFLOW="$ROOT/.github/workflows/ci.yml"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L13: VALIDATE="$ROOT/validate.sh"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L306: CI_LOCAL="$ROOT/ci-local.sh"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+gh141-synthetic-registry.sh
+  L43: listed="$(bash "$ROOT/validate.sh" --list)"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+gh182-healer-facade-safety.sh
+  L150: out="$(python3 "$HEALER" --mode heal --sandbox-root "$ROOT" --target-file "$ROOT/validate.sh" --repro "$REPRO_
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+gh251-validate-pytest-skip.sh
+  L7: VAL="$ROOT/validate.sh"
+      via ROOT=ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+gh267-express-skill.sh
+  L95: mkdir -p "$FX/utils/py" "$FX/utils" "$FX/test" "$FX/relay-automation" "$FX/src" "$FX/PROJECT/2-WORKING" "$FX/C
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L96: printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "gh999-drift.sh"\n  "gh999-content-drift.sh"\n  "gh
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L101: printf 'readme\n' > "$FX/README.md"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L110: cp "$HERE/../githooks/install.sh" "$FX/githooks/install.sh"
+      via HERE=HERE="$(cd "$(dirname "$0")" && pwd)"
+  L110: cp "$HERE/../githooks/install.sh" "$FX/githooks/install.sh"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L111: printf '#!/usr/bin/env bash\nexit 0\n' > "$FX/githooks/pre-push"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L112: chmod +x "$FX/githooks/install.sh" "$FX/githooks/pre-push"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L112: chmod +x "$FX/githooks/install.sh" "$FX/githooks/pre-push"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L193: printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - 2026-01-01\n\n### Fixed\n- old entry\n' > "$F
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L255: new_task_branch; git -C "$FX" checkout -q development; printf "upstream change\n" >> "$FX/README.md"; git -C "
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L274: new_task_branch; printf 'x\n' >> "$FX/githooks/pre-push"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L332: new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L335: new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L340: CL_BEFORE="$(shasum -a 256 "$FX/CHANGELOG.md")"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L342: [ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && [ "$(shasum -a 256 "$FX/CHANGELOG.md")" = "$CL_BEFOR
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L349: grep -q "## \[Unreleased\] - $TODAY" "$FX/CHANGELOG.md" && ok "CHANGELOG dated section inserted" || bad "CHANG
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L350: CH_TODAY="$(awk "/## \[Unreleased\] - $TODAY/,0" "$FX/CHANGELOG.md")"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L355: printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - %s\n\n### Added\n- someone added something\n\
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+  L358: CH_F3="$(awk "/## \[Unreleased\] - $TODAY/,/## \[Unreleased\] - 2026-01-01/" "$FX/CHANGELOG.md")"
+      via FX=FX="$WORK/repo"; REMOTE="$WORK/remote.git"
+gh268-relay-cue-and-target-checks.sh
+  L167: printf '%s' "$out" | grep -Fq "$HASV/validate.sh" \
+      via HASV=HASV="$WORK/has-validate"
+  L170: printf '%s' "$out" | grep -Fq "$ROOT/validate.sh" \
+      via ROOT=ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+gh293-vendored-guard-drift.sh
+  L21: printf 'tracked\n' > "$HARNESS/README.md"
+      via HARNESS=HARNESS="$WORK/update-harness"
+  L56: printf 'dirty\n' >> "$HARNESS/README.md"
+      via HARNESS=HARNESS="$WORK/update-harness"
+gh306-registry-bidirectional.sh
+  L32: V="$REPO/validate.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh319-gate-path-with-space.sh
+  L31: printf '#!/usr/bin/env bash\ntouch "%s/validate-ran"\nexit 1\n' "$WORK" > "$SPACED_ROOT/validate.sh"
+      via SPACED_ROOT=SPACED_ROOT="$SPLIT_PARENT/GH Repos/proj"   # splits into ".../GH" + "Repos/proj/validate.
+  L34: old_cmd="bash $SPACED_ROOT/validate.sh"                      # UNQUOTED — the pre-fix form
+      via SPACED_ROOT=SPACED_ROOT="$SPLIT_PARENT/GH Repos/proj"   # splits into ".../GH" + "Repos/proj/validate.
+  L43: new_cmd="bash $(printf '%q' "$SPACED_ROOT/validate.sh")"     # QUOTED — the fixed form
+      via SPACED_ROOT=SPACED_ROOT="$SPLIT_PARENT/GH Repos/proj"   # splits into ".../GH" + "Repos/proj/validate.
+  L64: printf '#!/usr/bin/env bash\ntouch "%s/gate-ran"\nexit 1\n' "$WORK" > "$ROOT/validate.sh"
+      via ROOT=ROOT="$PARENT/GH Repos/target"
+gh349-releases-roadmap-vendored.sh
+  L119: faqs="$ROOT_DIR/RELEASES-DB-FAQS.md"
+      via ROOT_DIR=ROOT_DIR="$(cd "$HERE/.." && pwd)"
+gh35-test-tiers.sh
+  L25: V="$REPO/validate.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L187: cp "$REPO/githooks/install.sh" "$r/githooks/install.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L349: "grep -q -- '--paths-file' '$REPO/githooks/pre-push'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L351: "grep -q '_tier\" = \"2\"' '$REPO/githooks/pre-push'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L363: cp "$REPO/ci-local.sh" "$R7/ci-local.sh"; chmod +x "$R7/ci-local.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh353-vendored-router-audit.sh
+  L121: cat > "$R_REL_CLEAN/ROUTER.md" <<'MD'
+      via R_REL_CLEAN=R_REL_CLEAN="$(mkrepo rel_clean)"
+  L141: cat > "$R_REL_STALE/ROUTER.md" <<'MD'
+      via R_REL_STALE=R_REL_STALE="$(mkrepo rel_stale)"
+  L161: cat > "$R_REL_UNSCOPED/ROUTER.md" <<'MD'
+      via R_REL_UNSCOPED=R_REL_UNSCOPED="$(mkrepo rel_unscoped)"
+  L177: cat > "$R_REL_NO_RMI/ROUTER.md" <<'MD'
+      via R_REL_NO_RMI=R_REL_NO_RMI="$(mkrepo rel_no_rmi)"
+  L192: cat > "$R_REL_OBSOLETE_DASH/ROUTER.md" <<'MD'
+      via R_REL_OBSOLETE_DASH=R_REL_OBSOLETE_DASH="$(mkrepo rel_obsolete_dash)"
+  L208: cat > "$R_REL_HIST_DASH/ROUTER.md" <<'MD'
+      via R_REL_HIST_DASH=R_REL_HIST_DASH="$(mkrepo rel_hist_dash)"
+  L224: cat > "$R_REL_NEG_GEN_DASH/ROUTER.md" <<'MD'
+      via R_REL_NEG_GEN_DASH=R_REL_NEG_GEN_DASH="$(mkrepo rel_neg_gen_dash)"
+  L240: cat > "$R_REL_NOT_A_GEN/ROUTER.md" <<'MD'
+      via R_REL_NOT_A_GEN=R_REL_NOT_A_GEN="$(mkrepo rel_not_a_gen)"
+  L256: cat > "$R_REL_GEN_MANIFEST/ROUTER.md" <<'MD'
+      via R_REL_GEN_MANIFEST=R_REL_GEN_MANIFEST="$(mkrepo rel_gen_manifest)"
+  L272: cat > "$R_REL_NEG_DB_SOURCE/ROUTER.md" <<'MD'
+      via R_REL_NEG_DB_SOURCE=R_REL_NEG_DB_SOURCE="$(mkrepo rel_neg_db_source)"
+  L288: cat > "$R_REL_COMPAT_DB/ROUTER.md" <<'MD'
+      via R_REL_COMPAT_DB=R_REL_COMPAT_DB="$(mkrepo rel_compat_db)"
+  L304: cat > "$R_REL_MODE_TOKEN_ONLY/ROUTER.md" <<'MD'
+      via R_REL_MODE_TOKEN_ONLY=R_REL_MODE_TOKEN_ONLY="$(mkrepo rel_mode_token_only)"
+  L320: cat > "$R_REL_UNRELATED_FROZEN/ROUTER.md" <<'MD'
+      via R_REL_UNRELATED_FROZEN=R_REL_UNRELATED_FROZEN="$(mkrepo rel_unrelated_frozen)"
+  L336: cat > "$R_REL_NEG_DASH/ROUTER.md" <<'MD'
+      via R_REL_NEG_DASH=R_REL_NEG_DASH="$(mkrepo rel_neg_dash)"
+  L352: cat > "$R_REL_HIST_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_HIST_STARTUP=R_REL_HIST_STARTUP="$(mkrepo rel_hist_startup)"
+  L368: cat > "$R_REL_PURPOSE_FREE/ROUTER.md" <<'MD'
+      via R_REL_PURPOSE_FREE=R_REL_PURPOSE_FREE="$(mkrepo rel_purpose_free)"
+  L384: cat > "$R_REL_PF_UNRELATED/ROUTER.md" <<'MD'
+      via R_REL_PF_UNRELATED=R_REL_PF_UNRELATED="$(mkrepo rel_pf_unrelated)"
+  L400: cat > "$R_REL_NOT_CURRENT_DASH/ROUTER.md" <<'MD'
+      via R_REL_NOT_CURRENT_DASH=R_REL_NOT_CURRENT_DASH="$(mkrepo rel_not_current_dash)"
+  L416: cat > "$R_REL_MULTI_CLAUSE/ROUTER.md" <<'MD'
+      via R_REL_MULTI_CLAUSE=R_REL_MULTI_CLAUSE="$(mkrepo rel_multi_clause)"
+  L433: cat > "$R_REL_HIST_ACTIVE_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_HIST_ACTIVE_STARTUP=R_REL_HIST_ACTIVE_STARTUP="$(mkrepo rel_hist_active_startup)"
+  L454: cat > "$R_REL_CONJ_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_CONJ_STARTUP=R_REL_CONJ_STARTUP="$(mkrepo rel_conj_startup)"
+  L471: cat > "$R_REL_WHILE_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_WHILE_STARTUP=R_REL_WHILE_STARTUP="$(mkrepo rel_while_startup)"
+  L488: cat > "$R_REL_COLON_ACTIVE/ROUTER.md" <<'MD'
+      via R_REL_COLON_ACTIVE=R_REL_COLON_ACTIVE="$(mkrepo rel_colon_active)"
+  L504: cat > "$R_REL_NOT_LEGACY/ROUTER.md" <<'MD'
+      via R_REL_NOT_LEGACY=R_REL_NOT_LEGACY="$(mkrepo rel_not_legacy)"
+  L520: cat > "$R_REL_PROSE_ROLE/ROUTER.md" <<'MD'
+      via R_REL_PROSE_ROLE=R_REL_PROSE_ROLE="$(mkrepo rel_prose_role)"
+  L537: cat > "$R_REL_PREFIX_PROSE/ROUTER.md" <<'MD'
+      via R_REL_PREFIX_PROSE=R_REL_PREFIX_PROSE="$(mkrepo rel_prefix_prose)"
+  L558: cat > "$R_REL_COMPOUND_ROLE/ROUTER.md" <<'MD'
+      via R_REL_COMPOUND_ROLE=R_REL_COMPOUND_ROLE="$(mkrepo rel_compound_role)"
+  L574: comp_content="$(cat "$R_REL_COMPOUND_ROLE/ROUTER.md")"
+      via R_REL_COMPOUND_ROLE=R_REL_COMPOUND_ROLE="$(mkrepo rel_compound_role)"
+  L582: cat > "$R_REL_ASTERISK/ROUTER.md" <<'MD'
+      via R_REL_ASTERISK=R_REL_ASTERISK="$(mkrepo rel_asterisk)"
+  L598: cat > "$R_REL_OPEN_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_OPEN_STARTUP=R_REL_OPEN_STARTUP="$(mkrepo rel_open_startup)"
+  L615: cat > "$R_REL_CONSULT_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_CONSULT_STARTUP=R_REL_CONSULT_STARTUP="$(mkrepo rel_consult_startup)"
+  L632: cat > "$R_REL_USE_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_USE_STARTUP=R_REL_USE_STARTUP="$(mkrepo rel_use_startup)"
+  L649: cat > "$R_REL_NOT_FROZEN_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_NOT_FROZEN_STARTUP=R_REL_NOT_FROZEN_STARTUP="$(mkrepo rel_not_frozen_startup)"
+  L666: cat > "$R_REL_LINK_STARTUP/ROUTER.md" <<'MD'
+      via R_REL_LINK_STARTUP=R_REL_LINK_STARTUP="$(mkrepo rel_link_startup)"
+  L683: cat > "$R_REL_NO_START/ROUTER.md" <<'MD'
+      via R_REL_NO_START=R_REL_NO_START="$(mkrepo rel_no_start)"
+  L697: cat > "$R_REL_DUP_SECT/ROUTER.md" <<'MD'
+      via R_REL_DUP_SECT=R_REL_DUP_SECT="$(mkrepo rel_dup_sect)"
+  L717: cat > "$R_REL_PDDA_CUSTOM/ROUTER.md" <<'MD'
+      via R_REL_PDDA_CUSTOM=R_REL_PDDA_CUSTOM="$(mkrepo rel_pdda_custom)"
+  L731: pdda_content="$(cat "$R_REL_PDDA_CUSTOM/ROUTER.md")"
+      via R_REL_PDDA_CUSTOM=R_REL_PDDA_CUSTOM="$(mkrepo rel_pdda_custom)"
+  L738: cat > "$R_REL_CUSTOM_STEP/ROUTER.md" <<'MD'
+      via R_REL_CUSTOM_STEP=R_REL_CUSTOM_STEP="$(mkrepo rel_custom_step)"
+  L751: with open('$R_REL_CUSTOM_STEP/ROUTER.md', 'rb') as f:
+      via R_REL_CUSTOM_STEP=R_REL_CUSTOM_STEP="$(mkrepo rel_custom_step)"
+  L763: with open('$R_REL_CUSTOM_STEP/ROUTER.md', 'rb') as f:
+      via R_REL_CUSTOM_STEP=R_REL_CUSTOM_STEP="$(mkrepo rel_custom_step)"
+  L776: cat > "$R_REL_HIST_READ/ROUTER.md" <<'MD'
+      via R_REL_HIST_READ=R_REL_HIST_READ="$(mkrepo rel_hist_read)"
+  L791: hist_content="$(cat "$R_REL_HIST_READ/ROUTER.md")"
+      via R_REL_HIST_READ=R_REL_HIST_READ="$(mkrepo rel_hist_read)"
+  L798: cat > "$R_REL_VALID_NEG/ROUTER.md" <<'MD'
+      via R_REL_VALID_NEG=R_REL_VALID_NEG="$(mkrepo rel_valid_neg)"
+  L815: cat > "$R_REL_FENCED/ROUTER.md" <<'MD'
+      via R_REL_FENCED=R_REL_FENCED="$(mkrepo rel_fenced)"
+  L839: cat > "$R_REL_DUP/ROUTER.md" <<'MD'
+      via R_REL_DUP=R_REL_DUP="$(mkrepo rel_dup)"
+  L853: cli_count="$(grep -c "releases_app.py roadmap list" "$R_REL_DUP/ROUTER.md")"
+      via R_REL_DUP=R_REL_DUP="$(mkrepo rel_dup)"
+  L860: role_sect_count="$(grep -c "## Role split" "$R_REL_DUP_SECT/ROUTER.md")"
+      via R_REL_DUP_SECT=R_REL_DUP_SECT="$(mkrepo rel_dup_sect)"
+  L861: start_sect_count="$(grep -c "## Startup sequence" "$R_REL_DUP_SECT/ROUTER.md")"
+      via R_REL_DUP_SECT=R_REL_DUP_SECT="$(mkrepo rel_dup_sect)"
+  L869: cat > "$R_REL_PREFIXED_CUSTOM/ROUTER.md" <<'MD'
+      via R_REL_PREFIXED_CUSTOM=R_REL_PREFIXED_CUSTOM="$(mkrepo rel_prefixed_custom)"
+  L883: with open('$R_REL_PREFIXED_CUSTOM/ROUTER.md', 'rb') as f:
+      via R_REL_PREFIXED_CUSTOM=R_REL_PREFIXED_CUSTOM="$(mkrepo rel_prefixed_custom)"
+  L900: with open('$R_REL_PREFIXED_CUSTOM/ROUTER.md', 'rb') as f:
+      via R_REL_PREFIXED_CUSTOM=R_REL_PREFIXED_CUSTOM="$(mkrepo rel_prefixed_custom)"
+  L924: printf "# ROUTER.md\r\n\r\n## Role split\r\n- \`ROADMAP.md\` = active pointer ledger\r\n\r\n%b\r\n## Startup s
+      via R_REL_CRLF=R_REL_CRLF="$(mkrepo rel_crlf)"
+  L928: with open('$R_REL_CRLF/ROUTER.md', 'rb') as f:
+      via R_REL_CRLF=R_REL_CRLF="$(mkrepo rel_crlf)"
+  L944: with open('$R_REL_CRLF/ROUTER.md', 'rb') as f:
+      via R_REL_CRLF=R_REL_CRLF="$(mkrepo rel_crlf)"
+  L955: cp "$R_REL_CRLF/ROUTER.md" "$WORK/router_pass1.bin"
+      via R_REL_CRLF=R_REL_CRLF="$(mkrepo rel_crlf)"
+  L957: cmp "$WORK/router_pass1.bin" "$R_REL_CRLF/ROUTER.md" >/dev/null 2>&1; rc_idemp=$?
+      via R_REL_CRLF=R_REL_CRLF="$(mkrepo rel_crlf)"
+  L964: printf '# ROUTER.md\n## Role split\n## Startup sequence\n1. Read ROADMAP.md\n' > "$R_REL_EMPTY_ROLE/ROUTER.md"
+      via R_REL_EMPTY_ROLE=R_REL_EMPTY_ROLE="$(mkrepo rel_empty_role)"
+  L974: cat > "$R_REL_REPEAT_CUSTOM/ROUTER.md" <<'MD'
+      via R_REL_REPEAT_CUSTOM=R_REL_REPEAT_CUSTOM="$(mkrepo rel_repeat_custom)"
+  L985: repeat_content="$(cat "$R_REL_REPEAT_CUSTOM/ROUTER.md")"
+      via R_REL_REPEAT_CUSTOM=R_REL_REPEAT_CUSTOM="$(mkrepo rel_repeat_custom)"
+  L986: repeat_count="$(grep -c "CUSTOM.md" "$R_REL_REPEAT_CUSTOM/ROUTER.md")"
+      via R_REL_REPEAT_CUSTOM=R_REL_REPEAT_CUSTOM="$(mkrepo rel_repeat_custom)"
+  L993: printf '# ROUTER.md\n## Role split\n- `ROADMAP.md` = active work\n- `LF_LINE.md` = line with LF\n- `CRLF_LINE.
+      via R_REL_MIXED_TERM=R_REL_MIXED_TERM="$(mkrepo rel_mixed_term)"
+  L997: with open('$R_REL_MIXED_TERM/ROUTER.md', 'rb') as f:
+      via R_REL_MIXED_TERM=R_REL_MIXED_TERM="$(mkrepo rel_mixed_term)"
+  L1010: cat > "$R_PDDA_COMMENT/ROUTER.md" <<'MD'
+      via R_PDDA_COMMENT=R_PDDA_COMMENT="$(mkrepo pdda_comment)"
+  L1027: cat > "$R_PDDA_PREFIX/ROUTER.md" <<'MD'
+      via R_PDDA_PREFIX=R_PDDA_PREFIX="$(mkrepo pdda_prefix)"
+  L1044: cat > "$R_PDDA_WS/ROUTER.md" <<'MD'
+      via R_PDDA_WS=R_PDDA_WS="$(mkrepo pdda_ws)"
+  L1073: cat > "$R_LEG_CLEAN/ROUTER.md" <<'MD'
+      via R_LEG_CLEAN=R_LEG_CLEAN="$(mkrepo leg_clean)"
+  L1090: cat > "$R_LEG_MD_LINK/ROUTER.md" <<'MD'
+      via R_LEG_MD_LINK=R_LEG_MD_LINK="$(mkrepo leg_md_link)"
+  L1104: cat > "$R_LEG_NOT_FROZEN/ROUTER.md" <<'MD'
+      via R_LEG_NOT_FROZEN=R_LEG_NOT_FROZEN="$(mkrepo leg_not_frozen)"
+  L1118: cat > "$R_LEG_OLD_API/ROUTER.md" <<'MD'
+      via R_LEG_OLD_API=R_LEG_OLD_API="$(mkrepo leg_old_api)"
+  L1131: old_api_content="$(cat "$R_LEG_OLD_API/ROUTER.md")"
+      via R_LEG_OLD_API=R_LEG_OLD_API="$(mkrepo leg_old_api)"
+  L1137: cat > "$R_LEG_HIST_CHANGELOG/ROUTER.md" <<'MD'
+      via R_LEG_HIST_CHANGELOG=R_LEG_HIST_CHANGELOG="$(mkrepo leg_hist_changelog)"
+  L1150: cl_content="$(cat "$R_LEG_HIST_CHANGELOG/ROUTER.md")"
+      via R_LEG_HIST_CHANGELOG=R_LEG_HIST_CHANGELOG="$(mkrepo leg_hist_changelog)"
+  L1156: cat > "$R_LEG_CUSTOM_STEP/ROUTER.md" <<'MD'
+      via R_LEG_CUSTOM_STEP=R_LEG_CUSTOM_STEP="$(mkrepo leg_custom_step)"
+  L1170: with open('$R_LEG_CUSTOM_STEP/ROUTER.md', 'rb') as f:
+      via R_LEG_CUSTOM_STEP=R_LEG_CUSTOM_STEP="$(mkrepo leg_custom_step)"
+  L1182: with open('$R_LEG_CUSTOM_STEP/ROUTER.md', 'rb') as f:
+      via R_LEG_CUSTOM_STEP=R_LEG_CUSTOM_STEP="$(mkrepo leg_custom_step)"
+  L1194: cat > "$R_LEG_DEPLOY_POLICY/ROUTER.md" <<'MD'
+      via R_LEG_DEPLOY_POLICY=R_LEG_DEPLOY_POLICY="$(mkrepo leg_deploy_policy)"
+  L1208: cat > "$R_LEG_ARCHIVED/ROUTER.md" <<'MD'
+      via R_LEG_ARCHIVED=R_LEG_ARCHIVED="$(mkrepo leg_archived)"
+  L1222: cat > "$R_LEG_FALSE_FROZEN/ROUTER.md" <<'MD'
+      via R_LEG_FALSE_FROZEN=R_LEG_FALSE_FROZEN="$(mkrepo leg_false_frozen)"
+  L1237: cat > "$R_LEG_TWO_LINE/ROUTER.md" <<'MD'
+      via R_LEG_TWO_LINE=R_LEG_TWO_LINE="$(mkrepo leg_two_line)"
+  L1253: cat > "$R_LEG_MIXED_ROLE/ROUTER.md" <<'MD'
+      via R_LEG_MIXED_ROLE=R_LEG_MIXED_ROLE="$(mkrepo leg_mixed_role)"
+  L1269: cat > "$R_LEG_ASTERISK/ROUTER.md" <<'MD'
+      via R_LEG_ASTERISK=R_LEG_ASTERISK="$(mkrepo leg_asterisk)"
+  L1283: cat > "$R_LEG_INACTIVE_ROLE/ROUTER.md" <<'MD'
+      via R_LEG_INACTIVE_ROLE=R_LEG_INACTIVE_ROLE="$(mkrepo leg_inactive_role)"
+  L1298: cat > "$R_LEG_DB_ROLE/ROUTER.md" <<'MD'
+      via R_LEG_DB_ROLE=R_LEG_DB_ROLE="$(mkrepo leg_db_role)"
+  L1312: cat > "$R_LEG_DEPLOY_START/ROUTER.md" <<'MD'
+      via R_LEG_DEPLOY_START=R_LEG_DEPLOY_START="$(mkrepo leg_deploy_start)"
+  L1326: cat > "$R_LEG_DEPLOY_NEG_START/ROUTER.md" <<'MD'
+      via R_LEG_DEPLOY_NEG_START=R_LEG_DEPLOY_NEG_START="$(mkrepo leg_deploy_neg_start)"
+  L1340: cat > "$R_LEG_START_FROZEN/ROUTER.md" <<'MD'
+      via R_LEG_START_FROZEN=R_LEG_START_FROZEN="$(mkrepo leg_start_frozen)"
+  L1355: touch "$R_LEG_HIST_REF/ROUTER.md"
+      via R_LEG_HIST_REF=R_LEG_HIST_REF="$(mkrepo leg_hist_ref)"
+  L1356: cat > "$R_LEG_HIST_REF/ROUTER.md" <<'MD'
+      via R_LEG_HIST_REF=R_LEG_HIST_REF="$(mkrepo leg_hist_ref)"
+  L1370: cat > "$R_LEG_NEG_READ/ROUTER.md" <<'MD'
+      via R_LEG_NEG_READ=R_LEG_NEG_READ="$(mkrepo leg_neg_read)"
+  L1385: cat > "$R_LEG_START_CONTRADICT/ROUTER.md" <<'MD'
+      via R_LEG_START_CONTRADICT=R_LEG_START_CONTRADICT="$(mkrepo leg_start_contradict)"
+  L1399: cat > "$R_LEG_START_MIXED/ROUTER.md" <<'MD'
+      via R_LEG_START_MIXED=R_LEG_START_MIXED="$(mkrepo leg_start_mixed)"
+  L1413: cat > "$R_LEG_SQL_START/ROUTER.md" <<'MD'
+      via R_LEG_SQL_START=R_LEG_SQL_START="$(mkrepo leg_sql_start)"
+  L1427: cat > "$R_LEG_NO_ROLE/ROUTER.md" <<'MD'
+      via R_LEG_NO_ROLE=R_LEG_NO_ROLE="$(mkrepo leg_no_role)"
+  L1439: cat > "$R_LEG_NO_START/ROUTER.md" <<'MD'
+      via R_LEG_NO_START=R_LEG_NO_START="$(mkrepo leg_no_start)"
+  L1452: cat > "$R_LEG_LEFTOVER/ROUTER.md" <<'MD'
+      via R_LEG_LEFTOVER=R_LEG_LEFTOVER="$(mkrepo leg_leftover)"
+  L1467: cat > "$R_LEG_DRIFT/ROUTER.md" <<'MD'
+      via R_LEG_DRIFT=R_LEG_DRIFT="$(mkrepo leg_drift)"
+  L1483: content_leg="$(cat "$R_LEG_DRIFT/ROUTER.md")"
+      via R_LEG_DRIFT=R_LEG_DRIFT="$(mkrepo leg_drift)"
+  L1500: touch "$R_UNREADABLE/ROUTER.md"
+      via R_UNREADABLE=R_UNREADABLE="$(mkrepo unreadable)"
+  L1501: chmod 000 "$R_UNREADABLE/ROUTER.md" 2>/dev/null || true
+      via R_UNREADABLE=R_UNREADABLE="$(mkrepo unreadable)"
+  L1503: if [ ! -r "$R_UNREADABLE/ROUTER.md" ]; then
+      via R_UNREADABLE=R_UNREADABLE="$(mkrepo unreadable)"
+  L1507: chmod 644 "$R_UNREADABLE/ROUTER.md"
+      via R_UNREADABLE=R_UNREADABLE="$(mkrepo unreadable)"
+  L1520: cat > "$R_REL_STALE/ROUTER.md" <<'MD'
+      via R_REL_STALE=R_REL_STALE="$(mkrepo rel_stale)"
+gh365-driver-lane-registry.sh
+  L34: LANE="$(sed -n '/^DRIVER_LOCK_LANE=/s/^DRIVER_LOCK_LANE="//p' "$REPO/validate.sh" | tr -d '"')"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L36: TESTS_TEXT="$(sed -n '/^TESTS=(/,/^)/p' "$REPO/validate.sh")"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh365-pdda-gov-scan.sh
+  L159: printf '# fixture index\n\nRead [guide](guide.md) and the missing [dead](dead-walkthrough.md).\n' > "$F/ROUTER
+      via F=F="$WORK/fixture-root"
+gh365-runner-envelope.sh
+  L143: grep -q 'test/lib/runner-envelope.sh' "$REPO/validate.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L146: grep -q 'test/lib/runner-envelope.sh' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L151: grep -q 'validate-harness.XXXXXX' "$REPO/validate.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L154: grep -q 'ci-local-identity.XXXXXX' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L158: _lin="$(grep -n 'runner-envelope.sh' "$REPO/ci-local.sh" | head -1 | cut -d: -f1)"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L159: _sui="$(grep -n 'RELAY_SELF_SUFFICIENCY_SKIP=1 step "validate.sh suite"' "$REPO/ci-local.sh" | head -1 | cut -
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L164: grep -q 'gate-record.sh --suite-log' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L167: if grep -Eq 'gate-record\.sh.*\|\| true' "$REPO/ci-local.sh"; then
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L186: _ln_py="$(grep -n 'pytest "$HERE/test/test_python_layer.py"' "$REPO/ci-local.sh" | head -1 | cut -d: -f1)"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L187: _ln_gm="$(grep -n 'gamma-poison/poison.patch' "$REPO/ci-local.sh" | head -1 | cut -d: -f1)"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L188: _ln_vs="$(grep -n '^validate_suite() {' "$REPO/ci-local.sh" | cut -d: -f1)"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L189: _ln_ve="$(awk "/^validate_suite\(\) {/,/^}/" "$REPO/ci-local.sh" | tail -1 >/dev/null; grep -n '^}' "$REPO/ci-
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L189: _ln_ve="$(awk "/^validate_suite\(\) {/,/^}/" "$REPO/ci-local.sh" | tail -1 >/dev/null; grep -n '^}' "$REPO/ci-
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L196: grep -q 'python:test_python_layer.py" >> "$GATE_VERDICTS' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L197: && grep -q 'gamma-poison-staleness-probe" >> "$GATE_VERDICTS' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L206: mkdir -p "$CB/test/lib" "$CB/utils/pdda" "$CB/utils/py" "$CB/utils/hq" "$CB/relay-automation" "$CB/githooks"
+      via CB=CB="$WORK/ci-fixture"
+  L209: cp "$REPO/validate.sh" "$CB/validate.sh"; chmod +x "$CB/validate.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L209: cp "$REPO/validate.sh" "$CB/validate.sh"; chmod +x "$CB/validate.sh"
+      via CB=CB="$WORK/ci-fixture"
+  L209: cp "$REPO/validate.sh" "$CB/validate.sh"; chmod +x "$CB/validate.sh"
+      via CB=CB="$WORK/ci-fixture"
+gh365-shellcheck-parallel.sh
+  L20: _sites="$(grep -rln 'shellcheck -S error\|shellcheck "' "$REPO/ci-local.sh" "$REPO/.github/workflows/ci.yml" 2
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L20: _sites="$(grep -rln 'shellcheck -S error\|shellcheck "' "$REPO/ci-local.sh" "$REPO/.github/workflows/ci.yml" 2
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L82: grep -q 'XYZ_SHELLCHECK_JOBS:-4' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L85: grep -q 'shellcheck -S error' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L88: grep -q 'git ls-files -z' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh365-validate-telemetry.sh
+  L69: cp "$REPO/validate.sh" "$r/validate.sh"; chmod +x "$r/validate.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L177: grep -q 'test/lib/runner-telemetry.sh' "$REPO/validate.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L180: grep -q 'test/lib/runner-telemetry.sh' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L183: grep -q 'rt_emit stage stage "$name"' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L186: grep -Eq 'rt_suite sequential "\$t"' "$REPO/ci-local.sh" \
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L189: grep -q 'vp_run_one "\$t" "driver-lock"' "$REPO/validate.sh" && grep -q "vp_run_one \"\$1\" pool" "$REPO/valid
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L189: grep -q 'vp_run_one "\$t" "driver-lock"' "$REPO/validate.sh" && grep -q "vp_run_one \"\$1\" pool" "$REPO/valid
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L197: _decl="$(sed -n '/^TESTS=(/,/^)/p' "$REPO/validate.sh" | grep -oE '"[^"]+\.sh"' | wc -l | tr -d ' ')"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L198: _list="$(bash "$REPO/validate.sh" --list | wc -l | tr -d ' ')"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh378-gate-requires-green-suite.sh
+  L51: cat > "$ROOT/validate.sh" << 'SH_EOF'
+      via ROOT=ROOT="$WORK/target"
+  L55: chmod +x "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L62: cat > "$ROOT/validate.sh" << 'SH_EOF'
+      via ROOT=ROOT="$WORK/target"
+  L66: chmod +x "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L79: cat > "$ROOT/validate.sh" << 'SH_EOF'
+      via ROOT=ROOT="$WORK/target"
+  L83: chmod +x "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L91: grep -q "pre-advance-baseline" "$ROOT_REPO/README.md" \
+      via ROOT_REPO=ROOT_REPO="$(cd "$(dirname "$0")/.." && pwd)"
+gh379-canary-uses-validate.sh
+  L41: WF="$REPO/.github/workflows/ci.yml"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L42: V="$REPO/validate.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh379-claude-builder-diagnosis.sh
+  L16: printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L76: grep -q "CLAUDE_MAX_BUDGET" "$ROOT_REPO/README.md" \
+      via ROOT_REPO=ROOT_REPO="$(cd "$(dirname "$0")/.." && pwd)"
+gh382-marathon-memory-telemetry.sh
+  L16: printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+gh384-crash-recovery.sh
+  L205: readme="$ROOT_DIR/README.md"
+      via ROOT_DIR=ROOT_DIR="$(cd "$HERE/.." && pwd)"
+gh390-gate-guard.sh
+  L36: printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+gh407-gate-ran-attribution.sh
+  L38: printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L82: printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L100: printf '#!/usr/bin/env bash\nexit 1\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L120: printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+gh419-gate-inventory.sh
+  L11: cat >"$FIXTURE/validate.sh" <<'EOF'
+      via FIXTURE=FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/gh419-gate-inventory.XXXXXX")"
+gh441-gate-env-contract.sh
+  L145: /usr/bin/grep -q "gate-env.sh" "$ROOT/validate.sh" \
+      via ROOT=ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+  L148: ! /usr/bin/grep -qE '^unset ALLOW_PATHS RELAY_FILE' "$ROOT/validate.sh" \
+      via ROOT=ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+gh457-gate-tiers.sh
+  L95: printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L129: printf '#!/usr/bin/env bash\nsleep 2\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L141: printf '#!/usr/bin/env bash\nsleep 30\nexit 0\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+  L150: printf '#!/usr/bin/env bash\nexit 1\n' > "$ROOT/validate.sh"
+      via ROOT=ROOT="$WORK/target"
+gh496-phase2-reconciliation-views.sh
+  L81: "$REPO/TESTS-RESULTS/2026-09-10+GH-999" "$REPO/.github/workflows"
+      via REPO=REPO="$WORK/fixture-repo"
+  L82: touch "$REPO/.github/workflows/wave-reconcile.yml"
+      via REPO=REPO="$WORK/fixture-repo"
+gh509-gate-evidence.sh
+  L128: WF="$ROOT_DIR/.github/workflows/ci.yml"
+      via ROOT_DIR=ROOT_DIR="$(cd "$HERE/.." && pwd)"
+gh527-destructive-git-guard.sh
+  L141: ok "AGENTS.md rail names reset --hard"      "grep -q 'reset --hard' '$REPO/AGENTS.md'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L142: ok "AGENTS.md rail names checkout -- <path>" "grep -q 'checkout --' '$REPO/AGENTS.md'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L143: ok "AGENTS.md rail names stash"              "grep -qi 'git stash' '$REPO/AGENTS.md'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L144: ok "AGENTS.md rail points at the guard"      "grep -q 'gh527-destructive-git-guard' '$REPO/AGENTS.md'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh536-evidence-detail.sh
+  L104: "grep -q 'gate-record.sh --suite-log' '$REPO/ci-local.sh'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L105: ok "ci-local.sh captures per-suite verdicts" "grep -q 'GATE_VERDICTS' '$REPO/ci-local.sh'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L107: "grep -q 'PIPESTATUS\[0\]' '$REPO/ci-local.sh'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh544-parallel-default.sh
+  L28: V="$REPO/validate.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L110: "! grep -qE '^[[:space:]]*(bash )?\\./?validate\\.sh' '$REPO/ci-local.sh'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L112: "grep -q 'TESTS=(' '$REPO/ci-local.sh'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L114: "grep -qE 'run: \\./validate\\.sh --sequential' '$REPO/.github/workflows/ci.yml'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L116: "! grep -qE 'run: \\./validate\\.sh[[:space:]]*\$' '$REPO/.github/workflows/ci.yml'"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh544-pre-push-gate.sh
+  L21: HOOK="$REPO/githooks/pre-push"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L22: INSTALL="$REPO/githooks/install.sh"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L127: printf '# docs-only\n' > "$R_DOC/README.md"
+      via R_DOC=R_DOC="$(mkrepo 1)"   # a red validate.sh proves it did NOT run on the docs route
+  L492: cp "$INSTALL" "$R_I/githooks/install.sh"
+      via R_I=R_I="$(mkrepo 0)"
+  L523: "grep -q 'run the gate before anything reaches the remote' '$R_I/githooks/pre-push'"
+      via R_I=R_I="$(mkrepo 0)"
+  L578: cp "$INSTALL" "$R_P/githooks/install.sh"
+      via R_P=R_P="$(mkrepo 1)"   # RED gate
+  L633: CI="$REPO/.github/workflows/ci.yml"
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+gh642-consumer-fruit.sh
+  L211: grep -q 'cp -R "$RTL_ROOT/node_modules" "$wt/node_modules"' "$RTL" && pass "worktree deps are a COPY (containm
+      via RTL_ROOT=$RTL_ROOT
+  L214: mkdir -p "$FIX/node_modules/pkg"; printf 'x' > "$FIX/node_modules/pkg/index.js"
+      via FIX=FIX="$WORK/rtl-fixture"; mkdir -p "$FIX"; require_fixture "$FIX" rtl-fixture
+  L214: mkdir -p "$FIX/node_modules/pkg"; printf 'x' > "$FIX/node_modules/pkg/index.js"
+      via FIX=FIX="$WORK/rtl-fixture"; mkdir -p "$FIX"; require_fixture "$FIX" rtl-fixture
+  L241: SRC="$WORK/init-src"; mkdir -p "$SRC/githooks"
+      via SRC=$SRC
+  L244: printf '#!/usr/bin/env bash\nprintf "#!/bin/sh\\nexit 0\\n" > .git/hooks/pre-push\nchmod +x .git/hooks/pre-pus
+      via SRC=SRC="$WORK/init-src"; mkdir -p "$SRC/githooks"
+  L244: printf '#!/usr/bin/env bash\nprintf "#!/bin/sh\\nexit 0\\n" > .git/hooks/pre-push\nchmod +x .git/hooks/pre-pus
+      via SRC=SRC="$WORK/init-src"; mkdir -p "$SRC/githooks"
+gh649-pdda-migration.sh
+  L25: if grep -Eq 'standalone.*source-of-truth|RELEASES.md is retired|GH-568' "$T/AGENTS.md" "$T/PROJECT/PDDA.md"; t
+      via T=T="$BOX/target"; mkdir "$T"; require_fixture "$T"; git -C "$T" init -q
+hq.sh
+  L28: : > "$ACME/ROUTER.md"; : > "$ACME/AGENTS.md"; : > "$ACME/ROADMAP.md"
+      via ACME=ACME="$TMP/repos/acme-app"; mkdir -p "$ACME/.git" "$ACME/PROJECT/2-WORKING" "$ACME/utils/p
+  L28: : > "$ACME/ROUTER.md"; : > "$ACME/AGENTS.md"; : > "$ACME/ROADMAP.md"
+      via ACME=ACME="$TMP/repos/acme-app"; mkdir -p "$ACME/.git" "$ACME/PROJECT/2-WORKING" "$ACME/utils/p
+litmus-release.sh
+  L249: } > "$FIX/validate.sh"
+      via FIX=FIX="$WORK/tree"
+  L266: /usr/bin/grep -v 'gh401-dry-run-no-mutation.sh' "$FIX/validate.sh" > "$FIX/validate.sh.new"
+      via FIX=FIX="$WORK/tree"
+  L266: /usr/bin/grep -v 'gh401-dry-run-no-mutation.sh' "$FIX/validate.sh" > "$FIX/validate.sh.new"
+      via FIX=FIX="$WORK/tree"
+  L267: mv "$FIX/validate.sh.new" "$FIX/validate.sh"
+      via FIX=FIX="$WORK/tree"
+  L267: mv "$FIX/validate.sh.new" "$FIX/validate.sh"
+      via FIX=FIX="$WORK/tree"
+marathon-plan.sh
+  L149: printf 'changelog mentions gh-220-partial here\n' >"$B/CHANGELOG.md"
+      via B=B="$WORK/B"; mkdir -p "$B"; echo "gh-220-partial" >"$B/.branches"
+  L296: printf 'changelog mentions gh-950-existing here (#950)\n' >"$J/CHANGELOG.md"
+      via J=J="$WORK/J"; mkdir -p "$J"; : >"$J/.branches"
+meter-release.sh
+  L175: local base="${1##*/}" validate="${2:-$ROOT/validate.sh}"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L207: local validate="${1:-$ROOT/validate.sh}" baselines="${2:-$ROOT/test/baselines}"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L499: printf '# Changelog\n\nAll notable changes.\n' > "$REF/CHANGELOG.md"
+      via REF=REF="$TMP/ref"
+  L505: cp "$REF/CHANGELOG.md" "$FIX/CHANGELOG.md"
+      via REF=REF="$TMP/ref"
+  L505: cp "$REF/CHANGELOG.md" "$FIX/CHANGELOG.md"
+      via FIX=FIX="$TMP/artifact"
+  L508: printf '# XYZ\n\n    %s\n' "$HAPPY_PATH_CMD" > "$FIX/README.md"
+      via FIX=FIX="$TMP/artifact"
+  L524: printf "see /Users/realdev/secret-notes.md\\n" >> "$FIX/README.md"
+      via FIX=FIX="$TMP/artifact"
+  L533: /usr/bin/sed -i.bak '/secret-notes/d' "$FIX/README.md"; rm -f "$FIX/README.md.bak"
+      via FIX=FIX="$TMP/artifact"
+  L533: /usr/bin/sed -i.bak '/secret-notes/d' "$FIX/README.md"; rm -f "$FIX/README.md.bak"
+      via FIX=FIX="$TMP/artifact"
+  L536: mv "$FIX/CHANGELOG.md" "$TMP/CHANGELOG.keep"
+      via FIX=FIX="$TMP/artifact"
+  L543: mv "$TMP/CHANGELOG.keep" "$FIX/CHANGELOG.md"
+      via FIX=FIX="$TMP/artifact"
+  L546: printf 'tampered\n' >> "$FIX/CHANGELOG.md"
+      via FIX=FIX="$TMP/artifact"
+  L553: cp "$REF/CHANGELOG.md" "$FIX/CHANGELOG.md"
+      via REF=REF="$TMP/ref"
+  L553: cp "$REF/CHANGELOG.md" "$FIX/CHANGELOG.md"
+      via FIX=FIX="$TMP/artifact"
+nightwatch-release.sh
+  L100: local base="${1##*/}" validate="${2:-$ROOT/validate.sh}"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L117: local validate="${1:-$ROOT/validate.sh}" baselines="${2:-$ROOT/test/baselines}"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L243: cp "$ROOT/validate.sh" "$TMP/validate.sh"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L243: cp "$ROOT/validate.sh" "$TMP/validate.sh"
+      via TMP=TMP="$(mktemp -d)"
+  L248: audit_manifest "$TMP/validate.sh" "$TMP/baselines"
+      via TMP=TMP="$(mktemp -d)"
+  L259: /usr/bin/grep -v '"gh388-run-log-durability.sh"' "$TMP/validate.sh" > "$TMP/v2" && mv "$TMP/v2" "$TMP/validate
+      via TMP=TMP="$(mktemp -d)"
+  L259: /usr/bin/grep -v '"gh388-run-log-durability.sh"' "$TMP/validate.sh" > "$TMP/v2" && mv "$TMP/v2" "$TMP/validate
+      via TMP=TMP="$(mktemp -d)"
+  L260: audit_manifest "$TMP/validate.sh" "$TMP/baselines" >/dev/null 2>&1
+      via TMP=TMP="$(mktemp -d)"
+  L268: cp "$ROOT/validate.sh" "$TMP/validate.sh"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L268: cp "$ROOT/validate.sh" "$TMP/validate.sh"
+      via TMP=TMP="$(mktemp -d)"
+  L270: audit_manifest "$TMP/validate.sh" "$TMP/baselines" >/dev/null 2>&1
+      via TMP=TMP="$(mktemp -d)"
+  L309: cp "$ROOT/validate.sh" "$TMP/validate.sh"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L309: cp "$ROOT/validate.sh" "$TMP/validate.sh"
+      via TMP=TMP="$(mktemp -d)"
+  L311: audit_manifest "$TMP/validate.sh" "$TMP/baselines" >/dev/null 2>&1
+      via TMP=TMP="$(mktemp -d)"
+oracle-guard.sh
+  L53: if [ -e "$ROOT/validate.sh" ]; then
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L54: SL="${TMPDIR:-/tmp}/og-alias.$$.sh"; ln -sf "$ROOT/validate.sh" "$SL"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+  L59: skip "symlink-to-oracle sub-test needs \$ROOT/validate.sh (absent in a vendored copy)"
+      via ROOT=ROOT="$(cd "$HERE/.." && pwd)"
+pdda-changelog.sh
+  L46: PDDA_CHANGELOG="$SBOX/CHANGELOG.md" \
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L53: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L65: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L77: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L94: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L107: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L124: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L135: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+  L146: cat > "$SBOX/CHANGELOG.md" <<'EOF'
+      via SBOX=SBOX="$(mktemp -d "$WORK/case.XXXXXX")"
+pdda-install-startup-docs.sh
+  L50: if cmp -s "$REPO/utils/pdda/templates/ROUTER.target.md" "$REPO/ROUTER.md"; then
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L60: n=$(grep -cE "$CANONICAL_ONLY" "$REPO/ROUTER.md" || true)
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L73: if cmp -s "$T/ROUTER.md" "$REPO/utils/pdda/templates/ROUTER.target.md"; then
+      via T=T="$(new_target fresh)"
+  L79: if cmp -s "$T/ROUTER.md" "$REPO/ROUTER.md"; then
+      via T=T="$(new_target fresh)"
+  L79: if cmp -s "$T/ROUTER.md" "$REPO/ROUTER.md"; then
+      via REPO=REPO="$(cd "$HERE/.." && pwd)"
+  L85: n=$(grep -cE "$CANONICAL_ONLY" "$T/ROUTER.md" || true)
+      via T=T="$(new_target fresh)"
+  L95: done < <(grep -oE '[A-Za-z0-9_./-]+\.sh' "$T/ROUTER.md" | sort -u)
+      via T=T="$(new_target fresh)"
+  L102: printf '# AGENTS.md\n\nMY HARD-WON REPO CONVENTIONS.\n' > "$T/AGENTS.md"
+      via T=T="$(new_target authored)"
+  L103: printf '# GUIDING-PRINCIPLES.md\n\nMY OWN PRINCIPLES.\n' > "$T/GUIDING-PRINCIPLES.md"
+      via T=T="$(new_target authored)"
+  L104: a_before=$(md5 -q "$T/AGENTS.md" 2>/dev/null || md5sum "$T/AGENTS.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L104: a_before=$(md5 -q "$T/AGENTS.md" 2>/dev/null || md5sum "$T/AGENTS.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L105: g_before=$(md5 -q "$T/GUIDING-PRINCIPLES.md" 2>/dev/null || md5sum "$T/GUIDING-PRINCIPLES.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L105: g_before=$(md5 -q "$T/GUIDING-PRINCIPLES.md" 2>/dev/null || md5sum "$T/GUIDING-PRINCIPLES.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L109: a_after=$(md5 -q "$T/AGENTS.md" 2>/dev/null || md5sum "$T/AGENTS.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L109: a_after=$(md5 -q "$T/AGENTS.md" 2>/dev/null || md5sum "$T/AGENTS.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L110: g_after=$(md5 -q "$T/GUIDING-PRINCIPLES.md" 2>/dev/null || md5sum "$T/GUIDING-PRINCIPLES.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L110: g_after=$(md5 -q "$T/GUIDING-PRINCIPLES.md" 2>/dev/null || md5sum "$T/GUIDING-PRINCIPLES.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored)"
+  L116: printf '# ROUTER.md\n\nMY OWN ROUTER.\n' > "$T/ROUTER.md"
+      via T=T="$(new_target authored-router)"
+  L117: r_before=$(md5 -q "$T/ROUTER.md" 2>/dev/null || md5sum "$T/ROUTER.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored-router)"
+  L117: r_before=$(md5 -q "$T/ROUTER.md" 2>/dev/null || md5sum "$T/ROUTER.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored-router)"
+  L119: r_after=$(md5 -q "$T/ROUTER.md" 2>/dev/null || md5sum "$T/ROUTER.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored-router)"
+  L119: r_after=$(md5 -q "$T/ROUTER.md" 2>/dev/null || md5sum "$T/ROUTER.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored-router)"
+  L126: r_forced=$(md5 -q "$T/ROUTER.md" 2>/dev/null || md5sum "$T/ROUTER.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored-router)"
+  L126: r_forced=$(md5 -q "$T/ROUTER.md" 2>/dev/null || md5sum "$T/ROUTER.md" | cut -d' ' -f1)
+      via T=T="$(new_target authored-router)"
+  L132: if cmp -s "$T/ROUTER.md" "$REPO/utils/pdda/templates/ROUTER.target.md"; then
+      via T=T="$(new_target authored-router)"
+  L259: printf '# MY ROUTER\n\nRun `my-private-deploy.sh` before shipping.\n' > "$T/ROUTER.md"
+      via T=T="$(new_target kept-router)"
+  L271: grep -q 'my-private-deploy.sh' "$T/ROUTER.md" && ok "the operator's router is left untouched" || bad "operator
+      via T=T="$(new_target kept-router)"
+phase3-signoff-guard.sh
+  L33: cp "$ROOT/ROUTER.md" "$A/ROUTER.md" 2>/dev/null || printf '# rules\n' >"$A/ROUTER.md"
+      via ROOT=ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+  L33: cp "$ROOT/ROUTER.md" "$A/ROUTER.md" 2>/dev/null || printf '# rules\n' >"$A/ROUTER.md"
+      via A=$A
+  L33: cp "$ROOT/ROUTER.md" "$A/ROUTER.md" 2>/dev/null || printf '# rules\n' >"$A/ROUTER.md"
+      via A=$A
+  L34: before="$(cksum "$A/ROUTER.md")"
+      via A=$A
+  L35: if printf 'sneak a rule edit\n' | bash "$SINK" "$A/ROUTER.md" 2>/dev/null; then
+      via A=$A
+  L40: [ "$(cksum "$A/ROUTER.md")" = "$before" ] \
+      via A=$A
+  L44: ln -s "$A/ROUTER.md" "$A/innocent.md" 2>/dev/null
+      via A=$A
+  L45: rbefore="$(cksum "$A/ROUTER.md")"
+      via A=$A
+  L51: [ "$(cksum "$A/ROUTER.md")" = "$rbefore" ] \
+      via A=$A
+  L60: if ln "$A/ROUTER.md" "$A/hardlink.md" 2>/dev/null; then
+      via A=$A
+  L61: hbefore="$(cksum "$A/ROUTER.md")"
+      via A=$A
+  L67: [ "$(cksum "$A/ROUTER.md")" = "$hbefore" ] \
+      via A=$A
+releases-skill.sh
+  L63: contains "router doc names the plural front door" "$ROOT/ROUTER.md" 'invoke `/releases`'
+      via ROOT=ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
+  L65: if grep -Eq '/release-plan|/release([^s[:alnum:]-]|$)' "$ROOT/ROUTER.md" "$ROOT/PROJECT/PDDA.md"; then
+      via ROOT=ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
+runner-loop.sh
+  L134: README_BAK="$WORK/README.md.bak"
+      via WORK=$WORK
+  L135: REAL_README="$HERE/../README.md"
+      via HERE=HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+sentinel-overlay.sh
+  L11: OV="$HERE/../sentinel-overlay"
+      via HERE=HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+swarm-preflight.sh
+  L691: printf '#!/usr/bin/env bash\nexit 0\n' >"$R/validate.sh"
+      via R=R="$WORK/gh54-fstouch"; mkdir -p "$R/PROJECT/2-WORKING" "$R/relay-automation" "$R/test"
+  L889: printf '#!/usr/bin/env bash\nexit 0\n' >"$R/validate.sh"
+      via R=R="$WORK/gh127-redirect"; mkdir -p "$R/PROJECT/2-WORKING" "$R/test"
+swe-diagram.sh
+  L327: if node "$VALIDATOR" "$HERE"/../ARCHITECTURE/*.json >/dev/null 2>&1; then
+      via HERE=HERE="$(cd "$(dirname "$0")" && pwd)"
+  L330: fail "every committed ARCHITECTURE/*.json spec passes the validator — $(node "$VALIDATOR" "$HERE"/../ARCHITECT
+      via HERE=HERE="$(cd "$(dirname "$0")" && pwd)"

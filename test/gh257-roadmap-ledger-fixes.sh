@@ -5,7 +5,7 @@
 # 3. roadmap update subcommand for parked raw_text with auditable receipt and rating sync
 # 4. staleness guard diagnostic guidance when regeneration yields no diff
 set -euo pipefail
-source test/_setup.sh "GH-257" || { echo "setup failed"; exit 1; }
+source "$(dirname "$0")/_setup.sh" "GH-257" || { echo "setup failed"; exit 1; }
 
 root="$(cd "$HERE/.." && pwd)"
 app() { python3 "$root/utils/py/releases_app.py" "$@"; }

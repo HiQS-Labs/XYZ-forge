@@ -12,6 +12,7 @@ source "$(dirname "$0")/_setup.sh" gh365-shellcheck-parallel
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
+require_forge_root ci-local.sh .github/workflows   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 command -v shellcheck >/dev/null 2>&1 || { echo "  SKIP: shellcheck not installed"; exit 0; }
 
 echo "== test: gh365-shellcheck-parallel =="

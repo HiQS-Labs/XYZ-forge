@@ -23,6 +23,7 @@ check(){ if [ "$1" = "$2" ]; then ok "$3"; else bad "$3 (want '$2', got '$1')"; 
 SBOX="$(mktemp -d "${TMPDIR:-/tmp}/pdda-install-startup.XXXXXX")"
 [ -n "$SBOX" ] && [ -d "$SBOX" ] || exit 1
 . "$HERE/lib/fixture-guard.sh"
+require_forge_root ROUTER.md   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$SBOX"
 trap 'rm -rf "$SBOX"' EXIT
 

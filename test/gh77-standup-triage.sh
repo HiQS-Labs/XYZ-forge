@@ -17,6 +17,8 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 ROOT_DIR="$(cd "$HERE/.." && pwd)"
 TRIAGE="$ROOT_DIR/skills/standup/triage.py"
 

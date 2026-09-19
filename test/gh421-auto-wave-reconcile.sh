@@ -2,6 +2,8 @@
 # GH-421: in-process CLI fixtures; never invokes git or network.
 set -euo pipefail
 GH421_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "$GH421_ROOT/test/lib/fixture-guard.sh"
+require_forge_root .github/workflows/wave-reconcile.yml   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 export PYTHONDONTWRITEBYTECODE=1
 python3 - "$GH421_ROOT" <<'PY'
 import contextlib

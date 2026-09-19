@@ -4,6 +4,8 @@ set -u
 set -o pipefail
 
 ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
+. "$ROOT/test/lib/fixture-guard.sh"
+require_forge_root ROUTER.md PROJECT/PDDA.md   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 SKILL="$ROOT/skills/releases/SKILL.md"
 INSTALLER="$ROOT/skills/releases/install.sh"
 PASS=0
