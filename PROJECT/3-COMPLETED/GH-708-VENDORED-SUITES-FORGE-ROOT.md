@@ -1,8 +1,8 @@
 ---
 title: "GH-708: suites that need forge-root-only paths are red from every vendored .xyz/ — make them witnessed skips"
-status: active
+status: Complete
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-19
 owner: unassigned
 goal: a vendored install can run any shipped suite and get either a real verdict or a named `skip: not vendored`, never a spurious red
 gh_issue: 708

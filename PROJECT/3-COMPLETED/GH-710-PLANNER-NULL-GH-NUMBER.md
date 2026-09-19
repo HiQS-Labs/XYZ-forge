@@ -1,8 +1,8 @@
 ---
 title: "GH-710: releases-mode planner crashes on a gh_number-NULL row, and rows rated by --gid never count as rated"
-status: active
+status: Complete
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-19
 owner: unassigned
 goal: the marathon planner (and therefore every consumer wave_reconcile) survives and correctly rates ledger rows that have no gh_number
 gh_issue: 710
