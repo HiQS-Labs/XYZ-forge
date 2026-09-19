@@ -2,8 +2,9 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-. "$HERE/lib/fixture-guard.sh"
-require_forge_root .git .gitignore   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
+# GH-708: forge-root only — witnessed skip in a vendored .xyz/. Conditional because gh273 re-homes
+# this script into a fixture dir that has no lib/ (it audits the script shape, not the forge).
+if [ -f "$HERE/lib/fixture-guard.sh" ]; then . "$HERE/lib/fixture-guard.sh"; require_forge_root .git .gitignore; fi
 
 # GH-401: this audit exists for GH-209 — "every test invocation of the marathon driver is
 # MARATHON_ROOT-scoped" — but its scope was two hardcoded filenames. An unscoped `--dry-run`
