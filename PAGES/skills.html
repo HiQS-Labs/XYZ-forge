@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skills — XYZ Forge</title>
+<meta name="description" content="The XYZ Forge skills that semi-automate agent supervision and drive an agent forward when it stalls or keeps bringing back the same bug: workhorse, unstuck, merge-cleanup, radar, whack-a-mole — plus the skills they call into.">
+<link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/skills.html">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">XYZ Forge</a>
+    <nav aria-label="Site">
+      <a href="index.html">Welcome</a>
+      <a href="use-cases.html">Use Cases</a>
+      <a href="how-it-works.html">How it Works</a>
+      <a href="skills.html" aria-current="page">Skills</a>
+      <a href="faq.html">FAQ</a>
+      <a href="models-harnesses.html">Models &amp; Harnesses</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="issues.html">Issues</a>
+      <a href="other-apps-tools.html">Other Apps &amp; Tools</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1>Skills for driving stalled agents</h1>
+    <p class="page-intro">Skills that semi-automate the boring parts of agent supervision and
+    proactively push an agent forward when it stalls, narrates instead of acting, or keeps bringing
+    back the same class of bug. They live in the repo under
+    <a href="https://github.com/HiQS-Labs/XYZ-forge/tree/development/skills"><code>skills/</code></a>;
+    each one opens with a "Recite this" block the agent must echo verbatim as its first line — that
+    recital is the tell that the skill actually loaded.</p>
+
+    <h2>Pick by symptom</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Symptom you are seeing</th><th>Skill</th><th>What it does in one line</th></tr></thead>
+        <tbody>
+          <tr><td>Agent is talking but nothing is moving</td><td><a href="#unstuck"><code>/unstuck</code></a></td><td>Blocking interrupt: freeze the machinery, re-anchor the milestone, take one goal-moving action.</td></tr>
+          <tr><td>Ambiguous or multi-part problem that needs a full governed pass</td><td><a href="#workhorse"><code>/workhorse</code></a></td><td>Seven-rung ladder from triage to verified, cross-model-checked execution.</td></tr>
+          <tr><td>The same bug keeps coming back</td><td><a href="#whack-a-mole"><code>/whack-a-mole</code></a></td><td>Cluster 14 days of churn, find the one root cause, file one umbrella issue.</td></tr>
+          <tr><td>Are we just fixing bugs? Is the plan still right?</td><td><a href="#radar"><code>/radar</code></a></td><td>21-day SDLC read: flow mix, regressions, release drift, coaching memo.</td></tr>
+          <tr><td>Clones and worktrees piling up, PRs unlanded</td><td><a href="#merge-cleanup"><code>/merge-cleanup</code></a></td><td>Sequence and land PRs in dependency order, then tear down clean clones safely.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>How they chain</h2>
+<pre><code>/workhorse     ──(stall / repeated non-zero exits)──►  /unstuck  ──(structural root cause)──►  /workhorse
+/merge-cleanup ──(third repair attempt refused)────►  /unstuck
+/whack-a-mole  ──(files umbrella + Cluster signature)──►  /radar re-scores it every run and is the only
+                                                          thing that calls the class "solved"</code></pre>
+    <p><code>workhorse</code> and <code>merge-cleanup</code> both carry a tripwire that self-invokes
+    <code>unstuck</code>; <code>unstuck</code> hands back to <code>workhorse</code> when the blocker
+    turns out to be structural. <code>whack-a-mole</code> files the umbrella; <code>radar</code>
+    measures whether it held.</p>
+
+    <h2 id="workhorse">Workhorse</h2>
+    <div class="card">
+      <h3>Governed end-to-end problem resolution</h3>
+      <p><strong>Use when:</strong> a task is ambiguous, multi-part, or arrives as a wall of text
+      (agent transcript, bug dump, PR review) and you want it worked through without the agent
+      guessing a patch.<br>
+      <strong>Trigger:</strong> <code>/workhorse &lt;task&gt;</code>, "workhorse", "tackle this",
+      "work through this problem", "methodical progress".<br>
+      <strong>Source:</strong> <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/workhorse/SKILL.md"><code>skills/workhorse/SKILL.md</code></a></p>
+    </div>
+<pre><code>0. Intake triage &amp; queue           ──► split the dump into atomic P0/P1/P2 items; park the rest
+1. Ground truth   (/debug-mantra)   ──► reproduce, trace the fail path, run disproofs first
+2. Least mechanism (/ponytail)      ──► YAGNI, stdlib first, extend existing subsystems, shortest diff
+3. Governance gate                  ──► AGENTS.md, SOP.md, GUIDING-PRINCIPLES.md, CHANGELOG, ledger
+4. Cross-model consensus (/consult) ──► Codex + agy in parallel; surface disagreements, never average
+5. Preservation gate                ──► classify Easy / Costly / One-way door; prove nothing is lost
+6. Governed execution               ──► minimal diff, run the runnable check, ledger closeout, next item</code></pre>
+    <p>What makes it proactive rather than just thorough:</p>
+    <ul>
+      <li><strong>Anti-downgrade rail.</strong> It may not report "Done" if the primary workflow was
+      bypassed or truncated — for example refusing to land PRs, running teardown-only, and declaring
+      victory. It resolves the blocker or reports the exact blocker.</li>
+      <li><strong>Anti-abandonment.</strong> Finishing one queue item while others remain is an
+      in-flight state, not a prompt to ask the operator what next.</li>
+      <li><strong>Tripwire to <code>/unstuck</code>.</strong> If a batch loop stops reducing queue
+      depth, or tools keep exiting non-zero without a state change, it invokes <code>/unstuck</code>
+      as a blocking interrupt instead of narrating.</li>
+      <li><strong>Orchestrator re-entry.</strong> Called from <code>merge-cleanup</code>,
+      <code>jog</code>, a marathon, or <code>/10days</code>, a repair is a checkpoint: it records the
+      outcome and re-invokes the parent with <code>--resume</code>.</li>
+      <li><strong>Fast-track.</strong> Trivial, easy-to-reverse work skips the consult rung with a
+      one-line note. Destructive, published, costly, or one-way-door actions never fast-track.</li>
+    </ul>
+
+    <h2 id="unstuck">Unstuck</h2>
+    <div class="card">
+      <h3>Goal-movement interrupt</h3>
+      <p><strong>Use when:</strong> the agent is passive, trapped in narration, halting on a tool
+      exit code, reporting activity without milestone change, overengineering, or reopening settled
+      decisions. It is a mid-flight interrupt, not another planning framework.<br>
+      <strong>Trigger:</strong> <code>/unstuck</code>, "we're stuck", "rabbit hole", "stop
+      overengineering", "the cogs are moving but the goal isn't", "get back to the plan".<br>
+      <strong>Source:</strong> <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/unstuck/SKILL.md"><code>skills/unstuck/SKILL.md</code></a></p>
+    </div>
+    <p>It also <strong>fires on its own</strong>. The agent must self-invoke on any of four tripwires,
+    without waiting for the operator:</p>
+    <ul>
+      <li>Two consecutive turns to the operator with no observable milestone change.</li>
+      <li>Tool exit-code inertia: a tool exited non-zero and the agent stopped or asked what to do
+      instead of diagnosing.</li>
+      <li>Passive narration: "Waiting for the run to finish…", "Should I continue?", "Let me know how
+      to proceed" on an in-flight task.</li>
+      <li>False completion: about to say "Done" while a core deliverable was bypassed or unattempted.</li>
+    </ul>
+    <p>The governing question is <em>what is the smallest action that changes the original goal's
+    observable state?</em></p>
+<pre><code>1. Freeze the cogs       ──► stop adding helpers, reviews, plans; record goal / milestone / last real movement
+2. Re-anchor the goal    ──► one sentence naming the nearest observable milestone ("failing test passes", "PR exists")
+3. Test the blocker      ──► "if this were fixed now, could the milestone proceed?" → goal blocker / safety / external / polish / cog
+4. Choose one move       ──► execute the accepted plan, fix one narrow blocker, use an existing seam, or ask one crisp question
+5. Act, verify, re-drive ──► one action, check the milestone itself, re-launch the primary engine (e.g. --resume), emit the receipt</code></pre>
+    <ul>
+      <li><strong>No bandages.</strong> Never disable tests, silence lint or type errors, weaken
+      contracts, or patch a call site when the invariant is broken. Structural fixes hand off to
+      <code>/workhorse</code>.</li>
+      <li><strong>Recurrence tripwire.</strong> The second time the same <em>class</em> of blocker
+      appears, a narrow fix is no longer the smallest move — escalate to <code>/workhorse</code>, or
+      take the bridge once and label it a bridge.</li>
+      <li><strong>Re-drive the engine.</strong> For <code>merge-cleanup</code>, <code>jog</code>, or a
+      marathon, a micro-fix is only the first beat; the interrupt does not exit until the orchestrator
+      is running again.</li>
+      <li><strong>Removes self-created process debt only.</strong> It never grants permission to push,
+      publish, delete, spend, or bypass a gate.</li>
+    </ul>
+    <p>Every run ends with a receipt:</p>
+<pre><code>UNSTUCK
+Goal:     &lt;original outcome&gt;
+Stall:    &lt;what was consuming motion&gt;
+Move:     &lt;single action taken or exact decision requested&gt;
+Evidence: &lt;observable milestone change or named blocker&gt;
+Queued:   &lt;genuine blockers filed to durable intake, or none&gt;
+Parked:   &lt;non-blocking cogs/polish, or none&gt;
+Next:     &lt;one next task state&gt;</code></pre>
+    <p>Not for a fresh ambiguous problem (<code>/workhorse</code>), an unknown failure
+    (<code>/debug-mantra</code>), or ordinary implementation trimming (<code>/ponytail</code>).</p>
+
+    <h2 id="merge-cleanup">Merge-Cleanup</h2>
+    <div class="card">
+      <h3>Worktree consolidation, PR sequencing, safe teardown</h3>
+      <p><strong>Use when:</strong> several task clones or worktrees of one repo have accumulated,
+      their PRs are open, and you want them landed in the right order and the folders retired without
+      losing anything or killing a live session. Complies with <code>WORKTREE-SAFETY.md</code>.<br>
+      <strong>Trigger:</strong> "Run merge-cleanup on this repo", "Scan all clones and worktrees",
+      "Sequence and merge open PRs", "Tear down clean task clones".<br>
+      <strong>Source:</strong> <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/merge-cleanup/SKILL.md"><code>skills/merge-cleanup/SKILL.md</code></a>
+      · scripts in <a href="https://github.com/HiQS-Labs/XYZ-forge/tree/development/skills/merge-cleanup/scripts"><code>skills/merge-cleanup/scripts/</code></a></p>
+    </div>
+<pre><code>0. Primary on-disk checkout  ──► is the operator's own tree clean, on `development`, fast-forwardable? Always first.
+1. Discover &amp; inventory      ──► worktrees + sibling clones under safe roots
+2. Active session inspection ──► preserve anything with open file handles, driver locks, .tick claims, recent edits
+3. Git safety verification   ──► dirty tree, stash, unpushed commits, submodules ⇒ PRESERVE_*
+4. PR matrix &amp; toposort      ──► dependency DAG, file-collision pre-check, simulated landing
+5. Execute &amp; reconcile       ──► remote squash-merge in order, ff-only the primary, wave_reconcile / releases check / pdda
+6. Safe teardown             ──► git worktree remove, clean clones to Trash, prune dangling symlinks</code></pre>
+    <p>The semi-automation is the <strong>drive loop</strong> — a script owns the evidence and the
+    repair budget, the agent owns the analysis:</p>
+<pre><code># 1. dry run — Phase 0 + audit + sequence
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --prefix XYZ-forge
+
+# 2. fix the primary until Phase 0 says landing-ready
+#    (a dirty primary is a blocker to FIX, not a reason to fall back to --teardown-only)
+
+# 3. execute
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --prefix XYZ-forge --execute
+
+# 4. exit 3 = handoff / park / defer: read the printed MERGE_CLEANUP_RECORD path,
+#    work the caller ladder, then resume — repeat until exit 0
+python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --prefix XYZ-forge --resume --execute
+
+# exit 2 = diagnose first; re-run only once the named gate is fixed</code></pre>
+    <ul>
+      <li><strong>Caller ladder on a conflicted PR:</strong> <code>/debug-mantra</code> → bounded
+      read-only <code>/recon</code> (8 files, 15 minutes) → <code>/ponytail</code> smallest fix (one
+      repair) → <code>/start-task</code>-style handoff (one repair) → <code>/unstuck</code> when the
+      third repair is refused. Attempts are counted in one record under one lock, so bouncing between
+      rungs or re-cloning never resets the count.</li>
+      <li><strong>Done rule:</strong> not "Done" unless Phase 5 ran to exit 0 (or exit 3 was worked
+      and re-driven to 0), or the operator explicitly asked for <code>--teardown-only</code>,
+      <code>--scan-only</code>, or <code>--prs-only</code>.</li>
+      <li><strong>Permission-classifier blocks:</strong> if a harness permission layer blocks
+      <code>--execute</code>, retry the identical command once before escalating — a block that passes
+      on a verbatim retry was non-deterministic.</li>
+    </ul>
+
+    <h2 id="radar">Radar</h2>
+    <div class="card">
+      <h3>SDLC process coach and strategic compass</h3>
+      <p><strong>Use when:</strong> you want an honest read of the last two to three weeks — are we
+      shipping or firefighting, what keeps breaking, did we regress, is the release plan still the
+      plan. Analysis is read-only; the only writes are the two report sinks, after one
+      confirmation.<br>
+      <strong>Trigger:</strong> <code>/radar</code>, <code>/radar --arc</code>, "how is our development
+      cycle going", "are we just fixing bugs", "what keeps breaking", "did we introduce any
+      regressions", "what should we fix once to stop the bleeding", "is the plan still right".<br>
+      <strong>Source:</strong> <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/radar/SKILL.md"><code>skills/radar/SKILL.md</code></a></p>
+    </div>
+    <p>Three lenses over a 21-day window on trunk:</p>
+    <ul>
+      <li><strong>Flow distribution.</strong> Commit subjects tallied and proven to sum; the Run /
+      Grow / Transform mix, with Transform counted only when declared via <code>rgt: transform</code>
+      on the governing <code>PROJECT/**</code> doc. Harness machinery is isolated from the
+      denominator.</li>
+      <li><strong>Recurring defects and regressions.</strong> Seven evidence signals, a
+      ≥2-days / ≥2-PRs recurrence discriminator, scored targets, plus an open-PR collision check so
+      nothing gets scheduled twice.</li>
+      <li><strong>Release recalibration.</strong> Reads <code>releases.db</code> and open milestones
+      read-only, measures orphan-issue share and plan-vs-execution drift. Never tops up the ledger.</li>
+    </ul>
+    <p>The output is a process-coach narrative (wins first, then process friction, then regressions),
+    prioritized coaching action items, cited evidence, and an optional multi-week arc when two or
+    more prior reports exist. It persists to two sinks on one confirmation: an immutable dated
+    <code>RADAR-REPORT-*.md</code> and one live <code>radar</code>-labelled issue checklist with
+    stable target IDs across runs. No targets and no umbrella observations means it writes nothing,
+    on purpose.</p>
+    <p><strong>Relationship to whack-a-mole:</strong> radar re-scores every filed umbrella's Cluster
+    signature on each run and is the only thing that calls a bug class solved — score below 5 on two
+    consecutive runs after the fix merged. Issue closure does not count.</p>
+    <p>Not for shipped recaps (<code>weekly-shipped</code>), ranking marathon candidates
+    (<code>marathon-triage</code>), maturity assessment (<code>/honest</code>), or executing fixes
+    (<code>/10days</code>).</p>
+
+    <h2 id="whack-a-mole">Whack-a-Mole</h2>
+    <div class="card">
+      <h3>Find the bug class that keeps coming back; file one umbrella</h3>
+      <p><strong>Use when:</strong> the same bug keeps resurfacing, you have had a run of hotfixes,
+      reverts, or reopened issues, and you want the one foundational defect named and a plan filed to
+      remove it — instead of another symptom patch.<br>
+      <strong>Trigger:</strong> "whack-a-mole", "this bug keeps coming back", "we keep fixing the same
+      thing", "what's eating our time", "recurring bugs", "bug churn", "find the root cause behind
+      these".<br>
+      <strong>Source:</strong> <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/whack-a-mole/SKILL.md"><code>skills/whack-a-mole/SKILL.md</code></a></p>
+    </div>
+    <p>Pipeline: <code>scan → cluster → score → understand → draft umbrella → approve → file → verify</code>.</p>
+    <ul>
+      <li><strong>Scan</strong> the last 14 days of issues, merged PRs, <code>fix</code> /
+      <code>revert</code> / <code>hotfix</code> commits, and review threads; detect the repo's own
+      ranking system (PDDA fields, P0 labels, project fields) so the umbrella lands at the top of it.</li>
+      <li><strong>Cluster</strong> items sharing two or more independent signals (same hot file, same
+      error string, explicit issue links, same label plus component). One shared signal is "adjacent":
+      listed but not scored.</li>
+      <li><strong>Score</strong> churn — reopens ×3, repeat fixes ×3, reverts ×4, cluster size ×1,
+      comments ÷5, days open ÷7 — with raw numbers shown so the ranking is auditable. No cluster above
+      5 means "no clear pattern"; stop.</li>
+      <li><strong>Understand</strong> the top cluster with <code>/debug-mantra</code> and
+      <code>/recon</code>, name the violated invariant, and grade every claim <code>FACT</code> /
+      <code>PATTERN</code> / <code>HYPOTHESIS</code>. "Unrelated bugs sharing a file" is a valid answer
+      and means no umbrella.</li>
+      <li><strong>Draft</strong> the umbrella: root cause, symptoms it explains, ordered tasks
+      (reproduce → guard → fix → sweep → verify → document), priority on the repo's own scale, a
+      not-in-scope list, and the mandatory fenced Cluster signature block that <code>radar</code>
+      re-scores.</li>
+      <li><strong>File</strong> one issue, only after the operator approves the exact body. It never
+      edits, closes, or comments on existing issues; git is read-only throughout.</li>
+    </ul>
+    <p>Why it matters for stalled agents: an agent that keeps returning with "fixed it again" is
+    usually patching a call site. This skill forces the invariant to be named and the guard to land
+    before the fix, so the next agent has a durable target rather than a fresh symptom.</p>
+
+    <h2>Related skills worth knowing</h2>
+    <p>Not on the list above, but they are the pieces the five skills call into, or they cover the
+    adjacent case.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Skill</th><th>Why it belongs on this page</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/debug-mantra/SKILL.md"><code>/debug-mantra</code></a></td><td>The ground-truth engine every skill above calls: reproduce, trace the fail path, falsify the hypothesis, cross-reference breadcrumbs. Use directly when the failure is still unknown.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/ponytail/SKILL.md"><code>/ponytail</code></a></td><td>Laziest solution that works. The cure for an agent inventing machinery; <code>unstuck</code> routes here when work is moving but bloated.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/consult/SKILL.md"><code>/consult</code></a></td><td>One-shot second opinion from Codex and agy in parallel. <code>workhorse</code> rung 4 and <code>unstuck</code> rung 4 both use it to break a tie without averaging.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/triangulate/SKILL.md"><code>/triangulate</code></a></td><td>recon → debug-mantra → ponytail in a fixed order for one problem. Lighter than <code>workhorse</code> when you do not need governance and consult.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/jog/SKILL.md"><code>/jog</code></a></td><td>Serial task-queue execution engine for "do these N things today, one at a time". One of the orchestrators <code>workhorse</code> and <code>unstuck</code> re-drive.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/start-task/SKILL.md"><code>/start-task</code></a></td><td>Carries an issue from fresh clone through recon, plan QA, execution, and a ready PR. The producer side of what <code>merge-cleanup</code> lands.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/10days/SKILL.md"><code>/10days</code></a></td><td>Unattended issue sweep → marathon plan → preflight → branch → execute. The "run it while I am away" driver; <code>radar</code> never executes, this does.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/relay-automation/SKILL.md"><code>relay-automation</code></a> / <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/relay-xyz/SKILL.md"><code>/relay-xyz</code></a></td><td>Hands-free producer/reviewer loop with a liveness watchdog (<code>watchdog.sh</code>) — the automated answer to a review handoff that stalls.</td></tr>
+          <tr><td><a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/standup/SKILL.md"><code>/standup</code></a></td><td>Under-a-screen "what did I leave open, what is rotting" read at session start. Cheaper than <code>radar</code> when you only need today.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>To install any of these for Claude Code, Codex, or agy on your machine, see
+    <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/skills-army-hq/SKILL.md"><code>skills-army-hq</code></a>,
+    which manages a durable local skill collection and the per-app symlinks.</p>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>XYZ Forge — local-first engineering operations for AI coding agents. Provided “AS IS,” without warranty.</span>
+    <span>
+      <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
+      <a href="issues.html">Issues</a> ·
+      <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE">License</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>
