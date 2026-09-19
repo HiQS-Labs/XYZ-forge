@@ -1,0 +1,41 @@
+{
+  "agreement": {
+    "category": {
+      "n": 6,
+      "pct": 4.2
+    },
+    "severity": {
+      "n": 70,
+      "pct": 48.95
+    },
+    "status": {
+      "n": 143,
+      "pct": 100.0
+    }
+  },
+  "input_tokens": 144629,
+  "kind": "errorlog",
+  "mock": false,
+  "model_requested": "jev-1.13.0",
+  "models_seen": {
+    "jev-1.13.0": 143
+  },
+  "pairs": {
+    "category": {
+      "auth_failure->config_error": 23,
+      "auth_failure->env_missing": 103,
+      "config_error->config_error": 5,
+      "config_error->env_missing": 9,
+      "env_failure->config_error": 2,
+      "env_missing->env_missing": 1
+    },
+    "severity": {
+      "critical->critical": 70,
+      "high->critical": 73
+    },
+    "status": {
+      "fail->fail": 143
+    }
+  },
+  "rows": 143
+}
