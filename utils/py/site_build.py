@@ -37,6 +37,7 @@ NAV = [
     ("index.html", "Welcome"),
     ("use-cases.html", "Use Cases"),
     ("how-it-works.html", "How it Works"),
+    ("skills.html", "Skills"),
     ("faq.html", "FAQ"),
     ("models-harnesses.html", "Models &amp; Harnesses"),
     ("roadmap.html", "Roadmap"),
