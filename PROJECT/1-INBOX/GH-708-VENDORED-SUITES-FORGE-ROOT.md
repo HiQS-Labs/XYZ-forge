@@ -68,7 +68,7 @@ relative to the **CWD** and so only ran from the repo root — `gh204`, `gh205`,
 Not in the list: `oracle-guard.sh` already skips its one sub-test when `$ROOT/validate.sh` is
 absent (the wording this helper adopts).
 
-**Follow-ups (not this issue — filed as one tracker):** 11 suites still fail in a vendored copy
+**Follow-ups (not this issue — tracked in #715):** 11 suites still fail in a vendored copy
 for other reasons: python module paths that assume the forge layout (`agent-chorus`,
 `gh-gen4-phase4-repro-synth`, `gh478-runaway-guard`, `gh589-skill-viewer`) and behavioural
 differences (`gh141-fuzz-inputs`, `gh155-phase1-metamorphic-invariants`,
