@@ -42,11 +42,11 @@ forge" is a false signal.
 
 ## Sweep (anchored on the forge root, not on fixtures; comments excluded)
 
-19 suites reach a path outside `VENDOR_DIRS` through `$HERE/..` (or a ROOT derived from it):
+25 suites reach a path outside `VENDOR_DIRS` through `$HERE/..` (or a ROOT derived from it):
 
 | forge-root path | suites |
 |---|---|
-| `validate.sh` | ballast-release, ci-workflow, gh365-driver-lane-registry, gh365-runner-envelope, gh365-validate-telemetry, gh379-canary-uses-validate, gh4-ungated-clone-warning (copies the whole tree, then runs `validate.sh` from the copy), meter-release, nightwatch-release |
+| `validate.sh` | ballast-release, ci-workflow, gh141-synthetic-registry, gh182-healer-facade-safety, gh251-validate-pytest-skip, gh298-ate-gen4-ci-smoke (clones the tree, then runs `validate.sh` from the clone), gh306-registry-bidirectional, gh365-driver-lane-registry, gh365-runner-envelope, gh365-validate-telemetry, gh379-canary-uses-validate, gh4-ungated-clone-warning (copies the tree, then runs `validate.sh` from the copy), gh-gen4-phase1-domain-oracles (`--cwd $ROOT`, `bash validate.sh --print-mode`), meter-release, nightwatch-release |
 | `ci-local.sh` | ci-workflow, gh35-test-tiers, gh365-runner-envelope, gh365-shellcheck-parallel, gh365-validate-telemetry, gh536-evidence-detail, gh544-parallel-default |
 | `githooks/` | gh267-express-skill, gh35-test-tiers, gh544-pre-push-gate |
 | `.github/` | gh544-parallel-default, gh544-pre-push-gate |
@@ -56,7 +56,12 @@ forge" is a false signal.
 Not in the list: `oracle-guard.sh` — it already skips only its one sub-test when `$ROOT/validate.sh`
 is absent (`test/oracle-guard.sh:59`, "absent in a vendored copy"), the wording this helper adopts;
 `swe-diagram.sh` names `ARCHITECTURE/` only in a comment. (r1: one false positive removed, one
-false negative added.)
+false negative added. r2: six more `validate.sh` suites added — the anchor regex had missed
+`HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"`-derived roots and commands run *inside* a
+copy of the tree. Because the static sweep has now missed twice, the acceptance adds an empirical
+witness: from a vendored copy of this checkout, every suite that mentions `validate.sh`,
+`ci-local.sh`, `githooks`, `.github`, `sentinel-overlay`, `ROUTER.md`, `AGENTS.md` or `README.md`
+in code must either pass or print the skip line — any other exit is a missed suite.)
 
 Method: every `$VAR/<path>` reference in `test/*.sh` whose `VAR` is assigned from `$HERE/..`,
 `cd "$HERE/.." && pwd`, `cd -P "$(dirname "$0")/.."`, or `git rev-parse --show-toplevel`; fixture
@@ -72,7 +77,7 @@ comment. Sweep transcript: `relay-system/2026-09-18/gh708-sweep.txt`.
    and `exit 0`; absent in a non-vendored tree → `forge-root: REFUSING — …` on stderr, `exit 2`
    (a check that cannot fail is not a check). One helper, same file the issue proposed, same
    fail-closed voice as its neighbours.
-2. Each of the 19 suites calls it once, right after sourcing the guard, naming exactly the paths it
+2. Each of the 25 suites calls it once, right after sourcing the guard, naming exactly the paths it
    needs (e.g. `require_forge_root githooks/install.sh`). Suites that do not source fixture-guard
    today source it for this call only.
 3. New `test/gh708-vendored-suite-skips.sh` (registered in `validate.sh`): (a) a fixture tree with
@@ -99,7 +104,8 @@ vendored tree; the witness in 3(d) plus the per-suite line naming a checked-in p
 ## Acceptance
 
 - [ ] `gh708-vendored-suite-skips.sh` green, its red control witnessed.
-- [ ] Forge gate unchanged: the 19 suites still run (no skip line) in the forge.
+- [ ] Forge gate unchanged: the 25 suites still run (no skip line) in the forge.
+- [ ] Empirical witness (one-off, recorded in the PR): from a vendored copy, every candidate suite passes or prints `skip: not vendored`.
 - [ ] Consumer: `bash .xyz/test/gh267-express-skill.sh` on LTVera prints the skip and exits 0.
 
 ## Rating (2026-09-18) — `rated 65/55/50/80`
@@ -109,13 +115,13 @@ vendored tree; the witness in 3(d) plus the per-suite line naming a checked-in p
 - pri 65: blocks LTVera#551 Step 2 acceptance ("failures block Step 3+"); ordered after #710 which
   breaks the consumer's reconcile.
 - appeal 50: neutral.
-- effort 80: one helper, 19 one-line call sites, one suite with a vendor witness.
+- effort 80: one helper, 25 one-line call sites, one suite with a vendor witness.
 - Recurrence: first report of this class (vendored suite red for a forge-only path); GH-197 (tier
   split) and GH-312 (preserve list) were vendor-manifest issues of a different class.
 
 ## Status
 
-active — plan r1 reviewed by agy (`relay-system/2026-09-18/gh710-gh708-plan-qa.md`): sweep corrected (−oracle-guard, +gh4-ungated-clone-warning); decision and marker passed; r2 pending.
+active — plan r1 reviewed by agy (`relay-system/2026-09-18/gh710-gh708-plan-qa.md`): r1 sweep corrected (−oracle-guard, +gh4-ungated-clone-warning); r2 (agy, block rejected by the relay validator for a missing `VERDICT:` line — findings taken from its turn log): fallback order confirmed, no more oracle-guard-class false positives, six `validate.sh` suites added; r3 pending.
 
 ## Merge evidence
 

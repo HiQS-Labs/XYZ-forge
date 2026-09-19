@@ -106,7 +106,7 @@ sequences it is its own.
 
 ## Status
 
-active — plan r1 reviewed by agy (`relay-system/2026-09-18/gh710-gh708-plan-qa.md`): findings 1, 2, 4 accepted and folded in above; r2 pending.
+active — plan r1 reviewed by agy (`relay-system/2026-09-18/gh710-gh708-plan-qa.md`): findings 1, 2, 4 accepted and folded in above; r2 (agy) confirmed the `(doc_path, title)` → unique `doc_path` → other link targets order; r3 pending.
 
 ## Merge evidence
 

@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,6 +141,34 @@ Basis: Critical logic gaps in GH-710's identity fallback and GH-708's sweep cove
 
 Round 2 asks: confirm the `(doc_path, title)` → unique `doc_path` → other link targets order is
 sound and that nothing else in the 19 is a false positive of the same kind as oracle-guard.
+
+Handing off to Reviewer — agy, take your turn.
+
+### Reviewer r2 (agy) — block rejected by the structural validator; recorded by the Producer from the turn log
+
+`relay-automation/agy-turn.sh` refused agy's r2 block (`VERDICT: line is missing`, exit 8), so nothing
+was appended. Its turn log (`relay-system/logs/2026-09-18/agy-turn-RELAY-gh710-gh708-plan-r2-56455.log`)
+states: (1) the `(doc_path, title)` → unique `doc_path` → other link targets order is sound;
+(2) none of the 19 suites is an oracle-guard-class false positive; (3) six suites were missed:
+`gh141-synthetic-registry`, `gh182-healer-facade-safety`, `gh251-validate-pytest-skip`,
+`gh306-registry-bidirectional` (caught by the target sweep, dropped by the anchor classifier) and
+`gh298-ate-gen4-ci-smoke`, `gh-gen4-phase1-domain-oracles` (run `validate.sh` inside a copy / via
+`--cwd $ROOT`, no path variable).
+
+### Producer r2 — dispositions (2026-09-18)
+
+- **r2 (1), (2) — noted.**
+- **r2 (3) six missed suites — Implemented.** All six verified by hand (`$ROOT`/`$REPO` =
+  `$HERE/..`; `gh298` clones the tree and runs `validate.sh` from the clone; `gh-gen4-phase1` runs
+  `bash validate.sh --print-mode` with `--cwd "$ROOT"`; `gh182` targets `$ROOT/validate.sh`). Sweep
+  is now 25 suites; the doc table is updated. Because the static sweep missed twice, the plan adds an
+  empirical witness to acceptance: from a vendored copy of this checkout, every suite that mentions
+  `validate.sh` / `ci-local.sh` / `githooks` / `.github` / `sentinel-overlay` / `ROUTER.md` /
+  `AGENTS.md` / `README.md` in code must pass or print the skip line; any other exit is a missed
+  suite and gets the helper before the PR opens.
+
+Round 3 (final under the cap): reviewer, please end your block with a `VERDICT:` line as the
+protocol requires, and give `STATUS: Approved` if nothing blocks; otherwise name the blocker.
 
 Handing off to Reviewer — agy, take your turn.
 
