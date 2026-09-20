@@ -59,6 +59,7 @@ trap cleanup EXIT
 # resolved-containment check (the lexical prefix test alone accepts `$WORK/../../<real repo>` —
 # the GH-567 residual). Same refusal contract: exit 2 with the reason on stderr.
 . "$HERE/lib/fixture-guard.sh"
+require_forge_root githooks/pre-push .github/workflows   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$WORK"
 
 # A throwaway repo carrying the real hook and a STUB validate.sh whose verdict we control.

@@ -7,6 +7,7 @@ source "$(dirname "$0")/_setup.sh" runner-loop
 export RUNNER_ROOT_DIR="$A"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+require_forge_root README.md   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 RUNNER="$(cd "$HERE/.." && pwd)/relay-automation/runner.sh"
 
 make_log() {

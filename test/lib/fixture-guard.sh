@@ -71,3 +71,36 @@ _fixture_check() {  # <path> <label> <type-flag> — shared body of require_fixt
 
 require_fixture()      { _fixture_check "${1:-}" "${2:-fixture}" -d; }
 require_fixture_file() { _fixture_check "${1:-}" "${2:-fixture}" -f; }
+
+# ── forge-root paths a vendored install does not ship (GH-708) ──────────────────────────────
+# `xyz-vendor.sh` mirrors only VENDOR_DIRS (relay-automation bin src utils test skills) into a
+# consumer's `.xyz/`, so a suite that reads a forge-root-only path — validate.sh, ci-local.sh,
+# githooks/, .github/, sentinel-overlay/, a governance .md — is red on every vendored target for
+# no reason of its own. Call `require_forge_root <relpath>…` once, after sourcing this file, naming
+# exactly the checked-in paths the suite needs (relative to the repo root, i.e. `$HERE/..`):
+#   present            → returns; the suite runs as in the forge.
+#   absent + vendored  → prints `skip: not vendored — …` on stdout and exits 0. The vendored
+#                        marker is the VERSION stamp xyz-vendor.sh writes beside test/
+#                        (`source_commit=<sha>`); the skip names the suite, the path and the SHA
+#                        so a consumer's log shows a witnessed skip, never a silent pass.
+#   absent + NOT vendored → `forge-root: REFUSING` on stderr, exit 2 — a forge checkout that lost
+#                        the file is broken, and a check that cannot fail is not a check.
+# It never skips in the forge (the paths exist there), so the gate is unaffected. Suites that
+# already degrade per sub-test on a missing forge path (test/oracle-guard.sh) keep doing that.
+require_forge_root() {  # <relpath>… — forge-root-only files/dirs this suite reads
+  local here root version sha suite rel
+  here="$(cd "$(dirname "${BASH_SOURCE[1]:-$0}")" && pwd)"   # the CALLING suite's directory
+  root="$(cd "$here/.." && pwd)"
+  version="$root/VERSION"
+  suite="$(basename "${BASH_SOURCE[1]:-$0}")"
+  for rel in "$@"; do
+    [ -n "$rel" ] || { echo "forge-root: REFUSING — require_forge_root got an EMPTY path (${suite})" >&2; exit 2; }
+    [ -e "$root/$rel" ] && continue
+    if [ -f "$version" ] && sha="$(sed -n 's/^source_commit=//p' "$version" 2>/dev/null | head -1)" && [ -n "$sha" ]; then
+      echo "skip: not vendored — ${suite} needs ${rel} (forge-root only; vendored source_commit=${sha})"
+      exit 0
+    fi
+    echo "forge-root: REFUSING — ${suite} needs ${root}/${rel} and it is missing in what is not a vendored install (no ${version} with source_commit=)" >&2
+    exit 2
+  done
+}

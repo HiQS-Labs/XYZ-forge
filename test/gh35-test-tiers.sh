@@ -40,6 +40,7 @@ trap cleanup EXIT
 
 # GH-177/GH-1: every fixture path this suite passes around is proven to live under $WORK.
 . "$HERE/lib/fixture-guard.sh"
+require_forge_root ci-local.sh githooks/install.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$WORK"
 
 # ── (1) CPU governance — the decision, announced (GH-35 Phase 2) ─────────────────────────────────

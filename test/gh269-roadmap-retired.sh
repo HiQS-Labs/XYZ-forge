@@ -1,7 +1,8 @@
 #!/bin/bash
 # test/gh269-roadmap-retired.sh — verify ROADMAP.md is retired and tools operate on releases.db
 set -eu
-source test/_setup.sh "GH-269" || { echo "setup failed"; exit 1; }
+source "$(dirname "$0")/_setup.sh" "GH-269" || { echo "setup failed"; exit 1; }
+require_forge_root releases.db   # GH-708: forge-root only — witnessed skip in a vendored .xyz/ (_setup.sh sourced the guard lib)
 
 root="$(cd "$HERE/.." && pwd)"
 

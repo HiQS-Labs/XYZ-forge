@@ -17,6 +17,7 @@
 #   T3  RED controls for the sweep itself: a planted unmapped path and a planted unregistered
 #       family member are both NAMED (the detectors fire, not just pass).
 source "$(dirname "$0")/_setup.sh" gh365-tier-fail-closed
+require_forge_root validate.sh ci-local.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/ (_setup.sh sourced the guard lib)
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"

@@ -71,6 +71,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # before exercising a single mutation.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/meter-release.XXXXXX")"
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 ROOT="$(cd "$HERE/.." && pwd)"
 

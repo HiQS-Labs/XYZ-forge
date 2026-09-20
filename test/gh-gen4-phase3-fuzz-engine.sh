@@ -5,6 +5,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root .gitignore   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh299-p3-fuzz.XXXXXX")"
 cleanup() { [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }

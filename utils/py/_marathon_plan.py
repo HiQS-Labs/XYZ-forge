@@ -775,16 +775,36 @@ class Engine:
                 # GH-698 F2: carry the canonical four-axis ratings so the planner
                 # ranks by the DB's own rank (the four-axis sum) instead of
                 # requiring legacy cx/risk/effort doc frontmatter.
+                # GH-710: gh_number is nullable (doc-only rows are legal), and such a
+                # row can only be rated by `releases roadmap rate --gid`. Index those
+                # rows by the identity the planner already uses for them (:867):
+                # (doc_path, title) first, then doc_path alone when it is unique among
+                # NULL-gh rows. True duplicates (same doc AND title) index nothing
+                # and are reported by gid so neither is rated by the other's score.
                 db_ranks, db_axes = {}, {}
+                by_key, by_doc = {}, {}  # (doc, title) -> [hits]; doc -> [hits]
                 for row in conn.execute(
-                    "SELECT gh_number, rating_pri, rating_sev, rating_appeal, rating_effort "
-                    "FROM roadmap_items WHERE gh_number IS NOT NULL"
+                    "SELECT gh_number, rating_pri, rating_sev, rating_appeal, rating_effort, "
+                    "global_id, doc_path, title FROM roadmap_items"
                 ):
                     axes = [row[1], row[2], row[3], row[4]]
-                    if all(a is not None for a in axes):
-                        db_ranks[int(row[0])] = sum(int(a) for a in axes)
-                        db_axes[int(row[0])] = tuple(int(a) for a in axes)
-                return ledger, db_ranks, db_axes
+                    rank = sum(int(a) for a in axes) if all(a is not None for a in axes) else None
+                    axes_t = tuple(int(a) for a in axes) if rank is not None else None
+                    if row[0] is not None:
+                        if rank is not None:
+                            db_ranks[int(row[0])] = rank
+                            db_axes[int(row[0])] = axes_t
+                    elif row[6]:
+                        hit = (row[5], rank, axes_t)
+                        by_key.setdefault((row[6], row[7] or ""), []).append(hit)
+                        by_doc.setdefault(row[6], []).append(hit)
+                # A key with one hit resolves to it; more than one is ambiguous and resolves
+                # to the gids only, so the `unrated` hint can name them without rating either.
+                db_by_doc = {}
+                for key, hits in list(by_key.items()) + [((d, None), h) for d, h in by_doc.items()]:
+                    db_by_doc[key] = hits[0] if len(hits) == 1 else \
+                        ("one of " + ", ".join(h[0] for h in hits), None, None)
+                return ledger, db_ranks, db_axes, db_by_doc
         except sqlite3.Error as exc:
             raise EngineExit(3, "marathon-plan: cannot read releases.db roadmap_items: %s" % exc) from exc
 
@@ -807,13 +827,13 @@ class Engine:
             if raw is None:
                 raise EngineExit(3, "marathon-plan: cannot read ROADMAP")
             ledger = self._parse_ledger(raw)
-            db_ranks, db_axes = {}, {}  # explicit ROADMAP fixtures carry no DB ratings
+            db_ranks, db_axes, db_by_doc = {}, {}, {}  # explicit ROADMAP fixtures carry no DB ratings
         elif is_releases_mode:
             self.SOURCE_NAME = "releases.db (roadmap_items)"
             self.SOURCE_LINK = os.path.relpath(db_path, self.QUEUE_DIR)
-            ledger, db_ranks, db_axes = self._load_ledger_from_db(db_path)
+            ledger, db_ranks, db_axes, db_by_doc = self._load_ledger_from_db(db_path)
         else:
-            db_ranks, db_axes = {}, {}
+            db_ranks, db_axes, db_by_doc = {}, {}, {}
             raw = self._read_file_safe(self.ROADMAP)
             if raw is not None:
                 ledger = self._parse_ledger(raw)
@@ -835,6 +855,20 @@ class Engine:
                        "risk": _L(fm.get("risk")), "effort": _L(fm.get("effort"))}
             db_rank = db_ranks.get(gh)
             db_axes_item = db_axes.get(gh)
+            gid = None
+            if gh is None and db_by_doc:
+                # GH-710: a NULL-gh row is matched by (doc, title), then by a unique doc —
+                # for the picked doc first, then every other .md link on the line, so the
+                # match does not hinge on _doc_of's choice among several links.
+                targets = [doc_rel] + [re.sub(r"#.*$", "", l["target"]) for l in item["links"]
+                                       if re.search(r"\.md($|#)", l["target"])]
+                for t in targets:
+                    if not t:
+                        continue
+                    hit = db_by_doc.get((t, item["title"])) or db_by_doc.get((t, None))
+                    if hit:
+                        gid, db_rank, db_axes_item = hit
+                        break
             rated = all(ratings[k] is not None for k in ("complexity", "risk", "effort"))
             if db_rank is not None:
                 # GH-698 F2: the DB's canonical four-axis rating satisfies `rated`
@@ -849,7 +883,7 @@ class Engine:
             suggested_branch = "marathon/%s-%s" % (slug, self.TODAY)
             records.append({
                 "title": item["title"], "section": item["section"], "emoji": item["status"],
-                "raw": item["raw"], "gh": gh, "docRel": doc_rel, "docExists": doc_exists,
+                "raw": item["raw"], "gh": gh, "gid": gid, "docRel": doc_rel, "docExists": doc_exists,
                 "slug": slug, "ratings": ratings, "rated": rated, "ratingsExempt": ratings_exempt,
                 "contract": contract, "zone": z["zone"], "zoneInferred": z["inferred"],
                 "writeset": z["writeset"], "zoneRule": z["zoneRule"],
@@ -957,9 +991,16 @@ class Engine:
             if r["docExists"] and not r["rated"]:
                 r["state"] = "unrated"
                 if is_releases_mode:
+                    # GH-710: no `%d` on a NULL gh_number — point at the row's gid instead.
+                    hint = (("rate via: releases roadmap rate --issue-num %d --rated P/S/A/E" % r["gh"])
+                            if r["gh"] is not None else
+                            ("rate via: releases roadmap rate --gid %s --rated P/S/A/E (row has no gh_number)"
+                             % (r.get("gid") or "<rmi-…>")))
+                    if (r.get("gid") or "").startswith("one of "):
+                        hint += " — two rows share this doc and title; rate the right one"
+
                     self._flag("info", "unrated", r,
-                               "ledger row has no four-axis rating in releases.db",
-                               "rate via: releases roadmap rate --issue-num %d --rated P/S/A/E" % r["gh"])
+                               "ledger row has no four-axis rating in releases.db", hint)
                 else:
                     missing = [k for k in ("complexity", "risk", "effort") if r["ratings"][k] is None]
                     self._flag("info", "unrated", r,

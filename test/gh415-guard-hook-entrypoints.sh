@@ -3,6 +3,7 @@
 source "$(dirname "$0")/_setup.sh" gh415-guard-hook-entrypoints
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+require_forge_root AGENTS.md   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 GUARD="$ROOT/relay-automation/hooks/relay-xyz-guard.sh"
 [ -x "$GUARD" ] || { echo "  FAIL: guard hook not executable: $GUARD" >&2; exit 1; }
 

@@ -3,9 +3,10 @@
 # Pins the GH-205 fix: validate.sh exports XYZ_HARNESS_DB to a throwaway copy, so telemetry
 # writes through harness_app.py land off-tree. Fixture-isolated: all writes here hit $WORK.
 set -eu
-source test/_setup.sh "GH-205" || { echo "setup failed"; exit 1; }
+source "$(dirname "$0")/_setup.sh" "GH-205" || { echo "setup failed"; exit 1; }
 
 root="$(cd "$HERE/.." && pwd)"
+require_forge_root harnesses.db   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 # Fixture "repo": a copy of the real ledger pair, standing in for the tracked root files.
 F="$WORK/fixture"

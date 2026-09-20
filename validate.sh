@@ -130,6 +130,7 @@ TESTS=(
   "gh648-l8-zero-output-handback.sh"  # GH-648 L8/GH-397 (zero-output reviewer turn is not review coverage: review_blocks_added oracle)
   "gh648-l9-369-regression.sh"        # GH-648 L9/GH-369 baseline (rtl_run_bounded kills the whole process group at the cap; verification-only)
   "gh698-planner-db-ratings.sh"       # GH-698 F2/F4 (planner reads DB four-axis ratings: rated row sequences, unrated holds — red control)
+  "gh708-vendored-suite-skips.sh"     # GH-708 (require_forge_root: witnessed `skip: not vendored` from a vendored .xyz/, refusal in the forge — red control; vendors this checkout)
   "claude-turn.sh"             # GH-58
   "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
   "worktree-isolation.sh"

@@ -5,6 +5,8 @@
 # bottom of the file (a no-op when inlined into a <script> tag — zero behavior change shipped).
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/lib/fixture-guard.sh"
+require_forge_root ARCHITECTURE   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 RENDERER="$HERE/../utils/swe-diagram/assets/renderer.js"
 GENERATOR="$HERE/../utils/swe-diagram/scripts/git-history-to-json.js"
 PASS=0; FAIL=0
