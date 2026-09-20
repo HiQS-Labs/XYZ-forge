@@ -203,3 +203,7 @@ no Phase 3 on this branch.
 ## Merge evidence
 
 - PR #476 merged 2026-09-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #714 merged 2026-09-20 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

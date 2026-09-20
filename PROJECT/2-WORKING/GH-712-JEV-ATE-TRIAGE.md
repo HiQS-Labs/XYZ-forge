@@ -89,3 +89,7 @@ Lane B of [GH-709](https://github.com/HiQS-Labs/XYZ-forge/issues/709). Issue: [G
 - `bash test/gh712-jev-triage.sh` fails on: empty benchmark accepted, FN ≠ 0 on the green control, FN ≠ 1 on the red control, a response missing `model`, hashes absent from `rows.jsonl`, or stderr text present in `rows.jsonl`.
 - `SUMMARY.md` states FN/FP/anomaly-agreement for the benchmark, per-field agreement for GH-141 with the homogeneity caveat, `jev-1.13.0` on every row, total input tokens, and the Phase 3 decision.
 - Phase 3 (if landed): `test/ate-run-variations.sh` green; a mocked `--classifier jev` run writes `classifier: "jev"` and `likely_cause: null` on the row; default run unchanged.
+
+## Merge evidence
+
+- PR #714 merged 2026-09-20 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
