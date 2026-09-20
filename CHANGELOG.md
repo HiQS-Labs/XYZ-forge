@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-18 — Offline Jev vs Tier-1/Gemma ATE triage replay; shadow flag not started (GH-712)
+
+Lane B of the GH-709 TypeSafe Jev recon. Added `utils/py/jev_triage.py` (stdlib only): three Choice
+questions (status / severity / category) over the same 1,500-char stdout/stderr tails the Gemma
+`CLASSIFY_PROMPT` sends, with `benchmark` and `errorlog` replays that write verdicts, confidence,
+model and request/response hashes only. `test/gh712-jev-triage.sh` pins the scorer with canned
+responses (green + red controls, empty input, hash/model contract, no stderr leak): 16/16.
+Live result (`TESTS-RESULTS/2026-09-18+GH-712/SUMMARY.md`, 217 `jev-1.13.0` requests, 217,837 input
+tokens): on the 74-row Tier-1 benchmark FN = 1 of 24 known-fail rows (the rc=0 `Segmentation fault`
+row at status confidence 0.05; `fn_zero_threshold` 0.48, FP 0); on the 143-row GH-141 log status
+agreement 100%, severity 49% (Jev `critical` on every non-zero exit; Gemma had split 73/70),
+category 4.2% — Gemma's `auth_failure` vs Jev's `env_missing`/`config_error` on `RELAY_AGENT
+required`, where Jev is the literal reading. Both Phase 2 gates missed as written, so Phase 3
+(`--classifier` flag on `run_variations.py`) was not started; the runner, Tier-1 classifier and
+calibration file are untouched. Any re-gate (recorded threshold, confidence floor, hand-labelled
+category reference) is a separate operator decision. Plan QA: agy, approved r2 (Codex out of quota).
+Reversibility: Easy.
+
 ## 2026-09-18 — Project site: Skills page for the agent-driving skills; Model Catalog card → resolve.hiqs.ai (GH-700)
 
 The GitHub Pages site had no page for the skills that push a stalled agent forward — the write-up

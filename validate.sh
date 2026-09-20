@@ -640,6 +640,7 @@ TESTS=(
   "gh-gen4-phase3-fuzz-engine.sh"    # GH-299 Phase 3 (Gen 4 seeded mutational fuzz engine: replay, novelty-capped corpus, cross-twin parity)
   "gh-gen4-phase4-repro-synth.sh"    # GH-299 Phase 4 (Gen 4 clustered reproducer synthesis: 1 suite per root cause, ddmin, falsification)
   "gh-gen4-phase5-campaign.sh"       # GH-299 Phase 5 (Gen 4 sandboxed campaign: bounded soak in a disposable clone, 0 host contamination, poison control)
+  "gh712-jev-triage.sh"              # GH-712 (Jev ATE triage offline replays: green/red FN controls, empty input, hash/model contract; canned responses, no network)
   "gh396-find-harness-roots.sh"     # GH-396 (find-harness two-roots contract: #395 ×5 topologies, #394 warn-under-override + runnable remedy, --quiet)
   "gh393-deepseek-readiness.sh"     # GH-396 / #393 (RELAY_HAS_DEEPSEEK parity with deepseek-turn.py's own binary rule + API key)
   "gh591-prepush-commit-boundary.sh" # GH-591 (hook-created files do not travel in the selected commit)

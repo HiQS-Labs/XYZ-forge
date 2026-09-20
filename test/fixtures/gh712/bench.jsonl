@@ -1,0 +1,6 @@
+{"label": "pass", "exit_code": 0, "signal": 0, "stderr": "", "duration_ms": 210.0}
+{"label": "pass", "exit_code": 0, "signal": 0, "stderr": "warning: 3 suites skipped (pytest absent)", "duration_ms": 900.0}
+{"label": "fail", "exit_code": 1, "signal": 0, "stderr": "Traceback (most recent call last):\n  File \"x.py\", line 3\nKeyError: 'choices'", "duration_ms": 400.0}
+{"label": "fail", "exit_code": 2, "signal": 0, "stderr": "usage: tool [-h] --repo REPO\ntool: error: the following arguments are required: --repo", "duration_ms": 50.0}
+{"label": "pass", "exit_code": 0, "signal": 0, "stderr": "", "duration_ms": 1500.0}
+{"label": "fail", "exit_code": 124, "signal": 0, "stderr": "", "duration_ms": 900000.0}
