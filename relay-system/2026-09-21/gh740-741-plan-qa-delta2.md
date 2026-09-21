@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -65,5 +65,50 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — round 1
+
+VERDICT: PASS
+Basis: F6a is resolved in the seeded plan: target values are coalesced before serialization, the original target and multiple receipt targets have parser-level acceptance, and the already-receipted OPEN-reference case is explicit. No Must remains.
+swept file: yes
+
+Read the entire 251-line plan and the prior delta relay; checked the parser and explicit-target, recovery, ownership and merge-evidence paths. No additional pre-existing defect within this bounded F6a review was found, and F1–F6 remain closed. Only this relay file is edited (Easy reversibility). No Git commands, suites, executable fixtures or reconciler invocation ran. The seeded artifact is reviewed as supplied; commit a6557c55 attribution comes from Setup, not an independently queried Git object.
+
+- **[Pass] F6a serialization.** `PROJECT/2-WORKING/GH-740-HOSTED-LANE-PUSH-RACE.md:119-127` explicitly states `nargs="+"` store semantics, original PR values plus every receipt PR in **one** group, the corresponding commit group, and “all other original flags are retained verbatim”. This matches the declarations at `utils/py/wave_reconcile.py:1870-1879`; repeated groups overwrite before target construction at `:1981-1982`. No change requested.
+- **[Pass] Falsifiable acceptance.** Plan `:74` requires the publisher-built argv to retain #42/#5/#6 in the production parser and preserve merge evidence for an original already-receipted #42 referencing an OPEN issue. Plan `:125-127` gives the exact repeated-option red control and commit analogue. This closes the original-target discovery gap: receipted recovery exclusion at `wave_reconcile.py:1223-1224` and OPEN-issue skip at `:1254-1256` cannot recover an overwritten target. No change requested.
+- **[Pass] Consistent bounded replay.** Plan `:203-207` says “coalesced” and “never a repeated option”, limits identities to this run's published receipts, and retains fail-closed handling of missing identity. Whole-file search finds no `dict.fromkeys` claim. Ownership over full metadata remains stated at `:94-95`; the coalescing revision does not alter it. No change requested.
+
+Evidence commands:
+```sh
+rg -n 'Serialisation|nargs=|original.*values|all other original|production parser|already-receipted|coalesced|never a repeated option|dict.fromkeys' PROJECT/2-WORKING/GH-740-HOSTED-LANE-PUSH-RACE.md
+```
+Exit **0**; decisive matches at lines 74, 119–125, 204–205 contain the requirements cited above.
+
+Non-mutating parser probe (source-extracted production argument declarations only):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PYPROBE'
+import argparse, ast
+from pathlib import Path
+main = next(n for n in ast.parse(Path('utils/py/wave_reconcile.py').read_text()).body if isinstance(n, ast.FunctionDef) and n.name == 'main')
+parser = argparse.ArgumentParser()
+nodes = [n for n in main.body if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Attribute) and n.value.func.attr == 'add_argument']
+assert nodes
+for n in nodes:
+    exec(compile(ast.Module(body=[n], type_ignores=[]), '<source-parser>', 'exec'), {'parser': parser})
+for flag, values in (('--pr', ['42','5','6']), ('--commit', ['a'*40,'b'*40,'c'*40])):
+    for targets in ([flag,values[0],flag,values[1]], [flag,*values]):
+        args = parser.parse_args(targets + ['--catch-up','--gate','--qualify'])
+        print(flag, 'groups='+str(targets.count(flag)), 'targets='+repr(getattr(args,flag[2:])))
+s = Path('PROJECT/2-WORKING/GH-740-HOSTED-LANE-PUSH-RACE.md').read_text()
+assert s
+print('plan lines:', len(s.splitlines()), 'dict.fromkeys present:', 'dict.fromkeys' in s)
+PYPROBE
+```
+Exit **0**. Decisive output: `--pr groups=2 targets=['5']`; `--pr groups=1 targets=['42', '5', '6']`; commit repeated form retains only the b SHA, coalesced form retains all a/b/c SHAs; `plan lines: 251 dict.fromkeys present: False`. Both forms were parsed with the original catch-up/gate/qualify flags. This measures parser semantics, not a built publisher. An initial version of this probe exited **1** while printing `args.gate` (`AttributeError: 'Namespace' object has no attribute 'gate'`); removing that probe-only attribute assumption produced the result above without changing production code.
+
+- **[Unverified — needs clone run]** Publisher-built argv integration, raced publication, original OPEN-reference merge-evidence persistence and zero retry qualification calls remain implementation acceptance. No runtime or merge approval is implied.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the approved plan; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
