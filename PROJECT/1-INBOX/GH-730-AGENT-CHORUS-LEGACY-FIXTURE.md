@@ -91,7 +91,7 @@ Issue item 3 (print the failing line in the refusal block) is already served:
 - [x] `. relay-automation/gate-env.sh && bash test/agent-chorus.sh` → 215/0 and **zero** `__pycache__` directories under `skills/ test/ utils/` afterwards
 - [x] `test/gh441-gate-env-contract.sh` → 18 pass, 0 fail (C7a/C8a red against the pre-fix `ci-local.sh` / `gate-env.sh`)
 - [ ] Full `./validate.sh` green through the pre-push gate on the final commit
-- [ ] Final Codex relay QA: Approved
+- [x] Final Codex relay QA: Approved, round 2 (`relay-system/2026-09-21/gh730-final-qa-codex.md`, reviewed-head 2ef7850a)
 
 ## Ratings (RELEASES, 2026-09-21)
 `rated 70/70/50/95`. **sev 70:** deterministic gate red on every push from an affected clone;

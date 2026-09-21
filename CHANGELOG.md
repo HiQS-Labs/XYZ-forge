@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-21 — agent-chorus legacy fixture dangles by construction; gate runs write no bytecode (GH-730)
+
+`git push` from the operator's primary clone was refused by the pre-push gate: `test/agent-chorus.sh`
+red on "legacy symlink not repointed" while pristine `origin/development` was 215/0. Two root causes.
+The test built its "dangling" legacy link as `ln -s "$REPO/skills/agent2agent"`, so its precondition
+was the clone's state — and on any clone that ever ran the old skill, `skills/agent2agent/` survives
+the #193 rename as a gitignored `scripts/__pycache__/` shell, the installer correctly refuses to touch
+a live link, and the assertion fails on every push. The link now targets a `$WORK` path the suite
+never creates. Second, gate runs manufactured those ghosts: suites import repo modules directly and
+wrote `__pycache__/` under `skills/*/scripts` and `utils/py`. `relay-automation/gate-env.sh` — the
+GH-441 prologue `validate.sh` sources — now exports `PYTHONDONTWRITEBYTECODE=1` (matching the relay
+shims, GH-682), and `ci-local.sh` now sources it too (it never had, so the qualifying run was also
+missing the GH-441 scrub). The helper's scratch names are `_ge_`-prefixed and unset; it used to
+clobber a caller's `_src`/`_hp_lib`. Regressions: `gh441-gate-env-contract` C7a/C8a (18/0; red on
+the pre-fix files); agent-chorus 214/1 → 215/0 with and without the ghost, and 214/1 with the
+installer's repoint disabled. Codex final QA Approved (`relay-system/2026-09-21/gh730-final-qa-codex.md`).
+Easy rollback: focused revert.
+
 ## 2026-09-21 — Closeout evidence guards: Jog carries the verified merge SHA; the pre-merge receipt gate rejects contradictory outcomes (GH-656, GH-657)
 
 Two blockers from the GH-646 final review, found finished-but-unpushed in a 2026-09-16 task clone
