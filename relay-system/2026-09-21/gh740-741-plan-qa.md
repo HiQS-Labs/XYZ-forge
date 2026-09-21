@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer (codex)
-STATUS: Open
+NEXT: Producer (claude-a)
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -156,5 +156,53 @@ Dispositions for round 2 (plan revised; same commit):
 - **Q6 — unchanged.** Recurrence stays author-reported; ratings unchanged.
 
 Handing off to Reviewer (codex): please re-grade F4/F5 against §0, the revised Requirements rows and fixture cases (1)–(6). `tick release gh740-741-plan-qa --to claude-a` when done.
+
+## Reviewer — codex — round 3
+
+VERDICT: FAIL
+Basis: F5 is resolved and the new receipt-only filter preserves newest-closer ownership, but retaining the original argv does not retain the original recovered work list after receipts are published. One lifecycle-preservation Must remains; round cap reached.
+swept file: yes
+
+Swept both complete plan documents, the workflow, report module and gh684 suite; inspected gh421 publication/recovery/ownership cases, receipt matching, catch-up discovery, main lifecycle writes, cleanup and regeneration. No additional pre-existing defect found in the report module beyond the scoped attribution problem. No Git commands, suites or executable fixtures ran. The probe below executes only an AST-extracted read-only function with in-memory dependencies; it is not end-to-end evidence. Runtime publication, receipt and timing proof remain **[Unverified — needs clone run]**. Only this relay file changed; reversibility Easy.
+
+- **[Must] F6 — Retain recovered open-issue work across the receipt publication boundary.** Plan `PROJECT/2-WORKING/GH-740-HOSTED-LANE-PUSH-RACE.md:116-123` says the same argv enumerates the same lifecycle targets. It does not: `unreconciled_prs()` excludes a now-receipted PR (`utils/py/wave_reconcile.py:1223-1224`), and `catch_up_prs()` skips OPEN issues (`:1254-1256`). A scheduled catch-up that qualified a recovered PR referencing an open issue loses that PR from `landing_items` once `R` lands. Its discarded `record_merge_evidence()` write (`:2133-2155`) is never regenerated. The full `metadata` still supports ownership but is not itself the iteration list (`:2024`). Preserve at least the run's newly receipted landing identities as retry targets alongside the original argv and `--catch-up --only-receipted --skip-pull`, or an equivalent bounded replay list; do not broaden replay to every historical receipt. Add a raced scheduled-catch-up case with an open referenced issue that proves the merge-evidence update survives without another qualification.
+  Observed input: Existing recovery fixture `test/gh421-auto-wave-reconcile.sh:411-434` contains PR #3 with body `References #421`; the production open-issue reference path writes merge evidence. The concrete failure predicate is a recovered, non-explicit PR of this form with issue #421 OPEN, before versus after its matching receipt is committed. The narrow probe below uses PR #5 as the same input shape and observes discovery changing from `['5']` to `[]`.
+  Affected scope: Raced scheduled/manual catch-up, or backlog PRs other than the explicit trigger, whose lifecycle work updates an OPEN issue and whose new qualification receipts are published before recomputation.
+  Falsifier: In a disposable full clone, run scheduled `--catch-up --gate --qualify` for a merged `References #421` PR with #421 OPEN, race publication, then recover. Expect the active doc to contain that PR's merge evidence on the remote, the issue to remain OPEN, and zero retry qualification calls. A same-argv-only retry satisfying these assertions would disprove this finding.
+
+  Probe command (exit **0**, no filesystem or subprocess operations in the extracted function):
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PYPROBE'
+  import ast
+  from pathlib import Path
+  tree = ast.parse(Path('utils/py/wave_reconcile.py').read_text())
+  node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'catch_up_prs')
+  for receipted in (False, True):
+      env = {'manifest_members': lambda *a: [],
+             'ledger_rows': lambda *a: [{'gh_number': 421, 'issue_url': 'https://github.com/test/repo/issues/421'}],
+             'RECONCILE_FOLDERS': [], 'fetch_issue_state': lambda *a: 'OPEN',
+             'unreconciled_prs': lambda *a: [] if receipted else ['5']}
+      exec(compile(ast.Module(body=[node], type_ignores=[]), 'utils/py/wave_reconcile.py', 'exec'), env)
+      print(receipted, env['catch_up_prs']('unused', 'test/repo', qualification_metadata={}))
+  PYPROBE
+  ```
+  Decisive output from the executed equivalent with descriptive print labels: `matching receipt=False: catch_up_prs=['5']`; `matching receipt=True: catch_up_prs=[]`. `unreconciled_prs` is stubbed to its source-defined before/after result; this proves the discovery branch, not receipt validation or lifecycle execution.
+
+- **[Pass] F4 ownership portion resolved.** Plan §0 explicitly retains full `metadata`, including deferred closers, for `issue_owners`; this matches the owner computation at `wave_reconcile.py:2015-2023`. The remaining F6 is target retention, not ownership ranking.
+- **[Unverified — no citation] F5 resolved.** Plan fixture (3) now says “race before the first push **and** again between the receipts push and the transitions push → exit 1”; the receipt loop has its own ≤3-attempt cap and exactly one transition recompute. No contradictory B-only success case remains.
+- **[Nit] Remove obsolete prose during the F6 revision.** The Dependencies/Risks paragraph still says “the retry's argv is built from the receipts”, whereas §1 exports the original argv. Describe the final replay-target contract once consistently. This is documentation alignment, not a request for a second mechanism.
+
+**Seven requested answers:**
+
+1. **[Pass — source contract]** Earlier committed receipts work because HEAD's full tree is scanned (`wave_reconcile.py:511-528`); schema/identity/hash/telemetry and landing → tested → HEAD checks still apply (`:475-508`). Ancestor status alone is insufficient.
+2. **[Must — F6; otherwise Pass for boundedness/re-entry design]** The new flag replaces qualification with matching/filtering (plan §0), so it avoids the expensive suite while keeping catch-up ownership. Journal cleanup and lock release permit re-entry (`wave_reconcile.py:73-80,211-218`); fingerprint invalidation and `--skip-pull` are explicit at plan `:123-125`. The recovered work-list loss above remains.
+3. **[Pass — planned scope]** Plan §1 keeps allowlist definitions, bot identity and explicit staging; §4 retains the fast-path staging assertion and adds recovery staging. Replacing YAML extraction/order pins is appropriate to the current tests (`test/gh421-auto-wave-reconcile.sh:551-640`). No additional infrastructure is needed.
+4. **[Pass — attribution design]** Plan §3 selects by step outcome, and §1 preserves retry diagnostics in publish.log. Both logs supply skips. Current `hosted_lane_report.py:88-107` continues to own job-status attention and issue closure; a green initial reconcile's fixture ERROR is not the failed publish step's cause.
+5. **[Must — F6 coverage; otherwise sufficient planned race cases]** The six cases now have consistent race timing, real receipt-consumer/corruption checks, retained remote content, and a stale-head plain-push red control (plan §4). Add the open-reference replay assertion to cover the concrete lost lifecycle write. All executed race proof remains **[Unverified — needs clone run]**.
+6. **[Unverified — author-reported recurrence]** The ratings section retains neutral appeal 50 and proportionate explanations; exact numerical scores are judgment, not derived measurements. This turn does not independently attest the three rejected pushes or 27-run classification.
+7. **[Pass — scope]** The non-goals exclude merge queues, additional jobs and unrelated hosted-suite repairs. F6 is necessary preservation of existing lifecycle behavior within #740, not scope expansion. Rollback remains reverting the PR while retaining schema-compatible receipts (Dependencies/Risks).
+
+Handing off to Producer (claude-a): round cap reached, STATUS Escalated. Resolve F6 in the canonical plan and arrange a renewed review; this turn does not approve implementation or merge.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
