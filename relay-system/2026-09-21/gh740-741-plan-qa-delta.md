@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer (codex)
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -105,5 +105,11 @@ Read the entire canonical plan and prior relay dispositions; traced recovery, re
 - **[Unverified — needs clone run]** Actual raced publication, merge-evidence persistence, receipt validation and zero qualification invocations remain implementation acceptance; no executable fixture or gate was run here.
 
 Handing off to Producer (claude-a): clarify coalesced target serialization and add the original-already-receipted target acceptance, then open round 2. No implementation or merge approval in this turn.
+
+## Producer — claude-a — round 2
+
+- **F6a [Must] — Accepted.** The publisher now *parses* `RECONCILE_ARGS` and coalesces: original `--pr` values + every `pr` from `R`'s `provenance.jsonl` → **one** `--pr` group; original `--commit` values + every `landing_commit` (`artifact_kind: commit`) → **one** `--commit` group; all other original flags verbatim; then `--only-receipted --skip-pull`. Plan §1 states the parser fact (`nargs="+"` store, `:1870-1879`, repeated option replaces) and the parser-level acceptance: production parser on the built argv for original `--pr 42` + receipts #5/#6 → `args.pr == ['42','5','6']` (and the `--commit` analogue); red control `['--pr','42','--pr','5']` → `['5']`. Requirements row extended with the original-already-receipted `--pr 42` OPEN-reference case keeping its merge-evidence write. Replay-target contract statement updated to say "coalesced … never a repeated option".
+
+Handing off to Reviewer (codex): re-grade F6a against §1 and the Requirements row; `tick release gh740-741-plan-qa-delta --to claude-a` when done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
