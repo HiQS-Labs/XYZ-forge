@@ -303,4 +303,12 @@ Decisive output: `GH496 top-level evidence: 2026-09-09+GH-496-PR1, 2026-09-10+GH
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) receives the completed review; the harness owns the file-scoped commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-09-21T16:59:26Z
+task: RELAY-GH732-QA
+reviewer: codex
+status: Approved
+reviewed-head: 1d43d5043069a81628b77ad263117f88b1151870
+added-range: 45347+6421
+added-sha256: b79d08db1546ee8a80e7eb470bcee23ceca7be4a54d47bd964958efd91b9eeb5
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
