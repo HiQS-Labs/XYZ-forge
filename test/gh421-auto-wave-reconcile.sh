@@ -482,6 +482,80 @@ class ReconcileTests(unittest.TestCase):
         self.assertIn('updated: 2026-09-08',doc)
         self.assertNotIn('updated: 2026-09-07',doc)
 
+    # GH-740: the hosted publish step's bounded retry. Same enumeration and ownership as the run it
+    # retries; landings without a committed, matching receipt are deferred, never qualified.
+    def only_receipted(self, receipted, targets=(), discover=None, issue_state='CLOSED', lookup=None):
+        older=dict(self.pr,number=90,mergedAt='2026-09-07T00:00:00Z',mergeCommit={'oid':'b'*40})
+        lookup=lookup or {'90':older,'42':self.pr}
+        def default_discover(root,slug,offline,qualification_metadata=None):
+            qualification_metadata.update({('pr','90'):older,('pr','42'):self.pr})
+            return ['90','42']
+        argv=['wave','--root',str(self.root),*targets,'--catch-up','--qualify','--gate','--only-receipted',
+              '--skip-pull','--skip-branch-check']
+        out=io.StringIO()
+        with patch.object(sys,'argv',argv), \
+             patch.object(wave,'catch_up_prs',side_effect=discover or default_discover), \
+             patch.object(wave,'qualify_landings') as qualify, \
+             patch.object(wave,'committed_qualifications',return_value=[{'pr':n} for n in receipted]), \
+             patch.object(wave,'qualification_receipt_matches',side_effect=lambda root,entry,meta: entry['pr']==meta['number']), \
+             patch.object(wave,'check_provenance_receipts'), \
+             patch.object(wave,'fetch_issue_state',return_value=issue_state), \
+             patch.object(wave,'fetch_pr_metadata',side_effect=lambda root,value,*a,**k: lookup[str(value)]), \
+             patch.object(wave,'check_porcelain_cleanliness',return_value=''), \
+             patch.object(wave,'verify_rollback_completeness'), \
+             patch.object(wave,'github_slug_from_origin',return_value='test/repo'), \
+             patch.object(wave,'harness_tool',side_effect=lambda root,path:str(source/path)), \
+             patch.object(wave.subprocess,'run',side_effect=self.run_command), \
+             contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            wave.main()
+        qualify.assert_not_called()
+        return out.getvalue()
+
+    def test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner(self):
+        out=self.only_receipted(receipted=[42])
+        self.assertIn('deferred PR #90',out)
+        self.assertNotIn('deferred PR #42',out)
+        doc=(self.root/self.doc.replace('2-WORKING','3-COMPLETED')).read_text()
+        self.assertIn('updated: 2026-09-08',doc)
+        self.assertNotIn('updated: 2026-09-07',doc)
+        self.assertIn('PR #42',self.rows('SELECT * FROM roadmap_items')[0]['raw_text'])
+
+    def test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own(self):
+        # The newer closer already had a committed receipt; the older one was receipted this run.
+        out=self.only_receipted(receipted=[90,42])
+        self.assertNotIn('deferred',out)
+        doc=(self.root/self.doc.replace('2-WORKING','3-COMPLETED')).read_text()
+        self.assertIn('updated: 2026-09-08',doc)
+        self.assertNotIn('updated: 2026-09-07',doc)
+
+    def test_only_receipted_refuses_an_explicit_unreceipted_target(self):
+        with self.assertRaises(SystemExit) as stopped:
+            self.only_receipted(receipted=[42],targets=['--pr','90'])
+        self.assertEqual(stopped.exception.code,6)
+
+    def test_only_receipted_requires_catch_up_and_qualify(self):
+        for argv in (['wave','--root',str(self.root),'--pr','42','--gate','--only-receipted'],
+                     ['wave','--root',str(self.root),'--catch-up','--gate','--only-receipted']):
+            with self.subTest(argv=argv[3:]), patch.object(sys,'argv',argv), \
+                 contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as stopped:
+                wave.main()
+            self.assertEqual(stopped.exception.code,2)
+
+    def test_only_receipted_explicit_target_keeps_open_issue_merge_evidence(self):
+        # GH-740 F6: after the receipts commit lands, discovery no longer lists this PR (it is
+        # receipted) and skips its OPEN issue — the publisher names it explicitly, and its
+        # merge-evidence write survives with zero qualification.
+        reference=dict(self.pr,number=5,body='References #421',mergeCommit={'oid':'5'*40})
+        def discover(root,slug,offline,qualification_metadata=None):
+            return []   # what catch_up_prs returns once #5 is receipted and #421 is OPEN
+        with patch.object(wave,'extract_linked_issues',return_value=([],[421])):
+            out=self.only_receipted(receipted=[5],targets=['--pr','5'],discover=discover,issue_state='OPEN',
+                                    lookup={'5':reference})
+        self.assertIn('Issue #421 referenced without a closing keyword and OPEN — recording merge evidence only',out)
+        doc=(self.root/self.doc).read_text()   # still active — the issue is open
+        self.assertIn('## Merge evidence',doc)
+        self.assertIn('PR #5',doc)
+
     def test_qualified_empty_sweep_writes_nothing(self):
         before=self.snapshot()
         argv=['wave','--root',str(self.root),'--catch-up','--qualify','--gate','--skip-pull','--skip-branch-check']
