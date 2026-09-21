@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -102,5 +102,84 @@ Output: one graded finding per question (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Review (agy) — Round 1 · 2026-09-21
+
+swept file: yes
+
+Pre-existing defects in plan file: none found beyond the missing recon references and unupdated locator/scanner lines identified in the findings below.
+
+#### Findings
+
+1. **Consumers** `[Blocker]`
+   - `repro.sh:165,167,276`: Directly executes and checks `skills/relay-xyz/find-harness.sh` (`if [ -x skills/relay-xyz/find-harness.sh ]; then bash skills/relay-xyz/find-harness.sh --check ...` and `grep -q 'AGY_BIN' skills/relay-xyz/find-harness.sh`). Missing from the plan's Recon section (`PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:78-144`) and Ordered implementation list (`:185-205`).
+   - `skills/agent-chorus/publish-manifest.tsv:4-15`: Declares 12 canonical source paths (`skills/agent-chorus/...`), which `skills/agent-chorus/sync-to-standalone.sh:78` validates with `[ -f "$SOURCE_REPO/$source_rel" ] || exit 1`. Unlisted in Recon or implementation plan; moving `skills/agent-chorus/` breaks `sync-to-standalone.sh`.
+   - `skills/agent-chorus/standalone/ci.yml:24`: Executes `bash "$RUNNER_TEMP/XYZ-forge/skills/agent-chorus/sync-to-standalone.sh" --check` (categorized under docs in plan at `:133`, but is an executable GitHub Actions workflow).
+   - `skills/review-xyz/scripts/review_engine.py:9`: Root resolver omitted from Recon; breaks when moved into tier directory (see Finding 2).
+   - **Fix:** Add `repro.sh:165,167,276`, `skills/agent-chorus/publish-manifest.tsv:4-15`, and `skills/agent-chorus/standalone/ci.yml:24` to Recon and Step 8/5.
+   - `Observed input:` Execution of `./repro.sh` and `skills/agent-chorus/sync-to-standalone.sh --check` after moving `skills/relay-xyz` and `skills/agent-chorus`.
+   - `Affected scope:` `repro.sh:165,167,276`, `skills/agent-chorus/publish-manifest.tsv:4-15`.
+   - `Falsifier:` In a tiered tree without these repoints, `repro.sh` skips/fails `find-harness.sh --check` and `sync-to-standalone.sh --check` exits 1 with `Missing source file`.
+
+2. **Locators** `[Blocker]`
+   - `skills/relay-xyz/find-harness.sh:103,172,207`: All three lines (`_hp_lib`, case 5 `_cand`, `LIVE_HARNESS`) require `../../..`. The plan correctly lists all three at `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:100`.
+   - `skills/file-xyz-bug/find-xyz.sh:70`: Plan cites lines 46 and 64 (`:101`), but misses line 70: `for _l in "$HOME/.claude/skills/relay-xyz/find-harness.sh" "$SELF_DIR/../relay-xyz/find-harness.sh"`. Line 70 derives `relay-xyz` as a sibling. Under tiers, `file-xyz-bug` is in `skills/2-daily/` while `relay-xyz` is in `skills/1-hourly/`, so `"$SELF_DIR/../relay-xyz/find-harness.sh"` silently misses.
+   - `skills/relay-automation/make-pkg.sh:11,30`: Plan cites line 5 (`cd ../..`) at `:102`, but misses line 11 (`tar czf skills/relay-automation/relay-pkg.tar.gz`) and line 30, which write the archive to the old un-tiered path.
+   - `skills/review-xyz/scripts/review_engine.py:9`: Completely omitted from the plan. Line 9 derives `XYZ_ROOT = os.path.dirname(os.path.dirname(SKILL_DIR))`. Under tiering, `SKILL_DIR` is `skills/2-daily/review-xyz`, so `XYZ_ROOT` resolves to `skills/` instead of the repository root, and `review_engine.py` fails with exit 2 (`cannot locate review_xyz.py at <root>/skills/utils/py/review_xyz.py`).
+   - Flat layout behavior: No bash locator is published to XYZ-mini (`utils/py/xyz_mini_sync.py:29-59`). In a Deployed Skills copy, every bash locator guards self-relative resolution with specific marker checks (`_has_harness`, `_has_hq`, `_is_intake`, `_is_pdda_repo`); since `../../..` lands in `$HOME` or `/Users` which lack these markers, all locators safely fall through rather than mis-resolving.
+   - **Fix:** Update `find-xyz.sh:70` to target `../../1-hourly/relay-xyz/find-harness.sh`, update `make-pkg.sh:11,30` to target `skills/1-hourly/relay-automation/relay-pkg.tar.gz`, and update `review_engine.py:9` with an extra `os.path.dirname` call.
+   - `Observed input:` `find-xyz.sh` step 3 fallback invocation; `make-pkg.sh` execution; `review_engine.py` invocation from `skills/2-daily/review-xyz/scripts/`.
+   - `Affected scope:` `skills/file-xyz-bug/find-xyz.sh:70`, `skills/relay-automation/make-pkg.sh:11,30`, `skills/review-xyz/scripts/review_engine.py:9`.
+   - `Falsifier:` Executing `python3 skills/2-daily/review-xyz/scripts/review_engine.py` exits 2 without adding a third `dirname`.
+
+3. **Python walk-up in vendored `.xyz/`** `[Blocker]`
+   - `skills/merge-cleanup/scripts/scan_clones.py:190`: Walking up to find `bin/tick` correctly resolves `<repo>/bin/tick` in canonical forge and `<repo>/.xyz/bin/tick` in vendored `.xyz/`, matching the docstring at line 186 ("The harness's own `bin/tick`, then PATH").
+   - `skills/agent-chorus/scripts/agent_chorus.py:85`: The plan's proposed "walk up to the nearest ancestor containing `skills/`, fall back to `parents[3]`" (`PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:104`) FAILS in a vendored `.xyz/` layout (`<consumer>/.xyz/skills/...`). In a vendored layout, `<consumer>/.xyz` contains `skills/`, so the nearest ancestor containing `skills/` is `<consumer>/.xyz`. This sets `default_root()` to `<consumer>/.xyz` instead of `<consumer>`, directing `relay-system/` into `<consumer>/.xyz/relay-system/` instead of `<consumer>/relay-system/` (`agent_chorus.py:188`). Furthermore, in a Deployed Skills copy outside a repository, no ancestor contains `skills/` and falling back to `parents[3]` resolves to `~/Documents`.
+   - **Fix:** In `agent_chorus.py:default_root()`, check whether the resolved ancestor is named `.xyz` and take its parent (`if root.name == ".xyz": root = root.parent`), matching `skills/relay-xyz/find-harness.sh:127-130` and `utils/py/harness_paths.py`.
+   - `Observed input:` Vendored setup at `<consumer>/.xyz/skills/2-daily/agent-chorus/scripts/agent_chorus.py`.
+   - `Affected scope:` `skills/agent-chorus/scripts/agent_chorus.py:81-86`.
+   - `Falsifier:` In a vendored checkout, `agent_chorus.py` resolves `root` to `.xyz` directory rather than consumer repository root unless it steps up from `.xyz`.
+
+4. **`skill_drift_check.py` and red control** `[Blocker]`
+   - `utils/py/skill_drift_check.py:52`: The plan proposes updating line 36 (`canonical.glob("*/SKILL.md")` -> globbing `*/SKILL.md` and `*/*/SKILL.md`), but omits line 52: `if not (canonical / name / "SKILL.md").is_file():`. In line 52, `collection` is flat. When checking if a vendored skill exists in canonical, it tests `canonical / name / "SKILL.md"`. When canonical is tiered (`canonical/<tier>/<name>/SKILL.md`), that path never exists, so EVERY vendored skill in `collection` will be falsely reported as `unrecognized` in lines 50-54.
+   - `test/gh660-skill-drift.sh:11-14`: The test's fixture uses a strictly one-level canonical tree (`$FIX/canonical/skills/alpha/SKILL.md`). Because the checker preserves `*/SKILL.md` globbing, the test still acts as a red control for the 1-level branch (detects drift on `beta`). However, it does NOT test or prove the two-level branch at all; it cannot catch the line 52 regression.
+   - **Fix:** In `skill_drift_check.py:50-54`, check whether `name` exists in the set of canonical skill names discovered in the first loop instead of testing a hardcoded flat path. Update `test/gh660-skill-drift.sh` to include a two-level canonical skill in its fixture (e.g. `$FIX/canonical/skills/1-hourly/alpha/SKILL.md`) to prove the tiered branch.
+   - `Observed input:` Tiered canonical tree with `skills/1-hourly/recon/SKILL.md` and collection with `recon/SKILL.md`.
+   - `Affected scope:` `utils/py/skill_drift_check.py:50-54` and `test/gh660-skill-drift.sh:11-17`.
+   - `Falsifier:` Run `python3 utils/py/skill_drift_check.py --canonical <tiered-dir> --collection <collection-dir> --json`. With only line 36 patched, `recon` appears in `unrecognized`.
+
+5. **`ci-route.sh` globs** `[Pass]`
+   - Verified that in bash `case "$path" in ...)` statements, pattern matching uses standard shell pattern matching rules (fnmatch without `FNM_PATHNAME`), where `*` matches any sequence of characters including `/`.
+   - `skills/*/hq/*` at `utils/ci-route.sh:37` correctly matches `skills/2-daily/hq/find-hq.sh` as well as any subdirectories (e.g. `skills/2-daily/hq/fixtures/...`).
+   - `skills/*/relay-xyz/*` at `utils/ci-route.sh:316` correctly matches `skills/1-hourly/relay-xyz/SKILL.md` and triggers `full_required=true` as verified against `test/ci-route.sh:170`.
+   - Quoted check: `p="skills/2-daily/hq/find-hq.sh"; case "$p" in skills/*/hq/*) echo MATCH ;; esac` exits 0 and prints `MATCH`. No pattern in `ci-route.sh` is broken by this behavior.
+
+6. **Tier assignments** `[Nit]`
+   - `skills/releases/SKILL.md:3`: Placed in `1-hourly` (`PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:66`). Its trigger description defines it as a periodic/milestone planning ledger and release management router ("/releases; release status or health checks; stale-plan review... publishing a planned GitHub Release"). Release planning is not an hourly developer activity; placement in `2-daily` or `3-weekly` better aligns with its cadence.
+   - `skills/standup/SKILL.md:3`: Placed in `2-daily` (`:67`). Its trigger description defines it as "Session-scoped triage: what did I leave open, what is rotting, and is the plan still right — answered in under a screen." Because it governs work session boundaries, it could be considered `1-hourly`.
+   - `skills/whack-a-mole/SKILL.md:3`: Placed in `3-weekly` (`:68`). Its description cites a 14-day scan window, which is bi-weekly/sprint level; placement in `3-weekly` is reasonable given the 4-tier model.
+   - **Fix:** (Advisory) Consider swapping `releases` to `2-daily` and `standup` to `1-hourly`.
+
+7. **Rating `55/25/50/45`** `[Pass]`
+   - Verified against `releases.db` (`roadmap_items` row for GH-744): `pri=55, sev=25, appeal=50, effort=45`.
+   - `sev 25`: Verified at `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:210` — no defect or active failure; flat layout causes navigation friction. No open issue in `releases.db` claims a blocker caused by the flat layout.
+   - `pri 55`: Verified operator prioritized GH-744 directly.
+   - `appeal 50`: Unset by operator; neutral 50 preserved.
+   - `effort 45`: Verified mechanical refactor across ~80 files. No axis is contradicted.
+
+8. **Requirements & Governance** `[Pass]`
+   - Completeness against Issue #744 Acceptance criteria: all four criteria (60 tiered skills with empty root, validate.sh green in disposable clone, skill_drift_check recognition, relay-xyz find-harness check) are incorporated in plan steps 1, 2, 5, and 9 (`PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:185-205`).
+   - Compliance with `AGENTS.md` and `ROUTER.md`: issue-first followed (GH-744), PDDA capture created in `1-INBOX` with frontmatter, roadmap row parked in `releases.db`, promotion procedure noted for activation (`:33-35`), CHANGELOG entry planned, and validation constrained to a disposable full clone (`:204`).
+
+9. **Rollback** `[Should]`
+   - `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:171`: A single `git revert <merge_commit>` cleanly reverts all tracked files in git (including `relay-pkg.tar.gz` and `security-scan-baseline.txt`).
+   - However, for machine-local state (`:138-142`), if the operator runs `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>` in Skills Army HQ after merge, a subsequent git revert requires a paired external action: re-running `intake.py --apply update <name> --source <forge>/skills/<name>` to restore flat provenance.
+   - **Fix:** Explicitly document this paired external rollback command in the Risks / rollback section (`:171`).
+   - `Observed input:` Rollback after post-merge Skills Army HQ intake update.
+   - `Affected scope:` `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:171`.
+   - `Falsifier:` Reverting the git merge without reverting Skills Army HQ provenance leaves Skills Army HQ pointing to deleted `<forge>/skills/<tier>/<name>` paths.
+
+VERDICT: FAIL
+Basis: The plan correctly captures the overall architecture, tier structure, and the majority of test and locator repoints, but contains concrete execution blockers that would cause runtime failures: (1) skill_drift_check.py:52 checks flat canonical paths in its collection loop, causing every vendored skill to be reported unrecognized; (2) skills/review-xyz/scripts/review_engine.py is omitted and resolves root to skills/; (3) skills/relay-automation/make-pkg.sh:11,30 still targets un-tiered tarball paths; (4) skills/agent-chorus/publish-manifest.tsv is unlisted and breaks sync-to-standalone.sh; (5) skills/file-xyz-bug/find-xyz.sh:70 assumes relay-xyz is a sibling at ../relay-xyz. In addition, agent_chorus.py walk-up mis-resolves in vendored .xyz/ layouts, test/gh660-skill-drift.sh lacks a two-level fixture, and repro.sh:165,167,276 is unlisted.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
