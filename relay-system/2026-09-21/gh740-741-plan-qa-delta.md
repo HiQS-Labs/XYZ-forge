@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -65,5 +65,45 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — round 1
+
+VERDICT: FAIL
+Basis: F6's explicit replay targets address receipt-induced discovery loss, but appending another --pr/--commit group does not preserve the original argv's targets under the current parser. One bounded Must remains.
+swept file: yes
+
+Read the entire canonical plan and prior relay dispositions; traced recovery, receipt identity production, argument parsing, explicit-item construction/deduplication, ownership and reference-only merge evidence. No additional pre-existing issue within the F6 delta was found beyond the parser interaction below. F1–F5 remain closed. Only this relay file changed; reversibility Easy. No Git commands, suites or executable fixtures ran.
+
+- **[Must] F6a — Merge target values before serialization; repeated options overwrite earlier targets.** The plan's Smallest affected surface §1 says to re-run the original argv “plus --pr <n…> / --commit <sha…>” and claims “Duplicates with the argv's own --pr collapse in the existing dict.fromkeys dedupe”. However, the parser at `utils/py/wave_reconcile.py:1870-1879` uses `nargs="+"` with the default store action. A second occurrence replaces the first before `:1981-1982` builds targets; `:2004` cannot recover discarded IDs. Cheapest fix: in the publisher, combine original and newly receipted PR IDs into one --pr group, and commit IDs into one --commit group, retaining all other original flags. Add a parser-level acceptance for an original target absent from this run's new receipts, plus multiple receipt targets.
+  Observed input: Original argv `--pr 42 --catch-up --gate --qualify`, newly published receipt for PR #5, and the plan's appended `--pr 5` yields `args.pr=['5']`. If #42 already has a committed receipt and references an OPEN issue, recovery excludes it (`:1223-1224`) and catch-up skips that issue (`:1254-1256`); its discarded merge-evidence write is again lost. This is the same F6 input predicate applied to the original explicit target. The measured failure is argument loss; lifecycle consequences are source-traced.
+  Affected scope: Retry argv containing an original --pr/--commit option and another occurrence of that option for newly published receipts; repeated per-receipt groups also retain only the last group.
+  Falsifier: The actual production parser receives the publisher's retry argv for original PR #42 plus new receipt PRs #5/#6 and retains all three IDs; equivalently for direct-commit IDs. In a disposable clone, make #42 already receipted and reference an OPEN issue, and require its merge evidence as well as #5/#6's work with zero retry qualification calls. A literal appended repeated-option argv preserving every ID in today's parser would disprove this finding.
+
+  Non-mutating probe command, exit **0**:
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PYPROBE'
+  import argparse, ast
+  from pathlib import Path
+  tree = ast.parse(Path('utils/py/wave_reconcile.py').read_text())
+  main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main')
+  parser = argparse.ArgumentParser()
+  for n in main.body:
+      if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Attribute) and n.value.func.attr == 'add_argument' and n.value.args and isinstance(n.value.args[0], ast.Constant) and n.value.args[0].value in ('--pr', '--commit'):
+          exec(compile(ast.Module(body=[n], type_ignores=[]), '<source-parser>', 'exec'), {'parser': parser})
+  for argv in (['--pr', '42', '--pr', '5'], ['--pr', '42', '5'], ['--pr', '5', '--pr', '6']):
+      args = parser.parse_args(argv)
+      items = list(dict.fromkeys(('pr', value) for value in (args.pr or [])))
+      print(f'{argv!r} -> args.pr={args.pr!r}; landing_items={items!r}')
+  PYPROBE
+  ```
+  Decisive output: `['--pr', '42', '--pr', '5'] -> args.pr=['5']; landing_items=[('pr', '5')]`; coalesced control `['--pr', '42', '5'] -> args.pr=['42', '5']; landing_items=[('pr', '42'), ('pr', '5')]`; repeated receipt groups `['--pr', '5', '--pr', '6'] -> args.pr=['6']; landing_items=[('pr', '6')]`. This executes only source-extracted argument declarations and an in-memory dedupe, not the reconciler.
+
+- **[Pass — plan design, subject to F6a]** Explicit targets enter the iteration list before discovery (`wave_reconcile.py:1981-2004`), so the scheduled PR #5 OPEN-reference case can reach `record_merge_evidence()` at `:2155`. The Requirements row explicitly requires “#421 stays OPEN, qualify_landings not called”; Ordered implementation 1b repeats the merge-evidence assertion. This is falsifiable planned proof.
+- **[Pass — scope/ownership]** §0 retains “issue_owners ... built over the full metadata, deferred closers included”, matching `wave_reconcile.py:2015-2023`. §1 limits additional targets to “provenance.jsonl entries in R”; receipt production writes only `pending` entries (`:611-624`). No historical-receipt replay is proposed.
+- **[Pass — alignment nit resolved]** Dependencies/Risks now states one “Replay-target contract (one statement): retry argv = original RECONCILE_ARGS + --only-receipted --skip-pull + explicit --pr/--commit for each entry in this run's published receipts”. Update its serialization wording consistently with F6a.
+- **[Unverified — needs clone run]** Actual raced publication, merge-evidence persistence, receipt validation and zero qualification invocations remain implementation acceptance; no executable fixture or gate was run here.
+
+Handing off to Producer (claude-a): clarify coalesced target serialization and add the original-already-receipted target acceptance, then open round 2. No implementation or merge approval in this turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
