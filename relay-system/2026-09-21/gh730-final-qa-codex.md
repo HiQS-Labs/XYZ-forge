@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -399,5 +399,139 @@ focused Producer receipts were not rerun in this reviewer worktree per the relay
 full disposable-clone gate remains pending after the blocker is fixed.
 
 handing off to Producer — go to the Producer window and say 'take your turn'
+
+### Producer — claude-a — Round 1 response
+
+Revision under review is now commit `9186eaae` (on top of `5fca8017`). Dispositions:
+
+- **[Blocker] ci-local.sh / explicit marathon `--pre-advance-cmd`** — Accepted for `ci-local.sh`: it now
+  sources `relay-automation/gate-env.sh` right after `HERE` (`ci-local.sh:70-74`); this also closes the
+  GH-441 scrub gap you noticed (the qualifying runner never sourced the prologue at all).
+  `Disposition: Rejected (Out of Scope / Ponytail)` for `marathon_drive._gate_env()`: the helper's own
+  contract (`gate-env.sh:2-3`, "SOURCE this at the top of any --pre-advance-cmd") already places the
+  export in a custom gate's hands, and the default gate resolves to `validate.sh`
+  (`utils/py/marathon_drive.py:1385-1387`). A second writer for gate environment inside the driver is
+  the exact duplication GH-441 removed. Contract assertion added for the accepted consumer:
+  `test/gh441-gate-env-contract.sh` C7a.
+- **[Should] `_src`/`_hp_lib` leak** — Accepted. All scratch names are `_ge_`-prefixed and unset
+  (`gate-env.sh:29-43, 96`). Your falsifier now yields `src=caller hp=unset pdb=1`; pinned as C8a.
+- All **[Pass]** findings — acknowledged, no change.
+
+Evidence (unsandboxed, this clone): `test/gh441-gate-env-contract.sh` → 18 pass, 0 fail. Red controls:
+pre-fix `ci-local.sh` → C7a FAIL; pre-fix `gate-env.sh` → C8a FAIL with
+`got 'unset|<repo>/relay-automation/gate-env.sh|<repo>/relay-automation/harness-paths.sh'`.
+The full `./validate.sh` gate runs once on the approved commit via the pre-push hook, after your verdict.
+
+Round-2 diff (commit `9186eaae`):
+
+````diff
+commit 9186eaae4c25310bcfc6ef881db00557ab9f5178
+Author: Noel Saw <56978803+noelsaw1@users.noreply.github.com>
+Date:   Mon Sep 21 11:38:51 2026 -0700
+
+    fix(gate): ci-local.sh sources gate-env.sh; helper keeps its scratch names to itself (GH-730 r1)
+    
+    Codex round-1 findings on the GH-730 final QA:
+    - Blocker (accepted in part): ci-local.sh launches suites and pytest directly
+      and never sourced relay-automation/gate-env.sh, so the qualifying run got
+      neither the GH-441 scrub nor the GH-730 no-bytecode rule. One source line.
+      The explicit marathon --pre-advance-cmd half is rejected: the helper's own
+      contract makes a custom gate source it, and the default gate is validate.sh.
+    - Should (accepted): gate-env.sh assigned bare _src/_dir/_hp_lib and unset a
+      nonexistent _ge_src, leaking into any caller that sourced it. All scratch
+      names are now _ge_-prefixed and unset.
+    - test/gh441-gate-env-contract.sh gains C7a (ci-local.sh consumes the helper)
+      and C8a (helper exports PYTHONDONTWRITEBYTECODE=1 and leaves _src/_hp_lib
+      alone). Both red against the pre-fix files, 18/0 after.
+    
+    Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+
+diff --git a/ci-local.sh b/ci-local.sh
+index 7d24fb28..91ba14c0 100755
+--- a/ci-local.sh
++++ b/ci-local.sh
+@@ -68,6 +68,11 @@ set -uo pipefail
+ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ cd "$HERE" || exit 1
+ 
++# The same gate-environment prologue validate.sh sources (GH-441 scrub of ambient marathon exports;
++# GH-730 no-bytecode rule). This runner launches suites and pytest directly below, so it must source
++# it itself — a `validate.sh --list` child cannot export back into this shell.
++. "$HERE/relay-automation/gate-env.sh"
++
+ # ── GH-45: REFUSE to run from a linked git worktree ─────────────────────────────────────────────
+ # Same guard, same reason, same override as validate.sh's (kept inline in both rather than a new
+ # shared .sh — GH-551; both copies are pinned by test/gh35-test-tiers.sh): this script runs the
+diff --git a/relay-automation/gate-env.sh b/relay-automation/gate-env.sh
+index eadc2ab7..d227f7ea 100644
+--- a/relay-automation/gate-env.sh
++++ b/relay-automation/gate-env.sh
+@@ -24,18 +24,20 @@
+ 
+ # Resolve the harness root from this script's own location, following symlinks, so sourcing works
+ # from any CWD and from a vendored .xyz/ install. No machine path is ever hardcoded.
+-_src="${BASH_SOURCE[0]:-$0}"
+-while [ -h "$_src" ] || [ -L "$_src" ]; do
+-  _dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
+-  _src="$(readlink "$_src")"
+-  case "$_src" in /*) ;; *) _src="$_dir/$_src" ;; esac
++# Every scratch name here is `_ge_`-prefixed and unset at the end: this file is SOURCED, so a bare
++# `_src` or `_hp_lib` would clobber the caller's own (GH-730 review finding).
++_ge_src="${BASH_SOURCE[0]:-$0}"
++while [ -h "$_ge_src" ] || [ -L "$_ge_src" ]; do
++  _ge_ldir="$(cd -P "$(dirname "$_ge_src")" >/dev/null 2>&1 && pwd)"
++  _ge_src="$(readlink "$_ge_src")"
++  case "$_ge_src" in /*) ;; *) _ge_src="$_ge_ldir/$_ge_src" ;; esac
+ done
+-_ge_dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
++_ge_dir="$(cd -P "$(dirname "$_ge_src")" >/dev/null 2>&1 && pwd)"
+ 
+-_hp_lib="$_ge_dir/harness-paths.sh"
+-if [ -f "$_hp_lib" ]; then
++_ge_hp_lib="$_ge_dir/harness-paths.sh"
++if [ -f "$_ge_hp_lib" ]; then
+   # shellcheck source=relay-automation/harness-paths.sh
+-  . "$_hp_lib"
++  . "$_ge_hp_lib"
+ fi
+ _ge_root="$(cd -P "$_ge_dir/.." && pwd)"
+ _ge_py="$_ge_root/utils/py/gate_env.py"
+@@ -80,7 +82,7 @@ else
+   return 1 2>/dev/null || exit 1
+ fi
+ 
+-unset _ge_src _ge_dir _ge_root _ge_py _ge_names _ge_n
++unset _ge_src _ge_ldir _ge_dir _ge_hp_lib _ge_root _ge_py _ge_names _ge_n
+ 
+ # GH-730: no bytecode into the tree from a gate run. Suites import repo modules directly
+ # (importlib in test/agent-chorus.sh, the unittest files under test/), and every such import
+diff --git a/test/gh441-gate-env-contract.sh b/test/gh441-gate-env-contract.sh
+index 4b188dca..0aaa6933 100755
+--- a/test/gh441-gate-env-contract.sh
++++ b/test/gh441-gate-env-contract.sh
+@@ -150,5 +150,16 @@ printf '%s' "$orphan_out" | /usr/bin/grep -q "GH-441" \
+   && pass "C6b validate.sh no longer hardcodes its own prologue" \
+   || fail "C6b validate.sh still carries the duplicated unset line"
+ 
++# ── C7 (GH-730): ci-local.sh is a gate entry point too — it launches suites and pytest directly ──
++/usr/bin/grep -q "gate-env.sh" "$ROOT/ci-local.sh" \
++  && pass "C7a ci-local.sh sources the shared helper" \
++  || fail "C7a ci-local.sh does not source gate-env.sh — its suites run with an ungoverned environment"
++
++# ── C8 (GH-730): sourcing the helper sets the no-bytecode rule and leaves the caller's names alone ──
++c8_out="$(env -u PYTHONDONTWRITEBYTECODE bash -c '_src=caller; unset _hp_lib; . "$1"; printf "%s|%s|%s" "${PYTHONDONTWRITEBYTECODE-unset}" "${_src-unset}" "${_hp_lib-unset}"' _ "$HELPER" 2>/dev/null)"
++[ "$c8_out" = "1|caller|unset" ] \
++  && pass "C8a the helper exports PYTHONDONTWRITEBYTECODE=1 and does not clobber a caller's _src/_hp_lib" \
++  || fail "C8a expected '1|caller|unset', got '$c8_out'"
++
+ printf '  gh441-gate-env-contract: %s pass, %s fail\n' "$PASS" "$FAIL"
+ [ "$FAIL" -eq 0 ]
+````
+
+Questions for round 2: (a) does the `ci-local.sh` source line sit early enough — before any suite or
+pytest launch — and is there any ordering hazard with the GH-45 worktree guard below it? (b) does the
+`_ge_` rename leave any reference to the old names? (c) anything else blocking Approved?
+
+handing off to Reviewer
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
