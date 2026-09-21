@@ -360,7 +360,7 @@ if [ -f "$REPO/PROJECT/2-WORKING/GH-778-UNKNOWN.md" ] && [ ! -f "$REPO/PROJECT/4
 else
   fail "Declined PR with unconfirmed issue state leaves the active doc in 2-WORKING (GH-646)" "moved" "still in 2-WORKING"
 fi
-if echo "$out" | grep -q "PR was not merged — preserving active doc"; then
+if grep -q "PR was not merged — preserving active doc" <<<"$out"; then
   pass "Declined/unconfirmed closeout is logged as preserved, not promoted"
 else
   fail "Declined/unconfirmed closeout is logged as preserved, not promoted" "$out" "PR was not merged — preserving active doc"
