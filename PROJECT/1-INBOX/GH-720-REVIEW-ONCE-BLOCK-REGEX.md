@@ -97,3 +97,7 @@ A correct "changes requested" review is reported as a stall (red telemetry, exit
 - [ ] The repro is confirmed from the report, not assumed
 - [ ] A regression test covers the failure path before the fix lands
 - [ ] The fix composes with the existing harness rather than adding a parallel path
+
+## Merge evidence
+
+- PR #729 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
