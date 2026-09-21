@@ -175,4 +175,12 @@ Read the entire 100-line plan and entire 207-line current marathon-triage skill,
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed to the planned rewrite and final QA; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-21T03:08:44Z
+task: RELAY-GH724-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 609553124a09195509899e33d090ccf2a5507019
+added-range: 22168+6050
+added-sha256: a6436bf3810bf2b2872e4648de3b501427975a7710f2f3821ad0ab7cd0a2382f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
