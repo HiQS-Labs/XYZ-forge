@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -65,5 +65,25 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer — codex — Round 1
+
+VERDICT: PASS
+Basis: No [Must]/[Blocker] found in the seeded implementation against the approved Requirements. Approval is code-review approval; clone-run evidence and final-commit gate remain required before merge readiness. Nonblocking evidence gaps below should be corrected when attaching that evidence.
+swept file: yes
+
+Sweep: complete publisher, reporter, workflow and gh740/gh684 suites; the explicitly scoped wave_reconcile argparse/partition and gh421 WorkflowTests/only_receipted sections, validate registration, CHANGELOG top entry and approved plan. No additional pre-existing functional defect found in these reviewed surfaces. Historical base comparison was not performed: this reviewer is expressly prohibited from running git, so “verbatim move” and absence of unrelated changes across the entire commit range are not independently attested.
+
+- [Pass] Q1: `utils/py/hosted_lane_publish.py:70`, `:91`, `:182` preserve the changed-path allowlist before explicit staging, bot identity, one initial commit/push. Recovery at `:207` resets to the fetched remote, checks out only receipts, bounds their publication to `RECEIPT_ATTEMPTS = 3`, then recomputes once (`:218`) and fails on a second transition-push rejection. No executable rebase or force-push. `retry_argv` (`:137`) coalesces original and receipt targets; `recompute` (`:167`) clears the planner fingerprint. No second subsystem or wider allowlist needed.
+- [Pass] Q2: `utils/py/wave_reconcile.py:1937` rejects the flag without catch-up/qualification. The partition at `:2022` calls the same `committed_qualifications`/`qualification_receipt_matches` pair used in `qualify_landings` (`:535`), refuses explicit missing receipts, logs recovered deferrals, and retains full metadata for `issue_owners`. The qualifying-suite call exists only in the opposite branch. gh421 `:514–555` covers older-deferred/newer-owned, both-receipted, explicit refusal, argument constraints and the OPEN reference's merge evidence.
+- [Pass] Q3: `utils/py/hosted_lane_report.py:69` selects the failing step's log; `:129` collects skips from both logs. Workflow uses both step outcomes, `job.status`, publish tee and pipefail. Narrow read-only probe, command: `PYTHONDONTWRITEBYTECODE=1 python3` importing the reporter and calling `terminal_error('success', ['wave-reconcile: ERROR — invalid merged_at timestamp'], 'failure', ['hosted-lane-publish: ERROR — push rejected'])`, then the same reconcile log with outcomes `failure`/`skipped`; exit 0, decisive output: `('publish', 'push rejected')` and `('reconcile', 'invalid merged_at timestamp')`. gh684's `test_green_reconcile_red_publish_names_the_publish_step_not_a_test_line` retains the old summarize result as the contrasting control.
+- [Pass] Q4, static fixture assessment: gh740 `:147` uses a real bare remote and racer, observes a rejected stale plain push, checks racer → receipts → transitions history and surviving racer ledger bytes, and invokes the production receipt consumer before/after telemetry corruption (`:177`). Second race, absent receipts and undeclared paths are present. Parser declarations are extracted from production, not copied, and repeated PR options provide the negative control (`:208`). These are substantive assertions; their execution was not repeated here.
+- [Should] Q4/Q5, evidence coverage: gh421 `:637` mocks `commit()` itself, so its path-list assertions no longer pin actual `git add -A -- <paths>` staging or bot identity. Add a narrow assertion of the real helper's git argv in the disposable-clone suite. Also missing are receipt-publication retry exhaustion (three rejected receipt pushes), an existing `--commit` target coalesced with another receipt target, and an assertion that the second-race diagnostic contains the actual racing SHA (gh740 `:185` only matches the prefix). None demonstrates a current production failure; these are test-coverage requests, not runtime behavior changes. The newer-unreceipted/older-receipted ownership case is also not pinned by gh421's current variants.
+- [Nit] Evidence count: the seed says gh740 “7/7”, but AST inspection finds six `test_*` methods. Command: `PYTHONDONTWRITEBYTECODE=1 python3` extracting the shell heredoc with `split("<<'PY'\n",1)[1].rsplit('\nPY',1)[0]`, parsing with `ast.parse`, and counting `FunctionDef` names starting `test_`; exit 0, output `gh740 test count: 6`. Reconcile the prose with the actual final clone-run output.
+- [Nit] The publisher's module/plan promise “Every failure” has the canonical prefix is broader than implementation: `declared_paths` (`:78`) exits with `Refusing undeclared reconciliation artifacts`, and `git` (`:66`) can raise an uncaught subprocess exception. Narrow that promise to handled recovery failures, or normalize those errors in a future change. Reporter fallback still attributes these to publish; this does not recreate #741.
+- [Pass] Q5/Q6/Q7, current scope: gh421 retains allowlist refusal cases (`:700`), trigger/permission/queue checks (`:603`) and step ordering (`:674`); inline-Python extraction is obsolete for the now-external module. Ratings `85/75/50/55` and `70/55/50/80` remain consistent with the plan's stated impact/effort and delivered one-lane change. `validate.sh:573` registers the fixture and the top CHANGELOG entry describes this same scope. No unrelated addition identified in the seeded review surfaces; historical pin equivalence remains unverified as noted above.
+- [Unverified — needs clone run] Claimed focused pass counts, full qualifying gate, mutation controls and final-SHA provenance must be attached from the disposable full clone. No validate.sh, test/*.sh, pytest, executable fixture or git command was run in this turn. Approval does not attest a hosted run or authorize merging.
+
+Relay closed (Approved), no further turn needed. Producer claude-a owns the remaining evidence attachment and nonblocking dispositions; harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
