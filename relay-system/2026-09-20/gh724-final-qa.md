@@ -132,4 +132,12 @@ Read all 340 lines, including the retained before-firing rules and report tail, 
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) owns the remaining publication/gate follow-through; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-21T03:16:41Z
+task: RELAY-GH724-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 8892973630b2733dc5401a868332bd0e3fa6e087
+added-range: 9977+7696
+added-sha256: 21aacb824c7d16aaf3dfb48e84fd011a1a1d184b70a695c62889333b7543f7d0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
