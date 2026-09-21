@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-20.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -88,5 +88,43 @@ Basis: awaiting independent plan review.
 9. Ratings `65/45/50/85`: grounded in the recon and the recurrence evidence (#443 + this report)? Appeal is neutral by policy.
 
 Output: graded findings (`[Blocker]/[Should]/[Nit]/[Pass]`), each with the fix and a citation; `swept file: yes|no`; a VERDICT with Basis. Do not edit the plan or any artifact — findings only, in this thread.
+
+### Reviewer R1 — codex
+
+VERDICT: FAIL
+Basis: the doc-only approach and existing writers fit the task, but the retained umbrella prerequisite prevents discovery-first triage, the read-only claim is inaccurate, and the completion/acceptance contract needs explicit blocked outcomes. These are plan corrections, not requests for runtime tooling.
+swept file: yes
+
+Read the whole plan and current marathon-triage skill, including the pre-existing prerequisites and report tail. Pre-existing defects relevant to this rewrite are included below. No artifact/source edits, git commands, harness execution, or test suites were run.
+
+- [Should] **Q2/Q8 — scope the retained umbrella/clone prerequisites to execution.** Plan `PROJECT/2-WORKING/GH-724-MARATHON-TRIAGE-DRIVE-LOOP.md:68` explicitly preserves 0b/0c. Current `skills/marathon-triage/SKILL.md:66-83` says “Procedure, before any triage work”, requires opening/registering an umbrella and linking members, and says “If you cannot name the umbrella issue, you are not ready to triage”. That is an additional stop cause beyond the diagnosis and asks for the wave sketch before inventory computes it. Fix: retain umbrella/full-clone rules for launching a selected marathon; make inventory, capture and dry-run reporting possible without selecting/creating an umbrella. Report umbrella creation/linking as a downstream decision when not already authorized.
+  Observed input: the existing skill's discovery trigger “choose work to swarm next” (`:7`) meets its unconditional “before any triage work” umbrella prerequisite (`:66`).
+  Affected scope: triage invocations without an already selected marathon umbrella; execution prerequisites remain intact.
+  Falsifier: walk the revised instructions with no umbrella and two unrelated candidate issues; inventory and a recommendation must complete without opening an umbrella or asking which arc to select first. An explicitly authorized marathon launch must still require its umbrella and full clone.
+
+- [Should] **Q1/Q3 — replace “writes nothing/read-only” with the actual dry-run boundary.** Plan `:42` says preflight “writes nothing”; `:71/:86` repeats a read-only default. But `utils/py/swarm_preflight.py:1298` runs `git fetch --prune`, `:1355-1361` creates a detached worktree, and `:1378` removes it; its `args.dry_run` exit is only at `:1705-1711`. Planner `--deep` invokes that same path (`utils/py/_marathon_plan.py:1022-1030`). Fix the recon and guardrail to authorize ordinary readiness computation without repeated confirmation while accurately stating its Git-metadata/temporary-worktree effects, no packet/plan publication, and no execution. Explicitly call captures + ledger rows reversible default intake writes, and honor an explicit user request for a strictly read-only audit by reporting proposed captures instead. No code change or new approval gate is needed.
+  Observed input: the planned `marathon_plan.py --dry-run --deep`/preflight `--dry-run` calls reach metadata mutations before the dry-run branch cited above.
+  Affected scope: descriptions of dry-run side effects and default intake authorization, not runtime behavior.
+  Falsifier: in a disposable clone, observe preflight on a valid contract with an outdated remote-tracking ref: ref refresh and transient worktree registration are allowed, while no packet/plan file is published. If dry-run bypasses those calls, this finding is wrong. [Unverified — needs clone run] for runtime side-effect measurement; source path observed directly.
+
+- [Should] **Q5/Q6 — distinguish a completed report from a blocked report.** Plan `:73` says planner 3 must “report ... and stop”, but `:74` prohibits any report without quoted waves/held/drift and full coverage. A releases DB without `roadmap_items` raises `EngineExit(3)` before report rendering (`utils/py/_marathon_plan.py:773`); unavailable GitHub likewise cannot establish the complete open-issue universe. Fix: forbid claiming completion, not reporting, when requirements fail. Allow an explicit incomplete/blocked report naming command, exit, missing evidence and next action; bound invocation repair/retry and handle unexpected exits as unknown rather than success. Keep the complete-report conditions for healthy runs.
+  Observed input: plan `:73` exit-3 stop and `:74` unconditional “no report unless” are contradictory for the concrete missing-table branch at `_marathon_plan.py:773`.
+  Affected scope: failure and offline terminal outcomes; successful triage still needs full coverage and per-candidate evidence.
+  Falsifier: a missing-table scenario must yield one blocked report without fabricated waves or an endless retry; a healthy scenario that merely asks whether to preflight must fail the completion rule.
+
+- [Should] **Q7 — give behavioral acceptance a red control, not only the heading count.** Plan `:76/:78/:90` tests three headings and deletes one as its negative control. A document with all three headings but the unchanged “before any triage work” prerequisite still passes that test. Fix: retain the cheap structural check, and add a small reviewer walkthrough covering no umbrella, missing intake, invalid contract, and unavailable evidence, checking actions/report against the done rule. Use the current stop-before-preflight behavior as the failing control and record decisive evidence in the final relay block/PR acceptance map. No new test suite is requested. Step 0 and deployed-copy checks already exist at `:85/:88`; run and cite them rather than treating the heading count as proof of unattended behavior.
+  Observed input: the proposed heading regex checks only `Recite this`, `Drive loop`, and `Done rule`, not their contents (`plan:76`).
+  Affected scope: acceptance evidence for this skill rewrite only.
+  Falsifier: retain all three headings while restoring the old ask-before-planner sentence (`skills/marathon-triage/SKILL.md:170-171`); the behavioral review must reject that mutant even though the heading check passes.
+
+- [Pass] **Q1 — CLI and guard grounding otherwise holds.** `utils/py/marathon_plan.py:49-57` documents no plan doc in dry-run, deep delegation, degrading without `--require-gh`, and the stated exits (the exit line is 57, not 58). `relay-automation/hooks/relay-xyz-guard.sh:98-100` accepts any Bash command text containing `find-harness.sh`; `:123-139` derives Bash/Python twins. Narrow static probe: `python3 - <<'PY'` using `Path.read_text()`, the guard's `re.search(r'Tier-A[\s\S]*?entry points\s*\(([^)]+)\)', a)` and `re.findall(r'`([^`]+)`', m.group(1))`, then checking both files, exited **0**: `marathon-plan in_guard_inventory= True bash_exists= True python_exists= True`; `swarm-preflight in_guard_inventory= True bash_exists= True python_exists= True`. Same read-only probe counted `current_shape_headings= 0`, `literal_ROADMAP.md= 0`. Qualify “every call exit 2” in plan `:70` to sessions with this hook enabled and no prior marker; the hook is fail-open and session-scoped (`guard:24/:33-34`).
+
+- [Pass] **Q3/Q4 — automatic reversible capture is appropriate; the existing writers cover the fields.** `utils/hq/hq-lib.sh:448-467` emits identity, title, status, created, `owner: unassigned`, provisional ratings and `goal`; `:548-550` supplies the pointer line. `utils/hq/hq.sh:324-339` uses exactly this render → roadmap-add sequence. PDDA's inbox minimum is `PROJECT/PDDA.md:263-269`; no additional owner/goal writer is needed. Preserve actionable issue substance in the renderer's request argument. Default capture authorization removes the reported operator stop; moving it behind a new confirmation would preserve that defect. The recipe should also say that a failed ledger add leaves intake incomplete (existing handling `hq.sh:342-345`), not silently claim success. Source-equivalence review only; PDDA gates were not run here.
+
+- [Pass] **Q5 — documented code classifications and exit-6 degradation are consistent.** Current skill `:142-149/:164-165` maps invalid contract 3 to NEEDS-CONTRACT, stale 4 to CONTRACT-STALE, and 5/6/7 to BLOCKED. `marathon_plan.py:54` and `_marathon_plan.py:1196-1205` support retrying once without `--require-gh` and marking live state UNKNOWN. Record individual preflight evidence independently: deep delegation discards stdout/stderr and explicitly handles only 4/5/6/7 (`_marathon_plan.py:1028-1049`), so planner success alone is not each candidate's exit/verdict.
+
+- [Pass] **Q6/Q8/Q9 — retain the proposed healthy-run done criteria, scope and ratings.** Plan `:74` rejects the “asked whether to preflight” terminal state and requires classifications, candidate evidence and capture gids; apply the blocked-report distinction above. Plan `:58/:62/:77-80` confines implementation to skill/governance docs plus deployment and explicitly excludes #443 runtime work. Ratings `:54` are reasonable ordinal judgments for the stated operator-time defect and small rewrite, with appeal neutral. Recurrence at `:50` is producer/operator-reported evidence, not independently re-observed here; no stronger recurrence claim is approved. Hooks/PDDA runtime checks remain [Unverified — needs clone run] where required by the turn boundary.
+
+Handing off to Producer (claude-a) — revise the plan for the four Should findings, disposition each, and open R2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
