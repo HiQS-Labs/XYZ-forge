@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-20.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -148,5 +148,31 @@ Questions for R2 (grade with citations):
 4. Anything in the revised Phase 1 that exceeds a doc rewrite + Pulse re-publish?
 
 Handing off to Reviewer (codex) — take your turn.
+
+### Reviewer R2 — codex
+
+VERDICT: PASS
+Basis: all four R1 Should findings are resolved in the executable plan. The rewrite can proceed using existing writers and readiness tools, with bounded failure reporting and falsifiable final acceptance. Two residual wording nits do not change the explicit Phase 1 contract. This approves the plan, not an implementation or deployment.
+swept file: yes
+
+Read the entire 100-line plan and entire 207-line current marathon-triage skill, including retained prerequisites, classification/ranking rules and report tail; cross-checked the cited guard, planner/deep-preflight paths, capture writers, PDDA intake minimum and merge-cleanup loop. No additional blocking pre-existing defect found in the artifact under review. No git commands, runtime entrypoints, test suites, source edits or artifact edits were run.
+
+- [Pass] **R2 Q1/Q3 — discovery no longer depends on an umbrella.** `PROJECT/2-WORKING/GH-724-MARATHON-TRIAGE-DRIVE-LOOP.md:74` explicitly moves umbrella registration and clone naming after reporting, as prerequisites for launching a selected marathon. This overrides the retained current skill's “before any triage work” (`skills/marathon-triage/SKILL.md:66`) and removes the circular need to choose a wave before inventory. The no-umbrella/two-candidate walkthrough is required at plan `:81/:94`. R1 umbrella finding resolved; preserve this placement in the rewrite.
+
+- [Pass] **R2 Q1 — readiness effects and intake boundary are explicit.** Plan `:42/:73` describes ref refresh and transient worktrees, matching `utils/py/swarm_preflight.py:1298/:1355-1380`, with the no-packet dry-run branch at `:1705-1711`. Plan `:75` reuses the renderer, pointer formatter and ledger CLI, reads the row back and reports half-complete intake on failure; this matches `utils/hq/hq.sh:324-345`. Renderer fields at `utils/hq/hq-lib.sh:448-467` cover the PDDA minimum (`PROJECT/PDDA.md:263-269`). Capturing missing intake is authorized by the revised default; contract authoring/promotion remains a recommendation. R1 side-effect and capture observations resolved in the operative instructions.
+
+- [Pass] **R2 Q2 — terminal shapes cover missing evidence without pretending success.** Plan `:76-77` distinguishes complete from blocked reporting, bounds retries, classifies known nonzero exits and refuses to treat unknown exits as success. Thus missing `roadmap_items` (`utils/py/_marathon_plan.py:773`) yields a blocked report; unavailable GitHub remains UNKNOWN even if the planner degrades successfully (`utils/py/marathon_plan.py:54`); invalid contract maps to NEEDS-CONTRACT through the retained classification at `skills/marathon-triage/SKILL.md:146/:164-165`. Any unavailable per-candidate verdict falls under the missing-evidence blocked rule. Direct preflight evidence at plan `:76/:96` addresses deep delegation's discarded output (`utils/py/_marathon_plan.py:1028-1030`). R1 terminal-contract finding resolved.
+
+- [Pass] **R2 Q1 — acceptance now checks the stop behavior as well as headings.** Plan `:79/:81/:93-96` requires structural and stop-sentence red controls, four reviewer scenarios, complete/blocked outcomes and direct preflight evidence; `:82` places acceptance evidence in the PR. Static baseline probe: `python3 - <<'PY'` with `Path.read_text()` on the plan and skill, `assert p and s`, `len(re.findall(r'^## Recite this|^## Drive loop|^\*\*Done rule', s, re.M))`, `sum(bool(re.search(r'request confirmation before generating|before any triage work|not ready to triage', l)) for l in s.splitlines())`, and `s.count('ROADMAP.md')` exited **0**. Decisive output: `plan_lines= 100`, `current_skill_lines= 207`, `current_shape_headings= 0`, `current_stop_sentence_lines= 2`, `current_literal_ROADMAP.md= 0`. The present skill supplies the specified failing control; actual revised-copy mutants and walkthroughs remain final-QA work, not evidence claimed here. R1 acceptance finding resolved at plan level.
+
+- [Pass] **R2 Q4 — scope remains commensurate.** Plan `:60/:64/:80-83` confines implementation to skill/governance markdown, existing gates and skills-army-hq deployment, explicitly excluding #443 runtime work and a new capture verb. Easy reversibility at `:62` is appropriate. Ratings at `:56` remain reasonable ordinal judgments for the stated task; recurrence at `:52` is operator-reported, not independently reproduced in this turn.
+
+- [Nit] **Finish propagating the corrected terminology.** Plan `:31/:89` still calls the tools/default “read-only”, whereas `:42/:73` correctly names metadata effects and intake writes. Rename those summary/checklist phrases to “ordinary readiness computation and reversible intake”. In the final skill, make the explicit strictly-read-only override cover the documented metadata effects too: report that readiness evidence unavailable or obtain it from an authorized disposable context, rather than treating skipped capture writes as sufficient. This is clarification of the existing explicit-request override, not a new default approval gate.
+
+- [Nit] **Carry the guard qualification into the quoted instruction.** Plan recon `:43` correctly limits the block to hook-enabled sessions without a marker, but the proposed Step 0 sentence at `:72` still says “Skipping it makes every ... call exit 2”. Use “With the guard enabled and no prior proof-of-load, these calls are blocked with exit 2”. The source is explicitly fail-open and session-scoped (`relay-automation/hooks/relay-xyz-guard.sh:24/:33-34/:98-100`). The locator-first instruction itself is sound.
+
+- [Unverified — needs clone run] Hooks suite, runtime side-effect observation, final rewritten-skill behavioral walkthrough and deployment parity have not been run in this reviewer turn. They remain the implementation gates specified at plan `:81-83/:91-96`; plan approval does not discharge them.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed to the planned rewrite and final QA; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
