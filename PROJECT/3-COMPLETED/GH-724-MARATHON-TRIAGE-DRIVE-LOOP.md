@@ -1,8 +1,8 @@
 ---
 title: marathon-triage drives end to end — drive-loop shape, guard-aware Step 0, capture recipe
-status: Active
+status: Complete
 created: 2026-09-20
-updated: 2026-09-20
+updated: 2026-09-21
 owner: noel
 goal: >
   An agent invoking /marathon-triage runs inventory, reconciliation, missing capture docs, the planner
