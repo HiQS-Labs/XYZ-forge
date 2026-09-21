@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -300,5 +300,104 @@ Output: graded findings ([Blocker]/[Should]/[Nit]/[Pass]) with file:line, each b
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — Round 1
+
+swept file: yes
+
+- [Pass] Root cause 1 is fixed without weakening the branch under test. The suite creates a fresh
+  guarded `$WORK` (`test/agent-chorus.sh:9-27`), and the only occurrence of `pre-rename-clone` in the
+  swept file is the link target at `test/agent-chorus.sh:718`; therefore the link exists, its target
+  does not, and the target text still ends in `/skills/agent2agent`. That reaches the installer's
+  `[ -L ]` guard, false `[ -e ]`, and legacy-name `case` arm at
+  `skills/agent-chorus/install.sh:28-38`. Static probe:
+  `rg -n 'pre-rename-clone' test/agent-chorus.sh` exited 0 with only
+  `718:ln -s "$WORK/pre-rename-clone/skills/agent2agent" ...`.
+
+- [Pass] The assertion remains strict. `test/agent-chorus.sh:721-738` reads the resulting link and
+  requires a non-empty target that is `-ef` the real `skills/agent-chorus` directory. A
+  non-repointing installer leaves a dangling target, which cannot satisfy `-ef`; a wrong live target
+  has a different inode and also fails. The swept-file explanation states those two discriminating
+  cases explicitly at `test/agent-chorus.sh:729-731`.
+
+- [Blocker] Root cause 2 is fixed for every `validate.sh` mode, but not for the other gate paths the
+  Definition of Done explicitly asks about. `validate.sh:12` sources the helper before mode/tier
+  parsing (`validate.sh:686-793`), so parallel, sequential, tier 2, and auto inherit the export.
+  However, `ci-local.sh` never sources `gate-env.sh` and launches suites/Pytest directly at
+  `ci-local.sh:297` and `ci-local.sh:318`; its `validate.sh --list` child at `ci-local.sh:367` cannot
+  export back into the parent. Likewise an explicit marathon command is selected at
+  `utils/py/marathon_drive.py:1367-1368`, while `_gate_env()` only copies and scrubs at
+  `utils/py/marathon_drive.py:2279-2283` before passing that environment to the command at
+  `utils/py/marathon_drive.py:2310-2318`. The default marathon gate is covered because it resolves to
+  `validate.sh` (`utils/py/marathon_drive.py:1385-1387`); an explicit `--pre-advance-cmd` is not.
+  Static probe command:
+  `rg -n 'gate-env\.sh|PYTHONDONTWRITEBYTECODE' ci-local.sh; rg -n 'bash "test/\$t"|python3 -m pytest' ci-local.sh; rg -n 'PYTHONDONTWRITEBYTECODE' utils/py/marathon_drive.py relay-automation/marathon-drive.sh`.
+  Exit statuses were `1`, `0`, `1`; decisive output was `ci-local.sh:297`, `ci-local.sh:318`, and no
+  bytecode-setting match in either marathon driver.
+  Concrete fix: source the shared helper in `ci-local.sh`, and make the marathon gate environment set
+  `PYTHONDONTWRITEBYTECODE=1` for explicit pre-advance commands (including the supported Bash fallback),
+  with a contract assertion for both consumers.
+  Observed input: ordinary `ci-local.sh` with `PYTHONDONTWRITEBYTECODE` initially unset, and
+  `marathon-drive --pre-advance-cmd '<Python-bearing gate>'`; the static launch paths above pass the
+  unchanged caller environment to Python-bearing work.
+  Affected scope: full/`--probe` `ci-local.sh` suite runs and explicit marathon pre-advance commands;
+  `validate.sh` modes and the default marathon gate are already covered.
+  Falsifier: from an initially unset shell, a hermetic environment-capture fixture for each launch
+  path must observe `PYTHONDONTWRITEBYTECODE=1`; a Producer/build turn must still observe it unset.
+  A full suite confirmation is [Unverified — needs clone run].
+
+- [Pass] The new export does not conflict with the GH-441 scrub registry. The registry governs
+  variables exported by drivers (`utils/py/gate_env.py:23-30,57-140`); the shell helper's no-second-
+  unset-list checks are `test/gh441-gate-env-contract.sh:69-103`, and its consumer check is
+  `test/gh441-gate-env-contract.sh:145-151`. The new export is after the scrub and cleanup at
+  `relay-automation/gate-env.sh:83-91`, so it neither adds a driver export nor duplicates the unset
+  registry. A scratch probe also confirmed explicit compilation still behaves explicitly:
+  `PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile "$TMPDIR/gh730-pycompile-probe.py"` exited 0 and
+  produced `$TMPDIR/__pycache__/gh730-pycompile-probe.cpython-314.pyc`; therefore the existing
+  `py_compile` assertions are not disabled by this setting.
+
+- [Pass] The surveyed clone-state class is complete on the current tree to the limits of a
+  repository-wide literal/source search. The only skill installers containing legacy migration logic
+  were `skills/agent-chorus/install.sh:18-47` and `skills/releases/install.sh:20-39,72-77`; the latter
+  removes legacy symlinks based on link type, not whether a repository target path happens to exist.
+  The other named absence assertion checks a tracked file, not a directory
+  (`test/test_deploy_skills.py:547-549`). Targeted `rg` searches across `skills/**/install.sh` and
+  `test/**` found no second test linking a real `$REPO`/`$ROOT` path as an expected-absent legacy
+  target. The current worktree graph index attempt failed, so the negative claim rests on the full
+  source sweep and literal search; the older primary-clone coverage report had known parser gaps, and
+  the relevant reported ranges in `test/agent-chorus.sh` were read directly.
+
+- [Pass] Issue item 3 is already served on both execution paths. A parallel failure is rerun alone,
+  and a real failure prints the final 40 serial lines before classification
+  (`validate.sh:1330-1347`). A forced sequential run streams each suite directly to the operator,
+  including its failing assertion, at `validate.sh:1383-1401`; it does not need the tail replay.
+
+- [Should] Pre-existing swept-file defect: sourcing `gate-env.sh` clobbers/leaks generic caller
+  variables. The helper assigns `_src` and `_hp_lib` at `relay-automation/gate-env.sh:27-39`, but its
+  cleanup unsets the nonexistent `_ge_src` and omits `_hp_lib` at
+  `relay-automation/gate-env.sh:83`. Probe command:
+  `bash -c '_src=caller; unset _hp_lib; . ./relay-automation/gate-env.sh; printf "src=%s\\nhp=%s\\n" "${_src-unset}" "${_hp_lib-unset}"'`.
+  Exit 0; decisive output was `src=./relay-automation/gate-env.sh` and
+  `hp=<repo>/relay-automation/harness-paths.sh`. Rename these internals consistently to `_ge_src` /
+  `_ge_hp_lib` (and clean them) so a sourced helper preserves caller state.
+  Observed input: a custom gate with `_src=caller` sources the documented shared helper.
+  Affected scope: any `gate-env.sh` consumer that already uses `_src` or `_hp_lib`; current
+  `validate.sh` happens not to rely on them after sourcing.
+  Falsifier: the same probe must exit 0 with `src=caller` and `hp=unset`, while the scrubbed variables
+  remain absent and `PYTHONDONTWRITEBYTECODE=1` remains exported.
+
+- [Pass] Beyond the helper namespace leak above, the full touched files were swept and no additional
+  pre-existing defect was identified: `relay-automation/gate-env.sh:1-91`,
+  `test/agent-chorus.sh:1-1393`, and
+  `PROJECT/1-INBOX/GH-730-AGENT-CHORUS-LEGACY-FIXTURE.md:1-102`.
+
+VERDICT: FAIL
+
+Basis: the fixture repair is correct, strict, and appropriately surgical, but the claimed gate-wide
+no-bytecode behavior does not reach `ci-local.sh` or explicit marathon pre-advance commands. The
+focused Producer receipts were not rerun in this reviewer worktree per the relay safety rule; the
+full disposable-clone gate remains pending after the blocker is fixed.
+
+handing off to Producer — go to the Producer window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
