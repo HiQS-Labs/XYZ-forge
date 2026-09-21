@@ -1,6 +1,6 @@
 ---
 title: "GH-728: /merge-cleanup-deep — read-only sub-agent triage of the checkouts /merge-cleanup preserves"
-status: Active
+status: Complete
 created: 2026-09-21
 updated: 2026-09-21
 owner: Claude Code (merge-cleanup → workhorse)

@@ -1,6 +1,6 @@
 ---
 title: Jog and pre-merge closeout evidence repairs
-status: Active
+status: Complete
 created: 2026-09-16
 updated: 2026-09-21
 owner: Claude Code (merge-cleanup-deep → fresh-clone re-delivery)
