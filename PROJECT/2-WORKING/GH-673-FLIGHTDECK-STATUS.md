@@ -21,7 +21,8 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Original final QA remains escalated at cap3. Operator approved reader coordination files and a focused replacement review. Original defects plus two advisory audit gaps repaired; 39 Python tests and expanded real-browser regressions pass. | Finish safe harness preflight, then drive the prepared independent replacement review; #646 landing, final-tip qualifying gate and landed-producer comparison remain release gates. |
+| 2026-09-20: rebased onto development `41be79e2` (content patch-identical to `09ec4faa`; ledger row replayed through the writer). Focused suites green (39/39 pytest, selectors, real Chrome, harness, gh53 17/17). Full `validate.sh` in a disposable clone 407/409 — both reds environment-only (witnessed on unmodified development). Final QA: agy PASS/Approved (`relay-system/2026-09-17/gh673-replacement-focused.md`). Evidence `TESTS-RESULTS/2026-09-20+GH-673/`. | Push, open PR against `development` (draft until the hosted smoke gate is green), then merge is the operator's call. Writer #646 lands second; its rebase after this PR is a no-op for the six shared `cmd_work_status` lines. |
+| (2026-09-17) Original final QA remains escalated at cap3. Operator approved reader coordination files and a focused replacement review. Original defects plus two advisory audit gaps repaired; 39 Python tests and expanded real-browser regressions pass. | Finish safe harness preflight, then drive the prepared independent replacement review; #646 landing, final-tip qualifying gate and landed-producer comparison remain release gates. |
 
 ## Approved reader safety contract
 
@@ -128,3 +129,10 @@ GH-678/PR680 tracks baseline installer tests escaping into real Gemini directori
 Safe preflight redirects all five existing installer target variables to owned
 scratch, HOME unchanged; the isolated installer suite passes 212/212 and real
 Gemini links are unchanged. No partial/aborted broad run qualifies a push or release.
+
+## Lessons Learned (For Future Agents)
+
+- A rebase that drops ledger hunks and replays the row through `releases_app` (`roadmap add` / `rate` / `update`) is the only safe way to carry `releases.db` across a moved base; text-merging the dump or the DB is never acceptable. Verify the content paths with `git patch-id --stable` before and after.
+- `test/flightdeck/browser-status-checks.mjs` needs Node ≥ 20.11 (`import.meta.dirname`); on this machine the default `node` is 18, `/opt/homebrew/opt/node@26/bin/node` works. A full gate that silently used Node 18 would report this as a reader defect.
+- `gh53-releases-merge-resolve` red on 2026-09-17 was the fixture flake fixed by #688, not a reader regression — check the base witness before attributing a red suite to the branch.
+- The reader gates on `schema_version >= 9` and reports `status_label_supported: false` otherwise, so it lands independently of the writer (#646); the writer's rebase after this PR is a no-op for the six shared `cmd_work_status` lines.
