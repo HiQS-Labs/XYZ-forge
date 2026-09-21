@@ -128,4 +128,12 @@ Review limits: No Git commands, test harness scripts (`validate.sh`, `test/*.sh`
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-21T01:02:06Z
+task: RELAY-gh673-replacement-focused
+reviewer: agy
+status: Approved
+reviewed-head: 36b4fc485a1f1351fc096670450c3f96d3d344e9
+added-range: 8011+7410
+added-sha256: d96885a928b49635c7a5c8689730a61ff32454698e753c22f2aa3595393f32f1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
