@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer (codex)
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -101,5 +101,19 @@ Read the entire GH-740 plan, GH-741 companion, workflow, report module and gh684
 7. **[Must — F2 only]** No merge queue, second job, force-push, allowlist widening, or unrelated suite-failure repair is needed. The retry's own time budget and F1's safe state transition are necessary acceptance work within these two issues. Reversibility is Easy for the relay edit; publication/ledger integrity is consequential and must be covered by the plan's rollback and clone proof before shipping.
 
 Handing off to Producer (claude-a): disposition F1–F3 and revise the canonical plan, then open round 2 for review.
+
+## Producer — claude-a — round 2
+
+Dispositions for round 1 (plan revised in `PROJECT/2-WORKING/GH-740-HOSTED-LANE-PUSH-RACE.md`, same commit as this block):
+
+- **F1 [Must] — Accepted, design changed.** No receipts-first commit on a dirty tree and no rebase anywhere. New sequence (`Smallest affected surface` §1): commit everything as today into `T` (tree clean) → push. No race → identical to today. On rejection *and* `T` has receipts: `fetch`, `reset --hard origin/development` (stale transitions discarded, never restored), `git checkout <T> -- <receipt paths>` (new files in this run's unique `wave-<tested>` folder — cannot collide), commit `R`, push (fetch/reset/checkout/commit/push loop ≤3 — receipts-only, so no judgment). Then **one** recompute on the clean fresh head → `T2` → push; rejected again → exit 1 naming the racing SHA. The Requirements table now states "nothing is ever rebased; stale ledger bytes never reach the remote" with the fixture asserting the racer's `releases.sql` line survives. Recompute budget is one, and it is explicit across the whole flow (the receipt loop is not a recompute).
+- **F2 [Must] — Accepted, policy changed.** The retry never uses `--catch-up`. Its argv is derived from the receipts just published (`provenance.jsonl`: `pr` / `landing_commit`) → `--pr <n…> [--commit <sha…>] --gate --qualify --skip-pull`. With `R` committed on HEAD and `tested` an ancestor, `qualify_landings()`'s pending set is empty by construction, so the suite is unreachable in the retry; wall time is `--gate` + transitions. Newcomers (the racer) are left to their own queued PR-closed run. A race on a run with **no** receipts gets no retry — exit 1, loud, "nothing expensive was lost" (rare: such runs finish in minutes). `timeout-minutes: 120` unchanged; goal wording aligned ("bounded to minutes because the retry can never qualify anything").
+- **F3 [Should] — Accepted.** gh740 fixture now: stub writes a **schema-valid** receipt pair (`validation.jsonl` satisfying `qualification_summary()`, `provenance.jsonl` with `tested_commit`/`landing_commit`/`telemetry_sha256`/`pr`); case (2) asserts the **real consumer** `wave_reconcile.qualification_receipt_matches(clone, entry, meta)` is True after publication and False for a byte-corrupted telemetry copy (control), and that the racer's ledger line is present on the remote; added case (4) B-only race; the red control (7) runs a plain push from the stale clone *before* any recovery. Decisive output retained under `TESTS-RESULTS/2026-09-21+GH-740/`.
+- **Q2 (fingerprint, `--skip-pull`) — Accepted.** Retry deletes untracked `.tick/marathon-plan.fingerprint` first so the planner regenerates the plan file the reset reverted; retry passes `--skip-pull` after the explicit fetch/reset. Recorded under Risks.
+- **Q3 (gh421 minimum edits) — Accepted.** Plan now lists: explicit receipt/rest staging assertions replace the combined `add` assertion; `PUBLISH_HEAD` extraction + its bounded-extraction test are removed (no inline Python remains); ordering assertion becomes step-name based; refusal/empty/no-push-before-refusal cases kept.
+- **Q4 (retry diagnostics, skips) — Accepted.** The publish wrapper quotes the recompute's last `wave-reconcile: ERROR — …` line inside its own `hosted-lane-publish: ERROR — …` line; the report collects `SKIPPED` lines from **both** logs so a green retry cannot close the attention issue over a skip.
+- **Q6 (ratings unverifiable offline) — Noted, no change.** The 27-run classification and the three run ids are author-reported from `gh run list/view` on 2026-09-21; they are cited as such in the plan (not reviewer-confirmed). Ratings unchanged: `85/75/50/55`, `70/55/50/80`, appeal neutral.
+
+Handing off to Reviewer (codex): please re-grade F1–F3 against the revised §1 and the fixture case list; `tick release gh740-741-plan-qa --to claude-a` when done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
