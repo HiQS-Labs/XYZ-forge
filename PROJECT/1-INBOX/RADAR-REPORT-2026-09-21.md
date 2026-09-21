@@ -36,9 +36,9 @@ and both train operators to reach for bypasses. A short stabilisation pass on th
 features on top of them — is what will give the Grow share room to come back.
 
 **Recommended next step:** treat the hosted reconcile lane as the release-blocking seam it is: land the two
-open failure classes (#735 malformed `merged_at` recovery + undeclared artifacts; the fast-forward push
-race when a merge lands during a run) under #591, and hold new merges until `gh run watch` returns green
-twice in a row — completion condition: 10 consecutive green scheduled/PR-closed runs, #735 self-closed.
+open items now filed under #591 (#740 the fast-forward push race when a merge lands during a run; #741 the lane
+report naming a unit test's expected error instead of the real failure), and hold new merges until `gh run watch` returns green
+twice in a row — completion condition: 10 consecutive green scheduled/PR-closed runs.
 **Second:** finish the "gate red on clean trunk" class as one item on #732 — named environment faults for
 present-but-broken tools, #730's `__pycache__` and #667's roadmap-coverage — completion: a fresh clone of
 `development` passes the full gate with no re-runs on the documented PATH. **Third:** adopt `rgt:` on the
@@ -92,9 +92,10 @@ Cluster: #421 #454 #492 #674 #707 #711 #735 + umbrella #591 (open); GH-546/#599,
 in the last 40 hosted runs; failure classes seen in order — hosted test setup (#600), exit-5 doc-debt gate
 (GH-693), 1-INBOX publish guard (GH-721), `agent-chorus-bridge` red only on the runner, plain
 fast-forward push rejected when a merge landed mid-run (#733 during #731's run 35623940059, 2026-09-21),
-and today `Refusing undeclared reconciliation artifacts` + `invalid merged_at timestamp` (#735, auto-filed
-by `hosted_lane_report.py` at 17:23Z; it self-closed when the 17:22Z run for #733 went green — the class is
-still unfixed, the alert is just quiet). Why it recurs: the lane is one ~70-min sequential job whose last step is a
+and the same rejection again on 2026-09-21 (#733 during #731's run 35623940059) — which the lane report
+(#735) *misattributed* to `invalid merged_at timestamp`: that line is a gh421 unit test's expected output inside
+the qualification log (followed by `ok`); the reconcile step was green and the job failed on the push step.
+Filed from this run: **#740** (push race) and **#741** (report attribution). Why it recurs: the lane is one ~70-min sequential job whose last step is a
 plain `git push HEAD:development`; every guard added in front of it (frontmatter, Lessons Learned, publish
 allowlist, artifact allowlist) is a new way to fail after 70 minutes of green tests, and the fallback is a
 manual local `wave_reconcile.py` — which is what #674 races. One durable fix: make the final push
@@ -185,8 +186,9 @@ git/gh, not runtime; orphan share is arithmetically forced.
 
 ## Checklist as generated (historical copy — live copy is #293)
 
-New this run: `RADAR-class-hosted-reconcile-lane` (3 items: rebase-and-retry or refuse-while-in-flight on the
-final push; declarative guards to the front of the job; close #421 as landed-by-#599 or say what is left),
+New this run: `RADAR-class-hosted-reconcile-lane` (4 items: #740 the final push must survive a concurrent
+landing; #741 the lane report must name the failing step's real error; declarative guards to the front of the
+job; close #421 as landed-by-#599 or say what is left),
 `RADAR-class-gate-red-on-clean-trunk` (→ #732 B.1/B.2), `RADAR-class-vendored-skill-drift` (whole-folder
 digest in `skill_drift_check.py`; re-vendor `radar/install.sh`). Carried: `RADAR-class-roadmap-ledger-drift`
 item 1 struck citing `593fdf7b` (#432); new item for the ledger binary as a conflict magnet (#711, #732 C.1,
