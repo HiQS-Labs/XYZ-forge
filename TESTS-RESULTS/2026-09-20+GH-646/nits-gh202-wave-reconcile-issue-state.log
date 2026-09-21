@@ -1,0 +1,44 @@
+== test: gh202-wave-reconcile-issue-state ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh202-wave-reconcile-issue-state.XXXXXX.FVQrHXyKHV
+== test: gh202-wave-reconcile-issue-state ==
+  PASS: reconcile exits 0 despite marathon-plan exit 5 (items held tolerated)
+  PASS: exit-5 tolerance is logged, not silent
+  PASS: OPEN-issue doc stays in 2-WORKING (no promotion)
+  PASS: OPEN-issue doc records merge evidence in place
+  PASS: CLOSED-issue doc promotes to 3-COMPLETED (existing behavior preserved)
+  PASS: merge-evidence recording is idempotent
+  PASS: legacy manifest (no issues key): closing keyword + unknown state still promotes — backward compatible
+  PASS: mention-only PR reconciles without acting on the mention
+  PASS: GH-271: unknown-state mention does NOT promote (PR #185 class blocked)
+  PASS: GH-271: unknown-state mention records nothing
+  PASS: GH-271: 'Closes #18' links 18
+  PASS: GH-271: comma list across spellings
+  PASS: GH-271: 'supersedes/unlike' are references, not links
+  PASS: GH-271: bare number after keyword is ignored (prefix mandatory)
+  PASS: GH-271: past-tense keyword case-insensitive
+  PASS: GH-271: trailing title tag links
+  PASS: GH-271: fenced code blocks are ignored
+  PASS: GH-271: keyword at title end cannot capture body ref (same-line rule)
+  PASS: GH-271: closer + mention split (the GH-202 convention)
+  PASS: GH-271 QA r1: URL fragments/paths are not mentions
+  PASS: GH-271 QA r1: plain refs still count after the lookbehind
+  PASS: GH-271 QA r3: and-joined refs close together
+  PASS: GH-271 QA r3: query-string equals and amp excluded from mentions
+  PASS: GH-271 QA r3: inline code in the TITLE is stripped
+  PASS: mid-subprocess failure dies with rc=6 (subprocess failure)
+  PASS: GH-271: rollback restored the pre-run leaderboard
+  PASS: GH-271: rollback removed the stray MARATHON-PLAN doc
+  PASS: GH-271: rollback restored the promoted doc to 2-WORKING
+  PASS: GH-271: rollback tripwire silent on a complete restore
+  PASS: GH-271: porcelain empty after rollback (tree fully restored)
+  PASS: tripwire positive-control run still dies rc=6
+  PASS: GH-271 QA r3: tripwire FIRES when a restore is incomplete
+  PASS:   and names the exact stray path
+  PASS: live gh OPEN answer: reconcile succeeds and keeps the doc active
+  PASS: live gh OPEN answer: merge evidence recorded
+  PASS: live gh FAILURE: reconcile dies loudly instead of promoting blindly (fail-closed)
+  PASS: live gh FAILURE: no mis-promotion occurred
+  PASS: GH-474: un-adopted RELEASES-PREVIEW.html is NOT resurrected by a reconcile
+  PASS: GH-474: the skip is logged, not silent
+  PASS: GH-474: an ADOPTED RELEASES-PREVIEW.html is still refreshed (gate is not a mute button)
+  gh202-wave-reconcile-issue-state: 40 pass, 0 fail

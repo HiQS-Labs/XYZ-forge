@@ -22,6 +22,7 @@ phases: 4
 | What was just completed | What's next |
 |---|---|
 | The replacement reviewer approved the focused writer source after it fixed a wave closeout path that could terminalize a still-open or unknown-state issue. 41 focused tests pass and three restored-bypass mutants fail as intended. The first full gate was safely aborted. | Land/verify GH-678 / PR #680 installer safety, or use the already validated per-target installer isolation that redirects every managed skill target to owned scratch without changing `HOME`; then run one new disposable-clone full gate before a PR is opened. |
+| 2026-09-20: rebased onto development `41be79e2` (ledger row replayed through the writer; `releases migrate` → schema 009). Four reconciler suites red on the rebased head were root-caused to `_may_terminalize_issue` gating MERGED closers; repaired in `c544629f` (merged closers keep GH-202 authority; declined PRs still need a confirmed CLOSED issue) plus three fixture edits that model the writer's identity reads. Fresh agy QA `relay-system/2026-09-20/gh646-rebase-repair-qa.md`: PASS/Approved; two Nits applied in `d59c0d86`. Evidence `TESTS-RESULTS/2026-09-20+GH-646/`. | Full `validate.sh` once in a disposable clone on the final head → push (`XYZ_SKIP_PREPUSH=1`, disclosed) → draft PR after reader PR #719; rebase once more after #719 lands (the six shared `cmd_work_status` lines become a no-op); merge is the operator's call. |
 
 ## Goal and scope
 
@@ -60,3 +61,18 @@ Stop and report rather than expand scope if qualified identity cannot reach the 
 ## Review authorization record
 
 On 2026-09-17, the operator authorized one replacement final-review lane after the first real headless reviewer failed before producing a verdict. The replacement is deliberately limited to every changed writer/runtime function and relevant direct callers in the 23-file GH-646 candidate, plus its schema/dump, focused-test, and receipt boundaries. This is a review-scope waiver only: it does not permit a live migration, connector enablement, label write, deployment, merge, or a skipped final qualification gate.
+
+## QA dispositions — 2026-09-20 (agy, Approved)
+
+- [Nit] no-active-doc log said "the PR was not merged" for a merged PR whose issue is OPEN — **Applied** (`d59c0d86`): the message now branches on `is_merged`.
+- [Nit] `--mutant wave_terminal` lambda took two arguments against the four-argument predicate, so the mutation runner raised `TypeError` instead of asserting — **Applied** (`d59c0d86`): `lambda *args, **kwargs: True`; witnessed `FAILED (failures=3)`.
+- [Nit] pin both predicate branches in the writer's unit suite — **Applied**: `test_may_terminalize_issue_pins_both_branches` (table-driven, seven tuples).
+- Consult (agy) proposed `(is_merged and issue_state is None)`; **Rejected** in favour of `(is_merged and not is_open)` because `is_open` also covers an unknown-state multiphase umbrella, which the approved writer must keep preserving.
+
+## Lessons Learned (For Future Agents)
+
+- A predicate that "requires confirmed state" must be checked against every landed contract that feeds it: `fetch_issue_state` documents None ⇒ promote for offline manifests, and three suites plus gh202 pin it. Run the neighbouring reconciler suites, not only the writer's own, before calling a tightening safe.
+- When a branch makes the writer qualify rows against `repos`, every hand-built fixture ledger must carry that MIGRATION_001 table; grep `CREATE TABLE.*roadmap_items` in `test/` for fixtures without `repos` (five existed; only gh496 reached the new path).
+- A stubbed `gh` must answer every verb the code path calls: adding a REST `gh api repos/…/issues/N` identity read silently breaks stubs that only answer `gh issue view`. Keep the stub's shape next to the reader's validation (`number`, `html_url`, lower-case `state`, `labels`, no `pull_request`).
+- Mutation runners are code too: a signature change to the mutated function must update the mutant lambda, or the red control degrades to a crash that looks like a failure. Run `--mutant` after every signature change.
+- Ledger across a rebase: drop the ledger hunks, replay through `releases_app` (`roadmap add`/`rate`/`update`, `releases migrate`), never text-merge `releases.sql`/`releases.db`.

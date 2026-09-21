@@ -1,0 +1,35 @@
+== test: gh496-phase2 ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh496-phase2.XXXXXX.RRpAlyIm6L
+=== Running gh496-phase2-reconciliation-views.sh test suite ===
+  PASS: In-flight hosted reconciler fails closed (exit 8)
+  PASS: Error message identifies in-flight wave-reconcile run
+  PASS: In-flight check bypassed with --force-local-reconcile (exit 0)
+  PASS: Warning logged when overriding in-flight run
+  PASS: --force-local-reconcile rejected inside GITHUB_ACTIONS (exit 2)
+  PASS: Error correctly explains GITHUB_ACTIONS prohibition
+  PASS: gh failure fails closed (exit 8)
+  PASS: gh error produces clean failure message
+  PASS: Pre-merge check passes when all conditions are met (exit 0)
+  PASS: Pre-merge confirmation message output
+  PASS: Placeholder lessons learned is not a doc-contract failure (exit 6, not 5)
+  PASS: WARN cites empty/placeholder lessons learned
+  PASS: Missing frontmatter owner field is rejected (exit 5)
+  PASS: Error message cites missing owner field
+  PASS: Missing committed test receipt is rejected (exit 6)
+  PASS: Error message cites missing committed receipt at HEAD
+  PASS: Uncommitted test receipt does not satisfy check (exit 6)
+  PASS: Stale test receipt with code changes is rejected (exit 6)
+  PASS: Error confirms stale receipt rejected
+  PASS: Pre-merge fails closed when PR metadata cannot be fetched (exit 2)
+  PASS: Error message explains PR query failure
+  PASS: Reconciler runs successfully (exit 0)
+  PASS: Marathon planner executed on initial run
+  PASS: Fingerprint file created on initial run
+  PASS: Second run exits 0
+  PASS: Marathon planner skipped when canonical inputs unchanged
+  PASS: Log confirms marathon-plan.sh was skipped due to unchanged fingerprint
+  PASS: Third run exits 0 after roadmap mutation
+  PASS: Marathon planner re-executed when roadmap inputs modified
+  PASS: Fourth run exits 0 after active doc content mutation
+  PASS: Marathon planner re-executed when active doc contents modified
+=== All GH-496 Phase 2 tests passed successfully! ===
