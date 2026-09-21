@@ -153,3 +153,61 @@ Builder needs to:
 1. In `relay-automation/xyz-vendor.sh` (`materialize_vendor()`): write `$STAGE_DIR/package.json` containing `{"type": "commonjs"}` (or formatted JSON with `"type": "commonjs"`).
 2. In `test/xyz-vendor.sh`: add a test fixture initializing a repo with root `package.json` having `{"type": "module"}`, vendor into it, assert `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` exits 0, and assert red control: removing `.xyz/package.json` causes the invocation to fail.
 3. Append a build block to `RELAY.md`, update `NEXT:` to `agy (Reviewer)`, and release token to `agy`.
+
+---
+
+### Round 2 · Reviewer · agy
+
+**Verdict:** Changes requested
+
+swept file: yes
+
+#### Overview
+The Builder turn for Round 2 also encountered the tool runtime IPC error (`failed to decode code-mode IPC frame: missing field code_mode_host_duration_ns`) and terminated before making any code modifications or writing to `RELAY.md`. Both required functional changes for GH-742 remain unaddressed on disk.
+
+#### Findings
+
+##### Finding 1 [Blocker]
+`materialize_vendor()` in `relay-automation/xyz-vendor.sh` does not write `.xyz/package.json` with `"type": "commonjs"`.
+- Observed input: `relay-automation/xyz-vendor.sh:470-476` (`materialize_vendor()`). Probe command `grep -n "package\.json" relay-automation/xyz-vendor.sh` exited with code 1 and 0 matches.
+- Affected scope: `relay-automation/xyz-vendor.sh:470-476` (inside `materialize_vendor()`).
+- Observed failure: In a consumer repository configured with `"type": "module"` in its root `package.json`, executing `.xyz/bin/tick` fails with `ReferenceError: require is not defined in ES module scope` because Node traverses up the directory tree and interprets `.xyz`'s CommonJS files as ESM.
+- Falsifier: Run `xyz-vendor.sh <target-repo>` on a target repo and inspect `<target-repo>/.xyz/package.json`:
+  ```bash
+  grep -F '"type": "commonjs"' "<target-repo>/.xyz/package.json"
+  ```
+  Currently fails (exit status 1, file does not exist).
+
+##### Finding 2 [Blocker]
+`test/xyz-vendor.sh` lacks the test fixture for `"type": "module"` target repos and the red control check.
+- Observed input: `test/xyz-vendor.sh:300-350`. Probe command `grep -n "package\.json" test/xyz-vendor.sh` exited with code 1 and 0 matches.
+- Affected scope: `test/xyz-vendor.sh`.
+- Observed failure: There is no test verifying that vendoring into a repository whose root `package.json` contains `"type": "module"` allows `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` to exit 0, nor a red control verifying failure when `.xyz/package.json` is removed.
+- Falsifier: Checking `test/xyz-vendor.sh` for an ESM target test fixture yields zero matches.
+
+#### Acceptance Criteria Tracking
+- [ ] `materialize_vendor()` in `relay-automation/xyz-vendor.sh` writes `.xyz/package.json` containing `"type": "commonjs"` on every vendor/update. -> Incomplete (`relay-automation/xyz-vendor.sh` not yet modified).
+- [ ] `test/xyz-vendor.sh` gains a fixture whose root `package.json` declares `"type": "module"`; after vendoring, `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` exits 0. Red control: with `.xyz/package.json` removed the same invocation fails. -> Incomplete (`test/xyz-vendor.sh` not yet modified).
+- [ ] `bash validate.sh` exits 0. -> [Unverified — needs clone run].
+
+#### Pre-existing Sweep
+Files swept in full:
+- `relay-automation/xyz-vendor.sh`: Swept lines 1–512 (locking, registry, exclude handling, state preservation, staging). Pre-existing code is clean; no unhandled defects identified.
+- `test/xyz-vendor.sh`: Swept lines 1–350 (fixtures, registry, collision safety, ignore rules). Pre-existing assertions are clean; no unhandled defects identified.
+- `test/gh105-vendor-releases-addon.sh`: Swept lines 1–67 (addon installation and overlay assertions). Clean.
+- `test/gh197-vendor-tier-split.sh`: Swept lines 1–411 (tier 1/tier 2 splits, overlay stripping). Clean.
+- `test/gh293-vendored-guard-drift.sh`: Swept lines 1–116 (guard drift checks). Clean.
+- `test/gh312-vendor-preserves-state.sh`: Swept lines 1–86 (runtime state preservation across update). Clean.
+- `test/gh642-consumer-fruit.sh`: Swept lines 1–316 (repo ignore reconciliation). Clean.
+- `test/gh708-vendored-suite-skips.sh`: Swept lines 1–111 (vendored suite skip behaviour). Clean.
+- `test/xyz-sync-check.sh`: Swept lines 1–102 (sync consistency checks). Clean.
+- `test/lib/vendored-fixture.sh`: Swept lines 1–153 (make_vendored_fixture helper). Clean.
+- `test/_setup.sh`: Swept lines 1–175 (test environment and fixture guard bootstrap). Clean.
+
+#### Next Steps
+Builder needs to:
+1. In `relay-automation/xyz-vendor.sh` (`materialize_vendor()`): write `$STAGE_DIR/package.json` containing `{"type": "commonjs"}` (e.g. `printf '{\n  "type": "commonjs"\n}\n' > "$STAGE_DIR/package.json"`).
+2. In `test/xyz-vendor.sh`: add a test fixture initializing a repo with root `package.json` having `{"type": "module"}`, vendor into it, assert `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` exits 0, and assert red control: removing `.xyz/package.json` causes the invocation to fail.
+3. Append a build block to `RELAY.md`, update `NEXT:` to `agy (Reviewer)`, and release token to `agy`.
+
+Handing off to codex — codex, take your turn.
