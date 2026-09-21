@@ -51,7 +51,7 @@ ROUND: 1 / 2
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed delta on `feat/gh646-writer-refresh` since its last approved
+- Artifact under review: `utils/py/wave_reconcile.py` (plus the three fixtures named below) — the committed delta on branch feat/gh646-writer-refresh since its last approved
   head `54b478de` (relay `relay-system/2026-09-17/gh646-writer-focused-replacement-qa.md`, Approved,
   round cap exhausted — hence this fresh thread). Concretely, `git diff 54b478de..HEAD` minus paperwork:
   the 2026-09-20 rebase onto origin/development `41be79e2` (26 commits; content patch-identical to the
