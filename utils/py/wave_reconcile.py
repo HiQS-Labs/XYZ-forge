@@ -324,9 +324,12 @@ def fetch_issue_state(repo_root, issue_num, offline_manifest=None):
         die(f"gh issue view #{issue_num} returned unparseable output; refusing to guess issue state", code=6)
 
 
-def _may_terminalize_issue(issue_state, force_promote):
-    """Terminal writer authority requires a confirmed close, unless explicitly forced."""
-    return force_promote or issue_state == "CLOSED"
+def _may_terminalize_issue(issue_state, force_promote, is_merged=False, is_open=False):
+    """Terminal writer authority: a confirmed CLOSED issue, an explicit --force-promote, or a
+    MERGED closer whose issue is not positively OPEN (the GH-202 contract: an offline manifest
+    without an issues[] entry means "promote as before"; live mode already dies on a gh failure).
+    A declined (unmerged) PR is never terminal authority on its own (GH-646)."""
+    return force_promote or issue_state == "CLOSED" or (is_merged and not is_open)
 
 
 def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
@@ -2126,8 +2129,8 @@ def main():
                         log(f"  Issue #{issue_num} is OPEN — keeping {os.path.basename(doc_path)} active; recording merge evidence")
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
                         log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
-                    elif doc_path and not _may_terminalize_issue(issue_state, args.force_promote):
-                        log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — preserving active doc and roadmap entry; confirmed CLOSED state required for terminal closeout")
+                    elif doc_path and not _may_terminalize_issue(issue_state, args.force_promote, is_merged, is_open):
+                        log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — and the PR was not merged — preserving active doc and roadmap entry; a declined PR needs a confirmed CLOSED issue to close out")
                     elif doc_path:
                         # GH-684 kept the shape "a defective BACKLOG doc stops only itself" (log
                         # `SKIP_MARKER`, discard from reconciled_issues, add to skipped_issues,
@@ -2158,7 +2161,7 @@ def main():
                     else:
                         log(f"  No active doc in 2-WORKING for GH-{issue_num}")
                         ship_date = (pr_meta.get("mergedAt") or datetime.now().isoformat())[:10]
-                        if _may_terminalize_issue(issue_state, args.force_promote):
+                        if _may_terminalize_issue(issue_state, args.force_promote, is_merged, is_open):
                             if is_merged:
                                 ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, args.dry_run, journal)
                             updated = update_roadmap_entry(
@@ -2174,7 +2177,7 @@ def main():
                             if updated:
                                 log(f"  ROADMAP.md entry updated for GH-{issue_num}")
                         else:
-                            log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — preserving active ROADMAP.md entry; confirmed CLOSED state required for terminal closeout")
+                            log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — and the PR was not merged — preserving active ROADMAP.md entry; a declined PR needs a confirmed CLOSED issue to close out")
 
                 # GH-271: reference-only mentions never promote or move anything. When the
                 # mentioned issue is OPEN (or an unknowable-state umbrella), record merge

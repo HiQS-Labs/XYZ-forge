@@ -142,7 +142,15 @@ corrupt_901
 
 cat > "$WORK/fake-gh" <<'SH'
 #!/usr/bin/env bash
-echo '{"state":"CLOSED","stateReason":"COMPLETED"}'
+# `gh issue view` shape for the state read; REST `gh api repos/O/R/issues/N` shape for the native
+# identity read the GH-646 writer performs first (number, html_url, lower-case state, labels list,
+# and no pull_request key — a PR is never an issue).
+if [ "$1" = api ]; then
+  n="${2##*/}"; repo="${2#repos/}"; repo="${repo%/issues/*}"
+  echo "{\"number\":$n,\"state\":\"closed\",\"html_url\":\"https://github.com/$repo/issues/$n\",\"labels\":[]}"
+else
+  echo '{"state":"CLOSED","stateReason":"COMPLETED"}'
+fi
 SH
 chmod +x "$WORK/fake-gh"
 
