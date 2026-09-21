@@ -88,7 +88,7 @@ class PublishTests(unittest.TestCase):
         sh('git', 'commit', '--quiet', '-m', 'base', cwd=seed)
         (seed / 'PROJECT/2-WORKING/GH-740-fixture.md').write_text('---\nstatus: active\n---\nmerged PR #7\n')
         sh('git', 'commit', '--quiet', '-am', 'Merge PR #7', cwd=seed)
-        self.landing = sh('git', 'rev-parse', 'HEAD', cwd=seed).stdout.strip()
+        self.landing = sh('git', 'rev-parse', 'HEAD', cwd=seed).stdout.strip()   # also the clone's HEAD at reconcile time = `tested`
         sh('git', 'push', '--quiet', 'origin', 'HEAD:development', cwd=seed)
         self.clone = self.tmp / 'clone'
         sh('git', 'clone', '--quiet', str(self.remote), str(self.clone), cwd=self.tmp)
@@ -147,8 +147,8 @@ class PublishTests(unittest.TestCase):
                          'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>')
         staged = sh('git', 'show', '--name-only', '--format=', 'origin/development', cwd=self.racer).stdout.split()
         self.assertEqual(sorted(staged), sorted(['releases.sql', 'PROJECT/2-WORKING/GH-740-fixture.md',
-                                                 f'TESTS-RESULTS/2026-09-21+GH-591/wave-{self.tested()}/provenance.jsonl',
-                                                 f'TESTS-RESULTS/2026-09-21+GH-591/wave-{self.tested()}/validation.jsonl']))
+                                                 f'TESTS-RESULTS/2026-09-21+GH-591/wave-{self.landing}/provenance.jsonl',
+                                                 f'TESTS-RESULTS/2026-09-21+GH-591/wave-{self.landing}/validation.jsonl']))
         self.assertEqual(len(self.stub_calls()), 1)
 
     def test_race_publishes_receipts_first_then_recomputes_once(self):
@@ -166,7 +166,7 @@ class PublishTests(unittest.TestCase):
         out = self.publish(env)
         log = self.remote_log()
         self.assertEqual(log[:4], ['chore: reconcile merged development work',
-                                   f'chore: retain qualification receipts for {self.tested()}',
+                                   f'chore: retain qualification receipts for {self.landing}',
                                    'racer', 'Merge PR #7'])
         self.assertIn('-- racer line', self.remote_file('releases.sql'))          # the racer's contribution survived
         self.assertIn('-- transition by stub run 2', self.remote_file('releases.sql'))
@@ -193,7 +193,7 @@ class PublishTests(unittest.TestCase):
         self.assertIn(f'hosted-lane-publish: ERROR — push rejected after recompute; origin/development moved to {racing[:12]}', result.stderr)
         self.assertIn('nothing expensive was lost', result.stderr)
         log = self.remote_log()
-        self.assertEqual(log[:3], ['racer', f'chore: retain qualification receipts for {self.tested()}', 'racer'])
+        self.assertEqual(log[:3], ['racer', f'chore: retain qualification receipts for {self.landing}', 'racer'])
         self.assertEqual(len(self.stub_calls()), 2)
 
     def test_race_without_receipts_exits_without_retry(self):
@@ -244,8 +244,6 @@ class PublishTests(unittest.TestCase):
         # red control: the repeated-option form the parser overwrites
         self.assertEqual(parser.parse_args(['--pr', '42', '--pr', '5']).pr, ['5'])
 
-    def tested(self):
-        return self.landing  # the clone's HEAD at reconcile time IS the landing commit in this fixture
 
 
 unittest.main(verbosity=2)
