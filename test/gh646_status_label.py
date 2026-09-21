@@ -934,6 +934,21 @@ class StatusLabelTests(unittest.TestCase):
                 self.assertEqual(self.fx.conn.execute("SELECT count(*) FROM work_events").fetchone()[0],
                                  event_count)
 
+    def test_may_terminalize_issue_pins_both_branches(self):
+        """Merged closers keep GH-202 authority (unknown state promotes; positively OPEN does not);
+        a declined PR is terminal only on a confirmed CLOSED issue or an explicit force."""
+        f = wave._may_terminalize_issue
+        for state, force, merged, is_open, expect in (
+                (None, False, True, False, True),      # merged, legacy manifest: promote as before
+                ("OPEN", False, True, True, False),    # merged but positively OPEN: preserve
+                (None, False, True, True, False),      # merged, unknown-state multiphase umbrella (is_open): preserve
+                (None, False, False, False, False),    # declined, unknown: preserve
+                ("UNKNOWN", False, False, False, False),
+                ("CLOSED", False, False, False, True), # declined, confirmed closed: terminal
+                (None, True, False, False, True)):     # explicit --force-promote
+            with self.subTest(state=state, force=force, merged=merged, is_open=is_open):
+                self.assertIs(f(state, force, merged, is_open), expect)
+
     def test_express_admission_dry_refusal_has_no_filesystem_writes(self):
         args = argparse.Namespace(root=self.fx.root, repo="owner/project", issue=646,
                                   dry_run=True, _expect_driver=set(), release=None)
@@ -1092,7 +1107,7 @@ def main():
         }
         target = "test_direct_close_refuses_mismatched_native_identity"
     elif opts.mutant == "wave_terminal":
-        wave._may_terminalize_issue = lambda issue_state, force_promote: True
+        wave._may_terminalize_issue = lambda *args, **kwargs: True
         target = "test_wave_requires_confirmed_closed_issue_before_terminalizing_label"
     suite = (unittest.defaultTestLoader.loadTestsFromName("StatusLabelTests." + target, sys.modules[__name__])
              if target else unittest.defaultTestLoader.loadTestsFromTestCase(StatusLabelTests))

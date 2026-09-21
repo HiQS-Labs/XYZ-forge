@@ -2177,7 +2177,10 @@ def main():
                             if updated:
                                 log(f"  ROADMAP.md entry updated for GH-{issue_num}")
                         else:
-                            log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — and the PR was not merged — preserving active ROADMAP.md entry; a declined PR needs a confirmed CLOSED issue to close out")
+                            if is_merged:
+                                log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
+                            else:
+                                log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — and the PR was not merged — preserving active ROADMAP.md entry; a declined PR needs a confirmed CLOSED issue to close out")
 
                 # GH-271: reference-only mentions never promote or move anything. When the
                 # mentioned issue is OPEN (or an unknowable-state umbrella), record merge
