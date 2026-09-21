@@ -106,3 +106,50 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Changes requested
+
+swept file: yes
+
+#### Overview
+The Builder turn for Round 1 encountered an execution/IPC error in the tool runtime (`failed to decode code-mode IPC frame: missing field code_mode_host_duration_ns`) and exited without making changes to tracked code or writing a build summary block to `RELAY.md`. Both core functional requirements for GH-742 remain unaddressed.
+
+#### Findings
+
+##### Finding 1 [Blocker]
+`materialize_vendor()` in `relay-automation/xyz-vendor.sh` does not create `.xyz/package.json` with `"type": "commonjs"`.
+- Observed input: `relay-automation/xyz-vendor.sh:435-500` (`materialize_vendor()`). Probe command `grep -n "package\.json" relay-automation/xyz-vendor.sh` exited with code 1 and no matches.
+- Affected scope: `relay-automation/xyz-vendor.sh:470-476` in `materialize_vendor()`.
+- Observed failure: In a consumer repository configured with `"type": "module"` in its root `package.json`, executing `.xyz/bin/tick` fails with `ReferenceError: require is not defined in ES module scope` because Node traverses up the directory tree and interprets `.xyz`'s CommonJS files as ESM.
+- Falsifier: Run `xyz-vendor.sh <target-repo>` on a target repo and inspect `<target-repo>/.xyz/package.json`:
+  ```bash
+  grep -F '"type": "commonjs"' "<target-repo>/.xyz/package.json"
+  ```
+  Currently fails (exit status 1, file does not exist).
+
+##### Finding 2 [Blocker]
+`test/xyz-vendor.sh` lacks the test fixture for `"type": "module"` target repos and the red control check.
+- Observed input: `test/xyz-vendor.sh:1-350`. Probe command `grep -n "package\.json" test/xyz-vendor.sh` exited with code 1 and no matches.
+- Affected scope: `test/xyz-vendor.sh`.
+- Observed failure: There is no test verifying that vendoring into a repository whose root `package.json` contains `"type": "module"` allows `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` to exit 0, nor a red control verifying failure when `.xyz/package.json` is removed.
+- Falsifier: Checking `test/xyz-vendor.sh` for an ESM target test fixture yields zero matches.
+
+#### Acceptance Criteria Tracking
+- [ ] `materialize_vendor()` in `relay-automation/xyz-vendor.sh` writes `.xyz/package.json` containing `"type": "commonjs"` on every vendor/update. -> Incomplete (`relay-automation/xyz-vendor.sh` not yet modified).
+- [ ] `test/xyz-vendor.sh` gains a fixture whose root `package.json` declares `"type": "module"`; after vendoring, `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` exits 0. Red control: with `.xyz/package.json` removed the same invocation fails. -> Incomplete (`test/xyz-vendor.sh` not yet modified).
+- [ ] `bash validate.sh` exits 0. -> [Unverified — needs clone run].
+
+#### Pre-existing Sweep
+Files swept in full:
+- `relay-automation/xyz-vendor.sh`: Swept lines 1–512 (locking, registry, exclude handling, state preservation, staging). Pre-existing code is clean; no unhandled defects identified.
+- `test/xyz-vendor.sh`: Swept lines 1–350 (fixtures, registry, collision safety, ignore rules). Pre-existing assertions are clean; no unhandled defects identified.
+
+#### Next Steps
+Builder needs to:
+1. In `relay-automation/xyz-vendor.sh` (`materialize_vendor()`): write `$STAGE_DIR/package.json` containing `{"type": "commonjs"}` (or formatted JSON with `"type": "commonjs"`).
+2. In `test/xyz-vendor.sh`: add a test fixture initializing a repo with root `package.json` having `{"type": "module"}`, vendor into it, assert `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` exits 0, and assert red control: removing `.xyz/package.json` causes the invocation to fail.
+3. Append a build block to `RELAY.md`, update `NEXT:` to `agy (Reviewer)`, and release token to `agy`.
