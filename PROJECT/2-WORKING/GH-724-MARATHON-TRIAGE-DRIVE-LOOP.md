@@ -23,7 +23,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA R1 (Codex) returned four `[Should]` findings — umbrella prerequisite blocks discovery triage, dry-run side effects misdescribed, complete vs blocked report undefined, heading-count acceptance too weak — all verified against source and accepted; plan revised. Deployed copy refreshed from canonical `5e60cb01` (Pulse `6cb97aa8`) so the `ROADMAP.md` drift is already gone | Plan QA R2; then rewrite `skills/marathon-triage/SKILL.md`, run the doc gates and the hooks suite, final relay QA with the four-scenario walkthrough, PR into `development`; re-publish to Pulse after landing |
+| Skill rewritten (`a9a41baa` + two final-QA wording nits); acceptance greps green (headings 3 / `ROADMAP.md` 0 / stop-sentences 0) and both red controls observed failing; PDDA doc gates 0 errors; `test/xyz-harness-hooks.sh` 62/62 in a disposable clone; Codex plan QA Approved (R2) and final QA Approved (R1, four-scenario walkthrough passed). Deployed copy refreshed from canonical `5e60cb01` (Pulse `6cb97aa8`) as an interim | Push through the pre-push gate, open the PR into `development`; after landing, re-publish `marathon-triage` to the Pulse collection from the primary (`intake.py --apply update marathon-triage --source <primary>/skills/marathon-triage`) and verify `diff -q` clean against canonical |
 
 ## Quad Concepts
 
@@ -97,4 +97,21 @@ Ordered work, verification inline:
 
 ## Lessons Learned (For Future Agents)
 
-- TBD at close-out.
+- A skill that *describes* a workflow gets walked through by the operator; a skill that *drives* one
+  needs the same four pieces the newer skills carry — a verbatim recite block, a drive loop with an
+  exit ladder, a definition of the terminal shapes, and a Done rule that names "asked the operator"
+  as not-terminal. Add those before adding more steps.
+- "Read-only" is a claim about published artifacts, not about side effects: `swarm-preflight.sh
+  --dry-run` still fetches and uses a transient worktree. Say what the tool actually does and put it
+  inside the default on that basis; a vague "read-only" invites the reviewer to prove it false.
+- Look for prerequisites that ask for the *output* of the computation — "name the umbrella before
+  you triage" wanted the wave sketch before inventory existed. Move them to the step that consumes
+  them (here: before firing).
+- A PreToolUse guard is part of the skill's execution environment. If the guard's proof-of-load is a
+  command the skill already runs, say so and make it the first call; otherwise the block reads as a
+  reason to ask the operator.
+- Count-based acceptance (three headings present) is not behavioural acceptance. Pair it with a grep
+  for the specific stop-sentences the rewrite removes and show the mutant (headings kept, sentence
+  restored) failing.
+- Reuse the intake writer even from a recipe: `hq_render_capture` + `hq_roadmap_line` +
+  `releases roadmap add` produced this very capture doc, which made the recipe its own control.

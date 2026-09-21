@@ -205,7 +205,8 @@ python3 "$HARNESS/utils/py/marathon_plan.py" --dry-run --deep
 `--dry-run` prints the report and writes no `MARATHON-PLAN-*.md`; `--deep` runs
 `swarm-preflight.sh --dry-run` for every ready item and folds the verdicts in. Quote the waves, the
 held items and any drift lines in the report. Handle the exit code per the drive loop table; `3`
-(ledger unparseable) turns the run into a blocked report, nothing else does. Writing the plan file (the planner **without** `--dry-run`)
+(ledger unparseable) turns the run into a blocked report, as does any other unmet Done-rule
+requirement listed there. Writing the plan file (the planner **without** `--dry-run`)
 is one of the five confirmation-gated actions — propose it in the report, do not do it.
 
 If a current `MARATHON-PLAN-*.md` already exists, `--check` reports whether it is in sync; drift is
@@ -258,6 +259,15 @@ Return one of the two shapes. A **complete report** (the Done rule holds) contai
    The operator starts from the recommendation and only overrides when the `UNLESS` clause
    holds — never from a blank menu. Reserve a bare options list only for genuinely balanced
    calls where no default is defensible, and say so explicitly.
+
+A **blocked report** contains everything above that *was* established, plus one line per
+unmet requirement: the command run, its exit code, the evidence that could not be established, and
+the next action. It never contains fabricated waves or verdicts.
+
+Keep the default report inline. If the operator requests a persisted report, write a dated
+`PROJECT/1-INBOX/MARATHON-TRIAGE-YYYY-MM-DD.md` with `doc_type: report`, source/provenance, and
+`roadmap_exempt: true`. If promoted to `2-WORKING`, add the full PDDA frontmatter, exact status table,
+and the ledger pointer. Never execute the marathon from this skill.
 
 ### 7. Before firing — the umbrella issue and the derived full clone (operator-confirmed)
 
@@ -329,12 +339,3 @@ salvage operation once could not find its own artifacts: live folders are `gh271
 different meanings under one shape — while committed transcripts also show `gh-8-…` and `gh-115-…`
 with a different separator, plus a `gh-115-clean` retry folder with no stated relationship to its
 original.
-
-A **blocked report** contains everything above that *was* established, plus one line per
-unmet requirement: the command run, its exit code, the evidence that could not be established, and
-the next action. It never contains fabricated waves or verdicts.
-
-Keep the default report inline. If the operator requests a persisted report, write a dated
-`PROJECT/1-INBOX/MARATHON-TRIAGE-YYYY-MM-DD.md` with `doc_type: report`, source/provenance, and
-`roadmap_exempt: true`. If promoted to `2-WORKING`, add the full PDDA frontmatter, exact status table,
-and the ledger pointer. Never execute the marathon from this skill.
