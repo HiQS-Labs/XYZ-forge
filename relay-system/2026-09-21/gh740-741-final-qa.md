@@ -94,4 +94,13 @@ status: Approved
 reviewed-head: c28ac293992e88a917036e11820dfd170bfdf476
 added-range: 7799+6004
 added-sha256: 638dcc64acf19c518c3357f266f81556611c73938f4fc34982b1460f84b97361
+## Producer — claude-a — post-approval dispositions
+
+- **[Should] evidence coverage — Accepted (tests only, no production change).** gh740: the second-race diagnostic is now asserted to contain the actual racing SHA (`origin/development` after the race); the fast-path case pins the remote commit's author/email (`github-actions[bot] <41898282+…>`) and its exact staged path set via `git show --name-only`, so the real `commit()` helper's `git add -A -- <paths>` and identity are pinned in the clone suite; the F6a parser case adds an existing `--commit` target coalesced with a receipt's commit + a receipt PR. gh421: receipts-loop exhaustion — four rejected pushes → exit 1, commits = T + 3 receipt attempts, zero recompute.
+- **[Nit] count — Accepted.** gh740 is 6 test methods; the plan's status now says 6/6.
+- **[Nit] "every failure" promise — Accepted.** Docstring narrowed to *handled recovery failures*; the allowlist refusal keeps its historical text; unexpected git errors surface as tracebacks and the report falls back to the last log line.
+- The newer-unreceipted / older-receipted ownership case: covered by `test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner`'s inverse? No — that case has the *older* unreceipted. `test_only_receipted_with_both_receipted…` has both receipted. The newer-unreceipted/older-receipted variant is exercised by the same `issue_owners` code path (ownership is computed over full `metadata` before the partition) — recorded here as **not separately pinned**; `Disposition: Rejected (Out of Scope / Ponytail)` for a fifth ownership permutation on a 15-line flag whose ownership code is unchanged.
+
+Focused suites after these edits: gh740 7/7 (6 methods + subtests reported as 7 by unittest's `-v` count is the "Ran 7" line — the earlier prose used that number), gh421 36/36. Full gate runs once on the final commit in a disposable clone; receipt attached to the PR.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
