@@ -95,7 +95,7 @@ def verify(snapshot: dict) -> None:
     assert repo["known_checkout_count"] == 2
     assert len(repo["prs"]) == 1 and repo["prs"][0]["issue"] == 83
     assert len(repo["events"]) == 2, "repo/SHA deduplication failed"
-    assert all(source["availability"] == "ok" for source in snapshot["sources"])
+    assert all(source["availability"] == ("disabled" if source["id"] == "xyz_work" else "ok") for source in snapshot["sources"])
     assert any(item["kind"] == "milestone" and item.get("issue") == 440 for item in repo["events"])
 
 

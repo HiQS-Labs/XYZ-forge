@@ -25,10 +25,96 @@ import json
 import re
 import sqlite3
 import sys
+import os
+import selectors
+import signal
+import subprocess
+import tempfile
+import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 
 GH_URL_RE = re.compile(r"https://github\.com/([^/]+/[^/]+)/issues/(\d+)")
+
+
+def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+    """Bounded data-only invocation of XYZ's existing qualified RO helper.
+
+    The configured harness is trusted executable code. Never load code from a
+    ledger root, invoke CLI/main/config, or open a source through a writer factory.
+    Output and process lifetime are bounded before parsing; errors are opaque.
+    """
+    script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+    database = Path(ledger_root).expanduser().resolve() / "releases.db"
+    if not script.is_file() or not database.is_file():
+        return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+    bootstrap = (
+        "import importlib.util,json,sys; "
+        "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+        "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+        "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+    )
+    proc = None
+    output = bytearray()
+    try:
+        if time.monotonic() >= deadline:
+            raise TimeoutError
+        with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+            proc = subprocess.Popen(
+                [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL, start_new_session=True,
+            )
+            try:
+                with selectors.DefaultSelector() as selector:
+                    selector.register(proc.stdout, selectors.EVENT_READ)
+                    while selector.get_map():
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        for key, _ in selector.select(min(remaining, 0.1)):
+                            chunk = os.read(key.fileobj.fileno(), 65536)
+                            if not chunk:
+                                selector.unregister(key.fileobj)
+                            else:
+                                output.extend(chunk)
+                                if len(output) > 2 * 1024 * 1024:
+                                    raise ValueError("output-limit")
+                # Observe exit without reaping: the PID remains ours until group
+                # cleanup, including children which closed or inherited stdout.
+                while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise TimeoutError
+                    time.sleep(min(0.01, remaining))
+                report = json.loads(output)
+                if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                    raise ValueError("invalid-report")
+                if not report.get("schema_ready"):
+                    report["error_code"] = "unavailable-evidence"
+            finally:
+                # Never poll/wait before this: a reaped PID could be reused.
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                except PermissionError:
+                    # Darwin reports EPERM for an otherwise empty group whose
+                    # only member is the already-exited (uid=0) zombie.
+                    exited = os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+                    if sys.platform != "darwin" or exited is None or exited.si_uid != 0:
+                        raise
+                finally:
+                    return_code = proc.wait(timeout=0.2)
+                    proc.stdout.close()
+            if return_code != 0:
+                raise ValueError("reader-failed")
+            return report
+    except (TimeoutError, subprocess.TimeoutExpired):
+        code = "reader-timeout"
+    except (OSError, ValueError, TypeError):
+        code = "invalid-or-oversized-report"
+    return {"schema_ready": False, "error_code": code, "issues": []}
 
 # Mirror of export_timeline.MARKER_BY_EMOJI, kept local to avoid a circular import (the
 # exporter imports THIS module). If one changes, change both.

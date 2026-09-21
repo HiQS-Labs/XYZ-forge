@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import sqlite3
 import time
 from datetime import datetime
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlsplit
+from utils.py.releases_cycle import read_work_status
 
 from .contract import (
     MAX_RECORDS,
@@ -34,6 +37,87 @@ def canonical_github_key(stored_name: Any, html_url: Any = None) -> str | None:
             if key:
                 return key
     return repo_key(stored_name)
+
+
+def native_item_identity(row: dict[str, Any]) -> bool:
+    """An item URL cannot lend a foreign repository, type or number to this row."""
+    try:
+        url = urlsplit(str(row.get("html_url") or ""))
+        path = url.path.strip("/").split("/")
+        kind = "pull" if row.get("item_type") == "pull_request" else "issues"
+        return (url.scheme == "https" and url.netloc.lower() == "github.com"
+                and not url.query and not url.fragment and len(path) == 4
+                and path[2] == kind and path[3] == str(row.get("number"))
+                and repo_key("/".join(path[:2])) == repo_key(row.get("repo_full_name"))
+                and str(repo_key(row.get("repo_full_name"))).startswith("github.com/"))
+    except ValueError:
+        return False
+
+
+def read_xyz_work(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
+    batch = empty_batch("xyz_work", ("established_work",), "unavailable")
+    roots = sorted(set(root.expanduser().resolve() for root in config.xyz_roots))
+    sources = []
+    window = min(deadline, time.monotonic() + 2)
+    for root in roots[:4]:
+        root_id = hashlib.sha256(str(root).encode()).hexdigest()[:16]
+        at = utc_now()
+        report = read_work_status(Path(__file__).resolve().parents[2], root, window, at)
+        source = {"id": root_id, "read_at": at, "generation": report.get("generation"),
+                  "schema_version": report.get("schema_version"),
+                  "supported": report.get("status_label_supported") is True,
+                  "error": report.get("error_code"), "excluded_rows": 0}
+        sources.append(source)
+        if not report.get("schema_ready"):
+            continue
+        ordered = sorted(report["issues"], key=lambda row: not (isinstance(row, dict) and row.get("status_label") == "in-progress" and row.get("recent_start")))
+        for row in ordered[:2000]:
+            if not isinstance(row, dict):
+                source["excluded_rows"] += 1
+                continue
+            key, number = repo_key(row.get("repo")), row.get("number")
+            if not key or not key.startswith("github.com/") or type(number) is not int or number <= 0:
+                source["excluded_rows"] += 1
+                continue
+            start = row.get("recent_start")
+            start = {name: start.get(name) for name in ("at", "event", "freshness")} if isinstance(start, dict) else None
+            lifecycle = row.get("latest_lifecycle")
+            lifecycle = {name: lifecycle.get(name) for name in ("at", "event")} if isinstance(lifecycle, dict) else None
+            evidence = {**source, "status_label": row.get("status_label"),
+                        "supported": row.get("status_label_supported") is True,
+                        "start": start, "lifecycle": lifecycle}
+            evidence.pop("excluded_rows")  # Root diagnostic, not order-dependent issue evidence.
+            if row.get("identity_valid") is not True:
+                # The helper owns this identity, but this row cannot establish work.
+                # Preserve a per-issue gap; unrelated qualified rows stay usable.
+                evidence.update(error="unqualified-ledger-row", status_label=None,
+                                start=None, lifecycle=None)
+            batch["issues"].append({"repo_id": key, "number": number,
+                                    "work_evidence": [evidence], "source_ref": "xyz_work"})
+            batch["repos"].append({"id": key, "source_refs": ["xyz_work"]})
+        if len(report["issues"]) > 2000:
+            source["error"] = "issue-cap"
+    grouped = {}
+    for row in batch["issues"]:
+        key = (row["repo_id"], row["number"])
+        if key not in grouped:
+            grouped[key] = {**row, "work_evidence": []}
+        grouped[key]["work_evidence"].extend(row["work_evidence"])
+    batch["issues"] = sorted(grouped.values(), key=lambda row: (not any(e["status_label"] == "in-progress" and e["start"] for e in row["work_evidence"]), row["repo_id"], row["number"]))[:2000]
+    incomplete = (len(roots) > 4 or len(grouped) > 2000 or not sources
+                  or any(s["error"] or not s["supported"] for s in sources))
+    finalized = {s["id"]: s for s in sources}
+    for row in batch["issues"]:
+        for evidence in row["work_evidence"]:
+            evidence["root_error"] = finalized[evidence["id"]]["error"]
+            evidence["error"] = evidence.get("error") or evidence["root_error"]
+            evidence["roots_complete"] = not incomplete
+    batch["repos"] = [{"id": key, "source_refs": ["xyz_work"]} for key in sorted({row["repo_id"] for row in batch["issues"]})]
+    batch["source"].update({"availability": "ok" if any(s["supported"] and not s["error"] for s in sources) else "unavailable",
+                            "coverage": "partial", "observed_through": None,
+                            "roots": sources, "error": "issue-cap" if len(grouped) > 2000 else "root-cap" if len(roots) > 4 else
+                            "source-unavailable-or-unsupported" if not sources or any(s["error"] or not s["supported"] for s in sources) else None})
+    return batch
 
 
 def work_references(text: str, repo: str | None = None) -> dict[str, list[int]]:
@@ -177,9 +261,12 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
     if not config.rebalance_db:
         return batch
     path = safe_path(config.rebalance_db)
-    conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=1)
+    conn = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, timeout=1)
     try:
         conn.execute("PRAGMA query_only=ON")
+        remaining = max(0, int((deadline - time.monotonic()) * 1000))
+        conn.execute(f"PRAGMA busy_timeout={min(250, remaining)}")
+        conn.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
         deadline_guard(deadline)
         repos: dict[str, dict[str, Any]] = {}
         project_keys: dict[str, list[str]] = {}
@@ -219,23 +306,67 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
             key = repo_key(link["repo_full_name"])
             if key and link["link_kind"] == "closes":
                 pr_issues.setdefault((key, int(link["source_number"])), []).append(int(link["target_number"]))
-        items = _sqlite_rows(conn, """
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(github_items)")}
+        optional = "," + ",".join(name if name in columns else f"NULL AS {name}" for name in ("labels_json", "state_reason"))
+        select = """
             SELECT repo_full_name,item_type,number,title,state,is_draft,is_merged,head_sha,
                    mergeable_state,review_decision,check_status,html_url,updated_at,fetched_at
-              FROM github_items
+        """ + optional + " FROM github_items "
+        established = []
+        keys = config.established_issues[:2000]
+        for offset in range(0, len(keys), 200):
+            deadline_guard(deadline)
+            chunk = keys[offset:offset + 200]
+            predicates = " OR ".join("(lower(repo_full_name)=? AND number=?)" for _ in chunk)
+            params = tuple(value for repo, number in chunk for value in (repo.removeprefix("github.com/"), number))
+            established.extend(_sqlite_rows(conn, select + f" WHERE item_type='issue' AND ({predicates}) LIMIT 2000", params))
+        items = established + _sqlite_rows(conn, select + """
              WHERE item_type='issue' OR state='open'
              ORDER BY COALESCE(updated_at,fetched_at) DESC LIMIT 2000
         """)
+        deadline_guard(deadline)
+        wanted = set(keys)
+        # Exact lookup can return case-variant duplicate cache rows. Keep the
+        # newest observation, while retaining quiet established work before caps.
+        def observed(row):
+            try:
+                parsed = datetime.fromisoformat((row.get("fetched_at") or "").replace("Z", "+00:00"))
+                return parsed.timestamp() if parsed.tzinfo else float("-inf")
+            except (ValueError, TypeError, OverflowError):
+                return float("-inf")
+        items.sort(key=observed, reverse=True)
+        items.sort(key=lambda row: (repo_key(row["repo_full_name"]), row["number"]) not in wanted)
+        latest = {}
+        conflicting = set()
+        for row in items:
+            identity = (repo_key(row["repo_full_name"]), row["item_type"], row["number"])
+            signature = (row["state"], row.get("labels_json"), row.get("state_reason"), native_item_identity(row))
+            prior = latest.setdefault(identity, (observed(row), signature))
+            if observed(row) == prior[0] and signature != prior[1]:
+                conflicting.add(identity)
+        seen = set()
         for row in items:
             deadline_guard(deadline)
-            key = canonical_github_key(row["repo_full_name"], row["html_url"])
+            key = repo_key(row["repo_full_name"])
             if not key:
                 continue
+            identity = (key, row["item_type"], row["number"])
+            if identity in seen:
+                continue
+            seen.add(identity)
             repo = repos.setdefault(key, {"id": key, "name": repo_name(key), "aliases": [], "source_refs": ["rebalance"]})
             if row["repo_full_name"] not in repo["aliases"]:
                 repo["aliases"].append(row["repo_full_name"])
             target = batch["prs"] if row["item_type"] == "pull_request" else batch["issues"]
             normalized = {"repo_id": key, "number": row["number"], "title": row["title"], "state": row["state"], "updated_at": row["updated_at"], "fetched_at": row["fetched_at"], "url": row["html_url"], "source_ref": "rebalance"}
+            try:
+                labels = json.loads(row["labels_json"]) if row["labels_json"] is not None else None
+            except (ValueError, TypeError):
+                labels = None
+            normalized.update({"labels": labels if isinstance(labels, list) and all(isinstance(label, str) for label in labels) else None,
+                               "native_conflict": identity in conflicting,
+                               "state_reason": row["state_reason"], "native_identity_valid": native_item_identity(row),
+                               "native_max_age_seconds": config.native_max_age_seconds})
             if row["item_type"] == "pull_request":
                 normalized.update({k: row[k] for k in ("is_draft", "is_merged", "head_sha", "mergeable_state", "review_decision", "check_status")})
                 title_issues = issue_numbers(row["title"] or "", key)
@@ -256,6 +387,7 @@ def read_rebalance(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
         observed = max((str(item.get("fetched_at") or "") for item in items), default=None) or utc_now()
         return _available(batch, observed, "partial")
     finally:
+        conn.set_progress_handler(None, 0)
         conn.close()
 
 
@@ -305,6 +437,7 @@ def read_continuity(config: ConnectorConfig, deadline: float) -> dict[str, Any]:
 
 
 REGISTRY: dict[str, Connector] = {
+    "xyz_work": read_xyz_work,
     "rebalance": read_rebalance,
     "clio": read_clio,
     "git_pulse": read_git_pulse,
@@ -320,7 +453,13 @@ def read_connectors(config: ConnectorConfig, deadline: float) -> list[dict[str, 
             batches.append(empty_batch(connector_id, (), "disabled"))
             continue
         try:
-            batches.append(reader(config, deadline))
+            batch = reader(config, deadline)
+            batches.append(batch)
+            if connector_id == "xyz_work":
+                config = replace(config, established_issues=tuple(sorted({
+                    (row["repo_id"], row["number"]) for row in batch["issues"]
+                    if any(e.get("status_label") == "in-progress" and e.get("start") for e in row["work_evidence"])
+                })))
         except (OSError, ValueError, TypeError, AttributeError, sqlite3.Error, json.JSONDecodeError, TimeoutError) as exc:
             batches.append(empty_batch(connector_id, (), "unavailable", type(exc).__name__))
     return batches

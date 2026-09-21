@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-20 — Flight Deck established-work reader (GH-673, Refs GH-646)
+
+Reuse the existing qualified ledger helper and cached GitHub observations to distinguish
+established work, recent intent, closure and missing/conflicting evidence. Readers do
+not change source task records, labels or schema; normal SQLite coordination files are
+allowed. Invalid helper-owned rows are per-issue gaps, while unresolvable rows are
+counted without poisoning unrelated tasks. Healthy unchanged handoffs stay open;
+changed context/status, vanished targets, failed reads or expired snapshots invalidate
+them. Equal-time native duplicates include identity in conflict detection, and
+issue/root diagnostics survive together. 39 populated Python checks, production-selector checks and real Chrome tests
+pass; replacement independent review and full qualifying gate remain pending.
+Easy rollback: disable the optional reader or reviewed revert; no source migration.
+
 ## 2026-09-18 — Offline Jev vs Tier-1/Gemma ATE triage replay; shadow flag not started (GH-712)
 
 Lane B of the GH-709 TypeSafe Jev recon. Added `utils/py/jev_triage.py` (stdlib only): three Choice
