@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-20.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -97,5 +97,39 @@ Basis: implementation committed at `a9a41baa`; requesting independent final QA a
 8. Scope: anything beyond a doc rewrite; anything that belongs in #443?
 
 Output: graded findings with citations, `swept file: yes|no`, VERDICT with Basis. Do not edit any artifact — findings only.
+
+### Reviewer R1 — codex
+
+VERDICT: PASS
+Basis: the rewritten skill satisfies the implementation contract: discovery runs without an umbrella, default intake/readiness proceeds unattended, and missing evidence produces a blocked report. Existing writers and CLI contracts support the recipes. Two wording nits below do not override the explicit drive-loop/Done rule. Approval covers the reviewed text, not deployment parity or unexecuted runtime gates.
+swept file: yes
+
+Read all 340 lines, including the retained before-firing rules and report tail, plus the approved plan, plan-QA history, CHANGELOG entry, writer signatures, planner/deep-preflight branches, guard and PDDA intake contract. No additional blocking pre-existing defect found. No git commands, source/artifact edits, executable fixtures or test suites were run.
+
+- [Pass] **Q1/Q2 — shape, guard and authorization.** `skills/marathon-triage/SKILL.md:23-30` states all five phases, complete/blocked reporting and Overall Goal; `:83-91` supplies the explicit Done rule. `:103-110` qualifies the exit-2 symptom by guard enabled/no prior proof, matching `relay-automation/hooks/relay-xyz-guard.sh:89-100`. Default metadata effects, reversible intake and strict-read-only override are explicit at skill `:39-51`; five execution actions remain gated at `:55-56`. Both plan-QA R2 nits are carried into the skill. No fix required.
+
+- [Pass] **Q3 — exit ladder and independent verdicts.** Skill `:78-90` maps planner 0/2/3/4/5/6/other and preflight 0/2/3/4/5/6/7, bounds invocation repair, and requires blocked reporting when evidence remains unavailable. Direct calls even after deep delegation are required at `:216-228`; `_marathon_plan.py:1022-1049` indeed discards output and specially handles only 4/5/6/7. CLI options/exits agree with `utils/py/marathon_plan.py:49-57`; preflight dry-run/no-packet behavior is at `utils/py/swarm_preflight.py:1690-1711`. No runtime behavior change requested.
+
+- [Pass] **Q4 — capture recipe source review.** Skill `:174-195` matches `hq_render_capture`'s eight required arguments (`utils/hq/hq-lib.sh:416-418`) and `hq_roadmap_line`'s six (`:548-550`). `hq_slug` already emits up to four SCREAMING-KEBAB words (`:384-392`); the extra uppercase conversion is harmless and matches PDDA's approximate filename convention (`PROJECT/PDDA.md:258-264`). Renderer frontmatter at `hq-lib.sh:448-467` supplies the intake minimum. All roadmap flags exist at `utils/py/releases_app.py:6511-6516`; add prints the gid at `:3631`, and list includes gid and GH number at `:4343-4345`. Failed add is explicitly half-complete. This is source compatibility, not a claim that writes or PDDA gates were executed here.
+
+- [Pass] **Walkthrough 1 / Q5 — no umbrella, two unrelated candidates.** Start at Step 0, inventory/reconcile both, skip capture creation because both have docs, run `python3 "$HARNESS/utils/py/marathon_plan.py" --dry-run --deep`, then direct `"$HARNESS/utils/swarm-preflight.sh" --project-doc <doc> --dry-run` (or `--gh-issue <n>` for promoted docs). Record the valid candidate's actual exit; missing contract becomes NEEDS-CONTRACT. With all required evidence available, Step 6 yields a complete report, with promotion/contract/umbrella as decisions, without asking first (`:52-54`, `:155-162`, `:199-228`, `:243-255`). Step 7 expressly does not run during triage (`:262-265`), while retaining umbrella registration and full-clone naming (`:267-324`).
+
+- [Pass] **Walkthrough 2 — missing capture.** Step 3 renders and parks using the quoted recipe (`:174-189`), records `(issue, doc, gid)`, and reclassifies NEEDS-CAPTURE to NEEDS-CONTRACT (`:159`). Successful add proceeds through planner/direct preflight to the complete report when evidence is available. Failed add proceeds to a blocked report naming the writer error and half-complete intake (`:87-91`, `:194-195`, `:333-335`). Neither branch asks whether to write the capture; commit remains a report decision (`:195-196`, `:253`).
+
+- [Pass] **Walkthrough 3 — invalid/stale contracts.** Step 5 direct preflight exit 3 gives NEEDS-CONTRACT; exit 4 gives CONTRACT-STALE (`:79`, `:156-158`, `:226-228`). Retain both exits/verdicts and propose contract work or delivery reconciliation; do not queue them as ready. These known classifications allow a complete report if the other Done criteria hold. No operator question interrupts computation.
+
+- [Pass] **Walkthrough 4 — unavailable GitHub.** A failed `gh issue list` leaves live state UNKNOWN and continues local inventory (`:61`, `:75`). Planner exit 6 permits one retry without `--require-gh` (`:78`); local/degraded output is retained, but the missing live issue universe requires the blocked report (`:88-90`). No fabricated live state or waves and no question before the retry.
+
+- [Pass] **Q6/Q8 — report and scope.** Complete content/decisions are specified at `:241-260`, blocked content at `:333-335`; commit-captures and open-umbrella appear at `:253`. The rewrite introduces instructions using existing tooling, not a new runtime/writer; ranking at `:233-237` retains the existing rule. CHANGELOG's top entry explicitly leaves PRS ratings and marathon-drive dry-run to #443 (`CHANGELOG.md:3-17`). No fix required.
+
+- [Pass] **Structural and behavioral red controls.** Read-only command `python3 - <<'PY'` read the nonempty skill with `Path.read_text()`, counted `re.findall(r'^## Recite this|^## Drive loop|^\*\*Done rule', s, re.M)` and the stop-sentence regex `request confirmation before generating|before any triage work|not ready to triage`, then repeated with `s.replace('## Drive loop','## Removed loop')` and with the old ask-before-planner sentence appended. Exit **0**; decisive output: `lines= 340 shape= 3 stops= 0 retired_roadmap= 0`, `heading_mutant= 2`, `stop_mutant= 1`. Thus each acceptance predicate rejects its mutant. For scenario 5, git inspection of origin/development was prohibited; the installed prior copy supplies a directly read alternative failing control: `sed -n '60,85p' /Users/noelsaw/.codex/skills/marathon-triage/SKILL.md` exited **0**, showing “Procedure, before any triage work:” followed by “Open the umbrella issue”, and “not ready to triage”. That copy stalls scenario 1 before inventory; the revised `:52-54/:262-265` removes that stop. This does not establish the installed copy's Git revision.
+
+- [Nit] **Q7 — remove a contradictory absolute.** Skill `:208` says planner 3 turns the run into a blocked report, “nothing else does”, while `:78/:88-90` correctly allow other unavailable-evidence failures to do so. Delete “nothing else does” or point to the drive-loop table. The governing Done rule already prevents false completion; this is wording cleanup, not a new behavior request.
+
+- [Nit] **Keep both report shapes together.** The blocked-report definition and persistence instructions (`:333-340`) sit below Step 7, whose opening says nothing in that step runs during triage. Move these paragraphs into Step 6 for easier scanning. The earlier full definition (`:67-70/:88-91`) already makes blocked reporting operative.
+
+- [Unverified — needs clone run] Producer-reported hooks/PDDA results were not rerun under this reviewer boundary; full gate execution belongs to the harness/disposable clone. Deployment parity is not approved: the installed copy still contains the old stop text as observed above, and the plan schedules publication after approval. No claim is made that every lifecycle/deployment checkbox is already discharged.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) owns the remaining publication/gate follow-through; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
