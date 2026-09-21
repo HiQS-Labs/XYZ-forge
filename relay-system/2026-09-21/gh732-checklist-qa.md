@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -178,5 +178,35 @@ The entire capture, including frontmatter, carry-over, acceptance and trailing s
 No additional implementation work is justified by the unverified six-run anecdotes alone. This turn's probes established routing/static facts only; all runtime gates remain [Unverified — needs clone run].
 
 Handing off to Producer (claude-a) — correct or disposition the findings, mark unavailable live evidence explicitly, and open the next review cycle. No approval yet.
+
+### Producer R2 — dispositions; issue #732 and the capture corrected
+
+VERDICT: PARKED
+Basis: every finding was re-verified against the current tree by the Producer before acting; the issue body on GitHub and the capture doc (artifact) are rewritten accordingly. Requesting R2.
+
+Verification performed this turn (read-only): `validate.sh:1258` `rt_suite`, `test/lib/runner-telemetry.sh:126/:146` `duration_ms`, `:1518` telemetry path line; `grep -c pytest test/gh425-gate-provenance-pr.sh` = 0 (last changed 2026-09-14, #597); `test/gh268-relay-cue-and-target-checks.sh:105-108` (absent-php skip; present-but-broken not covered); `validate.sh:932` MAX_JOBS, `:975` empty-guard, `:980` BURST, `:994-996` tier-2 default; `test/gh35-test-tiers.sh:259-274` GH-648 note (landed #716, 2026-09-18); `wave_reconcile.py:1066/:1836` "advisory (GH-693)" (landed #696/#697, 2026-09-18); `wave_reconcile.py:535-552` pending-batch qualification; `git ls-files releases.db` → tracked; cross-ref issue states via `gh` (network available to the Producer): #382 #30 #730 #223 #591 #674 #722 #496 all OPEN, #459 CLOSED.
+
+Dispositions:
+- 1 timing docs — **Implemented**: item now points at `githooks/pre-push:262/:279/:296` measured lines and adds `pre-push:10`; table labelled a dated observation.
+- 2 per-suite durations — **Implemented (reframed)**: "render existing GH-365 telemetry (`rt_suite`/`duration_ms`, `.tick/telemetry`)"; first attempts vs retries separated; no new facility. Phase 5 no longer lists it as a prerequisite.
+- 3 toolchain — **Implemented (corrected)**: gh425 pytest premise removed (0 refs; ModuleNotFoundError attributed to a subprocess in its chain, to be identified); GH-251 named-skip and gh268's absent-php skip acknowledged; the surviving gap is stated precisely — a binary that is *present but broken* (`php -v` non-zero) or an interpreter missing `yaml` is reported as a suite failure. Action rewritten to extend the existing skip/diagnostic paths; unconditional top-level dependency gate dropped. Red control rewritten to a stub `php` that exits 1.
+- 4 re-run ladder — **Implemented**: 2-wide pool and short-circuit dropped (would weaken GH-528); action limited to printing re-run time from the retry-lane records.
+- 5 tier-2 width — **Implemented (corrected)**: levers already win (`:932/:980` precede `:994`); item is now documentation only and says the earlier framing was wrong.
+- 6 ledger routing — **Implemented**: router behaviour stated as known (path-based, `:38/:458`, 23 shell suites, probe quoted); "evaluate" kept only for the narrowing decision with the fail-closed matrix; default "keep" named.
+- 7 gh35 nice — **Superseded (struck through, kept for the record)**: fixed by #716.
+- 8 contention — **Implemented**: recommendation only; pollers/relay effect labelled operator observation; existing `--burst` docs cited.
+- 9 split pushes — **Implemented (corrected)**: mixed docs+mapped code = tier 2 (`ci-route.sh:365`); saving only for genuinely independent docs follow-ups; linked to #30 rather than a new SOP rule.
+- 10 hosted qualify — **Implemented (corrected)**: per pending batch (`:535-582`), not per merge; the 3×70 min is a dated observation; Lessons Learned failure class closed by GH-693; decision stays in #591.
+- 11 cross-refs — **Implemented**: states verified 2026-09-21 and listed; GH-365 / GH-648 / GH-693 added as landed references.
+- 12 pre-merge wiring — **Implemented (reframed)**: rationale updated for GH-693; remaining gap named as optional frontmatter/receipt surfacing with `--pr` metadata; low priority; GH-693 preserved.
+- 13 Phase 3 — **Implemented**: `git ls-files` evidence stated; conflicts labelled operator observation; no retained spike evidence in `TESTS-RESULTS/` stated as the fact.
+- 14 Phase 4 — **Implemented**: "not present in the current selector".
+- 15 Phase 5 — **Implemented**: fresh matched campaign is the gap, not instrumentation.
+- 16 GH-496 doc — **Accepted as written**.
+- 17 acceptance — **Implemented**: item-specific red/green outcomes in a disposable clone; timing criterion allows deletion; gh425 control replaced with the broken-php stub. Capture-doc TODO scaffolding: frontmatter `goal` filled; the two Phase-0 TODO checklists are the renderer's intake scaffolding and are left as-is per PDDA (a 1-INBOX capture carries no execution plan).
+
+Questions for R2: (1) any surviving factual error against the current tree? (2) is any remaining action still disproportionate? (3) is the GH-693 reframing of item 12 correct — i.e. is anything the pre-merge check enforces *still* fatal post-merge and therefore worth surfacing pre-merge?
+
+Handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
