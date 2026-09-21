@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-09-21 — /merge-cleanup-deep: triage for the checkouts /merge-cleanup preserves (GH-728)
+
+`/merge-cleanup` preserves every checkout it cannot prove landed and only "recommends a deeper
+scan"; on this device that left 14 sibling clones untouched across runs. New opt-in skill
+`skills/merge-cleanup-deep/`: intake from `scan_clones.py --json` (no second discovery), zip-first
+backup with a sha256 manifest, at most three read-only sub-agents grouped by branch family (prompt
+template shipped in `agents/scan-prompt.md`: hard read-only rules, temp refs under
+`refs/deepscan/*`, evidence checklist a–g), verdicts PR-WORTHY / SUPERSEDED / NEEDS-OWNER /
+ABANDON-CANDIDATE / HOLD with the deciding evidence line, caller re-verification of every "unique
+defect" claim against `development` and open issues, and a handoff table that returns disposable
+checkouts to merge-cleanup's Phase 6 (never `rm`). Worked example: the 2026-09-21 pass — 1
+PR-worthy branch (#656/#657 fixes), 1 hold (== draft #723), 12 superseded. Skills Index gains the
+`merge-cleanup` and `merge-cleanup-deep` rows; merge-cleanup's Deep Scan Escalation line points
+here. Easy rollback: delete the folder and the two rows. No script, test, or CLI change.
+
 ## 2026-09-20 — Hosted reconcile lane publishes 1-INBOX capture promotions again (GH-721)
 
 Every hosted `wave-reconcile.yml` run since #705 (GH-698 item 2, 2026-09-18) did its full
