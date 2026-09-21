@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -135,11 +135,61 @@ Dispositions on Round 1:
   `git diff origin/development -- skills/debug-mantra/SKILL.md | rg -c '^[-+]> '` → `0` matching
   lines (0 = no recital line added or removed). Exit status of the pipeline: rg returns 1 on zero
   matches, which is the passing condition here. `bash test/debug-mantra.sh` → exit 0.
-- Both [Pass] findings — acknowledged; no change.
+- Both [Unverified — no citation] findings — acknowledged; no change.
 
 Artifact unchanged since Round 1 (still commit 7dfc84d5). Please grade against the now-bound Setup
 and answer the five Context questions.
 
 Handing off to Reviewer — take your turn.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+1. [Pass] The root-vs-proximate test is operational rather than decorative: it asks whether the fix
+   removes the failure class or one instance, then gives the repeatable upstream question "what let
+   that happen?" and concrete stopping conditions (`skills/debug-mantra/SKILL.md:55-58`). Concrete
+   fix: none.
+2. [Blocker] The symptom-fix definition and dead-code tell are sound, but its claim that a downstream
+   guard "will pass mantras 1–4 because the repro goes green" (`skills/debug-mantra/SKILL.md:57`)
+   contradicts the new mantra-3 class-vs-instance gate (`skills/debug-mantra/SKILL.md:55-58`) and
+   mantra-4 RC close-out (`skills/debug-mantra/SKILL.md:68`). This is the observed prose failure: the
+   named trap says the very gates introduced to catch it will still pass. Concrete fix: replace that
+   clause with the temporal/conditional point, e.g. "without the root-vs-proximate gate, a green
+   repro can make the session look fixed."
+   Observed input: an upstream producer emits invalid state; a downstream null-default makes the
+   original repro green, matching the current examples and assertion at `skills/debug-mantra/SKILL.md:57`.
+   Affected scope: defensive branches at a controlled crash/check site when the bad state was
+   produced upstream inside the system's contract.
+   Falsifier: an external or out-of-contract origin where the defensive branch is contractually
+   required; expected result: the revision must continue to allow that proximate-site decision with
+   a recorded reason under `skills/debug-mantra/SKILL.md:58`.
+3. [Pass] The one-line RC statement fits the experiment ledger because it closes the accumulated
+   evidence with origin, fix site, and any site divergence (`skills/debug-mantra/SKILL.md:62-68`).
+   The operating gate is proportionate: it requires that minimal statement while the adjacent scale
+   rule still waives a runnable harness or full written ledger for trivial defects
+   (`skills/debug-mantra/SKILL.md:97-98`). Concrete fix: none.
+4. [Pass] Plan pivot 3 coherently mirrors the same origin/class test and uses the RC statement only
+   as its reporting shape (`skills/debug-mantra/SKILL.md:80`); the following paragraph correctly
+   preserves the plan-time distinction that falsification is specified rather than already witnessed
+   (`skills/debug-mantra/SKILL.md:83`). Concrete fix: none.
+5. [Pass] The complete 101-line artifact was swept; no other pre-existing defect, redundancy,
+   over-engineering, or contradiction was found (`skills/debug-mantra/SKILL.md:1-101`). The docs-only
+   acceptance markers remain present and the recital matches the deployed reference. Supporting
+   probe: `sed -n '10,16p' skills/debug-mantra/SKILL.md > "$TMPDIR/gh737-current-recital.txt";
+   sed -n '10,16p' /Users/noelsaw/.codex/skills/debug-mantra/SKILL.md >
+   "$TMPDIR/gh737-reference-recital.txt"; cmp -s "$TMPDIR/gh737-current-recital.txt"
+   "$TMPDIR/gh737-reference-recital.txt"; rg -c 'proximate' skills/debug-mantra/SKILL.md;
+   rg -c 'symptom-fix trap' skills/debug-mantra/SKILL.md; rg -c 'Root cause:'
+   skills/debug-mantra/SKILL.md` exited `0`; decisive output was recital cmp `0`, then counts `3`,
+   `1`, and `1`. Producer's authoritative origin/development quote-line diff is recorded at this relay's
+   lines 133-137. Concrete fix: none.
+
+VERDICT: FAIL
+
+Basis: Four acceptance areas pass, but the symptom-fix paragraph presently contradicts the two new
+gates that are supposed to catch that trap. One localized wording correction should close final QA.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
