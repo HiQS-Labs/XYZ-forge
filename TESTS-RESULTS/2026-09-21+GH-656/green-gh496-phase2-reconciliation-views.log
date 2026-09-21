@@ -1,5 +1,5 @@
 == test: gh496-phase2 ==
-  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh496-phase2.XXXXXX.nwmljbXY6C
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh496-phase2.XXXXXX.KlS4vSUIQt
 === Running gh496-phase2-reconciliation-views.sh test suite ===
   PASS: In-flight hosted reconciler fails closed (exit 8)
   PASS: Error message identifies in-flight wave-reconcile run
@@ -49,6 +49,8 @@ PASS committed outcome {'status': None, 'rc': 0}
 PASS committed outcome {'status': '', 'rc': 0}
 PASS committed outcome {'rc': -1}
 PASS committed outcome {}
+PASS committed outcome {'result': 'pass', 'rc': None}
+PASS committed outcome {'result': 'pass', 'rc': ''}
   PASS: Pre-merge fails closed when PR metadata cannot be fetched (exit 2)
   PASS: Error message explains PR query failure
   PASS: Reconciler runs successfully (exit 0)

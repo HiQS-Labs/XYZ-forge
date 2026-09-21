@@ -25,3 +25,14 @@ the task clone (AGENTS.md). No operator source, ledger, workflow run or deployed
   post-merge attribution guard (`check_provenance_receipts`) is untouched and stays green.
 
 The pre-push gate on the task clone is the full-suite receipt (see the PR).
+
+## Independent review (`consult/`)
+
+- `gh656-code-review.codex.md` — Codex (gpt-6-astra, read-only sandbox): **correct & minimal**; the
+  predicate matched the contract across 4,096 outcome combinations it executed via AST; no
+  legitimate producer (`express.py:285`, qualification receipts `wave_reconcile.py:612`, existing
+  fixtures) emits a shape the guard now refuses; `check_provenance_receipts` untouched. One nit —
+  pin `{"result":"pass","rc":null}` / `{"result":"pass","rc":""}` — adopted (matrix now 8/23).
+- `agy-lane-failed-idle-timeout.md` — the agy lane failed twice (first: launched a suite and its
+  turn ended; second, static-only prompt: killed at the idle threshold with an established backend
+  connection). **The review is single-advisor**; stated, not hidden.

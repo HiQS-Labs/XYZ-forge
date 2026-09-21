@@ -442,7 +442,9 @@ negative = [{'result':'pass','rc':1}, {'result':'fail','rc':0},
             {'rc':'0'}, {'rc':0.0}, {'rc':None}, {'result':None,'rc':0},
             {'result':[],'rc':0}, {'status':{},'rc':0}, {'result':'unknown','rc':0},
             {'result':'','rc':0}, {'status':None,'rc':0}, {'status':'','rc':0},
-            {'rc':-1}, {}]
+            {'rc':-1}, {},
+            # Codex review 2026-09-21: pin present-but-invalid rc beside a passing result
+            {'result':'pass','rc':None}, {'result':'pass','rc':''}]
 for should_pass, cases in [(True,positive), (False,negative)]:
     for outcome in cases:
         tested = git('rev-parse','HEAD')

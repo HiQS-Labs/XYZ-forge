@@ -1,0 +1,15 @@
+# Independent code review — GH-656 / GH-657 closeout evidence guards
+
+Review the working tree's diff against `origin/development` (`git diff origin/development -- utils/py/jog_run.py utils/py/wave_reconcile.py test/gh280-jog-marathon-adapter.sh test/gh496-phase2-reconciliation-views.sh`). Read the issues' intent from `PROJECT/2-WORKING/GH-656-CLOSEOUT-EVIDENCE.md` and `PROJECT/2-WORKING/GH-657-RECEIPT-OUTCOMES.md`.
+
+Question: does this diff correctly and **minimally** fix
+
+1. **GH-656** — `utils/py/jog_run.py:jog_land` must carry the already-verified `merged_sha` as `mergeCommit: {oid: …}` into the offline reconciliation manifest it hands to `wave_reconcile.py`, so a nonempty owned release member ships instead of the reconciler refusing after Jog has persisted its landing; and
+2. **GH-657** — `utils/py/wave_reconcile.py:validate_pre_merge_receipts` must reject any *supplied* outcome that is not a valid success: `result=pass, rc=1`; `result=fail, rc=0`; `result=pass, status=fail`; boolean `rc` (True/False) with or without `pass`; null / empty-string / wrong-type `result`/`status`/`rc`; and a receipt with **no** outcome fields at all — while still accepting the supported legacy positive shapes: result-only (`pass`/`passed`/`PASS`), status-only, integer-zero-`rc`-only, and consistent combined success.
+
+Constraints to check:
+- The separate post-merge attribution guard `check_provenance_receipts` (GH-425) must NOT be tightened; confirm the diff does not touch it and that the pre-merge change cannot leak into it.
+- Trace every producer of pre-merge receipts on `development` (grep for writers of `TESTS-RESULTS/**/provenance.jsonl` / `validation.jsonl` entries with `result`/`status`/`rc`: `utils/py/express.py`, `utils/ci-route.sh`, `utils/py/wave_reconcile.py` qualification receipts, `githooks/pre-push`, tests' fixtures). Would any *legitimate* current producer emit a receipt the new `outcome_ok` predicate now refuses (e.g. `status: "PASS"` with `rc: "0"` as a string, `result: "passed"` with `status: "ok"`, `rc: 0` with `result: null`)?
+- Is the new predicate's handling of `rc` present-but-None (`"rc": null`) the intended refusal, and is `type(rc) is int` correct given `bool` is a subclass of `int`?
+
+Answer with: (a) verdict — correct & minimal / correct but not minimal / incorrect; (b) any concrete case the predicate gets wrong, with the exact receipt shape; (c) any regression risk for an existing receipt producer, naming the file and line; (d) anything blocking a PR into `development`; (e) anything optional. Advisory only — do not modify the repository.
