@@ -40,9 +40,14 @@ ROUND: 1 / 2
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: GH-673 reader candidate at the driver's current pinned HEAD
-  versus origin/development `ba1f58e8`; refreshed candidate `eb3815a2`, initial runtime `95b3cc24` plus scoped
-  equal-time identity and simultaneous row/root diagnostic repairs.
+- Artifact under review: GH-673 reader candidate at the driver's pinned HEAD `8391d93f`
+  (branch `fix/gh673-reader-completion`, rebased 2026-09-20 onto origin/development `41be79e2`;
+  every content path is patch-identical to the pre-rebase tip `09ec4faa`, whose runtime is
+  `95b3cc24` plus the scoped equal-time identity and simultaneous row/root diagnostic repairs;
+  the GH-673 ledger row was replayed through releases_app on the new base, never text-merged).
+  Focused evidence on this head, 2026-09-20: pytest test/flightdeck 39/39; work-status selector
+  checks pass; real-Chrome checks pass (Node 26); manual harness fixture checks pass;
+  gh53-releases-merge-resolve 17/17 (its 2026-09-17 red was the fixture flake fixed by #688).
   Read `PROJECT/2-WORKING/GH-673-FLIGHTDECK-STATUS.md` and the changed runtime files:
   `src/flightdeck/{contract,connectors,aggregate}.py`, `utils/py/releases_cycle.py`,
   `web/flightdeck/{app.js,issue-context.mjs}`, plus focused tests and manual harness.
@@ -54,7 +59,7 @@ ROUND: 1 / 2
   Declare the limited sweep honestly (`swept file: no` for that shared file plus
   `swept changed functions and callers: yes/no`); scope alone is not a defect.
   This fresh replacement cap2 does not reset or conceal the old escalated cap3 review.
-- Reviewer: codex   ·   Producer: codex-producer
+- Reviewer: agy (operator-selected substitute; Codex is over its usage limit until 2026-09-19 01:26 UTC+... — see #688 precedent)   ·   Producer: claude-a
 - Started: 2026-09-17
 - Definition of Done: surgical optional read-only local dashboard; no source task,
   cached/GitHub label or schema writes; normal SQLite coordination files permitted.
