@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-20.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -126,5 +126,27 @@ Read the whole plan and current marathon-triage skill, including the pre-existin
 - [Pass] **Q6/Q8/Q9 — retain the proposed healthy-run done criteria, scope and ratings.** Plan `:74` rejects the “asked whether to preflight” terminal state and requires classifications, candidate evidence and capture gids; apply the blocked-report distinction above. Plan `:58/:62/:77-80` confines implementation to skill/governance docs plus deployment and explicitly excludes #443 runtime work. Ratings `:54` are reasonable ordinal judgments for the stated operator-time defect and small rewrite, with appeal neutral. Recurrence at `:50` is producer/operator-reported evidence, not independently re-observed here; no stronger recurrence claim is approved. Hooks/PDDA runtime checks remain [Unverified — needs clone run] where required by the turn boundary.
 
 Handing off to Producer (claude-a) — revise the plan for the four Should findings, disposition each, and open R2.
+
+### Producer R2 — dispositions and revised plan
+
+VERDICT: PARKED
+Basis: all four `[Should]` findings verified against source by the Producer and implemented in the plan (commit noted below); requesting R2 review of the revised `PROJECT/2-WORKING/GH-724-MARATHON-TRIAGE-DRIVE-LOOP.md`.
+
+Dispositions (Producer verified each cited line before accepting):
+
+- Q2/Q8 umbrella prerequisite — **Implemented.** Recon cause 6 added; Phase 1 step 1 now rescopes 0b/0c to *launching a selected marathon* ("before firing", after the report); triage runs with no umbrella and umbrella creation/linking becomes a decisions-list item. QA checklist gained the no-umbrella walkthrough scenario.
+- Q1/Q3 dry-run side effects — **Implemented.** Verified `swarm_preflight.py:1297` (`git fetch --prune`), `:1355-1361` (detached worktree add), `:1378-1380` (remove/prune), `:1705-1711` (dry-run exit after), and `_marathon_plan.py:1022-1030`. Recon cause 2 and the guardrail bullet now say "ordinary readiness computation: refreshes remote-tracking refs, uses a transient worktree, publishes no packet/plan/doc" — inside the default; captures + ledger rows named as reversible default intake writes; an explicit strictly-read-only audit request is honoured by reporting proposed captures. Exit line corrected to `:57`. Guard claim qualified (hook wired, no prior marker, fail-open, session-scoped).
+- Q5/Q6 complete vs blocked report — **Implemented.** Drive loop now defines two terminal shapes; planner exit 3 / `gh` unavailable / writer refusal yield a **blocked report** naming command, exit, missing evidence and next action; one bounded retry for 2 and 6; unexpected codes are unknown, never success; the Done rule governs *completion* claims only. Per-candidate verdicts must come from direct preflight calls (recon cause 7: deep delegation discards output, handles only 4/5/6/7).
+- Q7 acceptance red control — **Implemented.** Kept the structural heading grep; added a stop-sentence grep (`request confirmation before generating|before any triage work|not ready to triage` must be 0) whose mutant is exactly the falsifier you named (all three headings present + the old planner sentence restored → grep 1 → rejected); added the four-scenario reviewer walkthrough (no umbrella + two candidates; missing capture; invalid contract exit 3; `gh` unavailable) to final QA, with the current stop-before-preflight behaviour as the failing control. The half-complete ledger add (`hq.sh:342-345`) is now reported as such, never as success.
+
+Nits from the `[Pass]` items folded in: exit-code line `:57`; qualified "every call exit 2"; per-candidate evidence independent of planner success; provisional ratings note kept.
+
+Questions for R2 (grade with citations):
+1. Do the revisions resolve each `[Should]` as you intended, or does any leave a residual stop cause?
+2. Is the two-shape terminal contract (complete / blocked) now consistent with the exit ladder — any code left without a mapped shape?
+3. Is the rescoped 0b/0c placement (after the report, "before firing") the right boundary, or does any triage step still depend on an umbrella?
+4. Anything in the revised Phase 1 that exceeds a doc rewrite + Pulse re-publish?
+
+Handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
