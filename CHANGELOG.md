@@ -44,6 +44,22 @@ naming `RECONCILE_FOLDERS` so the next widening finds the guard.
 `1-INBOX` deletion side (red on the old workflow with the production message, green on the fix)
 and a still-refused `PROJECT/1-INBOX/scratch-note.md`. Easy rollback: revert the one commit.
 No reconciler, ledger, or report-step change.
+## 2026-09-20 — marathon-triage drives end to end: recite / drive loop / done rule (GH-724)
+
+`skills/marathon-triage/SKILL.md` was a description, not a driven procedure, and its guardrails told
+the agent to ask before running the planner dry run and preflight — so every invocation was
+hand-driven. Rewritten in the newer skills' shape: a verbatim recite block, a drive loop with the
+planner (`0/2/3/4/5/6`) and preflight (`0/2/3/4/5/6/7`) exit ladders, two terminal shapes (complete
+report vs blocked report) and a Done rule. Step 0's locator call is named as the relay-xyz guard's
+proof-of-load and must be the first Bash call. The default now includes ordinary readiness
+computation (`marathon_plan.py --dry-run --deep`, `swarm-preflight.sh --dry-run` — side effects
+stated: ref refresh and a transient worktree, no packet/plan/doc published) and reversible intake
+writes: missing `1-INBOX` captures are rendered with `hq_render_capture` and parked with
+`releases roadmap add`, never hand-authored. Confirmation is reserved for promote / close / fire /
+cut a branch / write the plan file; the umbrella issue and derived full clone move to a
+"before firing" step instead of gating triage. Doc-only; Codex plan QA Approved (R2). Reversibility:
+Easy (revert one markdown file, re-publish the previous Pulse copy). Refs GH-443 (PRS-rating pass
+and `marathon-drive --dry-run` remain there).
 
 ## 2026-09-20 — Flight Deck established-work reader (GH-673, Refs GH-646)
 
