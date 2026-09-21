@@ -81,3 +81,11 @@ else
 fi
 
 unset _ge_src _ge_dir _ge_root _ge_py _ge_names _ge_n
+
+# GH-730: no bytecode into the tree from a gate run. Suites import repo modules directly
+# (importlib in test/agent-chorus.sh, the unittest files under test/), and every such import
+# wrote `__pycache__/` under skills/*/scripts and utils/py. Those caches are gitignored, so
+# they outlive the rename or removal of the directory that held them — `skills/agent2agent/`
+# survived the #193 rename as an ignored shell for a month and turned the pre-push gate red.
+# The relay shims already set this for reviewer turns (GH-682); the gate gets the same rule.
+export PYTHONDONTWRITEBYTECODE=1
