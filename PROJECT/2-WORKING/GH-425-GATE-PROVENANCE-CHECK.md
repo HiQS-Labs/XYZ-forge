@@ -155,3 +155,7 @@ the artifact this issue exists to produce; it goes in `test/baselines/`.
 ## Merge evidence
 
 - PR #545 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #733 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
