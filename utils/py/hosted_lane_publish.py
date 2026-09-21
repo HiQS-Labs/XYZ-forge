@@ -26,8 +26,10 @@ Race path (push rejected) and the commit carried receipts:
      already published, so nothing expensive is lost.
 Race path without receipts: exit 1 immediately (nothing expensive at stake; the next run recomputes).
 
-Every failure prints one `hosted-lane-publish: ERROR — …` line on stderr — the contract
-hosted_lane_report.py reads when the publish step is the one that failed (GH-741).
+Every handled recovery failure prints one `hosted-lane-publish: ERROR — …` line on stderr — the
+contract hosted_lane_report.py reads when the publish step is the one that failed (GH-741). The
+allowlist refusal keeps its historical `Refusing undeclared reconciliation artifacts` text, and an
+unexpected git error surfaces as a traceback; the report falls back to the log's last line for those.
 stdlib + git only; never force-pushes; the allowlist is the one the inline step had, unchanged.
 """
 import argparse

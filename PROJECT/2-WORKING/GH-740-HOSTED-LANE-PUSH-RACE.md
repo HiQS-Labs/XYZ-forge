@@ -41,7 +41,7 @@ Clone: `XYZ-forge-gh740-741-hosted-lane`, branch `fix/gh740-741-hosted-lane-push
 
 | What was just completed | What's next |
 |---|---|
-| **Implemented** (`87d6051c` report attribution + gh684; `c31921c9` `--only-receipted` + gh421; `fa5facd0` publish script, gh740 fixture suite, workflow wiring, gh421 pin move). Plan QA: relay `gh740-741-plan-qa` R1–R3 (F1–F6, capped/Escalated), `-delta` R1–R2 (F6a; R2 graded an unrevised plan — Producer error, disclosed), `-delta2` **Approved**. Focused suites green: gh684 10/10, gh421 36/36, gh740 7/7, ci-workflow 0 failed. | Full qualifying gate once in a disposable clone (evidence → `TESTS-RESULTS/2026-09-21+GH-740/`); final Codex relay QA on the diff; PR against `development`. Hosted proof is post-merge: the first raced run exercises the recovery. |
+| **Implemented** (`87d6051c` report attribution + gh684; `c31921c9` `--only-receipted` + gh421; `fa5facd0` publish script, gh740 fixture suite, workflow wiring, gh421 pin move). Plan QA: relay `gh740-741-plan-qa` R1–R3 (F1–F6, capped/Escalated), `-delta` R1–R2 (F6a; R2 graded an unrevised plan — Producer error, disclosed), `-delta2` **Approved**. Focused suites green: gh684 10/10, gh421 36/36, gh740 6/6, ci-workflow 0 failed. | Full qualifying gate once in a disposable clone (evidence → `TESTS-RESULTS/2026-09-21+GH-740/`); final Codex relay QA on the diff; PR against `development`. Hosted proof is post-merge: the first raced run exercises the recovery. |
 
 ## Observed problem (both issues, one seam)
 

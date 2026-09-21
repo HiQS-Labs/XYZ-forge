@@ -142,6 +142,13 @@ class PublishTests(unittest.TestCase):
         out = self.publish(env)
         self.assertIn('pushed 4 declared path(s)', out.stdout)
         self.assertEqual(self.remote_log()[:2], ['chore: reconcile merged development work', 'Merge PR #7'])
+        # the real helper staged exactly the declared paths under the bot identity
+        self.assertEqual(sh('git', 'log', '-1', '--format=%an <%ae>', 'origin/development', cwd=self.racer_synced()).stdout.strip(),
+                         'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>')
+        staged = sh('git', 'show', '--name-only', '--format=', 'origin/development', cwd=self.racer).stdout.split()
+        self.assertEqual(sorted(staged), sorted(['releases.sql', 'PROJECT/2-WORKING/GH-740-fixture.md',
+                                                 f'TESTS-RESULTS/2026-09-21+GH-591/wave-{self.tested()}/provenance.jsonl',
+                                                 f'TESTS-RESULTS/2026-09-21+GH-591/wave-{self.tested()}/validation.jsonl']))
         self.assertEqual(len(self.stub_calls()), 1)
 
     def test_race_publishes_receipts_first_then_recomputes_once(self):
@@ -182,7 +189,8 @@ class PublishTests(unittest.TestCase):
         env = self.reconcile(('STUB_RACE_AGAIN', str(self.race_script)))
         self.race()
         result = self.publish(env, expect_rc=1)
-        self.assertIn('hosted-lane-publish: ERROR — push rejected after recompute; origin/development moved to', result.stderr)
+        racing = sh('git', 'rev-parse', 'origin/development', cwd=self.racer_synced()).stdout.strip()
+        self.assertIn(f'hosted-lane-publish: ERROR — push rejected after recompute; origin/development moved to {racing[:12]}', result.stderr)
         self.assertIn('nothing expensive was lost', result.stderr)
         log = self.remote_log()
         self.assertEqual(log[:3], ['racer', f'chore: retain qualification receipts for {self.tested()}', 'racer'])
@@ -228,6 +236,10 @@ class PublishTests(unittest.TestCase):
         self.assertEqual(parser.parse_args(argv).pr, ['42', '5', '6'])
         argv = publish.retry_argv('--catch-up --gate --qualify', ['5'], ['c' * 40])
         self.assertEqual(parser.parse_args(argv).commit, ['c' * 40])
+        self.assertEqual(parser.parse_args(argv).pr, ['5'])
+        # an existing --commit target coalesced with a receipt's commit target (and a receipt PR)
+        argv = publish.retry_argv('--commit ' + 'b' * 40 + ' --catch-up --gate --qualify', ['5'], ['c' * 40])
+        self.assertEqual(parser.parse_args(argv).commit, ['b' * 40, 'c' * 40])
         self.assertEqual(parser.parse_args(argv).pr, ['5'])
         # red control: the repeated-option form the parser overwrites
         self.assertEqual(parser.parse_args(['--pr', '42', '--pr', '5']).pr, ['5'])

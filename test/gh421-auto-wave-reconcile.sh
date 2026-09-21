@@ -746,6 +746,21 @@ class WorkflowTests(unittest.TestCase):
         with self.assertRaises(SystemExit) as stopped:
             self.publish(self.PATHS, pushes=(False,))
         self.assertEqual(stopped.exception.code, 1)
+        # receipts-only publication exhausts its own ≤3-attempt loop: three receipt commits, no recompute
+        module = self.publish_module()
+        recorded = dict(commits=[], recompute=[])
+        with patch.object(module, 'git', return_value=SimpleNamespace(returncode=0, stdout='', stderr='')), \
+             patch.object(module, 'commit', side_effect=lambda paths, message: recorded['commits'].append(message) or 'f'*40), \
+             patch.object(module, 'push', side_effect=[False, False, False, False]), \
+             patch.object(module, 'changed_paths', return_value=sorted(paths)), \
+             patch.object(module, 'remote_head', return_value='d'*40), \
+             patch.object(module, 'recompute', side_effect=lambda argv, cmd: recorded['recompute'].append(argv)), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as stopped:
+                module.main(['--reconcile-args', '--pr 7 --catch-up --gate --qualify'])
+        self.assertEqual(stopped.exception.code, 1)
+        self.assertEqual(recorded['commits'], ['chore: reconcile merged development work'] + ['chore: retain qualification receipts for ' + 'a'*40] * 3)
+        self.assertEqual(recorded['recompute'], [])
 
 
 unittest.main(verbosity=2)
