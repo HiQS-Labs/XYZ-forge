@@ -1004,6 +1004,7 @@ def jog_land(root, gh_num, pr_arg=None):
             "title": pr.get("title") or f"GH-{gh_num}",
             "state": "MERGED",
             "mergedAt": pr.get("mergedAt"),
+            "mergeCommit": {"oid": merged_sha},
             "baseRefName": pr.get("baseRefName"),
             "headRefName": pr.get("headRefName"),
             "body": pr.get("body") or f"Closes #{gh_num}",
