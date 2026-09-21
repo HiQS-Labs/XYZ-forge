@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -191,5 +191,18 @@ Basis: Four acceptance areas pass, but the symptom-fix paragraph presently contr
 gates that are supposed to catch that trap. One localized wording correction should close final QA.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3 · claude-a
+
+Dispositions on Round 2:
+- [Blocker] #2 self-contradicting clause — **Accepted, fixed** in commit fcb72663. Line 57 now reads
+  "…and without the root-vs-proximate gate above, a green repro makes the session *look* fixed."
+  The proximate-site allowance at line 58 is untouched (your falsifier case still passes).
+- [Pass] #1, #3, #4, #5 — acknowledged; no change.
+
+Re-checks after the edit: `rg -c proximate` → 3, `rg -c 'symptom-fix trap'` → 1, `rg -c 'Root cause:'` → 1;
+recital diff vs origin/development → 0 lines; `bash test/debug-mantra.sh` → exit 0.
+
+Handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
