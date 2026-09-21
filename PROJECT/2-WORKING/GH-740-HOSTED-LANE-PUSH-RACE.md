@@ -41,7 +41,7 @@ Clone: `XYZ-forge-gh740-741-hosted-lane`, branch `fix/gh740-741-hosted-lane-push
 
 | What was just completed | What's next |
 |---|---|
-| Plan revised after Codex round 1 (F1 clean-tree transition, F2 bounded retry, F3 real-consumer fixture). Recon on `b6bb8aab`: traced the publish step (`wave-reconcile.yml:68-103`), the receipt contract (`wave_reconcile.py:475-528` — a receipt counts only when **committed on HEAD**), the report scan (`hosted_lane_report.py:52-56`), and the tests that pin them (`test/gh421-auto-wave-reconcile.sh:525-640`, `test/gh684-hosted-lane-report.sh`). Classified all 27 red runs since 09-17 by failing step: 3 rejected pushes (09-18 ×2, 09-21), 13 GH-721 guard (fixed #725), 3 Lessons Learned (fixed GH-693), 8 hosted suite red (out of scope). Both issues parked and rated. Plan written. | Codex plan QA (relay-xyz). Then implement in order: (1) `hosted_lane_report.py` outcome-aware attribution + gh684 cases; (2) `hosted_lane_publish.py` two-phase publish + gh740 fixture suite + gh421 pin updates + workflow wiring; focused suites; final relay QA; full gate once in a disposable clone; PR. |
+| Plan revised after Codex rounds 1–2 (F1 clean-tree transition, F2/F4 bounded retry that keeps catch-up ownership via a narrow `--only-receipted` reconciler flag, F3 real-consumer fixture, F5 obsolete B-only case removed). Recon on `b6bb8aab`: traced the publish step (`wave-reconcile.yml:68-103`), the receipt contract (`wave_reconcile.py:475-528` — a receipt counts only when **committed on HEAD**), the report scan (`hosted_lane_report.py:52-56`), and the tests that pin them (`test/gh421-auto-wave-reconcile.sh:525-640`, `test/gh684-hosted-lane-report.sh`). Classified all 27 red runs since 09-17 by failing step: 3 rejected pushes (09-18 ×2, 09-21), 13 GH-721 guard (fixed #725), 3 Lessons Learned (fixed GH-693), 8 hosted suite red (out of scope). Both issues parked and rated. Plan written. | Codex plan QA (relay-xyz). Then implement in order: (1) `hosted_lane_report.py` outcome-aware attribution + gh684 cases; (2) `hosted_lane_publish.py` two-phase publish + gh740 fixture suite + gh421 pin updates + workflow wiring; focused suites; final relay QA; full gate once in a disposable clone; PR. |
 
 ## Observed problem (both issues, one seam)
 
@@ -71,9 +71,8 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
 | Issue | Requirement | Acceptance (falsifiable) |
 |---|---|---|
 | #740 | A landing that races the run never costs the qualification again | Fixture: remote advances after the reconcile output exists and before the push; the receipts-only commit lands on the racer's head (no rebase), transitions land after exactly one recompute; `git log origin/development` = racer → receipts → transitions; the racer's own ledger line is still in `releases.sql` on the remote; the real consumer `qualification_receipt_matches()` returns True for the run's landing against the published receipt (False for a corrupted copy — control) |
-| #740 | The retry is bounded in wall time | The retry argv is `--pr/--commit <landings named in this run's receipts> --gate --qualify` — never `--catch-up`; with the receipts committed, `qualify_landings()`'s pending set is empty by construction, so the retry cannot run the suite; `timeout-minutes: 120` unchanged |
-| #740 | A second race on the same run, or a race on a run that produced no receipts, fails **loudly, once**, naming the racing head | Fixture: remote advances again during the retry → exit 1, stderr has `hosted-lane-publish: ERROR — …` naming `origin/development` and its SHA; receipts already on the remote. No-receipts race → exit 1, message says nothing expensive was lost |
-| #740 | A race after the receipts landed (B-only) is handled by the same path | Fixture variant: remote advances between the receipts push and the transitions push → one recompute, same assertions |
+| #740 | The retry is bounded in wall time **and** keeps the original run's lifecycle semantics | The retry re-runs the reconcile step's **own argv** plus `--only-receipted --skip-pull`: `--catch-up` still enumerates the same lifecycle targets and `issue_owners` is still built over every merged closer (`wave_reconcile.py:2015-2023`), but landings without a committed, matching receipt are **deferred** (logged, left to their own queued run) instead of qualified — so the suite is unreachable in the retry. gh421 replay of the #90/#42 two-closer input under `--only-receipted` with #42 receipted and #90 not: `qualify_landings` never called, #90 deferred, #42 owns the doc (`updated: 2026-09-08`, never `-07`); variant with both receipted → same owner; an **explicit** `--pr` item without a receipt → die (fail closed, GH-684 semantics). `timeout-minutes: 120` unchanged |
+| #740 | A second race on the same run, or a race on a run that produced no receipts, fails **loudly, once**, naming the racing head; receipts are never lost | Fixture: remote advances again between the receipts push and the transitions push → exit 1, stderr has `hosted-lane-publish: ERROR — …` naming `origin/development` and its SHA; receipts already on the remote; exactly one recompute happened. No-receipts race → exit 1, no retry, message says nothing expensive was lost. The receipts-only push has its own ≤3-attempt loop; that loop is never a recompute |
 | #740 | The bot's commit surface is unchanged | The allowlist cases pinned in gh421 (`undeclared` refusals for `utils/py/unexpected.py`, `TESTS-RESULTS/arbitrary/…`, `PROJECT/1-INBOX/scratch-note.md`, malformed `wave-<sha>`) pass against the moved function, byte-identical regexes |
 | #740 | No force-push; nothing is ever rebased; stale ledger bytes never reach the remote | The publish code contains no `--force`/`-f` and no `rebase` at all; on a race the full local commit is **discarded** and only receipt *files* are checked out of it onto the fresh head; the fixture asserts the racer's ledger line survives |
 | #741 | A red run whose reconcile step is green never reports a reconcile-log error | Replay: gh421-style log (test-emitted `ERROR —` lines, last one `invalid merged_at timestamp`) + `--reconcile-outcome success` + `--publish-outcome failure` + publish log with `[rejected]` → body names the publish step and the rejection; does **not** contain `merged_at` |
@@ -82,6 +81,19 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
 | both | Existing lane semantics | `job.status` still decides red/green; one labelled issue; self-close on green; skip lines unchanged |
 
 ## Smallest affected surface (existing subsystem + canonical writer, extended)
+
+0. **`utils/py/wave_reconcile.py` — one narrow flag, `--only-receipted`** (valid only with
+   `--catch-up --qualify`; argparse rejects it otherwise). Where `main` today calls
+   `qualify_landings(repo_root, [metadata[item] …], journal)` (`:2007-2011`), the flag instead
+   partitions `landing_items` with the **same** matcher the qualifier uses
+   (`committed_qualifications()` + `qualification_receipt_matches()`): items with a committed matching
+   receipt continue; recovered items without one are dropped from `landing_items` with a
+   `wave-reconcile: deferred <landing> — no committed qualification receipt; its own run qualifies it`
+   log line (not `SKIPPED` — a deferral is expected in a retry and must not open the attention
+   issue); an **explicit** `--pr/--commit` item without a receipt dies (fail closed, the GH-684
+   explicit-item contract). `issue_owners` (`:2015-2023`) is still built over the full `metadata`,
+   deferred closers included, so an older receipted closer still yields to a newer unreceipted one.
+   ~15 lines; no other path changes. gh421 gains the three cases in the Requirements row.
 
 1. **`utils/py/hosted_lane_publish.py` (new file, same subsystem — it *is* the current inline step, moved).**
    The workflow's inline Python (`:71-103`) becomes a script so it can be unit-tested and retried;
@@ -101,13 +113,14 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
      commit `R` (`chore: retain qualification receipts for <tested>`); push. If *that* push is
      rejected, repeat fetch / reset / checkout / commit / push up to 3 times — receipts are the only
      content, so this loop needs no judgment.
-   - **Recompute once, bounded.** Read the receipt entries just published (`provenance.jsonl`:
-     `pr` for PR landings, `landing_commit` for `artifact_kind: commit`) and re-run
-     `wave_reconcile.py --pr <n…> [--commit <sha…>] --gate --qualify --skip-pull` on the clean fresh
-     head. **Never `--catch-up`** in the retry (F2): newcomers — the racer included — have their own
-     queued PR-closed run. Because `R` is committed on HEAD and `tested` is now an ancestor,
-     `qualify_landings()`'s pending set is empty by construction and the suite cannot run; the
-     retry is `--gate` + transitions, minutes. `rm -f .tick/marathon-plan.fingerprint` first so
+   - **Recompute once, bounded, same semantics.** Re-run the reconcile step's own argv (passed in as
+     `RECONCILE_ARGS`, exported by that step via `$GITHUB_ENV`) plus `--only-receipted --skip-pull`
+     on the clean fresh head. `--catch-up` stays, so the retry enumerates the same lifecycle targets
+     and computes the same newest-closer ownership as the original run (F4); `--only-receipted`
+     (§0 below) makes it **defer** any landing without a committed matching receipt — the racer
+     included; its own queued PR-closed run qualifies it — instead of running the suite. Because `R`
+     is committed on HEAD and `tested` is now an ancestor, this run's landings match and are
+     processed; the retry is `--gate` + transitions, minutes. `rm -f .tick/marathon-plan.fingerprint` first so
      the planner regenerates the plan file the reset reverted (fingerprint lives in untracked
      `.tick/`, `wave_reconcile.py:1617-1647`). Then `declared_paths()` again → allowlist → commit
      `T2` → push. Rejected again → exit 1: `hosted-lane-publish: ERROR — push rejected after
@@ -122,8 +135,12 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
      that message (Codex Q4), and its `SKIPPED` lines stay in `publish.log` for the report.
    - Nothing to commit → `Nothing to commit`, exit 0 (unchanged).
 2. **`.github/workflows/wave-reconcile.yml`** — publish step becomes `id: publish` /
-   `run: python3 utils/py/hosted_lane_publish.py 2>&1 | tee "$RUNNER_TEMP/publish.log"` under
-   `set -euo pipefail` (the retry argv is derived from the receipts, so nothing is passed in). Report step gains
+   `run: python3 utils/py/hosted_lane_publish.py --reconcile-args "$RECONCILE_ARGS" 2>&1 | tee
+   "$RUNNER_TEMP/publish.log"` under `set -euo pipefail`. The reconcile step builds its argv once as
+   a bash array (`ARGS=(--pr "$PR_NUMBER" --catch-up --gate --qualify)` / `ARGS=(--catch-up --gate
+   --qualify)`), runs `wave_reconcile.py "${ARGS[@]}"`, and exports `RECONCILE_ARGS="${ARGS[*]}"` to
+   `$GITHUB_ENV` — one source for the argv, and the two literal command strings gh421 pins remain
+   present. Report step gains
    `--reconcile-outcome "${{ steps.reconcile.outcome }}" --publish-outcome "${{ steps.publish.outcome }}"
    --publish-log "$RUNNER_TEMP/publish.log"`. Triggers, permissions, concurrency, the two reconcile
    command lines pinned by gh421 — unchanged.
@@ -143,8 +160,8 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
    - `test/gh421-auto-wave-reconcile.sh`: the three publish tests (`:551-640`) import
      `hosted_lane_publish` instead of exec'ing YAML; allowlist cases unchanged; the "rejected push
      raises" pin becomes "rejected push → discard, receipts-only commit on the fresh head, one recompute" with `check_output`
-     patched as today, with explicit receipt/rest staging assertions replacing the single combined
-     `add` assertion; `PUBLISH_HEAD`-based extraction and its bounded-extraction test go (no inline
+     patched as today, keeping the combined explicit-staging assertion for the fast path and adding
+     receipt-only and recomputed-staging assertions for the recovery path; `PUBLISH_HEAD`-based extraction and its bounded-extraction test go (no inline
      Python remains to extract); the ordering assertion becomes "publish step precedes report step"
      by step name; workflow markers updated (`id: publish`, `steps.reconcile.outcome`,
      `hosted_lane_publish.py`, `--publish-log`).
@@ -155,16 +172,18 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
      registered sequential suites incl. the two required probe names; `provenance.jsonl` entry with
      `tested_commit`/`landing_commit`/`telemetry_sha256`/`pr`), a `PROJECT/2-WORKING/GH-740-fixture.md`
      and a `releases.sql` line, and counts its invocations. Cases: (1) no race → one commit, one push,
-     stub ×1; (2) race before the first push → remote = racer → receipts → transitions, stub ×2, the
-     racer's `releases.sql` line present on the remote, and **the real consumer**
-     `wave_reconcile.qualification_receipt_matches(clone, entry, meta)` is True for the published
-     receipt / False for a byte-corrupted `validation.jsonl` (control); (3) race before the receipts
-     push **and** again during the transitions push → exit 1, `hosted-lane-publish: ERROR — ` names
-     the remote SHA, receipts on the remote; (4) B-only race (remote advances after the receipts
-     landed) → same as (2); (5) race with no receipts → exit 1, no retry, stub ×1; (6) undeclared
-     artifact → refused before any push; (7) **red control**, run on the stale clone *before* any
+     stub ×1; (2) race before the first push → remote = racer → receipts → transitions, stub ×2 (the
+     second invocation receives `--only-receipted --skip-pull` appended to the original args — asserted
+     from the stub's recorded argv), the racer's `releases.sql` line present on the remote, and **the
+     real consumer** `wave_reconcile.qualification_receipt_matches(clone, entry, meta)` is True for the
+     published receipt / False for a byte-corrupted `validation.jsonl` (control); (3) race before the
+     first push **and** again between the receipts push and the transitions push → exit 1,
+     `hosted-lane-publish: ERROR — ` names the remote SHA, receipts on the remote, stub ×2 (one
+     recompute, no more); (4) race with no receipts → exit 1, no retry, stub ×1; (5) undeclared
+     artifact → refused before any push; (6) **red control**, run on the stale clone *before* any
      recovery: a plain `git push origin HEAD:development` is rejected (`[rejected]`), proving the
-     fixture races.
+     fixture races. (The former "B-only race succeeds" case is gone — F5: with a single combined
+     first push, a rejection between `R` and `T2` *is* the second race.)
 
 ## Dependencies, risks, rollback
 
@@ -193,22 +212,26 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
 
 1. `hosted_lane_report.py`: `terminal_error()` + `body_for()` step label + two CLI flags; gh684 +2
    cases → `bash test/gh684-hosted-lane-report.sh` green, including the red control.
-2. `hosted_lane_publish.py`: move the inline step; `declared_paths()`; Phase A/B; error lines.
+1b. `wave_reconcile.py --only-receipted` (§0) + gh421 two-closer cases (deferred #90 / receipted #42;
+   both receipted; explicit unreceipted → die) → `bash test/gh421-auto-wave-reconcile.sh` green.
+2. `hosted_lane_publish.py`: move the inline step; `declared_paths()`; commit-all → push → on race:
+   discard, lift receipts, `R`, one recompute with `--only-receipted --skip-pull`, `T2`; error lines.
 3. `test/gh740-hosted-lane-publish.sh` + `validate.sh` registration → green, red control witnessed.
-4. `wave-reconcile.yml` wiring (`RECONCILE_CMD`, `id: publish`, tee, report flags); gh421 pin
-   updates → `bash test/gh421-auto-wave-reconcile.sh` green.
+4. `wave-reconcile.yml` wiring (`ARGS` array + `RECONCILE_ARGS` export, `id: publish`, tee, report
+   flags); gh421 pin updates → `bash test/gh421-auto-wave-reconcile.sh` green.
 5. Focused: gh684, gh421, gh740, `ci-workflow.sh`. Record the gh740 decisive output (remote log, consumer True/False, the rejected plain push) under `TESTS-RESULTS/2026-09-21+GH-740/`. Full gate once, in a disposable clone, on the final
    approved commit; receipts retained under `TESTS-RESULTS/2026-09-21+GH-740/`.
 6. Final Codex relay QA → PR against `development`. Hosted proof is post-merge: the first PR-closed
-   run exercises Phase A on the real lane.
+   run exercises the fast path on the real lane; the first raced run exercises the recovery.
 
 ## Lessons Learned (For Future Agents)
 
 - A qualification receipt is only worth anything once it is **committed on HEAD** — so on a race,
   the receipt *files* are lifted out of the discarded commit onto the fresh head; the stale
   transitions are never rebased or restored, they are recomputed.
-- A retry that may re-enter a 70-minute step is not "bounded to one attempt" — derive the retry's
-  scope from what is already proven (the receipts) so the expensive branch is unreachable.
+- A retry that may re-enter a 70-minute step is not "bounded to one attempt" — make the expensive
+  branch unreachable (defer what has no receipt) while keeping the *same* enumeration and ownership
+  logic as the original run; narrowing the argv instead would silently change lifecycle semantics.
 - `if: always()` reporters that scan a log for the last error line are only right when the step
   that wrote the log is the step that failed; pass step outcomes, don't infer.
 - Classify red runs by *failing step* before by error text: 13 of 27 "reconciler failures" were one
