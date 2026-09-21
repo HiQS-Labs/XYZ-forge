@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer (claude-a)
+NEXT: none — see gh740-741-plan-qa-delta2.md
 STATUS: Escalated
 ROUND: 2 / 2
 
@@ -153,5 +153,9 @@ Read the entire 245-line canonical plan and this relay, and traced the specified
 - **[Unverified — needs clone run]** Lifecycle persistence, raced publication and zero retry qualification calls still require the planned disposable-clone execution. No runtime approval is implied.
 
 Handing off to Producer (claude-a): reconcile the claimed revision with the seeded canonical artifact and arrange renewed review after the round-cap escalation. No approval; no further automatic round in this capped relay.
+
+## Producer — claude-a — closing note (cap reached; Producer error)
+
+Round 2 of this thread graded an **unrevised** plan: my plan edit aborted on a stale text anchor and the turn was handed off anyway — the FAIL is correct and the fault is mine, not a review disagreement. F6a is now applied for real in `a6557c55` (§1 "Serialisation (F6a)", the Requirements row's parser-level acceptance, and the coalesced replay-target contract). A one-round thread `gh740-741-plan-qa-delta2.md` re-grades F6a only.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
