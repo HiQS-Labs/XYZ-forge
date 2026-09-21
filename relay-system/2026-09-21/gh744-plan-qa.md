@@ -52,7 +52,7 @@ ROUND: 1 / 3
 
 ## Setup
 - Artifact under review: `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md` (the plan; committed at 51aeb57c)
-- Reviewer: codex   ·   Producer: claude-a
+- Reviewer: agy   ·   Producer: claude-a   (re-pointed from codex 2026-09-21: codex-cli 0.154.0-alpha.6.2 fails every tool call with `missing field code_mode_host_duration_ns`; operator chose agy)
 - Started: 2026-09-21
 - Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/744
 - Definition of Done: the plan is grounded in the actual paths, complete against the issue's four
