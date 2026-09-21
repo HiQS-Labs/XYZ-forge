@@ -1,7 +1,8 @@
 ---
 title: relay-drive --review-once misgrades a real reviewer block as a zero-output stall (exit 3, not 5)
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING)
 created: 2026-09-20
+updated: 2026-09-21
 owner: agent-b
 gh_issue: 720
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/720
@@ -10,6 +11,9 @@ complexity: 2
 risk: 3
 effort: 1
 phases: 1
+rating: "pri/sev/appeal/effort 60/60/90/90 · calc 300"
+rating_ovr: null
+is_manual_override: false
 ratings_provisional: true
 reported_from: Jev-unofficial-toolkit
 harness_commit: 5e60cb01   # origin/development at capture; relay_drive.py identical at the report-time local HEAD b22e2641
@@ -29,9 +33,11 @@ goal: >
 
 # GH-720 — relay-drive --review-once misgrades a real reviewer block as a zero-output stall
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted 1-INBOX → 2-WORKING by the 2026-09-21 `/10days` sweep; bug re-verified at HEAD e565c0fe (`utils/py/relay_drive.py:39` regex unchanged; only intake PR #729 landed); contract auto-drafted. | Marathon lane fires from `marathon/10days-2026-09-21` via `swarm-preflight → marathon-drive`, scoped by the contract's `artifacts`. |
 
 ## Symptom
 relay-drive.sh --review-once reported DRIVER_EXIT=3 (no-progress stall) on an agy turn that actually landed: review block appended, header flipped NEXT: Producer, commit 68413b89 in XYZ-forge; expected exit 5 (handed back without approving).
@@ -97,6 +103,64 @@ A correct "changes requested" review is reported as a stall (red telemetry, exit
 - [ ] The repro is confirmed from the report, not assumed
 - [ ] A regression test covers the failure path before the fix lands
 - [ ] The fix composes with the existing harness rather than adding a parallel path
+
+## Acceptance
+
+Authored by `/10days` — the tracking issue has no `## Acceptance` section swarm-preflight recognises, so there is no block to copy verbatim. These criteria transcribe the issue's fix / expected-behaviour text.
+
+- [ ] `review_blocks_added` in `utils/py/relay_drive.py` (regex at `:39`) counts a reviewer block
+      whose heading is `### Reviewer (<agent>)` or `### Reviewer — Round N` as well as the `·`
+      forms, while still requiring a non-empty body after the heading so a zero-output turn is
+      still graded a stall (GH-397 intent preserved).
+- [ ] `relay-automation/new-relay.sh`'s `▶ TAKE YOUR TURN` block states the heading form the oracle
+      accepts, so a headless reviewer following the scaffold produces a countable block.
+- [ ] `test/relay-review-once.sh` gains a regression case: a turn that appends a substantive block
+      under `### Reviewer (agy)` and flips NEXT: exits 5, not 3; red control: a turn that moves
+      the file but appends no block still exits 3.
+- [ ] `bash validate.sh` exits 0.
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_present",
+      "path": "utils/py/relay_drive.py",
+      "pattern": "Reviewer \\\\u00b7 Round \\)"
+    },
+    {
+      "type": "grep_absent",
+      "path": "test/relay-review-once.sh",
+      "pattern": "### Reviewer \\(agy\\)"
+    }
+  ],
+  "artifacts": [
+    "utils/py/relay_drive.py",
+    "test/relay-review-once.sh",
+    "relay-automation/new-relay.sh"
+  ],
+  "remediation": {
+    "source": "issue#720",
+    "criteria": "Accept the reviewer headings the shipped scaffold actually elicits (or state the required one), pin with a regression case"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/relay_drive.py",
+      "test/relay-review-once.sh",
+      "relay-automation/new-relay.sh"
+    ],
+    "orchestrator_only": []
+  }
+}
+```
+
+Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified. Fix probes detect the BUG (`grep_present` = bug still there, `grep_absent` = fix landed), per swarm-preflight polarity.
 
 ## Merge evidence
 
