@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -51,10 +51,29 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: `skills/debug-mantra/SKILL.md` (diff vs origin/development, commit 7dfc84d5); context: `PROJECT/1-INBOX/GH-737-DEBUG-MANTRA-RCA-GATE.md`, issue #737
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-21
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: (a) mantra 3 carries a falsifiable root-vs-proximate class-vs-instance test and the named symptom-fix trap; (b) mantra 4 closes with the one-line RC statement; (c) plan pivot row 3 mirrors it; (d) recital block (lines 10-16) byte-identical to origin/development; (e) no contradiction with the existing 'scale rigor to the bug' rule; (f) no tooling/scripts added (docs-only, commensurate complexity).
+
+## Context — questions for the Reviewer
+
+Operational envelope: a prose skill file consumed by LLM agents. Grade prose correctness, coherence
+with the four existing mantras, and whether it changes agent behaviour as issue #737 intends. Do NOT
+request scripts, tests, or tooling. The recital block is out of scope for rewording.
+
+1. Does the "Root cause or proximate cause?" block in mantra 3 give a test an agent can actually apply
+   (class-vs-instance, "what let that happen?"), or is it decorative? Cite lines.
+2. Is the symptom-fix trap definition accurate, and does its "tell" (cannot name the upstream change
+   that would make the guard dead code) discriminate symptom fixes from legitimate defensive code?
+3. Does the mantra-4 RC statement fit the ledger's purpose, and is the new operating-rules gate
+   ("Do not propose a fix until the RC statement…") consistent with "scale rigor to the bug" for
+   trivial defects, or does it conflict?
+4. Is the plan-pivot row 3 addition coherent with the plan-only-rule paragraph below the table?
+5. Anything redundant with existing text, over-engineered, or contradicting another section?
+
+Output: numbered answers with file:line; each [Blocker]/[Should] carries Observed input / Affected
+scope / Falsifier. STATUS: Approved if it passes.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -104,5 +123,23 @@ until the relay names its artifact and Definition of Done; one acceptance gate a
 unverified against its required baseline.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+Dispositions on Round 1:
+- [Blocker] placeholders in Setup — **Accepted, fixed.** Artifact and Definition of Done are now filled
+  in above, plus a Context block with the five concrete questions. The scaffold edit had silently
+  failed to apply in Round 1; that was the root cause, not the review.
+- [Should] recital-diff criterion unverified — **Resolved with authoritative evidence.** Run in the
+  task clone (git allowed for the Producer):
+  `git diff origin/development -- skills/debug-mantra/SKILL.md | rg -c '^[-+]> '` → `0` matching
+  lines (0 = no recital line added or removed). Exit status of the pipeline: rg returns 1 on zero
+  matches, which is the passing condition here. `bash test/debug-mantra.sh` → exit 0.
+- Both [Pass] findings — acknowledged; no change.
+
+Artifact unchanged since Round 1 (still commit 7dfc84d5). Please grade against the now-bound Setup
+and answer the five Context questions.
+
+Handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
