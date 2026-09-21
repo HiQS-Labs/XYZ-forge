@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-20.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -66,7 +66,7 @@ ROUND: 1 / 2
 - Definition of Done: the previously approved writer semantics are intact after the rebase; the repair
   restores every landed reconciler contract (GH-202 offline promote-on-unknown for MERGED closers, #527
   per-row skip for local defects) without weakening GH-646's own rule (a declined PR is never terminal
-  authority; terminal label needs a confirmed CLOSED issue); no fixture edit hides a product defect.
+  authority; terminal label needs a confirmed CLOSED issue); no fixture edit hides a product defect.  [Unverified — no citation]
 
 ### Operational envelope (grade against this)
 One repo, one operator, local Python reconciler + Bash fixtures. Commensurate complexity: the repair is
@@ -118,5 +118,24 @@ are permitted under the landed GH-681 reviewer contract. No push.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · agy · Round 1 · 2026-09-20
+
+VERDICT: PASS
+Basis: The reconciler narrowing in `c544629f` correctly restores the GH-202 offline promote-on-unknown contract for merged closers while preserving GH-646's invariant that declined PRs require a confirmed CLOSED issue before terminalizing. Fixture updates in `gh496`, `gh527`, and `wave-reconcile.sh` model real ledger schemas and native identity reads without masking product defects. Rebase ledger replay and CHANGELOG paperwork are verified intact.
+swept file: yes
+
+- [Pass] **Question 1 (The predicate).** `_may_terminalize_issue(issue_state, force_promote, is_merged, is_open)` at `utils/py/wave_reconcile.py:327–332` returns `force_promote or issue_state == "CLOSED" or (is_merged and not is_open)`. Upstream at `utils/py/wave_reconcile.py:2093`, `is_open = (issue_state == "OPEN") or (issue_state is None and is_multiphase)`. For a merged closer (`is_merged=True`), an unlisted offline issue (`issue_state is None`, `is_multiphase=False`) yields `is_open=False` and `_may_terminalize_issue=True`, restoring GH-202's offline promote-on-unknown contract (`fetch_issue_state` docstring at `utils/py/wave_reconcile.py:295–300`); an issue positively `"OPEN"` yields `is_open=True` and suppresses terminalization, and a multiphase umbrella with `None` state is preserved active. For a declined PR (`is_merged=False`), `(is_merged and not is_open)` evaluates to `False`, strictly requiring `force_promote or issue_state == "CLOSED"`. The tuple where it promotes something the `54b478de` writer preserved is `(issue_state=None, force_promote=False, is_merged=True, is_open=False)` (and `issue_state="UNKNOWN"` with same flags), which was previously suppressed and broke GH-202.
+- [Nit] **Question 2 (Both call sites & log accuracy).** At both call sites (`utils/py/wave_reconcile.py:2101` and `:2133`), `is_merged` and `is_open` are the correct variables in scope. At Call Site 1 (`:2095–2102`), the log message at `:2102` (`"and the PR was not merged"`) is accurate for every path that reaches it because merged open issues are intercepted upstream by `if doc_path and is_open and is_merged and not args.force_promote:` at `:2095`. However, at Call Site 2 (`:2131–2150`, no active doc), if a merged PR closes an issue whose state is positively `"OPEN"` (`is_merged=True`, `is_open=True`), `_may_terminalize_issue` returns `False`, correctly preserving the active roadmap entry, but line `:2149` logs `"Issue #{issue_num} state is OPEN — and the PR was not merged — preserving active ROADMAP.md entry; a declined PR needs a confirmed CLOSED issue to close out"`. The PR was merged, not declined. Behavior is correct (roadmap entry preserved); the log message is a cosmetic diagnostic inaccuracy. Recommended follow-up: branch log message on `is_merged`.
+- [Nit] **Question 3 (Writer's own pin & mutant parameter count).** `test/gh646_status_label.py::test_wave_requires_confirmed_closed_issue_before_terminalizing_label` (`test/gh646_status_label.py:900–936`) is green (41/41 tests pass) and meaningful: it pins that a declined PR with issue states `OPEN`, `None`, and `UNKNOWN` leaves active docs and roadmap items untouched. However, the test's mutation runner flag at `test/gh646_status_label.py:1095` (`wave._may_terminalize_issue = lambda issue_state, force_promote: True`) was not updated for the 4-argument signature `(issue_state, force_promote, is_merged, is_open)`; invoking `python3 test/gh646_status_label.py --mutant wave_terminal` raises `TypeError: main.<locals>.<lambda>() takes 2 positional arguments but 4 were given` instead of running assertions. Recommended fix: update lambda to `lambda *args, **kwargs: True`. Additionally, while `wave-reconcile.sh` and `gh202` pin the merged closer behavior at the system level, adding a companion subtest with `is_merged=True` and `issue_state=None` to `gh646_status_label.py` would pin both branches of `_may_terminalize_issue` in the writer's unit suite.
+- [Pass] **Question 4 (Fixtures do not hide defects).**
+  - (a) `test/gh496-phase2-reconciliation-views.sh:112–115`: adding `repos(id, global_id, slug, updated_at)` matches canonical MIGRATION_001 schema (`utils/py/releases_app.py:1003–1005`), which `update_roadmap_entry` requires at `utils/py/wave_reconcile.py:1312` (`SELECT id,slug FROM repos`). Legitimate schema alignment, not defect masking.
+  - (b) `test/gh527-issue-url-repair.sh:143–155`: `fake-gh` answers the REST `api repos/.../issues/N` identity read required by `read_native_issue` (`utils/py/releases_app.py:5410–5423`). GH-901 (corrupted local URL) is skipped per-row (`utils/py/releases_app.py:4063–4067`) and reported, while GH-900 (valid URL) reconciles cleanly. Keeping whole-sweep refusal on remote read failure (`utils/py/releases_app.py:4070–4083`) is the correct design per GH-202 to avoid state drift on transient network/API outages.
+  - (c) `test/wave-reconcile.sh:90–106`, `:160–174`, `:346–368`: PR #1004 is a declined PR closing GH-778 with no `issues[]` entry, asserting `GH-778-UNKNOWN.md` remains in `2-WORKING/`. Reverting to pre-GH-646 semantics (`force_promote or not is_open`) terminalizes GH-778 to `4-MISC/`, failing the test. GH-777 has confirmed CLOSED state in `issues[]` and moves to `4-MISC/`. The pair provides an active red control.
+- [Pass] **Question 5 (Rebase integrity).** Verified `git diff 41be79e2..HEAD -- releases.sql`: exactly the schema 009 migration entry (`INSERT INTO schema_migrations VALUES('9', ...)`), generation bump 922 -> 926, the single GH-646 row in `roadmap_items` (`rmi-01M30QPGVMZ7N6DZ3KP9M2K96C`), `status_label` column projection (default NULL) across existing roadmap rows, 4 `op_receipts` (roadmap-add, roadmap-rate, roadmap-update, migrate), and 3 `work_events` (parked, rated, in_flight) for GH-646. No text-merge artifacts or unrelated drift.
+- [Pass] **Question 6 (Paperwork).** `CHANGELOG.md:3–16` accurately describes the schema 009 `in-progress` label, accepted start qualification, opt-in projection, clear on confirmed closure, reconciler narrowing in commit `c544629f` on rebase onto `41be79e2`, and the three fixture updates. Nothing false or overclaimed.
+- [Pass] **Whole-file sweep (`utils/py/wave_reconcile.py`).** Inspected the full 2,223 lines of `utils/py/wave_reconcile.py` (preflight branch checks, cleanliness, lock contention, rollback journal, provenance receipt verification, PR metadata parsing, issue identity resolution, doc lifecycle transitions, subprocess orchestration, and PDDA validation gate). No reachable pre-existing defects found in scope.
+
+relay closed (Approved), no further review turn needed. Handing off to claude-a — obtain Python-driver approval attestation and proceed with qualification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
