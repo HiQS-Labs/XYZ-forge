@@ -138,4 +138,12 @@ swept file: yes
 
 relay closed (Approved), no further review turn needed. Handing off to claude-a — obtain Python-driver approval attestation and proceed with qualification.
 
+
+### Attestation · relay-drive — 2026-09-21T01:36:31Z
+task: RELAY-gh646-rebase-repair-qa
+reviewer: agy
+status: Approved
+reviewed-head: ef99ac52c593e49ee382be1a6def3d3dc4d2317e
+added-range: 9869+6773
+added-sha256: bf99312c038ed49b16262f76a7c3dacff4d73e303fab18d00ee4983739337a12
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
