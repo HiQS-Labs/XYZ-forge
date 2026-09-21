@@ -1,9 +1,9 @@
 ---
 title: "GH-204: BSD `sed -i ''` idiom silently no-ops on Linux at five call sites"
-status: inbox
+status: Complete
 roadmap_exempt: true
 created: 2026-08-24
-updated: 2026-08-28
+updated: 2026-08-27
 owner: arnoldadero
 goal: make both in-place edits portable so a lost write can never be reported as a completed one
 gh_issue: 204
@@ -51,7 +51,7 @@ sed: can't read s/^STATUS:[[:space:]]*.*/STATUS: Escalated/: No such file or dir
 $ echo $?
 2
 $ cat probe.md
-STATUS: Open      # unchanged — the write was lost
+status: Complete
 ```
 
 Verified on this host, `713ba6d1`, 2026-08-24. Exit is **2** and the target file is byte-identical.

@@ -2,7 +2,7 @@
 gh_issue: 461
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/461
 title: Homepage quality proposition
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-06
 doc_type: feedback
 ---

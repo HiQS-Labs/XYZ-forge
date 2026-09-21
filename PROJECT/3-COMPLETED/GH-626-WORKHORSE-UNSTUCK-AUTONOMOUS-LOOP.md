@@ -1,8 +1,8 @@
 ---
 title: "GH-626: skills(workhorse, unstuck): close the autonomous re-entry loop — self-trigger on passive stalls and mandate orchestrator re-drive"
-status: active
+status: Complete
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-15
 owner: unassigned
 goal: close the autonomous re-entry loop in workhorse and unstuck so batch orchestrators run to completion without operator intervention
 gh_issue: 626

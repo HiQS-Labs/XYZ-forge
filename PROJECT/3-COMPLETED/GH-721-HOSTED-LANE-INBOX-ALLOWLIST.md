@@ -1,8 +1,8 @@
 ---
 title: "GH-721: wave-reconcile.yml publish allowlist never admits 1-INBOX, so every hosted run since GH-698 item 2 refuses its own doc moves"
-status: Active
+status: Complete
 created: 2026-09-20
-updated: 2026-09-20
+updated: 2026-09-21
 owner: Claude Code (merge-cleanup → workhorse)
 gh_issue: 721
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/721

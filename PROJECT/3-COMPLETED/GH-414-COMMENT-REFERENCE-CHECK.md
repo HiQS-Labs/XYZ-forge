@@ -1,6 +1,6 @@
 ---
 title: Nothing deterministic checks whether an inline code comment is still true — extend the dead-reference resolver past the doc boundary
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-03
 owner: noelsaw1
 gh_issue: 414

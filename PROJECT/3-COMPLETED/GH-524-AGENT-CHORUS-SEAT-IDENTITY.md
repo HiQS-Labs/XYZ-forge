@@ -1,8 +1,8 @@
 ---
 title: "GH-524: AgentChorus transcripts do not record the lab, model, or effort level behind a seat"
-status: Parked
+status: Complete
 created: 2026-09-09
-updated: 2026-09-09
+updated: 2026-09-10
 owner: unassigned
 goal: record lab, model and reasoning-effort per seat in the transcript itself and stamp every turn with it, so a discussion can be attributed without the purgeable telemetry layer
 gh_issue: 524

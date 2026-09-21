@@ -2,7 +2,7 @@
 gh_issue: 623
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/623
 title: "merge-cleanup: operator had to re-drive the run 4x — collision edges cascade handoffs, no fetch retry, no resume loop (session ae137dca)"
-status: "Proposed (1-INBOX — in execution on fix/gh-623-merge-cleanup-resilience)"
+status: Complete
 created: 2026-09-15
 doc_type: bug
 effort: 4

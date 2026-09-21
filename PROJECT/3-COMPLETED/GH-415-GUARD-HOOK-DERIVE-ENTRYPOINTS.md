@@ -1,6 +1,6 @@
 ---
 title: The skill-first guard hook covers 6 of 12 Tier-A entrypoints — derive the set from AGENTS.md instead of hardcoding it
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-03
 owner: noelsaw1
 gh_issue: 415

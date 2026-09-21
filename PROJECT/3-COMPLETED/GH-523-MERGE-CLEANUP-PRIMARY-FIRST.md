@@ -1,8 +1,8 @@
 ---
 title: "GH-523: merge-cleanup never reviews the primary on-disk checkout first, and merges into a tree that cannot receive the landing"
-status: Parked
+status: Complete
 created: 2026-09-09
-updated: 2026-09-09
+updated: 2026-09-10
 owner: unassigned
 goal: make the primary on-disk checkout Phase 0 of merge-cleanup — inspected by identity rather than by scan discovery, and a precondition that refuses the merge sequence when the tree cannot receive the landing
 gh_issue: 523

@@ -1,8 +1,8 @@
 ---
 title: "GH-510: jog's operator-confirmed merge path ignores gh pr merge failure and records the task completed"
-status: Parked
+status: Complete
 created: 2026-09-08
-updated: 2026-09-08
+updated: 2026-09-09
 owner: unassigned
 goal: make handle_landing_boundary park on a failed or skipped merge instead of returning completed, at both the operator-confirmed path and the no-PR-found fall-through
 gh_issue: 510

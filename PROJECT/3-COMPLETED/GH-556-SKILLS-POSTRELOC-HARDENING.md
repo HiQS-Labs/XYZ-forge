@@ -2,9 +2,9 @@
 gh_issue: 556
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/556
 title: "skills-army-hq: post-GH-536 hardening — source re-anchor, ignore defaults, mode-stable digests"
-status: Proposed (1-INBOX — not yet active; implementation not started)
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-11
 owner: noelsaw1
 doc_type: feedback
 goal: >

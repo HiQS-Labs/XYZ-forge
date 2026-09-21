@@ -2,7 +2,7 @@
 gh_issue: 165
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/165
 title: "GH-165: Post-Merge Wave & Marathon Lifecycle Reconciler (Docs, ROADMAP, DB, Views, and Planning)"
-status: Proposed
+status: Complete
 created: 2026-08-22
 updated: 2026-08-22
 owner: orchestrator

@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/561
 title: "merge-cleanup: a clone with only .tick/telemetry is judged an unverifiable coordination root, so every gate-run disposable clone is preserved forever"
 created: 2026-09-08
 type: bugfix
-status: 1-INBOX
+status: Complete
 complexity: 2
 risk: 2
 effort: 3

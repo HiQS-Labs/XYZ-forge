@@ -1,6 +1,6 @@
 ---
 title: A transient O_EXCL claim collision exits 1, identical to a durable loss — no retry channel under marathon load
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-03
 owner: noelsaw1
 gh_issue: 412

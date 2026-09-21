@@ -1,6 +1,6 @@
 ---
 title: tick log is exempt from the foreign-cwd guard — the verb that seeds every run, plus the whole marathon.* namespace
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-03
 owner: noelsaw1
 gh_issue: 411

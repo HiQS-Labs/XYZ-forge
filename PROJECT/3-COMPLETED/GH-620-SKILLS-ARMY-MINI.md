@@ -1,8 +1,8 @@
 ---
 title: "GH-620: XYZ Skills Army mini and reusable spin-off recipe"
-status: Qualifying
+status: Complete
 created: 2026-09-14
-updated: 2026-09-14
+updated: 2026-09-17
 owner: Codex
 goal: publish the closed Skills Army HQ package as a generated child repository while keeping XYZ Forge authoritative, and record the reusable minimum spin-off playbook
 gh_issue: 620

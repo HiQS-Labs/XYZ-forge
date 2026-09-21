@@ -1,8 +1,8 @@
 ---
 title: "GH-515: test/agent-chorus.sh's telemetry assertions time-bomb on the default-ON pilot window"
-status: Parked
+status: Complete
 created: 2026-09-08
-updated: 2026-09-08
+updated: 2026-09-09
 owner: unassigned
 goal: make the telemetry block of test/agent-chorus.sh opt in to telemetry explicitly, and assert the pilot-window logic without reading the wall clock
 gh_issue: 515

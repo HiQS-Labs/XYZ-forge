@@ -1,6 +1,6 @@
 ---
 title: releases update cannot re-point a release's tracking issue
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-08-24
 owner: noel
 gh_issue: 222

@@ -2,9 +2,9 @@
 gh_issue: 603
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/603
 title: "feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse, sop, whack-a-mole, unstuck, express, radar, and daily skills"
-status: Proposed (1-INBOX — active)
+status: Complete
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-15
 owner: noelsaw1
 doc_type: feedback
 goal: >
