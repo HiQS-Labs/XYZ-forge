@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -54,7 +54,7 @@ ROUND: 1 / 3
 - Artifact under review: `PROJECT/1-INBOX/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md` (verbatim capture of GitHub issue #732's body — the checklist under review). Sources to check it against: `validate.sh`, `utils/ci-route.sh`, `githooks/pre-push`, `.github/workflows/ci.yml`, `.github/workflows/wave-reconcile.yml`, `utils/py/wave_reconcile.py`, `utils/py/_marathon_plan.py`, `skills/merge-cleanup/scripts/merge_cleanup.py`, `test/gh35-test-tiers.sh`, `test/gh251-validate-pytest-skip.sh`, `test/gh425-gate-provenance-pr.sh`, `AGENTS.md`, `ROUTER.md`, `SOP.md`, `PROJECT/2-WORKING/GH-496-SHARPEN-CICD.md`.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-21
-- Definition of Done: every checklist item's factual premise is either confirmed against the cited source line (or corrected with the right citation), or marked as an operator observation that the source cannot confirm; no item duplicates an open issue without saying so; the carry-over from #496 is accurate (landed vs not landed); the proposed action per item is proportionate (no new subsystem) and its acceptance is falsifiable.
+- Definition of Done: every checklist item's factual premise is either confirmed against the cited source line (or corrected with the right citation), or marked as an operator observation that the source cannot confirm; no item duplicates an open issue without saying so; the carry-over from #496 is accurate (landed vs not landed); the proposed action per item is proportionate (no new subsystem) and its acceptance is falsifiable.  [Unverified — no citation]
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -90,5 +90,93 @@ Specific questions:
 12. **Anything missing** that the same week's evidence clearly supports and the list omits? Anything listed that the evidence does *not* support?
 
 Output: one graded finding per checklist item (`[Blocker]/[Should]/[Nit]/[Pass]`) with the citation, `swept file: yes|no`, VERDICT with Basis. Findings only — do not edit the artifact.
+
+### Reviewer R1 — whole-checklist grounding review
+
+VERDICT: FAIL
+Basis: several proposed fixes already exist or rest on superseded behavior; the checklist needs factual corrections before implementation. Review is of the seeded source, not an attestation of historical development SHA 39bb1392. No source edits, git commands, gates, tests, or executable fixtures were run.
+swept file: yes
+
+The entire capture, including frontmatter, carry-over, acceptance and trailing scaffolding, was reviewed. Pre-existing defects are included below. Timing/incident anecdotes remain operator observations, not independently reproduced evidence. Reversibility of this review: Easy; only this relay changes. Applied relay-xyz, SWE and debug-mantra review guidance within the user's narrower turn restrictions.
+
+**Checklist findings (artifact line numbers refer to PROJECT/1-INBOX/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md):**
+
+- [Pass] **1 — timing docs (line 71).** The cited numbers exist at `AGENTS.md:180`, `ROUTER.md:63` and `ROUTER.md:90`. Prefer the existing measured output over another evergreen estimate: `githooks/pre-push:262/:279/:296` prints the docs/tier-2/full `GREEN in ...s` lines. These are hook timings, not validate's own summary. Keep the six-run table explicitly dated operator observations; historical plausibility follows from the serial retry mechanism, not proof of those exact times. Acceptance: either remove static promises and cite those outputs, or retain a same-week receipt with host/width. Also inspect the same stale timing prose at `githooks/pre-push:10` when updating docs.
+
+- [Should] **2 — per-suite durations (line 72): reuse existing telemetry.** Console presentation is missing, but collection already exists: `validate.sh:1258` calls `rt_suite`, `test/lib/runner-telemetry.sh:146` emits `duration_ms`, and `validate.sh:1518` prints the retained file path. Storage defaults to `.tick/telemetry` (`test/lib/runner-telemetry.sh:69`); committed examples exist under `TESTS-RESULTS/2026-09-01+GH-365/campaign/`. Rewrite as a summary-rendering extension of GH-365, not a new timing facility or prerequisite to measuring anything.
+  Observed input: existing suite JSONL has `started_ms`, `ended_ms`, `duration_ms`, and retry lane records.
+  Affected scope: item 2 and Phase 5's assertion that new timings are prerequisite.
+  Falsifier: an inspected nonempty current receipt lacking suite durations would justify additional collection; current emitter already supplies them. Acceptance should distinguish initial attempts from retries and sum each once.
+
+- [Should] **3 — toolchain (line 73): gh425 premise is obsolete; don't impose optional dependencies globally.** `test/gh425-gate-provenance-pr.sh:5/:13/:427` uses Python's `unittest`, not pytest. `validate.sh:1409` and `test/gh251-validate-pytest-skip.sh:56` explicitly skip the Python layer when pytest is absent. PHP attribution to `gh268-relay-cue-and-target-checks.sh:97` is the right suite; its absent-PHP case is also deliberately skipped at line 107. Rewrite incident details as historical observations, identify still-affected consumers, and prefer targeted diagnostics/consistent existing skips over an unconditional top-level dependency gate. Pick one policy before acceptance; preserve non-qualifying status for omitted coverage.
+  Observed input: gh425 now imports `unittest`; the capture instead says its own `python3 -m pytest` fails.
+  Affected scope: item 3 and the gh425-based red control at line 97; docs-only and unrelated tier-2 runs must not acquire these dependencies accidentally.
+  Falsifier: current gh425 executing pytest would refute this correction. Static probe `python3` with `Path('test/gh425-gate-provenance-pr.sh').read_text().count('pytest')` returned `0` (exit 0). Runtime dependency failure attribution is [Unverified — needs clone run].
+
+- [Should] **4 — retries (line 74): retain solo verdicts.** `validate.sh:1301` explicitly requires the pool drained and lock lane finished; `vp_rerun_alone` at line 1325 runs synchronously. A second 2-wide pool reintroduces competing suites and cannot establish the same guarantee. Limit this item to displaying existing retry durations first; any early abort must produce incomplete/failed evidence, never a qualifying green. The retry count is bounded by the selected suites; elapsed cost is the concern.
+  Observed input: the proposed “2-wide pool” contradicts the current “Every failure is RE-RUN SEQUENTIALLY” contract.
+  Affected scope: failed/missing pooled results and their final classification.
+  Falsifier: a reproduced shared-resource pair failing together but passing alone must still receive solo verdicts; a candidate calling two-wide results authoritative fails that control. Actual pair execution is [Unverified — needs clone run].
+
+- [Should] **5 — tier-2 width (line 75): remove the requested implementation.** `XYZ_VALIDATE_MAX_JOBS` is applied at `validate.sh:932`; the fallback block requires empty `PARALLEL_JOBS` at line 975, and `BURST` is handled at line 980, before tier 2 at line 994. Explicit widths already win (subject to xargs capability); tier 2 is a default, not a pin. Rewrite as already supported usage/documentation.
+  Observed input: `--burst` reaches the earlier BURST branch; MAX_JOBS sets the value before the empty-value guard.
+  Affected scope: tier-2 width claims only; preserve the default and capability fallback.
+  Falsifier: a disposable-clone mode probe showing MAX_JOBS=4 or --burst ignored on a capable 12-core host would reopen this item. No validate entrypoint was executed here.
+
+- [Should] **6 — ledger routing (line 76): current route is known; reduced coverage remains a proposal.** Mapping is path-based (`utils/ci-route.sh:38/:458`), with no row-content classifier. Read-only probe `printf '%s\n' docs/example.md releases.sql releases.db | bash utils/ci-route.sh push` returned exit 0, `full_required=false`, `tier=2`, `tier2_subsystems=releases`, 23 registered shell suites. Do not present the historical “26-suite” run as the current registry count. Keep “evaluate” for whether reducing coverage is safe, not for what the router currently does. Cheapest default is retain routing; a row classifier is additional mechanism and needs evidence.
+  Observed input: docs plus releases.sql/releases.db selects the whole releases registry.
+  Affected scope: any proposed intake-only exception.
+  Falsifier: schema changes, dropped/modified rows, malformed dumps, unrelated code and empty/unreadable diffs must retain existing fail-closed coverage; a valid additive row must still pass ledger consistency. Record go/no-go evidence before changing selection.
+
+- [Should] **7 — nice nesting (line 77): already addressed.** `test/gh35-test-tiers.sh:261` names GH-648; lines 267–273 require caller+10 only for caller nice <=5, otherwise worker >= caller. A caller at 15 no longer expects 25. Mark superseded; do not replace the current assertion with an unmeasured platform clamp or unconditional skip.
+  Observed input: caller=15 selects the existing `worker never outranks a reniced caller` assertion.
+  Affected scope: the stale fix request, not the existing scheduler behavior.
+  Falsifier: evidence that this current branch still expects 25 for caller=15 would reopen it. Full nested behavior is [Unverified — needs clone run].
+
+- [Nit] **8 — contention guidance (line 78).** `validate.sh:697` sets `nice -n 10`; `ROUTER.md:69/:92` already documents burst/unattended use. The inspected command rails and SOP §4 do not already state a universal one-gate-at-a-time rule. A short recommendation is proportionate, but “pollers materially lengthen” is an operator observation, not derivable from nice. Reuse the existing burst explanation; do not claim global cross-clone serialization exists or is needed without measurements. Acceptance: one concise recommendation and a pointer to existing controls.
+
+- [Should] **9 — split pushes (line 79): mixed docs/code does not imply tier 3.** Read-only probe `printf '%s\n' docs/example.md utils/py/releases_app.py | bash utils/ci-route.sh push` returned exit 0, `full_required=false`, `tier=2`, `tier2_subsystems=releases` (23 shell suites). Docs do not disqualify mapped code at `utils/ci-route.sh:365`. Rewrite around genuinely independent docs follow-ups and the pushed range; splitting one mixed change adds a docs gate without necessarily reducing its code gate. The artifact itself assigns push cadence to #30, so make this a linked recommendation there rather than duplicate implementation.
+  Observed input: docs/example.md plus utils/py/releases_app.py routes tier 2.
+  Affected scope: mixed-push premise and proposed SOP default.
+  Falsifier: mapped code plus docs must remain tier 2, kernel code plus docs tier 3, docs-only tier 1; a rewrite claiming all mixed pushes are tier 3 fails this matrix.
+
+- [Should] **10 — hosted qualification (line 80): batch cost and historical failures need correction.** `.github/workflows/wave-reconcile.yml:65` uses --pr/--catch-up/--gate/--qualify; `utils/py/wave_reconcile.py:535` filters already-qualified landings and line 549 runs one full sequential qualification for a pending batch (actual invocation at line 582). It is not necessarily one 70-minute suite per merge. Serialization exists, but three runs do not delay the first possible landing until all three finish. Current Lessons Learned is advisory (GH-693), so “today every run fails on doc debt” requires dated run evidence. Keep any schedule-policy decision in #591; its existing plan explicitly chose hosted qualification per pending batch.
+  Observed input: `if not pending: return` and “Qualifying {len(pending)} landing(s) ...” in the current implementation.
+  Affected scope: queue-time estimate, current failure claim, and proposed trigger change.
+  Falsifier: three run URLs showing distinct nonempty qualifying batches at ~70 minutes each support that historical cost, but not an unconditional per-merge rule. Live runs unavailable here.
+
+- [Should] **11 — cross-refs (line 81) and duplicate inventory.** No-action boundaries for #674/#730/#223/#722 are sensible, but live state and bodies were not retrievable. Command `gh api 'repos/HiQS-Labs/XYZ-forge/issues?state=open&per_page=100'` exited 1: `error connecting to api.github.com`; its empty redirected output was not treated as a result set. Mark #382/#30/#730/#223/#591/#674/#722 status/body checks unverified, or supply current quoted source evidence. The list also needs the existing GH-365 timing and GH-648/GH-693 supersession references above.
+  Observed input: capture calls all these “Adjacent open issues” without retained current issue bodies; duplicate work is already visible for nice and cadence.
+  Affected scope: live-state/duplicate claims across every item; no claim here that the unavailable issues are closed.
+  Falsifier: current issue bodies and states showing distinct ownership and no overlap resolve the verification gap. Do not infer live status from a local filename.
+
+**Carry-over findings:**
+
+- [Should] **12 — pre-merge wiring (line 87): rationale is superseded.** Absence of an E.6 --pre-merge call is real (`merge_cleanup.py:905` delegates to `ledger_merge.py:520`, whose gate includes semantic conflict detection plus the two CLI checks). But `wave_reconcile.py:1836` says “Lessons Learned — advisory (GH-693)” and calls the warning emitter; post-merge uses the same policy at line 1066. Wire-up cannot prevent an exit-5 Lessons Learned failure that is no longer enforced. Reframe as an optional remaining frontmatter/receipt integration gap, explicitly preserving GH-693, and specify --pr metadata/head context if pursued; a bare call can infer closers from local commit text (`run_pre_merge:1700`).
+  Observed input: the proposed fix targets mandatory Lessons Learned, intentionally removed in `PROJECT/3-COMPLETED/GH-693-LESSONS-LEARNED-ADVISORY.md` (“never a promotion gate”).
+  Affected scope: carry-over rationale and acceptance; no restoration of the old requirement.
+  Falsifier: valid frontmatter/receipts with no Lessons Learned must warn, not fail; missing required frontmatter/receipts may still fail. Integration tests are [Unverified — needs clone run].
+
+- [Nit] **13 — Phase 3 transport (line 88).** Spike-gating is proportionate and matches GH-496's “PR 3: Phase 3 (Conditional Release DB Transport Change Spike).” Keep Costly/rollback language. “Still tracked” and “spike has not run” are not proven by file existence or the stale checklist; git was expressly prohibited, and historical conflict counts are operator observations. Supply retained index/spike evidence or label those claims unverified. Exact Phase 0 preservation requirements need a quote from the linked canonical #496 comment; the local plan only summarizes atomic check --rebuild bootstrap.
+
+- [Pass] **14 — Phase 4 profiles (line 89), scoped to local source.** GH-496's “PR 4: Phase 4 (Four Impact Profiles in ci-route.sh)” names the same four profiles; current `utils/ci-route.sh:24` still exposes the subsystem registry and numeric tier resolver. Extending that selector rather than adding a subsystem is proportionate. Rename/delete/unmapped/empty-input replay is falsifiable. “Not started” globally remains unverified; use “not present in the inspected selector” unless the owner supplies current evidence.
+
+- [Should] **15 — Phase 5 measurements (line 90): distinguish predecessor scope from existing profiling.** The GH-496 phase exists, but GH-365 already retains timing/campaign data. A new console summary is not prerequisite to measuring or choosing a candidate. Keep >=3 matched runs and identity controls; describe which further campaign is missing rather than asserting all measurement is unstarted.
+  Observed input: existing `TESTS-RESULTS/2026-09-01+GH-365/campaign/seq-clean.jsonl` and runner suite-duration emitter.
+  Affected scope: Phase 5 dependency and status prose.
+  Falsifier: if existing data cannot answer the proposed optimization, specify that gap and run a fresh matched campaign; no new instrumentation is justified merely by missing console output.
+
+- [Pass] **16 — reconcile GH-496 doc (line 91), local evidence only.** It says `updated: 2026-09-10`, “submit PR 2”, and contains exactly three unchecked boxes (read-only Python count, exit 0, `GH496 unchecked boxes: 3`). Its Merge evidence sections record #548, #553 and #580 as merged. `.github/workflows/ci.yml:533` contains the PR frozen-twin guard; `ci-route.sh:38/:42` contains the stated mappings; `githooks/pre-push:34/:35/:82` documents the bypasses and implements XYZ_SKIP_PREPUSH. Refresh is justified; local merge annotations are not independent live PR-state proof, and #459's current state is unverified. Preserve one canonical plan/explicit disposition of unfinished phases rather than duplicate two active checklists.
+
+**Acceptance and whole-file findings:**
+
+- [Should] **17 — acceptance lines 95–97 and TODO checklists at 111/115.** A changed log line alone cannot prove routing, retry isolation or skip correctness. Add item-specific red/green outcomes to the surviving actions, name retained evidence destinations, and make the timing-doc criterion allow deletion of estimates (currently line 71 allows deletion but line 96 requires numbers). Replace gh425's nonexistent pytest failure control with the actual dependency consumer. The frontmatter goal and two Phase-0 checklists remain TODOs; mark them deferred intake scaffolding or fill a narrow QA scope instead of implying build readiness.
+  Observed input: “or the suite log line it changes” at line 95 and “rather than failing gh425” at line 97.
+  Affected scope: acceptance for each surviving item, not expansion into a new implementation plan.
+  Falsifier: an implementation that merely prints a new line while leaving the targeted defect intact must fail acceptance. Planned executable controls belong in a disposable full clone and must retain nonempty output plus provenance.
+
+No additional implementation work is justified by the unverified six-run anecdotes alone. This turn's probes established routing/static facts only; all runtime gates remain [Unverified — needs clone run].
+
+Handing off to Producer (claude-a) — correct or disposition the findings, mark unavailable live evidence explicitly, and open the next review cycle. No approval yet.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
