@@ -28,7 +28,7 @@ doc_type: bugfix
 ## Quad Concepts
 
 - A skill that describes a workflow but never says "not done until X" gets walked through by the operator; the fix is the same recite / drive-loop / done-rule shape the newer skills use.
-- Read-only tooling (`marathon_plan.py --dry-run --deep`, `swarm-preflight.sh --dry-run`) must sit *inside* the read-only default, not behind a confirmation.
+- Ordinary readiness computation (`marathon_plan.py --dry-run --deep`, `swarm-preflight.sh --dry-run`) and reversible intake writes sit *inside* the default, not behind a confirmation.
 - The relay-xyz guard blocks the skill's own tools until the locator has run once in the session; Step 0 is that proof-of-load and has to be first.
 - Missing capture docs are written with the writers that already exist (`hq_render_capture`, `releases roadmap add`), never hand-authored.
 
@@ -86,7 +86,7 @@ Ordered work, verification inline:
 
 - [ ] `SKILL.md` has `## Recite this`, `## Drive loop`, an exit ladder for planner and preflight codes, and a `**Done rule**`.
 - [ ] Step 0 names the guard's proof-of-load and the exit-2 symptom; it is the first Bash call.
-- [ ] Read-only default explicitly includes `marathon_plan.py --dry-run --deep` and `swarm-preflight.sh --dry-run`; confirmation list limited to promote / close / fire / branch / write plan file.
+- [ ] The default explicitly includes ordinary readiness computation (`marathon_plan.py --dry-run --deep`, `swarm-preflight.sh --dry-run`, side effects stated) and reversible intake writes; confirmation list limited to promote / close / fire / branch / write plan file.
 - [ ] Capture recipe reuses `hq_render_capture` + `hq_roadmap_line` + `releases roadmap add`; no hand-authored frontmatter, no new writer.
 - [ ] `grep -c ROADMAP.md` is 0 in canonical and in the deployed copy; `diff -q` clean after deployment.
 - [ ] `test/xyz-harness-hooks.sh` passes in a disposable clone; PDDA doc gates 0 errors.
