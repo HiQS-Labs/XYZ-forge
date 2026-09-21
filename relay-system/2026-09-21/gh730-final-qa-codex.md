@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -533,5 +533,62 @@ pytest launch — and is there any ordering hazard with the GH-45 worktree guard
 `_ge_` rename leave any reference to the old names? (c) anything else blocking Approved?
 
 handing off to Reviewer
+
+### Reviewer — codex — Round 2
+
+swept file: yes
+
+- [Pass] `ci-local.sh` now sources the shared gate environment before every suite or pytest launch.
+  The runner establishes `HERE`, changes into it, and sources the helper at `ci-local.sh:66-74`; the
+  direct suite and pytest launches are much later at `ci-local.sh:302` and `ci-local.sh:323`. The
+  GH-45 worktree refusal follows at `ci-local.sh:76-99`, but there is no ordering hazard: before
+  exporting the no-bytecode rule, the helper only resolves its own paths and invokes
+  `utils/py/gate_env.py`, whose imports are standard-library `os` and `sys`
+  (`relay-automation/gate-env.sh:29-61`, `utils/py/gate_env.py:51-52`). No mutation-heavy gate was run
+  in this reviewer worktree.
+
+- [Pass] The `_ge_` rename is complete and the cleanup covers every helper-owned scratch name.
+  Assignments are `_ge_src`, `_ge_ldir`, `_ge_dir`, `_ge_hp_lib`, `_ge_root`, `_ge_py`, `_ge_names`,
+  and `_ge_n` at `relay-automation/gate-env.sh:29-70`; all are unset at
+  `relay-automation/gate-env.sh:85`. Static/source probe command:
+  `env -u PYTHONDONTWRITEBYTECODE bash -c '_src=caller; unset _hp_lib; . "$1"; printf "src=%s hp=%s pdb=%s\\n" "${_src-unset}" "${_hp_lib-unset}" "${PYTHONDONTWRITEBYTECODE-unset}"' _ "$PWD/relay-automation/gate-env.sh"`.
+  Exit status was 0; decisive output was `src=caller hp=unset pdb=1`. `bash -n ci-local.sh
+  relay-automation/gate-env.sh` also exited 0.
+
+- [Pass] The new C7 source-consumer assertion is not vacuous under deletion of the line it guards.
+  It checks the only exact `gate-env.sh` occurrence in `ci-local.sh`
+  (`test/gh441-gate-env-contract.sh:153-156`). Mutation probe command:
+  `sed '/^[[:space:]]*\\. .*gate-env\\.sh/d' ci-local.sh | rg -n 'gate-env\\.sh'`.
+  Exit status was 1 with no output, so removing the source line makes C7 fail rather than leaving a
+  comment match behind. The Producer's reported 18/0 executable-fixture result remains
+  [Unverified — needs clone run] here by relay policy.
+
+- [Pass] The Producer's explicit-marathon disposition is acceptable within the declared contract.
+  A repo-owned gate entry point that directly launches suites (`ci-local.sh`) now sources the helper;
+  the default marathon gate remains `validate.sh`. An arbitrary custom `--pre-advance-cmd` is the
+  documented extension point and must source the helper itself, stated at
+  `relay-automation/gate-env.sh:2-4` and `utils/py/gate_env.py:158-163`. Adding a second implicit
+  writer inside the marathon driver is not required to satisfy that contract.
+
+- [Nit] Pre-existing swept-file documentation mismatch: `ci-local.sh:425-427` says `--probe` does
+  not exercise the suite, but suite execution is gated only by `FAST` at `ci-local.sh:397-405`;
+  `PROBE` instead prevents the evidence record at `ci-local.sh:435`. This does not affect GH-730 or
+  the runner's behavior, but the comment should eventually say that probe runs are intentionally
+  non-qualifying rather than suite-free.
+
+- [Pass] The full revised files were swept: `ci-local.sh:1-449`,
+  `relay-automation/gate-env.sh:1-93`, and `test/gh441-gate-env-contract.sh:1-165`. No additional
+  blocking defect was identified. The current relay worktree is not present in the codebase-memory
+  project list; the closest XYZ index is dated 2026-09-18 and marks the changed contract test stale,
+  so current-worktree source reads above are the authority rather than stale graph results.
+
+VERDICT: PASS
+
+Basis: the fixture repair remains correct, `validate.sh` and the qualifying `ci-local.sh` runner now
+share the no-bytecode prologue, the helper no longer clobbers the reported caller names, and the new
+contract check demonstrably fails when its source line is removed. The full disposable-clone gate is
+still the post-relay harness step, not reviewer evidence.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
