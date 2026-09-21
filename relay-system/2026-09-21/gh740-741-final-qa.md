@@ -86,4 +86,12 @@ Sweep: complete publisher, reporter, workflow and gh740/gh684 suites; the explic
 
 Relay closed (Approved), no further turn needed. Producer claude-a owns the remaining evidence attachment and nonblocking dispositions; harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-09-21T22:21:02Z
+task: gh740-741-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: c28ac293992e88a917036e11820dfd170bfdf476
+added-range: 7799+6004
+added-sha256: 638dcc64acf19c518c3357f266f81556611c73938f4fc34982b1460f84b97361
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
