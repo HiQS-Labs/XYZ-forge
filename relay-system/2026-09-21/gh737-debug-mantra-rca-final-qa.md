@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -204,5 +204,51 @@ Re-checks after the edit: `rg -c proximate` → 3, `rg -c 'symptom-fix trap'` �
 recital diff vs origin/development → 0 lines; `bash test/debug-mantra.sh` → exit 0.
 
 Handing off to Reviewer — take your turn.
+
+### Reviewer · Round 3 · codex
+
+swept file: yes
+
+1. [Pass] The operational class-vs-instance test asks “what let that happen?” and follows
+   upstream hops to design, contract, or state origin, recording each hop as evidence
+   (`skills/debug-mantra/SKILL.md:55`). Concrete fix: none.
+2. [Pass] Round 2's blocker is resolved: the trap now says “without the root-vs-proximate
+   gate above, a green repro makes the session *look* fixed”
+   (`skills/debug-mantra/SKILL.md:57`). This no longer claims the new gates pass a symptom fix.
+   The dead-code tell prompts upstream analysis; the adjacent explicit allowance for an external,
+   out-of-contract, or separate-issue origin preserves legitimate defensive fixes with a recorded
+   reason (`skills/debug-mantra/SKILL.md:58`). Concrete fix: none.
+3. [Pass] The RC statement closes the evidence ledger with origin, fix site, and justification
+   (`skills/debug-mantra/SKILL.md:68`). The operating gate requires that statement while
+   the adjacent scale rule still permits a confirming observation without a harness or written
+   ledger for trivial defects (`skills/debug-mantra/SKILL.md:97-98`). Concrete fix: none.
+4. [Pass] Plan pivot 3 mirrors the origin/class test and justified downstream placement
+   (`skills/debug-mantra/SKILL.md:80`); the plan-only paragraph still distinguishes
+   specifying falsification from witnessing it (`skills/debug-mantra/SKILL.md:83`).
+   Concrete fix: none.
+5. [Pass] Swept all 101 lines; no additional pre-existing defect, material redundancy, or
+   contradiction found in this prose skill (`skills/debug-mantra/SKILL.md:1-101`).
+   The change remains commensurate prose guidance, without adding machinery to the skill.
+   Current marker probe:
+   `rg -c 'proximate' skills/debug-mantra/SKILL.md`;
+   `rg -c 'symptom-fix trap' skills/debug-mantra/SKILL.md`;
+   `rg -c 'Root cause:' skills/debug-mantra/SKILL.md`.
+   Exit status: each 0. Decisive output: `4`, `1`, `1`.
+   The current proximate count is four, rather than the Producer's reported three, because the
+   correction itself adds a matching line; the acceptance minimum remains satisfied.
+   Concrete fix: none.
+
+Evidence boundary: the Producer's Round 3 records the origin/development recital comparison
+(zero changed recital lines) and focused suite exit 0. Those are Producer-reported evidence,
+not commands rerun by this Reviewer. No git, executable fixtures, or test suites were run here;
+the post-turn harness gate remains separate from this prose approval.
+
+VERDICT: PASS
+
+Basis: The localized contradiction is resolved, the whole-file sweep found no further issue,
+and the six stated acceptance areas are satisfied by the inspected prose and recorded Producer
+baseline evidence. No open change request remains.
+
+Relay closed (Approved), no further turn needed. Returning completion to claude-a for harness closeout.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
