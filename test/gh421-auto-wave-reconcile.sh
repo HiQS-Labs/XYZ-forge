@@ -606,6 +606,8 @@ class WorkflowTests(unittest.TestCase):
     def test_publish_allowlist_and_plan_lands(self):
         paths = ['releases.db', 'releases.sql',
                  'PROJECT/2-WORKING/GH-421-fixture.md', 'PROJECT/3-COMPLETED/GH-421-fixture.md',
+                 # GH-721: the deletion side of a 1-INBOX -> 3-COMPLETED capture promotion (GH-698 item 2)
+                 'PROJECT/1-INBOX/GH-421-fixture.md',
                  'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md']
         paths += ['TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/provenance.jsonl',
                   'TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/validation.jsonl']
@@ -616,6 +618,8 @@ class WorkflowTests(unittest.TestCase):
             self.publish(paths + ['utils/py/unexpected.py'])
         with self.assertRaisesRegex(SystemExit, 'undeclared'):
             self.publish(paths + ['TESTS-RESULTS/arbitrary/provenance.jsonl'])
+        with self.assertRaisesRegex(SystemExit, 'undeclared'):
+            self.publish(paths + ['PROJECT/1-INBOX/scratch-note.md'])
         for sha in ('a'*39, 'a'*41, 'g'*40):
             with self.subTest(sha=sha), self.assertRaisesRegex(SystemExit, 'undeclared'):
                 self.publish(paths + ['TESTS-RESULTS/2026-09-13+GH-591/wave-'+sha+'/provenance.jsonl'])

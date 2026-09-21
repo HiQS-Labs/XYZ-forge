@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-09-20 — Hosted reconcile lane publishes 1-INBOX capture promotions again (GH-721)
+
+Every hosted `wave-reconcile.yml` run since #705 (GH-698 item 2, 2026-09-18) did its full
+`--qualify` work and then refused at the publish guard with
+`Refusing undeclared reconciliation artifacts: ['PROJECT/1-INBOX/GH-103-…', … 23 paths …]`:
+`RECONCILE_FOLDERS` had grown `1-INBOX`, so closed-issue captures are promoted out of it, but the
+guard's doc allowlist (last touched 2026-09-09) still read `2-WORKING|3-COMPLETED|4-MISC` and the
+`--no-renames` diff lists the deletion side of every move. One-token fix: `1-INBOX` joins the
+alternation (the `(?:GH-)?[0-9]+-` prefix keeps non-issue inbox notes refused), with a comment
+naming `RECONCILE_FOLDERS` so the next widening finds the guard.
+`test/gh421-auto-wave-reconcile.sh::test_publish_allowlist_and_plan_lands` now carries the
+`1-INBOX` deletion side (red on the old workflow with the production message, green on the fix)
+and a still-refused `PROJECT/1-INBOX/scratch-note.md`. Easy rollback: revert the one commit.
+No reconciler, ledger, or report-step change.
+
 ## 2026-09-20 — Flight Deck established-work reader (GH-673, Refs GH-646)
 
 Reuse the existing qualified ledger helper and cached GitHub observations to distinguish
