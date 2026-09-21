@@ -591,4 +591,12 @@ still the post-relay harness step, not reviewer evidence.
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-21T18:46:42Z
+task: RELAY-gh730-final-qa-codex
+reviewer: codex
+status: Approved
+reviewed-head: 2ef7850ae53cfb87e486147416a20da86d96e3af
+added-range: 34865+3869
+added-sha256: 55501788de9d741fa8a200a7738210834e7f19e5bd8a5c40c2b0aafd94ef7c1c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
