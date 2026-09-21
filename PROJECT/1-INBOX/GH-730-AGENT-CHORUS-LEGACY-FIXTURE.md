@@ -63,7 +63,14 @@ The same suite on a pristine `origin/development` checkout is 215/0.
 | Surface | Change |
 |---|---|
 | `test/agent-chorus.sh:713` | Fixture link targets `$WORK/pre-rename-clone/skills/agent2agent` — a path the suite never creates, so it is dangling by construction. Still ends in `/skills/agent2agent`, which is what the installer's `case` arm matches. |
-| `relay-automation/gate-env.sh` | `export PYTHONDONTWRITEBYTECODE=1` — the shared gate prologue `validate.sh:12` already sources (the GH-441 single registry for gate environment), so every suite in every gate mode inherits it. |
+| `relay-automation/gate-env.sh` | `export PYTHONDONTWRITEBYTECODE=1` — the shared gate prologue `validate.sh:12` already sources (the GH-441 single registry for gate environment), so every suite in every gate mode inherits it. Its scratch names are now all `_ge_`-prefixed and unset (it clobbered a caller's `_src`/`_hp_lib` — Codex round-1 finding). |
+| `ci-local.sh` | Sources `gate-env.sh` after `HERE` (round-1 Blocker): the qualifying runner launches suites and pytest directly and never sourced the prologue — so it was also missing the GH-441 scrub. |
+| `test/gh441-gate-env-contract.sh` | C7a: `ci-local.sh` sources the helper. C8a: sourcing sets `PYTHONDONTWRITEBYTECODE=1` and preserves a caller's `_src`/`_hp_lib`. Both red against the pre-fix files. |
+
+Rejected (Out of Scope / Ponytail): setting the variable inside `marathon_drive._gate_env()` for an
+explicit `--pre-advance-cmd`. The documented contract (`gate-env.sh:2-3`) already makes a custom gate
+source the helper itself, and the default gate resolves to `validate.sh`; a second writer for gate
+environment is the defect GH-441 replaced.
 
 Issue item 3 (print the failing line in the refusal block) is already served:
 `validate.sh:1345-1346` tails the last 40 lines of the failing suite's serial re-run before the
@@ -82,7 +89,7 @@ Issue item 3 (print the failing line in the refusal block) is already served:
 - [x] After fix, same clone state → `215 pass, 0 fail`; ghost removed → `215 pass, 0 fail`
 - [x] Red control for the changed assertion: installer's `ln -sfn` repoint disabled → `214 pass, 1 fail` on the same assertion (it still detects a non-repointing installer); installer restored
 - [x] `. relay-automation/gate-env.sh && bash test/agent-chorus.sh` → 215/0 and **zero** `__pycache__` directories under `skills/ test/ utils/` afterwards
-- [x] `test/gh441-gate-env-contract.sh` → 16 pass, 0 fail
+- [x] `test/gh441-gate-env-contract.sh` → 18 pass, 0 fail (C7a/C8a red against the pre-fix `ci-local.sh` / `gate-env.sh`)
 - [ ] Full `./validate.sh` green through the pre-push gate on the final commit
 - [ ] Final Codex relay QA: Approved
 
