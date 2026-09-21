@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -65,5 +65,44 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+Scope note: Setup is unbound. I inferred `skills/debug-mantra/SKILL.md` and the acceptance criteria in
+`PROJECT/1-INBOX/GH-737-DEBUG-MANTRA-RCA-GATE.md:52-57` only to perform a provisional whole-file
+sweep; that inference cannot substitute for the relay's source-of-truth contract.
+
+- [Blocker] The relay still contains literal placeholders for both the artifact and Definition of
+  Done (`relay-system/2026-09-21/gh737-debug-mantra-rca-final-qa.md:54,57`), while its own protocol
+  requires review of "the artifact named in Setup" against that Definition of Done
+  (`relay-system/2026-09-21/gh737-debug-mantra-rca-final-qa.md:15-18`). This is the observed failure:
+  the review target and grading contract are undefined. Concrete fix: replace both placeholders with
+  the exact artifact path and complete acceptance criteria before returning for review.
+- [Pass] On the inferred artifact, the whole 101-line file was swept and no pre-existing defects were
+  found. The edit adds the class-vs-instance/root-vs-proximate test and named symptom-fix trap at
+  `skills/debug-mantra/SKILL.md:55-58`, the required RC close-out at
+  `skills/debug-mantra/SKILL.md:68`, mirrors it in the plan pivot at
+  `skills/debug-mantra/SKILL.md:80`, and enforces it at `skills/debug-mantra/SKILL.md:97`.
+  Concrete fix: none.
+- [Pass] Narrow count probe passed. Command:
+  `rg -c 'proximate' skills/debug-mantra/SKILL.md; rg -c 'symptom-fix trap' skills/debug-mantra/SKILL.md; rg -c 'Root cause:' skills/debug-mantra/SKILL.md`.
+  Exit status: `0`. Decisive output: `3`, `1`, `1`, satisfying the inferred thresholds at
+  `PROJECT/1-INBOX/GH-737-DEBUG-MANTRA-RCA-GATE.md:52-54`. Concrete fix: none.
+- [Should] [Unverified — needs clone run] The exact `origin/development` recitation-diff criterion at
+  `PROJECT/1-INBOX/GH-737-DEBUG-MANTRA-RCA-GATE.md:55-56` was not run because this turn explicitly
+  forbids every `git` invocation. A supporting non-authoritative comparison was clean: command
+  `sed -n '1,19p' skills/debug-mantra/SKILL.md > "$TMPDIR/gh737-current-recitation.txt"; sed -n '1,19p' /Users/noelsaw/.codex/skills/debug-mantra/SKILL.md > "$TMPDIR/gh737-reference-recitation.txt"; cmp -s "$TMPDIR/gh737-current-recitation.txt" "$TMPDIR/gh737-reference-recitation.txt"`
+  exited `0`. Concrete fix: provide the authoritative origin/development comparison in the next turn
+  or cite the disposable-clone harness result.
+
+VERDICT: FAIL
+
+Basis: The inferred artifact content is strong, but an authoritative final-QA verdict is impossible
+until the relay names its artifact and Definition of Done; one acceptance gate also remains
+unverified against its required baseline.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
