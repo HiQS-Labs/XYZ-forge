@@ -416,6 +416,45 @@ else
 fi
 
 # Case G: Red Control 6 - Pre-merge fails closed when PR metadata cannot be fetched -> exit 2
+# GH-657: real committed receipts, with identity and staleness held valid.
+python3 - "$ROOT" "$WORK/outcome-receipts" <<'PY' || fail "GH-657 committed receipt outcomes"
+import importlib.util, json, os, subprocess, sys
+root, repo = sys.argv[1:]
+sys.path.insert(0, os.path.join(root, 'utils/py'))
+spec = importlib.util.spec_from_file_location('wave', os.path.join(root, 'utils/py/wave_reconcile.py'))
+wave = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(wave)
+os.makedirs(repo)
+def git(*args):
+    return subprocess.check_output(['git', '-C', repo, *args], text=True).strip()
+git('init', '-q')
+git('config', 'user.name', 'receipt-test')
+git('config', 'user.email', 'receipt@test.invalid')
+git('commit', '-q', '--allow-empty', '-m', 'fixture baseline')
+receipt_dir = os.path.join(repo, 'TESTS-RESULTS', 'outcomes')
+os.makedirs(receipt_dir)
+positive = [{key:token} for key in ('result','status') for token in ('pass','passed','PASS')] + [{'rc':0},
+            {'result':'pass','status':'passed','rc':0}]
+negative = [{'result':'pass','rc':1}, {'result':'fail','rc':0},
+            {'result':'pass','status':'fail','rc':0}, {'rc':False}, {'rc':True},
+            {'result':'fail','status':'pass'}, {'result':'pass','status':'fail'},
+            {'result':'pass','rc':False}, {'result':'pass','rc':True},
+            {'rc':'0'}, {'rc':0.0}, {'rc':None}, {'result':None,'rc':0},
+            {'result':[],'rc':0}, {'status':{},'rc':0}, {'result':'unknown','rc':0},
+            {'result':'','rc':0}, {'status':None,'rc':0}, {'status':'','rc':0},
+            {'rc':-1}, {}]
+for should_pass, cases in [(True,positive), (False,negative)]:
+    for outcome in cases:
+        tested = git('rev-parse','HEAD')
+        with open(os.path.join(receipt_dir,'provenance.jsonl'),'w') as f:
+            f.write(json.dumps({'commit':tested, **outcome})+'\n')
+        git('add','TESTS-RESULTS')
+        git('commit','-q','--allow-empty','-m','committed outcome')
+        error = wave.validate_pre_merge_receipts(repo, git('rev-parse','HEAD'))
+        assert (error is None) == should_pass, (outcome, error)
+        print('PASS committed outcome', outcome, flush=True)
+PY
+
 echo "error" > "$MOCK_GH_STATE"
 rc=0; out="$(python3 "$RECONCILE_PY" --root "$REPO" --pre-merge --pr 999 2>&1)" || rc=$?
 assert_eq "Pre-merge fails closed when PR metadata cannot be fetched (exit 2)" "$rc" "2"

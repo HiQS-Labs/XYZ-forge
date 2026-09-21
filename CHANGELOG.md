@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-09-21 — Closeout evidence guards: Jog carries the verified merge SHA; the pre-merge receipt gate rejects contradictory outcomes (GH-656, GH-657)
+
+Two blockers from the GH-646 final review, found finished-but-unpushed in a 2026-09-16 task clone
+by `/merge-cleanup-deep` and re-delivered from a fresh clone. `utils/py/jog_run.py:jog_land`
+now writes `mergeCommit: {oid: merged_sha}` into its offline reconciliation manifest, so
+`wave_reconcile` can ship a nonempty owned release member instead of refusing (rc=6) after Jog
+has already persisted its landing. `utils/py/wave_reconcile.py:validate_pre_merge_receipts`
+replaces "positive result/status OR rc == 0" with one predicate: every supplied outcome must be a
+valid success token and, if `rc` is present, an integer zero — so `result: pass, rc: 1`,
+`result: fail, rc: 0`, boolean `rc`, null/empty/wrong-type fields and absent outcomes all refuse,
+while result-only, status-only and integer-zero-only legacy receipts still pass. The post-merge
+attribution guard (`check_provenance_receipts`, GH-425) is untouched. Regressions: GH-280 section
+L5–L7 (real reconciler, replay duplicates nothing; 223/0) and a 29-shape committed-outcome block in
+GH-496; both red on the unfixed source. Easy rollback: focused revert.
+
 ## 2026-09-21 — /merge-cleanup-deep: triage for the checkouts /merge-cleanup preserves (GH-728)
 
 `/merge-cleanup` preserves every checkout it cannot prove landed and only "recommends a deeper
