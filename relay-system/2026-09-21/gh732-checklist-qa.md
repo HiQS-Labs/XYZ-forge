@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -261,5 +261,46 @@ Verified this turn: `wave_reconcile.py:580` (`python3 -c "import pytest"` in `qu
 - 17 acceptance/scaffolding — **Implemented.** Evidence destination `TESTS-RESULTS/<UTC-date>+GH-732/<item>/` + `provenance.jsonl` named; `event=suite`-only rule added for item 2 (retry legs emit `event=retry`, `validate.sh:1339-1340`); issue title updated ("render existing per-suite timings; present-but-broken toolchain diagnostics" — "re-run ladder bound" removed); Why now says "observed 18–23 min". Phase-0 TODO scaffolding left as intake scaffolding per `PROJECT/PDDA.md:274`.
 
 Handing off to Reviewer (codex) — final round; take your turn.
+
+### Reviewer R3 — final checklist review
+
+VERDICT: PASS
+Basis: the substantive R2 findings are resolved for this intake checklist. Qualification refusal is explicit, pre/post-merge contracts are distinguished, and preservation quotations and evidence-search scope are retained. Approval covers the checklist, not implementation, runtime qualification, or independent historical GitHub-state verification.
+swept file: yes
+
+Read the entire artifact, including frontmatter, both Why sections, carry-over, acceptance and intake scaffolding. No additional blocking pre-existing defect found. Review is Easy to undo; only this relay was edited. Applied relay-xyz, SWE and debug-mantra within the user's narrower restrictions. Artifact line citations below refer to `PROJECT/1-INBOX/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md`.
+
+- [Pass] **1 — timing (artifact:76).** Removal or dated measurement is allowed; `githooks/pre-push:262/:279/:296` supplies measured durations. The six-run table remains an observation.
+- [Pass] **2 — duration display (artifact:77/:103).** Existing `duration_ms` at `test/lib/runner-telemetry.sh:146` is reused; selecting `event=suite` prevents duplicate retry-event accounting.
+- [Pass] **3 — toolchain (artifact:78/:102).** `utils/py/wave_reconcile.py:580/:596` supports the preserved missing-pytest refusal with no receipt. The PHP controls now include broken linting and healthy syntax-error/clean cases. Historical gh425 attribution is explicitly unverified; the read-only count probe below found zero pytest references in its current shell source.
+- [Pass] **4 — retry cost (artifact:79).** Reporting preserves solo verdicts at `validate.sh:1301/:1325`; :1339/:1340 emits the two record types that acceptance now distinguishes.
+- [Pass] **5 — width (artifact:80).** `validate.sh:932/:975/:980/:994` applies explicit levers before the tier-2 default. Documentation-only scope is appropriate.
+- [Pass] **6 — ledger route (artifact:81).** `utils/ci-route.sh:26/:38` defines the releases registry/path mapping. Retaining it by default and requiring evidence before narrowing is proportionate.
+- [Pass] **7 — nice (artifact:82).** `test/gh35-test-tiers.sh:267/:272` already separates ordinary and reniced callers. Supersession is correct against local source; merge date is Producer-attested.
+- [Pass] **8 — contention (artifact:83).** The broader effect is labelled an operator observation; one recommendation around existing `validate.sh:697` controls avoids new coordination machinery.
+- [Pass] **9 — cadence (artifact:84).** The recommendation stays with #30 and independent follow-ups. `utils/ci-route.sh:365` selects mapped code without requiring tier 3 merely because docs accompany it.
+- [Pass] **10 — hosted batch (artifact:85).** `utils/py/wave_reconcile.py:535/:549/:582` filters pending landings and qualifies one batch; :1836 preserves advisory Lessons Learned. Historical durations are not a per-merge guarantee.
+- [Pass] **11 — ownership (artifact:86).** “Cross-refs, no action here” and the Producer's dated state attestation establish the document boundary; this is not an independent live-state check.
+- [Pass] **12 — pre-merge (artifact:92).** `utils/py/wave_reconcile.py:1831/:1840/:2047` distinguishes frontmatter, pre-merge passing receipts and post-merge attribution. Its :628 docstring explicitly says attribution does not establish success/committedness. `skills/merge-cleanup/scripts/ledger_merge.py:520` supports the narrowed E.6 integration gap. Optional integration preserves GH-693.
+- [Pass] **13 — transport (artifact:93).** The requested source span is retained, including “Refuse overwrite when a journal/live writer or unexported local data exists”; canonical provenance is Producer-attested in R3, not independently fetched here. The top-level evidence-directory probe below agrees with the stated search scope. This does not prove globally that no spike ever ran. Costly/old-behaviour defaults remain appropriate.
+- [Pass] **14 — profiles (artifact:94).** `utils/ci-route.sh:24` still exposes the existing subsystem registry; GH-496's “PR 4: Phase 4” names the proposed profiles. Extension plus fail-closed replay is proportionate.
+- [Pass] **15 — campaign (artifact:95).** Fresh matched measurements, repeated runs and intact clone identity address the evidence gap; existing collection at `test/lib/runner-telemetry.sh:146` needs no replacement.
+- [Pass] **16 — predecessor (artifact:96).** `PROJECT/2-WORKING/GH-496-SHARPEN-CICD.md:5/:25` still carries the old date and “submit PR 2”. Explicit disposition of unfinished phases avoids declaring parked work complete.
+- [Pass] **17 — acceptance (artifact:100/:102/:103).** Retained evidence destination and provenance are named, toolchain controls are falsifiable, and retry double-counting is excluded. The title and :111 now describe reporting and observed timings. Phase-0 TODOs remain intake scaffolding.
+- [Nit] **Unidentified yaml consumer (artifact:78).** Producer R3 says this is explicitly marked unverified, but that label is explicit only for the historical gh425 traceback. On promotion, identify the current yaml consumer and its red control, or mark that subcase unverified/deferred. This is an intake follow-up, not authorization to omit required coverage.
+
+Read-only probe, with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`, exited 0:
+
+```python
+from pathlib import Path
+print("GH496 top-level evidence:", ", ".join(sorted(p.name for p in Path("TESTS-RESULTS").iterdir() if "GH-496" in p.name)))
+print("gh425 pytest references:", Path("test/gh425-gate-provenance-pr.sh").read_text().count("pytest"))
+```
+
+Decisive output: `GH496 top-level evidence: 2026-09-09+GH-496-PR1, 2026-09-10+GH-496-PR2`; `gh425 pytest references: 0`. Command was `python3 -` with the above stdin. An earlier source-search command ended with a zsh unmatched-glob error for `src/cli*`; its missing tick output was discarded and replaced by a direct `bin/tick` read.
+
+[Unverified — needs clone run] Runtime controls and gates were not executed. No git commands or executable fixtures were run. Historical GitHub states and canonical-comment provenance remain Producer-attested.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) receives the completed review; the harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
