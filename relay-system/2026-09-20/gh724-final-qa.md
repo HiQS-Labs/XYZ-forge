@@ -51,7 +51,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `skills/marathon-triage/SKILL.md` @ `a9a41baa` (the rewritten skill, 340 lines). Read with: `PROJECT/2-WORKING/GH-724-MARATHON-TRIAGE-DRIVE-LOOP.md` (approved plan + QA checklist), `CHANGELOG.md` (top entry), `relay-system/2026-09-20/gh724-plan-qa.md` (plan QA R1/R2), `skills/merge-cleanup/SKILL.md` (shape reference), `relay-automation/hooks/relay-xyz-guard.sh`, `utils/py/marathon_plan.py`, `utils/py/swarm_preflight.py`, `utils/py/_marathon_plan.py:1022-1049`, `utils/hq/hq-lib.sh` (`hq_render_capture`, `hq_roadmap_line`, `hq_slug`), `PROJECT/PDDA.md` → GitHub issue intake.
+- Artifact under review: `skills/marathon-triage/SKILL.md` @ `a9a41baa` (the rewritten skill, 340 lines). Read with: `PROJECT/2-WORKING/GH-724-MARATHON-TRIAGE-DRIVE-LOOP.md` (approved plan + QA checklist), `CHANGELOG.md` (top entry), `relay-system/2026-09-20/gh724-plan-qa.md` (plan QA R1/R2), `skills/merge-cleanup/SKILL.md` (shape reference), `relay-automation/hooks/relay-xyz-guard.sh`, `utils/py/marathon_plan.py`, `utils/py/swarm_preflight.py`, `utils/py/_marathon_plan.py` (deep delegation at 1022-1049), `utils/hq/hq-lib.sh` (`hq_render_capture`, `hq_roadmap_line`, `hq_slug`), `PROJECT/PDDA.md` → GitHub issue intake.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-20
 - Definition of Done: the Phase 1 QA checklist in the plan doc — every item satisfied by the rewritten skill text; the four-scenario walkthrough reaches the right terminal shape (complete or blocked report) without asking the operator; the recipes are executable as written against the cited CLIs; no new writer, tool, or runtime change; #443 scope untouched.
