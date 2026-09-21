@@ -1,0 +1,11 @@
+FIRSTHAND_COUNT=8
+ECHOED_COUNT=9
+ECHOED `utils/py/jog_run.py:jog_land`
+ECHOED `merged_sha`
+ECHOED `rc`
+ECHOED `pass`
+ECHOED `check_provenance_receipts`
+ECHOED `merged_sha`
+ECHOED `rc`
+ECHOED `pass`
+ECHOED `check_provenance_receipts`

@@ -112,3 +112,7 @@ Route work proceeds regardless; only the flip waits.
 - `test/gh450-model-catalog-pin.sh` green against the new pin.
 - `./validate.sh` green from a separate disposable full clone (GH-45 worktree rule).
 - Registry row carries the grade the evidence earns, not a pre-assigned one.
+
+## Merge evidence
+
+- PR #526 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

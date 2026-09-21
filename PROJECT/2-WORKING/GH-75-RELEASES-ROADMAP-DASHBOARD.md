@@ -84,3 +84,7 @@ DB. Source of truth: https://github.com/HiQS-Labs/XYZ-forge/issues/75
   ]
 }
 ```
+
+## Merge evidence
+
+- PR #104 merged 2026-08-20 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

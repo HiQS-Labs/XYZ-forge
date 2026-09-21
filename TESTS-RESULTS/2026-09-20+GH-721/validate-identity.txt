@@ -1,0 +1,2 @@
+/private/tmp/gh646-test-env.0zkTRv/bin/python3
+/opt/homebrew/bin/php

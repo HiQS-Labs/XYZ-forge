@@ -1,0 +1,4 @@
+interface:
+  display_name: "Merge Cleanup Deep"
+  short_description: "Triage the clones /merge-cleanup preserved: backup, landed-elsewhere proof, PR-worthiness"
+  default_prompt: "Use $merge-cleanup-deep to back up and triage every checkout the last /merge-cleanup run preserved, with read-only sub-agents, and tell me which ones are worth a PR."

@@ -80,7 +80,9 @@ jobs:
           changed.update(filter(None, git('ls-files', '--others', '--exclude-standard', '-z').split(b'\0')))
           exact = {'releases.db', 'releases.sql', 'ROADMAP.md',
                    'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md'}
-          doc = r'PROJECT/(?:2-WORKING|3-COMPLETED|4-MISC)/(?:GH-)?[0-9]+-[^/]+\.md'
+          # GH-721: 1-INBOX is the deletion side of a closed-issue capture promotion (GH-698 item 2);
+          # keep this alternation equal to wave_reconcile.RECONCILE_FOLDERS plus the two destinations.
+          doc = r'PROJECT/(?:1-INBOX|2-WORKING|3-COMPLETED|4-MISC)/(?:GH-)?[0-9]+-[^/]+\.md'
           plan = r'(?:PROJECT/2-WORKING/)?MARATHON-PLAN-[0-9]{4}-[0-9]{2}-[0-9]{2}\.md'
           receipt = r'TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/(?:provenance|validation)\.jsonl'
           paths = sorted(os.fsdecode(path) for path in changed)
