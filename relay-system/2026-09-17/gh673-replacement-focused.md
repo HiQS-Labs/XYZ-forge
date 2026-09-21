@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,7 +90,7 @@ root/row errors). Both reproduced, repaired and witnessed red again when deleted
 That one-shot advisory answer is not a driven reviewer turn or final approval;
 ROUND remains 1/2 and no actual replacement reviewer turn has yet been dispatched.
 
-Report [Blocker]/[Should]/[Nit]/[Pass] with file:line citations; exact VERDICT PASS,
+Report [Blocker]/[Should]/[Nit]/[Unverified — no citation] with file:line citations; exact VERDICT PASS,
 FAIL or PARKED and Basis. Only real PASS with no unresolved blocker/should may set
 STATUS Approved. Read-only reviewer; modify/commit only this relay file. Do not run
 validate.sh, test/*.sh, pytest or executable fixtures in the isolated reviewer worktree.
@@ -107,5 +107,25 @@ No push. Time bounded by the driver.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer R1 — agy replacement focused completion QA
+
+VERDICT: PASS
+Basis: The GH-673 reader candidate at pinned HEAD 8391d93f satisfies the Definition of Done. Read-only preservation of source SQLite data and schemas is upheld with normal coordination files permitted; bad helper-owned rows remain per-issue gaps without poisoning peers; canonical duplicates and unresolvable rows are counted and handled conservatively; both per-row error and root error survive finalization; equal-time native duplicate detection includes item identity; drawers for healthy unchanged native and inferred cards stay open across clock renders while invalidations close stale context; bounded subprocess and native SQLite readers enforce timeouts and deadline progress interruptions; negative controls and mutation controls fail at intended assertions. Sweeps of all runtime files and the scoped releases_app.py functions revealed no pre-existing or introduced safety defects.
+
+swept file: yes
+swept changed functions and callers: yes
+
+- [Pass] Helper-owned invalid rows remain issue-scoped gaps without peer poisoning or lifecycle establishment. When `identity_valid` is False, the helper preserves the owned repository slug while disallowing lifecycle claims (`utils/py/releases_app.py:5345–5355, :5390–5401`). In `read_xyz_work`, unqualified rows clear `status_label`, `start`, and `lifecycle`, set `error="unqualified-ledger-row"`, and are appended per-issue without modifying or poisoning healthy peer rows (`src/flightdeck/connectors.py:90–97`). Unresolvable rows with missing keys or invalid numbers increment `excluded_rows` (`:78–81`). Canonical duplicates under legacy repo aliases merge additively by `(key, number)` rather than overwriting (`src/flightdeck/connectors.py:100–106`, `src/flightdeck/aggregate.py:112–125`). In-memory probe with mixed good, unqualified, and unresolvable items confirmed `bad_error: unqualified-ledger-row`, `good_status: in-progress`, and `excluded_rows: 1`. Fix: none.
+- [Pass] Simultaneous root/row error preservation, conservative caps, and error-only card visibility. Finalization in `read_xyz_work` preserves the row-level `error` alongside the root diagnostic `root_error` via `evidence["root_error"] = finalized[evidence["id"]]["error"]` and `evidence["error"] = evidence.get("error") or evidence["root_error"]` (`src/flightdeck/connectors.py:107–114`). When root errors or caps trigger, `roots_complete` becomes False, which causes `issueStatus` to withhold confirmation and report `Unavailable` (`web/flightdeck/issue-context.mjs:33`). Quiet error-only cards are retained in card inventory via `e.error` checks in `issueCards` (`web/flightdeck/issue-context.mjs:57, :64`). In-memory 2001-issue probe confirmed simultaneous `bad_ev["error"] == "unqualified-ledger-row"` and `bad_ev["root_error"] == "issue-cap"`; node probe of `issueCards` with error-only evidence returned `cards_count: 1`, `card_number: 99`, `workflow_kind: unknown`. A mutation control overwriting `error` with `root_error` reproduced `None` instead of `'unqualified-ledger-row'`. Fix: none.
+- [Pass] Equal-time native duplicates detect identity conflict order-independently. Item identity is verified against GitHub item URL structure, owner/repo, item type, and number (`src/flightdeck/connectors.py:42–54`). Duplicate signatures in `read_rebalance` include `native_item_identity(row)` in `(row["state"], row.get("labels_json"), row.get("state_reason"), native_item_identity(row))` (`src/flightdeck/connectors.py:342–346`). Disagreements across equal-time observations populate `conflicting` and set `native_conflict: true` (`:367`), prompting `issueStatus` to return `Conflicting observations` (`web/flightdeck/issue-context.mjs:28`). In-memory testing in both `valid_first` and `foreign_first` ordering returned `conflicting: True` deterministically. Fix: none.
+- [Pass] Bounded read-path containment, schema preservation, and group process termination. Subprocess execution in `read_work_status` loads `utils/py/releases_app.py` strictly from the trusted harness root, never from the ledger root, and executes `load_work_evidence` directly via python `-I -c` without CLI, main, or config dispatch (`utils/py/releases_cycle.py:47–56, :62–67`). Output is bounded to 2MiB and process lifetime is deadline-controlled (`:69–82`). Process group termination is enforced in `finally` via `os.killpg(proc.pid, signal.SIGKILL)` with Darwin zombie handling (`:95–109`). Native SQLite connections open with `mode=ro`, enforce `PRAGMA query_only=ON`, set bounded `busy_timeout`, and register deadline progress handlers (`src/flightdeck/connectors.py:264–270`). `load_work_evidence` refuses WAL headers, sidecars, and intent journals, and issues only read-only `SELECT` queries (`utils/py/releases_app.py:5215–5223, :5266–5282, :5286–5288`). Fix: none.
+- [Pass] Healthy unchanged drawer preservation and stale context invalidation. Recomputation in `render` resolves current native and inferred cards from `statusCards(repo)` and evaluates fresh handoff content via `detailContent(repo, issue)` without trusting saved state objects (`web/flightdeck/app.js:87–89, :208–214, :273–288`). An open drawer remains open across renders when `current.text === saved.text && current.title === saved.title && current.sourceHealthy === saved.sourceHealthy`. Changes to lane intent or issue title, vanishing targets, failed reads, and snapshot expiry (>300s) close the drawer. In-memory simulation confirmed `native_unchanged_closes: false`, `inferred_unchanged_closes: false`, `changed_task_closes: true`, `vanished_target_closes: true`, `failure_closes: true`, and `expiry_closes: true`. Fix: none.
+- [Pass] Negative controls and mutation controls fail at intended assertions. In `web/flightdeck/issue-context.mjs:33`, the guard `if (evidence.some(e => !e.supported || e.error || e.roots_complete === false))` ensures unready evidence returns `unknown`. In-memory mutation deleting `e.error` from line 33 caused mixed error evidence to fall through to signature mismatch and evaluate to `conflict` instead of `unknown`, proving the guard is load-bearing. Deletion of the per-row error preservation logic was verified to fail with `None != 'unqualified-ledger-row'` (`TESTS-RESULTS/2026-09-17+GH-673/completion.md:25–31, :56–64`). Fix: none.
+- [Pass] Whole-file sweep and scoped caller review. Full whole-file review completed for `src/flightdeck/contract.py` (lines 1–139), `src/flightdeck/connectors.py` (lines 1–466), `src/flightdeck/aggregate.py` (lines 1–190), `utils/py/releases_cycle.py` (lines 1–316), `web/flightdeck/issue-context.mjs` (lines 1–77), and `web/flightdeck/app.js` (lines 1–375). Scoped sweep completed for `utils/py/releases_app.py` lines 5195–5440 covering `_is_lifecycle_event`, `_sqlite_header_uses_wal`, `_utc_datetime`, `_repo_from_issue_url`, `_origin_repo_identity`, `load_work_evidence`, and `cmd_work_status`. No pre-existing or introduced safety defects found. Fix: none.
+
+Review limits: No Git commands, test harness scripts (`validate.sh`, `test/*.sh`, `pytest`), or live network/remote PR mutations were run in this reviewer worktree, consistent with containment instructions. All probes were non-mutating and executed in-memory with probe output directed to temporary scratch.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
