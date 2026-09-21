@@ -111,4 +111,12 @@ Exit **0**. Decisive output: `--pr groups=2 targets=['5']`; `--pr groups=1 targe
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the approved plan; the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-09-21T22:06:31Z
+task: gh740-741-plan-qa-delta2
+reviewer: codex
+status: Approved
+reviewed-head: 6398ebf2083cee58fa9803b2a57d8e89b42d3b8b
+added-range: 6184+4730
+added-sha256: 13f195327712bb6205663aff7f46346a8efa119413d4fdf026e1025ac1ef64e1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
