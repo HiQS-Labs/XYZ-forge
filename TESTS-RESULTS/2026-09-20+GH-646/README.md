@@ -33,5 +33,8 @@ agy relay `relay-system/2026-09-20/gh646-rebase-repair-qa.md`: **PASS / Approved
 (Codex over its usage limit). Two Nits applied in `d59c0d86` with the focused re-verification above.
 Consult transcript for the repair plan: `consult-writer-fix.agy.md` (adjudication recorded in provenance).
 
-`provenance.jsonl`: one row per run with log sha256; the full `validate.sh` receipt row is appended after
-the gate runs in a disposable clone on the final head.
+## Full gate
+`validate.sh` on the final head `da0648fb` in a disposable clone: **408/410**; the two reds (`gh268`, `gh649`) are
+the environment pair, red on unmodified `development` in the same environment. The earlier run on `c544629f`
+(405/410, `validate-full-c544629f.log`) found three branch-caused reds, fixed in `da0648fb` (see `gatefix-*.log`).
+`provenance.jsonl`: one row per run with log sha256; `validate-identity*.txt` record the clones' identity before/after.
