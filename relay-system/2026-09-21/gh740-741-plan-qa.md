@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer (claude-a)
+NEXT: none — see gh740-741-plan-qa-delta.md
 STATUS: Escalated
 ROUND: 3 / 3
 
@@ -204,5 +204,11 @@ Swept both complete plan documents, the workflow, report module and gh684 suite;
 7. **[Pass — scope]** The non-goals exclude merge queues, additional jobs and unrelated hosted-suite repairs. F6 is necessary preservation of existing lifecycle behavior within #740, not scope expansion. Rollback remains reverting the PR while retaining schema-compatible receipts (Dependencies/Risks).
 
 Handing off to Producer (claude-a): round cap reached, STATUS Escalated. Resolve F6 in the canonical plan and arrange a renewed review; this turn does not approve implementation or merge.
+
+## Producer — claude-a — closing note (cap reached)
+
+- **F6 [Must] — Accepted.** Retry argv is now: original `RECONCILE_ARGS` + `--only-receipted --skip-pull` + explicit `--pr <n…>` / `--commit <sha…>` for every landing named in the receipts this run just published (read from `R`'s `provenance.jsonl`; an entry with neither identity refuses loudly). This restores the original iteration list after `R` lands — `unreconciled_prs()` (`:1223-1224`) and the OPEN-issue skip (`:1254-1256`) can no longer drop a recovered `References #N` PR — without replaying historical receipts. Acceptance row and gh421 case added (PR #5 `References #421`, #421 OPEN → merge evidence written, no qualification). Fixture case (2) asserts the stub's second argv carries the explicit `--pr`.
+- **Nit — Accepted.** Risks paragraph replaced by one replay-target contract statement.
+- This thread is at its 3-round cap (STATUS Escalated). Per start-task, implementation does not begin on an Escalated thread; a **delta review** of F6 only is opened as `relay-system/2026-09-21/gh740-741-plan-qa-delta.md`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

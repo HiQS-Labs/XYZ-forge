@@ -41,7 +41,7 @@ Clone: `XYZ-forge-gh740-741-hosted-lane`, branch `fix/gh740-741-hosted-lane-push
 
 | What was just completed | What's next |
 |---|---|
-| Plan revised after Codex rounds 1–2 (F1 clean-tree transition, F2/F4 bounded retry that keeps catch-up ownership via a narrow `--only-receipted` reconciler flag, F3 real-consumer fixture, F5 obsolete B-only case removed). Recon on `b6bb8aab`: traced the publish step (`wave-reconcile.yml:68-103`), the receipt contract (`wave_reconcile.py:475-528` — a receipt counts only when **committed on HEAD**), the report scan (`hosted_lane_report.py:52-56`), and the tests that pin them (`test/gh421-auto-wave-reconcile.sh:525-640`, `test/gh684-hosted-lane-report.sh`). Classified all 27 red runs since 09-17 by failing step: 3 rejected pushes (09-18 ×2, 09-21), 13 GH-721 guard (fixed #725), 3 Lessons Learned (fixed GH-693), 8 hosted suite red (out of scope). Both issues parked and rated. Plan written. | Codex plan QA (relay-xyz). Then implement in order: (1) `hosted_lane_report.py` outcome-aware attribution + gh684 cases; (2) `hosted_lane_publish.py` two-phase publish + gh740 fixture suite + gh421 pin updates + workflow wiring; focused suites; final relay QA; full gate once in a disposable clone; PR. |
+| Plan revised after Codex rounds 1–3 (F1 clean-tree transition; F2/F4 bounded retry that keeps catch-up ownership via a narrow `--only-receipted` flag; F3 real-consumer fixture; F5 obsolete B-only case removed; **F6** the retry also names this run's newly receipted landings as explicit targets so recovered open-issue merge evidence survives). Relay `gh740-741-plan-qa` hit its 3-round cap at round 3 with F6 the only Must left (STATUS Escalated); F6 applied, delta review opened as `gh740-741-plan-qa-delta`. Recon on `b6bb8aab`: traced the publish step (`wave-reconcile.yml:68-103`), the receipt contract (`wave_reconcile.py:475-528` — a receipt counts only when **committed on HEAD**), the report scan (`hosted_lane_report.py:52-56`), and the tests that pin them (`test/gh421-auto-wave-reconcile.sh:525-640`, `test/gh684-hosted-lane-report.sh`). Classified all 27 red runs since 09-17 by failing step: 3 rejected pushes (09-18 ×2, 09-21), 13 GH-721 guard (fixed #725), 3 Lessons Learned (fixed GH-693), 8 hosted suite red (out of scope). Both issues parked and rated. Plan written. | Codex plan QA (relay-xyz). Then implement in order: (1) `hosted_lane_report.py` outcome-aware attribution + gh684 cases; (2) `hosted_lane_publish.py` two-phase publish + gh740 fixture suite + gh421 pin updates + workflow wiring; focused suites; final relay QA; full gate once in a disposable clone; PR. |
 
 ## Observed problem (both issues, one seam)
 
@@ -71,7 +71,7 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
 | Issue | Requirement | Acceptance (falsifiable) |
 |---|---|---|
 | #740 | A landing that races the run never costs the qualification again | Fixture: remote advances after the reconcile output exists and before the push; the receipts-only commit lands on the racer's head (no rebase), transitions land after exactly one recompute; `git log origin/development` = racer → receipts → transitions; the racer's own ledger line is still in `releases.sql` on the remote; the real consumer `qualification_receipt_matches()` returns True for the run's landing against the published receipt (False for a corrupted copy — control) |
-| #740 | The retry is bounded in wall time **and** keeps the original run's lifecycle semantics | The retry re-runs the reconcile step's **own argv** plus `--only-receipted --skip-pull`: `--catch-up` still enumerates the same lifecycle targets and `issue_owners` is still built over every merged closer (`wave_reconcile.py:2015-2023`), but landings without a committed, matching receipt are **deferred** (logged, left to their own queued run) instead of qualified — so the suite is unreachable in the retry. gh421 replay of the #90/#42 two-closer input under `--only-receipted` with #42 receipted and #90 not: `qualify_landings` never called, #90 deferred, #42 owns the doc (`updated: 2026-09-08`, never `-07`); variant with both receipted → same owner; an **explicit** `--pr` item without a receipt → die (fail closed, GH-684 semantics). `timeout-minutes: 120` unchanged |
+| #740 | The retry is bounded in wall time **and** keeps the original run's lifecycle semantics | The retry re-runs the reconcile step's **own argv** plus `--only-receipted --skip-pull` **plus `--pr <n…>` / `--commit <sha…>` for every landing named in the receipts this run just published** (F6: once `R` is on HEAD, `unreconciled_prs()` no longer lists those PRs — `wave_reconcile.py:1223-1224` — and `catch_up_prs()` skips OPEN issues — `:1254-1256` — so a recovered PR that only *references* an open issue would otherwise drop out and lose its `record_merge_evidence()` write, `:2133-2155`; naming them explicitly restores the original iteration list without replaying historical receipts). `--catch-up` still enumerates the rest and `issue_owners` is still built over every merged closer (`:2015-2023`), but landings without a committed, matching receipt are **deferred** (logged, left to their own queued run) instead of qualified — so the suite is unreachable in the retry. gh421 replay of the #90/#42 two-closer input under `--only-receipted` with #42 receipted and #90 not: `qualify_landings` never called, #90 deferred, #42 owns the doc (`updated: 2026-09-08`, never `-07`); variant with both receipted → same owner; an **explicit** `--pr` item without a receipt → die (fail closed, GH-684 semantics). gh421 replay of the recovery fixture's `References #421` shape (PR #5, #421 OPEN): scheduled `--catch-up --gate --qualify`, receipt for #5 committed, then the retry argv → `record_merge_evidence` runs for #5 (active doc carries its merge evidence), #421 stays OPEN, `qualify_landings` not called. `timeout-minutes: 120` unchanged |
 | #740 | A second race on the same run, or a race on a run that produced no receipts, fails **loudly, once**, naming the racing head; receipts are never lost | Fixture: remote advances again between the receipts push and the transitions push → exit 1, stderr has `hosted-lane-publish: ERROR — …` naming `origin/development` and its SHA; receipts already on the remote; exactly one recompute happened. No-receipts race → exit 1, no retry, message says nothing expensive was lost. The receipts-only push has its own ≤3-attempt loop; that loop is never a recompute |
 | #740 | The bot's commit surface is unchanged | The allowlist cases pinned in gh421 (`undeclared` refusals for `utils/py/unexpected.py`, `TESTS-RESULTS/arbitrary/…`, `PROJECT/1-INBOX/scratch-note.md`, malformed `wave-<sha>`) pass against the moved function, byte-identical regexes |
 | #740 | No force-push; nothing is ever rebased; stale ledger bytes never reach the remote | The publish code contains no `--force`/`-f` and no `rebase` at all; on a race the full local commit is **discarded** and only receipt *files* are checked out of it onto the fresh head; the fixture asserts the racer's ledger line survives |
@@ -114,8 +114,12 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
      rejected, repeat fetch / reset / checkout / commit / push up to 3 times — receipts are the only
      content, so this loop needs no judgment.
    - **Recompute once, bounded, same semantics.** Re-run the reconcile step's own argv (passed in as
-     `RECONCILE_ARGS`, exported by that step via `$GITHUB_ENV`) plus `--only-receipted --skip-pull`
-     on the clean fresh head. `--catch-up` stays, so the retry enumerates the same lifecycle targets
+     `RECONCILE_ARGS`, exported by that step via `$GITHUB_ENV`) plus `--only-receipted --skip-pull`,
+     plus `--pr <n…>` / `--commit <sha…>` read from the `provenance.jsonl` entries in `R` (`pr`, or
+     `landing_commit` when `artifact_kind` is `commit`; an entry with neither → refuse loudly) — the
+     landings this run qualified, made explicit so publication of `R` cannot drop them from the
+     catch-up enumeration (F6). Duplicates with the argv's own `--pr` collapse in the existing
+     `dict.fromkeys` dedupe (`:2004`). On the clean fresh head. `--catch-up` stays, so the retry enumerates the same lifecycle targets
      and computes the same newest-closer ownership as the original run (F4); `--only-receipted`
      (§0 below) makes it **defer** any landing without a committed matching receipt — the racer
      included; its own queued PR-closed run qualifies it — instead of running the suite. Because `R`
@@ -173,8 +177,8 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
      `tested_commit`/`landing_commit`/`telemetry_sha256`/`pr`), a `PROJECT/2-WORKING/GH-740-fixture.md`
      and a `releases.sql` line, and counts its invocations. Cases: (1) no race → one commit, one push,
      stub ×1; (2) race before the first push → remote = racer → receipts → transitions, stub ×2 (the
-     second invocation receives `--only-receipted --skip-pull` appended to the original args — asserted
-     from the stub's recorded argv), the racer's `releases.sql` line present on the remote, and **the
+     second invocation receives the original args plus `--only-receipted --skip-pull` plus `--pr <n>`
+     for the receipt the stub wrote — asserted from the stub's recorded argv), the racer's `releases.sql` line present on the remote, and **the
      real consumer** `wave_reconcile.qualification_receipt_matches(clone, entry, meta)` is True for the
      published receipt / False for a byte-corrupted `validation.jsonl` (control); (3) race before the
      first push **and** again between the receipts push and the transitions push → exit 1,
@@ -191,9 +195,10 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
 - Risk: `reset --hard` discards the local commit's transitions — intended: they were computed against
   a stale head and must never be pushed over the racer's ledger; the recompute regenerates them from
   committed state on the fresh head. Risk: untracked `.tick/marathon-plan.fingerprint` survives the
-  reset — deleted before the recompute. Risk: the retry's argv is built from the receipts — if a
-  `provenance.jsonl` entry lacks both `pr` and a valid `landing_commit`, refuse the retry loudly rather
-  than guess. Wall time: the retry cannot qualify (pending set empty by construction), so it fits the
+  reset — deleted before the recompute. Replay-target contract (one statement): retry argv = original
+  `RECONCILE_ARGS` + `--only-receipted --skip-pull` + explicit `--pr/--commit` for each entry in this
+  run's published receipts; an entry lacking both `pr` and a valid `landing_commit` refuses the retry
+  loudly rather than guess. Wall time: the retry cannot qualify (pending set empty by construction), so it fits the
   unchanged 120-minute job budget.
 - Rollback: revert the PR; the inline step returns. Receipts already pushed by the new code remain
   valid under the unchanged receipt schema.
@@ -212,8 +217,10 @@ Python: allowlist → `git add` → commit → **one plain `git push origin HEAD
 
 1. `hosted_lane_report.py`: `terminal_error()` + `body_for()` step label + two CLI flags; gh684 +2
    cases → `bash test/gh684-hosted-lane-report.sh` green, including the red control.
-1b. `wave_reconcile.py --only-receipted` (§0) + gh421 two-closer cases (deferred #90 / receipted #42;
-   both receipted; explicit unreceipted → die) → `bash test/gh421-auto-wave-reconcile.sh` green.
+1b. `wave_reconcile.py --only-receipted` (§0) + gh421 cases: two-closer (deferred #90 / receipted #42;
+   both receipted; explicit unreceipted → die) and the F6 open-reference retention case (PR #5
+   `References #421`, #421 OPEN, receipt committed, explicit `--pr 5` + `--catch-up --only-receipted` →
+   merge evidence written, no qualification) → `bash test/gh421-auto-wave-reconcile.sh` green.
 2. `hosted_lane_publish.py`: move the inline step; `declared_paths()`; commit-all → push → on race:
    discard, lift receipts, `R`, one recompute with `--only-receipted --skip-pull`, `T2`; error lines.
 3. `test/gh740-hosted-lane-publish.sh` + `validate.sh` registration → green, red control witnessed.
