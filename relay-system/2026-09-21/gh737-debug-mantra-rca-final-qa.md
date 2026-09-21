@@ -251,4 +251,12 @@ baseline evidence. No open change request remains.
 
 Relay closed (Approved), no further turn needed. Returning completion to claude-a for harness closeout.
 
+
+### Attestation · relay-drive — 2026-09-21T19:05:04Z
+task: RELAY-gh737-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9737eea25122e87e847bb82f9be385e125e38822
+added-range: 14870+2881
+added-sha256: 8b09751ccdacf6c3719f7dc6e9741862d4875b92bf338e26ddedd43b0342311d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
