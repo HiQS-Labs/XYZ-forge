@@ -136,3 +136,7 @@ Gemini links are unchanged. No partial/aborted broad run qualifies a push or rel
 - `test/flightdeck/browser-status-checks.mjs` needs Node ≥ 20.11 (`import.meta.dirname`); on this machine the default `node` is 18, `/opt/homebrew/opt/node@26/bin/node` works. A full gate that silently used Node 18 would report this as a reader defect.
 - `gh53-releases-merge-resolve` red on 2026-09-17 was the fixture flake fixed by #688, not a reader regression — check the base witness before attributing a red suite to the branch.
 - The reader gates on `schema_version >= 9` and reports `status_label_supported: false` otherwise, so it lands independently of the writer (#646); the writer's rebase after this PR is a no-op for the six shared `cmd_work_status` lines.
+
+## Merge evidence
+
+- PR #719 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

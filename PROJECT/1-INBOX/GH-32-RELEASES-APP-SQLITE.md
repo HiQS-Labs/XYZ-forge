@@ -457,3 +457,7 @@ Read-only. Duplicate global IDs across DBs fail the aggregation loudly.
       cross-repo-codename cases observed warning (not refusing).
 - [ ] Cockpit card renders releases from 2 fixture repo DBs sorted by target date, read-only, and
       fails loudly on an injected duplicate global ID.
+
+## Merge evidence
+
+- PR #104 merged 2026-08-20 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -801,9 +801,15 @@ def validate_pre_merge_receipts(repo_root, head_sha, pr_num=None):
                                 pass
 
                 if commit_match or pr_match:
-                    res = entry.get("result") or entry.get("status")
+                    outcomes = [entry[key] for key in ("result", "status") if key in entry]
                     rc = entry.get("rc")
-                    if res in ("pass", "passed", "PASS") or rc == 0:
+                    outcome_ok = bool(outcomes) or "rc" in entry
+                    outcome_ok = outcome_ok and all(
+                        isinstance(value, str) and value in ("pass", "passed", "PASS")
+                        for value in outcomes)
+                    if "rc" in entry:
+                        outcome_ok = outcome_ok and type(rc) is int and rc == 0
+                    if outcome_ok:
                         # GH-496 / Codex QA: verify receipt is not stale.
                         # If matched_sha is not HEAD, verify that no code or docs outside
                         # TESTS-RESULTS/ changed between the tested commit and HEAD.

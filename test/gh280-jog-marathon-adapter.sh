@@ -927,6 +927,15 @@ has "$(queue_status "$FR")" "parked|" \
   && pass "L1-L4 left the row un-landed (fail closed)" || fail "row mutated by a refused land: $(queue_status "$FR")"
 
 # L5: the good landing — verifies, completes the row, delegates lifecycle to wave_reconcile
+# GH-656: a nonempty release manifest exercises the real evidence consumer.
+LAND_ORIGIN="$(git -C "$FR" remote get-url origin)"
+git -C "$FR" remote set-url origin https://github.com/example/example.git
+REL_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" add --status draft --version 0.0.656 --description 'GH-656 landing fixture' --tracking-issue https://github.com/example/example/issues/901 2>&1)"
+REL_GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM releases WHERE version='0.0.656';")"
+[ -n "$REL_GID" ] && pass "L5 release member fixture is nonempty" || fail "L5 release creation failed: $REL_OUT"
+python3 "$FR/utils/py/releases_app.py" --root "$FR" manifest dial-in --gid "$REL_GID" https://github.com/example/example/issues/901 >/dev/null 2>&1
+MEMBER_BEFORE="$(sqlite3 "$FR/releases.db" "SELECT state FROM manifest_items WHERE release_id=(SELECT id FROM releases WHERE global_id='$REL_GID');")"
+[ "$MEMBER_BEFORE" = dialed_in ] && pass "L5 exact owned member starts dialed_in" || fail "L5 member fixture not live: $MEMBER_BEFORE"
 pr_view_json MERGED development "$LANE_TIP" "$MERGE_SHA" > "$VIEW"
 L5_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "L5 jog land completes cleanly" || fail "L5 rc=$rc: $L5_OUT"
@@ -938,11 +947,22 @@ has "$(queue_status "$FR")" "completed|landed via PR #42" \
 grep -q "SHIPPED.*PR #42" "$FR/ROADMAP.md" \
   && pass "L5 ROADMAP entry archived with the shipping badge" || fail "L5 ROADMAP not archived"
 jassert "$FR/.tick/jog/$GID/state.json" 'any(e.get("landing",{}).get("reconciled") for e in d["executions"])' "L5 landing reconciliation evidence recorded"
+SHIP_STATE="$(sqlite3 "$FR/releases.db" "SELECT state FROM manifest_items WHERE release_id=(SELECT id FROM releases WHERE global_id='$REL_GID');")"
+[ "$SHIP_STATE" = shipped ] && pass "L5 real reconciler ships owned dialed-in member" || fail "L5 manifest state: $SHIP_STATE"
+SHIP_EVIDENCE="$(sqlite3 "$FR/releases.db" "SELECT e.reason FROM manifest_state_events e JOIN manifest_items m ON m.id=e.item_id JOIN releases r ON r.id=m.release_id WHERE r.global_id='$REL_GID' AND e.to_state='shipped';")"
+[ "$SHIP_EVIDENCE" = "$MERGE_SHA" ] && pass "L5 shipped evidence equals verified full merge SHA" || fail "L5 shipping evidence: $SHIP_EVIDENCE"
+landing_counts() {
+  sqlite3 "$FR/releases.db" "SELECT (SELECT count(*) FROM manifest_items WHERE release_id=(SELECT id FROM releases WHERE global_id='$REL_GID')) || '|' || (SELECT count(*) FROM manifest_state_events) || '|' || (SELECT count(*) FROM op_receipts);"
+}
+LANDED_COUNTS="$(landing_counts)"
 
 # L6: replay is idempotent — verifies again, projects nothing new, reconciles nothing new
 L6_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && has "$L6_OUT" "already reconciled" \
   && pass "L6 land replay is idempotent" || fail "L6 rc=$rc: $L6_OUT"
+SHIP_COUNT="$(sqlite3 "$FR/releases.db" "SELECT count(*) FROM manifest_items WHERE release_id=(SELECT id FROM releases WHERE global_id='$REL_GID') AND state='shipped';")"
+[ "$SHIP_COUNT" = 1 ] && pass "L6 replay retains exactly one shipped member" || fail "L6 shipped count: $SHIP_COUNT"
+[ "$(landing_counts)" = "$LANDED_COUNTS" ] && pass "L6 replay emits no duplicate manifest evidence or receipts" || fail "L6 replay counts changed"
 
 # L7: crash-boundary resume — landing recorded, reconciliation evidence missing → only step 3 re-runs
 python3 - "$FR/.tick/jog/$GID/state.json" <<'PY'
@@ -958,6 +978,8 @@ L7_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb reconcile 901 --pr 42 2>&1)"; rc
 [ "$rc" -eq 0 ] && has "$L7_OUT" "replaying missing steps only" \
   && pass "L7 reconcile resumes at the missing durable step" || fail "L7 rc=$rc: $L7_OUT"
 jassert "$FR/.tick/jog/$GID/state.json" 'any(e.get("landing",{}).get("reconciled") for e in d["executions"])' "L7 reconciliation evidence restored"
+[ "$(landing_counts)" = "$LANDED_COUNTS" ] && pass "L7 missing-step replay emits no duplicate shipping evidence" || fail "L7 replay counts changed"
+git -C "$FR" remote set-url origin "$LAND_ORIGIN"
 
 # L8/L9: more fail-closed shapes on a fabricated ledger — missing gate evidence, wrong repo
 cleanup_root_fixture
@@ -1035,7 +1057,7 @@ M_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
 # of tracked ledger files cannot destroy the queue row anymore
 grep -q "jog-state:" <<<"$(git -C "$FR" log --oneline --grep="^jog-state:" -1)" \
   && pass "M3 supervisor-state commit landed before dispatch (F1)" \
-  || fail "M3 no jog-state commit found"
+  || fail "M3 no jog-state commit found: $M_OUT"
 grep -q "releases.db" <<<"$(git -C "$FR" show --name-only --format= "$(git -C "$FR" log --format=%H --grep="^jog-state:" -1)")" \
   && pass "M3 the supervisor commit carries releases.db" || fail "M3 supervisor commit lacks releases.db"
 git -C "$FR" checkout -q -- releases.db releases.sql

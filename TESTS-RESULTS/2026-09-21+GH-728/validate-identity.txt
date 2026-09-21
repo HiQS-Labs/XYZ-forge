@@ -1,0 +1,2 @@
+/Users/noelsaw/.cache/xyz-forge-test-venv/bin/python3
+/opt/homebrew/bin/php
