@@ -1,7 +1,7 @@
 ---
 gh_issue: 732
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/732
-title: "Mid September CI/CD optimizations — measured gate cost vs documented; fail-fast toolchain preflight; re-run ladder bound; tier-2 width; per-suite timings"
+title: "Mid September CI/CD optimizations — measured gate cost vs documented; render existing per-suite timings; present-but-broken toolchain diagnostics; #496 Phases 3–5 carried over"
 status: Proposed (1-INBOX — not yet active)
 created: 2026-09-21
 owner: noel
@@ -13,7 +13,7 @@ phases: 1
 ratings_provisional: true
 non_goals:
   - Changing the GH-35 balanced default
-  - Weakening GH-528 solo re-run verdicts
+  - Weakening GH-528 solo re-run verdicts or --qualify's refusal
   - Tiers 1/2 as promotion evidence
   - Redesigning the hosted matrix (#382/#30)
 related:
@@ -37,14 +37,14 @@ goal: >
 ## Key concepts
 
 - Measured gate cost vs documented numbers
-- Render existing GH-365 per-suite timings
-- Present-but-broken toolchain named, not a suite failure
+- Render existing GH-365 per-suite timings (event=suite only)
+- Present-but-broken toolchain named in the validator; --qualify refusal preserved
 - #496 Phases 3–5 carried over; pre-merge wiring reframed after GH-693
 
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# Mid September CI/CD optimizations — measured gate cost vs documented; fail-fast toolchain preflight; re-run ladder bound; tier-2 width; per-suite timings
+# Mid September CI/CD optimizations — measured gate cost vs documented; render existing per-suite timings; present-but-broken toolchain diagnostics; #496 Phases 3–5 carried over
 
 ## Status
 
@@ -56,7 +56,7 @@ goal: >
 
 ## Why
 
-Between 2026-09-17 and 2026-09-21 the local pre-push gate cost far more wall-clock than the docs promise, and several minutes of each run were spent on things that are not the diff under test. Observed on one 12-core macOS host, PARALLEL 4-wide (the GH-35 default), from six gated pushes in the merge/start-task lanes:
+Between 2026-09-17 and 2026-09-21 the local pre-push gate was **observed** to cost far more wall-clock than the docs promise (18–23 min full, one host — table below), and several minutes of each run were spent on things that are not the diff under test. Observed on one 12-core macOS host, PARALLEL 4-wide (the GH-35 default), from six gated pushes in the merge/start-task lanes:
 
 | push | tier / width | wall-clock | what stretched it |
 |---|---|---|---|
@@ -75,7 +75,7 @@ This is an **optimization checklist**, not a redesign; each item is small and in
 
 - [ ] **Doc fix: refresh or remove the gate timing claims.** `AGENTS.md:180` (~4–6 min parallel), `ROUTER.md:63/:89-90` (~16 min sequential; "3-minute"), and the same stale prose at `githooks/pre-push:10`. Prefer pointing at the hook's own measured lines (`githooks/pre-push:262/:279/:296` print `docs|tier 2|full gate GREEN in Ns`) over another evergreen estimate; if a number is kept, it carries the date, host class and width of a same-week run. The six-run table above is a dated operator observation, not a benchmark.
 - [ ] **Render the per-suite durations the gate already records.** Collection exists (GH-365): `validate.sh:1258` calls `rt_suite`, `test/lib/runner-telemetry.sh:146` emits `duration_ms` per suite (plus retry-lane records), the file lands under `.tick/telemetry` (`runner-telemetry.sh:69`) and `validate.sh:1518` prints its path; committed examples: `TESTS-RESULTS/2026-09-01+GH-365/campaign/`. What is missing is only the console view: add a "10 slowest suites" block to the summary, summing each suite once and separating first attempts from retries. No new timing facility.
-- [ ] **Toolchain drift: name the failing dependency, don't fail a suite that looks like a regression.** Observed 2026-09-17 (pre-#716/#697 tree, `development@1e21b7cc`): four suites red on clean `development` because the shell's Homebrew `python3` (3.14.7) lacked `pytest`/`PyYAML` and a *present but broken* `php@8.3` (dyld: missing `libaspell`) preceded `/opt/homebrew/bin/php` on PATH; each failed in the pool, was re-run alone, and failed again. Current state: `validate.sh:1409` + `test/gh251-validate-pytest-skip.sh:56` already treat *absent* pytest as a named skip, and `test/gh268-relay-cue-and-target-checks.sh:107` skips *absent* php — but neither covers a binary that is **present and broken** (`php -v` exits non-zero), and `gh425-gate-provenance-pr.sh` no longer imports pytest, so the `ModuleNotFoundError` in its 09-17 log came from a subprocess in its chain, not the suite. Action: (a) extend the existing skip/diagnostic paths so a present-but-broken `php` (or an interpreter missing `yaml`) is reported as a named environment fault, not a suite failure; (b) identify the actual pytest consumer under gh425/`--qualify` and give it the GH-251 treatment. No unconditional top-level dependency gate — docs-only and unrelated tier-2 runs must not acquire these dependencies.
+- [ ] **Toolchain drift: name the failing dependency — without weakening qualification.** Observed 2026-09-17 (`development@1e21b7cc`, pre-#716/#697): four suites red on clean `development` because the shell's Homebrew `python3` (3.14.7) lacked `pytest`/`PyYAML` and a *present but broken* `php@8.3` (dyld: missing `libaspell`) preceded `/opt/homebrew/bin/php` on PATH; each failed in the pool, was re-run alone, and failed again. Current state: `validate.sh:1409` + `test/gh251-validate-pytest-skip.sh:56` treat *absent* pytest as a named skip in the ordinary validator; `test/gh268-relay-cue-and-target-checks.sh:107` skips *absent* php. Neither covers a binary that is **present and broken**. The pytest consumer under `--qualify` is `qualify_landings` (`utils/py/wave_reconcile.py:580` runs `python3 -c "import pytest"`) and it **deliberately refuses with exit 6 and no receipt** (`:596`) — that is correct and must stay: qualification requires the coverage the ordinary validator may skip. Where the 09-17 `ModuleNotFoundError` in gh425's log originated is **unverified** (its traceback was not retained; `gh425` itself has 0 pytest references — it exercises qualification through a unittest fixture at `:360`). Action: (a) extend the existing skip/diagnostic paths so a present-but-broken `php` or an interpreter missing `yaml` is reported as a named environment fault in the ordinary validator; (b) keep `--qualify`'s nonzero refusal, optionally with a clearer environment diagnostic. No unconditional top-level dependency gate.
 - [ ] **Show the cost of the serial re-run ladder; keep its guarantee.** `vp_rerun_alone` (`validate.sh:1325`) re-runs every pooled failure alone and serially after the pool drains (`:1301`) — correct per GH-528, and a 2-wide re-run pool would reintroduce the contention the solo verdict exists to exclude, so **do not** change that. Action limited to: print time spent in re-runs (from the GH-365 retry-lane records) in the summary, so a refused gate shows how much of its wall-clock was re-run cost. Any early abort must yield incomplete/failed evidence, never a qualifying green.
 - [ ] **Tier-2 width: document that the levers already work.** `XYZ_VALIDATE_MAX_JOBS` is applied at `validate.sh:932` and `--burst` at `:980`, both *before* the tier-2 default at `:994-996`, which only fires when `PARALLEL_JOBS` is still empty (`:975`). So `--burst` / `MAX_JOBS` are honoured for tier 2 already; 2 is the default, not a pin. Action: one sentence in the `--help`/ROUTER rails saying so (the earlier framing of this item — "the levers are ignored" — was wrong).
 - [ ] **Ledger-row pushes: the router's answer is known; whether to narrow is not.** Routing is path-based: `releases.sql`/`releases.db` map to the `releases` subsystem (`utils/ci-route.sh:38`) → `tier=2` (`:458`), currently 23 registered shell suites (probe: `printf 'docs/x.md\nreleases.sql\nreleases.db' | bash utils/ci-route.sh push` → `tier=2 tier2_subsystems=releases`). An intake-only delta (rows added by `roadmap add`, no schema/CLI change) therefore always runs the whole releases registry (observed 648 s). Default is to keep that; a row-content classifier is new mechanism and needs go/no-go evidence (schema changes, dropped/modified rows, malformed dumps and unreadable diffs must retain fail-closed coverage). Record the evidence before changing selection, or close this item as "keep".
@@ -89,17 +89,18 @@ This is an **optimization checklist**, not a redesign; each item is small and in
 
 Status of #496 as of 2026-09-21, checked against `development` @ `39bb1392`: **landed** — Phase 1 telemetry out-of-tree (#548), Phase 2 single reconciliation owner / view decoupling / `wave_reconcile.py --pre-merge` (#553), fast-lane `XYZ_SKIP_PREPUSH` + AST selective routing (#580); the original three acceptance items (frozen-twin guard in `vendored-smoke` on PRs — `ci.yml:533-536`, #459 closed; `ci-route.sh:38/:42` maps `releases_app.py` and `utils/pdda/*`; `githooks/pre-push:34-35/:49` names both bypass levers) are done. **Not done**, carried here so #496 can close or be split:
 
-- [ ] **Pre-merge closeout check: optional integration gap, rationale updated.** `wave_reconcile.py --pre-merge` (`run_pre_merge`, `:1700`) exists and nothing runs it before a merge — merge-cleanup's E.6 gate (`merge_cleanup.py:905` → `ledger_merge.py:520`) runs semantic ledger conflict detection + `releases check` + `roadmap reconcile-state --dry-run` only. The failures that motivated this (2026-09-17: #671/#669 reconciliation exit 5 on missing Lessons Learned, ~2.5 h hosted runner time) are **closed by GH-693** (advisory since 09-18), so wiring `--pre-merge` in would not have been needed for that class. What remains: frontmatter/receipt prerequisites the pre-merge check still enforces could be surfaced before landing rather than after; if pursued, pass the PR head/`--pr` metadata (a bare call infers closers from local commit text). Low priority; preserve GH-693 (Lessons Learned warns, never fails).
-- [ ] **#496 Phase 3 — conditional `releases.db` transport change, spike-gated.** `releases.db` is still tracked (`git ls-files releases.db` on `development@39bb1392`); the binary conflicted on 3 of the 4 PRs landed 2026-09-17 (#669, #647, #726 — operator observation, each resolved with `utils/releases-merge-resolve.sh` in a disposable clone). The Phase 0 preservation spike from the canonical #496 plan (materialise from `releases.sql`; refuse overwrite on a live journal or unexported local writes; round-trip equality by gid/values/receipts, not bytes) has no retained evidence in `TESTS-RESULTS/` — run it and decide go/no-go. Costly if wrong; keep behind the old behaviour until the spike passes.
+- [ ] **Pre-merge closeout check: optional integration gap; the two contracts are not interchangeable.** `wave_reconcile.py --pre-merge` (`run_pre_merge`, `:1700`) exists and the inspected merge-cleanup E.6 path (`merge_cleanup.py:905` → `ledger_merge.py:520`: semantic ledger conflict detection + `releases check` + `roadmap reconcile-state --dry-run`) does not call it. The failures that motivated this (2026-09-17: #671/#669 reconciliation exit 5 on missing Lessons Learned) are **closed by GH-693** (advisory since 09-18, `:1066/:1836`). What the pre-merge path uniquely enforces: strict frontmatter (`validate_frontmatter_schema`, `:1001`, sole call `:1831`) and committed passing-evidence receipts (`validate_pre_merge_receipts`, `:720`, called `:1840`). Post-merge `--gate` checks receipt *attribution* (`check_provenance_receipts`, `:628`, called `:2047`) — missing attributable receipts remain fatal there — and `--qualify` generates fresh evidence; strict frontmatter is a pre-merge-only contract. So the optional integration would surface frontmatter/receipt problems before landing, not duplicate the post-merge checks. If pursued, pass the PR head / `--pr` metadata. Low priority; GH-693 preserved (Lessons Learned warns, never fails).
+- [ ] **#496 Phase 3 — conditional `releases.db` transport change, spike-gated.** `releases.db` is still tracked (`git ls-files releases.db` on `development@39bb1392`); the binary conflicted on 3 of the 4 PRs landed 2026-09-17 (#669, #647, #726 — operator observation, each resolved with `utils/releases-merge-resolve.sh` in a disposable clone). The preservation constraints come from the canonical #496 plan comment (2026-09-10, Phase 3), quoted: "Reuse the existing parser, locks and atomic recovery primitives for **safe bootstrap/materialization**", "Refuse overwrite when a journal/live writer or unexported local data exists", "Witness round-trip equality by stable global IDs, values, relationships, generations and receipt semantics; do not require SQLite byte equality". Retained evidence search: `TESTS-RESULTS/` has `2026-09-09+GH-496-PR1` and `2026-09-10+GH-496-PR2` only — no Phase 3 / materialization spike receipts. Run the spike and decide go/no-go; Costly if wrong; keep behind the old behaviour until it passes.
 - [ ] **#496 Phase 4 — four impact profiles (CI/CD, Skills, Core harness, Accessories) on the existing selector**, additive to the numeric tiers (`utils/ci-route.sh:24` registry + tier resolver); side-by-side old/new selection before narrowing; replay matrix incl. rename/delete, unmapped executable, mixed profiles, empty-diff-from-failure never = docs-only success. Not present in the current selector.
 - [ ] **#496 Phase 5 — measure before serialising; remove proven duplicate work.** Serialise only suites whose contention reproduces at matched width with intact clone identity; benchmark baseline vs candidate (≥3 reps, medians + spread, no invented % target). GH-365 already retains per-suite timing campaigns (`TESTS-RESULTS/2026-09-01+GH-365/campaign/`), so the missing piece is a *fresh matched campaign on the current tree*, not new instrumentation; the console-summary item above is a convenience, not a prerequisite.
 - [ ] **Bring `PROJECT/2-WORKING/GH-496-SHARPEN-CICD.md` current** (last `updated: 2026-09-10`; status table still says "submit PR 2" though #553 merged; 3 unticked items) — either close #496 with the landed scope and point the undone phases here, or split a reviewed follow-up per `PROJECT/PDDA.md`. Do not mark #496 complete while a required phase is parked (its own rule).
 
 ## Acceptance
 
-- [ ] Each landed item carries its own red/green outcome in a disposable full clone with nonempty output and provenance retained — a new log line alone is not proof (e.g. the duration summary must be checked against the JSONL it renders; a routing change against the ci-route matrix: mapped code + docs → tier 2, kernel code + docs → tier 3, docs-only → tier 1).
+- [ ] Each landed item carries its own red/green outcome in a disposable full clone with nonempty output and `provenance.jsonl` retained under `TESTS-RESULTS/<UTC-date>+GH-732/<item>/` — a new log line alone is not proof (e.g. the duration summary must be checked against the JSONL it renders; a routing change against the ci-route matrix: mapped code + docs → tier 2, kernel code + docs → tier 3, docs-only → tier 1).
 - [ ] Timing claims in `AGENTS.md`/`ROUTER.md`/`githooks/pre-push` are either removed in favour of the hook's measured line, or carry date/host/width of a same-week run.
-- [ ] Red control for the toolchain item: a present-but-broken `php` (a stub that exits 1 on `-v`) on PATH makes `gh268-relay-cue-and-target-checks.sh` report a named environment fault, not "clean PHP did not pass"; the equivalent for the real pytest consumer once identified.
+- [ ] Controls for the toolchain item: (red) a present-but-broken `php` stub on PATH — one that fails both `-v` and `-l`, modelling unusable linting — makes `gh268-relay-cue-and-target-checks.sh` report a named environment fault, not "clean PHP did not pass"; (green) healthy `php` still passes clean PHP and still fails the planted syntax error; (boundary) a missing-pytest `--qualify` run in a disposable clone still exits nonzero with **no** qualification receipt — a candidate that emits qualifying green after omitting the coverage fails.
+- [ ] Duration rendering (item 2) selects `event=suite` records only — retry legs also emit `event=retry` (`validate.sh:1339-1340`) and must not be double-counted.
 
 ## Non-goals
 
@@ -107,7 +108,7 @@ Changing the GH-35 balanced-width default (cores/2, cap 4, `nice -n 10`); reintr
 
 ## Why
 
-The local push gate costs 18–23 min against docs that promise 4–6; the remaining real gaps are a console view of existing timings, present-but-broken toolchain detection, and #496's unfinished phases.
+The local push gate was observed at 18–23 min against docs that promise 4–6; the remaining real gaps are a console view of existing timings, present-but-broken toolchain detection, and #496's unfinished phases.
 
 ## Phase 0 — Explore & scope
 

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -247,5 +247,19 @@ Reviewed the entire capture, including frontmatter, both Why sections, carry-ove
 Read-only source inspections above exited 0 except the explicitly reported GitHub request; no runtime success is claimed. Most prior findings are resolved. Remaining fixes are document corrections and explicit preservation of the existing qualification boundary.
 
 Handing off to Producer (claude-a) — disposition items 3, 12 and 13, tighten acceptance, and open R3. No approval yet.
+
+### Producer R3 — dispositions for items 3, 12, 13, 17
+
+VERDICT: PARKED
+Basis: all three `[Should]`s and the `[Nit]` verified against source and applied to issue #732 (body + title) and to the capture doc (artifact). Final round under the cap; requesting R3.
+
+Verified this turn: `wave_reconcile.py:580` (`python3 -c "import pytest"` in `qualify_landings`), `:596` (`die(... code=6)`, no receipt); `validate_frontmatter_schema` defined `:1001`, sole call `:1831`; `validate_pre_merge_receipts` `:720`/`:1840`; `check_provenance_receipts` `:628`/`:2047`; canonical #496 comment (2026-09-10) contains verbatim the three Phase 3 constraints now quoted in the artifact; `ls TESTS-RESULTS | grep 496` → `2026-09-09+GH-496-PR1`, `2026-09-10+GH-496-PR2` only.
+
+- 3 toolchain — **Implemented.** Names `qualify_landings` as the present consumer and states that its exit-6/no-receipt refusal is correct and preserved; "GH-251 treatment under `--qualify`" removed; the 09-17 `ModuleNotFoundError` origin marked **unverified** (traceback not retained; gh425 has 0 pytest refs, exercises qualification via a unittest fixture at `:360`); missing-`yaml` consumer marked unverified. Acceptance rewritten: red = php stub failing both `-v` and `-l`; green = healthy php passes clean / fails planted error; boundary = missing-pytest `--qualify` stays nonzero with no receipt.
+- 12 pre-merge — **Implemented.** Two contracts distinguished: strict frontmatter is pre-merge-only (`:1001`/`:1831`); receipts are `validate_pre_merge_receipts` pre vs `check_provenance_receipts` attribution post (missing attributable receipts remain fatal under post-merge `--gate`); `--qualify` generates fresh evidence. "Nothing runs it" narrowed to the inspected E.6 path (`ledger_merge.py:520`). Integration stays optional, low priority, GH-693 preserved.
+- 13 Phase 3 — **Implemented.** The three constraints are now quoted verbatim from the canonical comment; the retained-evidence claim now states the search scope and result (PR1/PR2 dirs only, no spike receipts). Costly rating and old-behaviour default retained.
+- 17 acceptance/scaffolding — **Implemented.** Evidence destination `TESTS-RESULTS/<UTC-date>+GH-732/<item>/` + `provenance.jsonl` named; `event=suite`-only rule added for item 2 (retry legs emit `event=retry`, `validate.sh:1339-1340`); issue title updated ("render existing per-suite timings; present-but-broken toolchain diagnostics" — "re-run ladder bound" removed); Why now says "observed 18–23 min". Phase-0 TODO scaffolding left as intake scaffolding per `PROJECT/PDDA.md:274`.
+
+Handing off to Reviewer (codex) — final round; take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
