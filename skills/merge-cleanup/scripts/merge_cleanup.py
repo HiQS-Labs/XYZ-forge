@@ -386,13 +386,12 @@ def _seconds_from_env(name: str, default: float) -> float:
 
 
 def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
-                              integration_branch: str) -> str:
+                              integration_branch: str,
+                              pr_head: Optional[str] = None) -> str:
     """Return success, fallback, or active_timeout for this merge head's hosted run.
 
-    `--commit` is the identity boundary: an older successful run must never satisfy a newer
-    landing. An observed active run is polled to completion and is never raced by the local
-    writer. Empty/unavailable results mean the hosted workflow does not exist for this repo and
-    select the local fallback.
+    Match either the PR head or merge commit. An active run first seen inside the listing grace
+    window is adopted by database id even when GitHub has not populated its headSha yet.
     """
     wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 1800)
     poll_s = _seconds_from_env(HOSTED_POLL_ENV, 30)
@@ -401,9 +400,10 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     deadline = started + wait_s
     query = [
         "run", "list", "--workflow", "wave-reconcile.yml",
-        "--branch", integration_branch, "--commit", merged_head,
-        "--json", "databaseId,status,conclusion", "--limit", "5",
+        "--json", "databaseId,status,conclusion,headSha,event", "--limit", "20",
     ]
+    expected_heads = {head for head in (merged_head, pr_head) if head}
+    adopted_run_id = None
 
     while True:
         res = _gh(query, repo_path, timeout=60)
@@ -420,7 +420,18 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
         except (TypeError, ValueError) as exc:
             log_warn(f"Hosted wave-reconcile lookup returned unusable JSON ({exc}); using local reconciliation")
             return "fallback"
-        if not runs:
+        elapsed = time.monotonic() - started
+        matching = [run for run in runs if str(run.get("headSha") or "") in expected_heads]
+        if adopted_run_id is not None:
+            matching = [run for run in runs if run.get("databaseId") == adopted_run_id] or matching
+        if not matching and elapsed < grace_s:
+            active = [run for run in runs if str(run.get("status") or "").lower()
+                      in {"queued", "in_progress", "waiting", "requested"}]
+            if active:
+                matching = active
+                adopted_run_id = active[0].get("databaseId")
+
+        if not matching:
             grace_left = grace_s - (time.monotonic() - started)
             if grace_left > 0:
                 log(f"No hosted wave-reconcile run listed yet for {merged_head[:10]}; "
@@ -430,7 +441,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             log(f"No hosted wave-reconcile run found for {merged_head[:10]}; using local reconciliation")
             return "fallback"
 
-        run = runs[0]
+        run = matching[0]
         status = str(run.get("status") or "").lower()
         conclusion = str(run.get("conclusion") or "").lower()
         run_id = run.get("databaseId") or "unknown"
@@ -461,11 +472,6 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     if not reconcile_script.exists():
         return True
     r_cmd = [sys.executable, str(reconcile_script), "--root", str(repo_path), "--pr", str(pr_num)]
-    # Older / vendored reconcilers do not know --force-local-reconcile; pass it only when advertised.
-    helptext = subprocess.run([sys.executable, str(reconcile_script), "--help"], cwd=str(repo_path),
-                              capture_output=True, text=True, check=False).stdout
-    if "--force-local-reconcile" in helptext:
-        r_cmd.append("--force-local-reconcile")
     r_res = subprocess.run(r_cmd, cwd=str(repo_path), capture_output=True, text=True, check=False)
     if r_res.returncode == 0:
         log(f"✅ local wave_reconcile for PR #{pr_num} passed")
@@ -479,7 +485,8 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
 
 def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
-                             dry_run: bool = True) -> bool:
+                             dry_run: bool = True,
+                             pr_head: Optional[str] = None) -> bool:
     """Wait for hosted reconciliation (or fall back locally), then run governance checks."""
     if dry_run:
         log(f"[DRY RUN] Would wait for hosted reconciliation or run wave_reconcile.py --pr {pr_num}")
@@ -498,7 +505,8 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
     if head.returncode != 0 or not head.stdout.strip():
         log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
         return False
-    hosted = wait_for_hosted_reconcile(head.stdout.strip(), repo_path, integration_branch)
+    hosted = wait_for_hosted_reconcile(
+        head.stdout.strip(), repo_path, integration_branch, pr_head=pr_head)
     if hosted == "active_timeout":
         return False
     if hosted == "success":
@@ -931,7 +939,9 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                 log_err(f"fast-forward to origin/{branch} FAILED: {ff.stderr.strip() or 'git refused'}")
                 log_err("PR is merged remotely but the primary did not advance — reconcile by hand.")
                 return 2
-            if not run_post_merge_reconcile(p_num, primary_repo, integration_branch=branch, dry_run=False):
+            if not run_post_merge_reconcile(
+                    p_num, primary_repo, integration_branch=branch, dry_run=False,
+                    pr_head=info.get("headRefOid")):
                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
                 return 2
             # GH-549/GH-624: report only after the merge, primary fast-forward, and reconcile

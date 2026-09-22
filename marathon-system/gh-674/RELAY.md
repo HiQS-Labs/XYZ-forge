@@ -1,6 +1,6 @@
 # Marathon Phase gh-674
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-674-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -116,3 +116,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-674's hosted reconciliation lookup contract.
+
+- Touched `skills/merge-cleanup/scripts/merge_cleanup.py`: removed branch/commit filters, matched recent runs by PR-head or merge SHA, adopted grace-window active runs by database id, and removed automatic `--force-local-reconcile` use.
+- Touched `skills/merge-cleanup/SKILL.md`: aligned Phase 5 documentation with the unfiltered lookup and manual-only force flag.
+- Touched `test/gh645-merge-cleanup-xyz-tools.sh`, added `test/gh674-merge-cleanup-hosted-lookup.sh`, and registered it in `validate.sh`: pinned PR-keyed active-run waiting, the filtered-query red control, and flag-free local fallback.
+- Preserved GH-629 compatibility by retaining an active run's database id when the existing fake response omits `headSha`.
+- Verification: not run by design; the phase brief explicitly forbids executing tests or gates inside this isolated worktree. The harness owns gate execution after handoff.
