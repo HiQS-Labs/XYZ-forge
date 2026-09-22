@@ -43,3 +43,7 @@ driver either, although `marathon-drive.sh --dry-run` already exists (GH-238).
 2. Planner reads PRS rank; keep PDDA gate.
 3. Skill text: four ordered passes + report lines; jog first-run shares the rating pass.
 4. Suite + registry.
+
+## Merge evidence
+
+- PR #726 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -710,7 +710,12 @@ install_rc=$?
 # target), leave real directories alone, and drop links that dangle at something unrelated.
 MIG_DIR="$WORK/legacy-skills"
 mkdir -p "$MIG_DIR"
-ln -s "$REPO/skills/agent2agent" "$MIG_DIR/agent2agent"   # the pre-rename install shape (now dangling)
+# GH-730: the dangling target is a fixture path this suite never creates, NOT $REPO/skills/agent2agent.
+# The installer repoints only when the target no longer exists, and on a long-lived clone the old
+# directory survives the #193 rename as an ignored `scripts/__pycache__/` shell — so pointing at the
+# real path coupled this assertion to the clone's untracked state and turned the pre-push gate red.
+# The path still ends in `/skills/agent2agent`, which is what migrate_legacy_link's case arm matches.
+ln -s "$WORK/pre-rename-clone/skills/agent2agent" "$MIG_DIR/agent2agent"   # the pre-rename install shape (dangling by construction)
 mig_out="$(CLAUDE_SKILLS_DIR="$MIG_DIR" CODEX_SKILLS_DIR="$WORK/mig-codex" \
   run_installer 2>&1)"
 mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"

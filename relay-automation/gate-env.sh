@@ -24,18 +24,20 @@
 
 # Resolve the harness root from this script's own location, following symlinks, so sourcing works
 # from any CWD and from a vendored .xyz/ install. No machine path is ever hardcoded.
-_src="${BASH_SOURCE[0]:-$0}"
-while [ -h "$_src" ] || [ -L "$_src" ]; do
-  _dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-  _src="$(readlink "$_src")"
-  case "$_src" in /*) ;; *) _src="$_dir/$_src" ;; esac
+# Every scratch name here is `_ge_`-prefixed and unset at the end: this file is SOURCED, so a bare
+# `_src` or `_hp_lib` would clobber the caller's own (GH-730 review finding).
+_ge_src="${BASH_SOURCE[0]:-$0}"
+while [ -h "$_ge_src" ] || [ -L "$_ge_src" ]; do
+  _ge_ldir="$(cd -P "$(dirname "$_ge_src")" >/dev/null 2>&1 && pwd)"
+  _ge_src="$(readlink "$_ge_src")"
+  case "$_ge_src" in /*) ;; *) _ge_src="$_ge_ldir/$_ge_src" ;; esac
 done
-_ge_dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
+_ge_dir="$(cd -P "$(dirname "$_ge_src")" >/dev/null 2>&1 && pwd)"
 
-_hp_lib="$_ge_dir/harness-paths.sh"
-if [ -f "$_hp_lib" ]; then
+_ge_hp_lib="$_ge_dir/harness-paths.sh"
+if [ -f "$_ge_hp_lib" ]; then
   # shellcheck source=relay-automation/harness-paths.sh
-  . "$_hp_lib"
+  . "$_ge_hp_lib"
 fi
 _ge_root="$(cd -P "$_ge_dir/.." && pwd)"
 _ge_py="$_ge_root/utils/py/gate_env.py"
@@ -80,4 +82,12 @@ else
   return 1 2>/dev/null || exit 1
 fi
 
-unset _ge_src _ge_dir _ge_root _ge_py _ge_names _ge_n
+unset _ge_src _ge_ldir _ge_dir _ge_hp_lib _ge_root _ge_py _ge_names _ge_n
+
+# GH-730: no bytecode into the tree from a gate run. Suites import repo modules directly
+# (importlib in test/agent-chorus.sh, the unittest files under test/), and every such import
+# wrote `__pycache__/` under skills/*/scripts and utils/py. Those caches are gitignored, so
+# they outlive the rename or removal of the directory that held them — `skills/agent2agent/`
+# survived the #193 rename as an ignored shell for a month and turned the pre-push gate red.
+# The relay shims already set this for reviewer turns (GH-682); the gate gets the same rule.
+export PYTHONDONTWRITEBYTECODE=1
