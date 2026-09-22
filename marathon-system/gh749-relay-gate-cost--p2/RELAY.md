@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -103,3 +103,14 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Created `c1/conflict-magnets.md`, `c1/provenance.jsonl`, `d2/hosted-lane-rate.md`, and `d2/provenance.jsonl` under `TESTS-RESULTS/2026-09-22+GH-732/`.
+
+- C.1: captured attempt records confirm ledger conflict involvement for PR #723 (B1 handoff). PR #688 records a resolved B1 attempt but no file attribution. Actual per-file manual/B1 resolution totals are **not derivable from inputs**; observed file-attributed counts are explicitly lower bounds, not zero-conflict claims. The 29 merge-history and 72 resolver-history rows are candidates only, with SHAs retained; overlapping merge subjects make the supposed non-merge capture unsuitable as a resolution count. Recommendations use registry / tarball / ledger; the tarball recommendation names its existing installer and test consumers; the ledger spike remains held.
+- D.2: independently counted 14 green / 24 failed / 2 cancelled from 40 captured runs, with every run id retained. Head streak is 1, below the required 10; prior 7/40 and 14/40 baselines are explicitly historical reports, not reconstructed snapshots. PR-closed action and #741 landing/cause correctness are not attested by this input.
+- Verification: replayed each self-contained provenance report command and embedded counting command; exact output matched. Verified every retained output/input SHA-256 and nonempty artifact. Altered-output controls were rejected for both reports; empty hosted input was rejected. Narrow verification output is in `.relay-scratch/verification.txt` (ephemeral); reproducible report commands and source hashes are retained in the allowed provenance files.
+- No Git commands, source edits, input regeneration, project tests, or full gate were run. The harness owns commit and phase-gate execution. This is a measurement handoff, not a claim that the full phase gate passed.
+
+Updated only the required routing header above; all other prior relay content is preserved. Handing off to agy for whole-file review.
