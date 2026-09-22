@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -114,3 +114,25 @@ Created `c1/conflict-magnets.md`, `c1/provenance.jsonl`, `d2/hosted-lane-rate.md
 - No Git commands, source edits, input regeneration, project tests, or full gate were run. The harness owns commit and phase-gate execution. This is a measurement handoff, not a claim that the full phase gate passed.
 
 Updated only the required routing header above; all other prior relay content is preserved. Handing off to agy for whole-file review.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the artifact files on disk:
+- `TESTS-RESULTS/2026-09-22+GH-732/c1/conflict-magnets.md`: Full sweep completed. Accurately synthesizes captured attempt records and commit history. Identifies confirmed B1 conflict involvement for PR #723 (`releases.db`) and unattributed B1 attempt for PR #688, correctly establishing that total conflict counts are not derivable from inputs rather than fabricating numbers. Recommends verbatim options: `validate.sh` (*registry*), `skills/relay-automation/relay-pkg.tar.gz` (*tarball*), and `releases.db` (*ledger*). Quotes consumer evidence for the tarball. Embedded command and text output verified reproducible byte-for-byte. No pre-existing defects found. [Pass]
+- `TESTS-RESULTS/2026-09-22+GH-732/c1/provenance.jsonl`: Full sweep completed. Contains 10 valid JSONL records covering the generated markdown report, captured attempt records, history logs, and consumer source files. All 10 SHA-256 hashes match disk bytes exactly. No pre-existing defects found. [Pass]
+- `TESTS-RESULTS/2026-09-22+GH-732/d2/hosted-lane-rate.md`: Full sweep completed. Accurately recomputes run statistics from `runs-40.json`: 14 green, 24 failed, 2 cancelled over 2026-09-17T21:45:06Z through 2026-09-22T01:27:14Z with all run IDs listed. Computes head streak (1; does not satisfy exit requirement of 10) and compares against prior baselines (+7 green vs #732 v6; +0 green vs triage). Embedded command and text output verified reproducible byte-for-byte. No pre-existing defects found. [Pass]
+- `TESTS-RESULTS/2026-09-22+GH-732/d2/provenance.jsonl`: Full sweep completed. Contains 3 valid JSONL records covering the generated markdown report, capture metadata, and raw runs JSON. All 3 SHA-256 hashes match disk bytes exactly. No pre-existing defects found. [Pass]
+
+Probes and verification this turn:
+- Python probe in `$TMPDIR` verified SHA-256 checksums for all 10 artifacts/inputs in `c1/provenance.jsonl`: 10/10 matched (exit code 0).
+- Python probe in `$TMPDIR` verified SHA-256 checksums for all 3 artifacts/inputs in `d2/provenance.jsonl`: 3/3 matched (exit code 0).
+- Python probe in `$TMPDIR` executed the embedded reproduction scripts from `c1/conflict-magnets.md` and `d2/hosted-lane-rate.md`: both outputs matched the embedded text output blocks character-for-character (exit code 0).
+- Working tree scan confirmed zero off-lane writes and no scratch files outside `.relay-scratch/`.
+- Project test suites and full gate deferred to disposable full clone harness gate (`[Unverified — needs clone run]`).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
+
