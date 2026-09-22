@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN-2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -117,3 +117,41 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+The retry's corrected implementation is already present; no artifact edits were needed.
+Reviewed the GH-732 detector/export and summary in validate.sh, the yaml sibling in
+gh251, and the gh268 diagnostic/skip probe. The rejected eval command is absent.
+Only this relay record changed (plus the explicitly required NEXT header update).
+
+Focused verification under .relay-scratch/:
+- bash -n on all three allowed shell artifacts: PASS.
+- Extracted the existing detector and PHP assertion function into a scratch script,
+  without eval. Broken-php and yaml-less shims produced both named diagnostics,
+  FAULTS=php,yaml, the evidence disclaimer, and the named PHP skip; exit 0.
+- Ran the actual PHP assertion function with the broken-php shim and no fault flag:
+  exit 1, "clean PHP did not pass (exit 1)". With XYZ_ENV_FAULTS=php: exit 0
+  and "SKIP: environment fault (php present but unusable)".
+- Native-PATH PHP assertions failed on clean PHP. Direct php -v returned -6:
+  dyld cannot load libaspell.15.dylib from the installed php@8.3. Thus this host
+  cannot establish the healthy-PHP green control; this is an observed environment
+  fault, not a passing healthy-tool test.
+- An earlier detector-removal mutation exited on an unset fixture variable;
+  it is not counted as mutation evidence. The initialized assertion-function
+  red/green pair above supersedes it.
+
+Scratch logs: gh732-fault-probe.log, gh732-unflagged-broken.log,
+gh732-flagged-broken.log, gh732-healthy.log, gh732-native-php.log.
+These are ephemeral local observations, not committed qualification evidence.
+
+Qualification source still checks import pytest before npm/validation and catches
+failure with code 6 before receipt creation. This was source inspection only:
+no qualification invocation, clone, git command, complete test script, or full
+gate was run. Full-suite B.2, zero-rerun telemetry, remaining planted faults,
+healthy-PHP verification, and runtime qualification/no-receipt evidence remain
+for the harness/outer acceptance runner under the user's turn restrictions.
+No claim of full phase acceptance or promotion evidence is made.
+
+Handing off to agy for review of the existing corrected artifacts and these limits.
