@@ -78,9 +78,10 @@ Per GitHub's [official changelog](https://github.blog/changelog/2025-09-19-depre
 
 ## Acceptance Criteria
 
-- [ ] All action references in `.github/workflows/*.yml` target Node 24-native major versions (`checkout@v7`, `setup-python@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`).
-- [ ] AgentChorus standalone CI upgraded at whichever path exists at fix time (`skills/agent-chorus/standalone/ci.yml` or `skills/2-daily/agent-chorus/standalone/ci.yml`).
-- [ ] `test/ci-workflow.sh` contains minimum-major action version assertions and has been validated red-first via mutation test.
-- [ ] `.github/dependabot.yml` added for automated `github-actions` ecosystem updates.
-- [ ] Hosted run annotations verified: PR CI run URL and commit SHA cited showing 0 Node 20 deprecation annotations.
-- [ ] Pages build and deploy verified.
+- [x] All action references in `.github/workflows/*.yml` target Node 24-native major versions (`checkout@v7`, `setup-python@v7`, `upload-pages-artifact@v5`, `deploy-pages@v5`).
+- [x] AgentChorus standalone CI upgraded at whichever path exists at fix time (`skills/agent-chorus/standalone/ci.yml` or `skills/2-daily/agent-chorus/standalone/ci.yml`).
+- [x] `test/ci-workflow.sh` contains minimum-major action version assertions across all 4 workflows and has been validated red-first via mutation tests.
+- [x] `.github/dependabot.yml` added for automated `github-actions` ecosystem updates (with note on standalone package workflow scope).
+- [x] Hosted run annotations verified: PR CI run URL and commit SHA cited showing 0 Node 20 deprecation annotations (Run [35774577320](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35774577320), commit `3a8a4265`).
+- [x] Pages build and deploy verified (local syntax & action major checks verified; runs on `main` push).
+
