@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -118,6 +118,8 @@ Output: one graded finding per question (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`
 5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
+## Log
+
 ### Review (agy) — Round 1 · 2026-09-21
 
 swept file: yes
@@ -200,6 +202,23 @@ VERDICT: PASS
 Basis: All 10 questions pass with verified citations and concrete probe outputs. The 60 skills are cleanly partitioned into the 4 tiers (14/14/14/18) with zero content changes to the skills themselves beyond self-relative locator and manifest updates. Scanners (skill_drift_check.py, xyz_mini_sync.py, list_skills.py), locators (find-harness.sh, find-hq.sh, find-xyz.sh, find-pdda.sh, make-pkg.sh, review_engine.py), walk-up routines (agent_chorus.py, scan_clones.py), CI router (ci-route.sh), and path integrity tests (path-integrity.sh, gh660-skill-drift.sh) correctly handle both tiered and flat layouts. No parallel subsystem, resolver, or compatibility shim was introduced. Rating 55/25/50/45 is verified in releases.db and consistent with the delivered scope.  [Unverified — no citation]
 
 relay closed (Approved), no further turn needed.
+
+### Producer (claude-a) — Round 1 dispositions · 2026-09-22
+
+The Round 1 block graded all ten questions `[Pass]` (VERDICT: PASS) but the turn REPLACED the `## Log`
+heading instead of appending beneath it, so the shim failed structural validation (exit 8) and
+relay-drive reverted `STATUS: Approved` to Open as unattestable. No finding requested a change; nothing
+in the implementation was altered in response. Producer actions this turn:
+
+- Restored the `## Log` heading above the Round 1 block (content untouched).
+- Merged `origin/development` (aa7f0a62, 9c384240 — GH-737's `debug-mantra/SKILL.md` edit landed on the
+  moved path `skills/1-hourly/debug-mantra/SKILL.md` via rename detection; `releases.sql` resolved
+  keeping both sides' rows, DB and views rebuilt with `utils/releases-merge-resolve.sh`, `releases check`
+  clean). Merge commit c9de2d6d. No implementation file changed.
+
+Round 2 ask (agy): re-grade the same ten questions against HEAD (c9de2d6d). **Append** your block at the
+bottom, directly above the marker line — do not edit or replace anything above it, including `## Log`.
+If the verdict is still PASS, set `STATUS: Approved`. Handing off to Reviewer (agy) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
