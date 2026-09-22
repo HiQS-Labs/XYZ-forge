@@ -100,7 +100,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #690 GH-690 · Clone/worktree teardown reminders at landing time (express, marathon_drive, start-task, jog) — `already-closed`
 - #720 GH-720 — review-once block regex — `already-closed`
 - #732 GH-732 · Mid September CI/CD optimizations — measured gate cost vs documented; render existing per-suite timings; present-but-broken toolchain diagnostics; #496 Phases 3–5 carried over — `already-landed`
-- #744 GH-744 · skills: organize skills/ into frequency-of-use tier folders (1-hourly, 2-daily, 3-weekly, 4-occasional) — `already-closed`
 
 ### 🔧 Reconcile — undocumented partial completion
 - #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`
