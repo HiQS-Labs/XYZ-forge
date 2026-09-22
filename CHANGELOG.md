@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-22 — Skills tier review fixes (GH-744, PR #747)
+
+Repaired cross-folder skill links using canonical repository URLs so flat collection copies
+remain readable. Extended the existing path-integrity gate to check cross-folder Markdown
+links, and made the relay archive output relative to its packaging script. Corrected the
+re-tiering contract: explicit paths in publishers/tests need updating, and direct installs
+need their installer re-run; Skills Army collection users refresh only their installed skills.
+No compatibility layer or automatic migration was added for this early, internally used product.
+Merged current development, preserving ledger rows and rebuilding its derived views and package.
+Verification results are recorded in the follow-up review evidence entry.
+
 ## 2026-09-22 — Marathon GH-749 planned: relay exit-code truth (#720) + measured gate cost (#732), one chain of four lanes
 
 `/marathon-triage` on #673/#720/#732 found no sequenceable lane: the planner (exit 4, drift) held all

@@ -2,13 +2,14 @@
 # Regenerate skills/1-hourly/relay-automation/relay-pkg.tar.gz from the live relay-automation
 # sources. Run after changing any packaged script. (Phase 5 packaging.)
 set -euo pipefail
-cd "$(dirname "${BASH_SOURCE[0]}")/../../.."   # repo root
+PACKAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$PACKAGE_DIR/../../.."   # repo root
 # GH-261: on macOS, bsdtar silently packs AppleDouble ._* sidecar entries for any source file
 # carrying an xattr (e.g. com.apple.provenance) — no corresponding "live source" file exists for
 # those, so relay-pkg-freshness.sh correctly flags them as stale junk when regenerated on Linux CI
 # (or extracted there). COPYFILE_DISABLE=1 is the standard opt-out; harmless on Linux (unused there).
 export COPYFILE_DISABLE=1
-tar czf skills/1-hourly/relay-automation/relay-pkg.tar.gz \
+tar czf "$PACKAGE_DIR/relay-pkg.tar.gz" \
   relay-automation/poll.sh \
   relay-automation/relay-loop.sh \
   relay-automation/runner.sh \
@@ -27,4 +28,4 @@ tar czf skills/1-hourly/relay-automation/relay-pkg.tar.gz \
   test/watchdog-relay.sh \
   test/codex-turn.sh \
   test/agy-turn.sh
-echo "wrote skills/1-hourly/relay-automation/relay-pkg.tar.gz ($(wc -c < skills/1-hourly/relay-automation/relay-pkg.tar.gz) bytes)"
+echo "wrote $PACKAGE_DIR/relay-pkg.tar.gz ($(wc -c < "$PACKAGE_DIR/relay-pkg.tar.gz") bytes)"

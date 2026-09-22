@@ -39,7 +39,7 @@ The rule forbids clustering on how code *reads*. It does not forbid clustering o
 ## When NOT to fire
 
 - Grading one diff or PR → `/code-review`.
-- Tracing one subject's blast radius before a change → [recon](../recon/SKILL.md).
+- Tracing one subject's blast radius before a change → [recon](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/recon/SKILL.md).
 - Clustering recurring *defects* rather than structures → [radar](../radar/SKILL.md).
 - A repo under ~30 source files. Read it; you do not need a report to see four of anything.
 - Deliberate parallelism: N adapters behind one interface, N drivers registered to one registry,
@@ -100,7 +100,7 @@ directories, and say which you excluded.
 
 Do it with the cheapest tool that holds: `rg` with a pattern per class, one pass each. If a
 `codebase-memory` graph is installed, seed from it — but every edge a finding rests on is confirmed
-by reading the file, exactly as in [recon](../recon/SKILL.md). Graph-only edges are marked and never ranked.
+by reading the file, exactly as in [recon](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/recon/SKILL.md). Graph-only edges are marked and never ranked.
 
 An empty class is a finding, not a failure: a repo with no config-key duplication should say so.
 
@@ -161,7 +161,7 @@ disagrees on validation outranks an 8-file cluster that agrees on everything.
 
 Mark each target's cost honestly: introducing a gateway is a **crossing** change, and if any
 toucher is consumed by another repo it is **irreversible**. Hand the classification to
-[triangulate](../triangulate/SKILL.md) rather than deciding the fix's size here.
+[triangulate](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/triangulate/SKILL.md) rather than deciding the fix's size here.
 
 ## Step 6 — Write the Convergence Map
 
@@ -205,12 +205,12 @@ with its thumb on the scale, and it is the section that tells you whether the sw
 - Zero targets is a real result on a small or well-factored tree. Say which, rather than
   manufacturing a cluster to look thorough.
 - Do not propose the gateway's implementation. DRY names what should converge and stops;
-  [triangulate](../triangulate/SKILL.md) sizes the change and `/ponytail` shrinks it.
+  [triangulate](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/triangulate/SKILL.md) sizes the change and `/ponytail` shrinks it.
 
 ## Neighbors
 
-- [recon](../recon/SKILL.md) — traces one subject outward. DRY runs the same trace resource-first.
-- [triangulate](../triangulate/SKILL.md) — sizes and paces the convergence work this skill finds.
+- [recon](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/recon/SKILL.md) — traces one subject outward. DRY runs the same trace resource-first.
+- [triangulate](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/triangulate/SKILL.md) — sizes and paces the convergence work this skill finds.
 - [radar](../radar/SKILL.md) — clusters recurring defects; DRY clusters structures. A repo that keeps producing the
   same bug class is often a DRY target radar has already noticed from the other end.
-- [ponytail](../ponytail/SKILL.md) — a gateway is machinery; make it the smallest one that works.
+- [ponytail](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/ponytail/SKILL.md) — a gateway is machinery; make it the smallest one that works.

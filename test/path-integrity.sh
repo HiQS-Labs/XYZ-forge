@@ -162,5 +162,40 @@ done
   && pass "all referenced relay/script/doc paths resolve (scanned ${#shfiles[@]} scripts + curated docs)" \
   || fail "one or more referenced paths do not exist (see above) — fix the path or the reference"
 
+# --- Check C: skill Markdown links survive folder moves (GH-744) --------------
+if python3 - "$ROOT" <<'PYLINKS'
+from pathlib import Path
+import re
+import sys
+from urllib.parse import unquote, urlsplit
+
+root = Path(sys.argv[1])
+docs = list((root / "skills").rglob("*.md"))
+assert docs, "no skill Markdown files found"
+prefix = "https://github.com/HiQS-Labs/XYZ-forge/blob/development/"
+checked = 0
+broken = []
+for doc in docs:
+    for match in re.finditer(r"\]\(([^\s)]+)\)", doc.read_text(errors="replace")):
+        target = match[1]
+        if target.startswith(prefix):
+            path = root / unquote(urlsplit(target[len(prefix):]).path)
+        elif target.startswith("../"):
+            path = doc.parent / unquote(urlsplit(target).path)
+        else:
+            continue  # Only cross-folder links; not remote URLs or illustrative snippets.
+        checked += 1
+        if not path.exists():
+            broken.append(f"{doc.relative_to(root)}: {target}")
+assert checked, "no cross-folder skill links checked"
+assert not broken, "broken skill links:\n" + "\n".join(broken)
+print(f"  checked {checked} cross-folder skill links")
+PYLINKS
+then
+  pass "cross-folder skill Markdown links resolve"
+else
+  fail "broken skill Markdown link — update it after relocating a skill"
+fi
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

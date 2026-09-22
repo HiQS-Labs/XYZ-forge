@@ -115,7 +115,7 @@ cd "$HARNESS"
 After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and
 `TICK_REPO_ROOT` points `tick` at that clone's event log. The relay/turn scripts self-resolve their
 own location (`$(dirname "$BASH_SOURCE")/..`), so invoke them with **repo-relative** paths exactly as
-the [relay automation README](../../relay-automation/README.md) shows.
+the [relay automation README](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/README.md) shows.
 The relay always operates on **the
 harness clone** (its `.tick/` log and guarded git root live there), whatever repo you launched from —
 so a clone with only `relay-system/` thread files still drives the real harness next door.
@@ -299,7 +299,7 @@ source. `RELAY_HAS_*` is set by `find-harness.sh --env`; every worker below also
 | Commandcode | `COMMANDCODE_MODEL` | `meta/muse-spark-1.2-contributor` | `cmd --list-models` for the live catalog (GLM, Qwen, DeepSeek all reachable here) |
 | DeepSeek | `DEEPSEEK_MODEL` | `deepseek/deepseek-v4-pro` | accepts a colloquial alias (`"deepseek v4 pro"`); also `DEEPSEEK_PROVIDER` (`openrouter`\|`deepseek`\|`alibaba`) selecting the endpoint and its key variable. An unrecognised value REFUSES the turn (it used to fall through to DeepSeek silently). `alibaba` is the Alibaba Token Plan, which serves Qwen under bare ids (`qwen3.8-max`, not `qwen/...`) and reads its key from `ALIBABA_TOKEN_PLAN_API_KEY` or, failing that, the file named by `ALIBABA_TOKEN_PLAN_API_KEY_FILE`. |
 | Aider | `AIDER_MODEL` | `openrouter/anthropic/claude-sonnet-5`, or `openai/agents-a1` when `AIDER_OPENAI_API_BASE` is set | force `AIDER_FLAGS=--edit-format diff` on GLM |
-| Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | Explicit operator choice, never a session default; see [subscription setup](../../relay-automation/README.md#claude-subscription-mode) |
+| Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | Explicit operator choice, never a session default; see [subscription setup](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/README.md#claude-subscription-mode) |
 | Pi | `PI_MODEL` | **none — required** | refuses to guess (GH-295) |
 
 Codex example:
@@ -475,7 +475,7 @@ once.
 
 **Worked recipe — "Dueling Claudes":** for the full copy-paste two-window setup (Reporter↔Maintainer,
 same machine, with the one human go-gate before commit), see
-[relay-automation/DUELING-CLAUDES.md](../../relay-automation/DUELING-CLAUDES.md). It carries the exact
+[relay-automation/DUELING-CLAUDES.md](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/DUELING-CLAUDES.md). It carries the exact
 `/loop` strings, the fresh-token-per-run rule, and the foreign-CWD `tick` pitfalls for Path B.
 
 ### Path B cadence — fixed interval (today) vs adaptive (GH-33)

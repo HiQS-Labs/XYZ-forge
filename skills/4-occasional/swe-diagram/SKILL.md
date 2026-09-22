@@ -6,7 +6,7 @@ description: Draw an interactive system architecture or Git-history diagram for 
 # swe-diagram — Interactive Architecture and Git-History Maps
 
 The skill interface lives here; its implementation assets are bundled under
-[`utils/swe-diagram/`](../../utils/swe-diagram/).
+[`utils/swe-diagram/`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/swe-diagram).
 
 Produce two deliverables for the target repo:
 

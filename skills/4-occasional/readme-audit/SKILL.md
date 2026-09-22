@@ -79,7 +79,7 @@ After the report, if there are **low-risk, deterministic** fixes, offer a single
 - **Never auto-apply:** rewriting prose for clarity, restructuring sections, inventing missing content, or anything where the "right" answer is a judgment call. Those stay **recommendations**, not edits.
 - After applying, list exactly what changed (file + line) and re-run the link check so the report and the tree agree. If a fix needs judgment, say so and leave it for the user.
 
-When this repo's convention requires it (see [AGENTS.md](../../AGENTS.md)), remember a README change can have downstream obligations — counts, tables, and trees that must stay in sync — and call those out even if you don't edit them.
+When this repo's convention requires it (see [AGENTS.md](https://github.com/HiQS-Labs/XYZ-forge/blob/development/AGENTS.md)), remember a README change can have downstream obligations — counts, tables, and trees that must stay in sync — and call those out even if you don't edit them.
 
 ## Output format
 

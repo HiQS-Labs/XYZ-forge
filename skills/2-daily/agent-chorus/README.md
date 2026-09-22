@@ -123,5 +123,5 @@ the exact XYZ commit in `.xyz-canonical-revision`. Standalone changes never sync
 
 ## License
 
-- AgentChorus inherits this repository's default [GNU AGPL-3.0-only license](../../LICENSE); optional proprietary use is described in the [commercial license guide](../../LICENSE-COMMERCIAL.md).
+- AgentChorus inherits this repository's default [GNU AGPL-3.0-only license](https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE); optional proprietary use is described in the [commercial license guide](https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE-COMMERCIAL.md).
 - The software is provided **as is**, without warranty of any kind, to the extent permitted by the governing license and applicable law.

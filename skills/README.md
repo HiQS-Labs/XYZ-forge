@@ -16,17 +16,20 @@ The per-skill index with a one-line purpose for each is `ARCHITECTURE.md` → "S
 
 - **Depth, not tier, is load-bearing.** Scanners glob `skills/*/*/SKILL.md`; the locators that ship
   inside skills (`find-harness.sh`, `find-hq.sh`, `find-xyz.sh`, `find-pdda.sh`, …) resolve the repo
-  root as three levels up from their own directory. Nothing reads the tier name.
+  root as three levels up from their own directory. Publish manifests and some scripts still contain explicit tier paths.
 - **Look a skill up by name:** `ls -d skills/*/<name>`.
 - **Re-tier a skill:** `git mv skills/<old>/<name> skills/<new>/<name>`, then repoint its row in the
-  Skills Index and any `skills/<old>/<name>` literal (`grep -rn "skills/<old>/<name>"`). No code change.
+  Skills Index and any `skills/<old>/<name>` literal (`grep -rn "skills/<old>/<name>"`). This includes paths in code and tests.
 - **Add a skill:** create it under the tier you expect it to be used at; `4-occasional/` is the
   default when unsure. The Skills Index row is part of the change.
-- **Discovery is unchanged.** Apps still scan `~/.claude/skills/<name>` (and the Codex / agy / ZCode
-  equivalents). Those entries point at the Skills Army HQ collection or at a skill's own `install.sh`
-  symlink — never at a tier folder — so re-tiering never breaks an installed skill. The one
-  machine-local follow-up after a re-tier is the collection's provenance:
-  `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>`.
+- **Refresh only your installed skills and configured app targets after a move.**
+  Skills Army HQ app links point at its flat collection and remain valid; refresh each moved
+  skill's source receipt with `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>`.
+  A direct `install.sh` link points at the source folder and becomes dangling when it moves:
+  re-run that skill's installer from its new location, using the same target options as before.
+  There is no need to install missing skills or configure IDEs you do not use.
+- Cross-skill and repo-document links use canonical repository URLs where needed so they also
+  work in the flat deployed collection.
 - **Vendored copies mirror the layout.** `relay-automation/xyz-vendor.sh` copies `skills/` verbatim,
   so a target repo's `.xyz/skills/` is tiered too. XYZ-mini is the exception: its publisher
   (`utils/py/xyz_mini_sync.py`) flattens the curated subset into the mini's own one-level `skills/`.

@@ -65,7 +65,7 @@ edited that ledger, finish with `releases roadmap sync` (a no-change sync is a f
    what every reader above trusts. `test/gh32-releases-artifacts.sh` gates this on every full-suite
    run, but it catches the mistake after the fact — checking first is cheaper. Never run
    `--rebuild` to make a red check go away without reading what diverged: it is for merge
-   resolution only, never crash recovery. See [RELEASES-DB-FAQS.md](../../RELEASES-DB-FAQS.md).
+   resolution only, never crash recovery. See [RELEASES-DB-FAQS.md](https://github.com/HiQS-Labs/XYZ-forge/blob/development/RELEASES-DB-FAQS.md).
 3. Treat GitHub as optional for checks and required for publication. If `gh` is unavailable, run
    the local assessment and state exactly which PR, milestone, issue, or Release conclusions are
    unavailable. Never convert missing network evidence into a clean verdict.

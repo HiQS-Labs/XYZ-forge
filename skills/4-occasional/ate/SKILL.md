@@ -6,7 +6,7 @@ description: "ATE (Automated Testing Environment): drive long-running (2-3hr+) u
 # ATE — Automated Testing Environment (generic bounded-variation matrix runner)
 
 The skill interface lives here; its implementation is bundled under
-[`utils/ate/`](../../utils/ate/).
+[`utils/ate/`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/ate).
 
 ATE walks a declared grid of command variations unattended for hours, logs every result as
 structured JSON, and a frontier model (you, Claude) checks in every ~5 minutes to catch
@@ -183,7 +183,7 @@ per_variation_timeout_seconds: 180
 - `scripts/compile_issue.py` — rolls up `error_log.jsonl` into one GH issue titled
   `ATE - [test-name] yyyy-mm-dd`; runs standalone too, for a manual rollup
 - `variations.example.yaml` — starter grid, copy and edit per pipeline under test
-- [`utils/ate/install.sh`](../../utils/ate/install.sh) — copies the interface and implementation to `~/.claude/skills/`
+- [`utils/ate/install.sh`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/ate/install.sh) — copies the interface and implementation to `~/.claude/skills/`
 
 ## Notes / gotchas
 

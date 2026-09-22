@@ -141,8 +141,8 @@ failure gets read once.
 ## Neighbors
 
 - [dry](../dry/SKILL.md) — produces the maps this skill reads. Always runs first.
-- [triangulate](../triangulate/SKILL.md) — sizes the convergence work; a shared library is a crossing
+- [triangulate](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/triangulate/SKILL.md) — sizes the convergence work; a shared library is a crossing
   change and usually an irreversible one.
 - [radar](../radar/SKILL.md) — per-repo defect clustering. Converge is the structural counterpart
   across repos, and a defect radar keeps re-finding is often a shape converge already named.
-- [recon](../recon/SKILL.md) — the trace underneath all of it.
+- [recon](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/recon/SKILL.md) — the trace underneath all of it.

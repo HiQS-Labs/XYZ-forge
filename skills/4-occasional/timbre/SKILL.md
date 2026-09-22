@@ -79,8 +79,8 @@ compensate by inventing traits.
 |---|---|
 | Explain dense material plainly | [feynman](../feynman/SKILL.md) |
 | Shorten text that is already clear | a summary — no skill needed |
-| Assess whether a claim is defensible | [honest](../honest/SKILL.md) |
-| Get a second model's read on a finished draft | [consult](../consult/SKILL.md) |
+| Assess whether a claim is defensible | [honest](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/3-weekly/honest/SKILL.md) |
+| Get a second model's read on a finished draft | [consult](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/consult/SKILL.md) |
 | Copy in a specific human voice, samples available | **stay here** |
 
 ## Why three roles, and not one good prompt
@@ -95,7 +95,7 @@ will reliably certify its own idea of the voice.
 Two structural answers, both borrowed from this repo's own principles:
 
 - **Separated grading.** The producer is never the sole grader
-  ([`GUIDING-PRINCIPLES.md`](../../GUIDING-PRINCIPLES.md), principle 12).
+  ([`GUIDING-PRINCIPLES.md`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/GUIDING-PRINCIPLES.md), principle 12).
 - **A green verdict needs a witnessed red control.** A review that cannot fail is not evidence
   (principle 13). Hence the lineup in Layer 3.
 
@@ -281,11 +281,11 @@ The receipt is the deliverable that makes this honest:
 | Skill | Relationship |
 |---|---|
 | [feynman](../feynman/SKILL.md) | Plain-language *translation*; timbre is voice fidelity. Different goals |
-| [honest](../honest/SKILL.md) | Two-audience assessment writing; shares the "state your limits" discipline |
-| [consult](../consult/SKILL.md) | If the harness is installed, a genuine second *model* can play Role C — a real independence upgrade over role-switching |
-| [relay](../relay/SKILL.md) | The Producer/Reviewer handoff pattern this pipeline imitates in a single file |
-| [triangulate](../triangulate/SKILL.md) | The three-lenses-in-fixed-order shape, applied to engineering decisions |
-| [better-options](../better-options/SKILL.md) | Run first if the brief itself may be wrong |
+| [honest](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/3-weekly/honest/SKILL.md) | Two-audience assessment writing; shares the "state your limits" discipline |
+| [consult](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/consult/SKILL.md) | If the harness is installed, a genuine second *model* can play Role C — a real independence upgrade over role-switching |
+| [relay](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/relay/SKILL.md) | The Producer/Reviewer handoff pattern this pipeline imitates in a single file |
+| [triangulate](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/triangulate/SKILL.md) | The three-lenses-in-fixed-order shape, applied to engineering decisions |
+| [better-options](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/better-options/SKILL.md) | Run first if the brief itself may be wrong |
 
 **Upgrade path.** With the XYZ harness available, Roles A/B/C map onto real relay turns with
 separate model backends, which replaces role-switching with actual independence. This skill is the

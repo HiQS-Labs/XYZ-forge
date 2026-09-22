@@ -188,5 +188,5 @@ Say `triangulate → ponytail only` and go. This is ponytail rung 1 applied to t
 Designed and QA'd through two automated `/relay-xyz` rounds against the plan doc, 2026-08-28:
 round 1 DeepSeek v4 Pro (dsh → OpenRouter), round 2 Qwen 3.8 Max (CommandCode). Both returned
 "Changes requested"; both were right. The threads and the full disposition table are in
-[`relay-system/2026-08-28/`](../../relay-system/2026-08-28/) —
+[`relay-system/2026-08-28/`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-system/2026-08-28) —
 `triangulate-r1-deepseek.md`, `triangulate-r2-qwen.md`, and `TRIANGULATE-PLAN.md`.

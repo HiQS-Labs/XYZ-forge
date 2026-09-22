@@ -20,7 +20,7 @@ description: >
 make — is the unlanded work in this clone worth a PR, already landed under another name, or scrap —
 and it produces evidence an operator can act on. It reads; `/merge-cleanup` writes.
 
-Strictly adheres to [`WORKTREE-SAFETY.md`](../../WORKTREE-SAFETY.md) and [`AGENTS.md`](../../AGENTS.md).
+Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/WORKTREE-SAFETY.md) and [`AGENTS.md`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/AGENTS.md).
 
 ---
 
