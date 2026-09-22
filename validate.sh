@@ -1020,8 +1020,25 @@ if [ -n "$NICE_CMD" ]; then
   export NICE_CMD
   echo "validate.sh: suite workers run under $NICE_CMD — an interactive-session hint, not a CPU limit (GH-35)"
 fi
+# GH-732 environment faults BEGIN
+# Recompute for this PATH; inherited faults must not suppress healthy-tool assertions.
+XYZ_ENV_FAULTS=""
+if command -v php >/dev/null 2>&1; then
+  _php_error="$(php -v 2>&1 >/dev/null)"; _php_rc=$?
+  if [ "$_php_rc" -ne 0 ] && ! php -l /dev/null >/dev/null 2>&1; then
+    XYZ_ENV_FAULTS="php"
+    echo "ENVIRONMENT FAULT: php present but unusable (${_php_error%%$'\n'*}) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)"
+  fi
+fi
+if ! python3 -c "import yaml" >/dev/null 2>&1; then
+  XYZ_ENV_FAULTS="${XYZ_ENV_FAULTS:+$XYZ_ENV_FAULTS,}yaml"
+  echo "ENVIRONMENT FAULT: python3 ($(command -v python3)) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)"
+fi
+export XYZ_ENV_FAULTS
+# GH-732 environment faults END
+
 if [ "$PRINT_MODE_ONLY" -eq 1 ]; then
-  # Resolve the mode, print it, run nothing. Exists so the decision is observable without paying
+  # Resolve the mode and toolchain diagnostics, print them, run no suites. Exists so the decision is observable without paying
   # for a gate run — both for test/gh544-parallel-default.sh (which must never execute the real
   # suite) and for a pre-push hook that wants to tell the operator what it is about to do.
   if [ -n "$PARALLEL_JOBS" ]; then
@@ -1554,6 +1571,9 @@ if [ -n "${RT_FILE:-}" ] && [ -s "$RT_FILE" ]; then
   ' || :
 fi
 # GH-732 timing summary END
+if [ -n "$XYZ_ENV_FAULTS" ]; then
+  echo "ENVIRONMENT FAULTS (GH-732): $XYZ_ENV_FAULTS — this run is NOT promotion evidence."
+fi
 if [ "${#SKIPPED_SUITES[@]}" -gt 0 ]; then
   echo "QUARANTINED (GH-379): ${#SKIPPED_SUITES[@]} suite(s) did NOT run — ${SKIPPED_SUITES[*]}"
   echo "  this run is NOT promotion evidence."

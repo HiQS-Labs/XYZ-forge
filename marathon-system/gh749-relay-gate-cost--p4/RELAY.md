@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -110,3 +110,19 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-732 B.1 in the three authorized artifact files:
+- `validate.sh`: probes the current PATH before the pool (also visible in `--print-mode`), exports freshly computed comma-separated `XYZ_ENV_FAULTS`, names broken PHP only when both version and empty-file lint fail, names the yaml interpreter and gate-toolchain PATH hint, and repeats faults with NOT promotion evidence in the summary. Existing exit codes, qualification code, suite registration, and solo re-run verdict are unchanged.
+- `test/gh268-relay-cue-and-target-checks.sh`: wraps the existing PHP assertions for reuse, reports the named skip when the fault list contains the exact php token, and adds a broken-PHP subprocess control using the validator's actual diagnostic block.
+- `test/gh251-validate-pytest-skip.sh`: adds the missing-yaml interpreter shim and asserts the named diagnostic, repair PATH, and evidence limitation through `--print-mode`; existing pytest cases are unchanged.
+
+Verification: `bash -n validate.sh test/gh251-validate-pytest-skip.sh test/gh268-relay-cue-and-target-checks.sh` exited 0. Narrow extracted regression blocks ran under `.relay-scratch/`: PHP fault control 1 pass/0 fail, YAML control passed; deleting the PHP marker caused exit 1 with the expected clean-PHP failure, and mutating the YAML diagnostic caused exit 1. Deterministic healthy-PHP stub control exercised both existing lint assertions (3 pass/0 fail including fault control); version-only and lint-only failures did not classify PHP as unusable, while both failing did. This host's actual PHP is broken (missing libaspell), so the healthy stub is branch evidence, not a real healthy-toolchain acceptance run. The actual Python also lacks yaml and was named correctly.
+
+Evidence logs: `.relay-scratch/php-focused.log`, `php-mutant.log`, `yaml-focused.log`, `yaml-mutant.log`, `php-healthy-stub.log`, and the three single/both-failure logs. These are ephemeral turn evidence, not committed promotion provenance.
+
+Outstanding harness/operator verification: full focused suites, the disposable-clone pytest-less qualification boundary (exit 6 and no receipt), B.2 fresh-clone full gate with zero re-runs and four planted faults, and retained TESTS-RESULTS provenance. The turn explicitly forbids Git, full-gate execution, and writes outside the four-file allowlist plus scratch, so those acceptance runs and retained evidence were not performed here. No full-gate success or phase completion is claimed. Reversibility: Easy; the diagnostic block and test changes are local and removable.
+
+Handing off to agy for review.

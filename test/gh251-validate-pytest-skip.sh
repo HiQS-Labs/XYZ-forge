@@ -79,5 +79,23 @@ case "$out" in
     ;;
 esac
 
+# GH-732: a different interpreter without PyYAML must name itself and the repair PATH.
+YAML_BIN="$WORK/no-yaml"; mkdir -p "$YAML_BIN"
+cat > "$YAML_BIN/python3" <<PYSH
+#!/usr/bin/env bash
+if [ "\$#" -ge 2 ] && [ "\$1" = "-c" ] && [ "\$2" = "import yaml" ]; then
+  exit 1
+fi
+exec "$REAL_PY" "\$@"
+PYSH
+chmod +x "$YAML_BIN/python3"
+out="$(PATH="$YAML_BIN:$PATH" bash "$VAL" --print-mode 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && [ -n "$out" ] \
+  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) cannot import yaml" \
+  && printf '%s' "$out" | grep -Fq '~/.cache/xyz-forge-test-venv/bin first on PATH' \
+  && printf '%s' "$out" | grep -Fq 'NOT promotion evidence (GH-732)' \
+  && pass "missing yaml names the interpreter, repair PATH, and evidence limit" \
+  || fail "missing yaml diagnostic regressed (exit $rc): $out"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
