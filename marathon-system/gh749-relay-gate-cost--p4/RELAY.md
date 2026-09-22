@@ -1,8 +1,8 @@
 # Marathon Phase p4
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-P4-TURN builder=codex reviewer=agy round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-P4-TURN-2 builder=codex reviewer=agy round-cap=5 -->
 
 ## Phase Brief
 
@@ -54,6 +54,8 @@ Umbrella: #749 · Issue: #732 items B.1 and B.2 · Phase p4 · `depends_on: p3`
 
 ## Rules
 
+**Retry note (2026-09-22):** the first attempt landed this lane (`10836fc9`, Approved) but its gate went red on `security-scan.sh`: the gh268 red control ran the validator's fault block through `eval "$(sed -n … validate.sh)"` (`eval-unsanitized`, a real finding — never baseline it). The corrected shape is already in the tree: prove the diagnostic with `bash validate.sh --print-mode` on the shimmed PATH (as the gh251 half does) and prove the suite's skip path by exporting `XYZ_ENV_FAULTS=php` — the contract validate.sh exports to suites. If the lane is present, verify it against the acceptance list and hand off; do not reintroduce `eval`.
+
 Shortest diff (`/ponytail`); widen B.1's mechanism only; no new script or library. Never weaken `--qualify` (`exit 6`, no receipt) or the GH-528 solo re-run verdict. Suites stay registered as they are (no `TESTS` array change unless a new suite is added, which this lane should not need). Evidence under `TESTS-RESULTS/2026-09-22+GH-732/l4/` with red/green/boundary outputs and `provenance.jsonl`. `bash validate.sh` green is the phase gate.
 
 ## Acceptance / Guard
@@ -65,6 +67,11 @@ Shortest diff (`/ponytail`); widen B.1's mechanism only; no new script or librar
 - B.2: fresh-clone full gate GREEN, zero re-runs, line recorded; four planted faults witnessed with their current output.
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh749-relay-gate-cost--p4/ESCALATION.md`): `pre-advance-failed`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (codex — BUILDER role)
@@ -74,9 +81,9 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 1. Implement the brief by creating/editing the artifact file(s): validate.sh, test/gh251-validate-pytest-skip.sh, test/gh268-relay-cue-and-target-checks.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick
-   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick claim MARATHON-P4-TURN --agent codex --paths "marathon-system/gh749-relay-gate-cost--p4/RELAY.md,validate.sh, test/gh251-validate-pytest-skip.sh, test/gh268-relay-cue-and-target-checks.sh"
-   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick ping MARATHON-P4-TURN --agent codex
-   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P4-TURN --agent codex --to agy
+   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick claim MARATHON-P4-TURN-2 --agent codex --paths "marathon-system/gh749-relay-gate-cost--p4/RELAY.md,validate.sh, test/gh251-validate-pytest-skip.sh, test/gh268-relay-cue-and-target-checks.sh"
+   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick ping MARATHON-P4-TURN-2 --agent codex
+   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P4-TURN-2 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/gh749-relay-gate-cost--p4/RELAY.md and validate.sh, test/gh251-validate-pytest-skip.sh, test/gh268-relay-cue-and-target-checks.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -90,8 +97,8 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: validate.sh, test/gh251-validate-pytest-skip.sh, test/gh268-relay-cue-and-target-checks.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P4-TURN --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick done MARATHON-P4-TURN --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P4-TURN-2 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick done MARATHON-P4-TURN-2 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick
    Edit ONLY marathon-system/gh749-relay-gate-cost--p4/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -110,54 +117,3 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-
-### Round 1 · Builder · codex
-
-Implemented GH-732 B.1 in the three authorized artifact files:
-- `validate.sh`: probes the current PATH before the pool (also visible in `--print-mode`), exports freshly computed comma-separated `XYZ_ENV_FAULTS`, names broken PHP only when both version and empty-file lint fail, names the yaml interpreter and gate-toolchain PATH hint, and repeats faults with NOT promotion evidence in the summary. Existing exit codes, qualification code, suite registration, and solo re-run verdict are unchanged.
-- `test/gh268-relay-cue-and-target-checks.sh`: wraps the existing PHP assertions for reuse, reports the named skip when the fault list contains the exact php token, and adds a broken-PHP subprocess control using the validator's actual diagnostic block.
-- `test/gh251-validate-pytest-skip.sh`: adds the missing-yaml interpreter shim and asserts the named diagnostic, repair PATH, and evidence limitation through `--print-mode`; existing pytest cases are unchanged.
-
-Verification: `bash -n validate.sh test/gh251-validate-pytest-skip.sh test/gh268-relay-cue-and-target-checks.sh` exited 0. Narrow extracted regression blocks ran under `.relay-scratch/`: PHP fault control 1 pass/0 fail, YAML control passed; deleting the PHP marker caused exit 1 with the expected clean-PHP failure, and mutating the YAML diagnostic caused exit 1. Deterministic healthy-PHP stub control exercised both existing lint assertions (3 pass/0 fail including fault control); version-only and lint-only failures did not classify PHP as unusable, while both failing did. This host's actual PHP is broken (missing libaspell), so the healthy stub is branch evidence, not a real healthy-toolchain acceptance run. The actual Python also lacks yaml and was named correctly.
-
-Evidence logs: `.relay-scratch/php-focused.log`, `php-mutant.log`, `yaml-focused.log`, `yaml-mutant.log`, `php-healthy-stub.log`, and the three single/both-failure logs. These are ephemeral turn evidence, not committed promotion provenance.
-
-Outstanding harness/operator verification: full focused suites, the disposable-clone pytest-less qualification boundary (exit 6 and no receipt), B.2 fresh-clone full gate with zero re-runs and four planted faults, and retained TESTS-RESULTS provenance. The turn explicitly forbids Git, full-gate execution, and writes outside the four-file allowlist plus scratch, so those acceptance runs and retained evidence were not performed here. No full-gate success or phase completion is claimed. Reversibility: Easy; the diagnostic block and test changes are local and removable.
-
-Handing off to agy for review.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-
-Reviewed the artifact files on disk:
-- `validate.sh`: Full sweep completed around modified sections and summary. Extends the skip/diagnostic path before the pool (lines 1023-1038) and summary reporting (lines 1574-1576). Pre-pool diagnostic tests `php -v` and `php -l /dev/null`, announcing `ENVIRONMENT FAULT: php present but unusable (<first stderr line>) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)` only when both version check and empty-file lint fail. Confirms python3 imports `yaml`, announcing `ENVIRONMENT FAULT: python3 (<path>) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)`. Exports computed `XYZ_ENV_FAULTS` (e.g. `php`, `yaml`, or `php,yaml`) and prints `ENVIRONMENT FAULTS (GH-732): $XYZ_ENV_FAULTS — this run is NOT promotion evidence.` in the summary next to QUARANTINED. Exit code semantics and `--qualify` paths remain strictly unchanged. Pre-existing code swept; no pre-existing defects found. [Pass]
-- `test/gh268-relay-cue-and-target-checks.sh`: Full sweep completed (278 lines). Encapsulates PHP target assertions in `gh732_php_assertions` and guards with `[[ ",${XYZ_ENV_FAULTS:-}," == *,php,* ]]` to report `SKIP: environment fault (php present but unusable)` rather than failing on clean PHP lint. Subprocess red control with broken PHP stub (`exit 1`, `missing libaspell`) confirms named fault emission, clean PHP failure suppression, and skip reporting. Healthy PHP assertions continue to verify syntax-error failure (exit 1) and clean PHP success (exit 0). Pre-existing code swept; no pre-existing defects found. [Pass]
-- `test/gh251-validate-pytest-skip.sh`: Full sweep completed (102 lines). Adds missing-PyYAML sibling test using a temporary `python3` shim failing `-c "import yaml"` on PATH with `validate.sh --print-mode`. Asserts named fault diagnostic naming the interpreter path, `gate-toolchain` repair PATH hint, and `NOT promotion evidence (GH-732)`. Absent pytest assertions remain intact. Pre-existing code swept; no pre-existing defects found. [Pass]
-- Boundary control & qualification invariant (`utils/py/wave_reconcile.py:580-597`): Swept `qualify_landings`. Confirmed `command(["python3", "-c", "import pytest"])` raises on missing pytest and halts with `die(..., code=6)` producing no receipt. Unchanged and strictly preserved. Full disposable-clone qualification execution and B.2 fresh-clone full gate with planted faults remain graded `[Unverified — needs clone run]` as required outside turn execution boundaries. [Pass]
-
-Probes and verification this turn (narrow non-mutating probes under `$TMPDIR` / `.relay-scratch/`):
-- Syntax check: `bash -n validate.sh test/gh251-validate-pytest-skip.sh test/gh268-relay-cue-and-target-checks.sh` returned exit code 0.
-- Diagnostic probe (isolated under `$TMPDIR`):
-  1. Broken PHP stub (failing `-v` with stderr and failing `-l /dev/null`): emitted `ENVIRONMENT FAULT: php present but unusable ...` and set `FAULTS=php` (exit code 0).
-  2. Version-only failure stub: did not classify PHP as unusable; `FAULTS=` (exit code 0).
-  3. Lint-only failure stub: did not classify PHP as unusable; `FAULTS=` (exit code 0).
-  4. Missing PyYAML python3 shim: emitted `ENVIRONMENT FAULT: python3 (...) cannot import yaml ...` and set `FAULTS=yaml` (exit code 0).
-  5. Both faults concurrent: emitted both diagnostics and set `FAULTS=php,yaml` (exit code 0).
-- Test regression probe (`gh268`): simulated broken PHP stub against extracted diagnostic block; confirmed `ENVIRONMENT FAULT: php present but unusable (missing libaspell)`, `SKIP: environment fault (php present but unusable)`, zero `clean PHP did not pass` failures (exit code 0, 3 passed).
-- Test regression probe (`gh251`): verified missing PyYAML shim under `validate.sh --print-mode` produces named diagnostic, repair hint, and evidence disclaimer (exit code 0, 1 passed).
-- Negative control probe (`gh251`): mutated YAML diagnostic string; test failed as expected with exit code 1.
-- Scratch discipline: all temporary files restricted to `$TMPDIR` and `.relay-scratch/`; working tree clean.
-
-**Verdict:** Approved
-
-relay closed, no further turn needed
-
-### Attestation · relay-drive — 2026-09-22T07:08:21Z
-task: MARATHON-P4-TURN
-reviewer: agy
-status: Approved
-reviewed-head: 10836fc9171f471fcf52fb9c347a07c01d178f65
-added-range: 14792+4279
-added-sha256: fba06aabb6ed724aa295ca141d5dc80d17f03858826133ed9c26745ffa0ca084
