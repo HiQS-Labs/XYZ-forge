@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
+
+Full local gate: 411/411 passed, with `gh32-releases-app.sh` passing the gate’s built-in isolated
+retry after a parallel failure. Clone identity stayed unchanged. The 132-link check catches a
+broken Skills Index row; the foreign-directory nudge assertion rejects the former wildcard
+fallback. Hook checks passed 63/63 and the viewer passed 8/8.
+[Retained evidence](TESTS-RESULTS/2026-09-22+GH-744/glm-followup/provenance.jsonl).
+
 ## 2026-09-22 — PR #747 GLM review follow-up (GH-744)
 
 Restored the flat app-install path in the AgentChorus incident comment and updated the mini
