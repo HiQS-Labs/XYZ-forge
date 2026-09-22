@@ -1,6 +1,6 @@
 ---
 title: "GH-749 relay exit-code truth + measured gate cost — marathon capture (one chain, four lanes)"
-status: "Planned — contracts ready (GH-720, GH-732 preflight exit 0); plan dry-run pending; fires from the marathon clone"
+status: "Delivered — four lanes Approved and gated; PR #750 open against development (head 3810a621, 411/411)"
 created: 2026-09-22
 updated: 2026-09-22
 owner: Noel Saw
@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| 2026-09-22: `/marathon-triage` (planner exit 4 — drift; all three candidates preflight exit 3) → `/unstuck`: umbrella #749 opened; GH-720 and GH-732 promoted to 2-WORKING with contracts (both preflight **ready, exit 0**); ledger rows repointed / rated / marked 🚧 through the writer; marathon row `mar-01M33PJX8HPKMJHPQFH1S0WG6B` (planned); plan + 4 briefs authored; lane inputs captured under `TESTS-RESULTS/2026-09-22+GH-732/`. | `relay-automation/marathon.sh --plan … --dry-run`, then fire from `~/marathon-clones/marathon-gh-749-relay-gate-cost` on branch `feat/gh749-relay-gate-cost`; lanes commit onto that branch; one delivery PR into `development`, landed by the merge lane one PR at a time. |
+| 2026-09-22: chain ran to completion — p1 #720 (`45b7d2cd`, attest `a58338fe`, 408/408) · p2 #732 C.1/D.2 (`5e9e0d5e`, `d3c5a21e`, 408/408) · p3 #732 A.1–A.5 (`a6b4a50c`, `4ef3ff58`, 409/409) · p4 #732 B.1/B.2 (`10836fc9`, `4c8717e9`, re-gated after the eval fix `4b15834e`). Bridges recorded: #507 (skip under the driver, standalone 410/410 in `TESTS-RESULTS/2026-09-22+GH-720/l1/`), #745 (tick events split), #752 filed (multi-phase re-fire), `MARATHON-p4-retry.yaml`. Final un-nested push gate 411/411 GREEN in 1068 s. PR #750 updated. | Merge lane: land #750 one-at-a-time (never alongside #751); hosted reconcile closes #720 or close it by hand; #732 stays open (D.2 exit condition, A.6/A.7, #496 P3–5). Follow-up surfaced by L3's block: `gh251-validate-pytest-skip.sh` is the slowest suite at 710 s. |
 
 Tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/749 (members, write-sets, tiers, what is held, acceptance).
 Ledger: `marathons` row `mar-01M33PJX8HPKMJHPQFH1S0WG6B` → #749; member rows GH-720 (`rmi-01M32MGB…`, rated 60/55/50/85) and GH-732 (`rmi-01M32XWJ…`, rated 55/40/50/70), both 🚧.
