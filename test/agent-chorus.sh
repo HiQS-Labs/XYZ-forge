@@ -679,7 +679,7 @@ esac
 
 # The installer is cross-agent. It writes five discovery directories, three of them only via
 # $HOME defaults, so every run below sets HOME to a sandbox: overriding the two named env vars
-# alone leaked three real ~/.gemini/**/skills/2-daily/agent-chorus writes per suite run (GH-678).
+# alone leaked three real ~/.gemini/**/skills/agent-chorus writes per suite run (GH-678).
 SANDBOX_HOME="$WORK/home"
 # Simulate user-selected IDE roots. Installer tests must ignore inherited overrides.
 export GEMINI_CONFIG_SKILLS_DIR="$WORK/ambient-config"

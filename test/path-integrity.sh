@@ -172,6 +172,7 @@ from urllib.parse import unquote, urlsplit
 root = Path(sys.argv[1])
 docs = list((root / "skills").rglob("*.md"))
 assert docs, "no skill Markdown files found"
+docs.append(root / "ARCHITECTURE.md")
 prefix = "https://github.com/HiQS-Labs/XYZ-forge/blob/development/"
 checked = 0
 broken = []
@@ -180,7 +181,7 @@ for doc in docs:
         target = match[1]
         if target.startswith(prefix):
             path = root / unquote(urlsplit(target[len(prefix):]).path)
-        elif target.startswith("../"):
+        elif target.startswith("../") or (doc == root / "ARCHITECTURE.md" and target.startswith("skills/")):
             path = doc.parent / unquote(urlsplit(target).path)
         else:
             continue  # Only cross-folder links; not remote URLs or illustrative snippets.

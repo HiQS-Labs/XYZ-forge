@@ -4,7 +4,7 @@
 Reads the frontmatter of skills/*/SKILL.md (relative to the repo toplevel, or --root) and prints a
 table plus a trailing "N skills" line. Nothing is hardcoded: the count is whatever is on disk.
 The frontmatter reader is a copy of skills-army-hq's `skill_info` loop (XYZ-forge,
-skills/skills-army-hq/scripts/intake.py) with its helpers inlined — stdlib only, no PyYAML.
+skills/3-weekly/skills-army-hq/scripts/intake.py) with its helpers inlined — stdlib only, no PyYAML.
 
 Usage: list_skills.py [--root DIR] [--json]
 Exit:  0 ok · 1 a SKILL.md is missing/invalid frontmatter · 2 no skills found

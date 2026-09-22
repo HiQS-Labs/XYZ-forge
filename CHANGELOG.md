@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-22 — PR #747 GLM review follow-up (GH-744)
+
+Restored the flat app-install path in the AgentChorus incident comment and updated the mini
+viewer provenance citation. Skill nudges now fall back to a bare skill name outside the source
+root. Extended the existing link check to cover the ARCHITECTURE Skills Index and added a
+foreign-directory nudge assertion. Merged current development with ledger records preserved.
+Verification is recorded in the accompanying review evidence.
+
 ## 2026-09-22 — Skills tier review verification (GH-744, PR #747)
 
 The review fix passed the full local gate (411/411) in a disposable full clone using the existing

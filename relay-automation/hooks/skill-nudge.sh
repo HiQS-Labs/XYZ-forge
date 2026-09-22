@@ -74,8 +74,8 @@ try:
 
     if skills:
         names = natural_join(skills)
-        # GH-744: skills live at skills/<tier>/<name>; resolve the tier when run from the repo root.
-        refs = natural_join([next(iter(sorted(glob.glob(f"skills/*/{skill}/SKILL.md"))), f"skills/*/{skill}/SKILL.md")
+        # GH-744: resolve tiered paths in-repo; elsewhere, point to the skill by name.
+        refs = natural_join([next(iter(sorted(glob.glob(f"skills/*/{skill}/SKILL.md"))), skill)
                              for skill in skills])
         verb = "does" if len(skills) == 1 else "do"
         context = f"BTW: {names} already {verb} this — see {refs}."
