@@ -259,7 +259,11 @@ rm "$OLD_TICK/src/project.js.bak"
 printf '%s\n' '{"event":"wave-reconcile-rollback","reason":"uncommitted-mutations","at":0}' \
   > "$WORK/pre-gh702-root/.tick/events/rollback.jsonl"
 if TICK_REPO_ROOT="$WORK/pre-gh702-root" "$OLD_TICK/bin/tick" project >/dev/null 2>&1; then
-  fail "GH-707 red control reproduces the old bare-record defect" "projection unexpectedly succeeded" "projection failure"
+  if grep -qE '^- (undefined|lane) ' "$WORK/pre-gh702-root/.tick/STATE.md"; then
+    pass "GH-707 red control reproduces the old bare-record defect"
+  else
+    fail "GH-707 red control reproduces the old bare-record defect" "clean projection" "phantom task or projection failure"
+  fi
 else
   pass "GH-707 red control reproduces the old bare-record defect"
 fi

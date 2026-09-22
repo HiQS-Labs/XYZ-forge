@@ -1,6 +1,6 @@
 # Marathon Phase gh-707
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-707-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -143,3 +143,11 @@ swept file: yes
   ```
   which causes the test suite to fail on line 400.
 - **Falsifier:** Invert/refine the assertion so the red control proves that without #702's filter, projection either fails or produces the phantom task in `STATE.md` (e.g. `if TICK_REPO_ROOT="$WORK/pre-gh702-root" "$OLD_TICK/bin/tick" project >/dev/null 2>&1 && ! grep -qE '^- (undefined|lane) ' "$WORK/pre-gh702-root/.tick/STATE.md"; then fail "GH-707 red control reproduces the old bare-record defect" "clean projection" "phantom task or projection failure"; else pass "GH-707 red control reproduces the old bare-record defect"; fi`). When tested against the stripped `project.js`, the phantom `- undefined` is detected and the red control passes.
+
+### Round 2 · Builder · codex
+
+- Updated the GH-707 red control in `test/wave-reconcile.sh` to accept either observable form of
+  the pre-#702 defect: a failed projection or a successful projection that writes an `undefined`
+  or `lane` phantom task to `STATE.md`. A successful clean projection now fails the control.
+- No tests or gates were executed, per the phase scope lock; the harness owns verification outside
+  this isolated worktree.
