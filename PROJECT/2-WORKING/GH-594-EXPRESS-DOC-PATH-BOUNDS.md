@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/594
 title: "express: is_doc_path exempts every PROJECT/** path from bounds — an unrelated governance edit can ride the hotfix lane uncounted"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 1
@@ -48,6 +48,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
       `PROJECT/**` file trips `bounds`; the lane's own capture doc + CHANGELOG.md still pass.
 - [ ] `skills/express/SKILL.md` states the narrowed exemption where it describes bounds.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `bash test/gh267-express-skill.sh` passes in full (109+ assertions): the lane's own red controls (`unrelated PROJECT doc must count against bounds` / `... insertion bound`) pass, AND the pre-existing controls keep passing — a counted `PROJECT/**` path must NOT be treated as a subsystem by the multi-subsystem rule (marathon attempt 1 on 2026-09-22 made control (ii) and the standalone check fail with `express-refused: rule=multi-subsystem — core paths span PROJECT, utils`, and its own two red controls also failed). Run the suite before handing off.
 
 ## Swarm Preflight Contract
 

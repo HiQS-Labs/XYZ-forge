@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/670
 title: "Marathon: support explicitly selected Claude CLI reviewers instead of Codex/Agy-only restriction"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 3
@@ -53,6 +53,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
       contract and stay green.
 - [ ] `HARNESS-MODELS-REGISTRY.md` records Claude as an eligible reviewer with its flags.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `bash test/gh346-gateway-allowlists.sh` stays green, in particular check #6: widening the reviewer gate to `claude*` in `bin/marathon-yaml` and `src/marathon-yaml.js` must still reject the phantom `gemini` reviewer, and the literal string `gemini` must not appear outside a comment in either file (marathon attempt 1 on 2026-09-22 failed `#6 ... still admits the phantom 'gemini' reviewer outside a comment` in both). Run the suite before handing off.
 
 ## Swarm Preflight Contract
 
