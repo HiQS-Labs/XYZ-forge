@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -114,3 +114,22 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-720 in the three permitted artifact files:
+- `utils/py/relay_drive.py`: accepts both legacy reviewer headings and all four specified alternative forms; counts only bodies containing non-whitespace before the next Markdown heading, HTML marker, separator, or EOF. Preserves the pure before/after count and GH-397 rationale.
+- `test/gh648-l8-zero-output-handback.sh`: adds subtests for all six heading forms and empty bodies bounded by EOF, headings, markers, and separators, including both legacy forms.
+- `relay-automation/new-relay.sh`: adds one sentence beside step 4 naming accepted forms and requiring a non-empty body.
+
+Verification observed in this turn:
+- Executed the suite's exact embedded Python unittest payload with `python3 -B` and REPO_ROOT pinned, avoiding the prohibited shell-suite invocation from this linked worktree.
+- Before the runtime fix: 6 test methods ran; four alternative-heading subtests failed with `AssertionError: 0 != 1`.
+- After the fix and expanded empty-body coverage: 6 test methods passed.
+- `bash -n relay-automation/new-relay.sh` passed; `new-relay.sh --print` emitted the heading sentence, verified with non-empty-output assertions.
+- Source-traced the existing review-once caller: positive count selects exit 5; header changes without a counted block select exit 3. End-to-end driver execution was not performed.
+- Logs and rendered scaffold are under `.relay-scratch/gh720-{red.log,green.log,scaffold.md}`. These are ephemeral observations, not committed provenance.
+
+Scope/verification limits: no git commands, full gate, or `test/new-relay.sh` run; the latter invokes git fixture setup. No TESTS-RESULTS files or provenance were created outside the authorized allowlist. The harness owns committed evidence and gate verification. Only the required NEXT header transition changes pre-existing relay text; this block is appended.
+
+Handing off to agy for independent review.
