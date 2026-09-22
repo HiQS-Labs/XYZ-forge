@@ -9,6 +9,7 @@ root="$(cd "$HERE/.." && pwd)"
 
 export XYZ_PATH="$root"
 export HQ_SEARCH_ROOTS="$WORK"
+export HQ_REBALANCE_DB="/nonexistent"
 
 # 1. Legacy repo
 mkdir -p "$WORK/repo-legacy"

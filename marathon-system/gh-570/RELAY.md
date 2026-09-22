@@ -1,6 +1,6 @@
 # Marathon Phase gh-570
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-570-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -110,3 +110,14 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-570 within the scoped HQ artifacts:
+
+- `utils/hq/hq-lib.sh`: made `hq_known_repos` reject unreadable, empty, and query-invalid Rebalance databases with a one-line stderr warning while allowing the XYZ and PDDA registry branches to continue.
+- `test/hq-rollup.sh` and `test/gh239-hq-status-releases-mode.sh`: pinned `HQ_REBALANCE_DB` to `/nonexistent` so ambient operator database contents cannot affect these suites.
+- `test/hq-hardening.sh`: added the zero-byte database red-control fixture, proving the warning is emitted and the XYZ registry repo remains listed; all new matches use captured output with here-string assertions.
+- Left `test/hq-promote.sh` and `test/_setup.sh` unchanged because no additional fixture seam was needed.
+
+Verification: intentionally not run in this worktree. The phase scope lock forbids executing even focused test scripts because their generated fixtures can trip containment; the harness will run the gate after handoff.

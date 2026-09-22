@@ -85,6 +85,7 @@ OUT="$VAULT/HQ-Daily-Rollup.md"
 
 run_rollup() {
   HQ_OBSIDIAN_VAULT="$VAULT" \
+  HQ_REBALANCE_DB="/nonexistent" \
   HQ_XYZ_REGISTRY="$XYZ_REG" \
   HQ_PDDA_REGISTRY_DIR="$PDDA_DIR" \
   HQ_SEARCH_ROOTS="$WORK/repos" \
