@@ -1,6 +1,6 @@
 # Marathon Phase gh-736
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-736-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -138,3 +138,72 @@ were confirmed in `.relay-scratch/gh736-static-check.txt`. Per the phase scope l
 tests or gates; the harness owns `test/gh436-merge-cleanup.sh` and the full gate after handoff.
 
 Handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+#### Scope & Integrity Audit
+- Reviewed all artifact files in full, not just the diffs:
+  - `skills/merge-cleanup/scripts/merge_cleanup.py` (1252 lines)
+  - `test/gh436-merge-cleanup.py` (870 lines)
+  - `skills/merge-cleanup/SKILL.md` (282 lines)
+  - `test/gh549-work-events.sh` (1479 lines)
+- Pre-existing defects in touched files: Found one defect in `test/gh549-work-events.sh:641` detailed below (stale query AST assertion incompatible with post-GH-674 `merge_cleanup.py` query structure). Pre-existing logic in `skills/merge-cleanup/scripts/merge_cleanup.py`, `test/gh436-merge-cleanup.py`, and `skills/merge-cleanup/SKILL.md` remains sound and verified.
+
+#### Acceptance Criteria Assessment
+1. **`--exclude <N>` PR dropping before R2-2 base check**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:1043` for help text `"Pattern, branch, or PR number to exclude from cleanup and PR sequencing"`.
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:1145-1152`: numeric `--exclude` values filter `prs` prior to `toposort_prs()` and log `PR #{pr['number']}: excluded by --exclude; not sequenced this run`.
+   - Unit test pin in `test/gh436-merge-cleanup.py:536-544` (`test_excluded_pr_is_removed_before_the_base_check`) verifies PR 8 targeting `main` is dropped without triggering R2-2 refusal.
+2. **Phase 5 UNKNOWN mergeable polling**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:87-88`, `227-236`, and `840-849`. Constant `MERGEABLE_POLL_ATTEMPTS = 6` and `MERGEABLE_POLL_S = 15` are defined; `_poll_mergeable` polls up to 6 attempts with `_sleep(MERGEABLE_POLL_S)` and `refresh_pr_with_retry`.
+   - Persistent UNKNOWN after 6 polls still stops at `skills/merge-cleanup/scripts/merge_cleanup.py:860-863` with exit code 2.
+   - Unit test pins in `test/gh436-merge-cleanup.py:546-568` cover transition from UNKNOWN to MERGEABLE as well as 7 observations stopping with rc 2 and 6 sleeps.
+3. **Stacked PR retargeting & withholding branch delete**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:92`, `150-164`, `239-258`, and `983-986`.
+   - Before `execute_pr_merge`, `_protect_stacked_dependents()` runs `gh pr edit <dep_num> --base <integration_branch>` for open dependents.
+   - When a retarget fails, `_WITHHOLD_BRANCH_DELETE.add(pr_num)` records the PR, logging warning `open stacked PR #... could not be retargeted ... branch deletion withheld`, and `execute_pr_merge()` omits `--delete-branch`.
+   - When retargeting succeeds, `log(f"PR #{pr_num}: retargeted open stacked PR #{dep_num} from '{head}' to '{integration_branch}' before deleting the base branch")` is logged.
+   - Unit test pins in `test/gh436-merge-cleanup.py:570-594` cover both successful retargeting and branch deletion withholding.
+4. **Unit pins in `test/gh436-merge-cleanup.py`**: [Pass]
+   - All required test cases are implemented in `test/gh436-merge-cleanup.py:536-594`:
+     - `test_excluded_pr_is_removed_before_the_base_check`
+     - `test_unknown_then_mergeable_is_polled_and_lands`
+     - `test_unknown_seven_observations_stops`
+     - `test_stacked_pr_is_retargeted_before_base_branch_deletion`
+     - `test_failed_stacked_retarget_withholds_branch_delete`
+5. **Documentation in `skills/merge-cleanup/SKILL.md`**: [Pass]
+   - Inspected `skills/merge-cleanup/SKILL.md:145`, `skills/merge-cleanup/SKILL.md:151`, and `skills/merge-cleanup/SKILL.md:259-260`. The Phase 5 specification and Example 6 accurately document the polling loop, stacked PR retargeting, delete withholding, and numeric `--exclude <PR>` usage.
+6. **Project Gate `bash validate.sh exits 0`**: [Fail]
+   - See Blocker finding below. `test/gh549-work-events.sh:641` fails against `merge_cleanup.py`.
+7. **Compatibility with `gh534_phase_a_tests.TestA5FreshInspection`**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:986`. `execute_pr_merge` is invoked with `(p_num, primary_repo, strategy=args.strategy, dry_run=False)` — no keyword arguments were added, preserving exact compatibility with `fake_merge()` stubs that don't accept `delete_branch=`.
+
+#### Findings
+
+#### [Blocker] Stale AST assertion in `test/gh549-work-events.sh:641` fails against `merge_cleanup.py`
+- **Observed input:** `MC="skills/merge-cleanup/scripts/merge_cleanup.py"; python3 - "$MC" <<'PYORDER' ... assert '"--commit", merged_head' in src ... PYORDER`
+- **Affected scope:** `test/gh549-work-events.sh:641`
+- **Observed failure:**
+  Command executed in non-mutating probe:
+  ```bash
+  python3 - skills/merge-cleanup/scripts/merge_cleanup.py <<'PYORDER'
+  import sys
+  src = open(sys.argv[1], encoding="utf-8").read()
+  assert '"--commit", merged_head' in src
+  PYORDER
+  ```
+  Exit status: `1`
+  Decisive output:
+  ```
+  Traceback (most recent call last):
+    File "<stdin>", line 3, in <module>
+  AssertionError
+  ```
+  In `skills/merge-cleanup/scripts/merge_cleanup.py:447-452`, the hosted reconcile lookup was updated under GH-674 to an unfiltered query (`run list --workflow wave-reconcile.yml --json databaseId,status,conclusion,headSha,event --limit 20`) so that both PR-keyed and merge-commit-keyed runs can be matched in Python; `"--commit", merged_head` was intentionally removed from `src`. Consequently, `test/gh549-work-events.sh:641` raises `AssertionError`, triggering `bad "merge-cleanup Phase 5 durability order drifted"` at line 646, which causes `test/gh549-work-events.sh` to fail ($FAIL=1) and exit 1 at line 1477. Since `test/gh549-work-events.sh` is registered in `validate.sh:252`, `bash validate.sh` will fail (violating Criterion 6).
+- **Falsifier:** In `test/gh549-work-events.sh:640-642`, update the assertion from `assert '"--commit", merged_head' in src` to match the shipped post-GH-674 contract in `merge_cleanup.py` (e.g. `assert 'merged_head' in src`). Re-running the AST probe from `test/gh549-work-events.sh:611-643` then exits 0.
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn
