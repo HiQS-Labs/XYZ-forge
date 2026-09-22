@@ -1,8 +1,8 @@
 # Marathon Phase p1
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-P1-TURN-2 builder=codex reviewer=agy round-cap=5 -->
 
 ## Phase Brief
 
@@ -60,6 +60,8 @@ Only `### Round N · Reviewer · …` (marathon phases) and `### Reviewer · Rou
 
 ## Rules
 
+**Retry note (2026-09-22):** the first attempt landed this fix (`45b7d2cd`, Approved) but its gate went red on `relay-pkg-freshness.sh` — `relay-automation/new-relay.sh` is packaged into `skills/relay-automation/relay-pkg.tar.gz`, so any edit there must be followed by `bash skills/relay-automation/make-pkg.sh` (the tarball is now in this lane's write-set). If the fix is already present in the tree, verify it against the acceptance list, regenerate the tarball if `bash test/relay-pkg-freshness.sh` reports drift, and hand off — do not rewrite working code.
+
 Python twin authoritative. Shortest diff (`/ponytail`). No new module, helper file, or parallel oracle. Evidence: `TESTS-RESULTS/2026-09-22+GH-720/` with the red control (new assertion failing at HEAD, captured before the fix) and the green run, plus `provenance.jsonl`. `bash validate.sh` green is the phase gate.
 
 ## Acceptance / Guard
@@ -69,19 +71,24 @@ Python twin authoritative. Shortest diff (`/ponytail`). No new module, helper fi
 - `new-relay.sh --print` output contains the heading sentence; `test/new-relay.sh` stays green.
 
 
+## Debug mantra (auto-triggered — 2 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh749-relay-gate-cost--p1/ESCALATION.md`): `unattested-terminal`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (codex — BUILDER role)
 
 You are the BUILDER for this phase. Read the phase brief above and implement it.
 APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
-1. Implement the brief by creating/editing the artifact file(s): utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh
+1. Implement the brief by creating/editing the artifact file(s): utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh, skills/relay-automation/relay-pkg.tar.gz
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick
-   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick claim MARATHON-P1-TURN --agent codex --paths "marathon-system/gh749-relay-gate-cost--p1/RELAY.md,utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh"
-   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick ping MARATHON-P1-TURN --agent codex
-   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P1-TURN --agent codex --to agy
-4. Edit ONLY these paths: marathon-system/gh749-relay-gate-cost--p1/RELAY.md and utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick claim MARATHON-P1-TURN-2 --agent codex --paths "marathon-system/gh749-relay-gate-cost--p1/RELAY.md,utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh, skills/relay-automation/relay-pkg.tar.gz"
+   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick ping MARATHON-P1-TURN-2 --agent codex
+   - /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P1-TURN-2 --agent codex --to agy
+4. Edit ONLY these paths: marathon-system/gh749-relay-gate-cost--p1/RELAY.md and utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh, skills/relay-automation/relay-pkg.tar.gz. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
    leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
@@ -91,11 +98,11 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 
 ▶ TAKE YOUR TURN (agy — REVIEWER role)
 
-You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh, skills/relay-automation/relay-pkg.tar.gz. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P1-TURN --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick done MARATHON-P1-TURN --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick release MARATHON-P1-TURN-2 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick done MARATHON-P1-TURN-2 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/bin/tick
    Edit ONLY marathon-system/gh749-relay-gate-cost--p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -114,46 +121,3 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · codex
-
-Implemented GH-720 in the three permitted artifact files:
-- `utils/py/relay_drive.py`: accepts both legacy reviewer headings and all four specified alternative forms; counts only bodies containing non-whitespace before the next Markdown heading, HTML marker, separator, or EOF. Preserves the pure before/after count and GH-397 rationale.
-- `test/gh648-l8-zero-output-handback.sh`: adds subtests for all six heading forms and empty bodies bounded by EOF, headings, markers, and separators, including both legacy forms.
-- `relay-automation/new-relay.sh`: adds one sentence beside step 4 naming accepted forms and requiring a non-empty body.
-
-Verification observed in this turn:
-- Executed the suite's exact embedded Python unittest payload with `python3 -B` and REPO_ROOT pinned, avoiding the prohibited shell-suite invocation from this linked worktree.
-- Before the runtime fix: 6 test methods ran; four alternative-heading subtests failed with `AssertionError: 0 != 1`.
-- After the fix and expanded empty-body coverage: 6 test methods passed.
-- `bash -n relay-automation/new-relay.sh` passed; `new-relay.sh --print` emitted the heading sentence, verified with non-empty-output assertions.
-- Source-traced the existing review-once caller: positive count selects exit 5; header changes without a counted block select exit 3. End-to-end driver execution was not performed.
-- Logs and rendered scaffold are under `.relay-scratch/gh720-{red.log,green.log,scaffold.md}`. These are ephemeral observations, not committed provenance.
-
-Scope/verification limits: no git commands, full gate, or `test/new-relay.sh` run; the latter invokes git fixture setup. No TESTS-RESULTS files or provenance were created outside the authorized allowlist. The harness owns committed evidence and gate verification. Only the required NEXT header transition changes pre-existing relay text; this block is appended.
-
-Handing off to agy for independent review.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-
-Reviewed the GH-720 implementation across all three specified artifact files (`utils/py/relay_drive.py`, `test/gh648-l8-zero-output-handback.sh`, and `relay-automation/new-relay.sh`).
-
-**Findings:**
-1. `[Pass]` `utils/py/relay_drive.py:40-48`: The regex `pat = re.compile(...)` in `review_blocks_added(before, after)` accepts both legacy headings (`### Round N · Reviewer · ...`, `### Reviewer · Round N ...`) and the four newly supported variants (`### Reviewer (<agent>)`, `### Reviewer (<agent>) — rN`, `### Reviewer — Round N`, `### Reviewer — Round N (<agent>)`). It requires non-empty body text before the next Markdown heading, HTML marker, horizontal rule, or EOF via `m.group(1).strip()`. Pure function contract and GH-397 docstring rationale are preserved, and tagged with GH-720.
-2. `[Pass]` `test/gh648-l8-zero-output-handback.sh:32-54`: Expanded unittest methods in `ReviewBlocksAdded` pin all six heading forms (`test_supported_reviewer_headings`), empty-body variants returning 0 across varied delimiters (`test_heading_without_body_counts_zero`), header flips returning 0 (`test_header_flip_without_block_counts_zero`), no-change returning 0 (`test_no_change_counts_zero`), and empty before text handling (`test_empty_before_text_is_safe`).
-3. `[Pass]` `relay-automation/new-relay.sh:106`: Documented the accepted reviewer heading forms directly inside step 4 of `▶ TAKE YOUR TURN` (`Reviewer headings may be ...; follow the heading with a non-empty review body.`), satisfying prompt guidance without restructuring the block.
-4. `[Pass]` Whole-file sweep: Swept `utils/py/relay_drive.py` (lines 1–1126), `test/gh648-l8-zero-output-handback.sh` (lines 1–69), and `relay-automation/new-relay.sh` (lines 1–190). Python syntax validated via `python3 -B -m py_compile utils/py/relay_drive.py` and shell scripts verified via `bash -n`. Isolated probes executed under `.relay-scratch/tmp` confirmed heading detection and empty-body handling. No pre-existing defects found in touched files.
-
-**Verdict:** Approved
-
-relay closed, no further turn needed
-
-### Attestation · relay-drive — 2026-09-22T05:00:42Z
-task: MARATHON-P1-TURN
-reviewer: agy
-status: Approved
-reviewed-head: 45b7d2cdba1e67d7c9f3636cc3616aad82c1405f
-added-range: 11953+2127
-added-sha256: 1d091d58dcf23f79afa2f55626aad0ad0e7631e5a98c6bca5085db22ecf63c9d
