@@ -156,3 +156,11 @@ swept file: yes
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-22T02:20:37Z
+task: MARATHON-GH-711-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 1ffa648afa08f3eca89cdaffc261771e655f5f6a
+added-range: 11057+3184
+added-sha256: 231e5881f9284927a60844525b651ac1e6cc694cf34ffc4bc6b6811a98fb96af
