@@ -1,5 +1,5 @@
 # Marathon Phase gh-651
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-651-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -159,3 +159,39 @@ swept file: yes
   `test/_setup.sh` remains unchanged.
 - Verification intentionally not run: this phase's scope lock assigns test execution to the harness
   because the focused suite creates fixture files outside the artifact allowlist.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+#### Verification & Assessment
+
+1. **Remediation of Round 1 Blocker (`test/gh610-claude-subscription.sh:159-163`):**
+   - The direct shebang (`'#!'+sys.executable`) in `fakegit` was replaced with a POSIX shell trampoline (`fakegit.write_text('#!/bin/sh\nPYTHON='+shlex.quote(sys.executable)+'\nexec "$PYTHON" "$0.py" "$@"\n')`) driving a Python sidecar (`fakegit.with_suffix('.py')`).
+   - Evaluated the swarm-preflight fix probe:
+     - Command: `grep -n "'#!'+sys\.executable" test/gh610-claude-subscription.sh`
+     - Exit status: 1
+     - Decisive output: zero matches found across the file.
+   - Tested POSIX trampoline execution under `$TMPDIR` with spaced Python interpreter path:
+     - Exit status: 0
+     - Decisive output: correctly preserved and forwarded arguments (`['.../fakegit.py', 'worktree', 'remove', 'test']`) through the quoted interpreter path.
+
+2. **Acceptance Criteria Evaluation:**
+   - **Criterion 1 (Safe Launcher & Interpreter Preservation):**
+     - Pass. The launcher for `claude` (lines 104-107) and `fakegit` (lines 157-163) wraps Python execution via `shlex.quote(...)` and executes `"$PYTHON" "$0.py" "$@"`. Authentication validation logic is untouched and no fallback interpreter substitution occurs.
+   - **Criterion 2 (Spaced-Path Regression & Direct-Path Red Control):**
+     - Pass. The direct-path red control is preserved in lines 99-103 (`direct.write_text('#!'+str(spaced_python)+'\n...')` raising `OSError`), and the preflight suite iterates over both `sys.executable` and `str(spaced_python)`. No live API or network calls are made.
+   - **Criterion 3 (Scope Confinement):**
+     - Pass. Changes are strictly confined to `test/gh610-claude-subscription.sh`. `test/_setup.sh` is unchanged.
+   - **Criterion 4 (`bash validate.sh` exits 0):**
+     - `[Unverified — needs clone run]`. Per relay guidelines and phase scope lock, test suite execution is reserved for disposable full clone runs and verified by the post-turn gate.
+
+#### Full File Sweep (GH-268)
+
+- [`test/gh610-claude-subscription.sh`](file:///Users/noelsaw/marathon-clones/10days-2026-09-21-HiQS-Labs-XYZ-forge-20260921-160010-lane-gh-651/test/gh610-claude-subscription.sh): Swept entire file (lines 1-277). Pre-existing tests covering legacy subscription rejection, reasoning effort flag mapping, binary resolution, mock probe failures, wall/idle timeout process termination, and runner diagnostics remain sound and free of latent defects.
+- [`test/_setup.sh`](file:///Users/noelsaw/marathon-clones/10days-2026-09-21-HiQS-Labs-XYZ-forge-20260921-160010-lane-gh-651/test/_setup.sh): Swept entire file (lines 1-176). Shared harness initialization, fixture containment trap, remote repo seeding, tick aliases, trunk commit permissions, and default reviewer binary stub are unmodified and intact.
+
+relay closed, no further turn needed
+
