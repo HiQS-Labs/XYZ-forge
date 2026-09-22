@@ -143,3 +143,11 @@ swept file: yes
 - Pre-existing defects: None found in swept files.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-22T02:08:41Z
+task: MARATHON-GH-720-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 55cda2ba197b8a06f4da92dd20e4582ecd873875
+added-range: 16177+2088
+added-sha256: d9607443a9b3938b401dc548a7ebf095c8545ce27482ac1e3262b7d4ba4e10db
