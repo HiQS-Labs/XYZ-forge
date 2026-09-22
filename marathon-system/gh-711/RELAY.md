@@ -1,5 +1,5 @@
 # Marathon Phase gh-711
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-711-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -118,3 +118,41 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - Added a GH-678 regression covering an unchanged remint plus independent additions on both sides; classification keeps theirs and replays the ours-only addition. The paired red control edits the retained base row and confirms classification still hands off.
 - Documented the narrowed B1 guard in the skill.
 - Verification: `python3 test/gh534_phase_b_tests.py` completed successfully; `python3 -m unittest test.gh534_phase_b_tests.TestB1Classify` ran 8 tests and passed. The full project gate was intentionally left to the harness.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+#### Scope & Integrity Audit
+- Reviewed all artifact files in full, not just the diffs:
+  - `skills/merge-cleanup/scripts/ledger_merge.py` (556 lines)
+  - `test/gh534_phase_b_tests.py` (615 lines)
+  - `skills/merge-cleanup/SKILL.md` (281 lines)
+- Pre-existing defects in touched files: None found. Existing error handling, generation comparisons, writer-replay logic, and table assertions in `skills/merge-cleanup/scripts/ledger_merge.py` remain sound and intact.
+
+#### Acceptance Criteria Assessment
+1. **Narrowed `classify()` duplicate-`gh_number` guard**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/ledger_merge.py:186-203`. In `classify()`, before accumulating gids in `by_gh`, `if k in b and row == b[k] and k not in other_rows: continue` checks if the gid is byte-identical to base on the side carrying it while the other side deleted it. Dropping that gid from `by_gh` prevents false-positive duplicate `gh_number` conflicts during re-mints while preserving conflicts if either side modified the row or added conflicting entries.
+   - Non-mutating probe executed under `.relay-scratch/tmp`:
+     - Command: `python3 -c "import sys; sys.path.insert(0, 'skills/merge-cleanup/scripts'); from ledger_merge import classify; ..."`
+     - Exit status: `0`
+     - Decisive output:
+       ```
+       disjoint: True
+       keep: theirs
+       replay: ['680']
+       red disjoint: False
+       red reasons: ['roadmap_items[GID-A]: updated on the PR side and deleted on the integration side — same-key change on both sides', 'roadmap_items gh_number 678: 2 different rows (GID-A, GID-B) — a clean textual merge would still be a semantic conflict', "roadmap_items[GID-A]: integration side deleted a row that the other side's updated roadmap_items row GID-A still references", 'roadmap_items[GID-A]: column(s) title changed — not expressible through a verb']
+       ```
+2. **Regression and red control in `test/gh534_phase_b_tests.py`**: [Pass]
+   - Inspected `test/gh534_phase_b_tests.py:277-306` (`TestB1Classify.test_gid_remint_of_unchanged_base_row_is_disjoint_but_an_edit_is_not`).
+   - Test verifies base with `(gid A, gh 678)`; ours retains base and adds `680`; theirs deletes A and adds `(gid B, gh 678, same content)` plus its own add `679`. Classification correctly evaluates as disjoint (`keep='theirs'`, replay `['680']`).
+   - Paired red control edits `remint source` on ours to `remint source edited`, confirming classification flags semantic/same-key conflict.
+3. **Documentation in `skills/merge-cleanup/SKILL.md`**: [Pass]
+   - Inspected `skills/merge-cleanup/SKILL.md:146`. The documentation accurately specifies: "A gid retained byte-identically from base is ignored for the duplicate-`gh_number` guard when the other side deleted that gid and re-minted the row; if the retained row was edited, the overlap still hands off."
+4. **Project Gate**: [Unverified — needs clone run]
+   - In accordance with review discipline and scope lock rules, full suite execution (`validate.sh`) is reserved for the post-turn disposable full clone harness gate.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
