@@ -153,3 +153,11 @@ Probes and verification this turn (narrow non-mutating probes under `$TMPDIR` / 
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-22T07:08:21Z
+task: MARATHON-P4-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 10836fc9171f471fcf52fb9c347a07c01d178f65
+added-range: 14792+4279
+added-sha256: fba06aabb6ed724aa295ca141d5dc80d17f03858826133ed9c26745ffa0ca084
