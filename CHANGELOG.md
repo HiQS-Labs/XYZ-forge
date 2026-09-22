@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-22 — Skills tier review verification (GH-744, PR #747)
+
+The review fix passed the full local gate (411/411) in a disposable full clone using the existing
+test Python environment. The link check covers 72 cross-folder references and fails when the old
+recon link is restored. Drift and archive-freshness checks also pass; clone identity stayed unchanged.
+[Run evidence](TESTS-RESULTS/2026-09-22+GH-744/pr747-review/provenance.jsonl).
+
 ## 2026-09-22 — Skills tier review fixes (GH-744, PR #747)
 
 Repaired cross-folder skill links using canonical repository URLs so flat collection copies

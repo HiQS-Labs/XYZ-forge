@@ -241,3 +241,13 @@ which run inline in the PR evidence, not as a new suite.
   sits outside both 14-day windows (2026-09-07→09-21 and 08-24→09-07: no skills-layout issues either
   window; `gh issue list --search "skills folder OR organize skills OR skills index"` on 2026-09-21).
 - **Uncertainty** — the tier placement of ~50 non-anchored skills is judgment; cheap to re-tier.
+
+## Review correction — 2026-09-22
+
+PR #747 review found broken cross-folder links and an overly broad claim about installed links.
+The fixes use canonical repository URLs for portable skill documentation, extend the existing
+path-integrity test, and document refreshing only installed skills/configured IDEs. Direct source
+symlinks need their installer re-run after a move; collection links remain valid. Re-tiering also
+requires updating explicit code/test paths. No migration framework or compatibility layer is needed
+for the current internal adoption. The full local gate passed 411/411; retained evidence is under
+`TESTS-RESULTS/2026-09-22+GH-744/pr747-review/`.
