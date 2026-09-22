@@ -12,7 +12,7 @@ set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-CLI="$REPO/skills/agent-chorus/scripts/agent_chorus.py"
+CLI="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus.py"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh233-chorus-concurrency.XXXXXX")" || {
   echo "FAIL: mktemp -d failed" >&2
   exit 1

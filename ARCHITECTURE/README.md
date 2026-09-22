@@ -3,7 +3,7 @@
 **Nothing in this folder is hand-written. Do not hand-edit the `.json` or the `.html`.**
 
 Every pair here is produced by the **`swe-diagram`** skill
-([`skills/swe-diagram/SKILL.md`](../skills/swe-diagram/SKILL.md), implementation under
+([`skills/4-occasional/swe-diagram/SKILL.md`](../skills/4-occasional/swe-diagram/SKILL.md), implementation under
 [`utils/swe-diagram/`](../utils/swe-diagram/)). The `.json` is the spec you edit; the `.html` is a
 self-contained, dependency-free interactive render of it — pan, zoom, drag, search, filter, and it
 follows the OS light/dark theme. Editing the HTML directly means your change is gone the next time

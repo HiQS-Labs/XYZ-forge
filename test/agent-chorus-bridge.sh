@@ -4,10 +4,10 @@ set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-CLI="$REPO/skills/agent-chorus/scripts/agent_chorus.py"
-BRIDGE="$REPO/skills/agent-chorus/scripts/agent_chorus_bridge.py"
-CLIENT="$REPO/skills/agent-chorus/scripts/agent_chorus_client.py"
-SKILL="$REPO/skills/agent-chorus/SKILL.md"
+CLI="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus.py"
+BRIDGE="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus_bridge.py"
+CLIENT="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus_client.py"
+SKILL="$REPO/skills/2-daily/agent-chorus/SKILL.md"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent-chorus-bridge-test.XXXXXX")" || {
   echo "FAIL: mktemp -d failed" >&2

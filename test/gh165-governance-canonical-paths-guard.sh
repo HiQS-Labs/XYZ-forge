@@ -48,12 +48,12 @@ fi
 
 # Invariant 3: standup triage.py never mutates ROADMAP.md, releases.db, or PROJECT active docs
 illegal_triage_writes=$(grep -En "open\(.*(ROADMAP\.md|releases\.db|releases\.sql|PROJECT/3-COMPLETED)" \
-  "$XYZ_ROOT/skills/standup/triage.py" 2>/dev/null || true)
+  "$XYZ_ROOT/skills/1-hourly/standup/triage.py" 2>/dev/null || true)
 
 if [ -z "$illegal_triage_writes" ]; then
-  pass "skills/standup/triage.py maintains strict read-only purity on governance ledgers"
+  pass "skills/1-hourly/standup/triage.py maintains strict read-only purity on governance ledgers"
 else
-  fail "skills/standup/triage.py maintains strict read-only purity on governance ledgers" "$illegal_triage_writes" "empty"
+  fail "skills/1-hourly/standup/triage.py maintains strict read-only purity on governance ledgers" "$illegal_triage_writes" "empty"
 fi
 
 # Invariant 4: No new .sh executable introduced under utils/ or relay-automation/ (GH-551)

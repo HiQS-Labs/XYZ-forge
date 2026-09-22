@@ -467,7 +467,7 @@ TESTS=(
                                   #   .xyz/utils/pdda/pdda.sh must never run, so a blanket .xyz/ prefix over the
                                   #   file fails here. Section 3 pins that a repo-owned tool still wins, which is
                                   #   what keeps every other wave-reconcile suite's $REPO/utils mock seam alive.
-  "gh77-standup-triage.sh"        # GH-77 (`skills/standup/triage.py`, the deterministic half of /standup) — 29/0.
+  "gh77-standup-triage.sh"        # GH-77 (`skills/1-hourly/standup/triage.py`, the deterministic half of /standup) — 29/0.
                                  #   Its PRD escalated at a 4-round review cap with a FLAT finding rate
                                  #   (11/13/10/10) because a state machine was being specified in prose. The
                                  #   properties four rounds argued about are pinned here instead: a tier-1..3

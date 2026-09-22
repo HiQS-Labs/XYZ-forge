@@ -79,7 +79,9 @@ def main(argv=None):
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
     root = a.root or repo_root()
-    paths = sorted(glob.glob(os.path.join(root, "skills", "*", "SKILL.md")))
+    # one level (XYZ-mini) or two (XYZ-forge: skills/<tier>/<name>, GH-744)
+    paths = sorted(glob.glob(os.path.join(root, "skills", "*", "SKILL.md"))
+                   + glob.glob(os.path.join(root, "skills", "*", "*", "SKILL.md")))
     rows, errors = [], []
     for p in paths:
         folder = os.path.basename(os.path.dirname(p))
@@ -106,7 +108,7 @@ def main(argv=None):
     if errors:
         return 1
     if not rows:
-        print("no skills found under skills/*/SKILL.md", file=sys.stderr)
+        print("no skills found under skills/*/SKILL.md or skills/*/*/SKILL.md", file=sys.stderr)
         return 2
     return 0
 

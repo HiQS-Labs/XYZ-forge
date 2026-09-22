@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """xyz-init-clone — one command for the validated consumer-marathon clone layout (GH-642).
 
-The foreign-repo marathon SOP (skills/relay-xyz, #621 run reports) needs a very specific
+The foreign-repo marathon SOP (skills/1-hourly/relay-xyz, #621 run reports) needs a very specific
 checkout before any lane fires, and every step of it was manual — and every manual step was
 once a failed fire:
 
@@ -17,7 +17,7 @@ once a failed fire:
 Usage:
   xyz-init-clone.py <repo-url> --umbrella N [--slug s] [--dir D]
 
-`--umbrella` is required: per skills/marathon-triage, a marathon without a named umbrella issue
+`--umbrella` is required: per skills/2-daily/marathon-triage, a marathon without a named umbrella issue
 is not ready to start, and the clone name keys off it. `--slug` defaults to the repo basename
 lowercased; it must be <=3 hyphen-separated lowercase words. The destination defaults to
 `~/marathon-clones/marathon-gh-<umbrella>-<slug>`; an occupied derived name retries with the

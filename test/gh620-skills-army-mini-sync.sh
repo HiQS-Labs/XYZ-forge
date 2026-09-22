@@ -38,7 +38,7 @@ assert git(src, "checkout", "-q", "-b", "fixture").returncode == 0
 sync = os.path.join(src, "utils/py/xyz_mini_sync.py")
 if MUTANT == "1":
     text = pathlib.Path(sync).read_text()
-    text = text.replace('    ("skills/skills-army-hq", "", "managed"),\n', "")
+    text = text.replace('    ("skills/3-weekly/skills-army-hq", "", "managed"),\n', "")
     pathlib.Path(sync).write_text(text)
     git(src, "add", sync); git(src, "commit", "-qm", "drop required payload")
 
@@ -58,7 +58,7 @@ actual = set(filter(None, git(dest, "ls-files").stdout.splitlines()))
 ok("literal inclusion-only payload set", actual == expected, f"missing={sorted(expected-actual)} extra={sorted(actual-expected)}")
 manifest = set(pathlib.Path(dest, "MANIFEST.txt").read_text().splitlines())
 ok("manifest names exactly the nine managed payloads", manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
-canonical_readme = pathlib.Path(src, "skills/skills-army-hq/README.md").read_bytes()
+canonical_readme = pathlib.Path(src, "skills/3-weekly/skills-army-hq/README.md").read_bytes()
 ok("root README matches its canonical package source",
    pathlib.Path(dest, "README.md").read_bytes() == canonical_readme)
 if MUTANT == "1":
@@ -74,7 +74,7 @@ ok("default sibling path uses the public repository casing",
    r.returncode == 0 and git(dest, "rev-parse", "HEAD").stdout.strip() == head, r.stderr[-300:])
 
 # A failed push leaves one exact publisher commit: rerun may push it, but an amended extra file may not.
-landing = pathlib.Path(src, "skills/skills-army-hq/README.md")
+landing = pathlib.Path(src, "skills/3-weekly/skills-army-hq/README.md")
 landing.write_text(landing.read_text() + "\nRetry fixture.\n")
 git(src, "add", str(landing)); git(src, "commit", "-qm", "publisher retry fixture")
 bad = os.path.join(WORK, "bad-retry"); git(WORK, "clone", "-q", bare, bad)
@@ -92,7 +92,7 @@ ok("exact retained publisher commit retries push", r.returncode == 0 and git(bar
 # A previously managed path dropped by the new profile must be absent in an exact retry.
 drop_src = os.path.join(WORK, "drop-src"); git(WORK, "clone", "-q", src, drop_src)
 drop_sync = os.path.join(drop_src, "utils/py/xyz_mini_sync.py")
-drop_text = pathlib.Path(drop_sync).read_text().replace('    ("skills/skills-army-hq", "", "managed"),\n', "")
+drop_text = pathlib.Path(drop_sync).read_text().replace('    ("skills/3-weekly/skills-army-hq", "", "managed"),\n', "")
 pathlib.Path(drop_sync).write_text(drop_text); git(drop_src, "add", drop_sync); git(drop_src, "commit", "-qm", "drop prior managed path")
 drop_dest = os.path.join(WORK, "drop-dest"); git(WORK, "clone", "-q", bare, drop_dest)
 r = sh(sys.executable, drop_sync, "--target", "skills-army-mini", "--dest", drop_dest, "--apply")
@@ -110,7 +110,7 @@ owner_manifest.write_text("\n".join(p for p in owner_manifest.read_text().splitl
 pathlib.Path(owner_remote, "README.md").write_text("operator-owned remote README\n")
 git(owner_remote, "add", "MANIFEST.txt", "README.md"); git(owner_remote, "commit", "-qm", "operator owns README"); git(owner_remote, "push", "-q", "origin", "main")
 owner_retry = os.path.join(WORK, "owner-retry"); git(WORK, "clone", "-q", owner_bare, owner_retry)
-shutil.copy(os.path.join(src, "skills/skills-army-hq/README.md"), os.path.join(owner_retry, "README.md"))
+shutil.copy(os.path.join(src, "skills/3-weekly/skills-army-hq/README.md"), os.path.join(owner_retry, "README.md"))
 owner_manifest = pathlib.Path(owner_retry, "MANIFEST.txt")
 owner_manifest.write_text("\n".join(sorted(expected - {"MANIFEST.txt", ".xyz-forge-revision"})) + "\n")
 git(owner_retry, "add", "MANIFEST.txt", "README.md")
@@ -176,7 +176,7 @@ repo_only = {".git", ".gitignore", ".xyz-forge-revision", "MANIFEST.txt", "LICEN
 ok("init excludes repository-only metadata from the installed manager",
    r.returncode == 0 and not any((installed_manager / name).exists() for name in repo_only))
 ok("installed manager is byte-for-byte the canonical package tree",
-   r.returncode == 0 and tree(installed_manager) == tree(os.path.join(src, "skills/skills-army-hq")))
+   r.returncode == 0 and tree(installed_manager) == tree(os.path.join(src, "skills/3-weekly/skills-army-hq")))
 r = cli(intake, "update", "skills-army-hq", "--source", dest)
 ok("generated repository root remains a valid manager update source",
    r.returncode == 0 and "Unchanged: skills-army-hq" in r.stdout, r.stderr)

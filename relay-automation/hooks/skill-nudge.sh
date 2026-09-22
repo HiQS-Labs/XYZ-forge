@@ -29,6 +29,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 python3 -c '
+import glob
 import json
 import re
 import sys
@@ -73,7 +74,9 @@ try:
 
     if skills:
         names = natural_join(skills)
-        refs = natural_join([f"skills/{skill}/SKILL.md" for skill in skills])
+        # GH-744: skills live at skills/<tier>/<name>; resolve the tier when run from the repo root.
+        refs = natural_join([next(iter(sorted(glob.glob(f"skills/*/{skill}/SKILL.md"))), f"skills/*/{skill}/SKILL.md")
+                             for skill in skills])
         verb = "does" if len(skills) == 1 else "do"
         context = f"BTW: {names} already {verb} this — see {refs}."
         print(json.dumps({

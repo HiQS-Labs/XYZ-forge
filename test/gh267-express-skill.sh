@@ -537,7 +537,7 @@ grep -q "Could not automatically resolve landing commit for GH-99" "$ERR" && ok 
 
 # --- GH-592 control (iii): no receipt for the landing → resume refuses BEFORE closing/shipping, with the recipe ---
 ! python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh 2>"$ERR" && ok "control (iii): resume refuses a landing with no valid receipt" || bad "resume accepted a landing with no receipt"
-grep -q "no COMMITTED valid express receipt bound to commit" "$ERR" && grep -q "write_receipt" "$ERR" && grep -q "skills/express/SKILL.md" "$ERR" && grep -q "fails closed" "$ERR" && grep -q "VOIDs on any difference" "$ERR" && ok "control (iii): refusal carries the recovery recipe incl. identity snapshot" || bad "recipe missing: $(tail -1 "$ERR")"
+grep -q "no COMMITTED valid express receipt bound to commit" "$ERR" && grep -q "write_receipt" "$ERR" && grep -q "skills/2-daily/express/SKILL.md" "$ERR" && grep -q "fails closed" "$ERR" && grep -q "VOIDs on any difference" "$ERR" && ok "control (iii): refusal carries the recovery recipe incl. identity snapshot" || bad "recipe missing: $(tail -1 "$ERR")"
 grep -q '"state":"OPEN"' "$GH_STATE/issue-999.json" && ok "control (iii): issue #999 still OPEN — refused before close" || bad "resume closed the issue without evidence"
 # --- GH-592 control (iv): failed / wrong-suite / wrong-issue records are not evidence ---
 git -C "$FX" checkout -q development; git -C "$FX" pull -q --ff-only origin development

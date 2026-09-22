@@ -46,7 +46,7 @@ assert_nudge() { # <label> <prompt> <expected-skill>...
   context="$(nudge_context "$output")"
   for expected in "$@"; do
     case "$context" in
-      *"skills/$expected/SKILL.md"*) ;;
+      *"/$expected/SKILL.md"*) ;;   # skills/<tier>/<name> or the skills/*/<name> pointer (GH-744)
       *) fail "$label missing $expected nudge: ${context:-<silent>}" ;;
     esac
   done

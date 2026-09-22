@@ -402,7 +402,7 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
     # concrete allowlisted FILE beneath the dir, and a bare dir entry has nothing beneath it). The
     # turn therefore did real work, had it reverted, and reported a *containment violation* — which
     # reads as a misbehaving builder rather than a malformed lane spec. Cost a full marathon turn on
-    # 2026-08-20 (Daybreak wave 1, `--artifact "…,skills/standup/fixtures,…"`).
+    # 2026-08-20 (Daybreak wave 1, `--artifact "…,skills/1-hourly/standup/fixtures,…"`).
     # Dir-ness is declared two ways, because the two cases are genuinely different:
     #   • trailing slash  — explicit, and the ONLY signal available when the directory does not exist
     #                       yet because the turn is about to create it;

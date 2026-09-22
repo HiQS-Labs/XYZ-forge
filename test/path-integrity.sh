@@ -20,8 +20,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 require_forge_root validate.sh ci-local.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 
 # --- Check A: package manifest == tarball contents (no source/package drift) ---
-MKPKG="$ROOT/skills/relay-automation/make-pkg.sh"
-TARBALL="$ROOT/skills/relay-automation/relay-pkg.tar.gz"
+MKPKG="$ROOT/skills/1-hourly/relay-automation/make-pkg.sh"
+TARBALL="$ROOT/skills/1-hourly/relay-automation/relay-pkg.tar.gz"
 if [ -f "$MKPKG" ] && [ -f "$TARBALL" ]; then
   # `.conf` joined the extension set with GH-388, which ships relay-automation/non-durable-log-roots.conf
   # — a data file both language lanes read at runtime. The pattern is the manifest's own definition of
@@ -36,10 +36,10 @@ if [ -f "$MKPKG" ] && [ -f "$TARBALL" ]; then
     comm -23 <(printf '%s\n' "$pkg_list") <(printf '%s\n' "$tar_list") >&2
     echo "  --- in tarball, not listed in make-pkg.sh ---" >&2
     comm -13 <(printf '%s\n' "$pkg_list") <(printf '%s\n' "$tar_list") >&2
-    fail "package manifest drift — re-run skills/relay-automation/make-pkg.sh and commit the tarball"
+    fail "package manifest drift — re-run skills/1-hourly/relay-automation/make-pkg.sh and commit the tarball"
   fi
 else
-  fail "packaging files missing: expected make-pkg.sh + relay-pkg.tar.gz under skills/relay-automation/"
+  fail "packaging files missing: expected make-pkg.sh + relay-pkg.tar.gz under skills/1-hourly/relay-automation/"
 fi
 
 # --- Check B: referenced script/doc paths resolve ------------------------------
@@ -49,8 +49,8 @@ fi
 # and `docs` when a new top-level tooling dir or operator doc appears.
 docs="README.md \
 relay-automation/README.md \
-skills/relay-automation/SKILL.md \
-skills/relay-xyz/SKILL.md"
+skills/1-hourly/relay-automation/SKILL.md \
+skills/1-hourly/relay-xyz/SKILL.md"
 
 shfiles=()
 # The portable PDDA runtime describes target-only paths and historical layouts.
@@ -67,6 +67,11 @@ done < <(cd "$ROOT" && git ls-files '*.sh')
 # and (c) end in a real extension — so globs (relay-automation/*.sh) and
 # placeholders (relay-system/<date>/<slug>.md) are skipped by construction.
 ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.gz)'
+# GH-744: repo skills live at skills/<tier>/<name>; an APP-DISCOVERY path (~/.claude/skills/<name>/...,
+# ~/.codex/skills/..., ~/.gemini/{config,antigravity,antigravity-cli}/skills/..., ~/.zcode/skills/...)
+# names the flat installed layout, which never exists in this tree. Blank those before tokenizing so
+# the bare `skills/<name>/...` tail is not mistaken for a repo path.
+app_root_re='s#(\.claude|\.codex|\.agents|\.zcode|config|antigravity|antigravity-cli)/skills/[A-Za-z0-9._/-]+##g'
 
 # Intentional FIXTURE LITERALS — path-like tokens that are test DATA (a file a test creates in a
 # throwaway temp repo at runtime), NOT references to a real file in this tree. Check B must skip them,
@@ -133,7 +138,7 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # negative receipt) — fixture literals of the same class, never files in this tree. Likewise
 # test/gh425-gate-provenance-pr.sh's synthetic express receipts name `test/gh592-demo.sh` /
 # `test/gh590-demo.sh` as the suite `command` under a mktemp root.
-fixture_literals=" test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh skills/alpha/SKILL.md skills/beta/SKILL.md skills/gamma/SKILL.md test/x.sh test/probe.sh test/probe-empty.sh "
+fixture_literals=" test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh skills/alpha/SKILL.md skills/beta/SKILL.md skills/1-hourly/delta/SKILL.md skills/gamma/SKILL.md test/x.sh test/probe.sh test/probe-empty.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do
@@ -148,7 +153,7 @@ for f in "${shfiles[@]}" $docs; do
       echo "  broken path reference '$tok' in $f" >&2
       bad=1
     fi
-  done < <(grep -hoE "$ext_re|bin/tick" "$ROOT/$f" 2>/dev/null | sort -u)
+  done < <(sed -E "$app_root_re" "$ROOT/$f" 2>/dev/null | grep -oE "$ext_re|bin/tick" | sort -u)
 done
 [ "$bad" = 0 ] \
   && pass "all referenced relay/script/doc paths resolve (scanned ${#shfiles[@]} scripts + curated docs)" \

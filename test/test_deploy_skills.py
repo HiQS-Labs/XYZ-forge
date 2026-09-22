@@ -553,7 +553,7 @@ raise SystemExit(mod.main(sys.argv[3:]))
         self.assertGreater(len(intake.snapshot(REPO / "skills" / "consult")), 1)
 
     def test_a7_swe_description_fits_zcode_discovery_limit(self):
-        description = intake.skill_info(REPO / "skills" / "swe")["description"]
+        description = intake.skill_info(REPO / "skills" / "1-hourly" / "swe")["description"]
         self.assertTrue(description)
         self.assertLessEqual(len(description), 1024)
 

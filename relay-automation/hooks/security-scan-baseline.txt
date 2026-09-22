@@ -38,7 +38,7 @@ test/poll-relay.sh	eval-unsanitized	# `eval "$AGENT_CMD"` split on the space →
 test/registry-lock-concurrency.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 test/relay-dep-drift.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 test/relay-turn-handoff.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
-test/relay-xyz-skill-guard.sh	eval-unsanitized	run "sess-loc" Bash 'eval "$(bash skills/relay-xyz/find-harness.sh --env)"'
+test/relay-xyz-skill-guard.sh	eval-unsanitized	run "sess-loc" Bash 'eval "$(bash skills/1-hourly/relay-xyz/find-harness.sh --env)"'
 test/security-scan.sh	eval-unsanitized	eval "$UNSANITIZED"
 test/security-scan.sh	eval-unsanitized	check_pattern "eval-var"         'eval "$MYVAR"'
 test/security-scan.sh	eval-unsanitized	check_pattern "eval-dollar"      'eval $MYVAR'

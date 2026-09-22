@@ -11,7 +11,7 @@
 #   B. Negative control (per #419) — the OLD 2-branch logic each consumer carried pre-fix, replayed
 #      verbatim against the SAME linked-worktree fixture, observably misses the lock the driver holds.
 #   C. End-to-end, real linked worktree — marathon-ls.sh, utils/hq/marathon-live.sh, and
-#      skills/relay-xyz/find-harness.sh --check, run for real against a `git worktree add` fixture
+#      skills/1-hourly/relay-xyz/find-harness.sh --check, run for real against a `git worktree add` fixture
 #      with the lock held at the driver's real (common-dir) path, all observe it correctly.
 set -uo pipefail
 
@@ -20,7 +20,7 @@ ROOT="$(cd "$HERE/.." && pwd)"
 LIB="$ROOT/relay-automation/driver-lock-lib.sh"
 LS="$ROOT/relay-automation/marathon-ls.sh"
 LIVE="$ROOT/utils/hq/marathon-live.sh"
-FH="$ROOT/skills/relay-xyz/find-harness.sh"
+FH="$ROOT/skills/1-hourly/relay-xyz/find-harness.sh"
 
 # shellcheck source=relay-automation/driver-lock-lib.sh
 . "$LIB"
@@ -205,11 +205,11 @@ grep -q '🟢 live' "$LIVE_OUT" 2>/dev/null \
 # C3. find-harness.sh --check — a "harness" fixture whose skill script + lib live in a linked
 # worktree, invoked from a separate FOREIGN caller repo so the concurrency-warning gate fires.
 HARNESS_MAIN="$WORK/harness-main"
-mkdir -p "$HARNESS_MAIN/relay-automation" "$HARNESS_MAIN/skills/relay-xyz"
+mkdir -p "$HARNESS_MAIN/relay-automation" "$HARNESS_MAIN/skills/1-hourly/relay-xyz"
 printf '#!/usr/bin/env bash\n:\n' >"$HARNESS_MAIN/relay-automation/relay-drive.sh"
 chmod +x "$HARNESS_MAIN/relay-automation/relay-drive.sh"
 cp "$LIB" "$ROOT/relay-automation/harness-paths.sh" "$HARNESS_MAIN/relay-automation/"
-cp "$FH" "$HARNESS_MAIN/skills/relay-xyz/find-harness.sh"
+cp "$FH" "$HARNESS_MAIN/skills/1-hourly/relay-xyz/find-harness.sh"
 git init -q "$HARNESS_MAIN"
 git -C "$HARNESS_MAIN" config user.email t@example.com
 git -C "$HARNESS_MAIN" config user.name "gh448 test"
@@ -225,7 +225,7 @@ FOREIGN="$WORK/foreign"
 mkdir -p "$FOREIGN"
 git init -q "$FOREIGN"
 
-fh_out="$(cd "$FOREIGN" && bash "$HARNESS_WT/skills/relay-xyz/find-harness.sh" --check 2>&1)"
+fh_out="$(cd "$FOREIGN" && bash "$HARNESS_WT/skills/1-hourly/relay-xyz/find-harness.sh" --check 2>&1)"
 grep -q 'a driver lock is currently HELD' <<<"$(printf '%s' "$fh_out")" \
   && pass "find-harness.sh --check: linked-worktree harness + held common-dir lock -> warns" \
   || fail "find-harness.sh --check: expected a held-lock warning, got: $fh_out"

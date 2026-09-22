@@ -4,9 +4,9 @@
 # capability gate documented in the SKILL.md, exercised separately by the relay tests.)
 source "$(dirname "$0")/_setup.sh" skill-extract
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PKG="$ROOT/skills/relay-automation/relay-pkg.tar.gz"
+PKG="$ROOT/skills/1-hourly/relay-automation/relay-pkg.tar.gz"
 
-[ -f "$PKG" ] && pass "relay-pkg.tar.gz present beside the skill" || fail "package missing — run skills/relay-automation/make-pkg.sh"
+[ -f "$PKG" ] && pass "relay-pkg.tar.gz present beside the skill" || fail "package missing — run skills/1-hourly/relay-automation/make-pkg.sh"
 
 D="$WORK/extract"; mkdir -p "$D"
 tar xzf "$PKG" -C "$D"

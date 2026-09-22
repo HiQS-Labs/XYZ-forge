@@ -15,7 +15,7 @@ pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 
 # 1. against this repo: count equals ls | wc -l and the name set equals the folder set
-skill_files=("$REPO"/skills/*/SKILL.md)
+skill_files=("$REPO"/skills/*/*/SKILL.md)   # skills/<tier>/<name> (GH-744)
 expected="${#skill_files[@]}"
 out="$(python3 "$VIEWER" --root "$REPO" 2>"$WORK/err")"; rc=$?
 got="$(printf '%s\n' "$out" | tail -1 | awk '{print $1}')"
