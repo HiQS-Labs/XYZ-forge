@@ -3569,6 +3569,10 @@ def cmd_roadmap_add(args):
                 args.issue_num, args.title, args.created, basename, args.doc_path,
                 args.issue_num, args.issue_url
             )
+            # GH-703: direct CLI intake must pass through the same grammar as an explicit
+            # --raw-text value. Titles containing a lone asterisk otherwise create a row that
+            # roadmap_render() silently drops because it cannot replay the bold bullet.
+            raw_text = validate_raw_text(raw_text, args.issue_num)
         # GH-249: the rating rides in the ledger line, parsed by the SAME parse_rating() the
         # markdown sync uses — one grammar, one parser, never a second scorer. Before this, ratings
         # could only enter through `roadmap sync`, which GH-169 turned into a no-op in releases-mode

@@ -561,6 +561,7 @@ TESTS=(
   "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
   "gh567-roadmap-dashboard-retired.sh" # GH-567 (verify ROADMAP-DASHBOARD.md and view-staleness machinery are retired)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
+  "gh703-raw-text-asterisk.sh"        # GH-703 (direct roadmap add validates synthesized raw_text before storing an unrenderable row)
   "gh269-roadmap-retired.sh"          # GH-269 (verify ROADMAP.md is retired, tools operate on releases.db, move/update CLI verbs)
   "gh568-releases-md-retired.sh"      # GH-568 (verify RELEASES.md is retired, tools operate on releases.db, writers audit)
   "gh423-roadmap-render.sh"           # GH-423 (releases roadmap render emits roadmap_items as ledger markdown marathon_plan.py parses unchanged)

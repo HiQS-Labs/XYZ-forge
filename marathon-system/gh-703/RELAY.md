@@ -1,6 +1,6 @@
 # Marathon Phase gh-703
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-703-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -110,3 +110,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Implemented fix option 1 in `utils/py/releases_app.py`: the synthesized fallback used by direct
+  `roadmap add` now passes through `validate_raw_text()` before rating or persistence, so a title
+  containing a lone `*` is refused with the existing `invalid-raw-text` diagnostic instead of
+  creating a row that `roadmap render` later drops.
+- Added `test/gh703-raw-text-asterisk.sh`, sourcing `test/_setup.sh`. Its mutation-based red control
+  removes the new validation call in a disposable `$WORK` copy and demonstrates the pre-fix
+  acceptance of `--title 'a/*/b'`; the candidate assertion requires that same no-`--raw-text` input
+  to be refused by the shared validator.
+- Registered the focused suite in `validate.sh`.
+- Verification: not executed in this isolated worktree because the phase scope lock explicitly
+  prohibits running tests or gates here; the outer harness owns the post-turn gate.
