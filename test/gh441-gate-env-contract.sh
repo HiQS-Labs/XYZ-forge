@@ -150,5 +150,16 @@ printf '%s' "$orphan_out" | /usr/bin/grep -q "GH-441" \
   && pass "C6b validate.sh no longer hardcodes its own prologue" \
   || fail "C6b validate.sh still carries the duplicated unset line"
 
+# ── C7 (GH-730): ci-local.sh is a gate entry point too — it launches suites and pytest directly ──
+/usr/bin/grep -q "gate-env.sh" "$ROOT/ci-local.sh" \
+  && pass "C7a ci-local.sh sources the shared helper" \
+  || fail "C7a ci-local.sh does not source gate-env.sh — its suites run with an ungoverned environment"
+
+# ── C8 (GH-730): sourcing the helper sets the no-bytecode rule and leaves the caller's names alone ──
+c8_out="$(env -u PYTHONDONTWRITEBYTECODE bash -c '_src=caller; unset _hp_lib; . "$1"; printf "%s|%s|%s" "${PYTHONDONTWRITEBYTECODE-unset}" "${_src-unset}" "${_hp_lib-unset}"' _ "$HELPER" 2>/dev/null)"
+[ "$c8_out" = "1|caller|unset" ] \
+  && pass "C8a the helper exports PYTHONDONTWRITEBYTECODE=1 and does not clobber a caller's _src/_hp_lib" \
+  || fail "C8a expected '1|caller|unset', got '$c8_out'"
+
 printf '  gh441-gate-env-contract: %s pass, %s fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

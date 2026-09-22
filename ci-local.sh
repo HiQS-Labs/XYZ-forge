@@ -68,6 +68,11 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$HERE" || exit 1
 
+# The same gate-environment prologue validate.sh sources (GH-441 scrub of ambient marathon exports;
+# GH-730 no-bytecode rule). This runner launches suites and pytest directly below, so it must source
+# it itself — a `validate.sh --list` child cannot export back into this shell.
+. "$HERE/relay-automation/gate-env.sh"
+
 # ── GH-45: REFUSE to run from a linked git worktree ─────────────────────────────────────────────
 # Same guard, same reason, same override as validate.sh's (kept inline in both rather than a new
 # shared .sh — GH-551; both copies are pinned by test/gh35-test-tiers.sh): this script runs the

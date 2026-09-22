@@ -168,3 +168,7 @@ The local push gate was observed at 18–23 min against docs that promise 4–6;
 ### QA checklist — Phase 0
 
 - [ ] TODO: acceptance criteria for the Phase 0 pass above.
+
+## Merge evidence
+
+- PR #734 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

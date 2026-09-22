@@ -163,3 +163,7 @@ When adding downstream tool invocations to central orchestrators (like calling `
 ## Merge evidence
 
 - PR #580 merged 2026-09-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #734 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
