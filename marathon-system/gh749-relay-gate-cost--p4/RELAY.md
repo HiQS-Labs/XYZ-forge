@@ -1,5 +1,5 @@
 # Marathon Phase p4
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN-2 builder=codex reviewer=agy round-cap=5 -->
@@ -155,3 +155,26 @@ for the harness/outer acceptance runner under the user's turn restrictions.
 No claim of full phase acceptance or promotion evidence is made.
 
 Handing off to agy for review of the existing corrected artifacts and these limits.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the artifact files on disk:
+- `validate.sh`: Full sweep completed. Lines 1023–1038 introduce the GH-732 environment fault detection block before the pool/sequential execution. When `php` is on PATH but fails both `php -v` and `php -l /dev/null`, `XYZ_ENV_FAULTS` records `php` and the diagnostic is emitted (`ENVIRONMENT FAULT: php present but unusable (...) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)`). When `python3` cannot `import yaml`, `XYZ_ENV_FAULTS` records `yaml` and emits the diagnostic naming `command -v python3` and the venv hint (`~/.cache/xyz-forge-test-venv/bin first on PATH`). `XYZ_ENV_FAULTS` is exported to child suite processes. Lines 1574–1576 print `ENVIRONMENT FAULTS (GH-732): $XYZ_ENV_FAULTS — this run is NOT promotion evidence.` in the Summary. Exit code semantics are unchanged. No pre-existing defects found. [Pass] (`validate.sh:1023-1038,1574-1576`)
+- `test/gh251-validate-pytest-skip.sh`: Full sweep completed. Lines 82–99 add the `yaml` sibling regression test: shims `python3` with a stub failing `-c "import yaml"` on PATH and runs `validate.sh --print-mode`, asserting that the diagnostic names the interpreter binary, the `~/.cache/xyz-forge-test-venv/bin` repair PATH, and the `NOT promotion evidence (GH-732)` limit. Swept the full file including existing pytest skip and isolation checks. No pre-existing defects found. [Pass] (`test/gh251-validate-pytest-skip.sh:82-99`)
+- `test/gh268-relay-cue-and-target-checks.sh`: Full sweep completed. Lines 97–113 update `gh732_php_assertions` to check whether `XYZ_ENV_FAULTS` contains `php` and emit `SKIP: environment fault (php present but unusable)` instead of failing on broken PHP. Lines 115–134 implement the red control using a broken `php` stub that prints `missing libaspell` and exits 1; exercises `validate.sh --print-mode` and `export XYZ_ENV_FAULTS=php` followed by `gh732_php_assertions` without `eval` (addressing the prior security scan finding). Verified that no `eval` call is present in the file. Swept the full file including target-checks, cue, and runner isolation logic. No pre-existing defects found. [Pass] (`test/gh268-relay-cue-and-target-checks.sh:97-134`)
+
+Probes and verification this turn (under `.relay-scratch/tmp/`):
+- Syntax check: `bash -n validate.sh test/gh251-validate-pytest-skip.sh test/gh268-relay-cue-and-target-checks.sh` returned exit code 0.
+- Security check: Grepped for `eval` across `test/gh268-relay-cue-and-target-checks.sh` and `test/gh251-validate-pytest-skip.sh`; confirmed zero executable `eval` occurrences (`test/gh268-relay-cue-and-target-checks.sh:119` is a comment explaining eval was eliminated).
+- Broken PHP probe: Isolated executable probe with a broken PHP stub (`echo "missing libaspell" >&2; exit 1`) running `bash validate.sh --print-mode` returned exit code 0 and printed `ENVIRONMENT FAULT: php present but unusable (missing libaspell) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)`.
+- Missing PyYAML probe: Isolated executable probe with a yaml-less `python3` stub running `bash validate.sh --print-mode` returned exit code 0 and printed `ENVIRONMENT FAULT: python3 (...) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)`.
+- Fault export & skip probe: Verified that `XYZ_ENV_FAULTS=php` and `XYZ_ENV_FAULTS=yaml,php,other` cause `gh732_php_assertions` to print `SKIP: environment fault (php present but unusable)` and exit 0, while unset/empty `XYZ_ENV_FAULTS` preserves existing execution paths.
+- Boundary control: Inspected `utils/py/wave_reconcile.py:580` (`command(["python3", "-c", "import pytest"])`); confirmed failure triggers `die("Full-suite qualification failed; no receipt produced: ...", code=6)`. Changes to `validate.sh` do not weaken `--qualify` or permit unverified qualification receipts.
+- Disposable clone tests: Full gate run, live test suites, and fresh-clone B.2 acceptance runs are deferred to the harness gate (`[Unverified — needs clone run]`).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
+
