@@ -52,3 +52,21 @@ gh549-work-events.sh           FAIL   identical 105/20 on the untouched primary 
 ```
 
 Acceptance one-liners: depth-2 SKILL.md count = 60; depth-1 count = 0; `find-harness.sh --check` resolves the clone via git-root; both publish manifests resolve every source; drift check vs Deployed Skills recognises 22 forge-owned skills before and after (12 ok + 10 drifted-by-text-repoint after).
+
+## Qualifying gate — disposable full clone `XYZ-forge-gh744-gate` (origin https://github.com/HiQS-Labs/XYZ-forge.git, identity verified before/after)
+
+`./validate.sh --burst` on the attested final commit **4f44f550** (2026-09-22): **passed 406 / 409**. Failed:
+
+| Suite | On pristine `origin/development` 9c384240 (same clone, same machine) | Standalone re-run | Disposition |
+|---|---|---|---|
+| `gh549-work-events.sh` | 105/20 — identical failure | — | pre-existing, env-driven (`XYZ_WORK_CONNECTORS_REGISTRY` active); hosted CI green on 9c384240 |
+| `gh605-work-state.sh` | 27/1 — identical failure (`test_wal_header_without_sidecars_refuses_before_open_for_schema_seven_and_eight`) | — | pre-existing on the base; hosted CI green on 9c384240 |
+| `relay-turn-timeout.sh` | — | 9 pass, 0 fail on the branch | timing flake under `--burst` full width |
+
+Log: `XYZ-forge-gh744-gate/.gh744-validate.log` (retained with the clone).
+
+## Post-approval upstream merges (no implementation change)
+
+- c9de2d6d: merged aa7f0a62 + 9c384240 (GH-737 debug-mantra SKILL.md edit landed on the moved path via rename detection; ledger resolved with `utils/releases-merge-resolve.sh`).
+- a9c612e1: merged d3c220de (GH-740/741; `releases.sql` + CHANGELOG both-entries resolution; `releases check` clean).
+- Focused re-run on a9c612e1: path-integrity 2/0, ci-route 76/0, relay-pkg-freshness 3/0, gh660-skill-drift 7/0, find-harness 23/0, gh421 OK, gh684 OK, gh740 OK, releases-skill 40/0; depth-2 SKILL.md = 60, depth-1 = 0.
