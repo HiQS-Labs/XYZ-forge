@@ -41,7 +41,7 @@ full env-exporting form (`eval "$(... --env)"` + `cd`) that every recipe in this
 run.
 
 This repo **already ships** the relay automation. Don't reinvent the CLI handoff turn by turn — call
-the scripts under [`relay-automation/`](../../relay-automation/). `/relay` defines the thread format
+the scripts under [`relay-automation/`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/). `/relay` defines the thread format
 and turn protocol and scaffolds the dated file; **`relay-xyz` is the thin repo-specific layer that
 drives that thread to completion with the shipped supervisor + turn-takers.**
 
