@@ -165,3 +165,11 @@ swept file: yes
 - [Pass] Whole-file sweep: Swept `utils/py/wave_reconcile.py` and `test/wave-reconcile.sh`. Rollback telemetry safely checks `os.path.isdir(events_dir)` before emitting, so test environments lacking `.tick/events/` (such as `test/gh202-wave-reconcile-issue-state.sh:263-279` and `test/gh421-auto-wave-reconcile.sh:207-217`) remain completely pristine with no untracked files generated. No pre-existing defects found in touched scopes.
 - [Unverified — needs clone run] Gate execution (`bash validate.sh`): Not run in-tree per phase brief scope lock (`test/wave-reconcile.sh` and related suites create fixture git repos in-tree that conflict with containment). Left for harness execution in a disposable full clone.
 
+
+### Attestation · relay-drive — 2026-09-22T04:18:32Z
+task: MARATHON-GH-707-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 82c927d9dfd74b7c6b9b716361ce14a1d2f90af6
+added-range: 18067+1817
+added-sha256: e51bbb4bc4fbc6c810adadefcc0825b02b861cedb9f8bfe8795e122b04742db0
