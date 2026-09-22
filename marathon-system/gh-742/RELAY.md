@@ -1,5 +1,5 @@
 # Marathon Phase gh-742
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-742-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -119,3 +119,25 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   this isolated worktree; the harness will run the gate after handoff.
 
 Handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the implementation against all acceptance criteria and inspected the full touched files:
+- `relay-automation/xyz-vendor.sh:465-468`: `materialize_vendor()` now explicitly writes `{"type": "commonjs"}` into `$STAGE_DIR/package.json` before runnability checks and before swapping `$STAGE_DIR` into `$VENDOR_DIR`. This ensures every vendoring and update operation guarantees an isolated CommonJS boundary for Node runtime entry points (`bin/tick`, `src/*.js`), isolating them from a consumer target's top-level `"type": "module"`.
+- `test/xyz-vendor.sh:28-47`: regression fixture initializes the consumer target's root `package.json` with `"type": "module"`, runs vendoring, verifies `.xyz/package.json` has `"type": "commonjs"`, verifies the target `package.json` remains `"type": "module"`, and executes `tick --help` cleanly. Includes a red control that removes `.xyz/package.json` and asserts `tick --help` fails under ES module scope, then restores `.xyz/package.json` for subsequent tests in the suite.
+
+Assessment across acceptance criteria:
+1. `materialize_vendor()` in `relay-automation/xyz-vendor.sh` writes `.xyz/package.json` containing `"type": "commonjs"` on every vendor/update: [Pass] verified at `relay-automation/xyz-vendor.sh:467`.
+2. `test/xyz-vendor.sh` gains a fixture whose root `package.json` declares `"type": "module"`; after vendoring, `TICK_REPO_ROOT=<target> .xyz/bin/tick --help` exits 0. Red control: with `.xyz/package.json` removed the same invocation fails: [Pass] verified at `test/xyz-vendor.sh:28-47`.
+3. `bash validate.sh` exits 0: [Unverified — needs clone run] Scope lock forbids running tests/gates in this isolated worktree; the gate runs post-turn in the disposable harness run.
+
+Full file sweeps:
+- `relay-automation/xyz-vendor.sh:1-516`: Pre-existing locking, registration, runtime-path preservation, Tier 1/2 splits, and ignore reconciliation verified intact; no pre-existing defects found.
+- `test/xyz-vendor.sh:1-369`: Mirror completeness checks, ignore invariants, tracked `.xyz` handling, find-harness resolution, and sync suite coverage verified intact; no pre-existing defects found.
+- Covering artifacts checked: `test/gh105-vendor-releases-addon.sh`, `test/gh197-vendor-tier-split.sh`, `test/gh293-vendored-guard-drift.sh`, `test/gh312-vendor-preserves-state.sh`, `test/gh642-consumer-fruit.sh`, `test/gh708-vendored-suite-skips.sh`, `test/xyz-sync-check.sh`, `test/lib/vendored-fixture.sh`, `test/_setup.sh` — verified compatible with the `.xyz/package.json` boundary.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
