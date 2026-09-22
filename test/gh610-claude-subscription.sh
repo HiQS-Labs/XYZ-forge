@@ -3,7 +3,7 @@
 set -eu
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PYTHONPATH="$ROOT/utils/py${PYTHONPATH:+:$PYTHONPATH}" python3 - <<'PYTEST'
-import json, tempfile, unittest, os, subprocess, sys, time, signal, importlib.util, shutil
+import json, tempfile, unittest, os, subprocess, sys, time, signal, importlib.util, shutil, shlex
 from pathlib import Path
 from unittest.mock import patch
 from proc_group import BoundedResult
@@ -88,12 +88,23 @@ class ClaudeSubscription(unittest.TestCase):
             subprocess.run(['git','add','README.md'],cwd=repo,check=True)
             subprocess.run(['git','commit','-qm','seed'],cwd=repo,check=True)
             cli=root/'claude'; env['CLAUDE_BIN']=str(cli)
-            cli.write_text('#!'+sys.executable+'\nimport sys,json,os\n'
+            cli_source=('import sys,json,os\n'
                 +'assert "--restricted" in sys.argv and "--strict-mcp-config" in sys.argv\n'
                 +'if sys.argv[-2:]==["auth","status"]: print('+repr(json.dumps(dict(loggedIn=True,authMethod='claude.ai',apiProvider='firstParty',subscriptionType='max')))+')\n'
                 +'else:\n assert "Read,Grep,Glob" in sys.argv\n assert ("--effort" in sys.argv)==bool(os.getenv("CLAUDE_REASONING_EFFORT"))\n if "--effort" in sys.argv: assert sys.argv[sys.argv.index("--effort")+1]==os.environ["CLAUDE_REASONING_EFFORT"]\n print("workspace trust warning",file=sys.stderr)\n if os.getenv("STUB_HANG"): exec(open(os.environ["STUB_HANG"]).read())\n if os.getenv("STUB_RC"): sys.exit(int(os.environ["STUB_RC"]))\n print(json.dumps(dict(type="result",is_error=os.getenv("STUB_ERROR")=="1",subtype="success",result="README.md:1 contains fixture")))\n')
-            cli.chmod(0o755)
-            preflight(str(cli),env,str(repo),cli_flags=['--restricted','--strict-mcp-config'])
+            cli.with_suffix('.py').write_text(cli_source)
+            spaced_dir=root/'python with spaces'; spaced_dir.mkdir()
+            spaced_python=spaced_dir/'python'
+            spaced_python.symlink_to(sys.executable)
+            direct=root/'direct-spaced-shebang'
+            direct.write_text('#!'+str(spaced_python)+'\nprint("unexpected success")\n')
+            direct.chmod(0o755)
+            with self.assertRaises(OSError):
+                subprocess.run([str(direct)],check=True,capture_output=True,text=True)
+            for selected_python in (sys.executable,str(spaced_python)):
+                cli.write_text('#!/bin/sh\nPYTHON='+shlex.quote(selected_python)+'\nexec "$PYTHON" "$0.py" "$@"\n')
+                cli.chmod(0o755)
+                preflight(str(cli),env,str(repo),cli_flags=['--restricted','--strict-mcp-config'])
             import claude_cli
             consult=Path(claude_cli.__file__).with_name('consult.py')
             for error,expected in [('0',0),('1',5)]:

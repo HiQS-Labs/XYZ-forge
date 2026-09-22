@@ -1,6 +1,6 @@
 # Marathon Phase gh-651
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-651-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -110,3 +110,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `test/gh610-claude-subscription.sh` to generate the Python CLI fixture as a sidecar
+  program launched by a quoted POSIX shell trampoline, preserving the exact selected interpreter.
+- Added an explicit direct spaced-shebang red control and exercised the safe launcher with both the
+  ordinary interpreter path and a non-empty path containing spaces.
+- Left `test/_setup.sh` unchanged; the shared fixture setup needs no behavior change.
+- Verification intentionally not run: this phase's scope lock assigns all test execution to the
+  harness because the fixture writes outside the artifact allowlist during execution.
