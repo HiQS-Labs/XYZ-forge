@@ -1,7 +1,8 @@
 ---
 title: agy-turn.sh auth pre-flight breaks on agy CLI >=1.1.19 — whoami subcommand removed
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-08-24
+updated: 2026-09-22
 owner: noel
 gh_issue: 221
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/221
@@ -99,3 +100,8 @@ risk — the shim fails closed rather than proceeding on bad auth.
       failure path before the fix lands
 - [ ] The fix composes with the existing pre-flight contract (short wall-clock cap, fails closed on
       genuine auth problems) rather than adding a parallel probe path
+
+## Merge evidence
+
+- Commit `68534a30ecf147fe40a76884eeacadcdfdd28058` landed 2026-08-24 — agy models auth probe fix.
+

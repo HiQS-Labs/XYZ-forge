@@ -1,8 +1,8 @@
 ---
 title: "GH-608: fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution"
-status: Active
+status: Complete
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-22
 owner: operator (via /express)
 gh_issue: 608
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/608
@@ -30,7 +30,8 @@ goal: >
 
 ## Merge evidence
 
-- (recorded at landing by the /express driver)
+- Express commit `c9c3f21be99496ecb9eb020ebbe89cf912cf2c7e` landed 2026-09-13 — honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution; issue #608 closed 2026-09-13.
+
 
 ## Lessons Learned (For Future Agents)
 

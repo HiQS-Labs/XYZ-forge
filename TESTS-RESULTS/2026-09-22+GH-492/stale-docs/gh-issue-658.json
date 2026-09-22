@@ -1,0 +1,1 @@
+{"closedAt":"2026-09-17T00:23:38Z","number":658,"state":"CLOSED","stateReason":"COMPLETED","title":"Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654)","url":"https://github.com/HiQS-Labs/XYZ-forge/issues/658"}
