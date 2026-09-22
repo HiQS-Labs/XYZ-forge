@@ -143,3 +143,11 @@ Full sweep: No pre-existing defects found in `test/gh32-releases-app.sh:1-926` o
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-09-22T02:09:31Z
+task: MARATHON-GH-558-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 0465f9b71d7844c67451106bddc5004c326bfcb8
+added-range: 10682+2521
+added-sha256: 23b1eac2f847ff634e486f02ad3b082120c7c44a8a9c7a4a0e7eada85b9c2322
