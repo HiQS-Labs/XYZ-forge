@@ -116,9 +116,13 @@ gh732_php_assertions
 FAULT_BIN="$WORK/broken-php"; mkdir -p "$FAULT_BIN"
 printf '#!/usr/bin/env bash\necho "missing libaspell" >&2\nexit 1\n' > "$FAULT_BIN/php"
 chmod +x "$FAULT_BIN/php"
+# Two halves, no eval (security-scan: eval-unsanitized): (1) the real diagnostic — validate.sh
+# --print-mode on a PATH with the broken php prints the named fault line; (2) the suite-side skip —
+# gh732_php_assertions honours the XYZ_ENV_FAULTS contract validate.sh exports to every suite.
 fault_out="$(
   export PATH="$FAULT_BIN:$PATH"
-  eval "$(sed -n '/^# GH-732 environment faults BEGIN$/,/^# GH-732 environment faults END$/p' "$ROOT/validate.sh")"
+  bash "$ROOT/validate.sh" --print-mode 2>&1
+  export XYZ_ENV_FAULTS=php
   gh732_php_assertions
 )"; fault_rc=$?
 [ "$fault_rc" -eq 0 ] && [ -n "$fault_out" ] \

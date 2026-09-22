@@ -46,6 +46,8 @@ Umbrella: #749 · Issue: #732 items B.1 and B.2 · Phase p4 · `depends_on: p3`
 
 ## Rules
 
+**Retry note (2026-09-22):** the first attempt landed this lane (`10836fc9`, Approved) but its gate went red on `security-scan.sh`: the gh268 red control ran the validator's fault block through `eval "$(sed -n … validate.sh)"` (`eval-unsanitized`, a real finding — never baseline it). The corrected shape is already in the tree: prove the diagnostic with `bash validate.sh --print-mode` on the shimmed PATH (as the gh251 half does) and prove the suite's skip path by exporting `XYZ_ENV_FAULTS=php` — the contract validate.sh exports to suites. If the lane is present, verify it against the acceptance list and hand off; do not reintroduce `eval`.
+
 Shortest diff (`/ponytail`); widen B.1's mechanism only; no new script or library. Never weaken `--qualify` (`exit 6`, no receipt) or the GH-528 solo re-run verdict. Suites stay registered as they are (no `TESTS` array change unless a new suite is added, which this lane should not need). Evidence under `TESTS-RESULTS/2026-09-22+GH-732/l4/` with red/green/boundary outputs and `provenance.jsonl`. `bash validate.sh` green is the phase gate.
 
 ## Acceptance / Guard
