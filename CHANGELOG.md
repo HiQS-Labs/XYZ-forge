@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-22 — Marathon GH-749 planned: relay exit-code truth (#720) + measured gate cost (#732), one chain of four lanes
+
+`/marathon-triage` on #673/#720/#732 found no sequenceable lane: the planner (exit 4, drift) held all
+three, direct preflight exited 3 on each (no contract), GH-673's ledger row carried no `[plan](…)` link in
+its `raw_text` (the planner reads the link, not `doc_path` — it reported `needs-doc` + `drift` for a doc
+that exists), GH-720's row was unrated (the #252 `hq park` gap) and GH-732's row still had its v1 title.
+This iteration lands the intake: umbrella [#749](https://github.com/HiQS-Labs/XYZ-forge/issues/749) opened
+and registered (`marathons` row `mar-01M33PJX8HPKMJHPQFH1S0WG6B`, planned); GH-720 and GH-732 promoted to
+`2-WORKING` with `Swarm Preflight Contract` blocks (both `swarm-preflight --dry-run` **ready, exit 0**),
+ratings confirmed (720: e1/c2/r2/p1, provisional cleared; 732: e3/c2/r2/p3, provisional cleared, #496
+Phases 3–5 held), rows repointed / marked 🚧 / rated through `releases roadmap repoint|update|rate`;
+plan dir `PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/` (`CAPTURE.md`, `MARATHON.yaml` — `marathon.sh
+--dry-run`: 4 phases in order — and briefs L1 review-once heading regex, L2 C.1/D.2 measurements over
+captured inputs, L3 dated timing claims + slowest-suites render from GH-365 telemetry, L4 named
+environment faults with `--qualify`'s exit-6 boundary kept); `MARATHON-PLAN-2026-09-22.md` now sequences
+**Wave 1: #720 ‖ #732**. #673 is held (its build merged as #719; the remainder waits on #646 / PR #723).
+Lane inputs captured under `TESTS-RESULTS/2026-09-22+GH-732/{c1,d2}/` so the codex builder counts from
+committed files, not from a sandboxed `gh`. → [GH-749 CAPTURE.md](PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md) ·
+[GH-720](PROJECT/2-WORKING/GH-720-REVIEW-ONCE-BLOCK-REGEX.md) · [GH-732](PROJECT/2-WORKING/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md) ·
+[#720](https://github.com/HiQS-Labs/XYZ-forge/issues/720) · [#732](https://github.com/HiQS-Labs/XYZ-forge/issues/732)
+
 ## 2026-09-21 — Hosted reconcile lane: a merge landing mid-run no longer discards the qualification; the lane report names the step that failed (GH-740, GH-741)
 
 The lane's final `git push origin HEAD:development` was a plain fast-forward at the end of a ~70-minute

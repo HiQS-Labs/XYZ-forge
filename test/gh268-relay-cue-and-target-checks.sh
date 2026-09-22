@@ -94,7 +94,10 @@ printf '%s' "$out" | grep -Fq "WordPress" \
 
 # run: a real syntax error must FAIL the gate. This is the assertion the whole file is for —
 # everything else is plumbing around making this one possible.
-if command -v php >/dev/null 2>&1; then
+gh732_php_assertions() {
+if [[ ",${XYZ_ENV_FAULTS:-}," == *,php,* ]]; then
+  echo "  SKIP: environment fault (php present but unusable)"
+elif command -v php >/dev/null 2>&1; then
   printf '<?php\nfunction gh268_broken( {\n' > "$PHP/bad.php"
   bash "$TC" run --root "$PHP" >/dev/null 2>&1; rc=$?
   [ "$rc" -eq 1 ] && pass "a real PHP syntax error FAILS the gate (exit 1)" \
@@ -106,6 +109,29 @@ if command -v php >/dev/null 2>&1; then
 else
   pass "php not installed — syntax-error case skipped (detection cases above still ran)"
 fi
+}
+gh732_php_assertions
+
+# GH-732: exercise the real diagnostic and the same assertions with a broken tool.
+FAULT_BIN="$WORK/broken-php"; mkdir -p "$FAULT_BIN"
+printf '#!/usr/bin/env bash\necho "missing libaspell" >&2\nexit 1\n' > "$FAULT_BIN/php"
+chmod +x "$FAULT_BIN/php"
+# Two halves, no eval (security-scan: eval-unsanitized): (1) the real diagnostic — validate.sh
+# --print-mode on a PATH with the broken php prints the named fault line; (2) the suite-side skip —
+# gh732_php_assertions honours the XYZ_ENV_FAULTS contract validate.sh exports to every suite.
+fault_out="$(
+  export PATH="$FAULT_BIN:$PATH"
+  bash "$ROOT/validate.sh" --print-mode 2>&1
+  export XYZ_ENV_FAULTS=php
+  gh732_php_assertions
+)"; fault_rc=$?
+[ "$fault_rc" -eq 0 ] && [ -n "$fault_out" ] \
+  && printf '%s' "$fault_out" | grep -Fq 'ENVIRONMENT FAULT: php present but unusable (missing libaspell)' \
+  && printf '%s' "$fault_out" | grep -Fq 'SKIP: environment fault (php present but unusable)' \
+  && ! printf '%s' "$fault_out" | grep -Fq 'clean PHP did not pass' \
+  && pass "broken php is a named environment fault, not a clean-PHP failure" \
+  || fail "broken php fault handling regressed: $fault_out"
+
 
 # All-skipped must NOT be a pass. A machine with no linters installed would otherwise hand back a
 # green gate for a repo nobody checked — the same false-green class as GH-319, one layer out.
