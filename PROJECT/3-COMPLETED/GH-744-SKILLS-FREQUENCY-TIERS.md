@@ -1,6 +1,6 @@
 ---
 title: Organize skills/ into frequency-of-use tier folders (1-hourly, 2-daily, 3-weekly, 4-occasional)
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-21
 owner: claude-a
 gh_issue: 744
