@@ -1,5 +1,5 @@
 # Marathon Phase gh-594
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-594-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -126,3 +126,21 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   the harness owns test execution after handoff.
 
 Handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+#### Verification & Assessment
+
+- [Pass] Narrowed doc path exemption in `utils/py/express.py:398-401`: `is_doc_path(root, issue, p)` exempts only `CHANGELOG.md` and `capture_doc_path(root, issue)`. Callers in `core_paths`, `insertions`, and `cmd_check` now pass `root` and `issue`. Other `PROJECT/**` paths are treated as core files and count against both core-file (`--max-files`) and insertion (`--max-insertions`) bounds.
+- [Pass] Multi-subsystem classification safety in `utils/py/express.py:513`: `non_test = [p for p in core if not p.startswith(("test/", "PROJECT/"))]` correctly prevents counted `PROJECT/**` paperwork from being classified as an independent product subsystem, preventing the false `multi-subsystem` refusal seen in marathon attempt 1.
+- [Pass] Red controls in `test/gh267-express-skill.sh:341-346`: Red controls verify that adding an unrelated `PROJECT/4-MISC/OTHER.md` file trips `too-many-files` when core file count exceeds bound, and trips `too-large` when insertions exceed bound, while the lane's own capture doc (`GH-999-DEMO-HOTFIX.md`) and `CHANGELOG.md` remain exempt.
+- [Pass] Bounds documentation contract in `skills/express/SKILL.md:107-111`: Bounds section updated to document that only `CHANGELOG.md` and the current issue's capture doc (`capture_doc_path(root, issue)`) are exempt, and every other `PROJECT/**` path counts.
+- [Pass] Non-mutating out-of-tree probe execution: Verified via Python in isolated scratch under `$TMPDIR` (`python3 -c '...; assert express.is_doc_path(...); ...'`) that lane capture doc and changelog are exempt, unrelated project docs are not exempt, and `tops` reflects only code subsystems (`utils`). Exit status 0, decisive output `PROBE_RESULT=PASS`.
+- [Pass] Whole-file sweep: Swept `utils/py/express.py` (1198 LOC), `test/gh267-express-skill.sh` (696 LOC), and `skills/express/SKILL.md` (177 LOC). No syntax errors (`python3 -m py_compile`, `bash -n`). No pre-existing defects found in touched scopes.
+- [Unverified — needs clone run] Gate execution (`bash validate.sh`) and full test suite (`test/gh267-express-skill.sh`): Not executed in-tree per scope lock and turn instructions (in-tree execution creates temporary fixtures conflicting with containment). Left for post-turn harness execution in a disposable full clone.
+
+relay closed, no further turn needed.
