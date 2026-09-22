@@ -1,6 +1,6 @@
 # Marathon Phase gh-558
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-558-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -104,3 +104,19 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the section-J fixture repair in `test/gh32-releases-app.sh` and documented its negative
+control in `test/baselines/GH-32-negative-control.md`.
+
+- Identified the cause as fixture-only: byte-level union retained both schema-singleton
+  `settings.generation` rows when their `updated_at` stamps differed; the product refusal was correct.
+- Pinned the two branch clocks one second apart so the formerly flaky shape is exercised every run,
+  then selected one generation row by generation value and timestamp and synchronized the header.
+- Added a red control that removes the generation header and requires a named `dump-generation`
+  refusal, followed by a successful rebuild at a third pinned timestamp and an assertion that the
+  generation row carries that stamp.
+- Captured and prints `check --rebuild` output on failure instead of swallowing the diagnostic.
+- Verification: not run, as this phase's scope lock explicitly prohibits running even the focused
+  suite inside the isolated worktree; the harness owns the real gate after handoff.
