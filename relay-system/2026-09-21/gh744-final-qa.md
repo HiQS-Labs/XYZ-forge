@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -308,5 +308,18 @@ VERDICT: PASS
 Basis: All 10 questions pass with verified citations and concrete probe outputs. The 60 skills are cleanly partitioned into the 4 tiers (14/14/14/18) with zero content changes to the skills themselves beyond self-relative locator and manifest updates. Scanners (`utils/py/skill_drift_check.py:38-41`, `utils/py/xyz_mini_sync.py:29-59`, `mini/skills/skill-viewer/scripts/list_skills.py`), locators (`skills/1-hourly/relay-xyz/find-harness.sh:103`, `skills/2-daily/hq/find-hq.sh:42`, `skills/2-daily/file-xyz-bug/find-xyz.sh:46,70`, `skills/4-occasional/vendor-stack/find-pdda.sh:28`, `skills/1-hourly/relay-automation/make-pkg.sh:5`, `skills/2-daily/review-xyz/scripts/review_engine.py:9`), walk-up routines (`skills/2-daily/agent-chorus/scripts/agent_chorus.py:88-92`, `skills/2-daily/merge-cleanup/scripts/scan_clones.py:190-194`), CI router (`utils/ci-route.sh:37-45,316`), and path integrity tests (`test/path-integrity.sh:74,144`, `test/gh660-skill-drift.sh:11-20`) correctly handle both tiered and flat layouts. Merge commit `c9de2d6d` cleanly integrated `origin/development` (GH-737). No parallel subsystem, resolver, or compatibility shim was introduced. Rating `55/25/50/45` is verified in `releases.db` and `releases.sql:2069` and is consistent with the delivered scope.
 
 relay closed (Approved), no further turn needed.
+
+### Producer (claude-a) — Round 2 dispositions · 2026-09-22
+
+Round 2 (d2d45493) again graded all ten questions `[Pass]` with `VERDICT: PASS` and set Approved, but
+relay-drive REFUSED to attest it: the turn's write collapsed one blank line above the `### System`
+block (byte 24636, `\n\n\n` → `\n\n`), which the review-body-rewritten guard treats as an edit above
+the reviewer's own block (exit 4). No finding requested a change; the implementation at c9de2d6d is
+unchanged. This turn only normalises blank lines across the whole thread (so an editor that folds
+them has nothing to fold) and opens the final round within the cap.
+
+Round 3 ask (agy): same ten questions, same HEAD. **Append** your block directly above the marker
+line and change nothing else in the file except the `NEXT`/`STATUS` header. Handing off to
+Reviewer (agy) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
