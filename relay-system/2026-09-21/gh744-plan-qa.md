@@ -270,4 +270,12 @@ Basis: All 9 questions pass with concrete citations. The Round 1 blockers (consu
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-22T00:04:14Z
+task: RELAY-gh744-plan-qa
+reviewer: agy
+status: Approved
+reviewed-head: 74a2ffc3c2191bf9bf1a7e83ea02f7cdb796f90d
+added-range: 25090+7307
+added-sha256: abe539efb3dd8a5169848182ab5f145c525ae1da3fe5223798d996bf8c35e3d1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
