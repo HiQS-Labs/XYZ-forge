@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/722
 title: "merge-cleanup: SAFE_ROOTS never includes the primary's own parent, so the SOP's sibling task clones (../XYZ-forge-<topic>) are invisible to the default audit and teardown"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 2
@@ -50,6 +50,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
 - [ ] The Phase 1 header prints the roots that were actually scanned.
 - [ ] `skills/merge-cleanup/SKILL.md` mentions the derived sibling root.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `bash test/gh436-merge-cleanup.sh` stays green: `TestMergeCleanupOrchestration` asserts the exact `teardown_checkout(candidate, dry_run=...)` call — do not add a `safe_roots=` kwarg to that call (marathon attempt 1 on 2026-09-22 did and failed `test_ready_primary_allows_zero_pr_cleanup` / `test_operator_can_explicitly_defer_unready_primary_cleanup`); thread the derived root through module state or the scan call instead. Run that suite before handing off.
 
 ## Swarm Preflight Contract
 

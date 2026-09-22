@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/707
 title: "wave_reconcile rollback (GH-698 F8) writes a bare record into .tick/events/ — the #694 shape; survives only because of #702's fold filter"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 2
@@ -50,6 +50,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
       into `.tick/events/` on a `src/project.js` with the two filter lines removed reproduces
       the #694 phantom/crash.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `bash test/gh202-wave-reconcile-issue-state.sh` and `bash test/gh421-auto-wave-reconcile.sh` stay green: their rollback assertions (`GH-271: rollback tripwire fired despite complete restore`, `porcelain dirty after rollback: ?? .tick/reconcile/`, `ReconcileTests.test_rollback_each_boundary` file-snapshot equality) require the tree to be byte-identical after a rollback — the envelope record must not leave a new file those checks can see (marathon attempt 1 on 2026-09-22 wrote `.tick/reconcile/<ts>.jsonl` and failed both). Run both suites before handing off.
 
 ## Swarm Preflight Contract
 
