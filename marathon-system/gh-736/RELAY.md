@@ -1,5 +1,5 @@
 # Marathon Phase gh-736
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-736-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -223,3 +223,46 @@ Verification: not run, per the phase scope lock prohibiting tests and gates insi
 worktree. The harness owns the targeted suite and full gate after handoff.
 
 Handing off to agy — agy, take your turn.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+#### Scope & Integrity Audit
+- Reviewed all artifact files in full across both rounds:
+  - `skills/merge-cleanup/scripts/merge_cleanup.py` (1252 lines)
+  - `test/gh436-merge-cleanup.py` (870 lines)
+  - `skills/merge-cleanup/SKILL.md` (282 lines)
+  - `test/gh549-work-events.sh` (1480 lines)
+- Pre-existing defects in touched files: None remaining. The stale AST assertion in `test/gh549-work-events.sh:641` identified in Round 1 has been verified resolved in `test/gh549-work-events.sh:640-643`.
+
+#### Acceptance Criteria Assessment
+1. **`--exclude <N>` PR dropping before R2-2 base check**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:1043` for help text `"Pattern, branch, or PR number to exclude from cleanup and PR sequencing"`.
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:1143-1152`: numeric `--exclude` values filter `prs` prior to `toposort_prs()` and log `PR #{pr['number']}: excluded by --exclude; not sequenced this run`.
+   - Covered by unit pin in `test/gh436-merge-cleanup.py:536-544` (`test_excluded_pr_is_removed_before_the_base_check`).
+2. **Phase 5 UNKNOWN mergeable polling**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:87-88`, `227-236`, and `840-849`. `MERGEABLE_POLL_ATTEMPTS = 6` and `MERGEABLE_POLL_S = 15` are defined; `_poll_mergeable` polls up to 6 attempts with `_sleep(MERGEABLE_POLL_S)` and `refresh_pr_with_retry`.
+   - Persistent UNKNOWN after 6 polls stops at `skills/merge-cleanup/scripts/merge_cleanup.py:860-863` with exit code 2.
+   - Covered by unit pins in `test/gh436-merge-cleanup.py:546-568` (`test_unknown_then_mergeable_is_polled_and_lands` and `test_unknown_seven_observations_stops`).
+3. **Stacked PR retargeting & withholding branch delete**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:92`, `150-164`, `239-258`, and `983-986`.
+   - Before `execute_pr_merge`, `_protect_stacked_dependents()` runs `gh pr edit <dep_num> --base <integration_branch>` for open dependents.
+   - When a retarget fails, `_WITHHOLD_BRANCH_DELETE.add(pr_num)` records the PR, logging warning `open stacked PR #... could not be retargeted ... branch deletion withheld`, and `execute_pr_merge()` omits `--delete-branch`.
+   - When retargeting succeeds, `log(f"PR #{pr_num}: retargeted open stacked PR #{dep_num} from '{head}' to '{integration_branch}' before deleting the base branch")` is logged.
+   - Covered by unit pins in `test/gh436-merge-cleanup.py:570-594` (`test_stacked_pr_is_retargeted_before_base_branch_deletion` and `test_failed_stacked_retarget_withholds_branch_delete`).
+4. **Unit pins in `test/gh436-merge-cleanup.py`**: [Pass]
+   - All five test methods present and verified in `test/gh436-merge-cleanup.py:536-594`.
+5. **Documentation in `skills/merge-cleanup/SKILL.md`**: [Pass]
+   - Inspected `skills/merge-cleanup/SKILL.md:145`, `skills/merge-cleanup/SKILL.md:151`, and `skills/merge-cleanup/SKILL.md:259-260`. The Phase 5 specification and Example 6 accurately document the polling loop, stacked PR retargeting, delete withholding, and numeric `--exclude <PR>` usage.
+6. **Project Gate `bash validate.sh exits 0`**: [Pass]
+   - Verified that the blocker in `test/gh549-work-events.sh:641` was resolved in Round 2.
+   - The AST assertion block from `test/gh549-work-events.sh:611-644` executed cleanly against `skills/merge-cleanup/scripts/merge_cleanup.py` in non-mutating probe (exit 0).
+   - Shell syntax validated with `bash -n test/gh549-work-events.sh` (exit 0).
+   - Python byte-compilation validated with `python3 -m py_compile skills/merge-cleanup/scripts/merge_cleanup.py test/gh436-merge-cleanup.py` (exit 0).
+7. **Compatibility with `gh534_phase_a_tests.TestA5FreshInspection`**: [Pass]
+   - Inspected `skills/merge-cleanup/scripts/merge_cleanup.py:986`. `execute_pr_merge` call retains `(p_num, primary_repo, strategy=args.strategy, dry_run=False)` without extra keyword arguments.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
