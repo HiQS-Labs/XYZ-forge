@@ -157,3 +157,11 @@ Probes and verification this turn:
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-22T05:51:38Z
+task: MARATHON-P1-TURN-2
+reviewer: agy
+status: Approved
+reviewed-head: 2d240ca1a437dd09455d442ceb9b2e53bb5aabe5
+added-range: 12962+2437
+added-sha256: 90bb88da19c9f347b1cd22d192343d395daa204972fc0a16ab4ef1e8399c9c04
