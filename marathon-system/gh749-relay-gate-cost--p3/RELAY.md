@@ -1,5 +1,5 @@
 # Marathon Phase p3
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -118,3 +118,28 @@ Implemented A.1–A.5 in AGENTS.md, ROUTER.md, githooks/pre-push, validate.sh, a
 Full gate intentionally not run under the turn’s explicit restriction. The harness must run the gate against the final state and retain the required TESTS-RESULTS evidence; that destination is outside this turn’s allowlist. No git commands run. Only the mandated NEXT metadata was updated above this appended block.
 
 Next: agy reviews the implementation and focused checks; harness owns the full gate and commit.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the artifact files on disk:
+- `AGENTS.md`: Full sweep completed. Undated gate timing estimates replaced with references to the hook's measured `GREEN in Ns` line. Surrounding text preserved intact. No pre-existing defects found. [Pass]
+- `ROUTER.md`: Full sweep completed. Undated timing prose replaced with pointers to measured hook output. Added the required A.4 and A.5 sentences regarding tier-2 width overrides (`--burst` / `XYZ_VALIDATE_MAX_JOBS`) and single-gate-per-host discipline to the command rails. No pre-existing defects found. [Pass]
+- `githooks/pre-push`: Full sweep completed. Header comments updated to remove stale timing claims in favor of measured `GREEN in Ns` output. No pre-existing defects found. [Pass]
+- `validate.sh`: Full sweep completed. Added `--help`/`-h` early handler including the A.4 and A.5 sentences in `_usage`. Registered `gh732-l3-gate-summary.sh` in the `TESTS` manifest. Embedded the GH-732 timing summary block after `telemetry:` using awk and sort over existing GH-365 records without introducing external dependencies or modifying exit code semantics. Correctly selects first attempt only for `pool|driver-lock|sequential` lanes, formats descending durations and rc, caps output at 10 slowest suites, sums retry count and wall-clock duration from `lane=retry` records without double-counting, and stays silent on absent/empty `$RT_FILE`. No pre-existing defects found. [Pass]
+- `test/gh732-l3-gate-summary.sh`: Full sweep completed. New fixture test exercises rendering path against synthetic telemetry across lanes with duplicate names, slower retries, paired retry events, missing/empty input handling, and help text presence without executing live gates or git commands. Registered in `validate.sh` `TESTS`. Verified with `bash -n` (syntax PASS). Full suite execution deferred to disposable full clone harness gate (`[Unverified — needs clone run]`). [Pass]
+
+Probes and verification this turn:
+- Syntax check: `bash -n validate.sh githooks/pre-push test/gh732-l3-gate-summary.sh` returned exit code 0.
+- Undated timing estimate scan: `grep -n '4–6 min\|~16 min\|16-minute\|3-minute\|~4 min' AGENTS.md ROUTER.md githooks/pre-push` returned exit code 1 (zero matches).
+- Additional timing scan: `grep -inE '[0-9]+[ -]min' AGENTS.md ROUTER.md githooks/pre-push` returned exit code 1 (zero matches).
+- Help option check: `./validate.sh --help` confirmed both A.4 and A.5 sentences present in output.
+- Manifest registration check: `./validate.sh --list` confirmed `test/gh732-l3-gate-summary.sh` present and registered.
+- Isolated telemetry summary probe in `$TMPDIR`: verified top-10 descending ordering, retry exclusion from suite rows, retry sum math (2 suites, 6.000s total), duplicate suppression, and empty/absent `$RT_FILE` silence. All assertions passed (exit code 0).
+- Negative control probe in `$TMPDIR`: ascending sort order mutated, confirmed negative control detection.
+- Scratch discipline: zero off-lane files created; working tree clean.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
