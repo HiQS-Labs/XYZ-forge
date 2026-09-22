@@ -1,6 +1,6 @@
 # Marathon Phase gh-736
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-736-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -115,3 +115,26 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-736 across the authorized merge-cleanup surfaces:
+
+- `skills/merge-cleanup/scripts/merge_cleanup.py`: numeric `--exclude` values now remove matching
+  PRs before topological sequencing and the integration-base check; unresolved mergeability is
+  polled six times at 15-second intervals through `_sleep` and `refresh_pr_with_retry`; open stacked
+  dependents are retargeted before a base branch is deleted, with branch deletion withheld and
+  logged if retargeting fails. Kept the existing `execute_pr_merge(...)` signature unchanged for
+  `TestA5FreshInspection` compatibility.
+- `test/gh436-merge-cleanup.py`: added pins for exclusion ordering, UNKNOWN→MERGEABLE success,
+  seven UNKNOWN observations stopping, successful stacked retargeting, and delete withholding on a
+  failed retarget.
+- `skills/merge-cleanup/SKILL.md`: updated Phase 4/5 behavior and example 6 to match the shipped CLI.
+- `test/gh549-work-events.sh`: inspected; no change was required because the durability-order AST
+  assertion remains valid.
+
+Verification: read-only AST parsing succeeded for both changed Python files and contract anchors
+were confirmed in `.relay-scratch/gh736-static-check.txt`. Per the phase scope lock, I did not run
+tests or gates; the harness owns `test/gh436-merge-cleanup.sh` and the full gate after handoff.
+
+Handing off to agy — agy, take your turn.

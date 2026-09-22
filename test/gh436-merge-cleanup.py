@@ -383,7 +383,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
     def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None,
-                      ff_rc=0, final_fetch_rc=0, checkouts=None):
+                      ff_rc=0, final_fetch_rc=0, checkouts=None, refresh_values=None):
         """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues.
 
         Phase 5's tail calls `prune_dangling_skill_symlinks(dry_run=False)`, which walks the REAL
@@ -428,12 +428,14 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                        else {"return_value": _verdict(landing_ready)})
 
         scanned = [] if checkouts is None else checkouts
+        refresh = (mock.Mock(side_effect=refresh_values) if refresh_values is not None else
+                   mock.Mock(side_effect=lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": next(p.get("baseRefName") for p in (prs or []) if p["number"] == n), "labels": [], "mergeCommit": None}))
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
              mock.patch.object(Path, "home", return_value=fake_home), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
              mock.patch.object(merge_cleanup, "inspect_primary_landing", **insp_kwargs) as insp, \
              mock.patch.object(merge_cleanup, "run_git", side_effect=fake_git), \
-             mock.patch.object(merge_cleanup, "refresh_pr", side_effect=lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": next(p.get("baseRefName") for p in (prs or []) if p["number"] == n), "labels": [], "mergeCommit": None}), \
+             mock.patch.object(merge_cleanup, "refresh_pr", refresh), \
              mock.patch.object(merge_cleanup, "prepare_landing_clone", side_effect=lambda pr, primary, branch, wd: {"clone": wd, "merge_rc": 0, "error": ""}), \
              mock.patch.object(merge_cleanup, "pre_merge_ledger_gate", return_value={"green": True, "failures": [], "diagnostics": []}), \
              mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=True) as merged, \
@@ -530,6 +532,65 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(rc, 2)
         merged.assert_not_called()
         reconcile.assert_not_called()
+
+    def test_excluded_pr_is_removed_before_the_base_check(self):
+        prs = [
+            {"number": 7, "baseRefName": "development", "title": "land", "files": [], "body": ""},
+            {"number": 8, "baseRefName": "main", "title": "excluded", "files": [], "body": ""},
+        ]
+        rc, _, merged, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--exclude", "8", "--execute"], prs=prs)
+        self.assertEqual(rc, 0)
+        self.assertEqual([call.args[0] for call in merged.call_args_list], [7])
+
+    def test_unknown_then_mergeable_is_polled_and_lands(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        base = {"number": 7, "state": "OPEN", "headRefOid": "a" * 40, "headRefName": "feat/x",
+                "baseRefName": "development", "labels": [], "mergeCommit": None}
+        with mock.patch.object(merge_cleanup, "_sleep") as sleep:
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--execute"], prs=prs,
+                refresh_values=[dict(base, mergeable="UNKNOWN"), dict(base, mergeable="MERGEABLE")])
+        self.assertEqual(rc, 0)
+        merged.assert_called_once()
+        sleep.assert_called_once_with(merge_cleanup.MERGEABLE_POLL_S)
+
+    def test_unknown_seven_observations_stops(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        unknown = {"number": 7, "state": "OPEN", "mergeable": "UNKNOWN", "headRefOid": "a" * 40,
+                   "headRefName": "feat/x", "baseRefName": "development", "labels": [], "mergeCommit": None}
+        with mock.patch.object(merge_cleanup, "_sleep") as sleep:
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--execute"], prs=prs,
+                refresh_values=[dict(unknown) for _ in range(7)])
+        self.assertEqual(rc, 2)
+        merged.assert_not_called()
+        self.assertEqual(sleep.call_count, merge_cleanup.MERGEABLE_POLL_ATTEMPTS)
+
+    def test_stacked_pr_is_retargeted_before_base_branch_deletion(self):
+        info = {"number": 7, "headRefName": "feat/base"}
+        prs = [info, {"number": 8, "baseRefName": "feat/base"}]
+        ok = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+        with mock.patch.object(merge_cleanup, "_gh", return_value=ok) as gh:
+            self.assertTrue(merge_cleanup._protect_stacked_dependents(
+                info, prs, self.primary, "development"))
+        gh.assert_called_once_with(["pr", "edit", "8", "--base", "development"], self.primary)
+
+    def test_failed_stacked_retarget_withholds_branch_delete(self):
+        info = {"number": 7, "headRefName": "feat/base"}
+        prs = [info, {"number": 8, "baseRefName": "feat/base"}]
+        failed = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="protected")
+        merged = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+        try:
+            with mock.patch.object(merge_cleanup, "_gh", side_effect=[failed, merged]) as gh, \
+                 mock.patch.object(merge_cleanup, "refresh_pr", return_value={
+                     "state": "MERGED", "mergeCommit": {"oid": "a" * 40}}):
+                self.assertFalse(merge_cleanup._protect_stacked_dependents(
+                    info, prs, self.primary, "development"))
+                self.assertTrue(merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False))
+            self.assertNotIn("--delete-branch", gh.call_args_list[1].args[0])
+        finally:
+            merge_cleanup._WITHHOLD_BRANCH_DELETE.discard(7)
 
     def test_matching_base_on_a_non_default_target_proceeds(self):
         prs = [{"number": 7, "baseRefName": "main", "title": "t", "files": [], "body": ""}]
