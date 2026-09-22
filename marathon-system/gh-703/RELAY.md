@@ -1,5 +1,5 @@
 # Marathon Phase gh-703
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-703-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -124,3 +124,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - Registered the focused suite in `validate.sh`.
 - Verification: not executed in this isolated worktree because the phase scope lock explicitly
   prohibits running tests or gates here; the outer harness owns the post-turn gate.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+#### Assessment
+
+- Criterion 1 (Fix option 1 implemented and named): Satisfied. Implemented fix option 1 in `utils/py/releases_app.py:3575` where `cmd_roadmap_add()` validates synthesized raw_text through `validate_raw_text(raw_text, args.issue_num)` before rating or insertion, refusing titles containing lone asterisks with `rule=invalid-raw-text` instead of creating dropped rows.
+- Criterion 2 (Registered test `test/gh703-raw-text-asterisk.sh`): Satisfied. Created `test/gh703-raw-text-asterisk.sh` and registered in `validate.sh:565`. Contains red control demonstrating pre-fix acceptance of unrenderable fallback `--title 'a/*/b'` and candidate assertion verifying refusal.
+- Criterion 3 (`bash validate.sh` exits 0): [Unverified — needs clone run] (per phase brief rules, test execution is reserved for the post-turn gate outside this worktree).
+- Criterion 4 (`bash test/gh703-raw-text-asterisk.sh` runs green standalone and under `validate.sh`): [Unverified — needs clone run] (statically verified: sources `test/_setup.sh`, defines no missing functions, assertions use `$PASS`/`$FAIL`/`pass`/`fail`, cleans up `$WORK`).
+- Swept file check: Swept `utils/py/releases_app.py` around roadmap add/update/render/validate functions; no pre-existing defects found in touched scopes.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
+
