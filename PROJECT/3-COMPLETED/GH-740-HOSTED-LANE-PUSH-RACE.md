@@ -2,9 +2,9 @@
 gh_issue: 740
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/740
 title: "GH-740 + GH-741: hosted reconcile lane — land receipts before the race, recompute transitions on rejection; report the failing step's real error"
-status: In progress
+status: Complete
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: Claude Code (start-task, one group: #740 + #741)
 doc_type: bugfix
 complexity: 3
