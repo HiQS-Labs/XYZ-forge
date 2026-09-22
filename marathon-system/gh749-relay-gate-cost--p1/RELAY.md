@@ -149,3 +149,11 @@ Reviewed the GH-720 implementation across all three specified artifact files (`u
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-09-22T05:00:42Z
+task: MARATHON-P1-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 45b7d2cdba1e67d7c9f3636cc3616aad82c1405f
+added-range: 11953+2127
+added-sha256: 1d091d58dcf23f79afa2f55626aad0ad0e7631e5a98c6bca5085db22ecf63c9d
