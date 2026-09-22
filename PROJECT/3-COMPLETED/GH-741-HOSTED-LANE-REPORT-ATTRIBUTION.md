@@ -2,8 +2,8 @@
 gh_issue: 741
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/741
 title: "hosted_lane_report.py blames the last 'wave-reconcile: ERROR' line — on a --qualify run that is a unit test's expected output (#735 named 'invalid merged_at timestamp'; the run failed on the push step)"
-status: In progress
-updated: 2026-09-21
+status: Complete
+updated: 2026-09-22
 created: 2026-09-21
 owner: Claude Code (start-task, one group with GH-740)
 doc_type: bugfix

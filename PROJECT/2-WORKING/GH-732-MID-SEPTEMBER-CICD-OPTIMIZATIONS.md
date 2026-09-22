@@ -2,22 +2,23 @@
 gh_issue: 732
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/732
 title: "Mid September CI/CD optimizations — measured gate cost vs documented; render existing per-suite timings; present-but-broken toolchain diagnostics; #496 Phases 3–5 carried over"
-status: Proposed (1-INBOX — not yet active)
+status: Active — marathon GH-749 lanes L2–L4 (A.1–A.5, B.1/B.2, C.1, D.2); #496 P3–5 held
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: noel
 doc_type: feedback
 complexity: 2
 risk: 2
 effort: 3
-phases: 1
-ratings_provisional: true
+phases: 3
+ratings_provisional: false   # rated 2026-09-22 at marathon-triage; three sequential lanes (measure, docs+render, env faults); #496 P3–5 excluded from this rating
 non_goals:
   - Changing the GH-35 balanced default
   - Weakening GH-528 solo re-run verdicts or --qualify's refusal
   - Tiers 1/2 as promotion evidence
   - Redesigning the hosted matrix (#382/#30)
 related:
+  - GH-749 (marathon umbrella — lanes L2, L3, L4)
   - #496 (predecessor)
   - #382
   - #30
@@ -52,7 +53,65 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via HQ (`/hq park`) for project **XYZ-forge** → repo `HiQS-Labs/XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Fill in Why/Key Concepts, correct the provisional ratings above, and run a Phase 0 explore pass before promoting to `2-WORKING`. |
+| 2026-09-22: promoted to 2-WORKING as lanes L2–L4 of marathon GH-749; ratings confirmed (e3/c2/r2/p3); preflight contract added; #496 Phases 3–5 explicitly held for a follow-on arc. D.2 re-baselined at triage: 14 green / 24 failed / 2 cancelled of the last 40 hosted runs (was 7/40 at v6). | Chain p2 (C.1 + D.2 measurements) → p3 (A.1–A.5 docs + `validate.sh` summary render) → p4 (B.1 named environment faults, B.2 fresh-clone acceptance) from `~/marathon-clones/marathon-gh-749-relay-gate-cost`; tick each item in the canonical issue body with its landing commit. |
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_present", "path": "AGENTS.md", "pattern": "4.6 min at the GH-35 balanced width" },
+    { "type": "grep_absent", "path": "validate.sh", "pattern": "GH-732" },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-09-22+GH-732/c1/conflict-magnets.md" },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-09-22+GH-732/c1/provenance.jsonl" },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-09-22+GH-732/d2/hosted-lane-rate.md" },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-09-22+GH-732/d2/provenance.jsonl" },
+    { "type": "path_absent", "path": "test/gh732-l3-gate-summary.sh" }
+  ],
+  "artifacts": [
+    "TESTS-RESULTS/2026-09-22+GH-732/c1/conflict-magnets.md",
+    "TESTS-RESULTS/2026-09-22+GH-732/c1/provenance.jsonl",
+    "TESTS-RESULTS/2026-09-22+GH-732/d2/hosted-lane-rate.md",
+    "TESTS-RESULTS/2026-09-22+GH-732/d2/provenance.jsonl",
+    "AGENTS.md",
+    "ROUTER.md",
+    "githooks/pre-push",
+    "validate.sh",
+    "test/gh732-l3-gate-summary.sh",
+    "test/gh251-validate-pytest-skip.sh",
+    "test/gh268-relay-cue-and-target-checks.sh"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-09-22+GH-732/c1/conflict-magnets.md",
+    "TESTS-RESULTS/2026-09-22+GH-732/c1/provenance.jsonl",
+    "TESTS-RESULTS/2026-09-22+GH-732/d2/hosted-lane-rate.md",
+    "TESTS-RESULTS/2026-09-22+GH-732/d2/provenance.jsonl",
+    "test/gh732-l3-gate-summary.sh"
+  ],
+  "remediation": {
+    "source": "issue#732",
+    "criteria": "Lane L2: C.1 per-file conflict counts and D.2 hosted-lane green rate recorded as reproducible counted lists under TESTS-RESULTS/2026-09-22+GH-732/. Lane L3: AGENTS.md:180, ROUTER.md:63/:89-90 and githooks/pre-push:10 no longer carry undated gate-timing estimates; validate.sh's summary prints a 10-slowest-suites block from the GH-365 event=suite telemetry (each suite once, retries separate) and the time spent in vp_rerun_alone; A.4/A.5 one-sentence rails. Lane L4: a present-but-broken php or an interpreter missing yaml (consumer: test/ci-workflow.sh:137) is reported by the ordinary validator as a named environment fault while --qualify's exit-6/no-receipt refusal is unchanged; B.2 fresh full clone on the documented PATH passes the full gate with zero re-runs."
+  },
+  "lanes": {
+    "agy_safe": [
+      "TESTS-RESULTS/2026-09-22+GH-732/c1/conflict-magnets.md",
+      "TESTS-RESULTS/2026-09-22+GH-732/c1/provenance.jsonl",
+      "TESTS-RESULTS/2026-09-22+GH-732/d2/hosted-lane-rate.md",
+      "TESTS-RESULTS/2026-09-22+GH-732/d2/provenance.jsonl",
+      "AGENTS.md",
+      "ROUTER.md",
+      "githooks/pre-push",
+      "validate.sh",
+      "test/gh732-l3-gate-summary.sh",
+      "test/gh251-validate-pytest-skip.sh",
+      "test/gh268-relay-cue-and-target-checks.sh"
+    ],
+    "orchestrator_only": []
+  }
+}
+```
 
 ## Idea
 
@@ -159,16 +218,32 @@ Changing the GH-35 balanced-width default (cores/2, cap 4, `nice -n 10`); reintr
 
 The local push gate was observed at 18–23 min against docs that promise 4–6; the remaining real gaps are a console view of existing timings, present-but-broken toolchain detection, and #496's unfinished phases.
 
-## Phase 0 — Explore & scope
+## Marathon lanes (GH-749) — what this doc's checklist splits into
 
-### Checklist
+### Lane L2 — measure (phase p2)
+- [ ] C.1: per-file count of PRs in the 08-31→09-21 window that needed a manual resolution on `validate.sh`, `skills/relay-automation/relay-pkg.tar.gz`, `releases.db` (from `git log --merges`, resolver commits, `.tick/merge-cleanup/` attempt records) → `TESTS-RESULTS/2026-09-22+GH-732/c1/conflict-magnets.md` + one decision line per file (registry / tarball / ledger).
+- [ ] D.2: `gh run list --workflow wave-reconcile.yml --limit 40` re-count with run ids → `…/d2/hosted-lane-rate.md`; baseline at triage 2026-09-22 was 14/40 green.
 
-- [ ] TODO: scope-specific checklist items for this idea's Phase 0 pass.
+### Lane L3 — docs + render (phase p3)
+- [ ] A.1 timing claims at `AGENTS.md:180`, `ROUTER.md:63/:89-90`, `githooks/pre-push:10` → point at the hook's measured `GREEN in Ns` lines or carry date/host/width.
+- [ ] A.2 "10 slowest suites" block in the `validate.sh` summary from `event=suite` records only; A.3 re-run cost line from the retry-lane records; `test/gh732-l3-gate-summary.sh` checks the block against the JSONL it renders.
+- [ ] A.4 / A.5 one sentence each in the `--help` / ROUTER rails (levers already work; one gate at a time).
 
-### QA checklist — Phase 0
+### Lane L4 — environment faults get a name (phase p4)
+- [ ] B.1: present-but-broken `php` (fails `-v` and `-l`) → `gh268-relay-cue-and-target-checks.sh` reports a named environment fault; interpreter missing `yaml` (consumer `test/ci-workflow.sh:137`) → named fault; `--qualify`'s exit-6 / no-receipt refusal untouched (boundary control).
+- [ ] B.2 acceptance: fresh full clone of `development` on the documented PATH → full gate GREEN with zero `vp_rerun_alone` re-runs (record the `GREEN in Ns` line).
 
-- [ ] TODO: acceptance criteria for the Phase 0 pass above.
+### QA gate — every lane
+- [ ] Red/green controls with `provenance.jsonl` under `TESTS-RESULTS/2026-09-22+GH-732/<lane>/`; `bash validate.sh` green in the marathon clone; the canonical issue body ticked with the landing commit.
+
+### Held (not in GH-749)
+- #496 Phases 3–5 and the GH-496 doc refresh — follow-on arc (Phase 3 is Costly, spike-gated).
+- A.6 / A.7 — recorded as recommendations (#30 / "keep"), no code.
 
 ## Merge evidence
 
 - PR #734 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #743 merged 2026-09-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

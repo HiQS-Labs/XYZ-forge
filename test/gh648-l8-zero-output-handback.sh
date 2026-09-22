@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GH-648 L8 / GH-397: a zero-output reviewer turn (header flips, token moves) is
-# NOT review coverage — only an appended `### Round N · Reviewer` block is.
+# NOT review coverage — only an appended reviewer block with a body is.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -28,6 +28,29 @@ HEADER_FLIP = "---\nNEXT: agy (Reviewer)\nSTATUS: Open\n---\nbody\n"
 class ReviewBlocksAdded(unittest.TestCase):
     def test_appended_block_is_counted(self):
         self.assertEqual(rd.review_blocks_added("body\n", "body\n" + BLOCK), 1)
+
+    def test_supported_reviewer_headings(self):
+        for heading in (
+            "### Round 1 · Reviewer · agy",
+            "### Reviewer · Round 1",
+            "### Reviewer (agy)",
+            "### Reviewer (agy) — r2",
+            "### Reviewer — Round 1",
+            "### Reviewer — Round 1 (agy)",
+        ):
+            with self.subTest(heading=heading):
+                block = heading + "\nswept file: yes\n[Should] Fix the parser.\n"
+                self.assertEqual(rd.review_blocks_added("body\n", "body\n" + block), 1)
+
+    def test_heading_without_body_counts_zero(self):
+        for heading in ("### Reviewer (agy)", "### Round 1 · Reviewer · agy",
+                        "### Reviewer · Round 1"):
+            for ending in ("", "\n \t\n", "\n## Next\nother text\n",
+                           "\n<!-- marker -->\nother text\n",
+                           "\n---\nother text\n"):
+                with self.subTest(heading=heading, ending=ending):
+                    self.assertEqual(
+                        rd.review_blocks_added("", heading + "\n" + ending), 0)
 
     def test_header_flip_without_block_counts_zero(self):
         self.assertEqual(

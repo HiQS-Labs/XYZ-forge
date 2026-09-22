@@ -1,0 +1,47 @@
+marathon-drive: relay approved — running pre-advance gate: bash /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/validate.sh
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//runner-envelope.RUcetB/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 4-wide — auto-detected 12 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+  391 pooled suites + 16 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] projection-idempotent.sh rc=0
+[parallel] concurrent-claim.sh rc=0
+FAILED in parallel (rc=1): marathon-drive.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+  PASS: GH-207: satisfied path is explicitly marked lane_already_satisfied
+  PASS: GH-207: red gate stalled lane still exits no-progress
+  PASS: GH-207: red gate does not route a stalled lane into reviewer recovery
+  PASS: GH-207: stalled red-gate lane still records the ordinary no-progress escalation
+  PASS: GH-279: zero-byte declared artifact remains no-progress
+FAILED in parallel (rc=1): relay-pkg-freshness.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+== test: relay-pkg-freshness ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-relay-pkg-freshness.XXXXXX.184gPQj98a
+  PASS: relay-pkg.tar.gz present
+  drift: relay-automation/new-relay.sh
+  PASS: tarball exposes 18 packaged paths
+  FAIL: relay-pkg.tar.gz is stale — run skills/relay-automation/make-pkg.sh
+
+FAILED in parallel (rc=1): gh280-jog-marathon-adapter.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+  PASS: C4 no-progress exits 3
+  PASS: C4 receipt reason no-progress
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C5 cap escalation exits 4
+WARNING (GH-528): 1 suite(s) failed in parallel and passed alone.
+passed: 406 / 410
+failed:
+  - marathon-drive.sh
+  - relay-pkg-freshness.sh
+  - gh280-jog-marathon-adapter.sh
+  - clone-identity-invariant
+marathon-drive: gate-guard: gate exit 1 after 1342s — peak group RSS 1320MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/relay-system/2026-09-22/marathon-p1-052305.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=737MB, swap_free=1312MB
+marathon-drive: escalation written: /Users/noelsaw/marathon-clones/marathon-gh-749-relay-gate-cost/marathon-system/gh749-relay-gate-cost--p1/ESCALATION.md (reason: pre-advance-failed)
+marathon-drive: tick analyze failed — end-of-run cost summary unavailable (MARATHON_COST_SUMMARY=0 to silence)
+marathon: HALT: phase p1 failed (marathon-drive exit 5) — chain stops; later phases NOT started

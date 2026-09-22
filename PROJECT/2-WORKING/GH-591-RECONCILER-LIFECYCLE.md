@@ -178,3 +178,7 @@ local evidence; automatic qualification after the dependent merge is still pendi
 ## Merge evidence
 
 - PR #600 merged 2026-09-13 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #743 merged 2026-09-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

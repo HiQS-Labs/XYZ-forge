@@ -60,7 +60,7 @@ bash githooks/install.sh        # ONCE PER CLONE — wires the pre-push gate (GH
 bash githooks/install.sh --check # is this clone gated? exit 1 if not
 ./validate.sh              # the gate — PARALLEL by default (GH-544), auto-sized to the host (GH-35)
 ./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
-./validate.sh --sequential # force the sequential run (~16 min)
+./validate.sh --sequential # force the sequential run (see the hook’s measured GREEN in Ns line)
 ./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
 ./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
 ./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
@@ -86,8 +86,7 @@ description, and (c) merge readiness still outstanding. A bypassed push never au
 promotion, or teardown, and a published draft is never approval.
 
 **Parallel became the default on 2026-08-14 (GH-544)** when the local gate was the only gate during
-the private phase, and a 16-minute gate does not get run — it gets skipped, which is worse than a
-3-minute one. **GH-35 (2026-08-18) rebalanced the width to `cores/2` (floor 2, cap 4) and put every
+the private phase, and a slow gate risks being skipped; use the hook’s measured `GREEN in Ns` line for current cost. **GH-35 (2026-08-18) rebalanced the width to `cores/2` (floor 2, cap 4) and put every
 worker under `nice -n 10`** — the original `cores − 2` (up to 8) saturated developer machines badly
 enough to wedge the editor; `--burst` buys the old full-core width back for unattended runs, and
 `--throttle`/`--quiet-cpu` pins 2 workers. Ambient levers: `XYZ_VALIDATE_THROTTLE=1`,
@@ -103,6 +102,10 @@ suites at the boundary, `--tier 1` runs the docs gate, and everything else — u
 test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
 Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
 sequential full run qualifies (GH-509).
+
+`--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
+Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen the run
+(`nice` protects the editor, not the wall-clock).
 
 **What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
 `ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it

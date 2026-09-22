@@ -1,6 +1,6 @@
 ---
 title: debug-mantra — add explicit Root Cause Analysis gate (root vs proximate cause, symptom-fix trap, RC ledger statement)
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-21
 owner: agent-b
 gh_issue: 737

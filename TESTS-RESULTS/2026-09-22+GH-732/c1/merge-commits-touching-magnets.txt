@@ -1,0 +1,29 @@
+304b52dd 2026-09-16 merge: integrate development hotfix and preserve both ledger histories
+4424c9ef 2026-09-10 Merge remote-tracking branch 'origin/development' into development
+f660eadd 2026-09-07 fix(gh484): address GLM recovery notes and integrate development
+f213272c 2026-09-07 Merge development into fix/gh474-dropped-row-signal — both ARCHITECTURE sections kept
+5bf6ef3a 2026-09-07 Merge development into feat/gh473-unstuck-skill — ledger union, no content conflict
+3549a994 2026-09-06 Merge development into feat/gh460-fuzz-resolver-campaign — ledger union plus one real content conflict decided
+443b0c70 2026-09-06 Merge development into fix/gh453-governance-audit — ledger conflicts resolved via the supported path
+196424fb 2026-09-06 Merge origin/development into development — concurrent ledger writes, both kept
+e344a1bd 2026-09-06 merge development (GH-465 project directory) into feat/gh450-model-catalog; GH-450 ledger row re-applied via CLI verbs
+3425e65a 2026-09-06 merge development into feat/gh450-model-catalog; fold GLM review nits (tag_commit/renderer_commit format assert, telemetry read no longer silently None)
+97620bc4 2026-09-05 Merge development into GH-453 audit before Stage 2
+3807434c 2026-09-04 Merge pull request #438 from HiQS-Labs/fix/gh415-guard-hook-recut
+939be43a 2026-09-04 Merge pull request #427 from HiQS-Labs/feat/gh414-comment-reference-check
+bb198b62 2026-09-03 Merge development into feat/gh405-mock-board-harness (GH-405 / GH-402)
+676baab1 2026-09-03 Merge remote-tracking branch 'origin/development' into development
+1dddcda8 2026-09-03 Merge remote-tracking branch 'origin/development' into development
+04b8e9e0 2026-09-03 merge development into feat/gh402-board-sync — releases ledger union (generation 363)
+3833e2e7 2026-09-03 Merge branch 'feat/gh402-board-sync' into feat/gh405-mock-board-harness
+c15ca0f5 2026-09-02 merge: development into feat/gh396-harness-root-resolver — ledger union (GH-396 + GH-399 rows, generation 362), DB rebuilt, dashboards regenerated
+e0e70215 2026-09-02 fix(gh384): refuse --tunnel without auth, and close the review findings
+a48189fc 2026-09-01 merge: bring development (ebe99e50) in — ledger re-resolved per the recorded recipe
+2867af9d 2026-09-01 Merge remote-tracking branch 'origin/development' into marathon/2026-09-02-harness-quickwins
+e363aba1 2026-09-01 Merge branch 'development' into fix/gh360-scoped-receipt-chain-rebuild
+4fe61689 2026-09-01 Merge branch 'development' into feat/gh353-vendored-router-roadmap-audit
+425f558f 2026-09-01 Merge branch 'development' into feat/gh353-vendored-router-roadmap-audit
+711aa0c2 2026-09-01 merge: bring development into gh365-test-recalibration — ledger resolved via the supported workflow
+cf951476 2026-09-01 Merge pull request #361 from HiQS-Labs/fix/dump-parse-multiline-values
+fced2191 2026-09-01 Merge pull request #363 from HiQS-Labs/fix/marathon-plan-link-bullets
+21004b3c 2026-09-01 merge: bring development into gh346-model-resolution
