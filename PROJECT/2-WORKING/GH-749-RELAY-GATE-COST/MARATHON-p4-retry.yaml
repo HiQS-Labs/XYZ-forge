@@ -1,0 +1,15 @@
+# MARATHON-p4-retry.yaml — single-phase plan for retrying p4 after p1..p3 landed.
+# Why a separate plan: relay_attest.candidate_ok (GH-505) diffs the WHOLE tree between a phase's
+# reviewed head and HEAD, so once later phases landed, p1 can never read as satisfied again and a
+# re-fire of MARATHON.yaml halts at p1 (exit 4). Same `name`, so the phase dir
+# marathon-system/gh749-relay-gate-cost--p4 and the MARATHON-P4-TURN-<n> retry suffix line up.
+# Fire: relay-automation/marathon.sh --plan <this> --pre-advance-cmd <gate> --retry p4 --closeout-pr
+name: gh749-relay-gate-cost
+phases:
+  - id: p4
+    name: "L4 #732 B.1/B.2 — a present-but-broken toolchain is a named environment fault"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md
+    artifact: validate.sh, test/gh251-validate-pytest-skip.sh, test/gh268-relay-cue-and-target-checks.sh
+    turn_timeout_s: 1500
+    max_review_rounds: 2
