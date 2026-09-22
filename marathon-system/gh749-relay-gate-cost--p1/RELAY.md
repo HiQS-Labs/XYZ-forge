@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -133,3 +133,19 @@ Verification observed in this turn:
 Scope/verification limits: no git commands, full gate, or `test/new-relay.sh` run; the latter invokes git fixture setup. No TESTS-RESULTS files or provenance were created outside the authorized allowlist. The harness owns committed evidence and gate verification. Only the required NEXT header transition changes pre-existing relay text; this block is appended.
 
 Handing off to agy for independent review.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the GH-720 implementation across all three specified artifact files (`utils/py/relay_drive.py`, `test/gh648-l8-zero-output-handback.sh`, and `relay-automation/new-relay.sh`).
+
+**Findings:**
+1. `[Pass]` `utils/py/relay_drive.py:40-48`: The regex `pat = re.compile(...)` in `review_blocks_added(before, after)` accepts both legacy headings (`### Round N · Reviewer · ...`, `### Reviewer · Round N ...`) and the four newly supported variants (`### Reviewer (<agent>)`, `### Reviewer (<agent>) — rN`, `### Reviewer — Round N`, `### Reviewer — Round N (<agent>)`). It requires non-empty body text before the next Markdown heading, HTML marker, horizontal rule, or EOF via `m.group(1).strip()`. Pure function contract and GH-397 docstring rationale are preserved, and tagged with GH-720.
+2. `[Pass]` `test/gh648-l8-zero-output-handback.sh:32-54`: Expanded unittest methods in `ReviewBlocksAdded` pin all six heading forms (`test_supported_reviewer_headings`), empty-body variants returning 0 across varied delimiters (`test_heading_without_body_counts_zero`), header flips returning 0 (`test_header_flip_without_block_counts_zero`), no-change returning 0 (`test_no_change_counts_zero`), and empty before text handling (`test_empty_before_text_is_safe`).
+3. `[Pass]` `relay-automation/new-relay.sh:106`: Documented the accepted reviewer heading forms directly inside step 4 of `▶ TAKE YOUR TURN` (`Reviewer headings may be ...; follow the heading with a non-empty review body.`), satisfying prompt guidance without restructuring the block.
+4. `[Pass]` Whole-file sweep: Swept `utils/py/relay_drive.py` (lines 1–1126), `test/gh648-l8-zero-output-handback.sh` (lines 1–69), and `relay-automation/new-relay.sh` (lines 1–190). Python syntax validated via `python3 -B -m py_compile utils/py/relay_drive.py` and shell scripts verified via `bash -n`. Isolated probes executed under `.relay-scratch/tmp` confirmed heading detection and empty-body handling. No pre-existing defects found in touched files.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
