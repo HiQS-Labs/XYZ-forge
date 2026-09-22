@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/736
 title: "merge-cleanup: --exclude never drops a PR, UNKNOWN mergeability stops every run after a landing, stacked PRs are auto-closed when their base lands with --delete-branch"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 2
@@ -56,6 +56,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
       withheld).
 - [ ] `skills/merge-cleanup/SKILL.md` example 6 and the Phase 5 text match the shipped behaviour.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `bash test/gh436-merge-cleanup.sh` stays green INCLUDING `gh534_phase_a_tests.TestA5FreshInspection`, whose `fake_merge()` stub does not accept a `delete_branch` kwarg — do not add new keyword arguments to the `execute_pr_merge(...)` call in `land_prs` (marathon attempt 1 on 2026-09-22 passed `delete_branch=` and raised `TypeError: fake_merge() got an unexpected keyword argument 'delete_branch'` in 5 tests); carry the withhold decision through module state or a separate call instead. Run that suite before handing off.
 
 ## Swarm Preflight Contract
 
