@@ -1,5 +1,5 @@
 # Marathon Phase gh-558
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-558-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -120,3 +120,26 @@ control in `test/baselines/GH-32-negative-control.md`.
 - Captured and prints `check --rebuild` output on failure instead of swallowing the diagnostic.
 - Verification: not run, as this phase's scope lock explicitly prohibits running even the focused
   suite inside the isolated worktree; the harness owns the real gate after handoff.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the implementation against all acceptance criteria and inspected the full touched files:
+- `test/gh32-releases-app.sh:328-335`: Pinned `RELEASES_APP_NOW` for side `a` to `2026-09-21T12:00:00Z` and side `b` to `2026-09-21T12:00:01Z`, making the divergent generation timestamps deterministic on every run and asserting `distinct runs` and `deterministic generation-row fixture`.
+- `test/gh32-releases-app.sh:343-359`: Corrected fixture dump unioning logic. Extracted generation settings rows, resolved the winning row by generation number and timestamp (`sort -t"'" -k4,4n -k6,6 | tail -n 1`), synchronized the `-- generation:` header to match the winner, and deduplicated generation rows via `awk` so exactly one generation settings row survives.
+- `test/gh32-releases-app.sh:367-387`: Added red control stripping the generation header and verifying refusal with `rule=dump-generation`, followed by successful rebuild at pinned timestamp `2026-09-21T12:00:02Z` asserting the updated generation timestamp.
+- `test/gh32-releases-app.sh:369-385`: `check --rebuild` diagnostics captured via `rlog` and printed to stderr (`printf '%s\n' "$V" >&2`) upon failure instead of being swallowed.
+- `test/baselines/GH-32-negative-control.md:106-119`: Added dedicated section documenting GH-558, stating fixture-only root cause, describing the clock pinning, red control, rebuild timestamp assertion, and surfaced diagnostics.
+
+Assessment across acceptance criteria:
+1. The cause is identified as fixture or product, and stated: [Pass] Identified and documented as fixture defect (intermittent timestamp divergence across second boundary causing duplicate settings rows) in builder block, `test/gh32-releases-app.sh:340`, and `test/baselines/GH-32-negative-control.md:108-118`.
+2. `bash test/gh32-releases-app.sh` passes 25 consecutive runs on `development`: [Unverified — needs clone run] In-tree test/gate execution is forbidden by phase scope lock; harness runs validation post-turn.
+3. Regression test pins generation stamp through `check --rebuild` on merged dump with red control: [Pass] Verified in `test/gh32-releases-app.sh:367-387`.
+4. Post-rebuild `check` output is no longer swallowed by `rout` in failure path: [Pass] Verified in `test/gh32-releases-app.sh:369-385`.
+
+Full sweep: No pre-existing defects found in `test/gh32-releases-app.sh:1-926` or `test/baselines/GH-32-negative-control.md:1-119`.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
