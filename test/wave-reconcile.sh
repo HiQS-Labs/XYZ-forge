@@ -217,6 +217,54 @@ set -e
 assert_eq "Dirty working tree is rejected (exit 3)" "$rc" "3"
 rm "$REPO/untracked-dirt.txt"
 
+# GH-707: rollback telemetry uses the tick envelope but remains analytics, not
+# coordination. A live .tick must still project cleanly and expose no phantom
+# task. The copied pre-#702 projector is the red control: the former bare record
+# reproduces the projection crash when both defensive filter lines are removed.
+mkdir -p "$REPO/.tick/events"
+PYTHONDONTWRITEBYTECODE=1 python3 - "$REPO" <<'PY'
+import json
+import sys
+
+sys.path.insert(0, sys.argv[1] + "/utils/py")
+from wave_reconcile import RollbackJournal
+
+RollbackJournal(sys.argv[1]).rollback()
+events = list(__import__("pathlib").Path(sys.argv[1], ".tick", "events").glob("*wave-reconcile-rollback.jsonl"))
+assert len(events) == 1, events
+record = json.loads(events[0].read_text())
+assert record["schema_version"] == "0.2.0"
+assert record["type"] == "wave_reconcile.rollback"
+assert record["agent"] == "wave_reconcile"
+assert record["reason"] == "uncommitted-mutations"
+assert record["ts"].endswith("Z")
+assert "task" not in record
+PY
+TICK_BIN="$XYZ_ROOT/bin/tick"
+if TICK_REPO_ROOT="$REPO" "$TICK_BIN" project >/dev/null 2>&1 \
+  && ! grep -qE '^- (undefined|lane) ' "$REPO/.tick/STATE.md"; then
+  pass "GH-707 rollback envelope projects without a phantom task"
+else
+  fail "GH-707 rollback envelope projects without a phantom task" "projection failed or phantom present" "clean projection"
+fi
+
+OLD_TICK="$WORK/pre-gh702-tick"
+mkdir -p "$OLD_TICK" "$WORK/pre-gh702-root/.tick/events"
+cp -R "$XYZ_ROOT/bin" "$XYZ_ROOT/src" "$OLD_TICK/"
+sed -i.bak \
+  -e "/typeof ev.task !== 'string'/d" \
+  -e "/!ev.type.startsWith('task.')/d" \
+  "$OLD_TICK/src/project.js"
+rm "$OLD_TICK/src/project.js.bak"
+printf '%s\n' '{"event":"wave-reconcile-rollback","reason":"uncommitted-mutations","at":0}' \
+  > "$WORK/pre-gh702-root/.tick/events/rollback.jsonl"
+if TICK_REPO_ROOT="$WORK/pre-gh702-root" "$OLD_TICK/bin/tick" project >/dev/null 2>&1; then
+  fail "GH-707 red control reproduces the old bare-record defect" "projection unexpectedly succeeded" "projection failure"
+else
+  pass "GH-707 red control reproduces the old bare-record defect"
+fi
+rm -f "$REPO/.tick/events/"*wave-reconcile-rollback.jsonl "$REPO/.tick/STATE.md" "$REPO/.tick/REJECTED.jsonl"
+
 # Test 3: Hermetic dry-run proves zero mutation
 hash_before="$(git -C "$REPO" status --porcelain; git -C "$REPO" rev-parse HEAD)"
 out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 1001 --offline "$REPO/manifest.json" --skip-pull --dry-run 2>&1)"

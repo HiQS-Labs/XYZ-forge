@@ -1,6 +1,6 @@
 # Marathon Phase gh-707
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-707-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -111,3 +111,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `utils/py/wave_reconcile.py` so rollback telemetry retains its existing `.tick/events/`
+  location but uses the tick `0.2.0` envelope: ISO UTC `ts`, `type:
+  wave_reconcile.rollback`, `agent: wave_reconcile`, and the existing `reason`. It deliberately
+  carries no `task`, so the established #702 non-`task.*` projection filter treats it as analytics
+  instead of coordination and cannot seed a phantom task.
+- Updated `test/wave-reconcile.sh` with a live-`.tick` rollback fixture that checks the complete
+  envelope, runs `tick project`, and rejects phantom state. Added a red control that copies the
+  projector, removes the two #702 filter lines, feeds it the old bare rollback record, and expects
+  projection failure.
+- No tests or gates were executed: this phase's scope lock explicitly reserves all test execution
+  for the harness because fixture writes inside the isolated worktree can invalidate the turn.
