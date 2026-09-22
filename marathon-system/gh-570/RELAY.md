@@ -147,3 +147,11 @@ Reviewed the scoped HQ artifacts in full on disk:
 
 relay closed, no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-22T03:05:43Z
+task: MARATHON-GH-570-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 2a6e9d7a55802d8832d1d88bd683c5bad2452265
+added-range: 11829+2349
+added-sha256: 0ca136533d07a28dfc8770ada94b817095e34144077bde2f923c78a39a75a2ca
