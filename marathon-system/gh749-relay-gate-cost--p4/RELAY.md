@@ -178,3 +178,11 @@ Probes and verification this turn (under `.relay-scratch/tmp/`):
 
 relay closed, no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-22T07:36:27Z
+task: MARATHON-P4-TURN-2
+reviewer: agy
+status: Approved
+reviewed-head: 9155c15a309cc053790924d2aec8e147958940d0
+added-range: 15544+4237
+added-sha256: 14ac4ccebb7042bc03869d70afa881cd9d4d763bf5baf849ef4b955e999b41a5
