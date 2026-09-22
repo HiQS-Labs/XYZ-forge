@@ -1,8 +1,8 @@
 ---
 title: "GH-496: Reduce merge churn, then select CI by impact"
-status: In progress
+status: Complete
 created: 2026-09-07
-updated: 2026-09-10
+updated: 2026-09-12
 owner: Antigravity (implementation); independent reviewer (QA)
 goal: Reduce merge churn by relocating routine telemetry and decoupling generated views first, then select CI by impact across four profiles using the existing selector
 gh_issue: 496

@@ -177,7 +177,7 @@ local change.
     directory, and git skips a hook path that does not resolve *in total silence*). **The wiring is
     still per clone and does not travel** — a fresh clone or second machine has NO gate until this
     runs. Check with `bash githooks/install.sh --check`.
-  - `./validate.sh` is **parallel by default** (~4–6 min at the GH-35 balanced width of cores/2 capped 4; `--burst`
+  - `./validate.sh` is **parallel by default** (see the hook’s measured `GREEN in Ns` line; GH-35 balanced width is cores/2 capped 4; `--burst`
   restores the old full-core width), auto-sized to the host, and announces a
     sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
     the evidence record — it stays sequential and does not call `validate.sh`.

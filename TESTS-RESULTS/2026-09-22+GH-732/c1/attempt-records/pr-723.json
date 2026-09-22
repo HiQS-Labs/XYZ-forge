@@ -1,0 +1,27 @@
+{
+ "attempts": [
+  {
+   "by": "script",
+   "clone_path": "/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/merge-cleanup-4rn9026r/pr-723-a14f4bab-i7dvvsc7",
+   "finished": "2026-09-21T17:27:36-0700",
+   "head_sha": "a14f4bab6b0a2cb1bb19c32b2ff2e274e9f884df",
+   "outcome": "handoff",
+   "reason": "code/doc conflict outside the ledger set: CHANGELOG.md",
+   "rung": "B1",
+   "started": "2026-09-21T17:27:36-0700"
+  }
+ ],
+ "base_sha": "a14f4bab6b0a2cb1bb19c32b2ff2e274e9f884df",
+ "conflict_files": [
+  "CHANGELOG.md",
+  "LEADERBOARD.md",
+  "releases.db",
+  "releases.sql"
+ ],
+ "last_side_touched": {},
+ "merge_base": "",
+ "pr": 723,
+ "pre_repair": {},
+ "repo": "https://github.com/HiQS-Labs/XYZ-forge.git",
+ "schema": 1
+}
