@@ -1,6 +1,6 @@
 # Marathon Phase gh-674
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-674-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -126,3 +126,46 @@ Implemented GH-674's hosted reconciliation lookup contract.
 - Touched `test/gh645-merge-cleanup-xyz-tools.sh`, added `test/gh674-merge-cleanup-hosted-lookup.sh`, and registered it in `validate.sh`: pinned PR-keyed active-run waiting, the filtered-query red control, and flag-free local fallback.
 - Preserved GH-629 compatibility by retaining an active run's database id when the existing fake response omits `headSha`.
 - Verification: not run by design; the phase brief explicitly forbids executing tests or gates inside this isolated worktree. The harness owns gate execution after handoff.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+#### Findings
+
+- [Blocker] Zero-grace configurations (including `test/gh534_phase_c_tests.py`) bypass active-run adoption and fall back immediately to local reconciliation, violating Criterion 7.
+  - Observed input: `HOSTED_GRACE_ENV="0"` with fake `gh run list` returning `[{"databaseId": 62901, "status": "in_progress", "conclusion": ""}]` (as configured by `test/gh534_phase_c_tests.py:255-256`).
+  - Affected scope: `skills/merge-cleanup/scripts/merge_cleanup.py:482-488`
+  - Falsifier: Run the following probe in `.relay-scratch/tmp`:
+    ```bash
+    export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"
+    python3 -c '
+    import os, sys, json
+    sys.path.insert(0, "skills/merge-cleanup/scripts")
+    import merge_cleanup
+    from pathlib import Path
+    from unittest import mock
+
+    class Res:
+        returncode = 0
+        stdout = json.dumps([{"databaseId": 62901, "status": "in_progress", "conclusion": ""}])
+        stderr = ""
+
+    with mock.patch.dict(os.environ, {
+        merge_cleanup.HOSTED_POLL_ENV: "0",
+        merge_cleanup.HOSTED_GRACE_ENV: "0",
+        merge_cleanup.HOSTED_WAIT_ENV: "10"
+    }), mock.patch.object(merge_cleanup, "_gh", return_value=Res()):
+        res = merge_cleanup.wait_for_hosted_reconcile("m"*40, Path("."), "development", pr_head="p"*40)
+        assert res != "fallback", f"Expected active run adoption, got {res}"
+    '
+    ```
+    Observed failure: Exit 1, `AssertionError: Expected active run adoption, got fallback`
+    Root cause: In `wait_for_hosted_reconcile`, line 482 guards adoption with `if not matching and elapsed < grace_s:`. When `HOSTED_GRACE_ENV` is set to `"0"` (as done by `TestCScript.setUp` in `test/gh534_phase_c_tests.py`), `grace_s = 0.0` and `elapsed >= 0.0`, making `elapsed < grace_s` False. The active run is never adopted, `matching` remains empty, and the function returns `"fallback"`, causing `run_local_wave_reconcile` to be invoked and failing `test/gh534_phase_c_tests.py::TestCScript::test_hosted_run_is_waited_for_and_fast_forwarded_before_emission`.
+    Proposed fix: Allow active run adoption when `elapsed <= grace_s or grace_s == 0`, e.g.:
+    `if not matching and (elapsed <= grace_s or grace_s == 0):`
+    so that active runs present in the list are adopted on initial poll even when grace duration is 0.
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn.
