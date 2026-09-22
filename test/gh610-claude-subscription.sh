@@ -156,9 +156,10 @@ class ClaudeSubscription(unittest.TestCase):
             # Force only Git's cleanup operation to fail; preserve the linked tree.
             real_git=shutil.which('git'); fakebin=root/'fakebin'; fakebin.mkdir()
             fakegit=fakebin/'git'
-            fakegit.write_text('#!'+sys.executable+'\nimport os,sys\n'
+            fakegit.with_suffix('.py').write_text('import os,sys\n'
                 +'if "worktree" in sys.argv and "remove" in sys.argv: sys.exit(1)\n'
                 +'os.execv('+repr(real_git)+',['+repr(real_git)+']+sys.argv[1:])\n')
+            fakegit.write_text('#!/bin/sh\nPYTHON='+shlex.quote(sys.executable)+'\nexec "$PYTHON" "$0.py" "$@"\n')
             fakegit.chmod(0o755)
             env.update(PATH=str(fakebin)+os.pathsep+env['PATH'],STUB_RC='')
             result=subprocess.run([sys.executable,str(consult),'--models','claude','--prompt','Read README.md','--out',str(root/'cleanup-failure')],cwd=repo,env=env,capture_output=True,text=True,timeout=30)
