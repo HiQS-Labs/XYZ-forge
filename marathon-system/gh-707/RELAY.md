@@ -1,6 +1,6 @@
 # Marathon Phase gh-707
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-707-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -125,3 +125,21 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   projection failure.
 - No tests or gates were executed: this phase's scope lock explicitly reserves all test execution
   for the harness because fixture writes inside the isolated worktree can invalidate the turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+#### Findings
+
+##### [Blocker] `test/wave-reconcile.sh` red control incorrectly asserts non-zero exit code instead of phantom task presence or projection failure
+- **Observed input:** Running `test/wave-reconcile.sh:251-265` with pre-#702 `src/project.js` (defensive filter lines removed) against bare record `{"event":"wave-reconcile-rollback","reason":"uncommitted-mutations","at":0}` in `$WORK/pre-gh702-root/.tick/events/rollback.jsonl`.
+- **Affected scope:** `test/wave-reconcile.sh:261-265`
+- **Failure:** Line 261 executes `if TICK_REPO_ROOT="$WORK/pre-gh702-root" "$OLD_TICK/bin/tick" project >/dev/null 2>&1; then fail ...`. However, `tick project` does NOT fail with a non-zero exit code when folding a single bare event; it exits with code 0 and writes a phantom task `- undefined (priority: 0)` to `$WORK/pre-gh702-root/.tick/STATE.md`. Because `tick project` succeeds (exit code 0), the `if` condition evaluates to true, tripping the assertion:
+  ```text
+  ❌ FAIL: GH-707 red control reproduces the old bare-record defect (got: projection unexpectedly succeeded, expected: projection failure)
+  ```
+  which causes the test suite to fail on line 400.
+- **Falsifier:** Invert/refine the assertion so the red control proves that without #702's filter, projection either fails or produces the phantom task in `STATE.md` (e.g. `if TICK_REPO_ROOT="$WORK/pre-gh702-root" "$OLD_TICK/bin/tick" project >/dev/null 2>&1 && ! grep -qE '^- (undefined|lane) ' "$WORK/pre-gh702-root/.tick/STATE.md"; then fail "GH-707 red control reproduces the old bare-record defect" "clean projection" "phantom task or projection failure"; else pass "GH-707 red control reproduces the old bare-record defect"; fi`). When tested against the stripped `project.js`, the phantom `- undefined` is detected and the red control passes.
