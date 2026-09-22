@@ -1,8 +1,8 @@
 ---
 title: "GH-663: QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission"
-status: Active
+status: Complete
 created: 2026-09-16
-updated: 2026-09-16
+updated: 2026-09-22
 owner: operator (via /express)
 gh_issue: 663
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/663
@@ -30,7 +30,8 @@ goal: >
 
 ## Merge evidence
 
-- (recorded at landing by the /express driver)
+- Express commit `4481ab488ba88f98a2e582046808fa72fa7fc6a2` landed 2026-09-17 — agy relay review findings on containment hotfix chain; issue #663 closed 2026-09-17.
+
 
 ## Lessons Learned (For Future Agents)
 

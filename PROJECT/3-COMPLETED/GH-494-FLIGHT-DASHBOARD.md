@@ -2,9 +2,9 @@
 gh_issue: 494
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/494
 title: Flightdeck — HTML consumer app and future Swift plan
-status: HTML v1 implemented — partial-data pilot awaiting operator acceptance
+status: Complete
 created: 2026-09-08
-updated: 2026-09-08
+updated: 2026-09-09
 owner: Codex
 goal: Help the operator remember and advance concurrent repository lanes each hour.
 doc_type: project

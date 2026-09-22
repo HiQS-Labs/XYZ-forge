@@ -2,9 +2,9 @@
 gh_issue: 673
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/673
 title: Flight Deck established-work reader
-status: Reader repaired — replacement focused QA pending
+status: Complete
 created: 2026-09-17
-updated: 2026-09-17
+updated: 2026-09-21
 owner: Codex
 goal: Distinguish established work from recent attention without changing source statuses.
 doc_type: project

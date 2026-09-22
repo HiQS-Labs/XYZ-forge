@@ -143,3 +143,7 @@ A correct "changes requested" review is reported as a stall (red telemetry, exit
 ## Merge evidence
 
 - PR #729 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #750 merged 2026-09-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
