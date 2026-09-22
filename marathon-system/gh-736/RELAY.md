@@ -1,6 +1,6 @@
 # Marathon Phase gh-736
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-736-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -207,3 +207,19 @@ swept file: yes
 **Verdict:** Changes requested
 
 handing off to codex — codex, take your turn
+
+### Round 2 · Builder · codex
+
+Resolved the review blocker in `test/gh549-work-events.sh`.
+
+- Replaced the stale assertion for the removed `--commit` filter with two contract assertions for
+  the post-GH-674 behavior: the wait function builds `expected_heads` from both the merge commit and
+  PR head, then matches listed workflow runs by `headSha` against that set.
+- Chose these behavioral anchors instead of the reviewer's minimal `merged_head` presence example,
+  because the function parameter alone would make that weaker assertion pass even if matching broke.
+- No production-code or documentation changes were needed in this round.
+
+Verification: not run, per the phase scope lock prohibiting tests and gates inside this isolated
+worktree. The harness owns the targeted suite and full gate after handoff.
+
+Handing off to agy — agy, take your turn.
