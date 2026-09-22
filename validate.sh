@@ -571,6 +571,7 @@ TESTS=(
   "gh425-gate-provenance-pr.sh"       # GH-425 (wave_reconcile --gate verifies a receipt actually attributes to the PR, not just that TESTS-RESULTS/ is non-empty)
   "gh421-auto-wave-reconcile.sh"      # GH-421 (post-merge CI auto-trigger for wave_reconcile.py; idempotent repeat, no re-shipped ledger writes)
   "gh684-hosted-lane-report.sh"       # GH-684 (hosted lane report: one labelled issue opened/commented on red or skips, closed on green; stub gh; red control = body without the run URL)
+  "gh740-hosted-lane-publish.sh"      # GH-740 (hosted publish survives a raced push: receipts lifted onto the fresh head, one --only-receipted recompute; production consumer accepts the published receipt; red control = the stale clone's plain push is rejected)
   "gh491-roadmap-section-validation.sh" # GH-491 (roadmap move/update --section validated against ledgerSections; refuses a markdown-side name naming the DB equivalent)
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
   "gh605-work-state.sh"               # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
