@@ -1,5 +1,5 @@
 # Marathon Phase gh-707
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-707-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -151,3 +151,17 @@ swept file: yes
   or `lane` phantom task to `STATE.md`. A successful clean projection now fails the control.
 - No tests or gates were executed, per the phase scope lock; the harness owns verification outside
   this isolated worktree.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+#### Verification & Assessment
+
+- [Pass] Red control assertion refinement in `test/wave-reconcile.sh:261-269`: Codex updated the GH-707 red control in `test/wave-reconcile.sh` to check for phantom tasks in `STATE.md` (`grep -qE '^- (undefined|lane) ' "$WORK/pre-gh702-root/.tick/STATE.md"`) as well as non-zero exit codes. Probed via non-mutating out-of-tree scratch execution under `$TMPDIR`: stripping the defensive filter lines from `src/project.js:63-64` reproduces `- undefined (priority: 0)` in `.tick/STATE.md`, which is detected by the assertion and passes the red control.
+- [Pass] Clean projection in live `.tick` in `test/wave-reconcile.sh:243-249`: Tested `wave_reconcile.RollbackJournal.rollback()` in `utils/py/wave_reconcile.py:174-199` against an active `.tick/events/` directory in scratch. Emits schema `0.2.0`, `wave_reconcile.rollback` event with `reason: "uncommitted-mutations"` and ISO `ts`, without a `task` field. `tick project` succeeds with exit 0 and outputs clean `STATE.md` with no phantom tasks.
+- [Pass] Whole-file sweep: Swept `utils/py/wave_reconcile.py` and `test/wave-reconcile.sh`. Rollback telemetry safely checks `os.path.isdir(events_dir)` before emitting, so test environments lacking `.tick/events/` (such as `test/gh202-wave-reconcile-issue-state.sh:263-279` and `test/gh421-auto-wave-reconcile.sh:207-217`) remain completely pristine with no untracked files generated. No pre-existing defects found in touched scopes.
+- [Unverified — needs clone run] Gate execution (`bash validate.sh`): Not run in-tree per phase brief scope lock (`test/wave-reconcile.sh` and related suites create fixture git repos in-tree that conflict with containment). Left for harness execution in a disposable full clone.
+
