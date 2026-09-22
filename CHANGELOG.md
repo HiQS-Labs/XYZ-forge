@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-21 — skills/ grouped by frequency of use: 1-hourly, 2-daily, 3-weekly, 4-occasional (GH-744)
+
+`skills/` was a flat alphabetical list of 60 directories; the ARCHITECTURE.md Skills Index was
+alphabetical too and missing seven skills. Every skill now lives at `skills/<tier>/<name>/` (a
+`git mv`, no content change) under four numbered folders, so a directory listing reads as a usage
+map. The operator anchored nine placements; the rest follow each skill's trigger description and can
+be re-tiered with a `git mv` plus the index row — nothing depends on the tier name, only on the
+two-level depth (`skills/README.md` states the contract). What had to learn the second level:
+`utils/py/skill_drift_check.py` scans `*/SKILL.md` and `*/*/SKILL.md` and keys `unrecognized` on the
+canonical name set (a mini collection stays one level; the GH-660 fixture gains a tiered skill so both
+branches are proven); `utils/py/xyz_mini_sync.py` and `agent-chorus/publish-manifest.tsv` re-point
+their SOURCE columns only — XYZ-mini and the standalone repo stay flat; `utils/ci-route.sh` registry
+globs are `skills/*/<name>/*`; the locators that derive the repo root from their own directory
+(`find-harness.sh`, `find-hq.sh`, `find-xyz.sh`, `find-pdda.sh`, `vendor-stack/install.sh`,
+`relay-to-issue.sh`, `make-pkg.sh`, `review_engine.py`) go one level higher, `find-xyz.sh` finds
+relay-xyz across tiers by glob, and `agent_chorus.py` / `scan_clones.py` walk up to the nearest
+ancestor holding `skills/` / `bin/tick` (same answer as `parents[3]` in every flat layout, including
+a vendored `.xyz/`). `test/path-integrity.sh` blanks app-discovery roots (`~/.claude/skills/<name>`)
+before tokenizing, since that flat installed layout never exists in this tree. `relay-pkg.tar.gz`
+regenerated at its new path. Vendored `.xyz/skills/` mirrors the tiers on the next `xyz-vendor.sh`
+refresh. Machine-local follow-up for a Skills Army HQ collection: `intake.py --apply update <name>
+--source <forge>/skills/<tier>/<name>` per forge-owned skill (the drift guard now reports those ten
+whose SKILL.md text gained tiered paths). Plan QA: agy Approved after two rounds
+(`relay-system/2026-09-21/gh744-plan-qa.md`; Codex's CLI could not run tool calls this session).
+Easy rollback: revert the merge commit, plus the reverse `intake.py update` if provenance was re-pointed.
+
 ## 2026-09-21 — agent-chorus legacy fixture dangles by construction; gate runs write no bytecode (GH-730)
 
 `git push` from the operator's primary clone was refused by the pre-push gate: `test/agent-chorus.sh`

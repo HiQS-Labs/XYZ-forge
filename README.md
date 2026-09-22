@@ -242,6 +242,10 @@ flow.
 
 ### Skills
 
+`skills/` is grouped by how often a skill is used — `1-hourly/`, `2-daily/`, `3-weekly/`, `4-occasional/` —
+so a directory listing reads as a usage map; the tier contract is in [`skills/README.md`](skills/README.md) and the
+per-skill index in [`ARCHITECTURE.md` → Skills Index](ARCHITECTURE.md#skills-index).
+
 Claude Code only scans `~/.claude/skills/`, so skills must be symlinked in once per machine:
 
 ```bash
