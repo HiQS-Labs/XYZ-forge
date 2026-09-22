@@ -1,5 +1,5 @@
 # Marathon Phase gh-567
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-567-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -112,3 +112,50 @@ Implemented the GH-567 Express cleanup across the scoped artifacts:
 - `test/gh267-express-skill.sh`: updated the projection contract and added a source assertion that Express contains no retired dashboard reference.
 
 Key decision: removal is enforced at both the production staging surface and two regression layers, without broadening scope into the legacy-mode router diagnostic. Verification was intentionally not executed because this phase brief explicitly forbids running even the focused tests inside the isolated worktree; the harness owns the gate after handoff.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+#### Scope & Integrity Audit
+- Reviewed all artifact files in full, not just the diffs:
+  - `utils/py/express.py` (1197 lines)
+  - `test/gh567-roadmap-dashboard-retired.sh` (227 lines)
+  - `test/gh267-express-skill.sh` (689 lines)
+- Pre-existing defects in touched files: None found. All error handling, telemetry, staging validation, and argument parsing remain robust and compliant with project standards.
+
+#### Acceptance Criteria Assessment
+1. **`utils/py/jog_run.py`, `utils/py/express.py`, and `skills/standup/collect.sh` references**: [Pass]
+   - Inspected `utils/py/express.py` lines 75-80 and 881-888: `ROADMAP-DASHBOARD.md` has been removed from `DRIVER_GENERATED` and `CLOSEOUT_ALLOWLIST_FILES`.
+   - Verified that `utils/py/jog_run.py`, `utils/py/express.py`, and `skills/standup/collect.sh` contain zero references to `ROADMAP-DASHBOARD.md`.
+   - Non-mutating probe executed under `.relay-scratch/tmp`:
+     - Command: `grep -n 'ROADMAP-DASHBOARD.md' utils/py/jog_run.py skills/standup/collect.sh utils/py/express.py || true`
+     - Exit status: `0`
+     - Decisive output: (empty / no matches found)
+   - Non-mutating python bytecode compile probe:
+     - Command: `python3 -m py_compile utils/py/express.py`
+     - Exit status: `0`
+     - Decisive output: `py_compile exit: 0`
+
+2. **Regression guards in `test/gh567-roadmap-dashboard-retired.sh` and `test/gh267-express-skill.sh`**: [Pass]
+   - `test/gh567-roadmap-dashboard-retired.sh`: `check_writer_audit` was tightened from pattern-specific writers (`>|>>|tee|mv|cp|touch|stage`) to all active references (`grep -n -F 'ROADMAP-DASHBOARD.md'`), correctly exempting the legacy diagnostic in `/utils/py/router_audit.py`. Red control 4 was updated to match the new check.
+   - `test/gh267-express-skill.sh`: Added assertion `! grep -q 'ROADMAP-DASHBOARD\.md' "$DRIVER"` ensuring Express contains no retired dashboard references.
+   - Non-mutating probe executed under `.relay-scratch/tmp` verifying `check_writer_audit`:
+     - Exit status: `0`
+     - Decisive output:
+       ```
+       PROD AUDIT: PASS (0 matches)
+       RED CONTROL: PASS (correctly caught injection)
+       Script exit: 0
+       ```
+   - Bash syntax check probe:
+     - Command: `bash -n test/gh267-express-skill.sh && bash -n test/gh567-roadmap-dashboard-retired.sh`
+     - Exit status: `0`
+     - Decisive output: `gh267 syntax: 0`, `gh567 syntax: 0`
+
+3. **`validate.sh` suite pass**: [Unverified — needs clone run]
+   - Per review instructions and phase brief, full test execution (`validate.sh`, `test/*.sh`) belongs in a disposable full clone to prevent fixture artifacts inside the worktree; the harness runs the full gate after this turn.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
