@@ -6,15 +6,15 @@
 # advisory; local commits remain free and ungated on purpose, while a push is checked before it
 # leaves the machine.
 #
-# WHY IT RUNS THE FAST GATE: `validate.sh` is parallel by default (~4 min on a 10-core host) rather
-# than sequential (~16 min). This is the single most important choice in this file. A 16-minute
-# pre-push hook does not produce 16 minutes of testing — it produces `--no-verify` as a reflex, and a
-# gate that is routinely bypassed is worth less than no gate, because it also produces the belief that
-# something was checked. Four minutes is a cost that actually gets paid.
+# WHY IT RUNS THE FAST GATE: `validate.sh` is parallel by default rather than sequential;
+# use this hook's measured `GREEN in Ns` line for current cost. This is the single most
+# important choice in this file. A slow pre-push hook risks producing `--no-verify` as a reflex,
+# and a gate that is routinely bypassed is worth less than no gate, because it also produces
+# the belief that something was checked.
 #
 # GH-35 added a NARROWER route below the fast gate: a push whose changed paths all map to a
 # registered utility subsystem (utils/ci-route.sh's Tier-2 registry) runs only that subsystem's
-# suites (~20-45s) instead of the full pool, under nice. The classifier must explicitly say
+# suites (see the measured `GREEN in Ns` line) instead of the full pool, under nice. The classifier must explicitly say
 # tier=2 AND name runnable suites — route=fast alone is not enough, because an unmapped code
 # path also routes fast and belongs on the full gate. Every narrower route fails closed to the
 # one above it.

@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -104,3 +104,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented A.1–A.5 in AGENTS.md, ROUTER.md, githooks/pre-push, validate.sh, and the new registered test/gh732-l3-gate-summary.sh.
+
+- Replaced undated timing estimates with the hook’s measured `GREEN in Ns` output; documented tier-2 width overrides and one gate per host.
+- Added the GH-732 summary directly after `telemetry:` using awk/sort over existing GH-365 records. First suite attempts across pool/driver-lock/sequential appear once, descending, capped at ten; retry suite records supply the separate count and cumulative seconds. The paired `event=retry` records are excluded to avoid doubling cost. Retry execution and verdict handling are unchanged.
+- Added an early `--help`/`-h` handler for the existing usage text (previously no help handler existed), so help does not run gate setup or git/worktree checks.
+- Focused fixture test PASS: twelve suites across all three lanes, duplicate first-attempt name, slower retries, paired retry events, summary/unrelated lane exclusions, exact ten-row output/order/durations/rc, missing/empty file silence, and help guidance. Bash syntax checks PASS. Stale timing-pattern scan found no matches.
+- Witnessed negative controls: reversed sorting → rc 1; including both suite and retry events → rc 1; restored renderer → rc 0. Outputs and local provenance are in `.relay-scratch/`; these are temporary verification, not committed gate evidence.
+
+Full gate intentionally not run under the turn’s explicit restriction. The harness must run the gate against the final state and retain the required TESTS-RESULTS evidence; that destination is outside this turn’s allowlist. No git commands run. Only the mandated NEXT metadata was updated above this appended block.
+
+Next: agy reviews the implementation and focused checks; harness owns the full gate and commit.
