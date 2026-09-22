@@ -1,6 +1,6 @@
 # Marathon Phase gh-651
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-651-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -120,3 +120,33 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - Left `test/_setup.sh` unchanged; the shared fixture setup needs no behavior change.
 - Verification intentionally not run: this phase's scope lock assigns all test execution to the
   harness because the fixture writes outside the artifact allowlist during execution.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+#### Findings
+
+- [Blocker] `test/gh610-claude-subscription.sh:159` writes `fakegit` with `'#!'+sys.executable`, failing under spaced interpreters and failing the preflight fix probe.
+  - **Affected scope:** `test/gh610-claude-subscription.sh:159` (`fakegit.write_text('#!'+sys.executable+'\nimport os,sys\n'...)`)
+  - **Observed input:** Running the test suite in an environment where Python's path contains spaces, or when `sys.executable` contains whitespace (e.g. `python with spaces/python`).
+  - **Observed failure:**
+    1. Direct execution probe:
+       Command:
+       `python3 -c "import tempfile, subprocess, sys, os; from pathlib import Path; d = Path('$TMPDIR/probe_direct'); d.mkdir(parents=True, exist_ok=True); (d/'py with spaces').mkdir(exist_ok=True); p = d/'py with spaces'/'python'; p.symlink_to(sys.executable); f = d/'git'; f.write_text('#!'+str(p)+'\nimport sys\n'); f.chmod(0o755); subprocess.run([str(f)], check=True)"`
+       Exit status: 1
+       Decisive output: `FileNotFoundError: [Errno 2] No such file or directory: '.../git'` (kernel refuses/mangles shebang line containing spaces).
+    2. Test regression in `test_real_probe_and_consult_dispatch`: When `fakebin` is prepended to `PATH`, `subprocess.run(['git', 'worktree', 'remove', ...])` fails to execute `fakegit` due to the malformed shebang, causing `execvp` to fall through to `/usr/bin/git`. As a result, `fakegit` never intercepts `worktree remove` to exit 1, and the worktree removal succeeds instead of failing, causing `self.assertIn('preserved at', result.stderr)` (lines 168-172) to fail.
+    3. Swarm preflight contract failure: The contract in `PROJECT/2-WORKING/GH-651-GH610-SPACED-PYTHON-SHEBANG.md` defines `fix_probes` with `grep_present` on pattern `'#!'\+sys\.executable`. Evaluating `re.search(r"'#!'\+sys\.executable", content)` matches line 159, marking the phase as not landed.
+  - **Falsifier:**
+    Rewrite `fakegit` at line 159 to launch safely without a direct `#!` + `sys.executable` shebang — for example, using a quoted POSIX shell trampoline / sidecar (`shlex.quote(sys.executable)`) or a pure POSIX shell script (e.g. checking `$*` for `worktree` and `remove` and execing `shlex.quote(real_git)`).
+    Verify that `grep -n "'#!'+sys\.executable" test/gh610-claude-subscription.sh` returns no matches (exit status 1), satisfying the swarm-preflight fix probe.
+
+#### Scope & File Sweep
+- Confined to `test/gh610-claude-subscription.sh,test/_setup.sh` per scope lock.
+- Full file sweep performed on both files:
+  - `test/_setup.sh`: reviewed in full (176 LOC); fixture guard, cleanup trap, repository seeding, tick bindings, trunk-commit exemption, and default reviewer stub are sound with no defects.
+  - `test/gh610-claude-subscription.sh`: reviewed in full (276 LOC); the shell trampoline and spaced-shebang red control for the `claude` mock CLI are well-formed. Pre-existing tests (legacy subscription rejection, effort flags, mock probe failures, timeout/idle process group kills, and bash runner checks) are sound, leaving only the `fakegit` fixture at line 159 to be remediated.
+
