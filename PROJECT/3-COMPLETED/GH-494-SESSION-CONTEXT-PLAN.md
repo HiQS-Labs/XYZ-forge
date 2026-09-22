@@ -1,8 +1,8 @@
 ---
 title: Flightdeck — session context and status mitigation
-status: Planned — DeepSeek V4 Pro textual QA approved; relay format validation failed
+status: Complete
 created: 2026-09-08
-updated: 2026-09-08
+updated: 2026-09-09
 owner: Codex
 goal: Preserve session intent and show existing Claude session status through passive incoming connectors.
 doc_type: project
