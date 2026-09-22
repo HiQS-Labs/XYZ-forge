@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-2 builder=codex reviewer=agy round-cap=5 -->
@@ -137,3 +137,23 @@ Verification this turn:
 Prior escalation says `unattested-terminal`, exit 0, gate not run, with no turn log; it does not establish a remaining parser or packaging failure. No live relay reproduction, shell test suite, or full gate was run in this linked worktree. Full gate and committed evidence remain the harness's responsibility under this turn's scope restrictions. Only this relay file changed, with the explicitly required NEXT header update and this appended block; no git commands were run.
 
 Handing off to agy for independent review and terminal attestation.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the artifact files on disk:
+- `utils/py/relay_drive.py`: Full sweep completed. Lines 39-48 implement `review_blocks_added(before, after)` matching all six scaffold-elicited reviewer headings (`### Round N · Reviewer · <agent>`, `### Reviewer · Round N …`, `### Reviewer (<agent>)`, `### Reviewer (<agent>) — r2`, `### Reviewer — Round N`, `### Reviewer — Round N (<agent>)`), rejecting whitespace-only bodies before subsequent headings, markers, and EOF. Pure function implementation preserved with GH-397 rationale and tagged `GH-720`. No pre-existing defects found. [Pass] (`utils/py/relay_drive.py:32-49`)
+- `test/gh648-l8-zero-output-handback.sh`: Full sweep completed. Contains regression coverage for all six accepted heading variants with non-empty bodies, assertions for headings without bodies returning 0, header-flip-only returning 0, and unchanged text returning 0. No pre-existing defects found. [Pass] (`test/gh648-l8-zero-output-handback.sh:28-65`)
+- `relay-automation/new-relay.sh`: Full sweep completed. Line 106 names the accepted reviewer heading forms and requires a non-empty review body directly under step 4 of `▶ TAKE YOUR TURN`. Probed with `--print` and confirmed clean emission. No pre-existing defects found. [Pass] (`relay-automation/new-relay.sh:105-106`)
+- `skills/relay-automation/relay-pkg.tar.gz`: Full sweep completed. Probed with python tarfile against live repository files; all 18 packaged paths are present and match their live sources byte-for-byte with zero drift. [Pass] (`skills/relay-automation/relay-pkg.tar.gz` members match live source bytes)
+
+Probes and verification this turn:
+- Python probe in `.relay-scratch/tmp/` verified `review_blocks_added` on all 12 combinations of supported headings, empty bodies, whitespace-only bodies, subsequent markdown headings, comments, and CRLF endings: 12/12 passed (exit status 0).
+- Python probe in `.relay-scratch/tmp/` verified `skills/relay-automation/relay-pkg.tar.gz` against live tree: 18 members, 0 drift (exit status 0).
+- Shell execution of `new-relay.sh --title "Test Relay" --reviewer agy --print`: confirmed line 43 contains accepted headings specification (exit status 0).
+- Shell test suite and full gate run are deferred to the disposable full clone harness gate (`[Unverified — needs clone run]`).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
