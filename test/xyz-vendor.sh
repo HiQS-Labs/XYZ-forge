@@ -23,9 +23,28 @@ export XYZ_REGISTRY="$WORK/registry.tsv"
 # Canonicalize via `cd && pwd` (macOS /var -> /private/var) so paths match what xyz-vendor +
 # find-harness store/resolve — otherwise the symlinked mktemp dir breaks string compares.
 mkdir -p "$WORK/foreign"; git init -q "$WORK/foreign"; REPO="$(cd "$WORK/foreign" && pwd -P)"
+# GH-742: a consumer can be an ESM package. The vendored harness remains CommonJS regardless of
+# the target's package boundary.
+printf '{\n  "type": "module"\n}\n' > "$REPO/package.json"
 
 # --- vendor materializes a complete .xyz/ ---
 "$VENDOR" "$REPO" >/dev/null 2>&1 || fail "vendor exited non-zero"
+grep -Fqx '  "type": "commonjs"' "$REPO/.xyz/package.json" \
+  && pass "GH-742: vendor writes a CommonJS package boundary" \
+  || fail "GH-742: .xyz/package.json missing type=commonjs"
+grep -Fqx '  "type": "module"' "$REPO/package.json" \
+  && pass "GH-742: target ESM package.json remains untouched" \
+  || fail "GH-742: vendor changed the target package.json"
+TICK_REPO_ROOT="$REPO" "$REPO/.xyz/bin/tick" --help >/dev/null 2>&1 \
+  && pass "GH-742: vendored tick runs inside an ESM target" \
+  || fail "GH-742: vendored tick inherited the target's ESM mode"
+mv "$REPO/.xyz/package.json" "$WORK/vendored-package.json"
+if TICK_REPO_ROOT="$REPO" "$REPO/.xyz/bin/tick" --help >/dev/null 2>&1; then
+  fail "GH-742 control: tick still ran without the vendored CommonJS boundary"
+else
+  pass "GH-742 control: removing .xyz/package.json reproduces the ESM failure"
+fi
+mv "$WORK/vendored-package.json" "$REPO/.xyz/package.json"
 # The vendor mirrors whole dirs VERBATIM (VENDOR_DIRS="relay-automation bin src test skills"), so
 # assert the vendored copy MATCHES the harness — like the src/*.js check below — not a magic count.
 # The old `== 20` was for the curated relay-pkg manifest; the full-mirror change (5972ef4) ships every

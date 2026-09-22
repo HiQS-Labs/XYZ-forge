@@ -1,6 +1,6 @@
 # Marathon Phase gh-742
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-742-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -106,3 +106,16 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Touched `relay-automation/xyz-vendor.sh` and `test/xyz-vendor.sh`.
+- Made every vendor/update write `.xyz/package.json` with `"type": "commonjs"`, establishing an
+  explicit Node package boundary for the CommonJS `bin/tick` and `src/*.js` runtime.
+- Added an ESM consumer fixture that preserves the target's root `"type": "module"`, proves the
+  vendored `tick --help` path succeeds, and includes a red control that removes the vendored package
+  boundary and expects the same invocation to fail before restoring it.
+- Verification intentionally not run: the phase scope lock forbids executing even focused tests in
+  this isolated worktree; the harness will run the gate after handoff.
+
+Handing off to agy — agy, take your turn.
