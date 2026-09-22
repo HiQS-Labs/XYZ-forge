@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN-2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -121,3 +121,19 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Existing GH-720 implementation verified; no artifact changes needed. The Python counter accepts all six requested heading forms and rejects whitespace-only bodies before headings, markers, and EOF. Existing regressions cover both legacy forms, header-only mutations, and unchanged text. The scaffold already names accepted headings and requires a non-empty body. All 18 packaged source files match the tarball byte-for-byte; regeneration is unnecessary.
+
+Verification this turn:
+- Executed the embedded Python unittest from `test/gh648-l8-zero-output-handback.sh` with bytecode disabled: all 6 tests passed.
+- Negative control: replaced the counter in memory with the brief's old regex, then ran the same tests; the supported-heading regression failed (exit 1), as expected.
+- Ran `new-relay.sh --print`: accepted-heading guidance and non-empty-body requirement present.
+- Compared every regular tarball member against its live source: no drift; non-empty member list asserted.
+- Scratch logs: `.relay-scratch/gh720-green.log`, `gh720-red-control.log`, `gh720-scaffold.log`, and `gh720-package-before.log`. These are ephemeral verification records, not committed provenance.
+
+Prior escalation says `unattested-terminal`, exit 0, gate not run, with no turn log; it does not establish a remaining parser or packaging failure. No live relay reproduction, shell test suite, or full gate was run in this linked worktree. Full gate and committed evidence remain the harness's responsibility under this turn's scope restrictions. Only this relay file changed, with the explicitly required NEXT header update and this appended block; no git commands were run.
+
+Handing off to agy for independent review and terminal attestation.
