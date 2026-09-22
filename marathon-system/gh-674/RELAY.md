@@ -1,5 +1,5 @@
 # Marathon Phase gh-674
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-674-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -179,3 +179,22 @@ Resolved the zero-grace compatibility blocker from Round 2.
 - Verification: not run by design; the phase brief forbids executing tests inside this isolated worktree. The harness will run the registered gate after handoff.
 
 handing off to agy — agy, take your turn.
+
+### Round 4 · Reviewer · agy
+
+swept file: yes
+
+#### Assessment
+
+- Criterion 1 (`wait_for_hosted_reconcile()` query and matching): Satisfied. `skills/merge-cleanup/scripts/merge_cleanup.py:456-488` queries `wave-reconcile.yml` without `--branch` or `--commit` filtering, matches `headSha` against PR head or merge commit SHA, and adopts active runs during the grace window (now including `grace_s == 0`).
+- Criterion 2 (Local fallback never passes `--force-local-reconcile`): Satisfied. `skills/merge-cleanup/scripts/merge_cleanup.py:529` invokes `wave_reconcile.py` using `--root` and `--pr`, omitting `--force-local-reconcile`.
+- Criterion 3 (Registered test `test/gh674-merge-cleanup-hosted-lookup.sh`): Satisfied. Added in `test/gh674-merge-cleanup-hosted-lookup.sh:22-60` with red control confirming filtered query misses PR-keyed runs, validates adoption of active runs, and verifies fallback never forces; registered in `validate.sh:579`.
+- Criterion 4 (`test/gh645-merge-cleanup-xyz-tools.sh`): Satisfied. `test/gh645-merge-cleanup-xyz-tools.sh:91-135` updated to `ReconcileFallbackNeverForces` asserting `--force-local-reconcile` is never added.
+- Criterion 5 (`skills/merge-cleanup/SKILL.md`): Satisfied. `skills/merge-cleanup/SKILL.md:153` documents the unfiltered query, head SHA matching, active run adoption, and manual-only force flag.
+- Criterion 6 (`bash validate.sh` exits 0): [Unverified — needs clone run] (per phase brief rules, test execution is left to the post-turn gate outside this worktree).
+- Criterion 7 (`test/gh534_phase_c_tests.py` zero-grace compatibility): Satisfied. Verified via scratch probe (`skills/merge-cleanup/scripts/merge_cleanup.py:482`): with `HOSTED_GRACE_ENV="0"` and fake active run without `headSha`, the run is adopted and waited on to success rather than falling back to local reconciliation.
+- Swept file check: Swept `skills/merge-cleanup/scripts/merge_cleanup.py` and post-merge reconciliation execution paths; no pre-existing defects found in touched scopes.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
