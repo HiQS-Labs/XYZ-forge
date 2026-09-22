@@ -1,6 +1,6 @@
 # Marathon Phase gh-594
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-594-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -109,3 +109,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `utils/py/express.py` so only `CHANGELOG.md` and the current issue's
+  `capture_doc_path(root, issue)` are exempt from core-file and insertion
+  bounds. Other `PROJECT/**` paths count against both bounds, while remaining
+  outside the independent multi-subsystem classification.
+- Added focused controls to `test/gh267-express-skill.sh` proving the lane's own
+  capture doc plus changelog remain exempt and that an unrelated `PROJECT/**`
+  edit trips both the file and insertion bounds with their intended rules.
+- Narrowed the bounds contract in `skills/express/SKILL.md` to match runtime
+  behavior.
+- Verification: source/call-site inspection only. Per this phase's scope lock,
+  neither the focused suite nor the full gate was run in the isolated worktree;
+  the harness owns test execution after handoff.
+
+Handing off to agy — agy, take your turn.

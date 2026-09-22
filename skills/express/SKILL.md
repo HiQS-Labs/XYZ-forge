@@ -105,8 +105,10 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem (unless
    `--allow-multi-subsystem` is passed, or micro-diff tolerance applies: $\le 30$
    insertions across $\le 2$ files auto-passes, GH-516). Only the lane's OWN
-   paperwork (`CHANGELOG.md`, `PROJECT/**`) is exempt — operator .md edits (README,
-   governance, skills) COUNT (a gateless merge never rewrites policy unbounded).
+   paperwork (`CHANGELOG.md` and the current issue's capture doc resolved by
+   `capture_doc_path(root, issue)`) is exempt. Every other `PROJECT/**` path and
+   operator .md edit (README, governance, skills) COUNTS (a gateless merge never
+   rewrites policy unbounded).
    Defaults are operator-tunable via `--max-files` / `--max-insertions`; the
    refusals are never optional.
 2. **Hard refusals** — frozen twins and shared Bash runtime (GH-308), any
@@ -172,4 +174,3 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
   full stop. An `--force` would make every guardrail negotiable.
 - No Costly/one-way-door work, ever (see step 2 refusals).
 - No force push (direct landing pushes fast-forward with Step 7 qualifying suite receipt and `XYZ_SKIP_PREPUSH=1`).
-
