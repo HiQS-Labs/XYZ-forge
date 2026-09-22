@@ -1,6 +1,6 @@
 ---
 title: pre-push gate red on test/agent-chorus.sh in any clone with a leftover skills/agent2agent/__pycache__ — legacy-symlink assertion reads clone state, not a fixture
-status: Proposed (1-INBOX — executing on fix/gh730-agent-chorus-legacy-fixture)
+status: Complete
 created: 2026-09-21
 owner: agent-b
 gh_issue: 730
