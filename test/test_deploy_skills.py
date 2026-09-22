@@ -18,7 +18,7 @@ import zipfile
 
 sys.dont_write_bytecode = True
 REPO = Path(__file__).resolve().parents[1]
-BUNDLE = REPO / "skills" / "skills-army-hq"
+BUNDLE = REPO / "skills" / "3-weekly" / "skills-army-hq"
 spec = importlib.util.spec_from_file_location("deploy_intake_test", BUNDLE / "scripts" / "intake.py")
 intake = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(intake)
@@ -545,12 +545,12 @@ raise SystemExit(mod.main(sys.argv[3:]))
         self.assertEqual(len(list((self.root / "backups").glob("skills-sync-trinity-*.zip"))), 1)
 
     def test_a10_old_discoverable_skill_is_absent(self):
-        self.assertFalse((REPO / "skills" / "skills-sync-trinity" / "SKILL.md").exists())
+        self.assertFalse(list(REPO.glob("skills/*/skills-sync-trinity/SKILL.md")))  # any tier (GH-744)
         self.assertTrue((BUNDLE / "SKILL.md").is_file())
 
     def test_a6_shipped_consult_has_no_recursive_install_artifact(self):
-        self.assertEqual(intake.skill_info(REPO / "skills" / "consult")["name"], "consult")
-        self.assertGreater(len(intake.snapshot(REPO / "skills" / "consult")), 1)
+        self.assertEqual(intake.skill_info(REPO / "skills" / "1-hourly" / "consult")["name"], "consult")
+        self.assertGreater(len(intake.snapshot(REPO / "skills" / "1-hourly" / "consult")), 1)
 
     def test_a7_swe_description_fits_zcode_discovery_limit(self):
         description = intake.skill_info(REPO / "skills" / "1-hourly" / "swe")["description"]

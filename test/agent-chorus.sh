@@ -1331,7 +1331,7 @@ python3 "$CLI" --root "$Q3W" --store "$Q3S" start --subject "gh524 lock" --agent
 Q3_FILE="$(find "$Q3S" -path "*925104*" -name conversation.md 2>/dev/null | head -1)"
 q3_out="$(CLI_PATH="$CLI" Q3W="$Q3W" Q3S="$Q3S" Q3_FILE="$Q3_FILE" python3 - <<'LOCKPY'
 import os, subprocess, sys, threading, time
-sys.path.insert(0, os.path.join("skills", "agent-chorus", "scripts"))
+sys.path.insert(0, os.path.join("skills", "2-daily", "agent-chorus", "scripts"))
 import agent_chorus as ac
 from pathlib import Path
 

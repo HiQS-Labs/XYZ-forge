@@ -23,7 +23,7 @@ import unittest.mock as mock
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "skills" / "merge-cleanup" / "scripts"))
+sys.path.insert(0, str(REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts"))
 
 import scan_clones  # noqa: E402
 import merge_cleanup  # noqa: E402
