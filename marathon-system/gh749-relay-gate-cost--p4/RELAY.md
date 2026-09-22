@@ -1,5 +1,5 @@
 # Marathon Phase p4
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -126,3 +126,30 @@ Evidence logs: `.relay-scratch/php-focused.log`, `php-mutant.log`, `yaml-focused
 Outstanding harness/operator verification: full focused suites, the disposable-clone pytest-less qualification boundary (exit 6 and no receipt), B.2 fresh-clone full gate with zero re-runs and four planted faults, and retained TESTS-RESULTS provenance. The turn explicitly forbids Git, full-gate execution, and writes outside the four-file allowlist plus scratch, so those acceptance runs and retained evidence were not performed here. No full-gate success or phase completion is claimed. Reversibility: Easy; the diagnostic block and test changes are local and removable.
 
 Handing off to agy for review.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed the artifact files on disk:
+- `validate.sh`: Full sweep completed around modified sections and summary. Extends the skip/diagnostic path before the pool (lines 1023-1038) and summary reporting (lines 1574-1576). Pre-pool diagnostic tests `php -v` and `php -l /dev/null`, announcing `ENVIRONMENT FAULT: php present but unusable (<first stderr line>) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)` only when both version check and empty-file lint fail. Confirms python3 imports `yaml`, announcing `ENVIRONMENT FAULT: python3 (<path>) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)`. Exports computed `XYZ_ENV_FAULTS` (e.g. `php`, `yaml`, or `php,yaml`) and prints `ENVIRONMENT FAULTS (GH-732): $XYZ_ENV_FAULTS — this run is NOT promotion evidence.` in the summary next to QUARANTINED. Exit code semantics and `--qualify` paths remain strictly unchanged. Pre-existing code swept; no pre-existing defects found. [Pass]
+- `test/gh268-relay-cue-and-target-checks.sh`: Full sweep completed (278 lines). Encapsulates PHP target assertions in `gh732_php_assertions` and guards with `[[ ",${XYZ_ENV_FAULTS:-}," == *,php,* ]]` to report `SKIP: environment fault (php present but unusable)` rather than failing on clean PHP lint. Subprocess red control with broken PHP stub (`exit 1`, `missing libaspell`) confirms named fault emission, clean PHP failure suppression, and skip reporting. Healthy PHP assertions continue to verify syntax-error failure (exit 1) and clean PHP success (exit 0). Pre-existing code swept; no pre-existing defects found. [Pass]
+- `test/gh251-validate-pytest-skip.sh`: Full sweep completed (102 lines). Adds missing-PyYAML sibling test using a temporary `python3` shim failing `-c "import yaml"` on PATH with `validate.sh --print-mode`. Asserts named fault diagnostic naming the interpreter path, `gate-toolchain` repair PATH hint, and `NOT promotion evidence (GH-732)`. Absent pytest assertions remain intact. Pre-existing code swept; no pre-existing defects found. [Pass]
+- Boundary control & qualification invariant (`utils/py/wave_reconcile.py:580-597`): Swept `qualify_landings`. Confirmed `command(["python3", "-c", "import pytest"])` raises on missing pytest and halts with `die(..., code=6)` producing no receipt. Unchanged and strictly preserved. Full disposable-clone qualification execution and B.2 fresh-clone full gate with planted faults remain graded `[Unverified — needs clone run]` as required outside turn execution boundaries. [Pass]
+
+Probes and verification this turn (narrow non-mutating probes under `$TMPDIR` / `.relay-scratch/`):
+- Syntax check: `bash -n validate.sh test/gh251-validate-pytest-skip.sh test/gh268-relay-cue-and-target-checks.sh` returned exit code 0.
+- Diagnostic probe (isolated under `$TMPDIR`):
+  1. Broken PHP stub (failing `-v` with stderr and failing `-l /dev/null`): emitted `ENVIRONMENT FAULT: php present but unusable ...` and set `FAULTS=php` (exit code 0).
+  2. Version-only failure stub: did not classify PHP as unusable; `FAULTS=` (exit code 0).
+  3. Lint-only failure stub: did not classify PHP as unusable; `FAULTS=` (exit code 0).
+  4. Missing PyYAML python3 shim: emitted `ENVIRONMENT FAULT: python3 (...) cannot import yaml ...` and set `FAULTS=yaml` (exit code 0).
+  5. Both faults concurrent: emitted both diagnostics and set `FAULTS=php,yaml` (exit code 0).
+- Test regression probe (`gh268`): simulated broken PHP stub against extracted diagnostic block; confirmed `ENVIRONMENT FAULT: php present but unusable (missing libaspell)`, `SKIP: environment fault (php present but unusable)`, zero `clean PHP did not pass` failures (exit code 0, 3 passed).
+- Test regression probe (`gh251`): verified missing PyYAML shim under `validate.sh --print-mode` produces named diagnostic, repair hint, and evidence disclaimer (exit code 0, 1 passed).
+- Negative control probe (`gh251`): mutated YAML diagnostic string; test failed as expected with exit code 1.
+- Scratch discipline: all temporary files restricted to `$TMPDIR` and `.relay-scratch/`; working tree clean.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
