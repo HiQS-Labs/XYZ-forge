@@ -1934,10 +1934,17 @@ def main():
     parser.add_argument("--qualify", action="store_true",
                         help="Run the full sequential suite and retain integration evidence before gated closeout")
     parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
+    parser.add_argument("--only-receipted", action="store_true",
+                        help="GH-740 publish retry: never run the suite — process only landings that already have a "
+                             "committed, matching qualification receipt; defer recovered ones that do not (their own "
+                             "run qualifies them); an explicit --pr/--commit without a receipt fails closed. "
+                             "Requires --catch-up --qualify.")
 
     args = parser.parse_args()
     if args.qualify and (not args.require_receipts or args.dry_run or args.offline or args.allow_dirty or args.pre_merge):
         parser.error("--qualify requires --gate and a live, clean, non-preview post-merge checkout")
+    if args.only_receipted and not (args.catch_up and args.qualify):
+        parser.error("--only-receipted requires --catch-up --qualify (it is the hosted publish step's bounded retry)")
 
     repo_root = os.path.abspath(args.root) if args.root else resolve_repo_root()
 
@@ -2008,7 +2015,25 @@ def main():
                     if (kind, value) not in metadata:
                         metadata[(kind, value)] = (fetch_commit_metadata(repo_root, value) if kind == "commit"
                                                   else fetch_pr_metadata(repo_root, value))
-                qualify_landings(repo_root, [metadata[item] for item in landing_items], journal)
+                if args.only_receipted:
+                    # GH-740: the publish step's retry after a raced push. The receipts it just published
+                    # are on HEAD, so this run's landings match; anything else (the racer) is deferred to
+                    # its own queued run rather than qualified here. Same matcher as the qualifier.
+                    # `metadata` keeps every closer so the newest-owner rule below is unchanged.
+                    previous = committed_qualifications(repo_root)
+                    kept = []
+                    for item in landing_items:
+                        if any(qualification_receipt_matches(repo_root, entry, metadata[item]) for entry in previous):
+                            kept.append(item)
+                        elif item in explicit_items:
+                            die(f"--only-receipted refuses explicit {landing_label(metadata[item])}: "
+                                "no committed qualification receipt", code=6)
+                        else:
+                            log(f"deferred {landing_label(metadata[item])} — no committed qualification receipt; "
+                                "its own run qualifies it")
+                    landing_items = kept
+                else:
+                    qualify_landings(repo_root, [metadata[item] for item in landing_items], journal)
             # A recovered batch can contain several closing PRs for one issue.
             # Qualify every landing, but let its newest known closer own all lifecycle
             # writes, including when that closer already has a committed receipt.

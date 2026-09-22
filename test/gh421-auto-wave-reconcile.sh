@@ -482,6 +482,80 @@ class ReconcileTests(unittest.TestCase):
         self.assertIn('updated: 2026-09-08',doc)
         self.assertNotIn('updated: 2026-09-07',doc)
 
+    # GH-740: the hosted publish step's bounded retry. Same enumeration and ownership as the run it
+    # retries; landings without a committed, matching receipt are deferred, never qualified.
+    def only_receipted(self, receipted, targets=(), discover=None, issue_state='CLOSED', lookup=None):
+        older=dict(self.pr,number=90,mergedAt='2026-09-07T00:00:00Z',mergeCommit={'oid':'b'*40})
+        lookup=lookup or {'90':older,'42':self.pr}
+        def default_discover(root,slug,offline,qualification_metadata=None):
+            qualification_metadata.update({('pr','90'):older,('pr','42'):self.pr})
+            return ['90','42']
+        argv=['wave','--root',str(self.root),*targets,'--catch-up','--qualify','--gate','--only-receipted',
+              '--skip-pull','--skip-branch-check']
+        out=io.StringIO()
+        with patch.object(sys,'argv',argv), \
+             patch.object(wave,'catch_up_prs',side_effect=discover or default_discover), \
+             patch.object(wave,'qualify_landings') as qualify, \
+             patch.object(wave,'committed_qualifications',return_value=[{'pr':n} for n in receipted]), \
+             patch.object(wave,'qualification_receipt_matches',side_effect=lambda root,entry,meta: entry['pr']==meta['number']), \
+             patch.object(wave,'check_provenance_receipts'), \
+             patch.object(wave,'fetch_issue_state',return_value=issue_state), \
+             patch.object(wave,'fetch_pr_metadata',side_effect=lambda root,value,*a,**k: lookup[str(value)]), \
+             patch.object(wave,'check_porcelain_cleanliness',return_value=''), \
+             patch.object(wave,'verify_rollback_completeness'), \
+             patch.object(wave,'github_slug_from_origin',return_value='test/repo'), \
+             patch.object(wave,'harness_tool',side_effect=lambda root,path:str(source/path)), \
+             patch.object(wave.subprocess,'run',side_effect=self.run_command), \
+             contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            wave.main()
+        qualify.assert_not_called()
+        return out.getvalue()
+
+    def test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner(self):
+        out=self.only_receipted(receipted=[42])
+        self.assertIn('deferred PR #90',out)
+        self.assertNotIn('deferred PR #42',out)
+        doc=(self.root/self.doc.replace('2-WORKING','3-COMPLETED')).read_text()
+        self.assertIn('updated: 2026-09-08',doc)
+        self.assertNotIn('updated: 2026-09-07',doc)
+        self.assertIn('PR #42',self.rows('SELECT * FROM roadmap_items')[0]['raw_text'])
+
+    def test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own(self):
+        # The newer closer already had a committed receipt; the older one was receipted this run.
+        out=self.only_receipted(receipted=[90,42])
+        self.assertNotIn('deferred',out)
+        doc=(self.root/self.doc.replace('2-WORKING','3-COMPLETED')).read_text()
+        self.assertIn('updated: 2026-09-08',doc)
+        self.assertNotIn('updated: 2026-09-07',doc)
+
+    def test_only_receipted_refuses_an_explicit_unreceipted_target(self):
+        with self.assertRaises(SystemExit) as stopped:
+            self.only_receipted(receipted=[42],targets=['--pr','90'])
+        self.assertEqual(stopped.exception.code,6)
+
+    def test_only_receipted_requires_catch_up_and_qualify(self):
+        for argv in (['wave','--root',str(self.root),'--pr','42','--gate','--only-receipted'],
+                     ['wave','--root',str(self.root),'--catch-up','--gate','--only-receipted']):
+            with self.subTest(argv=argv[3:]), patch.object(sys,'argv',argv), \
+                 contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as stopped:
+                wave.main()
+            self.assertEqual(stopped.exception.code,2)
+
+    def test_only_receipted_explicit_target_keeps_open_issue_merge_evidence(self):
+        # GH-740 F6: after the receipts commit lands, discovery no longer lists this PR (it is
+        # receipted) and skips its OPEN issue — the publisher names it explicitly, and its
+        # merge-evidence write survives with zero qualification.
+        reference=dict(self.pr,number=5,body='References #421',mergeCommit={'oid':'5'*40})
+        def discover(root,slug,offline,qualification_metadata=None):
+            return []   # what catch_up_prs returns once #5 is receipted and #421 is OPEN
+        with patch.object(wave,'extract_linked_issues',return_value=([],[421])):
+            out=self.only_receipted(receipted=[5],targets=['--pr','5'],discover=discover,issue_state='OPEN',
+                                    lookup={'5':reference})
+        self.assertIn('Issue #421 referenced without a closing keyword and OPEN — recording merge evidence only',out)
+        doc=(self.root/self.doc).read_text()   # still active — the issue is open
+        self.assertIn('## Merge evidence',doc)
+        self.assertIn('PR #5',doc)
+
     def test_qualified_empty_sweep_writes_nothing(self):
         before=self.snapshot()
         argv=['wave','--root',str(self.root),'--catch-up','--qualify','--gate','--skip-pull','--skip-branch-check']
@@ -550,49 +624,68 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(data['permissions'], {'contents':'read'})
         self.assertIn('run: bash test/gh421-auto-wave-reconcile.sh', (source / '.github/workflows/ci.yml').read_text())
 
-    PUBLISH_HEAD = 'shell: python3 {0}\n        run: |\n'
+    # GH-740: the publish step is utils/py/hosted_lane_publish.py (the former inline Python, moved).
+    # These tests drive the module with git patched out; test/gh740-hosted-lane-publish.sh drives it
+    # against a real bare remote.
+    def publish_module(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('gh421_publish', source / 'utils/py/hosted_lane_publish.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
 
-    def publish_script(self, workflow=None):
-        # GH-684: bounded to the publication step's own run: block — a step appended after it (the
-        # hosted-lane report) must not leak into the compiled Python.
-        import textwrap
-        block = (workflow or self.workflow).split(self.PUBLISH_HEAD, 1)[1].split('      - name:', 1)[0]
-        return textwrap.dedent(block)
-
-    def publish(self, paths, reject_push=False):
-        script = self.publish_script()
-        calls = []
-        def command(argv):
-            calls.append(argv[1:])
-            if argv[1] == 'diff':
-                return b'\0'.join(p.encode() for p in paths) + (b'\0' if paths else b'')
-            if argv[1] == 'ls-files':
-                return b''
-            if argv[1] == 'push' and reject_push:
-                raise wave.subprocess.CalledProcessError(1, argv)
-            return b''
-        with patch.object(wave.subprocess, 'check_output', side_effect=command):
-            exec(compile(script, 'workflow-publish', 'exec'), {})
+    def publish(self, paths, pushes=(True,), recomputed=None, targets=(['7'], [])):
+        """Run main() with git patched out. `pushes` is the sequence of push outcomes; `recomputed`
+        is what changed_paths() returns after the one recompute. Returns the recorded calls."""
+        module = self.publish_module()
+        calls = dict(commits=[], git=[], pushes=list(pushes), recompute=[])
+        def fake_git(*args, check=True):
+            calls['git'].append(args)
+            return SimpleNamespace(returncode=0, stdout='', stderr='')
+        def fake_commit(paths, message):
+            calls['commits'].append((list(paths), message))
+            return 'f' * 40
+        def fake_push():
+            return calls['pushes'].pop(0)
+        changed = [sorted(paths), sorted(recomputed or [])]   # changed_paths() returns sorted paths
+        with patch.object(module, 'git', side_effect=fake_git), \
+             patch.object(module, 'commit', side_effect=fake_commit), \
+             patch.object(module, 'push', side_effect=fake_push), \
+             patch.object(module, 'changed_paths', side_effect=lambda: changed.pop(0)), \
+             patch.object(module, 'remote_head', return_value='d' * 40), \
+             patch.object(module, 'receipt_targets', return_value=targets), \
+             patch.object(module, 'recompute', side_effect=lambda argv, cmd: calls['recompute'].append(argv)), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = module.main(['--reconcile-args', '--pr 7 --catch-up --gate --qualify'])
+        calls['rc'] = rc
         return calls
 
-    def test_publish_extraction_is_bounded_to_its_step(self):
-        appended = self.workflow.rstrip('\n') + '\n      - name: Something after publication\n        run: echo later\n'
-        for label, text in (('base', self.workflow), ('appended', appended)):
-            with self.subTest(label=label):
-                script = self.publish_script(text)
-                self.assertIn("git('push', 'origin', 'HEAD:development')", script)
-                compile(script, 'workflow-publish', 'exec')
+    RECEIPTS = ['TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/provenance.jsonl',
+                'TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/validation.jsonl']
+    PATHS = ['releases.db', 'releases.sql',
+             'PROJECT/2-WORKING/GH-421-fixture.md', 'PROJECT/3-COMPLETED/GH-421-fixture.md',
+             # GH-721: the deletion side of a 1-INBOX -> 3-COMPLETED capture promotion (GH-698 item 2)
+             'PROJECT/1-INBOX/GH-421-fixture.md',
+             'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md']
 
     def test_report_step_and_permissions(self):
         # GH-684: the reconcile log is tee'd outside the tree, the final step always runs, and it
         # reports the JOB's status (a rejected push after a green reconcile is still red).
+        # GH-740/741: the publish step is the module, its log is tee'd too, and the report gets both
+        # step outcomes so it can name the step that actually failed.
         for marker in ('issues: write', 'id: reconcile', '2>&1 | tee "$RUNNER_TEMP/reconcile.log"',
+                       'echo "RECONCILE_ARGS=${ARGS[*]}" >> "$GITHUB_ENV"',
+                       'id: publish', 'python3 utils/py/hosted_lane_publish.py --reconcile-args "$RECONCILE_ARGS"',
+                       '2>&1 | tee "$RUNNER_TEMP/publish.log"',
                        '- name: Report hosted lane', 'if: always()', '--status "${{ job.status }}"',
                        'python3 utils/py/hosted_lane_report.py', '--log "$RUNNER_TEMP/reconcile.log"',
-                       '--run-url "$RUN_URL"'):
+                       '--run-url "$RUN_URL"', '--reconcile-outcome "${{ steps.reconcile.outcome }}"',
+                       '--publish-outcome "${{ steps.publish.outcome }}"', '--publish-log "$RUNNER_TEMP/publish.log"'):
             self.assertIn(marker, self.workflow)
         self.assertNotIn('issues: read', self.workflow)
-        self.assertLess(self.workflow.index(self.PUBLISH_HEAD), self.workflow.index('- name: Report hosted lane'))
+        self.assertNotIn('shell: python3 {0}', self.workflow)   # no inline publish Python remains
+        self.assertLess(self.workflow.index('- name: Commit declared artifacts and push'),
+                        self.workflow.index('- name: Report hosted lane'))
         try:
             import yaml
         except ImportError:
@@ -600,34 +693,74 @@ class WorkflowTests(unittest.TestCase):
         data = yaml.safe_load(self.workflow)
         job = data['jobs']['reconcile']
         self.assertEqual(job['permissions']['issues'], 'write')
+        self.assertEqual([s.get('id') for s in job['steps'][-3:-1]], ['reconcile', 'publish'])
         self.assertEqual(job['steps'][-1]['name'], 'Report hosted lane')
         self.assertEqual(job['steps'][-1]['if'], 'always()')
 
     def test_publish_allowlist_and_plan_lands(self):
-        paths = ['releases.db', 'releases.sql',
-                 'PROJECT/2-WORKING/GH-421-fixture.md', 'PROJECT/3-COMPLETED/GH-421-fixture.md',
-                 # GH-721: the deletion side of a 1-INBOX -> 3-COMPLETED capture promotion (GH-698 item 2)
-                 'PROJECT/1-INBOX/GH-421-fixture.md',
-                 'PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md']
-        paths += ['TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/provenance.jsonl',
-                  'TESTS-RESULTS/2026-09-13+GH-591/wave-' + 'a'*40 + '/validation.jsonl']
-        calls = self.publish(paths)
-        self.assertIn(['add', '-A', '--', *sorted(paths)], calls)
-        self.assertEqual(calls[-1], ['push', 'origin', 'HEAD:development'])
+        module = self.publish_module()
+        paths = self.PATHS + self.RECEIPTS
+        self.assertEqual(module.declared_paths(sorted(paths)), sorted(paths))
+        self.assertEqual(module.receipt_paths(paths), self.RECEIPTS)
         with self.assertRaisesRegex(SystemExit, 'undeclared'):
-            self.publish(paths + ['utils/py/unexpected.py'])
+            module.declared_paths(paths + ['utils/py/unexpected.py'])
         with self.assertRaisesRegex(SystemExit, 'undeclared'):
-            self.publish(paths + ['TESTS-RESULTS/arbitrary/provenance.jsonl'])
+            module.declared_paths(paths + ['TESTS-RESULTS/arbitrary/provenance.jsonl'])
         with self.assertRaisesRegex(SystemExit, 'undeclared'):
-            self.publish(paths + ['PROJECT/1-INBOX/scratch-note.md'])
+            module.declared_paths(paths + ['PROJECT/1-INBOX/scratch-note.md'])
         for sha in ('a'*39, 'a'*41, 'g'*40):
             with self.subTest(sha=sha), self.assertRaisesRegex(SystemExit, 'undeclared'):
-                self.publish(paths + ['TESTS-RESULTS/2026-09-13+GH-591/wave-'+sha+'/provenance.jsonl'])
-        with self.assertRaises(wave.subprocess.CalledProcessError):
-            self.publish(paths, reject_push=True)
-        with self.assertRaises(SystemExit) as result:
-            self.publish([])
-        self.assertEqual(result.exception.code, 0)
+                module.declared_paths(paths + ['TESTS-RESULTS/2026-09-13+GH-591/wave-'+sha+'/provenance.jsonl'])
+        # fast path: one explicit-path commit, one push, nothing else touches git
+        calls = self.publish(paths)
+        self.assertEqual(calls['rc'], 0)
+        self.assertEqual(calls['commits'], [(sorted(paths), 'chore: reconcile merged development work')])
+        self.assertEqual(calls['recompute'], [])
+        self.assertEqual(calls['git'], [])
+        # an undeclared path is refused before any commit or push
+        with patch.object(module, 'changed_paths', return_value=paths + ['utils/py/unexpected.py']), \
+             patch.object(module, 'commit') as commit, patch.object(module, 'push') as push:
+            with self.assertRaisesRegex(SystemExit, 'undeclared'):
+                module.main([])
+        commit.assert_not_called(); push.assert_not_called()
+        # nothing to commit
+        with patch.object(module, 'changed_paths', return_value=[]), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(module.main([]), 0)
+
+    def test_publish_recovers_from_a_raced_push_with_receipts_first_and_one_recompute(self):
+        paths = self.PATHS + self.RECEIPTS
+        recomputed = ['releases.db', 'releases.sql', 'PROJECT/3-COMPLETED/GH-421-fixture.md']
+        calls = self.publish(paths, pushes=(False, True, True), recomputed=recomputed)
+        self.assertEqual(calls['rc'], 0)
+        self.assertEqual([c[0] for c in calls['commits']], [sorted(paths), self.RECEIPTS, sorted(recomputed)])
+        self.assertEqual(calls['commits'][1][1], 'chore: retain qualification receipts for ' + 'a'*40)
+        self.assertIn(('reset', '--hard', 'origin/development'), calls['git'])
+        self.assertIn(('checkout', 'f'*40, '--', *self.RECEIPTS), calls['git'])   # receipt FILES lifted, nothing rebased
+        self.assertFalse(any('rebase' in c or 'push' in c for c in calls['git']))
+        self.assertEqual(calls['recompute'], [['--catch-up', '--gate', '--qualify', '--pr', '7', '--only-receipted', '--skip-pull']])
+        # a second race: receipts stay published, exactly one recompute, loud exit
+        with self.assertRaises(SystemExit) as stopped:
+            self.publish(paths, pushes=(False, True, False), recomputed=recomputed)
+        self.assertEqual(stopped.exception.code, 1)
+        # no receipts in the raced commit: no retry at all
+        with self.assertRaises(SystemExit) as stopped:
+            self.publish(self.PATHS, pushes=(False,))
+        self.assertEqual(stopped.exception.code, 1)
+        # receipts-only publication exhausts its own ≤3-attempt loop: three receipt commits, no recompute
+        module = self.publish_module()
+        recorded = dict(commits=[], recompute=[])
+        with patch.object(module, 'git', return_value=SimpleNamespace(returncode=0, stdout='', stderr='')), \
+             patch.object(module, 'commit', side_effect=lambda paths, message: recorded['commits'].append(message) or 'f'*40), \
+             patch.object(module, 'push', side_effect=[False, False, False, False]), \
+             patch.object(module, 'changed_paths', return_value=sorted(paths)), \
+             patch.object(module, 'remote_head', return_value='d'*40), \
+             patch.object(module, 'recompute', side_effect=lambda argv, cmd: recorded['recompute'].append(argv)), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as stopped:
+                module.main(['--reconcile-args', '--pr 7 --catch-up --gate --qualify'])
+        self.assertEqual(stopped.exception.code, 1)
+        self.assertEqual(recorded['commits'], ['chore: reconcile merged development work'] + ['chore: retain qualification receipts for ' + 'a'*40] * 3)
+        self.assertEqual(recorded['recompute'], [])
 
 
 unittest.main(verbosity=2)

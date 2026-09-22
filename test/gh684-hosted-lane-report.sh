@@ -74,13 +74,18 @@ class ReportTests(unittest.TestCase):
         path.write_text('\n'.join(lines) + ('\n' if lines else ''))
         return str(path)
 
-    def run_report(self, status, log, open_issues=()):
+    def run_report(self, status, log, open_issues=(), extra=()):
         os.environ['OPEN_ISSUES'] = json.dumps([{'number': n} for n in open_issues])
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            rc = report.main(['--status', status, '--log', log, '--run-url', RUN_URL])
+            rc = report.main(['--status', status, '--log', log, '--run-url', RUN_URL, *extra])
         self.assertEqual(rc, 0)
         return out.getvalue()
+
+    def publish_log(self, *lines):
+        path = self.tmp / 'publish.log'
+        path.write_text('\n'.join(lines) + ('\n' if lines else ''))
+        return str(path)
 
     def calls(self):
         if not self.calls_file.exists():
@@ -148,9 +153,56 @@ class ReportTests(unittest.TestCase):
         self.assertIsNone(error)
         self.assertEqual(skips, [SKIP_LINE])
 
+    # GH-741: a --qualify run's reconcile log is full of the test suite's own expected ERROR lines.
+    QUALIFY_LOG = ('wave-reconcile: Processing PR #731...',
+                   'test_new_schema_cannot_fall_through (Qualification) ... wave-reconcile: ERROR — --gate failure: No provenance.jsonl entry matches PR #425',
+                   'ok',
+                   'wave-reconcile: ERROR — Malformed merged-PR recovery response: pull request lacks merged_at or base.ref',
+                   'wave-reconcile: ERROR — Malformed merged-PR recovery response: invalid merged_at timestamp',
+                   'ok',
+                   'wave-reconcile: Wave reconciliation completed successfully! ✅')
+    REJECTED = ' ! [rejected]          HEAD -> development (fetch first)'
+
+    def test_green_reconcile_red_publish_names_the_publish_step_not_a_test_line(self):
+        # Replay of run 35623940059 (#735): reconcile green, push rejected. The old scan would have
+        # blamed the last test-emitted line; the outcome-aware path names the publish step.
+        log = self.log(*self.QUALIFY_LOG)
+        self.assertEqual(report.summarize(report.read_log(log))[0],
+                         'wave-reconcile: ERROR — Malformed merged-PR recovery response: invalid merged_at timestamp')  # red control: old behaviour
+        publish = self.publish_log('hosted-lane-publish: pushing 1 declared path(s)', self.REJECTED,
+                                   "error: failed to push some refs to 'https://github.com/test/repo'")
+        self.run_report('failure', log, extra=['--reconcile-outcome', 'success', '--publish-outcome', 'failure',
+                                                '--publish-log', publish])
+        body = self.body_of(('issue', 'create'))
+        self.assertIn('(step: publish)', body)
+        self.assertIn('failed to push some refs', body)
+        self.assertNotIn('merged_at', body)
+        # With the publisher's own terminal line present, that line wins over the raw git tail.
+        self.calls_file.unlink()
+        publish = self.publish_log(self.REJECTED, 'hosted-lane-publish: ERROR — push rejected; origin/development moved to abc1234')
+        self.run_report('failure', log, extra=['--reconcile-outcome', 'success', '--publish-outcome', 'failure',
+                                                '--publish-log', publish])
+        self.assertIn('Terminal error (step: publish): `push rejected; origin/development moved to abc1234`',
+                      self.body_of(('issue', 'create')))
+
+    def test_red_reconcile_still_reports_its_own_last_error_and_publish_skips_count(self):
+        log = self.log(*self.QUALIFY_LOG[:-1], ERROR_LINE)
+        publish = self.publish_log('hosted-lane-publish: nothing to do')
+        self.run_report('failure', log, extra=['--reconcile-outcome', 'failure', '--publish-outcome', 'skipped',
+                                                '--publish-log', publish])
+        self.assertIn(f"Terminal error (step: reconcile): `{ERROR_LINE[len(report.ERROR_PREFIX):]}`",
+                      self.body_of(('issue', 'create')))
+        # A skip emitted by the recompute (publish log) still demands attention on a green job.
+        self.calls_file.unlink()
+        self.run_report('success', self.log('wave-reconcile: Wave reconciliation completed successfully! ✅'),
+                        open_issues=[7], extra=['--reconcile-outcome', 'success', '--publish-outcome', 'success',
+                                                '--publish-log', self.publish_log(SKIP_LINE)])
+        self.assertEqual(self.verbs(), [('issue', 'list'), ('issue', 'comment')])
+        self.assertNotIn(('issue', 'close'), self.verbs())
+
     def test_red_control_mutant_without_run_url_is_caught(self):
         # Witnessed: a body that drops the run URL trips the stub, and the tool fails closed.
-        with patch.object(report, 'body_for', lambda status, run_url, error, skips: 'no url here'):
+        with patch.object(report, 'body_for', lambda status, run_url, error, skips, step=None: 'no url here'):
             with self.assertRaises(SystemExit) as stopped:
                 self.run_report('failure', self.log(ERROR_LINE))
         self.assertIn('gh issue create failed', str(stopped.exception))
