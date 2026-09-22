@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -211,5 +211,63 @@ and was committed (71e1705f) — the GH-720 heading-regex misgrade; the review i
 
 Revised plan committed in this turn (same path). Round 2 asks the same nine questions against the revision;
 the operational envelope is unchanged. Handing off to Reviewer (agy) — take your turn.
+
+### Review (agy) — Round 2 · 2026-09-21
+
+swept file: yes
+
+Pre-existing defects in plan file: none found. The revised plan completely covers the 60 skills partition, all locator and scanner adaptations, test fixture repoints, and governance requirements.
+
+#### Findings
+
+1. **Consumers** `[Pass]`
+   - Grep probe `grep -rn -E 'skills/[a-z0-9-]+' --include='*.sh' --include='*.py' --include='*.yml' --include='*.json' .` (excluding `.git`, `CHANGELOG.md`, `relay-system/`, `marathon-system/`, `PROJECT/`, `temp/`, `.xyz/`) confirms every executable consumer of a `skills/<name>` path is captured in the plan's Recon section (`PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:78-144`) and Ordered implementation list (`:204-229`).
+   - `repro.sh:165,167,276`: Cited in Recon at `:104` and Step 7 at `:223`.
+   - `skills/agent-chorus/publish-manifest.tsv:4-15`: Cited in Recon at `:99-101` and Step 7 at `:222-224`.
+   - `skills/agent-chorus/standalone/ci.yml:24`: Cited in Recon at `:102-103` and Step 7 at `:223`.
+   - `skills/review-xyz/scripts/review_engine.py:9`: Cited in Recon at `:115` and Step 5 at `:217`.
+   - All 35 test files and remaining scripts verified against lines 86-144. No unlisted executable consumers remain.
+
+2. **Locators** `[Pass]`
+   - `skills/relay-xyz/find-harness.sh:103,172,207`: Verified all three self-relative derivations (`_hp_lib`, case 5 `_cand`, `LIVE_HARNESS`) require and are documented for `../../..` at `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:110` and Step 5 at `:215`.
+   - `skills/file-xyz-bug/find-xyz.sh:70`: Verified that the tier-agnostic unquoted glob `"$SELF_DIR"/../../*/relay-xyz/find-harness.sh` is captured in Recon at `:111-113` and Step 5 at `:216-217`, avoiding hardcoded tier assumptions while discovering the sibling skill.
+   - `skills/relay-automation/make-pkg.sh:11,30`: Verified `skills/relay-automation/relay-pkg.tar.gz` tarball literal repoint is captured in Recon at `:114` and Step 5 at `:216`.
+   - `skills/review-xyz/scripts/review_engine.py:9`: Verified extra `dirname` to resolve `XYZ_ROOT` from `skills/2-daily/review-xyz/scripts/` is captured in Recon at `:115` and Step 5 at `:217`.
+   - Flat layout behavior: Verified that no bash locator is published to XYZ-mini (`utils/py/xyz_mini_sync.py:30-62`), and in a Deployed Skills copy, all locators guard candidate paths with marker checks (`_has_harness`, `_has_hq`, `_is_intake`, `_is_pdda_repo`), safely falling through.
+
+3. **Python walk-up in vendored `.xyz/`** `[Pass]`
+   - `skills/merge-cleanup/scripts/scan_clones.py:190`: Verified `bin/tick` walk-up correctly finds `<repo>/bin/tick` in canonical and `<repo>/.xyz/bin/tick` in vendored checkouts as captured at `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:123`.
+   - `skills/agent-chorus/scripts/agent_chorus.py:85`: Verified that in the un-tiered codebase today, `parents[3]` from `<consumer>/.xyz/skills/agent-chorus/scripts/agent_chorus.py` resolves to `<consumer>/.xyz`. The nearest ancestor containing `skills/` also resolves to `<consumer>/.xyz`, and fallback to `parents[3]` outside a repository resolves to `~/Documents`. The walk-up preserves existing behavior across all layouts without introducing an out-of-scope behavior change, as documented in Recon at `:118-122`.
+
+4. **`skill_drift_check.py` and red control** `[Pass]`
+   - `utils/py/skill_drift_check.py:36,52`: Verified that both `canonical.glob("*/SKILL.md")` / `*/*/SKILL.md` (line 36) and the `unrecognized` collection loop (line 52) are updated to key off the discovered canonical skill name set rather than checking a flat path (`PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:86-90` and Step 2 at `:207-209`), preventing false `unrecognized` reports for vendored skills.
+   - `test/gh660-skill-drift.sh`: Verified that adding a tiered skill fixture (`$FIX/canonical/skills/1-hourly/alpha/SKILL.md`) retains the mutation-proof red control while proving the two-level branch (`:209-211`).
+
+5. **`ci-route.sh` globs** `[Pass]`
+   - Verified that bash `case` pattern matching treats `*` as matching any character sequence including `/` without `FNM_PATHNAME`.
+   - Patterns `utils/hq/*|skills/hq/*` (`utils/ci-route.sh:37`) and `relay-automation/*|skills/relay-automation/*|skills/relay-xyz/*` (`utils/ci-route.sh:316`) updated to `skills/*/hq/*` and `skills/*/relay-xyz/*` correctly match tiered paths (`skills/2-daily/hq/find-hq.sh`, `skills/1-hourly/relay-xyz/SKILL.md`), as verified by `test/ci-route.sh:170`. Captured at `:93-96` and Step 4 at `:214`.
+
+6. **Tier assignment** `[Pass]`
+   - Verified all 60 skills are partitioned across the 4 tiers: `1-hourly` (14), `2-daily` (14), `3-weekly` (14), `4-occasional` (18) at `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:64-70`.
+   - Verified all 9 operator anchors are preserved: `start-task`, `recon`, `debug-mantra`, `ponytail` in `1-hourly`; `merge-cleanup`, `marathon-triage` ("marathon build") in `2-daily`; `merge-cleanup-deep`, `skills-army-hq`, `radar` in `3-weekly`.
+   - Verified Round 1 advisory recommendations were adopted: `standup` placed in `1-hourly` (`:66, 73-74`) and `releases` placed in `2-daily` (`:67, 74`).
+   - Disk inventory probe confirmed exact match: 60 skills on disk, 60 skills in plan, 0 missing, 0 extra.
+
+7. **Rating `55/25/50/45`** `[Pass]`
+   - Verified against `releases.db` (`roadmap_items` row for GH-744): `rating_pri=55`, `rating_sev=25`, `rating_appeal=50`, `rating_effort=45`.
+   - Verified rationale at `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:230-244`: `sev 25` (no defect/data risk), `pri 55` (operator-directed refactor), `appeal 50` (neutral), `effort 45` (~80 files, mechanical). No repo evidence contradicts this rating.
+
+8. **Requirements & Governance** `[Pass]`
+   - Verified plan completeness against Issue #744: 4 tier folders (`1-hourly`, `2-daily`, `3-weekly`, `4-occasional`), all 60 skills moved via `git mv`, empty one-level find check, `validate.sh` green in disposable clone, `skill_drift_check.py` recognition, and `find-harness.sh` resolution (`PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:50-57, 204-229`).
+   - Verified compliance with `AGENTS.md` and `ROUTER.md`: issue-first intake, valid PDDA frontmatter, parked roadmap row in `releases.db`, promotion note (`:33-35`), CHANGELOG entry planned (`:229`), and full validation constrained to a disposable clone (`:196-198, 229`).
+
+9. **Rollback** `[Pass]`
+   - Verified at `PROJECT/1-INBOX/GH-744-SKILLS-FREQUENCY-TIERS.md:189-192`: single `git revert` cleanly reverses all repository commits and tracked assets (`relay-pkg.tar.gz`, `security-scan-baseline.txt`).
+   - Paired external rollback action for machine-local state explicitly specified: `intake.py --apply update <name> --source <forge>/skills/<name>` for each forge-owned skill in Skills Army HQ.
+
+VERDICT: PASS
+Basis: All 9 questions pass with concrete citations. The Round 1 blockers (consumer inventory in repro.sh / publish-manifest.tsv / ci.yml / review_engine.py, locator tarball and glob repoints, skill_drift_check collection loop logic, and red control fixture expansion) and suggestions have been completely addressed in the revised plan at 51aeb57c. The plan is grounded, commensurate, and ready for promotion and implementation.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
