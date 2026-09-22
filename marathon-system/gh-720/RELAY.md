@@ -1,6 +1,6 @@
 # Marathon Phase gh-720
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-720-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -110,3 +110,15 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `utils/py/relay_drive.py` so the review-once oracle recognizes `Reviewer (<agent>)` and
+  `Reviewer — Round N` headings alongside the existing middle-dot forms, while requiring substantive
+  non-heading body text after every accepted heading.
+- Updated `relay-automation/new-relay.sh` to tell reviewers exactly which countable heading forms the
+  oracle accepts and that the block body must be non-empty.
+- Added GH-720 coverage to `test/relay-review-once.sh`: a substantive `### Reviewer (agy)` block exits
+  5, while a relay-file/NEXT mutation with no reviewer block remains a stall and exits 3.
+- Verification: not run, as this phase brief explicitly forbids executing tests in the isolated
+  worktree; the harness will run the gate after handoff.

@@ -36,7 +36,19 @@ def review_blocks_added(before: str, after: str) -> int:
     the old oracle read any file mutation as "completed a review" — a failed turn
     masquerading as review coverage. Coverage means an appended review block.
     """
-    pat = re.compile(r"^### (Round .*\u00b7 Reviewer \u00b7|Reviewer \u00b7 Round )", re.M)  # relay threads write ROLE first; marathon phases write Round first
+    # Relay scaffolds and marathon prompts use several equivalent reviewer headings.  Count a
+    # heading only when its first non-blank successor is real body text (rather than another
+    # heading), preserving the GH-397 zero-output/stall distinction.
+    pat = re.compile(
+        r"^### (?:"
+        r"Round [^\r\n]*\u00b7 Reviewer(?: \u00b7[^\r\n]*)?"
+        r"|Reviewer \u00b7 Round [^\r\n]*"
+        r"|Reviewer \([^)\r\n]+\)"
+        r"|Reviewer \u2014 Round [^\r\n]+"
+        r")[ \t]*\r?\n"
+        r"(?:[ \t]*\r?\n)*(?!###(?:[ \t]|$))(?=[^\r\n]*\S)[^\r\n]+",
+        re.M,
+    )
 
     return len(pat.findall(after or "")) - len(pat.findall(before or ""))
 
