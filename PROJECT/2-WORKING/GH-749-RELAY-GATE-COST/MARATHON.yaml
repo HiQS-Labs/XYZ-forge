@@ -15,7 +15,7 @@ phases:
     name: "L1 #720 review-once — a real reviewer block is not a zero-output stall"
     reviewer: agy
     brief: PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md
-    artifact: utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh
+    artifact: utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh, skills/relay-automation/relay-pkg.tar.gz
     turn_timeout_s: 1200
     max_review_rounds: 2
 

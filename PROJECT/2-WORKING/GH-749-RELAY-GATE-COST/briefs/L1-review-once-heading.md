@@ -52,6 +52,8 @@ Only `### Round N · Reviewer · …` (marathon phases) and `### Reviewer · Rou
 
 ## Rules
 
+**Retry note (2026-09-22):** the first attempt landed this fix (`45b7d2cd`, Approved) but its gate went red on `relay-pkg-freshness.sh` — `relay-automation/new-relay.sh` is packaged into `skills/relay-automation/relay-pkg.tar.gz`, so any edit there must be followed by `bash skills/relay-automation/make-pkg.sh` (the tarball is now in this lane's write-set). If the fix is already present in the tree, verify it against the acceptance list, regenerate the tarball if `bash test/relay-pkg-freshness.sh` reports drift, and hand off — do not rewrite working code.
+
 Python twin authoritative. Shortest diff (`/ponytail`). No new module, helper file, or parallel oracle. Evidence: `TESTS-RESULTS/2026-09-22+GH-720/` with the red control (new assertion failing at HEAD, captured before the fix) and the green run, plus `provenance.jsonl`. `bash validate.sh` green is the phase gate.
 
 ## Acceptance / Guard
