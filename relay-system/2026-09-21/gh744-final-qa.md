@@ -408,4 +408,12 @@ Basis: All 10 questions pass with verified citations and concrete probe outputs.
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-22T01:03:53Z
+task: RELAY-gh744-final-qa-r3
+reviewer: agy
+status: Approved
+reviewed-head: c7ef259b5f30be9326c3b22b740cc822d1fb85d4
+added-range: 39964+14349
+added-sha256: 53a10edfc25d6af141acf9337f0b69c20a10c5eee1c5cc84b2b98a59b8ed7e58
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
