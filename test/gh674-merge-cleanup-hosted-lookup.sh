@@ -58,6 +58,30 @@ class HostedLookup(unittest.TestCase):
         self.assertTrue(all("--branch" not in call and "--commit" not in call for call in lookup_calls))
         self.assertTrue(all("headSha" in call[call.index("--json") + 1] for call in lookup_calls))
 
+    def test_zero_grace_adopts_active_run_without_head_sha(self):
+        responses = [
+            [{"databaseId": 62901, "status": "in_progress", "conclusion": ""}],
+            [{"databaseId": 62901, "status": "completed", "conclusion": "success"}],
+        ]
+
+        def fake_gh(args, cwd, timeout=60):
+            return subprocess.CompletedProcess(args, 0, json.dumps(responses.pop(0)), "")
+
+        env = {
+            merge_cleanup.HOSTED_GRACE_ENV: "0",
+            merge_cleanup.HOSTED_WAIT_ENV: "10",
+            merge_cleanup.HOSTED_POLL_ENV: "0",
+        }
+        with tempfile.TemporaryDirectory() as td, \
+                mock.patch.object(merge_cleanup, "_gh", side_effect=fake_gh), \
+                mock.patch.object(merge_cleanup.time, "sleep", return_value=None), \
+                mock.patch.dict(os.environ, env):
+            result = merge_cleanup.wait_for_hosted_reconcile(
+                "m" * 40, Path(td), "development", pr_head="p" * 40)
+
+        self.assertEqual(result, "success")
+        self.assertEqual(responses, [])
+
     def test_automatic_fallback_never_adds_force_flag(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

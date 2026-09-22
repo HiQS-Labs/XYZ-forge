@@ -424,7 +424,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
         matching = [run for run in runs if str(run.get("headSha") or "") in expected_heads]
         if adopted_run_id is not None:
             matching = [run for run in runs if run.get("databaseId") == adopted_run_id] or matching
-        if not matching and elapsed < grace_s:
+        if not matching and (elapsed <= grace_s or grace_s == 0):
             active = [run for run in runs if str(run.get("status") or "").lower()
                       in {"queued", "in_progress", "waiting", "requested"}]
             if active:

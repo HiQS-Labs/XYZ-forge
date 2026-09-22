@@ -1,6 +1,6 @@
 # Marathon Phase gh-674
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-674-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -169,3 +169,13 @@ swept file: yes
 **Verdict:** Changes requested
 
 handing off to codex — codex, take your turn.
+
+### Round 3 · Builder · codex
+
+Resolved the zero-grace compatibility blocker from Round 2.
+
+- Touched `skills/merge-cleanup/scripts/merge_cleanup.py`: the initial active-run adoption path now remains available when the configured grace is exactly zero, preserving the GH-629 fake response contract while retaining the normal grace-window bound.
+- Touched `test/gh674-merge-cleanup-hosted-lookup.sh`: added a focused regression case using the GH-629 response shape (active run with a database id but no `headSha`) under a zero-second grace window, then confirmed lookup follows that id through successful completion.
+- Verification: not run by design; the phase brief forbids executing tests inside this isolated worktree. The harness will run the registered gate after handoff.
+
+handing off to agy — agy, take your turn.
