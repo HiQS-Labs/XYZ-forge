@@ -1,0 +1,47 @@
+# MARATHON.yaml — GH-749 relay exit-code truth + measured gate cost, one chain of four lanes.
+# Umbrella/tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/749
+# Members: #720 (p1), #732 (p2..p4). Held: #673, #496 P3–5.
+#
+# Phases run STRICTLY ONE AT A TIME in this chain order (depends_on constrains, never parallelizes).
+# p3 and p4 both edit validate.sh, so the chain order is also the collision order.
+# The chain halts on the first phase that fails its review/gate; ESCALATION.md is left behind.
+#
+# Fire ONLY from the marathon clone on branch feat/gh749-relay-gate-cost (GH-561: lane commits stay
+# on the current non-protected branch). ALWAYS --dry-run before firing:
+#   relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/MARATHON.yaml --dry-run
+name: gh749-relay-gate-cost
+phases:
+  - id: p1
+    name: "L1 #720 review-once — a real reviewer block is not a zero-output stall"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md
+    artifact: utils/py/relay_drive.py, test/gh648-l8-zero-output-handback.sh, relay-automation/new-relay.sh
+    turn_timeout_s: 1200
+    max_review_rounds: 2
+
+  - id: p2
+    name: "L2 #732 C.1 + D.2 — measure conflict magnets and the hosted-lane green rate"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L2-measure-c1-d2.md
+    artifact: TESTS-RESULTS/2026-09-22+GH-732/c1/conflict-magnets.md, TESTS-RESULTS/2026-09-22+GH-732/c1/provenance.jsonl, TESTS-RESULTS/2026-09-22+GH-732/d2/hosted-lane-rate.md, TESTS-RESULTS/2026-09-22+GH-732/d2/provenance.jsonl
+    turn_timeout_s: 1200
+    depends_on: p1
+    max_review_rounds: 2
+
+  - id: p3
+    name: "L3 #732 A.1–A.5 — dated timing claims; render the per-suite timings the gate already records"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L3-timing-claims-and-summary.md
+    artifact: AGENTS.md, ROUTER.md, githooks/pre-push, validate.sh, test/gh732-l3-gate-summary.sh
+    turn_timeout_s: 1500
+    depends_on: p2
+    max_review_rounds: 2
+
+  - id: p4
+    name: "L4 #732 B.1/B.2 — a present-but-broken toolchain is a named environment fault"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md
+    artifact: validate.sh, test/gh251-validate-pytest-skip.sh, test/gh268-relay-cue-and-target-checks.sh
+    turn_timeout_s: 1500
+    depends_on: p3
+    max_review_rounds: 2

@@ -1,0 +1,72 @@
+9c384240 2026-09-21 feat(debug-mantra): add explicit Root Cause Analysis gate (GH-737) (#739)
+e565c0fe 2026-09-21 fix(test, gate): agent-chorus legacy fixture dangles by construction; gate runs write no bytecode (GH-730) (#738)
+25c84cbd 2026-09-21 intake(GH-732): capture Mid September CI/CD optimizations checklist + Codex accuracy QA relay (#734)
+5107b99d 2026-09-21 skills(GH-724): marathon-triage drives end to end — recite block, drive loop, exit ladders, done rule; guard-aware Step 0; capture recipe (#726)
+ab3a75d5 2026-09-21 intake(GH-720): capture review-once block-regex misgrade; park in ledger (#729)
+bd8c6950 2026-09-21 fix(closeout): Jog carries the verified merge SHA; pre-merge receipt gate rejects contradictory outcomes (GH-656, GH-657) (#733)
+5e60cb01 2026-09-20 feat(flightdeck): show established work and isolate invalid evidence (GH-673) (#719)
+3ea01917 2026-09-18 fix(marathon-plan, test): survive gh_number-NULL rows (GH-710); witnessed skips for forge-root-only suites in a vendored .xyz/ (GH-708) (#716)
+6928de21 2026-09-18 pages: Skills page for the agent-driving skills; Model Catalog card → resolve.hiqs.ai (GH-700) (#706)
+1e434d58 2026-09-18 feat(GH-648): marathon delivery — nine containment/aftermath lanes (two waves, all gates green) (#687)
+7689a2ae 2026-09-18 fix(skills): installers refuse to replace live symlinks; gate stops writing real HOME (GH-678) (#680)
+43cf4452 2026-09-17 fix(reconcile): hosted lane alerts on red, catch-up skips a defective backlog item; gh53 fixture deterministic (GH-684, GH-686) (#688)
+ef781146 2026-09-17 test: repair GH642 fixture seeding and caller safety (#653, #665) (#671)
+49e5b9a4 2026-09-17 feat: publish standalone Skills Army mini (GH-620) (#622)
+74daa7d2 2026-09-16 fix: complete GH-645 vendored tool lookup for ledger conflicts (#652)
+9e1e9bf4 2026-09-16 GH-642: consumer-repo fruit — vendor excludes, Opus-budget warn, --force token auto-suffix, worktree deps, xyz-init-clone, preflight warn (#643)
+567d50df 2026-09-15 feat(skills): End of Week governance review and kanban refresh (GH-606) (#637)
+d5c18633 2026-09-15 fix(merge-cleanup, agent-chorus): land N PRs per run — emit after ff, wait for hosted reconcile; bind without getfqdn (GH-624, GH-625, GH-629, GH-630) (#635)
+731ae5f0 2026-09-15 feat(skills): umbrella — autonomous re-entry loops (GH-626) + SDLC edge-case contracts (GH-609) (#641)
+a67b3df8 2026-09-14 draft(GH-605): evidence-based work state and Kanban policy reconciliation (#607)
+3ca5ad55 2026-09-14 feat(GH-592): express landings write a provenance receipt and reconcile under --gate (#597)
+526433d4 2026-09-11 feat(ledger): end-to-end removal of ROADMAP-DASHBOARD.md and view-staleness machinery (#567) (#576)
+69ca13ea 2026-09-11 feat(GH-564): work backfill from ledger state + a review_ready producer in reconcile (stacked on #559) (#574)
+99c263ea 2026-09-11 fix: stage relay, Tick, and merge-cleanup hotfixes (#529, #533, #554, #555) (#573)
+308dd184 2026-09-10 feat(GH-549): work-state event stream at the single ledger seam, with concurrent connectors (#559)
+062e94aa 2026-09-10 GH-534: merge-cleanup failure modes — Phases A+B+C implemented; Codex implementation QA Approved (#538)
+52938679 2026-09-10 feat(telemetry): relocate routine harness telemetry out-of-tree (GH-496 PR 1) (#548)
+02268668 2026-09-09 fix(GH-523/524): review the primary checkout before any PR, and put lab/model/effort in every AgentChorus turn (#526)
+4648460d 2026-09-09 chore(GH-490): marathon prep — six ledger-flip lanes promoted, contracted, and planned (#495)
+d78711cd 2026-09-09 docs(gh508): Git Sync Pulse as a portable skill projection — spike complete, all acceptance PASS (GH-508) (#535)
+03189d0c 2026-09-09 feat(express): v2 hotfix fast lane upgrade (GH-516) (#519)
+b4966580 2026-09-09 GH-518: muse-turn shim for Meta's native muse CLI, with a fail-closed model policy (#520)
+201fcc44 2026-09-08 Flightdeck HTML dashboard and manual diagnostic harness (GH-494) (#504)
+5ba227b0 2026-09-08 feat(GH-505/509/510): driver-attested relay approval — roles from the invocation, pinned reviewed revision, validated record at every consumer (#517)
+5830b536 2026-09-08 chore(GH-497): marathon prep — three ledger-trust lanes registered, contracted, and planned (#498)
+3d80fcfc 2026-09-07 fix(GH-474): restore the ledger row my own merge silently reverted
+f213272c 2026-09-07 Merge development into fix/gh474-dropped-row-signal — both ARCHITECTURE sections kept
+5bf6ef3a 2026-09-07 Merge development into feat/gh473-unstuck-skill — ledger union, no content conflict
+2aa33011 2026-09-07 fix(GH-474): the staleness guard reads the renderer's dropped-row warning instead of guessing from table names
+3549a994 2026-09-06 Merge development into feat/gh460-fuzz-resolver-campaign — ledger union plus one real content conflict decided
+443b0c70 2026-09-06 Merge development into fix/gh453-governance-audit — ledger conflicts resolved via the supported path
+196424fb 2026-09-06 Merge origin/development into development — concurrent ledger writes, both kept
+e10a1b16 2026-09-06 test(GH-460): standing fuzz smoke — resolver structural contract via Gen4 engine
+3425e65a 2026-09-06 merge development into feat/gh450-model-catalog; fold GLM review nits (tag_commit/renderer_commit format assert, telemetry read no longer silently None)
+98f927f8 2026-09-06 docs(intake): GH-460 — ATE/Fuzz campaign vs the model-alias resolver (rated 60/40/50/70)
+6a6a26f3 2026-09-05 feat(ate): GH-299 Gen 4 ATE & True Evolutionary Fuzzing — all 5 phases (#441)
+bb198b62 2026-09-03 Merge development into feat/gh405-mock-board-harness (GH-405 / GH-402)
+bbbeda01 2026-09-03 fix(GH-411): guard tick log for every event type except cost.* (#420)
+1dddcda8 2026-09-03 Merge remote-tracking branch 'origin/development' into development
+28f85a17 2026-09-03 chore(gh406): external-review triage arc — 10 issues, umbrella, marathon plan, SOP steps
+04b8e9e0 2026-09-03 merge development into feat/gh402-board-sync — releases ledger union (generation 363)
+e53f5d06 2026-09-02 fix(GH-396): resolve PR 403 review findings — symlinked .xyz Python parity & finder bootstrap
+d732760e 2026-09-02 feat(gh402): board_sync Phase 0+1 — Projects-board mirror with strong/weak signals
+c15ca0f5 2026-09-02 merge: development into feat/gh396-harness-root-resolver — ledger union (GH-396 + GH-399 rows, generation 362), DB rebuilt, dashboards regenerated
+d589322f 2026-09-02 feat(GH-396): Phase 1 — find-harness.sh two roots, one precedence, announced
+b7a4a1bb 2026-09-02 fix(GH-399): DEEPSEEK_PROVIDER had a silent catch-all — an unknown provider was routed to DeepSeek
+87e30924 2026-09-02 test(GH-396): Phase 0 — pin the two-roots contract and the DeepSeek readiness parity, RED by design
+e0e70215 2026-09-02 fix(gh384): refuse --tunnel without auth, and close the review findings
+a48189fc 2026-09-01 merge: bring development (ebe99e50) in — ledger re-resolved per the recorded recipe
+e363aba1 2026-09-01 Merge branch 'development' into fix/gh360-scoped-receipt-chain-rebuild
+4fe61689 2026-09-01 Merge branch 'development' into feat/gh353-vendored-router-roadmap-audit
+425f558f 2026-09-01 Merge branch 'development' into feat/gh353-vendored-router-roadmap-audit
+711aa0c2 2026-09-01 merge: bring development into gh365-test-recalibration — ledger resolved via the supported workflow
+ea983859 2026-09-01 chore(releases): address agy review — park GH-341, promote 0.9.0 to active
+56f01563 2026-09-01 fix(p1): resolve pre-advance gate failures for same-lane routing and validation
+96d4f388 2026-09-01 chore(releases): re-park GH-345 on development's ledger, drop the GH-347 duplicate
+b5460ce7 2026-09-01 feat(GH-346): Phase 3a — one name resolves to harness, gateway, and model
+aed7c2d1 2026-09-01 feat(GH-365): step 8 — tier routing proven fail-closed over the whole tree; registry drift guard
+557ece5a 2026-09-01 feat(GH-365): step 4 — one in-process governance-ref scan per doc, timings, red controls
+2511f77b 2026-09-01 feat(GH-365): step 2 — retained phase/suite/worker JSONL telemetry
+21004b3c 2026-09-01 merge: bring development into gh346-model-resolution
+2526bf9b 2026-08-31 fix(#358): resolve wave_reconcile's harness tools against the harness home (#359)
