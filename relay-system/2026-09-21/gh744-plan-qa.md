@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -181,5 +181,35 @@ Pre-existing defects in plan file: none found beyond the missing recon reference
 
 VERDICT: FAIL
 Basis: The plan correctly captures the overall architecture, tier structure, and the majority of test and locator repoints, but contains concrete execution blockers that would cause runtime failures: (1) skill_drift_check.py:52 checks flat canonical paths in its collection loop, causing every vendored skill to be reported unrecognized; (2) skills/review-xyz/scripts/review_engine.py is omitted and resolves root to skills/; (3) skills/relay-automation/make-pkg.sh:11,30 still targets un-tiered tarball paths; (4) skills/agent-chorus/publish-manifest.tsv is unlisted and breaks sync-to-standalone.sh; (5) skills/file-xyz-bug/find-xyz.sh:70 assumes relay-xyz is a sibling at ../relay-xyz. In addition, agent_chorus.py walk-up mis-resolves in vendored .xyz/ layouts, test/gh660-skill-drift.sh lacks a two-level fixture, and repro.sh:165,167,276 is unlisted.
+
+### Producer (claude-a) — Round 1 dispositions · 2026-09-21
+
+Driver note: `relay-drive --review-once` exited 3 (no-progress) although the review block above landed
+and was committed (71e1705f) — the GH-720 heading-regex misgrade; the review is treated as delivered.
+
+1. Consumers `[Blocker]` — **Implemented.** Plan Recon now lists `repro.sh:165,167,276`,
+   `skills/agent-chorus/publish-manifest.tsv:4-15` (source column only; destination stays the standalone's
+   flat layout), `skills/agent-chorus/standalone/ci.yml:24`, and `review_engine.py:9`; implementation steps 5/7 carry them.
+2. Locators `[Blocker]` — **Implemented, one modification.** `make-pkg.sh:11,30` and `review_engine.py:9`
+   as proposed. `find-xyz.sh:70`: NOT `../../1-hourly/relay-xyz` — that hardcodes relay-xyz's tier into another
+   skill, which the plan's contract forbids ("nothing depends on which tier"); it becomes the unquoted glob
+   `"$SELF_DIR"/../../*/relay-xyz/find-harness.sh` in the existing `for` list.
+3. agent_chorus.py walk-up `[Blocker]` — **Declined (behaviour change out of scope).** Today `parents[3]` from
+   `<consumer>/.xyz/skills/agent-chorus/scripts/` IS `<consumer>/.xyz`, so the walk-up ("nearest ancestor with
+   `skills/`") reproduces the current vendored root exactly; the Deployed-Skills fallback (`~/Documents`) is also
+   unchanged. Re-homing a vendored agent-chorus's `relay-system/` to the consumer root is a separate change
+   with its own consumers; the plan now states this explicitly (Recon, agent_chorus.py bullet).
+4. skill_drift_check.py:52 + red control `[Blocker]` — **Implemented.** The `unrecognized` loop keys on the
+   canonical name set from the first loop; `test/gh660-skill-drift.sh` gains one tiered canonical skill in
+   its fixture so the two-level branch is proven (step 2).
+5. ci-route globs `[Pass]` — noted.
+6. Tier placement `[Nit]` — **Implemented (advisory accepted):** `standup` → `1-hourly`, `releases` → `2-daily`.
+   `whack-a-mole` stays `3-weekly` as the reviewer agreed.
+7. Rating `[Pass]`, 8. Governance `[Pass]` — noted.
+9. Rollback `[Should]` — **Implemented.** Risks/rollback names the paired machine-local action
+   (`intake.py --apply update <name> --source <forge>/skills/<name>`).
+
+Revised plan committed in this turn (same path). Round 2 asks the same nine questions against the revision;
+the operational envelope is unchanged. Handing off to Reviewer (agy) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

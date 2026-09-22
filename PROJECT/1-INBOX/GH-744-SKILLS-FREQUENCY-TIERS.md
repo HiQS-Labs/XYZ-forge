@@ -63,14 +63,16 @@ on which tier a skill sits in, only on the two-level depth.
 
 | Tier | Skills |
 |---|---|
-| `1-hourly` (14) | start-task **(op)**, recon **(op)**, debug-mantra **(op)**, ponytail **(op)**, triangulate, swe, five, better-options, relay, relay-xyz, relay-automation, consult, releases, unstuck |
-| `2-daily` (14) | merge-cleanup **(op)**, marathon-triage **(op, "marathon build")**, jog, express, workhorse, xyz, agent-chorus, hq, file-xyz-bug, standup, relay-to-issue, review-xyz, phase-qa, ci-debug |
+| `1-hourly` (14) | start-task **(op)**, recon **(op)**, debug-mantra **(op)**, ponytail **(op)**, triangulate, swe, five, better-options, relay, relay-xyz, relay-automation, consult, standup, unstuck |
+| `2-daily` (14) | merge-cleanup **(op)**, marathon-triage **(op, "marathon build")**, jog, express, workhorse, xyz, agent-chorus, hq, file-xyz-bug, releases, relay-to-issue, review-xyz, phase-qa, ci-debug |
 | `3-weekly` (14) | merge-cleanup-deep **(op)**, skills-army-hq **(op)**, radar **(op)**, end-of-week, weekly-shipped, whack-a-mole, 10days, sop, marathon-cleanup, dry, converge, honest, push-to-xyz-mini, push-to-skills-army-mini |
 | `4-occasional` (18) | ate, browserbase, ci-doctor, ci-optimize, feynman, front-door, github-auth-debug, install-improve-audit, open-router, read-only, readme-audit, rpr, shakedown, spike-360, swe-diagram, timbre, vendor-stack, vscode-color |
 
 Interpretation flagged: the operator wrote "marathon build"; no skill carries that name. The
 marathon entry point that operators invoke is `marathon-triage` (it drives end to end since GH-724),
-so it takes that slot. `relay-automation` is a library skill, not invoked directly, but it ships the
+so it takes that slot. Plan QA round 1 moved `standup` up to `1-hourly` (session-boundary triage) and
+`releases` down to `2-daily` (the ledger CLI is used every task; the `/releases` router skill is not).
+`relay-automation` is a library skill, not invoked directly, but it ships the
 relay package every `/relay` run consumes, so it sits beside `relay` and `relay-xyz`.
 
 ## Recon (base e565c0fe)
@@ -81,7 +83,9 @@ TESTS-RESULTS/, SHAKEDOWN/, PARKED/, docs/ROADMAP-UPSTREAM-ARCHIVE) and app-disc
 681 hits; the ones that execute are:
 
 **Scanners / publishers that assume one level (must learn the second level)**
-- `utils/py/skill_drift_check.py:36` — `canonical.glob("*/SKILL.md")`. Consumed by
+- `utils/py/skill_drift_check.py:36,52` — `canonical.glob("*/SKILL.md")` in the canonical loop AND
+  `(canonical / name / "SKILL.md").is_file()` in the collection loop; both assume one level (plan QA r1 #4:
+  patching only the glob leaves every vendored skill `unrecognized`). Consumed by
   `skills/skills-army-hq/scripts/sync.py` on every reconciliation (GH-660); a miss means every
   forge-owned skill is reported `unrecognized` and drift goes undetected.
 - `utils/py/xyz_mini_sync.py:30-62` — MANIFEST source paths `skills/<name>` (destination in XYZ-mini
@@ -92,16 +96,30 @@ TESTS-RESULTS/, SHAKEDOWN/, PARKED/, docs/ROADMAP-UPSTREAM-ARCHIVE) and app-disc
   wrong tier; `test/ci-route.sh` pins the expected routing.
 - `relay-automation/xyz-vendor.sh:432` — `VENDOR_DIRS` mirrors `skills` verbatim; the vendored
   `.xyz/skills/` becomes tiered with no code change. `UPGRADE.md` cites `.xyz/skills/<name>` twice.
+- `skills/agent-chorus/publish-manifest.tsv:4-15` — canonical-source column (`skills/agent-chorus/...`) that
+  `skills/agent-chorus/sync-to-standalone.sh:78` validates with `[ -f "$SOURCE_REPO/$source_rel" ]`; the
+  destination column (the standalone repo's flat `skills/agent-chorus/`) stays. Same shape as the mini manifest.
+- `skills/agent-chorus/standalone/ci.yml:24` — executable workflow in the standalone repo; clones this repo and runs
+  `skills/agent-chorus/sync-to-standalone.sh --check` (repoint, it is code not prose).
+- `repro.sh:165,167,276` — executes and greps `skills/relay-xyz/find-harness.sh` directly.
 - `mini/skills/skill-viewer/scripts/list_skills.py:80` — globs `skills/*/SKILL.md` against the
   **XYZ-mini** root (flat by design). Untouched; its forge-side test `test/gh589-skill-viewer.sh`
   points it at fixtures.
 
 **Skill scripts that derive the repo root from their own location (one level deeper now)**
 - `skills/relay-xyz/find-harness.sh:103,172,207` — `$SELF_DIR/../..` (lib source, case 5 "self", vendored-live probe).
+- `skills/file-xyz-bug/find-xyz.sh:70` — borrows relay-xyz's locator as a SIBLING (`$SELF_DIR/../relay-xyz/...`);
+  under tiers they are in different folders. Becomes the tier-agnostic glob `"$SELF_DIR"/../../*/relay-xyz/find-harness.sh`
+  (unquoted glob in the `for` list; no tier name hardcoded).
+- `skills/relay-automation/make-pkg.sh:11,30` — writes/echoes the tarball at the literal `skills/relay-automation/relay-pkg.tar.gz` (besides the `cd ../..` at :5).
+- `skills/review-xyz/scripts/review_engine.py:9` — `XYZ_ROOT = dirname(dirname(SKILL_DIR))`; needs one more `dirname` (it is not published flat anywhere; the Deployed-Skills copy already cannot resolve `utils/py/review_xyz.py` and exits 2 there today).
 - `skills/hq/find-hq.sh:42,62`, `skills/file-xyz-bug/find-xyz.sh:46,64`, `skills/vendor-stack/find-pdda.sh:28,35`,
   `skills/vendor-stack/install.sh:50`, `skills/relay-to-issue/relay-to-issue.sh:49`, `skills/relay-automation/make-pkg.sh:5`.
 - `skills/agent-chorus/scripts/agent_chorus.py:85` — `parents[3]`; this file is ALSO published flat
-  into XYZ-mini, so it must resolve at both depths (walk up to the nearest ancestor containing `skills/`, fall back to `parents[3]`).
+  into XYZ-mini, so it must resolve at both depths: walk up to the nearest ancestor containing `skills/`, fall back to `parents[3]`.
+  This reproduces today's result in every layout — forge root, flat mini root, and a vendored copy, where `parents[3]` is
+  already `<consumer>/.xyz` (the walk-up lands on the same directory). Re-homing a vendored agent-chorus's `relay-system/`
+  to the consumer root (plan QA r1 #3) would be a behaviour change unrelated to the layout move — not done here.
 - `skills/merge-cleanup/scripts/scan_clones.py:190` — `parents[3] / "bin" / "tick"`; same walk-up, keyed on `bin/tick`.
 - Each skill's `install.sh` symlinks `~/.claude/skills/<name>` → `$SELF_DIR`; `SELF_DIR` is
   self-relative and needs no change. Only `vendor-stack/install.sh` derives `HARNESS` from `../..`.
@@ -168,7 +186,9 @@ publisher (GH-589/620); `ci-route.sh` stays the single routing registry (GH-35).
 - **Risk:** vendored consumers (`.xyz/skills/<name>`) on other repos break at their next
   `xyz-vendor.sh` refresh. **Mitigation:** UPGRADE.md entry; the locator inside the vendored copy
   resolves `.xyz/` by marker, not by depth.
-- **Rollback:** single revert of the PR merge commit; no data, ledger or schema change.
+- **Rollback:** single revert of the PR merge commit; no data, ledger or schema change. Paired machine-local
+  action if the Skills Army HQ provenance was already re-pointed: `intake.py --apply update <name> --source <forge>/skills/<name>`
+  per forge-owned skill (the reverse of the post-merge step below).
 
 ## Test scope
 
@@ -185,19 +205,23 @@ which run inline in the PR evidence, not as a new suite.
 1. `git mv` all 60 skills into their tiers; add `skills/README.md` (tier list + lookup contract).
    → `find skills -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l` = 60; one-level find is empty.
 2. `skill_drift_check.py`: glob `*/SKILL.md` **and** `*/*/SKILL.md` on the canonical side (mini
-   collections stay one level). → `bash test/gh660-skill-drift.sh` green (red control retained);
+   collections stay one level) and key the `unrecognized` loop on the canonical name set, not a flat path.
+   `test/gh660-skill-drift.sh` gains one tiered canonical skill in its fixture so the two-level branch is
+   exercised (drift detected there too). → `bash test/gh660-skill-drift.sh` green (red control retained);
    live run against Deployed Skills lists the same names as the pre-move run.
 3. `xyz_mini_sync.py` manifest sources → tiered paths. → `bash test/gh589-xyz-mini-sync.sh`,
    `bash test/gh620-skills-army-mini-sync.sh` green.
 4. `ci-route.sh` globs → `skills/*/hq/*` etc. → `bash test/ci-route.sh` green.
 5. Locators: bash `../..` → `../../..` (find-harness ×3, find-hq ×2, find-xyz ×2, find-pdda ×2,
-   vendor-stack/install.sh, relay-to-issue.sh, make-pkg.sh); Python walk-ups (agent_chorus.py,
-   scan_clones.py). → `bash test/find-harness.sh test/hq-locator.sh test/gh396-find-harness-roots.sh
+   vendor-stack/install.sh, relay-to-issue.sh, make-pkg.sh incl. its tarball literal); find-xyz.sh:70 sibling
+   glob; review_engine.py extra `dirname`; Python walk-ups (agent_chorus.py, scan_clones.py). → `bash test/find-harness.sh test/hq-locator.sh test/gh396-find-harness-roots.sh
    test/gh369-find-doc-root-resolution.sh test/agent-chorus.sh test/gh645-merge-cleanup-xyz-tools.sh`
    green; `bash skills/1-hourly/relay-xyz/find-harness.sh --check` resolves the clone.
 6. `make-pkg.sh` re-run so `relay-pkg.tar.gz` manifest matches. → `bash test/path-integrity.sh
    test/relay-pkg-freshness.sh test/skill-extract.sh` green.
-7. Remaining test repoints + security-baseline line. → each repointed test green.
+7. Remaining test repoints + security-baseline line + `repro.sh` + `publish-manifest.tsv` source column +
+   `standalone/ci.yml` + `.gitignore` (`skills/browserbase/.env*`). → each repointed test green;
+   `bash skills/2-daily/agent-chorus/sync-to-standalone.sh --check` finds every source.
 8. Docs: Skills Index regrouped + 7 additions; README/UPGRADE/AGENTS/SOP/HOW-TO-USE/ROUTER/
    WORKTREE-SAFETY/HARNESS-MODELS-REGISTRY/mini README/in-skill refs. → `grep -rn 'skills/[a-z]'`
    over live docs returns only tiered paths; `utils/pdda/pdda.sh run` clean.
