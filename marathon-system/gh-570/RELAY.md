@@ -1,5 +1,5 @@
 # Marathon Phase gh-570
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-570-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -121,3 +121,29 @@ Implemented GH-570 within the scoped HQ artifacts:
 - Left `test/hq-promote.sh` and `test/_setup.sh` unchanged because no additional fixture seam was needed.
 
 Verification: intentionally not run in this worktree. The phase scope lock forbids executing even focused test scripts because their generated fixtures can trip containment; the harness will run the gate after handoff.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+swept file: yes
+
+Reviewed the scoped HQ artifacts in full on disk:
+- `utils/hq/hq-lib.sh`:
+  - `hq_known_repos` (lines 193-223): verified the Rebalance DB probe guards with existence (`-e`), regular file (`-f`), readable (`-r`), and non-empty (`-s`), and safely queries SQLite via `rebalance_names="$(sqlite3 "$HQ_REBALANCE_DB" 'SELECT name FROM project_registry;' 2>/dev/null)"`.
+  - When the DB is unreadable, 0-byte, corrupt, or missing the `project_registry` table, it emits the exact one-line stderr warning `hq: warning: Rebalance DB is unreadable, empty, or unusable: ...` and does not abort the brace group or fail under `set -e` / `set -o pipefail`. The XYZ (`HQ_XYZ_REGISTRY`) and PDDA (`HQ_PDDA_REGISTRY_DIR`) streams continue to enumerate cleanly.
+  - Non-existent DB path skips cleanly without warning or failure, preserving degraded execution for environments without Rebalance OS.
+- `test/hq-rollup.sh` (line 88) & `test/gh239-hq-status-releases-mode.sh` (line 12):
+  - Verified `HQ_REBALANCE_DB="/nonexistent"` is explicitly exported/pinned, insulating rollup and status release-mode checks from ambient operator databases.
+- `test/hq-hardening.sh` (lines 188-201):
+  - Verified group `G6` creates a 0-byte DB fixture (`: > "$G6/rebalance.db"`) and asserts that `hq_known_repos` exits 0, lists `xyz-app`, and outputs `warning: Rebalance DB` to stderr.
+  - Verified `test/gh139-pipe-grep-guard.sh` compliance: all new assertions use here-string capture-then-match (`grep -q ... <<<"$OUT"` and `grep -q ... <<<"$ERR"`). The static count of `| grep -q` in `test/hq-hardening.sh` remains at 13, matching the entry in `test/baselines/GH-139-pipe-grep-baseline.txt:25`.
+- `test/hq-promote.sh` and `test/_setup.sh`:
+  - Reviewed whole files; both remain untouched and clean.
+- Entire file sweep (GH-268):
+  - Full sweep completed for all touched and scoped files (`utils/hq/hq-lib.sh`, `test/hq-rollup.sh`, `test/gh239-hq-status-releases-mode.sh`, `test/hq-hardening.sh`, `test/hq-promote.sh`, `test/_setup.sh`). No pre-existing defects found.
+- Gate status:
+  - `bash validate.sh`: [Unverified — needs clone run] (per scope lock, validate.sh and full test fixtures are reserved for the post-turn harness gate outside this isolated worktree).
+
+relay closed, no further turn needed
+
