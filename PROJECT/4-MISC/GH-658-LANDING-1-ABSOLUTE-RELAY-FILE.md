@@ -1,8 +1,8 @@
 ---
 title: "GH-658: Containment allowlist stores the ABSOLUTE relay_file path — worktree-relative porcelain can never match it, so every instructed relay-file edit trips exit-6 (root cause of #654)"
-status: Active
+status: Closed — not shipped (superseded by landing-2 fix commit ac9fb274ef34; doc in PROJECT/3-COMPLETED/GH-658-CONTAINMENT-ALLOWLIST-STORES-THE-ABSOLUTE-RELAY-FILE-PATH-WO.md)
 created: 2026-09-16
-updated: 2026-09-16
+updated: 2026-09-22
 owner: operator (via /express)
 gh_issue: 658
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/658

@@ -2,14 +2,14 @@
 gh_issue: 563
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/563
 title: "Public repository launch: release, security, front-door, and shakedown readiness"
-status: 2-WORKING
+status: Closed — not shipped (upstream issue #563 pre-migration public launch capture; PR #563 in Forge was unrelated jog/relay chore)
 # roadmap_exempt: this doc carries the UPSTREAM repo's GH numbering (pre-migration). Its ledger
 # entry left ROADMAP.md in the 2026-08-19 upstream purge (#69) and is preserved verbatim in
 # docs/ROADMAP-UPSTREAM-ARCHIVE.md. Exempt rather than re-pointed so old-numbered tasks stay
 # out of the live ledger; if this work is picked back up, file it under a NEW GH number first.
 roadmap_exempt: true
 created: 2026-08-15
-updated: 2026-08-17
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 4

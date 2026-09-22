@@ -1,7 +1,8 @@
 ---
 title: Make the three marathon process rules deterministic by extending marathon.sh's existing --plan refusal
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-03
+updated: 2026-09-22
 owner: noelsaw1
 gh_issue: 419
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/419
@@ -209,3 +210,8 @@ tracking identity for Marathon and Jog, item + session level) is the same discip
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
 }
 ```
+
+## Merge evidence
+
+- Commit `8cc64b7743f6df5ecde8d2087365d1869d22e21e` landed 2026-09-03 — planning/verification specification landed; issue #419 closed COMPLETED 2026-09-04.
+

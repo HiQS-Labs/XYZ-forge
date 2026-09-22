@@ -1,8 +1,8 @@
 ---
 title: "GH-712: Offline Jev vs Tier-1/Gemma ATE triage replay, then a gated --classifier shadow flag"
-status: Active
+status: Complete
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-22
 owner: Claude Code (start-task)
 goal: measure whether TypeSafe Jev can replace the local Gemma classifier for the three structured ATE triage fields, offline first, and add a default-off shadow flag only if the replays are clean
 gh_issue: 712
@@ -92,4 +92,5 @@ Lane B of [GH-709](https://github.com/HiQS-Labs/XYZ-forge/issues/709). Issue: [G
 
 ## Merge evidence
 
-- PR #714 merged 2026-09-20 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+- PR #714 merged 2026-09-20 (commit `d3dc6051515efbb0ee30f576e330fbaf394a116f`) — issue #712 closed 2026-09-20.
+

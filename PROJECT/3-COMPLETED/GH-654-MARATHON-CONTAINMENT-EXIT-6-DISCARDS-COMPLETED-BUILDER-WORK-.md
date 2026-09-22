@@ -1,8 +1,8 @@
 ---
 title: "GH-654: Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns)"
-status: Active
+status: Complete
 created: 2026-09-16
-updated: 2026-09-16
+updated: 2026-09-22
 owner: operator (via /express)
 gh_issue: 654
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/654
@@ -30,7 +30,8 @@ goal: >
 
 ## Merge evidence
 
-- (recorded at landing by the /express driver)
+- Express commit `8ee53a1edeffda49a60641dfb37c02b8d00ba708` landed 2026-09-16 — name offlane candidate paths in rtl_worktree_end before containment cleanup; issue #654 closed 2026-09-16.
+
 
 ## Lessons Learned (For Future Agents)
 

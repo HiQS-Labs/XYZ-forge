@@ -1,8 +1,8 @@
 ---
 title: "GH-565: fix(reconcile): correlate squashed/rebased PR commit lineage in check_provenance_receipts (--gate)"
-status: Active
+status: Complete
 created: 2026-09-10
-updated: 2026-09-10
+updated: 2026-09-22
 owner: operator (via /express)
 gh_issue: 565
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/565
@@ -31,7 +31,8 @@ goal: >
 
 ## Merge evidence
 
-- (recorded at landing by the /express driver)
+- Express commit `e30ceb868e7d8e6cfcf050d2bb8ebaeef91b5592` landed 2026-09-11 — correlate squashed/rebased PR commit lineage in wave reconcile gate; issue #565 closed 2026-09-11.
+
 
 ## Lessons Learned (For Future Agents)
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-22 — chore(pdda): retire 12 capture docs for closed issues; ledger rows reconciled (Refs #492)
+
+Retired 12 stale capture docs whose GitHub issues are closed (GH-221, GH-243, GH-246, GH-419,
+GH-565, GH-608, GH-654, GH-659, GH-663, GH-712 moved to `PROJECT/3-COMPLETED/` with recorded
+merge evidence; GH-563 pre-migration public launch capture and GH-658 landing-1 superseded draft
+moved to `PROJECT/4-MISC/`). Reconciled RELEASES DB roadmap ledger rows via `roadmap reconcile-state`
+(GH-608, GH-654, GH-659, GH-663, GH-712 moved to Completed) and updated status markers (GH-221,
+GH-243, GH-246, GH-419, GH-608, GH-654, GH-659, GH-663, GH-712 to ✅).
+
 ## 2026-09-21 — Hosted reconcile lane: a merge landing mid-run no longer discards the qualification; the lane report names the step that failed (GH-740, GH-741)
 
 The lane's final `git push origin HEAD:development` was a plain fast-forward at the end of a ~70-minute

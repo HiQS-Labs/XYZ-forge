@@ -3,8 +3,9 @@ issue: 243
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/243
 title: "GH-169 items 3-4: repoint ROUTER.md/AGENTS.md off ROADMAP.md text + dashboard-staleness push guard"
 created: 2026-08-25
+updated: 2026-09-22
 type: feedback
-status: 1-INBOX
+status: Complete
 complexity: 2
 risk: 2
 effort: 2
@@ -34,3 +35,8 @@ human-readable view can silently go stale — the exact drift #169's item 3 pred
 ## Related
 
 - #169 (plan) · #238/#239/PR #240 (machinery) · c97f6176 (the flip)
+
+## Merge evidence
+
+- Commits `932d1241313c99977b4c5fe964b6bdd621190caa` / `c97f6176` landed 2026-08-25 — releases-mode roadmap repoint and staleness guard.
+

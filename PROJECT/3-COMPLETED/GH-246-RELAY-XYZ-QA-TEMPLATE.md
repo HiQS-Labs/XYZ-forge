@@ -3,8 +3,9 @@ issue: 246
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/246
 title: "Refine relay-xyz skill documentation to include explicit QA/Consult prompt template for headless agents"
 created: 2026-08-25
+updated: 2026-09-22
 type: feedback
-status: 1-INBOX
+status: Complete
 complexity: 1
 risk: 1
 effort: 1
@@ -35,3 +36,8 @@ citation requirement.
 ## Related
 
 - skills/relay-xyz/SKILL.md · relay-automation/new-relay.sh · #246
+
+## Merge evidence
+
+- Commit `3e72ab1ee4540ce8a9fa64dfcfdf6992be7f50a4` landed 2026-08-26 — QA / Consult prompt template in relay-xyz SKILL.md.
+

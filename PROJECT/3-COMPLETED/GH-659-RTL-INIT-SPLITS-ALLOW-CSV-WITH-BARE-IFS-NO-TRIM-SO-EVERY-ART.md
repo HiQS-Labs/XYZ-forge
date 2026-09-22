@@ -1,8 +1,8 @@
 ---
 title: "GH-659: rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654)"
-status: Active
+status: Complete
 created: 2026-09-16
-updated: 2026-09-16
+updated: 2026-09-22
 owner: operator (via /express)
 gh_issue: 659
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/659
@@ -30,7 +30,8 @@ goal: >
 
 ## Merge evidence
 
-- (recorded at landing by the /express driver)
+- Express commit `0ec05b2882453531b4632aa6c35c8e390c58e807` landed 2026-09-16 — trim allowlist CSV in rtl.py before rtl_init; issue #659 closed 2026-09-16.
+
 
 ## Lessons Learned (For Future Agents)
 
