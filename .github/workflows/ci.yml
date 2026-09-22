@@ -156,7 +156,7 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Same reason as the canary job: fixtures synthesize an "older" ancestor with
           # `git rev-list --max-parents=0 HEAD`, which a shallow clone silently defeats.
@@ -246,7 +246,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # GH-232: several tests (e.g. xyz-vendor.sh's staleness check) use `git rev-list
           # --max-parents=0 HEAD` to synthesize an "older" ancestor commit for a fixture. The
@@ -517,7 +517,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

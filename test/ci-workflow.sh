@@ -95,6 +95,18 @@ require_marker 'CHANGED_TESTS: ${{ steps.route.outputs.changed_tests }}' "fast r
 require_marker 'github.event_name }}-${{ github.event.pull_request.number || github.ref' "concurrency is scoped by event and PR/branch"
 require_marker "cancel-in-progress: true" "superseded runs are cancelled"
 
+# GH-754: actions/checkout must target Node 24-native major versions (@v7+), never deprecated @v4 or earlier
+if grep -Eq 'uses:[[:space:]]*actions/checkout@v[1-6]\b' "$WORKFLOW"; then
+  fail "workflow still uses deprecated Node 20 actions/checkout (@v4 or older); must be @v7+"
+else
+  pass "no deprecated actions/checkout versions remain in ci.yml"
+fi
+if grep -Eq 'uses:[[:space:]]*actions/checkout@v[7-9]' "$WORKFLOW"; then
+  pass "workflow uses Node 24-native actions/checkout (@v7+)"
+else
+  fail "workflow must use Node 24-native actions/checkout (@v7+)"
+fi
+
 if grep -Eq '^[[:space:]]*schedule:[[:space:]]*$' "$WORKFLOW"; then
   fail "workflow must not add an automatic daily full-suite minute burn"
 else
