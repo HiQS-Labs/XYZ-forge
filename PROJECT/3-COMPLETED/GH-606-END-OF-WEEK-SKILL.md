@@ -1,8 +1,8 @@
 ---
 title: End of Week skill — build plan
-status: In progress
+status: Complete
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-09-15
 owner: Codex
 goal: Update Project Kanban and begin governance automation script recalibration.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/606
