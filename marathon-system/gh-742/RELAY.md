@@ -141,3 +141,11 @@ Full file sweeps:
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-09-22T02:07:37Z
+task: MARATHON-GH-742-TURN
+reviewer: agy
+status: Approved
+reviewed-head: b189e8fb176106ca585e22019a9938150ec41073
+added-range: 12788+2646
+added-sha256: 63b5946814e79feaa97f1e8f890066c58caafa63093d9a5314c79d7e6fb60072
