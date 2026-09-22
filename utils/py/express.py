@@ -71,13 +71,13 @@ SHARED_RUNTIME = "relay-automation/relay-turn-lib.sh"
 DRIVER_LEDGER = ("releases.db", "releases.sql")
 # Every adopted projection refreshed by a releases write. Presence is the
 # releases app's opt-in signal, so only files already adopted by this checkout
-# are accepted as driver output. The dashboard is rendered explicitly below.
+# are accepted as driver output.
 RELEASES_PROJECTIONS = (
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",
 )
-DRIVER_GENERATED = RELEASES_PROJECTIONS + ("ROADMAP-DASHBOARD.md",)
+DRIVER_GENERATED = RELEASES_PROJECTIONS
 DEFAULT_MAX_FILES = 4
 DEFAULT_MAX_INSERTIONS = 150
 
@@ -881,7 +881,6 @@ CLOSEOUT_ALLOWLIST_PREFIXES = (
 CLOSEOUT_ALLOWLIST_FILES = {
     "releases.db",
     "releases.sql",
-    "ROADMAP-DASHBOARD.md",
     "RELEASES-PREVIEW.html",
     "LEADERBOARD.html",
     "LEADERBOARD.md",

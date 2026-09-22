@@ -18,7 +18,8 @@
 #         CHANGELOG entry NOT silently dropped when today's section lacks a
 #         ### Fixed heading (deepseek QA finding 3)
 #   telemetry: every refusal writes a .tick express-refused event carrying the rule
-#   production projections: every adopted releases view + the roadmap dashboard
+#   production projections: every adopted releases view; the retired roadmap
+#                           dashboard is neither referenced nor staged
 #   TOCTOU: both new paths and mutations of already-qualified bytes refuse
 #   closeout: ship is persisted before clean-tree reconciliation; every failure ticks
 #   source audit: cmd_land/build_offline_manifest never call args_repo() — the
@@ -677,6 +678,7 @@ LAND_BODY="$(sed -n '/^def cmd_land/,/^def active_release/p' "$DRIVER")"
 grep -q '"push", "origin", "HEAD:development"' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push" || bad "direct development push missing"
 [ -z "$(printf '%s' "$LAND_BODY" | grep -n 'pr.*create\|pr.*merge')" ] && ok "landing creates no ghost PR" || bad "ghost PR call remains"
 grep -q "def cmd_resume" "$DRIVER" && ok "cmd_resume implemented" || bad "cmd_resume missing"
+! grep -q 'ROADMAP-DASHBOARD\.md' "$DRIVER" && ok "retired roadmap dashboard is absent from express staging surfaces" || bad "express still references the retired roadmap dashboard"
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"

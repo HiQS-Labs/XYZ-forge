@@ -1,6 +1,6 @@
 # Marathon Phase gh-567
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-567-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -102,3 +102,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the GH-567 Express cleanup across the scoped artifacts:
+
+- `utils/py/express.py`: removed `ROADMAP-DASHBOARD.md` from generated-output classification and the closeout staging allowlist; retained only the adopted release and leaderboard projections.
+- `test/gh567-roadmap-dashboard-retired.sh`: strengthened the production audit from writer-shaped matches to all active artifact references, while preserving the explicit `router_audit.py` legacy-diagnostic exception; updated the witnessed-red description accordingly.
+- `test/gh267-express-skill.sh`: updated the projection contract and added a source assertion that Express contains no retired dashboard reference.
+
+Key decision: removal is enforced at both the production staging surface and two regression layers, without broadening scope into the legacy-mode router diagnostic. Verification was intentionally not executed because this phase brief explicitly forbids running even the focused tests inside the isolated worktree; the harness owns the gate after handoff.
