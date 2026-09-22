@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/741
 title: "hosted_lane_report.py blames the last 'wave-reconcile: ERROR' line — on a --qualify run that is a unit test's expected output (#735 named 'invalid merged_at timestamp'; the run failed on the push step)"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 2
@@ -41,6 +41,7 @@ outcome`/`--push-log` to the reporter. No fix commit or PR references #741.
 - [ ] Replaying run 35623940059's `reconcile.log` with `job.status=failure` and reconcile-step outcome `success` through `hosted_lane_report.py` yields a body naming the push-step failure (`[rejected] … (fetch first)`), **not** `invalid merged_at timestamp`.
 - [ ] Red control: a green reconcile log containing test-emitted `wave-reconcile: ERROR —` lines with `job.status=success` yields no issue (today's `summarize()` still finds an "error" there).
 - [ ] A genuine reconcile-step `die(...)` is still reported verbatim as the terminal error.
+- [ ] `bash test/gh421-auto-wave-reconcile.sh` stays green: `WorkflowTests.test_publish_allowlist_and_plan_lands` extracts the publish step's inline Python from `.github/workflows/wave-reconcile.yml` and runs it; adding step `id:`s / capturing the push log must not change that step's extracted body or make it exit early (marathon attempt 1 on 2026-09-22 failed it with `SystemExit: 0`). Read the test's extraction before editing the workflow.
 
 ## Acceptance — deviations from the issue
 
@@ -50,6 +51,7 @@ unchanged so the preflight packet inlines it as the builder's definition of done
 - [added] Replaying run 35623940059's `reconcile.log` with `job.status=failure` and reconcile-step outcome `success` through `hosted_lane_report.py` yields a body naming the push-step failure (`[rejected] … (fetch first)`), **not** `invalid merged_at timestamp`. — reason: issue states this criterion as a plain bullet; carried as a checkbox, wording unchanged, so the packet carries it as the builder's definition of done
 - [added] Red control: a green reconcile log containing test-emitted `wave-reconcile: ERROR —` lines with `job.status=success` yields no issue (today's `summarize()` still finds an "error" there). — reason: issue states this criterion as a plain bullet; carried as a checkbox, wording unchanged, so the packet carries it as the builder's definition of done
 - [added] A genuine reconcile-step `die(...)` is still reported verbatim as the terminal error. — reason: issue states this criterion as a plain bullet; carried as a checkbox, wording unchanged, so the packet carries it as the builder's definition of done
+- [added] `bash test/gh421-auto-wave-reconcile.sh` stays green: `WorkflowTests.test_publish_allowlist_and_plan_lands` extracts the publish step's inline Python from `.github/workflows/wave-reconcile.yml` and runs it; adding step `id:`s / capturing the push log must not change that step's extracted body or make it exit early (marathon attempt 1 on 2026-09-22 failed it with `SystemExit: 0`). Read the test's extraction before editing the workflow. — reason: wave-gate regression on marathon attempt 1 (2026-09-22); carried as a criterion so attempt 2 builds against it
 
 ## Swarm Preflight Contract
 

@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/674
 title: "merge-cleanup: hosted wave-reconcile lookup keys on the merge SHA, misses the PR-closed run, then forces past the writer's in-flight guard (races the hosted reconciler)"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 2
@@ -54,6 +54,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
       updated to the new contract and stays green.
 - [ ] `skills/merge-cleanup/SKILL.md` Phase 5 text matches the shipped behaviour.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `test/gh534_phase_c_tests.py::TestCScript::test_hosted_run_is_waited_for_and_fast_forwarded_before_emission` (GH-629) stays green: with that test's existing fake `gh run list` response shape, the new lookup still classifies the hosted run as active and `run_local_wave_reconcile` is NOT called (marathon attempt 1 on 2026-09-22 called it once and failed the gate). Read the test's fake before changing the query/match logic.
 
 ## Swarm Preflight Contract
 

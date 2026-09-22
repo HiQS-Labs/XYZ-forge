@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/570
 title: "hq_known_repos: a 0-byte / table-less HQ_REBALANCE_DB silently empties the repo list; two gate suites read the real one"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 1
@@ -50,6 +50,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
       fixture or `/nonexistent` the way gh405 pins `XYZ_DEVICE_CONFIG_PATH`, and pass with any
       garbage at the operator's real path.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `bash test/gh139-pipe-grep-guard.sh` stays green: every new assertion in `test/hq-hardening.sh` (and the other allowlisted suites) uses capture-then-match — `grep -q PAT <<<"$(cmd)"` — never `cmd | grep -q PAT` (marathon attempt 1 on 2026-09-22 grew the pipe-into-grep count 13→15 and failed the gate).
 
 ## Swarm Preflight Contract
 

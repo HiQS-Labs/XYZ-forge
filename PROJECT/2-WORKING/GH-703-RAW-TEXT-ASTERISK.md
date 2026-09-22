@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/703
 title: "releases: `roadmap add` inline raw_text bypasses validate_raw_text — a title with a bare `*` produces a row the renderer drops and B1 replay refuses"
 status: Active (2-WORKING)
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-22
 owner: unassigned
 doc_type: capture
 complexity: 1
@@ -48,6 +48,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
       `roadmap render` keeps and `roadmap add --raw-text <stored>` re-accepts (option 2); red
       control demonstrates the pre-fix behaviour.
 - [ ] `bash validate.sh` exits 0.
+- [ ] `bash test/gh703-raw-text-asterisk.sh` runs green both standalone and under `bash validate.sh`: the suite must source the shared helpers it calls (e.g. `test/_setup.sh`) or define its own `finish`/`pass`/`fail` (marathon attempt 1 on 2026-09-22 died with `line 69: finish: command not found`, rc 127). Run the new suite once before handing off.
 
 ## Swarm Preflight Contract
 
