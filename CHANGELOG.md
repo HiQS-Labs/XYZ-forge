@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-21 — Hosted reconcile lane: a merge landing mid-run no longer discards the qualification; the lane report names the step that failed (GH-740, GH-741)
+
+The lane's final `git push origin HEAD:development` was a plain fast-forward at the end of a ~70-minute
+job; a merge landing meanwhile rejected it and the run threw away everything — including the
+qualification receipts, which only count once committed on HEAD (`committed_qualifications`), so the
+next run qualified the same landings again and raced again. Three such collisions in five days
+(09-18 ×2, 09-21; radar run 4 target `RADAR-class-hosted-reconcile-lane`). The inline publish step is
+now `utils/py/hosted_lane_publish.py` — same allowlist, explicit `git add`, bot identity, one push — and
+on a rejected push it discards the stale commit (`reset --hard origin/development`; the SQLite ledger is
+regenerated, never rebased), lifts only the receipt files onto the fresh head and publishes them, then
+recomputes the transitions once by re-running the reconcile step's own argv (`RECONCILE_ARGS`, exported
+by that step) with `--pr`/`--commit` coalesced plus the new `wave_reconcile.py --only-receipted
+--skip-pull` — which processes only landings with a committed matching receipt and defers the rest to
+their own queued run, so the suite is unreachable in the retry and the newest-closer ownership rule is
+unchanged. A second rejection exits 1 naming the racing head with the receipts already published.
+`utils/py/hosted_lane_report.py` (#741) now takes `steps.reconcile.outcome` / `steps.publish.outcome`
+and the publish log: a green reconcile step's log — full of the test suite's own expected
+`wave-reconcile: ERROR —` lines — is never blamed (#735 had named a gh421 fixture's
+`invalid merged_at timestamp` for a run that failed on the push). Proof: `test/gh740-hosted-lane-publish.sh`
+(bare remote + racer clone + stub reconciler writing schema-valid receipts; the production consumer
+accepts the published receipt and refuses a corrupted copy; the stale clone's plain push is the red
+control), gh421 (`--only-receipted` two-closer ownership, explicit unreceipted → exit 6, open-reference
+merge evidence survives, coalesced argv against the production parser), gh684 (attribution replay of
+run 35623940059). → [GH-740-HOSTED-LANE-PUSH-RACE.md](PROJECT/2-WORKING/GH-740-HOSTED-LANE-PUSH-RACE.md) ·
+[#740](https://github.com/HiQS-Labs/XYZ-forge/issues/740) · [#741](https://github.com/HiQS-Labs/XYZ-forge/issues/741) · umbrella [#591](https://github.com/HiQS-Labs/XYZ-forge/issues/591)
+
 ## 2026-09-21 — agent-chorus legacy fixture dangles by construction; gate runs write no bytecode (GH-730)
 
 `git push` from the operator's primary clone was refused by the pre-push gate: `test/agent-chorus.sh`

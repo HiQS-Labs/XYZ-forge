@@ -58,55 +58,39 @@ jobs:
         # GH-684: the log is tee'd OUTSIDE the tree ($RUNNER_TEMP) — the commit step below refuses
         # undeclared in-tree files — and stderr is folded in because the terminal
         # `wave-reconcile: ERROR — …` line is written there. pipefail keeps the reconciler's exit.
+        # GH-740: the argv is built once and exported as RECONCILE_ARGS so the publish step's one
+        # bounded recompute re-runs exactly this command (plus --only-receipted --skip-pull).
         run: |
           set -euo pipefail
           if [ "$EVENT_NAME" = pull_request ]; then
-            python3 utils/py/wave_reconcile.py --pr "$PR_NUMBER" --catch-up --gate --qualify 2>&1 | tee "$RUNNER_TEMP/reconcile.log"
+            ARGS=(--pr "$PR_NUMBER" --catch-up --gate --qualify)
           else
-            python3 utils/py/wave_reconcile.py --catch-up --gate --qualify 2>&1 | tee "$RUNNER_TEMP/reconcile.log"
+            ARGS=(--catch-up --gate --qualify)
           fi
+          echo "RECONCILE_ARGS=${ARGS[*]}" >> "$GITHUB_ENV"
+          python3 utils/py/wave_reconcile.py "${ARGS[@]}" 2>&1 | tee "$RUNNER_TEMP/reconcile.log"
       - name: Commit declared artifacts and push
-        shell: python3 {0}
+        id: publish
+        # GH-740: utils/py/hosted_lane_publish.py — the former inline step, moved so it can be tested
+        # and retried. Same allowlist, explicit `git add`, bot identity, one fast-forward push; on a
+        # rejected push it discards the stale commit, lifts only the receipt files onto the fresh
+        # head, publishes them, and recomputes the transitions once with --only-receipted (which can
+        # never run the suite). Never rebases a generated SQLite DB, never force-pushes. Its log is
+        # tee'd for the report step (GH-741).
         run: |
-          import os
-          import re
-          import subprocess
-
-          def git(*args):
-              return subprocess.check_output(['git', *args])
-
-          # Include both sides of doc moves; --no-renames makes the deletions explicit.
-          changed = set(filter(None, git('diff', '--name-only', '--no-renames', '-z', 'HEAD').split(b'\0')))
-          changed.update(filter(None, git('ls-files', '--others', '--exclude-standard', '-z').split(b'\0')))
-          exact = {'releases.db', 'releases.sql', 'ROADMAP.md',
-                   'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md'}
-          # GH-721: 1-INBOX is the deletion side of a closed-issue capture promotion (GH-698 item 2);
-          # keep this alternation equal to wave_reconcile.RECONCILE_FOLDERS plus the two destinations.
-          doc = r'PROJECT/(?:1-INBOX|2-WORKING|3-COMPLETED|4-MISC)/(?:GH-)?[0-9]+-[^/]+\.md'
-          plan = r'(?:PROJECT/2-WORKING/)?MARATHON-PLAN-[0-9]{4}-[0-9]{2}-[0-9]{2}\.md'
-          receipt = r'TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/(?:provenance|validation)\.jsonl'
-          paths = sorted(os.fsdecode(path) for path in changed)
-          unexpected = [p for p in paths if p not in exact and not re.fullmatch(doc, p) and not re.fullmatch(plan, p) and not re.fullmatch(receipt, p)]
-          if unexpected:
-              raise SystemExit('Refusing undeclared reconciliation artifacts: ' + repr(unexpected))
-          if not paths:
-              print('Nothing to commit')
-              raise SystemExit(0)
-          # Explicit paths only; a downstream generator cannot widen the bot commit.
-          git('add', '-A', '--', *paths)
-          git('config', 'user.name', 'github-actions[bot]')
-          git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')
-          git('commit', '-m', 'chore: reconcile merged development work')
-          # One fast-forward push; never rebase a generated SQLite DB or force-push.
-          # A concurrent merge rejects this push and fails the job. The next scheduled/manual
-          # catch-up starts from fresh development and recomputes the unlanded transitions.
-          git('push', 'origin', 'HEAD:development')
+          set -euo pipefail
+          python3 utils/py/hosted_lane_publish.py --reconcile-args "$RECONCILE_ARGS" 2>&1 | tee "$RUNNER_TEMP/publish.log"
       - name: Report hosted lane
         # GH-684: always runs, after the job's status is known. `job.status` reflects every preceding
         # step — a successful reconcile followed by a rejected fast-forward push is still red here.
         # One labelled issue is opened/commented on red or on any skipped backlog item, and closed
         # on the next green run with no skips. See utils/py/hosted_lane_report.py.
+        # GH-741: the step outcomes decide WHICH log's error is the cause — a green reconcile step's
+        # log is full of the test suite's own expected ERROR lines and must never be blamed.
         if: always()
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: python3 utils/py/hosted_lane_report.py --status "${{ job.status }}" --log "$RUNNER_TEMP/reconcile.log" --run-url "$RUN_URL"
+        run: >-
+          python3 utils/py/hosted_lane_report.py --status "${{ job.status }}" --log "$RUNNER_TEMP/reconcile.log"
+          --run-url "$RUN_URL" --reconcile-outcome "${{ steps.reconcile.outcome }}"
+          --publish-outcome "${{ steps.publish.outcome }}" --publish-log "$RUNNER_TEMP/publish.log"
