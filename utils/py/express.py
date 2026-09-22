@@ -304,7 +304,7 @@ def write_receipt(root, sha, issue, suite, rc):
 
 RECOVERY_RECIPE = (
     "no COMMITTED valid express receipt bound to commit %s for issue #%d and suite %s. Resume writes no "
-    "evidence. Recover in a FRESH disposable full clone with the script in skills/express/SKILL.md "
+    "evidence. Recover in a FRESH disposable full clone with the script in skills/2-daily/express/SKILL.md "
     "(section 'Recovery recipe'): it checks out %s, requires a clean baseline via git diff-index/ls-files "
     "(each inspection fails closed), snapshots HEAD + porcelain + remotes + local-config hash to a log "
     "OUTSIDE the tree, runs `bash %s` recording rc immediately, re-snapshots, and VOIDs on any difference. "

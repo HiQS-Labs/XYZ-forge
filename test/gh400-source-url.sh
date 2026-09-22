@@ -2,7 +2,7 @@
 # test/gh400-source-url.sh — GH-400, criterion 2: "Every generated capture doc contains the source
 # issue URL."
 #
-# This criterion shipped in b026737 as PROSE ONLY — `skills/10days/SKILL.md` told the model to put
+# This criterion shipped in b026737 as PROSE ONLY — `skills/3-weekly/10days/SKILL.md` told the model to put
 # the issue URL in `source:`, and no gate ever read the field. `source: issue#400`, or no `source`
 # at all, passed everything. That is the same "trust the model's output as though it were verified"
 # shape GH-400 exists to close, reproduced inside GH-400's own fix, which is why the criterion was

@@ -8,7 +8,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 PY="$ROOT/utils/py/aider-turn.py"
 SH="$ROOT/relay-automation/aider-turn.sh"
-SKILL="$ROOT/skills/relay-xyz/SKILL.md"
+SKILL="$ROOT/skills/1-hourly/relay-xyz/SKILL.md"
 EXPECTED=900
 pass=0; fail=0
 

@@ -18,7 +18,7 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "skills" / "merge-cleanup" / "scripts"))
+sys.path.insert(0, str(REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts"))
 sys.path.insert(0, str(REPO / "utils" / "py"))
 sys.path.insert(0, str(REPO / "test"))
 
@@ -33,7 +33,7 @@ from attempt_record import RECORD_ENV, RecordError, RecordLock, reserve  # noqa:
 from gh534_phase_a_tests import TestA2Provenance, TestA4OpenHandles, TestA4TickClaims, TestA5FailClosed, TestA5FreshInspection  # noqa: E402,F401
 from gh534_phase_b_tests import LedgerFixture, TestE6Gate, TestPhase5EndToEnd, _app, _git, commit_all, park  # noqa: E402,F401
 
-CLI = REPO / "skills" / "merge-cleanup" / "scripts" / "attempt_record.py"
+CLI = REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts" / "attempt_record.py"
 
 
 GH_RUN_WRAPPER = r'''#!/usr/bin/env python3
@@ -519,9 +519,9 @@ class TestB1SchemaGuard(unittest.TestCase):
 
 
 # --- Parity guard: SKILL.md's capability table vs the code and the tests ------------------------
-SKILL_MD = REPO / "skills" / "merge-cleanup" / "SKILL.md"
-MC_SRC = REPO / "skills" / "merge-cleanup" / "scripts" / "merge_cleanup.py"
-SC_SRC = REPO / "skills" / "merge-cleanup" / "scripts" / "scan_clones.py"
+SKILL_MD = REPO / "skills" / "2-daily" / "merge-cleanup" / "SKILL.md"
+MC_SRC = REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts" / "merge_cleanup.py"
+SC_SRC = REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts" / "scan_clones.py"
 # The FIXED required set: deleting a row cannot pass because the others remain.
 REQUIRED_CAPABILITIES = {
     "session-evidence-driver-lock": "script", "session-evidence-tick-claims": "script",
@@ -855,7 +855,7 @@ class TestGh623Resilience(LedgerFixture):
         st = self.load()
         st["list_fail"] = {"remaining": 99, "msg": "gh: Could not resolve host: github.com"}
         self.save()
-        r = subprocess.run([sys.executable, str(REPO / "skills" / "merge-cleanup" / "scripts" / "toposort_prs.py"),
+        r = subprocess.run([sys.executable, str(REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts" / "toposort_prs.py"),
                             "--repo", str(self.primary)],
                            capture_output=True, text=True,
                            env={**os.environ, "MERGE_CLEANUP_GH_BIN": str(self.gh), "GH_STATE": str(self.state)})

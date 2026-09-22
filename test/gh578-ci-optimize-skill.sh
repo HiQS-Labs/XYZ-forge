@@ -3,12 +3,12 @@
 source "$(dirname "$0")/_setup.sh" gh578-ci-optimize-skill
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-SKILL_FILE="$REPO/skills/ci-optimize/SKILL.md"
+SKILL_FILE="$REPO/skills/4-occasional/ci-optimize/SKILL.md"
 
 echo "== test: gh578-ci-optimize-skill =="
 
 # --- 1. File existence & basic structure ---
-[ -f "$SKILL_FILE" ] && pass "skills/ci-optimize/SKILL.md exists" || fail "missing skills/ci-optimize/SKILL.md"
+[ -f "$SKILL_FILE" ] && pass "skills/4-occasional/ci-optimize/SKILL.md exists" || fail "missing skills/4-occasional/ci-optimize/SKILL.md"
 
 # --- 2. YAML frontmatter validation ---
 grep -q "^name: ci-optimize$" "$SKILL_FILE" && pass "frontmatter has name: ci-optimize" || fail "missing name in frontmatter"

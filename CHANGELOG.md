@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
+
+Full local gate: 411/411 passed, with `gh32-releases-app.sh` passing the gate’s built-in isolated
+retry after a parallel failure. Clone identity stayed unchanged. The 132-link check catches a
+broken Skills Index row; the foreign-directory nudge assertion rejects the former wildcard
+fallback. Hook checks passed 63/63 and the viewer passed 8/8.
+[Retained evidence](TESTS-RESULTS/2026-09-22+GH-744/glm-followup/provenance.jsonl).
+
+## 2026-09-22 — PR #747 GLM review follow-up (GH-744)
+
+Restored the flat app-install path in the AgentChorus incident comment and updated the mini
+viewer provenance citation. Skill nudges now fall back to a bare skill name outside the source
+root. Extended the existing link check to cover the ARCHITECTURE Skills Index and added a
+foreign-directory nudge assertion. Merged current development with ledger records preserved.
+Verification is recorded in the accompanying review evidence.
+
+## 2026-09-22 — Skills tier review verification (GH-744, PR #747)
+
+The review fix passed the full local gate (411/411) in a disposable full clone using the existing
+test Python environment. The link check covers 72 cross-folder references and fails when the old
+recon link is restored. Drift and archive-freshness checks also pass; clone identity stayed unchanged.
+[Run evidence](TESTS-RESULTS/2026-09-22+GH-744/pr747-review/provenance.jsonl).
+
+## 2026-09-22 — Skills tier review fixes (GH-744, PR #747)
+
+Repaired cross-folder skill links using canonical repository URLs so flat collection copies
+remain readable. Extended the existing path-integrity gate to check cross-folder Markdown
+links, and made the relay archive output relative to its packaging script. Corrected the
+re-tiering contract: explicit paths in publishers/tests need updating, and direct installs
+need their installer re-run; Skills Army collection users refresh only their installed skills.
+No compatibility layer or automatic migration was added for this early, internally used product.
+Merged current development, preserving ledger rows and rebuilding its derived views and package.
+Verification results are recorded in the follow-up review evidence entry.
+
 ## 2026-09-22 — Marathon GH-749 planned: relay exit-code truth (#720) + measured gate cost (#732), one chain of four lanes
 
 `/marathon-triage` on #673/#720/#732 found no sequenceable lane: the planner (exit 4, drift) held all
@@ -29,6 +63,32 @@ merge evidence; GH-563 pre-migration public launch capture and GH-658 landing-1 
 moved to `PROJECT/4-MISC/`). Reconciled RELEASES DB roadmap ledger rows via `roadmap reconcile-state`
 (GH-608, GH-654, GH-659, GH-663, GH-712 moved to Completed) and updated status markers (GH-221,
 GH-243, GH-246, GH-419, GH-608, GH-654, GH-659, GH-663, GH-712 to ✅).
+
+## 2026-09-21 — skills/ grouped by frequency of use: 1-hourly, 2-daily, 3-weekly, 4-occasional (GH-744)
+
+`skills/` was a flat alphabetical list of 60 directories; the ARCHITECTURE.md Skills Index was
+alphabetical too and missing seven skills. Every skill now lives at `skills/<tier>/<name>/` (a
+`git mv`, no content change) under four numbered folders, so a directory listing reads as a usage
+map. The operator anchored nine placements; the rest follow each skill's trigger description and can
+be re-tiered with a `git mv` plus the index row — nothing depends on the tier name, only on the
+two-level depth (`skills/README.md` states the contract). What had to learn the second level:
+`utils/py/skill_drift_check.py` scans `*/SKILL.md` and `*/*/SKILL.md` and keys `unrecognized` on the
+canonical name set (a mini collection stays one level; the GH-660 fixture gains a tiered skill so both
+branches are proven); `utils/py/xyz_mini_sync.py` and `agent-chorus/publish-manifest.tsv` re-point
+their SOURCE columns only — XYZ-mini and the standalone repo stay flat; `utils/ci-route.sh` registry
+globs are `skills/*/<name>/*`; the locators that derive the repo root from their own directory
+(`find-harness.sh`, `find-hq.sh`, `find-xyz.sh`, `find-pdda.sh`, `vendor-stack/install.sh`,
+`relay-to-issue.sh`, `make-pkg.sh`, `review_engine.py`) go one level higher, `find-xyz.sh` finds
+relay-xyz across tiers by glob, and `agent_chorus.py` / `scan_clones.py` walk up to the nearest
+ancestor holding `skills/` / `bin/tick` (same answer as `parents[3]` in every flat layout, including
+a vendored `.xyz/`). `test/path-integrity.sh` blanks app-discovery roots (`~/.claude/skills/<name>`)
+before tokenizing, since that flat installed layout never exists in this tree. `relay-pkg.tar.gz`
+regenerated at its new path. Vendored `.xyz/skills/` mirrors the tiers on the next `xyz-vendor.sh`
+refresh. Machine-local follow-up for a Skills Army HQ collection: `intake.py --apply update <name>
+--source <forge>/skills/<tier>/<name>` per forge-owned skill (the drift guard now reports those ten
+whose SKILL.md text gained tiered paths). Plan QA: agy Approved after two rounds
+(`relay-system/2026-09-21/gh744-plan-qa.md`; Codex's CLI could not run tool calls this session).
+Easy rollback: revert the merge commit, plus the reverse `intake.py update` if provenance was re-pointed.
 
 ## 2026-09-21 — Hosted reconcile lane: a merge landing mid-run no longer discards the qualification; the lane report names the step that failed (GH-740, GH-741)
 

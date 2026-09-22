@@ -29,12 +29,12 @@ echo "== test: gh609-sdlc-agent-gaps =="
 # 1. Non-Empty File Size Guards
 # -----------------------------------------------------------------------------
 FILES=(
-  "skills/workhorse/SKILL.md"
-  "skills/start-task/SKILL.md"
-  "skills/swe/SKILL.md"
-  "skills/recon/SKILL.md"
-  "skills/ci-optimize/SKILL.md"
-  "skills/ci-debug/SKILL.md"
+  "skills/2-daily/workhorse/SKILL.md"
+  "skills/1-hourly/start-task/SKILL.md"
+  "skills/1-hourly/swe/SKILL.md"
+  "skills/1-hourly/recon/SKILL.md"
+  "skills/4-occasional/ci-optimize/SKILL.md"
+  "skills/2-daily/ci-debug/SKILL.md"
 )
 
 for f in "${FILES[@]}"; do
@@ -182,12 +182,12 @@ check_ci_debug_contract() {
 # 3. Positive Contract Assertions Against In-Tree Documents
 # -----------------------------------------------------------------------------
 
-WORKHORSE="$ROOT/skills/workhorse/SKILL.md"
-START_TASK="$ROOT/skills/start-task/SKILL.md"
-SWE="$ROOT/skills/swe/SKILL.md"
-RECON="$ROOT/skills/recon/SKILL.md"
-CI_OPT="$ROOT/skills/ci-optimize/SKILL.md"
-CI_DEBUG="$ROOT/skills/ci-debug/SKILL.md"
+WORKHORSE="$ROOT/skills/2-daily/workhorse/SKILL.md"
+START_TASK="$ROOT/skills/1-hourly/start-task/SKILL.md"
+SWE="$ROOT/skills/1-hourly/swe/SKILL.md"
+RECON="$ROOT/skills/1-hourly/recon/SKILL.md"
+CI_OPT="$ROOT/skills/4-occasional/ci-optimize/SKILL.md"
+CI_DEBUG="$ROOT/skills/2-daily/ci-debug/SKILL.md"
 
 if check_workhorse_contract "$WORKHORSE"; then
   pass "workhorse: satisfies unified contract (durable identity, 4-state recovery, local/remote fence, preservation split, semantic verification)"

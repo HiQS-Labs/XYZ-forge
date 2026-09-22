@@ -586,10 +586,10 @@ CUR2="$(sqlite3 "$FXE/releases.db" "SELECT last_event_id FROM connector_cursors 
 sqlite3 "$FXE/releases.db" "DELETE FROM connector_cursors WHERE connector='github_board';"
 
 echo "16. the merge emitter keys on the issue, never the PR"
-MC="$ROOT/skills/merge-cleanup/scripts/merge_cleanup.py"
+MC="$ROOT/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py"
 cat > "$WORK/mcprobe.py" <<'PYPROBE'
 import sys, os
-sys.path.insert(0, os.path.join(os.environ["GH549_ROOT"], "skills", "merge-cleanup", "scripts"))
+sys.path.insert(0, os.path.join(os.environ["GH549_ROOT"], "skills", "2-daily", "merge-cleanup", "scripts"))
 import merge_cleanup as M
 print("linked=%s" % M.linked_issues({"title": "feat: x", "body": "Closes #549 and fixes #402"}))
 print("none=%s" % M.linked_issues({"title": "chore", "body": "no refs at all"}))

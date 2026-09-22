@@ -5,7 +5,7 @@
 # from ANY CWD — including standing inside a different repo — with no hardcoded path.
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-REAL_LOCATOR="$HERE/../skills/hq/find-hq.sh"
+REAL_LOCATOR="$HERE/../skills/2-daily/hq/find-hq.sh"
 PASS=0; FAIL=0
 pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
@@ -27,17 +27,17 @@ fixture_guard_init "$TMP"   # GH-10: pin the sandbox root
 trap 'rm -rf "$TMP"' EXIT
 TMP="$(cd "$TMP" && pwd -P)"
 
-# --- fake harness: utils/hq/hq.sh stub + the real find-hq.sh copied into skills/hq ---
+# --- fake harness: utils/hq/hq.sh stub + the real find-hq.sh copied into skills/2-daily/hq ---
 HARN="$TMP/harness"
-mkdir -p "$HARN/utils/hq" "$HARN/skills/hq" "$HARN/relay-automation"
+mkdir -p "$HARN/utils/hq" "$HARN/skills/2-daily/hq" "$HARN/relay-automation"
 cp "$HERE/../relay-automation/harness-paths.sh" "$HARN/relay-automation/"
 cat > "$HARN/utils/hq/hq.sh" <<'EOF'
 #!/usr/bin/env bash
 echo "STUB-HQ ok"
 EOF
 chmod +x "$HARN/utils/hq/hq.sh"
-cp "$REAL_LOCATOR" "$HARN/skills/hq/find-hq.sh"
-chmod +x "$HARN/skills/hq/find-hq.sh"
+cp "$REAL_LOCATOR" "$HARN/skills/2-daily/hq/find-hq.sh"
+chmod +x "$HARN/skills/2-daily/hq/find-hq.sh"
 
 # --- fake FOREIGN repo (a real git root) that ships NO utils/hq ---
 FOREIGN="$TMP/foreign"
@@ -48,11 +48,11 @@ mkdir -p "$FOREIGN"
 # --- simulate the ~/.claude/skills/hq install: a symlink into the harness skill dir ---
 USKILLS="$TMP/userskills"
 mkdir -p "$USKILLS"
-ln -s "$HARN/skills/hq" "$USKILLS/hq"
+ln -s "$HARN/skills/2-daily/hq" "$USKILLS/hq"
 INSTALLED="$USKILLS/hq/find-hq.sh"   # the path a real session would call
 
 # 1. from the harness repo itself (git-root case)
-OUT="$( cd "$HARN" && bash "$HARN/skills/hq/find-hq.sh" --sh )"; rc=$?
+OUT="$( cd "$HARN" && bash "$HARN/skills/2-daily/hq/find-hq.sh" --sh )"; rc=$?
 { [ "$rc" = 0 ] && [ "$OUT" = "$HARN/utils/hq/hq.sh" ]; } \
   && pass "resolves hq.sh from the harness repo (git root)" \
   || fail "harness-cwd: rc=$rc out=$OUT"
@@ -89,7 +89,7 @@ RUN="$( eval "$EVOUT"; bash "$HQ_SH" )"
 #    of the locator in a subtree with no utils/hq above it, run from a non-git CWD with no
 #    override — so none of the three resolution rungs can hit. (The REAL locator would correctly
 #    find the real harness via its own location, which is exactly why we copy it out here.)
-ORPHAN="$TMP/orphan/skills/hq"
+ORPHAN="$TMP/orphan/skills/2-daily/hq"
 mkdir -p "$ORPHAN"
 cp "$REAL_LOCATOR" "$ORPHAN/find-hq.sh"; chmod +x "$ORPHAN/find-hq.sh"
 OUT="$( cd "$TMP/orphan" && unset XYZ_HARNESS XYZ_REPO_ROOT; bash "$ORPHAN/find-hq.sh" --sh 2>/dev/null )"; rc=$?

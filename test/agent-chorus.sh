@@ -4,8 +4,8 @@ set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-CLI="$REPO/skills/agent-chorus/scripts/agent_chorus.py"
-SKILL="$REPO/skills/agent-chorus/SKILL.md"
+CLI="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus.py"
+SKILL="$REPO/skills/2-daily/agent-chorus/SKILL.md"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent-chorus-test.XXXXXX")" || {
   echo "FAIL: mktemp -d failed" >&2
   exit 1
@@ -78,10 +78,10 @@ helper_examples="$(grep -c '^"\$AGENT_CHORUS" ' "$SKILL")"
 [ "$helper_examples" -eq 17 ] \
   && pass "all skill commands use the quoted skill-relative helper variable" \
   || fail "expected 17 \$AGENT_CHORUS helper commands, found $helper_examples"
-grep -Fq -- '$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py' "$SKILL" \
+grep -Fq -- '$(git rev-parse --show-toplevel)/skills/2-daily/agent-chorus/scripts/agent_chorus.py' "$SKILL" \
   && pass "skill still documents the in-repo helper path for XYZ-forge clones" \
   || fail "skill lost the in-repo helper path note"
-(cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent-chorus/scripts/agent_chorus.py" --help >/dev/null) \
+(cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/2-daily/agent-chorus/scripts/agent_chorus.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
 expect_file_contains "skill documents stdin message streaming" "$SKILL" \
@@ -688,7 +688,7 @@ export ANTIGRAVITY_CLI_SKILLS_DIR="$WORK/ambient-cli"
 run_installer() (
   export HOME="$SANDBOX_HOME"
   unset GEMINI_CONFIG_SKILLS_DIR ANTIGRAVITY_SKILLS_DIR ANTIGRAVITY_CLI_SKILLS_DIR
-  bash "$REPO/skills/agent-chorus/install.sh"
+  bash "$REPO/skills/2-daily/agent-chorus/install.sh"
 )
 CLAUDE_DIR="$WORK/claude-skills"
 CODEX_DIR="$WORK/codex-skills"
@@ -733,9 +733,9 @@ mig_target="$(readlink "$MIG_DIR/agent2agent" 2>/dev/null || true)"
 # drives them" class, which is a real signal that should not be silenced with an exemption marker
 # for the sake of a string comparison. (That guard's detector greps the raw file, comments
 # included, so even naming the construct here would trip it.)
-[ -n "$mig_target" ] && [ "$mig_target" -ef "$REPO/skills/agent-chorus" ] \
+[ -n "$mig_target" ] && [ "$mig_target" -ef "$REPO/skills/2-daily/agent-chorus" ] \
   && pass "installer repoints the legacy agent2agent symlink at the renamed skill" \
-  || fail "legacy symlink not repointed (now -> '$mig_target', which is not the same directory as '$REPO/skills/agent-chorus'): $mig_out"
+  || fail "legacy symlink not repointed (now -> '$mig_target', which is not the same directory as '$REPO/skills/2-daily/agent-chorus'): $mig_out"
 
 MIG_DIR2="$WORK/legacy-realdir"
 mkdir -p "$MIG_DIR2/agent2agent"
@@ -890,7 +890,7 @@ p2_closed_invite="$(p2_cli invite --id 888003 --agent 4 2>&1)"
 # 3. Citation verification (verify-citations)
 p2_cli start --subject "citations test" --packet-file "$WORK/pkt.md" --id 888004 --agents 2 >/dev/null 2>&1
 HEAD_SHA="$(git rev-parse HEAD)"
-p2_cli send --id 888004 --agent 2 --next-agent 1 --message "Referencing skills/agent-chorus/SKILL.md:10 and commit $HEAD_SHA" >/dev/null 2>&1
+p2_cli send --id 888004 --agent 2 --next-agent 1 --message "Referencing skills/2-daily/agent-chorus/SKILL.md:10 and commit $HEAD_SHA" >/dev/null 2>&1
 
 p2_cit_pass="$(p2_cli verify-citations --id 888004 --format json 2>&1)"
 p2_cit_rc=$?
@@ -1149,7 +1149,7 @@ else
   # helper's own parser is what any consumer will use to read this header back.
   seat_parsed="$(python3 -c '
 import sys
-sys.path.insert(0, "skills/agent-chorus/scripts")
+sys.path.insert(0, "skills/2-daily/agent-chorus/scripts")
 import agent_chorus as ac
 seats = ac.parse_seats(open(sys.argv[1]).read())
 a2 = seats.get("agent2", {})
@@ -1237,7 +1237,7 @@ fi
 # covers every OTHER header field too, which is where this defect actually lived (R2-S2).
 q1_field="$(python3 - <<'FIELDPY'
 import sys
-sys.path.insert(0, "skills/agent-chorus/scripts")
+sys.path.insert(0, "skills/2-daily/agent-chorus/scripts")
 import agent_chorus as ac
 header = "AGENT2AGENT-ID: 111111\nSUBJECT: s\nAGENTS: agent1 agent2\nSTATUS: Open\nTURN: 1\n"
 try:
@@ -1331,7 +1331,7 @@ python3 "$CLI" --root "$Q3W" --store "$Q3S" start --subject "gh524 lock" --agent
 Q3_FILE="$(find "$Q3S" -path "*925104*" -name conversation.md 2>/dev/null | head -1)"
 q3_out="$(CLI_PATH="$CLI" Q3W="$Q3W" Q3S="$Q3S" Q3_FILE="$Q3_FILE" python3 - <<'LOCKPY'
 import os, subprocess, sys, threading, time
-sys.path.insert(0, os.path.join("skills", "agent-chorus", "scripts"))
+sys.path.insert(0, os.path.join("skills", "2-daily", "agent-chorus", "scripts"))
 import agent_chorus as ac
 from pathlib import Path
 

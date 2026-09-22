@@ -13,7 +13,7 @@ pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 echo "== test: gh615-start-task-reinforce =="
-TARGET="$ROOT/skills/start-task/SKILL.md"
+TARGET="$ROOT/skills/1-hourly/start-task/SKILL.md"
 
 [ -s "$TARGET" ] && pass "size non-empty guard ($(wc -c < "$TARGET" | tr -d " ") bytes)" || fail "missing/empty file"
 

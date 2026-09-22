@@ -162,4 +162,4 @@ $$\text{Wave} \longrightarrow \text{Lane} \longrightarrow \text{Execution Plan (
 - [AGENTS.md](AGENTS.md) — repo behavior, decision quality, and proof rules.
 - [PROJECT/PDDA.md](PROJECT/PDDA.md) — the doc lifecycle contract (1-INBOX → 2-WORKING → 3-COMPLETED).
 - [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md) — the app-managed ledger contract and merge procedure.
-- [skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md) — driving automated relays and marathons.
+- [skills/1-hourly/relay-xyz/SKILL.md](skills/1-hourly/relay-xyz/SKILL.md) — driving automated relays and marathons.

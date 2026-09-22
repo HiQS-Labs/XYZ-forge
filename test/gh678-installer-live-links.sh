@@ -9,7 +9,7 @@ echo "== test: gh678-installer-live-links =="
 FOREIGN="$WORK/foreign-owner"          # stands in for a managed collection or another clone
 mkdir -p "$FOREIGN"; echo "foreign" > "$FOREIGN/SKILL.md"
 n=0
-for installer in "$REPO"/skills/*/install.sh; do
+for installer in "$REPO"/skills/*/*/install.sh; do   # skills/<tier>/<name> (GH-744)
   skill="$(basename "$(dirname "$installer")")"
   n=$((n+1))
   H="$WORK/home-$skill"; A="$H/apps"

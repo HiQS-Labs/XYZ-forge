@@ -12,8 +12,8 @@ export PDDA_SYNC_TMP="$BOX/old-state"
 unset PDDA_REPO PDDA_HOME PDDA_MANIFEST_CONF
 ok() { printf 'ok - %s\n' "$*"; }
 fail() { printf 'FAIL - %s\n' "$*" >&2; exit 1; }
-[ "$(cd "$BOX" && bash "$ROOT/skills/vendor-stack/find-pdda.sh")" = "$ROOT" ] || fail resolver
-if PDDA_REPO="$BOX" bash "$ROOT/skills/vendor-stack/find-pdda.sh" >"$BOX/invalid.log" 2>&1; then fail 'missing installer accepted'; fi
+[ "$(cd "$BOX" && bash "$ROOT/skills/4-occasional/vendor-stack/find-pdda.sh")" = "$ROOT" ] || fail resolver
+if PDDA_REPO="$BOX" bash "$ROOT/skills/4-occasional/vendor-stack/find-pdda.sh" >"$BOX/invalid.log" 2>&1; then fail 'missing installer accepted'; fi
 grep -q 'lacks utils/pdda/pdda-install.sh' "$BOX/invalid.log"
 ok 'Forge resolves without sibling PDDA; invalid override fails'
 T="$BOX/target"; mkdir "$T"; require_fixture "$T"; git -C "$T" init -q

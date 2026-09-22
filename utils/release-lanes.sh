@@ -7,7 +7,7 @@
 # uses it, in both directions of the GH-284 loop:
 #
 #   seed    release -> milestone -> its OPEN issues, as marathon candidates.
-#           Emitted in the SAME JSON-lines shape as skills/10days/scan-issues.sh, because
+#           Emitted in the SAME JSON-lines shape as skills/3-weekly/10days/scan-issues.sh, because
 #           release-driven selection is that pipeline with a different seed set, not a new pipeline.
 #
 #   rollup  milestone -> per-issue landed/mentioned/absent against the DERIVED trunk, plus an
@@ -155,7 +155,7 @@ cmd_seed() {
   require_gh
   log "seeding from milestone: $ms"
   local out
-  # Same fields and the same sort as skills/10days/scan-issues.sh, so the downstream /10days
+  # Same fields and the same sort as skills/3-weekly/10days/scan-issues.sh, so the downstream /10days
   # pipeline consumes this without knowing which seed source produced it.
   out="$(gh issue list --milestone "$ms" --state open --limit "$LIMIT" \
           --json number,title,createdAt,updatedAt,labels,url \

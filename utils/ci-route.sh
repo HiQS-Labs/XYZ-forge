@@ -34,15 +34,15 @@ SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh gh620-skills-army-mini-sync.sh
 
 subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
   case "$1" in
-    utils/hq/*|skills/hq/*)                                                                printf '%s\n' hq ;;
-    utils/py/releases_app.py|skills/releases/*|utils/release-lanes.sh|releases.sql|releases.db|utils/releases-merge-resolve.sh|utils/leaderboard.sh|test/gh549-work-events.sh) printf '%s\n' releases ;;
+    utils/hq/*|skills/*/hq/*)                                                                printf '%s\n' hq ;;
+    utils/py/releases_app.py|skills/*/releases/*|utils/release-lanes.sh|releases.sql|releases.db|utils/releases-merge-resolve.sh|utils/leaderboard.sh|test/gh549-work-events.sh) printf '%s\n' releases ;;
     utils/telemetry/*|test/gh496-telemetry-isolation.sh)                                  printf '%s\n' telemetry ;;
     utils/ate/*|utils/fuzzing/*|utils/py/telemetry_schema.py|utils/py/domain_oracles.py|utils/py/adaptive_ate.py|utils/py/calibrate_tier1.py|utils/py/fuzz_engine.py|utils/py/repro_synth.py|utils/py/gen4_campaign.py|utils/py/proc_group.py|utils/py/ate_runaway_sweep.py) printf '%s\n' ate ;;
     utils/swe-diagram/*)                                                                   printf '%s\n' swe-diagram ;;
     utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh|utils/py/wave_reconcile.py) printf '%s\n' pdda ;;
-    skills/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
-    skills/standup/*)                                                                      printf '%s\n' standup ;;
-    skills/skills-army-hq/*|skills/push-to-skills-army-mini/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
+    skills/*/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
+    skills/*/standup/*)                                                                      printf '%s\n' standup ;;
+    skills/*/skills-army-hq/*|skills/*/push-to-skills-army-mini/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
   esac
 }
 
@@ -299,7 +299,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
 
   # These surfaces own the coordination kernel, containment boundary, frozen twins,
   # worktree safety, or CI gate itself. They require the full suite before merge.
-  # (GH-35 moved utils/pdda/** and skills/agent-chorus code off this list and into the
+  # (GH-35 moved utils/pdda/** and skills/*/agent-chorus code off this list and into the
   # subsystem registry, per the issue's Tier-2 mapping; their focused suites run instead.)
   case "$path" in
     validate.sh)
@@ -313,7 +313,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
     bin/tick|bin/validate-relay-block|src/*)
       full_required=true
       ;;
-    relay-automation/*|skills/relay-automation/*|skills/relay-xyz/*)
+    relay-automation/*|skills/*/relay-automation/*|skills/*/relay-xyz/*)
       full_required=true
       ;;
     utils/py/*)

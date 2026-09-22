@@ -13,7 +13,7 @@ pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
 fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 echo "== test: gh617-relay-xyz-commensurate-review =="
-TARGET="$ROOT/skills/relay-xyz/SKILL.md"
+TARGET="$ROOT/skills/1-hourly/relay-xyz/SKILL.md"
 
 [ -s "$TARGET" ] && pass "size non-empty guard ($(wc -c < "$TARGET" | tr -d " ") bytes)" || fail "missing/empty file"
 

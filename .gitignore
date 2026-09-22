@@ -111,4 +111,4 @@ audit/out/
 .fuzz_corpus/
 
 # browserbase skill: local env files must never be tracked (key lives in ~/secrets/)
-skills/browserbase/.env*
+skills/4-occasional/browserbase/.env*

@@ -4,8 +4,8 @@
   "sources": [
     "PROJECT/1-INBOX/RECON-GH-508-GIT-PULSE-SKILLS.md (completed deep recon and authority classification)",
     "PROJECT/1-INBOX/GH-508-GIT-PULSE-SKILLS.md (Ponytail spike boundary and acceptance criteria)",
-    "skills/skills-army-hq/scripts/intake.py:180-195,232-280,469-527 (source intake, local state, inventory, transactions)",
-    "skills/skills-army-hq/scripts/sync.py:23-65 (local collection to app-root symlink reconciliation)",
+    "skills/3-weekly/skills-army-hq/scripts/intake.py:180-195,232-280,469-527 (source intake, local state, inventory, transactions)",
+    "skills/3-weekly/skills-army-hq/scripts/sync.py:23-65 (local collection to app-root symlink reconciliation)",
     "rebalanceOS experimental/git-pulse/collect.sh:475-601 and pulse.py:797-915 (scheduled checkout reconciliation and publication, recorded by recon)"
   ],
   "layout": "layered",

@@ -5115,7 +5115,7 @@ def _repo_identity_for_scan(root):
 
 def _linked_issues(pr):
     """Issue numbers a PR closes, from its title and body — the same regex merge_cleanup uses
-    (skills/merge-cleanup/scripts/merge_cleanup.py:CLOSES_RE), inlined rather than imported
+    (skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:CLOSES_RE), inlined rather than imported
     because that is a skill script off sys.path and a ledger verb must not grow a dependency
     on a skill's file layout."""
     text = "%s\n%s" % (pr.get("title") or "", pr.get("body") or "")

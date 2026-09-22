@@ -69,7 +69,7 @@ set -e
 # classify from their pushed range exactly as a PR classifies from its diff.
 expect_route "docs-only push uses the docs gate (was blanket full)" push docs true README.md
 expect_route "text documentation uses the docs gate" push docs true docs/guide.txt
-expect_route "AgentChorus skill instructions use the docs gate" push docs true skills/agent-chorus/SKILL.md
+expect_route "AgentChorus skill instructions use the docs gate" push docs true skills/2-daily/agent-chorus/SKILL.md
 # GH-28 follow-up: consult.sh always writes .txt sidecars (NO-CITATION.txt, PROVENANCE.txt,
 # DEGRADED-SINGLE-MODEL.txt) alongside each relay-system/ transcript. Before this, a lone sidecar
 # fell through to the catch-all `docs_only=false` branch, forcing a transcript-only push onto the
@@ -155,7 +155,7 @@ expect_tier() {
 
 expect_tier "docs-only changes are tier 1" pull_request 1 README.md PROJECT/x.md decisions/d.md docs/guide.txt .pdda-mode
 expect_tier "text and markdown anywhere are docs (GH-35 widened)" pull_request 1 relay-system/2026-08-18/run/NOTE.txt
-expect_tier "HQ utility changes are tier 2" pull_request 2 utils/hq/hq.sh skills/hq/find-hq.sh
+expect_tier "HQ utility changes are tier 2" pull_request 2 utils/hq/hq.sh skills/2-daily/hq/find-hq.sh
 expect_tier "releases subsystem (incl. the one non-twin utils/py file) is tier 2" pull_request 2 utils/py/releases_app.py utils/release-lanes.sh
 expect_tier "releases DB and dump files are tier 2 (GH-496)" pull_request 2 releases.sql releases.db
 expect_tier "releases utilities are tier 2 (GH-496)" pull_request 2 utils/releases-merge-resolve.sh utils/leaderboard.sh
@@ -163,11 +163,11 @@ expect_tier "wave_reconcile is tier 2 under PDDA (GH-496)" pull_request 2 utils/
 expect_tier "telemetry is tier 2" pull_request 2 utils/telemetry/health-lib.sh
 expect_tier "ATE + fuzzing are tier 2" pull_request 2 utils/ate/install.sh utils/fuzzing/fuzz-loop.sh
 expect_tier "swe-diagram is tier 2" pull_request 2 utils/swe-diagram/assets/renderer.js
-expect_tier "agent-chorus skill code is tier 2 (GH-35 subsystem 7)" pull_request 2 skills/agent-chorus/scripts/agent_chorus.py
-expect_tier "agent-chorus SKILL.md stays docs (explanatory markdown)" pull_request 1 skills/agent-chorus/SKILL.md
+expect_tier "agent-chorus skill code is tier 2 (GH-35 subsystem 7)" pull_request 2 skills/2-daily/agent-chorus/scripts/agent_chorus.py
+expect_tier "agent-chorus SKILL.md stays docs (explanatory markdown)" pull_request 1 skills/2-daily/agent-chorus/SKILL.md
 expect_tier "kernel changes are tier 3" pull_request 3 src/events.js
 expect_tier "authoritative Python twins are tier 3" pull_request 3 utils/py/relay_drive.py
-expect_tier "relay-xyz skill surface is tier 3" pull_request 3 skills/relay-xyz/SKILL.md
+expect_tier "relay-xyz skill surface is tier 3" pull_request 3 skills/1-hourly/relay-xyz/SKILL.md
 expect_tier "an UNMAPPED code path is tier 3 even though route=fast" pull_request 3 relay-automation/relay-turn-lib.sh
 expect_tier "an ordinary test EDIT is tier 3 (the contract's own evidence)" pull_request 3 test/some-suite.sh
 expect_tier "a test-like path outside test/ and outside a subsystem dir is unmapped" pull_request 3 fixtures/mock-test.sh
@@ -178,9 +178,9 @@ expect_tier "scheduled runs stay tier 3" schedule 3
 # GH-487 registered-skill contract tests: a modified registered skill with code + dedicated test
 # is classified as tier 2 (the fast path), but an unregistered skill or a missing dedicated test
 # fails closed into tier 3.
-expect_tier "a registered skill + its code + its dedicated tests is tier 2 (GH-487)" pull_request 2 skills/skills-army-hq/scripts/intake.py test/skills-army-hq.sh
+expect_tier "a registered skill + its code + its dedicated tests is tier 2 (GH-487)" pull_request 2 skills/3-weekly/skills-army-hq/scripts/intake.py test/skills-army-hq.sh
 expect_tier "a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)" pull_request 3 test/skills-army-hq.sh
-expect_tier "shared Python test integration still escalates beside skill code (GH-487)" pull_request 3 skills/skills-army-hq/scripts/intake.py test/test_python_layer.py
+expect_tier "shared Python test integration still escalates beside skill code (GH-487)" pull_request 3 skills/3-weekly/skills-army-hq/scripts/intake.py test/test_python_layer.py
 expect_tier "a TESTS-RESULTS receipt alone uses the docs gate (GH-487)" pull_request 1 TESTS-RESULTS/2026-09-08+GH-487/evidence.jsonl
 expect_tier "a TESTS-RESULTS receipt alone is tier 1 (GH-487)" pull_request 1 TESTS-RESULTS/2026-09-08+GH-487/evidence.jsonl
 expect_tier "a receipt beside subsystem code keeps the subsystem gate (GH-487)" pull_request 2 TESTS-RESULTS/2026-09-08+GH-487/evidence.jsonl utils/hq/hq.sh
@@ -267,8 +267,8 @@ fi
 
 # Case 2: Append-only test registration beside a subsystem update + its dedicated test routes to tier 2
 CASE2_BASE="$(git -C "$VALIDATE_REPO" rev-parse HEAD)"
-mkdir -p "$VALIDATE_REPO/skills/skills-army-hq/scripts"
-printf '#!/usr/bin/env python3\n' >"$VALIDATE_REPO/skills/skills-army-hq/scripts/intake.py"
+mkdir -p "$VALIDATE_REPO/skills/3-weekly/skills-army-hq/scripts"
+printf '#!/usr/bin/env python3\n' >"$VALIDATE_REPO/skills/3-weekly/skills-army-hq/scripts/intake.py"
 printf '#!/usr/bin/env bash\nexit 0\n' >"$VALIDATE_REPO/test/skills-army-hq.sh"
 printf '#!/usr/bin/env bash\nTESTS=(\n  "existing-test.sh"\n  "new-test.sh" # GH-496 (new test)\n  "skills-army-hq.sh"\n)\n' >"$VALIDATE_REPO/validate.sh"
 git -C "$VALIDATE_REPO" add -A >/dev/null 2>&1

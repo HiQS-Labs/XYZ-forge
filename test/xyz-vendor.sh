@@ -11,7 +11,7 @@ source "$(dirname "$0")/_setup.sh" xyz-vendor
 ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
 VENDOR="$ROOT/relay-automation/xyz-vendor.sh"
 SYNC="$ROOT/relay-automation/xyz-sync.sh"
-FH="$ROOT/skills/relay-xyz/find-harness.sh"
+FH="$ROOT/skills/1-hourly/relay-xyz/find-harness.sh"
 HOOK="$ROOT/relay-automation/hooks/xyz-vendor-reminder.sh"
 
 for f in "$VENDOR" "$SYNC" "$FH" "$HOOK"; do
@@ -286,7 +286,7 @@ printf 'source_commit=%s\ntick_version=x\nvendored_utc=x\n' "$HEAD" > "$REPO/.xy
 ( cd "$REPO" && "$FH" --quiet --root 2>"$WORK/cur.err" >/dev/null )
 [ ! -s "$WORK/cur.err" ] && pass "staleness: current copy is silent" || fail "current copy warned: $(cat "$WORK/cur.err")"
 # The BEHIND state needs a commit that is an ancestor of HEAD and is not HEAD itself —
-# find-harness.sh decides it with `merge-base --is-ancestor` (skills/relay-xyz/find-harness.sh:164).
+# find-harness.sh decides it with `merge-base --is-ancestor` (skills/1-hourly/relay-xyz/find-harness.sh:164).
 # In a repository with a SINGLE commit the root commit IS HEAD, so that state is structurally
 # unobservable rather than merely absent, and the assertions below would fail for a reason that says
 # nothing about the code.

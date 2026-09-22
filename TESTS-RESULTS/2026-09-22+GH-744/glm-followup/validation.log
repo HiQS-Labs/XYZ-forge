@@ -1,0 +1,144 @@
+=== index-mutation ===
+== test: path-integrity ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-path-integrity.XXXXXX.ONS7XVGAV7
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  PASS: all referenced relay/script/doc paths resolve (scanned 601 scripts + curated docs)
+Traceback (most recent call last):
+  File "<stdin>", line 26, in <module>
+AssertionError: broken skill links:
+ARCHITECTURE.md: skills/4-occasional/ponytail/SKILL.md
+  FAIL: broken skill Markdown link — update it after relocating a skill
+
+=== nudge-mutation ===
+== test: xyz-harness-hooks ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-xyz-harness-hooks.XXXXXX.ltGOieez0g
+  PASS: nudge: add item to marathon
+  PASS: nudge: fire marathon
+  PASS: nudge: preflight sweep
+  PASS: nudge: preflight all
+  PASS: nudge: dry-run each plan
+  PASS: nudge: commit/push + close issues
+  PASS: nudge: commit/push + archive/PDDA
+  FAIL: foreign CWD emitted an unusable pointer: BTW: marathon-triage already does this — see skills/*/marathon-triage/SKILL.md.
+
+=== path-integrity ===
+== test: path-integrity ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-path-integrity.XXXXXX.5OfGGuzLcQ
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  PASS: all referenced relay/script/doc paths resolve (scanned 601 scripts + curated docs)
+  checked 132 cross-folder skill links
+  PASS: cross-folder skill Markdown links resolve
+  path-integrity: 3 pass, 0 fail
+
+=== xyz-harness-hooks ===
+== test: xyz-harness-hooks ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-xyz-harness-hooks.XXXXXX.JdHFDzNiNw
+  PASS: nudge: add item to marathon
+  PASS: nudge: fire marathon
+  PASS: nudge: preflight sweep
+  PASS: nudge: preflight all
+  PASS: nudge: dry-run each plan
+  PASS: nudge: commit/push + close issues
+  PASS: nudge: commit/push + archive/PDDA
+  PASS: nudge: foreign CWD falls back to a skill name
+  PASS: silent: unrelated roadmap request
+  PASS: silent: unrelated fire request
+  PASS: silent: unrelated preflight
+  PASS: silent: commit/push alone
+  PASS: silent: closeout detail without commit/push
+  PASS: skill nudge fails open on malformed JSON
+  PASS: XYZ_NO_SKILL_NUDGE suppresses output
+  PASS: relay Approved exits 0
+  PASS: relay green writes exactly one record
+  PASS: relay green harness=relay
+  PASS: relay green health=green
+  PASS: relay title from '# ' heading
+  PASS: relay sessionId = thread slug
+  PASS: re-run prepends (2 records), no clobber
+  PASS: GH-505: re-driving an already-approved file is red (unattested-terminal), not green
+  PASS: nested relay (marathon-phase) writes NO record
+  PASS: relay Escalated exits 4
+  PASS: relay Escalated writes one record (not silently absent)
+  PASS: relay Escalated health=orange
+  PASS: relay round-cap exits 4
+  PASS: relay round-cap writes one record (not silently absent)
+  PASS: relay round-cap health=red
+  PASS: bare marathon-drive success exits 0
+  PASS: bare marathon-drive writes one record
+  PASS: bare marathon-drive harness=marathon
+  PASS: bare marathon-drive health=green
+  PASS: marathon title = phase-brief basename
+  PASS: swarm-context marathon-drive writes one record
+  PASS: swarm-context marathon-drive harness=swarm (not marathon)
+  PASS: marathon-phase marathon-drive writes NO record
+  PASS: bare marathon-drive halt exits 4
+  PASS: halt writes one record (not silently absent)
+  PASS: halt health=red
+  PASS: halt description says 'halted at phase'
+  PASS: marathon.sh 2-phase run exits 0
+  PASS: marathon.sh 2-phase → exactly ONE record (not per-phase)
+  PASS: marathon.sh record harness=marathon
+  PASS: marathon.sh sessionId = plan name
+  PASS: marathon.sh desc = 'N of M phase(s) approved'
+  PASS: marathon.sh halt propagates the phase exit (4)
+  PASS: marathon.sh halt → exactly ONE record (not silently absent)
+  PASS: marathon.sh halt health=red
+  PASS: marathon.sh halt harness=marathon
+  PASS: marathon.sh halt desc names the failing phase
+  PASS: XYZ_SESSION_ID overrides sessionId (not the constant p1)
+  PASS: XYZ_SESSION_ID run still tags harness=swarm
+  PASS: sessionId falls back to PHASE_ID when unset
+  PASS: review-once approval exits 0
+  PASS: review-once approval → relay/green record
+  PASS: review-once handback exits 5
+  PASS: review-once handback → relay/orange record
+  PASS: review-once stall exits 3
+  PASS: review-once stall → relay/red record
+  PASS: multi-round no-progress exits 3
+  PASS: multi-round no-progress → relay/red record
+  xyz-harness-hooks: 63 pass, 0 fail
+
+=== gh589-skill-viewer ===
+== test: gh589-skill-viewer ==
+  PASS: forge: viewer count 60 == ls count 60 (rc=0)
+  PASS: forge: viewer name set equals the folder set
+  PASS: foreign-repo CWD: viewer resolves its own repo (60)
+  PASS: red: un-anchored viewer copy reports the foreign repo (0) — control goes red
+  PASS: synthetic: three frontmatter styles parse to the expected set
+  PASS: synthetic: trailing count line is '3 skills'
+  PASS: red: missing frontmatter → exit 1, file named
+  PASS: red: empty skills dir → exit 2 (two empty inventories cannot pass)
+gh589-skill-viewer: 8 passed, 0 failed
+
+=== pdda-changelog ===
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+
+=== Full-gate startup, retry, and summary excerpts ===
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//runner-envelope.lzAspK/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 4-wide — auto-detected 12 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+  392 pooled suites + 16 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh32-releases-app.sh rc=1
+FAILED in parallel (rc=1): gh32-releases-app.sh — re-running it alone to see if that verdict survives
+  ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+WARNING (GH-528): 1 suite(s) failed in parallel and passed alone.
+    gh32-releases-app.sh
+  + gh32-releases-app.sh
+Summary
+===============================
+telemetry: /private/tmp/xyz-pr747-glm-test-20260922/.tick/telemetry/validate-parallel-1790100564928-91268.jsonl (411 suite events, 408 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh251-validate-pytest-skip.sh  716.287  0
+  gh549-work-events.sh  293.220  0
+  gh436-merge-cleanup.sh  288.269  0
+  relay-self-sufficiency.sh  170.488  0
+  pdda-repo-contract.sh  160.828  0
+  marathon-drive.sh  153.533  0
+  gh280-jog-marathon-adapter.sh  138.236  0
+  pdda-install-startup-docs.sh  121.334  0
+  marathon-root-audit.sh  84.066  0
+  gh365-tier-fail-closed.sh  82.295  0
+re-run ladder: 1 suite(s), 22.239s total
+passed: 411 / 411

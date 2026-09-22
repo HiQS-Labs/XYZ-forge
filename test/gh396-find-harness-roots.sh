@@ -27,7 +27,7 @@ if [ "$(basename "$HARNESS_DIR")" = ".xyz" ]; then
 else
   REPO="$HARNESS_DIR"
 fi
-FH="$HARNESS_DIR/skills/relay-xyz/find-harness.sh"
+FH="$HARNESS_DIR/skills/1-hourly/relay-xyz/find-harness.sh"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh396-roots.XXXXXX")"
 . "$HERE/lib/fixture-guard.sh"   # GH-10: shared fixture containment
 fixture_guard_init "$WORK"       # GH-10: pin the sandbox root
@@ -166,10 +166,10 @@ remove_vendored_fixture
 ok "precedence step 3: delegated to gh292-worktree-vendored-discovery.sh (linked worktree, no override)"
 # Step 4: standing in a harness clone itself (ships relay-automation/) → itself.
 _harness_clone="$WORK/d-harness"
-mkdir -p "$_harness_clone/relay-automation" "$_harness_clone/skills/relay-xyz"
+mkdir -p "$_harness_clone/relay-automation" "$_harness_clone/skills/1-hourly/relay-xyz"
 touch "$_harness_clone/relay-automation/relay-drive.sh"
 chmod +x "$_harness_clone/relay-automation/relay-drive.sh"
-cp "$FH" "$_harness_clone/skills/relay-xyz/find-harness.sh"
+cp "$FH" "$_harness_clone/skills/1-hourly/relay-xyz/find-harness.sh"
 [ -f "$HARNESS_DIR/relay-automation/harness-paths.sh" ] && cp "$HARNESS_DIR/relay-automation/harness-paths.sh" "$_harness_clone/relay-automation/"
 [ -f "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" ] && cp "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" "$_harness_clone/relay-automation/"
 _vf_init_repo "$_harness_clone"
@@ -188,10 +188,10 @@ rm -rf "$_foreign"
 # ── #394: staleness must still warn under an override, and the remedy must be runnable ────────
 # A vendored copy stamped with an ancestor commit is "behind".
 _live="$WORK/live-harness"
-mkdir -p "$_live/relay-automation" "$_live/skills/relay-xyz"
+mkdir -p "$_live/relay-automation" "$_live/skills/1-hourly/relay-xyz"
 touch "$_live/relay-automation/relay-drive.sh" "$_live/relay-automation/xyz-sync.sh"
 chmod +x "$_live/relay-automation/relay-drive.sh" "$_live/relay-automation/xyz-sync.sh"
-cp "$FH" "$_live/skills/relay-xyz/find-harness.sh"
+cp "$FH" "$_live/skills/1-hourly/relay-xyz/find-harness.sh"
 [ -f "$HARNESS_DIR/relay-automation/harness-paths.sh" ] && cp "$HARNESS_DIR/relay-automation/harness-paths.sh" "$_live/relay-automation/"
 [ -f "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" ] && cp "$HARNESS_DIR/relay-automation/driver-lock-lib.sh" "$_live/relay-automation/"
 _vf_init_repo "$_live"
@@ -200,10 +200,10 @@ _ancestor="$(git -C "$_live" rev-parse HEAD)"
 touch "$_live/f2" && git -C "$_live" add -A && git -C "$_live" commit -qm "c2"
 
 make_vendored_fixture "$WORK/f-stale" --stub --stale "$_ancestor"
-_err_auto="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT XYZ_LIVE_HARNESS="$_live" bash "$_live/skills/relay-xyz/find-harness.sh" --env 2>&1 >/dev/null || true)"
+_err_auto="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT XYZ_LIVE_HARNESS="$_live" bash "$_live/skills/1-hourly/relay-xyz/find-harness.sh" --env 2>&1 >/dev/null || true)"
 if grep -q 'behind the live harness' <<<"$_err_auto"; then ok "#394: auto-discovery warns that the vendored copy is behind"
 else bad "#394: auto-discovery warns that the vendored copy is behind (stderr: ${_err_auto:-<empty>})"; fi
-_err_over="$(cd "$VF_REPO" && XYZ_HARNESS="$VF_HARNESS" XYZ_REPO_ROOT= XYZ_LIVE_HARNESS="$_live" bash "$_live/skills/relay-xyz/find-harness.sh" --env 2>&1 >/dev/null || true)"
+_err_over="$(cd "$VF_REPO" && XYZ_HARNESS="$VF_HARNESS" XYZ_REPO_ROOT= XYZ_LIVE_HARNESS="$_live" bash "$_live/skills/1-hourly/relay-xyz/find-harness.sh" --env 2>&1 >/dev/null || true)"
 if grep -q 'behind the live harness' <<<"$_err_over"; then ok "#394: the warning still fires when XYZ_HARNESS points at the stale .xyz"
 else bad "#394: the warning still fires when XYZ_HARNESS points at the stale .xyz (stderr: ${_err_over:-<empty>})"; fi
 _remedy="$(grep -E '^[[:space:]]*remedy:' <<<"$_err_auto" | sed -E 's/^[[:space:]]*remedy:[[:space:]]*//' || true)"

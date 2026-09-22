@@ -31,7 +31,7 @@ Makes the skill + harness findable from **any** repo (so Claude A, sitting in th
 can still reach this harness):
 
 ```bash
-bash "~/Documents/GH Repos/xyz-3-agents-swarm/skills/relay-xyz/install.sh"
+bash "~/Documents/GH Repos/xyz-3-agents-swarm/skills/1-hourly/relay-xyz/install.sh"
 ```
 
 ## Per run — 3 steps
@@ -173,7 +173,7 @@ gated behind your "go" anyway, so they're not the noisy part.)
   `--target-root <other-repo>` per [CONSUMING.md](CONSUMING.md). Not needed for the default
   (all work in this repo).
 - **Same-model blind spots.** Two Claude windows share a model; for genuinely independent review
-  put Codex/agy in window B via Path A (see [skills/relay-xyz/SKILL.md](../skills/relay-xyz/SKILL.md)).
+  put Codex/agy in window B via Path A (see [skills/1-hourly/relay-xyz/SKILL.md](../skills/1-hourly/relay-xyz/SKILL.md)).
   Mitigated when a **runnable gate** is the referee (a fix is accepted on red→green, not on opinion) —
   proven in the 2026-06-26 cross-repo run.
 - **The token only works if BOTH windows run it — so prefer `--turn-source file`.** Field finding

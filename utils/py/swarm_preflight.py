@@ -1013,7 +1013,7 @@ ISSUE_URL_RE = re.compile(r'https?://github\.com/([^/\s]+/[^/\s]+?)/issues/(\d+)
 def check_source_url(doc_path, issue_number, tracking_slug=None):
     """GH-400/GH-425: a capture doc's `source:` must identify its tracking issue.
 
-    Until now this was an instruction in `skills/10days/SKILL.md` and nothing more — the field was
+    Until now this was an instruction in `skills/3-weekly/10days/SKILL.md` and nothing more — the field was
     never read by any gate, so `source: issue#400`, or no `source` at all, passed everything. That
     is the same "trust the model's output as though it were verified" shape GH-400 exists to close,
     reproduced inside GH-400's own fix.
