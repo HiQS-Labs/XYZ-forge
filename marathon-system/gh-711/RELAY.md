@@ -1,6 +1,6 @@
 # Marathon Phase gh-711
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-711-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -110,3 +110,11 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Touched `skills/merge-cleanup/scripts/ledger_merge.py`, `test/gh534_phase_b_tests.py`, and `skills/merge-cleanup/SKILL.md`.
+- Narrowed the duplicate-`gh_number` guard so a gid retained byte-identically from base is excluded when the other side deleted that gid and re-minted the row. An edited retained row still reaches the existing same-key/natural-key handoff.
+- Added a GH-678 regression covering an unchanged remint plus independent additions on both sides; classification keeps theirs and replays the ours-only addition. The paired red control edits the retained base row and confirms classification still hands off.
+- Documented the narrowed B1 guard in the skill.
+- Verification: `python3 test/gh534_phase_b_tests.py` completed successfully; `python3 -m unittest test.gh534_phase_b_tests.TestB1Classify` ran 8 tests and passed. The full project gate was intentionally left to the harness.
