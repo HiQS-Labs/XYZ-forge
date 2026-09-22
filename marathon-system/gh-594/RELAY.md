@@ -144,3 +144,11 @@ swept file: yes
 - [Unverified — needs clone run] Gate execution (`bash validate.sh`) and full test suite (`test/gh267-express-skill.sh`): Not executed in-tree per scope lock and turn instructions (in-tree execution creates temporary fixtures conflicting with containment). Left for post-turn harness execution in a disposable full clone.
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-09-22T04:37:29Z
+task: MARATHON-GH-594-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 2d082f5f85b75bf03e2f2ea61dad54e71d96e797
+added-range: 11319+2411
+added-sha256: 126a5d9c179183af26393fc2cdee88223f84ce1af48ac86e30ecd6d18a3b82b6
