@@ -8,7 +8,9 @@ The skill now reviews intake, contracts and implementation plans, obtains indepe
 plan QA, forms collision-safe lanes, prepares YAML, and requires direct preflight and
 the existing full-plan dry-run before a fire request. The bet is that one preparation
 route reduces stale plans without creating another executor. Agy review and gate
-evidence belong to the PR; firing still requires exact-plan confirmation.
+evidence belong to the PR; firing still requires exact-plan confirmation. Agy approved the revised
+skill after a dangling-link fix. Its token closeout mismatch is parked in #763; baseline macOS gate
+failures reproduced on `development` are parked in #764, so this branch remains draft-only.
 
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 

@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue #762 captured, source routes and runtime commands checked, skill refactor drafted. | Run focused checks, Agy relay QA, full gate in a separate disposable clone, then open a PR to `development`. |
+| Skill refactor and focused hook/installer checks passed; Agy content review approved. The full gate was red on baseline failures reproduced on `development`. | Open a draft PR to `development`; resolve parked baseline gate issue #764 before merge readiness. |
 
 ## Idea
 
@@ -101,4 +101,8 @@ QA: `git diff --check`; inspect all references, explicit fire gate and installed
 3. Run an Agy `relay-xyz` review of the changed skill and evidence; resolve findings, then open a
    PR against `development` with the exact gate result.
 
-QA: no failing relevant suite; review verdict recorded; PR diff and base verified.
+QA: `xyz-harness-hooks.sh` 66/66 and `gh678-installer-live-links.sh` passed in
+disposable clones. Agy's final transcript says `STATUS: Approved`; the relay wrapper exited 4 after
+`tick done` failed, parked as #763. Full `validate.sh` failed on `gh142`, `gh549`, `gh605` that also
+fail on untouched `development`; `gh425` passed after installing missing `pytest` in the temporary
+venv. The baseline gate follow-up is parked as #764. PR readiness remains pending.
