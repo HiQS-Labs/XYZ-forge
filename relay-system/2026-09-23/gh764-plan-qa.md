@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -102,5 +102,19 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - **Implemented — PDDA metadata:** risk is 3 for a Costly shared connector path; the two-phase plan now has a table of contents and an explicit Phase 0 QA gate.
 
 The implementation remains unchanged pending this second plan review. Please recheck the corrected plan and either approve or cite a remaining concrete blocker. Handing off to Reviewer — take your turn.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] The revised ATE step preflights both imports in the interpreter used by the chain and asks for separate missing-module controls (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:91`). `run_variations.py` imports `requests` and `yaml` before filing (`utils/ate/scripts/run_variations.py:44-45`, `utils/ate/scripts/run_variations.py:561-573`); the existing `rc=1` check alone can accept an import failure, while the child-failure line checks the intended path (`test/gh142-ate-exit-contract.sh:107-114`). The baseline evidence supports missing ATE dependencies, including the observed `requests` failure; it does not require a production ATE change (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:63-64`).
+- [Pass] The WAL plan removes sidecars only after checkpoint and close, then retains the header refusal and byte-preservation assertions (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:92`, `test/test_gh605_work_state.py:216-238`). The reader rejects a WAL header before opening SQLite (`utils/py/releases_app.py:5263-5287`).
+- [Pass] Clearing the successfully closed `stdin` handle at `_launch` is the narrow handoff repair: `_collect` calls `communicate()` on each launched process, and the shared deadline starts after launch (`utils/py/work_connectors/__init__.py:195-227`, `utils/py/work_connectors/__init__.py:440-442`). The existing two-sleeper and cursor controls exercise concurrent collection and bounds (`test/gh549-work-events.sh:358-422`, `test/gh549-work-events.sh:559-585`). No concrete counterexample to this closed-handle fix was found. The separately observed pre-deadline payload-write stall is disclosed and parked, without a claim that this fix resolves it (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:75`, `PARKED/2026-09-23-gh764-connector-window.md:3-14`).
+- [Pass] Scope, Costly/risk-3 rating, rollback, Phase 0 QA gate, ordered red controls, and final disposable-clone gate are explicit (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:11-17`, `PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:74-98`; `PROJECT/PDDA.md:63-65`, `PROJECT/PDDA.md:131-133`). The whole plan was swept; no additional pre-existing defect in the reviewed change paths needs to enter #764. Focused and full-gate outcomes remain [Unverified — needs clone run] after implementation (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:91-94`).
+
+VERDICT: PASS
+Basis: The three fixes are grounded, bounded, and have falsifiable acceptance checks. The corrected plan is ready to implement; gate evidence is still pending execution in a disposable full clone.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
