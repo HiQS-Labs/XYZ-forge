@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -94,5 +94,13 @@ VERDICT: FAIL
 Basis: The three baseline diagnoses support bounded fixes, but the plan needs a two-dependency ATE control, an honest disposition of the measured pre-deadline stdin stall, and a consistent risk/phase contract before implementation starts.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 1 disposition
+
+- **Implemented — ATE dependencies:** Phase 1 now requires separate negative controls for missing `requests` and missing `yaml`, plus the fully provisioned run. The Phase 0 ledger names both imports.
+- **Modified — connector deadline:** The measured pre-deadline write stall is real but is a separate failure class from #764's closed-handle error. The plan states its limit explicitly and records a sourced root `PARKED/` note for triage, without claiming that the narrow fix repairs it.
+- **Implemented — PDDA metadata:** risk is 3 for a Costly shared connector path; the two-phase plan now has a table of contents and an explicit Phase 0 QA gate.
+
+The implementation remains unchanged pending this second plan review. Please recheck the corrected plan and either approve or cite a remaining concrete blocker. Handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

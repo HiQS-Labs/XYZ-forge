@@ -8,7 +8,7 @@ updated: 2026-09-23
 owner: Codex
 doc_type: bugfix
 complexity: 2
-risk: 2
+risk: 3
 effort: 2
 phases: 2
 ratings_provisional: false
@@ -29,6 +29,11 @@ goal: >
 - Keep the connector launch parallel and the deadline shared.
 
 # Baseline macOS gate failures
+
+## Table of contents
+
+- [Phase 0 — Recon and failure ledger](#phase-0--recon-and-failure-ledger)
+- [Phase 1 — Ordered implementation and QA](#phase-1--ordered-implementation-and-qa)
 
 ## Status
 
@@ -56,7 +61,7 @@ Base: `origin/development` at `a47c212b3ce2cee400853386a3e7213182f7827d`.
 | Probe | Observation | Meaning |
 |---|---|---|
 | `bash test/gh142-ate-exit-contract.sh` with system Python | Fails at “no child-failure line”; `bash -x` reveals `ModuleNotFoundError: requests` in `run_variations.py` before filing. | The exit code assertion passed vacuously on an import failure. |
-| Same suite with temporary venv containing requests, PyYAML and pytest | 30 passed, 0 failed. | No ATE behavior fix is supported. The test needs an explicit dependency preflight, and gate setup needs a documented toolchain. |
+| Same suite with temporary venv containing requests, PyYAML and pytest | 30 passed, 0 failed. | No ATE behavior fix is supported. The test needs an explicit two-import dependency preflight, and gate setup needs a documented toolchain. |
 | `bash test/gh605-work-state.sh` | 27 passed, 1 failed before `load_work_evidence()`: `-wal`/`-shm` still exist after fixture close. | macOS SQLite leaves sidecars even after `wal_checkpoint(TRUNCATE)` and close. |
 | Standalone WAL probe | Header stays WAL after closed sidecars are removed; the exact header-without-sidecars state can be constructed. | Fix the fixture setup, preserve the production refusal. |
 | `bash test/gh549-work-events.sh` | Connector runs report `communicate failed: ValueError('I/O operation on closed file.')`; dependent cursor/card assertions fail. | `_launch` closes `proc.stdin`, `_collect` then invokes `proc.communicate()`. |
@@ -67,15 +72,23 @@ Base: `origin/development` at `a47c212b3ce2cee400853386a3e7213182f7827d`.
 - **ATE:** `test/gh142-ate-exit-contract.sh` starts `run_variations.py`, which imports `requests` and `yaml` before it can call `compile_issue.py`. The test's expected `rc=1` alone cannot distinguish import failure from filing failure. `utils/ate/install.sh` already names `requests` and PyYAML as dependencies; `validate.sh` calls the suite without a dependency preflight.
 - **Work state:** `test/test_gh605_work_state.py` constructs a WAL-mode copy, checkpoints and closes, then expects no sidecars before invoking `releases_app.load_work_evidence()`. The reader first checks the WAL header and sidecar presence and returns before opening the DB. The failure is in the fixture's precondition, not that reader.
 - **Work connectors:** `work reconcile` resolves configured connectors, `_launch` starts all child processes and writes each payload, `_collect` reads results under one deadline, validates `advanced_to`, and persists cursors. The closed stdin handle causes `communicate()` to fail before result parsing; cursor and board failures are downstream. This touches a shared connector path and is **Costly** until focused and full gate checks show preservation. Rollback: revert the connector handoff change; no data migration is involved.
+- **Existing window limit:** `_launch` writes each payload synchronously before the shared `_collect` deadline starts. A child that delays reading a payload larger than pipe capacity can stall the launch path; Codex reproduced a 2-second delay with a 1 MiB input. GH-764 does not claim to fix this distinct failure class. It is recorded in root `PARKED/` for later triage; the GH-549 suite still checks concurrent ordinary connectors and the collection window.
 
 Root cause: missing ATE runtime dependency + WAL fixture assumption + closed subprocess stdin handle;
 fix sites: ATE test preflight/toolchain docs, WAL test setup, and connector launcher respectively;
 why there: the production ATE and WAL readers satisfy their contracts, while the connector error
 originates where the closed handle is passed to the collector.
 
+### QA gate — Phase 0
+
+- [x] Each reported suite failure was observed on untouched `development` in a disposable full clone.
+- [x] The ATE import failure and SQLite sidecar premise were disproved with corrected local inputs.
+- [x] The connector closed-handle error was reproduced outside the suite and independently reviewed.
+- [ ] Codex approves the corrected plan before implementation.
+
 ## Phase 1 — Ordered implementation and QA
 
-1. Make GH-142 distinguish import/setup failure from the expected filing failure and document the local gate Python packages; rerun with and without `requests` -> expect a named dependency failure and a 30/0 result in the pinned venv.
+1. Make GH-142 distinguish import/setup failure from the expected filing failure by preflighting both `requests` and `yaml` in the same Python interpreter. Document the local gate packages; run separate missing-`requests` and missing-`yaml` controls, then the complete pinned venv -> expect named prerequisite failures and a 30/0 healthy result.
 2. Have GH-605's fixture remove closed WAL sidecars before asserting their absence; witness the old assertion fail and the updated test pass while the reader still refuses the WAL header.
 3. Clear the closed `stdin` handle after the GH-549 payload is sent; run its focused suite, including the parallel-window and cursor red controls -> expect no `communicate failed` and all checks green.
 4. Run the complete macOS gate once on the final approved commit in a separate disposable full clone; record result and provenance, and verify clone identity before/after. Keep #764 open and PR draft if any gate remains red.
