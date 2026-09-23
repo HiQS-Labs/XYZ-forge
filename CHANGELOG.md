@@ -10,8 +10,11 @@ prerequisite immediately, the WAL test explicitly constructs header-without-side
 the connector launcher clears its closed stdin handle before collection. The local-gate startup
 instruction names the same-interpreter Python preflight. Reversibility: **Costly** shared connector
 path, with a direct revert and no schema or data migration. Focused checks: GH-142 30/30,
-GH-605 28/28, GH-549 124/124; separate missing-module red controls failed by name. Final relay
-and qualifying full-gate evidence are pending.
+GH-605 28/28, GH-549 124/124; separate missing-module red controls failed by name. Codex final
+relay approved. Full macOS `validate.sh` passed 411/411 on the reviewed commit in a separate
+full clone with unchanged git identity; `security-scan.sh` failed only during the parallel pool
+on transient peer-suite files and passed the built-in isolated retry. Sanitized logs and the
+committed receipt are in [GH-764 evidence](TESTS-RESULTS/2026-09-23+GH-764/SUMMARY.md).
 
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 

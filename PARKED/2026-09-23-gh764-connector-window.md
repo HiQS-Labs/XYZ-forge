@@ -12,3 +12,7 @@ seconds before reading; the write itself took two seconds. This is outside #764'
 Next triage: decide whether the configured connector window should include payload delivery,
 then write a focused timeout test before changing dispatch. Keep the existing concurrency and
 cursor contracts. No issue or RELEASES row has been created for this observation yet.
+
+Final QA also noticed a diagnostic mismatch in the same area: `dispatch(window_s=2)` can run under
+a two-second window while the timeout text reports the default `CONNECTOR_WINDOW_S` of five seconds.
+This does not change the deadline or cursor outcome. Triage it with the window contract above.

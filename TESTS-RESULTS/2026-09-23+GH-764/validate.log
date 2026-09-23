@@ -1,0 +1,55 @@
+0001: githooks: NOT INSTALLED in this clone.
+0002:   <qualifying-clone>/.git/hooks/pre-push does not exist.
+0003:   This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh
+0004: validate.sh: continuing WITHOUT the push gate installed — this run is unaffected, but a future push from this clone will not be verified.
+0005: validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+0006: runner-envelope: validate.sh — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.5akBvh/harnesses.db), envelope state captured
+0007: validate.sh: PARALLEL mode 4-wide — auto-detected 12 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+0008:   392 pooled suites + 16 in the sequential driver-lock lane (GH-528)
+0009:   NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+0230: [parallel] gh142-ate-exit-contract.sh rc=0
+0281: [parallel] gh549-work-events.sh rc=0
+0359: [parallel] gh605-work-state.sh rc=0
+0378: [parallel] security-scan.sh rc=1
+0418: 
+0419: ===============================
+0420: FAILED in parallel (rc=1): security-scan.sh — re-running it alone to see if that verdict survives
+0421: ===============================
+0422:   ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+0423:   ... This means a shared resource is contended — see the warning at the end of this run.
+0424: 
+0425: ===============================================================================
+0426: WARNING (GH-528): 1 suite(s) failed in parallel and passed alone.
+0427: These are CONTENTION, not product failure: each verdict flipped the moment the
+0428: shared resource was free, so the suite is counted as PASSED and named here.
+0429: The contended resource is almost always THIS CLONE's .git/relay-driver.lock
+0430: (GH-42): it is taken by the real relay-drive.sh BEFORE argument parsing, so a
+0431: suite merely INVOKING a driver contends — add such suites to DRIVER_LOCK_LANE
+0432: in validate.sh so they run in the serialized lane:
+0433:     security-scan.sh
+0434: Until then --parallel is doing extra serial work and this run took longer than it should.
+0435: ===============================================================================
+0469: ============================= 21 passed in 19.40s ==============================
+0476: ===============================
+0477: Running gamma-poison fixture staleness probe
+0478: ===============================
+0479: 
+0480: ===============================
+0481: Summary
+0482: ===============================
+0483: telemetry: <qualifying-clone>/.tick/telemetry/validate-parallel-1790189028223-14565.jsonl (411 suite events, 408 registered)
+0484: 10 slowest suites:
+0485:   name  duration_s  rc
+0486:   gh251-validate-pytest-skip.sh  521.762  0
+0487:   relay-self-sufficiency.sh  221.703  0
+0488:   gh549-work-events.sh  209.148  0
+0489:   gh436-merge-cleanup.sh  168.681  0
+0490:   marathon-drive.sh  94.783  0
+0491:   gh280-jog-marathon-adapter.sh  87.230  0
+0492:   gh528-parallel-contention-retry.sh  74.544  0
+0493:   gh365-tier-fail-closed.sh  68.224  0
+0494:   pdda-repo-contract.sh  62.200  0
+0495:   agy-turn.sh  57.691  0
+0496: re-run ladder: 1 suite(s), 6.518s total
+0497: passed: 411 / 411
+0498:   + gh732-l3-gate-summary.sh

@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex approved the corrected plan; the bounded fixes and focused red/green controls passed in a separate full clone. | Run final Codex implementation QA, then the qualifying full macOS gate on its final commit. |
+| Codex approved plan and implementation; focused checks and the full macOS gate passed on the reviewed code commit in separate full clones. | Publish a ready PR to `development`; keep #764 open until merge and hosted reconciliation. |
 
 ## Why
 
@@ -102,5 +102,5 @@ and one bounded #764 PR. Plan QA and final QA use independent Codex relay turns.
 - [x] GH-142 without `requests`: exit 1 names `requests`; without PyYAML: exit 1 names `yaml`; with both present: 30 passed, 0 failed.
 - [x] GH-605: original fixture failed 27/28 on this macOS SQLite build; corrected fixture passed 28/28, including header refusal and byte-preservation checks.
 - [x] GH-549: original suite passed 105/125; corrected connector handoff passed 124/124 (the original run stopped at 105 passed / 20 failed). Existing cursor, concurrent launch, deadline, and red controls ran.
-- [ ] Final independent implementation relay approved on the committed diff.
-- [ ] Full macOS gate passes in a separate disposable full clone with retained provenance and unchanged clone identity.
+- [x] Final independent implementation relay approved on the committed diff in `relay-system/2026-09-23/gh764-final-qa.md`.
+- [x] Full macOS `validate.sh` passed 411/411 on reviewed commit `97d806e2` in a separate disposable full clone with unchanged identity. `security-scan.sh` failed once on transient files from parallel suites, then passed the runner's isolated retry. Sanitized logs and `provenance.jsonl` are retained in `TESTS-RESULTS/2026-09-23+GH-764/`.
