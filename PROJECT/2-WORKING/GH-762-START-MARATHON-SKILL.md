@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Skill refactor and focused hook/installer checks passed; Agy content review approved. The full gate was red on baseline failures reproduced on `development`. | Open a draft PR to `development`; resolve parked baseline gate issue #764 before merge readiness. |
+| Skill refactor, PARKED routing, focused checks and Agy content review passed; draft PR #765 is open. The full gate was red on baseline failures reproduced on `development`. | Resolve #764 before merge readiness. |
 
 ## Idea
 
@@ -115,3 +115,7 @@ disposable clones. Agy's final transcript says `STATUS: Approved`; the relay wra
 `tick done` failed, parked as #763. Full `validate.sh` failed on `gh142`, `gh549`, `gh605` that also
 fail on untouched `development`; `gh425` passed after installing missing `pytest` in the temporary
 venv. The baseline gate follow-up is parked as #764. PR readiness remains pending.
+Root PARKED routing and standup parser follow-up: `gh77-standup-triage.sh` passed 153/153 in a
+disposable full clone. A red control using the prior broad parser marked a general checklist as
+degraded; restoring the new parser returned lens 8 to `ok`. PDDA run had zero errors; RELEASES
+integrity check had zero failures and nine existing warnings.

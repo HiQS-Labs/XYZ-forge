@@ -1,1 +1,1 @@
-- [issue:1] malformed
+- [issue:1] malformed — check: {"kind": } — close: inspect
