@@ -33,4 +33,4 @@ The dataset card identifies CC BY 4.0 for the dataset and warns that repository-
 - [ ] Inventory repository-disjoint unseen test groups and exclude every previously used campaign instance.
 - [ ] Select exact candidate identities and synthetic-smoke latency/cost; cap the total calls.
 - [ ] Freeze split, sample, baseline training, comparator, metrics, uncertainty, failure policy and budget in #757 before final-test access.
-- [x] Human adjudication availability resolved: the operator reports no independent reviewer. Contract B remains unscored, with no advisory handoff.
+- [x] Human pilot reviewer identified: the operator volunteered to answer [20 pre-action questions in #757](https://github.com/HiQS-Labs/XYZ-forge/issues/757#issuecomment-5789038344). Contract B remains unscored until answers are received and frozen; the pilot is too small by itself for an advisory handoff.

@@ -1,0 +1,168 @@
+{
+  "dataset": "nebius/SWE-rebench-openhands-trajectories",
+  "revision": "35455389ab51bf5e2306bfd436ef72d0f98bf882",
+  "questionnaire": "https://github.com/HiQS-Labs/XYZ-forge/issues/757#issuecomment-5789038344",
+  "selection": "first 20 eligible distinct repositories in offsets 100..299 after excluding repo/issue in offsets 0..99; row index (9*n)//16 for each trajectory",
+  "cases": [
+    {
+      "question": 1,
+      "source_offset": 102,
+      "q3_row_index": 19,
+      "repository_sha256_prefix": "576d60e2a817b1f6",
+      "issue_sha256_prefix": "2f2c85a4b8a3f0e3",
+      "pre_action_state_sha256": "02f99270aedee1b7740265fab42d35ca90bcdb7b579531988b72c5076c88463e"
+    },
+    {
+      "question": 2,
+      "source_offset": 105,
+      "q3_row_index": 52,
+      "repository_sha256_prefix": "43b9bcee9cbeed09",
+      "issue_sha256_prefix": "5e575633719afa57",
+      "pre_action_state_sha256": "7e9448061ac588c7c0a3ab50841b519405f7c8225b3edc2ea58ec3a02a4d1d6d"
+    },
+    {
+      "question": 3,
+      "source_offset": 107,
+      "q3_row_index": 27,
+      "repository_sha256_prefix": "451da11def90af5d",
+      "issue_sha256_prefix": "2cb1323cc5f3963b",
+      "pre_action_state_sha256": "0db5e9608ef54402d83cea78dc290f1790f66471255326799d2be966a4bbb95e"
+    },
+    {
+      "question": 4,
+      "source_offset": 109,
+      "q3_row_index": 20,
+      "repository_sha256_prefix": "5fb43ee49a52d1cc",
+      "issue_sha256_prefix": "fae7e9ed552d58c0",
+      "pre_action_state_sha256": "b8d60f088c5a0b13b4d60a0573b04001aad2573e3f5206f47e432863e5c0e71d"
+    },
+    {
+      "question": 5,
+      "source_offset": 112,
+      "q3_row_index": 19,
+      "repository_sha256_prefix": "638c6d05a9e0814c",
+      "issue_sha256_prefix": "56be0de3d5003fc9",
+      "pre_action_state_sha256": "e22e67bd2119cecc61f36214187524e2ca8693c795bc24d2487bf29aa0521273"
+    },
+    {
+      "question": 6,
+      "source_offset": 113,
+      "q3_row_index": 25,
+      "repository_sha256_prefix": "3d690d3cf3590ab5",
+      "issue_sha256_prefix": "8894c214d40e9600",
+      "pre_action_state_sha256": "f5b22bbb883a113fe40b952c923357aaf22cf60120d1040afd0590140c48d12d"
+    },
+    {
+      "question": 7,
+      "source_offset": 121,
+      "q3_row_index": 26,
+      "repository_sha256_prefix": "1e7fb09e222c2adf",
+      "issue_sha256_prefix": "e38dc22370d09e43",
+      "pre_action_state_sha256": "20243f0bbee20c7292ffb22f64c5100b7e402fd9ecbea33a4be55cf5fc075c2a"
+    },
+    {
+      "question": 8,
+      "source_offset": 124,
+      "q3_row_index": 36,
+      "repository_sha256_prefix": "61c439d0549c01a6",
+      "issue_sha256_prefix": "619ce443cf57c604",
+      "pre_action_state_sha256": "f0156d0bb1f186b22e824dee11df50750f93bd869b15af4e66ce88428533dc6b"
+    },
+    {
+      "question": 9,
+      "source_offset": 128,
+      "q3_row_index": 27,
+      "repository_sha256_prefix": "9614fcfd3e97e8fc",
+      "issue_sha256_prefix": "48ac9694fa8429f9",
+      "pre_action_state_sha256": "7a49f68168f2380c13160e4e6a118c7ae9c5f034a462b8d332096f2f4a99859d"
+    },
+    {
+      "question": 10,
+      "source_offset": 130,
+      "q3_row_index": 22,
+      "repository_sha256_prefix": "542460868265b118",
+      "issue_sha256_prefix": "26addfd35c3ed6dd",
+      "pre_action_state_sha256": "14bcd66b9700a14b5b997909639dccc9f0c50757d45b8271a44c6376f88cc5ca"
+    },
+    {
+      "question": 11,
+      "source_offset": 133,
+      "q3_row_index": 37,
+      "repository_sha256_prefix": "a28bbc452e029ba4",
+      "issue_sha256_prefix": "63c2468f8052d9a4",
+      "pre_action_state_sha256": "de45935e7a0f1752f4fc5465d083c776ef744680293ae901fe3ed89d99bf4214"
+    },
+    {
+      "question": 12,
+      "source_offset": 136,
+      "q3_row_index": 15,
+      "repository_sha256_prefix": "0270cc6e4746c73d",
+      "issue_sha256_prefix": "62cd885753cdf61a",
+      "pre_action_state_sha256": "f7b23a27edb74446db5ae87975ba24177c7d572d1a00447368367e76946302f1"
+    },
+    {
+      "question": 13,
+      "source_offset": 137,
+      "q3_row_index": 27,
+      "repository_sha256_prefix": "27945b76fe9307e0",
+      "issue_sha256_prefix": "fedb5545061cecd5",
+      "pre_action_state_sha256": "91b83414cbed3537ced406b0842d3e62be17aa76d4275e3b45a32348a0c34ed5"
+    },
+    {
+      "question": 14,
+      "source_offset": 140,
+      "q3_row_index": 19,
+      "repository_sha256_prefix": "a3914e678ae90768",
+      "issue_sha256_prefix": "ba4fdda998f2f336",
+      "pre_action_state_sha256": "4abf64a74fe18d8ebdcb8829bf822cb19835fd49c5a787614793bee37a034d62"
+    },
+    {
+      "question": 15,
+      "source_offset": 141,
+      "q3_row_index": 21,
+      "repository_sha256_prefix": "f4b32890b542af71",
+      "issue_sha256_prefix": "8382e600758c4049",
+      "pre_action_state_sha256": "4f1ad29ef0229dce0023031cfa7147dd1689ab2baa8d542aecee59377733f9d8"
+    },
+    {
+      "question": 16,
+      "source_offset": 143,
+      "q3_row_index": 26,
+      "repository_sha256_prefix": "52e743ecd0188dbe",
+      "issue_sha256_prefix": "f96cba3aef5cfa30",
+      "pre_action_state_sha256": "730d404ef1256e532cef341e52869ce0c8be721fb9bb3fcd0e88905bf8071815"
+    },
+    {
+      "question": 17,
+      "source_offset": 145,
+      "q3_row_index": 40,
+      "repository_sha256_prefix": "d37991f8179da9b2",
+      "issue_sha256_prefix": "13550ad74bd7e727",
+      "pre_action_state_sha256": "d42f653fe3ea73f57fb5afd0bff9ed27c2b5ca7e5307291bab22121eebcc9d58"
+    },
+    {
+      "question": 18,
+      "source_offset": 147,
+      "q3_row_index": 54,
+      "repository_sha256_prefix": "f4468c07002d395d",
+      "issue_sha256_prefix": "2bce8e2c2d76b3f0",
+      "pre_action_state_sha256": "6b0eb8032932ecc25d1cfffdb751b69c58e7abce6979e7a37f41502c057fe256"
+    },
+    {
+      "question": 19,
+      "source_offset": 150,
+      "q3_row_index": 26,
+      "repository_sha256_prefix": "6fd93a9bd6698be7",
+      "issue_sha256_prefix": "e9bc9152977b2ef2",
+      "pre_action_state_sha256": "a5cfc16ff35c95d0f28f987ee1b1f6fbf862a4b6402de8d5f3b1ae8284d25944"
+    },
+    {
+      "question": 20,
+      "source_offset": 153,
+      "q3_row_index": 33,
+      "repository_sha256_prefix": "da35cbea36ccafee",
+      "issue_sha256_prefix": "de439cba2e53be60",
+      "pre_action_state_sha256": "abcd66fffb5b9d42564a453b8998961b34ec5266134027e8577155913edeff41"
+    }
+  ]
+}
