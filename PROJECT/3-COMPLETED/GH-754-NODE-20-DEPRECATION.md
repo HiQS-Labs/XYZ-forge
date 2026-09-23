@@ -1,6 +1,6 @@
 ---
 title: "ci: upgrade GitHub Actions from deprecated Node.js 20 to Node.js 24 across all workflows"
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-22
 owner: Noel Saw
 gh_issue: 754
