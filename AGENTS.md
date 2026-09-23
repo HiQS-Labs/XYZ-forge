@@ -234,6 +234,11 @@ local change.
   A file that turns out to be worth keeping gets *promoted* deliberately — into `PROJECT/1-INBOX/`
   as a capture doc, into `test/baselines/` as recorded evidence, or into the CHANGELOG — rather than
   being left at the root in the hope that someone later works out what it was.
+- **Park incidental findings in root `PARKED/`.** When an agent notices a real item outside the
+  current task, record a short, sourced observation there under `PARKED/README.md` without expanding
+  the active work. Triage may promote it through issue-first `PROJECT/1-INBOX` and the RELEASES
+  roadmap. This folder is an intentional exception to the scratch-file rule above; it is durable
+  intake, not a place for probes or half-written notes. Never park a blocker to the current task.
 - **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the twelve Tier-A
   entry points (`agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`,
   `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, `marathon-plan`, and

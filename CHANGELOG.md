@@ -11,6 +11,10 @@ route reduces stale plans without creating another executor. Agy review and gate
 evidence belong to the PR; firing still requires exact-plan confirmation. Agy approved the revised
 skill after a dangling-link fix. Its token closeout mismatch is parked in #763; baseline macOS gate
 failures reproduced on `development` are parked in #764, so this branch remains draft-only.
+Root `PARKED/` now owns incidental out-of-scope observations; selected notes move to issue-first
+`PROJECT/1-INBOX` and RELEASES intake during triage. Standup's lens 8 recognizes only its
+`— check:` records so ordinary parked checklists do not degrade collection. #763/#764 were already
+promoted and retain their formal records, with a root PARKED pointer.
 
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 

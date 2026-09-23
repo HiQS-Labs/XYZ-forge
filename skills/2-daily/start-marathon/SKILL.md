@@ -68,9 +68,10 @@ Then begin work.
   reviewed plan, create a task branch in a fresh full clone where the repo SOP requires it, and write
   the planner file and YAML. Do not close issues or fire until the exact plan/order is confirmed.
   Preserve an existing plan and receipt unless evidence requires a revision.
-- Out-of-scope findings go through the repo's existing parked intake: an issue-first
-  `PROJECT/1-INBOX/GH-*.md` capture and RELEASES roadmap row. In a repo without structured intake,
-  use its `PARKED/` folder. Never create a parallel `PARKED/` in this repo or silently expand the arc.
+- Incidental findings outside the marathon task go into root `PARKED/` under its README contract.
+  Do not expand the arc or file an issue merely to park a finding. During triage, promote selected
+  items through issue-first `PROJECT/1-INBOX/GH-*.md` capture and RELEASES roadmap registration;
+  leave a promotion pointer in PARKED. A blocker to the selected marathon stays in its active plan.
 - Recovery is bounded: diagnose a concrete failure with `workhorse`, then use `unstuck` if a session
   stalls or repeats a step without new evidence. Re-run the affected check once after a material
   correction. If the same condition persists, report the blocker; do not bypass a deterministic

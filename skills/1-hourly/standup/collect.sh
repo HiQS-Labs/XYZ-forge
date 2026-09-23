@@ -1116,7 +1116,9 @@ try:
         with open(path, "r", encoding="utf-8") as fh:
             for line in fh:
                 line_str = line.strip()
-                if not line_str.startswith("- ["):
+                # PARKED/ also contains free-form agent notes. Only a standup record's
+                # explicit check field opts it into lens 8; generic checkboxes are ignored.
+                if not line_str.startswith("- [") or " — check: " not in line_str:
                     continue
                 m = PARK_RE.match(line_str)
                 if not m:

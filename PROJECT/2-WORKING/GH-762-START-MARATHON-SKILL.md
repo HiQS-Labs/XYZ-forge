@@ -54,7 +54,7 @@ Rename and expand the existing `marathon-triage` skill into a discoverable **sta
 2. Primary path: reconcile intake and live issues; review active PDDA docs and preflight contracts; produce implementation plans with phase QA; independently review plans; compute disjoint lanes and waves; prepare the existing marathon YAML/plan artifacts; run preflight and dry-run without dispatch.
 3. Secondary path: when another session already wrote the docs, verify their current issue/commit state, run a focused smoke check, preflight, and dry-run; repair concrete gaps.
 4. Add bounded recovery through `workhorse` for diagnosis and `unstuck` for stalls. Respect lane attempt caps and never turn a deterministic blocker into a success claim.
-5. Route unrelated findings to canonical parked intake (`PROJECT/1-INBOX` plus RELEASES roadmap row), avoiding a second `PARKED/` queue in this repo.
+5. Record incidental out-of-scope findings in root `PARKED/`; promote selected items through issue-first `PROJECT/1-INBOX` capture and RELEASES registration during triage.
 
 ## Acceptance
 
@@ -76,13 +76,22 @@ The current skill stops at candidate triage and does not prepare reviewed plans 
 The current skill handles capture, ranking and per-candidate preflight but stops before plan QA,
 YAML preparation and a full `marathon.sh --plan ... --dry-run`. `pre-marathon` currently duplicates
 the dry-run step. Routing is anchored by `agents/openai.yaml`, the Claude installer, and
-`relay-automation/hooks/skill-nudge.sh`. A bare “marathon” is not routed. `PROJECT/1-INBOX` plus the
-RELEASES roadmap is the canonical parked intake here. `marathon_drive.py` and `marathon.sh` already
+`relay-automation/hooks/skill-nudge.sh`. A bare “marathon” is not routed. Root `PARKED/` is the
+first home for incidental out-of-scope observations; `PROJECT/1-INBOX` and the RELEASES roadmap
+are the formal intake after promotion. `marathon_drive.py` and `marathon.sh` already
 have dry-run support; no executor rewrite belongs in this issue. #443 retains the more complete PRS
 freshness gate. The chosen change is Easy to reverse: rename the source skill, keep a legacy alias,
 update routes and tests, and retain the explicit fire boundary.
 
 QA: source paths and supported commands inspected; no new runtime schema introduced.
+
+### Recon Map — root PARKED intake
+
+- **State and authority:** `PARKED/README.md` owns the incidental-observation format and promotion boundary. `ROUTER.md` owns startup and formal issue-first intake; `PROJECT/PDDA.md` owns the issue/capture/RELEASES contract after promotion. “Queue / parked intake” in RELEASES means formally captured deferred work, not the root folder.
+- **Entry and writes:** agents following `AGENTS.md`, `workhorse`, `start-marathon`, and `unstuck` may add sourced root `PARKED/` notes for findings outside the active goal. The standup skill writes only its structured `- [key] ... — check: {...} — close:` records there. A current-goal blocker remains in the active plan.
+- **Readers:** standup `collect.sh` lens 8 and `triage.py` scan root `PARKED/`. They recognize only records with the standup `— check:` marker; general Markdown notes and checklists stay human-triaged. No automatic issue, capture, or ledger row is created by parking.
+- **Promotion and rollback:** triage may leave, drop, or promote a note. Promotion opens an issue first, creates its `PROJECT/1-INBOX/GH-*.md` capture and RELEASES row, then adds a `Promoted:` pointer to the root note. This doc-only routing is **Easy** to reverse; the standup filter is covered by a focused regression and red control. Previously filed #763/#764 stay in their formal homes and get root pointers rather than duplicate issues.
+- **Blast radius and open edge:** the change touches routing text and the standup reader of the shared folder, not the marathon driver or RELEASES schema. Historical `PARKED/` entries and the frozen GH-77 contract remain valid. The existing formal intake of #763/#764 is retained.
 
 ## Phase 1 — Route and prepare
 
