@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -73,5 +73,19 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Pass] ATE setup now checks both imports with `python3` before making fixtures (`test/gh142-ate-exit-contract.sh:21-24`); the chain uses that interpreter and checks the child-failure line as well as exit 1 (`test/gh142-ate-exit-contract.sh:113-119`). This closes the import-error false positive without changing filing behavior.
+- [Pass] The WAL fixture checkpoints and closes before removing both sidecars, asserts their absence, then checks refusal, unchanged DB bytes, and no recreated sidecars (`test/test_gh605_work_state.py:216-242`). The reader's WAL-header branch returns before SQLite open (`utils/py/releases_app.py:5266-5287`).
+- [Pass] The connector clears `proc.stdin` only after sending and closing the payload (`utils/py/work_connectors/__init__.py:194-210`). All batches still launch before the shared deadline and collection (`utils/py/work_connectors/__init__.py:424-447`); collection retains timeout kill/reap, child-error reporting, and cursor bounds (`utils/py/work_connectors/__init__.py:224-269`). The focused GH-549 suite has explicit non-vacuous concurrent-window and cursor checks (`test/gh549-work-events.sh:365-421`, `test/gh549-work-events.sh:511-555`). No concrete regression input from this handoff change was found.
+- [Nit] Pre-existing diagnostic mismatch in the swept connector file: `dispatch(..., window_s=2)` is an actual GH-549 input (`test/gh549-work-events.sh:380-383`), but the timeout text interpolates the default `CONNECTOR_WINDOW_S`, 5 seconds (`utils/py/work_connectors/__init__.py:41-42`, `utils/py/work_connectors/__init__.py:231-237`). If this message is revised later, report the effective window. This does not affect the deadline or cursor outcome and is outside the GH-764 fix.
+- [Pass] Scope and governance stay aligned: the working doc rates the blocked gate without claiming a recurrence trend, records a Costly rollback, and leaves the final gate unchecked (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:44-55`, `PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:70-75`, `PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:100-106`). `CHANGELOG.md:3-14` likewise says the full gate is pending. The distinct pre-deadline payload stall remains parked (`PARKED/2026-09-23-gh764-connector-window.md:3-14`).
+- [Unverified — needs clone run] The qualifying complete macOS gate on the final commit remains pending (`PROJECT/2-WORKING/GH-764-BASELINE-GATE-FAILURES.md:94-106`). Focused pass counts are recorded there, but this relay turn did not rerun suites.
+
+VERDICT: PASS
+Basis: The implementation matches the approved bounded plan and has no observed implementation blocker. Approval is for proceeding to the separate full-clone gate; it is not gate qualification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
