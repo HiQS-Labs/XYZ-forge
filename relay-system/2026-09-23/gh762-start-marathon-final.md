@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -88,7 +88,7 @@ index da3abe4a..4c028140 100644
  5. Only after that confirmation, execute the confirmed live command(s). Never treat this command as
 -   permission to bypass `marathon-triage`'s no-fire boundary, invent a branch, or expand the reviewed
 +   permission to bypass `start-marathon`'s no-fire boundary, invent a branch, or expand the reviewed
-    scope. Stop and report any drift between the confirmed plan and current state before firing.
+    scope. Stop and report any drift between the confirmed plan and current state before firing.  [Unverified — no citation]
 diff --git a/relay-automation/hooks/skill-nudge.sh b/relay-automation/hooks/skill-nudge.sh
 index 14b2e0df..f1bc904d 100755
 --- a/relay-automation/hooks/skill-nudge.sh
@@ -134,7 +134,7 @@ index 00000000..c23d9c3d
 +  disjoint lanes, MARATHON.yaml, preflight and dry-run. Use for "start marathon", "marathon", a
 +  marathon queue, or a viability check of marathon docs another session prepared. Route an
 +  ambiguous bare "marathon" here; ask which arc only if live evidence cannot identify one.
-+  Explicit fire/execute requests use the confirmed marathon command after this preparation.
++  Explicit fire/execute requests use the confirmed marathon command after this preparation.  [Unverified — no citation]
 +  Legacy /marathon-triage requests use this same workflow. Requires the PROJECT lifecycle, RELEASES
 +  roadmap ledger and the resolved XYZ harness. Does not dispatch by default.
 +---
@@ -664,4 +664,16 @@ index 4dc9efd0..9e26e7c4 100755
 
 ## Log
 
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: The fix correctly preserves a live foreign legacy link while replacing a dangling one. The implementation accurately fulfills all requirements for the renamed skill.
+
+- [Pass] **Installer links:** `install.sh` lines 581-586 correctly replace a dangling `marathon-triage` legacy link while preserving a live one (line 587). The `test/gh678-installer-live-links.sh` additions at lines 597-615 assert this behavior properly and my probes confirm `-ef` handles absolute path comparisons correctly.
+- [Pass] **Primary/secondary routing & bounded recovery:** `SKILL.md` lines 148-161 clearly separate primary (generate plans/lanes) from secondary (verify existing plans). Bounded recovery is strictly enforced through retries and `workhorse`/`unstuck` fallback at lines 203-207 and in the drive loop table at lines 226-228.
+- [Pass] **Governance & canonical parking:** Explicit guardrails (lines 182-192) require honoring `PROJECT/PDDA.md` and read-only overrides. Canonical parking is enforced at lines 201-202 (use existing `PROJECT/1-INBOX` or `PARKED/` directories; do not create parallel parked intake).
+- [Pass] **Truth of full-plan dry-run:** Lines 416-424 require running `marathon.sh --plan <file> --dry-run` in a fresh full clone and prohibit dispatch.
+- [Pass] **Command and hook rewrites:** `.claude/commands/pre-marathon.md` and `relay-automation/hooks/skill-nudge.sh` correctly delegate to `start-marathon`. `skill-nudge.sh:112` accurately matches a bare "marathon" invocation.
+- [Nit] **Untouched files:** `skills/2-daily/merge-cleanup/scripts/scan_clones.py` and `utils/py/xyz_init_clone.py` contain comments referencing `marathon-triage`. Consider updating them in a future sweep.
+
+swept file: yes. No pre-existing defects found in the touched files (`.claude/commands/pre-marathon.md`, `relay-automation/hooks/skill-nudge.sh`, `skills/2-daily/start-marathon/SKILL.md`, `skills/2-daily/start-marathon/install.sh`, `test/gh678-installer-live-links.sh`, `test/xyz-harness-hooks.sh`).
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
