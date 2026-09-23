@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -74,5 +74,21 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer (agy) — r1
+VERDICT: PASS
+Basis: PR #765 is content-ready for review. Ambiguous "marathon" requests route cleanly to preparation without auto-dispatch; primary/secondary workflows cover intake, contracts, independent plan QA, disjoint lanes, YAML, preflight, and full-plan dry-run; recovery loops are bounded by workhorse/unstuck and lane attempt caps; root PARKED/ provides a coherent first home for incidental findings while preserving formal PDDA intake on promotion; standup lens 8 degradation is maintained for malformed machine records while ignoring general notes/checklists; compatibility across aliases, hooks, and callers is verified; and the full-gate baseline failures are properly disclosed and tracked in #764.
+
+- [Pass] **Ambiguous marathon routing & explicit fire gate (Question 1):** `skills/2-daily/start-marathon/SKILL.md:3-8` ("Route an ambiguous bare 'marathon' here; ask which arc only if live evidence cannot identify one. Explicit fire/execute requests use the confirmed marathon command after this preparation") and `:30-33` ("A bare 'marathon' is never implicit authorization to dispatch") establish that bare requests prepare rather than fire. `relay-automation/hooks/skill-nudge.sh:56-58,64` correctly matches bare `marathon` and variants to nudge to `start-marathon`. `.claude/commands/pre-marathon.md:3-5, 18-20` retains the operator confirmation boundary before any execution.
+- [Pass] **Primary and secondary preparation workflows (Question 1):** `skills/2-daily/start-marathon/SKILL.md:20-29` defines both paths. Primary follows Steps 0–6 covering missing capture generation with existing writers (`:187-216`), contract reconciliation and independent plan QA (`:217-233`), disjoint lane and wave formation (`:272-277`), umbrella tracking issue (`:336-366`), and direct candidate preflight plus `marathon.sh --plan <file> --dry-run` (`:253-297`). Secondary verifies existing docs, runs smoke checks, planner `--check`, and YAML dry-run without rewriting sound plans (`:25-29, 292-296`).
+- [Pass] **Bounded recovery & blocker discipline (Question 2):** `skills/2-daily/start-marathon/SKILL.md:75-78` bounds recovery: "diagnose a concrete failure with `workhorse`, then use `unstuck` if a session stalls or repeats a step without new evidence. Re-run the affected check once after a material correction. If the same condition persists, report the blocker; do not bypass a deterministic verdict, exceed `LANE_MAX_ATTEMPTS`, re-fire a parked lane, or fabricate readiness." Current-goal blockers must stay in active plans (`skills/2-daily/start-marathon/SKILL.md:74`, `PARKED/README.md:6`, `AGENTS.md:242`).
+- [Pass] **Root PARKED coherent intake & reader/writer tracing (Question 3):** `PARKED/README.md:3-6` establishes root `PARKED/` as the holding area for incidental agent findings outside the current task before triage, distinguishing it from the formal RELEASES queue (`:23-25`). Writers traced: `AGENTS.md:237-242`, `ROUTER.md:40-47`, `skills/2-daily/workhorse/SKILL.md:30, 45, 67`, `skills/1-hourly/unstuck/SKILL.md:123-124`, `skills/2-daily/start-marathon/SKILL.md:71-74`, and `/standup` machine records. Readers traced: human triage for notes, and standup `collect.sh`/`triage.py` for machine checks. Formal PDDA intake is strictly preserved upon promotion via issue-first `PROJECT/1-INBOX/GH-*.md` capture and `releases roadmap add` (`PARKED/README.md:14-18`). Follow-ups #763 and #764 in `PARKED/2026-09-23-gh762-followups.md` cite their promoted captures.
+- [Pass] **Standup lens 8 machine degradation vs general notes (Question 4):** `skills/1-hourly/standup/collect.sh:1119-1120` (`if not line_str.startswith("- [") or " — check: " not in line_str: continue`) and `skills/1-hourly/standup/triage.py:225` (`PARK_RE = re.compile(r"^- \[([^\]]+)\].* — check: ")`) restrict parsing to machine records. `skills/1-hourly/standup/fixtures/all-degraded/PARKED/bad.md:1` retains `— check: {"kind": }` to prove malformed machine objects still degrade lens 8, while `test/gh77-standup-triage.sh:308-323` confirms that generic markdown checklists leave lens 8 healthy (`status: ok`, 0 candidates, 0 suppression entries).
+- [Pass] **Installed aliases, callers, and compatibility (Question 5):** `skills/2-daily/start-marathon/install.sh:43-54` maintains backward compatibility for `marathon-triage` (replacing dangling symlinks while preserving live foreign links, verified in `test/gh678-installer-live-links.sh:39-61`). Direct callers updated: `.claude/commands/pre-marathon.md:6-7, 20`, `skills/3-weekly/10days/SKILL.md:273`, `skills/3-weekly/radar/SKILL.md:16, 512, 532`, `skills/2-daily/workhorse/SKILL.md:30, 45, 67`, `skills/1-hourly/unstuck/SKILL.md:123-124`, `skills/1-hourly/standup/SKILL.md:129-132`.
+- [Pass] **Surgical diff, PII check, and baseline gate disclosure (Question 5):** Diff inspection confirmed changes are surgical across the 31 touched files with zero personal credentials, private keys, or foreign user paths. Baseline macOS gate failures (`gh142`, `gh605`, `gh549`) reproduced on `development` are openly disclosed and tracked in `PROJECT/1-INBOX/GH-764-BASELINE-GATE-FAILURES.md` and `PROJECT/2-WORKING/GH-762-START-MARATHON-SKILL.md:43, 115-117`. There are no content blockers to marking draft PR #765 ready for review.
+
+swept file: yes. No pre-existing defects found across all touched files (`skills/2-daily/start-marathon/SKILL.md`, `skills/2-daily/start-marathon/install.sh`, `skills/2-daily/start-marathon/agents/openai.yaml`, `.claude/commands/pre-marathon.md`, `relay-automation/hooks/skill-nudge.sh`, `PARKED/README.md`, `PARKED/2026-09-23-gh762-followups.md`, `ROUTER.md`, `AGENTS.md`, `skills/1-hourly/standup/*`, `skills/2-daily/workhorse/SKILL.md`, `skills/1-hourly/unstuck/SKILL.md`, `skills/3-weekly/10days/SKILL.md`, `skills/3-weekly/radar/SKILL.md`, `PROJECT/2-WORKING/GH-762-START-MARATHON-SKILL.md`, `test/gh678-installer-live-links.sh`, `test/gh77-standup-triage.sh`, `test/xyz-harness-hooks.sh`).
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
