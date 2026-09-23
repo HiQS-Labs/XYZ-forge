@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Note: directory: "/" covers .github/workflows/*.yml only.
+  # Standalone workflows (e.g. skills/2-daily/agent-chorus/standalone/ci.yml) ship with their
+  # distribution package and are guarded by test/ci-workflow.sh rather than Dependabot.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

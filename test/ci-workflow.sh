@@ -95,6 +95,61 @@ require_marker 'CHANGED_TESTS: ${{ steps.route.outputs.changed_tests }}' "fast r
 require_marker 'github.event_name }}-${{ github.event.pull_request.number || github.ref' "concurrency is scoped by event and PR/branch"
 require_marker "cancel-in-progress: true" "superseded runs are cancelled"
 
+# GH-754: every workflow must use Node 24-native action majors (@v7+ for checkout/setup-python, @v5+ for pages actions).
+STANDALONE_CI=""
+if [ -f "$ROOT/skills/2-daily/agent-chorus/standalone/ci.yml" ]; then
+  STANDALONE_CI="skills/2-daily/agent-chorus/standalone/ci.yml"
+elif [ -f "$ROOT/skills/agent-chorus/standalone/ci.yml" ]; then
+  STANDALONE_CI="skills/agent-chorus/standalone/ci.yml"
+fi
+
+MONITORED_WFS=(
+  ".github/workflows/ci.yml"
+  ".github/workflows/pages.yml"
+  ".github/workflows/wave-reconcile.yml"
+)
+if [ -n "$STANDALONE_CI" ]; then
+  MONITORED_WFS+=("$STANDALONE_CI")
+fi
+
+for wf in "${MONITORED_WFS[@]}"; do
+  wf_path="$ROOT/$wf"
+  if [ ! -s "$wf_path" ]; then
+    fail "$wf is missing or empty"
+    continue
+  fi
+  if grep -Eq 'uses:[[:space:]]*actions/(checkout|setup-python)@v[1-6]\b' "$wf_path"; then
+    fail "$wf: uses deprecated actions/checkout or setup-python major (<v7)"
+  else
+    pass "$wf: no deprecated checkout or setup-python versions (<v7)"
+  fi
+  if grep -Eq 'uses:[[:space:]]*actions/checkout@v[7-9]' "$wf_path"; then
+    pass "$wf: uses Node 24-native actions/checkout (@v7+)"
+  else
+    fail "$wf: missing Node 24-native actions/checkout (@v7+)"
+  fi
+done
+
+PAGES_WF="$ROOT/.github/workflows/pages.yml"
+if grep -Eq 'uses:[[:space:]]*actions/(upload-pages-artifact|deploy-pages)@v[1-4]\b' "$PAGES_WF"; then
+  fail "pages.yml: uses deprecated Pages action major (<v5)"
+else
+  pass "pages.yml: no deprecated Pages action versions (<v5)"
+fi
+
+if grep -Eq 'uses:[[:space:]]*actions/setup-python@v[7-9]' "$PAGES_WF"; then
+  pass "pages.yml: uses Node 24-native actions/setup-python (@v7+)"
+else
+  fail "pages.yml: missing Node 24-native actions/setup-python (@v7+)"
+fi
+
+if grep -Eq 'uses:[[:space:]]*actions/upload-pages-artifact@v[5-9]' "$PAGES_WF" && \
+   grep -Eq 'uses:[[:space:]]*actions/deploy-pages@v[5-9]' "$PAGES_WF"; then
+  pass "pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)"
+else
+  fail "pages.yml: missing Node 24-native upload-pages-artifact or deploy-pages (@v5+)"
+fi
+
 if grep -Eq '^[[:space:]]*schedule:[[:space:]]*$' "$WORKFLOW"; then
   fail "workflow must not add an automatic daily full-suite minute burn"
 else
