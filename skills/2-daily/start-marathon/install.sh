@@ -10,7 +10,7 @@ while [ -h "$_src" ]; do
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 
-SKILL_NAME="marathon-triage"
+SKILL_NAME="start-marathon"
 DEST_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 LINK="$DEST_DIR/$SKILL_NAME"
 
@@ -40,3 +40,10 @@ fi
   exit 1
 }
 
+# Preserve the established invocation without duplicating the skill source.
+LEGACY_LINK="$DEST_DIR/marathon-triage"
+if [ ! -e "$LEGACY_LINK" ] || { [ -L "$LEGACY_LINK" ] && [ "$(readlink "$LEGACY_LINK")" = "$SELF_DIR" ]; }; then
+  [ -L "$LEGACY_LINK" ] || ln -s "$SELF_DIR" "$LEGACY_LINK"
+else
+  echo "marathon-triage: existing installation preserved at $LEGACY_LINK" >&2
+fi

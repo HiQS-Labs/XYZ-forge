@@ -1,33 +1,48 @@
 ---
-name: marathon-triage
+name: start-marathon
 description: >
-  Triage PDDA intake and active work into a ranked, preflight-checked, collision-safe marathon
-  candidate list — end to end, unattended. Reconcile GH capture docs with live issue state, write
-  the capture docs that are missing, run the planner dry run and per-candidate preflight, and group
-  disjoint write-sets into safe waves. Use when asked to triage the inbox, build or refresh a
-  marathon queue, choose work to swarm next, identify concurrent issues, or plan a marathon without
-  executing it. Requires this repo's PROJECT lifecycle, the RELEASES DB roadmap ledger, and
-  swarm-preflight.sh / marathon-plan.sh resolved from the harness root (bare repo root or a vendored
-  `.xyz/` install — see Step 0). Never fires the marathon.
+  Start marathon preparation from intake through reviewed implementation plans, honest contracts,
+  disjoint lanes, MARATHON.yaml, preflight and dry-run. Use for "start marathon", "marathon", a
+  marathon queue, or a viability check of marathon docs another session prepared. Route an
+  ambiguous bare "marathon" here; ask which arc only if live evidence cannot identify one.
+  Explicit fire/execute requests use the confirmed marathon command after this preparation.
+  Legacy /marathon-triage requests use this same workflow. Requires the PROJECT lifecycle, RELEASES
+  roadmap ledger and the resolved XYZ harness. Does not dispatch by default.
 ---
 
-# Marathon triage
+# Start marathon
 
-Produce an honest, ranked marathon plan without firing work. Treat `PROJECT/**` as the execution
+Prepare an honest, runnable marathon plan without firing work. Treat `PROJECT/**` as the execution
 record, GitHub as the live signal stream, and deterministic preflight output as stronger than prose.
+
+## Routing
+
+- **Primary — start or substantially revise an arc:** follow Steps 0–6, including intake review,
+  contract review, implementation plan drafting and independent plan QA, lane computation, plan and
+  YAML preparation, preflight, and dry-run. Choose real work with a per-item machine-checkable pass
+  condition. At most one long-horizon marathon may be in flight; check the RELEASES roadmap's
+  Immediate next-up and active marathon rows before preparing a competing arc.
+- **Secondary — another session prepared the docs:** verify the existing issue, doc, review receipt,
+  contract, and current commit. Run focused smoke checks, direct preflight, planner `--check`, and
+  `marathon.sh --plan <file> --dry-run`. Repair a concrete stale input and recheck; do not rewrite a
+  sound plan or duplicate its issue/ledger row. If required inputs are absent, enter the primary path
+  at the first missing step.
+- **Explicit firing:** `start-marathon` only prepares the exact command and evidence. The existing
+  `/pre-marathon` command may fire after the operator confirms the dry-run-approved plan and order.
+  A bare “marathon” is never implicit authorization to dispatch.
 
 ---
 
 ## Recite this — verbatim, as the first thing in your first response
 
-> **Marathon-Triage Discipline:**
+> **Start-Marathon Discipline:**
 > 1. **Resolve the harness and arm the guard (Step 0).** Run the locator block first — it exports `$HARNESS` and is the relay-xyz guard's proof-of-load; with the guard enabled and no prior proof-of-load, planner/preflight calls are cancelled with exit 2.
 > 2. **Inventory and reconcile (Steps 1–2).** List every open issue and every `GH-*.md` capture; give each exactly one classification from live GitHub state, never from stale local text.
 > 3. **Capture the intake that is missing (Step 3).** For each in-scope open issue with no capture doc, render it with the existing writer and park its ledger row; list what was written.
-> 4. **Compute, don't ask (Steps 4–5).** Run `marathon_plan.py --dry-run --deep` and `swarm-preflight.sh --dry-run` per candidate — ordinary readiness computation, inside the default (it refreshes remote-tracking refs and uses a transient worktree; it publishes no packet, plan file or doc); record every exit code and verdict from direct calls, and classify non-zero codes instead of stopping.
-> 5. **Report with decisions (Step 6).** A complete report — or an explicit blocked report naming what could not be established — with the classification table, ranked candidates and exact verdicts, collision map and waves, and one `RECOMMEND / BECAUSE / UNLESS` per open call. Promotion, closing, firing, branch cutting and writing the plan file stay behind operator confirmation; the umbrella issue and full clone are prerequisites for *firing*, not for triage.
+> 4. **Prepare and review (Steps 4–5).** Ground each contract and implementation plan in current code, obtain independent plan QA, compute disjoint lanes, prepare YAML, and run direct preflight plus the actual `marathon.sh --dry-run`. Record exits and repair bounded defects.
+> 5. **Report with decisions (Step 6).** Report the classification, reviewed plans, exact verdicts, collision map, waves, and runnable command; state any blocker. Firing and closing stay behind the operator's exact-plan confirmation.
 >
-> **Overall Goal:** An operator who types `/marathon-triage` gets the complete computation — captures written, planner and preflight run, decisions framed — without walking the agent through any step.
+> **Overall Goal:** `/start-marathon`, an ambiguous “marathon,” or legacy `/marathon-triage` yields a reviewed, preflighted, dry-run-approved marathon proposal without dispatch.
 
 Then begin work.
 
@@ -46,15 +61,20 @@ Then begin work.
   asks for a *strictly read-only audit*, that override covers the metadata effects too: skip Step 3's
   writes and report the captures you would have written, and either obtain readiness evidence from an
   authorised disposable clone or report it as **unavailable** — a skipped preflight is not a verdict.
-- **Writing a `1-INBOX` capture doc and parking its ledger row through the writer is intake, not
-  execution.** It is reversible, repo-local and part of this skill's default; the *commit* is listed
-  as an operator decision in the report.
-- **The umbrella issue and the derived full clone are prerequisites for firing a selected marathon
-  (Step 7), not for triage.** Inventory, capture, the planner dry run, preflight and the report all
-  run without an umbrella; creating or linking one is a decision the report proposes.
-- **Confirmation is reserved for exactly five actions:** promote a capture to `2-WORKING`, close an
-  issue, fire a marathon, cut a branch, or write the plan file (the planner *without* `--dry-run`).
-  Nothing else in this skill waits on the operator.
+- **Writing a `1-INBOX` capture doc and parking its ledger row through the writer is intake.**
+  Create the umbrella issue and a derived full clone for the selected arc during preparation; both
+  are needed to make a YAML plan and dry-run concrete. Report their identifiers.
+- The request authorizes reversible preparation: promote a selected capture under PDDA, write its
+  reviewed plan, create a task branch in a fresh full clone where the repo SOP requires it, and write
+  the planner file and YAML. Do not close issues or fire until the exact plan/order is confirmed.
+  Preserve an existing plan and receipt unless evidence requires a revision.
+- Out-of-scope findings go through the repo's existing parked intake: an issue-first
+  `PROJECT/1-INBOX/GH-*.md` capture and RELEASES roadmap row. In a repo without structured intake,
+  use its `PARKED/` folder. Never create a parallel `PARKED/` in this repo or silently expand the arc.
+- Recovery is bounded: diagnose a concrete failure with `workhorse`, then use `unstuck` if a session
+  stalls or repeats a step without new evidence. Re-run the affected check once after a material
+  correction. If the same condition persists, report the blocker; do not bypass a deterministic
+  verdict, exceed `LANE_MAX_ATTEMPTS`, re-fire a parked lane, or fabricate readiness.
 - Never override a deterministic PDDA or preflight finding with narrative judgment.
 - Use the repo's standing target branch policy. Do not invent a branch or silently substitute a
   builder.
@@ -75,20 +95,18 @@ be established and the next action. Asking the operator whether to run a step is
 | 1 | `gh issue list` + `find PROJECT/1-INBOX PROJECT/2-WORKING` | `gh` failure → live state `UNKNOWN`, continue with local docs |
 | 2 | one classification per issue and per doc | — |
 | 3 | render + park each missing capture | writer refusal → record it per issue, continue |
-| 4 | `python3 "$HARNESS/utils/py/marathon_plan.py" --dry-run --deep` | `0` clean → continue · `2` usage → fix the invocation, one retry · `3` ledger unparseable → **blocked report** naming the ledger error · `4` drift → record per item, continue · `5` items held → record the held set, continue · `6` `gh` required-but-absent → one re-run without `--require-gh`, mark live state `UNKNOWN` · any other code → unknown, never success; blocked report |
-| 5 | `swarm-preflight.sh --dry-run` per candidate — **direct calls, even for items `--deep` covered** (deep delegation discards preflight output and handles only 4/5/6/7, so planner success is not a candidate's verdict) | `0` READY · `2` usage → fix, one retry · `3` NEEDS-CONTRACT · `4` CONTRACT-STALE · `5` BLOCKED (not ready) · `6` BLOCKED (target) · `7` BLOCKED (ambiguous) — every code is a classification, none is a stop |
+| 4 | reconcile contracts; draft/review implementation plans; run `marathon_plan.py --dry-run --deep` | `0` clean → continue · `2` usage → fix and retry once · `3` ledger error → block · `4` drift / `5` held → classify and repair selected items · `6` unavailable GitHub → mark UNKNOWN; other codes → block |
+| 5 | direct `swarm-preflight.sh --dry-run` per candidate; audit collisions; prepare YAML; run `marathon.sh --plan <file> --dry-run` | Preflight: `0` READY, `3` NEEDS-CONTRACT, `4` CONTRACT-STALE, `5–7` BLOCKED; usage `2` → correct once. Dry-run failure → repair and retry once, then block |
 | 6 | report | the **Done rule** below decides whether it may claim *completion*; otherwise it is a blocked report |
-| 7 | before firing (operator-confirmed only) | umbrella issue + `marathon add` + derived full clone — see "Before firing" |
+| 7 | firing boundary (operator-confirmed only) | recheck umbrella, ledger, clone and exact approved plan/order; then hand to `/pre-marathon` |
 
-**Done rule:** do not claim a *complete* triage until all four hold — (a) every open issue and every
-`GH-*.md` doc in `1-INBOX`/`2-WORKING` has exactly one classification; (b) every `READY` /
-`NEEDS-PROMOTE` / `CONTRACT-STALE` candidate has a recorded preflight exit code and verdict from a
-direct call; (c) the planner dry-run output is quoted (waves, held items, drift lines); (d) every
-capture written in Step 3 is listed with its ledger gid, and any failed ledger add is listed as
-*intake half-complete*. When one of these cannot be met — planner exit `3`, `gh` unavailable, a writer
-refusal — emit a **blocked report** instead: the command, its exit, what is missing, the next action;
-no fabricated waves, no retry beyond the one bounded retry above. "Asked the operator whether to
-preflight / run the planner / write the captures" is neither shape — it is Step 4, 5 or 3 left undone.
+**Done rule:** claim a complete preparation only when (a) each in-scope issue and capture has one
+classification and written captures have ledger rows; (b) selected items have current, reviewed
+implementation plans and valid contracts; (c) every selected candidate has a direct preflight exit
+and verdict; (d) the planner report or `--check` records waves, held items and drift; (e) audited
+write-sets are disjoint within each wave; and (f) the exact YAML and `marathon.sh --dry-run` exit 0
+are recorded. A failed or unavailable check yields a blocked report with command, exit, missing
+evidence and next action, not fabricated readiness.
 
 **Permission-classifier blocks:** if a harness permission layer cancels a planner or preflight call,
 first check that Step 0 actually ran in this session (the `relay-xyz guard — STOP` message means it
@@ -192,11 +210,29 @@ python3 "$HARNESS/utils/py/releases_app.py" roadmap list | grep "GH-$NUM"     # 
 Use `feedback` instead of `bugfix` for a non-defect capture. A doc written here is a capture, not
 an active-work doc: it carries no `## Status` table until promotion. Record each `(issue, doc path,
 ledger gid)` for the report. If `roadmap add` fails, the intake is **half-complete** (doc exists, no
-row) — report it as such with the writer's error, never as success. Committing the captures is an
-operator decision (the report lists it); `NOT-A-WORK-ITEM` issues get no capture and are listed with
+row) — report it as such with the writer's error, never as success. `NOT-A-WORK-ITEM` issues get no capture and are listed with
 the reason.
 
-### 4. Compute the plan — dry run, deep
+### 4. Review contracts, draft plans, then compute
+
+For each selected member, read the issue's current body/comments, the active doc, actual code entry
+points and writes, and relevant tests. Reconcile acceptance, dependencies, target branch, fix probes,
+`artifacts`, `artifacts_new`, and lanes against that evidence. Use `recon` for unfamiliar stateful
+code and `swe` for plan quality. Revise a stale contract in the canonical doc and rerun preflight;
+a syntactically valid JSON contract with dishonest paths is still blocked.
+
+For work beyond a simple edit, finish the implementation plan in its canonical `PROJECT/2-WORKING`
+doc: goal, scope, current-state map, blast radius, one ordered phase list, explicit write-sets and
+dependencies, per-phase acceptance and QA, rollback for Costly changes, and final integration gate.
+Use Phase 0 for uncertainty that prevents a truthful contract; write its findings back before later
+phases. Review an existing plan for freshness before rewriting it. Run independent plan QA with
+`relay-xyz` (Agy or Codex per operator choice); resolve findings and record the review artifact and
+verdict. A self-reviewed plan is not complete QA. Missing runtime capability becomes a separate
+parked dependency and holds its lane.
+
+Check RELEASES ratings and the PDDA risk gate. `ratings_provisional: true` and `risk > 2` prevent
+automatic selection. #443 owns the fuller PRS freshness gate; until it lands, inspect rating and
+issue update timestamps and hold uncertain ratings rather than claiming planner verification.
 
 ```bash
 python3 "$HARNESS/utils/py/marathon_plan.py" --dry-run --deep
@@ -206,13 +242,14 @@ python3 "$HARNESS/utils/py/marathon_plan.py" --dry-run --deep
 `swarm-preflight.sh --dry-run` for every ready item and folds the verdicts in. Quote the waves, the
 held items and any drift lines in the report. Handle the exit code per the drive loop table; `3`
 (ledger unparseable) turns the run into a blocked report, as does any other unmet Done-rule
-requirement listed there. Writing the plan file (the planner **without** `--dry-run`)
-is one of the five confirmation-gated actions — propose it in the report, do not do it.
+requirement listed there. After contract and candidate review, write the canonical plan with the
+planner **without** `--dry-run`, inspect its diff, and run `--check`. This is reversible preparation
+authorized by a start request; a mismatch is drift, not success.
 
 If a current `MARATHON-PLAN-*.md` already exists, `--check` reports whether it is in sync; drift is
 a finding for the report, not a reason to regenerate.
 
-### 5. Preflight the remaining candidates
+### 5. Preflight, form lanes, and dry-run the actual marathon
 
 Run preflight **directly for every candidate** that is not `NOT-A-WORK-ITEM` or `UNKNOWN`, including
 the ready items `--deep` already touched — deep delegation discards preflight output and only
@@ -237,6 +274,26 @@ only when their declared and audited write-sets are disjoint and all zone caps h
 such as the RELEASES DB and `CHANGELOG.md` collide. Kernel paths obey the repo's
 one-kernel-lane-per-wave cap.
 
+For the selected arc, create or reuse the umbrella issue and RELEASES marathon row before preparing
+executable YAML. Keep one `PROJECT/2-WORKING/<arc>/MARATHON.yaml` and phase briefs. Use the current
+checked-in YAML examples and `marathon.sh` parser for supported keys: `name`, ordered `phases`,
+unique `id`, `brief`, exact `artifact`, builder/reviewer, `depends_on` where needed, and round/time
+bounds. Record member issues and umbrella identity in comments and briefs. Preserve sound existing
+YAML. Audit real writes, generated files and shared ledgers before declaring lanes disjoint.
+
+Run focused smoke checks for changed plan/brief paths, then run the no-dispatch command from a
+disposable full clone on the intended task branch:
+
+```bash
+"$HARNESS/relay-automation/marathon.sh" --plan PROJECT/2-WORKING/<arc>/MARATHON.yaml --dry-run
+```
+
+Inspect its complete output and exit, including worker availability, branch, dependencies,
+collisions, paths and gates. The secondary route runs the same command after existing-doc review
+and `marathon_plan.py --check`. A per-phase `marathon-drive.sh --dry-run` is not a substitute for
+the full YAML dry-run. A failed dry-run holds the plan. An active marathon or parked lane cannot be
+overridden with `--force`; replan through the standing queue.
+
 ### 6. Report
 
 Return one of the two shapes. A **complete report** (the Done rule holds) contains:
@@ -244,14 +301,14 @@ Return one of the two shapes. A **complete report** (the Done rule holds) contai
 1. Classification table with issue, doc, live state, contract state, and reason — one row per open
    issue and per `GH-*.md` doc.
 2. Captures written in Step 3: issue, doc path, ledger gid; and the issues excluded with reasons.
-3. The planner dry-run output (waves, held, drift) and the ranked candidates with each exact
-   preflight exit and verdict.
-4. Collision map and recommended waves.
+3. Reviewed implementation plans and QA receipts, the planner output (waves, held, drift), and each
+   selected candidate's direct preflight exit and verdict.
+4. Collision map, YAML path, focused smoke result, and the exact full-plan dry-run command and exit.
 5. Decisions needed — one **default recommendation per item**, not a flat symmetric list of
    options the operator has to weigh unaided. For each item that needs a call, emit:
 
    ```
-   RECOMMEND: <the single default action — commit captures | archive | close | promote | contract | unblock | write plan file | open umbrella + fire | hold>
+   RECOMMEND: <the single default action — commit captures | archive | close | revise contract | unblock | confirm exact plan and fire | hold>
    BECAUSE:   <the evidence behind it — live state, preflight verdict, rating, collision risk>
    UNLESS:    <the specific condition under which the operator should override the default>
    ```
@@ -265,14 +322,15 @@ unmet requirement: the command run, its exit code, the evidence that could not b
 the next action. It never contains fabricated waves or verdicts.
 
 Keep the default report inline. If the operator requests a persisted report, write a dated
-`PROJECT/1-INBOX/MARATHON-TRIAGE-YYYY-MM-DD.md` with `doc_type: report`, source/provenance, and
+`PROJECT/1-INBOX/START-MARATHON-YYYY-MM-DD.md` with `doc_type: report`, source/provenance, and
 `roadmap_exempt: true`. If promoted to `2-WORKING`, add the full PDDA frontmatter, exact status table,
 and the ledger pointer. Never execute the marathon from this skill.
 
-### 7. Before firing — the umbrella issue and the derived full clone (operator-confirmed)
+### 7. Firing boundary — umbrella identity and derived full clone
 
-Nothing in this step runs during triage. It applies once the operator has **selected** a marathon
-from the report and authorised firing it; the report's decisions list proposes it.
+Create or reconcile umbrella identity during preparation. Before firing, verify the selected plan,
+ledger row, clone, dry-run evidence and order still match the operator's confirmation. Dispatch only
+after that exact confirmation.
 
 #### 7a. Every marathon has an umbrella tracking issue
 

@@ -58,20 +58,23 @@ assert_no_nudge() { # <label> <prompt>
   [ -z "$output" ] && pass "$label" || fail "$label unexpectedly nudged: $output"
 }
 
-assert_nudge "nudge: add item to marathon" "Add GH-273 to the marathon" marathon-triage
-assert_nudge "nudge: fire marathon" "Please fire the marathon" marathon-triage
-assert_nudge "nudge: preflight sweep" "Run a preflight sweep first" marathon-triage
-assert_nudge "nudge: preflight all" "Preflight all ready work" marathon-triage
-assert_nudge "nudge: dry-run each plan" "Dry-run each plan before firing" marathon-triage
+assert_nudge "nudge: start marathon" "Start the marathon" start-marathon
+assert_nudge "nudge: bare marathon" "Marathon" start-marathon
+assert_nudge "nudge: add item to marathon" "Add GH-273 to the marathon" start-marathon
+assert_nudge "nudge: fire marathon" "Please fire the marathon" start-marathon
+assert_nudge "nudge: preflight sweep" "Run a preflight sweep first" start-marathon
+assert_nudge "nudge: preflight all" "Preflight all ready work" start-marathon
+assert_nudge "nudge: dry-run each plan" "Dry-run each plan before firing" start-marathon
 assert_nudge "nudge: commit/push + close issues" "Commit and push, then close the resolved issues" loose-ends marathon-cleanup
 assert_nudge "nudge: commit/push + archive/PDDA" "Commit and push; move docs to 3-COMPLETED and run a PDDA sweep" loose-ends marathon-cleanup
 
 foreign_context="$(cd "$WORK" && nudge_context "$(run_skill_nudge 'fire the marathon')")"
-[ "$foreign_context" = "BTW: marathon-triage already does this — see marathon-triage." ] \
+[ "$foreign_context" = "BTW: start-marathon already does this — see start-marathon." ] \
   && pass "nudge: foreign CWD falls back to a skill name" \
   || fail "foreign CWD emitted an unusable pointer: $foreign_context"
 
 assert_no_nudge "silent: unrelated roadmap request" "Add GH-273 to the roadmap"
+assert_no_nudge "silent: marathon used in unrelated prose" "The runner logged a marathon-length test"
 assert_no_nudge "silent: unrelated fire request" "Fire the unit tests"
 assert_no_nudge "silent: unrelated preflight" "Preflight the airplane"
 assert_no_nudge "silent: commit/push alone" "Commit and push these edits"

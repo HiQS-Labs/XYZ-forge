@@ -5,8 +5,8 @@
 # UserPromptSubmit is intentionally used instead of SessionStart: the nudge is relevant only
 # when the operator is about to repeat marathon lifecycle ceremony. The deliberately narrow
 # keyword table is:
-#   - add ... to [the] marathon / fire [the] marathon -> marathon-triage
-#   - preflight sweep / preflight all / dry-run each plan -> marathon-triage
+#   - start marathon / bare marathon / add ... to marathon / fire marathon -> start-marathon
+#   - preflight sweep / preflight all / dry-run each plan -> start-marathon
 #   - commit and push + close ... issue(s), move ... to 3-COMPLETED, or PDDA sweep
 #       -> loose-ends + marathon-cleanup
 # Unrelated prompts stay silent so this remains a useful pointer rather than a general nag.
@@ -53,13 +53,15 @@ try:
     triage_match = any(
         (
             re.search(r"\badd\b.*\bto\b.*\bmarathon\b", normalized),
+            re.search(r"\bstart (?:a |the )?marathon\b", normalized),
+            re.fullmatch(r"marathon[.!?]?", normalized),
             re.search(r"\bfire (?:the )?marathon\b", normalized),
             re.search(r"\bpreflight (?:sweep|all)\b", normalized),
             re.search(r"\bdry[- ]run each plan\b", normalized),
         )
     )
     if triage_match:
-        skills.append("marathon-triage")
+        skills.append("start-marathon")
 
     commit_and_push = re.search(r"\bcommit(?: and |\s*&\s*)push\b", normalized)
     closeout_detail = any(

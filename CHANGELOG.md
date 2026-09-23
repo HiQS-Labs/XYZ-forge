@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-23 — Start marathon preparation routing (GH-762)
+
+Renamed the marathon preparation skill to `start-marathon`, retained a legacy
+`marathon-triage` entry point, and routed ambiguous “marathon” prompts to preparation.
+The skill now reviews intake, contracts and implementation plans, obtains independent
+plan QA, forms collision-safe lanes, prepares YAML, and requires direct preflight and
+the existing full-plan dry-run before a fire request. The bet is that one preparation
+route reduces stale plans without creating another executor. Agy review and gate
+evidence belong to the PR; firing still requires exact-plan confirmation.
+
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 
 Full local gate: 411/411 passed, with `gh32-releases-app.sh` passing the gate’s built-in isolated
