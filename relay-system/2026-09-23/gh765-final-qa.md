@@ -52,7 +52,8 @@ ROUND: 1 / 4
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: draft PR #765, `origin/development...HEAD` at `fe2504b7`; inspect the full changed files, especially `skills/2-daily/start-marathon/SKILL.md`, `PARKED/README.md`, `ROUTER.md`, `AGENTS.md`, `skills/2-daily/workhorse/SKILL.md`, `skills/1-hourly/unstuck/SKILL.md`, `skills/1-hourly/standup/{SKILL.md,collect.sh,triage.py}`, tests and `PROJECT/2-WORKING/GH-762-START-MARATHON-SKILL.md`.
+- Artifact under review: skills/2-daily/start-marathon/SKILL.md
+- Review target: draft PR #765, `origin/development...HEAD` at `fe2504b7`; inspect the full changed files, especially `PARKED/README.md`, `ROUTER.md`, `AGENTS.md`, `skills/2-daily/workhorse/SKILL.md`, `skills/1-hourly/unstuck/SKILL.md`, `skills/1-hourly/standup/{SKILL.md,collect.sh,triage.py}`, tests and `PROJECT/2-WORKING/GH-762-START-MARATHON-SKILL.md`.
 - Reviewer: agy   ·   Producer: claude-a
 - Started: 2026-09-23
 - Operational envelope: local macOS skill routing and repo governance; no marathon dispatch or runtime rewrite. Read-only review; no `validate.sh`, `test/*.sh`, pytest, or executable fixtures in the relay worktree. Use narrow static inspection and the committed evidence. Keep any scratch under `.relay-scratch/` after setting `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR` there.
