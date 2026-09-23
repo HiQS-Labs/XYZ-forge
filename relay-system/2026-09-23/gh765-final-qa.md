@@ -91,4 +91,12 @@ swept file: yes. No pre-existing defects found across all touched files (`skills
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-23T18:13:19Z
+task: RELAY-gh765-final-qa
+reviewer: agy
+status: Approved
+reviewed-head: 4dec9dd4b0a3782136d8b985ba9df3f07e334fb9
+added-range: 7163+6052
+added-sha256: b9f7e66bf7f305cb58f431aa7afa639703c9d99ac48638db506d2a0d4b5023f7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
