@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-23 — GH-760: agent-chorus-bridge waits for GET / instead of sleep 1
+
+Hosted wave-reconcile `--qualify` failed closed when `test/agent-chorus-bridge.sh` raced a slow bind (`sleep 1.0`). The suite now polls `GET /` until the expected HTTP code, dumps client body + log on assertion failure, and fails closed against a closed port. Disposable-clone run: 48 passed, 0 failed; mutating the helper to always return 0 went red on that control.
+
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 
 Full local gate: 411/411 passed, with `gh32-releases-app.sh` passing the gate’s built-in isolated
