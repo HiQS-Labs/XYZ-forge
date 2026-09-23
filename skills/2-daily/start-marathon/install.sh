@@ -42,8 +42,13 @@ fi
 
 # Preserve the established invocation without duplicating the skill source.
 LEGACY_LINK="$DEST_DIR/marathon-triage"
-if [ ! -e "$LEGACY_LINK" ] || { [ -L "$LEGACY_LINK" ] && [ "$(readlink "$LEGACY_LINK")" = "$SELF_DIR" ]; }; then
-  [ -L "$LEGACY_LINK" ] || ln -s "$SELF_DIR" "$LEGACY_LINK"
+if [ -L "$LEGACY_LINK" ] && [ "$(readlink "$LEGACY_LINK")" = "$SELF_DIR" ]; then
+  : # Already points to this skill.
+elif [ -L "$LEGACY_LINK" ] && [ ! -e "$LEGACY_LINK" ]; then
+  rm -f "$LEGACY_LINK"
+  ln -s "$SELF_DIR" "$LEGACY_LINK"
+elif [ ! -e "$LEGACY_LINK" ]; then
+  ln -s "$SELF_DIR" "$LEGACY_LINK"
 else
   echo "marathon-triage: existing installation preserved at $LEGACY_LINK" >&2
 fi
