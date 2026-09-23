@@ -88,4 +88,12 @@ swept file: yes
 VERDICT: PASS
 Basis: The implementation matches the approved bounded plan and has no observed implementation blocker. Approval is for proceeding to the separate full-clone gate; it is not gate qualification.
 
+
+### Attestation · relay-drive — 2026-09-23T18:43:07Z
+task: RELAY-gh764-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: be2ba2454dc3556e056817184b48701d8ed2b64a
+added-range: 6837+2772
+added-sha256: cd930e72b43677e08d6a4ef934ef28daaad5c520cf0237e052e336c7f8742df9
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
