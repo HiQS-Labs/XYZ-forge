@@ -117,4 +117,12 @@ Basis: The three fixes are grounded, bounded, and have falsifiable acceptance ch
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-23T18:34:45Z
+task: RELAY-gh764-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 01ea60432864f62b7f17fcbe9ee4c8fd97f0d44c
+added-range: 13005+2690
+added-sha256: 4098ef4c59bb804cabb4e2a32888936e20e414db7421b81b029947353464aa74
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
