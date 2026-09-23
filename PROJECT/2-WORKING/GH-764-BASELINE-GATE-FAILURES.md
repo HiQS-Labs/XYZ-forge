@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| All three focused failures reproduced on untouched `development`; the first two have direct environment/fixture disproofs, and GH-549 has an isolated subprocess repro. | Review the plan, implement the bounded fixes, and run focused plus full gate checks in a separate full clone. |
+| Codex approved the corrected plan; the bounded fixes and focused red/green controls passed in a separate full clone. | Run final Codex implementation QA, then the qualifying full macOS gate on its final commit. |
 
 ## Why
 
@@ -84,7 +84,7 @@ originates where the closed handle is passed to the collector.
 - [x] Each reported suite failure was observed on untouched `development` in a disposable full clone.
 - [x] The ATE import failure and SQLite sidecar premise were disproved with corrected local inputs.
 - [x] The connector closed-handle error was reproduced outside the suite and independently reviewed.
-- [ ] Codex approves the corrected plan before implementation.
+- [x] Codex approved the corrected plan in `relay-system/2026-09-23/gh764-plan-qa.md` (attested Round 2).
 
 ## Phase 1 — Ordered implementation and QA
 
@@ -96,3 +96,11 @@ originates where the closed handle is passed to the collector.
 Non-scope: no new dependency manager, connector runner abstraction, SQLite reader relaxation, or
 synthetic testing framework. The three causes are separate, but they form one existing gate incident
 and one bounded #764 PR. Plan QA and final QA use independent Codex relay turns.
+
+### QA gate — Phase 1 (focused evidence)
+
+- [x] GH-142 without `requests`: exit 1 names `requests`; without PyYAML: exit 1 names `yaml`; with both present: 30 passed, 0 failed.
+- [x] GH-605: original fixture failed 27/28 on this macOS SQLite build; corrected fixture passed 28/28, including header refusal and byte-preservation checks.
+- [x] GH-549: original suite passed 105/125; corrected connector handoff passed 124/124 (the original run stopped at 105 passed / 20 failed). Existing cursor, concurrent launch, deadline, and red controls ran.
+- [ ] Final independent implementation relay approved on the committed diff.
+- [ ] Full macOS gate passes in a separate disposable full clone with retained provenance and unchanged clone identity.

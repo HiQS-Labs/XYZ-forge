@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-23 — GH-764 baseline macOS gate repair
+
+Three baseline failures were traced on untouched `development`: the ATE test could reach its
+expected exit code through a missing Python import, the work-state test assumed this macOS SQLite
+build removed empty WAL sidecars on close, and connector dispatch closed a child's stdin handle
+before `communicate()` tried to flush it. The ATE suite now names a missing `requests` or PyYAML
+prerequisite immediately, the WAL test explicitly constructs header-without-sidecars input, and
+the connector launcher clears its closed stdin handle before collection. The local-gate startup
+instruction names the same-interpreter Python preflight. Reversibility: **Costly** shared connector
+path, with a direct revert and no schema or data migration. Focused checks: GH-142 30/30,
+GH-605 28/28, GH-549 124/124; separate missing-module red controls failed by name. Final relay
+and qualifying full-gate evidence are pending.
+
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 
 Full local gate: 411/411 passed, with `gh32-releases-app.sh` passing the gate’s built-in isolated
