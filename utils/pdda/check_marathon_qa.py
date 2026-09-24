@@ -112,17 +112,29 @@ class MarathonQAChecker:
         is_generated_queue = "marathon-plan.sh" in frontmatter.get("generated_by", "")
         has_marathon_meta = bool(
             frontmatter.get("marathon_gid") or
-            frontmatter.get("umbrella") or
             frontmatter.get("doc_type") in ("marathon", "marathon-plan")
         )
         base_name = os.path.basename(file_path)
         is_marathon_filename = bool(re.match(r"^MARATHON-PLAN-[A-Za-z0-9._-]+\.md$", base_name, re.IGNORECASE))
 
-        has_waves = bool(
+        # Scan for declared waves outside the checklist section
+        declared_waves = set()
+        for idx, line in enumerate(lines):
+            if checklist_line and idx >= (checklist_line - 1):
+                if re.match(r"^##\s+", line) and not re.match(r"^###\s+", line):
+                    pass
+                else:
+                    continue
+            for m in re.finditer(r"(?:\*\*Wave\s+(\d+)[:\*]|^###?\s+Wave\s+(\d+)\b|^\s*-\s*\*{0,2}Wave\s+(\d+)[:\*])", line, re.IGNORECASE):
+                wn = m.group(1) or m.group(2) or m.group(3)
+                if wn:
+                    declared_waves.add(int(wn))
+
+        has_waves = bool(declared_waves) or bool(
             re.search(r"\bwaves?:", "".join(lines), re.IGNORECASE) or
             re.search(r"\*\*Wave\s+\d+:\*\*", "".join(lines), re.IGNORECASE)
         )
-        is_marathon_plan = checklist_line is not None or has_marathon_meta or (is_marathon_filename and not is_generated_queue) or (explicit_target and has_waves)
+        is_marathon_plan = has_marathon_meta or (is_marathon_filename and not is_generated_queue) or (explicit_target and has_waves)
 
         if not is_marathon_plan:
             if explicit_target:
@@ -199,7 +211,17 @@ class MarathonQAChecker:
                         "populate-marathon-checklist")
             return
 
-        for wave_num in sorted(wave_items.keys()):
+        # Check for missing checklists for any declared wave (F1)
+        for expected_wave in sorted(declared_waves):
+            if expected_wave not in wave_items:
+                self.record("error", file_path, checklist_line,
+                            f"Wave {expected_wave} declared in plan but missing its '### Wave {expected_wave}' checklist section",
+                            "add-wave-checklist")
+
+        all_waves = sorted(set(list(wave_items.keys()) + list(declared_waves)))
+        for wave_num in all_waves:
+            if wave_num not in wave_items:
+                continue
             items = wave_items[wave_num]
             has_proof = any(it["is_proof"] for it in items)
             has_codex = any(it["is_codex"] for it in items)
@@ -222,7 +244,18 @@ class MarathonQAChecker:
 
             for it in items:
                 line_no = it["line"]
-                # 1. Transcript existence check
+                # 1. Mandatory receipt check on Codex item (F2)
+                if it["is_codex"] and not it["receipt"]:
+                    if it["checked"] or must_be_complete:
+                        self.record("error", file_path, line_no,
+                                    f"Wave {wave_num} Post-Build Codex QA Relay item missing receipt citation (relay-system/...)",
+                                    "cite-relay-system-receipt")
+                    else:
+                        self.record("warn", file_path, line_no,
+                                    f"Wave {wave_num} Post-Build Codex QA Relay item has no receipt citation",
+                                    "pending-receipt-citation")
+
+                # 2. Transcript existence check
                 if it["receipt"]:
                     full_receipt = os.path.join(self.root, it["receipt"])
                     # Check for placeholder strings like <date> or <label>
@@ -245,7 +278,7 @@ class MarathonQAChecker:
                                         f"Wave {wave_num} transcript '{it['receipt']}' missing on disk before PR/completion",
                                         "execute-codex-qa-relay")
 
-                # 2. Checkbox verification check
+                # 3. Checkbox verification check
                 if not it["checked"]:
                     if must_be_complete:
                         self.record("error", file_path, line_no,

@@ -838,9 +838,10 @@ Wave QA contract (GH-784):
 3. **Double-relay protocol parity:** each wave must enforce `/start-task` Step 6 parity (Wave Plan QA)
    before coding and Step 8 parity (Wave Post-Build Codex QA) before pushing branches or opening PRs.
    The orchestrator cannot self-attest review solely by observing green test suites.
-4. **Mechanical receipt gate:** `utils/pdda/check_marathon_qa.py` (and `pdda.sh marathon-qa`) verifies
-   that all checklist items are verified (`[x]`) and corresponding `relay-system/` transcripts exist on
-   disk before a marathon PR can be created or promoted to `3-COMPLETED`.
+4. **Mechanical receipt gate:** `utils/pdda/check_marathon_qa.py --pre-pr --doc <plan>` (or `pdda.sh marathon-qa --pre-pr --doc <plan>`)
+   mechanically asserts that all declared waves have corresponding `### Wave N` checklist sections, all checklist items
+   are verified (`[x]`), Codex QA items cite concrete `relay-system/` receipts without unexpanded placeholders, and all
+   referenced receipt transcripts exist on disk before a marathon PR can be created or promoted to `3-COMPLETED`.
 
 ### 2. LLM-assisted doc readiness review
 
@@ -1057,10 +1058,11 @@ Run the deterministic checks every hour in this order:
 8. `pdda.sh issue-doc-sync`
 9. `pdda.sh releases`
 10. `pdda.sh governance`
+11. `pdda.sh marathon-qa`
 
 Then run:
 
-11. `pdda.sh doc-ready`
+12. `pdda.sh doc-ready`
 
 (`pdda.sh run` runs exactly this sequence and applies the active `PDDA_MODE` gate. Scheduling the
 single aggregate command is the recommended hourly cron entry.)

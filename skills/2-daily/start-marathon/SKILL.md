@@ -287,9 +287,13 @@ verification section:
 - [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated
 ```
 
-Mechanical check: `utils/pdda/check_marathon_qa.py` (and `pdda.sh marathon-qa`) mechanically
-verifies that all wave checklist items are verified (`[x]`) and all referenced `relay-system/`
-transcripts exist on disk before a marathon PR can be created or promoted to `3-COMPLETED`.
+Mechanical check: verify wave readiness before PR opening or promotion with:
+```bash
+python3 "$HARNESS/utils/pdda/check_marathon_qa.py" --pre-pr --doc "$CANONICAL_PLAN"
+# or via pdda.sh:
+"$HARNESS/utils/pdda/pdda.sh" marathon-qa --pre-pr --doc "$CANONICAL_PLAN"
+```
+The check mechanically asserts that all waves declared in the plan have a corresponding `### Wave N` checklist, all checklist items are verified (`[x]`), Codex QA items carry valid `relay-system/...` receipts without unexpanded placeholders, and all referenced receipt files exist on disk (exit 0). Routine aggregate scans warn on pending items in active working docs, while `--pre-pr` (and `PROJECT/3-COMPLETED` docs) fails closed (exit non-zero) on any unverified item.
 
 ### 5. Preflight, form lanes, and dry-run the actual marathon
 

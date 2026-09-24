@@ -1490,18 +1490,44 @@ check_governance() {
 # ------------------------------------------------------------------------------------------------
 check_marathon_qa() {
   pdda_reset_counts
-  local CHECK_NAME="pdda-check-marathon-qa" rc=0
+  local CHECK_NAME="pdda-check-marathon-qa" rc=0 py_rc=0
   local item_sev item_file item_line item_msg item_action
+  local is_strict=0
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      --pre-pr|--strict) is_strict=1 ;;
+    esac
+  done
 
-  while IFS=$'\t' read -r item_sev item_file item_line item_msg item_action; do
-    [ -z "$item_sev" ] && continue
-    pdda_record_finding "$item_sev" "$CHECK_NAME" "$item_file" "$item_line" "$item_msg" "$item_action"
-    if [ "$item_sev" = "error" ]; then
-      rc=1
+  local tmp_out
+  tmp_out="$(mktemp "${TMPDIR:-/tmp}/pdda-marathon-qa.XXXXXX")"
+
+  python3 "$HERE/check_marathon_qa.py" --root "$PDDA_REPO_ROOT" --format tsv --mode "$PDDA_MODE" "$@" > "$tmp_out"
+  py_rc=$?
+
+  if [ -s "$tmp_out" ]; then
+    while IFS=$'\t' read -r item_sev item_file item_line item_msg item_action; do
+      [ -z "$item_sev" ] && continue
+      pdda_record_finding "$item_sev" "$CHECK_NAME" "$item_file" "$item_line" "$item_msg" "$item_action"
+      if [ "$item_sev" = "error" ]; then
+        rc=1
+      fi
+    done < "$tmp_out"
+  fi
+  rm -f "$tmp_out"
+
+  if [ "$py_rc" -ne 0 ]; then
+    rc="$py_rc"
+    if [ "$ERROR_COUNT" -eq 0 ]; then
+      pdda_record_finding error "$CHECK_NAME" "$PDDA_REPO_ROOT" 1 "check_marathon_qa.py exited with error ($py_rc)" "check-checker-output"
     fi
-  done < <(python3 "$HERE/check_marathon_qa.py" --root "$PDDA_REPO_ROOT" --format tsv --mode "$PDDA_MODE" "$@")
+  fi
 
   pdda_emit_summary "$CHECK_NAME" "$rc"
+  if [ "$is_strict" -eq 1 ]; then
+    return "$rc"
+  fi
   return "$(pdda_gated_exit "$rc")"
 }
 
