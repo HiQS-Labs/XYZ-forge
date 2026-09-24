@@ -2,9 +2,9 @@
 gh_issue: 646
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/646
 title: Shared in-progress task label
-status: In progress — writer refresh and independent final review
+status: Complete
 created: 2026-09-16
-updated: 2026-09-17
+updated: 2026-09-24
 owner: Codex
 goal: Make explicit task starts and confirmed issue endings visible through the same in-progress label in the existing XYZ ledger and GitHub connector.
 branch: feat/gh646-writer-refresh
