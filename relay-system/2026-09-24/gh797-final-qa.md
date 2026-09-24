@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -88,5 +88,32 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Two concrete acceptance gaps remain in source presentation.
+swept file: no
+
+Scope: Read all of presentation.mjs, app.js, app.css, README, work-status-checks.mjs and the plan, plus connectors.py and contract.py. CHANGELOG review covered the GH-797 entry, not the historical body; hence the conservative sweep declaration. No additional pre-existing defect established in the fully read changed code. No Git commands or executable test fixtures ran. Graph project enumeration had no index for this worktree; direct source fallback was used, without claiming graph coverage or commit-diff verification.
+
+- [Blocker] Mixed-success XYZ reads hide failures behind a green pill. `web/flightdeck/presentation.mjs:27` returns before the error branch at line 28. `src/flightdeck/connectors.py:116-119` emits availability=ok when one root succeeds, even when another fails and the aggregate error is set. Move error classification before ok (retain stale precedence), and extend `test/flightdeck/work-status-checks.mjs:59-63` with a mixed-root case.
+  Observed input: `{id:'xyz_work',availability:'ok',coverage:'partial',error:'source-unavailable-or-unsupported',roots:[{supported:true,error:null},{supported:false,error:'ledger-locked'}]}`.
+  Affected scope: Fresh sources with top-level or root errors, including mixed-success read_xyz_work output.
+  Falsifier: This input must return failed with error help; clearing errors must return ok; fresh=false must remain stale.
+  Probe: `node --input-type=module` importing sourceStatus from `./web/flightdeck/presentation.mjs` and printing `JSON.stringify(sourceStatus(input))` for the exact input above. Exit 0; decisive output: `{"tone":"ok","label":"ok","help":"Coverage: partial; observed unknown"}`. This violates DoD 3. Probe environment: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`.
+
+- [Should] XYZ's disabled hint does not enable it under an explicit connector allowlist. `web/flightdeck/presentation.mjs:15,30` says only to set roots and restart, but `src/flightdeck/contract.py:99-113` auto-adds xyz_work only without an explicit list; `src/flightdeck/connectors.py:452-454` otherwise returns disabled. Mention adding xyz_work to FLIGHTDECK_CONNECTORS (or the configured connectors list) when explicitly set, as well as configuring roots. Extend the hint assertion at `test/flightdeck/work-status-checks.mjs:55` and clarify `web/flightdeck/README.md:23-24`.
+  Observed input: `FLIGHTDECK_CONFIG='' FLIGHTDECK_CONNECTORS=clio FLIGHTDECK_XYZ_ROOTS=/tmp/example`; roots-only advice leaves xyz_work disabled.
+  Affected scope: Explicit connector lists excluding xyz_work, including JSON config lists; default auto-enabling stays unchanged.
+  Falsifier: Roots with no explicit list auto-enable xyz_work; roots with an explicit list including xyz_work enable it; roots alone with an excluding list do not.
+  Probe: under the scratch environment above, `FLIGHTDECK_CONFIG='' FLIGHTDECK_CONNECTORS=clio FLIGHTDECK_XYZ_ROOTS=/tmp/example python3 -` with `from src.flightdeck.contract import ConnectorConfig; c=ConnectorConfig.from_environment(); print('enabled=',sorted(c.enabled),'xyz_roots=',[str(p) for p in c.xyz_roots]); print('xyz_work disabled=', 'xyz_work' not in c.enabled)`. Exit 0; output: `enabled= ['clio'] xyz_roots= ['/tmp/example']` and `xyz_work disabled= True`. No source reads or fixtures executed.
+
+- [Pass] Progress explains why it is not measured and that it is not an error (`web/flightdeck/presentation.mjs:11`, `web/flightdeck/app.js:41-43,111-114`), preserving the neutral model (`presentation.mjs:6-9`). No change requested.
+- [Pass] Stale precedence, excluded-row suffix and accessible source text remain (`web/flightdeck/presentation.mjs:26`, `web/flightdeck/app.js:162-174`). Grey, amber and red use existing CSS (`web/flightdeck/app.css:40-44`). Literal search of web/flightdeck and test/flightdeck found no remaining old .unavailable selector consumer. No change requested.
+- [Nit] `web/flightdeck/README.md:32-33` lists off but omits the visible not set up label returned at `web/flightdeck/presentation.mjs:32`. List both labels.
+- [Unverified — needs clone run] Producer-reported Node, mutation, pytest and Chrome results (`CHANGELOG.md:9-12`, plan Status table) were not independently rerun here, per containment. Rerun focused checks and red controls after fixes in a disposable full clone; the harness gate remains outstanding.
+
+Handing off to Producer (claude-a) — address the findings and take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
