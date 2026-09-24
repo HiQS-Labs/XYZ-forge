@@ -2,7 +2,7 @@
 title: "agent-chorus-bridge.sh flakes on hosted wave-reconcile: remote send misses turn 2 after sleep 1"
 status: Active
 created: 2026-09-23
-updated: 2026-09-23
+updated: 2026-09-24
 owner: Bryan Reyes
 gh_issue: 760
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/760
@@ -24,9 +24,9 @@ related:
   - GH-384 (bridge)
   - GH-293 (radar class)
 goal: >
-  test/agent-chorus-bridge.sh waits for GET / HTTP 200 instead of sleep 1.0 so hosted
-  wave-reconcile --qualify no longer fails closed on a startup race; next hosted
-  wave-reconcile.yml run does not list this suite in failed:.
+  PR #761 adds a GET / ready poll and dumps the send body plus bridge log on a failed
+  assertion. It does not fix the run 35767844928 send miss (health already passed).
+  #760 stays open until a failing run shows that body.
 ---
 
 # GH-760 — agent-chorus-bridge.sh flakes on hosted wave-reconcile
@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Ready-poll landed. Disposable clone: **48 passed, 0 failed**; mutation (helper always ready) went red on the closed-port control. | PR against `development`. Post-merge: hosted `wave-reconcile.yml` must not list `agent-chorus-bridge.sh` in `failed:` (cite run URL + SHA). |
+| Review on PR #761: the ready-poll does not explain run 35767844928 (GET / 200 and both joins passed before the send miss). Diagnostics stay. Claim corrected so the PR refs #760 and does not close it. | Merge `origin/development` and resolve the ledger. #760 stays open until a failing run prints the send body. |
 
 ## Symptom
 
@@ -49,13 +49,14 @@ Hosted `wave-reconcile.yml` run [35767844928](https://github.com/HiQS-Labs/XYZ-f
 
 Later scheduled reconcile [35786932826](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35786932826) at the same SHA `44e96b77` went green. Recurrence still burns ~70 minutes of hosted qualify.
 
-## Phase 1 — ready poll instead of sleep 1
+## Phase 1 — diagnostics, not a claimed fix
 
-`test/agent-chorus-bridge.sh`: `wait_bridge_ready` polls `GET /` until the expected HTTP code (200 on the open bridge, 401 on the CF-auth bridge) or 8s. Timeout fails with the bridge log. `expect_contains` / `expect_not_contains` dump the actual body and log on fail.
+Run 35767844928 passed bridge start, `GET /` 200, session create, and both joins before `remote agent2 send` missed `"turn": 2`. A later idempotent send in the same suite committed turn 2. The `runtime/agent2.watch` traceback is from `agent-chorus.sh`. `wait_bridge_ready` remains as readiness hardening. `dump_diag` prints the client body and the last 50 log lines on a failed assertion so the next red names the send-path cause.
 
 ### QA checklist — Phase 1
 
 - [x] Closed-port red control: `wait_bridge_ready http://127.0.0.1:1` fails; a helper that returns 0 unconditionally makes that check go red.
 - [x] `bash test/agent-chorus-bridge.sh` green in a disposable full clone (no previously passing checks skipped).
 - [x] No remaining `sleep 1.0` after a bridge start.
-- [ ] Post-merge: a hosted `wave-reconcile.yml` run does not list `agent-chorus-bridge.sh` in `failed:` (cite run URL + SHA).
+- [x] PR text refs #760 and does not claim the poll fixed the send miss.
+- [ ] A later failing hosted run shows the send body (or a verified cause). #760 stays open until then.

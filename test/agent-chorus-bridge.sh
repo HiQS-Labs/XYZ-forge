@@ -62,8 +62,9 @@ expect_not_contains() {
   esac
 }
 
-# GH-760: poll GET / until the server actually answers. A fixed sleep 1.0 is why hosted
-# wave-reconcile --qualify went red on run 35767844928 (send missed "turn": 2).
+# GH-760: poll GET / until the server actually answers. Run 35767844928 already passed
+# GET / before the send missed "turn": 2, so this poll is readiness hardening, not the
+# cause of that flake. dump_diag on a failed assertion is what names the next miss.
 # Returns 0/1 and does not call fail() — callers score the result so a closed-port
 # red control can PASS when this helper correctly refuses.
 wait_bridge_ready() {
@@ -87,7 +88,7 @@ wait_bridge_ready() {
 echo "agent-chorus-bridge (GH-384):"
 
 # GH-760 red control: the helper must fail when nothing is listening. If it treats a
-# refused connection as ready, this goes red and the sleep-1 bug class is back.
+# refused connection as ready, this goes red.
 if wait_bridge_ready "http://127.0.0.1:1" /dev/null 1 200; then
   fail "GH-760: wait_bridge_ready treated a closed port as ready"
 else
