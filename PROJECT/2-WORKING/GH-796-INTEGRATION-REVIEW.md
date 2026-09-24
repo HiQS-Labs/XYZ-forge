@@ -150,3 +150,28 @@ Agy reviewer must grade this plan and its evidence, not approve unremediated PRs
 ## Plan QA outcome
 
 Agy returned PASS in both review rounds. Round1 driver exited4 with the known GH-763 close-mismatch because the reviewer released to an agent named done; that attempt is not counted as successful QA. Bounded round2 retained the token for the existing shim, returned exit0 and recorded attested Approved against reviewed head `095b6c9cd113`. No production change or manual attestation bypass was used. The substantive plan was unchanged between rounds; only protocol recovery and final status/evidence were added. Relay: `relay-system/2026-09-24/gh796-plan-qa.md`. Driver log and portable attestation record are retained with the evidence. This approves the plan, not the still-unremediated PRs. Existing GH-763 remains separate; no runtime repair was attempted here.
+
+## GH-777 requirement coverage — operator follow-up
+
+Added after Agy plan approval as factual coverage accounting; it does not change the approved sequence or authorize more implementation. Strictly counting the 16 workstream checkboxes as written, merged #783 plus open #794/#795/#765/#759 fully address **1**, partially address **3**, and leave **12** without direct implementation satisfying their wording. All **5 final acceptance checkboxes remain incomplete**. Adjacent improvements are not counted as delivered requirements.
+
+| #777 workstream checkbox | Coverage | Implementation / gap |
+|---|---|---|
+| Sub-agent prior-art fan-out | Partial | #783 local helper + skill; no required subagent/sibling branches/full workhorse coverage |
+| Exact queries in first commit and capture doc | Unaddressed | PR template command is a different artifact requirement |
+| PR template update | Full | #783 repository template has search and mechanical proof fields |
+| General PDDA promotion gate | Partial | #765 pending marathon receipt gate; no general placeholder/linked-evidence blocker; F1–F6 outstanding |
+| Closed-issue/merged-PR/doc sync verification | Unaddressed | Not delivered by these PRs |
+| Canonical skills with drift detection | Unaddressed | Not delivered by these PRs |
+| Status/model single-owner enums + AST guards | Unaddressed | Not delivered by these PRs |
+| Script/DB/LLM/HTTP inventory ratchet | Partial | #783/#794 script/SQLite coverage; raw LLM/HTTP not covered |
+| Tri-state health probes | Unaddressed | Cleanup UNKNOWN polling is not the specified health probes |
+| Broken-probe tests for every health check | Unaddressed | Not delivered by these PRs |
+| Non-inert duplicate/ranking/aggregation fixture audit | Unaddressed | Not delivered by these PRs |
+| Runtime checkout binding | Unaddressed | Not delivered by these PRs |
+| Max-runtime across loops/turns | Unaddressed | Bounded cleanup polling does not satisfy this |
+| External API request counters | Unaddressed | Not delivered by these PRs |
+| Hermetic clocks/foreign-CWD/nonzero collection | Unaddressed | #795 interpreter-path hygiene is adjacent, not these required guards |
+| Current-target-base CI re-verification before merge | Unaddressed | #794 fixes reconciliation identity; GH-796 specifies future verification but adds no runtime enforcement |
+
+Final acceptance is broader than individual implementation: repository PR template does not prove installer coverage; prior-art helper is not a subagent; inventory is registered in validate.sh but not ci-local.sh; required collection/CWD checks and complete subtask-to-PR mapping remain absent. #777 must stay open after this batch. This is coverage by these PRs, not a claim that no related protection pre-exists elsewhere in Forge.

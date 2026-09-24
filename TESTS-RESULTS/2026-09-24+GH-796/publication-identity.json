@@ -1,0 +1,85 @@
+{
+  "before": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "31bbbc81bd6fa0c3e1bccd54296c09292b4b58cf\n"
+    },
+    {
+      "command": [
+        "git",
+        "config",
+        "--get",
+        "core.bare"
+      ],
+      "rc": 0,
+      "stdout": "false\n"
+    },
+    {
+      "command": [
+        "git",
+        "remote",
+        "-v"
+      ],
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\n"
+    },
+    {
+      "command": [
+        "git",
+        "config",
+        "--local",
+        "--get",
+        "user.email"
+      ],
+      "rc": 1,
+      "stdout": ""
+    }
+  ],
+  "after": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "31bbbc81bd6fa0c3e1bccd54296c09292b4b58cf\n"
+    },
+    {
+      "command": [
+        "git",
+        "config",
+        "--get",
+        "core.bare"
+      ],
+      "rc": 0,
+      "stdout": "false\n"
+    },
+    {
+      "command": [
+        "git",
+        "remote",
+        "-v"
+      ],
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\n"
+    },
+    {
+      "command": [
+        "git",
+        "config",
+        "--local",
+        "--get",
+        "user.email"
+      ],
+      "rc": 1,
+      "stdout": ""
+    }
+  ],
+  "equal": true
+}
