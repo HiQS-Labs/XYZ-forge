@@ -147,3 +147,7 @@ Every module reads the shared state through `RunContext`, so none of them needs 
 ## Merge evidence
 
 - PR #776 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #782 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

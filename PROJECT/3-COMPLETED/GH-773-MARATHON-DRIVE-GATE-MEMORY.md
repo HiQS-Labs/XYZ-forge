@@ -2,7 +2,7 @@
 gh_issue: 773
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/773
 title: "marathon_drive: gate memory guard silently disables when ps is denied, logs peak 0MB"
-status: Active (2-WORKING — PR ready 2026-09-24, awaiting merge)
+status: Complete
 created: 2026-09-23
 updated: 2026-09-24
 owner: noelsaw1
