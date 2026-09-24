@@ -326,7 +326,7 @@ mkdir -p "$DENY_BIN"
 printf '#!/bin/sh\necho "ps: Operation not permitted" >&2\nexit 1\n' > "$DENY_BIN/ps"
 chmod +x "$DENY_BIN/ps"
 out="$(PATH="$DENY_BIN:$PATH" run_driver --phase-id p8 --pre-advance-cmd 'sleep 3' 2>&1)"; rc=$?
-warns="$(printf '%s\n' "$out" | grep -c 'RSS watchdog unavailable')"
+warns="$(printf '%s\n' "$out" | grep -c 'RSS watchdog unavailable' || true)"
 if [ "$rc" -eq 0 ]; then
   pass "GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)"
 else
