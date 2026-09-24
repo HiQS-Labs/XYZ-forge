@@ -542,6 +542,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-23
 
 ### Fixed
+- **GH-779: radar: trunk CI health, new-guard re-run on open PRs, regressed-after-declared-fixed table.** (express hotfix, GH-267 lane; suite test/gh779-radar-ci-health.sh registered as the landing gate.)
 - **GH-778: feat: review-code and review-PR ground-truth code review skill.** (express hotfix, GH-267 lane; suite test/gh778-review-code-skill.sh registered as the landing gate.)
 
 ## [Unreleased] - 2026-09-18

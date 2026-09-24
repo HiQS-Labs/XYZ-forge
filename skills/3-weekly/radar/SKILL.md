@@ -31,7 +31,7 @@ Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 > **Radar Discipline:**
 > 1. **Frame window & discover historical arc (Step 0).** Default to 21 days on trunk (`main`/`development`); discover prior reports in `RADAR/`, `docs/radar/`, or `PROJECT/1-INBOX/` to extract historical baseline RGT metrics and multi-week trajectory.
 > 2. **Prove flow distribution & RGT mix (Step 1 — Lens 1).** Pipe trunk commit subjects to a verified tally file, prove counts sum to `wc -l`, isolate Harness machinery from the denominator, classify Run/Grow/Transform (Transform strictly declared via `rgt: transform`), and report Unclassified drift.
-> 3. **Cluster defects, detect regressions & check PR collisions (Steps 2–2b — Lens 2).** Mine 7 evidence signals to isolate chronic debt and short-cycle regressions (applying $\ge 2$ days / $\ge 2$ PRs recurrence discriminator); score targets, and cross-check open PRs to prevent duplicate scheduling.
+> 3. **Cluster defects, detect regressions & check PR collisions (Steps 2–2b — Lens 2).** Mine 9 evidence signals to isolate chronic debt and short-cycle regressions (applying $\ge 2$ days / $\ge 2$ PRs recurrence discriminator); score targets, and cross-check open PRs to prevent duplicate scheduling.
 > 4. **Audit release alignment & orphan backlog (Step 3 — Lens 3).** Read `releases.db` and open milestones read-only; measure orphan issue share and surface roadmap plan-vs-execution drift without modifying database state.
 > 5. **Deliver coaching memo & persist dual sinks on confirmation (Steps 4–5).** Present the SDLC Process Coach narrative (celebrate wins, coach process friction, highlight regressions, offer multi-week arc); upon single operator confirmation, write immutable Sink A (`RADAR-REPORT-*.md`) and sync live Sink B (`radar` issue checklist).
 >
@@ -226,6 +226,18 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
      `RADAR-<id>` target, which the row then links as `class RADAR-<id>`. One class, two
      ledgers — never a second numeric target because an umbrella exists.
 
+9. **Trunk CI health** — a red trunk is a live regression, and no signal above reads CI (GH-779;
+   rebalanceOS `development` failed `lint` + `root-noembed` on every push for 9 days unnoticed).
+   - Read: `gh run list --branch <trunk> --limit 200 --json databaseId,headSha,conclusion,createdAt,name`,
+     filtered to the window; for failed runs, `gh run view <id> --log-failed` and keep only the
+     failing test ids (`FAILED tests/...`) and lint findings (`path:line:col: CODE`).
+   - Report: **consecutive red days** up to the window end, the **first red commit** (sha, subject,
+     PR), and the failing tests/findings that persist across those runs.
+   - Red for **≥2 calendar days** is a **Potential Regression** target, ranked above every backlog
+     cluster: a red trunk hides every new failure behind the old ones.
+   - No `gh`, no workflow runs, or an unreadable log is **structurally unavailable**, stated as such
+     — never reported as green.
+
 **Guard against corpus drift when comparing runs.** Signal 1's citation graph is scoped to a set of
 directories, so a *lifecycle* action — a PDDA sweep moving docs from `2-WORKING` to `3-COMPLETED`
 or `4-MISC`, a bulk rename, an archive — changes the citation counts with no defect having changed
@@ -298,6 +310,16 @@ PR inventory. A plan recommendation must name any matching PR and say whether th
 merge it, unblock it, close it, or deliberately schedule a non-duplicate follow-up. Carry the PR
 classification results directly into Step 4.3 for the "In-Flight Work & Open PRs" summary.
 
+### New-guard re-run (collisions with zero file overlap)
+
+File overlap misses the costliest collision: a check lands, then an older PR that predates it lands
+and turns trunk red (GH-779: GH-241's script ratchet vs rebalanceOS #231, no shared files). For each
+check, ratchet, lint rule, or CI job **added or tightened in the window**, run it against every open
+PR head merged with current trunk (disposable clone: `git merge --no-commit origin/<trunk>`, then the
+guard's own command). A PR that fails a guard it predates is a **collision** — classify it
+"Draft, failing, conflicted, or stale" above and name the guard, the failing line, and the fix
+owner. A guard that cannot be run locally is reported as unavailable, never as a pass.
+
 ## Step 3 — Lens 3: release recalibration
 
 Read the DB using `releases check`, `releases list`, and the `python3 utils/timeline/export_timeline.py --json` payload. Cite the DB generation numbers in the report.
@@ -367,6 +389,18 @@ Follow the coach's narrative with 2–3 clear, high-leverage recommendations fra
 Translate the underlying analytical lenses into clean, easily digested human takeaways:
 - **Flow Balance & RGT Arc**: Summarize the Run/Grow/Transform effort mix alongside the trend across prior runs or windows (e.g. "Run/Maintenance: 76.9% [vs 76.7% in Run 2] · Grow/Features: 14.2% [vs 14.4%] · Transform: 0% (rgt: adoption: 0 docs) · Denominator: 607 commits"), clearly illustrating whether the development arc is trending toward feature momentum or stuck in KTLO.
 - **Top Recurring Targets & Regressions**: List the top 2–4 defect clusters in a simple bulleted format, clearly distinguishing **Recent Regressions** (bounceback on recently touched code) from **Chronic Tech Debt** (long-standing multi-week issues). Include why each recurs and what a single clean fix accomplishes.
+- **Regressed After Declared Fixed**: one row per class that was declared fixed and came back
+  (GH-779; format of HiQS-Labs/rebalanceOS#257). Evidence is signal 4 (false closes) plus a closed
+  issue whose class recurs in a later issue or target:
+
+  | Class | Declared fixed | Came back | Rule | Mechanical guard |
+  |---|---|---|---|---|
+  | DB bypasses | #27 (08-17) | #136 (08-30) | One gateway; no raw `sqlite3.connect` | SQLite gateway ratchet |
+
+  **Rule** is one portable sentence another project could adopt. **Mechanical guard** names the
+  test, ratchet, or CI check that fails when the class returns; `prose only` is itself a finding —
+  classes that regressed almost always had only a principle, an SOP, or a closed issue. Carry the
+  same table into Sink A.
 - **In-Flight Work & Open PRs**: State clearly whether current PRs are actively addressing these targets, blocked by conflicts/stale reviews, or if the targets are completely unowned.
 - **Release Plan Alignment**: Highlight in one or two sentences whether actual work matches the active roadmap milestone, calling out any untracked orphan work.
 
