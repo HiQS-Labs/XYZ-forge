@@ -50,11 +50,14 @@ with 13 same-class sites still broken and no guard, which is how this recurred.
 
 ## Recon (base `337813e0`)
 
-- **Stub consumers:** two tests run their stubs under a restricted `PATH`
-  (`test/gh666_agy_model_probe.py:146` sets `PATH=empty_bin`; `test/gh610…:20` sets `PATH=d`). So
-  `#!/usr/bin/env python3` is **not** a safe substitute: the stub must pin the exact interpreter.
-- **Import path:** 5 of the 6 remaining test sites already run their Python with `PYTHONPATH=$ROOT/utils/py`,
-  and `gh666_agy_model_probe.py:13` inserts `utils/py` into `sys.path`. `gh492` has the repo root as `argv[1]`.
+- **Stub interpreter:** `#!/usr/bin/env python3` would run whichever `python3` is first on the stub's
+  `PATH`, not the interpreter under test, so the stub must pin `sys.executable` exactly (the property #753's
+  launcher keeps). No existing test runs these stubs under an empty `PATH` (`test/gh666_agy_model_probe.py:136–147`
+  expects `invoked=False` there); empty-`PATH` behaviour is a **new** acceptance case, not existing coverage.
+  (Plan QA r1 nit.)
+- **Import path:** four sites (`gh648-l2/l4/l5/l6`) run their Python with `PYTHONPATH=$ROOT/utils/py`;
+  `gh666_agy_model_probe.py:13` inserts `utils/py` into `sys.path`; `gh492` has the repo root as `argv[1]`
+  and needs an explicit insertion.
 - **Command strings:** `utils/py/fuzz_engine.py:227-228` (`build_argv`) does
   `shlex.split(head) + mutant + shlex.split(tail)`, so `shlex.quote(sys.executable)` in the template is
   parsed back into one argv word. No engine change is needed.
@@ -67,11 +70,15 @@ with 13 same-class sites still broken and no guard, which is how this recurred.
 Extend, don't add systems. One small helper, the same edit at each site, and one guard.
 
 1. **Helper** — `utils/py/pystub.py`, stdlib only, ~15 lines. `launcher(python=sys.executable) -> str`
-   returns a two-line sh/Python polyglot header:
+   returns a two-line sh/Python polyglot header, the interpreter **always** single-quoted:
    ```
    #!/bin/sh
-   "exec" <shlex.quote(python)> "$0" "$@"
+   "exec" '<python>' "$0" "$@"
    ```
+   The single-quoted path is a valid string literal in both languages. A path containing `'`, `\` or a
+   newline raises `ValueError` naming it, so the helper never emits a broken stub. (Plan QA r1 blocker:
+   `shlex.quote` leaves an ordinary path such as `/usr/bin/python3` unquoted, making line 2 a Python
+   `SyntaxError`. It is not used for the header.)
    `/bin/sh` runs line 2 as `exec`. Python treats line 1 as a comment and line 2 as a harmless
    string-literal expression, then runs the rest of the same file. The approach is #753's (sh `exec` of the
    quoted interpreter); the only difference is a single file instead of `$0.py` beside it, which keeps every
@@ -82,14 +89,18 @@ Extend, don't add systems. One small helper, the same edit at each site, and one
 3. **Command strings (7)** — `f"{shlex.quote(sys.executable)} …"`, and quote `{tool}`/`{twin}` the same way
    (temp paths today, but the same class).
 4. **Guard + acceptance suite** — `test/gh788-python-path-space.sh`, registered in `validate.sh`:
-   - a stub from `pystub.launcher()` runs under a Python symlinked into a directory **with a space**,
-     and under `PATH=""`;
+   - a stub from `pystub.launcher()` compiles and runs for **both** an ordinary interpreter path and a Python
+     symlinked into a directory **with a space**, each with `PATH=""`, a stub path containing a space and an
+     argument `x y`, asserting the exact argv (the r1 falsifier);
+   - `launcher()` refuses a path containing `'`;
    - **red control:** a bare `#!<spaced python>` stub raises `OSError` (the actual defect);
    - `fuzz_engine.build_argv(f"{shlex.quote(spaced)} tool.py {{mutant}}", ["x"])[0] == spaced`, with a red
      control for the unquoted form;
    - **ratchet:** `git grep` over tracked `test/ utils/ relay-automation/ skills/` finds zero
      `'#!' + sys.executable` / `"#!" + sys.executable` / `f"{sys.executable} ` sites; the same matcher must
-     flag a planted sample (red control, so an empty or broken matcher cannot pass).
+     flag a planted sample (red control, so an empty or broken matcher cannot pass). `git grep` exit 1 is
+     "no match" (pass); any other non-zero exit is a scan error and fails the suite, never read as zero sites.
+     Safe argv-list uses (`[sys.executable, …]`, e.g. `utils/py/gen4_campaign.py:231`) do not match.
 5. **Verification:**
    - Run the 9 affected suites (`gh492`, `gh648-l2/l4/l5/l6`, `agy-turn`, `gh-gen4-phase3/4/5`) plus the new
      suite with the spaced venv active, which is the reproduction. Record each rc.
@@ -112,11 +123,13 @@ Extend, don't add systems. One small helper, the same edit at each site, and one
 
 `rated 75/70/50/70`
 
-- **sev 70:** blocks every push from an affected shell (work-blocking for the gate, not data loss), and the
-  only way through is `--no-verify`, which erodes the gate.
-- **pri 75:** recurring. #651 (2026-09-16) and #788 (2026-09-24) fall in the last 14 days and none in the prior
-  14 (search: "space in path", "shebang", "Exec format error", "GH Repos"). #651 was declared done with 13
-  sites left.
+- **sev 70:** blocks every push from an affected shell (work-blocking for the gate, not data loss). The ways
+  through are leaving the venv or `--no-verify`, and the second erodes the gate.
+- **pri 75:** recurring. #651 (opened 2026-09-16, closed 2026-09-24 by PR #753 with 13 sites left) and #788
+  (2026-09-24) fall in the last 14 days, and none of the same class in the prior 14. Search, 2026-09-24:
+  `gh issue list --repo HiQS-Labs/XYZ-forge --state all --search '<q>'` for q ∈ {"space in path",
+  "spaces in path", "\"GH Repos\"", "Exec format error", "shebang", "path with spaces"}. The only same-class hits
+  were #651 and #788; other hits (#406, #435, #481, #722) are unrelated path topics.
 - **appeal 50:** neutral; the operator gave no preference.
 - **effort 70:** mechanical edits at 13 sites, a ~15-line helper and one suite.
 

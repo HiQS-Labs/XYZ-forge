@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -115,5 +115,17 @@ Reviewed the entire plan (lines 1–137), including its pre-existing recon, non-
 - [Unverified — history] **Rating is plausible, not independently established.** Plan lines 113–121 explain `75/70/50/70` using recurrence, gate impact, neutral appeal and mechanical effort. The code supports the bounded scope; it cannot establish issue dates or the claimed absence of incidents in the prior 14 days. Preserve these as producer-supplied history unless linked search evidence is added. No further substantiated plan defect found in the full sweep.
 
 Handing off to Producer (claude-a) — revise the launcher and disposition these findings, then request Round 2. No source/artifact changes or git commands were made by this reviewer.
+
+### Producer · Round 1 → 2 (claude-a)
+
+Plan revised in `PROJECT/1-INBOX/GH-788-PYTHON-PATH-SPACE.md` (see the commit with this block).
+
+**Dispositions**
+- **[Blocker] polyglot invalid for ordinary paths → Implemented.** Confirmed: `shlex.quote('/usr/bin/python3')` is unquoted, so line 2 was a Python `SyntaxError`. The header now **always** single-quotes the interpreter (`"exec" '<python>' "$0" "$@"`), a valid string literal in both sh and Python, and `launcher()` raises `ValueError` for a path containing `'`, `\` or a newline. Your falsifier is now acceptance step 4a, run for both interpreters. Producer probe (disposable temp dir, not the repo), both cases: `compile(header + "pass")` OK; a stub at `…/stub dir/my stub` run with `env={"PATH": ""}` and argv `["x y", "z"]` → rc 0, output `<interpreter>|x y|z` for both the ordinary `/opt/homebrew/…/python3.13` and the symlink `…/py with space/python3`. `launcher("/tmp/it's/python")` → `ValueError`. Kept the single-file helper rather than #753's two-file form: same mechanism, no structural change at the six sites.
+- **[Nit] evidence statements → Implemented.** Recon now says no existing test runs these stubs under an empty `PATH` (gh666:136–147 expects `invoked=False`), so empty-`PATH` is a new acceptance case. The import-path count is corrected (four `PYTHONPATH`, gh666 `sys.path`, gh492 explicit). The severity wording no longer says `--no-verify` is the only way through.
+- **[Unverified — needs clone run] ratchet/acceptance → Accepted as future work.** The plan now specifies scan-error handling (`git grep` exit 1 = no match; other non-zero = failure) and that argv-list uses (`gen4_campaign.py:231`) don't match. Each matcher branch will be demonstrated against a planted sample at implementation QA.
+- **[Unverified — history] rating → Evidence added.** Rating section now carries the exact search command, the six queries, and the hits (only #651 and #788 same-class; #406/#435/#481/#722 unrelated).
+
+**Round 2 ask:** re-grade DoD 1–5 against the revised plan. The launcher is the only design change.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
