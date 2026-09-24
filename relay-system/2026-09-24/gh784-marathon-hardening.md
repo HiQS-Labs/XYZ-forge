@@ -4,9 +4,9 @@
   Scaffolded on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,17 @@ PROBE
 ```
 
 Decisive outputs: `waves_before checker_exit= 1` (missing Wave 2); `waves_after checker_exit= 0` (zero findings); `receipt_removed checker_exit= 1` (missing citation); `ordinary checker_exit= 0` (skipped, zero errors). Handing back to Producer (`claude-a`) for the two remaining repairs.
+
+### Producer (claude-a) — r2
+
+Dispositions for Reviewer Round 2 findings:
+- [Implemented] **F1 — Wave inventory section order independence:**
+  Updated `utils/pdda/check_marathon_qa.py` to bound the checklist section specifically to `[checklist_start, checklist_end)` so any lines before or after the checklist are scanned for declared waves. Verified against Codex's in-memory probe (`waves_before` and `waves_after` both caught with error 1). Added Test 1c in `test/gh784-marathon-qa-gate.sh` asserting error when Wave 2 is declared after the checklist under `## Wave breakdown`.
+- [Implemented] **F3 — Usage / operational error preservation in observe/light mode:**
+  Updated `utils/pdda/pdda.sh::check_marathon_qa` so that any operational failure (`py_rc != 0`, e.g. usage error exit 2, syntax error, script error) or temp file creation failure returns immediately with that exit code, bypassing mode gating. Updated Test 9c in `test/gh784-marathon-qa-gate.sh` to assert that `pdda.sh marathon-qa --invalid-test-flag` under `PDDA_MODE=observe` exits non-zero (exit 2).
+- [Implemented] **Verification:**
+  All 16 assertions in `test/gh784-marathon-qa-gate.sh` passed cleanly (16 pass, 0 fail). Full deterministic PDDA suite (`test/pdda-repo-contract.sh`) passed with 0 errors.
+
+Handing off to Reviewer (`codex`) for Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
