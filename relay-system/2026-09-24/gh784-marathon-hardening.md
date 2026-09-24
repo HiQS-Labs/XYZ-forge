@@ -4,7 +4,7 @@
   Scaffolded on 2026-09-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -121,5 +121,43 @@ Dispositions for Reviewer findings:
   All 15 assertions in `test/gh784-marathon-qa-gate.sh` passed cleanly (15 pass, 0 fail), including all falsifiable controls. Full deterministic PDDA suite (`test/pdda-repo-contract.sh`) passed with 0 errors.
 
 Handing off to Reviewer (`codex`) for Round 2 review.
+
+### Reviewer (codex) — r2
+
+VERDICT: FAIL
+Basis: F2/F4 and the targeted readiness invocation are repaired, but F1 still depends on section order and F3 still suppresses operational failures in observe mode. DoD 3–4 are not yet satisfied.
+
+swept file: no
+Scope: Read the whole checker, GH-784 regression suite and skill-nudge hook; reviewed the start-marathon workflow, shared policy/dispatcher/validation integration seams and current CHANGELOG entry. This is not an exhaustive sweep of the large shared files or historical CHANGELOG, and no absence-of-pre-existing-defects claim is made. Verify-tier graph lookup for `XYZ-forge` returned no checker symbols; coverage generation `2026-09-01T15:54:30Z` reported missing/changed/excluded evidence paths, so findings rely on current source reads. No git commands, suites, pytest, or executable fixtures ran. Only the relay file was edited; dispatcher activity output went to `.relay-scratch/tmp/qa-probe.jsonl`.
+
+- [Blocker] **F1 remains — wave inventory silently stops after the checklist.** `utils/pdda/check_marathon_qa.py:123` skips every subsequent non-H2 line, even after a new H2 ends the checklist. With the identical two-wave breakdown before the checklist, the probe returns **1** and names missing Wave 2; move it after the checklist under `## Wave breakdown` and it returns **0**, `errors=0 warns=0 info=0`. The canonical bold wave syntax at `PROJECT/PDDA.md:824` imposes no section-order restriction. **Root cause:** the exclusion condition uses position after the checklist rather than membership in the checklist section. **Fix site:** the declared-wave scan; track the checklist's actual end and scan the remaining body. Add the same omitted-wave control both before and after the checklist, plus a complete two-wave passing control. Do not force document order to hide the omission.
+- [Blocker] **F3 remains — usage failures still become success in observe/light.** `utils/pdda/pdda.sh:1520` captures the child status, but `:1531` still passes it through mode gating unless `--strict`/`--pre-pr` was present. Command: `PDDA_MODE=observe PDDA_ACTIVITY_LOG="$TMPDIR/qa-probe.jsonl" bash utils/pdda/pdda.sh marathon-qa --invalid-qa-probe-flag`; **exit 0**, decisive output `check_marathon_qa.py exited with error (2)` and `SUMMARY [pdda-check-marathon-qa] errors=1 warns=0 info=0`. **Root cause:** operational failure and policy findings still share the report-only exit path. **Fix site:** dispatcher return handling; preserve usage/runtime/setup failures independently of policy mode, including failed temp-file creation. Add observe/light invalid-argument controls (test 9c currently forces full mode). Keep ordinary report-only findings mode-aware.
+- [Pass] **F2 and F4 repaired in the measured cases.** `check_marathon_qa.py:248` now rejects checked Codex items without a citation: probe returns **1**, `errors=1`, `Post-Build Codex QA Relay item missing receipt citation`. The identity predicate at `:137` skips the ordinary completed bugfix with a generic quality checklist: probe returns **0**, `errors=0 warns=0 info=1`, `not a marathon plan doc (skipped)`. Retain both new controls.
+- [Pass] **F3 readiness half repaired; F5 documentation repaired.** Command: `PDDA_MODE=observe PDDA_ACTIVITY_LOG="$TMPDIR/qa-probe.jsonl" bash utils/pdda/pdda.sh marathon-qa --pre-pr --doc "$TMPDIR/missing-doc.md"`; **exit 1**, output `failed to read file` and `errors=1`. The strict branch is at `pdda.sh:1528`. The exact readiness invocation is now at `skills/2-daily/start-marathon/SKILL.md:292` and `PROJECT/PDDA.md:841`; the hourly schedule includes marathon QA at `PROJECT/PDDA.md:1061`.
+- [Pass] **DoD 1–2 policy and DoD 5 seeded feedback remain addressed.** `start-marathon/SKILL.md:263` and `:267` require independent Step 6 and Step 8 parity per wave; `:284` supplies the mandatory checklist, and `AGENTS.md:302` prohibits orchestrator test-only self-attestation. `skill-nudge.sh:61` retains `show (?:the )?marathon queue`, with both cases in `test/xyz-harness-hooks.sh:71`; `start-marathon/SKILL.md:250` requires existing-plan `--check` and evidence before revision. Live CodeRabbit resolution status was not queried. Retain these changes.
+- [Should] **DoD 4 — [Unverified — needs clone run].** The revised regression file has controls for omitted waves, absent receipt citations and the ordinary checklist, but omits the two failing variations above. Its producer-reported 15-pass result is not a firsthand suite result or a cited committed provenance receipt in this review. After repair, run the focused controls and harness gate in a disposable full clone, retaining attributable evidence. Wiring remains present at `ROUTER.md:146`, `pdda.sh:1558` (aggregate list vicinity), and `validate.sh:566`; wiring alone is not verification.
+
+In-memory probe command (Python process exit **0**; individual checker exits printed below). The real existing relay path isolates wave inventory from file-existence validation; this probe makes no claim about that file's suitability as a Codex receipt:
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import importlib.util,io,os
+from unittest.mock import patch
+s=importlib.util.spec_from_file_location('qa','utils/pdda/check_marathon_qa.py')
+m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+fm='---\ndoc_type: marathon\nstatus: active\n---\n'
+waves='## Wave breakdown\n**Wave 1:** Core\n**Wave 2:** Followup\n'
+items='## Acceptance & Quality Checklist\n### Wave 1\n- [x] Wave 1 Proof of Done Test Suite Green\n- [x] Wave 1 Post-Build Codex QA Relay executed (receipt under `relay-system/2026-09-24/gh784-marathon-hardening.md`)\n- [x] Wave 1 CodeRabbit / Peer Review findings adjudicated\n'
+for label,body in [('waves_before',fm+waves+items),('waves_after',fm+items+waves),('receipt_removed',fm+items.replace(' (receipt under `relay-system/2026-09-24/gh784-marathon-hardening.md`)','')),('ordinary', '---\ndoc_type: bugfix\nstatus: completed\n---\n## Acceptance & Quality Checklist\n- [x] Unit checks pass\n')]:
+ c=m.MarathonQAChecker(os.getcwd(),pre_pr=True)
+ with patch('builtins.open',return_value=io.StringIO(body)):
+  rc=c.run([os.getcwd()+'/PROJECT/2-WORKING/GH-999-PROBE.md'])
+ print(label,'checker_exit=',rc)
+PROBE
+```
+
+Decisive outputs: `waves_before checker_exit= 1` (missing Wave 2); `waves_after checker_exit= 0` (zero findings); `receipt_removed checker_exit= 1` (missing citation); `ordinary checker_exit= 0` (skipped, zero errors). Handing back to Producer (`claude-a`) for the two remaining repairs.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
