@@ -896,24 +896,51 @@ def _gate_guard_config():
     }
 
 
+GATE_RSS_UNAVAILABLE_WARNING = ("gate-guard: WARNING: RSS watchdog unavailable — cannot read "
+                                "process-group memory; continuing without RSS enforcement")
+
+
 def _gate_group_rss_mb(pgid):
-    """Summed RSS (MB) of a gate process group, or -1 when it cannot be read."""
+    """Summed RSS of a gate process group as (mb, None), or (None, reason) when it was not read.
+
+    GH-773: this used to return -1 on an exception and 0 on an empty or refused listing, and the
+    caller folded both into "peak 0MB" with the cap unable to fire. `ps-failed` means the probe
+    itself did not work (a sandbox raises PermissionError at exec); `group-missing` means `ps`
+    worked but listed no row for the group, which the caller must tell apart from a gate that has
+    just exited."""
     try:
-        out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
-                             timeout=10).stdout
+        res = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
+                             timeout=10)
     except (OSError, subprocess.SubprocessError):
-        return -1
+        return None, "ps-failed"
+    if res.returncode != 0 or not res.stdout.strip():
+        return None, "ps-failed"
     total_kb = 0
-    for line in out.splitlines():
+    matched = False
+    for line in res.stdout.splitlines():
         parts = line.split()
         if len(parts) != 2:
             continue
         try:
             if int(parts[0]) == pgid:
                 total_kb += int(parts[1])
+                matched = True
         except ValueError:
             continue
-    return total_kb // 1024
+    if not matched:
+        return None, "group-missing"
+    return total_kb // 1024, None
+
+
+def _gate_rss_summary(peak_mb, readable, unreadable):
+    """The peak-RSS fragment of the gate summary. GH-773: never report an unmeasured peak as 0MB."""
+    if unreadable == 0 and readable > 0:
+        return f"peak group RSS {peak_mb}MB"
+    if unreadable == 0:
+        return "peak group RSS unknown (gate exited before first sample)"
+    if readable == 0:
+        return f"peak group RSS unknown (no readable samples; {unreadable} unreadable samples)"
+    return f"peak group RSS unknown (observed max {peak_mb}MB; {unreadable} unreadable samples)"
 
 
 def _gate_kill_group(proc, reason):
@@ -2352,18 +2379,31 @@ relay-file: {rel_relay}
                                 start_new_session=True)
         started = time.monotonic()
         peak_rss_mb = 0
+        rss_readable = rss_unreadable = 0
         rc = None
         while rc is None:
             rc = proc.poll()
             if rc is not None:
                 break
             elapsed = int(time.monotonic() - started)
-            rss_mb = _gate_group_rss_mb(proc.pid)
-            peak_rss_mb = max(peak_rss_mb, rss_mb)
+            rss_mb, rss_status = _gate_group_rss_mb(proc.pid)
+            if rss_status == "group-missing":
+                # No row for the group: either the gate exited between poll() and ps (a clean
+                # finish, not a failed sample) or ps cannot see a live group (unreadable).
+                rc = proc.poll()
+                if rc is not None:
+                    break
+            if rss_mb is None:
+                rss_unreadable += 1
+                if rss_unreadable == 1:
+                    log(GATE_RSS_UNAVAILABLE_WARNING)
+            else:
+                rss_readable += 1
+                peak_rss_mb = max(peak_rss_mb, rss_mb)
             reason = None
             if cfg["wall_s"] > 0 and elapsed >= cfg["wall_s"]:
                 reason = f"wall clock {elapsed}s >= cap {cfg['wall_s']}s"
-            elif cfg["rss_mb"] > 0 and rss_mb >= cfg["rss_mb"]:
+            elif cfg["rss_mb"] > 0 and rss_mb is not None and rss_mb >= cfg["rss_mb"]:
                 reason = f"gate group RSS {rss_mb}MB >= cap {cfg['rss_mb']}MB"
             if reason:
                 _gate_kill_group(proc, reason)
@@ -2397,7 +2437,7 @@ relay-file: {rel_relay}
         # can later answer whether the layer-3 poll is being outrun by a fast allocator — which is
         # the stated precondition for taking on container isolation at all.
         log(f"gate-guard: gate exit {rc} after {int(time.monotonic() - started)}s — "
-            f"peak group RSS {peak_rss_mb}MB "
+            f"{_gate_rss_summary(peak_rss_mb, rss_readable, rss_unreadable)} "
             f"(tier {cfg['tier']}; caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, "
             f"CPU {cfg['cpu_s']}s)")
         # GH-284 P2: the run log reports this lane's gate outcome; mirrors RUN_GATE_RESULT in the

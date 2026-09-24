@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-24 — Gate memory guard says when it cannot measure (GH-773)
+
+When `ps` cannot run (a sandbox raises `PermissionError` at exec) or lists nothing for the gate's
+process group, the pre-advance gate's RSS watchdog in `utils/py/marathon_drive.py` used to switch
+off silently and log `peak group RSS 0MB`. It now logs one warning
+(`RSS watchdog unavailable … continuing without RSS enforcement`), keeps the wall-clock and CPU
+caps, and reports the peak as `unknown` with the count of unreadable samples. A gate that exits
+before its first sample also reports `unknown` instead of `0MB`. A clean exit between the poll and
+`ps` is re-polled, so it is not counted as a failed sample. The design came from AgentChorus #507818
+(fail-open-loud, no fallback probe, no receipt schema change). `test/gh390-gate-guard.sh` gains
+helper-seam cases, a denied-`ps` driven case, and a working-`ps` control; against the pre-fix code
+the new cases fail 4 of 6.
+
 ## 2026-09-24 — GH-760 correction: the ready-poll is not the send-path flake
 
 Run 35767844928 already passed `GET /` (HTTP 200), session create, and both joins before `remote agent2 send` missed `"turn": 2`. The 2026-09-23 entry's slow-bind explanation does not match that log. PR #761 keeps the poll and the failure diagnostics and does not close #760. The `FileNotFoundError` for `runtime/agent2.watch` in that log is from `agent-chorus.sh`, not the bridge suite.
@@ -19,6 +32,7 @@ relay approved. Full macOS `validate.sh` passed 411/411 on the reviewed commit i
 full clone with unchanged git identity; `security-scan.sh` failed only during the parallel pool
 on transient peer-suite files and passed the built-in isolated retry. Sanitized logs and the
 committed receipt are in [GH-764 evidence](TESTS-RESULTS/2026-09-23+GH-764/SUMMARY.md).
+
 
 ## 2026-09-23 — Audits of the two largest Python files, plus intake (GH-768, GH-769)
 
