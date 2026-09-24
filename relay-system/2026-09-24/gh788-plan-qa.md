@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -84,5 +84,36 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The scope is proportionate, but the specified launcher has an observed Python syntax failure for an ordinary interpreter path. Fix that design before implementation.
+swept file: yes
+
+Reviewed the entire plan (lines 1–137), including its pre-existing recon, non-goals, risk and rating sections; findings below include those sections. Source inspection used direct reads/search because no graph tools were available. Commit identity is supplied by Setup, not independently verified (no git commands permitted).
+
+- [Blocker] **The two-line polyglot is not valid Python for ordinary paths** (`PROJECT/1-INBOX/GH-788-PYTHON-PATH-SPACE.md:69–79`). `shlex.quote('/usr/bin/python3')` returns an unquoted path, producing `"exec" /usr/bin/python3 "$0" "$@"`. This raises `SyntaxError` before the stub body runs. The quoted-space case compiling successfully does not establish the default case.
+  Observed input: `python='/usr/bin/python3'` substituted into the exact proposed header; compile probe below exits 1.
+  Affected scope: all six migrated stub writers when their interpreter path needs no shell quoting.
+  Falsifier: compile the generated header plus `pass` for both `/usr/bin/python3` and `/tmp/python with spaces/python`; both must compile. In the disposable clone, execute both launcher cases with `PATH=''`, a stub pathname containing spaces and an argument `x y`, asserting the selected `sys.executable` and exact argv. A successful ordinary-path case would falsify this finding; the current header fails it.
+  Concrete fix: use a genuine sh/Python polyglot that encloses the shell exec line in a Python string independently of `shlex.quote`'s output, or reuse #753's two-file convention. Keep the small shared helper and extend acceptance to both ordinary and spaced interpreters; do not add a framework.
+  Probe command (environment: `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR="$PWD/.relay-scratch/tmp"`; no stub executed):
+  ```sh
+  python3 -B -c 'import shlex; compile("\x23!/bin/sh\n\"exec\" " + shlex.quote("/usr/bin/python3") + " \"$0\" \"$@\"\npass\n", "<plan-header>", "exec")'
+  ```
+  Exit status: **1**. Decisive output: `File "<plan-header>", line 2`, `"exec" /usr/bin/python3 "$0" "$@"`, `SyntaxError: invalid syntax`.
+
+- [Pass] **The listed 13 sites and quoting mechanism match the checked source.** `rg -n 'sys\.executable' test/ utils/ relay-automation/ skills/` (exit 0) returned the six shebang writers at exactly the listed lines and the seven command templates at `utils/py/fuzz_engine.py:375,381,382,390,392`, `utils/py/repro_synth.py:199`, and `utils/py/gen4_campaign.py:329`. No additional defect site appeared in that literal search; this is not proof against aliases or alternate constructions. `fuzz_engine.py:224–228` uses `shlex.split(head) + list(mutant) + shlex.split(tail)`, so quoting the interpreter and tool/twin is the correct boundary fix. An in-memory AST extraction of that function (no module imports or fixtures) returned `['/tmp/python', 'with', 'spaces/python', 'tool.py', 'x y']` for the bare template and `['/tmp/python with spaces/python', 'tool.py', 'x y']` for the quoted template (probe exit 0).
+
+- [Pass] **The helper scope and gh610 non-goal are reasonable.** Four gh648 scripts set `PYTHONPATH` near their start; `test/gh666_agy_model_probe.py:13` inserts `utils/py`, and `test/gh492-roadmap-state-sweep.sh:16` has the repository path. Thus five sites already have module access; gh492 needs the proposed insertion. No suitable Python launcher helper surfaced in the inspected helper inventory. `test/gh610-claude-subscription.sh:96–110,162` already pins an interpreter through `/bin/sh` and tests ordinary/spaced selections. Preserve that working launcher. The six stub bodies do not contain a discovered first-line comparison or future-import requirement that separately prevents a correctly designed single-file launcher.
+
+- [Nit] **Correct two evidence statements.** Plan lines 53–57 overstate existing restricted-PATH coverage: `test/gh666_agy_model_probe.py:136–147` expects `invoked=False`, and gh610 line 20 exercises unavailable-Python fallback, not its Python stub. Keep empty-PATH coverage as a new acceptance case. Also replace “5 of the 6 ... PYTHONPATH” with “four use PYTHONPATH, gh666 inserts sys.path.” Plan lines 115–116 say bypass is the “only way through,” although lines 25–27 already describe switching away from the affected venv; narrow that wording.
+
+- [Unverified — needs clone run] **Acceptance and ratchet implementation remain future work.** Plan lines 84–96 specify all three red-control families; no executable fixtures or suites were run this turn. The stated literal patterns cover the 13 observed sites and exclude safe argv-list uses such as `utils/py/gen4_campaign.py:231`, but exact regexes are not supplied. At implementation QA, demonstrate each matcher branch detects its planted sample and distinguish scan errors from zero matches; do not claim the matcher is verified now. Runtime empty-PATH behavior, exact interpreter preservation and all affected-suite results remain owed.
+
+- [Unverified — history] **Rating is plausible, not independently established.** Plan lines 113–121 explain `75/70/50/70` using recurrence, gate impact, neutral appeal and mechanical effort. The code supports the bounded scope; it cannot establish issue dates or the claimed absence of incidents in the prior 14 days. Preserve these as producer-supplied history unless linked search evidence is added. No further substantiated plan defect found in the full sweep.
+
+Handing off to Producer (claude-a) — revise the launcher and disposition these findings, then request Round 2. No source/artifact changes or git commands were made by this reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
