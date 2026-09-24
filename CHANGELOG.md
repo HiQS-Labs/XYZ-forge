@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-24 — GH-760 correction: the ready-poll is not the send-path flake
+
+Run 35767844928 already passed `GET /` (HTTP 200), session create, and both joins before `remote agent2 send` missed `"turn": 2`. The 2026-09-23 entry's slow-bind explanation does not match that log. PR #761 keeps the poll and the failure diagnostics and does not close #760. The `FileNotFoundError` for `runtime/agent2.watch` in that log is from `agent-chorus.sh`, not the bridge suite.
+
 ## 2026-09-23 — Audits of the two largest Python files, plus intake (GH-768, GH-769)
 
 Research-only audits of `utils/py/releases_app.py` (26 findings plus a caller and test sweep) and
@@ -21,6 +25,10 @@ views, Pages generation, and routed local/hosted verification. The Skills Army m
 GH-672 one-Pulse-collection-per-device contract and its canonical-source drift gate. Git lanes were
 rebuilt from current cached refs. All seven specs pass semantic validation with zero warnings; all
 seven self-contained HTML artifacts were rebuilt.
+
+## 2026-09-23 — GH-760: agent-chorus-bridge waits for GET / instead of sleep 1
+
+Hosted wave-reconcile `--qualify` failed closed when `test/agent-chorus-bridge.sh` raced a slow bind (`sleep 1.0`). The suite now polls `GET /` until the expected HTTP code, dumps client body + log on assertion failure, and fails closed against a closed port. Disposable-clone run: 48 passed, 0 failed; mutating the helper to always return 0 went red on that control.
 
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 
