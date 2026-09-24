@@ -62,6 +62,7 @@ CONNECTOR_DEFAULTS = {
 # from config: adding a connector is a pull request, not a runtime install (issue non-goal).
 REGISTRY = {
     "github_board": "work_connectors.github_board",
+    "github_labels": "work_connectors.github_labels",
 }
 
 
@@ -136,6 +137,39 @@ def events_after(conn, last_id, limit=500):
     return [{"id": r[0], "gh_number": r[1], "event": r[2],
              "payload": json.loads(r[3]) if r[3] else None, "at": r[4]}
             for r in rows]
+
+
+def label_events_after(conn, last_id, db_path, limit=500):
+    """Labels alone receive qualified current state; raw board protocol is frozen."""
+    from releases_app import (_has_column, _origin_repo_identity, resolve_roadmap_identity,
+                              latest_owned_lifecycle, load_work_evidence)
+    conn.row_factory = sqlite3.Row
+    source = load_work_evidence(db_path)
+    ready = bool(source.get("status_label_supported"))
+    repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
+    origin = _origin_repo_identity(os.path.dirname(db_path))
+    events = []
+    for r in conn.execute("SELECT id,repo_id,gh_number,event,payload,at FROM work_events "
+                          "WHERE id > ? ORDER BY id LIMIT ?", (last_id, limit)).fetchall():
+        ev = dict(r)
+        ev["payload"] = json.loads(ev["payload"]) if ev["payload"] else None
+        ev["status_label_supported"] = ready
+        ev["source_valid"] = bool(source.get("schema_ready") and not source.get("error"))
+        ev["source_error"] = source.get("error")
+        rows = conn.execute("SELECT * FROM roadmap_items WHERE repo_id = ? AND gh_number = ? LIMIT 2",
+                            (r["repo_id"], r["gh_number"])).fetchall()
+        ev["current"] = None
+        if len(rows) == 1:
+            row = rows[0]
+            current = resolve_roadmap_identity(row, repos, origin)
+            current.update(global_id=row["global_id"], section=row["section"],
+                           marker=row["status_marker"], status_label=row["status_label"] if ready else None,
+                           latest_lifecycle=latest_owned_lifecycle(conn, r["repo_id"], r["gh_number"]))
+            ev["current"] = current
+        else:
+            ev["identity_error"] = "missing or ambiguous current owned roadmap row"
+        events.append(ev)
+    return events
 
 
 def _registry():
@@ -427,22 +461,31 @@ def _dispatch_locked(db_path, at, conns, window_s, reset=False):
         _reset_cursors(db_path, list(conns))
     read = sqlite3.connect(db_path, timeout=30)
     try:
-        batches, bounds = {}, {}
+        batches, bounds, safe = {}, {}, {}
         for name, cfg in conns.items():
             last = cursor_for(read, name)
-            evs = events_after(read, last)
+            evs = (label_events_after(read, last, db_path) if name == "github_labels"
+                   else events_after(read, last))
             if evs:
-                batches[name] = (cfg, evs)
                 # The closed range this connector is allowed to report back. Captured here,
                 # from the rows we actually handed it — never re-derived from the child.
                 bounds[name] = (last, evs[-1]["id"])
+                if name == "github_board":
+                    evs = [ev for ev in evs if ev["event"] != "label_repair"]
+                if evs:
+                    batches[name] = (cfg, evs)
+                else:
+                    safe[name] = (bounds[name][1], None)
     finally:
         read.close()
     if not batches:
-        return {}
+        if safe:
+            _persist(db_path, safe, at)
+        return safe
     launched = [_launch(name, cfg, evs) for name, (cfg, evs) in sorted(batches.items())]
     deadline = time.monotonic() + (CONNECTOR_WINDOW_S if window_s is None else window_s)
     results = _collect(launched, deadline, bounds)
+    results.update(safe)
     try:
         _persist(db_path, results, at)
     except Exception as exc:

@@ -1,0 +1,25 @@
+== test: wave-reconcile ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-wave-reconcile.XXXXXX.pVWfu4g9sS
+=== Running wave-reconcile.sh test suite ===
+  ✅ PASS: Top-level help lists canonical purpose
+  ✅ PASS: Dirty working tree is rejected (exit 3)
+  ✅ PASS: Dry-run exits 0
+  ✅ PASS: Dry-run preserves exact byte-state of repo
+  ✅ PASS: Direct-commit dry-run exits 0
+  ✅ PASS: Direct-commit reconciliation preserves commit identity
+  ✅ PASS: Missing lessons learned is a WARN, not a refusal (exit 0)
+  ✅ PASS: WARN names the doc and the missing section
+  ✅ PASS: promotion proceeds past the WARN
+  ✅ PASS: Live reconciliation exits 0
+  ✅ PASS: Merged active doc moved from 2-WORKING to 3-COMPLETED
+  ✅ PASS: Merged doc frontmatter status updated to Complete
+  ✅ PASS: Unmerged/declined active doc moved from 2-WORKING to 4-MISC
+  ✅ PASS: Unmerged doc frontmatter status updated to Declined
+  ✅ PASS: Declined PR with unconfirmed issue state reconciles cleanly (exit 0)
+  ✅ PASS: Declined PR with unconfirmed issue state leaves the active doc in 2-WORKING (GH-646)
+  ✅ PASS: Declined/unconfirmed closeout is logged as preserved, not promoted
+  ✅ PASS: ROADMAP.md entry archived to Completed with shipping badge
+  ✅ PASS: ROADMAP.md entry archived separator-less fixture entry with correct formatting
+  ✅ PASS: Archived line carries no nested/mismatched bold markers
+  ✅ PASS: Mangled GH-222 entry is fixed and canonicalized
+=== wave-reconcile.sh Results: 21 passed, 0 failed ===

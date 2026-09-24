@@ -109,6 +109,10 @@ CREATE TABLE IF NOT EXISTS roadmap_items (
     updated_at TEXT
 )
 """)
+# GH-646: update_roadmap_entry qualifies the row against its OWN repo (repos is a MIGRATION_001
+# table; every real ledger has it). The fixture models that instead of a bare roadmap_items.
+c.execute("CREATE TABLE IF NOT EXISTS repos (id INTEGER PRIMARY KEY, global_id TEXT, slug TEXT, updated_at TEXT)")
+c.execute("INSERT OR REPLACE INTO repos (id, global_id, slug) VALUES (1, 'repo-0123456789ABCDEF0123456789', 'HiQS-Labs/XYZ-forge')")
 c.execute("CREATE TABLE IF NOT EXISTS releases (id INTEGER PRIMARY KEY, global_id TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS issue_refs (id INTEGER PRIMARY KEY, url TEXT)")
 c.execute("CREATE TABLE IF NOT EXISTS manifest_items (release_id INTEGER, issue_ref_id INTEGER, state TEXT)")

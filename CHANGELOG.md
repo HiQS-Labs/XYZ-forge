@@ -277,6 +277,20 @@ issue/root diagnostics survive together. 39 populated Python checks, production-
 pass; replacement independent review and full qualifying gate remain pending.
 Easy rollback: disable the optional reader or reviewed revert; no source migration.
 
+## 2026-09-20 — Explicit task starts and confirmed endings (GH-646)
+
+The existing roadmap writer gains schema 009's nullable `in-progress` label,
+established only by an explicitly accepted, repository-qualified task start.
+The opt-in GitHub connector projects only that label through existing replay;
+confirmed completion/cancellation clears it, and reopening requires a fresh start.
+Metadata, migration, quiet activity and PR merge alone do not establish task state.
+Existing Express and reconciliation paths preserve exact issue identity and
+read-only previews. Focused source review is approved and 41 tests pass; complete
+qualification remains required before landing. No live migration or connector
+enablement is included. Costly schema rollback: disable projection and retain a
+verified pre-migration backup; never restore it over newer task records.
+
+Reconciler narrowing (2026-09-20 rebase onto `41be79e2`): `_may_terminalize_issue` now treats a MERGED closer whose issue is not positively OPEN as terminal (the GH-202 offline contract, unchanged), and requires a confirmed CLOSED issue only for a declined PR — the earlier revision gated merged closers too and broke `wave-reconcile.sh`, `gh202`, `gh280`. Three fixtures now model what the writer verifies: `gh496` gains the `repos` table (MIGRATION_001), `gh527`'s stub `gh` answers the REST `api repos/…/issues/N` identity read, `wave-reconcile.sh` confirms GH-777 CLOSED and adds a declined/unconfirmed PR (#1004 → GH-778) that must stay in 2-WORKING (red control witnessed both ways).
 ## 2026-09-18 — Offline Jev vs Tier-1/Gemma ATE triage replay; shadow flag not started (GH-712)
 
 Lane B of the GH-709 TypeSafe Jev recon. Added `utils/py/jev_triage.py` (stdlib only): three Choice

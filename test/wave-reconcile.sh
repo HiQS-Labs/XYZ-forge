@@ -90,6 +90,21 @@ updated: 2026-08-22
 - Always preserve separatorless formatting when archiving entries.
 EOF
 
+# GH-646: a declined PR is not terminal authority on its own — with no confirmed CLOSED issue
+# state (no issues[] entry for 778) the active doc must stay put. Red control for the declined branch.
+cat << 'EOF' > "$REPO/PROJECT/2-WORKING/GH-778-UNKNOWN.md"
+---
+gh_issue: 778
+title: "GH-778: Declined, state unknown"
+status: In Progress
+created: 2026-08-22
+updated: 2026-08-22
+---
+
+# GH-778: Declined, state unknown
+Testing that an unconfirmed issue survives a declined PR.
+EOF
+
 cat << 'EOF' > "$REPO/PROJECT/2-WORKING/GH-777-DECLINED.md"
 ---
 gh_issue: 777
@@ -143,7 +158,19 @@ cat << 'EOF' > "$REPO/manifest.json"
       "baseRefName": "development",
       "headRefName": "feat/gh777",
       "body": "Closes #777"
+    },
+    {
+      "number": 1004,
+      "title": "feat(core): declined, issue state unknown",
+      "state": "CLOSED",
+      "mergedAt": null,
+      "baseRefName": "development",
+      "headRefName": "feat/gh778",
+      "body": "Closes #778"
     }
+  ],
+  "issues": [
+    {"number": 777, "state": "CLOSED"}
   ],
   "commits": [
     {
@@ -314,6 +341,29 @@ if grep -q "status: Declined" "$REPO/PROJECT/4-MISC/GH-777-DECLINED.md"; then
   pass "Unmerged doc frontmatter status updated to Declined"
 else
   fail "Unmerged doc frontmatter status updated to Declined" "not found" "status: Declined"
+fi
+
+# GH-646 red control: declined PR #1004 closes #778, whose state the manifest does not confirm.
+# The live run above left moved docs uncommitted; reconcile refuses a dirty tree (exit 3), so commit first.
+git -C "$REPO" add -A >/dev/null 2>&1 && git -C "$REPO" commit -q -m "fixture: state after live reconciliation" >/dev/null 2>&1 || true
+set +e
+out="$(python3 "$REPO/utils/py/wave_reconcile.py" --root "$REPO" --pr 1004 --offline "$REPO/manifest.json" --skip-pull 2>&1)"
+rc=$?
+set -e
+if [ "$rc" -eq 0 ]; then
+  pass "Declined PR with unconfirmed issue state reconciles cleanly (exit 0)"
+else
+  fail "Declined PR with unconfirmed issue state reconciles cleanly (exit 0)" "exit $rc: $out" "exit 0"
+fi
+if [ -f "$REPO/PROJECT/2-WORKING/GH-778-UNKNOWN.md" ] && [ ! -f "$REPO/PROJECT/4-MISC/GH-778-UNKNOWN.md" ]; then
+  pass "Declined PR with unconfirmed issue state leaves the active doc in 2-WORKING (GH-646)"
+else
+  fail "Declined PR with unconfirmed issue state leaves the active doc in 2-WORKING (GH-646)" "moved" "still in 2-WORKING"
+fi
+if grep -q "PR was not merged — preserving active doc" <<<"$out"; then
+  pass "Declined/unconfirmed closeout is logged as preserved, not promoted"
+else
+  fail "Declined/unconfirmed closeout is logged as preserved, not promoted" "$out" "PR was not merged — preserving active doc"
 fi
 
 # Verify ROADMAP.md has SHIPPED badge under Completed

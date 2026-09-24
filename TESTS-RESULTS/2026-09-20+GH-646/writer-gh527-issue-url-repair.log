@@ -1,0 +1,19 @@
+  ok   intake refuses an issue_url that names a different issue
+  ok   fixture baseline is consistent (bad data, valid chain) like GH-61 was
+  ok   a URL naming a different issue than gh_number is refused
+  ok   refusal names the invariant
+  ok   a non-issue URL is refused
+  ok   update with no field to change is still refused
+  ok   issue_url is corrected
+  ok   the repair wrote an op_receipt
+  ok   check is clean after a CLI repair (no dump-divergence, no receipt-chain break)
+  FAIL reconcile-state no longer refuses the whole run over one bad row (expected [0], got [3])
+  FAIL healthy row GH-900 was stranded: refused: rule=roadmap-issue-state: https://github.com/o/r/issues/900 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+  FAIL unresolvable row GH-901 was not reported: refused: rule=roadmap-issue-state: https://github.com/o/r/issues/900 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+  FAIL warning should point at the repair verb: refused: rule=roadmap-issue-state: https://github.com/o/r/issues/900 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+  FAIL mixed-row apply succeeds (expected [0], got [3])
+refused: rule=roadmap-issue-state: https://github.com/o/r/issues/900 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+  ok   the skipped row's state was never guessed
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+AssertionError

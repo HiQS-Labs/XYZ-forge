@@ -163,7 +163,15 @@ Then begin work.
    substitute a self-review or consult. A simple change may skip this stage with
    a brief reason; final QA still applies.
 
-7. **Execute and verify the reviewed scope.** Use the current agent or the repo's
+7. **Execute and verify the reviewed scope.**
+   In XYZ Forge's deliberately migrated schema009 ledger, admit the task after
+   Approved plan QA and before the first implementation write: resolve the exact
+   full tracking issue URL in `roadmap list --json` to its owned row, then run
+   `python3 utils/py/releases_app.py roadmap update --gid OWNED_ROW --accepted-start`.
+   Registration/rating/QA are not starts. Refuse uncertain identity/native state;
+   repeated admission preserves the original start. Do not install schema or
+   enable connectors automatically, or impose this flag on other repositories.
+   Use the current agent or the repo's
    established builder/jog/marathon workflow as appropriate. Multiple issues alone
    do not require a new marathon, queue, daemon, or parallel executor. Preserve
    existing role splits, active-marathon limits, driver locks and retry limits.

@@ -322,7 +322,10 @@ for SIDE in a b; do
   case "$S" in "$WORK"/*) ;; *) echo "REFUSING" >&2; exit 2 ;; esac
   cp -R "$ANC" "$S"   # WORK is a fresh mktemp -d: the path cannot pre-exist, so no scrub is needed
   printf 'Release: 1.%s.0\nStatus: Draft\nDescription: Side %s first. Second sentence. Third. Fourth.\nTracking Issue: https://github.com/A/B/issues/1%s\n\nRelease: 2.%s.0\nStatus: Draft\nDescription: Side %s second block.\n' "$SIDE" "$SIDE" "$SIDE" "$SIDE" "$SIDE" > "$WORK/led-$SIDE.md"
-  R="$S"; rout import "$WORK/led-$SIDE.md"
+  # Distinct seconds deliberately exercise the settings natural-key conflict;
+  # relying on both imports finishing in one second hid this merge requirement.
+  if [ "$SIDE" = a ]; then STAMP=2026-09-16T00:00:01Z; else STAMP=2026-09-16T00:00:02Z; fi
+  R="$S"; RELEASES_APP_NOW="$STAMP" rout import "$WORK/led-$SIDE.md"
 done
 RUN_A="$(sqlite3 "$WORK/j-a/releases.db" 'SELECT DISTINCT import_run FROM grandfather_entries')"
 RUN_B="$(sqlite3 "$WORK/j-b/releases.db" 'SELECT DISTINCT import_run FROM grandfather_entries')"
@@ -334,7 +337,21 @@ case "$MG" in "$WORK"/*) ;; *) echo "REFUSING" >&2; exit 2 ;; esac
 cp -R "$ANC" "$MG"
 cp "$WORK/merged.sql" "$MG/releases.sql"
 R="$MG"
-rout check --rebuild
+V="$(rlog check --rebuild)"
+if has "$V" 'rule=dump-duplicate-setting'; then ok "unresolved timestamp-distinct generation settings refuse rebuild" 0; else ok "duplicate generation setting refused" 1; fi
+# Both sides reached generation 2. Resolve that one shared natural key explicitly
+# (side A wins the timestamp), rather than treating different INSERT text as rows
+# with different identities. Keep every business row and both receipt branches.
+GEN_A="$(sqlite3 "$WORK/j-a/releases.db" "SELECT value FROM settings WHERE key='generation'")"
+GEN_B="$(sqlite3 "$WORK/j-b/releases.db" "SELECT value FROM settings WHERE key='generation'")"
+if [ -n "$GEN_A" ] && [ "$GEN_A" = "$GEN_B" ]; then
+  awk "/^INSERT INTO settings\\(key, value, updated_at\\) VALUES\\('generation',/ { if (seen++) next } { print }" "$WORK/merged.sql" > "$MG/releases.sql"
+else
+  echo "REFUSING: divergent generation values require an explicit higher-value resolution" >&2
+  exit 2
+fi
+V="$(rlog check --rebuild)"
+if has "$V" 'FAIL:' || has "$V" 'refused:'; then printf '%s\n' "$V"; fi
 V="$(rlog check)"; if has "$V" "check: clean"; then ok "the merged dump rebuilds atomically and checks green" 0; else ok "merge rebuild green" 1; fi
 N="$(sql 'SELECT COUNT(*) FROM releases')"; ok "BOTH sides' releases survive the rebuild (4 rows from two 2-block imports)" "$(is "$N" "4"; echo $?)"
 N="$(sql 'SELECT COUNT(DISTINCT import_run) FROM grandfather_entries')"

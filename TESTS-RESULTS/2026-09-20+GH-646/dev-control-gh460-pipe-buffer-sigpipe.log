@@ -1,0 +1,15 @@
+== test: gh460-pipe-buffer-sigpipe ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh460-pipe-buffer-sigpipe.XXXXXX.WbyjwY0pSz
+  PASS: control: the pre-fix shape FAILS on a >64KB payload (exit 141) even though the marker is present — SIGPIPE promoted to the pipeline status by pipefail
+  PASS: control: the status is 141 (128+13 = SIGPIPE), naming the mechanism rather than just 'non-zero'
+  PASS: control: the SAME shape passes on a payload that fits the buffer — the failure is attributable to size, not to the assertion
+  PASS: the post-fix file-based form passes on the big payload (exit 0) — there is no reader to lose
+  PASS: the post-fix file-based form passes on the small payload (exit 0) — there is no reader to lose
+  PASS: test/pdda-local-checks.sh does not pipe $real_out into grep (the reverted-fix guard)
+  PASS: it reads the captured output from a file instead
+  PASS: the failure message names WHICH summary is missing — the original named nothing and was twice misread as an unrelated WARN
+  PASS: GH-472: all 6 pipefail-setting files that pipe repo-wide output are free of the piped `grep -q` shape (43 sites converted)
+  PASS: GH-472: no NEW script both sets pipefail and pipes repo-wide output into `grep -q`
+  PASS: GH-472: no shell-pipe-into-grep -q text in utils/py/rtl.py (a text check, NOT proof that narration_mentions_root stays line-by-line — codex's QA said so and it is right)
+  PASS: GH-472: the known GH-308-frozen exposure set under relay-automation/ is EMPTY — all four frozen fail-opens are fixed
+gh460-pipe-buffer-sigpipe: 12 pass, 0 fail

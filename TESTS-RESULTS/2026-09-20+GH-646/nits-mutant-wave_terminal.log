@@ -1,0 +1,52 @@
+test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label)
+A declined PR is not terminal authority for an active owned issue. ... 
+  test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label) (issue_state='OPEN')
+A declined PR is not terminal authority for an active owned issue. ... FAIL
+  test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label) (issue_state=None)
+A declined PR is not terminal authority for an active owned issue. ... FAIL
+  test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label) (issue_state='UNKNOWN')
+A declined PR is not terminal authority for an active owned issue. ... FAIL
+
+======================================================================
+FAIL: test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label) (issue_state='OPEN')
+A declined PR is not terminal authority for an active owned issue.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/xyz-gh646-probe2/test/gh646_status_label.py", line 930, in test_wave_requires_confirmed_closed_issue_before_terminalizing_label
+    update_doc.assert_not_called()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 947, in assert_not_called
+    raise AssertionError(msg)
+AssertionError: Expected 'validate_and_update_doc' to not have been called. Called 1 times.
+Calls: [call('/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh646-8lsv_r1t/PROJECT/2-WORKING/GH-646-fixture.md', {'number': 42, 'state': 'CLOSED', 'baseRefName': 'development', 'title': 'declined fixture', 'body': 'Closes #646', 'mergedAt': None}, is_merged=False, dry_run=False, journal=<wave_reconcile.RollbackJournal object at 0x106a2cc20>)].
+
+======================================================================
+FAIL: test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label) (issue_state=None)
+A declined PR is not terminal authority for an active owned issue.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/xyz-gh646-probe2/test/gh646_status_label.py", line 930, in test_wave_requires_confirmed_closed_issue_before_terminalizing_label
+    update_doc.assert_not_called()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 947, in assert_not_called
+    raise AssertionError(msg)
+AssertionError: Expected 'validate_and_update_doc' to not have been called. Called 1 times.
+Calls: [call('/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh646-8lsv_r1t/PROJECT/2-WORKING/GH-646-fixture.md', {'number': 42, 'state': 'CLOSED', 'baseRefName': 'development', 'title': 'declined fixture', 'body': 'Closes #646', 'mergedAt': None}, is_merged=False, dry_run=False, journal=<wave_reconcile.RollbackJournal object at 0x1068e2c10>)].
+
+======================================================================
+FAIL: test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label) (issue_state='UNKNOWN')
+A declined PR is not terminal authority for an active owned issue.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/xyz-gh646-probe2/test/gh646_status_label.py", line 930, in test_wave_requires_confirmed_closed_issue_before_terminalizing_label
+    update_doc.assert_not_called()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 947, in assert_not_called
+    raise AssertionError(msg)
+AssertionError: Expected 'validate_and_update_doc' to not have been called. Called 1 times.
+Calls: [call('/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh646-8lsv_r1t/PROJECT/2-WORKING/GH-646-fixture.md', {'number': 42, 'state': 'CLOSED', 'baseRefName': 'development', 'title': 'declined fixture', 'body': 'Closes #646', 'mergedAt': None}, is_merged=False, dry_run=False, journal=<wave_reconcile.RollbackJournal object at 0x1068e2990>)].
+
+----------------------------------------------------------------------
+Ran 1 test in 0.102s
+
+FAILED (failures=3)
