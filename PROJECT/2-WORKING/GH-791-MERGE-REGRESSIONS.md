@@ -12,7 +12,7 @@ gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/791
 
 | What was just completed | What's next |
 |---|---|
-| Reviewed the landed batch and reproduced four direct regressions. | Repair and verify on a dedicated PR into development. |
+| Repaired four direct regressions; 180 cleanup tests and full macOS gate 419/419 pass. | Review and merge the dedicated PR into development. |
 
 ## Scope and recon
 
@@ -39,3 +39,9 @@ against the batch state, then passes against repairs. Run the inventory positive
 controls. Run the full macOS gate in a separate full clone and preserve evidence with provenance.
 Review roadmap, express, labels, vendor, HQ, watchdog, and bridge checks as part of the batch audit.
 Unknown: real GitHub eventual-consistency timing is modeled with controlled workflow responses.
+
+## Outcome
+
+The full-gated revision is `14640c75`. [Review and committed receipts](../../TESTS-RESULTS/2026-09-24+GH-791/REVIEW.md)
+include all negative controls and final validation. GH-793 records the unrelated intermittent
+idle-control failure and is held; no unrelated runtime fix is included.

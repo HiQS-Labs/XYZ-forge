@@ -1,13 +1,13 @@
 # Code Review Report — GH-791 merge sequence
 
-Verdict: **Changes requested on the batch; four direct defects repaired on this branch.**
+Verdict: **Changes requested on the original batch; repair verified and approved for review.**
 Target: `a2312944..337813e0` (five listed PRs plus preceding #761/#783).
 Review mode: direct source recon, baseline differential probes, negative controls, and disposable-clone validation.
 The runtime/skill diff under review was +1,327 / -136 lines across 19 files, excluding tests and receipts.
 
 | Category | Count | Status |
 |---|---:|---|
-| Blocker | 4 | Repaired; final gate pending |
+| Blocker | 4 | Repaired; full macOS gate 419/419 |
 | Should | 1 | Unrelated parallel-test failure filed as GH-793 and held |
 | Nit | 0 | No polish scope added |
 
@@ -61,8 +61,13 @@ this is not an exhaustive graph-based completeness claim.
 - `frozen-guard.log`: 38 pass / 0 fail.
 - `validate-batch.log`: **incomplete**, intentionally terminated after confirmed failures (exit 143).
   Its passing worker lines are observations, not a whole-gate success claim.
-- `cleanup-green.log`: the full merge-cleanup integration suite passes.
-- Final full-gate results will be appended after completion.
+- `cleanup-green.log`: 180 merge-cleanup integration tests pass.
+- `push-gate.log`: full macOS pre-push gate **419/419**, exit 0, 1,262 seconds, at
+  `14640c757a9c24e99c32e06e3ca413644d058e00`; no bypass, no failed worker.
+  Post-run HEAD, origin, core.bare, local identity, and clean working tree match expectations.
+- `docs-green.log`: six targeted PDDA checks pass; ledger check has zero failures.
+- The follow-up commit changes only documentation and receipts; runtime/test sources remain
+  identical to the full-gated revision. This is local verification, not release-promotion evidence.
 
 Every retained run has an entry in `provenance.jsonl` with source revision, command, exit status,
 artifact path, and SHA-256. These receipts are committed with the repair.
