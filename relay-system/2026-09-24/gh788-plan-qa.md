@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -127,5 +127,59 @@ Plan revised in `PROJECT/1-INBOX/GH-788-PYTHON-PATH-SPACE.md` (see the commit wi
 - **[Unverified — history] rating → Evidence added.** Rating section now carries the exact search command, the six queries, and the hits (only #651 and #788 same-class; #406/#435/#481/#722 unrelated).
 
 **Round 2 ask:** re-grade DoD 1–5 against the revised plan. The launcher is the only design change.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: The revised launcher resolves the observed Round 1 syntax failure. The plan is proportionate and ready to implement; approval is for the plan, not runtime or merge readiness.
+swept file: yes
+
+Swept the entire revised artifact (lines 1–150), including recon, non-goals, risk, rating and acceptance. No further substantiated pre-existing plan defect found. No graph tools were available; evidence uses direct reads and literal searches. Commit identity remains supplied by the relay, not independently checked (git prohibited).
+
+- [Pass] **DoD 1 — scope remains six stub writers and seven command templates.** `rg -n 'sys\.executable' test/ utils/ relay-automation/ skills/` exited 0 and returned the six writers at `test/gh492-roadmap-state-sweep.sh:24`, `test/gh648-l2-token-aftermath.sh:65`, `test/gh648-l4-285-revalidate.sh:49`, `test/gh648-l5-gh237-repro.sh:35`, `test/gh648-l6-muse-attribution.sh:33`, `test/gh666_agy_model_probe.py:32`, and the seven templates at `utils/py/fuzz_engine.py:375,381,382,390,392`, `utils/py/repro_synth.py:199`, `utils/py/gen4_campaign.py:329`. No additional defect appeared in this literal search. This does not establish coverage of aliases or alternate constructions; the plan acknowledges untraced forms at lines 65–66.
+- [Pass] **DoD 2 — ordinary and spaced paths now compile.** The always-single-quoted header at `PROJECT/1-INBOX/GH-788-PYTHON-PATH-SPACE.md:72–86` is a Python string expression and valid shell syntax for both probe inputs below. The documented character rejection is explicit and bounded. It retains the absolute-interpreter shell-exec mechanism at `test/gh610-claude-subscription.sh:106–110,162`. The six stub bodies reveal no first-line comparison or incompatible invocation requiring a different design. Runtime interpreter/argv preservation and empty-PATH execution remain clone-run acceptance.
+- [Pass] **DoD 3 — quoted command strings round-trip.** The extracted `utils/py/fuzz_engine.py:224–228` function preserved interpreter and tool paths, plus `x y`, in the probe below; the unquoted interpreter split into three words. Plan lines 89–90 address the correct boundary without changing the parser.
+- [Pass] **DoD 4 — meaningful negative controls are specified.** Plan lines 91–103 require bare-spaced-shebang failure, unquoted-argv failure, a planted ratchet sample and scan-error rejection. The literal patterns target the observed forms and exclude the safe argv-list example at `utils/py/gen4_campaign.py:231`. Exact regex implementation and every matcher branch still require the promised demonstration; this is acceptance-design approval only.
+- [Pass] **DoD 5 / helper location / rating — bounded and justified.** Plan lines 58–60 correctly describe four PYTHONPATH users, gh666's sys.path insertion and gh492's needed insertion. One ~15-line stdlib helper at lines 72–88 serves six callers; retaining gh610's working launcher and leaving the parser alone (lines 109–120) avoid unnecessary migration. The rating rationale at lines 124–134 supplies search commands and hit dispositions; `75/70/50/70` is reasonable on that producer-reported history, not an independently reproduced history audit.
+- [Unverified — needs clone run] **Implementation proof remains outstanding.** Run the planned affected suites and new suite in the disposable full clone, including exact selected `sys.executable`, exact argv, empty PATH, both interpreter shapes, rejected input, each planted matcher branch and scan errors; then the final full gate (plan lines 91–107,138–142). No executable fixture, suite, pytest or gate was run in this review. The producer's runtime probe remains attributed to the producer.
+
+**Read-only probe** (exit **0**; no generated stub executed and no project module imported):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PY'
+import ast, pathlib, shlex, subprocess
+plan = pathlib.Path('PROJECT/1-INBOX/GH-788-PYTHON-PATH-SPACE.md').read_text()
+template = plan.split('   ```\n',1)[1].split('   ```',1)[0]
+template = ''.join(line[3:] + '\n' for line in template.splitlines())
+for python in ['/usr/bin/python3', '/tmp/python with spaces/python']:
+    header = template.replace('<python>', python)
+    tree = ast.parse(header + 'pass\n')
+    compile(tree, '<plan-header>', 'exec')
+    assert isinstance(tree.body[0].value, ast.Constant)
+    r = subprocess.run(['/bin/sh', '-n'], input=header, text=True, capture_output=True)
+    assert r.returncode == 0, r.stderr
+    assert shlex.split(header.splitlines()[1]) == ['exec', python, '$0', '$@']
+    print(repr(python), 'Python compile OK; sh -n rc=0; shell words preserve path/$0/$@')
+source = pathlib.Path('utils/py/fuzz_engine.py').read_text()
+fn = next(n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == 'build_argv')
+ns = {'shlex': shlex}
+exec(compile(ast.Module(body=[fn], type_ignores=[]), '<extracted-build_argv>', 'exec'), ns)
+python = '/tmp/python with spaces/python'
+for quoted in [False, True]:
+    argv = ns['build_argv'](f'{shlex.quote(python) if quoted else python} {shlex.quote("/tmp/tool with spaces.py")} {{mutant}}', ['x y'])
+    print('quoted=' + str(quoted), repr(argv))
+    assert (argv == [python, '/tmp/tool with spaces.py', 'x y']) == quoted
+PY
+```
+Decisive output:
+```text
+'/usr/bin/python3' Python compile OK; sh -n rc=0; shell words preserve path/$0/$@
+'/tmp/python with spaces/python' Python compile OK; sh -n rc=0; shell words preserve path/$0/$@
+quoted=False ['/tmp/python', 'with', 'spaces/python', '/tmp/tool with spaces.py', 'x y']
+quoted=True ['/tmp/python with spaces/python', '/tmp/tool with spaces.py', 'x y']
+```
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) may proceed to implementation and disposable-clone verification. Only the relay file was edited; the harness owns its commit. Used `tick done` for approval as instructed; `done` and `release` are mutually exclusive ownership-ending operations (`src/scope.js:89–92,121–124`).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
