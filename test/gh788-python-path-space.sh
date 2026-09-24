@@ -19,7 +19,8 @@ out="$(PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$REPO/utils/py" python3 - "$WORK" <
 import os, subprocess, sys, tempfile
 import pystub, fuzz_engine
 
-work = tempfile.mkdtemp(dir="/tmp", prefix="gh788.")  # /tmp: the "ordinary" path must hold no space
+_tmp = tempfile.TemporaryDirectory(dir="/tmp", prefix="gh788.")  # /tmp: the "ordinary" path must hold no space; removed at exit
+work = _tmp.name
 real = os.path.realpath(sys.executable)
 
 def interpreter(dirname):
@@ -51,11 +52,14 @@ for label, interp in (("ordinary", interpreter("plain")), ("spaced", interpreter
     print(("PASS" if ok else "FAIL") + f": launcher runs the exact {label} interpreter with PATH='' and argv 'x y'"
           + ("" if ok else f" (rc={r.returncode} out={r.stdout!r} err={r.stderr[-200:]!r} ran={ran!r})"))
 
-try:
-    pystub.launcher("/tmp/it's/python3")
-    print("FAIL: launcher accepted a path containing a quote")
-except ValueError:
-    print("PASS: launcher refuses a path it cannot embed")
+for bad in ("/tmp/it's/python3", "/tmp/py\rpath/python3", "/tmp/py\\path/python3", ""):
+    try:
+        pystub.launcher(bad)
+        print(f"FAIL: launcher accepted an unembeddable path {bad!r}")
+    except ValueError:
+        pass
+else:
+    print("PASS: launcher refuses paths it cannot embed (quote, CR, backslash, empty)")
 
 # Red control: the pre-fix construction still fails with the spaced interpreter.
 spaced = os.path.join(work, "py with space", "python3")

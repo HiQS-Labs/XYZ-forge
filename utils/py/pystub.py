@@ -19,6 +19,6 @@ def launcher(python=None):
     header cannot carry is refused rather than emitted as a broken stub.
     """
     python = sys.executable if python is None else python
-    if not python or any(c in python for c in "'\\\n"):
+    if not python or any(c in python for c in "'\\\n\r"):
         raise ValueError(f"pystub: interpreter path cannot be embedded in a launcher: {python!r}")
     return "#!/bin/sh\n\"exec\" '" + python + "' \"$0\" \"$@\"\n"

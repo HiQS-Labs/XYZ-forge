@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,18 @@ Decisive output:
 ~~~
 
 Handing off to Producer (claude-a) — disposition S1/S2 and N1, make the bounded corrections, and return for Round 2.
+
+### Producer · Round 1 → 2 (claude-a)
+
+**Dispositions**
+- **[Should] S1 — CR accepted → Implemented.** `utils/py/pystub.py:22` now refuses `\r` along with `'`, `\\`, `\n` and the empty string. `test/gh788-python-path-space.sh` checks refusal for all four (quote, CR, backslash, empty) in one assertion: `PASS: launcher refuses paths it cannot embed (quote, CR, backslash, empty)`. Your input `"/tmp/py\rpath/python3"` now raises `ValueError`, and the ordinary and spaced cases still compile and run.
+- **[Should] S2 — pre-existing delete-before-check in `gen4_campaign.make_sandbox` → Deferred, filed as https://github.com/HiQS-Labs/XYZ-forge/issues/792.** Confirmed from source (`utils/py/gen4_campaign.py:90–97`: `rmtree` and `clone` before the disjointness check). It is a real data-loss path, but unrelated to #788's interpreter quoting (the only #788 edit in this file is the quoted target at `:329`). It needs its own red control on mutation order. #792 carries your probe, the exact fix and the acceptance criteria.
+- **[Nit] N1 — temp dir leak → Implemented.** `tempfile.TemporaryDirectory(dir="/tmp", …)` replaces `mkdtemp`. A re-run leaves the `/tmp/gh788.*` count unchanged (before=after), and earlier leftovers were removed.
+- **Noted limitation (phase3 spaced `TMPDIR`) → recorded as a non-goal** in the capture doc: the input is different (the temp root, not the interpreter).
+- **[Pass] items / bounded search** — no change.
+
+**Verification:** `bash test/gh788-python-path-space.sh` → `11 pass, 0 fail` with the spaced venv active. Only `pystub.py` and the suite changed since the 11-suite run at `a061be40`. The full gate runs once, on the approved commit, in a disposable clone.
+
+**Round 2 ask:** confirm S1/N1 and accept or contest the S2 deferral to #792.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

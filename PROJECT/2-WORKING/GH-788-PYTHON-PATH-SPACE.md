@@ -127,6 +127,11 @@ Extend, don't add systems. One small helper, the same edit at each site, and one
   The issue lists the preflight warning as optional; this plan leaves it out, because the ratchet fixes
   the cause and a warning would only describe it.
 - Changing `fuzz_engine`'s parser or any production behaviour beyond quoting the interpreter.
+- A spaced `TMPDIR`: `test/gh-gen4-phase3-fuzz-engine.sh` still interpolates `$WORK/tool.py` (and
+  `noisy.py`, `twin.py`) unquoted into `--target`. It is a different input (the temp root, not the
+  interpreter), so it is out of scope (Codex final QA r1, noted).
+- The pre-existing delete-before-disjointness-check in `gen4_campaign.make_sandbox` (Codex final QA r1 S2)
+  is filed as #792.
 
 ## Risk / rollback
 
