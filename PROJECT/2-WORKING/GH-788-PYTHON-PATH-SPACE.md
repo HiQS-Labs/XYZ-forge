@@ -22,7 +22,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Implemented and verified with the spaced venv active (see Implementation notes; affected-suite rcs in the PR). | Codex final QA, then the full gate once in a disposable clone, then PR. |
+| Codex final QA approved (round 3, `relay-system/2026-09-24/gh788-final-qa.md`); gate fixes applied. | Full gate once on the final commit in a disposable clone, then PR. |
 
 ## Problem (observed)
 
@@ -89,7 +89,7 @@ Extend, don't add systems. One small helper, the same edit at each site, and one
    site's structure unchanged. Absolute `/bin/sh` and an absolute interpreter mean it works with an
    empty `PATH`.
 2. **Test sites (6)** — replace `'#!' + sys.executable + '\n'` with `pystub.launcher()` (plus the
-   import; `gh492` inserts `argv[1]/utils/py` first). No other change to what the tests assert.
+   import; `gh492` inserts `argv[1]/test/lib` first; the others insert `test/lib` too). No other change to what the tests assert.
 3. **Command strings (7)** — `f"{shlex.quote(sys.executable)} …"`, and quote `{tool}`/`{twin}` the same way
    (temp paths today, but the same class).
 4. **Guard + acceptance suite** — `test/gh788-python-path-space.sh`, registered in `validate.sh`:
