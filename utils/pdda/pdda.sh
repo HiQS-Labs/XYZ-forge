@@ -1486,6 +1486,26 @@ check_governance() {
 }
 
 # ------------------------------------------------------------------------------------------------
+# K. marathon-qa (GH-784)
+# ------------------------------------------------------------------------------------------------
+check_marathon_qa() {
+  pdda_reset_counts
+  local CHECK_NAME="pdda-check-marathon-qa" rc=0
+  local item_sev item_file item_line item_msg item_action
+
+  while IFS=$'\t' read -r item_sev item_file item_line item_msg item_action; do
+    [ -z "$item_sev" ] && continue
+    pdda_record_finding "$item_sev" "$CHECK_NAME" "$item_file" "$item_line" "$item_msg" "$item_action"
+    if [ "$item_sev" = "error" ]; then
+      rc=1
+    fi
+  done < <(python3 "$HERE/check_marathon_qa.py" --root "$PDDA_REPO_ROOT" --format tsv --mode "$PDDA_MODE" "$@")
+
+  pdda_emit_summary "$CHECK_NAME" "$rc"
+  return "$(pdda_gated_exit "$rc")"
+}
+
+# ------------------------------------------------------------------------------------------------
 # run — the aggregate deterministic suite, then the LLM readiness review (in order)
 # ------------------------------------------------------------------------------------------------
 # Decoration -> stdout in text mode, stderr in json mode, so PDDA_FORMAT=json leaves stdout a clean
@@ -1512,6 +1532,7 @@ pdda-stale-working-docs:check_stale
 pdda-check-issue-doc-sync:check_issue_doc_sync
 pdda-check-releases:check_releases
 pdda-check-governance:check_governance
+pdda-check-marathon-qa:check_marathon_qa
 "
 
 cmd_run() {
@@ -1682,6 +1703,7 @@ Commands:
   releases           validate RELEASES.md — the release-planning ledger (warn-only nudge)
   releases-current   read-only roll-up: active releases from releases.db (or legacy RELEASES.md) (rough, unvalidated)
   governance         repo-root governance-doc (ROUTER/AGENTS/CLAUDE/...) cross-reference + doc/code drift
+  marathon-qa        mechanical marathon Wave QA receipt & checklist gate (GH-784)
   gh-refresh         refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
   doc-ready          LLM readiness review (delegates to pdda-doc-ready.sh; opt-in via PDDA_LLM_BIN)
   catchup            LLM repo triage and ROUTER.md recommendations (delegates to pdda-catchup.sh)
@@ -1709,6 +1731,7 @@ case "$cmd" in
   releases)         check_releases; exit "$?" ;;
   releases-current) cmd_releases_current; exit "$?" ;;
   governance)       check_governance; exit "$?" ;;
+  marathon-qa)      check_marathon_qa "$@"; exit "$?" ;;
   gh-refresh)       exec "$HERE/pdda-gh-refresh.sh" "$@" ;;
   doc-ready)        exec "$HERE/pdda-doc-ready.sh" "$@" ;;
   catchup)          exec "$HERE/pdda-catchup.sh" "$@" ;;

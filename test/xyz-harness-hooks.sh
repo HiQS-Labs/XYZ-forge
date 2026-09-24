@@ -65,6 +65,8 @@ assert_nudge "nudge: fire marathon" "Please fire the marathon" start-marathon
 assert_nudge "nudge: preflight sweep" "Run a preflight sweep first" start-marathon
 assert_nudge "nudge: preflight all" "Preflight all ready work" start-marathon
 assert_nudge "nudge: dry-run each plan" "Dry-run each plan before firing" start-marathon
+assert_nudge "nudge: show marathon queue" "Show the marathon queue" start-marathon
+assert_nudge "nudge: show marathon queue without the" "Show marathon queue" start-marathon
 assert_nudge "nudge: commit/push + close issues" "Commit and push, then close the resolved issues" loose-ends marathon-cleanup
 assert_nudge "nudge: commit/push + archive/PDDA" "Commit and push; move docs to 3-COMPLETED and run a PDDA sweep" loose-ends marathon-cleanup
 
@@ -75,6 +77,7 @@ foreign_context="$(cd "$WORK" && nudge_context "$(run_skill_nudge 'fire the mara
 
 assert_no_nudge "silent: unrelated roadmap request" "Add GH-273 to the roadmap"
 assert_no_nudge "silent: marathon used in unrelated prose" "The runner logged a marathon-length test"
+assert_no_nudge "silent: plan a marathon" "Plan a marathon"
 assert_no_nudge "silent: unrelated fire request" "Fire the unit tests"
 assert_no_nudge "silent: unrelated preflight" "Preflight the airplane"
 assert_no_nudge "silent: commit/push alone" "Commit and push these edits"

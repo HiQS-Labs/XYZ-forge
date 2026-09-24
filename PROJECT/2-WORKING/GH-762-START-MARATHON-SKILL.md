@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Skill refactor, PARKED routing, focused checks and Agy content review passed; draft PR #765 is open. The full gate was red on baseline failures reproduced on `development`. | Resolve #764 before merge readiness. |
+| Skill refactor, PARKED routing, CodeRabbit fixes, and GH-784 wave QA checklist contract + mechanical receipt gate implemented. Focused suites (hooks, adoption, gh784 gate) pass cleanly. | Run Codex QA relay via /relay-xyz, commit, push, and update PR #765. |
 
 ## Idea
 

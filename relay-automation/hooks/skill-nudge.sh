@@ -58,6 +58,7 @@ try:
             re.search(r"\bfire (?:the )?marathon\b", normalized),
             re.search(r"\bpreflight (?:sweep|all)\b", normalized),
             re.search(r"\bdry[- ]run each plan\b", normalized),
+            re.search(r"\bshow (?:the )?marathon queue\b", normalized),
         )
     )
     if triage_match:

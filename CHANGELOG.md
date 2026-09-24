@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-24 — Marathon wave QA checklist contract and mechanical receipt gate (GH-784, GH-762)
+
+Bound marathon wave transitions to the `/start-task` Step 6 and Step 8 double-relay protocol:
+plans must mandate a per-wave Proof of Done test suite, an independent Post-Build Codex QA Relay
+with on-disk receipts under `relay-system/`, and adjudication of peer review findings. The
+orchestrator cannot self-attest review solely by observing passing test suites. Added mechanical gate
+`utils/pdda/check_marathon_qa.py` (wired via `pdda.sh marathon-qa` and registered in `validate.sh`),
+verifying that wave checklist items are present, references to `relay-system/` transcripts exist on disk,
+and all items are verified before PR opening or plan promotion. Addressed CodeRabbit review feedback on
+PR #765 by extending `skill-nudge.sh` to match `show [the] marathon queue` and updating `start-marathon`
+to check existing plans with `marathon-plan.sh --check` before regenerating.
+
 ## 2026-09-23 — Start marathon preparation routing (GH-762)
 
 Renamed the marathon preparation skill to `start-marathon`, retained a legacy

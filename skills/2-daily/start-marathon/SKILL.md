@@ -80,6 +80,10 @@ Then begin work.
 - Use the repo's standing target branch policy. Do not invent a branch or silently substitute a
   builder.
 - If GitHub is unavailable, mark live-state evidence `UNKNOWN`; do not infer it from stale local text.
+- **Orchestrator vs. review separation (GH-784).** The orchestrator cannot self-satisfy the review
+  contract or attest review solely by observing test suites; it must mechanically invoke an
+  independent peer/Codex QA turn before sign-off. Wave completion requires on-disk receipts under
+  `relay-system/` and all wave checklist items checked.
 
 ---
 
@@ -243,12 +247,49 @@ python3 "$HARNESS/utils/py/marathon_plan.py" --dry-run --deep
 `swarm-preflight.sh --dry-run` for every ready item and folds the verdicts in. Quote the waves, the
 held items and any drift lines in the report. Handle the exit code per the drive loop table; `3`
 (ledger unparseable) turns the run into a blocked report, as does any other unmet Done-rule
-requirement listed there. After contract and candidate review, write the canonical plan with the
-planner **without** `--dry-run`, inspect its diff, and run `--check`. This is reversible preparation
-authorized by a start request; a mismatch is drift, not success.
+After contract and candidate review, if a current `MARATHON-PLAN-*.md` already exists, run the
+planner with `--check` first: `--check` reports whether it is in sync, reporting drift without
+overwriting it. Write the canonical plan with the planner **without** `--dry-run` only when the file
+is absent, inspect its diff, and run `--check`. Revise an existing plan only when concrete evidence
+or operator review explicitly justifies the revision; drift is a finding for the report, not an
+automatic reason to regenerate or overwrite an in-flight or reviewed plan. This is reversible
+preparation authorized by a start request; a mismatch is drift, not success.
 
-If a current `MARATHON-PLAN-*.md` already exists, `--check` reports whether it is in sync; drift is
-a finding for the report, not a reason to regenerate.
+#### Wave Lifecycle Contract & /start-task Step-8 Parity (GH-784)
+
+Marathon batch execution must strictly enforce the `/start-task` double-relay protocol per wave
+rather than collapsing execution into a single build-and-push loop:
+
+1. **Wave Plan QA (Step 6 parity):** Before coding a wave, conduct independent plan QA via
+   `relay-xyz` (Codex reviewer default). Commit review inputs so isolated reviewers can see them.
+2. **Wave Build & Proof-of-Done:** Implement the wave's changes within its declared allowlist.
+   Execute the wave's Proof of Done test suite green (runnable command + test exit 0).
+3. **Wave Post-Build Codex QA Relay (Step 8 parity):** Before pushing feature branches or opening
+   PRs, execute an independent Codex review turn against the committed wave diff and test receipts.
+   Record the on-disk receipt under `relay-system/<YYYY-MM-DD>/<label>.codex.md`.
+4. **Adjudication:** Adjudicate and resolve all findings from the Codex QA turn and CodeRabbit / Peer
+   Review.
+5. **Orchestrator vs. Review Protocol Separation:** The Orchestrator (the Claude dispatch/tool
+   driver) cannot self-satisfy the review contract or attest review solely by observing passing test
+   suites. It must mechanically invoke an independent peer/Codex QA turn before sign-off.
+
+#### Acceptance & Quality Checklist Contract
+
+Every marathon plan (`PROJECT/2-WORKING/MARATHON-PLAN-*.md`) must mandate an explicit per-wave
+verification section:
+
+```markdown
+## Acceptance & Quality Checklist
+
+### Wave 1
+- [ ] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0)
+- [ ] Wave 1 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated
+```
+
+Mechanical check: `utils/pdda/check_marathon_qa.py` (and `pdda.sh marathon-qa`) mechanically
+verifies that all wave checklist items are verified (`[x]`) and all referenced `relay-system/`
+transcripts exist on disk before a marathon PR can be created or promoted to `3-COMPLETED`.
 
 ### 5. Preflight, form lanes, and dry-run the actual marathon
 

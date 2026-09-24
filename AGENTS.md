@@ -298,6 +298,8 @@ local change.
   2. **Diff Size Sanity:** The diff size matches the logical scope of the fix (e.g. < 500 lines for targeted bugs).
   3. **Verification Status:** A test gate ran against the final committed state (either CI or a local `validate.sh` run).
   **Halt Condition:** If an emitted artifact fails any of these predicates, you must suspend the automation loop immediately.
+
+  **Orchestrator vs. Review Protocol Separation (GH-784):** The Orchestrator (the dispatch/tool driver) cannot self-satisfy the review contract or attest review solely by observing passing test suites. It must mechanically invoke an independent peer/Codex QA turn (`relay-xyz` / `/start-task` Step 8 parity) with recorded receipts under `relay-system/<YYYY-MM-DD>/<label>.codex.md` before approving or signing off on PR creation or promotion. Self-review or test-only observation does not satisfy the Wave QA receipt gate.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),
