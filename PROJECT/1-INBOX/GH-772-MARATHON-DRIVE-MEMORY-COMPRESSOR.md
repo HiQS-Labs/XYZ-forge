@@ -66,3 +66,7 @@ TODO: why this matters now -- what prompted it, what breaks or slows without it.
 ## Merge evidence
 
 - PR #776 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #782 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -18,6 +18,11 @@ PASS=0; FAIL=0
 pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); exit 1; }
 
+for pkg in requests yaml; do
+  python3 -c "import $pkg" >/dev/null 2>&1 ||
+    fail "ATE prerequisite missing: Python module $pkg (install requests pyyaml for this interpreter)"
+done
+
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh142-ate-exit.XXXXXX")"
 trap '[ -n "$WORK" ] && [ -d "$WORK" ] && rm -rf "$WORK"' EXIT
 # GH-1/GH-10: shared, resolved containment for every fixture this suite creates — the guard
