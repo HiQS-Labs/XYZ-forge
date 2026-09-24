@@ -135,6 +135,7 @@ TESTS=(
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
   "gh778-review-code-skill.sh"    # GH-778 (review-code and review-PR ground-truth code review skill)
+  "gh798-status-skill.sh"         # GH-798 (status skill and review-code DRY / helper audit)
   "gh779-radar-ci-health.sh"    # GH-779 (radar: trunk CI health, new-guard re-run on open PRs, regressed-after-fixed table)
   "gh781-wam-radar-seed.sh"    # GH-781 (whack-a-mole seeds candidate clusters from recent radar reports)
   "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)

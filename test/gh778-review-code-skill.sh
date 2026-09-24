@@ -40,7 +40,7 @@ done
 
 # --- 6. ARCHITECTURE.md registration ---
 grep -q "\[review-code\](skills/2-daily/review-code/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has review-code link" || fail "missing ARCHITECTURE.md link"
-grep -q "### \`2-daily\` — A few times a day (15)" "$ARCH_FILE" && pass "ARCHITECTURE.md has updated 2-daily count (15)" || fail "missing updated 2-daily count"
+grep -E "### \`2-daily\` — A few times a day \((15|16)\)" "$ARCH_FILE" && pass "ARCHITECTURE.md has updated 2-daily count (>= 15)" || fail "missing updated 2-daily count"
 
 # --- 7. Installer gh678 compliance (in sandbox) ---
 H="$WORK/home"; A="$H/apps"
