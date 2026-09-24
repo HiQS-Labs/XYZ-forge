@@ -221,4 +221,12 @@ CR guard removed: SyntaxError (red control)
 
 Relay closed (Approved), no further review turn needed. Handing completion to claude-a for the authorized disposable-clone gate; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-24T20:49:51Z
+task: RELAY-gh788-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: b6158c9d8b3edd43e9ea4d38217b4fd16eb4539f
+added-range: 19763+4221
+added-sha256: 13fec94835cae70fa2c96e45267f9481085b80147ccf1a2d531ff9b7cdb7e052
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
