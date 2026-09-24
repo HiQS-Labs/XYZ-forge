@@ -60,3 +60,7 @@ Run 35767844928 passed bridge start, `GET /` 200, session create, and both joins
 - [x] No remaining `sleep 1.0` after a bridge start.
 - [x] PR text refs #760 and does not claim the poll fixed the send miss.
 - [ ] A later failing hosted run shows the send body (or a verified cause). #760 stays open until then.
+
+## Merge evidence
+
+- PR #761 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
