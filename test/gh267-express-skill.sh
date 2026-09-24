@@ -12,13 +12,15 @@
 #             kernel-surface, scratch (.orig editor artifact), too-many-files,
 #             suite-unregistered, issue-closed
 #   happy path: check PASS on a legal single-subsystem fix with a registered suite;
-#               docs (.md) never count against the file bound
+#               only this issue's capture doc + CHANGELOG avoid size bounds;
+#               unrelated PROJECT docs count against file and insertion bounds
 #   docs: capture doc born complete (Lessons Learned present from birth) +
 #         CHANGELOG entry inserted under a fresh dated Unreleased section +
 #         CHANGELOG entry NOT silently dropped when today's section lacks a
 #         ### Fixed heading (deepseek QA finding 3)
 #   telemetry: every refusal writes a .tick express-refused event carrying the rule
-#   production projections: every adopted releases view + the roadmap dashboard
+#   production projections: every adopted releases view; the retired roadmap
+#                           dashboard is neither referenced nor staged
 #   TOCTOU: both new paths and mutations of already-qualified bytes refuse
 #   closeout: ship is persisted before clean-tree reconciliation; every failure ticks
 #   source audit: cmd_land/build_offline_manifest never call args_repo() — the
@@ -376,8 +378,14 @@ python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh --al
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
 run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
 
-new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"
-run_check > /dev/null 2> "$ERR" && ok "the lane's own paperwork (CHANGELOG) stays exempt" || bad "CHANGELOG counted against bounds: $(tail -1 "$ERR")"
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"; printf 'capture\n' > "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+run_check > /dev/null 2> "$ERR" && ok "the lane's own capture doc + CHANGELOG stay exempt" || bad "lane paperwork counted against bounds: $(tail -1 "$ERR")"
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/PROJECT/4-MISC"; printf 'unrelated\n' > "$FX/PROJECT/4-MISC/OTHER.md"
+run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against bounds" || { check_rule too-many-files "$ERR" && ok "unrelated PROJECT doc counts against file bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; mkdir -p "$FX/PROJECT/4-MISC"; python3 -c "print('\\n'.join('line %d' % i for i in range(151)))" > "$FX/PROJECT/4-MISC/OTHER.md"
+run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against insertion bound" || { check_rule too-large "$ERR" && ok "unrelated PROJECT doc counts against insertion bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
 
 echo "== docs born complete =="
 # GH-592 I8: docs without --suite must refuse BEFORE any write (no half-born doc, no CHANGELOG mutation)
@@ -745,6 +753,7 @@ LAND_BODY="$(sed -n '/^def cmd_land/,/^def active_release/p' "$DRIVER")"
 grep -q '"push", "origin", "HEAD:development"' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push" || bad "direct development push missing"
 [ -z "$(printf '%s' "$LAND_BODY" | grep -n 'pr.*create\|pr.*merge')" ] && ok "landing creates no ghost PR" || bad "ghost PR call remains"
 grep -q "def cmd_resume" "$DRIVER" && ok "cmd_resume implemented" || bad "cmd_resume missing"
+! grep -q 'ROADMAP-DASHBOARD\.md' "$DRIVER" && ok "retired roadmap dashboard is absent from express staging surfaces" || bad "express still references the retired roadmap dashboard"
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"

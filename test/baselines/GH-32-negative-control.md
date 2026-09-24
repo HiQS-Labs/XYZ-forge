@@ -102,3 +102,17 @@ is indistinguishable from a working one until you try to break it.
 - The four PRD-named check-failure cases are the suite's section I; mutations 2 and 3 above are
   the revert-and-replay evidence for two of them, and mutations 1/4/5 cover the remaining named
   guards (GID shape across DBs, lock refusal, the RELEASES.md write boundary).
+
+## GH-558 — merged-dump generation stamp control
+
+Section J's intermittent failure was a fixture defect, not a product defect. Its byte-level union
+kept both single-row `settings.generation` records when their `updated_at` values differed, and the
+product correctly refused that malformed dump as `dump-duplicate-setting`. The fixture now pins the
+two branch clocks one second apart, selects one generation row by value and timestamp, and makes the
+single dump header agree with it.
+
+The section also contains its own red control: it removes the merged dump's `-- generation:` header
+and requires `check --rebuild` to refuse with `rule=dump-generation` before restoring the canonical
+dump. The successful rebuild runs at a third pinned timestamp and asserts that timestamp on the
+post-rebuild `settings.generation` row. Failed rebuild output is printed to stderr instead of being
+discarded by `rout`, so a future regression leaves its named rule in the gate transcript.

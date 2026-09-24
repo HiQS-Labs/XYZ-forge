@@ -58,11 +58,13 @@ check_writer_audit() {
     return 2
   fi
 
-  # 2. Search for active write / redirect / stage patterns targeting ROADMAP-DASHBOARD.md
-  # Exclude test/ directory, markdown docs, and git history/evidence
+  # 2. Search for active references to ROADMAP-DASHBOARD.md. router_audit.py
+  # names the retired token only to diagnose legacy-mode ROUTER prose; it is
+  # not a writer, stager, or consumer of the removed artifact.
   local writer_matches
   writer_matches=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null | \
-    xargs -0 grep -n -E '(>|>>|tee|mv|cp|touch|stage).*ROADMAP-DASHBOARD\.md' 2>/dev/null || true)
+    xargs -0 grep -n -F 'ROADMAP-DASHBOARD.md' 2>/dev/null | \
+    grep -v -E '/utils/py/router_audit\.py:' || true)
 
   if [ -n "$writer_matches" ]; then
     echo "$writer_matches" >&2
@@ -170,7 +172,7 @@ else
   fail "red control 3: canary failed to detect githooks/dashboard-staleness-guard.sh presence"
 fi
 
-# Red Control 4: Mutated writer audit with active redirection writer
+# Red Control 4: Mutated writer audit with an active artifact reference
 MUT_DIR4="$WORK/mut_writer"
 mkdir -p "$MUT_DIR4/utils"
 cat > "$MUT_DIR4/utils/bad_script.sh" <<'EOF'
@@ -178,9 +180,9 @@ cat > "$MUT_DIR4/utils/bad_script.sh" <<'EOF'
 echo "resurrect" > ROADMAP-DASHBOARD.md
 EOF
 if ! check_writer_audit "$MUT_DIR4" >/dev/null 2>&1; then
-  pass "red control 4: writer audit correctly reported RED when write redirection was injected"
+  pass "red control 4: writer audit correctly reported RED when an active artifact reference was injected"
 else
-  fail "red control 4: writer audit failed to detect write redirection to ROADMAP-DASHBOARD.md"
+  fail "red control 4: writer audit failed to detect an active ROADMAP-DASHBOARD.md reference"
 fi
 
 # Red Control 5: Mutated writer audit with retired guard invocation

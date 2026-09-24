@@ -86,6 +86,12 @@ RETRY_BACKOFF_S = (2, 4)      # sleeps BETWEEN attempts: 3 calls, 2 sleeps
 MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll up to 6 × 15s
 MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
+MERGEABLE_POLL_ATTEMPTS = 6
+MERGEABLE_POLL_S = 15
+
+# `execute_pr_merge` intentionally keeps its long-standing signature: Phase-A callers replace it
+# with a three-argument stub. Phase 5 records the exceptional PRs here before calling it.
+_WITHHOLD_BRANCH_DELETE: set[int] = set()
 
 TRANSIENT_RE = re.compile(
     r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit",
@@ -143,12 +149,18 @@ def log_err(msg: str):
 
 def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry_run: bool = True) -> bool:
     """Merges a pull request via gh CLI."""
+    delete_branch = pr_num not in _WITHHOLD_BRANCH_DELETE
+    _WITHHOLD_BRANCH_DELETE.discard(pr_num)
+    delete_text = " --delete-branch" if delete_branch else ""
     if dry_run:
-        log(f"[DRY RUN] Would merge PR #{pr_num} via `gh pr merge {pr_num} --{strategy} --delete-branch`")
+        log(f"[DRY RUN] Would merge PR #{pr_num} via `gh pr merge {pr_num} --{strategy}{delete_text}`")
         return True
 
-    log(f"Merging PR #{pr_num} via `gh pr merge {pr_num} --{strategy} --delete-branch`...")
-    res = _gh(["pr", "merge", str(pr_num), f"--{strategy}", "--delete-branch"], repo_path, timeout=600)
+    merge_args = ["pr", "merge", str(pr_num), f"--{strategy}"]
+    if delete_branch:
+        merge_args.append("--delete-branch")
+    log(f"Merging PR #{pr_num} via `gh {' '.join(merge_args)}`...")
+    res = _gh(merge_args, repo_path, timeout=600)
     if res.returncode != 0:
         log_err(f"Failed to merge PR #{pr_num}: {res.stderr.strip()}")
         return False
@@ -212,6 +224,40 @@ def fetch_open_prs_with_retry(repo_path: str) -> List[Dict[str, Any]]:
                     f"retry {attempt + 2}/{RETRY_ATTEMPTS} in {wait}s")
                 _sleep(wait)
     raise last  # type: ignore[misc]
+
+
+def _poll_mergeable(info: Dict[str, Any], pr_num: int, repo_path: Path) -> Dict[str, Any]:
+    """Give GitHub's asynchronous mergeability calculation a bounded chance to settle."""
+    for attempt in range(MERGEABLE_POLL_ATTEMPTS):
+        if info.get("mergeable") in ("MERGEABLE", "CONFLICTING") or info.get("error"):
+            break
+        log(f"PR #{pr_num}: mergeable is {info.get('mergeable')!r}; polling "
+            f"{attempt + 1}/{MERGEABLE_POLL_ATTEMPTS} in {MERGEABLE_POLL_S}s")
+        _sleep(MERGEABLE_POLL_S)
+        info = refresh_pr_with_retry(pr_num, repo_path)
+    return info
+
+
+def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, Any]],
+                                repo_path: Path, integration_branch: str) -> bool:
+    """Retarget open stacked dependents, withholding branch deletion if any retarget fails."""
+    pr_num = info["number"]
+    head = info.get("headRefName") or ""
+    dependents = [p for p in open_prs
+                  if p.get("number") != pr_num and (p.get("baseRefName") or "") == head]
+    if not dependents:
+        return True
+    for dependent in dependents:
+        dep_num = dependent["number"]
+        res = _gh(["pr", "edit", str(dep_num), "--base", integration_branch], repo_path)
+        if res.returncode != 0:
+            _WITHHOLD_BRANCH_DELETE.add(pr_num)
+            log_warn(f"PR #{pr_num}: open stacked PR #{dep_num} could not be retargeted "
+                     f"({res.stderr.strip() or 'gh pr edit failed'}); branch deletion withheld")
+            return False
+        log(f"PR #{pr_num}: retargeted open stacked PR #{dep_num} from '{head}' to "
+            f"'{integration_branch}' before deleting the base branch")
+    return True
 
 
 def hold_label(info: Dict[str, Any]) -> Optional[str]:
@@ -388,13 +434,12 @@ def _seconds_from_env(name: str, default: float) -> float:
 
 
 def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
-                              integration_branch: str) -> str:
+                              integration_branch: str,
+                              pr_head: Optional[str] = None) -> str:
     """Return success, fallback, or active_timeout for this merge head's hosted run.
 
-    `--commit` is the identity boundary: an older successful run must never satisfy a newer
-    landing. An observed active run is polled to completion and is never raced by the local
-    writer. Empty/unavailable results mean the hosted workflow does not exist for this repo and
-    select the local fallback.
+    Match either the PR head or merge commit. An active run first seen inside the listing grace
+    window is adopted by database id even when GitHub has not populated its headSha yet.
     """
     wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 1800)
     poll_s = _seconds_from_env(HOSTED_POLL_ENV, 30)
@@ -403,9 +448,10 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     deadline = started + wait_s
     query = [
         "run", "list", "--workflow", "wave-reconcile.yml",
-        "--branch", integration_branch, "--commit", merged_head,
-        "--json", "databaseId,status,conclusion", "--limit", "5",
+        "--json", "databaseId,status,conclusion,headSha,event", "--limit", "20",
     ]
+    expected_heads = {head for head in (merged_head, pr_head) if head}
+    adopted_run_id = None
 
     while True:
         res = _gh(query, repo_path, timeout=60)
@@ -422,7 +468,18 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
         except (TypeError, ValueError) as exc:
             log_warn(f"Hosted wave-reconcile lookup returned unusable JSON ({exc}); using local reconciliation")
             return "fallback"
-        if not runs:
+        elapsed = time.monotonic() - started
+        matching = [run for run in runs if str(run.get("headSha") or "") in expected_heads]
+        if adopted_run_id is not None:
+            matching = [run for run in runs if run.get("databaseId") == adopted_run_id] or matching
+        if not matching and (elapsed <= grace_s or grace_s == 0):
+            active = [run for run in runs if str(run.get("status") or "").lower()
+                      in {"queued", "in_progress", "waiting", "requested"}]
+            if active:
+                matching = active
+                adopted_run_id = active[0].get("databaseId")
+
+        if not matching:
             grace_left = grace_s - (time.monotonic() - started)
             if grace_left > 0:
                 log(f"No hosted wave-reconcile run listed yet for {merged_head[:10]}; "
@@ -432,7 +489,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             log(f"No hosted wave-reconcile run found for {merged_head[:10]}; using local reconciliation")
             return "fallback"
 
-        run = runs[0]
+        run = matching[0]
         status = str(run.get("status") or "").lower()
         conclusion = str(run.get("conclusion") or "").lower()
         run_id = run.get("databaseId") or "unknown"
@@ -463,11 +520,6 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     if not reconcile_script.exists():
         return True
     r_cmd = [sys.executable, str(reconcile_script), "--root", str(repo_path), "--pr", str(pr_num)]
-    # Older / vendored reconcilers do not know --force-local-reconcile; pass it only when advertised.
-    helptext = subprocess.run([sys.executable, str(reconcile_script), "--help"], cwd=str(repo_path),
-                              capture_output=True, text=True, check=False).stdout
-    if "--force-local-reconcile" in helptext:
-        r_cmd.append("--force-local-reconcile")
     r_res = subprocess.run(r_cmd, cwd=str(repo_path), capture_output=True, text=True, check=False)
     if r_res.returncode == 0:
         log(f"✅ local wave_reconcile for PR #{pr_num} passed")
@@ -481,7 +533,8 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
 
 def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
-                             dry_run: bool = True) -> bool:
+                             dry_run: bool = True,
+                             pr_head: Optional[str] = None) -> bool:
     """Wait for hosted reconciliation (or fall back locally), then run governance checks."""
     if dry_run:
         log(f"[DRY RUN] Would wait for hosted reconciliation or run wave_reconcile.py --pr {pr_num}")
@@ -500,7 +553,8 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
     if head.returncode != 0 or not head.stdout.strip():
         log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
         return False
-    hosted = wait_for_hosted_reconcile(head.stdout.strip(), repo_path, integration_branch)
+    hosted = wait_for_hosted_reconcile(
+        head.stdout.strip(), repo_path, integration_branch, pr_head=pr_head)
     if hosted == "active_timeout":
         return False
     if hosted == "success":
@@ -802,6 +856,16 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     continue
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
                 return 2
+            if info.get("mergeable") not in ("MERGEABLE", "CONFLICTING"):
+                info = _poll_mergeable(info, p_num, primary_repo)
+                if info.get("error"):
+                    if _transient(info["error"]):
+                        log_err(f"PR #{p_num}: DEFERRED — network unavailable while polling mergeability: "
+                                f"{info['error']}")
+                        failed[p_num] = f"deferred: network ({info['error'][:120]})"
+                        continue
+                    log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
+                    return 2
             label = hold_label(info)
             if label:
                 log(f"PR #{p_num}: carries hold label '{label}' — skipped (#444)")
@@ -944,6 +1008,9 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             if dry_run:
                 log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{args.strategy} --delete-branch`")
                 continue
+            _WITHHOLD_BRANCH_DELETE.discard(p_num)
+            open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
+            _protect_stacked_dependents(info, open_prs, primary_repo, branch)
             if not execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False):
                 return 2
             # Land it locally before anything writes into the primary. In particular, emitting
@@ -959,7 +1026,9 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                 log_err(f"fast-forward to origin/{branch} FAILED: {ff.stderr.strip() or 'git refused'}")
                 log_err("PR is merged remotely but the primary did not advance — reconcile by hand.")
                 return 2
-            if not run_post_merge_reconcile(p_num, primary_repo, integration_branch=branch, dry_run=False):
+            if not run_post_merge_reconcile(
+                    p_num, primary_repo, integration_branch=branch, dry_run=False,
+                    pr_head=info.get("headRefOid")):
                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
                 return 2
             # GH-549/GH-624: report only after the merge, primary fast-forward, and reconcile
@@ -999,7 +1068,7 @@ def main():
     parser.add_argument("--primary", required=True, help="Path to the primary working repo (required; never inferred from the CWD)")
     parser.add_argument("--root", action="append", help="Root directory to search for checkouts")
     parser.add_argument("--prefix", default="", help="Filter checkouts by repo name substring")
-    parser.add_argument("--exclude", action="append", default=[], help="Pattern or branch to exclude from cleanup")
+    parser.add_argument("--exclude", action="append", default=[], help="Pattern, branch, or PR number to exclude from cleanup and PR sequencing")
     parser.add_argument("--strategy", choices=["squash", "merge", "rebase"], default="squash", help="PR merge strategy")
     parser.add_argument("--scan-only", action="store_true", help="Only audit and list checkouts")
     parser.add_argument("--prs-only", action="store_true", help="Only list and sequence open PRs")
@@ -1096,6 +1165,7 @@ def main():
         log_err(f"PR discovery failed after {RETRY_ATTEMPTS} attempts: {exc} — refusing to continue; "
                 f"the queue cannot be verified empty")
         return 2
+    args._open_prs_for_stacks = list(prs)
     ordered_prs: List[Dict[str, Any]] = []
     # `--exclude <N>` (a bare PR number) drops that PR from the queue, as SKILL.md's example 6
     # documents; other patterns still apply to checkouts only.
@@ -1105,6 +1175,17 @@ def main():
         prs = [p for p in prs if int(p.get("number", 0)) not in excluded_prs]
         for p in skipped:
             log(f"PR #{p['number']}: excluded by --exclude; not sequenced this run")
+    if prs:
+        excluded_pr_numbers = {int(value.lstrip("#")) for value in args.exclude
+                               if value.lstrip("#").isdigit()}
+        if excluded_pr_numbers:
+            kept = []
+            for pr in prs:
+                if pr.get("number") in excluded_pr_numbers:
+                    log(f"PR #{pr['number']}: excluded by --exclude; not sequenced this run")
+                else:
+                    kept.append(pr)
+            prs = kept
     if prs:
         ordered_prs, _, warnings = toposort_prs(prs)
         print("=" * 80)
@@ -1153,8 +1234,10 @@ def main():
         print(format_primary_landing(primary_landing) + "\n")
         # R2-2: the branch Phase 0 checked must be the branch these PRs actually land on. A PR
         # based elsewhere would merge into a tree whose readiness was never established.
+        sequenced_heads = {pr.get("headRefName") for pr in ordered_prs if pr.get("headRefName")}
         mismatched = [pr for pr in ordered_prs
-                      if (pr.get("baseRefName") or "") != args.integration_branch]
+                      if (pr.get("baseRefName") or "") != args.integration_branch
+                      and (pr.get("baseRefName") or "") not in sequenced_heads]
         if mismatched:
             log_err(f"REFUSING to merge: {len(mismatched)} PR(s) do not target '{args.integration_branch}':")
             for pr in mismatched:

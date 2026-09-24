@@ -26,7 +26,7 @@ sys.path.insert(0, str(REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts"
 import ledger_merge  # noqa: E402
 import merge_cleanup  # noqa: E402
 import scan_clones  # noqa: E402
-from ledger_merge import classify, pre_merge_ledger_gate, resolve_ledger_conflict  # noqa: E402
+from ledger_merge import classify, parse_dump, pre_merge_ledger_gate, resolve_ledger_conflict  # noqa: E402
 from scan_clones import GH_BIN_ENV  # noqa: E402
 
 APP_SRC = REPO / "utils" / "py" / "releases_app.py"
@@ -281,6 +281,36 @@ class TestB1Classify(LedgerFixture):
         c = classify(b, o, t)
         self.assertFalse(c["disjoint"])
         self.assertTrue(any("gh_number 400" in r for r in c["reasons"]), c["reasons"])
+
+    def test_gid_remint_of_unchanged_base_row_is_disjoint_but_an_edit_is_not(self):
+        root = self.clone("remint-base")
+        park(root, 678, "remint source")
+        base = (root / "releases.sql").read_text()
+        ours_root = self.tmp / "remint-ours"
+        theirs_root = self.tmp / "remint-theirs"
+        shutil.copytree(root, ours_root)
+        shutil.copytree(root, theirs_root)
+        park(ours_root, 680, "ours only")
+        park(theirs_root, 679, "theirs only")
+        ours = (ours_root / "releases.sql").read_text()
+        theirs = (theirs_root / "releases.sql").read_text()
+
+        base_row = next(row for row in parse_dump(base)["tables"]["roadmap_items"].values()
+                        if row["gh_number"] == "678")
+        old_gid = base_row["global_id"]
+        new_gid = old_gid[:-1] + ("0" if old_gid[-1] != "0" else "1")
+        theirs = theirs.replace(f"VALUES('{old_gid}',", f"VALUES('{new_gid}',", 1)
+
+        c = classify(base, ours, theirs)
+        self.assertTrue(c["disjoint"], c["reasons"])
+        self.assertEqual(c["keep"], "theirs")
+        self.assertEqual([op["row"]["gh_number"] for op in c["replay"]], ["680"])
+
+        edited_ours = ours.replace("'remint source'", "'remint source edited'", 1)
+        red = classify(base, edited_ours, theirs)
+        self.assertFalse(red["disjoint"])
+        self.assertTrue(any("same-key" in reason or "gh_number 678" in reason
+                            for reason in red["reasons"]), red["reasons"])
 
     def test_change_in_an_inexpressible_table_is_handoff(self):
         def add_release(r):

@@ -173,18 +173,28 @@ class RollbackJournal:
 
     def rollback(self):
         log("Rolling back all uncommitted mutations...")
-        # GH-698 F8: a rollback is a silent red. Emit a structured event into
-        # .tick/events/ so radar (and any .tick reader) sees the failure without
-        # reading CI logs — the same surface the drivers already use.
+        # GH-698 F8/GH-707: a rollback is a silent red. Keep the signal on the
+        # existing event surface, but use tick's envelope and an explicitly
+        # non-coordination type. In particular, do not invent a `task`: older
+        # bare records could seed a phantom task, while the #702 projection
+        # filter safely ignores this analytics record.
         try:
             events_dir = os.path.join(self.repo_root, ".tick", "events")
             if os.path.isdir(events_dir):
-                evt = os.path.join(events_dir, "%s-wave-reconcile-rollback.jsonl"
-                                   % time.strftime("%Y-%m-%dT%H-%M-%SZ", time.gmtime()))
+                now = datetime.now(timezone.utc)
+                ts = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+                filename_ts = ts.replace(":", "-")
+                evt = os.path.join(
+                    events_dir, f"{filename_ts}-wave-reconcile-rollback.jsonl"
+                )
                 with open(evt, "a", encoding="utf-8") as fh:
-                    fh.write(json.dumps({"event": "wave-reconcile-rollback",
-                                         "reason": "uncommitted-mutations",
-                                         "at": time.time()}) + "\n")
+                    fh.write(json.dumps({
+                        "schema_version": "0.2.0",
+                        "ts": ts,
+                        "type": "wave_reconcile.rollback",
+                        "agent": "wave_reconcile",
+                        "reason": "uncommitted-mutations",
+                    }) + "\n")
         except Exception:
             pass  # the event must never worsen the rollback
         for created in self.created_files:

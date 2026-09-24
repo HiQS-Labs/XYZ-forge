@@ -184,5 +184,20 @@ OUT="$(r1 'api')"; rc=$?
   && pass "control: cross-repo basename collision still ambiguous after the same-repo collapse fix" \
   || fail "control cross-repo rc=$rc -> $OUT"
 
+# ============================================================================================
+# GH-570 — an existing but empty Rebalance DB must not abort the combined known-repo stream.
+# ============================================================================================
+G6="$TMP/g6"; mkdir -p "$G6/empty"
+newrepo "$G6/xyz-app" "git@github.com:Me/xyz-app.git"
+REG6="$G6/xyz.tsv"; xyzrow "$G6/xyz-app" > "$REG6"
+: > "$G6/rebalance.db"
+OUT="$(env HQ_XYZ_REGISTRY="$REG6" HQ_REBALANCE_DB="$G6/rebalance.db" \
+  HQ_PDDA_REGISTRY_DIR="$G6/nopdda" bash -c '. "$1"; hq_known_repos' _ "$LIB" \
+  2>"$G6/stderr")"; rc=$?
+ERR="$(<"$G6/stderr")"
+{ [ "$rc" = 0 ] && grep -q '^xyz-app$' <<<"$OUT" && grep -q 'warning: Rebalance DB' <<<"$ERR"; } \
+  && pass "empty Rebalance DB warns while XYZ registry repos remain available" \
+  || fail "empty Rebalance DB rc=$rc stdout='$OUT' stderr='$ERR'"
+
 echo "== hq-hardening: $PASS passed, $FAIL failed =="
 [ "$FAIL" = 0 ]

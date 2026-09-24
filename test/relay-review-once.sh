@@ -111,5 +111,34 @@ chmod +x "$TO_STUB"
 outF="$(bash "$DRIVE" --relay-file "$A/relayTO.md" --relay-task RELAY-TO --agent-cmd "$TO_STUB" --review-once --reviewer reviewer 2>&1)"; rcF=$?
 [ "$rcF" -eq 3 ] && pass "GH-245: token-only move with no relay-file change exits 3, not success 5" || fail "expected 3, got $rcF (out: $outF)"
 
+# --- Case G (GH-720): the marathon reviewer heading names the agent in parentheses. A substantive
+#     block under that heading is review coverage and therefore a non-approval handback (exit 5). ---
+seed RELAY-PA relayPA.md
+PA_STUB="$WORK/pa-stub.sh"
+cat >"$PA_STUB" <<EOF
+#!/usr/bin/env bash
+set -u
+tmp="\$(mktemp)"; sed 's/^# body$/NEXT: producer/' "$A/relayPA.md" > "\$tmp" && mv "\$tmp" "$A/relayPA.md"
+printf '\n### Reviewer (agy)\n**Verdict:** Changes requested\nBasis: concrete finding.\n' >> "$A/relayPA.md"
+exit 0
+EOF
+chmod +x "$PA_STUB"
+outG="$(bash "$DRIVE" --relay-file "$A/relayPA.md" --relay-task RELAY-PA --agent-cmd "$PA_STUB" --review-once --reviewer reviewer 2>&1)"; rcG=$?
+[ "$rcG" -eq 5 ] && pass "GH-720: substantive Reviewer (agent) block exits 5, not stall 3" || fail "expected 5, got $rcG (out: $outG)"
+
+# --- Case H (GH-720 red control): moving relay metadata without appending a reviewer block remains
+#     a zero-output turn, even though the relay-file signature and NEXT pointer both change. ---
+seed RELAY-MF relayMF.md
+MF_STUB="$WORK/mf-stub.sh"
+cat >"$MF_STUB" <<EOF
+#!/usr/bin/env bash
+set -u
+tmp="\$(mktemp)"; sed 's/^# body$/NEXT: producer/' "$A/relayMF.md" > "\$tmp" && mv "\$tmp" "$A/relayMF.md"
+exit 0
+EOF
+chmod +x "$MF_STUB"
+outH="$(bash "$DRIVE" --relay-file "$A/relayMF.md" --relay-task RELAY-MF --agent-cmd "$MF_STUB" --review-once --reviewer reviewer 2>&1)"; rcH=$?
+[ "$rcH" -eq 3 ] && pass "GH-720: relay-file move without a reviewer block still exits 3" || fail "expected 3, got $rcH (out: $outH)"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

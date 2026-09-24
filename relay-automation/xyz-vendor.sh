@@ -462,6 +462,10 @@ materialize_vendor() {
     rm -f "$STAGE_DIR/RELEASES-DB-FAQS.md"
   fi
 
+  # GH-742: .xyz/ is a self-contained CommonJS package. Without this boundary, Node inherits a
+  # target repo's root `"type": "module"` and rejects bin/tick's require() calls before it can run.
+  printf '{\n  "type": "commonjs"\n}\n' > "$STAGE_DIR/package.json"
+
   # Runnability sanity — the two files every feature ultimately depends on.
   [ -f "$STAGE_DIR/bin/tick" ] || die "vendor incomplete: bin/tick missing after mirror"
   [ -f "$STAGE_DIR/relay-automation/relay-turn-lib.sh" ] \
