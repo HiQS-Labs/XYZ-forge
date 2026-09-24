@@ -1,6 +1,6 @@
 ---
 title: "GH-779: radar: trunk CI health, new-guard re-run on open PRs, regressed-after-declared-fixed table"
-status: Active
+status: Complete
 created: 2026-09-23
 updated: 2026-09-23
 owner: operator (via /express)

@@ -1,6 +1,6 @@
 ---
 title: "GH-778: feat: review-code and review-PR ground-truth code review skill"
-status: Active
+status: Complete
 created: 2026-09-23
 updated: 2026-09-23
 owner: operator (via /express)
