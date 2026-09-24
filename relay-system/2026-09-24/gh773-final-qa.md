@@ -52,7 +52,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the implementation diff `git diff 7bc89410..HEAD -- utils/py/marathon_drive.py test/gh390-gate-guard.sh` on branch `fix/gh773-gate-rss-unreadable`, graded against the approved plan `PROJECT/2-WORKING/GH-773-MARATHON-DRIVE-GATE-MEMORY.md` (Plan + Acceptance check sections) and the issue acceptance recorded there. Read the full `_gate_group_rss_mb`, `_gate_rss_summary`, and the guarded loop in `run_pre_advance_gate` in `utils/py/marathon_drive.py`, and section (8) of `test/gh390-gate-guard.sh`.
+- Artifact under review: `utils/py/marathon_drive.py` and `test/gh390-gate-guard.sh` (the GH-773 change), graded against the approved plan `PROJECT/2-WORKING/GH-773-MARATHON-DRIVE-GATE-MEMORY.md`.
+- Scope of the change: the diff from commit 7bc89410 to HEAD on this branch, limited to the two files above. Read the full `_gate_group_rss_mb`, `_gate_rss_summary`, and the guarded loop in `run_pre_advance_gate`, and section (8) of the test file.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-23
 - Definition of Done: every plan step and acceptance line is implemented in the actual code paths; no duplicate subsystem or writer; tests substantiate the claims.
