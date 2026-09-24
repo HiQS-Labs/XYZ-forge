@@ -12,7 +12,7 @@ gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/791
 
 | What was just completed | What's next |
 |---|---|
-| Reviewed the landed batch and reproduced three direct regressions. | Repair and verify on a dedicated PR into development. |
+| Reviewed the landed batch and reproduced four direct regressions. | Repair and verify on a dedicated PR into development. |
 
 ## Scope and recon
 
@@ -26,7 +26,8 @@ Entry path: cleanup CLI -> `land_prs` -> one bounded mergeability refresh -> lan
 one of the PR or merge SHAs before its success can skip the local reconciler. An unidentified
 active run can delay the writer, but cannot attest this landing. Existing local fallback retains
 its independent active-workflow guard. Inventory changes only admit the already-landed connector;
-the ratchet must still reject a new rogue script.
+the ratchet must still reject a new rogue script. The newly added hosted-lookup suite also
+used a local-only skill alias; its import now uses the canonical tracked package path.
 
 Reversibility: Easy; focused code/test/baseline edits can be reverted. No merge or clone teardown
 is executed by regression fixtures. The primary checkout stays untouched.

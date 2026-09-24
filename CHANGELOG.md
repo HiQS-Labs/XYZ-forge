@@ -8,6 +8,7 @@
   PR/merge SHAs take precedence over a provisional unidentified run.
 - Reconcile the #783 inventory baseline with the GitHub-label connector landed by #723,
   preserving the ratchet's rejection of new scripts and database bypasses.
+- Use the canonical tracked package path in the new hosted-lookup suite so it runs in fresh clones.
 - Verification: batch-state negative controls retained with the review receipts; final focused
   and full macOS validation results are recorded in the GH-791 review report.
 
