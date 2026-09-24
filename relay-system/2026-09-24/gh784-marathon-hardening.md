@@ -4,9 +4,9 @@
   Scaffolded on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -104,6 +104,22 @@ PROBE
 
 Observed decisive results (Python probe processes exited **0**, and the checker returns were printed separately): F1 `errors=0 warns=0 info=0`, checker exit **0**; F2 same, checker exit **0**; F4 `errors=3 warns=0 info=0`, checker exit **1**, naming missing Proof of Done, Codex QA Relay, and peer adjudication. The existing relay path in F1 isolates wave coverage from path-existence checking; it is not asserted to be a valid review receipt.
 
-Handoff: Producer (`claude-a`) to repair F1–F5, extend the regression controls, and return with clone-run evidence. STATUS remains Open.
+### Producer (claude-a) — r1
+
+Dispositions for Reviewer findings:
+- [Implemented] **F1 — Entire waves can disappear from QA:**
+  Updated `utils/pdda/check_marathon_qa.py` to extract declared wave numbers across the plan body outside the checklist (`declared_waves`), and assert that every declared wave has a corresponding `### Wave N` checklist section. Updated the positive fixture in `test/gh784-marathon-qa-gate.sh` to include Wave 2's checklist and receipts, and added test 1b as a negative control for omitted wave checklists (reproducing the F1 failure when missing).
+- [Implemented] **F2 — A checked Codex item needs no receipt at all:**
+  Updated `utils/pdda/check_marathon_qa.py` to assert that `is_codex` items MUST cite a concrete receipt under `relay-system/` when checked or at readiness/completion (`must_be_complete`). Added test 3b in `test/gh784-marathon-qa-gate.sh` verifying that an item checked without a receipt citation is caught with an error.
+- [Implemented] **F3 — Dispatcher loses child failures and explicit readiness enforcement:**
+  Updated `utils/pdda/pdda.sh::check_marathon_qa` to run `check_marathon_qa.py` through an explicit temporary file instead of process substitution, capturing python's exit status (`py_rc`). If python fails or arguments are invalid, it records an error finding and propagates the exit code. Also added `is_strict` detection for `--pre-pr` and `--strict` so they bypass the `PDDA_MODE=observe` suppression and exit non-zero immediately. Verified with both of Codex's exact probe commands (exit 1 on missing doc with `--pre-pr` under observe mode; exit 2 on invalid flag), and added tests 9b and 9c in `test/gh784-marathon-qa-gate.sh`.
+- [Implemented] **F4 — Non-marathon documents are misclassified by a generic checklist heading:**
+  Refined marathon identity in `utils/pdda/check_marathon_qa.py` to require `marathon_gid:` or `doc_type: marathon` (or `MARATHON-PLAN-*.md` filename or explicit target with declared waves); removed generic checklist headings and bare `umbrella` metadata from standalone marathon identity. Verified against Codex's F4 probe (`GH-999-SIMPLE-TASK.md` with `doc_type: bugfix` and a generic quality checklist now skipped cleanly with 0 errors).
+- [Implemented] **F5 — Document the actual readiness invocation at the wave boundary:**
+  Updated `skills/2-daily/start-marathon/SKILL.md` (lines 290-298) and `PROJECT/PDDA.md` (line 841) with the exact canonical command: `python3 "$HARNESS/utils/pdda/check_marathon_qa.py" --pre-pr --doc "$CANONICAL_PLAN"` (or `pdda.sh marathon-qa --pre-pr --doc "$CANONICAL_PLAN"`), requiring exit 0 before PR creation or plan promotion. Also added `11. pdda.sh marathon-qa` to the deterministic hourly schedule in `PROJECT/PDDA.md` (line 1060).
+- [Implemented] **Verification:**
+  All 15 assertions in `test/gh784-marathon-qa-gate.sh` passed cleanly (15 pass, 0 fail), including all falsifiable controls. Full deterministic PDDA suite (`test/pdda-repo-contract.sh`) passed with 0 errors.
+
+Handing off to Reviewer (`codex`) for Round 2 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
