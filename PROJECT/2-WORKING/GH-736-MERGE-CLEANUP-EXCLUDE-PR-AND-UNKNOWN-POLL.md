@@ -68,6 +68,15 @@ Both gaps were hit independently in live `/merge-cleanup` runs:
 
 ## Merge evidence
 
+- Agy relay QA: round 1 FAIL (2 blockers, fixed in `1d3d3c3b`; `[Should]` filed as #785), round 2
+  PASS — `relay-system/2026-09-24/gh736-merge-cleanup-qa.md`.
+- Pre-push gate (2026-09-24, local, 1177 s): `gh436-merge-cleanup.sh` green (174 tests). Push
+  refused on 10 suites unrelated to this change (`agy-turn`, `gh610-claude-subscription`,
+  `gh648-l2/l4/l5/l6`, `gh492-roadmap-state-sweep`, `gh-gen4-phase3/4/5`). The 4 re-run on a
+  pristine `origin/development` checkout (`39c2ae6a`) on the same machine fail identically
+  ("Exec format error" executing test stubs), so the baseline is known-red on this device.
+  Pushed with `--no-verify` on operator approval; the environment fault is tracked separately.
+
 - (recorded at landing)
 
 ## Lessons Learned (For Future Agents)
