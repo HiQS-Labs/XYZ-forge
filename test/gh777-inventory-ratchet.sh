@@ -34,4 +34,28 @@ if [[ "$OUT" != *"NEW script added"* ]]; then
   exit 1
 fi
 
+# Add a rogue sqlite connection in a new file
+echo "import sqlite3; conn = sqlite3.connect('test.db')" > "$TMP_TEST_DIR/scripts/rogue_db.py"
+
+set +e
+OUT=$(python3 "$TMP_TEST_DIR/utils/pdda/check_inventory_ratchet.py" --check 2>&1)
+RC=$?
+set -e
+
+if [ $RC -eq 0 ]; then
+  echo "FAIL: ratchet failed to block rogue sqlite connect"
+  exit 1
+fi
+
+# Verify --update-baseline refuses growth
+set +e
+UPDATE_OUT=$(python3 "$TMP_TEST_DIR/utils/pdda/check_inventory_ratchet.py" --update-baseline 2>&1)
+UPDATE_RC=$?
+set -e
+
+if [ $UPDATE_RC -eq 0 ]; then
+  echo "FAIL: update-baseline permitted growth"
+  exit 1
+fi
+
 echo "PASS: inventory ratchet enforcement and negative controls verified"

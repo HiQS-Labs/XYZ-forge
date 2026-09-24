@@ -99,6 +99,15 @@ def main() -> int:
     args = parser.parse_args()
 
     open_prs, pr_error = check_open_prs(REPO_ROOT)
+    if args.query and open_prs:
+        q_lower = args.query.lower()
+        matching_prs = [
+            pr for pr in open_prs
+            if q_lower in pr.get("title", "").lower() or q_lower in pr.get("headRefName", "").lower()
+        ]
+        if matching_prs:
+            open_prs = matching_prs
+
     active_roadmap, roadmap_error = check_releases_roadmap(REPO_ROOT, args.query)
     helpers = scan_existing_helpers(REPO_ROOT, args.query)
 

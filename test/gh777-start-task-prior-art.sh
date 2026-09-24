@@ -12,7 +12,9 @@ python3 "$ROOT/utils/py/prior_art_recon.py" --query "gate" --json > "$TMP_JSON"
 python3 -c "
 import json
 data = json.load(open('$TMP_JSON'))
-assert data['status'] in ('PASS', 'WARN'), f'Unexpected status: {data[\"status\"]}'
+assert data['status'] in ('PASS', 'WARN', 'UNKNOWN'), f'Unexpected status: {data[\"status\"]}'
+if data['status'] == 'UNKNOWN':
+    assert len(data.get('errors', [])) > 0, 'UNKNOWN status must report errors'
 assert 'open_prs' in data, 'Missing open_prs'
 assert 'roadmap_items' in data, 'Missing roadmap_items'
 assert 'existing_helpers' in data, 'Missing existing_helpers'
