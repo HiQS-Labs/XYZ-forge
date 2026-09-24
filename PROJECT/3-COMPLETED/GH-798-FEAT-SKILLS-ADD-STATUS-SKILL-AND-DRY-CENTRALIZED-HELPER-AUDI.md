@@ -1,6 +1,6 @@
 ---
 title: "GH-798: feat(skills): add status skill and DRY/centralized-helper audit in review-code"
-status: Active
+status: Complete
 created: 2026-09-24
 updated: 2026-09-24
 owner: operator (via /express)
