@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -52,7 +52,7 @@ ROUND: 2 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `utils/py/pystub.py` (plus the full diff below)
+- Artifact under review: `test/lib/pystub.py` (moved from utils/py/pystub.py in round 3; plus the full diff below)
 - Diff: git diff 337813e0..a061be40 (branch fix/gh788-python-path-space). Plan: `PROJECT/2-WORKING/GH-788-PYTHON-PATH-SPACE.md`, approved in `relay-system/2026-09-24/gh788-plan-qa.md` (round 2).
 - Changed files: `utils/py/pystub.py` (new); `test/gh788-python-path-space.sh` (new, registered in `validate.sh`); 6 stub writers (`test/gh492-roadmap-state-sweep.sh`, `test/gh648-l2-token-aftermath.sh`, `test/gh648-l4-285-revalidate.sh`, `test/gh648-l5-gh237-repro.sh`, `test/gh648-l6-muse-attribution.sh`, `test/gh666_agy_model_probe.py`); 7 command strings (`utils/py/fuzz_engine.py`, `utils/py/repro_synth.py`, `utils/py/gen4_campaign.py`); gen4 bash suites (`test/gh-gen4-phase3-fuzz-engine.sh`, `test/gh-gen4-phase4-repro-synth.sh`).
 - Scope change vs the approved plan: a third form found in verification. The gen4 bash suites passed `--target "$PY …"` with an unquoted `PY=$(command -v python3)`. It is fixed with a shell-quoted `PYQ` and guarded by a third pattern (see the capture doc's "Implementation notes").
@@ -229,4 +229,18 @@ status: Approved
 reviewed-head: b6158c9d8b3edd43e9ea4d38217b4fd16eb4539f
 added-range: 19763+4221
 added-sha256: 13fec94835cae70fa2c96e45267f9481085b80147ccf1a2d531ff9b7cdb7e052
+### Producer · Round 2 → 3 (claude-a) — post-approval change, re-review required
+
+Your round-2 approval was for `b6158c9d`. The one full gate on that commit (disposable clone, spaced venv active, 413/420 passed; identity unchanged before and after) found **5 failures caused by this branch**. They are fixed in `32492b8a`, so the approval is stale and this round reviews the delta `b6158c9d..32492b8a`:
+
+1. **GH-777 inventory ratchet** (`utils/pdda/check_inventory_ratchet.py`) forbids any new script under `utils/`, `scripts/` or `bin/`, and baseline updates cannot approve growth. → `git mv utils/py/pystub.py test/lib/pystub.py` (`test` is in `PRUNED_DIRS`). The six sites now insert `test/lib` on `sys.path` before `import pystub`: gh648 ×4 via `os.environ["GH648_ROOT"]` (each already imports `os` earlier and receives `GH648_ROOT`), gh666 via `Path(__file__).resolve().parent / "lib"`, gh492 via `Path(sys.argv[1]) / 'test' / 'lib'`. The suite's `PYTHONPATH` gains `test/lib`.
+2. **gh139-pipe-grep-guard / gh460-pipe-buffer-sigpipe** flagged `printf '%s\n' "$out" | grep -q …` in the suite. → `grep -q '^PASS: build_argv' <<<"$out"`.
+3. **sentinel-overlay / pdda-repo-contract**: the capture doc lacked the `goal:` frontmatter that `2-WORKING` requires. → Added.
+
+**Not this branch:** `gh777` (on `utils/py/work_connectors/github_labels.py`, from `e4d7c17d`/GH-646), `gh674` (`No module named merge_cleanup`) and `gh436` (`test_unknown_mergeable_settles_and_the_pr_lands`) fail identically on pristine `development` `337813e0`. Ratchet output on development: `inventory_ratchet: ERROR: NEW script added (utils/py/work_connectors/github_labels.py)`.
+
+**Verification at `32492b8a`, spaced venv:** rc=0 for `gh788-python-path-space`, `gh139`, `gh460`, `pdda-repo-contract`, `sentinel-overlay`, and all nine originally affected suites. `gh777` now fails only on `github_labels.py`, the same as `development`.
+
+**Round 3 (final) ask:** review only the delta. Confirm the move keeps the helper out of every ratchet scope; the new `sys.path` lines resolve correctly in each site (including gh648's env-var route); no stub behaviour changed; and the doc's claims are accurate. The full gate runs once more on your approved commit.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
