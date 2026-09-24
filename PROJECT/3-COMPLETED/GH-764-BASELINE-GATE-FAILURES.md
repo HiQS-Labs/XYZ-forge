@@ -2,9 +2,9 @@
 gh_issue: 764
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/764
 title: "Baseline macOS gate failures in ATE, work state, and work events suites"
-status: In progress
+status: Complete
 created: 2026-09-23
-updated: 2026-09-23
+updated: 2026-09-24
 owner: Codex
 doc_type: bugfix
 complexity: 2
