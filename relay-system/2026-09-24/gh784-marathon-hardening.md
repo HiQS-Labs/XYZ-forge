@@ -4,8 +4,8 @@
   Scaffolded on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -171,5 +171,51 @@ Dispositions for Reviewer Round 2 findings:
   All 16 assertions in `test/gh784-marathon-qa-gate.sh` passed cleanly (16 pass, 0 fail). Full deterministic PDDA suite (`test/pdda-repo-contract.sh`) passed with 0 errors.
 
 Handing off to Reviewer (`codex`) for Round 3 review.
+
+### Reviewer (codex) — r3
+
+VERDICT: PASS
+Basis: The remaining F1/F3 failures are repaired in the seeded content and measured controls. DoD 1–5 are content-ready within this review's scope; full-suite execution and live CodeRabbit thread state are not attested by this approval.
+
+swept file: no
+Scope: Whole checker, GH-784 regression suite and skill-nudge hook inspected, including existing content; shared governance, skill workflow, dispatcher, validation and CHANGELOG reviewed at the relevant integration seams. No exhaustive shared-file or absence-of-pre-existing-defects claim. Graph tools were unavailable in this turn's tool inventory, so current source reads supplied evidence. No git, suites, pytest, or executable fixtures ran. Only this relay file was edited; dispatcher activity records went under `.relay-scratch/tmp`.
+
+- [Pass] **F1 closed / DoD 3:** `utils/pdda/check_marathon_qa.py:116` bounds the checklist section before collecting external wave declarations. In-memory deletion controls now return **1** for missing Wave 2 both before and after the checklist, naming `Wave 2 declared in plan but missing its '### Wave 2' checklist section`. Complete two-wave controls in both orders return **0**, `errors=0 warns=0 info=0`. The added order regression is in `test/gh784-marathon-qa-gate.sh:112`. Retain these controls.
+- [Pass] **F3 closed / DoD 4:** `utils/pdda/pdda.sh:1504` returns on temp-file creation failure; `:1529` preserves nonzero child status ahead of mode gating. Command `PDDA_MODE=<mode> PDDA_ACTIVITY_LOG="$TMPDIR/qa-probe.jsonl" bash utils/pdda/pdda.sh marathon-qa --invalid-qa-probe-flag` returned **2** for each of `observe`, `light`, `full`, with `check_marathon_qa.py exited with error (2)`. Under observe, `--pre-pr --doc "$TMPDIR/missing-doc.md"` returned **1**, `failed to read file`; `--doc AGENTS.md` returned **0**, `not a marathon plan doc (skipped)`. With `TMPDIR="$TMPDIR/nonexistent-dir"` and the activity log kept at its existing absolute scratch path, invocation without additional arguments returned **1**, `failed to create temp file`. Retain mode-aware ordinary findings and the explicit strict/readiness branch.
+- [Pass] **F2/F4 retained / DoD 3:** `check_marathon_qa.py:250` requires a receipt citation, `:265` validates placeholders/existence, and `:294` rejects unchecked readiness items. Measured variants return **1** for a removed citation (`errors=1`), unexpanded receipt (`errors=1`), and three unchecked items (`errors=3`); an ordinary completed bugfix with a generic checklist returns **0** (`errors=0 warns=0 info=1`). This is a structural/existence gate, not semantic validation of the transcript's verdict or freshness; independent review remains required by policy.
+- [Pass] **DoD 1–2:** `skills/2-daily/start-marathon/SKILL.md:263` and `:267` require independent per-wave Step 6 and Step 8 parity, `:284` provides all three checklist items, and `:292` names the targeted readiness command. `AGENTS.md:302` explicitly prohibits test-only self-attestation. Retain these requirements.
+- [Pass] **DoD 4 integration and falsifiability:** `PROJECT/PDDA.md:632` and `:841`, `ROUTER.md:146`, `pdda.sh:1568` and `:1767`, and `validate.sh:566` wire the documented gate consistently. `test/gh784-marathon-qa-gate.sh` includes valid two-wave input, omitted-wave controls in both orders, missing citation/transcript/placeholder and unchecked-item controls, observe-mode dispatcher failure, and receipt deletion. Its failure helper exits nonzero (`test/_setup.sh:172`), with soft-failure protection at `:66`. The CHANGELOG entry at `CHANGELOG.md:3` describes this scope.
+- [Pass] **DoD 5 seeded feedback:** `relay-automation/hooks/skill-nudge.sh:61` matches both queue phrases; `test/xyz-harness-hooks.sh:68` and `:69` cover them. `start-marathon/SKILL.md:250` requires existing-plan `--check` and evidence before revision. Live CodeRabbit thread-resolution state was not queried.
+- [Should] **[Unverified — needs clone run]:** Run the focused suites and required harness gate in the disposable full clone and retain attributable evidence. Producer-reported 16-pass and PDDA results are not firsthand suite evidence from this turn. This is content approval, not an attestation of merge/promotion readiness.
+
+Reproducible in-memory probe for the section-order finding (process exit **0**; checker returns **1, 1, 0, 0**, respectively). The existing relay path isolates file existence and does not assert transcript approval:
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PROBE'
+import importlib.util, io, os
+from unittest.mock import patch
+s = importlib.util.spec_from_file_location('qa', 'utils/pdda/check_marathon_qa.py')
+m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
+fm = '---\ndoc_type: marathon\nstatus: active\n---\n'
+waves = '## Wave breakdown\n**Wave 1:** Core\n**Wave 2:** Followup\n'
+receipt = 'relay-system/2026-09-24/gh784-marathon-hardening.md'
+def items(n):
+    return (f'### Wave {n}\n- [x] Wave {n} Proof of Done Test Suite Green\n'
+            f'- [x] Wave {n} Post-Build Codex QA Relay executed (receipt under `{receipt}`)\n'
+            f'- [x] Wave {n} CodeRabbit / Peer Review findings adjudicated\n')
+check = '## Acceptance & Quality Checklist\n'
+for body in (fm+waves+check+items(1), fm+check+items(1)+waves,
+             fm+waves+check+items(1)+items(2), fm+check+items(1)+items(2)+waves):
+    c = m.MarathonQAChecker(os.getcwd(), pre_pr=True)
+    with patch('builtins.open', return_value=io.StringIO(body)):
+        rc = c.run([os.getcwd()+'/PROJECT/2-WORKING/GH-999-PROBE.md'])
+    print('checker_exit=', rc)
+PROBE
+```
+
+The same probe evaluated `fm+check+items(1)` with its receipt clause removed, its receipt replaced by `relay-system/<date>/<label>.codex.md`, or all `[x]` replaced by `[ ]`; these produced the respective failures recorded above. The ordinary control used `doc_type: bugfix`, `status: completed`, the generic checklist heading and `- [x] Unit checks pass`.
+
+Content approved; returning control to Producer (`claude-a`) with the token marked done. Harness owns the file-scoped commit and subsequent clone gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
