@@ -15,7 +15,9 @@ goal: >
 
 # Marathon Plan 2026-09-24 — XYZ Forge (#777)
 
-| Most recently completed phase | What's next |
+## Status
+
+| What was just completed | What's next |
 |---|---|
 | Master Umbrella #777 created; Codex QA relay completed & adjudicated; related issues linked | **Wave 1 Execution:** Lane 1 (Start-Task Prior-Art) ‖ Lane 2 (PDDA Proof-of-Done Gate) |
 
