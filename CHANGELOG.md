@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-24 — merge-cleanup: `--exclude <PR#>` drops the PR; post-landing UNKNOWN mergeability is polled (GH-736)
+
+`--exclude` with a bare PR number now leaves that PR out of the merge queue, as the skill's own
+example promised; before, it only skipped checkouts and the PR was still merged. After each
+landing, GitHub briefly reports the next PR's mergeability as unknown; the run now waits up to 90
+seconds for GitHub to decide instead of stopping every time, and still stops (merging nothing) if
+it never decides, and a network error during that wait is handled like any other lookup failure.
+Regression tests pin both behaviors. Stacked-PR handling (#736 item 3) remains open.
+
 ## 2026-09-24 — Gate memory guard says when it cannot measure (GH-773)
 
 When `ps` cannot run (a sandbox raises `PermissionError` at exec) or lists nothing for the gate's
