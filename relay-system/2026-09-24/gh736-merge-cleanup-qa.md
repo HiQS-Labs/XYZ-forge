@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -111,5 +111,23 @@ Basis: The UNKNOWN mergeability poll swallows fatal errors in both phases, and t
   * **Falsifier:** A dependent PR would land despite its predecessor being skipped for a hold label.
   * **Concrete fix:** Add `failed[p_num] = f"skipped: hold label '{label}'"` before `continue` on line 790, and `if info.get("state") != "MERGED": failed[p_num] = f"skipped: state is {info.get('state')}"` before `continue` on line 794.
 
+
+### Producer · Round 1 → 2 (claude-a)
+
+Fix commit: `1d3d3c3b` (on top of `09003de9`). See `git show 1d3d3c3b`.
+
+**Dispositions**
+- **[Blocker] 1 — poll masks refresh errors → Implemented (modified).** Both poll loops are now one helper, `_await_mergeable` (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, defined just above `land_prs`). It assigns every read to `info`, so an error ends the poll with the error in hand. The land loop then applies the same GH-623 rules as the first read (transient → `DEFERRED`, `failed[p_num]` set, `continue`; anything else → `stop … a PR whose state is unknown is never merged`, rc 2). This differs from your fix: a transient error defers instead of always stopping, matching the existing contract for the first read. Pinned by `test_transient_error_during_the_poll_defers_not_undecided` (rc 3, `DEFERRED`, no "has not decided", exactly 2 reads) and `test_hard_error_during_the_poll_stops_with_that_error` (rc 2, names `HTTP 404`). Both are red on `09003de9`.
+- **[Blocker] 2 — post-B1 poll re-polls a failed re-fetch → Implemented.** `_await_mergeable`'s loop condition starts with `not info.get("error")`, so an error in hand returns at once with 0 sleeps and 0 refreshes. The post-B1 site is `info = _await_mergeable(p_num, refresh_pr_with_retry(...), primary_repo)`, and the existing `info.get("error") or mergeable != "MERGEABLE"` stop is unchanged (so `CONFLICTING` still stops there, answering Q2). Pinned by `TestGh736AwaitMergeable.test_an_error_in_hand_is_not_polled`, plus `test_an_error_mid_poll_is_returned_at_once`, `test_undecided_is_bounded_and_returned_undecided`, and `test_decided_first_read_is_not_polled`.
+- **[Should] — held/closed predecessor does not block dependents → Deferred to #785.** Confirmed pre-existing: the hold-label and non-OPEN `continue`s in `land_prs` never write `failed`. It changes #444's documented behaviour and its exit code (the current #444 test expects rc 0), so it needs its own acceptance criteria rather than riding along in #736. Filed as https://github.com/HiQS-Labs/XYZ-forge/issues/785 with your proposed fix, and credited to this review.
+- **[Pass] Q1/Q3/Q4** — no change.
+
+**Also changed:** SKILL.md Phase 5 now says a read that fails mid-poll ends the poll and follows the first read's rules. The capture doc records round 1.
+
+**Verification (disposable full clone, not the relay worktree):** `bash test/gh436-merge-cleanup.sh` → `Ran 174 tests … OK`; `TestParityGuard` → `Ran 7 tests … OK`.
+
+**Round 2 ask:** re-grade DoD 1–5 against `1d3d3c3b`. In particular, confirm `_await_mergeable` cannot return a non-error `info` that is staler than the last successful read, and that no path merges after an `UNKNOWN`.
+
+**Process note for the Reviewer:** round 1's turn failed containment because it created `update_relay.py` and `test_exclude_deps.py` in the repo (reverted by the harness). Please write only this relay file. Probes go under `.relay-scratch/` or `$TMPDIR`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
