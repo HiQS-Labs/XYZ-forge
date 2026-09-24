@@ -117,14 +117,21 @@ class MarathonQAChecker:
         base_name = os.path.basename(file_path)
         is_marathon_filename = bool(re.match(r"^MARATHON-PLAN-[A-Za-z0-9._-]+\.md$", base_name, re.IGNORECASE))
 
+        # Determine exact checklist line range [checklist_start, checklist_end)
+        checklist_start = (checklist_line - 1) if checklist_line else len(lines)
+        checklist_end = len(lines)
+        if checklist_line:
+            for idx in range(checklist_start + 1, len(lines)):
+                line = lines[idx]
+                if re.match(r"^##\s+", line) and not re.match(r"^###\s+", line):
+                    checklist_end = idx
+                    break
+
         # Scan for declared waves outside the checklist section
         declared_waves = set()
         for idx, line in enumerate(lines):
-            if checklist_line and idx >= (checklist_line - 1):
-                if re.match(r"^##\s+", line) and not re.match(r"^###\s+", line):
-                    pass
-                else:
-                    continue
+            if checklist_start <= idx < checklist_end:
+                continue
             for m in re.finditer(r"(?:\*\*Wave\s+(\d+)[:\*]|^###?\s+Wave\s+(\d+)\b|^\s*-\s*\*{0,2}Wave\s+(\d+)[:\*])", line, re.IGNORECASE):
                 wn = m.group(1) or m.group(2) or m.group(3)
                 if wn:

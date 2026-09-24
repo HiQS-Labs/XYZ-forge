@@ -108,6 +108,37 @@ else
   fail "1b: Expected error on omitted Wave 2 checklist section, got rc=$rc: $out"
 fi
 
+# ── 1c. Declared waves after checklist section (F1 order independence) ──────
+cat > "$FIXTURE_ROOT/PROJECT/2-WORKING/MARATHON-PLAN-WAVES-AFTER.md" <<'EOF'
+---
+title: Plan With Waves After Checklist
+marathon_gid: M-TEST-001C
+doc_type: marathon
+status: active
+---
+
+# Plan With Waves After Checklist
+
+## Acceptance & Quality Checklist
+
+### Wave 1
+- [x] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0)
+- [x] Wave 1 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/2026-09-24/wave1.codex.md`)
+- [x] Wave 1 CodeRabbit / Peer Review findings adjudicated
+
+## Wave breakdown
+**Wave 1:** Foundation
+**Wave 2:** Hardening
+EOF
+
+out="$(python3 "$CHECKER" --root "$FIXTURE_ROOT" --pre-pr --doc "$FIXTURE_ROOT/PROJECT/2-WORKING/MARATHON-PLAN-WAVES-AFTER.md" 2>&1)"
+rc=$?
+if [ $rc -ne 0 ] && echo "$out" | grep -q "Wave 2 declared in plan but missing its '### Wave 2' checklist section"; then
+  pass "1c: Declared wave appearing after checklist is caught as error (F1 order independence)"
+else
+  fail "1c: Expected error on Wave 2 declared after checklist, got rc=$rc: $out"
+fi
+
 # ── 2. Missing '## Acceptance & Quality Checklist' in marathon plan ──────────
 cat > "$FIXTURE_ROOT/PROJECT/2-WORKING/MARATHON-PLAN-NO-CHECKLIST.md" <<'EOF'
 ---
@@ -343,11 +374,11 @@ else
   fail "9b: pdda.sh marathon-qa --pre-pr failed to enforce error: (rc=$rc_observe_fail) $out_observe_fail"
 fi
 
-# 9c: Unrecognized argument MUST fail with non-zero code (F3)
-out_bad_flag="$(PDDA_MODE=full PDDA_REPO_ROOT="$FIXTURE_ROOT" bash "$PDDA" marathon-qa --invalid-test-flag 2>&1)"
+# 9c: Unrecognized argument MUST fail with non-zero code even in observe mode (F3)
+out_bad_flag="$(PDDA_MODE=observe PDDA_REPO_ROOT="$FIXTURE_ROOT" bash "$PDDA" marathon-qa --invalid-test-flag 2>&1)"
 rc_bad_flag=$?
 if [ $rc_bad_flag -ne 0 ] && echo "$out_bad_flag" | grep -q "check_marathon_qa.py exited with error"; then
-  pass "9c: pdda.sh marathon-qa propagates child argument errors (F3)"
+  pass "9c: pdda.sh marathon-qa propagates child argument errors in observe mode (F3)"
 else
   fail "9c: pdda.sh marathon-qa failed to catch invalid flag: (rc=$rc_bad_flag) $out_bad_flag"
 fi

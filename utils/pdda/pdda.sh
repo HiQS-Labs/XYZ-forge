@@ -1501,7 +1501,11 @@ check_marathon_qa() {
   done
 
   local tmp_out
-  tmp_out="$(mktemp "${TMPDIR:-/tmp}/pdda-marathon-qa.XXXXXX")"
+  tmp_out="$(mktemp "${TMPDIR:-/tmp}/pdda-marathon-qa.XXXXXX" 2>/dev/null)" || {
+    pdda_record_finding error "$CHECK_NAME" "$PDDA_REPO_ROOT" 1 "failed to create temp file" "check-tmp-permissions"
+    pdda_emit_summary "$CHECK_NAME" 1
+    return 1
+  }
 
   python3 "$HERE/check_marathon_qa.py" --root "$PDDA_REPO_ROOT" --format tsv --mode "$PDDA_MODE" "$@" > "$tmp_out"
   py_rc=$?
@@ -1517,11 +1521,14 @@ check_marathon_qa() {
   fi
   rm -f "$tmp_out"
 
+  # Operational / runtime / usage failures MUST never be suppressed by observe/light mode
   if [ "$py_rc" -ne 0 ]; then
     rc="$py_rc"
     if [ "$ERROR_COUNT" -eq 0 ]; then
       pdda_record_finding error "$CHECK_NAME" "$PDDA_REPO_ROOT" 1 "check_marathon_qa.py exited with error ($py_rc)" "check-checker-output"
     fi
+    pdda_emit_summary "$CHECK_NAME" "$rc"
+    return "$rc"
   fi
 
   pdda_emit_summary "$CHECK_NAME" "$rc"
