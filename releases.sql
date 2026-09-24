@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 1070
+-- generation: 1071
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -12,7 +12,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('7', '2026-09-08T05:45
 INSERT INTO schema_migrations(version, applied_at) VALUES('8', '2026-09-12T16:07:23Z');
 -- table: settings
 INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
-INSERT INTO settings(key, value, updated_at) VALUES('generation', '1070', '2026-09-24T06:20:58Z');
+INSERT INTO settings(key, value, updated_at) VALUES('generation', '1071', '2026-09-24T06:21:14Z');
 INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
 -- table: repos
 INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
@@ -216,7 +216,7 @@ INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M2TG8D1XTP3D7FG4CS07CNW9', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M2TG8D25ZEX60YK68EQ6R5YJ', 'shipped', '2026-09-18T14:55:46Z', 'express hotfix 2026-09-18 (GH-267 lane)', NULL, '2026-09-18T14:56:01Z');
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M38YXGE9XEDGM33B888WBBJX', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M38YXGEP21QYG75KWPNS8STB', 'shipped', '2026-09-24T05:41:20Z', 'express hotfix 2026-09-23 (GH-267 lane)', NULL, '2026-09-24T05:41:25Z');
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M38Z8VA2Y8BMS6DCM84F8HNJ', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M38Z8VABWZ4ENKWSBC0SJBPW', 'shipped', '2026-09-24T05:47:32Z', 'express hotfix 2026-09-23 (GH-267 lane)', NULL, '2026-09-24T05:47:57Z');
-INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M39162Z0YPPF1R3SYG2XCT00', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M39162Z8Z0VQ5X2Z8F3HWS9B', 'dialed_in', '2026-09-24T06:20:58Z', 'express hotfix 2026-09-23 (GH-267 lane)', NULL, '2026-09-24T06:20:58Z');
+INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid, updated_at) VALUES('mfi-01M39162Z0YPPF1R3SYG2XCT00', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M39162Z8Z0VQ5X2Z8F3HWS9B', 'shipped', '2026-09-24T06:20:58Z', 'express hotfix 2026-09-23 (GH-267 lane)', NULL, '2026-09-24T06:21:14Z');
 -- table: manifest_state_events
 INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M0GT694QQ7Q952E5ZJ6SY1G8', 'open', 'cut', '2026-08-21T02:02:16Z', 'Admission error, not a re-scope: #108 (task rating system) was added 2026-08-20 without meeting the standing admission rule — it does not make Daybreak''s exit command fail, falsifies no named invariant, and carries no reproducer. Daybreak''s manifest is the nine /standup marathon work units (#79-#87); a rating system is not that work. Cut restores the 9-item denominator under a live marathon run. Re-homing to a future release is an open operator decision on #108.');
 INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M0EC52HXQ1MTWGM1RR27SPP2', 'dialed_in', 'shipped', '2026-08-21T04:22:07Z', 'PR #92 (merge 897e3064) — collect.sh lenses 2, 3 and 7, Daybreak wave 1; issue #79 closed');
@@ -290,6 +290,7 @@ INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VA
 INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M2TG8D1XTP3D7FG4CS07CNW9', 'dialed_in', 'shipped', '2026-09-18T14:56:01Z', '989f55496ea5d36f144d63fc937169b372b68ff1; registered suite test/gh693-lessons-learned-advisory.sh green (express-suite, not the full gate); receipt TESTS-RESULTS/2026-09-18+GH-693-express/provenance.jsonl; direct development push (express)');
 INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M38YXGE9XEDGM33B888WBBJX', 'dialed_in', 'shipped', '2026-09-24T05:41:25Z', 'cbe578de612d08de2b6e036a2f9773ed54553b04; registered suite test/gh778-review-code-skill.sh green (express-suite, not the full gate); receipt TESTS-RESULTS/2026-09-24+GH-778-express/provenance.jsonl; direct development push (express)');
 INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M38Z8VA2Y8BMS6DCM84F8HNJ', 'dialed_in', 'shipped', '2026-09-24T05:47:57Z', '48fdbbcf7f6a5f1fcdbc79b68d77d49bede17d3c; registered suite test/gh779-radar-ci-health.sh green (express-suite, not the full gate); receipt TESTS-RESULTS/2026-09-24+GH-779-express/provenance.jsonl; direct development push (express)');
+INSERT INTO manifest_state_events(item_gid, from_state, to_state, at, reason) VALUES('mfi-01M39162Z0YPPF1R3SYG2XCT00', 'dialed_in', 'shipped', '2026-09-24T06:21:14Z', '444954755cea088c6346c195d70ea2515959a2ad; registered suite test/gh781-wam-radar-seed.sh green (express-suite, not the full gate); receipt TESTS-RESULTS/2026-09-24+GH-781-express/provenance.jsonl; direct development push (express)');
 -- table: doc_lines
 INSERT INTO doc_lines(repo_gid, position, content, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '0', '# Major Releases', '2026-09-08T05:45:05Z');
 INSERT INTO doc_lines(repo_gid, position, content, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1', '', '2026-09-08T05:45:05Z');
@@ -1913,6 +1914,7 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M38Z8V06FRTQW7BM6TQZ2DXK', '2026-09-24T05:52:33Z', '2fc249b34b08428ba5822739ed9f552a', 'default', '60081cc9918babfeffe4264fae08a3fde2eeb15c4f23227766e6e1b29e75d3fd', '6bf5cfb4e98653030d1e937d62b90e1dd46aa16ef064eba91fa26aabb9b7462b');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-add', 'rmi-01M39162NB1SB08D0E3M15JBRE', '2026-09-24T06:20:58Z', '232d5f28e2864de68a68edb9c5df3049', 'default', '6bf5cfb4e98653030d1e937d62b90e1dd46aa16ef064eba91fa26aabb9b7462b', 'fb9131d8560af12343d01458b696a5acf6dae70674c9f0098197f543fe4ae7cd');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-add', 'mfi-01M39162Z0YPPF1R3SYG2XCT00', '2026-09-24T06:20:58Z', '18a81a483c5547469fe38e0a7ed164a2', 'default', 'fb9131d8560af12343d01458b696a5acf6dae70674c9f0098197f543fe4ae7cd', '3dbdef31eea0ed93ccd049f2e4a0152208dd3cf124db7295bbc0503d714f3eb6');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-ship', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', '2026-09-24T06:21:14Z', '4987d35a663f4b739edaa6dc9606c034', 'default', '3dbdef31eea0ed93ccd049f2e4a0152208dd3cf124db7295bbc0503d714f3eb6', '784d17c2c82f5eac189681d751258110b2b39647fbb24dcf30c1ae5e96fa0455');
 -- table: work_events
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CBC3C2HSWRSBY81TAZHYY0', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '568', 'df2ee890077d486dbe23311c5dd74d82', 'updated', '{"marker": "\u2705", "section": "Completed"}', '2026-09-13T03:01:02Z');
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CGH1A7Z979TG5DQJHN8DX6', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '591', '6d3d7a7619c247b5a85a039ea98756bd', 'parked', '{"section": "Queue / parked intake"}', '2026-09-13T04:31:07Z');
