@@ -227,6 +227,10 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(conn.execute("PRAGMA journal_mode=WAL").fetchone()[0].lower(), "wal")
             conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             conn.close()
+            # Some SQLite builds retain empty sidecars after close. Remove them to
+            # construct the header-without-sidecars input this test is about.
+            for suffix in ("-wal", "-shm"):
+                Path(str(wal_db) + suffix).unlink(missing_ok=True)
             for suffix in ("-wal", "-shm"):
                 self.assertFalse(Path(str(wal_db) + suffix).exists())
             before = wal_db.read_bytes()
