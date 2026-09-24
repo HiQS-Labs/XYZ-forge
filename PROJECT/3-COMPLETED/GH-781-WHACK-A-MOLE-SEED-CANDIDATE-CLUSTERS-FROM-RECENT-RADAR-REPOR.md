@@ -1,6 +1,6 @@
 ---
 title: "GH-781: whack-a-mole: seed candidate clusters from recent radar reports (re-verified, freshness-gated)"
-status: Active
+status: Complete
 created: 2026-09-23
 updated: 2026-09-23
 owner: operator (via /express)

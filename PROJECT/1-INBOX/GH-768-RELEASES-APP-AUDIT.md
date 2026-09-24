@@ -179,3 +179,7 @@ Largest suites: `gh32-releases-app.sh` (~120 invocations), `gh69-roadmap-shadow.
 - **Ledger bullet parser:** mirrored in `marathon-plan.sh:468-473` and `_marathon_plan.py:489-494`.
 - **Direct `sqlite3` reads of `releases.db`, bypassing the app:** at least 13 sites, including `wave_reconcile.py`, `_marathon_plan.py`, `site_build.py`, `board_sync.py`, `export_timeline.py`, `hq-lib.sh`, `pdda.sh`, `release-lanes.sh`, `collect.sh` and `tools/vscode-cockpit`. These are schema coupling points a migration must account for.
 - **No duplicate found:** the `rated N/N/N/N` parser (`ledger_merge.py:280` and `express.py:687` only build the token) and ULID/gid generation.
+
+## Merge evidence
+
+- PR #776 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
