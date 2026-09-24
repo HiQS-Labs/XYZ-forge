@@ -83,6 +83,8 @@ def _gh(args: List[str], cwd: Path, timeout: int = 180) -> subprocess.CompletedP
 
 RETRY_ATTEMPTS = 3
 RETRY_BACKOFF_S = (2, 4)      # sleeps BETWEEN attempts: 3 calls, 2 sleeps
+MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll up to 6 × 15s
+MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
 
 TRANSIENT_RE = re.compile(
@@ -794,6 +796,20 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                 log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
                 return 2
             mergeable = info.get("mergeable")
+            # GitHub recomputes mergeability after every landing on the base; the PR right after
+            # a merge reads UNKNOWN for a few seconds. Poll (bounded) before treating it as unknown
+            # state — a stop here is a timing artifact, not an unknowable PR.
+            polls = 0
+            while mergeable not in ("MERGEABLE", "CONFLICTING") and polls < MERGEABLE_POLL_ATTEMPTS:
+                polls += 1
+                log(f"PR #{p_num}: mergeable is {mergeable!r} — waiting {MERGEABLE_POLL_S}s for GitHub "
+                    f"to decide ({polls}/{MERGEABLE_POLL_ATTEMPTS})")
+                _sleep(MERGEABLE_POLL_S)
+                again = refresh_pr_with_retry(p_num, primary_repo)
+                if again.get("error"):
+                    break
+                info = again
+                mergeable = info.get("mergeable")
             if mergeable not in ("MERGEABLE", "CONFLICTING"):
                 log_err(f"PR #{p_num}: mergeable is {mergeable!r} — GitHub has not decided; stopping rather than guessing")
                 return 2
@@ -890,7 +906,16 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     keep_workdir = True
                     return 2
                 log(f"PR #{p_num}: {why}; re-fetching and re-gating the new head")
-                info = refresh_pr(p_num, primary_repo)
+                info = refresh_pr_with_retry(p_num, primary_repo)
+                polls = 0
+                while info.get("mergeable") not in ("MERGEABLE", "CONFLICTING") and polls < MERGEABLE_POLL_ATTEMPTS:
+                    polls += 1
+                    log(f"PR #{p_num}: mergeable is {info.get('mergeable')!r} — waiting {MERGEABLE_POLL_S}s for GitHub to decide ({polls}/{MERGEABLE_POLL_ATTEMPTS})")
+                    _sleep(MERGEABLE_POLL_S)
+                    again = refresh_pr_with_retry(p_num, primary_repo)
+                    if again.get("error"):
+                        break
+                    info = again
                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                     return 2
@@ -1069,6 +1094,14 @@ def main():
                 f"the queue cannot be verified empty")
         return 2
     ordered_prs: List[Dict[str, Any]] = []
+    # `--exclude <N>` (a bare PR number) drops that PR from the queue, as SKILL.md's example 6
+    # documents; other patterns still apply to checkouts only.
+    excluded_prs = {int(x) for x in (args.exclude or []) if str(x).isdigit()}
+    if excluded_prs:
+        skipped = [p for p in prs if int(p.get("number", 0)) in excluded_prs]
+        prs = [p for p in prs if int(p.get("number", 0)) not in excluded_prs]
+        for p in skipped:
+            log(f"PR #{p['number']}: excluded by --exclude; not sequenced this run")
     if prs:
         ordered_prs, _, warnings = toposort_prs(prs)
         print("=" * 80)

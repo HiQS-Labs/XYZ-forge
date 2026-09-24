@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-24 — merge-cleanup: `--exclude <PR#>` drops the PR; post-landing UNKNOWN mergeability is polled (GH-736)
+
+`--exclude` with a bare PR number now leaves that PR out of the merge queue, as the skill's own
+example promised; before, it only skipped checkouts and the PR was still merged. After each
+landing, GitHub briefly reports the next PR's mergeability as unknown; the run now waits up to 90
+seconds for GitHub to decide instead of stopping every time, and still stops (merging nothing) if
+it never decides. Three regression tests pin both behaviors. Stacked-PR handling (#736 item 3)
+remains open.
+
 ## 2026-09-23 — Audits of the two largest Python files, plus intake (GH-768, GH-769)
 
 Research-only audits of `utils/py/releases_app.py` (26 findings plus a caller and test sweep) and

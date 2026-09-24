@@ -79,7 +79,15 @@ def view(st, pr):
          "mergeCommit": ({"oid": pr["mergeCommit"]} if pr.get("mergeCommit") else None),
          "url": f"https://example.invalid/pr/{pr['number']}", "title": f"PR {pr['number']}", "body": pr.get("body", ""),
          "files": pr.get("files", []), "createdAt": f"2026-09-01T0{pr['number'] % 10}:00:00Z", "statusCheckRollup": []}
-    d["mergeable"] = st.get("force_mergeable", {}).get(str(pr["number"])) or (mergeable(st, pr) if pr["state"] == "OPEN" else "UNKNOWN")
+    forced = st.get("force_mergeable", {}).get(str(pr["number"]))
+    if isinstance(forced, dict):  # GH-736: {"value": ..., "remaining": N} reads `value` N times, then the truth
+        if forced.get("remaining", 0) > 0:
+            forced["remaining"] -= 1
+            save(st)
+            forced = forced["value"]
+        else:
+            forced = None
+    d["mergeable"] = forced or (mergeable(st, pr) if pr["state"] == "OPEN" else "UNKNOWN")
     return d
 def stub_fail(st, key, prnum=None):
     """GH-623: a failure injector. `True` -> fixed non-transient message (back-compat);
@@ -362,11 +370,45 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
         self.st["force_mergeable"] = {"1": "UNKNOWN"}
         self.save()
-        rc = self.run_main()
+        sleeps = []  # GH-736: record the poll schedule without waiting it out
+        with mock.patch.object(merge_cleanup, "_sleep", side_effect=sleeps.append):
+            rc = self.run_main()
         self.assertEqual(rc, 2)
         self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
         self.teardown.assert_not_called()
         self.pruner.assert_not_called()
+        # GH-736: the stop comes only after the bounded poll, never on the first UNKNOWN read.
+        polls = [s for s in sleeps if s == merge_cleanup.MERGEABLE_POLL_S]
+        self.assertEqual(len(polls), merge_cleanup.MERGEABLE_POLL_ATTEMPTS, sleeps)
+
+    def test_unknown_mergeable_settles_and_the_pr_lands(self):
+        # GH-736: GitHub reads UNKNOWN for a few seconds after every landing on the base; a PR
+        # that settles to MERGEABLE inside the poll lands instead of stopping the run.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
+        self.st["force_mergeable"] = {"1": {"value": "UNKNOWN", "remaining": 3}}
+        self.save()
+        out, sleeps = io.StringIO(), []
+        with contextlib.redirect_stdout(out), mock.patch.object(merge_cleanup, "_sleep", side_effect=sleeps.append):
+            rc = self.run_main()
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "MERGED")
+        polls = [s for s in sleeps if s == merge_cleanup.MERGEABLE_POLL_S]
+        self.assertTrue(1 <= len(polls) < merge_cleanup.MERGEABLE_POLL_ATTEMPTS, sleeps)
+        self.assertIn("waiting 15s for GitHub to decide", out.getvalue())
+
+    def test_exclude_pr_number_drops_it_from_the_queue(self):
+        # GH-736: `--exclude <N>` (SKILL.md example 6) removes PR N from the queue; before the
+        # fix it filtered checkouts only and PR N was still merged.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "excluded"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "kept"))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = self.run_main(extra=("--exclude", "1"))
+        self.assertEqual(rc, 0, self.err)
+        st = self.load()
+        self.assertEqual(st["prs"]["1"]["state"], "OPEN")
+        self.assertEqual(st["prs"]["2"]["state"], "MERGED")
+        self.assertIn("PR #1: excluded by --exclude", out.getvalue())
 
     def test_gh_view_failure_stops(self):
         self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
