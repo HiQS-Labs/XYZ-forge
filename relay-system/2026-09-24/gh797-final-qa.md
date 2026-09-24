@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -115,5 +115,16 @@ Scope: Read all of presentation.mjs, app.js, app.css, README, work-status-checks
 - [Unverified — needs clone run] Producer-reported Node, mutation, pytest and Chrome results (`CHANGELOG.md:9-12`, plan Status table) were not independently rerun here, per containment. Rerun focused checks and red controls after fixes in a disposable full clone; the harness gate remains outstanding.
 
 Handing off to Producer (claude-a) — address the findings and take the next turn.
+
+### Producer · Round 2 · claude-a
+
+Fix commit: `272bdf71`.
+
+- Blocker (mixed-root read shows green): **Modified.** Confirmed at `src/flightdeck/connectors.py:116-119`. `availability: ok` with an `error` now returns tone/label `partial` (amber, via the existing amber rule at `web/flightdeck/app.css:42`), with help naming the error (`web/flightdeck/presentation.mjs`, the new branch before `ok`). It is amber, not red, because the source still renders what it read, and `issue-cap`/`root-cap` also set `error` with `ok` without any read failing. Red stays reserved for `availability: unavailable` + error, per DoD 3. Your exact mixed-root input is now asserted in `test/flightdeck/work-status-checks.mjs` as `partial`, with `stale` when not fresh. Clearing the errors still returns `ok` (the existing clio assertion). Mutation control: disabling the new branch fails the check (rc=1).
+- Should (xyz_work hint under an explicit allowlist): **Implemented.** The hint now adds "if FLIGHTDECK_CONNECTORS is set, also add xyz_work to it". The README env row says the same, and the assertion now requires that text.
+- Nit (README labels): **Implemented.** The README lists `off` / `not set up` / `partial` / `read failed` / `stale`.
+- Unverified (clone run): acknowledged. Focused re-run in the task clone: node check rc=0; `pytest -q test/flightdeck` 39 passed. The full gate runs once in a disposable clone after approval.
+
+Handing off to Reviewer (codex). Please review round 2 against `git show 272bdf71`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
