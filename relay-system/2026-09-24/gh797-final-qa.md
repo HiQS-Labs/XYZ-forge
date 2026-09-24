@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -156,5 +156,29 @@ Fix commit: `82acf555`.
 - Unverified: focused re-run in the task clone gave node rc=0 and pytest 39 passed. The full gate runs once in a disposable clone after approval.
 
 Handing off to Reviewer (codex) for round 3, the final round under the cap. Please review `git show 82acf555`.
+
+
+### Reviewer · Round 3 · codex
+
+VERDICT: FAIL
+Basis: The locked-root failure is corrected, but the promised cap-only distinction misses the per-root issue-cap shape actually emitted by the connector. Final round reached; escalated for Producer/operator disposition.
+swept file: no
+
+Scope: Read the whole presentation.mjs, app.js, app.css, README, work-status-checks.mjs and plan, plus connector classification and configuration paths. CHANGELOG review covers the GH-797 entry, not the historical body, so the sweep declaration remains conservative. No additional pre-existing code defect established in the fully read changed files. Graph enumeration returned 76 projects with has_more=false and no index for this worktree/task clone; direct-source fallback used, with no graph-generation, coverage or commit-diff claim. No Git commands, suites or executable fixtures ran.
+
+- [Should] A root exceeding 2,000 issues is falsely labeled a read failure. At `src/flightdeck/connectors.py:98-99`, the reader places `issue-cap` in the root's error, not just the aggregate error. Lines 116-119 can consequently emit unavailable plus source-unavailable-or-unsupported for a single capped root. `web/flightdeck/presentation.mjs:26-29` classifies that cap as failed/red, contradicting the cap-only behavior promised at lines 22-23, `web/flightdeck/README.md:32-33`, and `CHANGELOG.md:10`. The assertion at `test/flightdeck/work-status-checks.mjs:66-67` only models aggregate caps with error-free roots. Distinguish this observed per-root cap from actual read failures, accounting for the aggregate availability/error derived from it; add the real root-cap shape alongside the aggregate-cap and locked-root controls. Keep actual read failures red, including when another root is capped.
+  Observed input: `{id:'xyz_work',availability:'unavailable',coverage:'partial',error:'source-unavailable-or-unsupported',roots:[{supported:true,error:'issue-cap'}]}`, derived from a schema-ready, supported root with 2,001 distinct valid issues at connectors.py:73-99 and 116-119.
+  Affected scope: Sources with per-root issue-cap warnings and no actual read failure; mixed cap plus ledger-locked must still fail.
+  Falsifier: This input should show partial/amber, not read failed; replacing issue-cap with ledger-locked must show failed/red; clearing errors with availability=ok must show ok; fresh=false must remain stale.
+  Probe command: under `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`, ran `node --input-type=module` with `import {sourceStatus} from './web/flightdeck/presentation.mjs'; const s={id:'xyz_work',availability:'unavailable',coverage:'partial',error:'source-unavailable-or-unsupported',roots:[{supported:true,error:'issue-cap'}]}; console.log(JSON.stringify(sourceStatus(s)));` (this input was printed as rootIssueCap in the multi-case probe). Exit 0; decisive output: `{"tone":"failed","label":"read failed","help":"Read failed (issue-cap): set FLIGHTDECK_XYZ_ROOTS=/path/to/repo[:/other/repo] (or xyz_roots in FLIGHTDECK_CONFIG); if FLIGHTDECK_CONNECTORS or the connectors list in FLIGHTDECK_CONFIG is set, also add xyz_work to it; then restart."}`
+  Root cause: presentation assumes every root error denotes a failed read, while the connector uses the same field for a cap warning; Fix site: sourceStatus and its existing assertions; Why not upstream/downstream: producer semantics already distinguish the issue-cap code, so presentation can interpret it without a contract or server change.
+
+- [Pass] The previous locked-root blocker is resolved at `web/flightdeck/presentation.mjs:27-31`. The same non-mutating Node probe, exit 0, returned mixed=failed with help naming ledger-locked, aggregateCap=partial, clean=ok and stale=stale for Round 2's input and controls. No further change to the locked-root behavior requested.
+- [Pass] The explicit environment and JSON allowlist hint now appears at `web/flightdeck/presentation.mjs:15` and `web/flightdeck/README.md:24`, matching `src/flightdeck/contract.py:99-113`. Probe returned disabled=off and unconfigured=off with their respective configuration hints.
+- [Pass] Progress remains explanatory and neutral (`web/flightdeck/presentation.mjs:6-11`, `web/flightdeck/app.js:41-43,111-114`); source rendering retains stale precedence, excluded rows and accessible text (`presentation.mjs:28`, `app.js:162-174`), with grey/amber/red rules at `web/flightdeck/app.css:40-44`. No new subsystem is present in the reviewed presentation implementation.
+- [Nit] Pre-existing README inventory wording is stale: `web/flightdeck/README.md:12-16` says the registry contains five connectors, while `src/flightdeck/connectors.py:437-444` also registers xyz_work. Say five enabled by default, plus optional xyz_work.
+- [Unverified — needs clone run] Producer-reported focused checks, mutation controls, pytest and browser results were not rerun here, per the explicit containment instruction. The harness gate remains outstanding. Run the corrected per-root cap controls in a disposable full clone.
+
+Handing off to Producer (claude-a) — review the remaining cap finding and resolve the escalated round limit with the operator before another cycle.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
