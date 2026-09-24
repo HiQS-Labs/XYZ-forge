@@ -277,5 +277,85 @@ case "$out" in
   *) pass "no kill occurred with the guard disabled" ;;
 esac
 
+# ── (8) GH-773: an unreadable RSS probe is loud, never a fake 0MB ───────────────────────
+# Seam first: classify every ps outcome and render every summary form without timing.
+out="$(python3 - "$ROOT_REPO/utils/py/marathon_drive.py" <<'PY'
+import importlib.util
+import subprocess
+import sys
+from unittest import mock
+
+spec = importlib.util.spec_from_file_location("marathon_drive", sys.argv[1])
+driver = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(driver)
+
+def probe(stdout="", returncode=0, raises=None):
+    def fake_run(*a, **k):
+        if raises:
+            raise raises
+        return subprocess.CompletedProcess(a[0], returncode, stdout, "")
+    with mock.patch.object(driver.subprocess, "run", fake_run):
+        return driver._gate_group_rss_mb(4242)
+
+assert probe(raises=PermissionError(1, "Operation not permitted")) == (None, "ps-failed")
+assert probe(raises=subprocess.TimeoutExpired("ps", 10)) == (None, "ps-failed")
+assert probe(stdout="4242 2048\n", returncode=1) == (None, "ps-failed")
+assert probe(stdout="  \n") == (None, "ps-failed")
+assert probe(stdout="1 999\n7 999\n") == (None, "group-missing")
+assert probe(stdout="4242 2048\n4242 1024\n1 999\n") == (3, None)
+assert probe(stdout="4242 512\n") == (0, None)   # a matched group under 1 MB is a real 0
+
+s = driver._gate_rss_summary
+assert s(37, 5, 0) == "peak group RSS 37MB"
+assert s(0, 0, 0) == "peak group RSS unknown (gate exited before first sample)"
+assert s(0, 0, 3) == "peak group RSS unknown (no readable samples; 3 unreadable samples)"
+assert s(37, 4, 2) == "peak group RSS unknown (observed max 37MB; 2 unreadable samples)"
+print("ps outcomes and summary forms classified")
+PY
+)"; rc=$?
+if [ "$rc" -eq 0 ]; then
+  pass "GH-773: ps outcomes and every summary form are classified through the module seam"
+else
+  fail "GH-773 seam failed: $out"
+fi
+
+# Driven: a ps that refuses (as a sandbox does) must not stop the gate, must warn exactly once,
+# and must never print a numeric peak.
+DENY_BIN="$WORK/deny-ps-bin"
+mkdir -p "$DENY_BIN"
+printf '#!/bin/sh\necho "ps: Operation not permitted" >&2\nexit 1\n' > "$DENY_BIN/ps"
+chmod +x "$DENY_BIN/ps"
+out="$(PATH="$DENY_BIN:$PATH" run_driver --phase-id p8 --pre-advance-cmd 'sleep 3' 2>&1)"; rc=$?
+warns="$(printf '%s\n' "$out" | grep -c 'RSS watchdog unavailable')"
+if [ "$rc" -eq 0 ]; then
+  pass "GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)"
+else
+  fail "GH-773: denied ps broke an honest gate (rc=$rc): $(printf '%s' "$out" | tail -5)"
+fi
+if [ "$warns" -eq 1 ]; then
+  pass "GH-773: the RSS-unavailable warning is logged exactly once across several polls"
+else
+  fail "GH-773: expected one RSS-unavailable warning, saw $warns: $(printf '%s' "$out" | tail -8)"
+fi
+case "$out" in
+  *"peak group RSS unknown (no readable samples; "*) pass "GH-773: the summary reports the peak as unknown" ;;
+  *) fail "GH-773: summary did not report an unknown peak: $(printf '%s' "$out" | tail -5)" ;;
+esac
+if printf '%s\n' "$out" | grep -Eq 'peak group RSS [0-9]+MB'; then
+  fail "GH-773: a numeric peak was printed although no sample was readable"
+else
+  pass "GH-773: no numeric peak (the old fake 0MB) is printed for an unmeasured run"
+fi
+
+# Red control: the same gate with the real ps must measure — numeric peak, no warning. An
+# implementation that always warned or always said "unknown" fails here.
+out="$(run_driver --phase-id p9 --pre-advance-cmd 'sleep 3' 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && printf '%s\n' "$out" | grep -Eq 'peak group RSS [0-9]+MB' \
+   && ! printf '%s\n' "$out" | grep -q 'RSS watchdog unavailable'; then
+  pass "GH-773 control: a working ps still yields a numeric peak and no warning"
+else
+  fail "GH-773 control: working ps did not yield a clean numeric peak (rc=$rc): $(printf '%s' "$out" | grep 'gate-guard' | tail -3)"
+fi
+
 echo "  gh390-gate-guard: $PASS pass, $FAIL fail"
 exit 0
