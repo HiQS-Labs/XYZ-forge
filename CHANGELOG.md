@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-23 — Audits of the two largest Python files, plus intake (GH-768, GH-769)
+
+Research-only audits of `utils/py/releases_app.py` (26 findings plus a caller and test sweep) and
+`utils/py/marathon_drive.py` (30 findings), each with a split plan and a follow-up order. No code
+changed. The audits produced six new issues, captured and parked in the ledger: four confirmed
+bugs (#770 `--root` ignored by five `jog` verbs, #771 jog still accepts the removed `gemini`
+reviewer, #772 page size hardcoded to 4K, #773 memory guard silently off when `ps` is denied);
+#774, where about 25 `releases_app` suites are missing from CI routing (a refactor blocker); and
+umbrella #775 for broken call sites in skills and scripts.
 ## 2026-09-23 — Architecture diagram set regenerated from current code (GH-767)
 
 Regenerated every JSON/HTML pair under `ARCHITECTURE/` using the repo-owned `swe-diagram`
