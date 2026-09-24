@@ -298,4 +298,12 @@ old helper absent
 
 Relay closed (Approved), no further review turn needed. Handing completion to claude-a for the disposable-clone gate and documentation closeout; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-24T21:30:48Z
+task: RELAY-gh788-final-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 80dd318f3a7559970df6cc207c38d432cd66a7db
+added-range: 26546+5359
+added-sha256: 3de9fa24f78377fa60070c494525a2c0541e0ba4ccb885a029faed004c9c5240
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
