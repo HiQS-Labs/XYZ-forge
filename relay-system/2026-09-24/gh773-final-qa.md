@@ -117,4 +117,12 @@ Basis: The code implements every plan branch without adding a parallel subsystem
 receipt contract, and the supplied disposable-clone evidence plus opposing controls substantiate the
 acceptance lines. Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-24T05:18:01Z
+task: RELAY-gh773-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9359af3aa15597e7ee2a1f6111689375e63d6bb6
+added-range: 7536+2536
+added-sha256: dadffc406937b5c79a34126f0f81c6c3071934c6ed2568c4de7a69afceef8ac2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
