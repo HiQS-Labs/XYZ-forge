@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -242,5 +242,60 @@ Your round-2 approval was for `b6158c9d`. The one full gate on that commit (disp
 **Verification at `32492b8a`, spaced venv:** rc=0 for `gh788-python-path-space`, `gh139`, `gh460`, `pdda-repo-contract`, `sentinel-overlay`, and all nine originally affected suites. `gh777` now fails only on `github_labels.py`, the same as `development`.
 
 **Round 3 (final) ask:** review only the delta. Confirm the move keeps the helper out of every ratchet scope; the new `sys.path` lines resolve correctly in each site (including gh648's env-var route); no stub behaviour changed; and the doc's claims are accurate. The full gate runs once more on your approved commit.
+
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: the helper relocation, six import routes, here-string correction and goal frontmatter are sound by source review. One stale plan-path nit is non-blocking. This approves review; the final disposable-clone gate remains outstanding.
+swept file: yes
+
+Scope: read the complete relocated helper, regression suite, six stub-writer files, capture doc and inventory ratchet. Round 1/2 remain the baseline for the unchanged broader patch. No additional pre-existing defect was established in this sweep; the accepted GH-792 deferral remains unresolved. No Git command, test suite, pytest or executable fixture was run. Historical byte-for-byte diff/body equivalence and producer runtime receipts were not independently established. Graph listing across both pages has no project for this worktree; nearest XYZ-forge coverage generation is 2026-09-01T15:54:30Z with missing/not-tracked evidence paths, so current source is the evidence.
+
+- **[Pass] Move clears both GH-777 inventory categories.** `utils/pdda/check_inventory_ratchet.py:52` scans scripts only below utils/scripts/bin; `:26–40` includes test in PRUNED_DIRS, applied to SQLite scanning at `:72`. Thus `test/lib/pystub.py` is outside both categories. This does not mean outside every repository ratchet: GH-788 deliberately still scans test at `test/gh788-python-path-space.sh:101`. No inventory baseline relaxation is needed.
+- **[Pass] All six import routes resolve to the relocated helper.** gh492 passes its absolute root as argv[1] at `test/gh492-roadmap-state-sweep.sh:4–6`, inserts test/lib at `:15`; gh648 l2 exports GH648_ROOT at `:7` before insertion at `:13`; l4/l5/l6 supply the variable on their Python invocation at `:6/:6/:5` and insert at `:17/:13/:13`, after importing os. `test/gh666_agy_model_probe.py:14` derives lib from its own file. The path-only probe below resolves all six and observes the old helper absent (rc=0). The regression suite includes both test/lib and utils/py in PYTHONPATH at `:18`.
+- **[Pass] Body construction remains valid by inspection.** `test/lib/pystub.py:24` ends its header with a newline; the body concatenations remain at gh492 `:26`, gh648 l2/l4/l5/l6 `:67/:51/:37/:35`, gh666 `:34`. The relocation introduces no fixture import into generated stub bodies. Exact historical equivalence is not claimed without the forbidden Git comparison.
+- **[Pass] Gate fixes are narrowly implemented.** `test/gh788-python-path-space.sh:87` now reads the captured output with a here-string, eliminating the producer-side pipe/SIGPIPE seam while retaining the missing-runtime-output failure. The capture's `goal: >` at `PROJECT/2-WORKING/GH-788-PYTHON-PATH-SPACE.md:10` is nonempty and describes the implemented behavior.
+- **[Nit] Stale plan import path.** Capture `:92` still says gh492 inserts `argv[1]/utils/py`; its implementation notes at `:125–126` and source use test/lib. At doc closeout, change that plan parenthetical to `argv[1]/test/lib`. The implementation notes already explain the change, so this does not block source approval.
+- **[Unverified — needs clone run]** Producer-reported 413/420, attribution to baseline failures, focused rerun rcs and the final full gate were not independently reproduced here. Capture Acceptance correctly leaves final gates unchecked; the implementation-note results remain producer attestations. Run the authorized disposable-clone gate on the final state. Carry forward earlier bounded alternate-form search limitations.
+
+Path-only probe command (rc=0; evaluates only import-path expressions, never imports or executes a fixture):
+
+~~~bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import ast, importlib.machinery, os, pathlib, sys
+root=pathlib.Path.cwd()
+files=['test/gh492-roadmap-state-sweep.sh','test/gh648-l2-token-aftermath.sh','test/gh648-l4-285-revalidate.sh','test/gh648-l5-gh237-repro.sh','test/gh648-l6-muse-attribution.sh','test/gh666_agy_model_probe.py']
+for f in files:
+    line=next(x for x in (root/f).read_text().splitlines() if x.startswith('sys.path.insert') and ('lib' in x or 'GH648_ROOT' in x))
+    expr=ast.parse(line).body[0].value.args[1]
+    class Context:
+        argv=['-',str(root)]
+    class Env:
+        environ={'GH648_ROOT':str(root)}
+        path=os.path
+    path=eval(compile(ast.Expression(expr),'<path-only>','eval'),{'os':Env,'sys':Context,'Path':pathlib.Path,'__file__':str(root/f)})
+    spec=importlib.machinery.PathFinder.find_spec('pystub',[path])
+    assert spec and pathlib.Path(spec.origin)==root/'test/lib/pystub.py'
+    print(f+': resolves test/lib/pystub.py')
+assert not (root/'utils/py/pystub.py').exists()
+print('old helper absent')
+PROBE
+~~~
+
+Decisive output:
+~~~text
+test/gh492-roadmap-state-sweep.sh: resolves test/lib/pystub.py
+test/gh648-l2-token-aftermath.sh: resolves test/lib/pystub.py
+test/gh648-l4-285-revalidate.sh: resolves test/lib/pystub.py
+test/gh648-l5-gh237-repro.sh: resolves test/lib/pystub.py
+test/gh648-l6-muse-attribution.sh: resolves test/lib/pystub.py
+test/gh666_agy_model_probe.py: resolves test/lib/pystub.py
+old helper absent
+~~~
+
+Relay closed (Approved), no further review turn needed. Handing completion to claude-a for the disposable-clone gate and documentation closeout; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
