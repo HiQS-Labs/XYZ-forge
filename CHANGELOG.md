@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-23 — Architecture diagram set regenerated from current code (GH-767)
+
+Regenerated every JSON/HTML pair under `ARCHITECTURE/` using the repo-owned `swe-diagram`
+workflow and a fresh codebase-memory index at `a47c212b`. The shared 25-node system graph now
+follows the full capture → plan → execute → gate → land lifecycle, Python-default Tier-A drivers,
+current adapter routing, driver-authored relay attestation, the releases/work-event authority split,
+hosted reconciliation, and passive Flightdeck reads. The ledger map removes the retired
+`ROADMAP-DASHBOARD.md` renderer/staleness guard and adds direct queries, work connectors, optional
+views, Pages generation, and routed local/hosted verification. The Skills Army map now reflects the
+GH-672 one-Pulse-collection-per-device contract and its canonical-source drift gate. Git lanes were
+rebuilt from current cached refs. All seven specs pass semantic validation with zero warnings; all
+seven self-contained HTML artifacts were rebuilt.
+
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 
 Full local gate: 411/411 passed, with `gh32-releases-app.sh` passing the gate’s built-in isolated

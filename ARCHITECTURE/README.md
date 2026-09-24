@@ -15,11 +15,11 @@ anyone rebuilds.
 | --- | --- | --- |
 | `system-diagram` | `layered` | The default left→right map of the multi-agent coordination system |
 | `system-diagram-top-down` | `top-down` | The same system, stacked vertically — fits a narrower page |
-| `system-diagram-hub` | `hub-ring` | `relay-lib` at the centre, everything else on a ring — reads as event-driven rather than as a pipeline |
+| `system-diagram-hub` | `hub-ring` | the `tick` coordination kernel at the centre, everything else on a ring |
 | `system-diagram-trust-clustered` | `trust-clustered` | Bands by **trust tier** rather than call direction, so the containment core reads as the hub it is |
 | `git-history-diagram` | `git-lanes` | Commits, branch cuts and merges as stacked branch lanes, generated from local refs |
-| `ledger-diagram` | `layered` | `releases.db`, the four views derived from it, the adoption gate, and the push guard that reads the renderer's stderr |
-| `skills-git-pulse-projection-diagram` | `layered` | Device-local Skills Army HQ authority, the proposed portable Git projection, and the scheduled pulse checkout that remains isolated |
+| `ledger-diagram` | `layered` | `releases.db`/`releases.sql`, current queries, work connectors, optional views, Pages generation, reconciliation, and routed gates |
+| `skills-git-pulse-projection-diagram` | `layered` | The GH-672 one-Pulse-collection-per-device path from canonical skill sources to direct app symlinks |
 
 The four `system-diagram*` files are deliberately **the same graph under different layouts** — pick
 the one that makes the point you are making. `git-history-diagram` and `ledger-diagram` are
@@ -41,6 +41,9 @@ node utils/swe-diagram/scripts/git-history-to-json.js --repo . --limit 20 \
   --output ARCHITECTURE/git-history-diagram.json
 bash utils/swe-diagram/assets/build-diagram.sh ARCHITECTURE/git-history-diagram.json
 ```
+
+`augment-fire-queue.js` is a retired July-era postprocessor with hard-coded historical plan names;
+it is not part of the current rebuild path and must not be applied to a generated Git-history spec.
 
 ## Adding a new one
 
