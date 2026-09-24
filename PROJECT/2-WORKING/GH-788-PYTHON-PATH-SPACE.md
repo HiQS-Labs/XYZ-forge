@@ -7,6 +7,10 @@ doc_type: bugfix
 created: 2026-09-24
 updated: 2026-09-24
 owner: operator (via /start-task)
+goal: >
+  Tests and fuzz self-tests run correctly when the Python interpreter lives under a path containing a
+  space: executable stubs pin the exact interpreter through a quoted launcher, fuzz command strings quote it,
+  and a ratchet keeps the three broken constructions from returning.
 related:
   - "#651 — same class, one site (gh610) fixed by PR #753; closed 2026-09-24 while 13 sites remained"
   - "#787 — pushed with --no-verify because of this defect"
@@ -69,7 +73,7 @@ with 13 same-class sites still broken and no guard, which is how this recurred.
 
 Extend, don't add systems. One small helper, the same edit at each site, and one guard.
 
-1. **Helper** — `utils/py/pystub.py`, stdlib only, ~15 lines. `launcher(python=sys.executable) -> str`
+1. **Helper** — `test/lib/pystub.py`, stdlib only, ~15 lines. `launcher(python=sys.executable) -> str`
    returns a two-line sh/Python polyglot header, the interpreter **always** single-quoted:
    ```
    #!/bin/sh
@@ -116,6 +120,13 @@ Extend, don't add systems. One small helper, the same edit at each site, and one
   third pattern (`--target "$PY `) with its own planted red control. The literal-pattern searches in recon and
   plan QA only looked for `sys.executable`, and this form never names it. That is the "alternate constructions"
   gap Codex flagged.
+- **Full-gate findings on the approved commit (spaced venv, disposable clone, 413/420):** five failures were
+  this branch's and are fixed. (1) GH-777's inventory ratchet forbids any new script under `utils/`, so the
+  helper moved to `test/lib/pystub.py` (`test/` is pruned from that ratchet), and the six sites and the suite
+  now put `test/lib` on `sys.path`. (2) `gh139`/`gh460` flag `printf … | grep -q` under pipefail, so the suite
+  uses `grep -q … <<<"$out"`. (3) `sentinel-overlay`/`pdda-repo-contract`: this doc lacked `goal:`. The other
+  three (`gh777` on `utils/py/work_connectors/github_labels.py`, `gh674` `No module named merge_cleanup`,
+  `gh436` `test_unknown_mergeable_settles_and_the_pr_lands`) fail identically on pristine `development` `337813e0`.
 - **Guard self-match:** once committed, the suite's planted samples and the helper's docstring matched the
   tree scan (it passed while they were untracked). The suite now excludes only its own file, and the helper
   docstring no longer quotes the bad construction.

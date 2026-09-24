@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import sys
+sys.path.insert(0, os.path.join(os.environ["GH648_ROOT"], "test", "lib"))
 import pystub  # GH-788: stub header that survives a spaced interpreter path
 import tempfile
 from types import SimpleNamespace

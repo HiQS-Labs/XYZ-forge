@@ -12,7 +12,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
-sys.path.insert(0, str(Path(sys.argv[1]) / 'utils' / 'py'))
+sys.path.insert(0, str(Path(sys.argv[1]) / 'test' / 'lib'))
 import pystub  # GH-788: stub header that survives a spaced interpreter path
 
 source = Path(sys.argv[1])

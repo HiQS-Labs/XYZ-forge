@@ -3,7 +3,7 @@
 #
 # `'#!' + sys.executable` stubs fail with ENOEXEC and unquoted `f"{sys.executable} …"` command strings
 # split in two whenever Python lives under a spaced path (a venv in `…/GH Repos/…`). This suite pins:
-#   1. utils/py/pystub.launcher() runs the EXACT selected interpreter — ordinary and spaced — with an
+#   1. test/lib/pystub.launcher() runs the EXACT selected interpreter — ordinary and spaced — with an
 #      empty PATH, a spaced stub path and a spaced argument; it refuses a path it cannot embed;
 #   2. red control: a bare `#!<spaced interpreter>` stub still fails (the defect is real);
 #   3. fuzz_engine.build_argv keeps a shlex-quoted spaced interpreter as one argv word (red: unquoted splits);
@@ -15,7 +15,7 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 echo "== test: gh788-python-path-space =="
 
 # --- 1–3: runtime behaviour ------------------------------------------------------------------
-out="$(PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$REPO/utils/py" python3 - "$WORK" <<'PY' 2>&1
+out="$(PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$REPO/test/lib:$REPO/utils/py" python3 - "$WORK" <<'PY' 2>&1
 import os, subprocess, sys, tempfile
 import pystub, fuzz_engine
 
@@ -84,7 +84,7 @@ PY
 while IFS= read -r line; do
   case "$line" in PASS:*) pass "${line#PASS: }" ;; FAIL*) fail "${line}" ;; esac
 done <<<"$out"
-printf '%s\n' "$out" | grep -q '^PASS: build_argv' || fail "runtime block did not report (python error?)"
+grep -q '^PASS: build_argv' <<<"$out" || fail "runtime block did not report (python error?)"
 
 # --- 4: ratchet --------------------------------------------------------------------------------
 # One matcher for the tree scan and the planted sample. Patterns are assembled from pieces so this
