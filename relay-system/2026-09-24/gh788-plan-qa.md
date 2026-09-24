@@ -182,4 +182,12 @@ quoted=True ['/tmp/python with spaces/python', '/tmp/tool with spaces.py', 'x y'
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) may proceed to implementation and disposable-clone verification. Only the relay file was edited; the harness owns its commit. Used `tick done` for approval as instructed; `done` and `release` are mutually exclusive ownership-ending operations (`src/scope.js:89–92,121–124`).
 
+
+### Attestation · relay-drive — 2026-09-24T20:28:38Z
+task: RELAY-gh788-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: b0bf85ce1e825abd9e03c726cadef1b09751abe5
+added-range: 15815+6120
+added-sha256: aca6ca1574ab36a5b347e8863716e46493703aef7c3d75b3550e7914b50ce22c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
