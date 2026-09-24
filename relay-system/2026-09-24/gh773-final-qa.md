@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,40 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+- [Pass] `_gate_group_rss_mb` preserves a measured sub-1MB group as `(0, None)` while separating
+  probe failures from a successful listing with no matching group (`utils/py/marathon_drive.py:903-932`).
+- [Pass] The guarded loop re-polls only `group-missing`, exits with the child's observed code without
+  incrementing unreadable state when that re-poll sees termination, counts every remaining unknown
+  sample, warns once, and gates the RSS cap only on a numeric sample
+  (`utils/py/marathon_drive.py:2384-2412`). The resulting `rc` then follows the same CPU attribution,
+  summary, baseline-allowance, and receipt path as the ordinary top-of-loop exit
+  (`utils/py/marathon_drive.py:2432-2458`).
+- [Pass] All four required summary forms are explicit and mutually selected by readable/unreadable
+  counts (`utils/py/marathon_drive.py:935-943`); the unchanged numeric form still contains the
+  consumer's `peak group RSS` substring (`test/gh390-gate-guard.sh:172-175`).
+- [Pass] Section 8 covers exception, timeout, nonzero, blank, missing-group, numeric, and real-zero
+  helper outcomes plus all four summaries (`test/gh390-gate-guard.sh:280-320`). Its driven denied-`ps`
+  case requires exit 0, exactly one warning, an unknown summary, and absence of a numeric peak; the
+  real-`ps` control requires the inverse (`test/gh390-gate-guard.sh:322-358`). Those opposing
+  assertions prevent an always-unknown or always-numeric implementation from passing vacuously.
+- [Pass] The unguarded path remains separate and unchanged in behavior, while guarded wall/CPU checks
+  and result fields remain on their existing paths (`utils/py/marathon_drive.py:2342-2359`,
+  `utils/py/marathon_drive.py:2403-2412`, `utils/py/marathon_drive.py:2456-2458`).
+- [Pass] Read-only syntax probes covered both complete artifacts: `ast.parse` reported
+  `AST_OK lines=3613 funcs=98 classes=0` for `utils/py/marathon_drive.py`, and
+  `bash -n test/gh390-gate-guard.sh` exited 0. No pre-existing defect was found in the swept scope.
+- [Unverified — needs clone run] The full gate is intentionally deferred to the disposable-clone
+  harness after this approval, as stated in Setup; no suite or executable fixture was run here.
+
+VERDICT: PASS
+
+Basis: The code implements every plan branch without adding a parallel subsystem or changing the
+receipt contract, and the supplied disposable-clone evidence plus opposing controls substantiate the
+acceptance lines. Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
