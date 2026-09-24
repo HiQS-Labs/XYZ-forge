@@ -14,6 +14,7 @@ from pathlib import Path
 import signal
 import subprocess
 import sys
+import pystub  # GH-788: stub header that survives a spaced interpreter path
 import tempfile
 import time
 from types import SimpleNamespace
@@ -46,7 +47,7 @@ receipts = []
 with tempfile.TemporaryDirectory(prefix='gh648-l4-', dir=scratch) as tmp:
     work = Path(tmp)
     stub = work / 'sleeper'
-    stub.write_text('#!' + sys.executable + '''
+    stub.write_text(pystub.launcher() + '''
 import os, pathlib, signal, time
 pathlib.Path(os.environ['GH648_STARTED']).write_text(str(os.getpid()))
 if os.environ.get('GH648_DESCENDANT') == '1':

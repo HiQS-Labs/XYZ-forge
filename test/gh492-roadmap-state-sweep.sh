@@ -12,6 +12,8 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+sys.path.insert(0, str(Path(sys.argv[1]) / 'utils' / 'py'))
+import pystub  # GH-788: stub header that survives a spaced interpreter path
 
 source = Path(sys.argv[1])
 app = Path(os.environ.get('GH492_APP', source / 'utils/py/releases_app.py'))
@@ -21,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix='gh492-', dir=os.environ.get('GH492_TMPD
     (root / '.git').mkdir()
     (root / '.pdda-mode').write_text('observe\nROADMAP_SOURCE=releases\n')
     stub = root / 'gh'
-    stub.write_text('#!' + sys.executable + '\n' + '''import json, os, sys
+    stub.write_text(pystub.launcher() + '''import json, os, sys
 from pathlib import Path
 if sys.argv[1] == 'api':
     path = sys.argv[2]
