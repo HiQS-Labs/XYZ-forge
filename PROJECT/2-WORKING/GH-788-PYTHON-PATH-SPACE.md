@@ -18,7 +18,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex plan QA round 2 (`relay-system/2026-09-24/gh788-plan-qa.md`; r1 blocker — `shlex.quote` leaves ordinary paths unquoted — fixed by an always-single-quoted launcher). | Implement steps 1–4, then verification step 5 and Codex final QA. |
+| Implemented and verified with the spaced venv active (see Implementation notes; affected-suite rcs in the PR). | Codex final QA, then the full gate once in a disposable clone, then PR. |
 
 ## Problem (observed)
 
@@ -105,6 +105,20 @@ Extend, don't add systems. One small helper, the same edit at each site, and one
    - Run the 9 affected suites (`gh492`, `gh648-l2/l4/l5/l6`, `agy-turn`, `gh-gen4-phase3/4/5`) plus the new
      suite with the spaced venv active, which is the reproduction. Record each rc.
    - Run the full `validate.sh` once, on the final approved commit, in a separate disposable full clone.
+
+## Implementation notes (verification findings)
+
+- **A third form, found in verification and missed by plan and plan QA:** the gen4 bash suites defined
+  `PY="$(command -v python3)"` and passed `--target "$PY tool.py {mutant}"`, which `fuzz_engine` shlex-splits.
+  After the Python-side quoting, `gh-gen4-phase3/4` still failed (corpus_size=1, 150 misclassified rows).
+  Fix: `PYQ` = `shlex.quote(sys.executable)` at the one definition in each file (`test/gh-gen4-phase3-fuzz-engine.sh`,
+  `test/gh-gen4-phase4-repro-synth.sh`), all 10 `--target` uses renamed to `$PYQ`. The guard gained a
+  third pattern (`--target "$PY `) with its own planted red control. The literal-pattern searches in recon and
+  plan QA only looked for `sys.executable`, and this form never names it. That is the "alternate constructions"
+  gap Codex flagged.
+- **Guard self-match:** once committed, the suite's planted samples and the helper's docstring matched the
+  tree scan (it passed while they were untracked). The suite now excludes only its own file, and the helper
+  docstring no longer quotes the bad construction.
 
 ## Non-goals
 

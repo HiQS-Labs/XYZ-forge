@@ -88,11 +88,13 @@ printf '%s\n' "$out" | grep -q '^PASS: build_argv' || fail "runtime block did no
 Q="['\"]"
 BARE="${Q}#!${Q} *\\+ *sys\\.executable"
 UNQ="f${Q}\\{sys\\.executable\\} "
+BASHPY='--target "\$PY '   # bash suites: the shell-quoted form is $PYQ (gen4 phase3/4)
 scan() {  # scan <dir> <git-grep path args...>; echoes matches; rc 0 = match, 1 = none, else error
   local dir="$1"; shift
-  git -C "$dir" grep -n -E -e "$BARE" -e "$UNQ" "$@"
+  git -C "$dir" grep -n -E -e "$BARE" -e "$UNQ" -e "$BASHPY" "$@"
 }
-hits="$(scan "$REPO" -- test utils relay-automation skills)"; rc=$?
+# This suite holds the planted samples, so it is the one file excluded from the tree scan.
+hits="$(scan "$REPO" -- test utils relay-automation skills ':(exclude)test/gh788-python-path-space.sh')"; rc=$?
 case "$rc" in
   1) pass "ratchet: no bare-shebang or unquoted-interpreter sites in test/ utils/ relay-automation/ skills/" ;;
   0) fail "ratchet: GH-788 sites remain — use pystub.launcher() / shlex.quote(sys.executable):"$'\n'"$hits" ;;
@@ -106,7 +108,10 @@ scan "$WORK" --no-index -- planted.py >/dev/null; rc=$?
 printf '%s\n' 'fuzz(f"{sys.executable} tool.py {{mutant}}")' > "$PLANT"
 scan "$WORK" --no-index -- planted.py >/dev/null; rc=$?
 [ "$rc" -eq 0 ] && pass "ratchet red control: flags a planted unquoted interpreter" || fail "ratchet missed a planted unquoted interpreter (rc=$rc)"
-printf '%s\n' 'subprocess.run([sys.executable, "tool.py"])' 'fuzz(f"{shlex.quote(sys.executable)} tool.py {{mutant}}")' > "$PLANT"
+printf '%s\n' 'python3 "$FUZZ" --mode fuzz --target "$PY tool.py {mutant}"' > "$PLANT"
+scan "$WORK" --no-index -- planted.py >/dev/null; rc=$?
+[ "$rc" -eq 0 ] && pass "ratchet red control: flags a planted unquoted \$PY fuzz target" || fail "ratchet missed a planted unquoted \$PY fuzz target (rc=$rc)"
+printf '%s\n' 'subprocess.run([sys.executable, "tool.py"])' 'fuzz(f"{shlex.quote(sys.executable)} tool.py {{mutant}}")' 'python3 "$FUZZ" --target "$PYQ tool.py {mutant}"' > "$PLANT"
 scan "$WORK" --no-index -- planted.py >/dev/null; rc=$?
 [ "$rc" -eq 1 ] && pass "ratchet ignores safe argv lists and quoted interpreters" || fail "ratchet flagged a safe form (rc=$rc)"
 

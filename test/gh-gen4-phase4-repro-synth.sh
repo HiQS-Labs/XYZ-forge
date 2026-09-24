@@ -21,7 +21,8 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 SYNTH="$ROOT/utils/py/repro_synth.py"
 BUILDER="$ROOT/utils/py/repro_builder.py"
 FUZZ="$ROOT/utils/py/fuzz_engine.py"
-PY="$(command -v python3)"
+# GH-788: shell-quoted, because fuzz_engine shlex-splits --target (a spaced venv path must stay one word)
+PYQ="$(python3 -c 'import shlex, sys; print(shlex.quote(sys.executable))')"
 
 echo "== test: gh-gen4-phase4-repro-synth =="
 
@@ -55,7 +56,7 @@ require_fixture "$FIX" "fixture repo"
 
 # 1. Fuzz -> telemetry (300 mutants), then cluster.
 TEL="$WORK/fuzz.jsonl"
-python3 "$FUZZ" --mode fuzz --target "$PY tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 7 --iterations 300 --cwd "$FIX" --corpus "$WORK/corpus" --telemetry-out "$TEL" --timeout-budget 10 --json > "$WORK/fuzz.json" 2>&1 || true
+python3 "$FUZZ" --mode fuzz --target "$PYQ tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 7 --iterations 300 --cwd "$FIX" --corpus "$WORK/corpus" --telemetry-out "$TEL" --timeout-budget 10 --json > "$WORK/fuzz.json" 2>&1 || true
 require_fixture_file "$TEL" "fuzz telemetry"
 cex="$(python3 -c "import json; print(len(json.load(open('$WORK/fuzz.json'))['counterexamples']))")"
 [ "$cex" -ge 4 ] && pass "fuzz produced $cex counterexamples across 300 mutants" || fail "only $cex counterexamples"
@@ -136,7 +137,7 @@ fi
 
 # 6. Telemetry that has no counterexamples emits nothing and exits 0 (no vacuous suites).
 CLEAN="$WORK/clean.jsonl"
-python3 "$FUZZ" --mode fuzz --target "$PY -c 'import sys; sys.exit(0)' {mutant}" --base "a" --seed 1 --iterations 20 --cwd "$FIX" --corpus "$WORK/corpus-clean" --telemetry-out "$CLEAN" --timeout-budget 10 >/dev/null 2>&1 || true
+python3 "$FUZZ" --mode fuzz --target "$PYQ -c 'import sys; sys.exit(0)' {mutant}" --base "a" --seed 1 --iterations 20 --cwd "$FIX" --corpus "$WORK/corpus-clean" --telemetry-out "$CLEAN" --timeout-budget 10 >/dev/null 2>&1 || true
 mkdir -p "$WORK/out-clean"
 if python3 "$SYNTH" --mode synth --telemetry "$CLEAN" --out-dir "$WORK/out-clean" --issue 299 --repo-root "$FIX" >/dev/null && [ -z "$(ls "$WORK/out-clean" 2>/dev/null)" ]; then
   pass "clean telemetry emits no suites and exits 0"

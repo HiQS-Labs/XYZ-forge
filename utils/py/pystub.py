@@ -1,7 +1,8 @@
 """Header for an executable Python stub that runs under an exact interpreter (GH-788).
 
-A `#!` line cannot contain a space, so `'#!' + sys.executable` fails with ENOEXEC ("Exec format
-error") whenever the interpreter lives under a spaced path such as a virtualenv in `…/GH Repos/…`.
+A `#!` line cannot contain a space, so a shebang built from the bare interpreter path fails with
+ENOEXEC ("Exec format error") whenever the interpreter lives under a spaced path such as a virtualenv
+in `…/GH Repos/…`.
 `launcher()` returns a two-line sh/Python polyglot instead: `/bin/sh` runs line 2 as an `exec` of the
 quoted interpreter, and Python reads line 1 as a comment and line 2 as a string-literal expression,
 then runs the rest of the same file. Same mechanism as gh610's launcher (PR #753), in one file.
