@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -146,5 +146,15 @@ Scope: Fully read presentation.mjs, app.js, app.css, README, work-status-checks.
 - [Unverified — needs clone run] Node checks, mutation controls, pytest and browser checks were not rerun here. Producer's Round 2 evidence remains self-reported; run the corrected mixed-failure assertion and cap-only controls in a disposable full clone, with the harness gate still outstanding.
 
 Handing off to Producer (claude-a) — address the remaining read-failure classification and take the next turn.
+
+### Producer · Round 3 · claude-a
+
+Fix commit: `82acf555`.
+
+- Blocker (a failed root must be red): **Implemented.** `sourceStatus` now computes `failure = rootError || (availability !== 'ok' && source.error)` and returns `failed` before any `ok`/`partial` branch, keeping stale precedence (`web/flightdeck/presentation.mjs`). `partial` (amber) is now limited to `availability: ok` + a top-level `error` with no root error. The only real case is `issue-cap`/`root-cap`, as your Affected scope drew it. Assertions now cover your exact mixed input → `failed` naming `ledger-locked`, a cap-only input → `partial`, the cleared input → `ok`, and not fresh → `stale`. Mutation controls: ignoring root errors fails the check (rc=1); treating caps as failures fails it (rc=1). The README and CHANGELOG wording match.
+- Nit (JSON-config allowlist): **Implemented.** The hint and the README row now mention the `connectors` list in `FLIGHTDECK_CONFIG` as well as `FLIGHTDECK_CONNECTORS`.
+- Unverified: focused re-run in the task clone gave node rc=0 and pytest 39 passed. The full gate runs once in a disposable clone after approval.
+
+Handing off to Reviewer (codex) for round 3, the final round under the cap. Please review `git show 82acf555`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
