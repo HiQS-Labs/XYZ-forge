@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -83,5 +83,33 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+Basis: The UNKNOWN mergeability poll swallows fatal errors in both phases, and the Phase 5 poll blindly retries initial fetch errors, violating the DoD requirement to end the poll and fall through to existing error handling.
+
+#### Findings vs Definition of Done
+* **[Blocker]** The bounded poll masks `refresh_pr_with_retry` errors instead of logging them (DoD 2).
+  * **Observed input:** A network error during the Phase 4 or Phase 5 bounded poll (`again.get("error")` is set).
+  * **Affected scope:** The `break` condition inside both poll loops. Because it breaks before `info = again`, `info` retains the previous `UNKNOWN` state. In Phase 4, the run halts printing "mergeable is 'UNKNOWN'" instead of the network error.
+  * **Falsifier:** A test injecting a fetch error during the poll would see the script halt with "GitHub has not decided" rather than the actual `gh` error.
+  * **Concrete fix:** In both loops, move `info = again` (and `mergeable = info.get("mergeable")` for Phase 4) **before** the `break` so the error state is captured. In Phase 4, add an `if info.get("error"): log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged"); return 2` check immediately after the loop (line 813) to handle the error properly.
+* **[Blocker]** The Phase 5 poll triggers unconditionally and retries blindly if the *initial* fetch failed (DoD 2).
+  * **Observed input:** An error on the very first `refresh_pr_with_retry` fetch in Phase 5 (line 909).
+  * **Affected scope:** The while condition `info.get("mergeable") not in ("MERGEABLE", "CONFLICTING")` on line 911.
+  * **Falsifier:** An initial fetch failure would enter the loop and poll 6 times (`None not in ...` is True) rather than stopping immediately.
+  * **Concrete fix:** Change the Phase 5 condition to `while not info.get("error") and info.get("mergeable") not in ("MERGEABLE", "CONFLICTING") and polls < MERGEABLE_POLL_ATTEMPTS:`.
+* **[Pass]** `--exclude` filtering and hard dependencies (Q3): `--exclude <N>` drops the PR before `toposort_prs` runs (line 1102). Since it's absent from `prs`, `toposort_prs` skips it (line 55 of `toposort_prs.py`). Thus, PR 2 is NOT blocked by PR 1 and is sequenced/attempted anyway. This satisfies DoD 3 exactly ("an excluded PR is never ... made a dependency blocker for others") and matches SKILL.md Example 6.
+* **[Pass]** Numeric checkout exclusions (Q4): A numeric string intended for a checkout (e.g. `--exclude 427` for `xyz-gh427`) drops PR 427 as well. This is explicitly the documented intent per SKILL.md Example 6 (line 119: "A bare PR number... also drops that PR").
+* **[Pass]** Stale `info` action (Q1): The error triggers a break, so `info` is stale (retains `UNKNOWN`), but it is NOT acted on to merge the PR. It safely returns 2 because `mergeable` remains `UNKNOWN`. The defect is masking the error (see Blocker 1), not a safety gap.
+* **[Should]** Pre-existing bug (Q5): In `land_prs`, if a PR is skipped due to a hold label (line 788) or state != OPEN (line 792), it executes `continue` but is never added to `failed`. Thus, dependents bypass the hard dependency and attempt to land.
+  * **Observed input:** A PR skipped because `hold_label(info)` returns true, or `info.get("state") != "OPEN"`.
+  * **Affected scope:** The `continue` statements for hold labels and states in `land_prs` (lines 788-794).
+  * **Falsifier:** A dependent PR would land despite its predecessor being skipped for a hold label.
+  * **Concrete fix:** Add `failed[p_num] = f"skipped: hold label '{label}'"` before `continue` on line 790, and `if info.get("state") != "MERGED": failed[p_num] = f"skipped: state is {info.get('state')}"` before `continue` on line 794.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
