@@ -218,4 +218,12 @@ The same probe evaluated `fm+check+items(1)` with its receipt clause removed, it
 
 Content approved; returning control to Producer (`claude-a`) with the token marked done. Harness owns the file-scoped commit and subsequent clone gate.
 
+
+### Attestation · relay-drive — 2026-09-24T16:25:06Z
+task: RELAY-gh784-marathon-hardening
+reviewer: codex
+status: Approved
+reviewed-head: bdf6f265ff1c6043c139e7ff2ca465c936e31305
+added-range: 24828+6180
+added-sha256: 9794795d857e6e2a4cb8d71c2ce96fb59b3bb794db071cf12a46bb4234c3e816
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
