@@ -36,21 +36,17 @@ def review_blocks_added(before: str, after: str) -> int:
     the old oracle read any file mutation as "completed a review" — a failed turn
     masquerading as review coverage. Coverage means an appended review block.
     """
-    # Relay scaffolds and marathon prompts use several equivalent reviewer headings.  Count a
-    # heading only when its first non-blank successor is real body text (rather than another
-    # heading), preserving the GH-397 zero-output/stall distinction.
+    # GH-720: accept scaffold-elicited headings, but never count an empty body.
     pat = re.compile(
-        r"^### (?:"
-        r"Round [^\r\n]*\u00b7 Reviewer(?: \u00b7[^\r\n]*)?"
-        r"|Reviewer \u00b7 Round [^\r\n]*"
-        r"|Reviewer \([^)\r\n]+\)"
-        r"|Reviewer \u2014 Round [^\r\n]+"
-        r")[ \t]*\r?\n"
-        r"(?:[ \t]*\r?\n)*(?!###(?:[ \t]|$))(?=[^\r\n]*\S)[^\r\n]+",
-        re.M,
+        r"^### (?:Round [^\n]*· Reviewer ·[^\n]*|"
+        r"Reviewer (?:· Round [^\n]*|\([^\n)]+\)[^\n]*|— Round [^\n]*))\n"
+        r"(.*?)(?=^[ \t]*(?:#{1,6}[ \t]|<!--|---[ \t]*$)|\Z)",
+        re.M | re.S,
     )
 
-    return len(pat.findall(after or "")) - len(pat.findall(before or ""))
+    return (sum(bool(m.group(1).strip()) for m in pat.finditer(after or ""))
+            - sum(bool(m.group(1).strip()) for m in pat.finditer(before or "")))
+
 
 
 def main():

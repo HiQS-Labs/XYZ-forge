@@ -1,0 +1,5 @@
+moved GH-608: Queue / parked intake -> Completed
+moved GH-654: Queue / parked intake -> Completed
+moved GH-659: Queue / parked intake -> Completed
+moved GH-663: Queue / parked intake -> Completed
+moved GH-712: Queue / parked intake -> Completed

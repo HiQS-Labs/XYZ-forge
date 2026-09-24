@@ -433,10 +433,10 @@ Change the default at all 11 sites:
 runbook originally said "touch only those 11 characters" and it was wrong):
 
 ```bash
-bash skills/relay-automation/make-pkg.sh   # re-bundles relay-pkg.tar.gz
+bash skills/1-hourly/relay-automation/make-pkg.sh   # re-bundles relay-pkg.tar.gz
 ```
 
-`skills/relay-automation/relay-pkg.tar.gz` vendors byte-for-byte copies of **5 of the flipped shims**
+`skills/1-hourly/relay-automation/relay-pkg.tar.gz` vendors byte-for-byte copies of **5 of the flipped shims**
 (`poll.sh`, `relay-loop.sh`, `relay-drive.sh`, `codex-turn.sh`, `agy-turn.sh`), and `relay-pkg-freshness.sh`
 compares them against the live sources. Flip the shims without regenerating the bundle and that test
 goes red. Bundle the regen **in the flip commit**, not a follow-up: a shim-only revert would otherwise
@@ -563,9 +563,9 @@ When executing elsewhere:
 1. **Locate the harness root** the device-agnostic way — do not hardcode a path. The locator is **not**
    at the repo root; it ships under the relay-xyz skill. Use the path that exists for your type:
    ```bash
-   # Type A (full clone):   skills/relay-xyz/find-harness.sh
-   # Type B (vendored leaf): .xyz/skills/relay-xyz/find-harness.sh   (at the consumer repo root)
-   L="skills/relay-xyz/find-harness.sh"; [ -x "$L" ] || L=".xyz/skills/relay-xyz/find-harness.sh"
+   # Type A (full clone):   skills/1-hourly/relay-xyz/find-harness.sh
+   # Type B (vendored leaf): .xyz/skills/1-hourly/relay-xyz/find-harness.sh   (at the consumer repo root)
+   L="skills/1-hourly/relay-xyz/find-harness.sh"; [ -x "$L" ] || L=".xyz/skills/1-hourly/relay-xyz/find-harness.sh"
    "$L" --check                 # prints the resolved harness root + which type
    eval "$("$L" --env)"; cd "$HARNESS"   # canonical: exports HARNESS + TICK_REPO_ROOT, cds into the harness
    ```

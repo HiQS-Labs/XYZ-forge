@@ -1,0 +1,4 @@
+  PASS: no file exceeded its baseline pipe-into-grep -q inventory
+  PASS: baseline is tight (no shrink owed)
+  PASS: baseline has no stale entries
+gh139: 3 passed, 0 failed

@@ -1,26 +1,24 @@
 ---
 title: relay-drive --review-once misgrades a real reviewer block as a zero-output stall (exit 3, not 5)
-status: Active (2-WORKING)
+status: Active — marathon GH-749 lane L1
 created: 2026-09-20
-updated: 2026-09-21
+updated: 2026-09-22
 owner: agent-b
 gh_issue: 720
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/720
 doc_type: bugfix
 complexity: 2
-risk: 3
+risk: 2
 effort: 1
 phases: 1
-rating: "pri/sev/appeal/effort 60/60/90/90 · calc 300"
-rating_ovr: null
-is_manual_override: false
-ratings_provisional: true
+ratings_provisional: false   # rated 2026-09-22 at marathon-triage; risk 2: regex widening with a regression control, exit-code consumers are the blast radius
 reported_from: Jev-unofficial-toolkit
 harness_commit: 5e60cb01   # origin/development at capture; relay_drive.py identical at the report-time local HEAD b22e2641
 non_goals:
   - Changing how marathon phases name their round blocks
   - Auto-handoff when RELAY_PEER is unset (separate WARN, separate issue if wanted)
 related:
+  - GH-749 (marathon umbrella — this is lane L1)
   - GH-397 (introduced the block-count oracle)
   - GH-648 (headless turn-timeout umbrella, Wave 2 lists #397)
 goal: >
@@ -37,7 +35,45 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Promoted 1-INBOX → 2-WORKING by the 2026-09-21 `/10days` sweep; bug re-verified at HEAD e565c0fe (`utils/py/relay_drive.py:39` regex unchanged; only intake PR #729 landed); contract auto-drafted. | Marathon lane fires from `marathon/10days-2026-09-21` via `swarm-preflight → marathon-drive`, scoped by the contract's `artifacts`. |
+| 2026-09-22: promoted to 2-WORKING as lane L1 of marathon GH-749 (`/marathon-triage` → `/unstuck`); ratings confirmed (e1/c2/r2/p1); preflight contract added. | Marathon phase p1 fires from `~/marathon-clones/marathon-gh-749-relay-gate-cost`: widen `review_blocks_added`, add the GH-397 regression case, gate green, lands in the GH-749 delivery PR. |
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "utils/py/relay_drive.py", "pattern": "GH-720" },
+    { "type": "grep_absent", "path": "test/gh648-l8-zero-output-handback.sh", "pattern": "Reviewer \\(agy\\)" }
+  ],
+  "artifacts": [
+    "utils/py/relay_drive.py",
+    "test/gh648-l8-zero-output-handback.sh",
+    "relay-automation/new-relay.sh"
+  ],
+  "remediation": {
+    "source": "issue#720",
+    "criteria": "review_blocks_added in utils/py/relay_drive.py counts a reviewer block headed `### Reviewer (<agent>)` or `### Reviewer — Round N` when a non-empty body follows the heading, so --review-once exits 5 on a real changes-requested handback; a heading with no body still reads as zero output (exit 3, GH-397); test/gh648-l8-zero-output-handback.sh gains the `### Reviewer (agy)` regression case that fails before the fix; relay-automation/new-relay.sh's TAKE YOUR TURN block names the accepted heading forms."
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/relay_drive.py",
+      "test/gh648-l8-zero-output-handback.sh",
+      "relay-automation/new-relay.sh"
+    ],
+    "orchestrator_only": []
+  }
+}
+```
+
+## Acceptance
+
+- [ ] `relay-drive.sh --review-once` on a thread whose reviewer appended a substantive block under `### Reviewer (agy)` exits **5**, not 3 (red control: the same run at `origin/development` exits 3).
+- [ ] A reviewer turn that appends only a heading with no body, or nothing at all, still exits **3** with the GH-397 "zero-output turn is not review coverage" line.
+- [ ] Both existing heading forms (`### Round N · Reviewer · …`, `### Reviewer · Round N …`) still count — the marathon-phase and relay-thread paths in `test/gh648-l8-zero-output-handback.sh` stay green.
+- [ ] `relay-automation/new-relay.sh`'s embedded `▶ TAKE YOUR TURN` block states the accepted reviewer heading forms (one sentence; no new prompt file).
+- [ ] Evidence under `TESTS-RESULTS/<UTC-date>+GH-720/` with `provenance.jsonl`; `bash validate.sh` green in the marathon clone.
 
 ## Symptom
 relay-drive.sh --review-once reported DRIVER_EXIT=3 (no-progress stall) on an agy turn that actually landed: review block appended, header flipped NEXT: Producer, commit 68413b89 in XYZ-forge; expected exit 5 (handed back without approving).
@@ -97,71 +133,17 @@ A correct "changes requested" review is reported as a stall (red telemetry, exit
 - [ ] Reproduce it in the intake repo (not just in the reporting repo)
 - [ ] Decide: widen `review_blocks_added` to accept `### Reviewer …` / `### <role> (<agent>)` headings (and keep the "zero-output" intent by requiring a non-empty body after the heading), **or** make `new-relay.sh` + the turn prompt state the exact required heading — reuse whichever path is smaller (`/ponytail`)
 - [ ] Add a regression case to the GH-397 test with the `### Reviewer (agy)` heading
-- [ ] Set/correct the triage ratings; clear `ratings_provisional` once real
+- [x] Set/correct the triage ratings; clear `ratings_provisional` once real — done 2026-09-22 (marathon-triage, GH-749)
 
 ### QA checklist — Phase 0
 - [ ] The repro is confirmed from the report, not assumed
 - [ ] A regression test covers the failure path before the fix lands
 - [ ] The fix composes with the existing harness rather than adding a parallel path
 
-## Acceptance
-
-Authored by `/10days` — the tracking issue has no `## Acceptance` section swarm-preflight recognises, so there is no block to copy verbatim. These criteria transcribe the issue's fix / expected-behaviour text.
-
-- [ ] `review_blocks_added` in `utils/py/relay_drive.py` (regex at `:39`) counts a reviewer block
-      whose heading is `### Reviewer (<agent>)` or `### Reviewer — Round N` as well as the `·`
-      forms, while still requiring a non-empty body after the heading so a zero-output turn is
-      still graded a stall (GH-397 intent preserved).
-- [ ] `relay-automation/new-relay.sh`'s `▶ TAKE YOUR TURN` block states the heading form the oracle
-      accepts, so a headless reviewer following the scaffold produces a countable block.
-- [ ] `test/relay-review-once.sh` gains a regression case: a turn that appends a substantive block
-      under `### Reviewer (agy)` and flips NEXT: exits 5, not 3; red control: a turn that moves
-      the file but appends no block still exits 3.
-- [ ] `bash validate.sh` exits 0.
-
-## Swarm Preflight Contract
-
-```json
-{
-  "target": {
-    "repo": ".",
-    "ref": "development"
-  },
-  "gate": "bash validate.sh",
-  "fix_probes": [
-    {
-      "type": "grep_present",
-      "path": "utils/py/relay_drive.py",
-      "pattern": "Reviewer \\\\u00b7 Round \\)"
-    },
-    {
-      "type": "grep_absent",
-      "path": "test/relay-review-once.sh",
-      "pattern": "### Reviewer \\(agy\\)"
-    }
-  ],
-  "artifacts": [
-    "utils/py/relay_drive.py",
-    "test/relay-review-once.sh",
-    "relay-automation/new-relay.sh"
-  ],
-  "remediation": {
-    "source": "issue#720",
-    "criteria": "Accept the reviewer headings the shipped scaffold actually elicits (or state the required one), pin with a regression case"
-  },
-  "lanes": {
-    "agy_safe": [
-      "utils/py/relay_drive.py",
-      "test/relay-review-once.sh",
-      "relay-automation/new-relay.sh"
-    ],
-    "orchestrator_only": []
-  }
-}
-```
-
-Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified. Fix probes detect the BUG (`grep_present` = bug still there, `grep_absent` = fix landed), per swarm-preflight polarity.
-
 ## Merge evidence
 
 - PR #729 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #750 merged 2026-09-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

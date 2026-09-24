@@ -17,7 +17,7 @@ import unittest.mock as mock
 from pathlib import Path
 
 # Add skill scripts to sys.path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "merge-cleanup" / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "2-daily" / "merge-cleanup" / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from scan_clones import (

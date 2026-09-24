@@ -2,7 +2,7 @@
 # Ensure the committed relay skill tarball matches the live packaged sources byte-for-byte.
 source "$(dirname "$0")/_setup.sh" relay-pkg-freshness
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PKG="$ROOT/skills/relay-automation/relay-pkg.tar.gz"
+PKG="$ROOT/skills/1-hourly/relay-automation/relay-pkg.tar.gz"
 
 [ -f "$PKG" ] && pass "relay-pkg.tar.gz present" || fail "package missing: $PKG"
 
@@ -31,7 +31,7 @@ done < <(tar tzf "$PKG")
 [ "$count" -gt 0 ] && pass "tarball exposes $count packaged paths" || fail "tarball is empty"
 [ "$drift" = 0 ] \
   && pass "every packaged file matches its live source" \
-  || fail "relay-pkg.tar.gz is stale — run skills/relay-automation/make-pkg.sh"
+  || fail "relay-pkg.tar.gz is stale — run skills/1-hourly/relay-automation/make-pkg.sh"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

@@ -252,7 +252,7 @@ print(sum(d["counts"].values()) == d["total"])')" = "True" ] \
 S="$(lanes seed --milestone Quicksilver 2>/dev/null)"
 keys="$(printf '%s\n' "$S" | head -1 | python3 -c 'import json,sys; print(",".join(sorted(json.loads(sys.stdin.read()))))')"
 [ "$keys" = "createdAt,labels,number,title,updatedAt,url" ] \
-  && pass "seed emits the same keys as skills/10days/scan-issues.sh" \
+  && pass "seed emits the same keys as skills/3-weekly/10days/scan-issues.sh" \
   || fail "seed shape drifted from the /10days seed contract: $keys"
 [ "$(printf '%s\n' "$S" | wc -l | tr -d ' ')" = "2" ] \
   && pass "seed emits one JSON object per open issue" \

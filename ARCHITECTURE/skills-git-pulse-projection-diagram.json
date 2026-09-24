@@ -1,211 +1,50 @@
 {
-  "title": "Skills Army HQ — Git Sync Pulse Projection Context",
-  "generated": "2026-09-08",
+  "title": "Skills Army HQ — One Pulse Collection per Device",
+  "generated": "2026-09-23",
   "sources": [
-    "PROJECT/1-INBOX/RECON-GH-508-GIT-PULSE-SKILLS.md (completed deep recon and authority classification)",
-    "PROJECT/1-INBOX/GH-508-GIT-PULSE-SKILLS.md (Ponytail spike boundary and acceptance criteria)",
-    "skills/skills-army-hq/scripts/intake.py:180-195,232-280,469-527 (source intake, local state, inventory, transactions)",
-    "skills/skills-army-hq/scripts/sync.py:23-65 (local collection to app-root symlink reconciliation)",
-    "rebalanceOS experimental/git-pulse/collect.sh:475-601 and pulse.py:797-915 (scheduled checkout reconciliation and publication, recorded by recon)"
+    "skills/3-weekly/skills-army-hq/SKILL.md — GH-672 one-collection-per-device SOP",
+    "skills/3-weekly/skills-army-hq/scripts/intake.py — default root, source intake, in-place adoption and local receipts",
+    "skills/3-weekly/skills-army-hq/scripts/sync.py — app symlink reconciliation and canonical Forge drift gate",
+    "skills/3-weekly/skills-army-hq/references/recovery.md — portable payload vs ignored machine-local state",
+    "PROJECT/3-COMPLETED/GH-536-DEPLOYED-SKILLS-RELOCATION.md — publisher relocation and observed first-device evidence",
+    "test/test_deploy_skills.py — two-device adoption, distinct identities, direct links and drift refusal"
   ],
   "layout": "layered",
-  "legend_note": "Solid arrows are current flows. Dashed arrows are the proposed explicit, single-publisher projection. Dotted arrows are local metadata or symlink state. The scheduled live pulse checkout remains a separate producer and is never the Skills Army HQ collection.",
   "groups": [
-    {
-      "id": "publisher-device",
-      "label": "Publisher Mac — local authority"
-    },
-    {
-      "id": "transport",
-      "label": "Existing private Git transport"
-    },
-    {
-      "id": "consumer-device",
-      "label": "Consumer Mac — local authority"
-    },
-    {
-      "id": "scheduled-pulse",
-      "label": "Existing scheduled pulse writers — separate path"
-    }
+    {"id": "authority", "label": "Canonical authoring authority"},
+    {"id": "device-a", "label": "Designated publisher device"},
+    {"id": "transport", "label": "Portable Git transport"},
+    {"id": "device-b", "label": "Consumer device"}
   ],
   "nodes": [
-    {
-      "id": "publisher-sources",
-      "label": "Local skill source repos",
-      "type": "storage",
-      "group": "publisher-device",
-      "tech": "Git worktrees/checkouts",
-      "description": "Existing local Git folders accepted one at a time by Skills Army HQ intake."
-    },
-    {
-      "id": "publisher-hq",
-      "label": "Skills Army HQ collection A",
-      "type": "storage",
-      "group": "publisher-device",
-      "tech": "~/Documents/Deployed Skills",
-      "description": "Authoritative local payload copies. The completed deployment contained 15 skills and remained independent of Git Sync Pulse."
-    },
-    {
-      "id": "publisher-state",
-      "label": "Device A state",
-      "type": "database",
-      "group": "publisher-device",
-      "tech": "targets + receipts + locks",
-      "description": "Absolute root, target paths, ownership receipts, transaction state, backups and history stay device-local and are excluded from projection."
-    },
-    {
-      "id": "publisher-apps",
-      "label": "Device A app roots",
-      "type": "external",
-      "group": "publisher-device",
-      "tech": "managed directory symlinks",
-      "description": "Claude, Codex and Gemini-compatible discovery roots read through local managed links."
-    },
-    {
-      "id": "publisher-projection",
-      "label": "Isolated projection checkout",
-      "type": "storage",
-      "group": "transport",
-      "tech": "skills/<name> + manifest",
-      "description": "Proposed explicit single-publisher checkout containing portable payloads only; not used by scheduled pulse jobs."
-    },
-    {
-      "id": "pulse-remote",
-      "label": "Private Git Sync Pulse remote",
-      "type": "external",
-      "group": "transport",
-      "tech": "existing main branch",
-      "description": "Optional transport location. It does not become deployment authority and gains no new background writer during the spike."
-    },
-    {
-      "id": "consumer-projection",
-      "label": "Explicit consumer checkout",
-      "type": "storage",
-      "group": "transport",
-      "tech": "clean pull on demand",
-      "description": "A separate checkout pulled explicitly before importing; never the scheduled live pulse checkout."
-    },
-    {
-      "id": "consumer-hq",
-      "label": "Skills Army HQ collection B",
-      "type": "storage",
-      "group": "consumer-device",
-      "tech": "local copied collection",
-      "description": "Independent authoritative collection populated through existing add/update operations."
-    },
-    {
-      "id": "consumer-state",
-      "label": "Device B state",
-      "type": "database",
-      "group": "consumer-device",
-      "tech": "distinct local metadata",
-      "description": "Device B retains its own absolute targets, ownership receipts, lock and recovery state."
-    },
-    {
-      "id": "consumer-apps",
-      "label": "Device B app roots",
-      "type": "external",
-      "group": "consumer-device",
-      "tech": "managed directory symlinks",
-      "description": "Existing sync machinery deploys imported skills to enabled app roots on Device B."
-    },
-    {
-      "id": "pulse-collector",
-      "label": "Git Pulse collector",
-      "type": "job",
-      "group": "scheduled-pulse",
-      "tech": "hourly launchd job",
-      "description": "Existing bounded writer that pulls, stages generated pulse/device paths, commits and pushes."
-    },
-    {
-      "id": "rebalance-publisher",
-      "label": "Rebalance pulse publisher",
-      "type": "job",
-      "group": "scheduled-pulse",
-      "tech": "hourly daytime job",
-      "description": "Independent existing writer that reconciles and publishes live-pulse.md."
-    },
-    {
-      "id": "live-pulse-checkout",
-      "label": "Scheduled live pulse checkout",
-      "type": "storage",
-      "group": "scheduled-pulse",
-      "tech": "~/.config/git-pulse/repo",
-      "description": "Generated-data checkout with multiple writers and a documented dirty-tree failure history. It must not host the HQ collection or projection worktree."
-    }
+    {"id": "canonical-sources", "label": "Canonical owning repositories", "type": "storage", "group": "authority", "tech": "skills/<tier>/<name>/", "description": "Only authoring sources. A deployed payload that is ahead of its source must be preserved and landed upstream before it is redistributed."},
+    {"id": "forge-drift", "label": "Forge canonical drift gate", "type": "job", "group": "authority", "tech": "utils/py/skill_drift_check.py", "description": "Compares Forge-owned deployed SKILL.md files with canonical tiered sources. Sync warns in preview and refuses deployment on drift unless explicitly overridden loudly."},
+    {"id": "publisher-intake", "label": "Skills Army intake / update", "type": "service", "group": "device-a", "tech": "intake.py · preview then --apply", "description": "Copies a reviewed skill folder from its owning local Git repository into the publisher's Pulse collection and records source commit/digest provenance."},
+    {"id": "device-a-collection", "label": "Device A Pulse checkout / Deployed Skills", "type": "storage", "group": "device-a", "tech": "~/git-pulse-sync/Deployed Skills", "description": "The publisher device's one deployed collection and portable payload tree. It is a generated distribution, not a second authoring source."},
+    {"id": "device-a-state", "label": "Device A local deployment state", "type": "database", "group": "device-a", "tech": "receipts · targets · locks · catalog/history", "description": "Distinct collection identity, ownership receipts, target configuration, locks, backups and staging. Ignored and untracked; never transported to another device."},
+    {"id": "device-a-apps", "label": "Device A app skill roots", "type": "external", "group": "device-a", "tech": "owned directory symlinks", "description": "Selected app directories point directly into Device A's Pulse collection. Discovery/runtime verification remains app-specific."},
+    {"id": "git-workflow", "label": "Reviewed Git commit / push / pull", "type": "job", "group": "transport", "tech": "explicit external Pulse workflow", "description": "Portable payload changes are committed and pushed from one designated publisher, then pulled only into clean consumer checkouts. The repository does not prove the currently installed scheduler implementation."},
+    {"id": "pulse-remote", "label": "Private Git Pulse remote", "type": "external", "group": "transport", "tech": "tracked payloads only", "description": "Carries skill folders, manager scripts, README and tracked ignore policy. It must not carry receipts, target choices, locks, history, backups or staging."},
+    {"id": "device-b-collection", "label": "Device B Pulse checkout / Deployed Skills", "type": "storage", "group": "device-b", "tech": "~/git-pulse-sync/Deployed Skills", "description": "Pulled payloads are adopted in place; no second ~/Documents/Deployed Skills mirror is created. Existing links read new bytes immediately after a clean pull."},
+    {"id": "device-b-adopt", "label": "In-place adoption + local sync", "type": "service", "group": "device-b", "tech": "init --adopt-existing · sync.py", "description": "Verifies clean tracked payloads, ignored machine state and portable manager links; creates only local receipts/targets, then reconciles owned app symlinks."},
+    {"id": "device-b-state", "label": "Device B local deployment state", "type": "database", "group": "device-b", "tech": "distinct ignored metadata", "description": "A new collection identity and this device's own targets, receipts, locks, catalog/history, backups and staging. Nothing is copied from Device A's local state."},
+    {"id": "device-b-apps", "label": "Device B app skill roots", "type": "external", "group": "device-b", "tech": "owned directory symlinks", "description": "Selected app directories point directly into Device B's Pulse collection. Foreign folders and retargeted links are preserved."}
   ],
   "edges": [
-    {
-      "source": "publisher-sources",
-      "target": "publisher-hq",
-      "label": "existing add/update copies",
-      "kind": "sync"
-    },
-    {
-      "source": "publisher-hq",
-      "target": "publisher-state",
-      "label": "records local authority",
-      "kind": "data"
-    },
-    {
-      "source": "publisher-hq",
-      "target": "publisher-apps",
-      "label": "existing sync",
-      "kind": "data"
-    },
-    {
-      "source": "publisher-hq",
-      "target": "publisher-projection",
-      "label": "proposed portable payload projection",
-      "kind": "async"
-    },
-    {
-      "source": "publisher-projection",
-      "target": "pulse-remote",
-      "label": "explicit commit/push",
-      "kind": "async"
-    },
-    {
-      "source": "pulse-remote",
-      "target": "consumer-projection",
-      "label": "explicit pull",
-      "kind": "async"
-    },
-    {
-      "source": "consumer-projection",
-      "target": "consumer-hq",
-      "label": "existing add/update imports",
-      "kind": "async"
-    },
-    {
-      "source": "consumer-hq",
-      "target": "consumer-state",
-      "label": "records distinct local authority",
-      "kind": "data"
-    },
-    {
-      "source": "consumer-hq",
-      "target": "consumer-apps",
-      "label": "existing sync",
-      "kind": "data"
-    },
-    {
-      "source": "pulse-collector",
-      "target": "live-pulse-checkout",
-      "label": "scheduled generated writes",
-      "kind": "sync"
-    },
-    {
-      "source": "rebalance-publisher",
-      "target": "live-pulse-checkout",
-      "label": "scheduled live-pulse write",
-      "kind": "sync"
-    },
-    {
-      "source": "live-pulse-checkout",
-      "target": "pulse-remote",
-      "label": "existing pull/rebase + push",
-      "kind": "sync"
-    }
-  ]
+    {"source": "canonical-sources", "target": "publisher-intake", "label": "reviewed local source", "kind": "sync"},
+    {"source": "forge-drift", "target": "publisher-intake", "label": "warn / refuse drift", "kind": "sync"},
+    {"source": "canonical-sources", "target": "forge-drift", "label": "canonical Forge skills", "kind": "data"},
+    {"source": "publisher-intake", "target": "device-a-collection", "label": "copy payload + provenance", "kind": "data"},
+    {"source": "device-a-collection", "target": "device-a-state", "label": "records local ownership", "kind": "data"},
+    {"source": "device-a-collection", "target": "device-a-apps", "label": "direct symlink read-through", "kind": "data"},
+    {"source": "device-a-collection", "target": "git-workflow", "label": "reviewed portable diff", "kind": "sync"},
+    {"source": "git-workflow", "target": "pulse-remote", "label": "commit + push", "kind": "async"},
+    {"source": "pulse-remote", "target": "git-workflow", "label": "clean pull", "kind": "async"},
+    {"source": "git-workflow", "target": "device-b-collection", "label": "tracked payload update", "kind": "data"},
+    {"source": "device-b-collection", "target": "device-b-adopt", "label": "adopt existing payloads", "kind": "sync"},
+    {"source": "device-b-adopt", "target": "device-b-state", "label": "create device-local receipts", "kind": "data"},
+    {"source": "device-b-adopt", "target": "device-b-apps", "label": "reconcile owned links", "kind": "sync"},
+    {"source": "device-b-collection", "target": "device-b-apps", "label": "direct symlink read-through", "kind": "data"}
+  ],
+  "legend_note": "GH-672 supersedes the GH-508 separate-projection design: each Pulse-enabled device has exactly one deployed collection inside its own checkout. Portable skill payloads travel through Git; local deployment state never does. Publication is shown as an explicit external workflow because the current repository cannot attest this machine's installed scheduler configuration."
 }

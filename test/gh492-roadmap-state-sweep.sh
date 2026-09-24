@@ -23,6 +23,14 @@ with tempfile.TemporaryDirectory(prefix='gh492-', dir=os.environ.get('GH492_TMPD
     stub = root / 'gh'
     stub.write_text('#!' + sys.executable + '\n' + '''import json, os, sys
 from pathlib import Path
+if sys.argv[1] == 'api':
+    path = sys.argv[2]
+    assert path.startswith('repos/example/repo/issues/'), sys.argv
+    number = path.rsplit('/', 1)[-1]
+    print(json.dumps({'number': int(number),
+                      'html_url': 'https://github.com/example/repo/issues/' + number,
+                      'state': 'open' if number == '2' else 'closed', 'labels': []}))
+    raise SystemExit(0)
 assert sys.argv[1:3] == ['issue', 'view'], sys.argv
 assert sys.argv[4:] == ['--json', 'state,stateReason'], sys.argv
 url = sys.argv[3]

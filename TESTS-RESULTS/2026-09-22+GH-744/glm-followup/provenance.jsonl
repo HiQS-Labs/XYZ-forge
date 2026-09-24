@@ -1,0 +1,6 @@
+{"sha": "78b20b94", "command": "path-integrity with a broken ARCHITECTURE Skills Index link", "exit_code": 1, "expected_failure": true}
+{"sha": "78b20b94", "command": "xyz-harness-hooks with the old wildcard nudge fallback restored", "exit_code": 1, "expected_failure": true}
+{"sha": "5588633c399092595b8da3fe77a73df9ab19815b", "command": "bash test/xyz-harness-hooks.sh; bash test/gh589-skill-viewer.sh", "exit_codes": [0, 0], "passed": [63, 8]}
+{"sha": "5588633c399092595b8da3fe77a73df9ab19815b", "command": "PATH=\"$HOME/.cache/xyz-forge-test-venv/bin:$PATH\" env -u XYZ_WORK_CONNECTORS_REGISTRY ./validate.sh", "exit_code": 0, "passed": 411, "total": 411, "parallel_failure_passed_on_builtin_serial_retry": "gh32-releases-app.sh", "identity_unchanged": true, "promotion_evidence": false}
+{"sha": "5588633c399092595b8da3fe77a73df9ab19815b", "command": "bash utils/pdda/pdda.sh changelog", "exit_code": 0}
+{"artifact": "validation.log", "sha256": "584a52a0da370c5d9e68e87799d935c2fdc03301ec6ade366265f38dade00a43", "full_gate_output": "selected excerpts; focused and mutation outputs retained in full"}

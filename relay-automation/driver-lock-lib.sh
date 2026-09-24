@@ -5,7 +5,7 @@
 # relay_drive.py / relay-drive.sh) byte-for-byte (utils/py/rtl.py's driver_lock_path is the Python
 # twin — the two MUST agree, asserted by test/gh448-driver-lock-resolver.sh). SOURCED by every
 # read-only consumer of the lock (marathon-ls.sh, utils/hq/marathon-live.sh,
-# skills/relay-xyz/find-harness.sh) — a consumer that constructs this path inline instead of calling
+# skills/1-hourly/relay-xyz/find-harness.sh) — a consumer that constructs this path inline instead of calling
 # this function is the bug this file exists to kill (5 of 7 construction sites had drifted to a
 # 2-branch guess that misses the linked-worktree case, silently reporting a LIVE marathon as IDLE).
 #

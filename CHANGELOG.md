@@ -1,5 +1,164 @@
 # Changelog
 
+## 2026-09-24 — merge-cleanup: `--exclude <PR#>` drops the PR; post-landing UNKNOWN mergeability is polled (GH-736)
+
+`--exclude` with a bare PR number now leaves that PR out of the merge queue, as the skill's own
+example promised; before, it only skipped checkouts and the PR was still merged. After each
+landing, GitHub briefly reports the next PR's mergeability as unknown; the run now waits up to 90
+seconds for GitHub to decide instead of stopping every time, and still stops (merging nothing) if
+it never decides, and a network error during that wait is handled like any other lookup failure.
+Regression tests pin both behaviors. Stacked-PR handling (#736 item 3) remains open.
+
+## 2026-09-24 — Gate memory guard says when it cannot measure (GH-773)
+
+When `ps` cannot run (a sandbox raises `PermissionError` at exec) or lists nothing for the gate's
+process group, the pre-advance gate's RSS watchdog in `utils/py/marathon_drive.py` used to switch
+off silently and log `peak group RSS 0MB`. It now logs one warning
+(`RSS watchdog unavailable … continuing without RSS enforcement`), keeps the wall-clock and CPU
+caps, and reports the peak as `unknown` with the count of unreadable samples. A gate that exits
+before its first sample also reports `unknown` instead of `0MB`. A clean exit between the poll and
+`ps` is re-polled, so it is not counted as a failed sample. The design came from AgentChorus #507818
+(fail-open-loud, no fallback probe, no receipt schema change). `test/gh390-gate-guard.sh` gains
+helper-seam cases, a denied-`ps` driven case, and a working-`ps` control; against the pre-fix code
+the new cases fail 4 of 6.
+
+## 2026-09-24 — GH-760 correction: the ready-poll is not the send-path flake
+
+Run 35767844928 already passed `GET /` (HTTP 200), session create, and both joins before `remote agent2 send` missed `"turn": 2`. The 2026-09-23 entry's slow-bind explanation does not match that log. PR #761 keeps the poll and the failure diagnostics and does not close #760. The `FileNotFoundError` for `runtime/agent2.watch` in that log is from `agent-chorus.sh`, not the bridge suite.
+
+## 2026-09-23 — GH-764 baseline macOS gate repair
+
+Three baseline failures were traced on untouched `development`: the ATE test could reach its
+expected exit code through a missing Python import, the work-state test assumed this macOS SQLite
+build removed empty WAL sidecars on close, and connector dispatch closed a child's stdin handle
+before `communicate()` tried to flush it. The ATE suite now names a missing `requests` or PyYAML
+prerequisite immediately, the WAL test explicitly constructs header-without-sidecars input, and
+the connector launcher clears its closed stdin handle before collection. The local-gate startup
+instruction names the same-interpreter Python preflight. Reversibility: **Costly** shared connector
+path, with a direct revert and no schema or data migration. Focused checks: GH-142 30/30,
+GH-605 28/28, GH-549 124/124; separate missing-module red controls failed by name. Codex final
+relay approved. Full macOS `validate.sh` passed 411/411 on the reviewed commit in a separate
+full clone with unchanged git identity; `security-scan.sh` failed only during the parallel pool
+on transient peer-suite files and passed the built-in isolated retry. Sanitized logs and the
+committed receipt are in [GH-764 evidence](TESTS-RESULTS/2026-09-23+GH-764/SUMMARY.md).
+
+
+## 2026-09-23 — Audits of the two largest Python files, plus intake (GH-768, GH-769)
+
+Research-only audits of `utils/py/releases_app.py` (26 findings plus a caller and test sweep) and
+`utils/py/marathon_drive.py` (30 findings), each with a split plan and a follow-up order. No code
+changed. The audits produced six new issues, captured and parked in the ledger: four confirmed
+bugs (#770 `--root` ignored by five `jog` verbs, #771 jog still accepts the removed `gemini`
+reviewer, #772 page size hardcoded to 4K, #773 memory guard silently off when `ps` is denied);
+#774, where about 25 `releases_app` suites are missing from CI routing (a refactor blocker); and
+umbrella #775 for broken call sites in skills and scripts.
+## 2026-09-23 — Architecture diagram set regenerated from current code (GH-767)
+
+Regenerated every JSON/HTML pair under `ARCHITECTURE/` using the repo-owned `swe-diagram`
+workflow and a fresh codebase-memory index at `a47c212b`. The shared 25-node system graph now
+follows the full capture → plan → execute → gate → land lifecycle, Python-default Tier-A drivers,
+current adapter routing, driver-authored relay attestation, the releases/work-event authority split,
+hosted reconciliation, and passive Flightdeck reads. The ledger map removes the retired
+`ROADMAP-DASHBOARD.md` renderer/staleness guard and adds direct queries, work connectors, optional
+views, Pages generation, and routed local/hosted verification. The Skills Army map now reflects the
+GH-672 one-Pulse-collection-per-device contract and its canonical-source drift gate. Git lanes were
+rebuilt from current cached refs. All seven specs pass semantic validation with zero warnings; all
+seven self-contained HTML artifacts were rebuilt.
+
+## 2026-09-23 — GH-760: agent-chorus-bridge waits for GET / instead of sleep 1
+
+Hosted wave-reconcile `--qualify` failed closed when `test/agent-chorus-bridge.sh` raced a slow bind (`sleep 1.0`). The suite now polls `GET /` until the expected HTTP code, dumps client body + log on assertion failure, and fails closed against a closed port. Disposable-clone run: 48 passed, 0 failed; mutating the helper to always return 0 went red on that control.
+
+## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
+
+Full local gate: 411/411 passed, with `gh32-releases-app.sh` passing the gate’s built-in isolated
+retry after a parallel failure. Clone identity stayed unchanged. The 132-link check catches a
+broken Skills Index row; the foreign-directory nudge assertion rejects the former wildcard
+fallback. Hook checks passed 63/63 and the viewer passed 8/8.
+[Retained evidence](TESTS-RESULTS/2026-09-22+GH-744/glm-followup/provenance.jsonl).
+
+## 2026-09-22 — PR #747 GLM review follow-up (GH-744)
+
+Restored the flat app-install path in the AgentChorus incident comment and updated the mini
+viewer provenance citation. Skill nudges now fall back to a bare skill name outside the source
+root. Extended the existing link check to cover the ARCHITECTURE Skills Index and added a
+foreign-directory nudge assertion. Merged current development with ledger records preserved.
+Verification is recorded in the accompanying review evidence.
+
+## 2026-09-22 — Skills tier review verification (GH-744, PR #747)
+
+The review fix passed the full local gate (411/411) in a disposable full clone using the existing
+test Python environment. The link check covers 72 cross-folder references and fails when the old
+recon link is restored. Drift and archive-freshness checks also pass; clone identity stayed unchanged.
+[Run evidence](TESTS-RESULTS/2026-09-22+GH-744/pr747-review/provenance.jsonl).
+
+## 2026-09-22 — Skills tier review fixes (GH-744, PR #747)
+
+Repaired cross-folder skill links using canonical repository URLs so flat collection copies
+remain readable. Extended the existing path-integrity gate to check cross-folder Markdown
+links, and made the relay archive output relative to its packaging script. Corrected the
+re-tiering contract: explicit paths in publishers/tests need updating, and direct installs
+need their installer re-run; Skills Army collection users refresh only their installed skills.
+No compatibility layer or automatic migration was added for this early, internally used product.
+Merged current development, preserving ledger rows and rebuilding its derived views and package.
+Verification results are recorded in the follow-up review evidence entry.
+
+## 2026-09-22 — Marathon GH-749 planned: relay exit-code truth (#720) + measured gate cost (#732), one chain of four lanes
+
+`/marathon-triage` on #673/#720/#732 found no sequenceable lane: the planner (exit 4, drift) held all
+three, direct preflight exited 3 on each (no contract), GH-673's ledger row carried no `[plan](…)` link in
+its `raw_text` (the planner reads the link, not `doc_path` — it reported `needs-doc` + `drift` for a doc
+that exists), GH-720's row was unrated (the #252 `hq park` gap) and GH-732's row still had its v1 title.
+This iteration lands the intake: umbrella [#749](https://github.com/HiQS-Labs/XYZ-forge/issues/749) opened
+and registered (`marathons` row `mar-01M33PJX8HPKMJHPQFH1S0WG6B`, planned); GH-720 and GH-732 promoted to
+`2-WORKING` with `Swarm Preflight Contract` blocks (both `swarm-preflight --dry-run` **ready, exit 0**),
+ratings confirmed (720: e1/c2/r2/p1, provisional cleared; 732: e3/c2/r2/p3, provisional cleared, #496
+Phases 3–5 held), rows repointed / marked 🚧 / rated through `releases roadmap repoint|update|rate`;
+plan dir `PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/` (`CAPTURE.md`, `MARATHON.yaml` — `marathon.sh
+--dry-run`: 4 phases in order — and briefs L1 review-once heading regex, L2 C.1/D.2 measurements over
+captured inputs, L3 dated timing claims + slowest-suites render from GH-365 telemetry, L4 named
+environment faults with `--qualify`'s exit-6 boundary kept); `MARATHON-PLAN-2026-09-22.md` now sequences
+**Wave 1: #720 ‖ #732**. #673 is held (its build merged as #719; the remainder waits on #646 / PR #723).
+Lane inputs captured under `TESTS-RESULTS/2026-09-22+GH-732/{c1,d2}/` so the codex builder counts from
+committed files, not from a sandboxed `gh`. → [GH-749 CAPTURE.md](PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md) ·
+[GH-720](PROJECT/2-WORKING/GH-720-REVIEW-ONCE-BLOCK-REGEX.md) · [GH-732](PROJECT/2-WORKING/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md) ·
+[#720](https://github.com/HiQS-Labs/XYZ-forge/issues/720) · [#732](https://github.com/HiQS-Labs/XYZ-forge/issues/732)
+
+## 2026-09-22 — chore(pdda): retire 12 capture docs for closed issues; ledger rows reconciled (Refs #492)
+
+Retired 12 stale capture docs whose GitHub issues are closed (GH-221, GH-243, GH-246, GH-419,
+GH-565, GH-608, GH-654, GH-659, GH-663, GH-712 moved to `PROJECT/3-COMPLETED/` with recorded
+merge evidence; GH-563 pre-migration public launch capture and GH-658 landing-1 superseded draft
+moved to `PROJECT/4-MISC/`). Reconciled RELEASES DB roadmap ledger rows via `roadmap reconcile-state`
+(GH-608, GH-654, GH-659, GH-663, GH-712 moved to Completed) and updated status markers (GH-221,
+GH-243, GH-246, GH-419, GH-608, GH-654, GH-659, GH-663, GH-712 to ✅).
+
+## 2026-09-21 — skills/ grouped by frequency of use: 1-hourly, 2-daily, 3-weekly, 4-occasional (GH-744)
+
+`skills/` was a flat alphabetical list of 60 directories; the ARCHITECTURE.md Skills Index was
+alphabetical too and missing seven skills. Every skill now lives at `skills/<tier>/<name>/` (a
+`git mv`, no content change) under four numbered folders, so a directory listing reads as a usage
+map. The operator anchored nine placements; the rest follow each skill's trigger description and can
+be re-tiered with a `git mv` plus the index row — nothing depends on the tier name, only on the
+two-level depth (`skills/README.md` states the contract). What had to learn the second level:
+`utils/py/skill_drift_check.py` scans `*/SKILL.md` and `*/*/SKILL.md` and keys `unrecognized` on the
+canonical name set (a mini collection stays one level; the GH-660 fixture gains a tiered skill so both
+branches are proven); `utils/py/xyz_mini_sync.py` and `agent-chorus/publish-manifest.tsv` re-point
+their SOURCE columns only — XYZ-mini and the standalone repo stay flat; `utils/ci-route.sh` registry
+globs are `skills/*/<name>/*`; the locators that derive the repo root from their own directory
+(`find-harness.sh`, `find-hq.sh`, `find-xyz.sh`, `find-pdda.sh`, `vendor-stack/install.sh`,
+`relay-to-issue.sh`, `make-pkg.sh`, `review_engine.py`) go one level higher, `find-xyz.sh` finds
+relay-xyz across tiers by glob, and `agent_chorus.py` / `scan_clones.py` walk up to the nearest
+ancestor holding `skills/` / `bin/tick` (same answer as `parents[3]` in every flat layout, including
+a vendored `.xyz/`). `test/path-integrity.sh` blanks app-discovery roots (`~/.claude/skills/<name>`)
+before tokenizing, since that flat installed layout never exists in this tree. `relay-pkg.tar.gz`
+regenerated at its new path. Vendored `.xyz/skills/` mirrors the tiers on the next `xyz-vendor.sh`
+refresh. Machine-local follow-up for a Skills Army HQ collection: `intake.py --apply update <name>
+--source <forge>/skills/<tier>/<name>` per forge-owned skill (the drift guard now reports those ten
+whose SKILL.md text gained tiered paths). Plan QA: agy Approved after two rounds
+(`relay-system/2026-09-21/gh744-plan-qa.md`; Codex's CLI could not run tool calls this session).
+Easy rollback: revert the merge commit, plus the reverse `intake.py update` if provenance was re-pointed.
+
 ## 2026-09-21 — Hosted reconcile lane: a merge landing mid-run no longer discards the qualification; the lane report names the step that failed (GH-740, GH-741)
 
 The lane's final `git push origin HEAD:development` was a plain fast-forward at the end of a ~70-minute
@@ -118,6 +277,20 @@ issue/root diagnostics survive together. 39 populated Python checks, production-
 pass; replacement independent review and full qualifying gate remain pending.
 Easy rollback: disable the optional reader or reviewed revert; no source migration.
 
+## 2026-09-20 — Explicit task starts and confirmed endings (GH-646)
+
+The existing roadmap writer gains schema 009's nullable `in-progress` label,
+established only by an explicitly accepted, repository-qualified task start.
+The opt-in GitHub connector projects only that label through existing replay;
+confirmed completion/cancellation clears it, and reopening requires a fresh start.
+Metadata, migration, quiet activity and PR merge alone do not establish task state.
+Existing Express and reconciliation paths preserve exact issue identity and
+read-only previews. Focused source review is approved and 41 tests pass; complete
+qualification remains required before landing. No live migration or connector
+enablement is included. Costly schema rollback: disable projection and retain a
+verified pre-migration backup; never restore it over newer task records.
+
+Reconciler narrowing (2026-09-20 rebase onto `41be79e2`): `_may_terminalize_issue` now treats a MERGED closer whose issue is not positively OPEN as terminal (the GH-202 offline contract, unchanged), and requires a confirmed CLOSED issue only for a declined PR — the earlier revision gated merged closers too and broke `wave-reconcile.sh`, `gh202`, `gh280`. Three fixtures now model what the writer verifies: `gh496` gains the `repos` table (MIGRATION_001), `gh527`'s stub `gh` answers the REST `api repos/…/issues/N` identity read, `wave-reconcile.sh` confirms GH-777 CLOSED and adds a declined/unconfirmed PR (#1004 → GH-778) that must stay in 2-WORKING (red control witnessed both ways).
 ## 2026-09-18 — Offline Jev vs Tier-1/Gemma ATE triage replay; shadow flag not started (GH-712)
 
 Lane B of the GH-709 TypeSafe Jev recon. Added `utils/py/jev_triage.py` (stdlib only): three Choice
@@ -426,6 +599,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
+
+## [Unreleased] - 2026-09-23
+
+### Fixed
+- **GH-781: whack-a-mole: seed candidate clusters from recent radar reports (re-verified, freshness-gated).** (express hotfix, GH-267 lane; suite test/gh781-wam-radar-seed.sh registered as the landing gate.)
+- **GH-779: radar: trunk CI health, new-guard re-run on open PRs, regressed-after-declared-fixed table.** (express hotfix, GH-267 lane; suite test/gh779-radar-ci-health.sh registered as the landing gate.)
+- **GH-778: feat: review-code and review-PR ground-truth code review skill.** (express hotfix, GH-267 lane; suite test/gh778-review-code-skill.sh registered as the landing gate.)
 
 ## [Unreleased] - 2026-09-18
 

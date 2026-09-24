@@ -3,6 +3,39 @@
 # Exit 0 = all pass; Exit 1 = at least one failed.
 set -u
 
+_usage() {
+  cat >&2 <<'USAGE'
+usage: ./validate.sh [--parallel N | --sequential | --print-mode]
+       ./validate.sh [--tier 1|2|3] [--subsystem <name>] [--auto [base[.. head]]] [--paths-file <file>]
+       ./validate.sh [--throttle|--quiet-cpu] [--burst]
+
+  concurrency   --parallel N | --max-parallel N   pin the worker count
+                --sequential                      one suite at a time (the qualifying form)
+                --throttle | --quiet-cpu          2 workers under nice — quiet-machine mode (GH-35)
+                --burst                           full-core width, cores-2 capped 8 — unattended speed
+  tiers (GH-35) --tier 1|2|3                      1 = docs gate · 2 = subsystem suites · 3 = full (default)
+                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems)
+                --auto [base[.. head]]            classify the git diff, run the minimal safe tier
+                --paths-file <file>               tier 2 from a path list — what pre-push hands over
+  environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
+                (an explicit flag always beats the environment; a width lever beats a throttle lever)
+  quarantine    --skip <suite>                      omit ONE registered suite (repeatable). Every skip
+                                                   is announced in the header AND the summary, and a
+                                                   run with any skip is NOT promotion evidence. An
+                                                   unregistered name is a usage error, so a typo can
+                                                   never silently skip nothing (GH-379).
+                XYZ_VALIDATE_SKIP=a.sh,b.sh        same, comma-separated, for CI
+  introspection --help | -h                        print this help and exit
+                --list                             print the registry this gate runs (test/<entry>
+                per line) and exit 0 — the shared manifest #141 Phase 1 points secondary
+                selectors (fuzz-loop.sh) at, so suite ownership has ONE source of truth
+  --burst / XYZ_VALIDATE_MAX_JOBS are honoured for tier 2: 2 is the default width, not a pin.
+  Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen
+  the run (nice protects the editor, not the wall-clock).
+USAGE
+}
+case "${1:-}" in --help|-h) _usage; exit 0 ;; esac
+
 # GH-441 Phase 2: clean the ambient variables a live marathon exports, via the shared contract rather
 # than a list copied here. This file used to hardcode six names; the driver popped three DIFFERENT
 # ones, and any other --pre-advance-cmd that forgot the prologue was silently wrong. One did, on
@@ -53,6 +86,7 @@ else
 fi
 
 TESTS=(
+  "gh732-l3-gate-summary.sh"    # GH-732 (existing telemetry timing summary fixtures)
   "projection-idempotent.sh"
   "concurrent-claim.sh"
   "chaos-stale-writer.sh"
@@ -100,6 +134,11 @@ TESTS=(
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
+  "gh778-review-code-skill.sh"    # GH-778 (review-code and review-PR ground-truth code review skill)
+  "gh779-radar-ci-health.sh"    # GH-779 (radar: trunk CI health, new-guard re-run on open PRs, regressed-after-fixed table)
+  "gh781-wam-radar-seed.sh"    # GH-781 (whack-a-mole seeds candidate clusters from recent radar reports)
+  "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)
+  "gh777-inventory-ratchet.sh"  # GH-777 (inventory ratchet: shrink-only script/connect guards)
   "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
   "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
   "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
@@ -250,6 +289,7 @@ TESTS=(
   "gh430-state-dir-tracked-default.sh" # GH-430 (STATE_DIR default is a tracked in-repo path, not ${TMPDIR:-/tmp})
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
   "gh549-work-events.sh"           # GH-549 (work-state event stream at the single write seam; 17/0 with both red controls)
+  "gh646-status-label.sh"          # GH-646 (qualified accepted starts, schema009, exact issue-label projection/replay)
   "gh402-board-sync.sh"             # GH-402 (Projects-board mirror: strong/weak signal classification, empty-input refusal, kill-switch, settings env tier, witnessed-red extractor break) — offline by design; live write path receipted in the Phase 0 spike
   "gh405-mock-board-harness.sh"     # GH-405 (Projects-board mock harness: CLI contract, GraphQL query/mutation resolvers, duplicate card creation fidelity, fault injection)
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
@@ -467,7 +507,7 @@ TESTS=(
                                   #   .xyz/utils/pdda/pdda.sh must never run, so a blanket .xyz/ prefix over the
                                   #   file fails here. Section 3 pins that a repo-owned tool still wins, which is
                                   #   what keeps every other wave-reconcile suite's $REPO/utils mock seam alive.
-  "gh77-standup-triage.sh"        # GH-77 (`skills/standup/triage.py`, the deterministic half of /standup) — 29/0.
+  "gh77-standup-triage.sh"        # GH-77 (`skills/1-hourly/standup/triage.py`, the deterministic half of /standup) — 29/0.
                                  #   Its PRD escalated at a 4-round review cap with a FLAT finding rate
                                  #   (11/13/10/10) because a state machine was being specified in prose. The
                                  #   properties four rounds argued about are pinned here instead: a tier-1..3
@@ -700,33 +740,7 @@ MODE_FLAGS=0
 PRINT_MODE_ONLY=0
 NICE_CMD="nice -n 10"   # GH-35: workers run as a scheduling HINT below interactive use
 command -v nice >/dev/null 2>&1 || NICE_CMD=""
-_usage() {
-  cat >&2 <<'USAGE'
-usage: ./validate.sh [--parallel N | --sequential | --print-mode]
-       ./validate.sh [--tier 1|2|3] [--subsystem <name>] [--auto [base[.. head]]] [--paths-file <file>]
-       ./validate.sh [--throttle|--quiet-cpu] [--burst]
 
-  concurrency   --parallel N | --max-parallel N   pin the worker count
-                --sequential                      one suite at a time (the qualifying form)
-                --throttle | --quiet-cpu          2 workers under nice — quiet-machine mode (GH-35)
-                --burst                           full-core width, cores-2 capped 8 — unattended speed
-  tiers (GH-35) --tier 1|2|3                      1 = docs gate · 2 = subsystem suites · 3 = full (default)
-                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems)
-                --auto [base[.. head]]            classify the git diff, run the minimal safe tier
-                --paths-file <file>               tier 2 from a path list — what pre-push hands over
-  environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
-                (an explicit flag always beats the environment; a width lever beats a throttle lever)
-  quarantine    --skip <suite>                      omit ONE registered suite (repeatable). Every skip
-                                                   is announced in the header AND the summary, and a
-                                                   run with any skip is NOT promotion evidence. An
-                                                   unregistered name is a usage error, so a typo can
-                                                   never silently skip nothing (GH-379).
-                XYZ_VALIDATE_SKIP=a.sh,b.sh        same, comma-separated, for CI
-  introspection --list                             print the registry this gate runs (test/<entry>
-                per line) and exit 0 — the shared manifest #141 Phase 1 points secondary
-                selectors (fuzz-loop.sh) at, so suite ownership has ONE source of truth
-USAGE
-}
 _err2() { echo "validate.sh: $*" >&2; _usage; exit 2; }
 SKIP_SUITES=()
 LIST_ONLY=0
@@ -1014,8 +1028,25 @@ if [ -n "$NICE_CMD" ]; then
   export NICE_CMD
   echo "validate.sh: suite workers run under $NICE_CMD — an interactive-session hint, not a CPU limit (GH-35)"
 fi
+# GH-732 environment faults BEGIN
+# Recompute for this PATH; inherited faults must not suppress healthy-tool assertions.
+XYZ_ENV_FAULTS=""
+if command -v php >/dev/null 2>&1; then
+  _php_error="$(php -v 2>&1 >/dev/null)"; _php_rc=$?
+  if [ "$_php_rc" -ne 0 ] && ! php -l /dev/null >/dev/null 2>&1; then
+    XYZ_ENV_FAULTS="php"
+    echo "ENVIRONMENT FAULT: php present but unusable (${_php_error%%$'\n'*}) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)"
+  fi
+fi
+if ! python3 -c "import yaml" >/dev/null 2>&1; then
+  XYZ_ENV_FAULTS="${XYZ_ENV_FAULTS:+$XYZ_ENV_FAULTS,}yaml"
+  echo "ENVIRONMENT FAULT: python3 ($(command -v python3)) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)"
+fi
+export XYZ_ENV_FAULTS
+# GH-732 environment faults END
+
 if [ "$PRINT_MODE_ONLY" -eq 1 ]; then
-  # Resolve the mode, print it, run nothing. Exists so the decision is observable without paying
+  # Resolve the mode and toolchain diagnostics, print them, run no suites. Exists so the decision is observable without paying
   # for a gate run — both for test/gh544-parallel-default.sh (which must never execute the real
   # suite) and for a pre-push hook that wants to tell the operator what it is about to do.
   if [ -n "$PARALLEL_JOBS" ]; then
@@ -1519,6 +1550,38 @@ rt_summary "${#PASSED[@]}" "${#FAILED[@]}" "$TOTAL" \
   "suite_events=$_suite_events" "run_set=${#RUN_TESTS[@]}" "registered=${#TESTS[@]}" \
   "suite_events_match=$([ "$_suite_lane_events" -eq "${#RUN_TESTS[@]}" ] && printf yes || printf no)"
 echo "telemetry: $RT_FILE ($_suite_events suite events, ${#TESTS[@]} registered)"
+# GH-732 timing summary BEGIN — controlled GH-365 JSONL fields, no new telemetry.
+# Only suite events: each retry also emits event=retry, which must not double its cost.
+if [ -n "${RT_FILE:-}" ] && [ -s "$RT_FILE" ]; then
+  awk '
+    function field(key, value) {
+      if (!match($0, "\"" key "\"[[:space:]]*:[[:space:]]*\"?[^,}\"]+")) return ""
+      value = substr($0, RSTART, RLENGTH)
+      sub(/^[^:]*:[[:space:]]*"?/, "", value)
+      return value
+    }
+    field("event") == "suite" {
+      lane = field("lane"); name = field("name")
+      ms = field("duration_ms"); rc = field("rc")
+      if (name == "" || ms !~ /^[0-9]+$/ || rc !~ /^[0-9]+$/) next
+      if (lane == "retry") {
+        retry_ms += ms
+        if (!retried[name]++) retry_count++
+      } else if (lane ~ /^(pool|driver-lock|sequential)$/ && !seen[name]++) {
+        print ms, name, rc
+      }
+    }
+    END { print -1, retry_count + 0, retry_ms + 0 }
+  ' "$RT_FILE" 2>/dev/null | LC_ALL=C sort -k1,1nr -k2,2 | awk '
+    BEGIN { print "10 slowest suites:"; print "  name  duration_s  rc" }
+    $1 == -1 { printf "re-run ladder: %d suite(s), %.3fs total\n", $2, $3 / 1000; next }
+    ++rows <= 10 { printf "  %s  %.3f  %s\n", $2, $1 / 1000, $3 }
+  ' || :
+fi
+# GH-732 timing summary END
+if [ -n "$XYZ_ENV_FAULTS" ]; then
+  echo "ENVIRONMENT FAULTS (GH-732): $XYZ_ENV_FAULTS — this run is NOT promotion evidence."
+fi
 if [ "${#SKIPPED_SUITES[@]}" -gt 0 ]; then
   echo "QUARANTINED (GH-379): ${#SKIPPED_SUITES[@]} suite(s) did NOT run — ${SKIPPED_SUITES[*]}"
   echo "  this run is NOT promotion evidence."

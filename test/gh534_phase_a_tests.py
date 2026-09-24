@@ -23,7 +23,7 @@ import unittest.mock as mock
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "skills" / "merge-cleanup" / "scripts"))
+sys.path.insert(0, str(REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts"))
 
 import scan_clones  # noqa: E402
 import merge_cleanup  # noqa: E402
@@ -272,7 +272,7 @@ class TestA2Provenance(_Fixture):
         self.assertIn("gh answered for", info["disposition_reason"])
 
     def test_cherry_is_not_consulted(self):
-        src = (REPO / "skills/merge-cleanup/scripts/scan_clones.py").read_text()
+        src = (REPO / "skills/2-daily/merge-cleanup/scripts/scan_clones.py").read_text()
         tree = ast.parse(src)
         for node in ast.walk(tree):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -417,7 +417,7 @@ class TestA4TickClaims(_Fixture):
 
     def test_ast_inspect_checkout_calls_inspect_tick_claims(self):
         """THE PIN: a call, not a mention in a string or comment."""
-        src = (REPO / "skills/merge-cleanup/scripts/scan_clones.py").read_text()
+        src = (REPO / "skills/2-daily/merge-cleanup/scripts/scan_clones.py").read_text()
         fn = next(n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.FunctionDef) and n.name == "inspect_checkout")
         calls = [n for n in ast.walk(fn) if isinstance(n, ast.Call) and getattr(n.func, "id", "") == "inspect_tick_claims"]
         self.assertTrue(calls, "inspect_checkout never calls inspect_tick_claims")

@@ -785,7 +785,7 @@ SAFE_ROOTS = [
     Path.home() / "agent-workspaces",
     Path.home() / "Documents" / "agent-workspaces",
     Path.home() / "marathon-clones",   # where /start-task, /jog and marathon flows put task clones
-]  # this list IS skills/merge-cleanup/scripts/scan_clones.py DEFAULT_SAFE_ROOTS (test-pinned, GH-534)
+]  # this list IS skills/2-daily/merge-cleanup/scripts/scan_clones.py DEFAULT_SAFE_ROOTS (test-pinned, GH-534)
 NEVER_DELETE = {Path.home(), Path.home() / "Documents", Path.home() / "Desktop", Path("/")}
 
 def _within(child: Path, parent: Path) -> bool:

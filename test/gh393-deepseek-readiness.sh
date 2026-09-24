@@ -26,7 +26,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd -P)"
-FH="$REPO/skills/relay-xyz/find-harness.sh"
+FH="$REPO/skills/1-hourly/relay-xyz/find-harness.sh"
 SHIM="$REPO/utils/py/deepseek-turn.py"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh393-ready.XXXXXX")"
 . "$HERE/lib/fixture-guard.sh"

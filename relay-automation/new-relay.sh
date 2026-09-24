@@ -103,8 +103,7 @@ ROUND: 1 / $ROUND_CAP
      including \`Declined — unproven generalization\` for a behaviour-change request that carries no
      \`Observed input:\` / \`Affected scope:\` / \`Falsifier:\`), make the change, then add new work.
 4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
-   A Reviewer block must use a countable heading — \`### Reviewer (<agent>)\`,
-   \`### Reviewer · Round N\`, or \`### Reviewer — Round N\` — followed by a non-empty body.
+   Reviewer headings may be \`### Reviewer · Round N\`, \`### Round N · Reviewer · <agent>\`, \`### Reviewer (<agent>)\` (optionally followed by \`— rN\`), or \`### Reviewer — Round N\` (optionally followed by \`(<agent>)\`); follow the heading with a non-empty review body.
 5. **Update the header:** flip \`NEXT\`; set \`STATUS\` (\`Approved\` closes — Reviewer only; else \`Open\`);
    the Producer bumps \`ROUND\` when opening a new cycle. If the max \`ROUND\` ends without \`Approved\`,
    set \`STATUS: Escalated\`.

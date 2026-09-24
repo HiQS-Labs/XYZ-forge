@@ -5,7 +5,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd -P)"
-FH="$REPO/skills/relay-xyz/find-harness.sh"
+FH="$REPO/skills/1-hourly/relay-xyz/find-harness.sh"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh292-worktree.XXXXXX")"
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
 fixture_guard_init "$WORK"   # GH-10: pin the sandbox root

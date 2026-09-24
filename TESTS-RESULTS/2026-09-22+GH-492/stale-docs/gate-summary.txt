@@ -1,0 +1,21 @@
+
+============================= 21 passed in 18.48s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Running gamma-poison fixture staleness probe
+===============================
+
+===============================
+Summary
+===============================
+telemetry: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh492-stale-docs/.tick/telemetry/validate-parallel-1790052003300-23151.jsonl (409 suite events, 407 registered)
+passed: 410 / 410
+  + projection-idempotent.sh
+  + concurrent-claim.sh
+  + path-overlap.sh
+  + chaos-stale-writer.sh

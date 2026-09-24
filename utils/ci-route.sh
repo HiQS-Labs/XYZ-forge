@@ -23,7 +23,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # a registry naming a suite that never runs is a green lie (the releases-skill lesson).
 SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent-chorus standup skills-army-hq"
 SUBSYSTEM_TESTS_hq="hq.sh hq-park.sh hq-park-synthesis.sh hq-dispatch.sh hq-next.sh hq-locator.sh hq-hardening.sh hq-promote.sh hq-marathon-scan.sh hq-rollup.sh hq-marathon-live.sh gh238-hq-releases-mode.sh gh239-hq-status-releases-mode.sh"
-SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh549-work-events.sh gh567-roadmap-dashboard-retired.sh gh568-releases-md-retired.sh"
+SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh549-work-events.sh gh567-roadmap-dashboard-retired.sh gh568-releases-md-retired.sh gh646-status-label.sh"
 SUBSYSTEM_TESTS_telemetry="xyz-completion.sh gh358-lock-instrumentation.sh archive-telemetry.sh gh496-telemetry-isolation.sh"
 SUBSYSTEM_TESTS_ate="ate-run-variations.sh gh298-ate-gen4-ci-smoke.sh gh-gen4-phase1-domain-oracles.sh gh-gen4-phase2-adaptive-ate.sh gh-gen4-phase3-fuzz-engine.sh gh-gen4-phase4-repro-synth.sh gh-gen4-phase5-campaign.sh gh478-runaway-guard.sh gh712-jev-triage.sh"
 SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
@@ -34,15 +34,15 @@ SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh gh620-skills-army-mini-sync.sh
 
 subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
   case "$1" in
-    utils/hq/*|skills/hq/*)                                                                printf '%s\n' hq ;;
-    utils/py/releases_app.py|skills/releases/*|utils/release-lanes.sh|releases.sql|releases.db|utils/releases-merge-resolve.sh|utils/leaderboard.sh|test/gh549-work-events.sh) printf '%s\n' releases ;;
+    utils/hq/*|skills/*/hq/*)                                                                printf '%s\n' hq ;;
+    utils/py/releases_app.py|utils/py/work_connectors/*|skills/*/releases/*|utils/release-lanes.sh|releases.sql|releases.db|utils/releases-merge-resolve.sh|utils/leaderboard.sh|test/gh549-work-events.sh|test/gh646-status-label.sh|test/gh646_status_label.py) printf '%s\n' releases ;;
     utils/telemetry/*|test/gh496-telemetry-isolation.sh)                                  printf '%s\n' telemetry ;;
     utils/ate/*|utils/fuzzing/*|utils/py/telemetry_schema.py|utils/py/domain_oracles.py|utils/py/adaptive_ate.py|utils/py/calibrate_tier1.py|utils/py/fuzz_engine.py|utils/py/repro_synth.py|utils/py/gen4_campaign.py|utils/py/proc_group.py|utils/py/ate_runaway_sweep.py) printf '%s\n' ate ;;
     utils/swe-diagram/*)                                                                   printf '%s\n' swe-diagram ;;
     utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh|utils/py/wave_reconcile.py) printf '%s\n' pdda ;;
-    skills/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
-    skills/standup/*)                                                                      printf '%s\n' standup ;;
-    skills/skills-army-hq/*|skills/push-to-skills-army-mini/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
+    skills/*/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
+    skills/*/standup/*)                                                                      printf '%s\n' standup ;;
+    skills/*/skills-army-hq/*|skills/*/push-to-skills-army-mini/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
   esac
 }
 
@@ -299,7 +299,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
 
   # These surfaces own the coordination kernel, containment boundary, frozen twins,
   # worktree safety, or CI gate itself. They require the full suite before merge.
-  # (GH-35 moved utils/pdda/** and skills/agent-chorus code off this list and into the
+  # (GH-35 moved utils/pdda/** and skills/*/agent-chorus code off this list and into the
   # subsystem registry, per the issue's Tier-2 mapping; their focused suites run instead.)
   case "$path" in
     validate.sh)
@@ -313,7 +313,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
     bin/tick|bin/validate-relay-block|src/*)
       full_required=true
       ;;
-    relay-automation/*|skills/relay-automation/*|skills/relay-xyz/*)
+    relay-automation/*|skills/*/relay-automation/*|skills/*/relay-xyz/*)
       full_required=true
       ;;
     utils/py/*)

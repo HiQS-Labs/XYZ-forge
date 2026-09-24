@@ -41,7 +41,7 @@ run "sess-skill" Bash "$DRIVE"
               || fail "post-skill relay-drive.sh should exit 0, got $RC"
 
 # 3. Running the skill's locator also counts as proof-of-load.
-run "sess-loc" Bash 'eval "$(bash skills/relay-xyz/find-harness.sh --env)"'
+run "sess-loc" Bash 'eval "$(bash skills/1-hourly/relay-xyz/find-harness.sh --env)"'
 [ "$RC" = 0 ] && pass "find-harness.sh event is allowed and records the session" \
               || fail "find-harness.sh should exit 0, got $RC"
 run "sess-loc" Bash "bash relay-automation/poll.sh --mode relay --agent claude-a"

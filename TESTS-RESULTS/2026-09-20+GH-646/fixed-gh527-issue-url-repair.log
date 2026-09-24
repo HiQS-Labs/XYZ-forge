@@ -1,0 +1,19 @@
+  ok   intake refuses an issue_url that names a different issue
+  ok   fixture baseline is consistent (bad data, valid chain) like GH-61 was
+  ok   a URL naming a different issue than gh_number is refused
+  ok   refusal names the invariant
+  ok   a non-issue URL is refused
+  ok   update with no field to change is still refused
+  ok   issue_url is corrected
+  ok   the repair wrote an op_receipt
+  ok   check is clean after a CLI repair (no dump-divergence, no receipt-chain break)
+  ok   reconcile-state no longer refuses the whole run over one bad row
+  ok   the healthy row is still reconciled
+  ok   the unresolvable row is named, not silently dropped
+  ok   the warning names the repair command
+  ok   mixed-row apply succeeds
+  ok   the skipped row's state was never guessed
+  ok   mixed-row apply moves the healthy row and records one receipt
+  ok   ledger remains consistent after mixed-row apply
+
+17 passed, 0 failed

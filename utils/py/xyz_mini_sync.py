@@ -27,21 +27,21 @@ import sys
 #   seed:    copied only when absent in mini; never replaced, never deleted
 # A directory entry ships every TRACKED file beneath it.
 MANIFEST = (
-    ("skills/relay", "skills/relay", "managed"),
-    ("skills/ponytail", "skills/ponytail", "managed"),
-    ("skills/honest", "skills/honest", "managed"),
-    ("skills/debug-mantra", "skills/debug-mantra", "managed"),
-    ("skills/unstuck", "skills/unstuck", "managed"),
+    ("skills/1-hourly/relay", "skills/relay", "managed"),
+    ("skills/1-hourly/ponytail", "skills/ponytail", "managed"),
+    ("skills/3-weekly/honest", "skills/honest", "managed"),
+    ("skills/1-hourly/debug-mantra", "skills/debug-mantra", "managed"),
+    ("skills/1-hourly/unstuck", "skills/unstuck", "managed"),
     # agent-chorus runtime only (its standalone publish pipeline stays behind)
-    ("skills/agent-chorus/SKILL.md", "skills/agent-chorus/SKILL.md", "managed"),
-    ("skills/agent-chorus/README.md", "skills/agent-chorus/README.md", "managed"),
-    ("skills/agent-chorus/TELEMETRY.md", "skills/agent-chorus/TELEMETRY.md", "managed"),
-    ("skills/agent-chorus/EXPERIMENTS.md", "skills/agent-chorus/EXPERIMENTS.md", "managed"),
-    ("skills/agent-chorus/install.sh", "skills/agent-chorus/install.sh", "managed"),
-    ("skills/agent-chorus/agents", "skills/agent-chorus/agents", "managed"),
-    ("skills/agent-chorus/scripts", "skills/agent-chorus/scripts", "managed"),
+    ("skills/2-daily/agent-chorus/SKILL.md", "skills/agent-chorus/SKILL.md", "managed"),
+    ("skills/2-daily/agent-chorus/README.md", "skills/agent-chorus/README.md", "managed"),
+    ("skills/2-daily/agent-chorus/TELEMETRY.md", "skills/agent-chorus/TELEMETRY.md", "managed"),
+    ("skills/2-daily/agent-chorus/EXPERIMENTS.md", "skills/agent-chorus/EXPERIMENTS.md", "managed"),
+    ("skills/2-daily/agent-chorus/install.sh", "skills/agent-chorus/install.sh", "managed"),
+    ("skills/2-daily/agent-chorus/agents", "skills/agent-chorus/agents", "managed"),
+    ("skills/2-daily/agent-chorus/scripts", "skills/agent-chorus/scripts", "managed"),
     # consult: skill + shim + full bash lib + its closed Python import set (layout preserved)
-    ("skills/consult", "skills/consult", "managed"),
+    ("skills/1-hourly/consult", "skills/consult", "managed"),
     ("relay-automation/consult.sh", "relay-automation/consult.sh", "managed"),
     ("relay-automation/relay-turn-lib.sh", "relay-automation/relay-turn-lib.sh", "managed"),
     ("utils/py/consult.py", "utils/py/consult.py", "managed"),
@@ -59,7 +59,7 @@ MANIFEST = (
 )
 SKILLS_ARMY_MANIFEST = (
     # This child repository is the package: project the canonical folder onto its root.
-    ("skills/skills-army-hq", "", "managed"),
+    ("skills/3-weekly/skills-army-hq", "", "managed"),
     ("mini/skills-army-gitignore", ".gitignore", "managed"),
     ("LICENSE", "LICENSE", "managed"),
     ("LICENSE-COMMERCIAL.md", "LICENSE-COMMERCIAL.md", "managed"),

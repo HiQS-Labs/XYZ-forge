@@ -383,7 +383,7 @@ fi
 # ------------------------------------------------------------------------------------------------
 # 2.7 — the advisory discovery flags exist (they close a lookup gap; nothing dispatches on them)
 # ------------------------------------------------------------------------------------------------
-FH="$ROOT/skills/relay-xyz/find-harness.sh"
+FH="$ROOT/skills/1-hourly/relay-xyz/find-harness.sh"
 for flag in RELAY_HAS_COMMANDCODE RELAY_HAS_DEEPSEEK; do
   if grep -q "$flag" "$FH"; then
     pass "2.7 find-harness.sh reports $flag"
@@ -398,7 +398,7 @@ else
 fi
 
 # 2.8 — the worker table must document deepseek, the gateway this issue's own list forgot
-if grep -qi "deepseek" "$ROOT/skills/relay-xyz/SKILL.md"; then
+if grep -qi "deepseek" "$ROOT/skills/1-hourly/relay-xyz/SKILL.md"; then
   pass "2.8 relay-xyz SKILL.md documents the deepseek worker"
 else
   fail "2.8 relay-xyz SKILL.md still omits deepseek — the original discovery gap"

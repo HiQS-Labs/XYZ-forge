@@ -1,0 +1,161 @@
+GH-549 work-state event stream:
+1. migration 008
+  ok  - schema_migrations carries version 8
+  ok  - work_events, connector_cursors and both triggers exist
+  ok  - trigger work_events_no_update present
+  ok  - trigger work_events_no_delete present
+2. work_events is append-only (witnessed refusals)
+  ok  - UPDATE refused: work_events is append-only
+  ok  - DELETE refused: work_events is append-only
+5. real verbs emit the right events
+  ok  - roadmap add/rate/update emitted parked,rated,in_flight
+  ok  - check is clean after three emitting writes
+6. dump placement (the load-bearing decision), with rows present
+  ok  - work_events is in the canonical dump but NOT in the business-digest view
+  ok  - connector_cursors is in neither — device-local by design
+7. the extractor registry is total
+  ok  - every derived op is mapped or allowlisted (ops=28 unclassified=none)
+  ok  - an unclassified op raises, so a new verb cannot silently drop a state
+8. rebuild round-trips work_events
+  ok  - check --rebuild preserved all 297 work_events rows
+9. RED CONTROL A — work_events above the include_receipts guard breaks the chain
+  ok  - mutated placement makes check report receipt-chain (the red fires)
+10. RED CONTROL B — connector_cursors in the dump breaks the dump comparison
+  ok  -   baseline: mutated build is clean before any cursor exists
+  ok  - cursor in the dump + post-transaction advance => dump-divergence (the red fires)
+  ok  - SHIPPED code is clean under the identical cursor advance (the fix holds)
+11. shared nested-block config resolution (device_config.resolve_device_block)
+  ok  - an absent config is a silent no-op returning the defaults
+  ok  - a malformed config reports an error instead of looking absent
+  ok  - an empty config file counts as absent, not malformed
+  ok  - the file tier resolves, and a bare string where a list belongs is coerced
+  ok  - the env tier outranks the file and coerces to the default's type
+  ok  - board_sync config still resolves through the shared block resolver
+12. connector dispatch: concurrent, bounded, isolated
+  ok  - two connectors, one failing: the good one advanced, the bad one did not, its error was recorded
+  ok  - two 5s connectors finished in 5.03s — launched concurrently, not serially
+  ok  - two hung connectors cost ONE 2.01s window, not one timeout each
+  ok  - a connector killed at the deadline does not advance its cursor
+13. dispatch never changes a host verb's exit code
+  ok  - a ledger verb exits 0 even with a connector configured that cannot succeed
+  ok  - and the ledger row is committed regardless
+  ok  - and check is clean after a dispatching write
+14. work emit — one row, real txn_id, its own receipt
+  ok  - one work emit creates EXACTLY one row (not zero, not two)
+  ok  - the row carries the real transaction id minted inside perform_write
+  ok  - and it went through perform_write — its own receipt is on the chain
+  ok  - check is clean after work emit
+15. work reconcile — replay, idempotence, reset
+  ok  - unconfigured reconcile is a no-op that says so
+  ok  - reconcile replays the events after the cursor
+  ok  - a second run is idempotent — the cursor is current
+  ok  - --reset replays from the beginning (the rebuild recovery path)
+  ok  - red control: an overshot cursor skips real events — which is why replay is cursor-driven, not scan-driven
+15b. a connector cannot advance its own cursor out of the batch it was handed (impl QA r1)
+  ok  - an overshooting connector is REFUSED, with the reason named
+  ok  - and its cursor did NOT move — the batch stays replayable
+  ok  - the refusal is recorded on the cursor row, not just printed
+  ok  - a backwards report is refused too, so acknowledged events are not replayed
+15c. red control — the bounds guard is load-bearing
+  ok  - red control: without the guard the overshoot IS stored (304 > 299) — the guard is what stops it
+16. the merge emitter keys on the issue, never the PR
+  ok  - a merged PR's closed issues are what get the event
+  ok  - a PR that closes nothing emits nothing — no card for a non-work-item
+  ok  - a dry run emits nothing
+  ok  - merge-cleanup waits for hosted reconciliation before emission, then commits and pushes the event
+17. the VENDORED github_board connector, through normal config, offline (impl QA r2)
+  ok  - the vendored connector runs from normal config with no registry overlay
+  ok  - and it MOVED THE CARD to the configured column (was 'absent', now 'Done')
+  ok  - and its cursor advanced past the seeded tail to this leg's own event (297 -> 298)
+mapping-ok
+  ok  - the event -> column mapping is user config: an override wins and an empty value disables it
+18. XYZ_WORK_CONNECTORS=0 is a GLOBAL kill switch, not just a hot-path one (impl QA r2)
+  ok  - with the switch off, work reconcile spawned NO connector child
+  ok  - and no cursor was written
+  ok  - and it says why, rather than looking like an empty config
+  ok  - red control: without the switch the SAME command does run the child — the switch is what stopped it
+19. two overlapping dispatches are serialized, and a cursor never goes backwards (impl QA r3)
+  ok  - two concurrent dispatches ran exactly ONE child — the second saw the advanced cursor
+  ok  - and the cursor finished at the NEWEST event (299), not an older batch's
+  ok  - red control: without the lock BOTH dispatches ran the same batch (2 children) — the lock is what stops it
+monotonic-ok
+  ok  - a late older persist cannot lower the cursor (9 stays 9)
+20. the connector lock fails CLOSED, and --reset is inside it (impl QA r4)
+work_connectors: cannot open the connector lock (NotADirectoryError(20, 'Not a directory')) — deferring this batch
+work_connectors: another dispatch holds the connector lock — leaving this batch for the next run
+fail-closed-ok
+  ok  - a lock that cannot be opened DEFERS the batch instead of dispatching unserialized
+  ok  - and no connector child ran at all under the unopenable lock
+  ok  - and no cursor moved, so the batch stays replayable
+  ok  - --reset still replays from zero with the delete inside the lock
+21. work backfill — projects existing ledger state, idempotent, through the one seam (GH-564)
+  ok  - fixture rows built through the verbs, one per mapping cell
+  ok  - 21a dry-run: zero events and zero receipts written
+  ok  - 21a dry-run prints the plan and says 0 written
+  ok  - 21a red: without the dry-run return, --dry-run DOES write (306 -> 542)
+  ok  - 21b Completed/🆕 -> completed (section wins; NOT pr_merged)
+  ok  - 21b 🚧 -> in_flight
+  ok  - 21b rated 🆕 -> rated
+  ok  - 21b unrated 🆕 -> parked
+  ok  - 21g Deferred + 🚧 -> skipped (Deferred is checked first)
+  ok  - 21b backfill never emits pr_merged
+  ok  - 21g red: with the order swapped, Deferred/🚧 DOES emit in_flight — the order is load-bearing
+  ok  - 21c a second backfill emits zero (backfill: 0 emitted, 238 skipped, 0 failed)
+  ok  - 21c red: without the transactional guard a second backfill DUPLICATES (542 -> 778)
+  ok  - 21d every backfill event (236) has its own work-emit receipt, joined on txn_id (0 orphans)
+  ok  - 21d releases check is clean after backfill
+  ok  - 21e two concurrent backfills produced exactly one event per row (236 = 236), not two
+  ok  - 21e red: with the read moved outside the transaction, the race DUPLICATES (472 > 236)
+22. review_ready from open non-draft PRs, inside reconcile, fail-soft (GH-564)
+  ok  - 22a an open non-draft PR closing #405 emitted review_ready
+  ok  - 22a and the card reached the configured review_ready column
+  ok  - 22b a DRAFT PR emitted nothing
+  ok  - 22b a PR closing nothing emitted nothing
+  ok  - 22g the scan passed --repo from the connector's identity, not the CWD
+  ok  - 22g ...and still does from a directory with no git checkout
+  ok  - 22c a second reconcile emits no second review_ready
+  ok  - 21f fixture: backfill then reconcile gives ...,review_ready (parked,parked,review_ready)
+  ok  - 21f backfill after a review_ready does NOT re-emit — it compares against its OWN last projection
+  ok  - 21f reconcile after a backfill does NOT re-emit review_ready — it ignores backfill rows
+  ok  - 21f an open PR against a COMPLETED issue does not pull it back to review_ready
+  ok  - 21f red(i): with the global latest, backfill DOES re-emit after review_ready (1 -> 2) — the ping-pong
+  ok  - 21f red(iii): with backfill rows visible, reconcile DOES re-emit review_ready (1 -> 2)
+  ok  - 21f red(ii): without completed in the suppression set the card IS pulled back
+  ok  - 22a red: with the event name swapped, 405 does NOT get review_ready
+  ok  - 22b red: without the isDraft filter, the draft PR DOES emit (for its own number, since linked_issues is bypassed in the same copy)
+  ok  - 22b red: with linked_issues bypassed, the closes-nothing PR DOES emit for its own number
+  ok  - 22d with gh pr list failing, reconcile exits 0
+  ok  - 22d ...and says why
+  ok  - 22d ...and still replayed
+  ok  - 22f one emission raising: reconcile still exits 0
+  ok  - 22f ...the OTHER issue's event still landed
+  ok  - 22f ...and the failure was named
+  ok  - 22f ...and dispatch still ran (cursor 297 -> 298)
+  ok  - 22f red: without the per-emission except, the verb FAILS (rc=1)
+  ok  - 22e XYZ_WORK_CONNECTORS=0: the scan made no gh call
+  ok  - 22e red: without the switch the SAME command calls gh
+23. completed is a mapped column, user-overridable (GH-564)
+ok
+  ok  - 23 completed -> Done by default; a user's empty override disables it
+  ok  - 23 red: with the key deleted, completed is unmapped — the entry is load-bearing
+24. the producer-scoped lookup has no row cap (impl QA r1), and every backfill event has ITS OWN receipt
+views-ok
+  ok  - 24 backfill's own latest is still found under 60 newer rows from another producer
+  ok  - 24 ...so a backfill after 60 unrelated events still emits nothing
+  ok  - 24 red: with LIMIT 50 restored, the own-row is hidden and backfill DUPLICATES (1 -> 2)
+  ok  - 24 every one of the 2 new backfill events has its OWN work-emit receipt (join on txn_id)
+  ok  - 24 red: a copy that bypasses perform_write leaves 237 receipt-less event(s) — the join catches it
+25. a non-object payload on an older row cannot break the producer views (impl QA r2)
+views-ok
+  ok  - 25 both producer views survive list/null/string payloads above the backfill row
+  ok  - 25 backfill exits 0 and skips 9930 (still its own latest) with non-object rows present
+  ok  - 25 red: with the raw .get restored, backfill DIES with AttributeError (rc=1)
+26. a writer REFUSAL for one issue cannot take reconcile down before dispatch (impl QA r3)
+  ok  - 26 with one emission REFUSING (SystemExit), reconcile still exits 0
+  ok  - 26 ...the other issue's event landed
+  ok  - 26 ...and the refusal was named
+  ok  - 26 ...and dispatch still ran (cursor 297 -> 298)
+  ok  - 26 red: re-raising SystemExit takes the verb down (rc=3) with NO dispatch — the catch is load-bearing
+  ok  - 26 on a ledger without work_events the scan returns (0,0,0) instead of exiting
+
+GH-549 work-state event stream: 124 passed, 0 failed

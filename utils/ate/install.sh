@@ -4,7 +4,9 @@ set -euo pipefail
 SKILL_NAME="ate"
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SRC_DIR}/../.." && pwd)"
-SKILL_SOURCE="${REPO_ROOT}/skills/${SKILL_NAME}/SKILL.md"
+SKILL_SOURCE=""
+for _f in "${REPO_ROOT}"/skills/*/"${SKILL_NAME}"/SKILL.md; do [ -f "$_f" ] && SKILL_SOURCE="$_f"; done   # skills/<tier>/<name> (GH-744)
+[ -f "${SKILL_SOURCE}" ] || { echo "ate/install.sh: no skills/*/${SKILL_NAME}/SKILL.md under ${REPO_ROOT}" >&2; exit 1; }
 DEST_DIR="${HOME}/.claude/skills/${SKILL_NAME}"
 
 mkdir -p "${HOME}/.claude/skills"

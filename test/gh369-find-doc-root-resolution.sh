@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# test/gh369-find-doc-root-resolution.sh — skills/10days/find-doc.sh root resolution + arg parsing.
+# test/gh369-find-doc-root-resolution.sh — skills/3-weekly/10days/find-doc.sh root resolution + arg parsing.
 #
 # Two issues converge here:
 #
@@ -21,7 +21,7 @@ set -uo pipefail
 # strict-mode: -e exempt — assertion harness; each case checks its own rc explicitly.
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SUT="$ROOT/skills/10days/find-doc.sh"
+SUT="$ROOT/skills/3-weekly/10days/find-doc.sh"
 PASS=0
 FAIL=0
 

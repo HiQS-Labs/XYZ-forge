@@ -1,0 +1,7 @@
+{"timestamp": "2026-09-22T17:24:11.241216+00:00", "sha": "862bee6eb9226c63b2ee7a601d4d329d02655148", "command": "bash test/path-integrity.sh with recon cross-folder link reverted", "exit_code": 1, "expected_failure": true, "restored_before_validation": true}
+{"sha": "862bee6eb9226c63b2ee7a601d4d329d02655148", "command": "bash test/path-integrity.sh", "exit_code": 0}
+{"sha": "862bee6eb9226c63b2ee7a601d4d329d02655148", "command": "bash test/gh660-skill-drift.sh", "exit_code": 0}
+{"sha": "862bee6eb9226c63b2ee7a601d4d329d02655148", "command": "bash test/relay-pkg-freshness.sh", "exit_code": 0}
+{"sha": "862bee6eb9226c63b2ee7a601d4d329d02655148", "command": "PATH=\"$HOME/.cache/xyz-forge-test-venv/bin:$PATH\" env -u XYZ_WORK_CONNECTORS_REGISTRY ./validate.sh", "exit_code": 0, "passed": 411, "total": 411, "clone_identity_unchanged": true, "mode": "parallel, 4 workers", "promotion_evidence": false, "earlier_system_python_attempt": "stopped because yaml unavailable; not counted"}
+{"sha": "862bee6eb9226c63b2ee7a601d4d329d02655148", "command": "bash utils/pdda/pdda.sh changelog", "exit_code": 0}
+{"artifact": "validation.log", "sha256": "9bcb5855b291fb0be108be99eaf3fb86c2cce27aa0a3c8e1761769d7131fb062"}

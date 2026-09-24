@@ -4,10 +4,10 @@ set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
-CLI="$REPO/skills/agent-chorus/scripts/agent_chorus.py"
-BRIDGE="$REPO/skills/agent-chorus/scripts/agent_chorus_bridge.py"
-CLIENT="$REPO/skills/agent-chorus/scripts/agent_chorus_client.py"
-SKILL="$REPO/skills/agent-chorus/SKILL.md"
+CLI="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus.py"
+BRIDGE="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus_bridge.py"
+CLIENT="$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus_client.py"
+SKILL="$REPO/skills/2-daily/agent-chorus/SKILL.md"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent-chorus-bridge-test.XXXXXX")" || {
   echo "FAIL: mktemp -d failed" >&2
@@ -37,17 +37,64 @@ FAIL=0
 pass() { printf '  PASS: %s\n' "$1"; PASS=$((PASS + 1)); }
 fail() { printf '  FAIL: %s\n' "$1"; FAIL=$((FAIL + 1)); }
 
+dump_diag() {
+  _label="$1"; _text="$2"
+  printf '    GH-760 diag [%s]: %s\n' "$_label" "$_text" >&2
+  if [ -n "${BRIDGE_DIAG_LOG:-}" ] && [ -f "$BRIDGE_DIAG_LOG" ]; then
+    printf '    GH-760 bridge log (%s, last 50 lines):\n' "$BRIDGE_DIAG_LOG" >&2
+    tail -n 50 "$BRIDGE_DIAG_LOG" >&2 || true
+  fi
+}
+
 expect_contains() {
   _label="$1"; _text="$2"; _needle="$3"
-  case "$_text" in *"$_needle"*) pass "$_label" ;; *) fail "$_label (missing: $_needle)" ;; esac
+  case "$_text" in
+    *"$_needle"*) pass "$_label" ;;
+    *) fail "$_label (missing: $_needle)"; dump_diag "$_label" "$_text" ;;
+  esac
 }
 
 expect_not_contains() {
   _label="$1"; _text="$2"; _needle="$3"
-  case "$_text" in *"$_needle"*) fail "$_label (unexpected: $_needle)" ;; *) pass "$_label" ;; esac
+  case "$_text" in
+    *"$_needle"*) fail "$_label (unexpected: $_needle)"; dump_diag "$_label" "$_text" ;;
+    *) pass "$_label" ;;
+  esac
+}
+
+# GH-760: poll GET / until the server actually answers. Run 35767844928 already passed
+# GET / before the send missed "turn": 2, so this poll is readiness hardening, not the
+# cause of that flake. dump_diag on a failed assertion is what names the next miss.
+# Returns 0/1 and does not call fail() — callers score the result so a closed-port
+# red control can PASS when this helper correctly refuses.
+wait_bridge_ready() {
+  # wait_bridge_ready <url> <log> [timeout_s] [expect_code]
+  _url="$1"
+  _log="$2"
+  _timeout_s="${3:-8}"
+  _expect_code="${4:-200}"
+  _started="${SECONDS}"
+  WAIT_BRIDGE_LAST_CODE="000"
+  WAIT_BRIDGE_LAST_LOG=""
+  while [ $((SECONDS - _started)) -lt "$_timeout_s" ]; do
+    WAIT_BRIDGE_LAST_CODE="$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 0.3 --max-time 0.5 "$_url/" 2>/dev/null || true)"
+    [ "$WAIT_BRIDGE_LAST_CODE" = "$_expect_code" ] && return 0
+    sleep 0.1
+  done
+  [ -n "$_log" ] && [ -f "$_log" ] && WAIT_BRIDGE_LAST_LOG="$(cat "$_log")"
+  return 1
 }
 
 echo "agent-chorus-bridge (GH-384):"
+
+# GH-760 red control: the helper must fail when nothing is listening. If it treats a
+# refused connection as ready, this goes red.
+if wait_bridge_ready "http://127.0.0.1:1" /dev/null 1 200; then
+  fail "GH-760: wait_bridge_ready treated a closed port as ready"
+else
+  pass "GH-760: wait_bridge_ready fails closed when nothing is listening"
+fi
+
 ROOT="$WORK/repo_root"
 mkdir -p "$ROOT"
 STORE="$WORK/Agent2Agent-Transcripts"
@@ -97,15 +144,18 @@ PORT="$(cat "$PORT_FILE")"
 
 python3 "$BRIDGE" --host 127.0.0.1 --port "$PORT" --root "$ROOT" --store "$STORE" >"$LOG_FILE" 2>&1 &
 BRIDGE_PID=$!
-sleep 1.0
-
+BASE_URL="http://127.0.0.1:$PORT"
+BRIDGE_DIAG_LOG="$LOG_FILE"
 if ! kill -0 "$BRIDGE_PID" 2>/dev/null; then
-  fail "bridge failed to start: $(cat "$LOG_FILE")"
+  fail "bridge process exited before listen: $(cat "$LOG_FILE")"
   exit 1
 fi
-pass "bridge server started on 127.0.0.1:$PORT"
-
-BASE_URL="http://127.0.0.1:$PORT"
+if wait_bridge_ready "$BASE_URL" "$LOG_FILE" 8 200; then
+  pass "bridge server started on 127.0.0.1:$PORT"
+else
+  fail "bridge not ready on 127.0.0.1:$PORT within 8s (last HTTP ${WAIT_BRIDGE_LAST_CODE:-none}): ${WAIT_BRIDGE_LAST_LOG}"
+  exit 1
+fi
 
 # 3. GET / health check
 health_res="$(curl -s -w "\n%{http_code}" "$BASE_URL/")"
@@ -284,9 +334,14 @@ CF_TOKEN="test-cf-client-secret-999"
 python3 "$BRIDGE" --host 127.0.0.1 --port "$CF_PORT" --root "$ROOT" --store "$STORE" \
   --cf-client-id "$CF_ID" --cf-client-secret "$CF_TOKEN" >"$LOG_FILE.cf" 2>&1 &
 BRIDGE_PID=$!
-sleep 1.0
-
 CF_BASE_URL="http://127.0.0.1:$CF_PORT"
+BRIDGE_DIAG_LOG="$LOG_FILE.cf"
+if wait_bridge_ready "$CF_BASE_URL" "$LOG_FILE.cf" 8 401; then
+  pass "CF-auth bridge started on 127.0.0.1:$CF_PORT"
+else
+  fail "CF-auth bridge not ready on 127.0.0.1:$CF_PORT within 8s (last HTTP ${WAIT_BRIDGE_LAST_CODE:-none}): ${WAIT_BRIDGE_LAST_LOG}"
+  exit 1
+fi
 
 # Request without CF headers -> HTTP 401
 cf_no_headers="$(curl -s -w "\n%{http_code}" "$CF_BASE_URL/sessions/777001/status")"
@@ -314,9 +369,14 @@ IDLE_PORT="$((PORT + 2))"
 python3 "$BRIDGE" --host 127.0.0.1 --port "$IDLE_PORT" --root "$ROOT" --store "$STORE" \
   --idle-timeout 2.0 >"$LOG_FILE.idle" 2>&1 &
 BRIDGE_PID=$!
-sleep 1.0
-
 IDLE_BASE="http://127.0.0.1:$IDLE_PORT"
+BRIDGE_DIAG_LOG="$LOG_FILE.idle"
+if wait_bridge_ready "$IDLE_BASE" "$LOG_FILE.idle" 8 200; then
+  pass "idle-lease bridge started on 127.0.0.1:$IDLE_PORT"
+else
+  fail "idle-lease bridge not ready on 127.0.0.1:$IDLE_PORT within 8s (last HTTP ${WAIT_BRIDGE_LAST_CODE:-none}): ${WAIT_BRIDGE_LAST_LOG}"
+  exit 1
+fi
 
 # Create discussion on short-idle bridge
 python3 -c '
@@ -363,7 +423,13 @@ wait "$BRIDGE_PID" 2>/dev/null || true
 RESTART_PORT="$((PORT + 3))"
 python3 "$BRIDGE" --host 127.0.0.1 --port "$RESTART_PORT" --root "$ROOT" --store "$STORE" >"$LOG_FILE.restart" 2>&1 &
 BRIDGE_PID=$!
-sleep 1.0
+BRIDGE_DIAG_LOG="$LOG_FILE.restart"
+if wait_bridge_ready "http://127.0.0.1:$RESTART_PORT" "$LOG_FILE.restart" 8 200; then
+  pass "restarted bridge listening on 127.0.0.1:$RESTART_PORT"
+else
+  fail "restarted bridge not ready on 127.0.0.1:$RESTART_PORT within 8s (last HTTP ${WAIT_BRIDGE_LAST_CODE:-none}): ${WAIT_BRIDGE_LAST_LOG}"
+  exit 1
+fi
 
 restart_status="$(curl -s "http://127.0.0.1:$RESTART_PORT/sessions/777001/status")"
 expect_contains "restarted bridge recovers status of closed discussion 777001" "$restart_status" '"status": "Closed"'

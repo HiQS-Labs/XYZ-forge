@@ -33,8 +33,12 @@ def _digest(path: Path) -> str:
 
 def scan(canonical: Path, collection: Path) -> dict:
     result = {"drifted": [], "ok": [], "unrecognized": []}
-    for skill_md in sorted(canonical.glob("*/SKILL.md")):
+    # GH-744: the forge keeps skills two levels down (skills/<tier>/<name>); a mini collection keeps
+    # them one level down. Both are canonical layouts, so scan both depths.
+    canonical_names = set()
+    for skill_md in sorted(list(canonical.glob("*/SKILL.md")) + list(canonical.glob("*/*/SKILL.md"))):
         name = skill_md.parent.name
+        canonical_names.add(name)
         vendored = collection / name / "SKILL.md"
         if not vendored.is_file():
             continue  # canonical skill the collection doesn't vendor: not its defect
@@ -49,7 +53,7 @@ def scan(canonical: Path, collection: Path) -> dict:
             result["ok"].append(entry)
     for vendored_md in sorted(collection.glob("*/SKILL.md")):
         name = vendored_md.parent.name
-        if not (canonical / name / "SKILL.md").is_file():
+        if name not in canonical_names:
             result["unrecognized"].append({"skill": name,
                                            "vendored_path": str(vendored_md)})
     return result

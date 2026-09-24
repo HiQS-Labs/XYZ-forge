@@ -4,7 +4,7 @@ source "$(dirname "$0")/_setup.sh" gh132-review-xyz-skill
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 REVIEW_PY="$REPO/utils/py/review_xyz.py"
-SKILL_DIR="$REPO/skills/review-xyz"
+SKILL_DIR="$REPO/skills/2-daily/review-xyz"
 
 echo "== test: gh132-review-xyz-skill =="
 

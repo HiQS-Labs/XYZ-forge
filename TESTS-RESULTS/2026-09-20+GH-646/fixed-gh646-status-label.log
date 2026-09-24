@@ -1,0 +1,67 @@
+test_active_appearance_changes_preserve_original_start (__main__.StatusLabelTests.test_active_appearance_changes_preserve_original_start) ... ok
+test_admission_rejects_combined_fields_and_closed_native (__main__.StatusLabelTests.test_admission_rejects_combined_fields_and_closed_native) ... refused: rule=accepted-start-fields: --accepted-start requires only --gid (and optional --dry-run)
+refused: rule=accepted-start-native: accepted start requires an open native issue
+ok
+test_ambiguous_owned_rows_refuse (__main__.StatusLabelTests.test_ambiguous_owned_rows_refuse) ... ok
+test_backfill_safe_skip_partial_and_over500_replay (__main__.StatusLabelTests.test_backfill_safe_skip_partial_and_over500_replay) ... ok
+test_board_payload_unchanged_repair_only_no_child (__main__.StatusLabelTests.test_board_payload_unchanged_repair_only_no_child) ... ok
+test_cancelled_and_explicit_inactive_open_removal (__main__.StatusLabelTests.test_cancelled_and_explicit_inactive_open_removal) ... ok
+test_close_during_definition_and_after_add_retains_conflict (__main__.StatusLabelTests.test_close_during_definition_and_after_add_retains_conflict) ... ok
+test_concurrent_duplicate_admission_rechecked_inside_lock (__main__.StatusLabelTests.test_concurrent_duplicate_admission_rechecked_inside_lock) ... ok
+test_corrupt_label_and_future_authority_refuse (__main__.StatusLabelTests.test_corrupt_label_and_future_authority_refuse) ... ok
+test_direct_close_refuses_mismatched_native_identity (__main__.StatusLabelTests.test_direct_close_refuses_mismatched_native_identity) ... refused: rule=roadmap-issue-state: https://github.com/owner/project/issues/646 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+refused: rule=roadmap-issue-state: https://github.com/owner/project/issues/646 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+refused: rule=roadmap-issue-state: https://github.com/owner/project/issues/646 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+ok
+test_direct_close_with_caught_up_cursor_and_cancellation (__main__.StatusLabelTests.test_direct_close_with_caught_up_cursor_and_cancellation) ... ok
+test_disallowed_repo_and_native_closed_do_not_add (__main__.StatusLabelTests.test_disallowed_repo_and_native_closed_do_not_add) ... ok
+test_duplicate_metadata_and_restart_authority (__main__.StatusLabelTests.test_duplicate_metadata_and_restart_authority) ... ok
+test_express_admission_dry_refusal_has_no_filesystem_writes (__main__.StatusLabelTests.test_express_admission_dry_refusal_has_no_filesystem_writes) ... express-refused: rule=roadmap-identity — no exact owned issue row; run express ledger first
+express-refused: rule=roadmap-identity — no exact owned issue row; run express ledger first
+ok
+test_express_dry_run_no_admission_write_and_foreign_row_refused (__main__.StatusLabelTests.test_express_dry_run_no_admission_write_and_foreign_row_refused) ... ok
+test_express_land_and_run_reject_second_owned_foreign_repository (__main__.StatusLabelTests.test_express_land_and_run_reject_second_owned_foreign_repository) ... express-refused: rule=roadmap-identity — requested repository differs from the landing root repository
+express-refused: rule=roadmap-identity — requested repository differs from the landing root repository
+ok
+test_express_manifest_state_uses_exact_issue_url_in_both_orders (__main__.StatusLabelTests.test_express_manifest_state_uses_exact_issue_url_in_both_orders) ... ok
+test_express_missing_ledger_identity_preview_never_creates_database (__main__.StatusLabelTests.test_express_missing_ledger_identity_preview_never_creates_database) ... express-refused: rule=roadmap-identity — existing ledger unavailable: unable to open database file
+express-refused: rule=roadmap-identity — existing ledger unavailable: unable to open database file
+ok
+test_express_refuses_before_activation_and_requalifies_before_snapshot (__main__.StatusLabelTests.test_express_refuses_before_activation_and_requalifies_before_snapshot) ... ok
+test_express_registration_and_resume_do_not_start (__main__.StatusLabelTests.test_express_registration_and_resume_do_not_start) ... ok
+test_express_resume_committed_receipt_cannot_authorize_foreign_repo (__main__.StatusLabelTests.test_express_resume_committed_receipt_cannot_authorize_foreign_repo) ... express-refused: rule=resume-identity — requested repository differs from the landing root repository
+express-refused: rule=resume-identity — requested repository differs from the landing root repository
+ok
+test_failed_removal_reopen_replay_and_cursor_retention (__main__.StatusLabelTests.test_failed_removal_reopen_replay_and_cursor_retention) ... ok
+test_foreign_url_closure_preserves_owned_start_and_sweeps_valid_row (__main__.StatusLabelTests.test_foreign_url_closure_preserves_owned_start_and_sweeps_valid_row) ... ok
+test_label_readback_mismatch_and_definition_permission_refuse (__main__.StatusLabelTests.test_label_readback_mismatch_and_definition_permission_refuse) ... ok
+test_migration_metadata_never_establishes_label (__main__.StatusLabelTests.test_migration_metadata_never_establishes_label) ... ok
+test_native_rest_validation (__main__.StatusLabelTests.test_native_rest_validation) ... ok
+test_opt_out_no_network (__main__.StatusLabelTests.test_opt_out_no_network) ... work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+ok
+test_ordinary_active_appearance_never_establishes_label (__main__.StatusLabelTests.test_ordinary_active_appearance_never_establishes_label) ... ok
+test_owned_identity_and_pr_refusal (__main__.StatusLabelTests.test_owned_identity_and_pr_refusal) ... refused: rule=accepted-start-identity: roadmap row does not have qualified owned issue identity
+refused: rule=accepted-start-native: native issue identity/state unavailable or pull request
+ok
+test_owned_opted_out_repo_before_included_start_progresses (__main__.StatusLabelTests.test_owned_opted_out_repo_before_included_start_progresses) ... ok
+test_repair_rejects_active_foreign_and_open_conflict (__main__.StatusLabelTests.test_repair_rejects_active_foreign_and_open_conflict) ... refused: rule=label-repair-active: repair requires a NULL terminal row
+refused: rule=label-repair-identity: unqualified owned issue identity
+ok
+test_roundtrip_new_old_and_corrupt_field (__main__.StatusLabelTests.test_roundtrip_new_old_and_corrupt_field) ... ok
+test_same_number_foreign_rows_never_borrow_owner (__main__.StatusLabelTests.test_same_number_foreign_rows_never_borrow_owner) ... refused: rule=accepted-start-identity: roadmap row does not have qualified owned issue identity
+ok
+test_schema8_evidence_supported_labels_unavailable (__main__.StatusLabelTests.test_schema8_evidence_supported_labels_unavailable) ... refused: rule=status-label-unsupported: schema009 required; migrate deliberately first
+ok
+test_source_unavailable_pending_journal (__main__.StatusLabelTests.test_source_unavailable_pending_journal) ... ok
+test_terminal_precedence_and_nonempty_lifecycle_loop (__main__.StatusLabelTests.test_terminal_precedence_and_nonempty_lifecycle_loop) ... ok
+test_unchanged_legacy_admission_and_dry_run (__main__.StatusLabelTests.test_unchanged_legacy_admission_and_dry_run) ... ok
+test_wave_closeout_qualifies_owned_gid_in_both_orders_and_foreign_only (__main__.StatusLabelTests.test_wave_closeout_qualifies_owned_gid_in_both_orders_and_foreign_only) ... ok
+test_wave_foreign_only_row_cannot_be_completed_by_root_issue_number (__main__.StatusLabelTests.test_wave_foreign_only_row_cannot_be_completed_by_root_issue_number) ... ok
+test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label)
+A declined PR is not terminal authority for an active owned issue. ... ok
+test_zero_event_completed_cancelled_qualified_repair (__main__.StatusLabelTests.test_zero_event_completed_cancelled_qualified_repair) ... ok
+
+----------------------------------------------------------------------
+Ran 41 tests in 7.960s
+
+OK

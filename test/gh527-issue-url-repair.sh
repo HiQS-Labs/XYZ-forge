@@ -37,7 +37,8 @@ fixture_guard_init "$WORK"       # GH-10: pin the sandbox root
 git init -q "$WORK"
 git -C "$WORK" config user.email t@example.com
 git -C "$WORK" config user.name t
-python3 "$APP" --root "$WORK" init >/dev/null
+# Closure now independently qualifies the row's owner; the fixture owns o/r.
+python3 "$APP" --root "$WORK" init --slug o/r >/dev/null
 # GH-10: every path this suite writes must be provably inside the pinned sandbox, never a real repo.
 require_fixture "$WORK/.git" "gh527 fixture git dir"
 require_fixture_file "$WORK/releases.db" "gh527 fixture ledger DB"
@@ -141,7 +142,15 @@ corrupt_901
 
 cat > "$WORK/fake-gh" <<'SH'
 #!/usr/bin/env bash
-echo '{"state":"CLOSED","stateReason":"COMPLETED"}'
+# `gh issue view` shape for the state read; REST `gh api repos/O/R/issues/N` shape for the native
+# identity read the GH-646 writer performs first (number, html_url, lower-case state, labels list,
+# and no pull_request key — a PR is never an issue).
+if [ "$1" = api ]; then
+  n="${2##*/}"; repo="${2#repos/}"; repo="${repo%/issues/*}"
+  echo "{\"number\":$n,\"state\":\"closed\",\"html_url\":\"https://github.com/$repo/issues/$n\",\"labels\":[]}"
+else
+  echo '{"state":"CLOSED","stateReason":"COMPLETED"}'
+fi
 SH
 chmod +x "$WORK/fake-gh"
 
@@ -150,7 +159,7 @@ out="$(RELEASES_GH_BIN="$WORK/fake-gh" python3 "$APP" --root "$WORK" \
        roadmap reconcile-state --dry-run 2>&1)"; rc=$?
 set -e
 check "$rc" "0" "reconcile-state no longer refuses the whole run over one bad row"
-case "$out" in *"GH-900"*) ok "the healthy row is still reconciled" ;;
+case "$out" in *"would move GH-900:"*) ok "the healthy row is still reconciled" ;;
                *) bad "healthy row GH-900 was stranded: $out" ;; esac
 case "$out" in *"GH-901"*) ok "the unresolvable row is named, not silently dropped" ;;
                *) bad "unresolvable row GH-901 was not reported: $out" ;; esac

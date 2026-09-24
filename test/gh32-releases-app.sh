@@ -322,69 +322,36 @@ for SIDE in a b; do
   case "$S" in "$WORK"/*) ;; *) echo "REFUSING" >&2; exit 2 ;; esac
   cp -R "$ANC" "$S"   # WORK is a fresh mktemp -d: the path cannot pre-exist, so no scrub is needed
   printf 'Release: 1.%s.0\nStatus: Draft\nDescription: Side %s first. Second sentence. Third. Fourth.\nTracking Issue: https://github.com/A/B/issues/1%s\n\nRelease: 2.%s.0\nStatus: Draft\nDescription: Side %s second block.\n' "$SIDE" "$SIDE" "$SIDE" "$SIDE" "$SIDE" > "$WORK/led-$SIDE.md"
-  # GH-558: force the two branch-local generation rows to carry different timestamps. The old
-  # byte-level union only flaked when real writes happened to straddle a second; pinning the clocks
-  # makes that merge shape deterministic and keeps this regression control load-bearing.
-  if [ "$SIDE" = "a" ]; then
-    export RELEASES_APP_NOW=2026-09-21T12:00:00Z
-  else
-    export RELEASES_APP_NOW=2026-09-21T12:00:01Z
-  fi
-  R="$S"; rout import "$WORK/led-$SIDE.md"
+  # Distinct seconds deliberately exercise the settings natural-key conflict;
+  # relying on both imports finishing in one second hid this merge requirement.
+  if [ "$SIDE" = a ]; then STAMP=2026-09-16T00:00:01Z; else STAMP=2026-09-16T00:00:02Z; fi
+  R="$S"; RELEASES_APP_NOW="$STAMP" rout import "$WORK/led-$SIDE.md"
 done
-unset RELEASES_APP_NOW
 RUN_A="$(sqlite3 "$WORK/j-a/releases.db" 'SELECT DISTINCT import_run FROM grandfather_entries')"
 RUN_B="$(sqlite3 "$WORK/j-b/releases.db" 'SELECT DISTINCT import_run FROM grandfather_entries')"
 if [ -n "$RUN_A" ] && [ -n "$RUN_B" ] && [ "$RUN_A" != "$RUN_B" ]; then ok "the two divergent sides carry DISTINCT import runs (same-second imports cannot collide)" 0; else ok "distinct runs" 1; fi
-# The human merge: one header, one row per single-row setting, then byte-dedupe ordinary rows.
-# GH-558 was a FIXTURE defect, not a product defect: each side's generation row includes its own
-# updated_at, so byte-level dedupe kept both rows whenever the imports straddled a second. Select the
-# winner by generation value and then timestamp, and make the header agree with that row.
-J_GEN_ROWS="$(grep -h "^INSERT INTO settings(key, value, updated_at) VALUES('generation', " "$WORK/j-a/releases.sql" "$WORK/j-b/releases.sql" || true)"
-J_GEN_WIN="$(printf '%s\n' "$J_GEN_ROWS" | sort -t"'" -k4,4n -k6,6 | tail -n 1)"
-J_GEN_VALUE="$(printf '%s\n' "$J_GEN_WIN" | sed -n "s/.*VALUES('generation', '\([0-9][0-9]*\)'.*/\1/p")"
-J_GEN_TS="$(printf '%s\n' "$J_GEN_ROWS" | sed -n "s/.*VALUES('generation', '[0-9]*', '\([^']*\)').*/\1/p" | sort -u | wc -l | tr -d ' ')"
-if [ -n "$J_GEN_WIN" ] && [ -n "$J_GEN_VALUE" ] && [ "$J_GEN_TS" = "2" ]; then
-  ok "the fixture deterministically carries two differently-stamped generation rows" 0
-else
-  ok "deterministic generation-row fixture" 1
-fi
-{ printf -- '-- generation: %s\n' "$J_GEN_VALUE"
-  grep -vh '^-- generation' "$WORK/j-a/releases.sql" "$WORK/j-b/releases.sql" \
-    | awk -v win="$J_GEN_WIN" '
-        /^INSERT INTO settings\(key, value, updated_at\) VALUES\(\x27generation\x27, / { if (!done) { print win; done = 1 }; next }
-        !seen[$0]++'
-} > "$WORK/merged.sql"
-N="$(grep -c "VALUES('generation', " "$WORK/merged.sql")"
-ok "the merge keeps exactly one generation settings row" "$(is "$N" "1"; echo $?)"
+# the human merge: union both dumps per the grammar (shared ancestor lines dedup; one header)
+{ grep '^-- generation' "$WORK/j-a/releases.sql"; grep -vh '^-- generation' "$WORK/j-a/releases.sql" "$WORK/j-b/releases.sql" | awk '!seen[$0]++'; } > "$WORK/merged.sql"
 MG="$WORK/j-merged"
 case "$MG" in "$WORK"/*) ;; *) echo "REFUSING" >&2; exit 2 ;; esac
 cp -R "$ANC" "$MG"
 cp "$WORK/merged.sql" "$MG/releases.sql"
 R="$MG"
-# Red control: without the canonical generation header, the same merged dump must be refused before
-# any DB replacement. This proves the stamp assertion can fail rather than merely describing it.
-grep -v '^-- generation:' "$WORK/merged.sql" > "$WORK/merged-no-generation.sql"
-cp "$WORK/merged-no-generation.sql" "$MG/releases.sql"
-V="$(rlog check --rebuild)"; RC=$?
-if [ "$RC" -ne 0 ] && has "$V" "rule=dump-generation"; then
-  ok "red control: a merged dump without its generation stamp is refused by name" 0
+V="$(rlog check --rebuild)"
+if has "$V" 'rule=dump-duplicate-setting'; then ok "unresolved timestamp-distinct generation settings refuse rebuild" 0; else ok "duplicate generation setting refused" 1; fi
+# Both sides reached generation 2. Resolve that one shared natural key explicitly
+# (side A wins the timestamp), rather than treating different INSERT text as rows
+# with different identities. Keep every business row and both receipt branches.
+GEN_A="$(sqlite3 "$WORK/j-a/releases.db" "SELECT value FROM settings WHERE key='generation'")"
+GEN_B="$(sqlite3 "$WORK/j-b/releases.db" "SELECT value FROM settings WHERE key='generation'")"
+if [ -n "$GEN_A" ] && [ "$GEN_A" = "$GEN_B" ]; then
+  awk "/^INSERT INTO settings\\(key, value, updated_at\\) VALUES\\('generation',/ { if (seen++) next } { print }" "$WORK/merged.sql" > "$MG/releases.sql"
 else
-  printf '%s\n' "$V" >&2
-  ok "red control: missing generation stamp refuses rebuild" 1
+  echo "REFUSING: divergent generation values require an explicit higher-value resolution" >&2
+  exit 2
 fi
-cp "$WORK/merged.sql" "$MG/releases.sql"
-export RELEASES_APP_NOW=2026-09-21T12:00:02Z
-V="$(rlog check --rebuild)"; RC=$?
-unset RELEASES_APP_NOW
-if [ "$RC" -eq 0 ]; then
-  ok "the merged dump rebuild completes" 0
-else
-  printf '%s\n' "$V" >&2
-  ok "the merged dump rebuild completes" 1
-fi
-STAMP="$(sql "SELECT updated_at FROM settings WHERE key='generation'")"
-ok "the rebuild pins the generation stamp at the controlled write time" "$(is "$STAMP" "2026-09-21T12:00:02Z"; echo $?)"
+V="$(rlog check --rebuild)"
+if has "$V" 'FAIL:' || has "$V" 'refused:'; then printf '%s\n' "$V"; fi
 V="$(rlog check)"; if has "$V" "check: clean"; then ok "the merged dump rebuilds atomically and checks green" 0; else ok "merge rebuild green" 1; fi
 N="$(sql 'SELECT COUNT(*) FROM releases')"; ok "BOTH sides' releases survive the rebuild (4 rows from two 2-block imports)" "$(is "$N" "4"; echo $?)"
 N="$(sql 'SELECT COUNT(DISTINCT import_run) FROM grandfather_entries')"

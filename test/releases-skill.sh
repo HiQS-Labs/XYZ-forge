@@ -6,8 +6,8 @@ set -o pipefail
 ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
 . "$ROOT/test/lib/fixture-guard.sh"
 require_forge_root ROUTER.md PROJECT/PDDA.md   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
-SKILL="$ROOT/skills/releases/SKILL.md"
-INSTALLER="$ROOT/skills/releases/install.sh"
+SKILL="$ROOT/skills/2-daily/releases/SKILL.md"
+INSTALLER="$ROOT/skills/2-daily/releases/install.sh"
 PASS=0
 FAIL=0
 
@@ -98,7 +98,7 @@ rc=$?
   || fail "installer failed with legacy symlinks: $out"
 [ -L "$CLAUDE_DIR/releases" ] && pass "installer creates plural Claude symlink" \
   || fail "plural Claude symlink missing"
-[ "$(readlink "$CLAUDE_DIR/releases" 2>/dev/null)" = "$ROOT/skills/releases" ] \
+[ "$(readlink "$CLAUDE_DIR/releases" 2>/dev/null)" = "$ROOT/skills/2-daily/releases" ] \
   && pass "plural symlink targets the repo-owned skill" \
   || fail "plural symlink points at the wrong target"
 [ ! -L "$CLAUDE_DIR/release" ] && [ ! -L "$CLAUDE_DIR/release-plan" ] \

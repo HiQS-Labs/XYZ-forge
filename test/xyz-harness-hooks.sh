@@ -45,8 +45,8 @@ assert_nudge() { # <label> <prompt> <expected-skill>...
   output="$(run_skill_nudge "$prompt")"
   context="$(nudge_context "$output")"
   for expected in "$@"; do
-    case "$context" in
-      *"skills/$expected/SKILL.md"*) ;;
+    case "${context##* — see }" in
+      *"/$expected/SKILL.md"*|"$expected."|"$expected and "*|*" and $expected.") ;;   # resolved path or bare skill name
       *) fail "$label missing $expected nudge: ${context:-<silent>}" ;;
     esac
   done
@@ -65,6 +65,11 @@ assert_nudge "nudge: preflight all" "Preflight all ready work" marathon-triage
 assert_nudge "nudge: dry-run each plan" "Dry-run each plan before firing" marathon-triage
 assert_nudge "nudge: commit/push + close issues" "Commit and push, then close the resolved issues" loose-ends marathon-cleanup
 assert_nudge "nudge: commit/push + archive/PDDA" "Commit and push; move docs to 3-COMPLETED and run a PDDA sweep" loose-ends marathon-cleanup
+
+foreign_context="$(cd "$WORK" && nudge_context "$(run_skill_nudge 'fire the marathon')")"
+[ "$foreign_context" = "BTW: marathon-triage already does this — see marathon-triage." ] \
+  && pass "nudge: foreign CWD falls back to a skill name" \
+  || fail "foreign CWD emitted an unusable pointer: $foreign_context"
 
 assert_no_nudge "silent: unrelated roadmap request" "Add GH-273 to the roadmap"
 assert_no_nudge "silent: unrelated fire request" "Fire the unit tests"

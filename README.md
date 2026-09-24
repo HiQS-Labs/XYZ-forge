@@ -28,7 +28,7 @@ Claude consult and relay support explicit subscription checks and native reasoni
 See [Claude setup](relay-automation/README.md#claude-subscription-mode) for restricted
 consult reads, supported CLI versions, and failure diagnostics.
 
-## Status: alpha, single-operator, moving fast
+## Status: Beta, single-operator, moving fast
 
 Be clear-eyed about what you are adopting.
 
@@ -237,20 +237,24 @@ bash relay-automation/xyz-vendor.sh /path/to/target
 
 Vendors the harness under `.xyz/` in the target repo. **Note:** the harness alone leaves that repo at
 HQ Tier C, which cannot be dispatched to. For the unattended path you also need PDDA installed at the
-target's root — see [`skills/vendor-stack/SKILL.md`](skills/vendor-stack/SKILL.md) for the two-step
+target's root — see [`skills/4-occasional/vendor-stack/SKILL.md`](skills/4-occasional/vendor-stack/SKILL.md) for the two-step
 flow.
 
 ### Skills
 
+`skills/` is grouped by how often a skill is used — `1-hourly/`, `2-daily/`, `3-weekly/`, `4-occasional/` —
+so a directory listing reads as a usage map; the tier contract is in [`skills/README.md`](skills/README.md) and the
+per-skill index in [`ARCHITECTURE.md` → Skills Index](ARCHITECTURE.md#skills-index).
+
 Claude Code only scans `~/.claude/skills/`, so skills must be symlinked in once per machine:
 
 ```bash
-bash skills/relay-xyz/install.sh     # the relay driver — start here
-bash skills/hq/install.sh            # multi-repo command center
-bash skills/agent-chorus/install.sh  # multi-session discussions
+bash skills/1-hourly/relay-xyz/install.sh     # the relay driver — start here
+bash skills/2-daily/hq/install.sh            # multi-repo command center
+bash skills/2-daily/agent-chorus/install.sh  # multi-session discussions
 ```
 
-On a machine that runs the Skills Army HQ collection (`skills/skills-army-hq`), skip these: the
+On a machine that runs the Skills Army HQ collection (`skills/3-weekly/skills-army-hq`), skip these: the
 collection owns those symlinks and deploys every skill at once. An installer now refuses to
 replace a live link it does not own (GH-678), so running one there is a no-op with a message.
 

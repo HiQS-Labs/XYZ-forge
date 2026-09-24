@@ -80,7 +80,7 @@ reset_src()
 # mirror: dropped entry deleted; operator TODO.md (seed) and unrelated file survive
 write(os.path.join(DEST, "TODO.md"), "my edits\n"); write(os.path.join(DEST, "NOTES.local"), "mine\n")
 git(DEST, "add", "-A"); git(DEST, "commit", "-q", "-m", "operator"); git(DEST, "push", "-q", "origin", "main")
-write(SYNC, read(SYNC).replace('    ("skills/honest", "skills/honest", "managed"),\n', "")); commit_src("drop honest")
+write(SYNC, read(SYNC).replace('    ("skills/3-weekly/honest", "skills/honest", "managed"),\n', "")); commit_src("drop honest")
 r = run("--apply"); ok("dropped entry is deleted from mini", r.returncode == 0 and not os.path.exists(os.path.join(DEST, "skills/honest")), r.stderr[-200:])
 ok("seeded TODO.md and unrelated NOTES.local survive", read(os.path.join(DEST, "TODO.md")) == "my edits\n" and read(os.path.join(DEST, "NOTES.local")) == "mine\n")
 

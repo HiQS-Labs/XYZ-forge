@@ -1,0 +1,219 @@
+== test: gh280-jog-marathon-adapter ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.kDNdYexbOy
+  PASS: A1 root preflight exits 0 (candidate ready)
+  PASS: A2 packet still carries run-candidate.json (additive)
+  PASS: A2 packet still carries lane-plan.json (additive)
+  PASS: A2 packet still carries freshness.json (additive)
+  PASS: A2 packet still carries readiness.json (additive)
+  PASS: A2 packet still carries marathon-invocation.txt (additive)
+  PASS: A2 packet still carries packet.md (additive)
+  PASS: A2 packet still carries marathon-invocation.json (additive)
+  PASS: A3 invocation artifact schema is marathon-invocation@1
+  PASS: A4 argv[0] is the absolute executable drive path
+  PASS: A5 env entries carry swarm/session/isolation
+  PASS: A6 packet_path resolves
+  PASS: A7 result_path is beside the packet
+  PASS: A8 identity fields: issue/base_ref/builder/reviewer
+  PASS: A9 phase/lane/gate/artifacts carried
+  PASS: A10 argv embeds --result-file with result_path
+  PASS: A11 argv embeds --phase-brief with packet_path
+  PASS: A12 run-candidate@1 unchanged (compat)
+  PASS: A13 text invocation hint unchanged (compat)
+  PASS: B1 load_marathon_invocation accepts the real artifact
+  PASS: B2 unsupported schema version refused
+  PASS: B3 non-executable argv[0] refused
+  PASS: C1 approved run exits 0
+  PASS: C1 receipt written
+  PASS: C1 receipt outcome approved / exit 0
+  PASS: C1 receipt carries phase/lane/token
+  PASS: C1 unreached issue is an explicit null
+  PASS: C1 gate green + gate receipt path resolves
+  PASS: C1 head_sha matches repo HEAD
+  PASS: C1 no branch redirect recorded
+  PASS: C1 timestamps present
+  PASS: C1 attempt count/max recorded
+  PASS: C1 load_marathon_result accepts the real receipt
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C2 missing gate refuses pre-dispatch (exit 2)
+  PASS: C2 refusal still writes a receipt
+  PASS: C2 receipt outcome refused + reason
+  PASS: C2 gate result not-run
+  PASS: C2 nothing dispatched (no builder/reviewer turn spent)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C3 gate failure exits 5
+  PASS: C3 receipt escalated/pre-advance-failed/gate red
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C4 no-progress exits 3
+  PASS: C4 receipt reason no-progress
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C5 cap escalation exits 4
+  PASS: C5 receipt reason cap-or-close-mismatch
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C6 timeout exits 7
+  PASS: C6 receipt reason timeout-no-artifact
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C7 relay-failure exits 5
+  PASS: C7 receipt reason relay-failed-before-gate, gate not-run
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C8 lane parked at attempt cap exits 8
+  PASS: C8 receipt outcome parked, reason names the cap
+  PASS: C8 receipt attempt count 2/2
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C9 run without --result-file keeps exit 0
+  PASS: C9 no receipt written when option unused
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C10 malformed --result-file refuses (exit 2)
+  PASS: C10 malformed path dispatches nothing
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C11 invalid --execution-id refuses (exit 2)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C12 caller execution id recorded
+  PASS: C12 re-run atomically replaces the receipt
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: D1 redirected run exits 0
+  PASS: D1 lane branch marathon/gh280-lane exists
+  PASS: D1 receipt records redirect base/head
+  PASS: D1 receipt carries verified PR identity
+  PASS: D1 no PR note on successful publication
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: D2 PR-publication failure keeps the phase green (exit 0)
+  PASS: D2 receipt approved with explicit null PR
+  PASS: D2 receipt notes the failed publication
+  PASS: E1 vendored preflight exits 0
+  PASS: E2 vendored artifact points inside .xyz
+  PASS: E3 vendored target_root is the consumer repo
+  PASS: E4 vendored drive exits 0 with receipt
+  PASS: E5 vendored receipt target_repo is the consumer repo
+  PASS: E6 vendored refusal exits 2
+  PASS: E7 vendored refusal receipt written
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: F1 real packet argv chain exits 0 (Preflight → Marathon → Relay)
+  PASS: F2 stub builder landed the declared artifact
+  PASS: F3 chain wrote the packet's result receipt
+  PASS: F4 receipt approved with relay STATUS Approved
+  PASS: F5 gate ran green inside the chain
+  PASS: F6 builder claim event in the fixture tick log
+  PASS: F7 reviewer claim event in the fixture tick log
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G1 marathon executor without --reviewer refuses (exit 2)
+  PASS: G1 refusal names the reviewer policy
+  PASS: G1 row untouched (pending, attempt_count 0)
+  PASS: G2 reviewer == builder refused before lease
+  PASS: G3 unavailable reviewer binary refused before lease
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G4 marathon executor queue run exits 0
+  PASS: G4 row parked awaiting-landing with receipt PR identity
+  PASS: G4 execution ledger exists under .tick/jog/<gid>
+  PASS: G4 ledger records one approved, projected execution
+  PASS: G4 receipt approved, PR 42, redirected lane branch
+  PASS: G4 stub builder landed the artifact through the real chain
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G5 refusing reviewer → row failed with marathon escalation
+  PASS: G5 receipt outcome escalated
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G6 cold-start without result parks (never refires)
+  PASS: G6 no second execution fired on cold start
+  PASS: G7 cold-start re-projects the terminal result idempotently
+  PASS: G7 re-projection fired no new execution
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G8 preflight refusal parks with exit code
+  PASS: H1 vendored marathon queue run exits 0 from a foreign cwd
+  PASS: H2 vendored row parked awaiting-landing (green, no PR)
+  PASS: H3 vendored execution ledger lives in the consumer repo
+  PASS: H4 vendored receipt approved, target is the consumer repo
+  PASS: H5 foreign cwd stayed clean (no root-relative lookups — GH-279 #2)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I1 --simulate stays on the relay machinery (behavior unchanged)
+  PASS: I1b simulated auto-merge completes the processed row
+  PASS: I2 legacy run leaves no marathon execution state
+  PASS: I3 --simulate prints the deprecation notice (window + separate removal)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I4 --executor relay rollback path completes the legacy simulate + notice
+  PASS: I4b relay simulate completes the processed row
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I5 bare jog run without --reviewer refuses (exit 2)
+  PASS: I5 refusal names the reviewer policy (marathon default)
+  PASS: I5 row untouched (pending, attempt_count 0)
+  PASS: I6 default run (no --executor) dispatches marathon, exits 0
+  PASS: I6 row parked awaiting-landing with receipt PR identity
+  PASS: I6 execution ledger exists under .tick/jog/<gid>
+  PASS: I6 ledger records one approved, projected execution
+  PASS: I6 receipt approved, PR 42, redirected lane branch
+  PASS: I6 stub builder landed the artifact through the real chain
+  PASS: I6 marathon-default run prints no deprecation notice
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I7 --dry-run unchanged (plan only, no notice, no reviewer needed)
+  PASS: I7b dry-run leaves the row pending (zero mutation)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: J1 resume re-projects a terminal result (no dispatch)
+  PASS: J1 row parked awaiting-landing after resume
+  PASS: J1 resume fired no new execution
+  PASS: J2 resume parks a result-less dispatched execution (exit 1)
+  PASS: J2 row parked with resume reason
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: K1 red-gate execution fails the row (relay approved, gate red)
+  PASS: K1 failed row's reason carries the trace segment (execution id + result path — Scope 4)
+  PASS: K2 gate-only retry exits 0
+  PASS: K2 row parked awaiting-landing after green gate retry
+  PASS: K2 retry receipt approved via satisfied-lane path
+  PASS: K2 only marathon's own transcript commit advanced the head (work head preserved)
+  PASS: K2 gate retry spent no new tick token (1 task.created)
+  PASS: K3 gate retry refuses when the head SHA moved
+  PASS: K3 refusal dispatched no gate run
+  PASS: K4 retry-build exits 0
+  PASS: K4 row parked awaiting-landing after the rebuild
+  PASS: K4 ledger gained a second retry-build execution
+  PASS: K4 rebuild ran on a fresh suffixed token (-2)
+  PASS: K4 prior token history and execution records preserved
+  PASS: L1 wrong PR base refused
+  PASS: L2 head-SHA mismatch refused
+  PASS: L3 unmerged PR refused
+  PASS: L4 unreachable merge SHA refused
+  PASS: L1-L4 left the row un-landed (fail closed)
+  PASS: L5 jog land completes cleanly
+  PASS: L5 row completed with landed-PR reason
+  PASS: L5 wave_reconcile promoted the capture doc to 3-COMPLETED
+  PASS: L5 ROADMAP entry archived with the shipping badge
+  PASS: L5 landing reconciliation evidence recorded
+  PASS: L6 land replay is idempotent
+  PASS: L7 reconcile resumes at the missing durable step
+  PASS: L7 reconciliation evidence restored
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: L8 receipt without green gate evidence refused
+  PASS: L9 receipt naming a foreign repo refused
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: M0 promoted executor run exits 0
+  PASS: M1 dashboard not created after promotion (GH-567)
+  PASS: M3 supervisor-state commit landed before dispatch (F1)
+  PASS: M3 the supervisor commit carries releases.db
+  PASS: M3 containment-style tree revert leaves the queue row intact (F1)
+  PASS: M2 re-add minted a fresh gid
+  PASS: M2 resume finds the ledger by gh-number after re-add (F2)
+  PASS: M2 ledger record present (relative-path form asserted below)
+  PASS: M2 result_path stored relative to the ledger (F2)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: N0 token T reads done in the fixture root
+  PASS: N0 attestation fixture published for token T
+  PASS: N1 verified auto-merge completes on a matching PR
+  PASS: N1 the verified merge issued exactly one gh pr merge
+  PASS: N2 head-SHA mismatch refuses the auto-merge
+  PASS: N2 no merge call issued on refusal
+  PASS: N2b PR head ≠ validated candidate refuses the auto-merge even though head_sha matches
+  PASS: N2b no merge call issued
+  PASS: N2c unattested approved receipt refuses the auto-merge
+  PASS: N2c no merge call issued
+  PASS: N3 already-merged PR refuses the auto-merge
+  PASS: N4 red gate refuses the auto-merge
+  PASS: N5 foreign-repo receipt refuses the auto-merge
+  PASS: N5 refusal matrix issued no further merge calls
+  PASS: N6 retry-gate refuses under a live supervisor lock (exit 4)
+  PASS: N7 retry-build refuses under a live supervisor lock (exit 4)
+  PASS: N8 retry-gate proceeds past a free lock (exit 2, not lock refusal)
+  PASS: N8 retry-gate released the supervisor lock on exit
+  PASS: O1 refused projection carries the trace segment (execution id + result path)
+  PASS: O2 projection without trace args stays unannotated (back-compat)
+  PASS: P1 jog never creates PRs (Marathon owns PR identity)
+  PASS: P2 jog never invokes the tick binary or writes executor attempt state
+  PASS: P3 jog never cuts lane branches (branch identity is Marathon's)
+  PASS: seed fixture byte-unchanged after the full suite (final check) (containment)
+  gh280-jog-marathon-adapter: 216 pass, 0 fail

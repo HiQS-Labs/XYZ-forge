@@ -162,9 +162,9 @@ probe_builders() {
     "")       echo "  (no claude on PATH — interop leak not present here)" ;;
     *)        echo "  (claude is a Linux binary here — interop leak not present)" ;;
   esac
-  if [ -x skills/relay-xyz/find-harness.sh ]; then
+  if [ -x skills/1-hourly/relay-xyz/find-harness.sh ]; then
     echo "  --- find-harness.sh --check says:"
-    bash skills/relay-xyz/find-harness.sh --check 2>&1 | sed 's/^/    /'
+    bash skills/1-hourly/relay-xyz/find-harness.sh --check 2>&1 | sed 's/^/    /'
   fi
 }
 
@@ -273,7 +273,7 @@ probe_lane_cli_probe() {
   fi
   # find-harness.sh is the better-behaved sibling: it honours AGY_BIN and the
   # well-known install location. The disagreement IS the finding.
-  if grep -q 'AGY_BIN' skills/relay-xyz/find-harness.sh 2>/dev/null; then
+  if grep -q 'AGY_BIN' skills/1-hourly/relay-xyz/find-harness.sh 2>/dev/null; then
     ok "find-harness.sh resolves via AGY_BIN/well-known path — the two tools disagree by construction"
   else
     bad "find-harness.sh no longer resolves AGY_BIN"

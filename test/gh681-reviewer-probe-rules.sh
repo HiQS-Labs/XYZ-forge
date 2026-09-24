@@ -11,7 +11,7 @@
 #   A  the Reviewer note in rtl_turn_prompt allows narrow, non-mutating probes (scratch-only output),
 #      keeps test suites out of the worktree, and the shared "verify ONLY with the specific test" clause
 #      becomes Producer-only — so each role has exactly one verification instruction;
-#   B  new-relay.sh's Reviewer bullet (and its mirrors in skills/relay, skills/relay-xyz, and the marathon
+#   B  new-relay.sh's Reviewer bullet (and its mirrors in skills/1-hourly/relay, skills/1-hourly/relay-xyz, and the marathon
 #      brief) require a generalization to carry Observed input / Affected scope / Falsifier.
 #
 # Cases 1-6 pin wording (this is prose; a suite can only pin its text, not its effect — stated plainly).
@@ -91,14 +91,14 @@ else
 fi
 
 # --- Case 6: drift guard — every place the rule is codified still carries it ---------------------
-for f in skills/relay-xyz/SKILL.md skills/relay/SKILL.md utils/py/marathon_drive.py; do
+for f in skills/1-hourly/relay-xyz/SKILL.md skills/1-hourly/relay/SKILL.md utils/py/marathon_drive.py; do
   grep -qF "Declined — unproven generalization" "$ROOT/$f" \
     && pass "case 6: $f carries the generalization rule" \
     || fail "case 6: $f lost the generalization rule (GH-681 codified it in two-plus places)"
 done
-grep -qF "MAY run narrow, non-mutating probes" "$ROOT/skills/relay-xyz/SKILL.md" \
-  && pass "case 6: skills/relay-xyz/SKILL.md carries the probe allowance" \
-  || fail "case 6: skills/relay-xyz/SKILL.md lost the probe allowance"
+grep -qF "MAY run narrow, non-mutating probes" "$ROOT/skills/1-hourly/relay-xyz/SKILL.md" \
+  && pass "case 6: skills/1-hourly/relay-xyz/SKILL.md carries the probe allowance" \
+  || fail "case 6: skills/1-hourly/relay-xyz/SKILL.md lost the probe allowance"
 
 # --- Case 7 (behavioural): scratch output is sanctioned, .pytest_cache residue is off-lane ----------
 printf 'STATUS: Open\nNEXT: Reviewer\n\nbody\n' >"$RELAY"
