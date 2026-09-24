@@ -68,6 +68,27 @@ Collect per item: id, title, timestamps, labels, files touched (commits/PRs), er
 
 Read bodies and review threads for the candidates, not everything. Note what was not read.
 
+### Seed from radar (when a recent report exists)
+
+Radar already clusters this repo on a schedule (GH-781). Read its output before the raw scan so the
+scan budget goes to verification, not rediscovery:
+
+1. **Find it:** the newest `PROJECT/1-INBOX/RADAR-REPORT-*.md` (else `RADAR/`, `docs/radar/`) and the
+   open issue from `gh issue list --label radar --state open`.
+2. **Freshness gate:** use it only if the report date is within **2× this run's window** of the
+   frozen window end; otherwise skip it and say `radar report <date> too old — not seeded`.
+3. **Seed:** each target under `### Ranked targets` / `### Carried targets` (its `RADAR-class-…` or
+   `RADAR-<seam>` ID, member issues/PRs, seam or class) becomes a **candidate cluster**. Read those
+   members first, then run the starter queries for everything else.
+4. **Seeds are hints, not evidence.** Every item still passes §3's two-signal rule inside this run's
+   window. Members outside the window are listed as `prior only` and never scored. A seed that does
+   not reproduce is reported as `not reproduced`, never silently dropped. Clusters radar missed still
+   come from the normal scan.
+5. **Report the yield:** `Seeded from RADAR-REPORT-<date>: N targets, M confirmed, K not reproduced`
+   — or `no radar report found`, which is a stated result, not a silent skip.
+6. **Link the ledgers:** when the top cluster matches a `RADAR-<id>`, the umbrella body (§6) cites
+   `class RADAR-<id>` so radar's umbrella row links it — one class, two ledgers.
+
 ### Detect the repo's ranking system
 
 Before drafting anything, learn how this repo ranks work so the umbrella can be filed at the top of it. Check, in order:

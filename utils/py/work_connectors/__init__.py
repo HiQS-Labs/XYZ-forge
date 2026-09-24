@@ -236,6 +236,9 @@ def _launch(name, cfg, events):
     try:
         proc.stdin.write(payload)
         proc.stdin.close()
+        # communicate() flushes a non-None stdin, including one already closed.
+        # The payload is sent; leave only stdout/stderr for _collect to drain.
+        proc.stdin = None
     except Exception as exc:
         return (name, proc, "stdin write failed: %r" % (exc,))
     return (name, proc, None)
