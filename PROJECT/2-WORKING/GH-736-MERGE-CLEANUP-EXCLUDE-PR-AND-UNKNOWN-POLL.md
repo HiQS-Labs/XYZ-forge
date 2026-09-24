@@ -49,7 +49,10 @@ Both gaps were hit independently in live `/merge-cleanup` runs:
   `MERGEABLE_POLL_S` (15 s), re-reading through `refresh_pr_with_retry`. A PR still undecided
   after 90 s stops the run exactly as before, so no PR of unknown state is ever merged.
 - The same bounded poll (and the retry wrapper instead of a single `refresh_pr`) runs after a B1
-  ledger resolution re-fetches the PR.
+  ledger resolution re-fetches the PR. Both sites share one helper, `_await_mergeable`.
+- A refresh error inside the poll ends it at once and is handled by the existing GH-623 rules — a
+  transient error defers the PR, any other stops the run naming the real error (Agy QA round 1).
+  A re-fetch that already failed is never polled.
 
 ## Acceptance Criteria
 
@@ -59,6 +62,7 @@ Both gaps were hit independently in live `/merge-cleanup` runs:
 - [x] Negative control: all three fail against `development`'s unmodified script.
 - [x] Capability table rows `mergeable-unknown-poll` and `exclude-drops-pr` pinned; `TestParityGuard` green.
 - [x] Full registered suite `test/gh436-merge-cleanup.sh` green (168 tests).
+- [x] Agy relay QA round 1 (`relay-system/2026-09-24/gh736-merge-cleanup-qa.md`): two blockers — an error mid-poll was masked as "GitHub has not decided", and a failed post-B1 re-fetch was polled six times. Both fixed via `_await_mergeable`; pinned by `TestGh736AwaitMergeable` (4 unit tests) and two end-to-end tests, both red on the reviewed commit `09003de9`. The round-1 `[Should]` (a held predecessor does not block its hard dependents) is pre-existing and filed as #785.
 - [ ] Agy relay QA approved.
 - [ ] PR merged to `development`.
 
@@ -80,6 +84,10 @@ Both gaps were hit independently in live `/merge-cleanup` runs:
   eventually consistent. A bounded poll with the existing fail-closed stop at the end keeps the
   safety property (never merge an undecided PR) while removing a guaranteed false stop after every
   landing.
+- **A poll is a second read, so it needs the first read's error handling.** The first version
+  polled correctly but treated a failed refresh as "still undecided", so a DNS blip mid-poll
+  stopped the whole run with a misleading message. Agy's review caught it; routing the poll's
+  error back through the same defer/stop rules as the first read fixed both sites at once.
 - **Shared test fixtures are shared contracts.** Stubbing `_sleep` inside the shared `run_main`
   helper silently replaced the stub the GH-623 resilience tests install themselves; the parity
   guard caught it. Scope a stub to the test that needs it.

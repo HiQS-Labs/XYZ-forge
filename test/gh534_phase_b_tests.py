@@ -410,6 +410,44 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.assertEqual(st["prs"]["2"]["state"], "MERGED")
         self.assertIn("PR #1: excluded by --exclude", out.getvalue())
 
+    def _error_after_first_read(self, msg):
+        """GH-736: the first land-loop read is real (UNKNOWN via force_mergeable); every read after
+        it — i.e. the poll's — fails with `msg`."""
+        real, calls = merge_cleanup.refresh_pr_with_retry, []
+        def fake(n, repo):
+            calls.append(n)
+            return real(n, repo) if len(calls) == 1 else {"error": msg}
+        return fake, calls
+
+    def test_transient_error_during_the_poll_defers_not_undecided(self):
+        # Agy QA r1 blocker 1: an error inside the poll was masked as "GitHub has not decided" and
+        # stopped the run; a transient one must defer the PR under the GH-623 rules instead.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
+        self.st["force_mergeable"] = {"1": "UNKNOWN"}
+        self.save()
+        fake, calls = self._error_after_first_read("gh: Could not resolve host: github.com")
+        with mock.patch.object(merge_cleanup, "refresh_pr_with_retry", side_effect=fake), \
+             mock.patch.object(merge_cleanup, "_sleep"):
+            rc = self.run_main()
+        self.assertEqual(rc, 3, self.err)
+        self.assertIn("DEFERRED", self.err)
+        self.assertNotIn("has not decided", self.err)
+        self.assertEqual(len(calls), 2, "the poll must stop at the first failed read, not retry it")
+        self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
+
+    def test_hard_error_during_the_poll_stops_with_that_error(self):
+        self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
+        self.st["force_mergeable"] = {"1": "UNKNOWN"}
+        self.save()
+        fake, _ = self._error_after_first_read("HTTP 404: Not Found (pr view)")
+        with mock.patch.object(merge_cleanup, "refresh_pr_with_retry", side_effect=fake), \
+             mock.patch.object(merge_cleanup, "_sleep"):
+            rc = self.run_main()
+        self.assertEqual(rc, 2, self.err)
+        self.assertIn("HTTP 404: Not Found", self.err)
+        self.assertNotIn("has not decided", self.err)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
+
     def test_gh_view_failure_stops(self):
         self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
         self.st["view_fail"] = True
@@ -621,6 +659,39 @@ class TestE6Gate(LedgerFixture):
         self.assertEqual(len(seen), 2)
         self.assertIn("'200'", seen[1], "PR 2's gate did not run against a tree containing PR 1's landing")
 
+
+
+class TestGh736AwaitMergeable(unittest.TestCase):
+    """GH-736 `_await_mergeable`: bounded, stops on the first error, never re-polls an error."""
+
+    def _run(self, first, reads):
+        seq = iter(reads)
+        with mock.patch.object(merge_cleanup, "refresh_pr_with_retry", side_effect=lambda n, r: next(seq)) as rf, \
+             mock.patch.object(merge_cleanup, "_sleep") as sl, \
+             contextlib.redirect_stdout(io.StringIO()):
+            out = merge_cleanup._await_mergeable(7, first, Path("."))
+        return out, rf.call_count, sl.call_count
+
+    def test_decided_first_read_is_not_polled(self):
+        for state in ("MERGEABLE", "CONFLICTING"):
+            out, refreshes, sleeps = self._run({"mergeable": state}, [])
+            self.assertEqual((out["mergeable"], refreshes, sleeps), (state, 0, 0))
+
+    def test_an_error_in_hand_is_not_polled(self):
+        # Agy QA r1 blocker 2: a failed post-B1 re-fetch was re-polled six times.
+        out, refreshes, sleeps = self._run({"error": "boom"}, [])
+        self.assertEqual((out.get("error"), refreshes, sleeps), ("boom", 0, 0))
+
+    def test_an_error_mid_poll_is_returned_at_once(self):
+        out, refreshes, sleeps = self._run({"mergeable": "UNKNOWN"}, [{"mergeable": "UNKNOWN"}, {"error": "net"}])
+        self.assertEqual((out.get("error"), refreshes, sleeps), ("net", 2, 2))
+
+    def test_undecided_is_bounded_and_returned_undecided(self):
+        reads = [{"mergeable": "UNKNOWN"}] * merge_cleanup.MERGEABLE_POLL_ATTEMPTS
+        out, refreshes, sleeps = self._run({"mergeable": "UNKNOWN"}, reads)
+        self.assertEqual(out["mergeable"], "UNKNOWN")
+        self.assertEqual(refreshes, merge_cleanup.MERGEABLE_POLL_ATTEMPTS)
+        self.assertEqual(sleeps, merge_cleanup.MERGEABLE_POLL_ATTEMPTS)
 
 if __name__ == "__main__":
     unittest.main()

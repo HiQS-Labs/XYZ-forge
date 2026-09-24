@@ -736,6 +736,23 @@ def prune_dangling_skill_symlinks(dry_run: bool = True):
             log_warn(f"Error checking skill dir {d}: {exc}")
 
 
+def _await_mergeable(p_num: int, info: Dict[str, Any], primary_repo: Path) -> Dict[str, Any]:
+    """GH-736: GitHub recomputes mergeability for every open PR after each landing on the base, so
+    the next PR reads UNKNOWN for a few seconds. Poll (bounded) while it is undecided. A refresh
+    error ends the poll at once and is returned, never retried here — the caller applies its own
+    GH-623 defer/stop rules. Still undecided after the last poll is returned as-is: the caller's
+    fail-closed stop (a PR whose state is unknown is never merged) is unchanged."""
+    polls = 0
+    while (not info.get("error") and info.get("mergeable") not in ("MERGEABLE", "CONFLICTING")
+           and polls < MERGEABLE_POLL_ATTEMPTS):
+        polls += 1
+        log(f"PR #{p_num}: mergeable is {info.get('mergeable')!r} — waiting {MERGEABLE_POLL_S}s for GitHub "
+            f"to decide ({polls}/{MERGEABLE_POLL_ATTEMPTS})")
+        _sleep(MERGEABLE_POLL_S)
+        info = refresh_pr_with_retry(p_num, primary_repo)
+    return info
+
+
 def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_run: bool) -> int:
     """E + E.6 + B1: the Phase 5 feedback loop. Every PR is re-fetched before any decision, gated
     in a disposable clone against the CURRENT integration head, merged only on green, verified
@@ -795,21 +812,16 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             if (info.get("baseRefName") or "") != branch:
                 log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
                 return 2
+            info = _await_mergeable(p_num, info, primary_repo)
+            if info.get("error"):  # a refresh inside the poll failed: same rules as the first read
+                if _transient(info["error"]):
+                    log_err(f"PR #{p_num}: DEFERRED — network unavailable after {RETRY_ATTEMPTS} attempts: "
+                            f"{info['error']}")
+                    failed[p_num] = f"deferred: network ({info['error'][:120]})"
+                    continue
+                log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
+                return 2
             mergeable = info.get("mergeable")
-            # GitHub recomputes mergeability after every landing on the base; the PR right after
-            # a merge reads UNKNOWN for a few seconds. Poll (bounded) before treating it as unknown
-            # state — a stop here is a timing artifact, not an unknowable PR.
-            polls = 0
-            while mergeable not in ("MERGEABLE", "CONFLICTING") and polls < MERGEABLE_POLL_ATTEMPTS:
-                polls += 1
-                log(f"PR #{p_num}: mergeable is {mergeable!r} — waiting {MERGEABLE_POLL_S}s for GitHub "
-                    f"to decide ({polls}/{MERGEABLE_POLL_ATTEMPTS})")
-                _sleep(MERGEABLE_POLL_S)
-                again = refresh_pr_with_retry(p_num, primary_repo)
-                if again.get("error"):
-                    break
-                info = again
-                mergeable = info.get("mergeable")
             if mergeable not in ("MERGEABLE", "CONFLICTING"):
                 log_err(f"PR #{p_num}: mergeable is {mergeable!r} — GitHub has not decided; stopping rather than guessing")
                 return 2
@@ -906,16 +918,7 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     keep_workdir = True
                     return 2
                 log(f"PR #{p_num}: {why}; re-fetching and re-gating the new head")
-                info = refresh_pr_with_retry(p_num, primary_repo)
-                polls = 0
-                while info.get("mergeable") not in ("MERGEABLE", "CONFLICTING") and polls < MERGEABLE_POLL_ATTEMPTS:
-                    polls += 1
-                    log(f"PR #{p_num}: mergeable is {info.get('mergeable')!r} — waiting {MERGEABLE_POLL_S}s for GitHub to decide ({polls}/{MERGEABLE_POLL_ATTEMPTS})")
-                    _sleep(MERGEABLE_POLL_S)
-                    again = refresh_pr_with_retry(p_num, primary_repo)
-                    if again.get("error"):
-                        break
-                    info = again
+                info = _await_mergeable(p_num, refresh_pr_with_retry(p_num, primary_repo), primary_repo)
                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                     return 2
