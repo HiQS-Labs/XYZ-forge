@@ -107,3 +107,7 @@ No new test file, no fuzzing, no timing-sensitive exact sample counts (assert `K
 ### Acceptance check (falsifiable)
 
 `bash test/gh390-gate-guard.sh` passes, including the new seam and driven cases; the driven red control fails if the warning or `unknown` text is printed with a working `ps`. `bash test/gh291-contract-goldens.sh` and `bash test/gh457-gate-tiers.sh` still pass. Full gate once on the final commit.
+
+## Merge evidence
+
+- PR #776 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

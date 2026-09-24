@@ -13,6 +13,27 @@ before its first sample also reports `unknown` instead of `0MB`. A clean exit be
 helper-seam cases, a denied-`ps` driven case, and a working-`ps` control; against the pre-fix code
 the new cases fail 4 of 6.
 
+## 2026-09-24 — GH-760 correction: the ready-poll is not the send-path flake
+
+Run 35767844928 already passed `GET /` (HTTP 200), session create, and both joins before `remote agent2 send` missed `"turn": 2`. The 2026-09-23 entry's slow-bind explanation does not match that log. PR #761 keeps the poll and the failure diagnostics and does not close #760. The `FileNotFoundError` for `runtime/agent2.watch` in that log is from `agent-chorus.sh`, not the bridge suite.
+
+## 2026-09-23 — GH-764 baseline macOS gate repair
+
+Three baseline failures were traced on untouched `development`: the ATE test could reach its
+expected exit code through a missing Python import, the work-state test assumed this macOS SQLite
+build removed empty WAL sidecars on close, and connector dispatch closed a child's stdin handle
+before `communicate()` tried to flush it. The ATE suite now names a missing `requests` or PyYAML
+prerequisite immediately, the WAL test explicitly constructs header-without-sidecars input, and
+the connector launcher clears its closed stdin handle before collection. The local-gate startup
+instruction names the same-interpreter Python preflight. Reversibility: **Costly** shared connector
+path, with a direct revert and no schema or data migration. Focused checks: GH-142 30/30,
+GH-605 28/28, GH-549 124/124; separate missing-module red controls failed by name. Codex final
+relay approved. Full macOS `validate.sh` passed 411/411 on the reviewed commit in a separate
+full clone with unchanged git identity; `security-scan.sh` failed only during the parallel pool
+on transient peer-suite files and passed the built-in isolated retry. Sanitized logs and the
+committed receipt are in [GH-764 evidence](TESTS-RESULTS/2026-09-23+GH-764/SUMMARY.md).
+
+
 ## 2026-09-23 — Audits of the two largest Python files, plus intake (GH-768, GH-769)
 
 Research-only audits of `utils/py/releases_app.py` (26 findings plus a caller and test sweep) and
@@ -34,6 +55,10 @@ views, Pages generation, and routed local/hosted verification. The Skills Army m
 GH-672 one-Pulse-collection-per-device contract and its canonical-source drift gate. Git lanes were
 rebuilt from current cached refs. All seven specs pass semantic validation with zero warnings; all
 seven self-contained HTML artifacts were rebuilt.
+
+## 2026-09-23 — GH-760: agent-chorus-bridge waits for GET / instead of sleep 1
+
+Hosted wave-reconcile `--qualify` failed closed when `test/agent-chorus-bridge.sh` raced a slow bind (`sleep 1.0`). The suite now polls `GET /` until the expected HTTP code, dumps client body + log on assertion failure, and fails closed against a closed port. Disposable-clone run: 48 passed, 0 failed; mutating the helper to always return 0 went red on that control.
 
 ## 2026-09-22 — PR #747 GLM follow-up verified (GH-744)
 

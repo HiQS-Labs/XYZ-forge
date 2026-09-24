@@ -143,3 +143,7 @@ Every module reads the shared state through `RunContext`, so none of them needs 
 6. **Share with relay_drive (M):** F3 (lock, attempts, tick info, cost summary into `rtl.py`), F26 (receipt schema), F21 caching, F29.
 7. **Retire the Bash twin (L, separate decision under GH-308):** F25.
 8. **Diagram refresh (S, any time):** F28, done through the swe-diagram skill.
+
+## Merge evidence
+
+- PR #776 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
