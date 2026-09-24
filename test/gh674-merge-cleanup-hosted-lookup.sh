@@ -2,7 +2,7 @@
 # GH-674 — hosted reconciliation lookup sees PR-keyed runs; automatic fallback never forces.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export XYZ_TEST_SCRIPTS="$HERE/../skills/merge-cleanup/scripts"
+export XYZ_TEST_SCRIPTS="$HERE/../skills/2-daily/merge-cleanup/scripts"
 
 exec python3 - <<'PY'
 import json
