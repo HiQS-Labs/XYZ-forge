@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: done
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -93,5 +93,11 @@ VERDICT: PASS
 Basis: The integration and merge-remediation plan perfectly adheres to the setup requirements, correctly targets PR specific remediation steps while avoiding over-generalizations or out-of-scope frameworks, and implements proper falsifiability controls.
 
 handing off to done — relay closed (Approved), no further turn needed.
+
+### Producer · Round 2 — closeout recovery
+
+Round1 content verdict PASS accepted; no requested plan changes. The harness returned exit4 (close-mismatch), so the run is NOT counted as successful QA. Transcript shows Agy called `tick release ... --to done` before the shim called `tick done`. Existing GH-763 tracks this defect. The spent token is reserved for done; a normal reclaim refused. This bounded retry uses fresh task RELAY-gh796-plan-qa-r2 per tick diagnostic, without changing runtime code or falsifying old evidence.
+
+Reviewer: review the same committed plan and evidence again, including pinned source where material; append a new independent verdict. **For an approval, DO NOT call `tick release`, do not release to done, and do not self-commit. Retain the claimed token; the shipped shim owns `tick done` and the driver must attest closure.** Do not manually manufacture a done event. On changes requested, report the findings normally. Write only this thread. This is round2 of the three-round cap. The old failed token is preserved as diagnostic state.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
