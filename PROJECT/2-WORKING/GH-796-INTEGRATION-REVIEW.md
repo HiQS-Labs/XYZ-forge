@@ -7,9 +7,9 @@ owner: noel
 goal: Land reviewed compatible PRs in a verified sequence while preserving deferred work and the incomplete GH-777 arc.
 gh_issue: 796
 branch: feat/gh796-integration-review
-effort: medium
-complexity: medium
-risk: high
+effort: 3
+complexity: 3
+risk: 4
 phases: 3
 ---
 

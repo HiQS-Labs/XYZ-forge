@@ -44,7 +44,7 @@ ROUND: 1 / 3
 5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
    the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
    set `STATUS: Escalated`.
-6. **Commit only the relay file** (`relay(gh796-plan-qa): <role> r<N>`); no push. **Stop** and report one line.
+6. **Write only the relay file**; the harness owns the commit. No self-commit, no push. **Stop** and report one line.
 7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
    next and what they should do: *"handing off to <other role> — go to the <other> window and say
    'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
