@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-24 — GH-791 merge regression review
+
+- Consolidate overlapping #787/#753 mergeability polling and PR exclusion into one path,
+  restoring the six-poll limit and preserving both numeric exclusion spellings.
+- Reject foreign or unidentified hosted workflow success as evidence for a landing; matching
+  PR/merge SHAs take precedence over a provisional unidentified run.
+- Reconcile the #783 inventory baseline with the GitHub-label connector landed by #723,
+  preserving the ratchet's rejection of new scripts and database bypasses.
+- Verification: batch-state negative controls retained with the review receipts; final focused
+  and full macOS validation results are recorded in the GH-791 review report.
+
 ## 2026-09-24 — merge-cleanup: `--exclude <PR#>` drops the PR; post-landing UNKNOWN mergeability is polled (GH-736)
 
 `--exclude` with a bare PR number now leaves that PR out of the merge queue, as the skill's own

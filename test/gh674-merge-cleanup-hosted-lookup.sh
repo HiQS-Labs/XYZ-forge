@@ -61,7 +61,8 @@ class HostedLookup(unittest.TestCase):
     def test_zero_grace_adopts_active_run_without_head_sha(self):
         responses = [
             [{"databaseId": 62901, "status": "in_progress", "conclusion": ""}],
-            [{"databaseId": 62901, "status": "completed", "conclusion": "success"}],
+            [{"databaseId": 62901, "status": "completed", "conclusion": "success",
+              "headSha": "p" * 40}],
         ]
 
         def fake_gh(args, cwd, timeout=60):
@@ -81,6 +82,45 @@ class HostedLookup(unittest.TestCase):
 
         self.assertEqual(result, "success")
         self.assertEqual(responses, [])
+
+    def test_foreign_or_unidentified_success_cannot_attest_this_merge(self):
+        for initial_sha, final_sha in (("foreign", "foreign"), (None, "foreign"), (None, None)):
+            with self.subTest(initial_sha=initial_sha, final_sha=final_sha):
+                responses = [
+                    [{"databaseId": 791, "status": "in_progress", "headSha": initial_sha}],
+                    [{"databaseId": 791, "status": "completed", "conclusion": "success",
+                      "headSha": final_sha}],
+                ]
+                def fake_gh(args, cwd, timeout=60):
+                    return subprocess.CompletedProcess(args, 0, json.dumps(responses.pop(0)), "")
+                with mock.patch.object(merge_cleanup, "_gh", side_effect=fake_gh), \
+                        mock.patch.object(merge_cleanup.time, "sleep"), \
+                        mock.patch.dict(os.environ, {merge_cleanup.HOSTED_GRACE_ENV: "0"}):
+                    self.assertEqual(merge_cleanup.wait_for_hosted_reconcile(
+                        "m" * 40, Path("."), "development", pr_head="p" * 40), "fallback")
+
+    def test_matching_run_takes_precedence_over_unidentified_adoption(self):
+        responses = [
+            [{"databaseId": 1, "status": "in_progress"}],
+            [{"databaseId": 1, "status": "completed", "conclusion": "failure"},
+             {"databaseId": 2, "status": "completed", "conclusion": "success", "headSha": "p" * 40}],
+        ]
+        def fake_gh(args, cwd, timeout=60):
+            return subprocess.CompletedProcess(args, 0, json.dumps(responses.pop(0)), "")
+        with mock.patch.object(merge_cleanup, "_gh", side_effect=fake_gh), \
+                mock.patch.object(merge_cleanup.time, "sleep"), \
+                mock.patch.dict(os.environ, {merge_cleanup.HOSTED_GRACE_ENV: "0"}):
+            self.assertEqual(merge_cleanup.wait_for_hosted_reconcile(
+                "m" * 40, Path("."), "development", pr_head="p" * 40), "success")
+
+    def test_unidentified_active_run_still_blocks_local_writer_at_timeout(self):
+        response = subprocess.CompletedProcess([], 0, json.dumps([
+            {"databaseId": 791, "status": "in_progress"}]), "")
+        with mock.patch.object(merge_cleanup, "_gh", return_value=response), \
+                mock.patch.dict(os.environ, {merge_cleanup.HOSTED_GRACE_ENV: "0",
+                                             merge_cleanup.HOSTED_WAIT_ENV: "0"}):
+            self.assertEqual(merge_cleanup.wait_for_hosted_reconcile(
+                "m" * 40, Path("."), "development", pr_head="p" * 40), "active_timeout")
 
     def test_automatic_fallback_never_adds_force_flag(self):
         with tempfile.TemporaryDirectory() as td:

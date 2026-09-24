@@ -1,0 +1,40 @@
+---
+title: "GH-791: repair merge-batch regressions"
+status: in-progress
+created: 2026-09-24
+updated: 2026-09-24
+owner: Codex
+goal: Restore bounded cleanup polling, correct hosted-run attribution, and the inventory gate.
+gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/791
+---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Reviewed the landed batch and reproduced three direct regressions. | Repair and verify on a dedicated PR into development. |
+
+## Scope and recon
+
+The reviewed batch ends at `337813e0`; #761 and #783 are the preceding merges named by #791.
+#787 and #753 both added mergeability polling; their combined `land_prs` calls wait twice.
+#753 also adopts unrelated hosted workflow runs as evidence for the current landing.
+#783 froze the script inventory before #723 added the GitHub-label connector.
+
+Entry path: cleanup CLI -> `land_prs` -> one bounded mergeability refresh -> landing ->
+`run_post_merge_reconcile` -> `wait_for_hosted_reconcile`. GitHub workflow identity must match
+one of the PR or merge SHAs before its success can skip the local reconciler. An unidentified
+active run can delay the writer, but cannot attest this landing. Existing local fallback retains
+its independent active-workflow guard. Inventory changes only admit the already-landed connector;
+the ratchet must still reject a new rogue script.
+
+Reversibility: Easy; focused code/test/baseline edits can be reverted. No merge or clone teardown
+is executed by regression fixtures. The primary checkout stays untouched.
+
+## Verification
+
+Run existing merge-cleanup tests and new mocked foreign/unknown workflow cases. Observe failures
+against the batch state, then passes against repairs. Run the inventory positive and negative
+controls. Run the full macOS gate in a separate full clone and preserve evidence with provenance.
+Review roadmap, express, labels, vendor, HQ, watchdog, and bridge checks as part of the batch audit.
+Unknown: real GitHub eventual-consistency timing is modeled with controlled workflow responses.
