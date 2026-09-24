@@ -137,6 +137,8 @@ TESTS=(
   "gh778-review-code-skill.sh"    # GH-778 (review-code and review-PR ground-truth code review skill)
   "gh779-radar-ci-health.sh"    # GH-779 (radar: trunk CI health, new-guard re-run on open PRs, regressed-after-fixed table)
   "gh781-wam-radar-seed.sh"    # GH-781 (whack-a-mole seeds candidate clusters from recent radar reports)
+  "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)
+  "gh777-inventory-ratchet.sh"  # GH-777 (inventory ratchet: shrink-only script/connect guards)
   "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
   "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
   "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
