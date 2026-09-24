@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-24 — Gate memory guard says when it cannot measure (GH-773)
+
+When `ps` cannot run (a sandbox raises `PermissionError` at exec) or lists nothing for the gate's
+process group, the pre-advance gate's RSS watchdog in `utils/py/marathon_drive.py` used to switch
+off silently and log `peak group RSS 0MB`. It now logs one warning
+(`RSS watchdog unavailable … continuing without RSS enforcement`), keeps the wall-clock and CPU
+caps, and reports the peak as `unknown` with the count of unreadable samples. A gate that exits
+before its first sample also reports `unknown` instead of `0MB`. A clean exit between the poll and
+`ps` is re-polled, so it is not counted as a failed sample. The design came from AgentChorus #507818
+(fail-open-loud, no fallback probe, no receipt schema change). `test/gh390-gate-guard.sh` gains
+helper-seam cases, a denied-`ps` driven case, and a working-`ps` control; against the pre-fix code
+the new cases fail 4 of 6.
+
 ## 2026-09-23 — Audits of the two largest Python files, plus intake (GH-768, GH-769)
 
 Research-only audits of `utils/py/releases_app.py` (26 findings plus a caller and test sweep) and

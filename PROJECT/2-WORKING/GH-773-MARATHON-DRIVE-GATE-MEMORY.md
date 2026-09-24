@@ -2,7 +2,7 @@
 gh_issue: 773
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/773
 title: "marathon_drive: gate memory guard silently disables when ps is denied, logs peak 0MB"
-status: Active (2-WORKING — plan drafted 2026-09-24, awaiting Codex plan QA)
+status: Active (2-WORKING — implemented 2026-09-24, awaiting final QA and PR)
 created: 2026-09-23
 updated: 2026-09-24
 owner: noelsaw1
@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon traced; plan drafted from the AgentChorus #507818 decision; task rated 55/60/50/80. | Codex relay plan QA, then implement on `fix/gh773-gate-rss-unreadable`. |
+| Plan approved by Codex (round 1; driver exit 4 is the #763 close-mismatch, token closed by hand). Fix and tests implemented; `gh390-gate-guard.sh` 23/23, mutation run against pre-fix code fails the 4 new checks; gh291, gh457, gh382 green. | Full gate once, final Codex QA, open PR. |
 
 ## Bug
 
