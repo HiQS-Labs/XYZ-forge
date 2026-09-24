@@ -121,7 +121,7 @@
     "utils/validate-agy.sh",
     "utils/vndr/vndr.sh"
   ],
-  "sqlite_bypasses_count": 36,
+  "sqlite_bypasses_count": 32,
   "sqlite_bypasses": [
     "relay-automation/xyz-releases-onboard.sh:126",
     "skills/1-hourly/standup/collect.sh:780",
@@ -143,11 +143,7 @@
     "utils/py/jog_run.py:1666",
     "utils/py/jog_run.py:346",
     "utils/py/jog_run.py:837",
-    "utils/py/prior_art_recon.py:50",
-    "utils/py/releases_app.py:436",
-    "utils/py/releases_app.py:5287",
-    "utils/py/releases_app.py:6089",
-    "utils/py/releases_app.py:6189",
+    "utils/py/prior_art_recon.py:53",
     "utils/py/releases_cycle.py:129",
     "utils/py/site_build.py:109",
     "utils/py/site_build.py:112",

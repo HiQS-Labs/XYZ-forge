@@ -100,7 +100,7 @@ Then begin work.
    and identify the existing implementation before proposing changes. For code,
    trace the relevant entry point through callers/callees to state writes and
    visible outputs; inspect tests, configuration knobs, and likely affected
-   consumers. Run `python3 utils/py/prior_art_recon.py --query <seam>` to inspect
+   consumers. Run `python3 utils/py/prior_art_recon.py --query <seam>` (where available) to inspect
    open PRs across repos, `releases.db` roadmap, and existing utilities (`lib/*`,
    `utils/py/*`) before authoring new utilities. Import existing helpers rather
    than reinventing them. Prefer the repo's graph tools where available, falling back
