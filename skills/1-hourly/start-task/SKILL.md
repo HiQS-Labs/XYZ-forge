@@ -52,8 +52,8 @@ Then begin work.
    (`ROUTER.md` where present), `AGENTS.md`, `SOP.md`, guiding principles, active
    roadmap, and relevant project docs. Resolve issue numbers against the actual
    remote; use full repo/issue URLs across repos. Inspect existing issues, PRs,
-   plans, and active work before creating anything. Reuse an existing issue and
-   its canonical plan; never create duplicate intake for an already tracked ask.
+   plans, and active work before creating anything (`python3 utils/py/prior_art_recon.py --query <seam>` where available).
+   Reuse an existing issue and its canonical plan; never create duplicate intake for an already tracked ask.
    Follow the target repo's branch and governance contracts. Missing PDDA or
    RELEASES infrastructure is not permission to install it or invent a substitute.
    Record which local equivalent applies or that the repo has none.
@@ -100,8 +100,11 @@ Then begin work.
    and identify the existing implementation before proposing changes. For code,
    trace the relevant entry point through callers/callees to state writes and
    visible outputs; inspect tests, configuration knobs, and likely affected
-   consumers. Prefer the repo's graph tools where available, falling back when
-   coverage is insufficient. Trace enough to size the change; name untraced paths
+   consumers. Run `python3 utils/py/prior_art_recon.py --query <seam>` to inspect
+   open PRs across repos, `releases.db` roadmap, and existing utilities (`lib/*`,
+   `utils/py/*`) before authoring new utilities. Import existing helpers rather
+   than reinventing them. Prefer the repo's graph tools where available, falling back
+   when coverage is insufficient. Trace enough to size the change; name untraced paths
    and uncertainty rather than claiming an exhaustive audit.
    Inspect recent same-class issues and recurrence evidence for severity/priority
    ratings; distinguish actual new incidents from duplicate reports.
