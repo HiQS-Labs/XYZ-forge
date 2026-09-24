@@ -1,6 +1,6 @@
 ---
 title: "GH-788: gate — suites fail when the Python path contains a space (shebang and unquoted sys.executable)"
-status: Proposed (1-INBOX — not yet active)
+status: In Progress
 gh_issue: 788
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/788
 doc_type: bugfix
@@ -18,7 +18,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Intake, recon and plan (base `337813e0`). | Codex plan QA, then implement. |
+| Plan approved by Codex plan QA round 2 (`relay-system/2026-09-24/gh788-plan-qa.md`; r1 blocker — `shlex.quote` leaves ordinary paths unquoted — fixed by an always-single-quoted launcher). | Implement steps 1–4, then verification step 5 and Codex final QA. |
 
 ## Problem (observed)
 
