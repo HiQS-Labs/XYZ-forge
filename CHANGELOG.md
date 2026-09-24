@@ -6,7 +6,8 @@ Cards said "Progress coverage unknown" with no explanation, and sources with no 
 (topology, continuity) got a red dot. Cards now read **Progress not measured**, with a
 tooltip saying it is not an error and why. Source pills say `off` or `not set up` in grey,
 with a tooltip naming the variable that turns them on (for example `FLIGHTDECK_XYZ_ROOTS`
-for the in-progress view). Red now means only an actual read failure. Presentation only:
+for the in-progress view). A source that read only in part shows amber `partial`, and red now means only an
+outright read failure. Presentation only:
 no server or snapshot change. Reversibility: **Easy**. Verification: node
 `work-status-checks.mjs` (a mutation that paints an unconfigured source red fails it),
 `pytest test/flightdeck` 39/39, and the real-Chrome browser check.

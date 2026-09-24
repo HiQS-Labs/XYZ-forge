@@ -52,7 +52,7 @@ assert.equal(issueStatus(active,now).kind,'in-progress','open issue is not compl
 // GH-797: unknown/unconfigured sources are grey with an enable hint; only read failures are red.
 const src = (id, availability, extra = {}) => ({id, availability, coverage:'unknown', observed_through:null, error:null, ...extra});
 assert.equal(sourceStatus(src('xyz_work','disabled')).tone,'off');
-assert.match(sourceStatus(src('xyz_work','disabled')).help,/FLIGHTDECK_XYZ_ROOTS/);
+assert.match(sourceStatus(src('xyz_work','disabled')).help,/FLIGHTDECK_XYZ_ROOTS.*add xyz_work to it/);
 assert.match(sourceStatus(src('clio','disabled')).help,/FLIGHTDECK_CONNECTORS/);
 assert.deepEqual([sourceStatus(src('topology','unavailable')).tone, sourceStatus(src('topology','unavailable')).label],['off','not set up']);
 assert.match(sourceStatus(src('continuity','unavailable')).help,/no producer.*FLIGHTDECK_CONTINUITY_JSON/);
@@ -60,6 +60,10 @@ assert.equal(sourceStatus(src('rebalance','unavailable',{error:'FileNotFoundErro
 assert.match(sourceStatus(src('rebalance','unavailable',{error:'FileNotFoundError'})).help,/FileNotFoundError.*FLIGHTDECK_REBALANCE_DB/);
 assert.equal(sourceStatus(src('xyz_work','unavailable',{roots:[{error:'ledger-locked'}]})).tone,'failed','root error is a read failure');
 assert.equal(sourceStatus(src('clio','ok',{coverage:'partial'})).tone,'ok');
+const mixed = src('xyz_work','ok',{error:'source-unavailable-or-unsupported',roots:[{supported:true,error:null},{supported:false,error:'ledger-locked'}]});
+assert.equal(sourceStatus(mixed).tone,'partial','mixed-root read is never green');
+assert.match(sourceStatus(mixed).help,/source-unavailable-or-unsupported/);
+assert.equal(sourceStatus(mixed,false).tone,'stale');
 assert.equal(sourceStatus(src('clio','unavailable',{error:'X'}), false).tone,'stale');
 assert.match(PROGRESS_HELP,/Not an error/);
 console.log('work-status production selector: nonempty agreement, quiet work, closure, uncertainty, identity and typed references passed');

@@ -12,18 +12,20 @@ export const PROGRESS_HELP = 'Not an error. Flightdeck shows the activity its so
 
 // Where each connector is configured (see src/flightdeck/contract.py).
 const SOURCE_SETUP = {
-  xyz_work: 'set FLIGHTDECK_XYZ_ROOTS=/path/to/repo[:/other/repo] (or xyz_roots in FLIGHTDECK_CONFIG) and restart',
+  xyz_work: 'set FLIGHTDECK_XYZ_ROOTS=/path/to/repo[:/other/repo] (or xyz_roots in FLIGHTDECK_CONFIG); if FLIGHTDECK_CONNECTORS is set, also add xyz_work to it; then restart',
   rebalance: 'check FLIGHTDECK_REBALANCE_DB points at the Rebalance database',
   clio: 'check FLIGHTDECK_CLIO_JSONL points at the prompt log',
   git_pulse: 'check FLIGHTDECK_GIT_PULSE_DIR points at the Git Pulse sync folder',
   topology: 'no producer writes this feed yet; once one does, set FLIGHTDECK_TOPOLOGY_JSON',
   continuity: 'no producer writes this feed yet; once one does, set FLIGHTDECK_CONTINUITY_JSON'
 };
-// Unknown or unconfigured is "off" (grey); only an actual read failure is "failed" (red).
+// Unknown or unconfigured is "off" (grey); a source that read only in part is "partial" (amber);
+// only an outright read failure is "failed" (red).
 export function sourceStatus(source, fresh = true) {
   const setup = SOURCE_SETUP[source.id] || 'check the Flightdeck configuration';
   const error = source.error || (source.roots || []).map(root => root.error).find(Boolean);
   if (!fresh) return {tone: 'stale', label: 'stale', help: 'Snapshot is older than 5 minutes; waiting for a fresh read.'};
+  if (source.availability === 'ok' && error) return {tone: 'partial', label: 'partial', help: `Partly read (${error}); showing what was read: ${setup}.`};
   if (source.availability === 'ok') return {tone: 'ok', label: 'ok', help: `Coverage: ${source.coverage}; observed ${source.observed_through || 'unknown'}`};
   if (error) return {tone: 'failed', label: 'read failed', help: `Read failed (${error}): ${setup}.`};
   if (source.availability === 'disabled') {
