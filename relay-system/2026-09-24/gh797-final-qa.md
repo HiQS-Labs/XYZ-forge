@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -126,5 +126,25 @@ Fix commit: `272bdf71`.
 - Unverified (clone run): acknowledged. Focused re-run in the task clone: node check rc=0; `pytest -q test/flightdeck` 39 passed. The full gate runs once in a disposable clone after approval.
 
 Handing off to Reviewer (codex). Please review round 2 against `git show 272bdf71`.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: The mixed-root failure is now visible, but amber still violates the explicit red-for-read-failures acceptance criterion. Cap warnings are a valid distinction; availability=ok alone does not establish that no read failed.
+swept file: no
+
+Scope: Fully read presentation.mjs, app.js, app.css, README, work-status-checks.mjs and the plan. Read the connector aggregation and configuration paths; CHANGELOG review covers the GH-797 entry only, not the historical body. No additional pre-existing defect established in the fully read changed code. Graph enumeration returned 76 projects, has_more=false, with no index for this worktree or task clone; used direct source fallback and claim no graph coverage/generation or commit-diff verification. No Git commands or executable test fixtures ran.
+
+- [Blocker] Round 1's mixed-root read-failure case remains outside DoD 3: `web/flightdeck/presentation.mjs:28` maps every ok+error input to amber, including a locked ledger. `src/flightdeck/connectors.py:116` sets ok when any other root succeeds, and lines 118-119 retain the aggregate error. The requirement says a source with a read failure (including roots[].error) stays red; it does not restrict this to total failure. Classify actual root read failures before the partial branch and preserve stale precedence. If retaining amber for cap-only warnings, distinguish those from actual read errors; no server change is needed. Update the mixed assertion at `test/flightdeck/work-status-checks.mjs:64` accordingly and align the README/CHANGELOG wording.
+  Observed input: `{id:"xyz_work",availability:"ok",coverage:"partial",error:"source-unavailable-or-unsupported",roots:[{supported:true,error:null},{supported:false,error:"ledger-locked"}]}`.
+  Affected scope: Fresh mixed-success XYZ sources containing an actual root read failure; not a request to classify cap-only warnings as read failures.
+  Falsifier: The observed input returns failed/red and names the read failure; removing errors returns ok; fresh=false remains stale. A cap-only input with no failed read must not be mistaken for a locked ledger.
+  Probe command (under `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`): `node --input-type=module` with `import {sourceStatus} from "./web/flightdeck/presentation.mjs"; const mixed={id:"xyz_work",availability:"ok",coverage:"partial",error:"source-unavailable-or-unsupported",roots:[{supported:true,error:null},{supported:false,error:"ledger-locked"}]}; console.log(JSON.stringify(sourceStatus(mixed))); console.log("clean="+sourceStatus({...mixed,error:null,roots:[{supported:true,error:null}]}).tone); console.log("stale="+sourceStatus(mixed,false).tone);`. Exit 0. Decisive output: `{"tone":"partial","label":"partial","help":"Partly read (source-unavailable-or-unsupported); showing what was read: set FLIGHTDECK_XYZ_ROOTS=/path/to/repo[:/other/repo] (or xyz_roots in FLIGHTDECK_CONFIG); if FLIGHTDECK_CONNECTORS is set, also add xyz_work to it; then restart."}`, `clean=ok`, `stale=stale`.
+- [Pass] The explicit environment allowlist hint is added at `web/flightdeck/presentation.mjs:15` and README's FLIGHTDECK_XYZ_ROOTS row; README now lists both off and not set up. No further change to those labels requested.
+- [Nit] The allowlist hint still omits the JSON-config variant raised in Round 1: `src/flightdeck/contract.py:99,112` applies the same exclusion when configured.connectors is set. Extend the wording to mention the configured connectors list, as well as FLIGHTDECK_CONNECTORS.
+- [Pass] Progress copy remains explanatory (`web/flightdeck/presentation.mjs:11`, `web/flightdeck/app.js:41-43,111-114`); source stale precedence and excluded-row help remain (`presentation.mjs:27`, `app.js:162-174`). Existing CSS supplies the tones (`web/flightdeck/app.css:40-44`). No additional subsystem introduced in the reviewed presentation code.
+- [Unverified — needs clone run] Node checks, mutation controls, pytest and browser checks were not rerun here. Producer's Round 2 evidence remains self-reported; run the corrected mixed-failure assertion and cap-only controls in a disposable full clone, with the harness gate still outstanding.
+
+Handing off to Producer (claude-a) — address the remaining read-failure classification and take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
