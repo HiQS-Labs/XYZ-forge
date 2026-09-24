@@ -61,8 +61,11 @@ assert.match(sourceStatus(src('rebalance','unavailable',{error:'FileNotFoundErro
 assert.equal(sourceStatus(src('xyz_work','unavailable',{roots:[{error:'ledger-locked'}]})).tone,'failed','root error is a read failure');
 assert.equal(sourceStatus(src('clio','ok',{coverage:'partial'})).tone,'ok');
 const mixed = src('xyz_work','ok',{error:'source-unavailable-or-unsupported',roots:[{supported:true,error:null},{supported:false,error:'ledger-locked'}]});
-assert.equal(sourceStatus(mixed).tone,'partial','mixed-root read is never green');
-assert.match(sourceStatus(mixed).help,/source-unavailable-or-unsupported/);
+assert.equal(sourceStatus(mixed).tone,'failed','a failed xyz_work root is red even when another root read');
+assert.match(sourceStatus(mixed).help,/ledger-locked/);
+const capped = src('xyz_work','ok',{error:'issue-cap',roots:[{supported:true,error:null}]});
+assert.equal(sourceStatus(capped).tone,'partial','a cap warning is not a read failure');
+assert.equal(sourceStatus({...mixed,error:null,roots:[{supported:true,error:null}]}).tone,'ok');
 assert.equal(sourceStatus(mixed,false).tone,'stale');
 assert.equal(sourceStatus(src('clio','unavailable',{error:'X'}), false).tone,'stale');
 assert.match(PROGRESS_HELP,/Not an error/);

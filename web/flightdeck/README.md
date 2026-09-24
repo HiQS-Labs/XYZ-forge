@@ -21,7 +21,7 @@ Optional environment variables:
 |---|---|
 | `FLIGHTDECK_PORT` | Loopback port; default `8768` |
 | `FLIGHTDECK_CONNECTORS` | Comma-separated enabled connector IDs; empty means none |
-| `FLIGHTDECK_XYZ_ROOTS` | `:`-separated repo roots for the in-progress work view (`xyz_work`); off when unset. If `FLIGHTDECK_CONNECTORS` is set, it must also list `xyz_work` |
+| `FLIGHTDECK_XYZ_ROOTS` | `:`-separated repo roots for the in-progress work view (`xyz_work`); off when unset. If `FLIGHTDECK_CONNECTORS` or the `connectors` list in `FLIGHTDECK_CONFIG` is set, it must also list `xyz_work` |
 | `FLIGHTDECK_REBALANCE_DB` | Rebalance SQLite path |
 | `FLIGHTDECK_CLIO_JSONL` | CLIO-compatible prompt JSONL path |
 | `FLIGHTDECK_GIT_PULSE_DIR` | Git Pulse sync root |
@@ -29,9 +29,9 @@ Optional environment variables:
 | `FLIGHTDECK_CONTINUITY_JSON` | Existing producer's versioned milestone/handoff snapshot |
 | `FLIGHTDECK_CONFIG` | Optional JSON file containing the same lowercase path keys and `connectors` array |
 
-Source pills read `ok`, `off` or `not set up` (grey), `partial` (amber; some roots or rows
-could not be read), `read failed` (red; the tooltip names the error and the variable to
-check), or `stale`. Hover a pill
+Source pills read `ok`, `off` or `not set up` (grey), `partial` (amber; a row or root cap was hit,
+but nothing failed to read), `read failed` (red, including when one `xyz_work` root fails;
+the tooltip names the error and the variable to check), or `stale`. Hover a pill
 for how to enable it. Cards show **Progress not measured** because no source yet
 reports a progress window. That is expected, not an error.
 
