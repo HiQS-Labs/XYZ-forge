@@ -52,7 +52,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the **plan** in `PROJECT/1-INBOX/GH-788-PYTHON-PATH-SPACE.md` (commit `3ba43e1e`, branch `fix/gh788-python-path-space`). No code has been written yet.
+- Artifact under review: `PROJECT/1-INBOX/GH-788-PYTHON-PATH-SPACE.md` (the plan; no code has been written yet)
+- Commit reviewed: 3ba43e1e on branch fix/gh788-python-path-space
 - Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/788 (root cause, repro, site list). Same class, previously: #651, fixed for `gh610` only by PR #753.
 - Source to read (the plan's claims are about these):
   - `test/gh492-roadmap-state-sweep.sh:24`, `test/gh648-l2-token-aftermath.sh:65`, `test/gh648-l4-285-revalidate.sh:49`, `test/gh648-l5-gh237-repro.sh:35`, `test/gh648-l6-muse-attribution.sh:33`, `test/gh666_agy_model_probe.py:32,130-146`
