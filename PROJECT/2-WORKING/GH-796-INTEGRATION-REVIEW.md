@@ -1,6 +1,6 @@
 ---
 title: GH-796 — Open PR integration review and merge-remediation plan
-status: In progress — plan QA
+status: Plan approved — awaiting remediation
 created: 2026-09-24
 updated: 2026-09-24
 owner: noel
@@ -17,7 +17,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Four pinned PRs reviewed; textual merge matrix and targeted QA-gate failures captured | Agy plan QA; then operator handoff for remediation and merge-cleanup |
+| Four pinned PRs reviewed; Agy plan QA PASS with successful harness attestation | Remediate and requalify candidates, then run the reviewed merge-cleanup sequence |
 
 ## Table of contents
 
@@ -93,7 +93,7 @@ Phase 1 acceptance:
 - [x] Pin all four heads and development; distinguish Git conflicts from semantic risks.
 - [x] Review code and ledger seams; record explicit source/coverage limitations.
 - [x] Retain diagnostic failures and passing comparison controls.
-- [ ] Agy approves the resulting plan through a successful relay turn.
+- [x] Agy approves the resulting plan through a successful relay turn.
 
 ## Phase 2 — Ordered remediation and landing
 
@@ -146,3 +146,7 @@ Graph Verify attempted: XYZ-forge generation `2026-09-01T15:54:30Z`, ready but s
 2026-09-24 RELEASES rating: **80/75/50/65** (priority/severity/neutral appeal/cheapness), read back from the canonical writer. Gate-blocking and false-green readiness consequences justify priority/severity; no observed data loss is claimed. Bounded review/remediation is moderately cheap. Recurrence: recent Sep10–24 examples include #791 merge collisions, #788/#651 repeated interpreter-path failures, and #784 missing independent-QA enforcement; prior Aug27–Sep9 window was not exhaustively audited, so trend is unknown. No user numeric override. Existing PR issue scores are not changed by this integration coordinator.
 
 Agy reviewer must grade this plan and its evidence, not approve unremediated PRs. Reviewer writes only the relay thread. Every finding gets a disposition; nonzero driver exit/missing verdict/containment failure is not approval. Final planned handoff includes exact executing merge-cleanup revision, admitted/excluded PR list, remediation status and outstanding gates.
+
+## Plan QA outcome
+
+Agy returned PASS in both review rounds. Round1 driver exited4 with the known GH-763 close-mismatch because the reviewer released to an agent named done; that attempt is not counted as successful QA. Bounded round2 retained the token for the existing shim, returned exit0 and recorded attested Approved against reviewed head `095b6c9cd113`. No production change or manual attestation bypass was used. The substantive plan was unchanged between rounds; only protocol recovery and final status/evidence were added. Relay: `relay-system/2026-09-24/gh796-plan-qa.md`. Driver log and portable attestation record are retained with the evidence. This approves the plan, not the still-unremediated PRs. Existing GH-763 remains separate; no runtime repair was attempted here.

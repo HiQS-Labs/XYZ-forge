@@ -1,0 +1,17 @@
+relay-drive: GH-370 progress (main tree fallback: <review-clone>) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.V92qCZ)
+rtl: GH-654 allowlist: [] relay_file: <review-clone>/relay-system/2026-09-24/gh796-plan-qa.md
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: relay STATUS=Approved → closed token (tick done RELAY-gh796-plan-qa-r2)
+relay-drive: attested Approved by agy — reviewed 095b6c9cd113, 1078 bytes of review text, record <review-clone>/.git/relay-attest/RELAY-gh796-plan-qa-r2.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 3m 38s
+per done-task: ≥0 tokens, 3m 38s wall-clock
+  turn peak RSS: agy: 159MB peak RSS
+

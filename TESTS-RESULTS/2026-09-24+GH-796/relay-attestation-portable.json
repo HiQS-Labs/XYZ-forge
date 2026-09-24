@@ -1,0 +1,19 @@
+{
+  "added_len": 1078,
+  "added_sha256": "12b0268cd92fce26508f6e636160c611691bbcff605771e8c5400a997f479b91",
+  "added_start": 9890,
+  "artifact_sha256": null,
+  "attested_at": "2026-09-24T23:25:03Z",
+  "driver_pid": 20288,
+  "isolated": true,
+  "relay_file": "<review-clone>/relay-system/2026-09-24/gh796-plan-qa.md",
+  "relay_file_rel": "relay-system/2026-09-24/gh796-plan-qa.md",
+  "reviewed_head": "095b6c9cd11320e5a3440a8645589aa5bebbf4ac",
+  "reviewer": "agy",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "<review-clone>",
+  "task": "RELAY-gh796-plan-qa-r2",
+  "trailer_sha256": "6c07828dbe68f88a79fc25200e9a13860e9aec3c1f22e65190487cc98f05ed30",
+  "transcript_repo": "<review-clone>"
+}
