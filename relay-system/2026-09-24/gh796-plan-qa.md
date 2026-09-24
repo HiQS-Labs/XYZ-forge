@@ -116,4 +116,12 @@ Basis: Re-verified against the Definition of Done. The remediations and merge or
 
 handing off to done — relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-24T23:25:03Z
+task: RELAY-gh796-plan-qa-r2
+reviewer: agy
+status: Approved
+reviewed-head: 095b6c9cd11320e5a3440a8645589aa5bebbf4ac
+added-range: 9890+1078
+added-sha256: 12b0268cd92fce26508f6e636160c611691bbcff605771e8c5400a997f479b91
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
