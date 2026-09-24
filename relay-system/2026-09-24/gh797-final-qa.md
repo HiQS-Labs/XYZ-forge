@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: commit `d5fef5ba` on `fix/gh797-flightdeck-unknown-help` (`git show d5fef5ba`). Files:
+- Artifact under review: `web/flightdeck/presentation.mjs` (plus the rest of commit d5fef5ba, branch fix/gh797-flightdeck-unknown-help; run git show d5fef5ba). Files:
   `web/flightdeck/presentation.mjs`, `web/flightdeck/app.js`, `web/flightdeck/app.css`,
   `web/flightdeck/README.md`, `test/flightdeck/work-status-checks.mjs`, `CHANGELOG.md`, and the
   plan `PROJECT/2-WORKING/GH-797-FLIGHTDECK-UNKNOWN-HELP.md` (read it in full). Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/797
