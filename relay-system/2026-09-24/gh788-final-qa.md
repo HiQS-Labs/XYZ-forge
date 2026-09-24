@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -172,5 +172,53 @@ Handing off to Producer (claude-a) — disposition S1/S2 and N1, make the bounde
 **Verification:** `bash test/gh788-python-path-space.sh` → `11 pass, 0 fail` with the spaced venv active. Only `pystub.py` and the suite changed since the 11-suite run at `a061be40`. The full gate runs once, on the approved commit, in a disposable clone.
 
 **Round 2 ask:** confirm S1/N1 and accept or contest the S2 deferral to #792.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: S1 is corrected with a measured red control; N1 uses automatic cleanup; S2's separate tracking is accepted for this bounded interpreter-quoting repair. This approves the source review, not the outstanding disposable-clone gate.
+swept file: yes
+
+Scope: read the complete current `utils/py/pystub.py` and `test/gh788-python-path-space.sh`, the capture doc, and the S2 function. Round 1's broader whole-file sweep remains the baseline; attempted bulk re-reads of the other files were output-truncated, so no fresh exhaustive sweep of those files is claimed. No additional pre-existing defect was established. No Git command, suite, pytest or executable fixture was run. Graph project listing (both pages) contains no project for this worktree; nearest XYZ-forge coverage is generation 2026-09-01T15:54:30Z, with missing/not-tracked evidence paths. Current source is the evidence.
+
+- **[Pass] S1 resolved.** `utils/py/pystub.py:22` rejects CR and LF alongside quote, backslash and empty input. The non-mutating probe below returned rc=0: ordinary/spaced headers compile, all five invalid inputs are refused, and removing CR rejection in memory restores the SyntaxError. The committed refusal case is at `test/gh788-python-path-space.sh:55`; runtime execution remains for the clone gate.
+- **[Pass] N1 resolved by inspection.** `test/gh788-python-path-space.sh:22` retains a `TemporaryDirectory` object for the lifetime of the Python block (`work = _tmp.name` at :23), replacing the unowned allocation. Its normal interpreter-shutdown finalizer provides cleanup. The producer's before/after directory-count measurement was not independently repeated.
+- **[Should — deferred, accepted] S2 remains real and unfixed.** `utils/py/gen4_campaign.py:93` still deletes before :95–97 validate disjointness. Accept separate remediation because this is pre-existing and independent of the quoting change, with the exact observed input and mutation-order acceptance now recorded in open [GH-792](https://github.com/HiQS-Labs/XYZ-forge/issues/792). Read-only command `gh issue view 792 --repo HiQS-Labs/XYZ-forge --json number,title,state,body` returned rc=0, `"number":792,"state":"OPEN"`, and acceptance: “The overlapping call refuses with zero `makedirs`/`rmtree`/`subprocess` calls”; the disjoint control is also present. This disposition does not certify overlapping sandbox inputs as safe or resolve #792.
+- **[Unverified — needs clone run]** Final runtime/regression/ratchet gate remains outstanding, as the capture's Acceptance and this turn's restrictions require. Carry forward Round 1's bounded-search and historical-diff limitations; no new assertion that all possible alternate constructions were exhaustively ruled out. The source review has no remaining required #788 correction.
+
+S1 probe command (rc=0; no subprocesses, fixture execution or source mutation):
+
+~~~bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+PYTHONPATH="$PWD/utils/py" python3 - <<'PROBE'
+import pathlib,pystub
+for p in ('/tmp/plain/python3','/tmp/py with space/python3'):
+    compile(pystub.launcher(p)+'pass\n','<header>','exec')
+    print(repr(p),'compiles')
+for p in ('/tmp/py\rpath/python3','/tmp/py\npath/python3',"/tmp/it's/python3",'/tmp/py\\path/python3',''):
+    try: pystub.launcher(p)
+    except ValueError: print(repr(p),'refused')
+    else: raise AssertionError(p)
+s=pathlib.Path('utils/py/pystub.py').read_text()
+ns={}; exec(compile(s.replace('\\r',''),'<CR-guard-removed>','exec'),ns)
+try: compile(ns['launcher']('/tmp/py\rpath/python3')+'pass\n','<mutant>','exec')
+except SyntaxError: print('CR guard removed: SyntaxError (red control)')
+else: raise AssertionError('mutation did not fail')
+PROBE
+~~~
+
+Decisive output:
+~~~text
+'/tmp/plain/python3' compiles
+'/tmp/py with space/python3' compiles
+'/tmp/py\rpath/python3' refused
+'/tmp/py\npath/python3' refused
+"/tmp/it's/python3" refused
+'/tmp/py\\path/python3' refused
+'' refused
+CR guard removed: SyntaxError (red control)
+~~~
+
+Relay closed (Approved), no further review turn needed. Handing completion to claude-a for the authorized disposable-clone gate; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
