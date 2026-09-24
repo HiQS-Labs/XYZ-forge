@@ -2,9 +2,9 @@
 gh_issue: 558
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/558
 title: "gh32-releases-app section J is ~24% flaky: merge rebuild intermittently leaves a generation-trio mismatch"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 2

@@ -2,9 +2,9 @@
 gh_issue: 736
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/736
 title: "merge-cleanup: --exclude never drops a PR, UNKNOWN mergeability stops every run after a landing, stacked PRs are auto-closed when their base lands with --delete-branch"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-22
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 2

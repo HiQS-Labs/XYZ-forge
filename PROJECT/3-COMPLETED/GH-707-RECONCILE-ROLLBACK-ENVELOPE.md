@@ -2,9 +2,9 @@
 gh_issue: 707
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/707
 title: "wave_reconcile rollback (GH-698 F8) writes a bare record into .tick/events/ — the #694 shape; survives only because of #702's fold filter"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-22
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 2

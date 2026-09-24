@@ -1,8 +1,8 @@
 ---
 title: relay-drive --review-once misgrades a real reviewer block as a zero-output stall (exit 3, not 5)
-status: Active — marathon GH-749 lane L1
+status: Complete
 created: 2026-09-20
-updated: 2026-09-22
+updated: 2026-09-24
 owner: agent-b
 gh_issue: 720
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/720

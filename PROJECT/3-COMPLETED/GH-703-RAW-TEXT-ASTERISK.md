@@ -2,9 +2,9 @@
 gh_issue: 703
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/703
 title: "releases: `roadmap add` inline raw_text bypasses validate_raw_text — a title with a bare `*` produces a row the renderer drops and B1 replay refuses"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-22
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 1

@@ -2,9 +2,9 @@
 gh_issue: 674
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/674
 title: "merge-cleanup: hosted wave-reconcile lookup keys on the merge SHA, misses the PR-closed run, then forces past the writer's in-flight guard (races the hosted reconciler)"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-22
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 2

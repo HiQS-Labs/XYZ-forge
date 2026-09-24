@@ -98,3 +98,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
 ```
 
 Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified. Fix probes detect the BUG (`grep_present` = bug still there, `grep_absent` = fix landed), per swarm-preflight polarity.
+
+## Merge evidence
+
+- PR #753 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

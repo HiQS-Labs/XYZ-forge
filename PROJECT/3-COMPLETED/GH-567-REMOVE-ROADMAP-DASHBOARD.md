@@ -2,9 +2,9 @@
 gh_issue: 567
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/567
 title: "feat(ledger): end-to-end removal of ROADMAP-DASHBOARD.md and view-staleness machinery"
-status: "In progress"
+status: Complete
 created: 2026-09-10
-updated: 2026-09-21
+updated: 2026-09-24
 owner: noelsaw
 goal: "End-to-end removal of ROADMAP-DASHBOARD.md and view-staleness machinery across 11 scopes with permanent regression guard"
 doc_type: enhancement

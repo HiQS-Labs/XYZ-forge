@@ -2,9 +2,9 @@
 gh_issue: 651
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/651
 title: "test(gh610): mock CLI shebang breaks with a spaced Python path"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 1

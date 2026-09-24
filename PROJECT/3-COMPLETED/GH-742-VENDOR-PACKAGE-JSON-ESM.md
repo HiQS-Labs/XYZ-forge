@@ -2,9 +2,9 @@
 gh_issue: 742
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/742
 title: "xyz-vendor.sh: vendored .xyz/ ships no package.json, so every Node entry point breaks on a `'type':'module'` target"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-21
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 1

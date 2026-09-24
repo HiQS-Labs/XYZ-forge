@@ -2,9 +2,9 @@
 gh_issue: 570
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/570
 title: "hq_known_repos: a 0-byte / table-less HQ_REBALANCE_DB silently empties the repo list; two gate suites read the real one"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-09-22
+updated: 2026-09-24
 owner: unassigned
 doc_type: capture
 complexity: 1
