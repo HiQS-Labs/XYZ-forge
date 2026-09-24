@@ -1,6 +1,6 @@
 ---
 title: "GH-736: merge-cleanup — --exclude drops a PR, UNKNOWN mergeability is polled before stopping"
-status: In Progress
+status: Complete
 created: 2026-09-24
 updated: 2026-09-24
 owner: operator
