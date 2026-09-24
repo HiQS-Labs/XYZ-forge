@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -120,7 +120,7 @@ Fix commit: `1d3d3c3b` (on top of `09003de9`). See `git show 1d3d3c3b`.
 - **[Blocker] 1 — poll masks refresh errors → Implemented (modified).** Both poll loops are now one helper, `_await_mergeable` (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, defined just above `land_prs`). It assigns every read to `info`, so an error ends the poll with the error in hand. The land loop then applies the same GH-623 rules as the first read (transient → `DEFERRED`, `failed[p_num]` set, `continue`; anything else → `stop … a PR whose state is unknown is never merged`, rc 2). This differs from your fix: a transient error defers instead of always stopping, matching the existing contract for the first read. Pinned by `test_transient_error_during_the_poll_defers_not_undecided` (rc 3, `DEFERRED`, no "has not decided", exactly 2 reads) and `test_hard_error_during_the_poll_stops_with_that_error` (rc 2, names `HTTP 404`). Both are red on `09003de9`.
 - **[Blocker] 2 — post-B1 poll re-polls a failed re-fetch → Implemented.** `_await_mergeable`'s loop condition starts with `not info.get("error")`, so an error in hand returns at once with 0 sleeps and 0 refreshes. The post-B1 site is `info = _await_mergeable(p_num, refresh_pr_with_retry(...), primary_repo)`, and the existing `info.get("error") or mergeable != "MERGEABLE"` stop is unchanged (so `CONFLICTING` still stops there, answering Q2). Pinned by `TestGh736AwaitMergeable.test_an_error_in_hand_is_not_polled`, plus `test_an_error_mid_poll_is_returned_at_once`, `test_undecided_is_bounded_and_returned_undecided`, and `test_decided_first_read_is_not_polled`.
 - **[Should] — held/closed predecessor does not block dependents → Deferred to #785.** Confirmed pre-existing: the hold-label and non-OPEN `continue`s in `land_prs` never write `failed`. It changes #444's documented behaviour and its exit code (the current #444 test expects rc 0), so it needs its own acceptance criteria rather than riding along in #736. Filed as https://github.com/HiQS-Labs/XYZ-forge/issues/785 with your proposed fix, and credited to this review.
-- **[Pass] Q1/Q3/Q4** — no change.
+- **[Unverified — no citation] Q1/Q3/Q4** — no change.
 
 **Also changed:** SKILL.md Phase 5 now says a read that fails mid-poll ends the poll and follows the first read's rules. The capture doc records round 1.
 
@@ -129,5 +129,20 @@ Fix commit: `1d3d3c3b` (on top of `09003de9`). See `git show 1d3d3c3b`.
 **Round 2 ask:** re-grade DoD 1–5 against `1d3d3c3b`. In particular, confirm `_await_mergeable` cannot return a non-error `info` that is staler than the last successful read, and that no path merges after an `UNKNOWN`.
 
 **Process note for the Reviewer:** round 1's turn failed containment because it created `update_relay.py` and `test_exclude_deps.py` in the repo (reverted by the harness). Please write only this relay file. Probes go under `.relay-scratch/` or `$TMPDIR`.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+Basis: The `_await_mergeable` function correctly polls, does not drop newer reads for older ones, and propagates errors or unresolved `UNKNOWN` states so the main loop stops the run instead of merging. All DoD criteria are satisfied.
+
+#### Findings vs Definition of Done
+* **[Pass]** DoD 1 (Safety): `_await_mergeable` (line 802) overwrites `info` on each retry. If it ends in an error, it is returned and `land_prs` exits 2 (line 823). If it ends in `UNKNOWN`, `land_prs` exits 2 (line 828) and never merges. The same applies to the post-B1 poll (line 924).
+* **[Pass]** DoD 2 (Bounded poll): `_await_mergeable` is bounded by `polls < MERGEABLE_POLL_ATTEMPTS` (line 798). The `not info.get("error")` condition (line 797) properly terminates the poll on the first error, returning that error directly to the caller.
+* **[Pass]** DoD 3 & 4 (Exclude semantics & Tests): Verified passed in round 1, and tests run cleanly.
+* **[Pass]** DoD 5 (Docs match code): SKILL.md Phase 5 (line 144) now explicitly states "a read that fails mid-poll ends the poll and follows the same rules as the first read".
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
