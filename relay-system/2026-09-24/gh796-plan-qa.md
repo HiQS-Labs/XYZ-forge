@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -69,5 +69,29 @@ Review the committed `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md`, its adjac
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+* `[Pass]` Merge order and bootstrap sequence is correct and prioritizes landing the path repair first.
+  - Citation: `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:38` ("Proposed order: #794 → #795 → remediated #765. Hold #759 separately.")
+* `[Pass]` Ledger and schema preservation are explicitly safeguarded against binary overwrites.
+  - Citation: `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:66` ("Preserve current schema and ledger history through the existing resolver/replay writer; fresh three-way classification at each actual landing remains mandatory.")
+* `[Pass]` Draft PR #759 exclusion and artifact retention are properly handled.
+  - Citation: `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:109` ("Leave #759 draft and explicitly excluded throughout. Record its provenance/eligibility findings under #757/#759...")
+* `[Pass]` Falsifiable acceptance controls and diagnostics enforce strict checks.
+  - Citation: `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:111` ("Use debug-mantra for any failed check: reproduce, trace, falsify, retain breadcrumbs.")
+* `[Pass]` Cleanup boundaries preserve necessary state and clones.
+  - Citation: `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:123` ("Preserve dirty files, unique refs, stashes, dependent worktrees, active sessions and failed inspection state. Move proven-safe full clones to Trash...")
+* `[Pass]` Required operational envelope avoids new engines and frameworks.
+  - Citations: `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:71` ("No parallel gate implementation."), `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:79` ("No general Markdown framework needed."), `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:106` ("full macOS gate once in a separate disposable full clone")
+* `[Pass]` Documented RELEASES rating applies 80/75/50/65 and appeal neutral.
+  - Citation: `PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:146` ("2026-09-24 RELEASES rating: **80/75/50/65** (priority/severity/neutral appeal/cheapness)")
+
+VERDICT: PASS
+Basis: The integration and merge-remediation plan perfectly adheres to the setup requirements, correctly targets PR specific remediation steps while avoiding over-generalizations or out-of-scope frameworks, and implements proper falsifiability controls.
+
+handing off to done — relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
