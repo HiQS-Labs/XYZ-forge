@@ -326,7 +326,7 @@ mkdir -p "$DENY_BIN"
 printf '#!/bin/sh\necho "ps: Operation not permitted" >&2\nexit 1\n' > "$DENY_BIN/ps"
 chmod +x "$DENY_BIN/ps"
 out="$(PATH="$DENY_BIN:$PATH" run_driver --phase-id p8 --pre-advance-cmd 'sleep 3' 2>&1)"; rc=$?
-warns="$(printf '%s\n' "$out" | grep -c 'RSS watchdog unavailable' || true)"
+warns="$(grep -c 'RSS watchdog unavailable' <<<"$out" || true)"
 if [ "$rc" -eq 0 ]; then
   pass "GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)"
 else
@@ -341,7 +341,7 @@ case "$out" in
   *"peak group RSS unknown (no readable samples; "*) pass "GH-773: the summary reports the peak as unknown" ;;
   *) fail "GH-773: summary did not report an unknown peak: $(printf '%s' "$out" | tail -5)" ;;
 esac
-if printf '%s\n' "$out" | grep -Eq 'peak group RSS [0-9]+MB'; then
+if grep -Eq 'peak group RSS [0-9]+MB' <<<"$out"; then
   fail "GH-773: a numeric peak was printed although no sample was readable"
 else
   pass "GH-773: no numeric peak (the old fake 0MB) is printed for an unmeasured run"
@@ -350,8 +350,8 @@ fi
 # Red control: the same gate with the real ps must measure — numeric peak, no warning. An
 # implementation that always warned or always said "unknown" fails here.
 out="$(run_driver --phase-id p9 --pre-advance-cmd 'sleep 3' 2>&1)"; rc=$?
-if [ "$rc" -eq 0 ] && printf '%s\n' "$out" | grep -Eq 'peak group RSS [0-9]+MB' \
-   && ! printf '%s\n' "$out" | grep -q 'RSS watchdog unavailable'; then
+if [ "$rc" -eq 0 ] && grep -Eq 'peak group RSS [0-9]+MB' <<<"$out" \
+   && ! grep -q 'RSS watchdog unavailable' <<<"$out"; then
   pass "GH-773 control: a working ps still yields a numeric peak and no warning"
 else
   fail "GH-773 control: working ps did not yield a clean numeric peak (rc=$rc): $(printf '%s' "$out" | grep 'gate-guard' | tail -3)"
