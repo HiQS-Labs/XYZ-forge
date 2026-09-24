@@ -40,7 +40,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: var(--border) solid va
 .source-pill i, .health i { background: var(--color-unknown); border-radius: 100%; height: var(--space-2); width: var(--space-2); }
 .source-pill.ok i, .health.green i { background: var(--color-green); }
 .source-pill.stale i, .health.amber i { background: var(--color-amber); }
-.source-pill.unavailable i, .health.red i { background: var(--color-red); }
+.source-pill.failed i, .health.red i { background: var(--color-red); }
+.source-pill[title], .health[title]:not([title=""]) { cursor: help; }
 .repo-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-card-min)), 1fr)); padding: 0 var(--space-6) var(--space-6); }
 .repo-card {
   --repo-color: var(--color-repo-1);
