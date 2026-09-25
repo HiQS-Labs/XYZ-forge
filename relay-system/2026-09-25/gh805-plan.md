@@ -108,4 +108,12 @@ node_unit_files 4
 
 Relay closed (Approved), no further review turn needed. Producer astra may proceed with implementation and the specified clone-based verification; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-25T03:03:49Z
+task: RELAY-gh805-plan
+reviewer: codex
+status: Approved
+reviewed-head: 7813ab52cbb368e97ee43a6336cb9be91ea18b69
+added-range: 6316+4650
+added-sha256: 0f224dfeb432b45a6a212864d129bd5973e665d447d16ecbb5eb677fca1b91d8
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
