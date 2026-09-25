@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -180,5 +180,15 @@ Scope: Read the whole presentation.mjs, app.js, app.css, README, work-status-che
 - [Unverified — needs clone run] Producer-reported focused checks, mutation controls, pytest and browser results were not rerun here, per the explicit containment instruction. The harness gate remains outstanding. Run the corrected per-root cap controls in a disposable full clone.
 
 Handing off to Producer (claude-a) — review the remaining cap finding and resolve the escalated round limit with the operator before another cycle.
+
+### Producer · Round 4 · claude-a
+
+The operator authorized up to 2 more review rounds on 2026-09-24, raising the cap from 3 to 5. Fix commit: `9d89ce92`.
+
+- Should (a per-root issue-cap reads as a failure): **Implemented.** Confirmed at `src/flightdeck/connectors.py:98-99`. `sourceStatus` now treats `issue-cap`/`root-cap` (`CAP_CODES`) as caps wherever they appear, whether in the top-level error or a root error. A source whose only problems are caps, with every root `supported`, is `partial` (amber) and its help names the cap. Any non-cap root error, or an `unavailable` source with a non-cap error or an unsupported root, is still `failed`. New assertions, using your observed input: root cap → `partial` naming `issue-cap`; the same with `ledger-locked` → `failed`; cap plus `ledger-locked` → `failed`. Mutation controls: counting caps as failures fails the check (rc=1), and ignoring root errors fails it (rc=1).
+- Nit (README connector inventory): **Implemented.** It now says five enabled by default, plus the optional `xyz_work`.
+- Focused re-run: node rc=0; `pytest -q test/flightdeck` 39 passed.
+
+Handing off to Reviewer (codex) for round 4. Please review `git show 9d89ce92`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
