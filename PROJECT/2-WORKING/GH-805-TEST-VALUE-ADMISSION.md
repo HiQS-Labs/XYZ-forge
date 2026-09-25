@@ -183,3 +183,8 @@ Plan relay round 2 approved b0ae4627. Decision preparation, complete manifest ch
 ### Concurrency correction before handoff
 
 A single mutable `.github/test-admission.json` would put unrelated PRs in conflict on the same metadata path. Replace it before deployment with one generated UUID-named record per change set under `.github/test-admission/`, using the same CLI/schema/authority and no DB. The validator requires exactly one new regular record for code changes, excludes only that record from the content manifest, and refuses modification/deletion of historical records. Native review remains the authority; no additional approval writer is introduced. Concurrent record additions must coexist without an admission-path conflict. This small record-layout correction receives focused proof and the third final QA round; the first gateway full run is retained as intermediate evidence, not the final qualifying claim.
+
+
+### Gateway gate correction and current handoff
+
+The gateway full gate at 2f75a185 failed 421/422 solely because GH777 rejects a new utility module. Admission is now folded into the existing `gate_inventory.py`, including native-review catalog and publishing helpers; callers import that canonical gateway. The ratchet baseline is unchanged. Focused ratchet, admission, protected-publisher and reconciliation checks pass; retained patch/provenance identify the exact corrected source. Final relay round 3 approved the previous revision while this full gate completed, so the mechanical consolidation still needs final QA under the operator-requested cap exception, followed by a full passing push gate. Activation/credential separation remain open.

@@ -1,0 +1,6 @@
+PASS: parser rejects empty/duplicate/dynamic input; advisory metadata never authenticates approval
+PASS: real push hook refuses unadmitted changes before executing validate.sh
+PASS: executable additions, permission transitions and removals require a decision
+PASS: shared-record merge conflict witnessed; per-change records merge without conflict
+PASS: complete binding, stale/missing/forged/renamed/deleted controls and native review identity
+PASS: GH-419 inventory discovers registered gates and records only declared controls

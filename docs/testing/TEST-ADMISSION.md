@@ -1,6 +1,6 @@
 # Test admission: one coverage decision per change
 
-Agents must disclose proposed test growth and obtain the operator's GitHub review before landing changes. The gateway prepares and validates coverage decisions; it does not decide that valid JSON deserves approval. The execution registry remains `validate.sh` plus its existing non-shell lanes.
+Agents must disclose proposed test growth and obtain the operator's GitHub review before landing changes. The existing `gate_inventory.py admission` gateway prepares and validates coverage decisions; it does not decide that valid JSON deserves approval. The execution registry remains `validate.sh` plus its existing non-shell lanes.
 
 **Activation status:** implementation under PR #811. Native protection and separated agent credentials must be verified before this is described as enforced. A local hook can be bypassed; a candidate-authored status is not human approval.
 

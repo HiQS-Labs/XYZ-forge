@@ -47,7 +47,7 @@ jobs:
           python3 - <<'PY_PREFLIGHT'
           import json, os, sys
           sys.path.insert(0, 'utils/py')
-          from coverage_admission import gh
+          from gate_inventory import gh
           from hosted_lane_publish import pending_publication, publication_landing
           repo = os.environ['REPO']
           protected = gh(f'repos/{repo}/branches/development')['protected']

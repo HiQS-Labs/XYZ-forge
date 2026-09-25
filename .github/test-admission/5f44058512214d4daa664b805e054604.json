@@ -34,7 +34,7 @@
       "status": "A"
     },
     {
-      "new_blob": "db42fde8006544a0ee35dfd86547b19e5d0d8aa2",
+      "new_blob": "70a29110c0c163c29d95bf937deb4e33275c3a46",
       "new_mode": "100644",
       "old_blob": "e73ce6d083af26d5de232de9f83ae4c2731e2072",
       "old_mode": "100644",
@@ -58,7 +58,7 @@
       "status": "M"
     },
     {
-      "new_blob": "e9b21fd61c1ca2e0ff8a430b032d4a347cebdec9",
+      "new_blob": "cd1ae9b2e1c21a158fc9cdf5b7a6a888e9f28384",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -66,7 +66,7 @@
       "status": "A"
     },
     {
-      "new_blob": "564d0ce27721a409731173d5e0faff5078313087",
+      "new_blob": "018e287447ac03da002637624604d88f5efd5891",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -1106,6 +1106,222 @@
       "status": "A"
     },
     {
+      "new_blob": "50926e6b8f15da0cc48d6fb3594c013298b9d52a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "50926e6b8f15da0cc48d6fb3594c013298b9d52a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "04c1b8ba9a32b4d9e578116b2c11c786a5fb8469",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/prepush.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "d3688fd70cf404b66bc12996005b93fb7bf23dba",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/provenance.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "8205662c73a9f052753da2555baf33148b722cab",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790312845389-18568.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "570122c05fa9a8c0c731b55aada825a52364fb49",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790312847134-19916.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "45cbcf56454a9e32c9ecdd682e72fe760a07b906",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313083916-58804.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "03e549097ca6fc2a3ba89f013710a98931169e2d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313084295-59187.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "6d4a656b5bbbb482c89325df3f91b65c034ebd7c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313084931-59795.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "08a84ef5cb41f68cc52ba0ab40d4912c5bc6f484",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313085346-60214.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "a6540feb1cb7b928bd32bc93ad5006d724db1796",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313085730-60614.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "51b75878a8d3462f59f48d898f2da054abf3a515",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313086086-61049.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "2fdea81c53c606ca4de7f52a1d6430211372f82c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313088471-63390.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "be6d7dc20cb38f6f8c05614567aaee0ffbf86ae5",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313088471-63390.jsonl.w63390",
+      "status": "A"
+    },
+    {
+      "new_blob": "d84efea6e47fe43e0d2cad4a5ad9953427061fc1",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313123910-45655.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "348eb18a17a268ee68b472d8f2b0f7e1f1de416b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313359084-87791.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "316decc0ee3ca6ec6ab784d2d3aeda934224bb06",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313370113-98693.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "54ba2f58d329229aaa8e2920e0d0066da15cf64c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-parallel-1790313382886-5883.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "5ab2ee59bd916d0ad4ae9904e8b519d643463088",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-sequential-1790313080875-56114.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "52a040aca0b2bdf6780b9b962c48e6ebf37fbf03",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/candidate.patch",
+      "status": "A"
+    },
+    {
+      "new_blob": "8c0cfcf5355f38af5006d006ce71285cfde2ea64",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/gh419-gate-inventory.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "d1f6d83e50df548462b81af1a8265b12b9584227",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/gh421-auto-wave-reconcile.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "639a2ca081f3223b0a412aac570dd3f158aecb86",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/gh740-hosted-lane-publish.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "111816645b0186593c4d9eb886c1a868445c2590",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/gh777-inventory-ratchet.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "7db4133d0214aefa58224bfeb266c55b824bd3c7",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "7db4133d0214aefa58224bfeb266c55b824bd3c7",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "ebf350121fbb8b22aa6ed485a1a92d5d5f55d074",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-ratchet-focused/provenance.jsonl",
+      "status": "A"
+    },
+    {
       "new_blob": "53c8975801b398f60ff0fcd4742b027985a1b433",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
@@ -1202,7 +1418,7 @@
       "status": "M"
     },
     {
-      "new_blob": "ec8a997b450d63b0139ade87b1622eb8ceda86d0",
+      "new_blob": "e744485fd6b3c7cf90e8cfa3e1a4eb3ed1f287fc",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -1226,7 +1442,7 @@
       "status": "A"
     },
     {
-      "new_blob": "317ac129e9758c938506bbfca43d3aa2c20dff7d",
+      "new_blob": "7935df5f347889dc93edf6f2695756a5f5395b54",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -1330,7 +1546,7 @@
       "status": "M"
     },
     {
-      "new_blob": "05f53e2002a39f839efbcdb4ae863455132b4065",
+      "new_blob": "4d567adc7a81f2884f5164a994629b576e458531",
       "new_mode": "100644",
       "old_blob": "d555b1e23b24273ff7adea2c8c7870afbf0cda6f",
       "old_mode": "100644",
@@ -1354,7 +1570,7 @@
       "status": "M"
     },
     {
-      "new_blob": "ee6ba655ec6c481d5712b714aa0c373f70b0cded",
+      "new_blob": "f678c54ef5a0a52b58bd03ffdc4c6fd125d1bd5a",
       "new_mode": "100755",
       "old_blob": "8d9e1150ca8b5610cca0bde1ccf74a3f30286db5",
       "old_mode": "100755",
@@ -1370,15 +1586,7 @@
       "status": "M"
     },
     {
-      "new_blob": "a8ea7db7e245da5383cc64d83d812429387f4568",
-      "new_mode": "100644",
-      "old_blob": "0000000000000000000000000000000000000000",
-      "old_mode": "000000",
-      "path": "utils/py/coverage_admission.py",
-      "status": "A"
-    },
-    {
-      "new_blob": "7638122d7cae7cd0d6dca85a862a994cf2f56e1f",
+      "new_blob": "4a57141e51ac6a98579a21d84db59edf2d9e7b38",
       "new_mode": "100644",
       "old_blob": "78a0a0f38ad7e63fae9ebac73f61a859c9960d23",
       "old_mode": "100644",
@@ -1386,7 +1594,7 @@
       "status": "M"
     },
     {
-      "new_blob": "5d69de90ead8edd408ca52d9819b991f8d305f84",
+      "new_blob": "e46cdff89379b6af6f118b978b5436669365a51d",
       "new_mode": "100644",
       "old_blob": "ca2eadbc3a6c51e7163b5dee93a4dac760cc8545",
       "old_mode": "100644",

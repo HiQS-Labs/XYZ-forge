@@ -186,7 +186,7 @@ RECONCILE_PREFIX = 'automation/reconcile-'
 
 
 def pending_publication(repo):
-    from coverage_admission import paged
+    from gate_inventory import paged
     return [p for p in paged(f'repos/{repo}/pulls?state=open&base=development&per_page=100')
             if p.get('user', {}).get('id') == 41898282
             and p.get('head', {}).get('ref', '').startswith(RECONCILE_PREFIX)]
@@ -204,7 +204,7 @@ def publication_landing(repo_root, pr):
                              '--name-only', '-z', sha + '^1', sha], capture_output=True, text=True)
     if result.returncode:
         return False
-    from coverage_admission import is_packet_path
+    from gate_inventory import is_packet_path
     paths = [p for p in result.stdout.split('\0') if p and not is_packet_path(p)]
     if not paths:
         return False
@@ -218,7 +218,7 @@ def publication_landing(repo_root, pr):
 def publish_review(paths, repo):
     """Retain qualified artifacts on a reviewable branch; never direct-push fallback."""
     from pathlib import Path
-    from coverage_admission import PACKET_DIR, manifest, packet, open_pr
+    from gate_inventory import PACKET_DIR, manifest, packet, open_pr
     import uuid
     # Recheck the original allowlist before admitting the generated packet.
     declared_paths(paths)

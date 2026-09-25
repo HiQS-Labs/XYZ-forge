@@ -97,3 +97,6 @@ Final gateway Codex review round 2 approved 164a2a0a. Review corrections require
 
 
 Gateway record concurrency correction (3c9506c3): four focused suites pass with unchanged clone identity; receipts are in `gateway-record-focused/`. The real Git control conflicts on the old shared filename and merges distinct records cleanly. Final relay reopened for its third and last round; the in-flight full run at 2f75a185 is intermediate evidence, not verification of this later change.
+
+
+Full gateway run at `2f75a185` failed **421/422** after 755.6 seconds with unchanged clone identity; push was refused. `gh777-inventory-ratchet.sh` rejected the newly introduced `coverage_admission.py`. Full receipts and telemetry are in `gateway-intermediate-full/`. The correction folds that implementation into the existing `gate_inventory.py` admission subcommand and updates its imports, with no baseline exception or new utility file. Four focused checks pass on the retained candidate patch (`gateway-ratchet-focused/`), including the ratchet's growth-rejection control. Round 3 approved the preceding record-format revision; it does not attest this subsequent relocation. Additional final QA awaits the requested operator exception to the three-round cap. No final full-green or live activation is claimed.

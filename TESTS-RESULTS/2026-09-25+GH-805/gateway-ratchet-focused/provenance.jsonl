@@ -1,0 +1,4 @@
+{"command": ["bash", "test/gh777-inventory-ratchet.sh"], "sha": "3c9506c37488bedd442b4af614cd4fdbcf2f2992", "patch_sha256": "363b12cc67d69839173e49235a2d34765a1faa5f27560814c202f1668eb3858f", "rc": 0, "duration_s": 0.136}
+{"command": ["bash", "test/gh419-gate-inventory.sh"], "sha": "3c9506c37488bedd442b4af614cd4fdbcf2f2992", "patch_sha256": "363b12cc67d69839173e49235a2d34765a1faa5f27560814c202f1668eb3858f", "rc": 0, "duration_s": 1.537}
+{"command": ["bash", "test/gh740-hosted-lane-publish.sh"], "sha": "3c9506c37488bedd442b4af614cd4fdbcf2f2992", "patch_sha256": "363b12cc67d69839173e49235a2d34765a1faa5f27560814c202f1668eb3858f", "rc": 0, "duration_s": 3.278}
+{"command": ["bash", "test/gh421-auto-wave-reconcile.sh"], "sha": "3c9506c37488bedd442b4af614cd4fdbcf2f2992", "patch_sha256": "363b12cc67d69839173e49235a2d34765a1faa5f27560814c202f1668eb3858f", "rc": 0, "duration_s": 1.779}
