@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix landed on branch (`0f1b811e`): PATHS_FILE → `skills/3-weekly/skills-army-hq/scripts/sync.py`. Matched standalone timing **1050.6 s → 67.5 s (−93.6%)**, 6/6 assertions both sides; red control witnessed (exit 1 → restore → green); evidence in `TESTS-RESULTS/2026-09-24+GH-808/`. | Full qualifying gate (`ci-local.sh`) once in the disposable clone, final relay QA (Codex), push through pre-push gate, PR vs `development`. |
+| Fix + evidence landed; relay QA **Approved** (codex, 1 round, attested at `d157de71`, `relay-system/2026-09-24/gh808-final-qa.md`); reviewer nits dispositioned: LEADERBOARD.md routine view reverted, `roadmap rate` re-run until `calc=254` read back, plan-step expectations corrected to observed 6-pass / fail-fast behavior. | `ci-local.sh` receipt (in flight at `17e96185`), post-gate identity transcript into evidence, push through pre-push gate (full gate at final head), PR vs `development`. |
 
 ## Rating rationale (2026-09-24)
 
@@ -48,8 +48,8 @@ goal: >
 ## Plan (ordered)
 
 1. Retarget `PATHS_FILE` in `test/gh251-validate-pytest-skip.sh` from `utils/py/releases_app.py` to `skills/3-weekly/skills-army-hq/scripts/sync.py`, with a comment stating why that path (cheapest `.py`-bearing tier-2 lane; the suite only needs `T2_PYTEST=1`, not a specific subsystem). -> expect a 2-line diff.
-2. Focused verification in the disposable gate clone: `bash test/gh251-validate-pytest-skip.sh` green, and the captured output still shows `--paths-file classified tier 2` + `Running python3 -m pytest test/test_python_layer.py`. -> expect 5 pass, 0 fail.
-3. Witnessed red control (same clone): mutate the expected `SKIPPED: python:test_python_layer.py (pytest not importable…)` string in `validate.sh`, watch both sections fail, restore, watch green. -> expect red, then green, output captured.
+2. Focused verification in the disposable gate clone: `bash test/gh251-validate-pytest-skip.sh` green, and the captured output still shows the pytest lane ran (the pass assertions require it). -> expect 6 pass, 0 fail (the GH-732 yaml diagnostic is the sixth).
+3. Witnessed red control (same clone): mutate the expected `SKIPPED: python:test_python_layer.py (pytest not importable…)` string in `validate.sh`, watch the suite go red — fail-fast: `_setup.sh`'s `fail()` exits 1 at the first failing assertion (the absent-pytest SKIPPED check), so later sections do not run — restore, watch green. -> expect red (exit 1), then green, output captured.
 4. Matched before/after timing (same clone, same host, standalone `time bash test/gh251…` at base vs task commit). -> expect before ≈ 700–1050 s, after ≤ 120 s.
 5. Full qualifying gate ONCE (`bash ci-local.sh`) at the final commit, pre/post identity checks on the clone. -> expect GREEN + `.gate-evidence/<sha>.txt`.
 6. Final relay QA (Codex) on the diff + evidence; push through the pre-push gate; open PR vs `development`; cite #808, #805, #732, #749.
