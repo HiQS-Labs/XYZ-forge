@@ -72,6 +72,7 @@ HOG_EOF
 MOCK_HOG="$WORK/gh382-magicmock-while-true.py"
 cat > "$MOCK_HOG" << 'MOCK_HOG_EOF'
 from unittest.mock import MagicMock
+import time
 
 page = MagicMock()
 calls = 0
@@ -79,6 +80,9 @@ while True:
     page()
     calls += 1
     if calls >= 500_000:
+        # Fast hosts can reach the bounded ceiling between watchdog samples.
+        # Hold the same allocation for two pinned polling intervals, never allocate more.
+        time.sleep(2)
         raise SystemExit("fixture safety ceiling reached before the guard fired")
 MOCK_HOG_EOF
 
@@ -238,7 +242,7 @@ fi
 # can append calls very quickly before the one-second watchdog poll, but it still leaves room for a
 # normal Python process.  It is the recorded post-fix baseline described beside MOCK_HOG above.
 start=$SECONDS
-out="$(MARATHON_GATE_RSS_MB=96 run_driver --phase-id p7 --pre-advance-cmd "python3 $MOCK_HOG" 2>&1)"; rc=$?
+out="$(MARATHON_GATE_RSS_MB=96 MARATHON_GATE_POLL_S=1 run_driver --phase-id p7 --pre-advance-cmd "python3 $MOCK_HOG" 2>&1)"; rc=$?
 elapsed=$((SECONDS - start))
 if [ "$rc" -eq 5 ] && [ "$(esc_reason p7)" = "gate-killed" ]; then
   pass "GH-382 MagicMock-in-while-True runaway is killed and attributed as gate-killed"

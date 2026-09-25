@@ -132,3 +132,7 @@ Prefer extending the existing gate/registry and review receipt mechanisms over b
 ## Execution evidence
 
 Steps 1–6 are implemented and supported by [the report](../../TESTS-RESULTS/2026-09-25+GH-805/REPORT.md), generated catalog, advisory cohort and committed provenance. Plan relay approved revision 7813ab52; implementation e5f7659d passed eight focused suites, with five external mutation controls failing as expected. Step 7 remains pending final review and full-gate/PR evidence. No merge or release claim.
+
+### Gate-discovered bounded amendment
+
+The first full gate failed 419/422 with intact clone identity. Two scoped integration corrections replace the fictional GH177 payload path with a real inert path and update the releases route count from 24 to 28. The third failure reproduces on unchanged 0ae3452a: GH390’s MagicMock fixture reaches its 500,000-call ceiling between RSS watchdog samples. A simple fixture-only repair holds that same bounded allocation for two pinned one-second polling intervals before its existing failure exit; production guard, allocation limit and required gate-killed verdict stay unchanged. This is an obvious local reversible test repair, so it uses start-task’s simple-change exception rather than another architecture review; final relay round 3 explicitly reviews it and its disabled-guard red control.
