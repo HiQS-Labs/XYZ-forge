@@ -1,6 +1,6 @@
 ---
 title: "GH-801: fix: GH-798 skill tests violate pipe-to-grep ratchet and block full gate"
-status: Active
+status: Complete
 created: 2026-09-24
 updated: 2026-09-24
 owner: operator (via /express)
