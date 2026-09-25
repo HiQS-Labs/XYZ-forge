@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -79,5 +79,31 @@ Output graded findings with `file:line` citations, a VERDICT and a Basis. Set `S
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The local retry is a reasonable design, but the plan needs a concrete injection seam and auditable evidence before its proof claims meet the Definition of Done. These are plan corrections, not a request for a broader runtime subsystem.
+swept file: yes
+
+Reviewed the entire plan and all of `harness_app.py`, `harness_turn_logger.py`, and `gh496-telemetry-isolation.sh`. No additional established pre-existing runtime defect was found in this sweep; this is not proof that every concurrency interleaving succeeds.
+
+- [Should] **Specify how case 14 reaches the connection created inside `init_db`.** Plan `PROJECT/2-WORKING/GH-813-SQLITE-WAL-INIT-RACE.md:59` names a factory but does not say how it replaces the internal `sqlite3.connect(db_path)` at `utils/py/harness_app.py:168`. Creating a subclass connection separately does not affect that call. Cheapest fix: explicitly patch `harness_app.sqlite3.connect` within the inline test, saving the real connect before patching and forwarding it with `factory=Subclass`; assert the injected WAL-attempt count (4 for a, 1 for b, 50 for c), and put an outer timeout on c so an unbounded mutant fails rather than hangs. No production injection API is needed.
+  Observed input: `init_db(db_path)` has no connection/factory argument and internally calls `sqlite3.connect(db_path)` with no keywords.
+  Affected scope: the proposed case 14 only.
+  Falsifier: in the disposable clone, demonstrate that the patch intercepts the real WAL call and case 14a fails on base after one injected lock, then succeeds after four WAL attempts with the fix; an unpatched base run must not accidentally satisfy the test.
+  Probe: `python3` AST inspection of `init_db` printed `utils/py/harness_app.py:168: sqlite3.connect(db_path); factory keywords=[]` (Python exit 0). This is static seam evidence, not an executed red control.
+
+- [Should] **Retain/cite the measurements and qualify the recurrence claim.** Plan lines 30–31 give exact 200-round results without a command, receipt path, or provenance; line 36 adds an unexplained 3% denominator; line 40 asserts a complete 3-versus-3 historical count without dated query results. `rg -n -F -e '30/200' -e '33 errors' -e 'GH-813' TESTS-RESULTS` exited 1 with no output. That does not establish that the producer never ran them; it establishes that this review cannot audit them from the named evidence store. Link retained commands/results/provenance (and name where implementation/red-control receipts will be committed), or label unavailable numbers provisional. Record issue creation timestamps and the date-window/query predicate for recurrence, or describe these as examples rather than an exhaustive flat trend. Local GH-558's capture says `created: 2026-09-21` (`PROJECT/3-COMPLETED/GH-558-GH32-SECTION-J-FLAKE.md:6`), so it cannot by itself substantiate placement in the earlier window; capture date need not equal issue date. Appeal 50 is explicitly neutral at plan line 38, and the recoverable-impact/cheap-fix rationale supports the qualitative rating, but not the uncited rates.
+
+- [Should] **Correct the stated latency bound without widening the fix.** Plan lines 57 and 72 call about 2.5 seconds the worst case. Fifty attempts allow 49 sleeps, at most 2.45 seconds of deliberate sleep; that does not include time inside SQLite. A read-only configuration probe, `python3 -c 'import sqlite3; c=sqlite3.connect(":memory:"); print(c.execute("PRAGMA busy_timeout").fetchone()[0])'`, reports `5000` ms (same probe executed in the combined Python inspection, exit 0). `harness_app.py:168` keeps that default. State that 2.45 seconds is the added sleep budget for immediate-BUSY failures, not a universal wall-clock cap; 50 attempts remains the bounded policy. The reported 0.06–0.07-second sample supports bypass of the full timeout in those failures, not every possible lock condition. No timeout/helper redesign is requested.
+
+- [Pass] **Recon and scope match source.** The sole `sqlite3.connect` in `harness_app.py` is at line 168; WAL is line 171; migration tolerance is lines 276–283; all CLI paths converge through `init_db` at lines 460, 539, 547, 553, 562, 602, and 622. The logger surfaces nonzero subprocess results without failing the turn at `harness_turn_logger.py:132–145`. No observed later CREATE/ALTER/seed/INSERT failure supports extending retries beyond the pragma. Plan lines 51–53 appropriately avoid a helper subsystem, preinitialization, soak tests in the gate, and a new mandatory WAL-mode assertion. Jitter is a small defensible contention choice, but its superiority to fixed sleep is not measured here.
+
+- [Nit] **Correct two verification labels.** Plan line 57 expects 14/14 after adding case 14, but the existing suite already has 14 `pass` sites (case 10 reports twice, `test/gh496-telemetry-isolation.sh:234` and `:250`). Say zero failures/all expected cases, or use the implemented count. Plan line 66 calls `validate.sh` qualifying; `ROUTER.md:110–111` distinguishes that self-check from `ci-local.sh`'s qualifying evidence record. Use the intended gate's accurate label.
+
+- [Unverified — needs clone run] The real race, prototype 0/200, base red control, eventual cases 14a–c, stderr mutation, and final gate were not executed in this reviewer worktree. Require their receipts during implementation; no runtime success is claimed by this plan review.
+
+Handing off to Producer (claude-a) — address the findings and open round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
