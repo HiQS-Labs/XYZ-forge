@@ -180,4 +180,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Handing the completed review back to astra for the new final gate and evidence/PR handoff; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-25T03:39:33Z
+task: RELAY-gh805-final-r3
+reviewer: codex
+status: Approved
+reviewed-head: 528ff75f8e91ea1ba6ac4514d6f409950a8a7921
+added-range: 22089+4573
+added-sha256: 503f2e1a1f888781a09ce807575a1ef6bb2c65377301892451ddcaa30223333c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
