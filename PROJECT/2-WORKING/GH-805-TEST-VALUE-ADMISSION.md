@@ -2,7 +2,7 @@
 gh_issue: 805
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/805
 title: "Audit test value and enforced test admission"
-status: "Implementation verified — final QA pending"
+status: "Full gate passed — PR handoff pending"
 created: 2026-09-25
 updated: 2026-09-25
 owner: operator
@@ -22,7 +22,7 @@ related: [802, 732, 774, 801, 365]
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan Approved; implementation and focused red/green checks complete | Final Codex QA, full gate and one PR |
+| Plan and final Codex QA Approved; full gate 422/422; branch pushed | Open one PR and verify hosted blocking check |
 
 ## Table of contents
 
@@ -136,3 +136,5 @@ Steps 1–6 are implemented and supported by [the report](../../TESTS-RESULTS/20
 ### Gate-discovered bounded amendment
 
 The first full gate failed 419/422 with intact clone identity. Two scoped integration corrections replace the fictional GH177 payload path with a real inert path and update the releases route count from 24 to 28. The third failure reproduces on unchanged 0ae3452a: GH390’s MagicMock fixture reaches its 500,000-call ceiling between RSS watchdog samples. A simple fixture-only repair holds that same bounded allocation for two pinned one-second polling intervals before its existing failure exit; production guard, allocation limit and required gate-killed verdict stay unchanged. This is an obvious local reversible test repair, so it uses start-task’s simple-change exception rather than another architecture review; final relay round 3 explicitly reviews it and its disabled-guard red control.
+
+Final full pre-push validation passed422/422 on9625367f with intact clone identity. The branch pushed without bypass; promotion is not claimed. Final relay round3 approved the gate-discovered fixture amendments. Step7 awaits the PR/hosted handoff only.

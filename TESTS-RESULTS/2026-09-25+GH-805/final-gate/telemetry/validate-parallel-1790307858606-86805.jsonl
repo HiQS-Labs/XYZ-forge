@@ -1,0 +1,7 @@
+{"v":1,"ts_ms":1790307858606,"run":"unknown-86805","runner":"validate","event":"run.start","commit":"unknown","host":"noels-Mac-Mini","mode":"parallel","width":2,"tier":2,"registered":418}
+{"v":1,"ts_ms":1790307858634,"run":"unknown-86805","runner":"validate","event":"suite","lane":"non-suite","name":"tier2:pdda","started_ms":1790307858623,"ended_ms":1790307858630,"duration_ms":7,"rc":0}
+{"v":1,"ts_ms":1790307858651,"run":"unknown-86805","runner":"validate","event":"suite","lane":"non-suite","name":"tier2:static","started_ms":1790307858639,"ended_ms":1790307858647,"duration_ms":8,"rc":0}
+{"v":1,"ts_ms":1790307858720,"run":"unknown-86805","runner":"validate","event":"suite","lane":"pool","name":"hq.sh","queued_ms":1790307858618,"started_ms":1790307858701,"ended_ms":1790307858715,"duration_ms":14,"rc":0,"worker":87010,"out_bytes":20,"out_sha256":"f519dda71412","skip_lines":0}
+{"v":1,"ts_ms":1790307858759,"run":"unknown-86805","runner":"validate","event":"stage","lane":"non-suite","name":"telemetry-merge","started_ms":1790307858618,"ended_ms":1790307858755,"duration_ms":137,"rc":0,"merged_malformed":"3 0"}
+{"v":1,"ts_ms":1790307858828,"run":"unknown-86805","runner":"validate","event":"stage","lane":"non-suite","name":"envelope-assert","started_ms":1790307858769,"ended_ms":1790307858823,"duration_ms":54,"rc":0}
+{"v":1,"ts_ms":1790307858844,"run":"unknown-86805","runner":"validate","event":"run.summary","passed":4,"failed":0,"total":4,"envelope_rc":"0","envelope_drift":"none","suite_events":"3","run_set":"1","registered":"418","suite_events_match":"yes"}

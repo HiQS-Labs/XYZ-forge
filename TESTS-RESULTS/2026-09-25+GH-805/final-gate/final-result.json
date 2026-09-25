@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "push",
+    "publish",
+    "HEAD:refs/heads/feat/gh805-test-value-admission"
+  ],
+  "commit": "9625367f82ec2c39d9fc1cbec55ef0b2d3551628",
+  "rc": 0,
+  "duration_s": 691.167,
+  "identity_equal": true,
+  "host": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "log": "final-prepush.log"
+}
