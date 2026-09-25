@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 4 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -190,5 +190,22 @@ The operator authorized up to 2 more review rounds on 2026-09-24, raising the ca
 - Focused re-run: node rc=0; `pytest -q test/flightdeck` 39 passed.
 
 Handing off to Reviewer (codex) for round 4. Please review `git show 9d89ce92`.
+
+### Reviewer · Round 4 · codex
+
+VERDICT: PASS
+Basis: The remaining per-root cap finding is resolved, while actual read failures retain red and stale snapshots retain precedence. No further blocking finding in the seeded implementation. Approval is the source-review verdict; the post-turn harness gate remains outstanding.
+swept file: no
+
+Scope: Read all of presentation.mjs, app.js, app.css, README, work-status-checks.mjs and the plan, and the connector/configuration paths. CHANGELOG review covered the GH-797 entry rather than the historical body, hence the conservative sweep declaration. No additional pre-existing defect established in the fully read changed code. Graph enumeration returned 76 projects, has_more=false, with no index for this worktree or task clone; used direct-source fallback without a graph generation/coverage claim. No Git commands, suites or executable fixtures ran; no commit-diff verification claimed.
+
+- [Pass] The Round 3 cap input now returns partial and names issue-cap; locked roots and mixed cap/failure inputs remain failed and name ledger-locked (`web/flightdeck/presentation.mjs:23-35`). This matches the emitted cap/aggregate shapes at `src/flightdeck/connectors.py:98-119`. Existing assertions now include the per-root cap and adjacent failure cases (`test/flightdeck/work-status-checks.mjs:63-75`). No fix requested.
+  Probe command: under `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`, ran `node --input-type=module` importing `sourceStatus` from `./web/flightdeck/presentation.mjs`. Exact base input: `const s={id:'xyz_work',availability:'unavailable',coverage:'partial',error:'source-unavailable-or-unsupported',roots:[{supported:true,error:'issue-cap'}]}`. Printed `JSON.stringify(sourceStatus(input,fresh))` for s; s with roots replaced by `[{supported:true,error:'ledger-locked'}]`; s with roots `[...s.roots,{supported:false,error:'ledger-locked'}]`; s with availability ok and roots `[{supported:true,error:null},{supported:false,error:'ledger-locked'}]`; s with availability ok, error root-cap and roots `[{supported:true,error:null}]`; that last input with error null; and s with fresh=false. Exit 0. Decisive outputs: `rootCap={"tone":"partial","label":"partial","help":"Partly shown (issue-cap); the rest was read normally."}`; locked, capAndLocked and mixed each returned `tone=failed` with `Read failed (ledger-locked)`; aggregateCap returned `tone=partial` naming root-cap; clean returned `tone=ok`; stale returned `tone=stale`.
+- [Pass] Disabled/unconfigured hints and actual exception handling agree with `src/flightdeck/contract.py:99-121,126-132` and `src/flightdeck/connectors.py:394-397,449-464`. The same Node probe (exit 0) also printed sourceStatus for `{id:'xyz_work',availability:'disabled',error:null}` → off, with roots and both allowlist hints; `{id:'topology',availability:'unavailable',error:null}` → off/not set up naming FLIGHTDECK_TOPOLOGY_JSON; `{id:'rebalance',availability:'unavailable',error:'FileNotFoundError'}` → failed naming FileNotFoundError and FLIGHTDECK_REBALANCE_DB. Implementation: `web/flightdeck/presentation.mjs:14-20,34-40`. No fix requested.
+- [Pass] Progress remains neutral and explains why it is not measured (`web/flightdeck/presentation.mjs:6-11`, `web/flightdeck/app.js:41-43,111-114`). Source rendering preserves the excluded-row suffix and accessible label (`app.js:162-174`); existing CSS provides grey/amber/red (`web/flightdeck/app.css:40-44`). The presentation helper stays local and introduces no parallel subsystem. No fix requested.
+- [Pass] README now describes five default connectors plus optional xyz_work (`web/flightdeck/README.md:12-16`), matching the registry and default list (`src/flightdeck/connectors.py:439-445`, `src/flightdeck/contract.py:99-113`). Source-state wording agrees with the reviewed behavior (`README.md:32-36`, `CHANGELOG.md:3-13`). No fix requested.
+- [Unverified — needs clone run] Producer-reported focused checks, mutation controls, pytest and browser results were not independently rerun, per containment. The harness must run the remaining gate in a disposable full clone; this review does not attest that gate or merge readiness.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) resumes the post-review gate; token completed with done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
