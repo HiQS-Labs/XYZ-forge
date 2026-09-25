@@ -131,25 +131,28 @@ g('init','-q','--initial-branch=development'); g('config','user.name','Fixture')
 g('add','.'); g('commit','-qm','base'); base=g('rev-parse','HEAD')
 (r/'test/existing.py').write_text('assert value == 2\n'); (r/'product.py').write_text('value=2\n'); g('add','.')
 why={k:'bounded fixture evidence' for k in a.FIELDS}; why.update(outcome='extend',issue='https://github.com/HiQS-Labs/XYZ-forge/issues/805')
-b,tree,rows=a.manifest(r,base,'INDEX'); valid=a.packet(b,rows,why)
-packet=r/a.PACKET; packet.parent.mkdir()
+b,tree,rows,_=a.manifest(r,base,'INDEX'); valid=a.packet(b,rows,why)
+packet_name=a.PACKET_DIR+'/'+('0'*32)+'.json'; packet=r/packet_name; packet.parent.mkdir(parents=True)
 def write(data):
-    packet.write_text(json.dumps(data)); g('add',a.PACKET)
+    packet.write_text(json.dumps(data)); g('add',packet_name)
 def refused(fn):
     try: fn()
     except ValueError: return
     raise AssertionError('bad proposal was accepted')
 refused(lambda:a.inspect(r,base,'INDEX'))
 write(valid); out=a.inspect(r,base,'INDEX'); assert out['test_files']['M']==1 and not out['approval_trusted']
+other=packet.parent/(('1'*32)+'.json'); other.write_text(json.dumps(valid)); g('add',str(other.relative_to(r)))
+refused(lambda:a.inspect(r,base,'INDEX')); other.unlink(); g('add','-u')
+
 for bad in [{**valid,'approved':True}, {**valid,'changes':rows[:-1]}, {**valid,'base':'0'*40}, {**valid,'decision':{**why,'reason':''}}]:
     write(bad); refused(lambda:a.inspect(r,base,'INDEX'))
 write(valid); (r/'product.py').write_text('value=3\n'); g('add','product.py'); refused(lambda:a.inspect(r,base,'INDEX'))
 (r/'product.py').write_text('value=2\n'); g('add','product.py')
 (r/'test/new.py').write_text('assert True\n'); g('add','test/new.py')
-b,t,rs=a.manifest(r,base,'INDEX'); write(a.packet(b,rs,why)); refused(lambda:a.inspect(r,base,'INDEX'))
+b,t,rs,_=a.manifest(r,base,'INDEX'); write(a.packet(b,rs,why)); refused(lambda:a.inspect(r,base,'INDEX'))
 write(a.packet(b,rs,{**why,'outcome':'add'})); assert a.inspect(r,base,'INDEX')['test_files']['A']==1
 (r/'test/new.py').unlink(); g('add','-u'); (r/'test/existing.py').rename(r/'test/renamed.py'); g('add','.')
-refused(lambda:a.inspect(r,base,'INDEX')); b,t,rs=a.manifest(r,base,'INDEX'); write(a.packet(b,rs,{**why,'outcome':'add'}))
+refused(lambda:a.inspect(r,base,'INDEX')); b,t,rs,_=a.manifest(r,base,'INDEX'); write(a.packet(b,rs,{**why,'outcome':'add'}))
 assert a.inspect(r,base,'INDEX')['test_files']['D']==1
 write(a.packet(b,rs,{**why,'outcome':'no-add'})); refused(lambda:a.inspect(r,base,'INDEX'))
 refused(lambda:a.loads('{"outcome":"add","outcome":"reuse"}'))
@@ -217,6 +220,38 @@ g('commit','-qm','executable documentation fixture'); exec_base=g('rev-parse','H
 doc.chmod(0o644); g('add','docs/runner.md'); refused(lambda:a.inspect(r,exec_base,'INDEX'))
 doc.unlink(); g('add','-u'); refused(lambda:a.inspect(r,exec_base,'INDEX'))
 print('PASS: executable additions, permission transitions and removals require a decision')
+old_packet=packet.read_bytes(); packet.write_text('{}'); g('add',packet_name)
+try:
+    a.manifest(r,exec_base,'INDEX')
+except ValueError as error:
+    assert 'historical records are immutable' in str(error)
+else:
+    raise AssertionError('historical admission record was editable')
+packet.write_bytes(old_packet); g('add',packet_name)
+# Real Git merge proof: a shared mutable packet conflicts; independent records coexist.
+# Alternate indexes and commit-tree never overwrite the fixture working tree.
+def branch_commit(record, label, index_name):
+    env={**os.environ,'GIT_INDEX_FILE':str(fixture/index_name)}
+    def alt(*args, input=None):
+        return subprocess.check_output(['git','-C',str(r),*args],input=input,text=True,env=env).strip()
+    alt('read-tree',exec_base)
+    for path, data in [(record,label),(label+'.py','value=1\n')]:
+        blob=alt('hash-object','-w','--stdin',input=data)
+        alt('update-index','--add','--cacheinfo','100644',blob,path)
+    return alt('commit-tree',alt('write-tree'),'-p',exec_base,'-m',label)
+shared='.github/test-admission.json'
+left=branch_commit(shared,'left','shared-left-index'); right=branch_commit(shared,'right','shared-right-index')
+old_merge=subprocess.run(['git','-C',str(r),'merge-tree','--write-tree',left,right],text=True,capture_output=True)
+assert old_merge.returncode==1 and shared in old_merge.stdout
+left_record=a.PACKET_DIR+'/'+('a'*32)+'.json'; right_record=a.PACKET_DIR+'/'+('b'*32)+'.json'
+left=branch_commit(left_record,'left','unique-left-index'); right=branch_commit(right_record,'right','unique-right-index')
+new_merge=subprocess.run(['git','-C',str(r),'merge-tree','--write-tree',left,right],text=True,capture_output=True)
+assert new_merge.returncode==0, new_merge.stdout+new_merge.stderr
+merged=g('commit-tree',new_merge.stdout.strip(),'-p',left,'-p',right,'-m','merge independent records')
+mb,tree,remaining,record=a.manifest(r,left,merged)
+assert mb==left and record==right_record and [row['path'] for row in remaining]==['right.py']
+print('PASS: shared-record merge conflict witnessed; per-change records merge without conflict')
+
 
 print('PASS: complete binding, stale/missing/forged/renamed/deleted controls and native review identity')
 PY_GATEWAY

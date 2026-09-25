@@ -13,8 +13,9 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import uuid
 
-PACKET = '.github/test-admission.json'
+PACKET_DIR = '.github/test-admission'
 CHECK = 'test admission'
 OPERATOR_ID = 56978803
 FIELDS = {'outcome', 'behavior', 'existing_coverage', 'reason', 'red_evidence', 'cost', 'issue'}
@@ -70,6 +71,10 @@ def documentation(path):
             and Path(path).suffix.lower() in {'.md', '.txt', '.rst'})
 
 
+def is_packet_path(path):
+    return bool(re.fullmatch(re.escape(PACKET_DIR) + r'/[0-9a-f]{32}\.json', path))
+
+
 def manifest(root, base, head):
     parent = revision(root, 'HEAD' if head == 'INDEX' else head)
     base = revision(root, base)
@@ -84,13 +89,18 @@ def manifest(root, base, head):
     for i in range(0, len(fields) - 1, 2):
         meta, path = fields[i:i + 2]
         old_mode, new_mode, old_blob, new_blob, status = meta.lstrip(':').split()
-        if path != PACKET:
-            rows.append(dict(path=path, status=status, old_mode=old_mode, new_mode=new_mode,
-                             old_blob=old_blob, new_blob=new_blob))
+        rows.append(dict(path=path, status=status, old_mode=old_mode, new_mode=new_mode,
+                         old_blob=old_blob, new_blob=new_blob))
+    records = [r for r in rows if r['path'].startswith(PACKET_DIR + '/')]
+    if len(records) > 1 or any(not is_packet_path(r['path']) or r['status'] != 'A'
+                               or r['new_mode'] != '100644' for r in records):
+        raise ValueError('one new regular admission record per change; historical records are immutable')
+    record_path = records[0]['path'] if records else None
+    rows = [r for r in rows if r['path'] != record_path]
     rows.sort(key=lambda row: row['path'])
     if not rows:
         raise ValueError('empty change set; no admission decision to make')
-    return base, tree, rows
+    return base, tree, rows, record_path
 
 
 def rationale(value):
@@ -131,17 +141,16 @@ def summary(root, base, head, rows, decision=None):
 
 
 def inspect(root, base, head='HEAD'):
-    base, tree, rows = manifest(root, base, head)
+    base, tree, rows, record_path = manifest(root, base, head)
     needs = any(not documentation(r['path']) or r['old_mode'] not in {'000000', '100644'}
                 or r['new_mode'] not in {'000000', '100644'} for r in rows)
-    if not needs:
+    if not needs and record_path is None:
         result = summary(root, base, tree, rows)
         result['state'] = 'documentation-only; operator PR review still required'
         return result
-    mode = git(root, 'ls-tree', tree, '--', PACKET).split()
-    if not mode or mode[0] != '100644':
+    if record_path is None:
         raise ValueError('missing regular admission packet; run gate_inventory.py admission prepare')
-    text = git(root, 'show', f'{tree}:{PACKET}')
+    text = git(root, 'show', f'{tree}:{record_path}')
     if len(text) > 2_000_000:
         raise ValueError('admission packet exceeds 2 MB')
     data = loads(text)
@@ -156,7 +165,9 @@ def inspect(root, base, head='HEAD'):
         raise ValueError('new test-tree files require an explicit add decision')
     if changes and outcome in {'reuse', 'no-add'}:
         raise ValueError('test changes require an extend or add decision, including weakening/deletion')
-    return summary(root, base, tree, rows, data['decision'])
+    result = summary(root, base, tree, rows, data['decision'])
+    result['record_path'] = record_path
+    return result
 
 
 def markdown(result):
@@ -283,14 +294,15 @@ def main(argv=None):
         if args.command == 'prepare':
             if not args.rationale:
                 raise ValueError('prepare requires --rationale FILE; stage intended changes first')
-            base, tree, rows = manifest(root, args.base, 'INDEX')
+            base, tree, rows, record_path = manifest(root, args.base, 'INDEX')
             data = packet(base, rows, loads(args.rationale.read_text()))
-            target = root / PACKET
+            record_path = record_path or f'{PACKET_DIR}/{uuid.uuid4().hex}.json'
+            target = root / record_path
             if target.is_symlink() or target.parent.is_symlink():
                 raise ValueError('refusing symlink admission output')
-            target.parent.mkdir(exist_ok=True)
+            target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(json.dumps(data, indent=2, sort_keys=True) + '\n')
-            print(f'Wrote proposed decision: {PACKET}; stage it. This does not approve tests.')
+            print(f'Wrote proposed decision: {record_path}; stage it. This does not approve tests.')
             return 0
         if args.command == 'check':
             print(markdown(inspect(root, args.base, args.head)))

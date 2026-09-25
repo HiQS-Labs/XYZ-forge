@@ -204,7 +204,8 @@ def publication_landing(repo_root, pr):
                              '--name-only', '-z', sha + '^1', sha], capture_output=True, text=True)
     if result.returncode:
         return False
-    paths = [p for p in result.stdout.split('\0') if p and p != '.github/test-admission.json']
+    from coverage_admission import is_packet_path
+    paths = [p for p in result.stdout.split('\0') if p and not is_packet_path(p)]
     if not paths:
         return False
     try:
@@ -217,7 +218,8 @@ def publication_landing(repo_root, pr):
 def publish_review(paths, repo):
     """Retain qualified artifacts on a reviewable branch; never direct-push fallback."""
     from pathlib import Path
-    from coverage_admission import PACKET, manifest, packet, open_pr
+    from coverage_admission import PACKET_DIR, manifest, packet, open_pr
+    import uuid
     # Recheck the original allowlist before admitting the generated packet.
     declared_paths(paths)
     if pending_publication(repo):
@@ -225,17 +227,20 @@ def publish_review(paths, repo):
     base = git('rev-parse', 'HEAD').stdout.strip()
     git('add', '-A', '--', *paths)
     root = Path.cwd()
-    merge_base, _, rows = manifest(root, base, 'INDEX')
+    merge_base, _, rows, record_path = manifest(root, base, 'INDEX')
+    if record_path is not None:
+        fail('unexpected staged admission record before publication')
+    record_path = f'{PACKET_DIR}/{uuid.uuid4().hex}.json'
     decision = dict(outcome='no-add', behavior='Publish existing qualification receipts and lifecycle state',
                     existing_coverage='Existing qualifying gate receipts; no executable test changes',
                     reason='Required review replaces direct integration push on protected development',
                     red_evidence='Publisher allowlist refuses code/test changes',
                     cost='Zero new automated tests; prior qualifying run retained in receipts',
                     issue='https://github.com/HiQS-Labs/XYZ-forge/issues/805')
-    target = root / PACKET
-    target.parent.mkdir(exist_ok=True)
+    target = root / record_path
+    target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(packet(merge_base, rows, decision), indent=2, sort_keys=True) + '\n')
-    full = commit([*paths, PACKET], 'chore: reconcile merged development work')
+    full = commit([*paths, record_path], 'chore: reconcile merged development work')
     branch = RECONCILE_PREFIX + full[:16]
     git('push', 'origin', f'HEAD:refs/heads/{branch}')
     pr = open_pr(repo, branch, full, 'chore: review qualified reconciliation artifacts',
