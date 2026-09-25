@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -98,5 +98,19 @@ R1 Implemented: added exact dispatch / check-run delivery for task and reconcile
 R2 Modified: omit the incompatible different-last-pusher requirement while retaining stale-review dismissal and required sole CODEOWNER review. Explicitly document shared-account review credentials as an unresolved activation prerequisite, not merely an admin-settings caveat. Bot authorship alone is not human-only authentication. Native approval is per change set, not per assertion.
 
 Please review the new Publication, credential and activation contract section plus the complete Gateway continuation. Three-round cap, no tests in worktree. Handing off to codex.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: R1 and R2 are resolved at plan level. The gateway now specifies bot event delivery, exact-head admission publication, compatible native review policy, protected reconciliation, and explicit activation prerequisites. Approval authorizes implementation against this plan, not merge, deployment, or a claim of enforced human-only review.
+swept file: yes
+
+- [Pass] **R1 resolved — explicit delivery and bootstrap contract.** Artifact lines 72–74 name job-scoped GITHUB_TOKEN, explicit development admission dispatch, branch CI dispatch, pending/completed check-runs on the live PR head, head-race refusal and default-branch deployment prerequisites. Existing `.github/workflows/ci.yml:98–104,513–518` exposes workflow_dispatch and an unconditional blocking smoke job. GitHub documents the dispatch exception to token event suppression and default-branch workflow availability ([token documentation](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token), [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)). This establishes a buildable delivery design; bot-created and bot-updated task/reconcile PR delivery still needs the live witness required by lines 72–74 and 83.
+- [Pass] **R2 resolved — compatible account policy and honest identity boundary.** Artifact lines 62 and 70 explicitly omit different-last-pusher approval, retain stale dismissal and sole CODEOWNER approval, and require removal of agent review/admin capability before claiming human-only enforcement. This matches the distinction in [GitHub protected-branch documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches). The proposed least-privilege setup is a prerequisite to verify, not evidence that current agent credentials are separated. Line 74 preserves the operator's bootstrap decision for #811.
+- [Pass] **Complete binding, disclosure, and trusted checking remain in scope.** Artifact lines 80–81 require the complete non-packet manifest, merge-base, stale/omitted/renamed/deleted controls, suite-growth disclosure and unknown case counts, with candidate objects treated only as data by the admission checker. Lines 83 and 85 extend existing suites rather than introduce another suite/service. Full-file sweep found no additional pre-existing plan defect requiring correction.
+- [Pass] **Protected reconciliation is connected to admission.** Artifact lines 66 and 76 specify allowlist validation before generated no-add metadata, complete diff binding, outstanding-PR pause, identity plus actual-diff recursion exclusion, and visible failure with retained evidence instead of direct-push fallback. Those changes address the existing `.github/workflows/wave-reconcile.yml:42–49` unprotected-branch prerequisite and `utils/py/hosted_lane_publish.py:79–86,102–111` allowlist/direct-push seams; preserve the existing unprotected mode as stated.
+- [Unverified — needs clone run] No tests, fixtures, pytest, validate.sh, or git commands were run. Source inspection establishes existing seams only. Historical execution evidence at artifact lines 169–175 was not independently rerun. Implementation safety, red controls, native approval after publication/revision, exact-head checks and protected reconciliation remain acceptance work; activation must remain unclaimed until witnessed. CI dispatch is not promotion evidence and its pull_request-only steps remain event-specific (`.github/workflows/ci.yml:539–544`).
+
+Relay closed (Approved), no further review turn needed. Handing the token to Producer (astra) for implementation and the separately required final QA; merge/settings activation remains an operator decision.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
