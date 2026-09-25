@@ -156,6 +156,28 @@ with patch.object(a,'gh',side_effect=api), patch.object(a,'git',return_value='')
     refused(lambda:a.hosted(r,'owner/repo',1,str(fixture/'never.json')))
 assert calls[-1][1]['conclusion']=='failure'
 assert not any(c[1] and c[1].get('conclusion')=='success' for c in calls)
+# Positive hosted check and head-race failure use the same writer without candidate execution.
+pr['head']['ref']='feat/coverage'
+good={'state':'proposed','test_files':{'A':0,'M':1,'D':0,'T':0},'registered_suite_delta':0,'changes':rows,'decision':why}
+with patch.object(a,'gh',side_effect=api), patch.object(a,'git',return_value=''), patch.object(a,'revision',return_value='f'*40), patch.object(a,'inspect',return_value=good), patch.dict('os.environ',{'GITHUB_STEP_SUMMARY':str(fixture/'summary.md')}):
+    calls.clear(); a.hosted(r,'owner/repo',1,str(fixture/'catalog.json'))
+    assert calls[-1][1]['conclusion']=='success' and json.loads((fixture/'catalog.json').read_text())['head']=='f'*40
+    calls.clear()
+    with patch.object(a,'live_pr',side_effect=[pr,{**pr,'head':{'sha':'e'*40}}]):
+        refused(lambda:a.hosted(r,'owner/repo',1,str(fixture/'catalog.json')))
+    assert calls[-1][1]['conclusion']=='failure'
+# Both bot creation and reuse dispatch admission on trusted development and CI on the task branch.
+for existing in [[],[pr]]:
+    dispatch=[]
+    def publication_api(path,payload=None,method=None):
+        if '/git/ref/' in path: return {'object':{'sha':'f'*40}}
+        if '/pulls?' in path: return existing
+        if path.endswith('/pulls'): return pr
+        dispatch.append((path,payload)); return None
+    with patch.object(a,'gh',side_effect=publication_api):
+        a.open_pr('owner/repo','feat/coverage','f'*40,'title','body')
+    assert dispatch[0][1]['ref']=='development' and dispatch[0][1]['inputs']['pr']=='1'
+    assert dispatch[1][1]['ref']=='feat/coverage'
 # A same-account reviewer, stale review, or dismissed review is never authenticated admission.
 with patch.object(a,'gh',return_value=pr), patch.object(a,'git',return_value=''), patch.object(a,'revision',return_value='f'*40), patch.object(a,'inspect',return_value={'state':'proposed'}):
     review={'id':3,'user':{'id':a.OPERATOR_ID},'state':'APPROVED','commit_id':'f'*40,'html_url':'review'}
