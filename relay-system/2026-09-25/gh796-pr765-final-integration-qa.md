@@ -122,4 +122,12 @@ Write only the relay thread. No source changes, self-commit, push, tick release 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-25T08:08:28Z
+task: RELAY-GH796-PR765-FINAL-20260925
+reviewer: agy
+status: Approved
+reviewed-head: 902aa29dbcd4fc568400da3ec98e3c30c987b614
+added-range: 8694+2881
+added-sha256: f7b5623f23d10a49e3a132760a05fe848aae0d4229527603162aaf215723a83d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
