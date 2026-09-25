@@ -1,0 +1,26 @@
+== test: gh390-gate-guard ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.tlCl45hxaS
+  PASS: all CPU signal/Bash attribution shapes are covered through the module-level seam
+  PASS: an honest gate still passes under the guard (exit 0)
+  PASS: peak-RSS telemetry is logged on a passing run (the Phase 3 trip condition)
+  PASS: a runaway allocator halts the phase (exit 5) instead of the host
+  PASS: layer 3 killed the gate's whole process group
+  PASS: ESCALATION.md records reason: gate-killed (distinct from a red gate)
+  PASS: the kill landed promptly (3s), well before the hog's own 1 GB ceiling
+  PASS: a hanging gate is killed at the wall-clock cap (4s, exit 5)
+  PASS: the kill reason names the wall-clock cap
+  PASS: a CPU spin is killed by the kernel-enforced cap (2s, exit 5)
+  PASS: a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect
+  PASS: GH-382 MagicMock-in-while-True runaway is killed and attributed as gate-killed
+  PASS: GH-382 baseline records group kill and distinct guard exit (108, 2s)
+  PASS: a red gate still halts the phase (exit 5)
+  PASS: a red gate keeps reason pre-advance-failed — the guard does not relabel real failures
+  PASS: MARATHON_GATE_GUARD=0 restores the unguarded gate (the hog completes, exit 0)
+  PASS: no kill occurred with the guard disabled
+  PASS: GH-773: ps outcomes and every summary form are classified through the module seam
+  PASS: GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)
+  PASS: GH-773: the RSS-unavailable warning is logged exactly once across several polls
+  PASS: GH-773: the summary reports the peak as unknown
+  PASS: GH-773: no numeric peak (the old fake 0MB) is printed for an unmeasured run
+  PASS: GH-773 control: a working ps still yields a numeric peak and no warning
+  gh390-gate-guard: 23 pass, 0 fail

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -150,4 +150,16 @@ status: Approved
 reviewed-head: 4ac68632469ee510563b46dcbf022db5eb7201e0
 added-range: 15040+4970
 added-sha256: cd39393b8e5f0a7d89ea1fb419836efec98dee397c8ef3c7757f72fc2cabc84a
+### Producer · Round 3 · astra
+
+The required full pre-push gate ran at 50adf9c0 and failed 419/422; identity remained intact and no push occurred. This is fresh observed evidence, not speculative review churn.
+
+- Corrected test/gh177-sandbox-test-guard.sh payloads to name a real inert path: path-integrity rejected the fictional example path. No payload is executed.
+- Corrected test/ci-route.sh expected releases count from24 to28 for the four approved additions. No mapping check removed.
+- Simple fixture-only amendment in test/gh390-gate-guard.sh: unchanged base0ae3452a reproduces the MagicMock failure. Diagnostic output says the existing500k-call ceiling fires between RSS samples (exit1 after1s, observed peak2MB). Hold the SAME allocation for2s at the ceiling and pin p7 poll cadence to1s; preserve the safety ceiling/failure exit and production guard unchanged. This is a bounded local test repair discovered by the required gate, not an architecture change. Review this amendment explicitly.
+
+Focused controls at8fa90065: path-integrity PASS, ci-route76/76, hook17/17, gh39023/23; disabling ONLY the p7 guard makes gh390 fail again. Pre/post identity snapshots match. Logs, unchanged-base counterfactual and first failed full telemetry are retained under TESTS-RESULTS/2026-09-25+GH-805. Decision content digest updated for the inert hook-path edit; observe-mode approval remains unauthenticated. No other production logic changed after round2.
+
+Questions: Are these observed gate failures repaired without weakening their guards? Does the MagicMock fixture remain bounded and capable of detecting absent protection? Re-review against the same seven-step scope and approve only for a new final gate, never infer merge readiness from focused green. This is the final configured review round.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

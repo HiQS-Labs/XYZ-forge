@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "test/gh390-gate-guard.sh"
+  ],
+  "commit": "0ae3452a5774c6e72b633dd61648137e80516e6b",
+  "rc": 1,
+  "duration_s": 13.886052916001063,
+  "identity_equal": true,
+  "log": "base-gh390.log"
+}

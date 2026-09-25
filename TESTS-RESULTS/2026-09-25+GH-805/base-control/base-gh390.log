@@ -1,0 +1,18 @@
+== test: gh390-gate-guard ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.1WarMf1WRf
+  PASS: all CPU signal/Bash attribution shapes are covered through the module-level seam
+  PASS: an honest gate still passes under the guard (exit 0)
+  PASS: peak-RSS telemetry is logged on a passing run (the Phase 3 trip condition)
+  PASS: a runaway allocator halts the phase (exit 5) instead of the host
+  PASS: layer 3 killed the gate's whole process group
+  PASS: ESCALATION.md records reason: gate-killed (distinct from a red gate)
+  PASS: the kill landed promptly (3s), well before the hog's own 1 GB ceiling
+  PASS: a hanging gate is killed at the wall-clock cap (4s, exit 5)
+  PASS: the kill reason names the wall-clock cap
+  PASS: a CPU spin is killed by the kernel-enforced cap (3s, exit 5)
+  PASS: a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect
+  FAIL: GH-382 reproducer was not attributed as gate-killed (rc=5, reason=pre-advance-failed): wall-clock (run window): 12s
+per done-task: ≥0 tokens, 2s wall-clock
+memory: compressor peak: 3193MB, swap free min: 1212MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified

@@ -1,0 +1,23 @@
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.lmtA0EKySI/target/phases/p7/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P7-TURN → claude
+marathon-drive: memory-telemetry: phase p7-start boundary — compressor=3190MB, swap_free=1212MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.lmtA0EKySI/gh382-magicmock-while-true.py
+fixture safety ceiling reached before the guard fired
+marathon-drive: gate-guard: gate exit 1 after 1s — peak group RSS 2MB (tier full; caps: RSS 96MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.lmtA0EKySI/target/relay-system/2026-09-25/marathon-p7-033437.md
+marathon-drive: memory-telemetry: phase p7-escalated boundary — compressor=3190MB, swap_free=1212MB
+marathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.lmtA0EKySI/target/phases/p7/ESCALATION.md (reason: pre-advance-failed)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/5 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 12s
+per done-task: ≥0 tokens, 2s wall-clock
+memory: compressor peak: 3190MB, swap free min: 1212MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
