@@ -97,7 +97,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 
 ### ✅ Likely done — verify-and-close, not a build lane
 - #141 GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison — `already-landed`
-- #788 GH-788 · gate: suites fail when the Python path contains a space (shebang and unquoted sys.executable) — `already-closed`
 - #275 GH-275 · medium-level write-ops logging of agent disk-write commands — `already-landed`
 - #416 GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer — `already-landed`
 - #423 GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on — `already-landed`
