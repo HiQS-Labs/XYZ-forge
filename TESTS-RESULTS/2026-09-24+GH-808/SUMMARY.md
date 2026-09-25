@@ -25,3 +25,20 @@ Change: `PATHS_FILE` content `utils/py/releases_app.py` → `skills/3-weekly/ski
 `--paths-file` to classify tier 2 with `T2_PYTEST=1`; the pytest lane itself is 20.9 s hosted.
 
 Files: `before.log`, `after.log`, `red-control.log`, `red-control-restore.log`, `provenance.jsonl`.
+
+## Gate-run isolation appendix (2026-09-25)
+
+Four full `ci-local.sh` attempts; every failure isolated to an environmental or upstream
+cause, none to this diff — `gh251` itself green in all runs:
+
+| Run | Clone location | Base | Sole failure | Isolation |
+|---|---|---|---|---|
+| 1 | `/tmp` (symlinked) | `0ae3452a` | gh649 `FAIL - resolver` | Fails identically at base; physical-vs-logical root mismatch under macOS `/tmp`→`/private/tmp`; passes at non-symlinked path. Filed #814. |
+| 2 | sibling (spaced path) | `0ae3452a` | gh496 concurrency subtest | Passes solo ×2 (14/14); timing flake. |
+| 3 | sibling (spaced path) | `0ae3452a` | gh648-l4 `killpg` EPERM | Fails identically at base; **the GH-788/#795 space-in-Python-path bug — fixed upstream by `41c07aa4`**; passes at the rebased head. |
+| 4 (final) | sibling (spaced path) | `41c07aa4` (rebased) | — | The qualifying run at the final head. |
+
+Also recorded: pre/post identity transcripts (`identity-transcript.txt`), solo logs for each
+isolated suite, and the relocated-clone gh649 pass. Origin/development moved twice mid-task
+(`0ae3452a`, then `41c07aa4`); the branch was rebased each time via the documented
+`releases-merge-resolve.sh` procedure.
