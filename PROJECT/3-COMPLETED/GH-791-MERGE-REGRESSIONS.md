@@ -1,8 +1,8 @@
 ---
 title: "GH-791: repair merge-batch regressions"
-status: in-progress
+status: Complete
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-25
 owner: Codex
 goal: Restore bounded cleanup polling, correct hosted-run attribution, and the inventory gate.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/791
@@ -12,7 +12,7 @@ gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/791
 
 | What was just completed | What's next |
 |---|---|
-| Repaired four direct regressions; 180 cleanup tests and full macOS gate 419/419 pass. | Review and merge the dedicated PR into development. |
+| PR #794 merged at `0ae3452a`; local fallback reconciliation, RELEASES check and issue-doc sync passed after the hosted qualification failed on three unrelated suites. | GH-796 continues with #795 and remediated #765; hosted failures remain tracked under #790 and existing follow-ups. |
 
 ## Scope and recon
 
@@ -45,3 +45,5 @@ Unknown: real GitHub eventual-consistency timing is modeled with controlled work
 The full-gated revision is `14640c75`. [Review and committed receipts](../../TESTS-RESULTS/2026-09-24+GH-791/REVIEW.md)
 include all negative controls and final validation. GH-793 records the unrelated intermittent
 idle-control failure and is held; no unrelated runtime fix is included.
+
+Post-merge reconciliation evidence and provenance: `TESTS-RESULTS/2026-09-25+GH-796/pr794-reconciliation/`. The hosted failure is retained and is not a passing qualification.
