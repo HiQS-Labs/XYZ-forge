@@ -121,4 +121,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) owns the remaining qualifying gate and publication steps.
 
+
+### Attestation · relay-drive — 2026-09-25T18:07:16Z
+task: RELAY-gh825-final
+reviewer: codex
+status: Approved
+reviewed-head: 1cfa3ee71ad628dbbc37cfe84114511f9daac84b
+added-range: 11862+2874
+added-sha256: af85195794c4222aa19af7a256e50cefecb673bebc66eebb262b7c2e97315b2f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
