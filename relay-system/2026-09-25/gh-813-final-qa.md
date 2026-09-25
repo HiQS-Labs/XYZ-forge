@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,24 @@ Output graded findings with `file:line` citations, a VERDICT and a Basis. Set `S
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The bounded WAL-only retry and regression checks satisfy the approved design; retained producer evidence supports R1–R4. No Blocker or Should remains. This approves source and evidence review, not the pending final gate.
+swept file: yes
+
+Read all 703 lines of utils/py/harness_app.py, all 340 lines of test/gh496-telemetry-isolation.sh, the approved plan and its prior review, and the campaign script/receipts/provenance. No additional established pre-existing defect was found in the swept files within this local CLI change's operational envelope.
+
+- [Pass] **Retry matches step 1.** utils/py/harness_app.py:170-184 leaves connect and foreign-key setup outside the retry; only the WAL execute is inside try. range(50), the case-insensitive substring check, bare re-raise at attempt 49 or any other OperationalError, and 20–50 ms jitter implement the specified policy. Schema/migration/seed remain outside it (:186-301). No helper, duplicate write path, or broader retry is introduced in this implementation.
+- [Pass] **Case 14 reaches the real seam and rejects empty output.** test/gh496-telemetry-isolation.sh:293-312 imports the shared sqlite3 module, saves connect, subclasses execute and patches the factory, reaching harness_app.py:170. The seed query (:319) checks initialization. Exact grep -qxF predicates require `a|ok|4`, `b|disk I/O error|1`, and `c|database is locked|50`, together with rc 0 (:330-336). Missing output or a nonzero Python exit fails; exit zero without all three lines also fails. signal.alarm(30) (:296) terminates an unbounded retry on macOS, and the shell captures its nonzero status. This meets the timeout intent without another dependency.
+- [Pass] **Case 9 preserves fresh concurrent initialization.** test/gh496-telemetry-isolation.sh:176-196 creates only the directory, launches ten workers, captures stderr separately and waits for each PID. The if/then/fi form at :209 returns success for an empty file, so a trailing empty stderr file does not terminate the assignment under errexit. Row-count/integrity checks remain at :199-205; errors reach fail at :210.
+- [Pass] **Retained core evidence agrees.** TESTS-RESULTS/2026-09-25+GH-813/provenance.jsonl:1-4 records four runs and explicitly discloses uncommitted overlays at run time. base-200.txt:1-9 reports 29/200 failures, 35 lock errors and 29 short rounds; fixed-200.txt:1-7 reports zero failed/short rounds. red-control-base.txt ends with `a|database is locked|1`, `b|disk I/O error|1`, `c|database is locked|1` and `13 pass, 2 fail`; suite-fixed.txt ends with `15 pass, 0 fail`. These support the Results at PROJECT/2-WORKING/GH-813-SQLITE-WAL-INIT-RACE.md:74-76 and CHANGELOG.md:5 as producer-retained evidence, not independently rerun observations. A finite campaign does not establish an unconditional never-fails guarantee; bounded exhaustion remains correct.
+- [Pass] **Rating and lifecycle remain qualified.** Plan :35-45 grounds 60/45/50/90 in recoverable telemetry loss/gate disruption, neutral appeal and small effort without asserting a recurrence trend. releases.sql:736 carries that same rating, working-doc pointer and in-progress status; plan :20 and :71 leave the final gate/PR outstanding.
+- [Nit] **Clarify two evidence details when next editing the plan.** Plan :67 says external timeout 30, while the implementation uses signal.alarm(30). The red receipt's `==> ...err_10 <==` headers and empty-file headers differ from the final nonempty-file loop at test :209. It demonstrates stderr capture in an earlier revision, not execution of that final formatting loop. Preserve this distinction; final clone evidence can attest the final source. Neither requires a runtime redesign.
+- [Unverified — needs clone run] No suite, executable fixture, concurrency campaign or full gate was run here. Plan :77's neighboring-suite claims have no corresponding rows among the four retained provenance records and are not independently accepted as evidence. Run the final gate in the required disposable full clone, retaining final-source evidence and identity checks. Git was explicitly prohibited this turn, so base equivalence, exact historical diff scope, tracking and final-commit attribution were not independently checked; no all-path diff-clean claim is made.
+- [Pass] **Read-only syntax/evidence probes.** Command: python3 stdin program applying ast.parse to utils/py/harness_app.py, parsing every provenance JSON line, asserting exactly four rows and nonempty referenced receipts, and asserting neither `/Users/` nor `/private/var/folders/` occurs in receipt text; exit 0. Decisive output: `source parses; four nonempty receipts; no user/temp absolute prefixes in receipts`. Command: `bash -n test/gh496-telemetry-isolation.sh`; exit 0, no output. Both ran with PYTHONDONTWRITEBYTECODE=1 and scratch-pinned TMPDIR; neither executed artifact behavior.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) owns the pending disposable-clone gate and final publication checks.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
