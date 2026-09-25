@@ -1,0 +1,54 @@
+== test: wave-reconcile ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-wave-reconcile.XXXXXX.28v40V84ZJ
+=== Running wave-reconcile.sh test suite ===
+  ✅ PASS: Top-level help lists canonical purpose
+  ✅ PASS: Dirty working tree is rejected (exit 3)
+  ✅ PASS: Dry-run exits 0
+  ✅ PASS: Dry-run preserves exact byte-state of repo
+  ✅ PASS: Direct-commit dry-run exits 0
+  ✅ PASS: Direct-commit reconciliation preserves commit identity
+  ✅ PASS: Missing lessons learned is a WARN, not a refusal (exit 0)
+  ❌ FAIL: WARN names the doc and the missing section (got: wave-reconcile: Starting wave reconciliation (dry_run=True, root=/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-wave-reconcile.XXXXXX.28v40V84ZJ/fixture-repo)
+wave-reconcile: Processing PR #1001...
+wave-reconcile:   PR #1001 closes [999]; references []
+wave-reconcile:   Issue #999 state is UNKNOWN — preserving active doc and roadmap entry; confirmed CLOSED state required for terminal closeout
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> marathon-plan.sh --dry-run
+wave-reconcile: Wave reconciliation completed successfully! ✅, expected: wave-reconcile: WARN — Doc GH-999-TEST.md has no '## Lessons Learned)
+  ❌ FAIL: promotion proceeds past the WARN (got: wave-reconcile: Starting wave reconciliation (dry_run=True, root=/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-wave-reconcile.XXXXXX.28v40V84ZJ/fixture-repo)
+wave-reconcile: Processing PR #1001...
+wave-reconcile:   PR #1001 closes [999]; references []
+wave-reconcile:   Issue #999 state is UNKNOWN — preserving active doc and roadmap entry; confirmed CLOSED state required for terminal closeout
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> marathon-plan.sh --dry-run
+wave-reconcile: Wave reconciliation completed successfully! ✅, expected: Moved -> GH-999-TEST.md)
+  ✅ PASS: Live reconciliation exits 0
+  ❌ FAIL: Merged active doc moved from 2-WORKING to 3-COMPLETED (got: missing, expected: present)
+grep: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-wave-reconcile.XXXXXX.28v40V84ZJ/fixture-repo/PROJECT/3-COMPLETED/GH-999-TEST.md: No such file or directory
+  ❌ FAIL: Merged doc frontmatter status updated to Complete (got: not found, expected: status: Complete)
+  ✅ PASS: Unmerged/declined active doc moved from 2-WORKING to 4-MISC
+  ✅ PASS: Unmerged doc frontmatter status updated to Declined
+  ✅ PASS: Declined PR with unconfirmed issue state reconciles cleanly (exit 0)
+  ✅ PASS: Declined PR with unconfirmed issue state leaves the active doc in 2-WORKING (GH-646)
+  ❌ FAIL: Declined/unconfirmed closeout is logged as preserved, not promoted (got: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-wave-reconcile.XXXXXX.28v40V84ZJ/fixture-repo)
+wave-reconcile: Processing PR #1004...
+wave-reconcile:   PR #1004 state is 'CLOSED' (unmerged/declined) -> routing to 4-MISC/
+wave-reconcile:   PR #1004 closes [778]; references []
+wave-reconcile:   Issue #778 state is UNKNOWN — preserving active doc and roadmap entry; confirmed CLOSED state required for terminal closeout
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile: Running PDDA doc-hygiene gate...
+wave-reconcile: Wave reconciliation completed successfully! ✅, expected: PR was not merged — preserving active doc)
+  ❌ FAIL: ROADMAP.md entry archived to Completed (got: not found, expected: SHIPPED 2026-08-22)
+  ❌ FAIL: ROADMAP.md entry archived separator-less fixture entry with correct formatting (got: not found, expected: GH-444...SHIPPED...— separatorless)
+  ❌ FAIL: Archived line carries no nested/mismatched bold markers (got: - **GH-444** ✅ **SHIPPED 2026-08-22 (PR #1003)** — separatorless description, expected: - **GH-444** 🚧 **active 2026-08-22** separatorless description)
+  ✅ PASS: Mangled GH-222 entry is fixed and canonicalized
+=== wave-reconcile.sh Results: 13 passed, 8 failed ===

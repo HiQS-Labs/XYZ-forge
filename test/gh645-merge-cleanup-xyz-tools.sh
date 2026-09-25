@@ -2,8 +2,8 @@
 # gh645-merge-cleanup-xyz-tools.sh — /merge-cleanup must find PRS tools that a consumer repo vendors
 # under gitignored `.xyz/utils/py/` (GH-645). A landing clone is a plain `git clone`, so it never
 # carries `.xyz/`; the gate went RED with "No such file", and the reconciler was then passed
-# `--force-local-reconcile`, which the vendored wave_reconcile.py rejects. Pins resolver order,
-# the primary-checkout fallback, and the advertised-flag-only rule.
+# `--force-local-reconcile`, which is reserved for explicit operator recovery. Pins resolver order,
+# the primary-checkout fallback, and the automatic fallback's flag-free contract.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export XYZ_TEST_SCRIPTS="$HERE/../skills/2-daily/merge-cleanup/scripts"
@@ -88,7 +88,7 @@ class ToolPathResolution(unittest.TestCase):
         self.assertEqual(cmd[2:4], ["--root", str(self.clone)])
 
 
-class ReconcileFlagIsAdvertisedOnly(unittest.TestCase):
+class ReconcileFallbackNeverForces(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.repo = Path(self.tmp.name)
@@ -127,11 +127,11 @@ class ReconcileFlagIsAdvertisedOnly(unittest.TestCase):
         self.assertIn(f"--root {self.repo}", argv)
         self.assertIn("--pr 7", argv)
 
-    def test_flag_passed_when_the_tool_advertises_it(self):
+    def test_flag_omitted_even_when_the_tool_advertises_it(self):
         self._write_reconciler(advertises=True)
         with mock.patch.object(merge_cleanup, "log"), mock.patch.object(merge_cleanup, "log_err"):
             self.assertTrue(merge_cleanup.run_local_wave_reconcile(7, self.repo))
-        self.assertIn("--force-local-reconcile", (self.repo / "argv.txt").read_text())
+        self.assertNotIn("--force-local-reconcile", (self.repo / "argv.txt").read_text())
 
 
 if __name__ == "__main__":

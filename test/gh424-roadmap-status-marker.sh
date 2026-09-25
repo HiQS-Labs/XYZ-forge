@@ -39,13 +39,13 @@ class MarkerTests(unittest.TestCase):
         # This is not a git checkout and nothing invokes git against it.
         (self.root / '.git').mkdir()
         (self.root / '.pdda-mode').write_text('ROADMAP_SOURCE=releases\n')
-        self.cli('init', '--slug', 'gh424-fixture')
+        self.cli('init', '--slug', 'owner/project')
         self.doc = 'PROJECT/1-INBOX/GH-424-test.md'
         (self.root / self.doc).parent.mkdir(parents=True)
         (self.root / self.doc).write_text('# fixture\n')
         for n in (424, 425):
             self.cli('roadmap', 'add', '--issue-num', str(n), '--title', f'fixture {n}',
-                     '--created', '2026-09-08', '--issue-url', f'https://example.test/issues/{n}',
+                     '--created', '2026-09-08', '--issue-url', f'https://github.com/owner/project/issues/{n}',
                      '--doc-path', self.doc)
         for name in artifacts[2:]:
             (self.root / name).write_text(f'original {name}\n')
@@ -155,7 +155,8 @@ class MarkerTests(unittest.TestCase):
 
         with patch.object(wave.subprocess, 'run', side_effect=run), \
              patch.object(wave, 'harness_tool', side_effect=lambda root, path: str(source / path)):
-            self.assertTrue(wave.update_roadmap_entry(str(self.root), 424, 42, '2026-09-08', journal=journal))
+            self.assertTrue(wave.update_roadmap_entry(str(self.root), 424, 42, '2026-09-08', journal=journal,
+                                                   repo_slug='owner/project'))
             self.assertNotEqual(before['releases.db'], (self.root / 'releases.db').read_bytes())
             with self.assertRaises(wave.ReconcileError) as raised:
                 wave.run_subprocesses(str(self.root), journal=journal)

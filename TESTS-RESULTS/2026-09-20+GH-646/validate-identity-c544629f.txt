@@ -1,0 +1,2 @@
+head=c544629fe64818295ce569326409c2e192e95384 start=2026-09-21T01:29:36Z dirty-before=0 python3=/tmp/xyz-flightdeck-completion.2zF9Hr/python-env/bin/python3 node=v26.0.0
+validate rc=1 wall=1358s end=2026-09-21T01:52:14Z head-after=c544629fe64818295ce569326409c2e192e95384 dirty-after=0

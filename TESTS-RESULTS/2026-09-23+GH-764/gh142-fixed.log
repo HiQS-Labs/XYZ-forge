@@ -1,0 +1,40 @@
+== 1. filed: stub gh succeeds ==
+  PASS: compile_issue exits 0 when gh files
+  PASS: gh was invoked
+  PASS: creation reported
+  PASS: body file cleaned up after filing
+== 2. gh-failed: nonzero, body preserved (the #142 defect: was exit 0) ==
+  PASS: compile_issue exits 1 when gh fails
+  PASS: failure named
+  PASS: issue_body.md preserved for manual filing
+== 3. no-records: exit 3, gh never called ==
+  PASS: empty log exits 3 (distinct from filed)
+  PASS: gh not invoked on empty log
+== 4. dry-run: exit 0, gh never called ==
+  PASS: dry-run exits 0
+  PASS: dry-run never calls gh
+  PASS: dedup: two identical failures collapse to one bucket, seen 2x
+== 5. chain: run_variations propagates the filing outcome ==
+  PASS: run_variations exits 1 when the chained filing fails
+  PASS: chain names the child failure
+  PASS: run_variations exits 0 when the chained filing succeeds
+  PASS: chain run logged records (fixture really exercised)
+== 6. #141 Phase 5: labels default-neutral and flow end-to-end ==
+  PASS: default rollup label is the neutral 'bug'
+  PASS: no aider-pipeline on a non-Aider grid (default-neutral)
+  PASS: labelled chain run healthy
+  PASS: --issue-label flows run -> compiler -> gh
+  PASS: explicit labels replace, not augment, the default
+  PASS: the Aider preset opts back into aider-pipeline via issue_labels
+== 7. #141 Phase 5: the classifier oracle is decoupled from the Aider edit assumption ==
+  PASS: expects_edits selects the classifier rule (diagnostic grids pass no-edit runs)
+  PASS: mock classifier passes an exit-0 no-edit variation
+== 8. review turn 3: launch failure and hang land in the gh-failed class, loudly ==
+  PASS: missing gh exits 1 (gh-failed class)
+  PASS: missing gh named cleanly
+  PASS: no traceback on launch failure
+  PASS: body preserved on launch failure
+  PASS: hanging gh exits 1 via the timeout cap
+  PASS: timeout named with the cap and the override
+  PASS: body preserved on hang
+gh142-ate-exit-contract: 30 passed, 0 failed

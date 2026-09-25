@@ -1013,6 +1013,13 @@ def _migration_007(conn):
 # it must never use executescript() or any other implicit-commit API. 001 is exempt because
 # it is reachable only on a fresh database (cmd_init) or a rebuild, never alongside other
 # pending versions on a live ledger.
+def _migration_009(conn):
+    """GH-646: absence is not a historic start; migration deliberately leaves NULL."""
+    if not _has_column(conn, "roadmap_items", "status_label"):
+        conn.execute("ALTER TABLE roadmap_items ADD COLUMN status_label TEXT "
+                     "CHECK(status_label IS NULL OR status_label = 'in-progress')")
+
+
 MIGRATIONS = {
     1: {"apply": lambda conn: conn.executescript(MIGRATION_001), "txn_safe": False},
     2: {"apply": lambda conn: _ensure_roadmap_schema(conn, stamp=False), "txn_safe": True},
@@ -1022,6 +1029,7 @@ MIGRATIONS = {
     6: {"apply": _migration_006, "txn_safe": True},
     7: {"apply": _migration_007, "txn_safe": True},
     8: {"apply": _migration_008, "txn_safe": True},
+    9: {"apply": _migration_009, "txn_safe": True},
 }
 
 
@@ -1249,6 +1257,9 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
             rmi_extra = "".join(", ri.%s" % c for c in RATING_COLUMNS)
         else:
             rmi_extra = ""
+        if _has_column(conn, "roadmap_items", "status_label"):
+            rmi_cols.append("status_label")
+            rmi_extra += ", ri.status_label"
         _emit(w, "roadmap_items", rmi_cols, _rows(conn, rmi_select.format(extra=rmi_extra)))
 
     if _table_exists(conn, "jog_queue"):
@@ -1459,9 +1470,13 @@ def _extract_roadmap_update(conn, op, gid, previous=None):
     if row is None:
         return None
     marker = row["status_marker"] or ""
-    changed = previous is not None and (
-        (previous["status_marker"] or "") != marker
-        or (previous["section"] or "").strip() != (row["section"] or "").strip()
+    accepted = bool(previous and previous.get("accepted_start")) if isinstance(previous, dict) else False
+    # Appearance is not new authority: an active section/marker may change while
+    # the lifecycle stays active. Only a classified transition or explicit
+    # accepted-start witness may replace the original lifecycle id/time.
+    changed = accepted or previous is not None and (
+        _live_roadmap_event(previous["section"], previous["status_marker"], False)
+        != _live_roadmap_event(row["section"], marker, False)
     )
     if not changed:
         return ("updated", row["gh_number"], {
@@ -1470,10 +1485,13 @@ def _extract_roadmap_update(conn, op, gid, previous=None):
         }, row["repo_id"])
     event = _live_roadmap_event(row["section"], marker,
                                 row["rating_pri"] is not None)
-    return (event, row["gh_number"], {
+    payload = {
         "source": "roadmap-update", "transition": True,
         "marker": marker, "section": row["section"],
-    }, row["repo_id"])
+    }
+    if accepted:
+        payload["accepted_start"] = True
+    return (event, row["gh_number"], payload, row["repo_id"])
 
 
 def _jog_work_event(row, status, event=None):
@@ -1613,7 +1631,24 @@ def _dispatch_work_connectors(db_path, at):
         return {}
 
 
-def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_events=None):
+def _sync_status_labels(conn, before, op, target_gid, accepted_start=False):
+    """One field-maintenance seam, including multi-row sweep/sync mutations."""
+    for row in conn.execute("SELECT * FROM roadmap_items").fetchall():
+        old = before.get(row["global_id"])
+        state = _live_roadmap_event(row["section"], row["status_marker"], False)
+        label = old["status_label"] if old else None
+        if state != "in_flight":
+            label = None
+        elif (op == "roadmap-update" and row["global_id"] == target_gid
+              and accepted_start):
+            label = "in-progress"
+        if label != row["status_label"]:
+            conn.execute("UPDATE roadmap_items SET status_label = ? WHERE global_id = ?",
+                         (label, row["global_id"]))
+
+
+def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_events=None,
+                  accepted_start=False):
     """Run one CLI transaction under the full multi-artifact protocol:
 
       write intent journal (txn_id, NEXT generation, planned outputs)   [BEFORE the DB commit]
@@ -1652,7 +1687,14 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_even
         try:
             previous = (_roadmap_row(conn, target_gid)
                         if op == "roadmap-update" and target_gid is not None else None)
+            labels_ready = _has_column(conn, "roadmap_items", "status_label")
+            before_rows = ({r["global_id"]: dict(r) for r in conn.execute(
+                "SELECT * FROM roadmap_items")} if labels_ready else {})
             mutate(conn)
+            if labels_ready:
+                _sync_status_labels(conn, before_rows, op, target_gid, accepted_start)
+            if accepted_start and previous is not None:
+                previous = dict(previous, accepted_start=True)
             now = now_iso()
             if _has_column(conn, "settings", "updated_at"):
                 cur = conn.execute("UPDATE settings SET value = ?, updated_at = ? WHERE key = ?",
@@ -3569,6 +3611,10 @@ def cmd_roadmap_add(args):
                 args.issue_num, args.title, args.created, basename, args.doc_path,
                 args.issue_num, args.issue_url
             )
+            # GH-703: direct CLI intake must pass through the same grammar as an explicit
+            # --raw-text value. Titles containing a lone asterisk otherwise create a row that
+            # roadmap_render() silently drops because it cannot replay the bold bullet.
+            raw_text = validate_raw_text(raw_text, args.issue_num)
         # GH-249: the rating rides in the ledger line, parsed by the SAME parse_rating() the
         # markdown sync uses — one grammar, one parser, never a second scorer. Before this, ratings
         # could only enter through `roadmap sync`, which GH-169 turned into a no-op in releases-mode
@@ -3721,13 +3767,17 @@ def cmd_roadmap_repoint(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
     try:
-        rows = conn.execute("SELECT global_id, doc_path, raw_text FROM roadmap_items "
-                            "WHERE gh_number = ? LIMIT 2", (args.issue_num,)).fetchall()
+        gid = getattr(args, "gid", None)
+        if (args.issue_num is None) == (gid is None):
+            refuse("selector", "pass exactly one of --issue-num or --gid")
+        where, param, label = (("gh_number = ?", args.issue_num, "GH-%d" % args.issue_num)
+                               if args.issue_num is not None else ("global_id = ?", gid, gid))
+        rows = conn.execute("SELECT global_id, gh_number, doc_path, raw_text FROM roadmap_items "
+                            "WHERE %s LIMIT 2" % where, (param,)).fetchall()
         if not rows:
-            refuse("no-such-row", "no roadmap row for GH-%d" % args.issue_num)
+            refuse("no-such-row", "no roadmap row for %s" % label)
         if len(rows) != 1:
-            refuse("selector", "GH-%d matches multiple repositories; repoint by issue number "
-                   "is ambiguous" % args.issue_num)
+            refuse("selector", "%s matches multiple repositories; pass --gid" % label)
         row = rows[0]
         new = args.doc_path
         if not os.path.isfile(os.path.join(root, new)):
@@ -3746,7 +3796,7 @@ def cmd_roadmap_repoint(args):
                          "WHERE global_id = ?", (new, raw_text, now_iso(), row["global_id"]))
 
         perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
-        print("repointed GH-%d -> %s" % (args.issue_num, new))
+        print("repointed GH-%d -> %s" % (row["gh_number"], new))
     finally:
         conn.close()
 
@@ -3839,6 +3889,11 @@ def cmd_roadmap_update(args):
     Marker-only updates preserve raw_text, ratings, section and doc_path.
     """
     marker = getattr(args, "status_marker", None)  # `move` shares this handler.
+    accepted = getattr(args, "accepted_start", False)
+    if accepted and (args.gid is None or args.issue_num is not None or any(
+            getattr(args, k, None) is not None for k in
+            ("raw_text", "section", "status_marker", "issue_url"))):
+        refuse("accepted-start-fields", "--accepted-start requires only --gid (and optional --dry-run)")
     if marker is not None and marker not in _ROADMAP_STATUS_MARKERS:
         refuse("invalid-status-marker", "--status-marker must be one of %s"
                % ", ".join(_ROADMAP_STATUS_MARKERS))
@@ -3861,7 +3916,7 @@ def cmd_roadmap_update(args):
             where, param, label = "global_id = ?", args.gid, args.gid
 
         has_rating_cols = _has_column(conn, "roadmap_items", "rating_pri")
-        select_cols = ["global_id", "gh_number", "title", "raw_text", "issue_url"]
+        select_cols = ["*"]
         rows = conn.execute(
             "SELECT %s FROM roadmap_items WHERE %s LIMIT 2" % (", ".join(select_cols), where),
             (param,)).fetchall()
@@ -3874,7 +3929,21 @@ def cmd_roadmap_update(args):
         # cross repository ownership when two configured repositories both have issue #N.
         where, param = "global_id = ?", row["global_id"]
 
-        if args.raw_text is None and args.section is None and marker is None and issue_url is None:
+        if accepted:
+            if not _has_column(conn, "roadmap_items", "status_label") or 9 in pending_versions(conn):
+                refuse("status-label-unsupported", "schema009 required; migrate deliberately first")
+            repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
+            identity = resolve_roadmap_identity(row, repos, _origin_repo_identity(root))
+            if not identity["identity_valid"]:
+                refuse("accepted-start-identity", "roadmap row does not have qualified owned issue identity")
+            try:
+                native = read_native_issue(identity["repo"], row["gh_number"], row["issue_url"])
+            except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+                refuse("accepted-start-native", str(exc))
+            if native["state"] != "open":
+                refuse("accepted-start-native", "accepted start requires an open native issue")
+
+        if not accepted and args.raw_text is None and args.section is None and marker is None and issue_url is None:
             refuse("no-update", "pass at least one of --raw-text, --section, --status-marker or --issue-url")
 
         new_raw_text = None
@@ -3897,6 +3966,8 @@ def cmd_roadmap_update(args):
             validate_issue_identity(issue_url, row["gh_number"], require_github=True)
 
         if args.dry_run:
+            if accepted:
+                print("accepted-start: %s -> In progress / 🚧 / in-progress (preview only)" % label)
             if args.raw_text is not None:
                 print("raw_text: %s -> %s" % (old_raw_text, new_raw_text))
                 if rating["rating_pri"] is not None:
@@ -3912,9 +3983,24 @@ def cmd_roadmap_update(args):
             return
 
         def mutate(conn):
+            if accepted:
+                current = conn.execute("SELECT * FROM roadmap_items WHERE global_id = ?",
+                                       (row["global_id"],)).fetchone()
+                if current is None or any(current[k] != row[k] for k in ("repo_id", "gh_number", "issue_url")):
+                    refuse("accepted-start-stale", "row changed during native lookup; retry admission")
+                latest = latest_owned_lifecycle(conn, current["repo_id"], current["gh_number"])
+                if (current["status_label"] == "in-progress" and latest
+                        and latest["event"] in _START_EVENTS
+                        and _live_roadmap_event(current["section"], current["status_marker"], False) == "in_flight"):
+                    raise _AlreadyRecorded("in_flight")
+                if dict(current) != dict(row):
+                    refuse("accepted-start-stale", "row changed during native lookup; retry admission")
             ts = now_iso()
             updates = ["updated_at = ?"]
             params = [ts]
+            if accepted:
+                updates.extend(["section = ?", "status_marker = ?"])
+                params.extend(["In progress", "🚧"])
             if args.raw_text is not None:
                 updates.append("raw_text = ?")
                 params.append(new_raw_text)
@@ -3935,7 +4021,12 @@ def cmd_roadmap_update(args):
             params.append(param)
             conn.execute("UPDATE roadmap_items SET %s WHERE %s" % (", ".join(updates), where), params)
 
-        perform_write(root, conn, "roadmap-update", row["global_id"], mutate)
+        try:
+            perform_write(root, conn, "roadmap-update", row["global_id"], mutate,
+                          accepted_start=accepted)
+        except _AlreadyRecorded:
+            print("accepted-start: %s already active; original start preserved" % label)
+            return
         print("updated %s" % label)
     finally:
         conn.close()
@@ -3964,16 +4055,25 @@ def cmd_roadmap_reconcile_state(args):
             "ORDER BY gh_number, global_id", terminal).fetchall()
         changes = []
         unresolvable = []
+        owned_repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
+        origin = _origin_repo_identity(root)
         for row in rows:
-            # Full URLs preserve repository identity, including imported cross-repo references.
+            # A URL cannot override the row's independently owned repository.
             url = row["issue_url"] or ""
+            identity = resolve_roadmap_identity(row, owned_repos, origin)
             if (not GH_ISSUE_URL_RE.fullmatch(url)
-                    or url.rsplit("/", 1)[-1] != str(row["gh_number"])):
+                    or url.rsplit("/", 1)[-1] != str(row["gh_number"])
+                    or not identity["identity_valid"]):
                 # Per-row, not per-command: one row whose issue_url disagrees with its gh_number
                 # is a local data defect, and refusing the whole sweep over it strands every other
                 # row (#527). Still never guess this row's state — skip it and name it.
                 unresolvable.append(row["gh_number"])
                 continue
+            try:
+                native = read_native_issue(identity["repo"], row["gh_number"], url)
+            except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+                refuse("roadmap-issue-state", "%s native identity/state unavailable (%s); refusing to guess "
+                       "issue state" % (url, exc))
             try:
                 result = subprocess.run(
                     [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", url,
@@ -3992,7 +4092,13 @@ def cmd_roadmap_reconcile_state(args):
             if not isinstance(issue, dict) or issue.get("state") not in ("OPEN", "CLOSED"):
                 refuse("roadmap-issue-state", "%s returned invalid state; refusing to guess issue state" % url)
             if issue["state"] == "OPEN":
+                if native["state"] != "open":
+                    refuse("roadmap-issue-state", "%s changed from native closed to open during lookup; retry "
+                           "the sweep" % url)
                 continue
+            if native["state"] != "closed":
+                refuse("roadmap-issue-state", "%s changed from native open to closed during lookup; retry "
+                       "the sweep" % url)
             reason = issue.get("stateReason")
             if reason not in ("COMPLETED", "NOT_PLANNED"):
                 refuse("roadmap-issue-state", "%s returned unknown closure reason; refusing to guess "
@@ -4001,7 +4107,7 @@ def cmd_roadmap_reconcile_state(args):
             changes.append((row, target))
 
         for gh in unresolvable:
-            print("warn: rule=roadmap-issue-identity: GH-%s has no matching issue URL; skipped "
+            print("warn: rule=roadmap-issue-identity: GH-%s has no matching owned issue URL; skipped "
                   "(fix with `releases roadmap update --issue-num %s --issue-url <url>`)"
                   % (gh, gh))
         if not changes:
@@ -4322,6 +4428,8 @@ def cmd_roadmap_list(args):
                                  "position": r["position"], "status_marker": r["status_marker"],
                                  "doc_path": _col(r, "doc_path"), "issue_url": _col(r, "issue_url"),
                                  "raw_text": _col(r, "raw_text")})
+                    rows[-1]["status_label_supported"] = _has_column(conn, "roadmap_items", "status_label")
+                    rows[-1]["status_label"] = _col(r, "status_label")
             print(json.dumps(rows, ensure_ascii=False))
             return
         if not _table_exists(conn, "roadmap_items"):
@@ -4986,6 +5094,31 @@ def cmd_work_emit(args):
                 payload = json.loads(args.payload_json)
             except ValueError as exc:
                 refuse("bad-payload", "--payload-json is not valid JSON (%s)" % exc)
+        gid = getattr(args, "roadmap_gid", None)
+        if gid:
+            if (args.event != "label_repair" or not _has_column(conn, "roadmap_items", "status_label")
+                    or 9 in pending_versions(conn)):
+                refuse("label-repair-selector", "--roadmap-gid requires label_repair and schema009")
+            row = conn.execute("SELECT * FROM roadmap_items WHERE global_id = ?", (gid,)).fetchone()
+            repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
+            if row is None:
+                refuse("label-repair-identity", "no such roadmap row")
+            identity = resolve_roadmap_identity(row, repos, _origin_repo_identity(root))
+            if not identity["identity_valid"]:
+                refuse("label-repair-identity", "unqualified owned issue identity")
+            def repair(c):
+                current = c.execute("SELECT * FROM roadmap_items WHERE global_id = ?", (gid,)).fetchone()
+                if current is None or dict(current) != dict(row):
+                    refuse("label-repair-stale", "row changed; retry repair")
+                if (current["status_label"] is not None or _live_roadmap_event(
+                        current["section"], current["status_marker"], False) not in ("completed", "deferred")):
+                    refuse("label-repair-active", "repair requires a NULL terminal row")
+            perform_write(root, conn, "work-emit", gid, repair, work_event=(
+                "label_repair", row["gh_number"], {"source": "label-repair", "roadmap_gid": gid}, row["repo_id"]))
+            print("emitted label_repair for %s" % gid)
+            return
+        if args.event == "label_repair":
+            refuse("label-repair-selector", "label_repair requires qualified --roadmap-gid")
         # `work emit` is unconditional by contract: merge-cleanup calls it to report a merge it
         # witnessed, and a witnessed event is recorded whatever came before it.
         txn_id = _emit_work_event(root, conn, args.event, args.gh_number, payload)
@@ -5252,6 +5385,48 @@ def _origin_repo_identity(root):
     return match.group(1) if match else None
 
 
+def resolve_roadmap_identity(row, repo_rows, origin_repo=None):
+    """Qualify the row's OWN repo, never a same-number or URL-selected neighbour."""
+    url_repo, number = _repo_from_issue_url(row["issue_url"])
+    slug = repo_rows.get(row["repo_id"])
+    source = slug if slug and "/" in slug else None
+    if slug and origin_repo and slug == origin_repo.rsplit("/", 1)[-1]:
+        source = origin_repo
+    valid = bool(source and url_repo == source and number == row["gh_number"])
+    return {"repo": source, "number": row["gh_number"], "identity_valid": valid,
+            "issue_url": row["issue_url"], "repo_id": row["repo_id"]}
+
+
+def latest_owned_lifecycle(conn, repo_id, number):
+    for row in conn.execute("SELECT id,event,payload,at FROM work_events "
+                            "WHERE repo_id = ? AND gh_number = ? ORDER BY id DESC",
+                            (repo_id, number)):
+        ev = dict(row)
+        try:
+            ev["payload"] = json.loads(ev["payload"]) if ev["payload"] else None
+        except ValueError:
+            continue
+        if _is_lifecycle_event(ev):
+            return ev
+    return None
+
+
+def read_native_issue(repo, number, issue_url, timeout=10):
+    """REST issues expose pull_request explicitly; `gh issue view` alone is not proof."""
+    proc = subprocess.run([os.environ.get("XYZ_LABELS_GH_BIN", os.environ.get("RELEASES_GH_BIN", "gh")),
+                           "api", "repos/%s/issues/%d" % (repo, number)],
+                          capture_output=True, text=True, timeout=timeout)
+    if proc.returncode:
+        raise ValueError("native issue read failed: %s" % proc.stderr.strip())
+    issue = json.loads(proc.stdout)
+    if (not isinstance(issue, dict) or "pull_request" in issue
+            or issue.get("number") != number or issue.get("html_url") != issue_url
+            or issue.get("state") not in ("open", "closed")
+            or not isinstance(issue.get("labels"), list)):
+        raise ValueError("native issue identity/state unavailable or pull request")
+    return issue
+
+
 def load_work_evidence(db_path, stale_days=3, as_of=None):
     """Read schema-8 work evidence without migration, side effects, config, or network."""
     db_path = os.path.abspath(os.fspath(db_path))
@@ -5331,28 +5506,16 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
                             + (",status_label " if label_ready else "") +
                             "FROM roadmap_items WHERE gh_number IS NOT NULL ORDER BY gh_number,global_id")
         for row in rows:
-            url_repo, url_number = _repo_from_issue_url(row["issue_url"])
-            url_matches_row = url_number == int(row["gh_number"])
             # The roadmap row owns its repo_id. Never borrow another repo row merely because
             # its slug matches the URL; same-basename cross-owner ledgers make that unsafe.
             # A legacy basename slug is accepted only when origin proves the full owner/name.
             repo_id = row["repo_id"]
-            row_slug = repo_rows.get(repo_id)
             # The repos row is the independently owned identity. A malformed or foreign URL
             # must make the evidence invalid without erasing which configured repository owns
             # it. Legacy basename-only rows are qualified only when the local origin proves the
             # full slug; otherwise there is no safe identity to project.
-            source_repo = None
-            if row_slug and "/" in row_slug:
-                source_repo = row_slug
-            elif (row_slug and origin_repo
-                  and row_slug == origin_repo.rsplit("/", 1)[-1]):
-                source_repo = origin_repo
-            repo_matches = bool(
-                url_repo and url_matches_row and row_slug
-                and (row_slug == url_repo
-                     or (row_slug == url_repo.rsplit("/", 1)[-1] and origin_repo == url_repo))
-            )
+            identity = resolve_roadmap_identity(row, repo_rows, origin_repo)
+            source_repo, repo_matches = identity["repo"], identity["identity_valid"]
             evs = events_by_issue.get((repo_id, row["gh_number"]), []) if repo_matches else []
             latest = evs[-1] if evs else None
             latest_lifecycle = None
@@ -6022,18 +6185,24 @@ def load_dump(conn, tables, skip_schema_migrations=False):
                          (row["import_run"], rgid, row["rule"], row.get("source_value"),
                           row.get("supplied_value"), row.get("disposition")))
     for row in tables.get("roadmap_items", []):
+        label_ready = _has_column(conn, "roadmap_items", "status_label")
+        if not label_ready and row.get("status_label") is not None:
+            refuse("status-label-unsupported", "cannot restore an established label into a pre-schema009 ledger")
+        label_cols = ", status_label" if label_ready else ""
+        placeholders = ", ".join("?" for _ in range(21 if label_ready else 20))
         conn.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title, section,
                         position, status_marker, complexity, risk, effort, doc_path, issue_url,
                         raw_text, first_seen, updated_at,
-                        rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr%s)
+                        VALUES (%s)""" % (label_cols, placeholders),
                      (row["global_id"], repo_ids[row["repo_gid"]], _int_or_none(row.get("gh_number")),
                       row["title"], row["section"], int(row["position"]),
                       row.get("status_marker"), _int_or_none(row.get("complexity")),
                       _int_or_none(row.get("risk")), _int_or_none(row.get("effort")),
                       row.get("doc_path"), row.get("issue_url"), row["raw_text"],
                       row["first_seen"], row["updated_at"],
-                      *[_int_or_none(row.get(c)) for c in RATING_COLUMNS]))
+                      *[_int_or_none(row.get(c)) for c in RATING_COLUMNS])
+                     + ((row.get("status_label"),) if label_ready else ()))
     for row in tables.get("jog_queue", []):
         conn.execute("""INSERT INTO jog_queue(global_id, repo_id, gh_number, position, status,
                         created_at, updated_at, attempt_count, lease_pid, failure_reason)
@@ -6470,7 +6639,9 @@ def build_parser():
     wsub = sp_work.add_subparsers(dest="work_cmd", required=True)
     sp_we = wsub.add_parser("emit", help="record one work event (used by merge-cleanup)")
     sp_we.add_argument("--event", required=True, help="domain event name, e.g. pr_merged")
-    sp_we.add_argument("--gh-number", type=int, required=True, help="the issue this is about")
+    we_selector = sp_we.add_mutually_exclusive_group(required=True)
+    we_selector.add_argument("--gh-number", type=int, help="the issue this is about")
+    we_selector.add_argument("--roadmap-gid", help="owned terminal row for labels-only repair")
     sp_we.add_argument("--payload-json", help="optional JSON object of extra detail")
     sp_wb = wsub.add_parser("backfill", help="project the roadmap's existing state onto the "
                                              "event stream (GH-564); idempotent")
@@ -6536,13 +6707,15 @@ def build_parser():
     sp_rr.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_rp = rsub.add_parser("repoint", help="re-point a parked row's capture doc after the doc moves")
-    sp_rp.add_argument("--issue-num", required=True, type=int, help="GH issue number of the parked row")
+    sp_rp.add_argument("--issue-num", type=int, help="GH issue number of the parked row (unique match required)")
+    sp_rp.add_argument("--gid", help="exact roadmap row global ID; pass exactly one selector")
     sp_rp.add_argument("--doc-path", required=True, help="the doc's NEW repo-relative path")
     sp_rp.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
     sp_ru = rsub.add_parser("update", help="update a roadmap row's text, section or status marker")
     sp_ru.add_argument("--issue-num", type=int, help="GH issue number of the parked row")
     sp_ru.add_argument("--gid", help="the row's rmi- global id")
+    sp_ru.add_argument("--accepted-start", action="store_true", help="explicit qualified open-issue admission; schema009 required")
     sp_ru.add_argument("--raw-text", help="new raw_text for the row")
     sp_ru.add_argument("--status-marker", choices=_ROADMAP_STATUS_MARKERS,
                        help="explicit lifecycle marker; never inferred from raw_text")

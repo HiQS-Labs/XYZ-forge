@@ -1,0 +1,14 @@
+== test: gh496-phase2 ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh496-phase2.XXXXXX.K1ylDo6ZjS
+=== Running gh496-phase2-reconciliation-views.sh test suite ===
+  PASS: In-flight hosted reconciler fails closed (exit 8)
+  PASS: Error message identifies in-flight wave-reconcile run
+  FAIL: In-flight check bypassed with --force-local-reconcile (exit 0): expected '0', got '6' (output: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh496-phase2.XXXXXX.K1ylDo6ZjS/fixture-repo)
+wave-reconcile:   WARNING: Overriding active hosted reconciliation run(s): #998877 (in_progress) via --force-local-reconcile
+wave-reconcile: Processing PR #999...
+wave-reconcile:   PR #999 closes [999]; references []
+wave-reconcile:   Found active doc: GH-999-TEST.md
+TRANSITION ["doc", "move", "GH-999-TEST.md", "3-COMPLETED", "2026-09-10"]
+wave-reconcile:   Moved -> GH-999-TEST.md (destination: 3-COMPLETED)
+wave-reconcile: ERROR — Cannot read reconciliation ledger: no such table: repos
+wave-reconcile: Rolling back all uncommitted mutations...)

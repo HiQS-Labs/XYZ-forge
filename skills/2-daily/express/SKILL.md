@@ -94,6 +94,14 @@ git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA"                    # 7.
 ```
 
+Before landing, `cmd_land` qualifies the change, resolves the exact owned full issue
+URL, and invokes `roadmap update --gid OWNED_ROW --accepted-start` (schema009 must
+already be deliberately installed). It then requalifies against the existing
+driver-projection allowlist before snapshots/testing. Dry-run previews only;
+registration via `ledger` is not admission. Interrupted/repeated land preserves
+one effective start; receipt-based `resume` never starts work after landing.
+
+
 What each phase asserts (all refusals and fired runs write `.tick/express/*` — a sibling of tick's coordination log, never inside it (GH-694) — and mirror to `~/.config/xyz/events/`):
 
 0. **Tree of execution** — task branch based on origin/development with $\le 2$
@@ -105,8 +113,10 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem (unless
    `--allow-multi-subsystem` is passed, or micro-diff tolerance applies: $\le 30$
    insertions across $\le 2$ files auto-passes, GH-516). Only the lane's OWN
-   paperwork (`CHANGELOG.md`, `PROJECT/**`) is exempt — operator .md edits (README,
-   governance, skills) COUNT (a gateless merge never rewrites policy unbounded).
+   paperwork (`CHANGELOG.md` and the current issue's capture doc resolved by
+   `capture_doc_path(root, issue)`) is exempt. Every other `PROJECT/**` path and
+   operator .md edit (README, governance, skills) COUNTS (a gateless merge never
+   rewrites policy unbounded).
    Defaults are operator-tunable via `--max-files` / `--max-insertions`; the
    refusals are never optional.
 2. **Hard refusals** — frozen twins and shared Bash runtime (GH-308), any
@@ -172,4 +182,3 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
   full stop. An `--force` would make every guardrail negotiable.
 - No Costly/one-way-door work, ever (see step 2 refusals).
 - No force push (direct landing pushes fast-forward with Step 7 qualifying suite receipt and `XYZ_SKIP_PREPUSH=1`).
-

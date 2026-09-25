@@ -187,7 +187,13 @@ def classify(base_text: str, ours_text: str, theirs_text: str) -> Dict[str, Any]
         if t == "roadmap_items":
             by_gh: Dict[str, Set[Any]] = {}
             for src, rows in (("ours", o), ("theirs", h)):
+                other_rows = h if src == "ours" else o
                 for k, row in rows.items():
+                    # A writer replay can re-mint a row's gid.  When one side merely retains the
+                    # byte-identical base row and the other replaces its gid, the retained gid is
+                    # not an independent change under this natural key.
+                    if k in b and row == b[k] and k not in other_rows:
+                        continue
                     gh = row.get("gh_number")
                     if gh:
                         by_gh.setdefault(gh, set()).add(k)

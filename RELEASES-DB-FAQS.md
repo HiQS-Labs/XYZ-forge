@@ -11,6 +11,52 @@ releases init
 
 Nothing runs until the ledger is invoked.
 
+## Shared in-progress issue label (GH-646)
+
+Deliberately migrate to schema009 before using
+`releases roadmap update --gid OWNED_ROW --accepted-start`. Admission requires an
+independently owned full issue URL and a verified native open issue (never a PR).
+It sets `In progress`/`🚧` plus the exact nullable `status_label = 'in-progress'`
+through the existing locked writer and receipt. Repeated admission preserves the
+original start; `--dry-run` writes nothing. Migration, old-dump restoration, rating,
+metadata and backfill do not infer starts from legacy appearance. New dumps retain
+the field; old dumps restore NULL. NULL means absent/unestablished, not completed.
+Schema8 work evidence remains available, with `status_label_supported: false`.
+
+Remote projection is separately opt-in in the existing device configuration:
+
+```json
+{"work_connectors":{"github_labels":{"enabled":true,"repos":["owner/repository"]}}}
+```
+
+The labels adapter checks current owned state and native identity before changing
+only `in-progress`, preserves other labels, verifies readback and retains its old
+cursor on outages/conflicts. It handles one distinct actionable issue per bounded
+invocation; repeat `releases work reconcile --connector github_labels` to drain
+large backlogs (each batch is at most 500 events). Unconfigured or disabled means
+no network calls. Legacy board batches remain unchanged; new repair intents are
+filtered out without losing cursor progress.
+Independently qualified owned repositories omitted from `repos` are safely
+acknowledged without network calls, so an opt-in subset can progress. Malformed,
+foreign or ambiguous ownership still refuses before this allowlist check.
+
+Direct native closes are discovered by an explicit preview-first
+`releases roadmap reconcile-state`, then `--apply` (COMPLETED versus NOT_PLANNED
+remain distinct). For already-terminal cleanup drift, reset label replay with
+`releases work reconcile --connector github_labels --reset` when witnessed events
+exist. With zero events, seed
+`releases work emit --event label_repair --roadmap-gid OWNED_ROW`, then reconcile.
+This qualified labels-only repair requires a NULL Completed/Deferred row and
+does not synthesize lifecycle authority. Unestablished NULL/open issues are
+preserved as unresolved conflicts; witnessed local stops can remove stale labels
+on open/reopened native issues without claiming closure. Merged PR/open issue and
+quiet/stale activity do not imply completion. Reopened terminal rows need a fresh
+explicit start.
+
+Disable this connector to roll back projection. Do not run older writer binaries
+against migrated ledgers: their dump/digest excludes the new field. No automatic
+configuration deployment, production migration or background watcher is added.
+
 ## Work-state diagnosis and board policy (GH-605)
 
 `releases work status --json` is a read-only readiness check. It opens an existing database in
@@ -62,7 +108,9 @@ instead of mistaking invalid evidence for an absent ledger row.
 `roadmap rate --force` removes the complete prior canonical rating and optional override before
 writing the replacement, so `raw_text` continues to parse back to the stored rating columns.
 Number-only `roadmap repoint` refuses when more than one repository owns that issue number and, for
-a unique match, updates only its resolved global row ID.
+a unique match, updates only its resolved global row ID. Pass `--gid <rmi-id>` instead of
+`--issue-num` to repoint an exact row. Wave reconciliation qualifies the root repository and
+full issue URL before repointing/updating that GID; foreign same-number rows remain untouched.
 
 ## Re-pointing a release's tracking issue (GH-222)
 

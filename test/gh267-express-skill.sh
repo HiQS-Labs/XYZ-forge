@@ -12,13 +12,15 @@
 #             kernel-surface, scratch (.orig editor artifact), too-many-files,
 #             suite-unregistered, issue-closed
 #   happy path: check PASS on a legal single-subsystem fix with a registered suite;
-#               docs (.md) never count against the file bound
+#               only this issue's capture doc + CHANGELOG avoid size bounds;
+#               unrelated PROJECT docs count against file and insertion bounds
 #   docs: capture doc born complete (Lessons Learned present from birth) +
 #         CHANGELOG entry inserted under a fresh dated Unreleased section +
 #         CHANGELOG entry NOT silently dropped when today's section lacks a
 #         ### Fixed heading (deepseek QA finding 3)
 #   telemetry: every refusal writes a .tick express-refused event carrying the rule
-#   production projections: every adopted releases view + the roadmap dashboard
+#   production projections: every adopted releases view; the retired roadmap
+#                           dashboard is neither referenced nor staged
 #   TOCTOU: both new paths and mutations of already-qualified bytes refuse
 #   closeout: ship is persisted before clean-tree reconciliation; every failure ticks
 #   source audit: cmd_land/build_offline_manifest never call args_repo() — the
@@ -31,6 +33,8 @@
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DRIVER="$HERE/../utils/py/express.py"
+export EXPRESS_CANONICAL_PY="$(cd "$HERE/../utils/py" && pwd)"
+export EXPRESS_REPO="H/H" XYZ_WORK_CONNECTORS=0
 WORK="$(mktemp -d /tmp/gh267-express.XXXXXX)" || { echo "FAIL: mktemp"; exit 1; }
 BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"; export HOME="$WORK/home"
 mkdir -p "$BIN" "$GH_STATE" "$HOME"
@@ -59,6 +63,21 @@ cat > "$BIN/gh" <<'GH'
 #!/usr/bin/env bash
 # gh267 suite stub: issue view/close from $GH_STATE.
 set -u
+if [ "$1" = api ]; then
+  case "$2" in repos/H/H/issues/[0-9]*) ;; *) echo "foreign native issue" >&2; exit 1;; esac
+  python3 - "$2" <<'PY'
+import json, os, sys
+number = int(sys.argv[1].rsplit("/", 1)[-1])
+with open(os.path.join(os.environ["GH_STATE"], "issue-%d.json" % number)) as source:
+    issue = json.load(source)
+print(json.dumps(dict(number=number, html_url=issue["url"],
+                     state=issue["state"].lower(), labels=[{"name":"unrelated"}])))
+PY
+  exit $?
+fi
+if [ "$1 $2" = "repo view" ]; then
+  printf '{"nameWithOwner":"H/H"}\n'; exit 0
+fi
 if [ "$1 $2" = "issue view" ]; then
   n=""; prev=""
   for a in "$@"; do
@@ -116,23 +135,36 @@ chmod +x "$FX/githooks/install.sh" "$FX/githooks/pre-push"
 # and every adopted projection that production refresh_preview owns.
 cat > "$FX/utils/py/releases_app.py" <<'RA'
 #!/usr/bin/env python3
-import os, sqlite3, sys
+import os, sys
+sys.path.insert(0, os.environ["EXPRESS_CANONICAL_PY"])
+import releases_app as canonical
 a = sys.argv[1:]
 if a[:1] == ["next"]:
-    print("NEXT: stub gid=rel-STUB000000000000000000000008")
-if a[:2] in (["roadmap", "add"], ["manifest", "dial-in"], ["manifest", "ship"]):
-    c = sqlite3.connect("releases.db")
-    c.execute("CREATE TABLE IF NOT EXISTS fixture_writes (id INTEGER PRIMARY KEY, verb TEXT)")
-    c.execute("INSERT INTO fixture_writes(verb) VALUES (?)", (" ".join(a[:2]),))
+    c = canonical.connect("releases.db")
+    print("NEXT: stub gid=" + c.execute("SELECT global_id FROM releases LIMIT 1").fetchone()[0])
+    c.close()
+if a[:2] in (["roadmap", "add"], ["roadmap", "update"], ["manifest", "dial-in"], ["manifest", "ship"]):
+    c = canonical.connect("releases.db")
+    before = canonical.get_generation(c)
+    if a[:1] == ["roadmap"]:
+        # Admission exercises the real ownership/native/schema/locked receipt boundary.
+        canonical.main(["--root", os.getcwd()] + a)
+    else:
+        def mutate(conn):
+            conn.execute("CREATE TABLE IF NOT EXISTS fixture_writes (id INTEGER PRIMARY KEY, verb TEXT)")
+            conn.execute("INSERT INTO fixture_writes(verb) VALUES (?)", (" ".join(a[:2]),))
+            if a[:2] == ["manifest", "ship"]:
+                conn.execute("UPDATE manifest_items SET state='shipped'")
+        canonical.perform_write(os.getcwd(), c,
+                                "manifest-ship" if a[1] == "ship" else "manifest-add", None, mutate)
+    changed = canonical.get_generation(c) != before
+    c.close()
     if a[:2] == ["manifest", "ship"]:
-        c.execute("UPDATE manifest_items SET state='shipped'")
         inject = os.environ.get("STUB_INJECT_PATH")  # GH-592 control (i): dirt after the clean check
         if inject:
             os.makedirs(os.path.dirname(inject), exist_ok=True)
             open(inject, "a").write('{"commit": "deadbeef", "case": "unrelated"}\n')
-    c.commit(); c.close()
-    for name in ("releases.sql", "RELEASES-PREVIEW.html",
-                 "LEADERBOARD.html", "LEADERBOARD.md"):
+    for name in (("RELEASES-PREVIEW.html", "LEADERBOARD.html", "LEADERBOARD.md") if changed else ()):
         with open(name, "a", encoding="utf-8") as f:
             f.write("stub-release-write: %s\n" % " ".join(a[:2]))
 print("stub-releases:", " ".join(a[:2]))
@@ -178,16 +210,29 @@ if os.path.isdir("PROJECT/2-WORKING"):
                 os.makedirs("PROJECT/3-COMPLETED", exist_ok=True)
                 os.replace(src, dst)
 WR
-python3 -c "import sqlite3; c=sqlite3.connect('$FX/releases.db');
-c.execute('CREATE TABLE IF NOT EXISTS roadmap_items (global_id TEXT, gh_number INTEGER)');
-c.execute('CREATE TABLE IF NOT EXISTS releases (id INTEGER PRIMARY KEY, global_id TEXT)');
-c.execute('INSERT INTO releases (id, global_id) VALUES (1, \"rel-STUB000000000000000000000008\")');
-c.execute('CREATE TABLE IF NOT EXISTS issue_refs (id INTEGER PRIMARY KEY, url TEXT)');
-c.execute('INSERT INTO issue_refs (id, url) VALUES (1, \"https://github.com/H/H/issues/999\"), (2, \"https://github.com/H/H/issues/998\"), (3, \"https://github.com/H/H/issues/997\")');
-c.execute('CREATE TABLE IF NOT EXISTS manifest_items (id INTEGER PRIMARY KEY, release_id INTEGER, issue_ref_id INTEGER, state TEXT)');
-c.execute('INSERT INTO manifest_items (id, release_id, issue_ref_id, state) VALUES (1, 1, 1, \"dialed_in\"), (2, 1, 2, \"dialed_in\"), (3, 1, 3, \"dialed_in\")');
-c.commit(); c.close()"
-printf 'base dump\n' > "$FX/releases.sql"
+python3 - "$FX" <<'PY' || exit 1
+import argparse, os, sys
+sys.path.insert(0, os.environ["EXPRESS_CANONICAL_PY"])
+import releases_app as canonical
+root = sys.argv[1]
+canonical.cmd_init(argparse.Namespace(root=root, slug="H/H"))
+c = canonical.connect(os.path.join(root, "releases.db"))
+now = canonical.now_iso()
+for index, number in enumerate((999, 998, 997), 1):
+    c.execute("INSERT INTO issue_refs(id,global_id,url,created_at,updated_at) VALUES(?,?,?,?,?)",
+              (index,canonical.new_gid("ref-"),"https://github.com/H/H/issues/%d" % number,now,now))
+c.execute("INSERT INTO releases(id,global_id,repo_id,version,status,description,tracking_ref_id,updated_at) "
+          "VALUES(1,?,1,'0.0.1','active','fixture',1,?)", (canonical.new_gid("rel-"),now))
+for index in (1, 2, 3):
+    c.execute("INSERT INTO manifest_items(id,global_id,release_id,issue_ref_id,state,updated_at) "
+              "VALUES(?,?,1,?,'dialed_in',?)", (index,canonical.new_gid("mfi-"),index,now))
+c.close()
+# Pre-existing owned registration makes dry-run admission a pure preview, not intake.
+for number in (999, 998, 997):
+    canonical.cmd_roadmap_add(argparse.Namespace(root=root,issue_num=number,
+        issue_url="https://github.com/H/H/issues/%d" % number,title="Demo hotfix",created="2026-08-27",
+        doc_path="PROJECT/2-WORKING/GH-%d-DEMO-HOTFIX.md" % number,raw_text=None,dry_run=False))
+PY
 for projection in RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md; do
   printf 'base projection\n' > "$FX/$projection"
 done
@@ -333,8 +378,14 @@ python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh --al
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
 run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
 
-new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"
-run_check > /dev/null 2> "$ERR" && ok "the lane's own paperwork (CHANGELOG) stays exempt" || bad "CHANGELOG counted against bounds: $(tail -1 "$ERR")"
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"; printf 'capture\n' > "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+run_check > /dev/null 2> "$ERR" && ok "the lane's own capture doc + CHANGELOG stay exempt" || bad "lane paperwork counted against bounds: $(tail -1 "$ERR")"
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/PROJECT/4-MISC"; printf 'unrelated\n' > "$FX/PROJECT/4-MISC/OTHER.md"
+run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against bounds" || { check_rule too-many-files "$ERR" && ok "unrelated PROJECT doc counts against file bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; mkdir -p "$FX/PROJECT/4-MISC"; python3 -c "print('\\n'.join('line %d' % i for i in range(151)))" > "$FX/PROJECT/4-MISC/OTHER.md"
+run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against insertion bound" || { check_rule too-large "$ERR" && ok "unrelated PROJECT doc counts against insertion bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
 
 echo "== docs born complete =="
 # GH-592 I8: docs without --suite must refuse BEFORE any write (no half-born doc, no CHANGELOG mutation)
@@ -378,6 +429,28 @@ FIRED="$(ls "$FX/.tick/express/"*express-fired*.jsonl 2>/dev/null | head -1)"
 [ -n "$FIRED" ] && ok "express-fired telemetry written on full success" || bad "express-fired telemetry missing"
 TICK_REPO_ROOT="$FX" "$HERE/../bin/tick" project >/dev/null 2>"$ERR" && ok "tick project folded cleanly after express-fired telemetry (GH-694)" || { bad "tick project failed after express-fired telemetry (GH-694)"; cat "$ERR"; }
 grep -qE '^- (GH-999|lane|undefined) ' "$FX/.tick/STATE.md" && bad "express-fired telemetry seeded a phantom task (GH-694)" || ok "no phantom task from express-fired telemetry (GH-694)"
+ADMISSION_PROOF="$(python3 - "$FX" <<'PY'
+import json, os, sqlite3, sys
+c = sqlite3.connect(os.path.join(sys.argv[1], "releases.db"))
+c.row_factory = sqlite3.Row
+assert c.execute("SELECT 1 FROM schema_migrations WHERE version=9").fetchone()
+row = c.execute("SELECT ri.* FROM roadmap_items ri JOIN repos r ON r.id=ri.repo_id "
+                "WHERE r.slug='H/H' AND ri.gh_number=999 AND ri.issue_url='https://github.com/H/H/issues/999'").fetchone()
+assert row and row["status_label"] == "in-progress"
+events = list(c.execute("SELECT * FROM work_events WHERE repo_id=? AND gh_number=999 AND event='in_flight'", (row["repo_id"],)))
+assert len(events) == 1
+event = events[0]
+payload = json.loads(event["payload"])
+assert payload["source"] == "roadmap-update" and payload["transition"] is True and payload["accepted_start"] is True
+receipt = c.execute("SELECT * FROM op_receipts WHERE op='roadmap-update' AND target_gid=? AND txn_id=?",
+                    (row["global_id"],event["txn_id"])).fetchone()
+assert receipt and receipt["state_digest_before"] != receipt["state_digest_after"]
+assert len(receipt["state_digest_before"]) == len(receipt["state_digest_after"]) == 64
+print("owned-start-receipt")
+c.close()
+PY
+)"
+[ "$ADMISSION_PROOF" = owned-start-receipt ] && ok "schema009 owned admission has exactly one real writer start and matching digest receipt" || bad "owned admission receipt missing"
 
 echo "== GH-592: the landing writes its provenance receipt and reconciles under --gate =="
 FIX_SHA="$(git -C "$FX" log --format=%H --grep='\[express\]' -1)"
@@ -421,7 +494,8 @@ rm -rf "$FX/TESTS-RESULTS/unrelated"; git -C "$FX" checkout -q -- . 2>/dev/null;
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-mut\n' > "$FX/utils/py/foo.py"; printf '# demo suite v2m\n' > "$FX/test/gh999-demo.sh"
 issue_json OPEN "Demo hotfix" 999
 python3 - "$DRIVER" "$FX" <<'PY' >/dev/null 2>"$ERR" && bad "no-write mutation must fail closed" || { grep -q "express-reconcile-failed" "$ERR" && grep -q "No provenance.jsonl" "$ERR" && ok "control (ii): driver without a real receipt write fails the gate (missing-receipt oracle reached)" || bad "control (ii) wrong failure: $(tail -2 "$ERR")"; }
-import importlib.util, sys
+import importlib.util, os, sys
+sys.path.insert(0, os.environ["EXPRESS_CANONICAL_PY"])
 spec = importlib.util.spec_from_file_location("express", sys.argv[1]); express = importlib.util.module_from_spec(spec); spec.loader.exec_module(express)
 express.write_receipt = lambda root, sha, issue, suite, rc: "TESTS-RESULTS/mutant+GH-999-express/provenance.jsonl"
 sys.argv = ["express.py", "--root", sys.argv[2], "run", "--issue", "999", "--suite", "test/gh999-demo.sh", "--summary", "demo"]
@@ -479,12 +553,14 @@ FAILED_TICK="$(ls -t "$FX/.tick/express/"*express-reconcile-failed*.jsonl 2>/dev
 echo "== dry-run mode (GH-516) =="
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-dry\n' > "$FX/utils/py/foo.py"
 issue_json OPEN "Demo hotfix" 999
+DRY_LEDGER_BEFORE="$(shasum -a 256 "$FX/releases.db" "$FX/releases.sql")"
 DRYOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --suite test/gh999-demo.sh --summary "dry run demo" --dry-run 2>"$ERR")"
 grep -q "express-check \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports check pass" || bad "run --dry-run check missing: $DRYOUT"
 grep -q "express-land \[dry-run\]: PASS" <<<"$DRYOUT" && ok "run --dry-run reports land pass" || bad "run --dry-run land missing: $DRYOUT"
 [ ! -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] && ok "dry-run created no capture doc" || bad "dry-run created capture doc"
 [ "$(git -C "$FX" branch --show-current)" = task/gh-999 ] && ok "dry-run left task branch intact" || bad "dry-run switched branch"
 [ -z "$(git -C "$FX" status --porcelain=v1)" ] && bad "working tree changes were wiped by dry-run" || ok "dry-run preserved uncommitted working tree"
+[ "$(shasum -a 256 "$FX/releases.db" "$FX/releases.sql")" = "$DRY_LEDGER_BEFORE" ] && ok "dry-run accepted admission preserves exact DB/dump bytes" || bad "dry-run mutated admission ledger"
 
 echo "== resume subcommand & central telemetry (GH-516) =="
 new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fixed-resume\n' > "$FX/utils/py/foo.py"
@@ -677,6 +753,7 @@ LAND_BODY="$(sed -n '/^def cmd_land/,/^def active_release/p' "$DRIVER")"
 grep -q '"push", "origin", "HEAD:development"' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push" || bad "direct development push missing"
 [ -z "$(printf '%s' "$LAND_BODY" | grep -n 'pr.*create\|pr.*merge')" ] && ok "landing creates no ghost PR" || bad "ghost PR call remains"
 grep -q "def cmd_resume" "$DRIVER" && ok "cmd_resume implemented" || bad "cmd_resume missing"
+! grep -q 'ROADMAP-DASHBOARD\.md' "$DRIVER" && ok "retired roadmap dashboard is absent from express staging surfaces" || bad "express still references the retired roadmap dashboard"
 
 echo
 echo "gh267-express-skill: pass=$PASS fail=$FAIL"

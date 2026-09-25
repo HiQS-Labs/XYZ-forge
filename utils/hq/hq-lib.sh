@@ -192,8 +192,15 @@ hq_contains(){ case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
 # enumerated here (too broad); the exact path-resolve already covers on-disk repos.
 hq_known_repos(){
   {
-    if [ -f "$HQ_REBALANCE_DB" ] && command -v sqlite3 >/dev/null 2>&1; then
-      sqlite3 "$HQ_REBALANCE_DB" 'SELECT name FROM project_registry;' 2>/dev/null | sed 's#.*/##'
+    if [ -e "$HQ_REBALANCE_DB" ] && command -v sqlite3 >/dev/null 2>&1; then
+      local rebalance_names=""
+      if [ ! -f "$HQ_REBALANCE_DB" ] || [ ! -r "$HQ_REBALANCE_DB" ] || [ ! -s "$HQ_REBALANCE_DB" ]; then
+        printf 'hq: warning: Rebalance DB is unreadable, empty, or unusable: %s\n' "$HQ_REBALANCE_DB" >&2
+      elif rebalance_names="$(sqlite3 "$HQ_REBALANCE_DB" 'SELECT name FROM project_registry;' 2>/dev/null)"; then
+        printf '%s\n' "$rebalance_names" | sed 's#.*/##'
+      else
+        printf 'hq: warning: Rebalance DB is unreadable, empty, or unusable: %s\n' "$HQ_REBALANCE_DB" >&2
+      fi
     fi
     if [ -f "$HQ_XYZ_REGISTRY" ]; then
       local install coord

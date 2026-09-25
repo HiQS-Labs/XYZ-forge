@@ -421,6 +421,8 @@ check("selected pending Wave 2 fails", False, "--pre-pr", "--wave", "2")
 for value in ("0", "-1", "banana", "3"):
     check("invalid or absent wave " + value, False, "--pre-pr", "--wave", value)
 check("wave requires pre-PR mode", False, "--wave", "1")
+check("wave requires marathon plan", False, "--pre-pr", "--wave", "1",
+      doc=root / "PROJECT/3-COMPLETED/GH-999-SIMPLE-TASK.md")
 check("wave requires explicit document", False, "--pre-pr", "--wave", "1", doc=None)
 check("wave requires exactly one document", False, "--pre-pr", "--wave", "1", "--doc", str(plan))
 plan.write_text(pending.replace("status: active", "status: completed"))

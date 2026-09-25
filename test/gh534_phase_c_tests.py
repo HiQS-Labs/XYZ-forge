@@ -83,7 +83,8 @@ else:
             git(work, "push", "-q", "origin", state["base"])
         finally:
             shutil.rmtree(work, ignore_errors=True)
-    run = {"databaseId": 62901, "status": "completed", "conclusion": "success"}
+    run = {"databaseId": 62901, "status": "completed", "conclusion": "success",
+           "headSha": state["hosted_head"]}
 
 with open(state_path, "w") as fh:
     json.dump(state, fh, indent=1)

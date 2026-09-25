@@ -134,6 +134,12 @@ TESTS=(
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
   "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
+  "gh778-review-code-skill.sh"    # GH-778 (review-code and review-PR ground-truth code review skill)
+  "gh798-status-skill.sh"         # GH-798 (status skill and review-code DRY / helper audit)
+  "gh779-radar-ci-health.sh"    # GH-779 (radar: trunk CI health, new-guard re-run on open PRs, regressed-after-fixed table)
+  "gh781-wam-radar-seed.sh"    # GH-781 (whack-a-mole seeds candidate clusters from recent radar reports)
+  "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)
+  "gh777-inventory-ratchet.sh"  # GH-777 (inventory ratchet: shrink-only script/connect guards)
   "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
   "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
   "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
@@ -284,6 +290,7 @@ TESTS=(
   "gh430-state-dir-tracked-default.sh" # GH-430 (STATE_DIR default is a tracked in-repo path, not ${TMPDIR:-/tmp})
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
   "gh549-work-events.sh"           # GH-549 (work-state event stream at the single write seam; 17/0 with both red controls)
+  "gh646-status-label.sh"          # GH-646 (qualified accepted starts, schema009, exact issue-label projection/replay)
   "gh402-board-sync.sh"             # GH-402 (Projects-board mirror: strong/weak signal classification, empty-input refusal, kill-switch, settings env tier, witnessed-red extractor break) — offline by design; live write path receipted in the Phase 0 spike
   "gh405-mock-board-harness.sh"     # GH-405 (Projects-board mock harness: CLI contract, GraphQL query/mutation resolvers, duplicate card creation fidelity, fault injection)
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
@@ -596,6 +603,7 @@ TESTS=(
   "gh239-hq-status-releases-mode.sh"  # GH-239 (releases-mode status + rollup read from the releases DB)
   "gh567-roadmap-dashboard-retired.sh" # GH-567 (verify ROADMAP-DASHBOARD.md and view-staleness machinery are retired)
   "gh257-roadmap-ledger-fixes.sh"     # GH-257 (roadmap ledger validation, dropped-row warnings, update subcommand, staleness diagnosis)
+  "gh703-raw-text-asterisk.sh"        # GH-703 (direct roadmap add validates synthesized raw_text before storing an unrenderable row)
   "gh269-roadmap-retired.sh"          # GH-269 (verify ROADMAP.md is retired, tools operate on releases.db, move/update CLI verbs)
   "gh568-releases-md-retired.sh"      # GH-568 (verify RELEASES.md is retired, tools operate on releases.db, writers audit)
   "gh423-roadmap-render.sh"           # GH-423 (releases roadmap render emits roadmap_items as ledger markdown marathon_plan.py parses unchanged)
@@ -611,7 +619,8 @@ TESTS=(
   "gh605-work-state.sh"               # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
   "gh605-board-policy.sh"              # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
   "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
-  "gh645-merge-cleanup-xyz-tools.sh"  # GH-645 (/merge-cleanup: PRS tools resolved from .xyz/ and the primary; reconcile flag only when advertised)
+  "gh645-merge-cleanup-xyz-tools.sh"  # GH-645 (/merge-cleanup: PRS tools resolved from .xyz/ and automatic reconcile never forces)
+  "gh674-merge-cleanup-hosted-lookup.sh" # GH-674 (/merge-cleanup: unfiltered hosted lookup matches PR/merge SHA; fallback never forces)
   "gh681-reviewer-probe-rules.sh"     # GH-681 (reviewer prompt allows narrow non-mutating probes with one role-consistent verification clause; scaffold + mirrors carry the generalization/falsifier rule; scratch sanctioned, .pytest_cache residue still off-lane)
   "gh527-issue-url-repair.sh"         # GH-527 (issue_url is repairable via roadmap update, validated at both writers, and one identity-defective row is skipped by name instead of refusing the whole sweep)
   "gh353-vendored-router-audit.sh"    # GH-353 (audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates)

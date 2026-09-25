@@ -26,7 +26,7 @@ sys.path.insert(0, str(REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts"
 import ledger_merge  # noqa: E402
 import merge_cleanup  # noqa: E402
 import scan_clones  # noqa: E402
-from ledger_merge import classify, pre_merge_ledger_gate, resolve_ledger_conflict  # noqa: E402
+from ledger_merge import classify, parse_dump, pre_merge_ledger_gate, resolve_ledger_conflict  # noqa: E402
 from scan_clones import GH_BIN_ENV  # noqa: E402
 
 APP_SRC = REPO / "utils" / "py" / "releases_app.py"
@@ -79,7 +79,15 @@ def view(st, pr):
          "mergeCommit": ({"oid": pr["mergeCommit"]} if pr.get("mergeCommit") else None),
          "url": f"https://example.invalid/pr/{pr['number']}", "title": f"PR {pr['number']}", "body": pr.get("body", ""),
          "files": pr.get("files", []), "createdAt": f"2026-09-01T0{pr['number'] % 10}:00:00Z", "statusCheckRollup": []}
-    d["mergeable"] = st.get("force_mergeable", {}).get(str(pr["number"])) or (mergeable(st, pr) if pr["state"] == "OPEN" else "UNKNOWN")
+    forced = st.get("force_mergeable", {}).get(str(pr["number"]))
+    if isinstance(forced, dict):  # GH-736: {"value": ..., "remaining": N} reads `value` N times, then the truth
+        if forced.get("remaining", 0) > 0:
+            forced["remaining"] -= 1
+            save(st)
+            forced = forced["value"]
+        else:
+            forced = None
+    d["mergeable"] = forced or (mergeable(st, pr) if pr["state"] == "OPEN" else "UNKNOWN")
     return d
 def stub_fail(st, key, prnum=None):
     """GH-623: a failure injector. `True` -> fixed non-transient message (back-compat);
@@ -274,6 +282,36 @@ class TestB1Classify(LedgerFixture):
         self.assertFalse(c["disjoint"])
         self.assertTrue(any("gh_number 400" in r for r in c["reasons"]), c["reasons"])
 
+    def test_gid_remint_of_unchanged_base_row_is_disjoint_but_an_edit_is_not(self):
+        root = self.clone("remint-base")
+        park(root, 678, "remint source")
+        base = (root / "releases.sql").read_text()
+        ours_root = self.tmp / "remint-ours"
+        theirs_root = self.tmp / "remint-theirs"
+        shutil.copytree(root, ours_root)
+        shutil.copytree(root, theirs_root)
+        park(ours_root, 680, "ours only")
+        park(theirs_root, 679, "theirs only")
+        ours = (ours_root / "releases.sql").read_text()
+        theirs = (theirs_root / "releases.sql").read_text()
+
+        base_row = next(row for row in parse_dump(base)["tables"]["roadmap_items"].values()
+                        if row["gh_number"] == "678")
+        old_gid = base_row["global_id"]
+        new_gid = old_gid[:-1] + ("0" if old_gid[-1] != "0" else "1")
+        theirs = theirs.replace(f"VALUES('{old_gid}',", f"VALUES('{new_gid}',", 1)
+
+        c = classify(base, ours, theirs)
+        self.assertTrue(c["disjoint"], c["reasons"])
+        self.assertEqual(c["keep"], "theirs")
+        self.assertEqual([op["row"]["gh_number"] for op in c["replay"]], ["680"])
+
+        edited_ours = ours.replace("'remint source'", "'remint source edited'", 1)
+        red = classify(base, edited_ours, theirs)
+        self.assertFalse(red["disjoint"])
+        self.assertTrue(any("same-key" in reason or "gh_number 678" in reason
+                            for reason in red["reasons"]), red["reasons"])
+
     def test_change_in_an_inexpressible_table_is_handoff(self):
         def add_release(r):
             _app(r, "add", "--version", "9.9.9", "--status", "draft", "--tracking-issue", "TMP-ZZZZZZ", "--description", "x")
@@ -362,11 +400,83 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
         self.st["force_mergeable"] = {"1": "UNKNOWN"}
         self.save()
-        rc = self.run_main()
+        sleeps = []  # GH-736: record the poll schedule without waiting it out
+        with mock.patch.object(merge_cleanup, "_sleep", side_effect=sleeps.append):
+            rc = self.run_main()
         self.assertEqual(rc, 2)
         self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
         self.teardown.assert_not_called()
         self.pruner.assert_not_called()
+        # GH-736: the stop comes only after the bounded poll, never on the first UNKNOWN read.
+        polls = [s for s in sleeps if s == merge_cleanup.MERGEABLE_POLL_S]
+        self.assertEqual(len(polls), merge_cleanup.MERGEABLE_POLL_ATTEMPTS, sleeps)
+
+    def test_unknown_mergeable_settles_and_the_pr_lands(self):
+        # GH-736: GitHub reads UNKNOWN for a few seconds after every landing on the base; a PR
+        # that settles to MERGEABLE inside the poll lands instead of stopping the run.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
+        self.st["force_mergeable"] = {"1": {"value": "UNKNOWN", "remaining": 3}}
+        self.save()
+        out, sleeps = io.StringIO(), []
+        with contextlib.redirect_stdout(out), mock.patch.object(merge_cleanup, "_sleep", side_effect=sleeps.append):
+            rc = self.run_main()
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "MERGED")
+        polls = [s for s in sleeps if s == merge_cleanup.MERGEABLE_POLL_S]
+        self.assertTrue(1 <= len(polls) < merge_cleanup.MERGEABLE_POLL_ATTEMPTS, sleeps)
+        self.assertIn("waiting 15s for GitHub to decide", out.getvalue())
+
+    def test_exclude_pr_number_drops_it_from_the_queue(self):
+        # GH-736: `--exclude <N>` (SKILL.md example 6) removes PR N from the queue; before the
+        # fix it filtered checkouts only and PR N was still merged.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "excluded"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "kept"))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = self.run_main(extra=("--exclude", "1"))
+        self.assertEqual(rc, 0, self.err)
+        st = self.load()
+        self.assertEqual(st["prs"]["1"]["state"], "OPEN")
+        self.assertEqual(st["prs"]["2"]["state"], "MERGED")
+        self.assertIn("PR #1: excluded by --exclude", out.getvalue())
+
+    def _error_after_first_read(self, msg):
+        """GH-736: the first land-loop read is real (UNKNOWN via force_mergeable); every read after
+        it — i.e. the poll's — fails with `msg`."""
+        real, calls = merge_cleanup.refresh_pr_with_retry, []
+        def fake(n, repo):
+            calls.append(n)
+            return real(n, repo) if len(calls) == 1 else {"error": msg}
+        return fake, calls
+
+    def test_transient_error_during_the_poll_defers_not_undecided(self):
+        # Agy QA r1 blocker 1: an error inside the poll was masked as "GitHub has not decided" and
+        # stopped the run; a transient one must defer the PR under the GH-623 rules instead.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
+        self.st["force_mergeable"] = {"1": "UNKNOWN"}
+        self.save()
+        fake, calls = self._error_after_first_read("gh: Could not resolve host: github.com")
+        with mock.patch.object(merge_cleanup, "refresh_pr_with_retry", side_effect=fake), \
+             mock.patch.object(merge_cleanup, "_sleep"):
+            rc = self.run_main()
+        self.assertEqual(rc, 3, self.err)
+        self.assertIn("DEFERRED", self.err)
+        self.assertNotIn("has not decided", self.err)
+        self.assertEqual(len(calls), 2, "the poll must stop at the first failed read, not retry it")
+        self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
+
+    def test_hard_error_during_the_poll_stops_with_that_error(self):
+        self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
+        self.st["force_mergeable"] = {"1": "UNKNOWN"}
+        self.save()
+        fake, _ = self._error_after_first_read("HTTP 404: Not Found (pr view)")
+        with mock.patch.object(merge_cleanup, "refresh_pr_with_retry", side_effect=fake), \
+             mock.patch.object(merge_cleanup, "_sleep"):
+            rc = self.run_main()
+        self.assertEqual(rc, 2, self.err)
+        self.assertIn("HTTP 404: Not Found", self.err)
+        self.assertNotIn("has not decided", self.err)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
 
     def test_gh_view_failure_stops(self):
         self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
@@ -579,6 +689,39 @@ class TestE6Gate(LedgerFixture):
         self.assertEqual(len(seen), 2)
         self.assertIn("'200'", seen[1], "PR 2's gate did not run against a tree containing PR 1's landing")
 
+
+
+class TestGh736AwaitMergeable(unittest.TestCase):
+    """GH-736 `_await_mergeable`: bounded, stops on the first error, never re-polls an error."""
+
+    def _run(self, first, reads):
+        seq = iter(reads)
+        with mock.patch.object(merge_cleanup, "refresh_pr_with_retry", side_effect=lambda n, r: next(seq)) as rf, \
+             mock.patch.object(merge_cleanup, "_sleep") as sl, \
+             contextlib.redirect_stdout(io.StringIO()):
+            out = merge_cleanup._await_mergeable(7, first, Path("."))
+        return out, rf.call_count, sl.call_count
+
+    def test_decided_first_read_is_not_polled(self):
+        for state in ("MERGEABLE", "CONFLICTING"):
+            out, refreshes, sleeps = self._run({"mergeable": state}, [])
+            self.assertEqual((out["mergeable"], refreshes, sleeps), (state, 0, 0))
+
+    def test_an_error_in_hand_is_not_polled(self):
+        # Agy QA r1 blocker 2: a failed post-B1 re-fetch was re-polled six times.
+        out, refreshes, sleeps = self._run({"error": "boom"}, [])
+        self.assertEqual((out.get("error"), refreshes, sleeps), ("boom", 0, 0))
+
+    def test_an_error_mid_poll_is_returned_at_once(self):
+        out, refreshes, sleeps = self._run({"mergeable": "UNKNOWN"}, [{"mergeable": "UNKNOWN"}, {"error": "net"}])
+        self.assertEqual((out.get("error"), refreshes, sleeps), ("net", 2, 2))
+
+    def test_undecided_is_bounded_and_returned_undecided(self):
+        reads = [{"mergeable": "UNKNOWN"}] * merge_cleanup.MERGEABLE_POLL_ATTEMPTS
+        out, refreshes, sleeps = self._run({"mergeable": "UNKNOWN"}, reads)
+        self.assertEqual(out["mergeable"], "UNKNOWN")
+        self.assertEqual(refreshes, merge_cleanup.MERGEABLE_POLL_ATTEMPTS)
+        self.assertEqual(sleeps, merge_cleanup.MERGEABLE_POLL_ATTEMPTS)
 
 if __name__ == "__main__":
     unittest.main()

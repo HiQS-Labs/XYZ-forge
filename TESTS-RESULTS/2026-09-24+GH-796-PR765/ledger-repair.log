@@ -1,0 +1,72 @@
+OK: foreign_keys pragma asserted per connection
+FAIL: rule=generation-mismatch: settings.generation=1055 but releases.sql says 1138 — write in progress, crashed, or a torn trio
+OK: receipt chain intact (1176 receipt(s), business-state digest matches, 133 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-overdue: 0.9.0 Cargo is active and 6 day(s) past its target of 2026-09-19 — if the exit criterion is met, `releases ship` it; if not, `releases update` the target
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+rebuilt releases.db from releases.sql (generation 1055 -> 1139); displaced DB backed up at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh765-integration-remediation-20260924/releases.db.bak
+OK: post-rebuild verification — DB rebuilt from releases.sql, displaced DB at releases.db.bak
+check: clean (0 failures, 9 warning(s))
+["roadmap add GH-762: rc=0 ", "roadmap rate GH-762 55/25/50/70: rc=0 ", "roadmap update GH-762 (section/marker): rc=0 ", "roadmap add GH-763: rc=0 ", "roadmap update GH-763 (section/marker): rc=0 "]
+releases-merge-resolve: took either side of releases.db in the working tree (it is regenerated below, so the choice cannot matter)
+releases-merge-resolve: rebuilding releases.db from the merged releases.sql
+OK: foreign_keys pragma asserted per connection
+FAIL: rule=generation-mismatch: settings.generation=1055 but releases.sql says 1144 — write in progress, crashed, or a torn trio
+OK: receipt chain intact (1176 receipt(s), business-state digest matches, 133 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-overdue: 0.9.0 Cargo is active and 6 day(s) past its target of 2026-09-19 — if the exit criterion is met, `releases ship` it; if not, `releases update` the target
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+rebuilt releases.db from releases.sql (generation 1055 -> 1145); displaced DB backed up at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh765-integration-remediation-20260924/releases.db.bak
+OK: post-rebuild verification — DB rebuilt from releases.sql, displaced DB at releases.db.bak
+check: clean (0 failures, 9 warning(s))
+releases-merge-resolve: verifying
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1145 (DB <-> dump)
+OK: receipt chain intact (1311 receipt(s), business-state digest matches, 150 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-overdue: 0.9.0 Cargo is active and 6 day(s) past its target of 2026-09-19 — if the exit criterion is met, `releases ship` it; if not, `releases update` the target
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))
+releases-merge-resolve: regenerating adopted views: LEADERBOARD.md
+releases-merge-resolve:   -> leaderboard.sh
+leaderboard: wrote /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh765-integration-remediation-20260924/LEADERBOARD.md
+releases-merge-resolve: resolving releases.db in the index now that the rebuild verified clean
+releases-merge-resolve: artifacts are consistent and staged. Review, then commit the merge yourself —
+releases-merge-resolve: this script deliberately does not commit.
+releases-merge-resolve: note: releases.db.bak holds the DB that was displaced; it is untracked and safe to delete.
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1145 (DB <-> dump)
+OK: receipt chain intact (1311 receipt(s), business-state digest matches, 150 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-overdue: 0.9.0 Cargo is active and 6 day(s) past its target of 2026-09-19 — if the exit criterion is met, `releases ship` it; if not, `releases update` the target
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))
+SEMANTIC_LEDGER_RESOLVED

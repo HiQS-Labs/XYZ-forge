@@ -638,7 +638,8 @@ wait_calls = {
 assert {"wait_for_hosted_reconcile", "run_local_wave_reconcile"} <= post_calls, post_calls
 assert {"_gh", "sleep"} <= wait_calls, wait_calls
 assert '"--workflow", "wave-reconcile.yml"' in src
-assert '"--commit", merged_head' in src
+assert 'expected_heads = {head for head in (merged_head, pr_head) if head}' in src
+assert 'str(run.get("headSha") or "") in expected_heads' in src
 assert 'HOSTED_WAIT_ENV = "MERGE_CLEANUP_HOSTED_WAIT_S"' in src
 PYORDER
 [ $? -eq 0 ] \

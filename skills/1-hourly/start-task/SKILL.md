@@ -52,8 +52,8 @@ Then begin work.
    (`ROUTER.md` where present), `AGENTS.md`, `SOP.md`, guiding principles, active
    roadmap, and relevant project docs. Resolve issue numbers against the actual
    remote; use full repo/issue URLs across repos. Inspect existing issues, PRs,
-   plans, and active work before creating anything. Reuse an existing issue and
-   its canonical plan; never create duplicate intake for an already tracked ask.
+   plans, and active work before creating anything (`python3 utils/py/prior_art_recon.py --query <seam>` where available).
+   Reuse an existing issue and its canonical plan; never create duplicate intake for an already tracked ask.
    Follow the target repo's branch and governance contracts. Missing PDDA or
    RELEASES infrastructure is not permission to install it or invent a substitute.
    Record which local equivalent applies or that the repo has none.
@@ -100,8 +100,11 @@ Then begin work.
    and identify the existing implementation before proposing changes. For code,
    trace the relevant entry point through callers/callees to state writes and
    visible outputs; inspect tests, configuration knobs, and likely affected
-   consumers. Prefer the repo's graph tools where available, falling back when
-   coverage is insufficient. Trace enough to size the change; name untraced paths
+   consumers. Run `python3 utils/py/prior_art_recon.py --query <seam>` (where available) to inspect
+   open PRs across repos, `releases.db` roadmap, and existing utilities (`lib/*`,
+   `utils/py/*`) before authoring new utilities. Import existing helpers rather
+   than reinventing them. Prefer the repo's graph tools where available, falling back
+   when coverage is insufficient. Trace enough to size the change; name untraced paths
    and uncertainty rather than claiming an exhaustive audit.
    Inspect recent same-class issues and recurrence evidence for severity/priority
    ratings; distinguish actual new incidents from duplicate reports.
@@ -160,7 +163,15 @@ Then begin work.
    substitute a self-review or consult. A simple change may skip this stage with
    a brief reason; final QA still applies.
 
-7. **Execute and verify the reviewed scope.** Use the current agent or the repo's
+7. **Execute and verify the reviewed scope.**
+   In XYZ Forge's deliberately migrated schema009 ledger, admit the task after
+   Approved plan QA and before the first implementation write: resolve the exact
+   full tracking issue URL in `roadmap list --json` to its owned row, then run
+   `python3 utils/py/releases_app.py roadmap update --gid OWNED_ROW --accepted-start`.
+   Registration/rating/QA are not starts. Refuse uncertain identity/native state;
+   repeated admission preserves the original start. Do not install schema or
+   enable connectors automatically, or impose this flag on other repositories.
+   Use the current agent or the repo's
    established builder/jog/marathon workflow as appropriate. Multiple issues alone
    do not require a new marathon, queue, daemon, or parallel executor. Preserve
    existing role splits, active-marathon limits, driver locks and retry limits.

@@ -173,18 +173,28 @@ class RollbackJournal:
 
     def rollback(self):
         log("Rolling back all uncommitted mutations...")
-        # GH-698 F8: a rollback is a silent red. Emit a structured event into
-        # .tick/events/ so radar (and any .tick reader) sees the failure without
-        # reading CI logs — the same surface the drivers already use.
+        # GH-698 F8/GH-707: a rollback is a silent red. Keep the signal on the
+        # existing event surface, but use tick's envelope and an explicitly
+        # non-coordination type. In particular, do not invent a `task`: older
+        # bare records could seed a phantom task, while the #702 projection
+        # filter safely ignores this analytics record.
         try:
             events_dir = os.path.join(self.repo_root, ".tick", "events")
             if os.path.isdir(events_dir):
-                evt = os.path.join(events_dir, "%s-wave-reconcile-rollback.jsonl"
-                                   % time.strftime("%Y-%m-%dT%H-%M-%SZ", time.gmtime()))
+                now = datetime.now(timezone.utc)
+                ts = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+                filename_ts = ts.replace(":", "-")
+                evt = os.path.join(
+                    events_dir, f"{filename_ts}-wave-reconcile-rollback.jsonl"
+                )
                 with open(evt, "a", encoding="utf-8") as fh:
-                    fh.write(json.dumps({"event": "wave-reconcile-rollback",
-                                         "reason": "uncommitted-mutations",
-                                         "at": time.time()}) + "\n")
+                    fh.write(json.dumps({
+                        "schema_version": "0.2.0",
+                        "ts": ts,
+                        "type": "wave_reconcile.rollback",
+                        "agent": "wave_reconcile",
+                        "reason": "uncommitted-mutations",
+                    }) + "\n")
         except Exception:
             pass  # the event must never worsen the rollback
         for created in self.created_files:
@@ -322,6 +332,14 @@ def fetch_issue_state(repo_root, issue_num, offline_manifest=None):
         return str(_json.loads(r.stdout).get("state", "")).upper()
     except ValueError:
         die(f"gh issue view #{issue_num} returned unparseable output; refusing to guess issue state", code=6)
+
+
+def _may_terminalize_issue(issue_state, force_promote, is_merged=False, is_open=False):
+    """Terminal writer authority: a confirmed CLOSED issue, an explicit --force-promote, or a
+    MERGED closer whose issue is not positively OPEN (the GH-202 contract: an offline manifest
+    without an issues[] entry means "promote as before"; live mode already dies on a gh failure).
+    A declined (unmerged) PR is never terminal authority on its own (GH-646)."""
+    return force_promote or issue_state == "CLOSED" or (is_merged and not is_open)
 
 
 def record_merge_evidence(doc_path, pr_meta, dry_run=False, journal=None):
@@ -1289,7 +1307,7 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
     return sorted(found, key=int)
 
 
-def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None):
+def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None, repo_slug=None):
     """Move entry in ROADMAP.md and/or releases.db to Completed/Deferred section with shipping badge."""
     roadmap_path = os.path.join(repo_root, "ROADMAP.md")
     db_path = os.path.join(repo_root, "releases.db")
@@ -1303,7 +1321,20 @@ def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=Tru
     if os.path.isfile(db_path):
         rows = ledger_rows(repo_root, "SELECT * FROM roadmap_items WHERE gh_number = ?", (issue_num,))
         if rows:
-            row = rows[0]
+            from releases_app import resolve_roadmap_identity
+            repo_slug = repo_slug or github_slug_from_origin(repo_root)
+            if not repo_slug:
+                die("Cannot qualify reconciliation ledger against the root repository", code=6)
+            repos = {r["id"]: r["slug"] for r in ledger_rows(repo_root, "SELECT id,slug FROM repos")}
+            qualified = [row for row in rows
+                         if (identity := resolve_roadmap_identity(row, repos, repo_slug))["identity_valid"]
+                         and identity["repo"] == repo_slug]
+            if len(qualified) > 1:
+                die(f"Multiple exact owned roadmap rows for {repo_slug}#{issue_num}", code=6)
+            if not qualified:
+                log(f"No qualified owned roadmap row for {repo_slug}#{issue_num}; leaving foreign/invalid rows unchanged")
+                return False
+            row = qualified[0]
             raw_text = row["raw_text"] or ""
             title_match = re.search(r"^-\s+\*\*([^*]+)\*\*", raw_text)
             title_part = title_match.group(1).strip() if title_match else f"GH-{issue_num} · {row['title']}"
@@ -1314,10 +1345,10 @@ def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=Tru
             new_raw_text = f"- **{title_part}** {badge_sub} —{rest}".strip()
             marker = "✅" if is_merged else "⛔"
             if doc_path and row["doc_path"] != doc_path:
-                ledger_write(repo_root, ["roadmap", "repoint", "--issue-num", str(issue_num),
+                ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
                              "--doc-path", doc_path], dry_run, journal)
             if (row["section"], row["status_marker"], raw_text) != (target_section_db, marker, new_raw_text):
-                ledger_write(repo_root, ["roadmap", "update", "--issue-num", str(issue_num),
+                ledger_write(repo_root, ["roadmap", "update", "--gid", row["global_id"],
                              "--section", target_section_db, "--status-marker", marker,
                              "--raw-text", new_raw_text], dry_run, journal)
             updated = True
@@ -2108,6 +2139,8 @@ def main():
                         log(f"  Issue #{issue_num} is OPEN — keeping {os.path.basename(doc_path)} active; recording merge evidence")
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
                         log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
+                    elif doc_path and not _may_terminalize_issue(issue_state, args.force_promote, is_merged, is_open):
+                        log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — and the PR was not merged — preserving active doc and roadmap entry; a declined PR needs a confirmed CLOSED issue to close out")
                     elif doc_path:
                         # GH-684 kept the shape "a defective BACKLOG doc stops only itself" (log
                         # `SKIP_MARKER`, discard from reconciled_issues, add to skipped_issues,
@@ -2131,13 +2164,14 @@ def main():
                             dry_run=args.dry_run,
                             journal=journal,
                             doc_path=os.path.relpath(dest_path, repo_root),
+                            repo_slug=repo_slug,
                         )
                         if updated:
                             log(f"  ROADMAP.md entry updated for GH-{issue_num}")
                     else:
                         log(f"  No active doc in 2-WORKING for GH-{issue_num}")
                         ship_date = (pr_meta.get("mergedAt") or datetime.now().isoformat())[:10]
-                        if not is_open or args.force_promote:
+                        if _may_terminalize_issue(issue_state, args.force_promote, is_merged, is_open):
                             if is_merged:
                                 ship_manifest_items(repo_root, issue_num, pr_meta, repo_slug, args.dry_run, journal)
                             updated = update_roadmap_entry(
@@ -2148,11 +2182,15 @@ def main():
                                 is_merged=is_merged,
                                 dry_run=args.dry_run,
                                 journal=journal,
+                                repo_slug=repo_slug,
                             )
                             if updated:
                                 log(f"  ROADMAP.md entry updated for GH-{issue_num}")
                         else:
-                            log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
+                            if is_merged:
+                                log(f"  Issue #{issue_num} is OPEN — preserving active ROADMAP.md entry (skipping move to Completed)")
+                            else:
+                                log(f"  Issue #{issue_num} state is {issue_state or 'UNKNOWN'} — and the PR was not merged — preserving active ROADMAP.md entry; a declined PR needs a confirmed CLOSED issue to close out")
 
                 # GH-271: reference-only mentions never promote or move anything. When the
                 # mentioned issue is OPEN (or an unknowable-state umbrella), record merge
