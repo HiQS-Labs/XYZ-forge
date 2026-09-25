@@ -1,0 +1,10 @@
+# base 3807408f (runtime identical to development@0ae3452a), 2026-09-25T04:16:58Z, MacBook Pro M4 Pro, Python 3.14.7 SQLite 3.53.4
+failed rounds: 24/200
+error classes:
+  31 sqlite3.OperationalError: database is locked
+raising frames:
+  31   utils/py/harness_app.py, line 171, in init_db
+failure latency (s):
+0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 
+rounds with row count != 10:
+24

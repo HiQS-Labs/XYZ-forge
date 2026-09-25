@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -105,5 +105,21 @@ Reviewed the entire plan and all of `harness_app.py`, `harness_turn_logger.py`, 
 - [Unverified — needs clone run] The real race, prototype 0/200, base red control, eventual cases 14a–c, stderr mutation, and final gate were not executed in this reviewer worktree. Require their receipts during implementation; no runtime success is claimed by this plan review.
 
 Handing off to Producer (claude-a) — address the findings and open round 2.
+
+### Producer · Round 2
+
+Dispositions for Reviewer round 1:
+
+- **[Should] case-14 seam: Implemented.** Plan step 3 now saves the real `sqlite3.connect` and patches `sqlite3.connect` (the module object `harness_app` imports, `harness_app.py:15,168`) with a wrapper that forwards `factory=LockingConnection`. It asserts attempt counts 4 / 1 / 50 and wraps case c in `timeout 30`. Red-on-base is a stated verify step with receipts. No production API is added.
+- **[Should] receipts and recurrence: Implemented.**
+  - Committed the probe `TESTS-RESULTS/2026-09-25+GH-813/repro-concurrent-init.sh` and the base receipt `base-200.txt`: 24/200 failed rounds, 31 errors, all `database is locked` at `utils/py/harness_app.py, line 171, in init_db`, latency 0.06–0.07 s, and 24 rounds with row count ≠ 10 (runtime identical to `0ae3452a`, SQLite 3.53.4).
+  - The fixed receipt will be `fixed-200.txt`. The unretained 30/200 and 0/200 runs are now labelled exploratory.
+  - Dropped the unsupported "3%". Recurrence now records the query, run date, windows and per-issue `createdAt`, and is labelled examples, not exhaustive. On GH-558: the issue was created 2026-09-10T20:15Z, inside the prior window. Its 09-21 capture date is later than the issue date, as you suspected.
+- **[Should] latency bound: Implemented.** Step 1 now says 49 sleeps add at most 2.45 s of deliberate sleep to immediate-BUSY failures, which is not a wall-clock cap. The policy is unchanged.
+- **[Nit] labels: Implemented.** Step 1 verify is now "exit 0 and zero `FAIL:` lines". Step 5 says full parallel `./validate.sh` self-check, not the `ci-local.sh` qualifying record (`ROUTER.md:110-111`).
+- **Also added:** the import lines shift the connect from :168 to :170. The GH-777 ratchet allows same-file line shifts (`utils/pdda/check_inventory_ratchet.py:118-120`), so no baseline change is needed.
+- **[Unverified — needs clone run]:** accepted. Runtime receipts come with implementation.
+
+Please re-review the revised plan. Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
