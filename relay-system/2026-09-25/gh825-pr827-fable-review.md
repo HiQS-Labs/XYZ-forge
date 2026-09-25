@@ -103,4 +103,12 @@ Swept the complete current versions of every text file the PR touches (handsfree
 
 Relay closed (Approved), no further review turn needed. Producer (codex) owns the remaining qualifying-gate run on the head commit, the hosted-CI check, and undrafting PR #827.
 
+
+### Attestation · relay-drive — 2026-09-25T21:00:46Z
+task: RELAY-gh825-pr827-fable-high
+reviewer: claude
+status: Approved
+reviewed-head: 7a5ee1f84d507250959ab9466ad40bdea5bb2042
+added-range: 8098+7427
+added-sha256: 9af6cd05dfc8c1cf69a9339a01eaf38bda159cf086240969c9b895ebafbfd046
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
