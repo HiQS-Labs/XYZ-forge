@@ -98,7 +98,7 @@
       "status": "M"
     },
     {
-      "new_blob": "018e287447ac03da002637624604d88f5efd5891",
+      "new_blob": "5821ed09b66ab9bd38f8c39066d6c9e1d2c4b31b",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -1303,6 +1303,158 @@
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
       "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-intermediate-full/telemetry/validate-sequential-1790313080875-56114.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "113459522b4531c4f1e5652d2f20f369a92d55af",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "113459522b4531c4f1e5652d2f20f369a92d55af",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "fbe8673532d591ce081f70093a85dc3c5b5b54f3",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/prepush.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "e24b20222c2646ac05d441a49318831c3284082c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/provenance.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "c392e29911c630289423dcd34f157877910508dc",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790315801650-16188.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "9dd0e4eb33b115405d7c8df8d7ae0d5c375dc671",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790315803352-17533.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "6ec3ee5ff981e858b14da1998aa26689790e164c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316038962-53111.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "5cc6b03e1f64a19eaba86c4c247903fe68eccdad",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316039345-53479.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "c5976ca9e5ef1ae25e12ad51925bb5e13f529b70",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316040035-54143.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "f1a078e91aba78b3c2916a35f0a9aaebc61d41a3",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316040453-54558.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "c81b5b2fb8b3d24126a9b903f171df632bd5dbcc",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316040863-54951.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "e606d9692d0b80f3b22a051b48fefc90601630fe",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316041251-55396.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "42c84f33cb111c95cd00f273a5b99032f893c059",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316043628-57701.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "15bfba8dd52e9015316719d02f825da545c40828",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316043628-57701.jsonl.w57701",
+      "status": "A"
+    },
+    {
+      "new_blob": "826e4b63738789a32fade33175a26a2e0ea23171",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316081252-43495.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "593554e1acc8624d79a4ab58ab7554398d42e39b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316313787-83365.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "3935e71d68f5185b67a344e1093690bce564989b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316324769-94103.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "d1e0da3f168b07f2dd9fffabd24f977697a0c7c1",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-parallel-1790316337192-467.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "b4715b54dccbac50b1e48eac7374ba368e2148f5",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-publish/telemetry/validate-sequential-1790316036065-50316.jsonl",
       "status": "A"
     },
     {

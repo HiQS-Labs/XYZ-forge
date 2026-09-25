@@ -100,3 +100,6 @@ Gateway record concurrency correction (3c9506c3): four focused suites pass with 
 
 
 Full gateway run at `2f75a185` failed **421/422** after 755.6 seconds with unchanged clone identity; push was refused. `gh777-inventory-ratchet.sh` rejected the newly introduced `coverage_admission.py`. Full receipts and telemetry are in `gateway-intermediate-full/`. The correction folds that implementation into the existing `gate_inventory.py` admission subcommand and updates its imports, with no baseline exception or new utility file. Four focused checks pass on the retained candidate patch (`gateway-ratchet-focused/`), including the ratchet's growth-rejection control. Round 3 approved the preceding record-format revision; it does not attest this subsequent relocation. Additional final QA awaits the requested operator exception to the three-round cap. No final full-green or live activation is claimed.
+
+
+Publication verification: the full macOS pre-push gate on `437f17d8a3fadb0e624524824e27a709ab4857ad` passed **422/422** (gate 837 seconds; push wrapper 840.1 seconds), with matching pre/post clone identity. The normal push to origin succeeded. Receipts and raw telemetry are in `gateway-publish/`. This verifies the published implementation, not completion of approved ceilings/content sealing, final review of the consolidation, or live activation.
