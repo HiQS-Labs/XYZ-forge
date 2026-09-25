@@ -54,7 +54,7 @@ clone-identity: IDENTITY DRIFT — the clone this suite ran in changed under the
 @@ -1,6 +1,6 @@
  head:   682be30fc051e9ee898d85760abb339770c1d52d
  bare:   false
- remote: 
+ remote:
 -email:  t@t
 +email:  mutated@t
  name:   t
@@ -66,7 +66,7 @@ runner-envelope: worktrees DRIFT under red — the run changed it; this run's ev
 @@ -2,3 +2,7 @@
  HEAD 682be30fc051e9ee898d85760abb339770c1d52d
  branch refs/heads/main
- 
+
 +worktree /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh365-runner-envelope.XXXXXX.cc8re1fh7R/wt-drift
 +HEAD 682be30fc051e9ee898d85760abb339770c1d52d
 +branch refs/heads/wt-drift

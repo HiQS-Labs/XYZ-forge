@@ -248,39 +248,47 @@ for command in ['python3','npm']:
     script = bin_dir/command
     script.write_text('#!/bin/bash\nif [ "$1" = "-c" ]; then exit 0; fi\nprintf "%s\\n" "$*" >> "$LANE_CALLS"\nexit "$LANE_RC"\n')
     script.chmod(0o755)
-validate = (root/'validate.sh').read_text()
-validate = validate[validate.index('# The Python layer follows'):validate.index("# GH-1: the identity bracket's assert half.")]
+validate_source = (root/'validate.sh').read_text()
+validate = validate_source[validate_source.index('# The Python layer follows'):validate_source.index("# GH-1: the identity bracket's assert half.")]
+summary = validate_source[validate_source.index('TOTAL=$(( ${#RUN_TESTS[@]} + 1 ))'):validate_source.index('# GH-365 step 2: the retained record of THIS run')]
 ci = (root/'ci-local.sh').read_text()
 start = ci.index('  if python3 -m pytest "$HERE/test/test_python_layer.py"')
 start = ci.rfind('  _s="$(rt_now_ms)"',0,start)
 end = ci.index('  if git apply --check',start)
 end = ci.rfind('  _s="$(rt_now_ms)"',start,end)
 ci = ci[start:end]
-prefix = '''
-TIER=3; T2_PYTEST=0; NICE_CMD=""; PASSED=(); FAILED=(); SKIPPED_SUITES=(); rc=0
+prefix = """
+T2_PYTEST=1; T2_PDDA=0; T2_PATHS=""; NICE_CMD=""; RUN_TESTS=(); PASSED=(); FAILED=(); SKIPPED_SUITES=(); rc=0
 rt_now_ms() { echo 1; }
 rt_emit() { :; }
-'''
+rt_summary() { :; }
+"""
 for runner, snippet in [('validate',validate),('ci-local',ci)]:
-    for child_rc in [0,7]:
-        calls=work/f'{runner}-{child_rc}.calls'; verdicts=work/f'{runner}-{child_rc}.verdicts'
-        env={**os.environ,'PATH':str(bin_dir)+':'+os.environ['PATH'],'HERE':str(root),'LANE_CALLS':str(calls),'LANE_RC':str(child_rc),'GATE_VERDICTS':str(verdicts)}
+    for tier in ([2,3] if runner=='validate' else [3]):
+      for child_rc in [0,7]:
+        calls=work/f'{runner}-{tier}-{child_rc}.calls'; verdicts=work/f'{runner}-{tier}-{child_rc}.verdicts'
+        env={**os.environ,'PATH':str(bin_dir)+':'+os.environ['PATH'],'HERE':str(root),'TIER':str(tier),'LANE_CALLS':str(calls),'LANE_RC':str(child_rc),'GATE_VERDICTS':str(verdicts)}
+        # The shell suites/identity/gamma are not under test here; seed only their fixed verdicts.
+        seeds = 'PASSED+=("clone-identity-invariant"); [ "$TIER" -eq 3 ] && PASSED+=("gamma-poison-staleness-probe")\n' if runner=='validate' else ''
         suffix = '\nprintf "failed=%s rc=%s\\n" "${#FAILED[@]}" "$rc"\n'
-        r=subprocess.run(['bash','-c',prefix+snippet+suffix],env=env,text=True,capture_output=True)
-        assert r.returncode == 0, r.stderr
+        script = prefix+seeds+snippet+(summary if runner=='validate' else '')+suffix
+        r=subprocess.run(['bash','-c',script],env=env,text=True,capture_output=True)
+        assert r.returncode == 0, (r.stdout,r.stderr)
         invoked=calls.read_text().splitlines()
-        assert len(invoked)==2, invoked
-        assert 'test/test_python_layer.py' in invoked[0] and 'test/flightdeck/' in invoked[0], invoked
-        assert invoked[1]=='run test:unit', invoked
+        expected=2 if tier==3 else 1
+        assert len(invoked)==expected, invoked
+        assert 'test/test_python_layer.py' in invoked[0], invoked
+        assert ('test/flightdeck/' in invoked[0]) == (tier==3), invoked
+        if tier==3: assert invoked[1]=='run test:unit', invoked
         if runner=='validate':
-            assert f'failed={2 if child_rc else 0} rc=0' in r.stdout,r.stdout
+            assert f'failed={expected if child_rc else 0} rc=0' in r.stdout,r.stdout
         else:
             assert f'failed=0 rc={1 if child_rc else 0}' in r.stdout,r.stdout
             assert verdicts.read_text().count('\tFAIL' if child_rc else '\tpass')==2
-        print('PASS:',runner,'both lanes once; child rc',child_rc,'propagated')
+        print('PASS:',runner,'tier',tier,'lane count and actual summary; child rc',child_rc,'propagated')
+
 PY805
 [ "$?" -eq 0 ] || fail "GH-805 non-shell lane propagation"
 
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0
-

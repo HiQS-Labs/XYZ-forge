@@ -1440,6 +1440,8 @@ fi
 
 # The Python layer follows the change set on tier 2 (a *.py path or a python-bearing subsystem
 _pytest_skipped=0
+_pytest_targets=("$HERE/test/test_python_layer.py")
+[ "$TIER" -eq 3 ] && _pytest_targets+=("$HERE/test/flightdeck/")
 if [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; then
   echo
   echo "==============================="
@@ -1451,7 +1453,7 @@ if [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; then
     _pytest_skipped=1
     SKIPPED_SUITES+=("python:test_python_layer.py")
     rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
-  elif $NICE_CMD python3 -m pytest "$HERE/test/test_python_layer.py" "$HERE/test/flightdeck/"; then
+  elif $NICE_CMD python3 -m pytest "${_pytest_targets[@]}"; then
     PASSED+=("python:test_python_layer.py")
     rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
   else
@@ -1527,7 +1529,7 @@ TOTAL=$(( ${#RUN_TESTS[@]} + 1 ))                       # suites + the identity 
 if { [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; } && [ "$_pytest_skipped" -eq 0 ]; then
   TOTAL=$((TOTAL + 1))
 fi
-if [ "$TIER" -eq 3 ]; then TOTAL=$((TOTAL + 1)); fi     # gamma-poison staleness probe
+if [ "$TIER" -eq 3 ]; then TOTAL=$((TOTAL + 2)); fi     # gamma-poison + Node unit lane
 [ "$TIER" -eq 2 ] && [ "$T2_PDDA" -eq 1 ] && TOTAL=$((TOTAL + 1))
 [ "$TIER" -eq 2 ] && [ -n "$T2_PATHS" ] && TOTAL=$((TOTAL + 1))
 if [ "$TIER" -eq 2 ]; then

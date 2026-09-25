@@ -1,4 +1,4 @@
 == test: GH-269 ==
   workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-GH-269.XXXXXX.IczFaWh593
   PASS: ROADMAP.md is absent at repo root
-  FAIL: marathon_plan.py failed with unexpected exit 5: 
+  FAIL: marathon_plan.py failed with unexpected exit 5:

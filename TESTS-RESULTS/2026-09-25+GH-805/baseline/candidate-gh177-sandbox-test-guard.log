@@ -1,17 +1,17 @@
-PASS 2 ./validate.sh 
-PASS 2 bash test/example.sh 
-PASS 2 command bash test/example.sh 
-PASS 2 env VAR=x bash test/example.sh 
-PASS 2 exec ./validate.sh 
-PASS 2 time ./validate.sh 
-PASS 2 nohup ./validate.sh 
-PASS 2 nice ./validate.sh 
-PASS 2 source test/example.sh 
-PASS 2 cd test && bash example.sh 
-PASS 0 bash -n test/example.sh 
-PASS 0 shellcheck test/example.sh 
-PASS 0 grep validate.sh README.md 
-PASS 0 cd src && bash build.sh 
-PASS 0 cd test && cd .. && bash build.sh 
+PASS 2 ./validate.sh
+PASS 2 bash test/example.sh
+PASS 2 command bash test/example.sh
+PASS 2 env VAR=x bash test/example.sh
+PASS 2 exec ./validate.sh
+PASS 2 time ./validate.sh
+PASS 2 nohup ./validate.sh
+PASS 2 nice ./validate.sh
+PASS 2 source test/example.sh
+PASS 2 cd test && bash example.sh
+PASS 0 bash -n test/example.sh
+PASS 0 shellcheck test/example.sh
+PASS 0 grep validate.sh README.md
+PASS 0 cd src && bash build.sh
+PASS 0 cd test && cd .. && bash build.sh
 PASS 0 ./validate.sh unsandboxed
 PASS: 17 hook cases; example command strings were never executed

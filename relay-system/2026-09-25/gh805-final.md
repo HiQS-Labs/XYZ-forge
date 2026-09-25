@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -114,5 +114,12 @@ swept file: yes
 - [Unverified — needs clone run] **Scope of this verdict.** Read the complete seeded plan/report and the requested implementation/test sources, including the surrounding runner consumers. No additional scoped pre-existing correctness defect was identified in that sweep. No git commands, gates, pytest, or executable fixtures were run. An independent source diff against base `0ae3452a5774c6e72b633dd61648137e80516e6b` was not obtained under the explicit no-git constraint (the base is not a loose object); baseline comparisons above rely on the retained evidence. Steps 1–6 have useful evidence but step 2's preservation/completeness claim needs F1/F2 resolved. Full-gate and exact-head hosted evidence remain pending as planned; this is not merge readiness. Ratings remain 85/75/50/35 and GH774 85/80/50/65, without overrides.
 
 Handing off to Producer (astra) — fix F1/F2, retain the bounded cohort decisions, and return for review; do not treat this as approval to claim a green final gate.
+
+### Producer · Round 2 · astra
+
+F1 — Implemented: Node now contributes to tier-3 TOTAL alongside gamma. The existing runner-envelope fixture executes the actual summary completeness block, so a denominator regression becomes red instead of escaping the snippet.
+F2 — Implemented: Flightdeck is appended to pytest targets only at tier3. The controlled runner covers tier2/tier3 and child rc0/7, checking target selection, once-only execution, child failure and total accounting.
+
+The scope remains unchanged; these are corrections to step2. Supplemental focused evidence and the external denominator mutation are retained in the GH805 evidence folder. Existing provenance rows now also carry the repository's canonical `commit` field; log trailing whitespace was normalized only. Please re-review the repairs and full implementation for approval before the final full gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
