@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/762
 title: "Start marathon: route and prepare a verified marathon before firing"
 status: In progress
 created: 2026-09-23
-updated: 2026-09-23
+updated: 2026-09-24
 owner: Codex
 doc_type: plan
 complexity: 2
@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Skill refactor, PARKED routing, CodeRabbit fixes, and GH-784 wave QA checklist contract + mechanical receipt gate implemented. Focused suites (hooks, adoption, gh784 gate) pass cleanly. | Run Codex QA relay via /relay-xyz, commit, push, and update PR #765. |
+| GH-796 F1–F6 remediation integrated with development through #794. Five focused suites and PDDA aggregate pass at `0e9c4b88`; independent source review found no remaining F1–F6 blocker. | Integrate reconciled #795, obtain driver-attested independent final relay QA, run the full local gate, then publish and update PR #765. |
 
 ## Idea
 
@@ -119,3 +119,9 @@ Root PARKED routing and standup parser follow-up: `gh77-standup-triage.sh` passe
 disposable full clone. A red control using the prior broad parser marked a general checklist as
 degraded; restoring the new parser returned lens 8 to `ok`. PDDA run had zero errors; RELEASES
 integrity check had zero failures and nine existing warnings.
+
+### GH-796 integration verification — 2026-09-24
+
+At source `0e9c4b8859bc034bb6a15bdc635e97b8185b6d06`, the GH-784 gate, harness hooks, installer live links, standup triage (153/153), and GH-777 inventory ratchet all passed in a separate disposable full clone. PDDA aggregate returned zero errors and 37 warnings; pending marathon proof items remain unchecked. The clone remained clean with the expected HEAD, origin, and non-bare identity. Committed logs and per-command provenance are in `TESTS-RESULTS/2026-09-24+GH-796-PR765/integration-focused-0e9c4b88/`.
+
+The earlier #764 baseline follow-up is completed on development and is not a current blocker. Earlier relay text without successful driver attestation is not reused as final approval. Final #795 integration, current-head independent relay QA, and the full local gate remain outstanding; this focused result does not establish merge readiness.
