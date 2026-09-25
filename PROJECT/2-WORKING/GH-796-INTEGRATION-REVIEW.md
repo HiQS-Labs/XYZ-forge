@@ -1,6 +1,6 @@
 ---
 title: GH-796 — Open PR integration review and merge-remediation plan
-status: In progress — merge operation
+status: Blocked — GH-801 development gate regression
 created: 2026-09-24
 updated: 2026-09-24
 owner: noel
@@ -17,7 +17,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Operator authorized merge operation; current heads refreshed; #794 ledger resolution prepared | Finish #794 current-base gate, land/reconcile, then requalify #795; #765 remains held pending remediation |
+| Merge bootstrap reviewed and #794 ledger resolved; full gate found GH-798 pipeline ratchet regression, filed as #801 | Hold landing until #801 is repaired and the current-base gate passes; no PR merged |
 
 ## Table of contents
 
@@ -183,3 +183,7 @@ Operator authorized the merge operation. Primary was clean on development at `a0
 New development GH-798 introduces a ledger-only conflict for #794. Canonical B1 classified it disjoint (generations 1123/1125), kept current development state and replayed only GH-791/GH-793 via the writer, producing `0852e43cb58abdcf0f12cbbb2db1ec63ec8682ed`. Its repair occupies slot 1/2 at the primary coordinator. Full macOS push gate is pending in a separate disposable full clone; no landing claimed yet.
 
 Operational adaptation: invoke the existing cleanup helpers in supervised stages instead of letting the master runner automatically push from the valued primary. The runner's post-reconcile push can invoke mutation-heavy tests there, contrary to WORKTREE-SAFETY section 12. Reconciliation still follows the existing exact-SHA hosted/fallback contract; any resulting write must be gated/pushed from a disposable full clone and fast-forwarded into primary. No force merge, writer replacement, new executor or gate bypass is authorized by this adaptation.
+
+Agy operational-adaptation QA round2 returned exit0 with attested Approved at reviewed head `23943dfb1cf6`; round1 close-mismatch is preserved as failed QA, not approval. No code was changed to recover the relay.
+
+**Stop: GH-801.** The current-base gate reports `gh139-pipe-grep-guard.sh rc=1`: GH-798 introduced ten prohibited pipes in its test. Exact source comparison excludes #794 as the origin. Separate issue #801 is parked, and the merge queue is held under the operator's unrelated-bug rule. No bypass, no merge, no cleanup. Final full-gate count will be recorded when the existing run finishes.

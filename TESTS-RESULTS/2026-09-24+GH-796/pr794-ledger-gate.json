@@ -1,0 +1,18 @@
+{
+  "green": true,
+  "failures": [],
+  "diagnostics": [
+    "releases check: warn: rule=mig-ref-stale: MIG-F1CCB6 is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=mig-ref-stale: MIG-D7D2C4 is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=mig-ref-stale: MIG-D248B2 is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=mig-ref-stale: MIG-79F036 is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=mig-ref-stale: MIG-A993B3 is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=mig-ref-stale: MIG-751A4C is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=mig-ref-stale: MIG-7AFFE1 is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=mig-ref-stale: MIG-AC68FA is 37 days old (> 7) \u2014 disposition the migration debt before the strict flip",
+    "releases check: warn: rule=release-overdue: 0.9.0 Cargo is active and 6 day(s) past its target of 2026-09-19 \u2014 if the exit criterion is met, `releases ship` it; if not, `releases update` the target",
+    "roadmap reconcile-state --dry-run: would move GH-589: Queue / parked intake -> Completed",
+    "roadmap reconcile-state --dry-run: would move GH-644: Queue / parked intake -> Completed",
+    "roadmap reconcile-state --dry-run: would move GH-690: Queue / parked intake -> Completed"
+  ]
+}

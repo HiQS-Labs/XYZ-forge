@@ -1,0 +1,19 @@
+{
+  "added_len": 1626,
+  "added_sha256": "af031575d90f7851e39a34df8b6a3ae0a3af97b750379c29784c696d2c974131",
+  "added_start": 9400,
+  "artifact_sha256": null,
+  "attested_at": "2026-09-25T00:55:16Z",
+  "driver_pid": 77876,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924/relay-system/2026-09-24/gh796-landing-qa.md",
+  "relay_file_rel": "relay-system/2026-09-24/gh796-landing-qa.md",
+  "reviewed_head": "23943dfb1cf68f0f31920bd17c1bd003db10d394",
+  "reviewer": "agy",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924",
+  "task": "RELAY-gh796-landing-qa",
+  "trailer_sha256": "a81f73b1ce1c77f2a3e82e67bad230dc99d1c984848e285cb2a98d1cbd4918cb",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924"
+}
