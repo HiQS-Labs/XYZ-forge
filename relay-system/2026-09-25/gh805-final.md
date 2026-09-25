@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -73,5 +73,46 @@ Full gate is intentionally pending until final code approval per start-task. Do 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The bounded advisory design and four cohort choices are reasonable, but the new Node verdict is absent from validate.sh's completeness denominator. Implementation is not ready for the final gate until that accounting defect is fixed. The Flightdeck addition also widens tier-2 selection contrary to the stated full-runner scope.
+swept file: yes
+
+- [Blocker] **F1 — full-gate denominator omits Node.** `validate.sh:1467` appends `node:test:unit` to PASSED/FAILED; `validate.sh:1527` counts only shell suites, identity, Python and gamma. `validate.sh:1540` therefore refuses even an otherwise green tier-3 run. Add the Node contribution under its execution condition and extend the existing runner-envelope control through the real summary accounting (its current extraction stops before the identity/summary block). Do not weaken the completeness check.
+  Observed input: current 418-entry TESTS registry, TIER=3, pytest available, no skips, all children successful: **422 classified versus TOTAL=421**.
+  Affected scope: every tier-3 validate.sh run reaching the completeness check, with or without a successful Node child; tier-2 must retain its own denominator.
+  Falsifier: in a disposable clone, an all-green controlled runner including the actual summary must exit 0 with equal classified/expected counts; removing the Node TOTAL contribution must make that control red. A child rc7 must still fail for its child verdict. Full execution remains [Unverified — needs clone run].
+  Read-only source probe (exit **1**, no runner or fixture executed):
+  ```python
+  # Command: PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' ... PY
+  from pathlib import Path
+  import re, shlex
+  s=Path('validate.sh').read_text()
+  n=len(shlex.split(re.search(r'^TESTS=\((.*?)^\)',s,re.M|re.S)[1],comments=True))
+  b=s[s.index('TOTAL=$(( ${#RUN_TESTS[@]} + 1 ))'):s.index('# GH-15: the verdict')]
+  print(b)
+  labels=re.findall(r'PASSED\+=\("([^"]+)"\)',s[s.index('# The Python layer follows'):s.index('TOTAL=$(( ${#RUN_TESTS[@]} + 1 ))')])
+  print('full-gate non-shell verdicts:',labels)
+  print(f'all-green tier3: registered={n}, classified={n+len(labels)}, TOTAL={n+3}')
+  assert n+len(labels)==n+3, 'Node verdict is missing from TOTAL'
+  ```
+  Decisive output: `full-gate non-shell verdicts: ['python:test_python_layer.py', 'node:test:unit', 'clone-identity-invariant', 'gamma-poison-staleness-probe']`; `all-green tier3: registered=418, classified=422, TOTAL=421`; `AssertionError: Node verdict is missing from TOTAL`. The +3 is the displayed source's tier-3 arithmetic, not an observed full-gate run.
+
+- [Should] **F2 — preserve focused Python selection.** `validate.sh:1442` enters the Python lane for T2_PYTEST as well as tier 3, but `validate.sh:1454` unconditionally adds Flightdeck. Keep Flightdeck restricted to full runs unless a separately justified focused mapping is explicitly adopted; extend the existing controlled runner checks to include tier 2.
+  Observed input: `--subsystem releases` (also pdda) sets T2_PYTEST=1 at `validate.sh:938`; the shared pytest invocation then includes `"$HERE/test/flightdeck/"`. Plan step 2 explicitly says “both full-runner” additions while “preserving ... tier behavior.”
+  Affected scope: tier-2 selections that enable T2_PYTEST, not the intended tier-3 coverage addition.
+  Falsifier: controlled tier-2 releases invocation selects the existing Python layer without Flightdeck, while tier 3 selects both exactly once; demonstrate child-failure propagation for both. No execution attempted here. Source query `rg -n 'T2_PYTEST=1' validate.sh` exited 0 and included `938:  case "$SUBSYSTEM" in releases|pdda) T2_PYTEST=1 ;; esac`.
+
+- [Pass] **Independent cohort adjudication: agree with all four outcomes (0/4 disagreement).** Reuse gh269/567/568: gh269's “Fixture test: releases roadmap move and update CLI verbs”, gh567's `check_writer_audit`, and gh568's `check_runtime_untouched`/Python AST write checks protect distinct policies. Extend gh269 for planner status: `planner_status_allowed() { [ "$1" -eq 0 ] || [ "$1" -eq 4 ]; }` belongs in that owner. Add GH177: its new suite supplies JSON to the live hook and never executes the dangerous payload strings (`test/gh177-sandbox-test-guard.sh`, `subprocess.run(['bash', hook], input=json.dumps(payload)...)`). Reject duplicate GH534 scheduling: registered `test/gh436-merge-cleanup.sh` execs its Python collector, which imports all three phase modules at `test/gh436-merge-cleanup.py:863` before `unittest.main()` at line 869. Retain these choices; they do not depend on fixing F1/F2.
+
+- [Pass] **Advisory limits are honest and proportionate.** `utils/py/gate_inventory.py:257` overwrites claimed authority with `approval_trusted: False` and `would_refuse_mandatory: True`; audit limitations explicitly say literal references “are not execution proof.” REPORT's “Coverage: GO” and “Mandatory admission: NO-GO” are distinct, and it declines global invariant counts, matched runtime savings, and real-world error-rate estimates. Preserve observe mode; no approval service or general scanner is warranted here.
+
+- [Pass] **Retained focused evidence supports the narrow repairs, not summary correctness.** `provenance.jsonl` records eight focused rc0 suites and five candidate mutation rc1 results; the matching logs exist and are nonempty. The before/after planner-exit5 and quoted-move logs support the stated regressions. `focused/gh365-runner-envelope.log` says `PASS: validate both lanes once; child rc 7 propagated`, but that snippet never reaches TOTAL, explaining why it missed F1. Read-only JSON/hash probe (Python pathlib/json/hashlib, exit 0) compared both identity pairs, required every referenced log to have nonzero size, and recomputed each decisions.json content hash: `baseline identity_equal= True`, `focused identity_equal= True`, `provenance rows= 23 empty logs= []`, and all four cohort records reported `stale bindings= []`. Preserve the evidence and add the missing summary witness after repair.
+
+- [Unverified — needs clone run] **Scope of this verdict.** Read the complete seeded plan/report and the requested implementation/test sources, including the surrounding runner consumers. No additional scoped pre-existing correctness defect was identified in that sweep. No git commands, gates, pytest, or executable fixtures were run. An independent source diff against base `0ae3452a5774c6e72b633dd61648137e80516e6b` was not obtained under the explicit no-git constraint (the base is not a loose object); baseline comparisons above rely on the retained evidence. Steps 1–6 have useful evidence but step 2's preservation/completeness claim needs F1/F2 resolved. Full-gate and exact-head hosted evidence remain pending as planned; this is not merge readiness. Ratings remain 85/75/50/35 and GH774 85/80/50/65, without overrides.
+
+Handing off to Producer (astra) — fix F1/F2, retain the bounded cohort decisions, and return for review; do not treat this as approval to claim a green final gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
