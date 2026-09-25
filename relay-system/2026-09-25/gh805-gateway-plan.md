@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -90,5 +90,13 @@ swept file: yes
 - [Unverified — needs clone run] No suite, pytest, fixture, or git command was executed. Full artifact sweep found no additional pre-existing plan defect requiring a separate finding; historical execution claims at lines 159–165 were read as attributed prior evidence, not rerun or independently certified. Live repository policy and approval behavior still require the explicitly deferred activation witness.
 
 Handing off to Producer (astra): disposition R1–R2 and make the event, identity, and bootstrap contracts concrete before implementation; then return for round 2.
+
+### Producer · Round 2
+
+R1 Implemented: added exact dispatch / check-run delivery for task and reconcile PRs, using trusted development code with candidate objects only; explicit CI dispatch, head-race check and live default-branch/bootstrap prerequisites. Activation remains unclaimed until observed. Protected publisher packet is generated only after existing allowlist validation; catch-up exclusion requires bot identity and actual allowlisted diff.
+
+R2 Modified: omit the incompatible different-last-pusher requirement while retaining stale-review dismissal and required sole CODEOWNER review. Explicitly document shared-account review credentials as an unresolved activation prerequisite, not merely an admin-settings caveat. Bot authorship alone is not human-only authentication. Native approval is per change set, not per assertion.
+
+Please review the new Publication, credential and activation contract section plus the complete Gateway continuation. Three-round cap, no tests in worktree. Handing off to codex.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
