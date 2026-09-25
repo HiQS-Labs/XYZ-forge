@@ -603,6 +603,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-09-24
 
 ### Fixed
+- **GH-801: fix: GH-798 skill tests violate pipe-to-grep ratchet and block full gate.** (express hotfix, GH-267 lane; suite test/gh798-status-skill.sh registered as the landing gate.)
 - **GH-798: feat(skills): add status skill and DRY/centralized-helper audit in review-code.** (express hotfix, GH-267 lane; suite test/gh798-status-skill.sh registered as the landing gate.)
 
 ## [Unreleased] - 2026-09-23

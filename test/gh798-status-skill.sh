@@ -37,14 +37,14 @@ grep -q "Centralized Helper Adherence" "$REVIEW_CODE_FILE" && pass "review-code 
 grep -q "Parallel Subsystem / Reinvention Trap" "$REVIEW_CODE_FILE" && pass "review-code has parallel subsystem trap" || fail "missing parallel subsystem trap"
 
 # Lane E subsections must explicitly bind required severities:
-awk '/1\. \*\*Centralized Helper Adherence:\*\*/,/2\. \*\*Parallel Subsystem/' "$REVIEW_CODE_FILE" | grep -q 'is a `\[Blocker\]`' && pass "Lane E helper adherence binds to [Blocker]" || fail "Lane E helper adherence not bound to [Blocker]"
-awk '/2\. \*\*Parallel Subsystem \/ Reinvention Trap:\*\*/,/3\. \*\*Intra-Diff/' "$REVIEW_CODE_FILE" | grep -q 'mandatory `\[Blocker\]`' && pass "Lane E parallel subsystem binds to [Blocker]" || fail "Lane E parallel subsystem not bound to [Blocker]"
-awk '/3\. \*\*Intra-Diff & Cross-Module Duplication \(DRY\):\*\*/,/(\*\*Graph & Source Lookup|\-\-\-)/' "$REVIEW_CODE_FILE" | grep -q 'is a `\[Should\]`' && pass "Lane E code duplication binds to [Should]" || fail "Lane E duplication not bound to [Should]"
+grep -q 'is a `\[Blocker\]`' <<<"$(awk '/1\. \*\*Centralized Helper Adherence:\*\*/,/2\. \*\*Parallel Subsystem/' "$REVIEW_CODE_FILE")" && pass "Lane E helper adherence binds to [Blocker]" || fail "Lane E helper adherence not bound to [Blocker]"
+grep -q 'mandatory `\[Blocker\]`' <<<"$(awk '/2\. \*\*Parallel Subsystem \/ Reinvention Trap:\*\*/,/3\. \*\*Intra-Diff/' "$REVIEW_CODE_FILE")" && pass "Lane E parallel subsystem binds to [Blocker]" || fail "Lane E parallel subsystem not bound to [Blocker]"
+grep -q 'is a `\[Should\]`' <<<"$(awk '/3\. \*\*Intra-Diff & Cross-Module Duplication \(DRY\):\*\*/,/(\*\*Graph & Source Lookup|\-\-\-)/' "$REVIEW_CODE_FILE")" && pass "Lane E code duplication binds to [Should]" || fail "Lane E duplication not bound to [Should]"
 
 # Phase 4 categories must bind required severities:
-awk '/\[Blocker\]/,/\[Should\]/' "$REVIEW_CODE_FILE" | grep -q "reinventing a parallel subsystem" && pass "review-code binds parallel subsystem to [Blocker]" || fail "parallel subsystem is not under [Blocker]"
-awk '/\[Blocker\]/,/\[Should\]/' "$REVIEW_CODE_FILE" | grep -q "bypassing established centralized helpers" && pass "review-code binds helper bypass to [Blocker]" || fail "helper bypass is not under [Blocker]"
-awk '/\[Should\]/,/\[Nit\]/' "$REVIEW_CODE_FILE" | grep -q "non-DRY duplicate logic" && pass "review-code binds duplicate logic to [Should]" || fail "duplicate logic is not under [Should]"
+grep -q "reinventing a parallel subsystem" <<<"$(awk '/\[Blocker\]/,/\[Should\]/' "$REVIEW_CODE_FILE")" && pass "review-code binds parallel subsystem to [Blocker]" || fail "parallel subsystem is not under [Blocker]"
+grep -q "bypassing established centralized helpers" <<<"$(awk '/\[Blocker\]/,/\[Should\]/' "$REVIEW_CODE_FILE")" && pass "review-code binds helper bypass to [Blocker]" || fail "helper bypass is not under [Blocker]"
+grep -q "non-DRY duplicate logic" <<<"$(awk '/\[Should\]/,/\[Nit\]/' "$REVIEW_CODE_FILE")" && pass "review-code binds duplicate logic to [Should]" || fail "duplicate logic is not under [Should]"
 
 # --- 6. ARCHITECTURE.md registration ---
 grep -q "\[status\](skills/2-daily/status/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has status link" || fail "missing ARCHITECTURE.md link"
@@ -85,7 +85,7 @@ grep -q "Status Discipline:" "$TMP_COPY" && fail "negative control 8a: mutation 
 TMP_REV="$WORK/review_code_mutated.md"
 cp "$REVIEW_CODE_FILE" "$TMP_REV"
 sed -i.bak 's/\[Blocker\]/\[Nit\]/g' "$TMP_REV"
-if awk '/\[Blocker\]/,/\[Should\]/' "$TMP_REV" | grep -q "reinventing a parallel subsystem"; then
+if grep -q "reinventing a parallel subsystem" <<<"$(awk '/\[Blocker\]/,/\[Should\]/' "$TMP_REV")"; then
   fail "negative control 8b: severity mutation failed to turn Blocker check red"
 else
   pass "negative control 8b: severity mutation correctly made Blocker check fail (red)"
@@ -95,7 +95,7 @@ fi
 TMP_LANE_E1="$WORK/review_code_lane_e1.md"
 cp "$REVIEW_CODE_FILE" "$TMP_LANE_E1"
 sed -i.bak 's/is a `\[Blocker\]`/is a `[Nit]`/g' "$TMP_LANE_E1"
-if awk '/1\. \*\*Centralized Helper Adherence:\*\*/,/2\. \*\*Parallel Subsystem/' "$TMP_LANE_E1" | grep -q 'is a `\[Blocker\]`'; then
+if grep -q 'is a `\[Blocker\]`' <<<"$(awk '/1\. \*\*Centralized Helper Adherence:\*\*/,/2\. \*\*Parallel Subsystem/' "$TMP_LANE_E1")"; then
   fail "negative control 8c: Lane E1 helper mutation failed to turn check red"
 else
   pass "negative control 8c: Lane E1 helper mutation correctly made check fail (red)"
@@ -105,7 +105,7 @@ fi
 TMP_LANE_E2="$WORK/review_code_lane_e2.md"
 cp "$REVIEW_CODE_FILE" "$TMP_LANE_E2"
 sed -i.bak 's/mandatory `\[Blocker\]`/mandatory `[Nit]`/g' "$TMP_LANE_E2"
-if awk '/2\. \*\*Parallel Subsystem \/ Reinvention Trap:\*\*/,/3\. \*\*Intra-Diff/' "$TMP_LANE_E2" | grep -q 'mandatory `\[Blocker\]`'; then
+if grep -q 'mandatory `\[Blocker\]`' <<<"$(awk '/2\. \*\*Parallel Subsystem \/ Reinvention Trap:\*\*/,/3\. \*\*Intra-Diff/' "$TMP_LANE_E2")"; then
   fail "negative control 8d: Lane E2 parallel subsystem mutation failed to turn check red"
 else
   pass "negative control 8d: Lane E2 parallel subsystem mutation correctly made check fail (red)"
@@ -115,7 +115,7 @@ fi
 TMP_LANE_E3="$WORK/review_code_lane_e3.md"
 cp "$REVIEW_CODE_FILE" "$TMP_LANE_E3"
 sed -i.bak 's/is a `\[Should\]`/is a `[Nit]`/g' "$TMP_LANE_E3"
-if awk '/3\. \*\*Intra-Diff & Cross-Module Duplication \(DRY\):\*\*/,/(\*\*Graph & Source Lookup|\-\-\-)/' "$TMP_LANE_E3" | grep -q 'is a `\[Should\]`'; then
+if grep -q 'is a `\[Should\]`' <<<"$(awk '/3\. \*\*Intra-Diff & Cross-Module Duplication \(DRY\):\*\*/,/(\*\*Graph & Source Lookup|\-\-\-)/' "$TMP_LANE_E3")"; then
   fail "negative control 8e: Lane E3 duplication mutation failed to turn check red"
 else
   pass "negative control 8e: Lane E3 duplication mutation correctly made check fail (red)"
