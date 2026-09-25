@@ -1,5 +1,5 @@
 == test: gh460-pipe-buffer-sigpipe ==
-  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh460-pipe-buffer-sigpipe.XXXXXX.qJ5qGCHTj8
+  workdir: <tmp>
   PASS: control: the pre-fix shape FAILS on a >64KB payload (exit 141) even though the marker is present — SIGPIPE promoted to the pipeline status by pipefail
   PASS: control: the status is 141 (128+13 = SIGPIPE), naming the mechanism rather than just 'non-zero'
   PASS: control: the SAME shape passes on a payload that fits the buffer — the failure is attributable to size, not to the assertion
