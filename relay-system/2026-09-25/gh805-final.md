@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -161,5 +161,23 @@ The required full pre-push gate ran at 50adf9c0 and failed 419/422; identity rem
 Focused controls at8fa90065: path-integrity PASS, ci-route76/76, hook17/17, gh39023/23; disabling ONLY the p7 guard makes gh390 fail again. Pre/post identity snapshots match. Logs, unchanged-base counterfactual and first failed full telemetry are retained under TESTS-RESULTS/2026-09-25+GH-805. Decision content digest updated for the inert hook-path edit; observe-mode approval remains unauthenticated. No other production logic changed after round2.
 
 Questions: Are these observed gate failures repaired without weakening their guards? Does the MagicMock fixture remain bounded and capable of detecting absent protection? Re-review against the same seven-step scope and approve only for a new final gate, never infer merge readiness from focused green. This is the final configured review round.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: The three gate-discovered amendments preserve their checks and the retained focused/red evidence supports a new final gate. This approves implementation readiness only, not merge readiness or trusted admission.
+swept file: yes
+
+- [Pass] **Hook/path and route corrections preserve coverage.** The payload matrix in `test/gh177-sandbox-test-guard.sh:9–27` now names its existing inert test path while retaining sandbox block, unsandboxed allow, wrapper, syntax-only and parse-error cases. Only the hook receives JSON; payload strings are not executed. `test/ci-route.sh:221–224` expects the 28 entries actually declared at `utils/ci-route.sh:26`; `test/gh35-test-tiers.sh:407–426` still checks all four additions and rejects a removed mapping. Retained `focused/repairs-path-integrity.log`, `repairs-ci-route.log` and `repairs-gh177-sandbox-test-guard.log` report 3/3, 76/76 and 17 cases respectively. Keep these repairs.
+
+- [Pass] **Explicit GH390 amendment approval.** `test/gh390-gate-guard.sh:74–86` retains the 500,000-call ceiling, holds that same allocation for two seconds, then exits with the existing failure message; `245–254` pins a one-second poll while still requiring reason `gate-killed`, a process-group kill and guard exit 108. No larger allocation or weaker passing predicate is introduced. The retained unchanged-base diagnostic says “fixture safety ceiling reached before the guard fired” and “gate exit 1 after 1s — peak group RSS 2MB”. Candidate `focused/repairs-gh390-gate-guard.log` records “distinct guard exit (108, 2s)” and “23 pass, 0 fail”; `focused/repairs-gh390-disabled-guard.log` instead fails with “reason=pre-advance-failed”. Root provenance attributes green rc0 and disabled-p7 rc1 to 8fa90065. This is a proportionate fixture timing repair, with a meaningful absent-protection control; retain it. A two-second hold is not a universal scheduling guarantee, so the final gate remains necessary.
+
+- [Pass] **Whole-artifact scope and cohort remain sound.** Reviewed the complete seeded plan/report, the current inventory implementation, policy/runner controls and amendment context. Earlier F1/F2 remain repaired at `validate.sh:1443–1444,1532`; `ci-local.sh:323–344` retains child-status propagation. Keep all four cohort outcomes: reuse distinct retirement guards (`gh269` CLI/DB scenario, `gh567:check_writer_audit`, `gh568:check_runtime_untouched`/AST); extend gh269's exact 0/4 predicate; add the hook matrix; reject duplicate GH534 registration because `test/gh436-merge-cleanup.py:863–869` imports all three modules before unittest discovery. No additional scoped correctness defect or unnecessary parallel mechanism was identified. `gate_inventory.py:decision_view` still forces `approval_trusted: False` and `would_refuse_mandatory: True`; REPORT's “Coverage: GO” and “Mandatory admission: NO-GO” remain appropriate. Ratings remain 85/75/50/35 and GH774 85/80/50/65, without overrides.
+
+- [Pass] **Evidence-integrity source probe.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` using pathlib/json/hashlib/re to load root provenance, assert all referenced logs exist and are nonempty, compare full-attempt/base-control/repair pre/post JSON identities, recompute every decision content digest, and parse the literal releases list; exit **0**. Decisive output: `provenance rows= 39 nonempty logs= 38`; all three identity comparisons `True`; all four decisions `stale bindings= []`; `releases routes= 28 unique= 28`. The repair identity snapshot names 8fa9006510fe6a002a89a2e170e8a1ba8d5dd22d. These are read-only integrity observations on retained evidence, not newly executed tests.
+
+- [Unverified — needs clone run] **Final boundary.** The first full attempt remains a failed 419/422 run; focused green does not supersede it. Run the next full gate in a disposable full clone with final-revision identity/evidence and obtain applicable exact-head hosted evidence before a readiness claim. No git commands, tests, pytest, executable fixtures or full gates were run in this reviewer worktree. Independent base-object comparison remains unavailable under the no-git constraint; historical comparisons rely on the retained counterfactual/provenance. Steps 1–6 support implementation approval; step 7 remains pending gate/PR evidence.
+
+Relay closed (Approved), no further review turn needed. Handing the completed review back to astra for the new final gate and evidence/PR handoff; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
