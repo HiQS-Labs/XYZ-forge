@@ -100,4 +100,12 @@ Read all 703 lines of utils/py/harness_app.py, all 340 lines of test/gh496-telem
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) owns the pending disposable-clone gate and final publication checks.
 
+
+### Attestation · relay-drive — 2026-09-25T04:29:08Z
+task: RELAY-gh-813-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 4513f4aa30c7e53340ba249bde8f012f6ccef0cc
+added-range: 7949+5060
+added-sha256: 47da499caae53d0df19d99a4d7cadb6032f9178716fac59bf6e87158cd969823
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
