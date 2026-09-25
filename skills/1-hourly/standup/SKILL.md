@@ -43,6 +43,9 @@ instead of argued in Markdown.
   `--page` escape hatch. Never suppressed, never parked, never merely absent.
 - **Writes stay inside `PARKED/`.** Session state lives at `PARKED/.standup-session-<id>.json`, not
   under `.git/` — `.git` is a *file* in a linked worktree, and this repo uses them.
+- **General PARKED notes remain human intake.** Lens 8 parses only lines with its explicit
+  `— check:` machine field; Markdown checklists and other agent observations in root `PARKED/`
+  do not become standup records. Triage may promote those notes under `PARKED/README.md`.
 - **A park file is never itself emitted as an item.** Untracked paths under `PARKED/` are excluded;
   a *modified tracked* one still surfaces, because it cannot loop.
 - **`close` is never executed.** Only a park record's read-only `check` probe runs during collection.

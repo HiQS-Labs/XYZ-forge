@@ -234,6 +234,11 @@ local change.
   A file that turns out to be worth keeping gets *promoted* deliberately — into `PROJECT/1-INBOX/`
   as a capture doc, into `test/baselines/` as recorded evidence, or into the CHANGELOG — rather than
   being left at the root in the hope that someone later works out what it was.
+- **Park incidental findings in root `PARKED/`.** When an agent notices a real item outside the
+  current task, record a short, sourced observation there under `PARKED/README.md` without expanding
+  the active work. Triage may promote it through issue-first `PROJECT/1-INBOX` and the RELEASES
+  roadmap. This folder is an intentional exception to the scratch-file rule above; it is durable
+  intake, not a place for probes or half-written notes. Never park a blocker to the current task.
 - **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the twelve Tier-A
   entry points (`agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`,
   `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, `marathon-plan`, and
@@ -293,6 +298,8 @@ local change.
   2. **Diff Size Sanity:** The diff size matches the logical scope of the fix (e.g. < 500 lines for targeted bugs).
   3. **Verification Status:** A test gate ran against the final committed state (either CI or a local `validate.sh` run).
   **Halt Condition:** If an emitted artifact fails any of these predicates, you must suspend the automation loop immediately.
+
+  **Orchestrator vs. Review Protocol Separation (GH-784):** The Orchestrator (the dispatch/tool driver) cannot self-satisfy the review contract or attest review solely by observing passing test suites. It must mechanically invoke an independent peer/Codex QA turn (`relay-xyz` / `/start-task` Step 8 parity) with recorded receipts under `relay-system/<YYYY-MM-DD>/<label>.codex.md` before approving or signing off on PR creation or promotion. Self-review or test-only observation does not satisfy the Wave QA receipt gate.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),

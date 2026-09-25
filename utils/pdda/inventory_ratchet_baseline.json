@@ -1,5 +1,5 @@
 {
-  "total_scripts": 120,
+  "total_scripts": 121,
   "scripts": [
     "utils/ate/install.sh",
     "utils/ate/scripts/checkin.py",
@@ -25,6 +25,7 @@
     "utils/marathon-plan.sh",
     "utils/pdda-local-checks.sh",
     "utils/pdda/check_inventory_ratchet.py",
+    "utils/pdda/check_marathon_qa.py",
     "utils/pdda/pdda-catchup.sh",
     "utils/pdda/pdda-doc-ready.sh",
     "utils/pdda/pdda-edit-doc-hook.sh",

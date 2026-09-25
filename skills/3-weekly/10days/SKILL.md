@@ -24,8 +24,8 @@ description: >
 # /10days — recent-issue sweep → PRS rating prioritization → marathon → fire
 
 Turn "what's landed in GitHub in the last N days that's still worth doing" into a fired
-marathon, unattended. This is `marathon-triage`'s more automated sibling: where
-`marathon-triage` stops at a plan and hands it to the operator, `/10days` carries the
+marathon, unattended. This is `start-marathon`'s more automated sibling: where
+`start-marathon` stops at a plan and hands it to the operator, `/10days` carries the
 plan through PRS rating evaluation, preflight, branch-cut, and execution in one run — because that is
 literally what it was built for (a canned macOS text-replacement snippet that expects
 one shot, no back-and-forth).
@@ -44,7 +44,7 @@ origin sync verification, and robust multi-lane execution containment.
 - **Sandbox off for `gh` and `git fetch`/`git push`** — every `gh` call and preflight
   run here fails under the Bash sandbox (TLS/keychain). Run with the sandbox disabled.
 - **Auto-fire is intentional here, and only here.** `GUIDING-PRINCIPLES.md` §8 and the
-  `marathon-triage` skill both say never auto-cut a branch or auto-fire a marathon —
+  `start-marathon` skill both say never auto-fire a marathon —
   that default stands everywhere else in this repo. `/10days` was authorized by the
   operator (2026-07-16) to override the *pause*, not the *substance*: it still requires
   a clean working tree AND an idle coordination layer before cutting anything (Step 7),
@@ -361,7 +361,7 @@ For each `INCLUDE` verdict:
   become a rubber stamp. This is the only supported way to diverge; there is no env-var bypass,
   because a deviation should live in the doc where the next reader finds it.
 
-- **Audit the guess like `marathon-triage` does**: do the declared `artifacts` paths
+- **Audit the guess like `start-marathon` does**: do the declared `artifacts` paths
   actually exist (or, for a new file, does the issue actually call for creating one at
   that path)? Does the set plausibly match the issue's real subject, not a generic or
   copy-pasted guess? A contract that fails this sniff test is a placeholder — its

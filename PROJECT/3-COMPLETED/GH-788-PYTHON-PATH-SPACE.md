@@ -1,11 +1,11 @@
 ---
 title: "GH-788: gate — suites fail when the Python path contains a space (shebang and unquoted sys.executable)"
-status: In Progress
+status: Complete
 gh_issue: 788
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/788
 doc_type: bugfix
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-25
 owner: operator (via /start-task)
 goal: >
   Tests and fuzz self-tests run correctly when the Python interpreter lives under a path containing a

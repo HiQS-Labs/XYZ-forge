@@ -285,6 +285,20 @@ else
   fail "GH-509: the boundary job needs timeout-minutes — an unbounded hang on macOS is the costly case"
 fi
 
+# GH-823: a bound must still fit the suite. wave-reconcile.yml runs this same `validate.sh --sequential`
+# on this same runner and demonstrably finishes inside its cap; a lower boundary cap would fail every
+# promotion on time, not on code (45 against a 60-92 min suite would). A missing cap on either side fails
+# too. Only the JOB-level key counts — exactly four spaces in these workflows — so a step-level
+# `timeout-minutes` cannot stand in for a deleted job cap.
+reconcile_block="$(awk '/^  reconcile:/{f=1} f{print} f && /^  [a-z]/ && !/^  reconcile:/{exit}' "$ROOT/.github/workflows/wave-reconcile.yml")"
+boundary_cap="$(sed -nE 's/^    timeout-minutes:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' <<<"$boundary_block")"
+reconcile_cap="$(sed -nE 's/^    timeout-minutes:[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' <<<"$reconcile_block")"
+if [[ "$boundary_cap" =~ ^[0-9]+$ && "$reconcile_cap" =~ ^[0-9]+$ ]] && [ "$boundary_cap" -ge "$reconcile_cap" ]; then
+  pass "the boundary cap (${boundary_cap}m) fits the suite: >= wave-reconcile's ${reconcile_cap}m for the same sequential run"
+else
+  fail "GH-823: boundary timeout-minutes '${boundary_cap:-missing}' must be >= wave-reconcile's '${reconcile_cap:-missing}' — the same sequential suite on the same runner needs that long"
+fi
+
 # The promotion rule compares against a RECORDED commit, not against a remembered run.
 if grep -q 'MACOS-BOUNDARY' <<<"$boundary_block" && grep -q 'GITHUB_SHA' <<<"$boundary_block"; then
   pass "the boundary job records its resolved SHA as promotion evidence"

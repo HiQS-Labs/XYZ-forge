@@ -39,6 +39,26 @@ for installer in "$REPO"/skills/*/*/install.sh; do   # skills/<tier>/<name> (GH-
     fail "$skill: dangling link not replaced (exit $rc, now -> $(readlink "$A/claude/$skill" 2>/dev/null)): $(tail -3 "$WORK/out-$skill")"
   fi
 
+  if [ "$skill" = start-marathon ]; then
+    legacy="$A/claude/marathon-triage"
+    rm -f "$legacy"
+    ln -s "$WORK/nowhere/marathon-triage" "$legacy"
+    run; rc=$?
+    if [ "$rc" -eq 0 ] && [ "$(readlink "$legacy")" -ef "$(dirname "$installer")" ]; then
+      pass "start-marathon: replaces dangling legacy link"
+    else
+      fail "start-marathon: legacy link remained dangling (exit $rc)"
+    fi
+    rm -f "$legacy"
+    ln -s "$FOREIGN" "$legacy"
+    run; rc=$?
+    if [ "$rc" -eq 0 ] && [ "$(readlink "$legacy")" = "$FOREIGN" ]; then
+      pass "start-marathon: preserves live foreign legacy link"
+    else
+      fail "start-marathon: replaced live foreign legacy link (exit $rc)"
+    fi
+  fi
+
 
 done
 [ "$n" -gt 0 ] && pass "matrix covered all $n discovered installers" || fail "no installers discovered"
