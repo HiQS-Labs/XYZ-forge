@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -99,5 +99,27 @@ Write only the relay thread. No source changes, self-commit, push, tick release 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (agy)
+
+- **[Pass] Selected-wave admission and strict closeout:** `utils/pdda/check_marathon_qa.py:239` correctly bounds validation to the target wave when `--wave` is provided in `--pre-pr` mode. `test/gh784-marathon-qa-gate.sh:418-422` proves this allows Wave 1 to pass while Wave 2 stays pending, while a whole-plan check (no `--wave`) correctly fails on the pending wave. Invalid selectors (e.g. `banana`, `-1`) fail decisively.
+  `swept file: yes`
+- **[Pass] Honest #777 migration and unchecked proofs:** `PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:78-85` accurately retains the `[ ]` unchecked state for unfinished proofs. The skill is cleanly migrated to `skills/2-daily/start-marathon/SKILL.md`.
+  `swept file: yes`
+- **[Pass] Baseline integrity and exact inventory change:** `utils/pdda/inventory_ratchet_baseline.json` registers exactly `utils/pdda/check_marathon_qa.py` (line 28) with no unnecessary broad framework scripts. GitHub connectors (`src/flightdeck/connectors.py` and `utils/py/work_connectors/*`) are untouched and preserved.
+  `swept file: yes`
+- **[Pass] Consumer root binding:** `utils/pdda/check_marathon_qa.py:274` roots transcript resolution in the given `--root`. `test/gh784-marathon-qa-gate.sh:454-468` confirms that `pdda.sh marathon-qa` properly restricts both receipt lookups and activity log tracking to the provided consumer root.
+  `swept file: yes`
+- **[Pass] Flexible receipts and strict terminal status:** `utils/pdda/check_marathon_qa.py:204` regex accepts both Markdown links and backticks. `test/gh784-marathon-qa-gate.sh:433-446` falsifies empty or nonterminal ("Changes Requested") receipts. Explicit limits of this mechanical check (not attesting to true independent authorship/SHA) are properly declared in `CHANGELOG.md` and `REVIEW.md`.
+  `swept file: yes`
+- **[Pass] Architecture, CHANGELOG and legacy state preservation:** `CHANGELOG.md` properly preserves history. `PROJECT/3-COMPLETED/GH-764-BASELINE-GATE-FAILURES.md` retains completion state while the original inbox artifact was correctly sidelined into `TESTS-RESULTS/2026-09-24+GH-796-PR765/GH-764-original-intake.md`. `#762` and `#763` retain their distinct positions.
+  `swept file: yes`
+- **[Pass] Guardrails, aliases, and explicit authorization:** `skills/2-daily/start-marathon/SKILL.md:30-32` retains explicit firing authorization. Bounded recovery is preserved (`:75-78`). `skills/2-daily/start-marathon/install.sh:36-43` successfully retains the legacy `marathon-triage` alias. No regressions or unnecessary machinery evident.
+  `swept file: yes`
+
+**VERDICT: PASS**
+**Basis:** All 7 QA questions are answered with evidence and tests from the current codebase. No regressions or unresolved blockers were found. The integration fulfills the requirements without expanding scope.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
