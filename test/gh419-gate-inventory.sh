@@ -74,4 +74,40 @@ assert row["negative_control"]["form"] == "controlled-bad-fixture", row
 assert row["negative_control"]["observed"] is True, row
 PY
 
+# GH-805: parser and advisory decisions must reject bad inputs without inventing authority.
+python3 - "$HERE" "$FIXTURE" <<'PY805'
+import hashlib, importlib.util, json, pathlib, sys
+root, fixture = map(pathlib.Path, sys.argv[1:])
+spec = importlib.util.spec_from_file_location('inventory', root/'utils/py/gate_inventory.py')
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+registry = fixture/'validate.sh'; original = registry.read_text()
+registry.write_text('TESTS=(\n # "ignored.sh"\n "safe.sh"\n)\n')
+assert m.registered_gates(fixture) == ['safe.sh']
+for body in ['TESTS=(\n)\n', 'TESTS=(\n "safe.sh" "safe.sh"\n)\n', 'TESTS=(\n "$dynamic.sh"\n)\n']:
+    registry.write_text(body)
+    try: m.registered_gates(fixture)
+    except ValueError: pass
+    else: raise AssertionError('invalid registry accepted: '+body)
+registry.write_text(original)
+file = fixture/'test/safe.sh'
+record = {k:'example' for k in ('id','behavior','consequence','issue','overlap','reason','review_source','routing','red_evidence')}
+record.update(outcome='extend', proposer='builder', reviewer='independent-advisory', content={'test/safe.sh':hashlib.sha256(file.read_bytes()).hexdigest()})
+path = fixture/'decisions.json'
+def view(records):
+    path.write_text(json.dumps(records)); return m.decision_view(fixture.resolve(), path)['decisions'][0]
+valid = view([record]); assert not valid['metadata_errors']
+assert valid['approval_trusted'] is False and valid['would_refuse_mandatory'] is True
+assert view([{**record, 'approved':True, 'approval_trusted':True}])['approval_trusted'] is False
+assert 'self-issued review' in view([{**record,'reviewer':'builder'}])['metadata_errors']
+assert view([{**record,'content':{'test/safe.sh':'0'*64}}])['metadata_errors']
+assert view([{**record,'content':{'missing.py':'0'*64}}])['metadata_errors']
+assert view([{**record,'content':{'../escape.py':'0'*64}}])['metadata_errors']
+assert view([{**record,'reason':''}])['metadata_errors']
+for records in [[], {}, [None]]:
+    try: view(records)
+    except ValueError: pass
+    else: raise AssertionError('invalid decision input accepted')
+print('PASS: parser rejects empty/duplicate/dynamic input; advisory metadata never authenticates approval')
+PY805
+
 echo "PASS: GH-419 inventory discovers registered gates and records only declared controls"

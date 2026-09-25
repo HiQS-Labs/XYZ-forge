@@ -238,5 +238,49 @@ out="$(bash "$REPO/utils/gate-record.sh" --suite-log /dev/null --verdicts /dev/n
 
 [ -n "$_AMBIENT_HARNESS_DB" ] && export XYZ_HARNESS_DB="$_AMBIENT_HARNESS_DB"
 echo "== gh365-runner-envelope: $PASS passed, $FAIL failed =="
+# GH-805: execute the actual non-shell lane snippets with controlled child verdicts.
+# This avoids running a nested full gate merely to prove error propagation.
+python3 - "$REPO" "$WORK" <<'PY805'
+import os, pathlib, subprocess, sys
+root, work = map(pathlib.Path, sys.argv[1:])
+bin_dir = work/'lane-bin'; bin_dir.mkdir()
+for command in ['python3','npm']:
+    script = bin_dir/command
+    script.write_text('#!/bin/bash\nif [ "$1" = "-c" ]; then exit 0; fi\nprintf "%s\\n" "$*" >> "$LANE_CALLS"\nexit "$LANE_RC"\n')
+    script.chmod(0o755)
+validate = (root/'validate.sh').read_text()
+validate = validate[validate.index('# The Python layer follows'):validate.index("# GH-1: the identity bracket's assert half.")]
+ci = (root/'ci-local.sh').read_text()
+start = ci.index('  if python3 -m pytest "$HERE/test/test_python_layer.py"')
+start = ci.rfind('  _s="$(rt_now_ms)"',0,start)
+end = ci.index('  if git apply --check',start)
+end = ci.rfind('  _s="$(rt_now_ms)"',start,end)
+ci = ci[start:end]
+prefix = '''
+TIER=3; T2_PYTEST=0; NICE_CMD=""; PASSED=(); FAILED=(); SKIPPED_SUITES=(); rc=0
+rt_now_ms() { echo 1; }
+rt_emit() { :; }
+'''
+for runner, snippet in [('validate',validate),('ci-local',ci)]:
+    for child_rc in [0,7]:
+        calls=work/f'{runner}-{child_rc}.calls'; verdicts=work/f'{runner}-{child_rc}.verdicts'
+        env={**os.environ,'PATH':str(bin_dir)+':'+os.environ['PATH'],'HERE':str(root),'LANE_CALLS':str(calls),'LANE_RC':str(child_rc),'GATE_VERDICTS':str(verdicts)}
+        suffix = '\nprintf "failed=%s rc=%s\\n" "${#FAILED[@]}" "$rc"\n'
+        r=subprocess.run(['bash','-c',prefix+snippet+suffix],env=env,text=True,capture_output=True)
+        assert r.returncode == 0, r.stderr
+        invoked=calls.read_text().splitlines()
+        assert len(invoked)==2, invoked
+        assert 'test/test_python_layer.py' in invoked[0] and 'test/flightdeck/' in invoked[0], invoked
+        assert invoked[1]=='run test:unit', invoked
+        if runner=='validate':
+            assert f'failed={2 if child_rc else 0} rc=0' in r.stdout,r.stdout
+        else:
+            assert f'failed=0 rc={1 if child_rc else 0}' in r.stdout,r.stdout
+            assert verdicts.read_text().count('\tFAIL' if child_rc else '\tpass')==2
+        print('PASS:',runner,'both lanes once; child rc',child_rc,'propagated')
+PY805
+[ "$?" -eq 0 ] || fail "GH-805 non-shell lane propagation"
+
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0
+

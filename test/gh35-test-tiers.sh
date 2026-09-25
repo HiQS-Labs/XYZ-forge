@@ -403,5 +403,26 @@ ok "GH-45: an absolute-path invocation whose HERE is the worktree is still refus
 
 git -C "$R7" worktree remove --force "$WT45" >/dev/null 2>&1
 
+# GH-805/#774: protect the four confirmed cross-name releases omissions.
+release_selection="$(bash "$ROUTER" subsystems releases)"
+missing_release_coverage() {
+  local selected="$1" suite
+  for suite in jog-queue.sh gh75-dashboard.sh gh605-board-policy.sh gh605-work-state.sh; do
+    case " $selected " in *" $suite "*) ;; *) echo "$suite"; return 1 ;; esac
+  done
+}
+if missing_release_coverage "$release_selection"; then
+  pass=$((pass + 1))
+else
+  fail=$((fail + 1))
+fi
+if missing_release_coverage "${release_selection/gh605-work-state.sh/}" >/dev/null; then
+  echo "FAIL: planted missing releases mapping was accepted"
+  fail=$((fail + 1))
+else
+  echo "PASS: planted missing releases mapping rejected"
+  pass=$((pass + 1))
+fi
+
 echo "  gh35-test-tiers: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

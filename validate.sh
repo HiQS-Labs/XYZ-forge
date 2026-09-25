@@ -669,7 +669,8 @@ TESTS=(
   "gh105-vendor-releases-addon.sh"  # GH-105 (Tier-2 releases addon vendoring + sticky tier detection)
   "gh107-timeline-json-seam.sh"     # GH-107 (export_timeline.py --json seam)
   "gh132-review-xyz-skill.sh"       # GH-132 (/review-xyz skill + multi-model review harness)
-  "gh165-governance-canonical-paths-guard.sh" # GH-165 (canonical wave-reconciler paths + GH-551 anti-sprawl static guard)
+  "gh165-governance-canonical-paths-guard.sh"
+  "gh177-sandbox-test-guard.sh" # GH-165 (canonical wave-reconciler paths + GH-551 anti-sprawl static guard)
   "gh197-vendor-tier-split.sh"      # GH-197 (two-tier vendor: core default + opt-in RELEASES overlay)
   "gh273-marathon-root-audit-python-shape.sh" # GH-273 (root audit matches python3-spelled driver calls — the GH-195 blind spot)
   "gh312-vendor-preserves-state.sh" # GH-312 (vendor/sync must not destroy the target's runtime state)
@@ -1450,13 +1451,26 @@ if [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; then
     _pytest_skipped=1
     SKIPPED_SUITES+=("python:test_python_layer.py")
     rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
-  elif $NICE_CMD python3 -m pytest "$HERE/test/test_python_layer.py"; then
+  elif $NICE_CMD python3 -m pytest "$HERE/test/test_python_layer.py" "$HERE/test/flightdeck/"; then
     PASSED+=("python:test_python_layer.py")
     rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" 0
   else
     _rc=$?   # before FAILED+= and before the substitutions — same ordering rule as the suite loop
     FAILED+=("python:test_python_layer.py")
     rt_emit suite non-suite "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$_rc"
+  fi
+fi
+
+# GH-805: package.json owns Node unit collection; one additional full-gate lane.
+if [ "$TIER" -eq 3 ]; then
+  _s="$(rt_now_ms)"
+  if (cd "$HERE" && $NICE_CMD npm run test:unit); then
+    PASSED+=("node:test:unit")
+    rt_emit suite non-suite "node:test:unit" "$_s" "$(rt_now_ms)" 0
+  else
+    _rc=$?
+    FAILED+=("node:test:unit")
+    rt_emit suite non-suite "node:test:unit" "$_s" "$(rt_now_ms)" "$_rc"
   fi
 fi
 

@@ -50,20 +50,18 @@ check_writer_audit() {
     dirs=("$search_root")
   fi
 
-  # 1. Empty-input guard: count candidate script/workflow files
-  local file_count
-  file_count=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) 2>/dev/null | wc -l | tr -d ' ')
-  if [ "${file_count:-0}" -eq 0 ]; then
-    # Return 2 to distinguish empty-input failure from pattern match failure
-    return 2
-  fi
+  # Discover once; keep the three independent policy searches and their diagnostics.
+  local files=() file
+  while IFS= read -r -d '' file; do files+=("$file"); done < <(
+    find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) -print0
+  )
+  if [ "${#files[@]}" -eq 0 ]; then return 2; fi
 
   # 2. Search for active references to ROADMAP-DASHBOARD.md. router_audit.py
   # names the retired token only to diagnose legacy-mode ROUTER prose; it is
   # not a writer, stager, or consumer of the removed artifact.
   local writer_matches
-  writer_matches=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null | \
-    xargs -0 grep -n -F 'ROADMAP-DASHBOARD.md' 2>/dev/null | \
+  writer_matches=$(grep -Hn -F 'ROADMAP-DASHBOARD.md' "${files[@]}" 2>/dev/null | \
     grep -v -E '/utils/py/router_audit\.py:' || true)
 
   if [ -n "$writer_matches" ]; then
@@ -73,8 +71,7 @@ check_writer_audit() {
 
   # 3. Search for invocations of dashboard-staleness-guard.sh
   local guard_matches
-  guard_matches=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null | \
-    xargs -0 grep -n -E '\bdashboard-staleness-guard\.sh\b' 2>/dev/null || true)
+  guard_matches=$(grep -Hn -E '\bdashboard-staleness-guard\.sh\b' "${files[@]}" 2>/dev/null || true)
 
   if [ -n "$guard_matches" ]; then
     echo "$guard_matches" >&2
@@ -83,8 +80,7 @@ check_writer_audit() {
 
   # 4. Search for invocations of roadmap-dashboard.sh (excluding comments in frozen/legacy code)
   local renderer_matches
-  renderer_matches=$(find "${dirs[@]}" -type f \( -name "*.sh" -o -name "*.py" -o -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null | \
-    xargs -0 grep -n -E '\broadmap-dashboard\.sh\b' 2>/dev/null | grep -v -E ':[0-9]+:\s*(#|//)' || true)
+  renderer_matches=$(grep -Hn -E '\broadmap-dashboard\.sh\b' "${files[@]}" 2>/dev/null | grep -v -E ':[0-9]+:\s*(#|//)' || true)
 
   if [ -n "$renderer_matches" ]; then
     echo "$renderer_matches" >&2

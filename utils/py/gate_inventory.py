@@ -16,6 +16,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
+import shlex
+import subprocess
 import re
 import sys
 from pathlib import Path
@@ -46,7 +49,12 @@ def registered_gates(root: Path) -> list[str]:
     match = TESTS_RE.search(validate.read_text(encoding="utf-8"))
     if not match:
         raise ValueError(f"could not find TESTS array in {validate}")
-    return [entry for entry in QUOTED_ENTRY_RE.findall(match.group(1)) if entry.endswith(".sh")]
+    entries = shlex.split(match.group(1), comments=True)
+    if not entries or len(entries) != len(set(entries)):
+        raise ValueError("TESTS must contain nonempty, unique literal entries")
+    if any(not re.fullmatch(r"[A-Za-z0-9_./-]+\.sh", entry) for entry in entries):
+        raise ValueError("TESTS contains unsupported nonliteral entries")
+    return entries
 
 
 def source_outside_heredocs(source: str) -> str:
@@ -150,14 +158,121 @@ def inventory(root: Path) -> dict[str, Any]:
     }
 
 
+
+def audit(root: Path) -> dict[str, Any]:
+    """Read canonical discovery/selection; source references are not execution proof."""
+    gates = registered_gates(root)
+    tracked = subprocess.check_output(
+        ["git", "-C", str(root), "ls-files", "test"], text=True
+    ).splitlines()
+    if not tracked:
+        raise ValueError("empty tracked test discovery")
+    routes = subprocess.check_output(
+        ["bash", str(root / "utils/ci-route.sh"), "subsystems"], text=True
+    ).splitlines()
+    if not routes:
+        raise ValueError("empty subsystem discovery")
+    ownership: dict[str, list[str]] = {}
+    for line in routes:
+        subsystem, entries = line.split("\t", 1)
+        for entry in entries.split():
+            ownership.setdefault(entry, []).append(subsystem)
+    runners = {name: (root / name).read_text() for name in ("validate.sh", "ci-local.sh")}
+    sources = {name: (root / name).read_text(encoding="utf-8") for name in tracked if name.endswith((".sh", ".py", ".js", ".mjs"))}
+    rows = []
+    for name in tracked:
+        if not name.endswith((".sh", ".py", ".js", ".mjs")):
+            continue
+        path = root / name
+        entry = name.removeprefix("test/")
+        selected = []
+        references = []
+        if entry in gates:
+            selected = list(runners)
+            references = ["validate.sh:TESTS", "ci-local.sh:read_tests"]
+            state = "registered-shell"
+        elif name.startswith("test/lib/") or Path(name).name in {"_setup.sh", "_scratch-repo.sh"}:
+            state = "helper"
+        else:
+            # Literal direct callers/imports only; dynamic dispatch remains explicitly unknown.
+            tokens = {name, Path(name).name}
+            if name.endswith(".py"):
+                tokens.add(Path(name).stem)
+            for caller in tracked:
+                if caller == name or not caller.endswith((".sh", ".py", ".js")):
+                    continue
+                caller_source = sources[caller]
+                if any(token in caller_source for token in tokens):
+                    references.append(caller)
+            selected = [runner for runner, text in runners.items() if name in text]
+            if name.startswith("test/flightdeck/") and name.endswith(".py"):
+                selected = [runner for runner, text in runners.items() if '"$HERE/test/flightdeck/"' in text]
+            if name.startswith("test/unit/") and name.endswith(".test.js"):
+                selected = [runner for runner, text in runners.items() if "npm run test:unit" in text]
+            state = "explicit-non-shell-lane" if selected else "reference-only-or-uncollected"
+        rows.append({"path": name, "classification": state, "selected_by": selected,
+                     "subsystems": ownership.get(entry, []), "source_references": sorted(set(references)),
+                     "coverage_review": "unreviewed"})
+    return {"schema_version": 1, "mode": "observe", "registered_shell_suites": len(gates),
+            "tracked_shell_files": sum(name.endswith(".sh") for name in tracked),
+            "rows": rows, "limitations": [
+                "Literal source references may be comments, fixtures or imports; they are not execution proof.",
+                "Dynamic collectors and case/assertion/invariant counts require focused runtime evidence.",
+                "Negative-control declarations and advisory review metadata are not authenticated approvals."]}
+
+
+def decision_view(root: Path, path: Path) -> dict[str, Any]:
+    """Validate bounded advisory metadata; NEVER infer authentication from candidate files."""
+    records = json.loads(path.read_text())
+    if not isinstance(records, list) or not records:
+        raise ValueError("decision input must be a nonempty list")
+    ids: set[str] = set()
+    result = []
+    for record in records:
+        if not isinstance(record, dict):
+            raise ValueError("decision must be an object")
+        errors = []
+        for field in ("id", "behavior", "consequence", "issue", "overlap", "reason", "reviewer", "review_source", "routing", "red_evidence"):
+            if not isinstance(record.get(field), str) or not record[field].strip():
+                errors.append(f"missing {field}")
+        ident = record.get("id")
+        if isinstance(ident, str):
+            if ident in ids:
+                errors.append("duplicate id")
+            ids.add(ident)
+        if record.get("outcome") not in {"reuse", "extend", "add", "no-add"}:
+            errors.append("invalid outcome")
+        bindings = record.get("content")
+        if not isinstance(bindings, dict) or not bindings:
+            errors.append("missing content bindings")
+        else:
+            for name, expected in bindings.items():
+                file = (root / name).resolve()
+                if not file.is_relative_to(root) or not file.is_file():
+                    errors.append(f"missing/outside content: {name}")
+                elif not isinstance(expected, str) or hashlib.sha256(file.read_bytes()).hexdigest() != expected:
+                    errors.append(f"stale content: {name}")
+        if record.get("reviewer") == record.get("proposer"):
+            errors.append("self-issued review")
+        result.append({**record, "state": "unreviewed" if errors else "advisory-reviewed",
+                       "metadata_errors": errors, "approval_trusted": False,
+                       "would_refuse_mandatory": True,
+                       "authority_reason": "No authenticated reviewer/check authority is configured"})
+    return {"schema_version": 1, "mode": "observe", "enforcement": "disabled", "decisions": result}
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--json", action="store_true", help="emit JSON (the default output format)")
+    parser.add_argument("--audit", action="store_true", help="read-only discovery and routing view (not collection proof)")
+    parser.add_argument("--decisions", type=Path, help="validate advisory decision JSON; does not approve admission")
     args = parser.parse_args(argv)
     try:
-        report = inventory(args.root.resolve())
-    except (OSError, ValueError) as error:
+        root = args.root.resolve()
+        report = audit(root) if args.audit else inventory(root)
+        if args.decisions:
+            report["admission"] = decision_view(root, args.decisions)
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
         print(f"gate-inventory: {error}", file=sys.stderr)
         return 2
     json.dump(report, sys.stdout, indent=2, sort_keys=True)

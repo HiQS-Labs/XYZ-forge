@@ -16,12 +16,21 @@ fi
 # ── 2. Active tools execute without ROADMAP.md ───────────────────────────────────────
 rc=0
 out="$(QUEUE_PLAN_GH=off python3 "$root/utils/py/marathon_plan.py" --dry-run 2>&1)" || rc=$?
-# exit 0 (clean) or 4 (drift present) are valid execution verdicts; exit 3 (ROADMAP unparseable) is failure
-if [ "${rc:-0}" -eq 3 ]; then
-  fail "marathon_plan.py failed with exit 3 (unparseable/missing ROADMAP): $out"
+# Only clean execution or known drift is a valid planner verdict.
+planner_status_allowed() { [ "$1" -eq 0 ] || [ "$1" -eq 4 ]; }
+if planner_status_allowed "$rc"; then
+  pass "marathon_plan.py executed without ROADMAP.md (exit $rc)"
 else
-  pass "marathon_plan.py executed without ROADMAP.md (exit ${rc:-0})"
+  fail "marathon_plan.py failed with unexpected exit $rc: $out"
 fi
+for status in 3 5 127; do
+  if planner_status_allowed "$status"; then
+    fail "red control: planner error $status accepted"
+  else
+    pass "red control: planner error $status rejected"
+  fi
+done
+planner_status_allowed 0 && planner_status_allowed 4 || fail "valid planner verdict rejected"
 
 # ── 3. Roadmap CLI operates cleanly from releases.db ─────────────────────────────────
 if python3 "$root/utils/py/releases_app.py" roadmap list >/dev/null 2>&1; then

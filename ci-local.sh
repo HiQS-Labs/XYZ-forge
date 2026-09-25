@@ -320,7 +320,7 @@ validate_suite() {
   # the summary agree on the denominator.
   _s="$(rt_now_ms)"
   _rc=0
-  if python3 -m pytest "$HERE/test/test_python_layer.py"; then
+  if python3 -m pytest "$HERE/test/test_python_layer.py" "$HERE/test/flightdeck/"; then
     printf '%s\tpass\n' "python:test_python_layer.py" >> "$GATE_VERDICTS"
   else
     _rc=$?   # before any other statement — the printf/echo and the rt_now_ms substitutions reset $?
@@ -329,6 +329,18 @@ validate_suite() {
     echo "  ^^ FAILED: python:test_python_layer.py" >&2
   fi
   rt_emit suite sequential "python:test_python_layer.py" "$_s" "$(rt_now_ms)" "$_rc"
+
+  # GH-805: same canonical Node unit command as validate.sh.
+  _s="$(rt_now_ms)"
+  _rc=0
+  if (cd "$HERE" && npm run test:unit); then
+    printf '%s\tpass\n' "node:test:unit" >> "$GATE_VERDICTS"
+  else
+    _rc=$?
+    rc=1
+    printf '%s\tFAIL\n' "node:test:unit" >> "$GATE_VERDICTS"
+  fi
+  rt_emit suite sequential "node:test:unit" "$_s" "$(rt_now_ms)" "$_rc"
 
   _s="$(rt_now_ms)"
   _rc=0
