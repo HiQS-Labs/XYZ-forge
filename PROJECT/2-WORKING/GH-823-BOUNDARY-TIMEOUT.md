@@ -21,7 +21,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Cap raised to 120 and the lock extended; final Codex QA round 1 found a step-level `timeout-minutes` could stand in for a deleted job cap, now fixed by job-level matching and witnessed in a disposable clone. | Codex QA round 2 on the fix; then the full gate once on the final commit and the PR. |
+| Cap raised to 120 and the lock extended. Final Codex QA was Approved in round 2 (driver-attested, reviewed head `cf5cac4e`; [relay](../../relay-system/2026-09-25/gh823-final-qa.md)) after round 1's step-cap finding was fixed and its controls were witnessed. | Run the full gate once on the final commit through the push hook in a disposable clone, then open the PR into `development`. |
 
 ## Problem (observed)
 
