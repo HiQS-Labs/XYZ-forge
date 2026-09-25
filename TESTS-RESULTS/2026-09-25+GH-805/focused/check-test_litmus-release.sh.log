@@ -1,0 +1,11 @@
+== test: litmus-release ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-litmus-release.XXXXXX.jWb1T7FrAm
+  OK   #375 complete — test/gh375-agy-auth-preflight.sh(pre-fix-replay) (issue: unknown)
+  OK   #390 complete — test/gh390-gate-guard.sh(deliberate-mutation) (issue: unknown)
+  OK   #407 complete — test/gh407-gate-ran-attribution.sh(pre-fix-replay) (issue: unknown)
+  OK   #417 complete — test/gh417-turn-root-symlink-prefix.sh(pre-fix-replay) (issue: unknown)
+  OK   #457 complete — test/gh457-gate-tiers.sh(deliberate-mutation) (issue: unknown)
+  OK   #461 complete — test/gh401-dry-run-no-mutation.sh(pre-fix-replay) (issue: unknown)
+  PASS: no manifest entry claims completion it cannot support (0 false completion claims)
+  manifest: 6/6 complete, 0 remaining, 0 false claim(s)
+litmus-release: 1 pass, 0 fail

@@ -67,4 +67,4 @@ Live policy read-back returned `development` unprotected (HTTP404) and an empty 
 
 **Mandatory admission: NO-GO.** There is no independently authenticated approval source or required trusted verifier on development. Continue observe mode if useful; do not sell valid JSON as “all new tests approved.” Broad enforcement, automatic deletion, a database catalog migration and legacy backfill are deferred unless a later authorized design supplies the missing authority and demonstrates net value.
 
-Final full-gate / hosted outcome: pending. Focused green and plan approval alone do not make this PR ready.
+Final QA round 1 rejected a missing Node summary contribution and unintended tier-2 Flightdeck selection. Both are repaired; the controlled runner now exercises the actual summary for tier2/tier3 and child rc0/7, and removing the Node total makes it red. Final full-gate / hosted outcome: pending. Focused green and plan approval alone do not make this PR ready.
