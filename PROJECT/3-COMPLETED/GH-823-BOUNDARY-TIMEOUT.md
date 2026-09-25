@@ -1,6 +1,6 @@
 ---
 title: "GH-823: ci — macOS promotion boundary times out (45-min cap vs a 60–92-min hosted sequential suite)"
-status: Active
+status: Complete
 gh_issue: 823
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/823
 doc_type: bugfix
