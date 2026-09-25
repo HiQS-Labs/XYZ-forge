@@ -2,23 +2,72 @@
 gh_issue: 805
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/805
 title: "Audit test value and enforced test admission"
-status: "Proposed (1-INBOX — not yet active)"
+status: "Planning — pending Codex plan QA"
 created: 2026-09-25
 updated: 2026-09-25
 owner: operator
 goal: "Determine necessary test coverage and evaluate a minimal enforceable admission pilot"
-doc_type: feedback
+doc_type: plan
 effort: 3
 complexity: 3
 risk: 3
 phases: 3
-ratings_provisional: true
+ratings_provisional: false
 related: [802, 732, 774, 801, 365]
 ---
 
 # GH-805 — Test value and admission
 
-Local intake capture; the issue is the discussion surface. This is an audit proposal, not an approved implementation design. Ratings and the three broad stages (inventory, evidence, pilot decision) are provisional.
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Fresh full clone, intake, ratings and read-only source recon | Codex plan QA; accepted-start only after approval |
+
+## Table of contents
+
+- [Recon and ratings](#recon-and-ratings)
+- [Execution checklist](#execution-checklist)
+- [Verification and handoff](#verification-and-handoff)
+- [Decision to make](#decision-to-make)
+
+## Recon and ratings
+
+Execution base: `0ae3452a5774c6e72b633dd61648137e80516e6b`; branch `feat/gh805-test-value-admission`, one PR targeting development. This plan supersedes the original six-step intake checklist and implements the seven-step [review checklist](https://github.com/HiQS-Labs/XYZ-forge/issues/805#issuecomment-5825833432). GH-808/gh251 is GLM-owned and excluded; consume its results only if landed. GH-774 shares the routing seam; this PR repairs confirmed gaps, without claiming all its wider suggestions complete.
+
+The bet: existing inventory and route owners can support useful coverage repair and an observe-only pilot without a second registry or approval service. Mandatory approval is a separate decision: same-account model signatures and builder-editable metadata are not authenticated approval. If independent reviewer identity and trusted verifier execution remain unavailable, this work ends with a documented no-go for enforcement, not simulated trust.
+
+Ratings read back from RELEASES: GH-805 **85/75/50/35**, GH-774 **85/80/50/65** (priority/severity/appeal/cheapness). GH-805 has broad confidence and maintenance consequences but no observed new corruption; GH-774 risks missed product regressions on focused gates and has a narrower repair. Appeal is neutral, no operator rank override. Recurrence window 2026-09-11–25 versus 2026-08-28–09-10: #774 and #801 are concrete coverage-selection/ratchet examples; they do not establish one root cause or a measured rising rate. Complete incident counts and trend are unknown.
+
+Entry points and affected consumers:
+
+- `validate.sh:TESTS` → shell runners; `utils/ci-route.sh` → focused subsets. `gate_inventory.py:registered_gates/inventory` already generates shell metadata; `gh419-gate-inventory.sh` and `litmus-release.sh` consume its current JSON contract. Preserve that default contract; new audit/decision output is opt-in. Parse literal entries without shell evaluation, reject empty/duplicate registration, distinguish comments.
+- `gh436-merge-cleanup.sh` → `gh436-merge-cleanup.py` → three gh534 modules: covered indirectly, do not add again. Four synthetic shell suites use registered wrappers; test/lib files and gh306 exemptions explain other shell exclusions. Inventory traces edges and labels unknowns rather than claiming filename discovery is complete coverage.
+- Both `validate.sh` and `ci-local.sh` explicitly run `test/test_python_layer.py`; neither collects `test/flightdeck/`. `package.json:test:unit` owns the four Node unit files, with no full-gate caller. Reuse these existing test commands in both full runners, preserving telemetry/error aggregation. Flightdeck uses ephemeral loopback only; Node unit eligibility is established by focused runs on the supported host. Browser `.mjs` tests are outside this registration change.
+- `utils/ci-route.sh:SUBSYSTEM_TESTS_releases` omits existing full-gate suites. Limit repair to the confirmed four (`jog-queue`, `gh75-dashboard`, `gh605-board-policy`, `gh605-work-state`) plus other #774 named direct importers only after source confirmation. Extend existing gh35/gh365 route checks; do not make a second execution list.
+- `gh269-roadmap-retired.sh` documents planner status 0/4 but rejects only 3. Repair the accepted-set predicate and demonstrate rejection of another error. Its DB sync scenario remains distinct from the gh567 dashboard scanner and gh568 CLI/AST checks.
+- `gh165-governance-canonical-paths-guard.sh` has four static guards and broad quote/comment filtering. Witness planted prohibited writes and missing-input controls; repair only demonstrated blind spots, state remaining syntactic limits. No general AST/linter framework.
+- GH177 sandbox hook is live in `.claude/settings.json`; CHANGELOG documents historical 8/22-case matrices, but no current registered regression. Recover representative block/allow/wrapper cases by sending JSON to the hook, never executing dangerous example commands. One small registered hook suite is justified; extend existing suites for all other new controls.
+- gh567 repeats filesystem discovery in its writer audit. Experiment with one discovered file list reused by policy-specific searches; retain gh269/567/568 registrations and their distinct controls. If matched evidence does not justify the change, retain the original implementation.
+- Existing telemetry/provenance under TESTS-RESULTS is the evidence writer; historical GH591 duration is 4809.278s with gh251 1044.435s, not a current baseline. Index existing parallel records by revision/width/host/result, leave unavailable dimensions unknown.
+
+## Execution checklist
+
+1. [ ] **Inventory — Medium; meaningful quick win.** Extend `utils/py/gate_inventory.py` with an opt-in audit view derived from the current registry, route mapping and runner invocations; include indirect gh534 and explicit helper/manual/unknown classifications with source references. Retain a generated snapshot and historical artifact index, no hand-maintained runner list. → Nonempty fixture/source checks reproduce counts; commented, duplicate and empty registry controls fail appropriately; original JSON consumers stay compatible.
+2. [ ] **Selection repair — High; bounded quick win.** Extend the existing releases mapping and both full-runner Python/Node invocation paths after focused supported-host eligibility checks. Preserve existing collectors and tier behavior; add a missing-mapping red control in the existing routing suite. → Before/after selected sets show additions only, Flightdeck and Node cases run once per full runner, nonzero child exit propagates, and incremental time is recorded in disposable clones.
+3. [ ] **Meaningful controls — High; bounded quick win.** Tighten gh269's planner exit handling, witness/repair gh165's concrete guarded-write failures, and restore a small gh177 hook matrix including sandboxed block, unsandboxed allow and read-only syntax commands. New hook coverage needs one registered suite; other checks extend current suites. → Each claimed protection has a witnessed seeded failure and restored green, with nonempty logs and pre/post clone identity evidence.
+4. [ ] **Simplification experiment — Medium; benefit uncertain.** Map the distinct gh269/567/568 invariants, then trial one-time gh567 file discovery without combining suites or dropping policy checks. Compare base/candidate LOC including helpers, discovery count, diagnostics, focused runtime and seeded detections. → Retain only a demonstrated maintenance/runtime improvement; unchanged detection and diagnostics required, otherwise record a keep decision.
+5. [ ] **Trust contract — High; prerequisite, not a quick win.** Specify reuse/extend/add/no-add decisions, coverage IDs, overlap rationale, test/product file digests, source/reviewer identity, routing and red evidence; additions inside existing files and weakening/deletion invalidate the bound content. Record that local metadata validation cannot authenticate approval; mandatory use would require a separately authenticated authorized reviewer and trusted verifier revision/check producer on development, with deliberate operator override audited and fail-closed missing authority. → A proposed design covers forged/self/stale/missing/malformed/verifier edits; live authority unavailable means explicit no-go, without changing branch protection.
+6. [ ] **Observe-only pilot — High; not a quick win.** Add optional decision-record validation and a generated projection to the existing inventory tool, using one bounded JSON metadata artifact under the GH805 evidence directory (no DB/server and no new scheduling authority). States are proposed/unreviewed/advisory-reviewed; approval_trusted remains false without independently verified authority, even if metadata says approved. → Codex independently adjudicates retirement-cohort keep/extend choices, legitimate gh177 addition and an inappropriate duplicate proposal; record stale/malformed/missing/forged observations, review disagreement/latency and tool cost, separately scoring metadata validation and semantic recommendation accuracy. Do not label synthetic fixtures real-world false-accept estimates.
+7. [ ] **Decisions and handoff — High; not a quick win.** Publish separate coverage and mandatory-admission decisions, observed suite/case/invariant counts, retained protections and cost limits; attribute any available #808 evidence separately. Default recommendation retains independent policy guards and declines mandatory admission until authentic authority and required trusted execution exist. → Final Codex review, focused evidence, one final full gate and applicable hosted exact-head evidence support one PR; mark issue checklist items only when demonstrated, leave issue open awaiting merge.
+
+## Verification and handoff
+
+Plan QA precedes implementation and ledger accepted-start. Review the actual source paths above and this complete plan, not merely the summary. Final QA reviews the committed diff, decision cohort and evidence before the one final full qualifying gate. Reviewer writes are restricted to its relay thread and never runs tests in its linked worktree.
+
+All mutation-heavy tests run in a separate disposable full clone. Capture commands, exit status, timings, revision and pre/post HEAD/config/remotes identity in committed `TESTS-RESULTS/2026-09-25+GH-805/provenance.jsonl`; identity drift invalidates the run. Red controls mutate only fixture/disposable content and restore saved bytes, never reset a valued checkout. Focused suites are gh419, gh35/gh365 routing, runner envelope, gh269/165/177/567/568 plus the existing Flightdeck/Node commands and targeted PDDA checks. Test footprint stays proportional: no fuzzers, alternative runner, sweeping legacy backfill or bulk deletions.
+
+Review/dogfood/conformance arcs remain in this same branch: plan relay; focused implementation and real-cohort CLI use; final relay and runner parity/conformance, then full gate. Routing and gate changes are Costly shared confidence changes: rollback is a reviewed revert of this scoped PR, retaining prior safety checks and no external policy changes. Inventory/pilot output alone is Easy and nonblocking. Never weaken tests merely to obtain green; unresolved baseline failures remain reported and prevent a ready claim.
 
 ## Decision to make
 
@@ -69,22 +118,6 @@ Prefer extending the existing gate/registry and review receipt mechanisms over b
 **Enforcement:** evaluate a deterministic check at the existing local gate plus a hosted merge-required check, with an approval source the candidate change cannot silently redefine. The pilot must define trusted verifier/reviewer identities, how evidence binds to relevant test/product changes, how changes invalidate approval, and how unavailable/malformed approval refuses admission; local hooks alone are bypassable.
 
 **Catalog:** one authoritative metadata source and a generated/queryable view, reconciled with actual collection and runner selection. Start existing coverage as inventoried/unreviewed, not retroactively oracle-approved; phase enforcement for additions and meaningful modifications without blocking all legacy work on a wholesale backfill.
-
-## Checklist — meaningful quick wins first
-
-Severity describes the consequence of leaving a gap unresolved; these are investigation priorities, not claims that every gap is already proven.
-
-1. [ ] **Define the units and decision rubric — Medium severity · Quick win.** Distinguish suite files, collected cases, assertions, and unique protected invariants, and publish the four admission outcomes above with concrete examples. Accept an evidence-backed “extend existing” or “no new test” decision so test creation does not become the default proof of productivity. Done when reviewers can apply the rubric to a small mixed sample and disagreements are recorded rather than hidden.
-
-2. [ ] **Derive the current inventory from existing sources — Medium severity · Quick win for registration inventory; deeper coverage mapping is not.** List registered and unregistered entry points, language/framework, routing, exclusions, and available timing evidence, separating helpers/fixtures from executable tests. Identify scanner blind spots and missing data instead of treating an empty extraction as zero tests. Done when every count has a reproducible definition, nonempty source, and pinned revision; do not hand-maintain a second runner list.
-
-3. [ ] **Measure test value on a bounded representative sample — High severity · Not a quick win.** Include expensive suites, churn-heavy guards, core safety tests, and ordinary product tests; map invariants and distinct negative controls, using existing timings and historical defects where available. Produce per-item decisions: keep, extend/consolidate, change execution frequency, retire, or investigate, with confidence and supporting evidence. Done when proposed savings have a matched baseline and each reduction names the protection retained or explicitly lost; report unknowns and use debug-mantra for failures.
-
-4. [ ] **Prove one consolidation or retirement is safe before scaling — High severity · Conditional quick win after evidence.** Select one well-understood overlap and show the retained tests catch the relevant historical defect and distinguishing boundary cases under witnessed red controls in disposable full clones. Compare matched before/after runtime and detection, retaining logs and committed provenance; a unique critical failure missed by the candidate stops the experiment. If no safe reduction is demonstrated, report that outcome instead of manufacturing a deletion quota.
-
-5. [ ] **Pilot admission and catalog generation in one subsystem — High severity · Costly shared-policy change; not a quick win.** Reuse the current review/gate path, initially reporting decisions in observe mode, then enforce only the pilot after testing rejection and acceptance behavior. Witness controls for missing/forged/self-issued approval, stale approval after relevant edits, tests added inside existing files, renamed/deleted tests, weakened assertions, malformed or empty discovery, and changes to the verifier itself. Done when legitimate regression coverage is admitted, unjustified/stale entries are refused, the catalog reconciles with execution, and approval latency/model/review cost is measured.
-
-6. [ ] **Publish the count recommendation and a go/no-go on broader enforcement — High severity · Not a quick win.** Report baseline and proposed counts by suite/case/invariant where measurable, runtime and maintenance effects, residual blind spots, and the admission mechanism's own false-accept/reject evidence. Recommend keep/consolidate/retire decisions with traceable rationale rather than “cut X%,” and retain independent critical-safety coverage even if it rarely fails. Expand only if the pilot demonstrates net value; otherwise keep the useful inventory and decline the new approval machinery.
 
 ## Safety, rollback, and non-goals
 
