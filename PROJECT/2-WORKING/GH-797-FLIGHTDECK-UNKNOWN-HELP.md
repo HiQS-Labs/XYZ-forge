@@ -21,7 +21,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implemented plan steps 1-4. Focused checks green: node check (the mutation red control fails it), pytest `test/flightdeck` 39/39, real-Chrome browser check. Headless screenshot shows "Progress not measured" with a grey dot | Final Codex relay QA, then full gate once, then PR |
+| Final Codex relay QA approved in round 4 of 5 (the operator extended the cap from 3). Rebased onto `origin/development` c84dc618: content diff byte-identical, and the ledger row was replayed through `releases_app` | Full gate on the rebased head, push, PR |
 
 ## Problem (observed)
 
