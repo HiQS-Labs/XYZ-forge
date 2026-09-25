@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -157,5 +157,35 @@ Dispositions (fix commit `857ec01f`, evidence commit follows it on the branch):
 - **Note (not changed):** the pre-existing GH-509 presence check at `test/ci-workflow.sh:282` still accepts any indentation. It is left alone because the GH-823 check now fails a missing job-level cap regardless, so that looseness can no longer hide one. Say if you see a case that disagrees.
 
 Handing off to Reviewer (codex) for round 2: verify the extraction fix and the committed evidence.
+
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+Swept the complete CI workflow, workflow-lock test, reference reconciliation workflow and GH-823 plan; reviewed the current CHANGELOG entry, not its unrelated historical archive. No additional pre-existing runtime defect identified. No git commands, suites or executable fixtures were run.
+
+- [Pass] Round 1's extraction finding is resolved: both patterns now anchor the four-space job key at `test/ci-workflow.sh:294-295`; the numeric/nonempty comparison at `:296` rejects absent caps. Step keys cannot substitute for job keys, and additional step keys do not cause false failures. The older presence check is redundant but harmless for this requirement.
+- [Pass] Independently probed the actual extraction/comparison statements using `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' ... PY`: read the two workflow blocks through their awk expressions, assert both are nonempty, locate the source line beginning `boundary_cap=`, then run its two assignments and predicate via `subprocess.run(['bash', '-c', code])`, supplying only in-memory string variants and replacing the pass/fail body with exit 0/1. Driver exit 0. Decisive output:
+  ```text
+  current: rc=0 expected=0
+  extra-step-both: rc=0 expected=0
+  boundary45: rc=1 expected=1
+  boundary119: rc=1 expected=1
+  missing-boundary-plus-step: rc=1 expected=1
+  missing-reconcile-plus-step: rc=1 expected=1
+  empty-boundary: rc=1 expected=1
+  empty-reconcile: rc=1 expected=1
+  ```
+  Source measured: `test/ci-workflow.sh:294-296`. This is a predicate probe, not a suite run.
+- [Pass] Supplied clone receipts witness the requested controls: `TESTS-RESULTS/2026-09-25+GH-823/ci-workflow-controls.log:68` reports unchanged rc=0; `:135` reports extra-step-both rc=0; `:403` and `:470` report missing-job-plus-step rc=1 on the respective sides. Lower-cap, deleted-cap and renamed-job failures appear at `:202`, `:269`, `:336`, `:537`; restored rc=0 at `:604`. These are nine runs, including baseline and restored runs, rather than nine distinct mutations. `provenance.jsonl:1` binds the supplied evidence to source `857ec01f7c4e81f13c3b63d3b5b3604c02e622b6` and labels it focused-only. I inspected the receipts; I did not rerun the suites or independently establish their git provenance.
+- [Pass] The cap remains 120 at `.github/workflows/ci.yml:159`, matching `.github/workflows/wave-reconcile.yml:28`. The measured-runtime rationale remains proportionate; >= is a conservative relative lock, not a guarantee against future runtime growth or both caps being lowered together. No extra subsystem is warranted.
+- [Pass] Documentation nits are resolved: the test now says “would” (`test/ci-workflow.sh:290`); the plan explicitly says “Predicted from those runtimes; no boundary run has timed out yet” and leaves the post-timeout red line unobserved. `CHANGELOG.md:7` says “would time out”; the plan status table names round 2 and the pending final gate. No observed promotion success is claimed.
+- [Unverified — needs clone run] Full-gate qualification on the final commit remains pending, as explicitly recorded in `TESTS-RESULTS/2026-09-25+GH-823/provenance.jsonl:1`. This approval closes artifact review only; it is not full-gate or hosted promotion evidence.
+
+VERDICT: PASS
+Basis: The scoped failure from round 1 is fixed, the independent predicate probe and supplied clone controls agree, and the documentation distinguishes predicted timeout from observed execution. No remaining blocking review finding.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the already-planned final gate and PR workflow.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
