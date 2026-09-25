@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,42 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Two bounded implementation gaps remain: executable-mode changes can evade the decision packet, and automated bot publication selects a full hosted canary even for metadata-only updates. Neither finding treats pending operator activation as a build failure.
+swept file: yes
+
+Read the entire seeded artifact, including its historical completion claims and explicit superseding caveat. Reviewed admission/inventory, hook/routing, workflows/CODEOWNERS, publisher/catch-up, runbook, gh419/gh740 and relevant gh421 assertions. No additional pre-existing defect established by this review; broader value-census work remains outside this turn's scope.
+
+- [Should] **F1 — Make the documentation exemption respect executable modes.** `utils/py/coverage_admission.py:136` tests only the path, although the manifest already contains old/new modes. An executable with a documentation suffix returns before checking for a packet. Require a decision when either relevant side has executable mode; retain the ordinary non-executable documentation exemption. Extend gh419's existing controls, including a regular-document negative control.
+  Observed input: Synthetic manifest row `dict(path='docs/runner.md', status='A', old_mode='000000', new_mode='100755', old_blob='0'*40, new_blob='1'*40)` passed to the real `inspect` classifier. This is a classifier probe, not a claim that this file exists in the branch.
+  Affected scope: Documentation-suffix changes with old or new Git mode `100755`, including additions, removals and permission transitions; no request for a general content interpreter.
+  Falsifier: A disposable-clone commit adding executable `docs/runner.md` without a packet must refuse; an ordinary `100644` documentation-only change must retain the exemption. A current-code refusal of the former would disprove the finding.
+  Probe command (exit 0; no Git commands or candidate fixtures executed):
+  ```python
+  # PYTHONDONTWRITEBYTECODE=1; TMPDIR="$PWD/.relay-scratch/tmp"; python3 -
+  import sys
+  from unittest.mock import patch
+  sys.path.insert(0, 'utils/py')
+  import coverage_admission as a
+  row=dict(path='docs/runner.md',status='A',old_mode='000000',new_mode='100755',old_blob='0'*40,new_blob='1'*40)
+  with patch.object(a,'manifest',return_value=('b'*40,'c'*40,[row])), patch.object(a,'summary',return_value={}), patch.object(a,'git',side_effect=AssertionError('packet read')):
+      print(a.inspect('.', 'base', 'head'))
+  print(a.documentation('docs/guide.md'))
+  ```
+  Decisive output: `{'state': 'documentation-only; operator PR review still required'}` and `True`. Git/data acquisition and summary are stubbed; the real exemption branch is exercised. Native operator review is still required, so this is a coverage-decision omission, not an approval bypass.
+
+- [Should] **F2 — Separate automatic publication checks from deliberate full-canary dispatch.** `coverage_admission.py:192` dispatches `ci.yml` for creation AND reuse. `utils/ci-route.sh:77` treats that event as an unconditional full run; `.github/workflows/ci.yml:244` enables the canary for dispatch, and its `Run validate.sh suite` step consumes `route=full`. Merely adding the packet to docs routing does not make this hosted publication path cheap. Provide a bounded automatic-publication dispatch path that still supplies exact-head blocking smoke/admission checks without selecting the expensive advisory full canary for a metadata-only refresh. Preserve deliberate full-run dispatch semantics.
+  Observed input: `.github/test-admission.json` sent to the classifier with the exact event name emitted by `dispatch_checks`; command `printf '%s\n' '.github/test-admission.json' | bash utils/ci-route.sh workflow_dispatch`, exit 0, returns `docs_only=false`, `full_required=true`, `route=full`, `tier=3`, `tier_reason=operator-initiated full run`.
+  Affected scope: Bot publisher creation/reuse and protected reconciliation calls through `dispatch_checks`; particularly a packet/evidence-only follow-up. This is static workflow reachability plus a real classifier query, not a measured hosted runtime claim.
+  Falsifier: A disposable/hosted automatic-publication metadata-only control supplies current-head admission and blocking smoke while skipping the full advisory canary; an explicit operator full dispatch still selects full. If current automatic publication already skips that canary, show its exact-head job evidence.
+
+- [Pass] **Proposal binding and authority separation are explicit in source.** `coverage_admission.py:150` compares the packet to a recomputed complete manifest; its manifest records both blob IDs and modes and excludes only the packet. `catalog` requires the operator ID, latest effective APPROVED state, exact head and a different PR author. `.github/CODEOWNERS` contains `* @noelsaw1`. These are source findings, not live enforcement proof.
+- [Pass] **Trusted admission and protected publication are structurally separated from candidate execution/direct integration push.** `test-admission.yml` checks out `ref: development` with `persist-credentials: false`; `hosted` fetches objects and checks the live head before completing its check. `hosted_lane_publish.py:263` returns through protected publication; `publication_landing` checks bot identity, branch namespace and landed allowlisted paths. Native protection and credential separation remain rollout prerequisites per the runbook's “not activated/verified” instruction.
+- [Unverified — needs clone run] No test suite, pytest, executable fixture, Git command, or live activation was run in this reviewer worktree. Existing `gateway-focused/provenance.jsonl` records focused greens and red controls, including the initial gh421 failure and subsequent green; those receipts do not prove the final post-review revision. The historical 422/422 is explicitly pre-gateway. Run the corrected focused controls and final macOS gate in the harness's disposable full clone before claiming final verification.
+
+Handing off to Producer astra — address F1/F2 with bounded existing coverage and return for round 2. No artifact/source edits or self-commit made by this reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
