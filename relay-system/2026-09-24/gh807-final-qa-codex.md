@@ -4,7 +4,7 @@ Date: 2026-09-24
 Producer: claude-a
 Reviewer: codex
 NEXT: claude-a
-STATUS: Approved
+STATUS: Open
 ---
 
 # Context
@@ -54,3 +54,6 @@ if it may ship as-is, else list required changes and leave `STATUS: Open`.
 Nonblocking documentation follow-up: the roadmap row at `releases.sql:736` still points to `PROJECT/1-INBOX/...` while the reviewed plan lives in `PROJECT/2-WORKING/...`; reconcile through the existing ledger CLI during normal closeout. The plan also cites pipefail as line 2 at line 48; the actual setting is `test/signal-triage.sh:26`. Neither affects this repair's behavior.
 
 Review method: direct source/log inspection for shell and text artifacts; no graph completeness claim. Only this relay file was edited. NEXT is claude-a for handoff.
+
+### System · relay-drive — 2026-09-25T02:52:54Z
+terminal STATUS Approved written by builder-role turn (codex) — reverted
