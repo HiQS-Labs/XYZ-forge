@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -157,5 +157,22 @@ Dispositions for Reviewer round 2:
 - **[Nit] recurrence trend: Implemented.** It now says selected examples alone do not establish a trend, so the trend is recorded as unknown.
 
 This is the last round in the budget. Handing off to Reviewer (codex).
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: The remaining provenance finding is resolved for plan approval, and both wording nits are corrected. No Blocker or Should remains. Approval covers the design and its specified proof obligations, not an implemented fix.
+swept file: yes
+
+Read the entire revised plan, both Python source files, the gh496 suite, and the characterization script, receipt and provenance. No additional established pre-existing runtime defect was found in the swept files. No executable fixture or test suite was run.
+
+- [Pass] **Evidence gap resolved.** `TESTS-RESULTS/2026-09-25+GH-813/provenance.jsonl:1` now records the base run's tree commit, runtime-equivalence predicate/result, versions, UTC times, exit status and counts. Its 29 failed rounds / 35 errors / 29 short rounds agree with `base-200.txt:1-9`. Plan `PROJECT/2-WORKING/GH-813-SQLITE-WAL-INIT-RACE.md:30-32` distinguishes unretained exploratory runs; :69-70 requires provenance alongside future red-control and fixed receipts. This is inspection of producer-retained evidence; I did not independently rerun the equivalence command or verify Git tracking.
+- [Pass] **Prior wording findings resolved.** Plan :62 and :77 both distinguish the 2.45-second deliberate sleep budget from SQLite execution time. Plan :41-45 labels recurrence examples non-exhaustive and the trend unknown; :37-40 provides a reasonable qualitative rating with appeal explicitly neutral. Issue timestamps remain producer-reported, not independently queried here.
+- [Pass] **Scope and fail path remain grounded.** `utils/py/harness_app.py:168-171` opens the connection and executes the WAL pragma; :276-283 preserves the separate ALTER tolerance, and :583-595 inserts the telemetry row. `utils/py/harness_turn_logger.py:132-145` surfaces logging failures. The retained receipt names only the WAL statement, so it supplies no concrete basis for broader retries. Plan :56-58 appropriately declines a helper, preinitialization and a new WAL read-back requirement. Jitter is acceptable, although no superiority over fixed sleep is established.
+- [Pass] **Acceptance criteria can falsify the implementation.** Plan :64-69 patches the module's connect function and forwards the saved real function with the subclass factory, reaching the direct execute call at `harness_app.py:171`. Required counts 4/1/50 distinguish eventual success, immediate non-lock propagation and exhaustion; case 14a must fail on base, and the outer timeout rejects an unbounded retry. Case b alone is expected to pass on base. Plan :63 retains a stderr mutation check, :70 requires both zero failed rounds and ten rows per DB, and :71 requires the final disposable-clone gate.
+- [Nit] **Call the recorded command parameterized rather than exact.** `provenance.jsonl:1` uses `<clone-root>` and `<scratch-dir>` placeholders. The script and runtime identity make the invocation reproducible, so this does not block plan approval, but plan :30's “exact command” overstates literal argv retention. Preserve concrete invocation details in future receipts, or label the command as normalized.
+- [Unverified — needs clone run] The fixed 200-round campaign, base red control, cases 14a-c, stderr mutation and final gate remain implementation obligations. The existing base receipt was inspected, not rerun. A finite campaign does not establish an unconditional never-fails guarantee; bounded exhaustion remains the explicit behavior in R2.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with implementation and the specified clone-run evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
