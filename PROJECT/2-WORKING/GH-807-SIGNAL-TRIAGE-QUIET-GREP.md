@@ -45,7 +45,7 @@ Evidence: PR #799 at `52eb25cf`, `TESTS-RESULTS/2026-09-24+GH-796/resume-signal-
 
 Ten sites pipe a shell variable into grep: nine `echo "$json" | grep -q …` (lines 70, 76, 102,
 114, 154, 159, 182, 190, 254) and one `echo "$json_l" | grep '"category"'` (line 208). Under
-`set -o pipefail` (line 2), `grep -q` exits on first match, `echo` gets SIGPIPE on a large
+`set -o pipefail` (line 26), `grep -q` exits on first match, `echo` gets SIGPIPE on a large
 write, the pipeline's status is non-zero, and the `if` takes the fail branch. Same class as
 GH-139 / GH-460; this file is a grandfathered row in `test/baselines/GH-139-pipe-grep-baseline.txt:32`
 (`9 test/signal-triage.sh`).
