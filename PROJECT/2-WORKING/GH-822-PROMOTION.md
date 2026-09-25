@@ -52,9 +52,12 @@ All six passed in the 2026-09-25 qualifying `ci-local.sh` run on `9ab269c8`.
 ## Promotion steps (after this PR is reconciled)
 
 1. Choose the SHA `P` = the `development` tip after this PR's reconcile. Hold other merges until step 3 finishes.
-2. `gh api -X DELETE repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins`;
-   `git push origin P:refs/heads/main`; `gh api -X POST …/enforce_admins`. → expect `main` = `development` = `P`,
-   and protection restored with `enforce_admins: true`.
+2. `gh api -X DELETE repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins`, then
+   `git push origin P:refs/heads/main`, then **always**, even if the push failed,
+   `gh api -X POST repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins`.
+   → expect `main` = `development` = `P`, and
+   `gh api repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins --jq .enabled` prints `true`.
+   Do not continue until it does.
 3. Watch `boundary-macos` on that push. → expect `MACOS-BOUNDARY: green P` in the job summary.
 4. `/releases` Publish: `gh release create 0.9.0 --target P --title … --notes …` from the Cargo block, marked
    Latest. Then write back `releases update --gh-release-url` and `releases ship --evidence` in a small follow-up PR.
