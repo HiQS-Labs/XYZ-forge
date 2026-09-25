@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Provisioned task clone, inventoried test/gh798-status-skill.sh assertions | Draft surgical simplification plan, run relay QA, and execute |
+| Simplified test/gh798-status-skill.sh, validated zero ratchet regressions (gh139), and passed Codex relay QA | Review and landing of PR #806 to development |
 
 ## Context & Problem
 
@@ -32,16 +32,18 @@ Issue #804 reviews the instruction-wording assertions in `test/gh798-status-skil
 
 ## Acceptance Criteria
 
-- [ ] Inventory all assertions in `test/gh798-status-skill.sh` and classify failure modes.
-- [ ] Retain compact installer safety coverage (foreign live links refusal, dangling link replacement).
-- [ ] Retain structural & metadata validation (file existence, frontmatter name/description, ARCHITECTURE.md registration).
-- [ ] Consolidate brittle multi-line awk phrase and severity assertions on `review-code/SKILL.md` into direct, robust section/keyword checks.
-- [ ] Preserve meaningful negative controls (e.g. missing recital, missing core sections).
-- [ ] Verify test suite passes cleanly with zero ratchet regressions (`gh139`).
+- [x] Inventory all assertions in `test/gh798-status-skill.sh` and classify failure modes.
+- [x] Retain compact installer safety coverage (foreign live links refusal, dangling link replacement).
+- [x] Retain structural & metadata validation (file existence, frontmatter name/description, ARCHITECTURE.md registration).
+- [x] Consolidate brittle multi-line awk phrase and severity assertions on `review-code/SKILL.md` into direct, robust section/keyword checks.
+- [x] Preserve meaningful negative controls (e.g. missing recital, missing core sections).
+- [x] Verify test suite passes cleanly with zero ratchet regressions (`gh139`).
 
 ## Merge evidence
 
-- (to be recorded at PR readiness)
+- PR: https://github.com/HiQS-Labs/XYZ-forge/pull/806
+- Regression suites: `test/gh798-status-skill.sh` (21 pass, 0 fail), `test/gh139-pipe-grep-guard.sh` (3 pass, 0 fail).
+- Pre-push gate: `validate.sh` (411 pass, 0 fail).
 
 ## Lessons Learned (For Future Agents)
 

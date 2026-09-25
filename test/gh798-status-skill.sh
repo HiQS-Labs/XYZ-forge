@@ -42,11 +42,11 @@ grep -q "### \`2-daily\` — A few times a day (16)" "$ARCH_FILE" && pass "ARCHI
 
 # --- 7. Installer gh678 compliance (in sandbox) ---
 H="$WORK/home"; A="$H/apps"
-mkdir -p "$A/claude" "$A/codex" "$A/gemcfg" "$A/antigrav" "$A/antigravcli" "$A/agents"
+mkdir -p "$A/claude" "$A/codex" "$A/gemcfg" "$A/antigrav" "$A/agents"
 run_installer() {
   HOME="$H" CLAUDE_SKILLS_DIR="$A/claude" CODEX_SKILLS_DIR="$A/codex" \
   GEMINI_CONFIG_SKILLS_DIR="$A/gemcfg" ANTIGRAVITY_SKILLS_DIR="$A/antigrav" \
-  ANTIGRAVITY_CLI_SKILLS_DIR="$A/antigravcli" AGENTS_SKILLS_DIR="$A/agents" \
+  AGENTS_SKILLS_DIR="$A/agents" \
   bash "$INSTALLER"
 }
 
@@ -68,12 +68,14 @@ rc_dan=$?
 # 8a: Recital deletion on status/SKILL.md must fail recital check
 TMP_COPY="$WORK/skill_mutated.md"
 cp "$SKILL_FILE" "$TMP_COPY"
+grep -q "Status Discipline:" "$TMP_COPY" || fail "negative control 8a precondition: missing recital in source"
 sed -i.bak '/Status Discipline:/d' "$TMP_COPY"
 grep -q "Status Discipline:" "$TMP_COPY" && fail "negative control 8a: mutation failed to delete recital" || pass "negative control 8a: mutation successfully detected missing recital"
 
 # 8b: Lane E deletion on review-code/SKILL.md must fail Lane E check
 TMP_REV="$WORK/review_code_mutated.md"
 cp "$REVIEW_CODE_FILE" "$TMP_REV"
+grep -q "Lane E. Centralized Helpers & DRY" "$TMP_REV" || fail "negative control 8b precondition: missing Lane E in source"
 sed -i.bak '/Lane E. Centralized Helpers & DRY/d' "$TMP_REV"
 grep -q "Lane E. Centralized Helpers & DRY" "$TMP_REV" && fail "negative control 8b: mutation failed to delete Lane E" || pass "negative control 8b: mutation successfully detected missing Lane E"
 
