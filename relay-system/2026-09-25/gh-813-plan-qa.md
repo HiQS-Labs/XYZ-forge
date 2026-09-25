@@ -175,4 +175,12 @@ Read the entire revised plan, both Python source files, the gh496 suite, and the
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with implementation and the specified clone-run evidence.
 
+
+### Attestation · relay-drive — 2026-09-25T04:23:03Z
+task: RELAY-gh-813-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 1d68ae3571c0ad6c1701df258e7b9375e9da5f0f
+added-range: 20697+3609
+added-sha256: e15f5ae850c6bc545c17cfae562a6fdad5c0e17b88f8cdaf1de1d0387cd19562
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
