@@ -1,6 +1,6 @@
 ---
 title: GH-796 — Open PR integration review and merge-remediation plan
-status: Plan approved — awaiting remediation
+status: In progress — merge operation
 created: 2026-09-24
 updated: 2026-09-24
 owner: noel
@@ -17,7 +17,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Four pinned PRs reviewed; Agy plan QA PASS with successful harness attestation | Remediate and requalify candidates, then run the reviewed merge-cleanup sequence |
+| Operator authorized merge operation; current heads refreshed; #794 ledger resolution prepared | Finish #794 current-base gate, land/reconcile, then requalify #795; #765 remains held pending remediation |
 
 ## Table of contents
 
@@ -175,3 +175,11 @@ Added after Agy plan approval as factual coverage accounting; it does not change
 | Current-target-base CI re-verification before merge | Unaddressed | #794 fixes reconciliation identity; GH-796 specifies future verification but adds no runtime enforcement |
 
 Final acceptance is broader than individual implementation: repository PR template does not prove installer coverage; prior-art helper is not a subagent; inventory is registered in validate.sh but not ci-local.sh; required collection/CWD checks and complete subtask-to-PR mapping remain absent. #777 must stay open after this batch. This is coverage by these PRs, not a claim that no related protection pre-exists elsewhere in Forge.
+
+## Execution checkpoint — 2026-09-24
+
+Operator authorized the merge operation. Primary was clean on development at `a08f30e9`, all four runtime PR heads matched the reviewed snapshot, and #759/#765 retained hold labels. Bootstrap used the reviewed #794 cleanup implementation at `1712a579`; direct source diff confirmed no local changes to that package. Dry-run evidence is committed alongside the plan.
+
+New development GH-798 introduces a ledger-only conflict for #794. Canonical B1 classified it disjoint (generations 1123/1125), kept current development state and replayed only GH-791/GH-793 via the writer, producing `0852e43cb58abdcf0f12cbbb2db1ec63ec8682ed`. Its repair occupies slot 1/2 at the primary coordinator. Full macOS push gate is pending in a separate disposable full clone; no landing claimed yet.
+
+Operational adaptation: invoke the existing cleanup helpers in supervised stages instead of letting the master runner automatically push from the valued primary. The runner's post-reconcile push can invoke mutation-heavy tests there, contrary to WORKTREE-SAFETY section 12. Reconciliation still follows the existing exact-SHA hosted/fallback contract; any resulting write must be gated/pushed from a disposable full clone and fast-forwarded into primary. No force merge, writer replacement, new executor or gate bypass is authorized by this adaptation.
