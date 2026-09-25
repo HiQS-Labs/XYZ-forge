@@ -2,7 +2,7 @@
 gh_issue: 805
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/805
 title: "Audit test value and enforced test admission"
-status: "Full gate passed — PR handoff pending"
+status: "PR ready — awaiting merge"
 created: 2026-09-25
 updated: 2026-09-25
 owner: operator
@@ -22,7 +22,7 @@ related: [802, 732, 774, 801, 365]
 
 | What was just completed | What's next |
 |---|---|
-| Plan and final Codex QA Approved; full gate 422/422; branch pushed | Open one PR and verify hosted blocking check |
+| All seven steps complete; PR #811 open; full gate 422/422 and hosted blocking smoke passed | Await maintainer merge; retain clone and evidence |
 
 ## Table of contents
 
@@ -59,7 +59,7 @@ Entry points and affected consumers:
 4. [x] **Simplification experiment — Medium; benefit uncertain.** Map the distinct gh269/567/568 invariants, then trial one-time gh567 file discovery without combining suites or dropping policy checks. Compare base/candidate LOC including helpers, discovery count, diagnostics, focused runtime and seeded detections. → Retain only a demonstrated maintenance/runtime improvement; unchanged detection and diagnostics required, otherwise record a keep decision.
 5. [x] **Trust contract — High; prerequisite, not a quick win.** Specify reuse/extend/add/no-add decisions, coverage IDs, overlap rationale, test/product file digests, source/reviewer identity, routing and red evidence; additions inside existing files and weakening/deletion invalidate the bound content. Record that local metadata validation cannot authenticate approval; mandatory use would require a separately authenticated authorized reviewer and trusted verifier revision/check producer on development, with deliberate operator override audited and fail-closed missing authority. → A proposed design covers forged/self/stale/missing/malformed/verifier edits; live authority unavailable means explicit no-go, without changing branch protection.
 6. [x] **Observe-only pilot — High; not a quick win.** Add optional decision-record validation and a generated projection to the existing inventory tool, using one bounded JSON metadata artifact under the GH805 evidence directory (no DB/server and no new scheduling authority). States are proposed/unreviewed/advisory-reviewed; approval_trusted remains false without independently verified authority, even if metadata says approved. → Codex independently adjudicates retirement-cohort keep/extend choices, legitimate gh177 addition and an inappropriate duplicate proposal; record stale/malformed/missing/forged observations, review disagreement/latency and tool cost, separately scoring metadata validation and semantic recommendation accuracy. Do not label synthetic fixtures real-world false-accept estimates.
-7. [ ] **Decisions and handoff — High; not a quick win.** Publish separate coverage and mandatory-admission decisions, observed suite/case/invariant counts, retained protections and cost limits; attribute any available #808 evidence separately. Default recommendation retains independent policy guards and declines mandatory admission until authentic authority and required trusted execution exist. → Final Codex review, focused evidence, one final full gate and applicable hosted exact-head evidence support one PR; mark issue checklist items only when demonstrated, leave issue open awaiting merge.
+7. [x] **Decisions and handoff — High; not a quick win.** Publish separate coverage and mandatory-admission decisions, observed suite/case/invariant counts, retained protections and cost limits; attribute any available #808 evidence separately. Default recommendation retains independent policy guards and declines mandatory admission until authentic authority and required trusted execution exist. → Final Codex review, focused evidence, one final full gate and applicable hosted exact-head evidence support one PR; mark issue checklist items only when demonstrated, leave issue open awaiting merge.
 
 ## Verification and handoff
 
@@ -131,10 +131,10 @@ Prefer extending the existing gate/registry and review receipt mechanisms over b
 
 ## Execution evidence
 
-Steps 1–6 are implemented and supported by [the report](../../TESTS-RESULTS/2026-09-25+GH-805/REPORT.md), generated catalog, advisory cohort and committed provenance. Plan relay approved revision 7813ab52; implementation e5f7659d passed eight focused suites, with five external mutation controls failing as expected. Step 7 remains pending final review and full-gate/PR evidence. No merge or release claim.
+Steps 1–6 are implemented and supported by [the report](../../TESTS-RESULTS/2026-09-25+GH-805/REPORT.md), generated catalog, advisory cohort and committed provenance. Plan relay approved revision 7813ab52; implementation e5f7659d passed eight focused suites, with five external mutation controls failing as expected. Step 7 is now complete; final gate and hosted PR evidence are recorded below. No merge or release claim.
 
 ### Gate-discovered bounded amendment
 
 The first full gate failed 419/422 with intact clone identity. Two scoped integration corrections replace the fictional GH177 payload path with a real inert path and update the releases route count from 24 to 28. The third failure reproduces on unchanged 0ae3452a: GH390’s MagicMock fixture reaches its 500,000-call ceiling between RSS watchdog samples. A simple fixture-only repair holds that same bounded allocation for two pinned one-second polling intervals before its existing failure exit; production guard, allocation limit and required gate-killed verdict stay unchanged. This is an obvious local reversible test repair, so it uses start-task’s simple-change exception rather than another architecture review; final relay round 3 explicitly reviews it and its disabled-guard red control.
 
-Final full pre-push validation passed422/422 on9625367f with intact clone identity. The branch pushed without bypass; promotion is not claimed. Final relay round3 approved the gate-discovered fixture amendments. Step7 awaits the PR/hosted handoff only.
+Final full pre-push validation passed 422/422 on 9625367f with intact clone identity. The branch pushed without bypass; promotion is not claimed. Final relay round 3 approved the gate-discovered fixture amendments. [PR #811](https://github.com/HiQS-Labs/XYZ-forge/pull/811) is mergeable against development; hosted blocking smoke passed on 73e31244. All steps are complete for PR handoff, not shipped/merged.
