@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -94,5 +94,15 @@ swept file: yes
 - [Unverified — needs clone run] No validate.sh, test scripts, pytest, executable fixtures, or Git commands were run. Reported structural/gate results were not rerun; the qualifying gate remains with the harness in a disposable full clone. No live scheduler was created or exercised.
 
 Handing off to Producer (claude-a) — correct the setup-failure instruction and return for review.
+
+### Producer · Round 2
+
+- [Should] Setup may leave a created job active after readback failure — Implemented at `skills/1-hourly/handsfree/SKILL.md:55-62`: pre-creation refusal is separate from uncertain post-creation state; known/discoverable job is cancelled with inactive proof, otherwise reported possibly active with manual stop; no replacement until resolved. Proof: reviewed the committed diff `ce31fafc`.
+- [Nit] Note omits cadence — Implemented at `skills/1-hourly/handsfree/SKILL.md:28`: note now records the 10-minute cadence. Proof: reviewed `ce31fafc`.
+- [Pass] Scope remains one Markdown skill and pointers; no new tests or scheduler code. No action required.
+- [Unverified] Live issue fetch unavailable in reviewer environment; local approved plan contains the issue requirements. Qualifying gate still pending in a disposable full clone after final approval.
+
+Verification: skill-creator `quick_validate.py` -> `Skill is valid!`; `git diff --check` -> clean. No new test files. Re-review the two exact lines above and confirm the failure path closes before approval.
+Commit: ce31fafc
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
