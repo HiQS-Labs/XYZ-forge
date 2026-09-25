@@ -1,0 +1,5 @@
+{
+  "git rev-parse HEAD": "7813ab52cbb368e97ee43a6336cb9be91ea18b69",
+  "git config --local --list": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=/Users/noelsaw/Documents/GitHub/XYZ-forge-gh805-test-value-20260925\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.feat/gh805-test-value-admission.remote=origin\nbranch.feat/gh805-test-value-admission.merge=refs/heads/feat/gh805-test-value-admission",
+  "git remote -v": "origin\t/Users/noelsaw/Documents/GitHub/XYZ-forge-gh805-test-value-20260925 (fetch)\norigin\t/Users/noelsaw/Documents/GitHub/XYZ-forge-gh805-test-value-20260925 (push)"
+}

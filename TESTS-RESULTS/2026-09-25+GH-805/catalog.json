@@ -1,0 +1,6488 @@
+{
+  "admission": {
+    "decisions": [
+      {
+        "approval_trusted": false,
+        "authority_reason": "No authenticated reviewer/check authority is configured",
+        "behavior": "Distinct ROADMAP, dashboard, and release-view policies remain protected",
+        "consequence": "Dropping a unique policy check permits retired writers or broken CLI behavior",
+        "content": {
+          "test/gh269-roadmap-retired.sh": "372a4ea8bfb3a5012732f33dd992404cdad16eceb0ad45551be967ee127d0c19",
+          "test/gh567-roadmap-dashboard-retired.sh": "2846944c63e4a9365c85683efbde42508cfdb58f2af1252adcfae5dbca7e5c81",
+          "test/gh568-releases-md-retired.sh": "c362d7bebd65bab153120d8570b9ca568c187dd8a85f078a53622cb3042809c0"
+        },
+        "cost": "See provenance; incremental full-gate cost not yet measured",
+        "id": "retirement-policies",
+        "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+        "metadata_errors": [],
+        "outcome": "reuse",
+        "overlap": "Three suites share only broad shape, not all controls",
+        "proposer": "GPT 6 Astra Light",
+        "reason": "Keep separate CLI/AST/runtime checks; simplify gh567 discovery only",
+        "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+        "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+        "reviewer": "Luna high /root/admission (advisory)",
+        "routing": "Full shell gate; retirement cohort also releases tier 2",
+        "state": "advisory-reviewed",
+        "would_refuse_mandatory": true
+      },
+      {
+        "approval_trusted": false,
+        "authority_reason": "No authenticated reviewer/check authority is configured",
+        "behavior": "Planner success is only exit 0 or known drift exit 4",
+        "consequence": "Unexpected planner failure was reported as success",
+        "content": {
+          "test/gh269-roadmap-retired.sh": "372a4ea8bfb3a5012732f33dd992404cdad16eceb0ad45551be967ee127d0c19",
+          "utils/py/marathon_plan.py": "46c754b9a6477aadd717d14f73ca0d2e447f999c7730a8d0f72a083d928022a6"
+        },
+        "cost": "See provenance; incremental full-gate cost not yet measured",
+        "id": "planner-exit-contract",
+        "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+        "metadata_errors": [],
+        "outcome": "extend",
+        "overlap": "Existing gh269 suite is the owner",
+        "proposer": "GPT 6 Astra Light",
+        "reason": "Extend accepted-set and red controls, no new suite",
+        "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+        "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+        "reviewer": "Luna high /root/admission (advisory)",
+        "routing": "Full shell gate; retirement cohort also releases tier 2",
+        "state": "advisory-reviewed",
+        "would_refuse_mandatory": true
+      },
+      {
+        "approval_trusted": false,
+        "authority_reason": "No authenticated reviewer/check authority is configured",
+        "behavior": "Sandboxed suite commands are refused and harmless references allowed",
+        "consequence": "Sandbox execution can trigger destructive fixture escapes",
+        "content": {
+          "relay-automation/hooks/gh177-sandbox-test-guard.sh": "0cb960b12fe8c7c29e9166063e1b3ba442f03cb0eae7437eddd11a0cd21c4672",
+          "test/gh177-sandbox-test-guard.sh": "94321e379e9c70f4ccc82b0aa06248fb2cf8406452a9caae37060152f5646d55"
+        },
+        "cost": "See provenance; incremental full-gate cost not yet measured",
+        "id": "sandbox-hook",
+        "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+        "metadata_errors": [],
+        "outcome": "add",
+        "overlap": "No registered caller tests the live hook; historical matrix exists",
+        "proposer": "GPT 6 Astra Light",
+        "reason": "One small hook-payload suite covers the live boundary without executing example commands",
+        "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+        "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+        "reviewer": "Luna high /root/admission (advisory)",
+        "routing": "Full shell gate; retirement cohort also releases tier 2",
+        "state": "advisory-reviewed",
+        "would_refuse_mandatory": true
+      },
+      {
+        "approval_trusted": false,
+        "authority_reason": "No authenticated reviewer/check authority is configured",
+        "behavior": "GH534 phase modules remain collected through GH436",
+        "consequence": "Duplicate scheduling wastes time and muddies counts",
+        "content": {
+          "test/gh436-merge-cleanup.py": "fbcc3bef8e55f35b6bd8be2970aa3f39790c9eacfa79fbc655799c900f281f15",
+          "test/gh436-merge-cleanup.sh": "b11c81ffaae8f05b0ba0696c2f651b8c7e80e57918edca6ff20c553a1cccb288",
+          "test/gh534_phase_a_tests.py": "d210139b7c0b4b893a658d983ad521a751e7360d7a177c242c5d9aff154c2fa8",
+          "test/gh534_phase_b_tests.py": "cbffd561f3bbf07d8faa8fb85e63c7803481ebab38d157999dddca8c2d305b91",
+          "test/gh534_phase_c_tests.py": "932f779f62214b994eb4b3ddc6f659a6050d264afa2aeeafe867ae3b67d9824c"
+        },
+        "cost": "See provenance; incremental full-gate cost not yet measured",
+        "id": "duplicate-gh534",
+        "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+        "metadata_errors": [],
+        "outcome": "no-add",
+        "overlap": "GH436 Python collector imports all three phase modules",
+        "proposer": "GPT 6 Astra Light",
+        "reason": "Reject a second shell wrapper; preserve current indirect collector",
+        "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+        "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+        "reviewer": "Luna high /root/admission (advisory)",
+        "routing": "Full shell gate; retirement cohort also releases tier 2",
+        "state": "advisory-reviewed",
+        "would_refuse_mandatory": true
+      }
+    ],
+    "enforcement": "disabled",
+    "mode": "observe",
+    "schema_version": 1
+  },
+  "limitations": [
+    "Literal source references may be comments, fixtures or imports; they are not execution proof.",
+    "Dynamic collectors and case/assertion/invariant counts require focused runtime evidence.",
+    "Negative-control declarations and advisory review metadata are not authenticated approvals."
+  ],
+  "mode": "observe",
+  "registered_shell_suites": 418,
+  "rows": [
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/_scratch-repo.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/_setup.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/acorn-extract.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/agent-chorus-bridge.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/agent-chorus.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "agent-chorus"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/agy-tui-takeover-verdict.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/agy-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/aider-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/analyze.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/archive-commit.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/archive-root.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/archive-telemetry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "telemetry"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/archive-writers.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/ate-run-variations.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/auto-sync.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/ballast-release.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/baselines/gh453-governance/check_links.py",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/champion.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/chaos-concurrent-pollers.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/chaos-midturn-kill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/chaos-stale-writer.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/checkjs.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/ci-route.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/ci-workflow.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/circuit-break.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/claim-cap.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/claude-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/codex-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/commandcode-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/concurrent-claim.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/consult.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/cost.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/debug-mantra.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/deep-research.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/driver-lock.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/find-harness.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/fixtures/canary-peer-orphan/verify-fixture.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/fixtures/canary-reviewer-overstep/verify-fixture.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/fixtures/canary-token-reuse/verify-fixture.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/fixtures/gamma-poison/verify-fixture.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/fixtures/canary-peer-orphan/verify-fixture.sh",
+        "test/fixtures/canary-reviewer-overstep/verify-fixture.sh",
+        "test/fixtures/canary-token-reuse/verify-fixture.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/flightdeck/browser-status-checks.mjs",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "explicit-non-shell-lane",
+      "coverage_review": "unreviewed",
+      "path": "test/flightdeck/test_flightdeck.py",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "explicit-non-shell-lane",
+      "coverage_review": "unreviewed",
+      "path": "test/flightdeck/test_work_status.py",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/flightdeck/work-status-checks.mjs",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh-gen4-phase1-domain-oracles.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh-gen4-phase2-adaptive-ate.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh-gen4-phase3-fuzz-engine.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh-gen4-phase4-repro-synth.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh-gen4-phase5-campaign.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh1-adoption-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh1-fixture-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh103-timeline-exporter.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh105-vendor-releases-addon.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh107-timeline-json-seam.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh113-headless-scratch.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh114-headless-tty.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh115-round-cap.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh123-lock-progress-bound.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh124-closeout.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh129-relay-tick-root.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh130-agy-auth-whoami.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh131-marathon-target-root.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh132-review-xyz-skill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh139-pipe-grep-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh14-atomic-append.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh141-fuzz-inputs.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh141-synthetic-registry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh142-ate-exit-contract.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh148-deepseek-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh153-releases-sidebar-rollup.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh155-phase1-metamorphic-invariants.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh155-phase2-differential-oracle.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh155-phase3-repro-builder.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh155-phase4-self-healer.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh155-phase5-active-explorer.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh156-turn-shims-help.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh165-governance-canonical-paths-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh168-wave-reconcile-scope.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh174-harness-registry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh177-sandbox-test-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh180-repro-timeout-crash.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh181-repro-adapter-fidelity.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh182-healer-facade-safety.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh183-explorer-env-soundness.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh184-no-tracked-scratch.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh197-vendor-tier-split.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh2-orphan-backup-repro.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh202-wave-reconcile-issue-state.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh204-sed-portability.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh205-gate-idempotency.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh217-gate-env-plan-outside.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh218-synthetic-nested-driver-lock.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh23-path-overlap-enforcement.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh232-wave-reconcile-multiphase.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh233-agent-chorus-concurrency.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh238-hq-releases-mode.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh239-hq-status-releases-mode.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh245-agy-probe-verb-invariant.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh251-validate-pytest-skip.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh255-remedy-ordering.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh256-target-root-guard-root.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh257-roadmap-ledger-fixes.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh267-express-skill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh268-relay-cue-and-target-checks.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh269-roadmap-retired.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh273-marathon-root-audit-python-shape.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh278-turn-timeout-parity.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh280-jog-marathon-adapter.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh284-p3-release-milestone.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh284-p4-release-lanes.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh284-runlog-heartbeat.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh289-target-root-build-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh290-ate-variation-grid.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh291-contract-goldens.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh292-worktree-vendored-discovery.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh293-vendored-guard-drift.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh298-ate-gen4-ci-smoke.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh304-vendored-relay-path.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh306-registry-bidirectional.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh307-gate-env-scrub.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh308-consult-guards.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh308-frozen-twin-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh308-poll-guards.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh308-swarm-gate-path.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh308-turn-shim-parity.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh312-vendor-preserves-state.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh314-transcript-writeset.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh319-gate-path-with-space.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh32-release-target-advisory.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh32-releases-app.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh32-releases-artifacts.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh320-twin-timeout-parity.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh322-runlog-python-lane.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh322-unknown-arg-rejection.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh331-cost-summary.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh342-sentinel-debug-log-python.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh343-gate-program-target-root.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh346-gateway-allowlists.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh346-model-telemetry-honesty.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh346-profile-resolve.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh346-registry-view-freshness.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh346-resolver-fallback.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh346-telemetry-row-written.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh349-releases-roadmap-vendored.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh35-test-tiers.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh351-manifest-unship.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh353-vendored-router-audit.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh358-lock-instrumentation.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "telemetry"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh358-wave-reconcile-vendored-paths.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh360-dump-multiline-values.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh360-scoped-receipt-chain-rebuild.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh362-marathon-plan-link-bullets.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh365-driver-lane-registry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh365-pdda-gov-scan.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh365-runner-envelope.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh365-shellcheck-parallel.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh365-tier-fail-closed.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh365-validate-telemetry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh368-same-lane-routing.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh369-find-doc-root-resolution.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh369-group-kill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh370-progress-telemetry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh371-interrupt-snapshot.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh372-escalation-log-tail.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh373-reviewer-validation.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh374-drift-path-filter.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh375-agy-auth-preflight.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh375-auth-timeout-verdict.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh376-relay-drive-lock-parity.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh378-gate-requires-green-suite.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh379-canary-uses-validate.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh379-claude-builder-diagnosis.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh380-claude-trust.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh382-marathon-memory-telemetry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh384-crash-recovery.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh385-retry-token-satisfied.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh386-turn-budget-honesty.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh387-gate-not-first-executor.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh388-run-log-durability.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh39-releases-project-sync.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh390-gate-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh390-timeout-attribution.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh391-emit-marathon-yaml.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh393-deepseek-readiness.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh396-find-harness-roots.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh397-reviewer-turn-role.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh399-packet-acceptance-continuation.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh4-ungated-clone-warning.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh400-acceptance-fidelity.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh400-source-url.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh401-dry-run-no-mutation.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh402-board-sync.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh402-branch-enforcement.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh405-mock-board-harness.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh407-gate-ran-attribution.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh408-tick-failure-visibility.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh409-claim-leak.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh410-containment-advisory.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh410-relay-block-driven-path.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh411-tick-log-foreign-cwd.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh412-transient-claim-exit.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh413-launch-artifact-destination-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh414-comment-reference-check.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh415-guard-hook-entrypoints.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh417-turn-root-symlink-prefix.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh418-issue-state-frozen.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh418-planner-ledger-source.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh419-gate-inventory.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh421-auto-wave-reconcile.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh422-backfill-source-url.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh423-roadmap-render.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh424-roadmap-status-marker.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh425-gate-provenance-pr.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh425-source-url-slug.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh426-worktree-leak.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh429-wave-reconcile-vendored-observe.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh430-state-dir-tracked-default.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh432-failed-turn-persist.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/gh436-merge-cleanup.py",
+      "selected_by": [],
+      "source_references": [
+        "test/gh436-merge-cleanup.sh",
+        "test/gh534_phase_a_tests.py",
+        "test/gh534_phase_b_tests.py",
+        "test/gh534_phase_c_tests.py"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh436-merge-cleanup.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh438-acceptance-recheck.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh438-removal-is-progress.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh441-gate-env-contract.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh448-driver-lock-resolver.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh450-model-catalog-pin.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh454-reconciler-defects.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh457-gate-tiers.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh460-fuzz-resolver-smoke.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/gh460-oracle.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/gh306-registry-bidirectional.sh",
+        "test/gh460-fuzz-resolver-smoke.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh460-pipe-buffer-sigpipe.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh467-index-only-lane-blocked.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh478-runaway-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh484-phase-dir-default.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh491-gate-only-refire.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh491-roadmap-section-validation.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh492-idle-kill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh492-roadmap-state-sweep.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh496-phase2-reconciliation-views.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh496-telemetry-isolation.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "telemetry"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh50-sandboxed-git-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh505-relay-attest.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh509-gate-evidence.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh514-write-set-trackable.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh518-muse-adapter-containment.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh518-muse-model-policy.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh520-default-reviewer-stub.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh525-unshipped-version-tokens.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh527-destructive-git-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh527-issue-url-repair.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh528-parallel-contention-retry.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh53-releases-merge-resolve.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/gh534_phase_a_tests.py",
+      "selected_by": [],
+      "source_references": [
+        "test/gh436-merge-cleanup.py",
+        "test/gh534_phase_c_tests.py"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/gh534_phase_b_tests.py",
+      "selected_by": [],
+      "source_references": [
+        "test/gh436-merge-cleanup.py",
+        "test/gh534_phase_c_tests.py"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/gh534_phase_c_tests.py",
+      "selected_by": [],
+      "source_references": [
+        "test/gh436-merge-cleanup.py"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh536-evidence-detail.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh54-merged-dump-refusals.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh544-parallel-default.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh544-pre-push-gate.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh549-work-events.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh551-resolver-refuses.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh554-tick-unknown-flags.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh557-unknown-blocks-manifest.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh567-roadmap-dashboard-retired.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh568-releases-md-retired.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh57-live-merge-resolve.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh57-releases-fuzz.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh578-ci-optimize-skill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh589-consult-no-tick.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh589-skill-viewer.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh589-xyz-mini-sync.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh591-prepush-commit-boundary.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh605-board-policy.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh605-work-state.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh608-deepseek-effort.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh609-sdlc-agent-gaps.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh610-claude-subscription.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh615-start-task-reinforce.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh616-start-task-commensurate-envelope.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh617-relay-xyz-commensurate-review.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh620-skills-army-mini-sync.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "skills-army-hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh642-consumer-fruit.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh645-merge-cleanup-xyz-tools.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh646-status-label.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/gh646_status_label.py",
+      "selected_by": [],
+      "source_references": [
+        "test/gh646-status-label.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l1-turn-termination.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l2-token-aftermath.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l3-consult-cap.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l4-285-revalidate.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l5-gh237-repro.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l6-muse-attribution.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l7-checkout-aftermath.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l8-zero-output-handback.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh648-l9-369-regression.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh649-pdda-migration.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh654-offlane-log.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh660-skill-drift.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/gh666_agy_model_probe.py",
+      "selected_by": [],
+      "source_references": [
+        "test/agy-turn.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh674-merge-cleanup-hosted-lookup.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh678-installer-live-links.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh681-reviewer-probe-rules.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh684-hosted-lane-report.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh69-roadmap-shadow.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh693-lessons-learned-advisory.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh698-planner-db-ratings.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh703-raw-text-asterisk.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh708-vendored-suite-skips.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh712-jev-triage.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "ate"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh732-l3-gate-summary.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh740-hosted-lane-publish.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh75-dashboard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh77-standup-triage.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "standup"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh777-inventory-ratchet.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh777-start-task-prior-art.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh778-review-code-skill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh779-radar-ci-health.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh781-wam-radar-seed.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh798-status-skill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh90-allowlist-directory.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/gh91-relay-scratch.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/handoff-exclusive.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/handoff.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/heartbeat.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/heldout-check.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-dispatch.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-hardening.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-locator.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-marathon-live.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-marathon-scan.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-next.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-park-synthesis.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-park.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-promote.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq-rollup.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/hq.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/improve-loop-dogfood.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/improve-loop-qa.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/improve-loop.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/jog-queue.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/lane-attempt-cap.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/attest-stub.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/clone-identity.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/fixture-guard.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/gh-prlist-wrapper.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/runaway-guard.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/runner-envelope.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/runner-telemetry.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "helper",
+      "coverage_review": "unreviewed",
+      "path": "test/lib/vendored-fixture.sh",
+      "selected_by": [],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/litmus-release.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/loop-cost.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/loop-stop.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/marathon-closeout.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/marathon-drive.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/marathon-monitor.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/marathon-plan.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/marathon-root-audit.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/marathon-yaml.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/marathon.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/measure.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/meter-release.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/mktemp-trap-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/model-alias.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/new-relay.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/nightwatch-release.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/oracle-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/path-integrity.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/path-overlap.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/pdda-changelog.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/pdda-install-startup-docs.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/pdda-local-checks.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/pdda-repo-contract.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/pdda-roadmap-coverage.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/phase3-signoff-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/pi-turn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/poll-driver.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/poll-relay.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/preflight-docs.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/projection-idempotent.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/reap.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/registry-lock-concurrency.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-artifact-file.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-case-insensitive.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-commit-pathspec.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-concurrent-commit.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-dep-drift.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-escalation-not-stall.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-file-seeding-visibility.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-loop.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-pkg-freshness.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-review-once.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-self-sufficiency.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-target-root-newfile.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-target-root-paths.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-target-root-relayfile.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-target-root.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-token-collision.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-turn-handoff.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-turn-timeout.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-turn-trace.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-uncited-findings.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-untracked-file-warn.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/relay-xyz-skill-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/releases-skill.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "releases"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/rtl-orphan-backup.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/runner-loop.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/scope-change.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/security-scan.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/sentinel-driver-hooks.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/sentinel-network-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/sentinel-overlay.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/sentinel-tier1.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/shim-worktree.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/signal-triage.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/skill-extract.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/skills-army-hq.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "skills-army-hq"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/swarm-preflight.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/swe-diagram.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "swe-diagram"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh101-consult-programmatic.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh102-telemetry-schema.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh124-closeout-suite.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/gh124-closeout.sh",
+        "test/gh141-synthetic-registry.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh129-relay-tick-root.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/gh129-relay-tick-root.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh130-agy-auth-whoami.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/gh130-agy-auth-whoami.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh131-marathon-target-root.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/gh131-marathon-target-root.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh94-containment-invariants.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/gh94-script-serialization.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/synthetic-claude-target-root.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/synthetic-marathon-env-leak.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/synthetic-marathon-worktree-guard.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/synthetic-pi-model-unset.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/synthetic/synthetic-pi-provider-unsupported.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/take.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/terminality-seal.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/test-agy-isolation.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/gh306-registry-bidirectional.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/test-agy-standalone-repo.sh",
+      "selected_by": [],
+      "source_references": [
+        "test/gh306-registry-bidirectional.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/test_deploy_skills.py",
+      "selected_by": [],
+      "source_references": [
+        "test/skills-army-hq.sh",
+        "test/test_python_layer.py"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/test_gh605_board_policy.py",
+      "selected_by": [],
+      "source_references": [
+        "test/gh605-board-policy.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "reference-only-or-uncollected",
+      "coverage_review": "unreviewed",
+      "path": "test/test_gh605_work_state.py",
+      "selected_by": [],
+      "source_references": [
+        "test/gh605-work-state.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "explicit-non-shell-lane",
+      "coverage_review": "unreviewed",
+      "path": "test/test_python_layer.py",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "test/ci-route.sh",
+        "test/gh251-validate-pytest-skip.sh",
+        "test/gh365-runner-envelope.sh",
+        "test/gh379-canary-uses-validate.sh",
+        "test/gh425-gate-provenance-pr.sh",
+        "test/gh740-hosted-lane-publish.sh"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/tick-foreign-cwd.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/transcript-audit.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "explicit-non-shell-lane",
+      "coverage_review": "unreviewed",
+      "path": "test/unit/cli.test.js",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "explicit-non-shell-lane",
+      "coverage_review": "unreviewed",
+      "path": "test/unit/events.test.js",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "explicit-non-shell-lane",
+      "coverage_review": "unreviewed",
+      "path": "test/unit/lock.test.js",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "explicit-non-shell-lane",
+      "coverage_review": "unreviewed",
+      "path": "test/unit/project.test.js",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/verdict-edge.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/watchdog-liveness.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/watchdog-relay.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/wave-reconcile.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "pdda"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/workstealing-verdict.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/worktree-isolation.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/write-ops-log.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/xyz-completion.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": [
+        "telemetry"
+      ]
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/xyz-harness-hooks.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/xyz-sync-check.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    },
+    {
+      "classification": "registered-shell",
+      "coverage_review": "unreviewed",
+      "path": "test/xyz-vendor.sh",
+      "selected_by": [
+        "validate.sh",
+        "ci-local.sh"
+      ],
+      "source_references": [
+        "ci-local.sh:read_tests",
+        "validate.sh:TESTS"
+      ],
+      "subsystems": []
+    }
+  ],
+  "schema_version": 1,
+  "tracked_shell_files": 436
+}

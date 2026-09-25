@@ -1,0 +1,22 @@
+== test: GH-568 ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-GH-568.XXXXXX.gUMlfvipiz
+  PASS: static canary: RELEASES.md and RELEASES.generated.md absent from repo root
+  PASS: artifact_paths() exposes only DB artifacts (no gen, drift, or ledger keys)
+  PASS: releases_app.py gen exits nonzero (3), reports rule=retired, and creates no retired artifacts
+  PASS: releases_app.py list operates cleanly without RELEASES.md
+  PASS: releases_app.py show operates cleanly without RELEASES.md
+  PASS: releases_app.py check operates cleanly without RELEASES.md
+  PASS: wave_reconcile.py executes cleanly without RELEASES.generated.md
+  PASS: utils/release-lanes.sh executes cleanly without RELEASES.md
+  PASS: runtime probe: pre-created RELEASES.md and RELEASES.generated.md are never touched by releases add
+  PASS: audit scanned 262 candidate production files (empty-input guard passed)
+  PASS: writer audit: zero active writers or redirects found in production paths
+  PASS: red control 1: canary correctly reported RED when RELEASES.md was injected
+  PASS: red control 2: canary correctly reported RED when RELEASES.generated.md was injected
+  PASS: red control 3: writer audit correctly reported RED when write redirection was injected
+  PASS: red control 4: writer audit correctly reported RED when Python write was injected
+  PASS: red control 5: empty-input guard correctly returned exit 2 on empty candidate directory
+  PASS: red control 6: runtime probe correctly reported RED when retired file was modified
+  PASS: red control 7: writer audit correctly reported RED when JS/TS write was injected
+  PASS: red control 8: writer audit correctly reported RED when nested expression Python write was injected
+== GH-568 ALL PASSED ==

@@ -1,0 +1,83 @@
+== test: gh365-runner-envelope ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh365-runner-envelope.XXXXXX.cwWXNVNx8V
+== test: gh365-runner-envelope ==
+runner-envelope: suite — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+  PASS: A1: begin points XYZ_HARNESS_DB at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db)
+  PASS: A2: an envelope-routed write leaves the tracked tree byte-clean
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under suite
+  PASS: A3: untouched envelope asserts clean (rc 0)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+  PASS: A4: new untracked file -> envelope drift (rc 2), record invalid
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+  PASS: A5: tracked-file mutation -> envelope drift (rc 2)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+  PASS: A6: identity mutation -> hard failure (rc 1), run unattributable
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+  PASS: A7: registered-worktree drift detected (rc 2)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+  PASS: A8: driver-lock appearance detected (rc 2)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+runner-envelope: pre-dirt — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.I3ODBd/harnesses.db), envelope state captured
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under pre-dirt
+  PASS: A9: pre-existing dirt with no further change asserts clean
+runner-envelope: preset — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh365-runner-envelope.XXXXXX.cwWXNVNx8V/preset-harnesses.db), envelope state captured
+  PASS: A10: pre-set XYZ_HARNESS_DB respected (no scratch override)
+  PASS: A11: scrub removed scratch and state dirs
+  PASS: B1: validate.sh sources the shared envelope helper
+  PASS: B2: ci-local.sh sources the shared envelope helper
+  PASS: B3: validate.sh's inline envelope is gone (helper owns it)
+  PASS: B3b: ci-local.sh's private identity snapshot is gone (helper owns it)
+  PASS: B4: ci-local sources the helper before the suite step
+  PASS: B5: ci-local still passes --suite-log to gate-record (GH-536 pin)
+  PASS: B6: a refused gate record fails the qualifying run (no || true)
+  PASS: B7: gh35 fixtures copy the shared lib (tier-2 fixture runs need it)
+  PASS: B8: the Python lane runs INSIDE validate_suite (line 323)
+  PASS: B8b: the gamma-poison staleness probe runs INSIDE validate_suite (line 347)
+  PASS: B8c: both lanes land in GATE_VERDICTS under validate.sh's own PASSED labels
+  PASS: C1 CONTROL: tier 1 (no suites) still runs green without the lib
+  PASS: C2: envelope path without the lib REFUSES, naming it (exit 1)
+  PASS: D1 CONTROL: gate-record records from a clean tree (this clone)
+== gh365-runner-envelope: 25 passed, 0 failed ==
+PASS: validate both lanes once; child rc 0 propagated
+PASS: validate both lanes once; child rc 7 propagated
+PASS: ci-local both lanes once; child rc 0 propagated
+PASS: ci-local both lanes once; child rc 7 propagated
+runner-envelope: tree DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.aKTA04/tree	2026-09-24 20:09:10
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.aKTA04/tree.post	2026-09-24 20:09:10
+@@ -0,0 +1 @@
++?? untracked-scratch.txt
+runner-envelope: tree DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.A0Eb2N/tree	2026-09-24 20:09:10
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.A0Eb2N/tree.post	2026-09-24 20:09:10
+@@ -0,0 +1 @@
++ M tracked.md
+clone-identity: IDENTITY DRIFT — the clone this suite ran in changed under the run:
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.p5Cfl5/identity	2026-09-24 20:09:11
++++ /dev/fd/63	2026-09-24 20:09:11
+@@ -1,6 +1,6 @@
+ head:   8415a87d50978c13282ac92d9c19ab029fb46a57
+ bare:   false
+ remote: 
+-email:  t@t
++email:  mutated@t
+ name:   t
+ branch: refs/heads/main
+Every result from this clone is invalidated (GH-567): re-clone, then run candidate and base at the same width.
+runner-envelope: worktrees DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.kS2iWG/worktrees	2026-09-24 20:09:11
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.kS2iWG/worktrees.post	2026-09-24 20:09:11
+@@ -2,3 +2,7 @@
+ HEAD 8415a87d50978c13282ac92d9c19ab029fb46a57
+ branch refs/heads/main
+ 
++worktree /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh365-runner-envelope.XXXXXX.cwWXNVNx8V/wt-drift
++HEAD 8415a87d50978c13282ac92d9c19ab029fb46a57
++branch refs/heads/wt-drift
++
+runner-envelope: locks DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.n5dzhq/locks	2026-09-24 20:09:11
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.n5dzhq/locks.post	2026-09-24 20:09:11
+@@ -1 +1 @@
+-relay-driver.lock: absent
++relay-driver.lock: present (pid 99999 stale )

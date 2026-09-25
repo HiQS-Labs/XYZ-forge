@@ -1,0 +1,82 @@
+[
+  {
+    "id": "retirement-policies",
+    "outcome": "reuse",
+    "behavior": "Distinct ROADMAP, dashboard, and release-view policies remain protected",
+    "consequence": "Dropping a unique policy check permits retired writers or broken CLI behavior",
+    "overlap": "Three suites share only broad shape, not all controls",
+    "reason": "Keep separate CLI/AST/runtime checks; simplify gh567 discovery only",
+    "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+    "proposer": "GPT 6 Astra Light",
+    "reviewer": "Luna high /root/admission (advisory)",
+    "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+    "routing": "Full shell gate; retirement cohort also releases tier 2",
+    "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+    "cost": "See provenance; incremental full-gate cost not yet measured",
+    "content": {
+      "test/gh269-roadmap-retired.sh": "372a4ea8bfb3a5012732f33dd992404cdad16eceb0ad45551be967ee127d0c19",
+      "test/gh567-roadmap-dashboard-retired.sh": "2846944c63e4a9365c85683efbde42508cfdb58f2af1252adcfae5dbca7e5c81",
+      "test/gh568-releases-md-retired.sh": "c362d7bebd65bab153120d8570b9ca568c187dd8a85f078a53622cb3042809c0"
+    }
+  },
+  {
+    "id": "planner-exit-contract",
+    "outcome": "extend",
+    "behavior": "Planner success is only exit 0 or known drift exit 4",
+    "consequence": "Unexpected planner failure was reported as success",
+    "overlap": "Existing gh269 suite is the owner",
+    "reason": "Extend accepted-set and red controls, no new suite",
+    "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+    "proposer": "GPT 6 Astra Light",
+    "reviewer": "Luna high /root/admission (advisory)",
+    "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+    "routing": "Full shell gate; retirement cohort also releases tier 2",
+    "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+    "cost": "See provenance; incremental full-gate cost not yet measured",
+    "content": {
+      "test/gh269-roadmap-retired.sh": "372a4ea8bfb3a5012732f33dd992404cdad16eceb0ad45551be967ee127d0c19",
+      "utils/py/marathon_plan.py": "46c754b9a6477aadd717d14f73ca0d2e447f999c7730a8d0f72a083d928022a6"
+    }
+  },
+  {
+    "id": "sandbox-hook",
+    "outcome": "add",
+    "behavior": "Sandboxed suite commands are refused and harmless references allowed",
+    "consequence": "Sandbox execution can trigger destructive fixture escapes",
+    "overlap": "No registered caller tests the live hook; historical matrix exists",
+    "reason": "One small hook-payload suite covers the live boundary without executing example commands",
+    "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+    "proposer": "GPT 6 Astra Light",
+    "reviewer": "Luna high /root/admission (advisory)",
+    "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+    "routing": "Full shell gate; retirement cohort also releases tier 2",
+    "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+    "cost": "See provenance; incremental full-gate cost not yet measured",
+    "content": {
+      "test/gh177-sandbox-test-guard.sh": "94321e379e9c70f4ccc82b0aa06248fb2cf8406452a9caae37060152f5646d55",
+      "relay-automation/hooks/gh177-sandbox-test-guard.sh": "0cb960b12fe8c7c29e9166063e1b3ba442f03cb0eae7437eddd11a0cd21c4672"
+    }
+  },
+  {
+    "id": "duplicate-gh534",
+    "outcome": "no-add",
+    "behavior": "GH534 phase modules remain collected through GH436",
+    "consequence": "Duplicate scheduling wastes time and muddies counts",
+    "overlap": "GH436 Python collector imports all three phase modules",
+    "reason": "Reject a second shell wrapper; preserve current indirect collector",
+    "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+    "proposer": "GPT 6 Astra Light",
+    "reviewer": "Luna high /root/admission (advisory)",
+    "review_source": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+    "routing": "Full shell gate; retirement cohort also releases tier 2",
+    "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
+    "cost": "See provenance; incremental full-gate cost not yet measured",
+    "content": {
+      "test/gh436-merge-cleanup.sh": "b11c81ffaae8f05b0ba0696c2f651b8c7e80e57918edca6ff20c553a1cccb288",
+      "test/gh436-merge-cleanup.py": "fbcc3bef8e55f35b6bd8be2970aa3f39790c9eacfa79fbc655799c900f281f15",
+      "test/gh534_phase_a_tests.py": "d210139b7c0b4b893a658d983ad521a751e7360d7a177c242c5d9aff154c2fa8",
+      "test/gh534_phase_b_tests.py": "cbffd561f3bbf07d8faa8fb85e63c7803481ebab38d157999dddca8c2d305b91",
+      "test/gh534_phase_c_tests.py": "932f779f62214b994eb4b3ddc6f659a6050d264afa2aeeafe867ae3b67d9824c"
+    }
+  }
+]

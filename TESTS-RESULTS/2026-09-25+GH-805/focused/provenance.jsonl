@@ -1,0 +1,8 @@
+{"command": ["bash", "test/gh419-gate-inventory.sh"], "rc": 0, "duration_s": 0.204, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh419-gate-inventory.log"}
+{"command": ["bash", "test/gh35-test-tiers.sh"], "rc": 0, "duration_s": 6.289, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh35-test-tiers.log"}
+{"command": ["bash", "test/gh365-runner-envelope.sh"], "rc": 0, "duration_s": 1.911, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh365-runner-envelope.log"}
+{"command": ["bash", "test/gh269-roadmap-retired.sh"], "rc": 0, "duration_s": 8.796, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh269-roadmap-retired.log"}
+{"command": ["bash", "test/gh165-governance-canonical-paths-guard.sh"], "rc": 0, "duration_s": 0.199, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh165-governance-canonical-paths-guard.log"}
+{"command": ["bash", "test/gh177-sandbox-test-guard.sh"], "rc": 0, "duration_s": 0.283, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh177-sandbox-test-guard.log"}
+{"command": ["bash", "test/gh567-roadmap-dashboard-retired.sh"], "rc": 0, "duration_s": 0.393, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh567-roadmap-dashboard-retired.log"}
+{"command": ["bash", "test/gh568-releases-md-retired.sh"], "rc": 0, "duration_s": 1.074, "sha": "e5f7659d7ff8f7ce7f1f2f8f9537a8ba2e1d11da", "log": "gh568-releases-md-retired.log"}

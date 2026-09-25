@@ -1,0 +1,83 @@
+== test: gh365-runner-envelope ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh365-runner-envelope.XXXXXX.cc8re1fh7R
+== test: gh365-runner-envelope ==
+runner-envelope: suite — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+  PASS: A1: begin points XYZ_HARNESS_DB at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db)
+  PASS: A2: an envelope-routed write leaves the tracked tree byte-clean
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under suite
+  PASS: A3: untouched envelope asserts clean (rc 0)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+  PASS: A4: new untracked file -> envelope drift (rc 2), record invalid
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+  PASS: A5: tracked-file mutation -> envelope drift (rc 2)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+  PASS: A6: identity mutation -> hard failure (rc 1), run unattributable
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+  PASS: A7: registered-worktree drift detected (rc 2)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+  PASS: A8: driver-lock appearance detected (rc 2)
+runner-envelope: red — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+runner-envelope: pre-dirt — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.XhSCSd/harnesses.db), envelope state captured
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under pre-dirt
+  PASS: A9: pre-existing dirt with no further change asserts clean
+runner-envelope: preset — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh365-runner-envelope.XXXXXX.cc8re1fh7R/preset-harnesses.db), envelope state captured
+  PASS: A10: pre-set XYZ_HARNESS_DB respected (no scratch override)
+  PASS: A11: scrub removed scratch and state dirs
+  PASS: B1: validate.sh sources the shared envelope helper
+  PASS: B2: ci-local.sh sources the shared envelope helper
+  PASS: B3: validate.sh's inline envelope is gone (helper owns it)
+  PASS: B3b: ci-local.sh's private identity snapshot is gone (helper owns it)
+  PASS: B4: ci-local sources the helper before the suite step
+  PASS: B5: ci-local still passes --suite-log to gate-record (GH-536 pin)
+  PASS: B6: a refused gate record fails the qualifying run (no || true)
+  PASS: B7: gh35 fixtures copy the shared lib (tier-2 fixture runs need it)
+  PASS: B8: the Python lane runs INSIDE validate_suite (line 323)
+  PASS: B8b: the gamma-poison staleness probe runs INSIDE validate_suite (line 347)
+  PASS: B8c: both lanes land in GATE_VERDICTS under validate.sh's own PASSED labels
+  PASS: C1 CONTROL: tier 1 (no suites) still runs green without the lib
+  PASS: C2: envelope path without the lib REFUSES, naming it (exit 1)
+  PASS: D1: gate-record refuses a dirty tree (exit 3) — the teeth exist
+== gh365-runner-envelope: 25 passed, 0 failed ==
+runner-envelope: tree DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.nXNEVe/tree	2026-09-24 20:10:50
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.nXNEVe/tree.post	2026-09-24 20:10:50
+@@ -0,0 +1 @@
++?? untracked-scratch.txt
+runner-envelope: tree DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.i6V1h1/tree	2026-09-24 20:10:51
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.i6V1h1/tree.post	2026-09-24 20:10:51
+@@ -0,0 +1 @@
++ M tracked.md
+clone-identity: IDENTITY DRIFT — the clone this suite ran in changed under the run:
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.IGyqwO/identity	2026-09-24 20:10:51
++++ /dev/fd/63	2026-09-24 20:10:51
+@@ -1,6 +1,6 @@
+ head:   682be30fc051e9ee898d85760abb339770c1d52d
+ bare:   false
+ remote: 
+-email:  t@t
++email:  mutated@t
+ name:   t
+ branch: refs/heads/main
+Every result from this clone is invalidated (GH-567): re-clone, then run candidate and base at the same width.
+runner-envelope: worktrees DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.BMzY6W/worktrees	2026-09-24 20:10:51
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.BMzY6W/worktrees.post	2026-09-24 20:10:51
+@@ -2,3 +2,7 @@
+ HEAD 682be30fc051e9ee898d85760abb339770c1d52d
+ branch refs/heads/main
+ 
++worktree /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh365-runner-envelope.XXXXXX.cc8re1fh7R/wt-drift
++HEAD 682be30fc051e9ee898d85760abb339770c1d52d
++branch refs/heads/wt-drift
++
+runner-envelope: locks DRIFT under red — the run changed it; this run's evidence record is INVALID (GH-365):
+--- /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.pK41nx/locks	2026-09-24 20:10:51
++++ /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-state.pK41nx/locks.post	2026-09-24 20:10:51
+@@ -1 +1 @@
+-relay-driver.lock: absent
++relay-driver.lock: present (pid 99999 stale )
+Traceback (most recent call last):
+  File "<stdin>", line 29, in <module>
+AssertionError: ['-m pytest /Users/noelsaw/Documents/GitHub/XYZ-forge-gh805-candidate-20260925/test/test_python_layer.py /Users/noelsaw/Documents/GitHub/XYZ-forge-gh805-candidate-20260925/test/flightdeck/']
+  FAIL: GH-805 non-shell lane propagation

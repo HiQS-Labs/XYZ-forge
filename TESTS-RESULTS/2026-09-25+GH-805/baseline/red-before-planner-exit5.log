@@ -1,0 +1,13 @@
+== test: GH-269 ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-GH-269.XXXXXX.FGQSigFEQF
+  PASS: ROADMAP.md is absent at repo root
+  PASS: marathon_plan.py executed without ROADMAP.md (exit 5)
+  PASS: releases_app.py roadmap list passed from releases.db source
+  PASS: pdda.sh roadmap-coverage passed from releases.db
+  PASS: pdda.sh roadmap passed cleanly when ROADMAP.md is absent
+  PASS: fixture: roadmap add inserted item into Queue / parked intake
+  PASS: fixture: roadmap move moved item to Completed
+  PASS: fixture: roadmap sync gracefully skips with no ROADMAP.md
+  PASS: all GH-269 roadmap retirement checks passed
+releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
+releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))

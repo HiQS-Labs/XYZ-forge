@@ -1,0 +1,16 @@
+== test: GH-567 ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-GH-567.XXXXXX.51HCQq9e8l
+  PASS: static canary: ROADMAP-DASHBOARD.md and retired scripts absent from repo root
+  PASS: releases_app.py roadmap list operates cleanly without ROADMAP-DASHBOARD.md
+  PASS: releases_app.py roadmap render operates on-demand to stdout without writing file
+  PASS: wave_reconcile.py executes cleanly without dashboard dependencies
+  PASS: audit scanned 252 candidate production files (empty-input guard passed)
+  PASS: writer audit: zero active writers or guards found in production paths
+  PASS: red control 1: canary correctly reported RED when ROADMAP-DASHBOARD.md was injected
+  PASS: red control 2: canary correctly reported RED when utils/roadmap-dashboard.sh was injected
+  PASS: red control 3: canary correctly reported RED when githooks/dashboard-staleness-guard.sh was injected
+  PASS: red control 4: writer audit correctly reported RED when an active artifact reference was injected
+  PASS: red control 5: writer audit correctly reported RED when guard invocation was injected
+  PASS: red control 6: empty-input guard correctly returned exit 2 on empty candidate directory
+  PASS: red control 7: writer audit correctly reported RED when roadmap-dashboard.sh invocation was injected
+== GH-567 ALL PASSED ==

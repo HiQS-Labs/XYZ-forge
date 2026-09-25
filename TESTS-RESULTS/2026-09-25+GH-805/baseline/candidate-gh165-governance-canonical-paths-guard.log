@@ -1,0 +1,9 @@
+== test: gh165-governance-canonical-paths-guard ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh165-governance-canonical-paths-guard.XXXXXX.fslEE6UdAX
+PASS red control: mover: utils/mover.py
+PASS red control: mover: utils/mover.sh
+PASS red control: pdda-write: utils/pdda/pdda.sh
+PASS red control: triage-open: skills/1-hourly/standup/triage.py
+PASS red control: retired-wrapper utils/wave-reconcile.sh
+PASS red control: missing-input: utils/pdda/pdda-lib.sh
+PASS: canonical-path static canaries and six rejecting controls

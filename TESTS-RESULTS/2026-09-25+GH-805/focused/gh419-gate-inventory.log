@@ -1,0 +1,2 @@
+PASS: parser rejects empty/duplicate/dynamic input; advisory metadata never authenticates approval
+PASS: GH-419 inventory discovers registered gates and records only declared controls

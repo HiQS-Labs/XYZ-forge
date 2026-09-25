@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh805-verify-20260925
+configfile: pytest.ini
+collected 39 items
+
+test/flightdeck/test_flightdeck.py ...................                   [ 48%]
+test/flightdeck/test_work_status.py ....................                 [100%]
+
+============================== 39 passed in 1.70s ==============================

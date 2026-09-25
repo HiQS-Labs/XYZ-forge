@@ -1,0 +1,960 @@
+[
+  {
+    "path": "TESTS-RESULTS/2026-08-20+GH-101/ate_telemetry.jsonl",
+    "events": 1935,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-08-20+GH-101/fuzz_telemetry.jsonl",
+    "events": 19,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-08-20+GH-102/ate_telemetry.jsonl",
+    "events": 42,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-08-20+GH-102/fuzz_telemetry.jsonl",
+    "events": 8,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-08-23+GH-174/soak_telemetry.jsonl",
+    "events": 1656,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-01+GH-365/qualifying-run.telemetry.jsonl",
+    "events": 342,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1788332562488,
+        "run": "f1b59bd0d-77370",
+        "runner": "ci-local",
+        "event": "run.start",
+        "commit": "f1b59bd0d5f1433851d6c83630081a70e065e607",
+        "host": "noels-Mac-Studio",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 328
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1788334339736,
+        "run": "f1b59bd0d-77370",
+        "runner": "ci-local",
+        "event": "run.summary",
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "declared": "328",
+        "recorded": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-04+GH-299/campaign/telemetry.jsonl",
+    "events": 400,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-04+GH-299/soak-agy/telemetry.jsonl",
+    "events": 14825,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/final-replay/seed7/telemetry.jsonl",
+    "events": 500,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/final-replay/seed8/telemetry.jsonl",
+    "events": 500,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/final-replay/seed9/telemetry.jsonl",
+    "events": 500,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/final-replay/wrapper-seed11/telemetry.jsonl",
+    "events": 300,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/seed7/telemetry.jsonl",
+    "events": 500,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/seed8/telemetry.jsonl",
+    "events": 500,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/seed9/telemetry.jsonl",
+    "events": 500,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/wrapper-seed11/telemetry.jsonl",
+    "events": 300,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/wrapper-seed11-failed-attempt/telemetry-failed-11ab9aaf.jsonl",
+    "events": 300,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-06+GH-460/wrapper-seed11-failed-attempt/telemetry-superseded-successful-6016e964.jsonl",
+    "events": 300,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-13+GH-584/agy-qa-full-prepush.telemetry.jsonl",
+    "events": 379,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789323455551,
+        "run": "4cdb82a21-26304",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "4cdb82a2131cffa876e69ae41d4cef677123eff6",
+        "host": "noels-Mac-Studio",
+        "mode": "parallel",
+        "width": 4,
+        "tier": 3,
+        "registered": 371
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789324351302,
+        "run": "4cdb82a21-26304",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 374,
+        "failed": 0,
+        "total": 374,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "374",
+        "run_set": "371",
+        "registered": "371",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-13+GH-584/hosted-correction-full-prepush.telemetry.jsonl",
+    "events": 379,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789332602091,
+        "run": "b19831922-28243",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "b198319222523dd3d10941929cb59f0255c4a621",
+        "host": "<redacted-host>",
+        "mode": "parallel",
+        "width": 4,
+        "tier": 3,
+        "registered": 371
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789333824876,
+        "run": "b19831922-28243",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 374,
+        "failed": 0,
+        "total": 374,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "374",
+        "run_set": "371",
+        "registered": "371",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-13+GH-584/landing-full-prepush.telemetry.jsonl",
+    "events": 377,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789328514376,
+        "run": "69197b53d-28819",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "69197b53da33c34936f06f8e05ac551f810e13ae",
+        "host": "noels-Mac-Studio",
+        "mode": "parallel",
+        "width": 4,
+        "tier": 3,
+        "registered": 371
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789329381142,
+        "run": "69197b53d-28819",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 374,
+        "failed": 0,
+        "total": 374,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "373",
+        "run_set": "371",
+        "registered": "371",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-13+GH-591/baseline-validation.jsonl",
+    "events": 378,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789274324292,
+        "run": "7615ed06a-60882",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "7615ed06a6a70d50596b504a17988644f4a295b6",
+        "host": "<host>",
+        "mode": "parallel",
+        "width": 4,
+        "tier": 3,
+        "registered": 370
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789275361256,
+        "run": "7615ed06a-60882",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 373,
+        "failed": 0,
+        "total": 373,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "373",
+        "run_set": "370",
+        "registered": "370",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-13+GH-610/validation.jsonl",
+    "events": 13,
+    "run_start": [],
+    "run_summary": [],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-16+GH-645-qa/ci-local-telemetry.jsonl",
+    "events": 398,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789588174921,
+        "run": "a47f1078e-29468",
+        "runner": "ci-local",
+        "event": "run.start",
+        "commit": "a47f1078eab493eed30c0b8cf3920818e7c61e8d",
+        "host": "noels-Mac-Studio",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 383
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789591748709,
+        "run": "a47f1078e-29468",
+        "runner": "ci-local",
+        "event": "run.summary",
+        "passed": 10,
+        "failed": 0,
+        "total": 10,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "declared": "383",
+        "recorded": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-18+GH-591/wave-60d7d7ec263f327b77756c10ad61b64c9fc80313/validation.jsonl",
+    "events": 397,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789707183876,
+        "run": "60d7d7ec2-4953",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "60d7d7ec263f327b77756c10ad61b64c9fc80313",
+        "host": "sjc20-bb713-575790a2-5234-497e-92a4-413d471f9eba-CA0C1919CECC",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 392
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789711115704,
+        "run": "60d7d7ec2-4953",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 395,
+        "failed": 0,
+        "total": 395,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "394",
+        "run_set": "392",
+        "registered": "392",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-21+GH-591/wave-25c84cbdb5fb3149a71d75bda441f733f3f87b03/validation.jsonl",
+    "events": 411,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790026198228,
+        "run": "25c84cbdb-7028",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "25c84cbdb5fb3149a71d75bda441f733f3f87b03",
+        "host": "sjc22-bt150-b811b5f8-21ee-42d3-b9ff-792ea39b7904-C2D00B93E783",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 406
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790030873440,
+        "run": "25c84cbdb-7028",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 409,
+        "failed": 0,
+        "total": 409,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "408",
+        "run_set": "406",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-21+GH-591/wave-5107b99d3629f90eb443929d5056f50f68fc3799/validation.jsonl",
+    "events": 411,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790020940112,
+        "run": "5107b99d3-2579",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "5107b99d3629f90eb443929d5056f50f68fc3799",
+        "host": "sjc22-bt152-b5d92cad-6c2f-42e2-927e-db612c53a0df-8E042E71A479",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 406
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790025864571,
+        "run": "5107b99d3-2579",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 409,
+        "failed": 0,
+        "total": 409,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "408",
+        "run_set": "406",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-21+GH-591/wave-a3125bfe1aa766f52d0deeaf4d60e3f8eb37bfe4/validation.jsonl",
+    "events": 411,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789961737543,
+        "run": "a3125bfe1-59398",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "a3125bfe1aa766f52d0deeaf4d60e3f8eb37bfe4",
+        "host": "iad20-fj921-aa1ca989-c0f0-4150-addb-00b6847dc902-B23F917EFD9C",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 406
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789966016096,
+        "run": "a3125bfe1-59398",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 409,
+        "failed": 0,
+        "total": 409,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "408",
+        "run_set": "406",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-21+GH-591/wave-ab3a75d5fc11c7bb74cf676bfd40991135b34a15/validation.jsonl",
+    "events": 411,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790016488917,
+        "run": "ab3a75d5f-2898",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "ab3a75d5fc11c7bb74cf676bfd40991135b34a15",
+        "host": "sjc20-bb714-901d2aaa-5a38-49a7-9047-e4e8be30ccea-AE8E37104813",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 406
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790020655272,
+        "run": "ab3a75d5f-2898",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 409,
+        "failed": 0,
+        "total": 409,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "408",
+        "run_set": "406",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-21+GH-591/wave-bd8c6950056103f0a08c0ce2bdb122f76cb37eeb/validation.jsonl",
+    "events": 411,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790011510378,
+        "run": "bd8c69500-5550",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "bd8c6950056103f0a08c0ce2bdb122f76cb37eeb",
+        "host": "sjc22-bm213-a95ffc5e-217d-4c9f-9a4a-5fc3cb6228ac-6A08BDFCA6F8",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 406
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790015964388,
+        "run": "bd8c69500-5550",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 409,
+        "failed": 0,
+        "total": 409,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "408",
+        "run_set": "406",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-21+GH-740/validation.jsonl",
+    "events": 415,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790029435560,
+        "run": "9e6ec63e6-14699",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "9e6ec63e6ea739957449d0e29e44e96833791e47",
+        "host": "noels-MacBook-Pro-14",
+        "mode": "parallel",
+        "width": 4,
+        "tier": 3,
+        "registered": 407
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790030612658,
+        "run": "9e6ec63e6-14699",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 410,
+        "failed": 0,
+        "total": 410,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "410",
+        "run_set": "407",
+        "registered": "407",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-22+GH-591/wave-44e96b77eaf082597fc175c4c5020e81873cab4d/validation.jsonl",
+    "events": 413,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790112632962,
+        "run": "44e96b77e-3123",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "44e96b77eaf082597fc175c4c5020e81873cab4d",
+        "host": "sjc22-be105-7efe7da7-aa69-44b1-8660-726aa625a184-CA9705336238",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 408
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790117653878,
+        "run": "44e96b77e-3123",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 411,
+        "failed": 0,
+        "total": 411,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "410",
+        "run_set": "408",
+        "registered": "408",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-22+GH-591/wave-8393a6a1a6ceef7560580a127bc7ff1612d4fcb2/validation.jsonl",
+    "events": 413,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790098464320,
+        "run": "8393a6a1a-3310",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "8393a6a1a6ceef7560580a127bc7ff1612d4fcb2",
+        "host": "sjc22-be105-987fb4d2-d2f1-4e69-933d-fcf5c37764ad-465A8D2E6DE7",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 408
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790103287027,
+        "run": "8393a6a1a-3310",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 411,
+        "failed": 0,
+        "total": 411,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "410",
+        "run_set": "408",
+        "registered": "408",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-22+GH-591/wave-c0a9b8998dfa939a4c7d860defaea8a57dac3314/validation.jsonl",
+    "events": 413,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790092859349,
+        "run": "c0a9b8998-5073",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "c0a9b8998dfa939a4c7d860defaea8a57dac3314",
+        "host": "sjc22-bm212-3565f086-f454-4d08-8bac-a5bbfb6dc5a2-FAACDF1F1AF0",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 408
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790097872369,
+        "run": "c0a9b8998-5073",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 411,
+        "failed": 0,
+        "total": 411,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "410",
+        "run_set": "408",
+        "registered": "408",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-22+GH-591/wave-d3c220de7b13d73f1f4672be4b2f157452acb339/validation.jsonl",
+    "events": 412,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790040520776,
+        "run": "d3c220de7-7352",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "d3c220de7b13d73f1f4672be4b2f157452acb339",
+        "host": "sat12-dp151-0dc93cad-b0fe-4425-ad34-837975496908-2E6E7C2EC324",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 407
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790044698155,
+        "run": "d3c220de7-7352",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 410,
+        "failed": 0,
+        "total": 410,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "409",
+        "run_set": "407",
+        "registered": "407",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-22+GH-591/wave-e565c0fe606310088f65cca5f5fcddd04b428dfd/validation.jsonl",
+    "events": 411,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790031253120,
+        "run": "e565c0fe6-11303",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "e565c0fe606310088f65cca5f5fcddd04b428dfd",
+        "host": "sjc22-be105-45959bbf-6b4b-4d09-a3ac-bd647a20a0e1-4A6B296A4D5C",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 406
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790035857377,
+        "run": "e565c0fe6-11303",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 409,
+        "failed": 0,
+        "total": 409,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "408",
+        "run_set": "406",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-23+GH-591/wave-adbcaa724f9fdf6843ecf17e73e84e2b10874dd0/validation.jsonl",
+    "events": 413,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790121820473,
+        "run": "adbcaa724-5888",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "adbcaa724f9fdf6843ecf17e73e84e2b10874dd0",
+        "host": "sjc22-be108-960dc098-dab2-46be-99de-42162f918f18-E6726E2FCE7D",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 408
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790126574586,
+        "run": "adbcaa724-5888",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 411,
+        "failed": 0,
+        "total": 411,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "410",
+        "run_set": "408",
+        "registered": "408",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-24+GH-591/wave-0255497769d2b33f3725e23ef649233cf9a3d66c/validation.jsonl",
+    "events": 415,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790230329814,
+        "run": "025549776-6999",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "0255497769d2b33f3725e23ef649233cf9a3d66c",
+        "host": "sjc22-bt150-77e2572f-da68-4444-843e-a0e3acce8661-22467864B57A",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 410
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790235109674,
+        "run": "025549776-6999",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 413,
+        "failed": 0,
+        "total": 413,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "412",
+        "run_set": "410",
+        "registered": "410",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/2026-09-24+GH-591/wave-326e48121a6ac3e28362d25c0964dae99bbb203c/validation.jsonl",
+    "events": 418,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1790271800689,
+        "run": "326e48121-2415",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "326e48121a6ac3e28362d25c0964dae99bbb203c",
+        "host": "sat12-bq166-db0a30c3-b643-4e9b-93f5-a495ed6b0cd0-9ACB64F55EB0",
+        "mode": "sequential",
+        "width": 1,
+        "tier": 3,
+        "registered": 413
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1790276609967,
+        "run": "326e48121-2415",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 416,
+        "failed": 0,
+        "total": 416,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "415",
+        "run_set": "413",
+        "registered": "413",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  },
+  {
+    "path": "TESTS-RESULTS/gh605-plan-preflight/validate-telemetry.jsonl",
+    "events": 379,
+    "run_start": [
+      {
+        "v": 1,
+        "ts_ms": 1789330416712,
+        "run": "38507a233-13103",
+        "runner": "validate",
+        "event": "run.start",
+        "commit": "38507a23303bebab6184607b15e3099cc2dd88e3",
+        "host": "noels-Mac-Studio",
+        "mode": "parallel",
+        "width": 4,
+        "tier": 3,
+        "registered": 371
+      }
+    ],
+    "run_summary": [
+      {
+        "v": 1,
+        "ts_ms": 1789331433882,
+        "run": "38507a233-13103",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 374,
+        "failed": 0,
+        "total": 374,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "374",
+        "run_set": "371",
+        "registered": "371",
+        "suite_events_match": "yes"
+      }
+    ],
+    "comparison": "historical; absent dimensions unknown"
+  }
+]

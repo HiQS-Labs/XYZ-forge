@@ -1,0 +1,9 @@
+{"command": "python3 -m pytest -q test/flightdeck/", "rc": 0, "duration_s": 1.894, "sha": "7813ab52cbb368e97ee43a6336cb9be91ea18b69", "log": "baseline-0.log"}
+{"command": "npm run test:unit", "rc": 0, "duration_s": 0.5, "sha": "7813ab52cbb368e97ee43a6336cb9be91ea18b69", "log": "baseline-1.log"}
+{"command": "bash test/gh269-roadmap-retired.sh", "rc": 0, "duration_s": 8.777, "sha": "7813ab52cbb368e97ee43a6336cb9be91ea18b69", "log": "baseline-2.log"}
+{"command": "bash test/gh165-governance-canonical-paths-guard.sh", "rc": 0, "duration_s": 0.196, "sha": "7813ab52cbb368e97ee43a6336cb9be91ea18b69", "log": "baseline-3.log"}
+{"command": "bash test/gh567-roadmap-dashboard-retired.sh", "rc": 0, "duration_s": 0.461, "sha": "7813ab52cbb368e97ee43a6336cb9be91ea18b69", "log": "baseline-4.log"}
+{"command": "bash test/gh568-releases-view-retired.sh", "rc": 127, "duration_s": 0.004, "sha": "7813ab52cbb368e97ee43a6336cb9be91ea18b69", "log": "baseline-5.log"}
+{"command": "bash test/gh568-releases-md-retired.sh", "rc": 0, "duration_s": 1.055604332999792, "sha": "7813ab52cbb368e97ee43a6336cb9be91ea18b69", "log": "baseline-6.log"}
+{"command": "bash test/gh269-roadmap-retired.sh", "mutation": "planner-exit5", "expected_guard_rc": 1, "observed_rc": 0, "duration_s": 8.417266667005606, "log": "red-before-planner-exit5.log"}
+{"command": "bash test/gh165-governance-canonical-paths-guard.sh", "mutation": "quoted-move", "expected_guard_rc": 1, "observed_rc": 0, "duration_s": 0.2022882080054842, "log": "red-before-quoted-move.log"}

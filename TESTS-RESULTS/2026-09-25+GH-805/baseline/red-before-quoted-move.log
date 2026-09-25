@@ -1,0 +1,8 @@
+== test: gh165-governance-canonical-paths-guard ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh165-governance-canonical-paths-guard.XXXXXX.9egbb4Sy77
+=== Running gh165-governance-canonical-paths-guard.sh ===
+  ✅ PASS: No unauthorized scripts move active docs into 3-COMPLETED
+  ✅ PASS: pdda.sh and pdda-lib.sh maintain strict read-only purity
+  ✅ PASS: skills/1-hourly/standup/triage.py maintains strict read-only purity on governance ledgers
+  ✅ PASS: No new .sh wrapper in utils/ (GH-551 invariant preserved)
+=== gh165-governance-canonical-paths-guard.sh Results: 4 passed, 0 failed ===

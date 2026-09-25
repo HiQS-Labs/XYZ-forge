@@ -1,0 +1,26 @@
+
+> xyz-3-agents-swarm@1.0.1 test:unit
+> node --test "test/unit/*.test.js"
+
+✔ cli priority and epoch bounds checking (275.682459ms)
+✔ cli rejects malformed task/agent strings (61.990375ms)
+✔ appendEvent writes one parsable .jsonl file and readAllEvents returns it (1.395208ms)
+✔ readAllEvents returns events in chronological (filename) order (1.315625ms)
+✔ appendEvent rejects unknown event types and missing task/agent (0.389417ms)
+✔ readAllEvents on a repo with no .tick directory returns [] (0.159833ms)
+✔ lock rejects malformed task/agent at write time (1.597375ms)
+✔ fold is idempotent: folding the same events twice yields the same tasks (0.916125ms)
+✔ claim/release/done project to the expected statuses (0.127875ms)
+✔ epoch fencing: a stale-epoch mutation after ownership moved on is rejected (0.347916ms)
+✔ epoch fencing: a non-owner mutation is rejected as non-owner-agent (0.092875ms)
+✔ terminality seal: a release landing AFTER a done does not reopen the task (0.089709ms)
+✔ nextEpoch is one above the highest epoch any prior claim carried (0.124291ms)
+✔ dependency.drift never seeds a projected task (phantom-open guard) (0.035167ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 367.084042

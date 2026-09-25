@@ -1,0 +1,70 @@
+# GH-805 test value and admission pilot
+
+Coverage repairs are justified; a blanket test cull and mandatory admission rollout are not. This is a bounded audit, not a census of semantic invariants or a trusted approval service.
+
+## Units and inventory
+
+| Unit | Base | Candidate | Meaning |
+|---|---:|---:|---|
+| Registered shell suites | 417 | 418 | `validate.sh:TESTS`; one GH177 hook suite added |
+| Tracked shell files under test | 435 | 436 | Includes helpers, exemptions and nested fixtures |
+| Flightdeck collected Python cases | 39 | 39 | Existing cases newly included in both full runners |
+| Node unit cases | 14 | 14 | Four existing files, newly included in both full runners |
+| Retirement policy suites | 3 | 3 | All distinct protections retained |
+| Assert / whole-estate invariant count | unknown | unknown | No defensible global count inferred from files |
+
+Generate the view with `python3 utils/py/gate_inventory.py --audit --decisions TESTS-RESULTS/2026-09-25+GH-805/decisions.json`. Default output retains the original GH419/litmus JSON contract. The audit reads current tracked files, canonical TESTS and `ci-route.sh subsystems`; source references are discovery hints, explicitly not proof of execution. The checked-in catalog is a reproducible snapshot, never a second scheduling authority.
+
+The 18 shell files outside TESTS comprise eight `test/lib` helpers, two setup helpers, two legacy manual agy tests, the per-mutant gh460 oracle, four synthetic suites called by registered wrappers, and the deliberately manual recursive gamma fixture. `gh306-registry-bidirectional.sh:EXEMPT` owns the top-level exclusions; gamma has a nonrecursive staleness probe in the gate. An exemption is an explanation, not an endorsement of indefinite exclusion.
+
+GH534's three Python modules are reached through registered `gh436-merge-cleanup.sh` → `gh436-merge-cleanup.py` imports → unittest discovery. A duplicate standalone registration was rejected. Flightdeck and Node previously had no checked-in full-gate caller; focused supported-host runs passed 39 and 14 cases respectively. Browser `.mjs` and arbitrary dynamic imports remain outside this narrow repair.
+
+`historical-telemetry-index.json` indexes 40 existing JSONL artifacts, retaining available run-start and summary records with revision, host, width and result. Missing dimensions remain unknown; unlike historical runs are not matched benchmarks. The historical GH591 wave measurement of gh251 was 1044.435/4809.278 seconds (21.7%); GH808 remains GLM-owned and no savings from it are claimed here.
+
+## Repairs and witnessed controls
+
+| Change | Before control | Candidate control / protection |
+|---|---|---|
+| gh269 planner exit | Injected exit 5 still returned suite rc0 | Same injection returns rc1; 0/4 are the accepted set |
+| gh165 quoted mover | `shutil.move("active.md", "PROJECT/3-COMPLETED/active.md")` was invisible | Same injection returns rc1; missing required inputs also fail |
+| GH177 hook regression | No registered hook payload matrix | 17 cases pass; replacing hook with exit0 fails the suite |
+| releases selection | Four named suites omitted from focused releases | Additions only; removing gh605-work-state fails the routing suite |
+| full non-shell lanes | Flightdeck/Node absent | Both runner snippets execute each lane once; child rc7 fails both; deleting Node call makes runner-envelope red |
+| inventory / decisions | Parser could accept empty/duplicate or commented entries | Fixtures reject empty/duplicate/dynamic registry; stale/missing/self-issued records flagged; asserted trusted approval remains false |
+
+Logs and `provenance.jsonl` retain exact commands, revisions, results and elapsed times. Baseline execution used a separate full clone at 7813ab52 (docs-only changes from 0ae3452a); candidate execution used e5f7659d. Identity snapshots match before/after focused runs. A mistyped baseline filename returned rc127 and is retained as a failed invocation; the corrected gh568 run passed. Expected red-control failures are not gate failures or successful production runs.
+
+GH165 is still a bounded static canary: literal same-line moves and named PDDA/triage write shapes, not a proof against computed destinations or every language. It deliberately retains the existing conservative triage `open` check. GH177 preserves the hook's documented parse-error fail-open and approximate shell parsing; nested substitutions and xargs/find dispatch are not advertised as covered.
+
+## Simplification result
+
+Retain all three retirement suites. GH269 protects planner/DB/PDDA behavior; GH567 protects dashboard artifacts and invocations; GH568 protects release-view CLI/write/AST/runtime behavior. Neither filename similarity nor the shared word “retired” establishes redundancy.
+
+GH567 now discovers the candidate files once and reuses that array for its three policy searches. The file shrank from 226 to 222 lines, four traversal expressions became one, and filename-bearing diagnostics remain intact even for a one-file fixture. Existing canary/writer/empty-input red controls pass. Focused baseline/candidate samples were 0.461/0.393 seconds on this host; one sample is insufficient for a runtime improvement claim. The concrete gain is less duplicated discovery, with no helper or suite deletion. Combined retirement-suite LOC rises from 799 to 804 because gh269 gained meaningful controls; no 550-line reduction is claimed.
+
+## Admission contract and pilot
+
+Four allowed coverage decisions are **reuse**, **extend**, **add**, and **no-add**. Approve the coverage decision for a change set, not a ritual per assertion. `decisions.json` is the bounded cohort metadata; the tool alone derives the displayed state and hard-codes `approval_trusted=false` and `would_refuse_mandatory=true`. Valid metadata becomes advisory-reviewed; invalid/incomplete metadata is unreviewed. There is no new database, service, execution registry or merge blocker.
+
+| Proposal | Independent advisory decision | Rationale |
+|---|---|---|
+| Retire/merge gh269/567/568 | Reuse distinct suites | Each has policy-specific controls absent from the others |
+| New suite for planner exit | Extend gh269 | Existing owner can carry this regression |
+| New GH177 hook suite | Add | Live containment boundary lacks registered regression |
+| Separate GH534 wrapper | No-add | Existing GH436 collector already imports all three modules |
+
+Luna high `/root/admission` independently inspected the source cohort in approximately three minutes and agreed with all four decisions; identity is advisory, not an authenticated GitHub reviewer. Final Codex relay review also evaluates this cohort. Four selected proposals are too few and too curated to estimate a real-world semantic false-accept/reject rate. Observed disagreement in that advisory review: 0/4. Tool execution cost is in provenance; model token/currency cost is unavailable, not zero. Plan relay wall time was 2m18s; final review overhead is recorded in its thread.
+
+Metadata controls cover malformed/empty input, missing fields, duplicate IDs, self-issued review, stale content, missing/deleted content and attempted `approval_trusted:true`. Content hashes cover entire listed product/test files, so additions inside files, weakening, renames/deletions and edits invalidate listed bindings. This is not proof that a proposer listed every relevant file, that a reviewer is authorized, or that a candidate did not change the verifier. No record is accepted as trusted admission; semantic correctness is assessed separately from shape/digest validation.
+
+A mandatory system would need an authenticated reviewer principal independent of the proposer; approval bound to the change set and complete relevant-content manifest; a verifier revision supplied from trusted protected configuration, not candidate code; and an expected check producer required on **development**. Missing/forged/self/stale/malformed approval or verifier changes must refuse until independently reviewed; intentional operator overrides must be authenticated, scoped, visible and retained. Current same-account model signatures and locally supplied records meet none of those authentication requirements. Unavailable authority therefore fails the rollout decision, not ordinary repository test execution.
+
+Live policy read-back returned `development` unprotected (HTTP404) and an empty ruleset list. No settings were changed. Rollback of the pilot is simply stopping the opt-in command; rollback of coverage/routing changes is a reviewed revert retaining the previous safety gates.
+
+## Decisions
+
+**Coverage: GO for these measured repairs and the small GH567 maintenance simplification.** Retain all three retirement policy suites, reject duplicate GH534 scheduling, and add only the demonstrated hook gap. An optimal total test count cannot be inferred; 418 shell registrations is the resulting implementation, not a target or recommended permanent cap.
+
+**Mandatory admission: NO-GO.** There is no independently authenticated approval source or required trusted verifier on development. Continue observe mode if useful; do not sell valid JSON as “all new tests approved.” Broad enforcement, automatic deletion, a database catalog migration and legacy backfill are deferred unless a later authorized design supplies the missing authority and demonstrates net value.
+
+Final full-gate / hosted outcome: pending. Focused green and plan approval alone do not make this PR ready.

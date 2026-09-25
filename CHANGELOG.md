@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-25 — Bounded test-value audit and coverage repairs (GH-805)
+
+- Add existing Flightdeck and Node unit coverage to both full runners and restore four focused releases mappings (#774 partial scope).
+- Reject unexpected planner exits, catch quoted canonical-path moves, and register a small sandbox-hook regression matrix. Preserve all three retirement suites; reuse GH567 file discovery.
+- Extend the existing inventory tool with an opt-in advisory catalog. Mandatory admission remains no-go without authenticated reviewer and trusted verifier authority; no merge settings changed.
+- Focused tests and rejecting mutation controls are retained in `TESTS-RESULTS/2026-09-25+GH-805/`; final gate remains pending.
+
 ## 2026-09-24 — GH-791 merge regression review
 
 - Consolidate overlapping #787/#753 mergeability polling and PR exclusion into one path,
