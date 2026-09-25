@@ -114,4 +114,12 @@ Round1 PASS is advisory only: driver exit4 close-mismatch means no valid QA atte
 
 handing off to done — relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-25T00:55:16Z
+task: RELAY-gh796-landing-qa
+reviewer: agy
+status: Approved
+reviewed-head: 23943dfb1cf68f0f31920bd17c1bd003db10d394
+added-range: 9400+1626
+added-sha256: af031575d90f7851e39a34df8b6a3ae0a3af97b750379c29784c696d2c974131
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
