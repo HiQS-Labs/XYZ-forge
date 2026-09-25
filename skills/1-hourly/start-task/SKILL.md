@@ -183,9 +183,15 @@ Then begin work.
    Apply tiered verification discipline: during iterative implementation and
    relay review loops, run ONLY the focused target test suite (`bash test/<target-test>.sh`
    or `./validate.sh --auto`). Do NOT re-run full qualifying test gates between
-   review rounds when tweaking text or minor points. Run the full qualifying gate
-   (`ci-local.sh` or full `./validate.sh`) EXACTLY ONCE on the final approved
-   commit. In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
+   review rounds when tweaking text or minor points. Select the final gate from
+   the actual changed paths against the integration base, using the repo's existing
+   classifier and push-hook route. In XYZ Forge, a Markdown/text-only change
+   (`*.md`/`*.txt`, including skill instructions) uses the deterministic documentation
+   gate (`utils/pdda/pdda.sh run`), not `ci-local.sh` or the full `validate.sh` suite.
+   Include both sides of renames and deletions; a changed script, test, DB, or other
+   non-doc path must follow its classified tier rather than being called docs-only.
+   Run the full qualifying gate (`ci-local.sh` or full `./validate.sh`) EXACTLY ONCE on the final approved commit only when the route requires it.
+   In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
    never a valued task clone or linked worktree. Verify its repository identity
    before and after the run; drift invalidates its evidence. Retain required
    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
