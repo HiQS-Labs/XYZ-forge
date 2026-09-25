@@ -41,8 +41,7 @@ def gh(path, payload=None, method=None):
     cmd = ['gh', 'api', path]
     if payload is not None:
         cmd += ['--input', '-']
-    if method:
-        cmd += ['--method', method]
+    cmd += ['--method', method or ('POST' if payload is not None else 'GET')]
     result = subprocess.run(cmd, input=json.dumps(payload) if payload is not None else None,
                             capture_output=True, text=True, check=True)
     return loads(result.stdout) if result.stdout.strip() else None

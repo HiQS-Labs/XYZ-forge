@@ -1,0 +1,3 @@
+githooks: NOT INSTALLED in this clone.
+  /Users/noelsaw/Documents/GitHub/XYZ-forge-gh805-gateway-verify-20260925/.git/hooks/pre-push does not exist.
+  This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh

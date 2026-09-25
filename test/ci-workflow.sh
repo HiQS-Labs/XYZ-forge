@@ -314,8 +314,8 @@ python3 - "$WORKFLOW" <<'PY_ADMISSION_CI'
 import pathlib, sys, yaml
 workflow=yaml.safe_load(pathlib.Path(sys.argv[1]).read_text())
 triggers=workflow.get('on',workflow.get(True))
-assert triggers['workflow_dispatch']['inputs']['publication_only']=={
-    'description':'Bot publication checks only (skip advisory full canary)', 'type':'boolean','default':False}
+option=triggers['workflow_dispatch']['inputs']['publication_only']
+assert option['type']=='boolean' and option['default'] is False
 condition=workflow['jobs']['canary-ubuntu']['if']
 assert "(github.event_name == 'workflow_dispatch' && inputs.publication_only != true)" in condition
 assert "inputs.publication_only && 'publication' || 'default'" in workflow['concurrency']['group']

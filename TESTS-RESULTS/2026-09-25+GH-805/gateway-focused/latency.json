@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-09-25T04:59:32.075704+00:00",
+  "commit": "838eb089f232c007fcb77cd034d9a721b187a2cd",
+  "command": "python3 utils/py/gate_inventory.py admission check (5 sequential observations)",
+  "rc": 0,
+  "duration_s": 0.44867545900024197,
+  "samples_s": [
+    0.10011050000002797,
+    0.08929379200026233,
+    0.08811508300004789,
+    0.08550037499981045,
+    0.08565570900009334
+  ],
+  "median_s": 0.08811508300004789,
+  "scope": "local metadata check only; not human approval latency or full gate"
+}

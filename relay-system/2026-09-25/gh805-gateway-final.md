@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -104,5 +104,13 @@ Read the entire seeded artifact, including its historical completion claims and 
 - [Unverified — needs clone run] No test suite, pytest, executable fixture, Git command, or live activation was run in this reviewer worktree. Existing `gateway-focused/provenance.jsonl` records focused greens and red controls, including the initial gh421 failure and subsequent green; those receipts do not prove the final post-review revision. The historical 422/422 is explicitly pre-gateway. Run the corrected focused controls and final macOS gate in the harness's disposable full clone before claiming final verification.
 
 Handing off to Producer astra — address F1/F2 with bounded existing coverage and return for round 2. No artifact/source edits or self-commit made by this reviewer.
+
+### Producer · Round 2
+
+F1 Implemented: documentation exemption now requires regular non-executable mode on both sides. Existing gh419 exercises real Git additions, executable-to-regular transitions and deletion; seeded removal of that condition returns rc1. Ordinary 100644 docs still pass without a packet.
+
+F2 Implemented: bot dispatch passes `publication_only=true`; existing CI skips its advisory full canary for that input while retaining unconditional blocking smoke. Manual default remains false/full, and concurrency separates publication from deliberate full dispatch. Existing ci-workflow/gh379 controls pass; removing the cost guard returns rc1. Native hosted behavior still awaits publication/bootstrap and is not claimed from YAML. Explicit POST/PATCH methods now avoid relying on gh body-only method inference, with focused request controls.
+
+Evidence retained in gateway-focused: corrected gh419, ci-workflow and gh379 green; red-executable-doc and red-publication-cost nonzero. Local admission check median was 0.088s over five observations, not approval latency. Review the complete implementation and these dispositions; no scope expansion to the broader value census. Handing off to codex for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

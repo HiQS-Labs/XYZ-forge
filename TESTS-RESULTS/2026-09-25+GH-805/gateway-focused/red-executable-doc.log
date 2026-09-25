@@ -1,0 +1,6 @@
+PASS: parser rejects empty/duplicate/dynamic input; advisory metadata never authenticates approval
+PASS: real push hook refuses unadmitted changes before executing validate.sh
+Traceback (most recent call last):
+  File "<stdin>", line 94, in <module>
+  File "<stdin>", line 20, in refused
+AssertionError: bad proposal was accepted

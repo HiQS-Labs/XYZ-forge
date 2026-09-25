@@ -1,0 +1,42 @@
+## Test coverage decision
+
+State: **proposed** — not an approval.
+Test-file changes: {"A": 1, "D": 0, "M": 10, "T": 0} (A/M/D/T).
+Registered shell-suite delta: 1.
+Case count: unknown; no assertion count is inferred from filenames.
+
+**behavior**
+> Require explicit coverage decisions and operator review before agent changes land; preserve the existing coverage repairs in PR811
+
+**cost**
+> Focused gateway suite ~1.1s; publisher suite ~3.2s; workflow/reconciliation suite ~1.7s on local macOS. Zero new registered suites in gateway continuation. No model call per test; one operator review per PR. Live approval latency unknown pending activation.
+
+**existing coverage**
+> Extend gh419 for the admission boundary and gh740/gh421 for protected publishing. Reuse all existing suite registrations; the prior GH177 hook suite remains the only new registered suite in this PR.
+
+**issue**
+> https://github.com/HiQS-Labs/XYZ-forge/issues/805
+
+**outcome**
+> add
+
+**reason**
+> Reported uncontrolled test growth requires a machine-checked proposal and authenticated operator review. The gateway continuation adds zero registered suites and no separate test framework.
+
+**red evidence**
+> Committed gateway-focused evidence: missing/stale/omitted/forged/rename/delete and operator-review controls pass; disabling full manifest comparison, self-review rejection or early hook refusal makes gh419 fail. Protected publisher retains receipts without pushing development.
+
+Changed test paths:
+- `test/ci-route.sh` (M)
+- `test/gh165-governance-canonical-paths-guard.sh` (M)
+- `test/gh177-sandbox-test-guard.sh` (A)
+- `test/gh269-roadmap-retired.sh` (M)
+- `test/gh35-test-tiers.sh` (M)
+- `test/gh365-runner-envelope.sh` (M)
+- `test/gh390-gate-guard.sh` (M)
+- `test/gh419-gate-inventory.sh` (M)
+- `test/gh421-auto-wave-reconcile.sh` (M)
+- `test/gh567-roadmap-dashboard-retired.sh` (M)
+- `test/gh740-hosted-lane-publish.sh` (M)
+
+Approve through the GitHub PR review UI after inspecting the complete diff. New commits dismiss approval.

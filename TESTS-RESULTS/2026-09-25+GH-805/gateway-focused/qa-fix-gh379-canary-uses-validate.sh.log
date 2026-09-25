@@ -1,0 +1,39 @@
+== test: gh379-canary-uses-validate ==
+  PASS: canary invokes ./validate.sh with an explicit --parallel N
+  PASS: no CI step scrapes the TESTS array out of validate.sh
+  PASS: the full-suite step was actually extracted (not an empty awk range)
+  PASS: the FULL-suite step does not iterate suites itself
+  PASS: the Fast Gate list was actually extracted (not an empty awk range)
+  PASS: every Fast Gate array entry was parsed (11 parsed of 11 in the array body)
+  PASS: every Fast Gate suite name still exists on disk (missing: none)
+  PASS: validate.sh still owns the non-shell lane 'python:test_python_layer.py'
+  PASS: validate.sh still owns the non-shell lane 'clone-identity-invariant'
+  PASS: validate.sh still owns the non-shell lane 'gamma-poison-staleness-probe'
+  PASS: the canary step uses a LITERAL block scalar (run: |), not a folding one
+  PASS: the canary step's run body resolved through a real YAML parser
+  PASS: the canary step runs exactly 2 commands — the shell pin and the gate (found 2)
+  PASS:   the first is the shell pin
+  PASS:   the second invokes the gate
+  PASS: the canary's command matches './validate.sh --parallel N [--skip NAME]...' exactly (bad: none)
+  PASS: the canary's command does not narrow or short-circuit the run with '--tier'
+  PASS: the canary's command does not narrow or short-circuit the run with '--subsystem'
+  PASS: the canary's command does not narrow or short-circuit the run with '--auto'
+  PASS: the canary's command does not narrow or short-circuit the run with '--paths-file'
+  PASS: the canary's command does not narrow or short-circuit the run with '--print-mode'
+  PASS: the canary's command does not narrow or short-circuit the run with '--list'
+  PASS: validate.sh accepts --skip
+  PASS: --skip with no value is a usage error (exit 2)
+  PASS:   and says what it wanted
+  PASS: an UNREGISTERED --skip name is refused (exit 2), so a typo cannot silently skip nothing
+  PASS:   and the refusal explains why a no-op skip is dangerous
+  PASS:   and no suite ran before the refusal
+  PASS: the registry listed at least one suite to skip
+  PASS: skipping EVERY suite refuses (exit 1) rather than reporting a zero-test green
+  PASS:   and it says so, instead of dying on an unbound variable
+  PASS: every --skip name in ci.yml is a registered suite (drift: none)
+  PASS: validate.sh announces quarantined suites in the header
+  PASS: validate.sh repeats them in the summary
+  PASS: a quarantined run disqualifies itself as promotion evidence
+  PASS: boundary-macos still pins --sequential (it is the promotion boundary, not the canary)
+
+  gh379-canary-uses-validate: 36 pass, 0 fail

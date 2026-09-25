@@ -117,6 +117,13 @@ from unittest.mock import patch
 root, fixture = map(pathlib.Path, sys.argv[1:])
 sys.path.insert(0, str(root/'utils/py'))
 import coverage_admission as a
+# Explicit methods: body-only requests must not depend on gh's default method inference.
+from types import SimpleNamespace
+with patch.object(a.subprocess,'run',return_value=SimpleNamespace(stdout='{}')) as request:
+    a.gh('repos/owner/repo/check-runs',{'name':'test admission'})
+    assert request.call_args.args[0][-2:]==['--method','POST']
+    a.gh('repos/owner/repo/check-runs/1',{'status':'completed'},'PATCH')
+    assert request.call_args.args[0][-2:]==['--method','PATCH']
 r = fixture/'admission-repo'; r.mkdir(); (r/'test').mkdir()
 def g(*args): return subprocess.check_output(['git','-C',str(r),*args], text=True).strip()
 g('init','-q','--initial-branch=development'); g('config','user.name','Fixture'); g('config','user.email','fixture@example.invalid')
