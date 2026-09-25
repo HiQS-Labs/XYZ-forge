@@ -67,13 +67,13 @@ run_triage() {
     return
   fi
   # Check category field in JSON
-  if echo "$json" | grep -q "\"category\": \"${expected_cat}\""; then
+  if grep -q "\"category\": \"${expected_cat}\"" <<<"$json"; then
     pass "$sig_id: category=${expected_cat}"
   else
     fail "$sig_id: expected category=${expected_cat}, got: $json"
   fi
   # Check evidence contains the expected rule id
-  if echo "$json" | grep -q "\"evidence\": \"${expected_rule}"; then
+  if grep -q "\"evidence\": \"${expected_rule}" <<<"$json"; then
     pass "$sig_id: evidence starts with ${expected_rule}"
   else
     fail "$sig_id: expected evidence starting with ${expected_rule}, got: $json"
@@ -99,7 +99,7 @@ run_triage "validate-fail-001" "bug" "rule-2-bug" \
 # Verify the test name appears in evidence
 json_c="$(bash "$TRIAGE" --id "validate-fail-002" --output-dir "$TRIAGE_DIR" \
   --source "validate-fail" --test "test/some-test.sh" 2>/dev/null)"
-if echo "$json_c" | grep -q "test/some-test.sh"; then
+if grep -q "test/some-test.sh" <<<"$json_c"; then
   pass "validate-fail: test name embedded in evidence"
 else
   fail "validate-fail: test name not in evidence; got: $json_c"
@@ -111,7 +111,7 @@ run_triage "sec-scan-001" "bug" "rule-2-bug" \
 
 json_d="$(bash "$TRIAGE" --id "sec-scan-002" --output-dir "$TRIAGE_DIR" \
   --source "security-scan" 2>/dev/null)"
-if echo "$json_d" | grep -q "\"source\": \"security-scan\""; then
+if grep -q "\"source\": \"security-scan\"" <<<"$json_d"; then
   pass "security-scan: source field preserved as security-scan (stays queryable per GP #7)"
 else
   fail "security-scan: source field should be security-scan; got: $json_d"
@@ -151,12 +151,12 @@ run_triage "manual-001" "enhancement" "rule-4-enhancement" \
 # ---------------------------------------------------------------------------
 json_k="$(bash "$TRIAGE" --id "dup-override-001" --output-dir "$TRIAGE_DIR" \
   --source "validate-fail" --test "test/foo.sh" --dedupe-of "GH-15" 2>/dev/null)"
-if echo "$json_k" | grep -q "\"category\": \"noise\""; then
+if grep -q "\"category\": \"noise\"" <<<"$json_k"; then
   pass "dedupe-first: --dedupe-of on validate-fail source fires rule-1/noise (not rule-2/bug)"
 else
   fail "dedupe-first: expected noise, got: $json_k"
 fi
-if echo "$json_k" | grep -q "\"dedupe_of\""; then
+if grep -q "\"dedupe_of\"" <<<"$json_k"; then
   pass "dedupe-first: dedupe_of field present in JSON"
 else
   fail "dedupe-first: dedupe_of field missing in JSON"
@@ -179,7 +179,7 @@ fi
 
 # All required fields present
 for field in signal_id source category severity evidence classified_at; do
-  if echo "$json_l" | grep -q "\"${field}\""; then
+  if grep -q "\"${field}\"" <<<"$json_l"; then
     pass "JSON schema: field '${field}' present"
   else
     fail "JSON schema: field '${field}' missing in: $json_l"
@@ -187,7 +187,7 @@ for field in signal_id source category severity evidence classified_at; do
 done
 
 # evidence field contains matched-rule id (e.g. "rule-4-enhancement / ...")
-if echo "$json_l" | grep -q "\"evidence\": \"rule-"; then
+if grep -q "\"evidence\": \"rule-" <<<"$json_l"; then
   pass "JSON schema: evidence field carries matched-rule id (starts with rule-*)"
 else
   fail "JSON schema: evidence field does not start with rule-*: $json_l"
@@ -205,7 +205,7 @@ fi
 
 # File contents match stdout (first line should match)
 FILE_CAT="$(grep '"category"' "$NOTE_PATH" | tr -d ' ')"
-STDOUT_CAT="$(echo "$json_l" | grep '"category"' | tr -d ' ')"
+STDOUT_CAT="$(grep '"category"' <<<"$json_l" | tr -d ' ')"
 if [[ "$FILE_CAT" == "$STDOUT_CAT" ]]; then
   pass "canonical note contents match stdout"
 else
@@ -251,7 +251,7 @@ check_severity() {
   shift 2
   local json=""
   json="$(bash "$TRIAGE" --id "$sig_id" --output-dir "$TRIAGE_DIR" "$@" 2>/dev/null)"
-  if echo "$json" | grep -q "\"severity\": \"${expected_sev}\""; then
+  if grep -q "\"severity\": \"${expected_sev}\"" <<<"$json"; then
     pass "$sig_id: severity=${expected_sev}"
   else
     fail "$sig_id: expected severity=${expected_sev}, got: $json"
