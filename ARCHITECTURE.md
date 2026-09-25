@@ -62,7 +62,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (15)
+### `2-daily` — A few times a day (16)
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -81,6 +81,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
 | [review-code](skills/2-daily/review-code/SKILL.md) | Meticulous ground-truth code and PR review using recon, debug-mantra, and workhorse/unstuck ladders. |
 | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
+| [status](skills/2-daily/status/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 

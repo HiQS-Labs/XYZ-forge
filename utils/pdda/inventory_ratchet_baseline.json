@@ -1,5 +1,5 @@
 {
-  "total_scripts": 119,
+  "total_scripts": 120,
   "scripts": [
     "utils/ate/install.sh",
     "utils/ate/scripts/checkin.py",
@@ -103,6 +103,7 @@
     "utils/py/wave_reconcile.py",
     "utils/py/work_connectors/__init__.py",
     "utils/py/work_connectors/github_board.py",
+    "utils/py/work_connectors/github_labels.py",
     "utils/py/workspace_manager.py",
     "utils/py/xyz_init_clone.py",
     "utils/py/xyz_mini_sync.py",

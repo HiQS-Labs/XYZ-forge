@@ -1,0 +1,19 @@
+== test: gh492-idle-kill ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh492-idle.kfSezu
+  PASS: the sampler collected enough readings for a verdict (samples=8)
+  PASS: a blocked turn accumulates idle time (idle=4.375560707994737s) — killable before the wall cap
+  PASS: CONTROL: a slow-but-progressing turn stays un-idle (idle=0.7355793750029989s) — not killed
+  PASS: blocked and progressing are separated by the signal the bound acts on (4.375560707994737s vs 0.7355793750029989s)
+  PASS: the blocked turn still classifies as timeout-idle-unknown — GH-390 attribution preserved
+  PASS: the progressing turn still classifies as timeout-slow-but-progressing — not conflated with idle
+  PASS: idle_seconds() is None before any sample — callers must read that as 'do not kill'
+  PASS: agy-turn guards the idle bound behind idle_cap > 0 (RELAY_TURN_IDLE_S=0 disables it)
+  PASS: agy-turn treats an unmeasured idle reading as not-killable
+  PASS: CONSULT: a hung advisor is seen as idle when scoped to its own pid (idle=3.1531620000023395s)
+  PASS: CONSULT: the SHARED-parent scope masks that same hang (idle=0.44554579199757427s) — which is why root_pid exists
+  PASS: a growing transcript FILE registers as progress (advisors share a worktree; a file is per-advisor)
+  PASS: a missing transcript reads 0.0 rather than raising — an advisor that never writes is still measurable
+  PASS: consult guards the idle bound (CONSULT_IDLE_S=0 restores pure wall-cap behaviour)
+  PASS: consult treats an unmeasured idle reading as not-killable
+  PASS: consult scopes each advisor's diagnostics to that advisor's own pid
+  gh492-idle-kill: 16 pass, 0 fail
