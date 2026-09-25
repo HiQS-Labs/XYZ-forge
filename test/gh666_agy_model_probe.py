@@ -11,6 +11,8 @@ import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "utils/py"))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
+import pystub  # GH-788: stub header that survives a spaced interpreter path
 spec = importlib.util.spec_from_file_location(
     "agy_turn", Path(__file__).resolve().parents[1] / "utils/py/agy-turn.py")
 agy = importlib.util.module_from_spec(spec)
@@ -29,7 +31,7 @@ class ModelProbeTests(unittest.TestCase):
         self.record = self.root / "invocations.jsonl"
         self.stub = self.caller / "tools" / "agy"
         self.stub.parent.mkdir()
-        self.stub.write_text("#!" + sys.executable + "\n" + '''
+        self.stub.write_text(pystub.launcher() + '''
 import json, os, sys, time
 from pathlib import Path
 assert sys.argv[1:] == ["models"]
