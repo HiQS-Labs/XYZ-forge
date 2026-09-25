@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-24 — GH-800 M6 full-suite benchmark intake
+
+Opened the three-device full-gate timing campaign at pinned `development@a08f30e9`. The first complete Mac mini M6 run took 1,083 s with 416/420 passing and four persistent failures; its clone identity stayed intact. A prior 678 s setup attempt lacked Node on PATH and was excluded. Public-safe per-suite timing and provenance are retained in `TESTS-RESULTS/2026-09-25+GH-800/`. A green matched baseline and the other two devices remain open.
+
 ## 2026-09-24 — merge-cleanup: `--exclude <PR#>` drops the PR; post-landing UNKNOWN mergeability is polled (GH-736)
 
 `--exclude` with a bare PR number now leaves that PR out of the merge queue, as the skill's own
