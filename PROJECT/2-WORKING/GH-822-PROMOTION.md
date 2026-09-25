@@ -49,7 +49,19 @@ and `xyz-sync.sh update` preserves its ledger) is covered by gh105-vendor-releas
 gh103-timeline-exporter, gh349-releases-roadmap-vendored, gh197-vendor-tier-split and gh312-vendor-preserves-state.
 All six passed in the 2026-09-25 qualifying `ci-local.sh` run on `9ab269c8`.
 
-## Promotion steps (after this PR is reconciled)
+## Promotion steps: executed 2026-09-25 (historical record; do not re-run for 0.9.0)
+
+Results of each step below:
+
+1. `P` = `a076b1b117a68252dc3d9d1c4901b0c31fcb4db3`, the reconciled tip after #826. No other merges landed in the window.
+2. `main` was fast-forwarded `29144118..a076b1b1` at 20:16:49Z behind a green full pre-push gate. `enforce_admins` was off from
+   19:57:52Z to 20:16:49Z and restored; `enabled: true` was verified, and the protection matched its snapshot.
+3. `MACOS-BOUNDARY: green a076b1b1`: `validate.sh --sequential` 422/422 in 78 min (CI run 36184841355).
+4. [0.9.0 "Cargo"](https://github.com/HiQS-Labs/XYZ-forge/releases/tag/0.9.0) was published on `a076b1b1` as Latest at 21:37:16Z. The ledger
+   write-back (GH_URL plus `shipped`) landed in the follow-up PR.
+5. Not needed: step 3 was green.
+
+The steps as planned, kept as the template for the next promotion (use a new version, never 0.9.0 again):
 
 1. Choose the SHA `P` = the `development` tip after this PR's reconcile. Hold other merges until step 3 finishes.
 2. `gh api -X DELETE repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins`, then
