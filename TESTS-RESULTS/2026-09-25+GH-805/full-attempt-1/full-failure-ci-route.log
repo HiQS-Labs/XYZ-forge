@@ -1,0 +1,63 @@
+== test: ci-route ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-ci-route.XXXXXX.zx1LBpFt1s
+  PASS: markdown-only PR uses the docs gate
+  PASS: ordinary code-only PR uses the fast gate without PDDA
+  PASS: mixed docs and ordinary code runs both fast tests and PDDA
+  PASS: Tick/event changes require the full pre-merge gate
+  PASS: relay containment changes require the full pre-merge gate
+  PASS: Python-authoritative twin changes require the full pre-merge gate
+  PASS: worktree safety test changes require the full pre-merge gate
+  PASS: CI workflow changes require the full pre-merge gate
+  PASS: PDDA implementation changes run the PDDA subsystem gate (GH-35)
+  PASS: releases DB changes run the releases subsystem gate (GH-496)
+  PASS: wave_reconcile changes run the PDDA subsystem gate (GH-496)
+  PASS: a deleted regression test fails closed into the full gate
+  PASS: a push with no usable range fails closed into the full gate
+  PASS: scheduled runs remain the full fallback boundary
+  PASS: fast routes include a directly matching changed-area test
+  PASS: an empty PR diff fails closed into the full gate
+  PASS: unknown events fail loudly
+  PASS: docs-only push uses the docs gate (was blanket full)
+  PASS: text documentation uses the docs gate
+  PASS: AgentChorus skill instructions use the docs gate
+  PASS: a relay-system .txt sidecar alone uses the docs gate
+  PASS: a relay-system transcript plus its .txt sidecar both use the docs gate
+  PASS: ordinary code-only push uses the fast gate
+  PASS: a push touching the kernel still fails closed to full
+  PASS: a push touching relay containment still fails closed to full
+  PASS: workflow_dispatch stays unconditionally full even for a docs-only path list
+  PASS: control: plain --name-only reports ONE path for a rename (the source is invisible)
+  PASS: a renamed regression test selects full (--no-renames surfaces the removal)
+  PASS: an ordinary test edit is not forced to full (the rename rule is not a blanket)
+  PASS: docs-only changes are tier 1
+  PASS: text and markdown anywhere are docs (GH-35 widened)
+  PASS: HQ utility changes are tier 2
+  PASS: releases subsystem (incl. the one non-twin utils/py file) is tier 2
+  PASS: releases DB and dump files are tier 2 (GH-496)
+  PASS: releases utilities are tier 2 (GH-496)
+  PASS: wave_reconcile is tier 2 under PDDA (GH-496)
+  PASS: telemetry is tier 2
+  PASS: ATE + fuzzing are tier 2
+  PASS: swe-diagram is tier 2
+  PASS: agent-chorus skill code is tier 2 (GH-35 subsystem 7)
+  PASS: agent-chorus SKILL.md stays docs (explanatory markdown)
+  PASS: kernel changes are tier 3
+  PASS: authoritative Python twins are tier 3
+  PASS: relay-xyz skill surface is tier 3
+  PASS: an UNMAPPED code path is tier 3 even though route=fast
+  PASS: an ordinary test EDIT is tier 3 (the contract's own evidence)
+  PASS: a test-like path outside test/ and outside a subsystem dir is unmapped
+  PASS: mixed docs + subsystem is tier 2 with PDDA still on
+  PASS: mixed subsystem + kernel fails closed to tier 3
+  PASS: scheduled runs stay tier 3
+  PASS: a registered skill + its code + its dedicated tests is tier 2 (GH-487)
+  PASS: a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)
+  PASS: shared Python test integration still escalates beside skill code (GH-487)
+  PASS: a TESTS-RESULTS receipt alone uses the docs gate (GH-487)
+  PASS: a TESTS-RESULTS receipt alone is tier 1 (GH-487)
+  PASS: a receipt beside subsystem code keeps the subsystem gate (GH-487)
+  PASS: a deleted dedicated suite fails closed into the full gate (GH-487)
+  PASS: subsystems listing names hq and its suites
+  PASS: an unknown subsystem fails loudly (exit 2)
+  PASS: subsystems hq lists its 13 suites
+  FAIL: subsystems releases listed       28 suites: gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh549-work-events.sh gh567-roadmap-dashboard-retired.sh gh568-releases-md-retired.sh gh646-status-label.sh jog-queue.sh gh75-dashboard.sh gh605-board-policy.sh gh605-work-state.sh

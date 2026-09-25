@@ -5,11 +5,11 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "$ROOT/relay-automation/hooks/gh177-sandbox-test-guard.sh" <<'PY'
 import json, subprocess, sys
 hook = sys.argv[1]
-blocked = ['./validate.sh', 'bash test/example.sh', 'command bash test/example.sh',
-           'env VAR=x bash test/example.sh', 'exec ./validate.sh', 'time ./validate.sh',
-           'nohup ./validate.sh', 'nice ./validate.sh', 'source test/example.sh',
-           'cd test && bash example.sh']
-allowed = ['bash -n test/example.sh', 'shellcheck test/example.sh',
+blocked = ['./validate.sh', 'bash test/gh177-sandbox-test-guard.sh', 'command bash test/gh177-sandbox-test-guard.sh',
+           'env VAR=x bash test/gh177-sandbox-test-guard.sh', 'exec ./validate.sh', 'time ./validate.sh',
+           'nohup ./validate.sh', 'nice ./validate.sh', 'source test/gh177-sandbox-test-guard.sh',
+           'cd test && bash gh177-sandbox-test-guard.sh']
+allowed = ['bash -n test/gh177-sandbox-test-guard.sh', 'shellcheck test/gh177-sandbox-test-guard.sh',
            'grep validate.sh README.md', 'cd src && bash build.sh',
            'cd test && cd .. && bash build.sh']
 for command, expected, unsandboxed in [(x, 2, False) for x in blocked] + [(x, 0, False) for x in allowed] + [('./validate.sh', 0, True)]:

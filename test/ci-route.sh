@@ -219,8 +219,8 @@ out="$(bash "$ROUTER" subsystems hq)"
   && pass "subsystems hq lists its 13 suites" \
   || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems releases)"
-[[ "$(wc -w <<<"$out")" -eq 24 ]] \
-  && pass "subsystems releases lists its 24 suites (GH-496; +gh549-work-events; +gh567-roadmap-dashboard; +gh568-releases-md-retired; +gh646-status-label)" \
+[[ "$(wc -w <<<"$out")" -eq 28 ]] \
+  && pass "subsystems releases lists its 28 suites (GH-805 restores four existing coverage mappings)" \
   || fail "subsystems releases listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems pdda)"
 [[ "$(wc -w <<<"$out")" -eq 15 ]] \

@@ -1,0 +1,5 @@
+== test: path-integrity ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-path-integrity.XXXXXX.9EnaIPqbXt
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  broken path reference 'test/example.sh' in test/gh177-sandbox-test-guard.sh
+  FAIL: one or more referenced paths do not exist (see above) — fix the path or the reference

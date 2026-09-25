@@ -53,7 +53,7 @@
     "red_evidence": "See focused provenance and negative controls in REPORT.md; gh534 duplicate decision is source-based",
     "cost": "See provenance; incremental full-gate cost not yet measured",
     "content": {
-      "test/gh177-sandbox-test-guard.sh": "94321e379e9c70f4ccc82b0aa06248fb2cf8406452a9caae37060152f5646d55",
+      "test/gh177-sandbox-test-guard.sh": "d4bef802502c1697ca7b27fdf220f2dd4d5146ec96352d89ac3c22e6366a8e24",
       "relay-automation/hooks/gh177-sandbox-test-guard.sh": "0cb960b12fe8c7c29e9166063e1b3ba442f03cb0eae7437eddd11a0cd21c4672"
     }
   },
