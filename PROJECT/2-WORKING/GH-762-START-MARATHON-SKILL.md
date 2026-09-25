@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| GH-796 F1–F6 remediation integrated through reconciled #795 at base `69367026`; B1 preserved generation 1152 and replayed only #762/#763. Earlier focused controls and bounded source review pass. | Obtain driver-attested independent final relay QA and run the final combined full local gate, then publish and update PR #765. |
+| Final integration through reconciled #795 is complete; Agy approved all seven bounded review questions with driver attestation at a4cac730. Earlier focused controls pass. | Run the final combined full local gate, then publish and update PR #765; keep #777 open. |
 
 ## Idea
 
