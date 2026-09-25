@@ -1,6 +1,6 @@
 ---
 title: "GH-825: handsfree wake and progress skill"
-status: Active (2-WORKING — plan QA)
+status: Active (2-WORKING)
 created: 2026-09-25
 updated: 2026-09-25
 owner: unassigned
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan and final QA approved; skill structure and focused PDDA checks passed | Run the qualifying gate in a disposable full clone, then open PR to `development` |
+| Codex plan and final QA approved; skill structure and focused PDDA checks passed; full `ci-local.sh` passed in a disposable full clone at `9b3a780d` with 421 suite verdicts and a clean clone-identity invariant | Push the reviewed branch and open a PR to `development`; check hosted CI on the pushed commit |
 
 ## Observed state and recon ledger
 
