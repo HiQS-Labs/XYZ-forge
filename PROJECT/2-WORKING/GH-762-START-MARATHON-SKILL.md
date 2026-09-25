@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| GH-796 F1–F6 remediation integrated with development through #794. Five focused suites and PDDA aggregate pass at `0e9c4b88`; independent source review found no remaining F1–F6 blocker. | Integrate reconciled #795, obtain driver-attested independent final relay QA, run the full local gate, then publish and update PR #765. |
+| GH-796 F1–F6 remediation integrated through reconciled #795 at base `69367026`; B1 preserved generation 1152 and replayed only #762/#763. Earlier focused controls and bounded source review pass. | Obtain driver-attested independent final relay QA and run the final combined full local gate, then publish and update PR #765. |
 
 ## Idea
 
