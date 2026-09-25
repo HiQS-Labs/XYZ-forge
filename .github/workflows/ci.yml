@@ -101,11 +101,16 @@ on:
   pull_request:
     branches: [main, development]
   workflow_dispatch:
+    inputs:
+      publication_only:
+        description: Bot publication checks only (skip advisory full canary)
+        type: boolean
+        default: false
 
 concurrency:
   # Cancel superseded runs within the same event lane. Keep manual integration runs
   # independent so a branch push cannot cancel an operator-requested full gate.
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}-${{ inputs.publication_only && 'publication' || 'default' }}
   cancel-in-progress: true
 
 permissions:
@@ -241,7 +246,7 @@ jobs:
     # fallback. Push-to-main is after the promotion decision, and pull_request was the 8m54s long pole.
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/development') ||
-      github.event_name == 'workflow_dispatch'
+      (github.event_name == 'workflow_dispatch' && inputs.publication_only != true)
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:

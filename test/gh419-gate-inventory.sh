@@ -177,7 +177,7 @@ for existing in [[],[pr]]:
     with patch.object(a,'gh',side_effect=publication_api):
         a.open_pr('owner/repo','feat/coverage','f'*40,'title','body')
     assert dispatch[0][1]['ref']=='development' and dispatch[0][1]['inputs']['pr']=='1'
-    assert dispatch[1][1]['ref']=='feat/coverage'
+    assert dispatch[1][1]['ref']=='feat/coverage' and dispatch[1][1]['inputs']=={'publication_only':'true'}
 # A same-account reviewer, stale review, or dismissed review is never authenticated admission.
 with patch.object(a,'gh',return_value=pr), patch.object(a,'git',return_value=''), patch.object(a,'revision',return_value='f'*40), patch.object(a,'inspect',return_value={'state':'proposed'}):
     review={'id':3,'user':{'id':a.OPERATOR_ID},'state':'APPROVED','commit_id':'f'*40,'html_url':'review'}
@@ -201,6 +201,16 @@ result=subprocess.run(['bash',str(root/'githooks/pre-push'),'origin'],cwd=r,text
 assert result.returncode==1 and 'refused before expensive validation' in result.stderr, result.stderr
 assert not (r/'expensive-ran').exists()
 print('PASS: real push hook refuses unadmitted changes before executing validate.sh')
+# Documentation exemption is for regular non-executable blobs only, on BOTH sides.
+doc_base=g('rev-parse','HEAD'); (r/'docs').mkdir(); doc=r/'docs/runner.md'
+doc.write_text('ordinary documentation\n'); g('add','docs/runner.md')
+assert a.inspect(r,doc_base,'INDEX')['state'].startswith('documentation-only')
+doc.chmod(0o755); g('add','docs/runner.md'); refused(lambda:a.inspect(r,doc_base,'INDEX'))
+g('commit','-qm','executable documentation fixture'); exec_base=g('rev-parse','HEAD')
+doc.chmod(0o644); g('add','docs/runner.md'); refused(lambda:a.inspect(r,exec_base,'INDEX'))
+doc.unlink(); g('add','-u'); refused(lambda:a.inspect(r,exec_base,'INDEX'))
+print('PASS: executable additions, permission transitions and removals require a decision')
+
 print('PASS: complete binding, stale/missing/forged/renamed/deleted controls and native review identity')
 PY_GATEWAY
 

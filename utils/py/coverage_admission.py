@@ -133,7 +133,8 @@ def summary(root, base, head, rows, decision=None):
 
 def inspect(root, base, head='HEAD'):
     base, tree, rows = manifest(root, base, head)
-    needs = any(not documentation(r['path']) for r in rows)
+    needs = any(not documentation(r['path']) or r['old_mode'] not in {'000000', '100644'}
+                or r['new_mode'] not in {'000000', '100644'} for r in rows)
     if not needs:
         result = summary(root, base, tree, rows)
         result['state'] = 'documentation-only; operator PR review still required'
@@ -192,7 +193,7 @@ def live_pr(repo, number):
 def dispatch_checks(repo, pr):
     gh(f'repos/{repo}/actions/workflows/test-admission.yml/dispatches',
        dict(ref='development', inputs={'pr': str(pr['number'])}))
-    gh(f'repos/{repo}/actions/workflows/ci.yml/dispatches', dict(ref=pr['head']['ref']))
+    gh(f'repos/{repo}/actions/workflows/ci.yml/dispatches', dict(ref=pr['head']['ref'], inputs={'publication_only': 'true'}))
 
 
 def open_pr(repo, branch, expected, title, body):

@@ -309,6 +309,20 @@ fi
 
 # GH-347 relocates the expensive advisory suite to the integration point. Extract only the job's
 # actual condition so workflow-level triggers and explanatory prose cannot satisfy this contract.
+# GH805: automatic bot publication must not select the expensive advisory full canary.
+python3 - "$WORKFLOW" <<'PY_ADMISSION_CI'
+import pathlib, sys, yaml
+workflow=yaml.safe_load(pathlib.Path(sys.argv[1]).read_text())
+triggers=workflow.get('on',workflow.get(True))
+assert triggers['workflow_dispatch']['inputs']['publication_only']=={
+    'description':'Bot publication checks only (skip advisory full canary)', 'type':'boolean','default':False}
+condition=workflow['jobs']['canary-ubuntu']['if']
+assert "(github.event_name == 'workflow_dispatch' && inputs.publication_only != true)" in condition
+assert "inputs.publication_only && 'publication' || 'default'" in workflow['concurrency']['group']
+assert 'if' not in workflow['jobs']['vendored-smoke']
+PY_ADMISSION_CI
+[ "$?" -eq 0 ] && pass "bot publication keeps blocking smoke without advisory full canary" || fail "publication dispatch unexpectedly runs full canary or omits smoke"
+
 canary_condition="$(awk '/^  canary-ubuntu:/{job=1} job && /^[[:space:]]*if:/{cond=1} cond{print} cond && /^[[:space:]]*runs-on:/{exit}' "$WORKFLOW")"
 if grep -q "refs/heads/development" <<<"$canary_condition" \
   && grep -q "github.event_name == 'push'" <<<"$canary_condition" \
