@@ -90,4 +90,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Producer may implement the approved plan and obtain final QA.
 
+
+### Attestation · relay-drive — 2026-09-25T18:00:03Z
+task: RELAY-gh825-plan-r2
+reviewer: codex
+status: Approved
+reviewed-head: f1a3a757c73303b26da52d96ca69bb35f43dc12a
+added-range: 6362+3329
+added-sha256: 5140e509f84bda80f578b798e4edee3d58a5f56d3ea14f4f194546d2774cc9ec
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
