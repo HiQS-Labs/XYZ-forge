@@ -1,7 +1,7 @@
 ---
-name: status
+name: where-are-we-at
 description: >-
-  Deep ground-truth status assessment skill for a topic, module, feature, or subsystem. Cuts through
+  Answer "where are we at on <topic>?" with a deep ground-truth assessment of a module, feature, or subsystem. Cuts through
   stale documentation and superficial LLM scans by orchestrating /recon (codebase architecture & live
   symbols), /debug-mantra (empirical breadcrumb observation), and /merge-cleanup (multi-checkout,
   active sessions, tick claims, and PR detection) into a verified status report.
@@ -9,16 +9,16 @@ metadata:
   argument-hint: "<topic, module, issue, or subsystem>"
 ---
 
-# /status — Deep Ground-Truth Topic, Module & Subsystem Status Assessment
+# /where-are-we-at — Deep Ground-Truth Topic, Module & Subsystem Status Assessment
 
-`/status` delivers an authoritative, empirical status evaluation of any topic, module, feature,
+`/where-are-we-at` delivers an authoritative, empirical status evaluation of any topic, module, feature,
 or subsystem within a codebase.
 
 Superficial LLM scans often hallucinate completeness or recite stale documentation: they read an
 outdated markdown roadmap or architecture guide, perform a superficial grep in the current working
 directory, and miss unlanded branches, active worktrees, in-flight PRs, or silent regressions.
 
-`/status` solves this by orchestrating three core disciplines into an empirical verification ladder:
+`/where-are-we-at` solves this by orchestrating three core disciplines into an empirical verification ladder:
 1. **[`/merge-cleanup`](../merge-cleanup/SKILL.md) (Multi-Checkout & Session Reality):** Audits active
    worktrees, task clones (`~/agent-workspaces`, `~/marathon-clones`), active `.tick` claims, driver locks,
    and open GitHub PRs (`gh pr list`).
@@ -47,7 +47,8 @@ Then begin work.
 
 ## Conversational Triggers
 
-Trigger `/status` when the operator asks:
+Trigger `/where-are-we-at` when the operator asks:
+- `"Where are we at on <topic>?"`
 - `"What is the status of <topic/subsystem>?"`
 - `"Check the status of <module>"`
 - `"How far along is <feature>?"`

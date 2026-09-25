@@ -3,7 +3,7 @@
 source "$(dirname "$0")/_setup.sh" gh798-status-skill
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-SKILL_DIR="$REPO/skills/2-daily/status"
+SKILL_DIR="$REPO/skills/2-daily/where-are-we-at"
 SKILL_FILE="$SKILL_DIR/SKILL.md"
 INSTALLER="$SKILL_DIR/install.sh"
 REVIEW_CODE_FILE="$REPO/skills/2-daily/review-code/SKILL.md"
@@ -12,12 +12,12 @@ ARCH_FILE="$REPO/ARCHITECTURE.md"
 echo "== test: gh798-status-skill =="
 
 # --- 1. File existence & basic structure ---
-[ -f "$SKILL_FILE" ] && pass "skills/2-daily/status/SKILL.md exists" || fail "missing status/SKILL.md"
-[ -f "$INSTALLER" ] && pass "skills/2-daily/status/install.sh exists" || fail "missing status/install.sh"
-[ -x "$INSTALLER" ] && pass "install.sh is executable" || fail "status/install.sh is not executable"
+[ -f "$SKILL_FILE" ] && pass "skills/2-daily/where-are-we-at/SKILL.md exists" || fail "missing where-are-we-at/SKILL.md"
+[ -f "$INSTALLER" ] && pass "skills/2-daily/where-are-we-at/install.sh exists" || fail "missing where-are-we-at/install.sh"
+[ -x "$INSTALLER" ] && pass "install.sh is executable" || fail "where-are-we-at/install.sh is not executable"
 
 # --- 2. YAML frontmatter validation ---
-grep -q "^name: status$" "$SKILL_FILE" && pass "frontmatter has name: status" || fail "missing name in frontmatter"
+grep -q "^name: where-are-we-at$" "$SKILL_FILE" && pass "frontmatter has name: where-are-we-at" || fail "missing name in frontmatter"
 grep -q "description:" "$SKILL_FILE" && pass "frontmatter has description" || fail "missing description in frontmatter"
 
 # --- 3. Recital and Core Discipline Presence ---
@@ -47,7 +47,7 @@ grep -q "bypassing established centralized helpers" <<<"$(awk '/\[Blocker\]/,/\[
 grep -q "non-DRY duplicate logic" <<<"$(awk '/\[Should\]/,/\[Nit\]/' "$REVIEW_CODE_FILE")" && pass "review-code binds duplicate logic to [Should]" || fail "duplicate logic is not under [Should]"
 
 # --- 6. ARCHITECTURE.md registration ---
-grep -q "\[status\](skills/2-daily/status/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has status link" || fail "missing ARCHITECTURE.md link"
+grep -q "\[where-are-we-at\](skills/2-daily/where-are-we-at/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has where-are-we-at link" || fail "missing ARCHITECTURE.md link"
 grep -q "### \`2-daily\` — A few times a day (16)" "$ARCH_FILE" && pass "ARCHITECTURE.md has updated 2-daily count (16)" || fail "missing updated 2-daily count"
 
 # --- 7. Installer gh678 compliance (in sandbox) ---
@@ -61,21 +61,21 @@ run_installer() {
 }
 
 FOREIGN="$WORK/foreign"; mkdir -p "$FOREIGN"; echo "foreign" > "$FOREIGN/SKILL.md"
-ln -s "$FOREIGN" "$A/claude/status"
+ln -s "$FOREIGN" "$A/claude/where-are-we-at"
 set +e
 run_installer >"$WORK/out-foreign" 2>&1
 rc_for=$?
 set -e
-[ "$rc_for" -ne 0 ] && [ "$(readlink "$A/claude/status")" = "$FOREIGN" ] && pass "installer refuses live foreign link" || fail "installer replaced live foreign link"
+[ "$rc_for" -ne 0 ] && [ "$(readlink "$A/claude/where-are-we-at")" = "$FOREIGN" ] && pass "installer refuses live foreign link" || fail "installer replaced live foreign link"
 
-rm -f "$A/claude/status"
-ln -s "$WORK/nowhere/status" "$A/claude/status"
+rm -f "$A/claude/where-are-we-at"
+ln -s "$WORK/nowhere/where-are-we-at" "$A/claude/where-are-we-at"
 run_installer >"$WORK/out-dangling" 2>&1
 rc_dan=$?
-[ "$rc_dan" -eq 0 ] && [ "$(readlink "$A/claude/status")" -ef "$SKILL_DIR" ] && pass "installer replaces dangling link" || fail "installer failed to replace dangling link"
+[ "$rc_dan" -eq 0 ] && [ "$(readlink "$A/claude/where-are-we-at")" -ef "$SKILL_DIR" ] && pass "installer replaces dangling link" || fail "installer failed to replace dangling link"
 
 # --- 8. Negative control mutation (falsification) ---
-# 8a: Recital deletion on status/SKILL.md must fail recital check
+# 8a: Recital deletion on where-are-we-at/SKILL.md must fail recital check
 TMP_COPY="$WORK/skill_mutated.md"
 cp "$SKILL_FILE" "$TMP_COPY"
 sed -i.bak '/Status Discipline:/d' "$TMP_COPY"

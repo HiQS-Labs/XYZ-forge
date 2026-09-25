@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# install.sh — make status discoverable to Claude Code, Codex, and Gemini / Antigravity from THIS clone.
+# install.sh — make where-are-we-at discoverable to Claude Code, Codex, and Gemini / Antigravity from THIS clone.
 set -euo pipefail
 
 _src="${BASH_SOURCE[0]}"
@@ -13,7 +13,7 @@ while [ -h "$_src" ]; do
   esac
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-SKILL_NAME="status"
+SKILL_NAME="where-are-we-at"
 
 install_one() {
   _label="$1"

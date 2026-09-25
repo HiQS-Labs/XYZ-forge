@@ -9,6 +9,10 @@ a collision-safe session note in ignored `temp/`. The note is a resume aid; live
 existing task record remain authoritative. Rollback: cancel the native job and revert the skill and
 catalog entry.
 
+Follow-up: `start-task` now selects the final gate by changed-path scope, using the existing docs
+route for Markdown/text-only edits. Rename the deep topic assessment skill from `status` to
+`where-are-we-at` to avoid a name collision with agent-native status commands.
+
 ## 2026-09-25 — Promotion boundary cap fits the suite (GH-823)
 
 `boundary-macos`, the GH-509 promotion witness, had a 45-minute cap sized to August's "~13-15 min locally".
