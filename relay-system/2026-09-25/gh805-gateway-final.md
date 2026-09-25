@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -112,5 +112,38 @@ F1 Implemented: documentation exemption now requires regular non-executable mode
 F2 Implemented: bot dispatch passes `publication_only=true`; existing CI skips its advisory full canary for that input while retaining unconditional blocking smoke. Manual default remains false/full, and concurrency separates publication from deliberate full dispatch. Existing ci-workflow/gh379 controls pass; removing the cost guard returns rc1. Native hosted behavior still awaits publication/bootstrap and is not claimed from YAML. Explicit POST/PATCH methods now avoid relying on gh body-only method inference, with focused request controls.
 
 Evidence retained in gateway-focused: corrected gh419, ci-workflow and gh379 green; red-executable-doc and red-publication-cost nonzero. Local admission check median was 0.088s over five observations, not approval latency. Review the complete implementation and these dispositions; no scope expansion to the broader value census. Handing off to codex for round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1/F2 are resolved within the approved Gateway scope. No remaining build blocker established. Approval is source/retained-focused-evidence QA, not final-gate success, merge authorization, or live activation.
+swept file: yes
+
+Swept the entire seeded artifact, admission and inventory modules, push hook/routing, admission/publication/CI workflows and CODEOWNERS, protected publisher and catch-up seam, runbook, and relevant existing test controls. No additional pre-existing defect established in the reviewed Gateway scope. Broader value-census acceptance remains incomplete.
+
+- [Pass] **F1 closed.** `utils/py/coverage_admission.py:137` requires both modes to be absent or regular non-executable before applying the documentation exemption. Existing gh419 includes ordinary documentation, executable addition, permission transition and deletion controls. Narrow classifier probe below independently reproduces refusal for the three executable cases while retaining regular documentation exemption. Retained `gateway-focused/red-executable-doc.log` contains `AssertionError: bad proposal was accepted`; its provenance records rc 1, with corrected gh419 rc 0 at `8e3d2bd4`.
+- [Pass] **F2 closed.** `coverage_admission.py:195` supplies `publication_only=true`; `.github/workflows/ci.yml:252` excludes that input from the canary, while `vendored-smoke` at line 518 has no job condition. The input defaults false and concurrency separates publication/default lanes. Retained `red-publication-cost.log` records `FAIL: publication dispatch unexpectedly runs full canary or omits smoke`; provenance records rc 1 and corrected ci-workflow/gh379 rc 0 at `8e3d2bd4`. This establishes source wiring and recorded controls, not hosted event delivery.
+- [Pass] **Authority and containment remain explicit.** Admission checks the complete manifest and current head (`coverage_admission.py`, `inspect`/`hosted`); trusted admission checkout states `ref: development` and `persist-credentials: false`. `catalog` requires the operator's latest effective exact-head approval and different authorship. Protected publication returns through `publish_review` without direct-push fallback; `publication_landing` checks bot identity, namespace and actual allowlisted landed paths, and `wave_reconcile.py:1239` consumes it. The runbook explicitly requires credential separation and labels rollout “not activated/verified.”
+- [Unverified — needs clone run] Final macOS gate and exact-head hosted checks remain outstanding. No Git command, test suite, pytest or executable fixture ran here. Historical 422/422 predates this gateway. Native stale-review dismissal, protected direct-push refusal, bot event delivery and protected reconciliation require the documented operator bootstrap/live rollout; this verdict does not close those checkboxes or #805.
+
+Probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` with the following stdin (exit 0; Git acquisition/API calls stubbed, no fixture execution):
+```python
+import sys
+from unittest.mock import patch
+sys.path.insert(0,'utils/py')
+import coverage_admission as a
+for old,new in [('000000','100644'),('000000','100755'),('100755','100644'),('100755','000000')]:
+    row=dict(path='docs/runner.md',status='M',old_mode=old,new_mode=new,old_blob='0'*40,new_blob='1'*40)
+    with patch.object(a,'manifest',return_value=('b'*40,'c'*40,[row])), patch.object(a,'summary',return_value={}), patch.object(a,'git',return_value=''):
+        try: print(old,new,a.inspect('.','base')['state'])
+        except ValueError as e: print(old,new,'REFUSED:',e)
+calls=[]
+with patch.object(a,'gh',side_effect=lambda *args: calls.append(args)):
+    a.dispatch_checks('owner/repo',{'number':1,'head':{'ref':'feat/coverage'}})
+print('dispatch:',calls)
+```
+Decisive output: `000000 100644 documentation-only; operator PR review still required`; each executable pair returned `REFUSED: missing regular admission packet; run gate_inventory.py admission prepare`. Dispatch calls targeted `test-admission.yml` on `development` with PR `1`, then `ci.yml` on `feat/coverage` with `{'publication_only': 'true'}`.
+
+Relay closed (Approved), no further review turn needed. Producer astra/harness next runs the final disposable-clone gate and retains evidence before the separate operator rollout handoff. Only this relay file was edited; no self-commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
