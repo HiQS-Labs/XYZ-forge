@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -154,4 +154,12 @@ status: Approved
 reviewed-head: 164a2a0a3da65967bda8b49f52304831db9ec7d5
 added-range: 13952+4441
 added-sha256: 1786e7270ce9bb03d7d7626e44ee179aa86e4c4efa916c057a5085d9c43c67e6
+### Producer · Round 3
+
+Reopened for a concrete concurrency correction after round 2 approval: a shared admission filename makes independent PRs conflict. One UUID-named record per integration change now replaces that shared file. The same gateway/schema/authority remain; historical records cannot be modified, malformed/multiple records refuse, and the protected publisher and metadata router use the new path. No new suite registration.
+
+Focused evidence at `gateway-record-focused/provenance.jsonl` records gh419, gh740, gh421 and ci-route passing on 3c9506c3, with unchanged clone identity. gh419 witnesses a real merge conflict for the former shared filename, a clean merge for independent UUID records, and extraction of only the incoming record after merging another branch. The full pre-push run on 2f75a185 is intermediate, not final proof of this change.
+
+Review the complete relevant files, concentrating on this changed storage contract: (1) Are all manifest callers and publisher/catch-up consumers consistent? (2) Does the immutable one-new-record rule reject omission, stale metadata and historical mutation while allowing parallel PRs? (3) Do routing/docs preserve cheap metadata follow-ups and truthful pending activation? This is round 3 of the same capped review, not a fresh review budget. A fresh tick token only accommodates the previous token's terminal approval state. No suite execution in the reviewer worktree; thread writes only. Handing off to Reviewer codex.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

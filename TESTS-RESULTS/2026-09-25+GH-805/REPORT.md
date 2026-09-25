@@ -94,3 +94,6 @@ The API reports development unprotected, no rulesets, read-only default workflow
 
 
 Final gateway Codex review round 2 approved 164a2a0a. Review corrections require a packet for executable documentation on either side of a change, and make bot CI dispatch `publication_only=true`: blocking smoke remains, while advisory full canary and deliberate-full concurrency are separated. Both controls have witnessed reds and focused greens. The gateway check itself had a 0.088s median across five local observations; this excludes human review latency. The fresh-clone hook initially reported not installed; installation and subsequent check passed before any push. The final macOS gate is next; historical 422/422 is not substituted for it.
+
+
+Gateway record concurrency correction (3c9506c3): four focused suites pass with unchanged clone identity; receipts are in `gateway-record-focused/`. The real Git control conflicts on the old shared filename and merges distinct records cleanly. Final relay reopened for its third and last round; the in-flight full run at 2f75a185 is intermediate evidence, not verification of this later change.

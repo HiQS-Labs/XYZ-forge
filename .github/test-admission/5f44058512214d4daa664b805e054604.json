@@ -66,7 +66,7 @@
       "status": "A"
     },
     {
-      "new_blob": "421efd4fd63cfc6183f5dc15028062266e93a7e6",
+      "new_blob": "564d0ce27721a409731173d5e0faff5078313087",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -1106,6 +1106,62 @@
       "status": "A"
     },
     {
+      "new_blob": "53c8975801b398f60ff0fcd4742b027985a1b433",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-record-focused/ci-route.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "8c0cfcf5355f38af5006d006ce71285cfde2ea64",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-record-focused/gh419-gate-inventory.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "c603fd0e84274704d56d0b4c1f4c866374ba8fd2",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-record-focused/gh421-auto-wave-reconcile.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "489439b37eed3c2860dfd788831728f4f802a833",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-record-focused/gh740-hosted-lane-publish.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "7db4133d0214aefa58224bfeb266c55b824bd3c7",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-record-focused/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "7db4133d0214aefa58224bfeb266c55b824bd3c7",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-record-focused/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "2526d29dd6ac7b611cb1fe8159a668facfee2c5a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-record-focused/provenance.jsonl",
+      "status": "A"
+    },
+    {
       "new_blob": "a3f31fc9ca86971ca675ce0f8d58dc41a3a55166",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
@@ -1170,7 +1226,7 @@
       "status": "A"
     },
     {
-      "new_blob": "196fb99e439a73693f8e8e699ff116d5e4828f6a",
+      "new_blob": "317ac129e9758c938506bbfca43d3aa2c20dff7d",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
