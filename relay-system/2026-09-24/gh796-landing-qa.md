@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: done
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -44,7 +44,7 @@ ROUND: 1 / 3
 5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
    the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
    set `STATUS: Escalated`.
-6. **Commit only the relay file** (`relay(gh-796-supervised-landing-adaptation-qa): <role> r<N>`); no push. **Stop** and report one line.
+6. **Write only the relay file.** The shim owns the commit and tick closeout. No self-commit, no push, no tick release/done commands. Stop after the report.
 7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
    next and what they should do: *"handing off to <other role> — go to the <other> window and say
    'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
@@ -78,7 +78,7 @@ Questions: Does this adaptation preserve the existing merge/reconcile gates whil
 3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns.
 4. Stay tight — findings are bullets, not essays. Grade every finding.
 5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
-6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+6. The relay ends on **Approved** (Reviewer only). The shim owns the commit; no self-commit, no push.
 
 ## Log
 
@@ -93,5 +93,9 @@ Questions: Does this adaptation preserve the existing merge/reconcile gates whil
 **Basis**: The plan properly preserves test isolation using disposable full clones and preserves existing merge/reconcile gates before any push to primary. It proposes reusing existing functions without requiring a new framework, exactly as intended.
 
 handing off to done — relay closed (Approved), no further turn needed.
+
+### Producer · Round 2 — protocol recovery
+
+Round1 PASS is advisory only: driver exit4 close-mismatch means no valid QA attestation. No change in the proposed operation. Re-review the stated approach and source facts, append an independent verdict. **DO NOT call tick release or tick done, and do not self-commit. Retain the claimed token; the shipped shim owns tick done and the driver must attest closure.** Only edit this thread. On approval set STATUS Approved and NEXT done, then stop. This is round2 of3, not a reset of the budget.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
