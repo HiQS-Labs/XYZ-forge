@@ -20,7 +20,7 @@ risk: 2
 
 Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/801.
 
-`test/gh139-pipe-grep-guard.sh` reports that `test/gh798-status-skill.sh` grew from zero to ten prohibited pipeline sites. Source and ratchet baseline are identical on development `a08f30e9` and merge candidate `0852e43c`; introduction is `e9a0420d` (GH-798), not PR #794. Focused GH-798 evidence alone did not establish the full gate.
+`test/gh139-pipe-grep-guard.sh` reports that `test/gh798-status-skill.sh` grew from zero to ten prohibited pipeline sites. Source and ratchet baseline are identical on development `a08f30e9` and merge candidate `0852e43c`; introduction is `e9a0420d` (GH-798), not PR #794. Focused GH-798 evidence alone did not establish the full gate. The combined full run completed 419/420 with only this failure and unchanged clone identity. Independent pristine-development reproduction fails; pre-GH-798 `337813e0` passes 3/3.
 
 Evidence: `TESTS-RESULTS/2026-09-24+GH-796/gh801-pipe-ratchet-red.log` and committed provenance. Reproduce only in a disposable full clone: `bash test/gh139-pipe-grep-guard.sh`.
 

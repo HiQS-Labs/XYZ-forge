@@ -1,0 +1,4 @@
+  FAIL: test/gh798-status-skill.sh grew from 0 to 10 pipe-into-grep -q site(s) — use capture-then-match: grep -q PAT <<<"$(cmd)"
+  PASS: baseline is tight (no shrink owed)
+  PASS: baseline has no stale entries
+gh139: 2 passed, 1 failed
