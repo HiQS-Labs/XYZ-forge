@@ -8,10 +8,10 @@ Asserts that:
    - Wave N Post-Build Codex QA Relay executed (receipt recorded under relay-system/...)
    - Wave N CodeRabbit / Peer Review findings adjudicated
 3. For any checked item (- [x]) citing a relay transcript, the transcript file
-   exists on disk relative to the repository root.
-4. When --pre-pr is passed (or doc is in 3-COMPLETED / marked Completed), all waves
-   must be verified (- [x]) and all on-disk transcripts must exist before a PR can
-   be created or a plan promoted.
+   exists on disk relative to the repository root. Required Codex receipts carry
+   a terminal STATUS (Approved or Closed); this does not attest authorship or SHA.
+4. --pre-pr --wave N admits one wave. Without --wave, --pre-pr checks all waves.
+   Completed docs always require all waves verified, even with a wave selector.
 """
 
 import argparse
@@ -30,12 +30,13 @@ def find_repo_root():
 
 
 class MarathonQAChecker:
-    def __init__(self, root, mode="observe", fmt="text", pre_pr=False, strict=False):
+    def __init__(self, root, mode="observe", fmt="text", pre_pr=False, strict=False, wave=None):
         self.root = os.path.abspath(root)
         self.mode = mode
         self.format = fmt
         self.pre_pr = pre_pr
         self.strict = strict
+        self.wave = wave
         self.errors = 0
         self.warns = 0
         self.info = 0
@@ -144,7 +145,9 @@ class MarathonQAChecker:
         is_marathon_plan = has_marathon_meta or (is_marathon_filename and not is_generated_queue) or (explicit_target and has_waves)
 
         if not is_marathon_plan:
-            if explicit_target:
+            if self.wave is not None:
+                self.record("error", file_path, 1, "selected wave requires a marathon plan", "select-marathon-plan")
+            elif explicit_target:
                 self.record("info", file_path, 1, "not a marathon plan doc (skipped)")
             return
 
@@ -198,7 +201,7 @@ class MarathonQAChecker:
                 is_codex = bool(re.search(r"Post-Build Codex QA|Codex QA Relay", text, re.IGNORECASE))
                 is_peer = bool(re.search(r"CodeRabbit|Peer Review", text, re.IGNORECASE))
 
-                receipt_match = re.search(r"[`'\"]?(relay-system/[^`'\"\s]+)[`'\"]?", text)
+                receipt_match = re.search(r"[`'\"]?(relay-system/[^`'\"\s)]+)[`'\"]?", text)
                 receipt_path = receipt_match.group(1) if receipt_match else None
 
                 wave_items[wave_num].append({
@@ -226,10 +229,14 @@ class MarathonQAChecker:
                             "add-wave-checklist")
 
         all_waves = sorted(set(list(wave_items.keys()) + list(declared_waves)))
+        if self.wave is not None and self.wave not in all_waves:
+            self.record("error", file_path, checklist_line,
+                        f"selected Wave {self.wave} is absent from the plan", "select-existing-wave")
         for wave_num in all_waves:
             if wave_num not in wave_items:
                 continue
             items = wave_items[wave_num]
+            must_be_complete = is_completed or (self.pre_pr and (self.wave is None or self.wave == wave_num))
             has_proof = any(it["is_proof"] for it in items)
             has_codex = any(it["is_codex"] for it in items)
             has_peer = any(it["is_peer"] for it in items)
@@ -284,6 +291,20 @@ class MarathonQAChecker:
                             self.record("error", file_path, line_no,
                                         f"Wave {wave_num} transcript '{it['receipt']}' missing on disk before PR/completion",
                                         "execute-codex-qa-relay")
+                    elif it["is_codex"] and (it["checked"] or must_be_complete):
+                        # Follow relay_attest's first STATUS header contract. PDDA is
+                        # distributed without the Forge relay runtime, so no runtime import.
+                        try:
+                            with open(full_receipt, encoding="utf-8") as receipt_file:
+                                status = next((line.split(":", 1)[1].strip()
+                                               for line in receipt_file
+                                               if line.startswith("STATUS:")), "")
+                        except (OSError, UnicodeError) as exc:
+                            status = f"unreadable: {exc}"
+                        if status not in ("Approved", "Closed"):
+                            self.record("error", file_path, line_no,
+                                        f"Wave {wave_num} Codex receipt lacks terminal STATUS: Approved or Closed",
+                                        "complete-independent-codex-review")
 
                 # 3. Checkbox verification check
                 if not it["checked"]:
@@ -329,7 +350,8 @@ def main():
     parser = argparse.ArgumentParser(description="Mechanical marathon Wave QA receipt & checklist gate (GH-784)")
     parser.add_argument("--root", default="", help="Repository root")
     parser.add_argument("--doc", action="append", default=[], help="Specific doc path to check")
-    parser.add_argument("--pre-pr", action="store_true", help="Assert that all waves are verified before PR opening")
+    parser.add_argument("--pre-pr", action="store_true", help="Require verified QA; all waves unless --wave selects one")
+    parser.add_argument("--wave", type=int, help="Positive wave number for one plan's pre-PR admission")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero on any error regardless of mode")
     parser.add_argument("--mode", default=os.environ.get("PDDA_MODE", "observe"),
                         choices=["observe", "light", "full"], help="Enforcement mode")
@@ -340,8 +362,11 @@ def main():
     args = parser.parse_args()
     root = args.root or find_repo_root()
     all_docs = args.doc + args.docs
+    if args.wave is not None and (args.wave < 1 or not args.pre_pr or len(all_docs) != 1):
+        parser.error("--wave requires a positive number, --pre-pr and exactly one explicit document")
 
-    checker = MarathonQAChecker(root=root, mode=args.mode, fmt=args.format, pre_pr=args.pre_pr, strict=args.strict)
+    checker = MarathonQAChecker(root=root, mode=args.mode, fmt=args.format, pre_pr=args.pre_pr,
+                               strict=args.strict, wave=args.wave)
     rc = checker.run(all_docs)
     sys.exit(rc)
 

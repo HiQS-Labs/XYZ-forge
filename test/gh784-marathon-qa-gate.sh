@@ -35,11 +35,11 @@ mkdir -p "$FIXTURE_ROOT/PROJECT/2-WORKING" \
 # ── 1. Valid marathon plan with complete wave receipts on disk ──────────────
 cat > "$FIXTURE_ROOT/relay-system/2026-09-24/wave1.codex.md" <<'EOF'
 # Wave 1 Codex QA Receipt
-Status: Approved
+STATUS: Approved
 EOF
 cat > "$FIXTURE_ROOT/relay-system/2026-09-24/wave2.codex.md" <<'EOF'
 # Wave 2 Codex QA Receipt
-Status: Approved
+STATUS: Approved
 EOF
 
 cat > "$FIXTURE_ROOT/PROJECT/2-WORKING/MARATHON-PLAN-TEST.md" <<'EOF'
@@ -390,6 +390,85 @@ if [ $rc_fail -ne 0 ] && [[ "$out_fail" == *"does not exist on disk"* ]]; then
   pass "9d: pdda.sh marathon-qa propagates missing transcript error and returns non-zero"
 else
   fail "9d: pdda.sh marathon-qa failed to catch missing transcript: (rc=$rc_fail) $out_fail"
+fi
+
+# ── Integration controls: selected-wave admission and receipt semantics ────
+if python3 - "$CHECKER" "$PDDA" "$FIXTURE_ROOT" "$WORK" <<'PYCONTROLS'
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+checker, dispatcher, root, work = sys.argv[1:]
+root = Path(root)
+source = (root / "PROJECT/2-WORKING/MARATHON-PLAN-TEST.md").read_text()
+plan = root / "PROJECT/2-WORKING/MARATHON-PLAN-SELECTED.md"
+receipt = root / "relay-system/2026-09-24/wave1.codex.md"
+pending = source.replace("[x] Wave 2", "[ ] Wave 2")
+plan.write_text(pending)
+
+def check(label, expected, *args, doc=plan):
+    command = [sys.executable, checker, "--root", str(root), *args]
+    if doc is not None:
+        command += ["--doc", str(doc)]
+    result = subprocess.run(command, text=True, capture_output=True)
+    assert (result.returncode == 0) == expected, (label, result.returncode, result.stdout, result.stderr)
+    print("control:", label)
+
+check("Wave 1 can land before pending Wave 2", True, "--pre-pr", "--wave", "1")
+check("whole-plan closeout still rejects pending Wave 2", False, "--pre-pr")
+check("selected pending Wave 2 fails", False, "--pre-pr", "--wave", "2")
+for value in ("0", "-1", "banana", "3"):
+    check("invalid or absent wave " + value, False, "--pre-pr", "--wave", value)
+check("wave requires pre-PR mode", False, "--wave", "1")
+check("wave requires explicit document", False, "--pre-pr", "--wave", "1", doc=None)
+check("wave requires exactly one document", False, "--pre-pr", "--wave", "1", "--doc", str(plan))
+plan.write_text(pending.replace("status: active", "status: completed"))
+check("completed status cannot bypass future wave", False, "--pre-pr", "--wave", "1")
+completed = root / "PROJECT/3-COMPLETED/MARATHON-PLAN-SELECTED.md"
+completed.write_text(pending)
+check("completed directory cannot bypass future wave", False, "--pre-pr", "--wave", "1", doc=completed)
+for markdown in (False, True):
+    text = pending
+    if markdown:
+        text = text.replace("`relay-system/2026-09-24/wave1.codex.md`",
+                            "[receipt](relay-system/2026-09-24/wave1.codex.md)")
+    plan.write_text(text)
+    for status, expected in (("STATUS: Approved\n", True), ("STATUS: Closed\n", True),
+                             ("", False), ("STATUS: Changes Requested\n", False),
+                             ("STATUS: Changes Requested\nSTATUS: Approved\n", False)):
+        receipt.write_text(status)
+        check("receipt form/status " + repr((markdown, status)), expected, "--pre-pr", "--wave", "1")
+    receipt.unlink()
+    check("missing receipt form " + str(markdown), False, "--pre-pr", "--wave", "1")
+    receipt.write_text("STATUS: Approved\n")
+
+# A second root with the same plan but no receipt must fail. Its dispatcher log
+# must stay in that consumer, not the harness checkout.
+other = Path(work) / "consumer-root"
+other.mkdir()
+other_plan = other / "MARATHON-PLAN-CONSUMER.md"
+other_plan.write_text(pending)
+env = dict(os.environ, PDDA_REPO_ROOT=str(other), PDDA_MODE="observe")
+env.pop("PDDA_ACTIVITY_LOG", None)
+harness_log = Path(dispatcher).resolve().parents[2] / "PROJECT/PDDA-ACTIVITY.jsonl"
+before = harness_log.read_bytes() if harness_log.exists() else None
+command = ["bash", dispatcher, "marathon-qa", "--root", str(other), "--pre-pr", "--wave", "1", "--doc", str(other_plan)]
+result = subprocess.run(command, env=env, capture_output=True, text=True)
+assert result.returncode != 0 and "does not exist on disk" in result.stdout, result.stdout
+other_receipt = other / "relay-system/2026-09-24/wave1.codex.md"
+other_receipt.parent.mkdir(parents=True)
+other_receipt.write_text("STATUS: Approved\n")
+result = subprocess.run(command, env=env, capture_output=True, text=True)
+assert result.returncode == 0, (result.stdout, result.stderr)
+assert (other / "PROJECT/PDDA-ACTIVITY.jsonl").stat().st_size > 0
+assert (harness_log.read_bytes() if harness_log.exists() else None) == before
+print("control: consumer receipt and activity log are bound to consumer root")
+PYCONTROLS
+then
+  pass "Selected-wave, final-closeout, receipt and consumer-root controls"
+else
+  fail "Selected-wave, final-closeout, receipt or consumer-root control failed"
 fi
 
 # ── 10. Mutation test: falsify the receipt existence check ──────────────────

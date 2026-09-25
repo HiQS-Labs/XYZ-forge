@@ -287,13 +287,25 @@ verification section:
 - [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated
 ```
 
-Mechanical check: verify wave readiness before PR opening or promotion with:
+Mechanical check: set `TARGET_ROOT` to the absolute root of the repository whose plan is being
+executed, `CANONICAL_PLAN` to its absolute plan path, and `WAVE` to the positive wave number being
+admitted. Bind both commands to that consumer root:
 ```bash
-python3 "$HARNESS/utils/pdda/check_marathon_qa.py" --pre-pr --doc "$CANONICAL_PLAN"
-# or via pdda.sh:
-"$HARNESS/utils/pdda/pdda.sh" marathon-qa --pre-pr --doc "$CANONICAL_PLAN"
+python3 "$HARNESS/utils/pdda/check_marathon_qa.py" --root "$TARGET_ROOT" --pre-pr --wave "$WAVE" --doc "$CANONICAL_PLAN"
+# or via pdda.sh (also binds the activity log to the consumer):
+PDDA_REPO_ROOT="$TARGET_ROOT" "$HARNESS/utils/pdda/pdda.sh" marathon-qa --root "$TARGET_ROOT" --pre-pr --wave "$WAVE" --doc "$CANONICAL_PLAN"
 ```
-The check mechanically asserts that all waves declared in the plan have a corresponding `### Wave N` checklist, all checklist items are verified (`[x]`), Codex QA items carry valid `relay-system/...` receipts without unexpanded placeholders, and all referenced receipt files exist on disk (exit 0). Routine aggregate scans warn on pending items in active working docs, while `--pre-pr` (and `PROJECT/3-COMPLETED` docs) fails closed (exit non-zero) on any unverified item.
+Use a positive wave number and one explicit plan. Every declared wave must retain its mandatory
+checklist structure; only the selected wave must be complete for this PR. Future waves remain
+honestly pending. For final closeout, omit `--wave` from the same command to require all waves.
+Completed docs always require all waves, even if a selector is supplied.
+
+Checked receipt citations must resolve on disk under the consumer root. Codex receipts for checked
+or required items must have a first `STATUS:` header of `Approved` or `Closed`; ordinary Markdown
+links and backticked paths are supported. Empty, missing, nonterminal and placeholder receipts
+fail. This checks recorded terminal status, not independent authorship or exact reviewed SHA;
+the independent review and head verification above remain required. Routine aggregate scans warn
+on pending items in active plans.
 
 ### 5. Preflight, form lanes, and dry-run the actual marathon
 

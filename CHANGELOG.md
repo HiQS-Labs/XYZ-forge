@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-24 — Preserve sequential marathon admission during integration (GH-796, GH-784)
+
+Separate selected-wave PR readiness (`--pre-pr --wave N`) from all-wave final closeout in the
+existing marathon QA checker. Bind consumer checks and logs to the consumer root, accept ordinary
+Markdown receipt links, and require a terminal recorded Codex verdict. Terminal status does not
+prove independent authorship or the reviewed SHA; those remain separate review obligations.
+Migrate the active GH-777 plan with honest pending checklists and approve only the new checker in
+the existing inventory baseline. This resolves PR #765's integration failures without a second
+gate or review framework. Rollback is a reviewed revert plus canonical ledger reconciliation;
+never mark future waves complete to make the gate pass.
+
 ## 2026-09-24 — Marathon wave QA checklist contract and mechanical receipt gate (GH-784, GH-762)
 
 Bound marathon wave transitions to the `/start-task` Step 6 and Step 8 double-relay protocol:

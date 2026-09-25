@@ -645,9 +645,13 @@ Minimum behavior:
   relay, and peer review adjudication
 - for every checked item (`- [x]`) referencing a `relay-system/` transcript, assert that the
   transcript file actually exists on disk; emit `error` on missing files (falsified / hollow check)
-- when `--pre-pr` is specified (or doc is marked `Completed` / in `3-COMPLETED`), assert that every
-  wave's checklist items are verified (`- [x]`) and all on-disk transcripts exist; emit `error` on
-  any unverified wave or missing transcript
+- `--pre-pr --wave N` requires one explicit plan and a positive existing wave; require that wave's
+  items and receipts, while future waves remain pending. All waves still need mandatory structure.
+- `--pre-pr` without `--wave` requires all waves for final closeout. Docs marked `Completed` or in
+  `3-COMPLETED` always require all waves, even with a selector.
+- Codex receipts for checked or required items must have a first `STATUS:` header of `Approved` or
+  `Closed`. Accept Markdown links and backticked paths; reject empty/nonterminal receipts. This
+  verifies recorded status, not independent authorship or exact reviewed SHA.
 - during routine active development in `2-WORKING`, report unverified waves as `warn` so in-progress
   development does not block normal gates prematurely
 
@@ -838,10 +842,14 @@ Wave QA contract (GH-784):
 3. **Double-relay protocol parity:** each wave must enforce `/start-task` Step 6 parity (Wave Plan QA)
    before coding and Step 8 parity (Wave Post-Build Codex QA) before pushing branches or opening PRs.
    The orchestrator cannot self-attest review solely by observing green test suites.
-4. **Mechanical receipt gate:** `utils/pdda/check_marathon_qa.py --pre-pr --doc <plan>` (or `pdda.sh marathon-qa --pre-pr --doc <plan>`)
-   mechanically asserts that all declared waves have corresponding `### Wave N` checklist sections, all checklist items
-   are verified (`[x]`), Codex QA items cite concrete `relay-system/` receipts without unexpanded placeholders, and all
-   referenced receipt transcripts exist on disk before a marathon PR can be created or promoted to `3-COMPLETED`.
+4. **Mechanical receipt gate:** for wave admission, run
+   `check_marathon_qa.py --root <consumer-root> --pre-pr --wave N --doc <plan>`; with the dispatcher,
+   also set `PDDA_REPO_ROOT=<consumer-root>` so its activity log uses that root. Each wave retains
+   mandatory checklist structure. The selected wave must be verified with concrete, existing
+   receipts, and its Codex receipt must have first `STATUS: Approved` or `STATUS: Closed`.
+   Omit `--wave` for final all-wave closeout; completed docs always require all waves. Markdown
+   links and backticked receipt paths are supported. Recorded terminal status does not replace
+   independent review or exact-head verification.
 
 ### 2. LLM-assisted doc readiness review
 
