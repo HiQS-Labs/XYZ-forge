@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -69,5 +69,43 @@ Questions: (1) Are source/collector claims grounded and preserved consumers iden
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Ready to implement within the stated one-repository, observe-only envelope. The seven steps identify existing owners, bounded changes, falsifiable acceptance and explicit keep/no-go outcomes. This approves the plan, not implementation or merge readiness.
+swept file: yes
+
+- [Pass] Grounded collector and consumer map. `utils/py/gate_inventory.py:inventory` emits the existing `gates`/`negative_control` contract consumed at `test/gh419-gate-inventory.sh:45` and `test/litmus-release.sh:179`. The plan explicitly says “Preserve that default contract; new audit/decision output is opt-in.” `test/gh436-merge-cleanup.py:863` imports the three gh534 modules; retaining their wrapper avoids duplicate collection. No change requested.
+- [Pass] Selection repair targets actual seams: `validate.sh:1453` and `ci-local.sh:323` invoke only `test/test_python_layer.py`; `package.json:12` owns the Node unit command; `test/flightdeck/test_flightdeck.py:226` binds the server to ephemeral loopback. The source-only probe below corroborates all four releases omissions. Step 2 requires supported-host eligibility, additions-only selection, once-per-runner collection and child-failure propagation before claiming repair. No change requested.
+- [Pass] Controls and simplification are proportionate. `test/gh269-roadmap-retired.sh:22` documents 0/4 but its predicate rejects only 3; step 3 explicitly repairs that accepted set. The gh165 quote/comment filter and suppressed missing-input errors are addressed by witnessed controls rather than a speculative scanner. `test/gh567-roadmap-dashboard-retired.sh:check_writer_audit` repeats discovery for distinct searches; step 4 preserves diagnostics/detection and permits “record a keep decision.” The gh269 DB scenario and gh568 CLI/AST checks remain separate. No change requested.
+- [Unverified — no citation] Authority claims are sufficient for this non-enforcing pilot: step 5 says “live authority unavailable means explicit no-go, without changing branch protection”; step 6 says “approval_trusted remains false without independently verified authority, even if metadata says approved.” Three advisory states and one optional metadata artifact do not require an approval service. Forgery/staleness observations are separated from semantic recommendations and synthetic fixtures are explicitly excluded from real-world false-accept estimates. No change requested.
+- [Unverified — no citation] Scope and evidence limits remain honest: the plan states “Complete incident counts and trend are unknown,” excludes GH808/gh251, limits GH774 completion claims, preserves existing guards, and names a reviewed PR revert for Costly routing changes. The final review, committed provenance, identity checks and full qualifying gate remain required. Full-file sweep found no additional pre-existing plan defect requiring revision.
+- [Unverified — needs clone run] Actual Flightdeck/Node eligibility, runner parity, witnessed red/green controls, simplification benefit and final gate status remain future acceptance work. No suites or executable fixtures were run here; their absence is not a pre-build blocker. Ledger ratings and historical timing were not independently re-measured in this review.
+
+Read-only probe (exit 0; Python used only source text and directory names, no imports of repository code):
+```python
+import re
+from pathlib import Path
+s=Path("validate.sh").read_text(); b=s.split("TESTS=(")[1].split("\n)")[0]
+n=re.findall(r'^\s*"([^"\n]+\.sh)"',b,re.M)
+assert n and len(n)==len(set(n))
+r=Path("utils/ci-route.sh").read_text(); m=re.search(r'^SUBSYSTEM_TESTS_releases="([^"]+)"',r,re.M).group(1).split()
+print("unique_shell_entries",len(n))
+for x in ("jog-queue.sh","gh75-dashboard.sh","gh605-board-policy.sh","gh605-work-state.sh"):
+ print(x,"full_registered",x in n,"releases_selected",x in m)
+print("node_unit_files",len(list(Path("test/unit").glob("*.test.js"))))
+```
+Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"` followed by `python3 -` with the above stdin. Decisive output:
+```text
+unique_shell_entries 417
+jog-queue.sh full_registered True releases_selected False
+gh75-dashboard.sh full_registered True releases_selected False
+gh605-board-policy.sh full_registered True releases_selected False
+gh605-work-state.sh full_registered True releases_selected False
+node_unit_files 4
+```
+
+Relay closed (Approved), no further review turn needed. Producer astra may proceed with implementation and the specified clone-based verification; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
