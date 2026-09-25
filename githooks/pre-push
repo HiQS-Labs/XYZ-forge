@@ -85,6 +85,24 @@ if [ "${XYZ_SKIP_PREPUSH:-0}" != "0" ]; then
   exit 0
 fi
 
+# GH-805: refuse missing/stale coverage decisions BEFORE paying for the test gate.
+# Review happens on the PR; this validates proposals and never grants approval.
+# The integration diff, not merely the last push, owns the coverage decision.
+if [ -f "$REPO/.github/workflows/test-admission.yml" ]; then
+  if ! git rev-parse --verify --quiet refs/remotes/origin/development >/dev/null; then
+    echo "pre-push: admission needs origin/development; fetch it before pushing." >&2
+    exit 1
+  fi
+  for _admission_pair in "${_real_ref_pairs[@]}"; do
+    _admission_head="${_admission_pair%%|*}"
+    if ! python3 "$REPO/utils/py/gate_inventory.py" admission check \
+        --root "$REPO" --base origin/development --head "$_admission_head"; then
+      echo "pre-push: coverage decision missing/stale — refused before expensive validation." >&2
+      exit 1
+    fi
+  done
+fi
+
 # A docs-only commit is still checked, but by the deterministic documentation gate instead of the
 # full runtime suite. Reuse the CI classifier rather than growing a second definition of "docs".
 # These routes are intentionally narrow: a force push, an unavailable remote base, a URL push,

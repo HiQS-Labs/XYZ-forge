@@ -1,0 +1,49 @@
+name: Publish agent PR for operator review
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Existing task branch (candidate code is never executed here)
+        required: true
+        type: string
+      sha:
+        description: Expected full task HEAD
+        required: true
+        type: string
+      title:
+        description: PR title
+        required: true
+        type: string
+      body:
+        description: PR description and evidence
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: development
+          persist-credentials: false
+      - name: Open or reuse bot PR and explicitly dispatch its checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ inputs.branch }}
+          EXPECTED_SHA: ${{ inputs.sha }}
+          TITLE: ${{ inputs.title }}
+          BODY: ${{ inputs.body }}
+        run: >-
+          python3 utils/py/gate_inventory.py admission open-pr
+          --branch "$BRANCH" --expected-sha "$EXPECTED_SHA" --title "$TITLE" --body "$BODY"

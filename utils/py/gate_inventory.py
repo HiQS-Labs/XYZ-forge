@@ -46,9 +46,14 @@ HEREDOC_RE = re.compile(r"<<-?\s*['\"]?([A-Za-z_][A-Za-z0-9_]*)")
 def registered_gates(root: Path) -> list[str]:
     """Return the registered shell gates, in validate.sh order."""
     validate = root / "validate.sh"
-    match = TESTS_RE.search(validate.read_text(encoding="utf-8"))
+    return registered_entries(validate.read_text(encoding="utf-8"))
+
+
+def registered_entries(source: str) -> list[str]:
+    """Parse registry text without evaluating a candidate runner."""
+    match = TESTS_RE.search(source)
     if not match:
-        raise ValueError(f"could not find TESTS array in {validate}")
+        raise ValueError("could not find TESTS array")
     entries = shlex.split(match.group(1), comments=True)
     if not entries or len(entries) != len(set(entries)):
         raise ValueError("TESTS must contain nonempty, unique literal entries")
@@ -261,6 +266,10 @@ def decision_view(root: Path, path: Path) -> dict[str, Any]:
     return {"schema_version": 1, "mode": "observe", "enforcement": "disabled", "decisions": result}
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "admission":
+        import test_admission
+        return test_admission.main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--json", action="store_true", help="emit JSON (the default output format)")

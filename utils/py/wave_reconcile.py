@@ -1235,6 +1235,9 @@ def unreconciled_prs(repo_root, repo_slug, metadata):
                 if (type(pr.get('number')) is not int or pr['number'] <= 0
                         or not re.fullmatch(r'[0-9a-f]{40}', pr.get('merge_commit_sha') or '')):
                     raise ValueError('merged PR has no exact landing identity')
+                from hosted_lane_publish import publication_landing
+                if publication_landing(repo_root, pr):
+                    continue  # Reviewed receipt publication is not another qualification workload.
                 meta = dict(number=pr['number'], title=pr.get('title') or '', body=pr.get('body') or '',
                             state='MERGED', mergedAt=merged, baseRefName='development',
                             mergeCommit={'oid':pr['merge_commit_sha']}, url=pr.get('html_url') or '',

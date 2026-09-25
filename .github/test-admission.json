@@ -1,0 +1,1071 @@
+{
+  "base": "0ae3452a5774c6e72b633dd61648137e80516e6b",
+  "changes": [
+    {
+      "new_blob": "2adfd26fccfbf9e1c015e5a88b51eb158fe8712f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": ".github/CODEOWNERS",
+      "status": "A"
+    },
+    {
+      "new_blob": "9467bdbd41618ba7fb9f6de751a7dcf9317eb05a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": ".github/workflows/publish-test-pr.yml",
+      "status": "A"
+    },
+    {
+      "new_blob": "cae83ad9998968201ac4d15b004c4c010a5f9454",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": ".github/workflows/test-admission.yml",
+      "status": "A"
+    },
+    {
+      "new_blob": "1f94a71f6cb22ab7218cba86b1c4f51946c861ce",
+      "new_mode": "100644",
+      "old_blob": "e73ce6d083af26d5de232de9f83ae4c2731e2072",
+      "old_mode": "100644",
+      "path": ".github/workflows/wave-reconcile.yml",
+      "status": "M"
+    },
+    {
+      "new_blob": "03098089c23521ff73d8d0acd4eaca958208883d",
+      "new_mode": "100644",
+      "old_blob": "32d6552a825de91aea9ca57a58f0ecc949fa822d",
+      "old_mode": "100644",
+      "path": "CHANGELOG.md",
+      "status": "M"
+    },
+    {
+      "new_blob": "96fd0cfd11b2d1741ff2c931414eda928babf41d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "PROJECT/2-WORKING/GH-805-TEST-VALUE-ADMISSION.md",
+      "status": "A"
+    },
+    {
+      "new_blob": "ef02cd7a9d1530993ac754aa6a3b5a468173109a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/REPORT.md",
+      "status": "A"
+    },
+    {
+      "new_blob": "241dc10198e2ef9e585980fe30a0d173a92d9f26",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/base-control/base-gh390-instrumented.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "9295b4f8158ff601c22d4851188a5f6b42391ec2",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/base-control/base-gh390.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "93f0dda18b702e1da3d8a1d0d6238f9da2e97338",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/base-control/base-p7-detail.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "7ff1070d314c397d4822f8f2406f8a82bfd73a97",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/base-control/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "7ff1070d314c397d4822f8f2406f8a82bfd73a97",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/base-control/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "84508294f82cf2cbcd26deb9587f64d7489da08a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/base-control/result.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "fdd9c8614006df73f3f165d621b4aba8845cf8f0",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline-0.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "d005aa004df08d79c477ed48368fdbecea594415",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline-1.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "dc39d560823f4e0577a4109b5f7d79fe32867bac",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline-2.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "12a53890d4240498c993930acf5fb7c1086f83d3",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline-3.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "0370a7d6a143343d2b6c28424f2f382641e2cb15",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline-4.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "b63f86f5c119f19db736225bcd406903d692f3ea",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline-5.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "cc74884e4411be1b4873ffd38a7798d7852ad7c2",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline-6.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "490689796575f66ca9ef072debb56a59c762f009",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/baseline.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "eaf0656cf514a89ac1cf8cda09664bdf8696dca4",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/candidate-gh165-governance-canonical-paths-guard.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "eb0d5bfb7fc277ae01784ba854c90e6cc8046c48",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/candidate-gh177-sandbox-test-guard.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "990f4ddca3e5b8ec4523a7171bec43585683ca7f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/candidate-gh269-roadmap-retired.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "834fb3ec4dcb5db99a6f1f5915986c52e77aa302",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/candidate-gh419-gate-inventory.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "493132618d5fd337d3aab720868509ea4d0b03f5",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/candidate-gh567-roadmap-dashboard-retired.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "66a72ef6e130106e49869bc337f0a22761b5357c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "66a72ef6e130106e49869bc337f0a22761b5357c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "b53e848dc592baf843795f7f6762d5f818980c25",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/red-before-planner-exit5.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "a5c02dd14c1c88156e1e1af7900a076f6f160766",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/baseline/red-before-quoted-move.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "a869a0905153d66917ddf029ca5898d3ea6f49e5",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/catalog.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "477a276c5a0e2ff6d256b69597fbfa59ea476f10",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/decisions.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "42115563091dba322ab93f994f397e2c685362bb",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/development-protection.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "a8e91e3684981b57d8f6a3454478f41f2922c2e0",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/development-protection.stderr",
+      "status": "A"
+    },
+    {
+      "new_blob": "82fadf078dd54023d8acfc5ae7cc1debda071945",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/final-identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "82fadf078dd54023d8acfc5ae7cc1debda071945",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/final-identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "d649f1b6f45180deac0e14cdf17e6736b519057f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/final-prepush.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "4de58d877e47da1b2200d906b27e0b154dffb71b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/final-result.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "550087c33f88a9d0882142bda7a516775b7f304d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307623244-48121.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "6f821b3ef24c15530d8e7b3c0631e57a2d27e072",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307624857-49472.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "d5fce7aef247599b5ba210c30233b28766707ef2",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307856785-84915.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "705bc69f66d50b4694d9bd7cb5c1d657bc497091",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307857157-85342.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "761b29a25f343dc34a16cdb35d2e3770290f6df6",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307857825-86028.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "643263074ff49268130edb7a3bbfce77519ce653",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307858227-86424.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "04ac31a3bd8df99092405096460525cad39d29d9",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307858606-86805.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "27067241b552c389b78e234c3a5731e879639c2c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307858957-87165.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "6aa5cb7b3b9ae139827d4a21fc6761abb2d2465b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307861220-89295.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "1c0b276545531787fd19465afdb58f6a6006c28d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790307898462-75657.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "eb9c8c992cff49d923797f070bd546b341e5faf0",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790308127567-16286.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "170c73bee48e06a923a2c56cd08439b3b2d788c0",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790308138390-26237.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "b8b5f20ed69f2854bb6bec17d57c49188158ce00",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-parallel-1790308151093-32189.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "eadecb5d70fcab8d9c45059716c2a5a28de301ac",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/final-gate/telemetry/validate-sequential-1790307853937-82131.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "eb39f0d1e13c7d1f1a5f3abcc5ea5a0375fa0987",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/check-changelog.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "47137ab0ac6ba33d70189457ca786fd03ff7409b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/check-frontmatter.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "97469323183ff38dc1a1826feb6bfea4b9b4bc55",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/check-roadmap-coverage.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "ea1b11a38cd1ec1e9971a756babf81fef3841562",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/check-status-table.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "66e445a1b7985accfbf7cac42eca9a5cd6e3d5b3",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/check-test_gh306-registry-bidirectional.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "815ebc1e8c214c634683fd890bd0b82b9579831f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/check-test_litmus-release.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "8c9a3096448c667580a9e251245a04c08732c653",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/final-review-green.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "0b640a5d3a348a51cebfbe01349575c054b5d34f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/final-review-missing-node-total.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "8d2e839395ee00c4827debec84aa3ba7fe7eb3e6",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh165-governance-canonical-paths-guard.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "eb0d5bfb7fc277ae01784ba854c90e6cc8046c48",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh177-sandbox-test-guard.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "ffb3e0c9acca901526cfa87075116a3753427746",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh269-roadmap-retired.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "5bf5740f8621739720a72542c926ddc89493dc80",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh35-test-tiers.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "da1e71ede838e1dbcb2491c66202cf5e1053a78e",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh365-runner-envelope.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "1750fbd44423cf85fee426dacfc4b1d8341111e4",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh419-gate-inventory.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "9165404ad5c9af79b17a2d64ab75da391133872c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh567-roadmap-dashboard-retired.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "d828cdc8f85e0a9c387469c189ed10cd76a55603",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/gh568-releases-md-retired.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "fef5c3e826709c862e10031d392cfab29774b60d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "fef5c3e826709c862e10031d392cfab29774b60d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "99f1bb2e850149200c3811ad55188cb9f7bf2ff2",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/provenance.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "1c07e0846ab4adf30d37bec0e8f7d0f10f6ff0f6",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/red-hook-disabled.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "0bea0c21c9d82476d83c9a1ba50bb37cc5097471",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/red-node-lane-removed.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "1ce27496878e34e356347c46dac5b177de5d3b52",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/red-planner-exit5.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "a3f62f5f935f9dbe0be3bd8aeb58c29f6d906c2d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/red-quoted-move.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "f37c439f3cc864e3887f620f0f8ba87628cf7d07",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/red-route-removed.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "318f8261244987b34a1b9cc256bedf211824b97e",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/repairs-ci-route.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "8d85b79b5230292abc1fc38826b0d824809f7dea",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/repairs-gh177-sandbox-test-guard.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "0f1e76c6acbdb4370b94d47450f0a1141993403f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/repairs-gh390-disabled-guard.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "16a017df377f8c67b7feaf152f790549d8bfcbcb",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/repairs-gh390-gate-guard.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "52a2417e5c5ec18415c23a8e530ede85f5d8ca25",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/repairs-identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "52a2417e5c5ec18415c23a8e530ede85f5d8ca25",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/repairs-identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "f19e59a78c79e53efbafb65acae5efe327204c1f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/focused/repairs-path-integrity.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "af2edd153bbbc55bec66340ae8804c8218992be5",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/full-failure-ci-route.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "5a23ccd37fec04a783c93697d2228f9e7c6a9c81",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/full-failure-gh390.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "3e757e8590ad5686994620f65793e72562df8efa",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/full-failure-path-integrity.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "d83f9a98ca67c0a9d4de0d2f141bc4fd2f393251",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/full-identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "d83f9a98ca67c0a9d4de0d2f141bc4fd2f393251",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/full-identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "c7975143d03ef5814cb233d5c229f584cc443162",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/full-prepush.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "c7fefbaffcbec78ae3a8e81b508f19c2f529c1a8",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/full-result.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "e50c377cc7e9d11a9d4cfe23d61026b9879bac29",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306442387-69547.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "1603e665a9187e7f0d47a00aa2adb903e6b1f8c8",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306444251-70931.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "e0d5bed13cbdc2d4d4c72c6476053c7a8b97ee09",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306675176-6181.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "190e39ad4f42fcb9cd3873f0780a56f4743d4e7e",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306675549-6521.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "d71d3c5516b2b38cb715e97f65c926c609958230",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306676191-7217.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "71e084ca1142fe1076203df6f48f9b3775d32b3b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306676610-7625.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "fa480fd72f4faeebf275cb23a2dbc7ebc237e95f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306677032-8116.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "5e2a7574a8d52be969235ac17ca2632d4aa45cee",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306677377-8476.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "6a521d400bc53d7c4a1638bdc9c4728c3677661c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306679362-10673.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "c13062054e0ac02b3c2d54eb8ce57638cb23c136",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306722691-5876.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "3c9ce792acb2cd65628ed2815bec827201114e39",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306941845-30895.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "8f2e0b0c25d401086ff35453fc8cf654ffb12907",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306952647-42030.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "d1923c2b1a84b17bb57658405211998f271e0e81",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-parallel-1790306965105-49520.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "e85ff006c2d68ddf2198830a6c81eb6cc767524f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/full-attempt-1/telemetry/validate-sequential-1790306672249-3608.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "a3f31fc9ca86971ca675ce0f8d58dc41a3a55166",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/historical-telemetry-index.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "38198007070bb1695818ce961726b636aa8fe495",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/hosted-checks.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "02d8e9a55ceed1233dfd5e6f23e05ca430e6819a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/provenance.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "0637a088a01e8ddab3bf3fa98dbe804cbde1a0dc",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/rulesets.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "c0af414656a30b04eff2c2406030b15f13af04fe",
+      "new_mode": "100755",
+      "old_blob": "91ba14c0ef41c6ed9c7320983f10c28ca6c9cbd5",
+      "old_mode": "100755",
+      "path": "ci-local.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "9854f38c5a1ff7226a33d316f51175767d2207bc",
+      "new_mode": "100755",
+      "old_blob": "1cf4e6aef5565294007eec91a91ebf653c0c4360",
+      "old_mode": "100755",
+      "path": "githooks/pre-push",
+      "status": "M"
+    },
+    {
+      "new_blob": "9c0debb7b340d6a5aa83ed4add8608e0d0b56581",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "relay-system/2026-09-25/gh805-final.md",
+      "status": "A"
+    },
+    {
+      "new_blob": "570dbfdfed0d9e1f70cdb8190fa4c0ba16ea22be",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "relay-system/2026-09-25/gh805-gateway-plan.md",
+      "status": "A"
+    },
+    {
+      "new_blob": "e8cc6badd10b8dc5dd8b996caa3e0799ae7acbdd",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "relay-system/2026-09-25/gh805-plan.md",
+      "status": "A"
+    },
+    {
+      "new_blob": "33ce4f91965bd438a122538805518fc53afad13d",
+      "new_mode": "100644",
+      "old_blob": "73855c0799d47895e736b2daf56fd444342a5010",
+      "old_mode": "100644",
+      "path": "releases.db",
+      "status": "M"
+    },
+    {
+      "new_blob": "44c19a600746b750deb96988fb71ecc8bf62d99c",
+      "new_mode": "100644",
+      "old_blob": "ca3ecccafffd02754dcd9d580584a123cd210327",
+      "old_mode": "100644",
+      "path": "releases.sql",
+      "status": "M"
+    },
+    {
+      "new_blob": "e9490cd5447c1d41fa31df7e716a500edd316e5b",
+      "new_mode": "100755",
+      "old_blob": "16c8c00c34a78c31db9592645afea25da385e545",
+      "old_mode": "100755",
+      "path": "test/ci-route.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "c91ba72912605bf2e1776b4bbd2ff402da33e983",
+      "new_mode": "100755",
+      "old_blob": "014f07e337b21d401c44e5952a656f57d6d38994",
+      "old_mode": "100755",
+      "path": "test/gh165-governance-canonical-paths-guard.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "1587dddd431077f78d92b65c9cdebec943a6934d",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "test/gh177-sandbox-test-guard.sh",
+      "status": "A"
+    },
+    {
+      "new_blob": "1530933c07e38d391b08a66e25f02b76bdf6f5ff",
+      "new_mode": "100644",
+      "old_blob": "490344e319ca0968185ea8e7f6d3b678005d9e10",
+      "old_mode": "100644",
+      "path": "test/gh269-roadmap-retired.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "9749492ef1134381177f8698187f89cb6dd0e3f1",
+      "new_mode": "100755",
+      "old_blob": "c6acfd400ace631980a1dc01f867aa7b97c2c4fb",
+      "old_mode": "100755",
+      "path": "test/gh35-test-tiers.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "b625dc9e9cb9c0cd35be2338e030dadc1e670b16",
+      "new_mode": "100755",
+      "old_blob": "a04fca48852a853b11d167b071f70cda9c0240e7",
+      "old_mode": "100755",
+      "path": "test/gh365-runner-envelope.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "46ccf60f2dff4a295a4772fd38059fb652c793be",
+      "new_mode": "100755",
+      "old_blob": "0ea5c6fae2c22fcda1d0bfe5c95b14693a431427",
+      "old_mode": "100755",
+      "path": "test/gh390-gate-guard.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "d341808f400a0ae13bafaebbfedbceded0f5ded5",
+      "new_mode": "100644",
+      "old_blob": "d555b1e23b24273ff7adea2c8c7870afbf0cda6f",
+      "old_mode": "100644",
+      "path": "test/gh419-gate-inventory.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "0bb3221a3d4463b48b8b4a5eaa348f93fce442ab",
+      "new_mode": "100755",
+      "old_blob": "0d7fe01ca8c858a6e028b5657f7ba83ce55d4f81",
+      "old_mode": "100755",
+      "path": "test/gh421-auto-wave-reconcile.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "3f21d0a3e224656d3d4e35c2776e6ed49f2a4c4e",
+      "new_mode": "100755",
+      "old_blob": "bfc53dec0413b7fefa394935aad463aca72859d0",
+      "old_mode": "100755",
+      "path": "test/gh567-roadmap-dashboard-retired.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "a1eab0e403d480bf2ef59bef597c4512b9919cc0",
+      "new_mode": "100755",
+      "old_blob": "8d9e1150ca8b5610cca0bde1ccf74a3f30286db5",
+      "old_mode": "100755",
+      "path": "test/gh740-hosted-lane-publish.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "71ef82ec1c4b93115bb3dcee6157127a279575e8",
+      "new_mode": "100755",
+      "old_blob": "e68a2bd4f38ddde18d85739bd22425837187be3e",
+      "old_mode": "100755",
+      "path": "utils/ci-route.sh",
+      "status": "M"
+    },
+    {
+      "new_blob": "8718e8fd92a49daaf6c2f169fdd59d0ffe7034b7",
+      "new_mode": "100644",
+      "old_blob": "78a0a0f38ad7e63fae9ebac73f61a859c9960d23",
+      "old_mode": "100644",
+      "path": "utils/py/gate_inventory.py",
+      "status": "M"
+    },
+    {
+      "new_blob": "b2b7c4af9015395a4ad7494145a24313c07eafc5",
+      "new_mode": "100644",
+      "old_blob": "ca2eadbc3a6c51e7163b5dee93a4dac760cc8545",
+      "old_mode": "100644",
+      "path": "utils/py/hosted_lane_publish.py",
+      "status": "M"
+    },
+    {
+      "new_blob": "d135675e7a4d104d280d5deb9a35f4c17d8d3ff7",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "utils/py/test_admission.py",
+      "status": "A"
+    },
+    {
+      "new_blob": "d6bba342c426b14bfe49d4d84e0eca4349967497",
+      "new_mode": "100755",
+      "old_blob": "c6bf8dfabec7d229f7c9294b3ef52830d2e77143",
+      "old_mode": "100755",
+      "path": "utils/py/wave_reconcile.py",
+      "status": "M"
+    },
+    {
+      "new_blob": "ab315c8d1a23bad353584ca00302c18157996c65",
+      "new_mode": "100755",
+      "old_blob": "7960e3eec19d2df6991a5d712606cd9813da1b28",
+      "old_mode": "100755",
+      "path": "validate.sh",
+      "status": "M"
+    }
+  ],
+  "decision": {
+    "behavior": "Require explicit coverage decisions and operator review before agent changes land; preserve the existing coverage repairs in PR811",
+    "cost": "Gateway runtime and incremental focused test cost are not yet measured. No model runs per test; one coverage decision per change set. Human review and credential separation required before activation.",
+    "existing_coverage": "Extend gh419 for the admission boundary and gh740/gh421 for protected publishing. Reuse all existing suite registrations; the prior GH177 hook suite remains the only new registered suite in this PR.",
+    "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
+    "outcome": "add",
+    "reason": "Reported uncontrolled test growth requires a machine-checked proposal and authenticated operator review. The gateway continuation adds zero registered suites and no separate test framework.",
+    "red_evidence": "Focused refusal/identity/manifest controls and protected publisher controls are pending execution; historical coverage repair controls remain in TESTS-RESULTS/2026-09-25+GH-805. This is a proposal, not approval."
+  },
+  "schema": "test-admission@1"
+}

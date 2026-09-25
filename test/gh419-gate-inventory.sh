@@ -110,4 +110,61 @@ for records in [[], {}, [None]]:
 print('PASS: parser rejects empty/duplicate/dynamic input; advisory metadata never authenticates approval')
 PY805
 
+# GH805 gateway controls extend this existing suite; no additional runner registration.
+python3 - "$HERE" "$FIXTURE" <<'PY_GATEWAY'
+import copy, json, pathlib, subprocess, sys
+from unittest.mock import patch
+root, fixture = map(pathlib.Path, sys.argv[1:])
+sys.path.insert(0, str(root/'utils/py'))
+import test_admission as a
+r = fixture/'admission-repo'; r.mkdir(); (r/'test').mkdir()
+def g(*args): return subprocess.check_output(['git','-C',str(r),*args], text=True).strip()
+g('init','-q','--initial-branch=development'); g('config','user.name','Fixture'); g('config','user.email','fixture@example.invalid')
+(r/'product.py').write_text('value=1\n'); (r/'test/existing.py').write_text('assert value == 1\n')
+g('add','.'); g('commit','-qm','base'); base=g('rev-parse','HEAD')
+(r/'test/existing.py').write_text('assert value == 2\n'); (r/'product.py').write_text('value=2\n'); g('add','.')
+why={k:'bounded fixture evidence' for k in a.FIELDS}; why.update(outcome='extend',issue='https://github.com/HiQS-Labs/XYZ-forge/issues/805')
+b,tree,rows=a.manifest(r,base,'INDEX'); valid=a.packet(b,rows,why)
+packet=r/a.PACKET; packet.parent.mkdir()
+def write(data):
+    packet.write_text(json.dumps(data)); g('add',a.PACKET)
+def refused(fn):
+    try: fn()
+    except ValueError: return
+    raise AssertionError('bad proposal was accepted')
+refused(lambda:a.inspect(r,base,'INDEX'))
+write(valid); out=a.inspect(r,base,'INDEX'); assert out['test_files']['M']==1 and not out['approval_trusted']
+for bad in [{**valid,'approved':True}, {**valid,'changes':rows[:-1]}, {**valid,'base':'0'*40}, {**valid,'decision':{**why,'reason':''}}]:
+    write(bad); refused(lambda:a.inspect(r,base,'INDEX'))
+write(valid); (r/'product.py').write_text('value=3\n'); g('add','product.py'); refused(lambda:a.inspect(r,base,'INDEX'))
+(r/'product.py').write_text('value=2\n'); g('add','product.py')
+(r/'test/new.py').write_text('assert True\n'); g('add','test/new.py')
+b,t,rs=a.manifest(r,base,'INDEX'); write(a.packet(b,rs,why)); refused(lambda:a.inspect(r,base,'INDEX'))
+write(a.packet(b,rs,{**why,'outcome':'add'})); assert a.inspect(r,base,'INDEX')['test_files']['A']==1
+(r/'test/new.py').unlink(); g('add','-u'); (r/'test/existing.py').rename(r/'test/renamed.py'); g('add','.')
+refused(lambda:a.inspect(r,base,'INDEX')); b,t,rs=a.manifest(r,base,'INDEX'); write(a.packet(b,rs,{**why,'outcome':'add'}))
+assert a.inspect(r,base,'INDEX')['test_files']['D']==1
+write(a.packet(b,rs,{**why,'outcome':'no-add'})); refused(lambda:a.inspect(r,base,'INDEX'))
+refused(lambda:a.loads('{"outcome":"add","outcome":"reuse"}'))
+# The hosted path publishes failure, never success, when candidate verification rejects.
+pr={'number':1,'base':{'ref':'development','sha':base},'head':{'sha':'f'*40},'state':'open','user':{'id':41898282}}
+calls=[]
+def api(path,payload=None,method=None):
+    calls.append((path,payload,method))
+    return {'id':7} if path.endswith('/check-runs') else pr
+with patch.object(a,'gh',side_effect=api), patch.object(a,'git',return_value=''), patch.object(a,'revision',return_value='f'*40), patch.object(a,'inspect',side_effect=ValueError('seeded stale proposal')):
+    refused(lambda:a.hosted(r,'owner/repo',1,str(fixture/'never.json')))
+assert calls[-1][1]['conclusion']=='failure'
+assert not any(c[1] and c[1].get('conclusion')=='success' for c in calls)
+# A same-account reviewer, stale review, or dismissed review is never authenticated admission.
+with patch.object(a,'gh',return_value=pr), patch.object(a,'git',return_value=''), patch.object(a,'revision',return_value='f'*40), patch.object(a,'inspect',return_value={'state':'proposed'}):
+    review={'id':3,'user':{'id':a.OPERATOR_ID},'state':'APPROVED','commit_id':'f'*40,'html_url':'review'}
+    with patch.object(a,'paged',return_value=[review]): assert a.catalog(r,'owner/repo',1)['approval_trusted']
+    for bad in [{**review,'commit_id':'0'*40},{**review,'state':'DISMISSED'},{**review,'user':{'id':9}}]:
+        with patch.object(a,'paged',return_value=[bad]): assert not a.catalog(r,'owner/repo',1)['approval_trusted']
+    pr['user']['id']=a.OPERATOR_ID
+    with patch.object(a,'paged',return_value=[review]): assert not a.catalog(r,'owner/repo',1)['approval_trusted']
+print('PASS: complete binding, stale/missing/forged/renamed/deleted controls and native review identity')
+PY_GATEWAY
+
 echo "PASS: GH-419 inventory discovers registered gates and records only declared controls"

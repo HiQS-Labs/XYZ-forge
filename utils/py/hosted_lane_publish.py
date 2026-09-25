@@ -181,12 +181,78 @@ def recompute(argv, reconcile_cmd):
         fail(f"recompute failed after the receipts were published: {detail}")
 
 
+# Protected integration branches use the same allowlist and writer, with PR review.
+RECONCILE_PREFIX = 'automation/reconcile-'
+
+
+def pending_publication(repo):
+    from test_admission import paged
+    return [p for p in paged(f'repos/{repo}/pulls?state=open&base=development&per_page=100')
+            if p.get('user', {}).get('id') == 41898282
+            and p.get('head', {}).get('ref', '').startswith(RECONCILE_PREFIX)]
+
+
+def publication_landing(repo_root, pr):
+    """No label/title exemption: verify author, namespace AND complete landed diff."""
+    if (pr.get('user', {}).get('id') != 41898282
+            or not pr.get('head', {}).get('ref', '').startswith(RECONCILE_PREFIX)):
+        return False
+    sha = pr.get('merge_commit_sha', '')
+    if not re.fullmatch(r'[0-9a-f]{40}', sha):
+        return False
+    result = subprocess.run(['git', '-C', str(repo_root), 'diff', '--no-renames',
+                             '--name-only', '-z', sha + '^1', sha], capture_output=True, text=True)
+    if result.returncode:
+        return False
+    paths = [p for p in result.stdout.split('\0') if p and p != '.github/test-admission.json']
+    if not paths:
+        return False
+    try:
+        declared_paths(paths)
+    except SystemExit:
+        return False
+    return True
+
+
+def publish_review(paths, repo):
+    """Retain qualified artifacts on a reviewable branch; never direct-push fallback."""
+    from pathlib import Path
+    from test_admission import PACKET, manifest, packet, open_pr
+    # Recheck the original allowlist before admitting the generated packet.
+    declared_paths(paths)
+    if pending_publication(repo):
+        fail('reconciliation PR already pending; retain local artifacts and await its review')
+    base = git('rev-parse', 'HEAD').stdout.strip()
+    git('add', '-A', '--', *paths)
+    root = Path.cwd()
+    merge_base, _, rows = manifest(root, base, 'INDEX')
+    decision = dict(outcome='no-add', behavior='Publish existing qualification receipts and lifecycle state',
+                    existing_coverage='Existing qualifying gate receipts; no executable test changes',
+                    reason='Required review replaces direct integration push on protected development',
+                    red_evidence='Publisher allowlist refuses code/test changes',
+                    cost='Zero new automated tests; prior qualifying run retained in receipts',
+                    issue='https://github.com/HiQS-Labs/XYZ-forge/issues/805')
+    target = root / PACKET
+    target.parent.mkdir(exist_ok=True)
+    target.write_text(json.dumps(packet(merge_base, rows, decision), indent=2, sort_keys=True) + '\n')
+    full = commit([*paths, PACKET], 'chore: reconcile merged development work')
+    branch = RECONCILE_PREFIX + full[:16]
+    git('push', 'origin', f'HEAD:refs/heads/{branch}')
+    pr = open_pr(repo, branch, full, 'chore: review qualified reconciliation artifacts',
+                 'Lifecycle/receipt publication from the hosted reconciler. No new tests. '
+                 'Review the generated coverage decision and allowlisted diff. No automatic merge.')
+    log('reconciliation awaits operator review: ' + pr['html_url'])
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--reconcile-args', default='',
                         help='the argv the reconcile step ran (RECONCILE_ARGS); reused for the one bounded recompute')
     parser.add_argument('--reconcile-cmd', default='python3 utils/py/wave_reconcile.py',
                         help='the reconciler command (tests substitute a stub)')
+    parser.add_argument('--protected', action='store_true', help='publish via operator-reviewed PR; no direct push fallback')
+    parser.add_argument('--repo', default=os.environ.get('GITHUB_REPOSITORY', ''))
     args = parser.parse_args(argv)
     reconcile_cmd = shlex.split(args.reconcile_cmd)
 
@@ -194,6 +260,10 @@ def main(argv=None):
     if not paths:
         print('Nothing to commit')
         return 0
+    if args.protected:
+        if not args.repo:
+            fail('--protected requires --repo')
+        return publish_review(paths, args.repo)
     receipts = receipt_paths(paths)
     full = commit(paths, 'chore: reconcile merged development work')
     if push():

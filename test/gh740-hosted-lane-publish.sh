@@ -137,6 +137,42 @@ class PublishTests(unittest.TestCase):
     def stub_calls(self):
         return [json.loads(l) for l in self.calls.read_text().splitlines()] if self.calls.exists() else []
 
+    def test_protected_publication_retains_receipts_without_pushing_development(self):
+        from unittest.mock import patch
+        import hosted_lane_publish as publisher
+        import test_admission as admission
+        self.reconcile()
+        before = sh('git', 'rev-parse', 'HEAD', cwd=self.clone).stdout.strip()
+        called = []
+        def opened(repo, branch, full, title, body):
+            called.append((repo, branch, full))
+            return {'html_url': 'https://github.com/owner/repo/pull/1'}
+        previous = os.getcwd()
+        try:
+            os.chdir(self.clone)
+            with patch.object(publisher, 'pending_publication', return_value=[]), patch.object(admission, 'open_pr', side_effect=opened):
+                self.assertEqual(publisher.main(['--protected', '--repo', 'owner/repo']), 0)
+            self.assertEqual(len(called), 1)
+            remote = sh('git', 'ls-remote', 'origin', 'refs/heads/development', cwd=self.clone).stdout.split()[0]
+            self.assertEqual(remote, before)
+            published = sh('git', 'ls-remote', 'origin', 'refs/heads/' + called[0][1], cwd=self.clone).stdout.split()[0]
+            self.assertEqual(published, called[0][2])
+            result = admission.inspect(self.clone, before)
+            self.assertEqual(result['decision']['outcome'], 'no-add')
+            self.assertFalse(result['approval_trusted'])
+            paths = sh('git', 'diff', '--name-only', before, 'HEAD', cwd=self.clone).stdout.splitlines()
+            self.assertTrue(any(p.endswith('/provenance.jsonl') for p in paths))
+            # Recovery exclusion requires bot identity AND an allowlisted landed diff.
+            pr = {'user': {'id':41898282}, 'head': {'ref':called[0][1]}, 'merge_commit_sha':called[0][2]}
+            self.assertTrue(publisher.publication_landing(self.clone, pr))
+            self.assertFalse(publisher.publication_landing(self.clone, {**pr, 'user':{'id':1}}))
+            (self.clone/'runtime.py').write_text('print("unapproved runtime")\n')
+            sh('git','add','runtime.py',cwd=self.clone); sh('git','commit','-qm','code cannot be disguised as reconciliation',cwd=self.clone)
+            pr['merge_commit_sha'] = sh('git','rev-parse','HEAD',cwd=self.clone).stdout.strip()
+            self.assertFalse(publisher.publication_landing(self.clone, pr))
+        finally:
+            os.chdir(previous)
+
     def test_no_race_is_one_commit_one_push(self):
         env = self.reconcile()
         out = self.publish(env)

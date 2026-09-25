@@ -1,0 +1,3 @@
+# Required owner review is activated by repository protection, not this file alone.
+# All paths: moving tests or changing admission/CI must not evade operator review.
+* @noelsaw1

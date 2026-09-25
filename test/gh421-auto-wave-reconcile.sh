@@ -623,6 +623,13 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(data['jobs']['reconcile']['permissions']['contents'], 'write')
         self.assertEqual(data['permissions'], {'contents':'read'})
         self.assertIn('run: bash test/gh421-auto-wave-reconcile.sh', (source / '.github/workflows/ci.yml').read_text())
+        self.assertIn('pending_publication(repo)', self.workflow)
+        self.assertIn("if: steps.publication.outputs.pending != 'true'", self.workflow)
+        self.assertIn('publication_landing', self.workflow)
+        self.assertIn('EXTRA=(--protected)', self.workflow)
+        self.assertEqual(data['jobs']['reconcile']['permissions']['pull-requests'], 'write')
+        self.assertNotIn('.protected)" = false', self.workflow)
+
 
     # GH-740: the publish step is utils/py/hosted_lane_publish.py (the former inline Python, moved).
     # These tests drive the module with git patched out; test/gh740-hosted-lane-publish.sh drives it

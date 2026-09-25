@@ -29,7 +29,8 @@ jobs:
     permissions:
       contents: write
       issues: write   # GH-684: the final step opens/closes the one hosted-reconcile-attention issue
-      pull-requests: read
+      pull-requests: write
+      actions: write
     env:
       GH_TOKEN: ${{ github.token }}
       PYTHONDONTWRITEBYTECODE: '1'
@@ -38,23 +39,41 @@ jobs:
         with:
           ref: development
           fetch-depth: 0
-      - name: Check direct-push prerequisite
+      - name: Resolve protected publication and pending review
+        id: publication
         env:
           REPO: ${{ github.repository }}
         run: |
-          set -euo pipefail
-          # development was unprotected when implemented. Fail before writes if that changes;
-          # a protected branch needs a reviewed bot-bypass policy, never an implicit bypass.
-          test "$(gh api "repos/$REPO/branches/development" --jq .protected)" = false
+          python3 - <<'PY_PREFLIGHT'
+          import json, os, sys
+          sys.path.insert(0, 'utils/py')
+          from test_admission import gh
+          from hosted_lane_publish import pending_publication, publication_landing
+          repo = os.environ['REPO']
+          protected = gh(f'repos/{repo}/branches/development')['protected']
+          pending = pending_publication(repo) if protected else []
+          event = json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          own = publication_landing('.', event.get('pull_request', {}))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f'pending={str(bool(pending)).lower()}\n')
+              f.write(f'protected={str(protected).lower()}\n')
+              f.write(f'own={str(own).lower()}\n')
+          if pending:
+              print('Qualification paused while reconciliation PR awaits operator review:', pending[0]['html_url'])
+          PY_PREFLIGHT
       - name: Install runtime dependencies
+        if: steps.publication.outputs.pending != 'true'
         run: npm ci
       - name: Install Python dependencies for complete qualification
+        if: steps.publication.outputs.pending != 'true'
         run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
       - name: Reconcile merged PR or catch up
+        if: steps.publication.outputs.pending != 'true'
         id: reconcile
         env:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          OWN_PUBLICATION: ${{ steps.publication.outputs.own }}
         # GH-684: the log is tee'd OUTSIDE the tree ($RUNNER_TEMP) — the commit step below refuses
         # undeclared in-tree files — and stderr is folded in because the terminal
         # `wave-reconcile: ERROR — …` line is written there. pipefail keeps the reconciler's exit.
@@ -62,7 +81,7 @@ jobs:
         # bounded recompute re-runs exactly this command (plus --only-receipted --skip-pull).
         run: |
           set -euo pipefail
-          if [ "$EVENT_NAME" = pull_request ]; then
+          if [ "$EVENT_NAME" = pull_request ] && [ "$OWN_PUBLICATION" != true ]; then
             ARGS=(--pr "$PR_NUMBER" --catch-up --gate --qualify)
           else
             ARGS=(--catch-up --gate --qualify)
@@ -70,7 +89,10 @@ jobs:
           echo "RECONCILE_ARGS=${ARGS[*]}" >> "$GITHUB_ENV"
           python3 utils/py/wave_reconcile.py "${ARGS[@]}" 2>&1 | tee "$RUNNER_TEMP/reconcile.log"
       - name: Commit declared artifacts and push
+        if: steps.publication.outputs.pending != 'true'
         id: publish
+        env:
+          PROTECTED: ${{ steps.publication.outputs.protected }}
         # GH-740: utils/py/hosted_lane_publish.py — the former inline step, moved so it can be tested
         # and retried. Same allowlist, explicit `git add`, bot identity, one fast-forward push; on a
         # rejected push it discards the stale commit, lifts only the receipt files onto the fresh
@@ -79,7 +101,9 @@ jobs:
         # tee'd for the report step (GH-741).
         run: |
           set -euo pipefail
-          python3 utils/py/hosted_lane_publish.py --reconcile-args "$RECONCILE_ARGS" 2>&1 | tee "$RUNNER_TEMP/publish.log"
+          EXTRA=()
+          [ "$PROTECTED" != true ] || EXTRA=(--protected)
+          python3 utils/py/hosted_lane_publish.py --reconcile-args "$RECONCILE_ARGS" "${EXTRA[@]}" 2>&1 | tee "$RUNNER_TEMP/publish.log"
       - name: Report hosted lane
         # GH-684: always runs, after the job's status is known. `job.status` reflects every preceding
         # step — a successful reconcile followed by a rejected fast-forward push is still red here.
@@ -87,7 +111,7 @@ jobs:
         # on the next green run with no skips. See utils/py/hosted_lane_report.py.
         # GH-741: the step outcomes decide WHICH log's error is the cause — a green reconcile step's
         # log is full of the test suite's own expected ERROR lines and must never be blamed.
-        if: always()
+        if: always() && steps.publication.outputs.pending != 'true'
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: >-
