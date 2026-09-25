@@ -25,7 +25,7 @@ when an external result leaves nothing actionable in the current turn.
 2. Record the start time and a hard deadline no later than 3 hours later. Use
    one unique, non-overwriting `temp/handsfree-YYYY-MM-DD-<session-token>.md`
    file in the current repo (`temp/` is ignored here). Include the goal and
-   canonical source, start/deadline with time zone, awaited artifact and SHA,
+   canonical source, 10-minute cadence, start/deadline with time zone, awaited artifact and SHA,
    current observation, next action, scheduler/job identity and cancellation
    method, and last wake result. Keep this short. It is a local resume note,
    never a replacement for the issue, project plan, CI result, or user message.
@@ -51,8 +51,13 @@ when an external result leaves nothing actionable in the current turn.
    - For any other harness, use its native same-conversation scheduler only
      after the same create, readback, and cancel checks.
 
-   If any check fails, leave the wake **unarmed**, record why, continue what can
-   be done now, and tell the user the exact limitation. A harness with only
+   If a capability check fails **before creation**, leave the wake unarmed,
+   record why, continue what can be done now, and tell the user the limitation.
+   If creation was attempted but the receipt or active-job readback fails,
+   retain any job ID (or look up the job by this note's unique path), then
+   cancel it and verify it is inactive. If its state cannot be proven, report
+   that it may still be active and give the manual stop action. Do not create
+   a replacement until that state is resolved. A harness with only
    standalone scheduled runs may offer that as a separate option using the
    note, clearly labelled as a new run rather than this conversation waking.
    Do not substitute a shell `sleep`, OS cron, a new headless agent, or an unverified background task
