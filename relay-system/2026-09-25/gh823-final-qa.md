@@ -188,4 +188,12 @@ Basis: The scoped failure from round 1 is fixed, the independent predicate probe
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the already-planned final gate and PR workflow.
 
+
+### Attestation · relay-drive — 2026-09-25T15:57:17Z
+task: RELAY-gh823-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: cf5cac4e77862f8a6faf7cb804f9d9d1a063095e
+added-range: 16698+3650
+added-sha256: 84f3f92c8f0d4f4982f522314360c195fee39bc79c8917aaa9ddb0899216b50f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
