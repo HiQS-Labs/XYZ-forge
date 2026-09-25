@@ -84,6 +84,8 @@ Fail a pillar, and the turn, feature, or relay review isn't done.
 
 13. **A green gate without a witnessed red control is not evidence.** Every new or materially changed decision gate ships a recorded demonstration that it fails for the right reason: a pre-fix replay, deliberate mutation, or controlled bad fixture. Do not mistake a check that validates the artifact it just generated (#351) or a parity check that compares a lane to itself (#348) for evidence; both shapes are structurally unable to falsify their claim.
 
+Test growth must earn operator approval through the single writer; [AGENTS.md → Test admission](AGENTS.md#test-admission) governs approved ceilings, content integrity and enforcement status.
+
 ## Applying this
 
 Adding a feature or weighing a tradeoff, ask: *does this keep agents coordinated without collision, contained within their scope, and verifiable to an outside observer? And is "done" provable by running `validate.sh`?* If any answer is no, reconsider.

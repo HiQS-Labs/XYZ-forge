@@ -1,5 +1,7 @@
 # Test Results & Artifacts (`TESTS-RESULTS/`)
 
+Test changes and their approved budgets follow [AGENTS.md → Test admission](../AGENTS.md#test-admission); evidence artifacts do not grant approval.
+
 This directory contains committed execution artifacts, benchmark datasets, and structured telemetry logs from autonomous testing campaigns (such as ATE variation runs, fuzzing loops, and harness evaluations).
 
 ## Purpose

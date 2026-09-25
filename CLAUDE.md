@@ -2,6 +2,8 @@
 
 This repo's canonical agent instructions live in [AGENTS.md](AGENTS.md).
 
+Test changes follow the single gateway and approval rules in [AGENTS.md → Test admission](AGENTS.md#test-admission).
+
 Startup order:
 
 1. Read [ROUTER.md](ROUTER.md) for canonical entry points and command rails.

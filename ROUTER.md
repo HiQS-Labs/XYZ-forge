@@ -32,6 +32,8 @@ This file is the first entry point for an AI agent working in this repo: it tell
 
 ## Canonical rules
 
+- Before adding or changing tests, read [AGENTS.md → Test admission](AGENTS.md#test-admission) for the single writer, operator authority, approved budgets and current enforcement status.
+
 - Do not put phase checklists, build steps, or deep execution notes in the roadmap ledger.
 - Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer row in the roadmap ledger (the RELEASES DB) that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Governance lives in `PROJECT/PDDA.md` → "ROADMAP contract".
 - Promoting a capture from `1-INBOX` to `2-WORKING` is a DB-verb procedure (`roadmap repoint` + `roadmap update` / `roadmap move`), never a markdown edit — the exact steps and their two known gate traps (`updated:` frontmatter key, bullet-format `raw_text`) live in `SOP.md` → "Step 1b: Promoting a capture from 1-INBOX to 2-WORKING (releases-mode)".

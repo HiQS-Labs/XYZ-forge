@@ -18,6 +18,8 @@ This document outlines the standard operating procedure for designing, executing
 
 ## 1. Governance & Principles
 
+- Route every test change through the single gateway and operator approval under [AGENTS.md → Test admission](AGENTS.md#test-admission); use its linked runbook for commands and activation status.
+
 - **Verified Beats Plausible (Rule 6 / GH-430):** Any model grading, performance claim, or architecture recommendation must be backed by retained, committed telemetry (`error_log.jsonl` / `*.jsonl`) in `TESTS-RESULTS/`.
 - **Full Clone Isolation (GH-564):** Never run destructive suites, resets, or multi-hour variation runs in the primary working tree or a linked worktree. Always provision a standalone clone (e.g. `../XYZ-forge-<topic>`).
 - **Process Group Containment:** All spawned runners must use process-group session isolation (`setsid`) and PGID-targeted cleanup (`SIGTERM` -> `SIGKILL`) to prevent zombie child processes.

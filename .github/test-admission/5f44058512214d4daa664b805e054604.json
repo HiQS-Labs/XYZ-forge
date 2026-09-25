@@ -42,7 +42,7 @@
       "status": "M"
     },
     {
-      "new_blob": "c980838f4744a6dc8a739f4d8930905a32a638f8",
+      "new_blob": "10a740820fe8742961e20cded7d3520a66a9f2d6",
       "new_mode": "100644",
       "old_blob": "7601f517cfb1de9cc413435faa1203f184e8f43f",
       "old_mode": "100644",
@@ -58,12 +58,44 @@
       "status": "M"
     },
     {
+      "new_blob": "94ac7d8658d3db7f18937adc68166807281219a2",
+      "new_mode": "100644",
+      "old_blob": "1097cb36d1252e05cbc247e1a99ce3383f67bbe4",
+      "old_mode": "100644",
+      "path": "CLAUDE.md",
+      "status": "M"
+    },
+    {
+      "new_blob": "186dc9b09b2f36b08c329645e0afa996dc9c9433",
+      "new_mode": "100644",
+      "old_blob": "29de1a5b04c5488ae50164d45cbb519505ff40e1",
+      "old_mode": "100644",
+      "path": "GUIDING-PRINCIPLES.md",
+      "status": "M"
+    },
+    {
       "new_blob": "e282f26bf0a9b6eaa0af3bc29cb410acc5e4f08b",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
       "path": "PROJECT/2-WORKING/GH-805-TEST-VALUE-ADMISSION.md",
       "status": "A"
+    },
+    {
+      "new_blob": "421986056a8b8c46a65685ac1f86879ba1b33d1e",
+      "new_mode": "100644",
+      "old_blob": "15e2b980a6bb80942a6d67a6f8b3626be38d424a",
+      "old_mode": "100644",
+      "path": "ROUTER.md",
+      "status": "M"
+    },
+    {
+      "new_blob": "890c625cf544d357e2d62c5c42d6c5d9ada45751",
+      "new_mode": "100644",
+      "old_blob": "3766c062d5576bf95fd3419b07e42040acca80a4",
+      "old_mode": "100644",
+      "path": "SOP.md",
+      "status": "M"
     },
     {
       "new_blob": "018e287447ac03da002637624604d88f5efd5891",
@@ -1106,6 +1138,22 @@
       "status": "A"
     },
     {
+      "new_blob": "d53bf0c36b38ad0e57cff06f5965ccedbbb8096c",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-governance/governance.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "4f75f50bbf3a9c86f7b3f8fe8d8c322f6a9c139b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-governance/provenance.jsonl",
+      "status": "A"
+    },
+    {
       "new_blob": "50926e6b8f15da0cc48d6fb3594c013298b9d52a",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
@@ -1408,6 +1456,14 @@
       "old_mode": "000000",
       "path": "TESTS-RESULTS/2026-09-25+GH-805/rulesets.json",
       "status": "A"
+    },
+    {
+      "new_blob": "d01611a2e1b536d5168d49a7112d034813058395",
+      "new_mode": "100644",
+      "old_blob": "3c6b64fcdfec11809bc69a4c9dbce772f074889d",
+      "old_mode": "100644",
+      "path": "TESTS-RESULTS/README.md",
+      "status": "M"
     },
     {
       "new_blob": "c0af414656a30b04eff2c2406030b15f13af04fe",
