@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-25 — Bounded handsfree agent wakeups (GH-825)
+
+Add a `handsfree` skill for checking CI and other asynchronous results and then continuing the
+authorized task every 10 minutes, for at most 3 hours. It uses the current harness's native
+same-conversation scheduler only when creation, readback, and cancellation are available, and keeps
+a collision-safe session note in ignored `temp/`. The note is a resume aid; live results and the
+existing task record remain authoritative. Rollback: cancel the native job and revert the skill and
+catalog entry.
+
 ## 2026-09-25 — Promotion boundary cap fits the suite (GH-823)
 
 `boundary-macos`, the GH-509 promotion witness, had a 45-minute cap sized to August's "~13-15 min locally".

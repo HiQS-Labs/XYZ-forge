@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue #825 opened; intake parked and rated; scheduler docs grounded | Codex plan QA, then implement the reviewed skill |
+| Codex plan QA approved in `relay-system/2026-09-25/gh825-plan-r2.codex.md`; skill authored | Verify structure and repo gates, obtain final Codex QA, open PR |
 
 ## Observed state and recon ledger
 
