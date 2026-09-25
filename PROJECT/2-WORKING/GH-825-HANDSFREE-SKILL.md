@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA approved in `relay-system/2026-09-25/gh825-plan-r2.codex.md`; skill authored | Verify structure and repo gates, obtain final Codex QA, open PR |
+| Codex plan and final QA approved; skill structure and focused PDDA checks passed | Run the qualifying gate in a disposable full clone, then open PR to `development` |
 
 ## Observed state and recon ledger
 
