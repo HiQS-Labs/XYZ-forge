@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -102,5 +102,23 @@ may read any repo path read-only.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The narrow retarget preserves the six assertions and the pytest-selection contract; retained before/after and mutation receipts support the acceptance claims. No blocking defect found. Approval covers this artifact review, not the outstanding qualifying clone gate or promotion.
+swept file: yes
+
+- [Pass] Routing: `utils/ci-route.sh:33,45` maps the chosen path to the two skills-army-hq suites; `validate.sh:915-929` sets `T2_PYTEST=1` from its `.py` suffix, and `validate.sh:1442-1459` retains the real pytest/skip/failure branches. Read-only probe `printf 'skills/3-weekly/skills-army-hq/scripts/sync.py\n' | bash utils/ci-route.sh pull_request` exited 0: `tier=2`, `tier2_subsystems=skills-army-hq`, `tier2_tests=skills-army-hq.sh,gh620-skills-army-mini-sync.sh`. The comment accurately describes the measured choice. No fix needed.
+- [Pass] Preservation and whole-file sweep: read all of `test/gh251-validate-pytest-skip.sh:1-105`, including its shims, assertions and exit path, plus `_setup.sh`'s fail-fast helper/soft-fail EXIT trap. The artifact's sole test hunk replaces the paths-file value and adds four comment lines; assertions at `:20-102` are untouched and none consumes a releases-specific result. No pre-existing blocking defect found. The header's claim about genuine pytest failures is broader than the cases exercised (no forced failing-pytest case), but that pre-existing coverage limitation is unchanged by this cost fix.
+- [Pass] Evidence: `TESTS-RESULTS/2026-09-24+GH-808/before.log:3-11` and `after.log:3-11` retain identical six PASS lines, `17:30.60` versus `1:07.46`, and `exit=0`. `red-control.log:5,26,51` retains the expected assertion failure, mutated `pytest not present` message and `red-run exit=1`; `red-control-restore.log:3-9` returns to six passes. `provenance.jsonl:1-4` pins base/fix commits and records matched command/host/clone and rc 0/0/1/0. A read-only Python JSON/log comparison (`python3 -` with `json.loads`, PASS-line equality and command/host/clone equality assertions) exited 0: `six PASS lines identical; four receipts rc=0,0,1,0; matched command/host/clone`. These are inspected producer receipts, not a fresh reviewer timing run.
+- [Pass] Coupling is proportionate: the selected real path exists, and the rationale is documented at `test/gh251-validate-pytest-skip.sh:14-18`. Routing changes can require updating this test, but loss of tier-2 classification is refused at `validate.sh:919-925` and loss of pytest output fails the positive assertions. The old releases selection already had subsystem coupling. No new abstraction or policy change is warranted.
+- [Nit] Scope metadata: the artifact includes only the test retarget, GH-808 docs/evidence and ledger-related changes, with no `validate.sh` or containment edit. However, `LEADERBOARD.md:1` has a routine generation-only change despite AGENTS' task-branch view rule; omit it when preparing the final publication. The added GH-808 `roadmap_items` row in `releases.sql` also has NULL ratings although its new `rated` work event and the plan say `72/50/50/82`; reconcile that intake metadata through the releases CLI (not by editing the dump). No unrelated issue-row change appears in the supplied SQL diff.
+- [Nit] `PROJECT/2-WORKING/GH-808-GH251-GATE-COST.md` plan step 2 still expects `5 pass`, and step 3 says both sections fail; the retained evidence correctly shows six passes and fail-fast on the absent-pytest assertion. Update those expectations to the observed six-pass / first-failure behavior.
+- [Unverified — needs clone run] The final qualifying gate and clone-identity checks were not rerun here, as required by the reviewer boundary. The summary's pre/post identity assertion has no raw identity transcript in this evidence bundle. Run the final gate in the disposable full clone and retain its receipt before claiming merge readiness. No git, suites, pytest, or executable fixtures were run this turn.
+
+Evidence method: Verify-tier intent; nearest graph `XYZ-forge` is the parent checkout, generation `2026-09-01T15:54:30Z`. Coverage reported changed metadata / untracked test for the four relevant shell paths, so this review relied on exact local source and seeded diff reads instead of stale graph completeness claims.
+
+Relay closed (Approved), no further review turn needed; Producer owns the remaining gate and publication steps.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
