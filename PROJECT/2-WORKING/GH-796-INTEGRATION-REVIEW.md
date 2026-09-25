@@ -1,6 +1,6 @@
 ---
 title: GH-796 — Open PR integration review and merge-remediation plan
-status: Blocked — GH-801 development gate regression
+status: Blocked — unrelated gate finding GH-807
 created: 2026-09-24
 updated: 2026-09-24
 owner: noel
@@ -17,7 +17,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Merge bootstrap reviewed and #794 ledger resolved; full gate found GH-798 pipeline ratchet regression, filed as #801 | Hold landing until #801 is repaired and the current-base gate passes; no PR merged |
+| GH-801 included; #794 refreshed and published at df1353de, gate 420/420 after two built-in retries; unrelated SIGPIPE defect filed as GH-807 | Hold remote merges under operator's unrelated-bug rule; retain partial #765 remediation and resume only after the hold is resolved |
 
 ## Table of contents
 
@@ -187,3 +187,49 @@ Operational adaptation: invoke the existing cleanup helpers in supervised stages
 Agy operational-adaptation QA round2 returned exit0 with attested Approved at reviewed head `23943dfb1cf6`; round1 close-mismatch is preserved as failed QA, not approval. No code was changed to recover the relay.
 
 **Stop: GH-801.** The current-base gate reports `gh139-pipe-grep-guard.sh rc=1`: GH-798 introduced ten prohibited pipes in its test. Exact source comparison excludes #794 as the origin. Separate issue #801 is parked, and the merge queue is held under the operator's unrelated-bug rule. No bypass, no merge, no cleanup. Full gate finished **419/420**, sole failure GH-139 on the GH-798 test; clone-identity invariant passed; installed hook refused the push (1102 seconds). Pristine current development independently reproduces the same failure, while pre-GH-798 `337813e0` passes (3/3). The resolved candidate remains local; remote #794 is unchanged. Evidence and provenance are retained in this PR.
+
+## Resume after GH-801 — 2026-09-24
+
+Operator reports Agy completed GH-801 and requests resume plus a future test-simplification issue. Verified issue closed and source replacement landed in `137076593882`, reconciled development `c84dc618`. GH-804 is created and parked; no simplification implementation is in this batch.
+
+Primary initially contained one untracked generated scheduling overlay `MARATHON-PLAN-2026-09-25.md`. Preserved byte-for-byte under primary `temp/gh796-preserved/` with SHA-256 manifest before restoring landing readiness; no unrelated plan was committed or discarded. Fresh dry-run confirmed readiness and retained current PR heads. New PR #803 is explicitly excluded with #759 and the plan-publication PR.
+
+Canonical B1 reclassified the #794 ledger against generation1132 and replayed the same two task rows, producing `df1353de59dd44e2c6b50a63b9a7d3bcd851bbb7`. This occupies repair slot2/2 at the original coordinator; budget was not reset. Candidate qualification is pending in the isolated gate clone. No approval is inferred from prior 419/420 or the operator-supplied focused results.
+
+## Resume result and new hold — 2026-09-24
+
+The installed macOS push gate for #794 candidate `df1353de59dd44e2c6b50a63b9a7d3bcd851bbb7`
+returned **420/420**, exit0 in1274seconds, and pushed that exact head without a bypass. The envelope
+verified unchanged identity, tracked tree, worktrees and driver lock; post-run source clone is clean
+with canonical origin and core.bare=false. Hosted CI run36086131946 is bound to that head and its
+vendored smoke job passed; hosted macOS promotion and Ubuntu jobs were skipped as configured.
+This is local gate and hosted smoke evidence, not a hosted macOS promotion attestation.
+
+Two initial parallel failures must not be hidden by the runner's final green:
+- `signal-triage.sh`: correct category JSON failed line70's `echo | grep -q` assertion after Broken
+  pipe, 43pass/1fail. The built-in serial retry passed. Test and production triage source are identical
+  to current development; line70 dates to initial public commit1f0a5bf1. Filed and parked **GH-807**;
+  no repair within this merge batch. This is the existing GH-139/GH-460 class.
+- `gh-gen4-phase1-domain-oracles.sh`: the final real-clone zero-state assertion failed in parallel
+  and passed the built-in serial retry. Exact underlying reason was suppressed by that assertion;
+  no root cause is claimed. Current development has identical suite, oracle and validator source.
+
+Two external full gates in a separate `XYZ-forge-gh804-simplify-skill-tests` clone overlapped the
+run. Their processes were preserved and not stopped. The captured process list establishes overlap,
+not causation. No quiet-host matched-base control was run. Per-suite serial scratch logs were
+removed by the runner; the retained main gate log records both retry outcomes.
+
+Per the operator's instruction to file unrelated bugs and hold, **no remote PR was merged**.
+#794 remains OPEN/MERGEABLE at the published candidate; primary remains clean on development
+`c84dc61888f2c812597f9d9d7719e00ae2a2b339`. #795, held #765 and plan PR #799 remain pending;
+#759 and new unrelated PRs remain excluded. #777 remains open.
+
+While the gate ran, narrow F1/F2/F4/F5/F6 preparation was committed locally as `92c4e222` in
+`XYZ-forge-gh765-integration-remediation-20260924`. This is **unfinished, untested and unpublished**:
+selected-wave selector, terminal receipt status, Markdown links, root binding and honest plan QA
+checklists. The inventory update/current-base integration, focused tests and independent final QA
+remain outstanding. Repair slot1/2 is reserved at the original coordinator; do not reset it. Preserve
+that clone, both #794 repair candidates and this integration review clone. No cleanup occurred.
+
+The new future simplification issue GH-804 is filed and parked. This coordinator did not implement
+its test simplification; external GH-804 work is outside the frozen merge set.
