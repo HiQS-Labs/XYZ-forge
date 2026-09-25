@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-24 — Preserve sequential marathon admission during integration (GH-796, GH-784)
+
+Separate selected-wave PR readiness (`--pre-pr --wave N`) from all-wave final closeout in the
+existing marathon QA checker. Bind consumer checks and logs to the consumer root, accept ordinary
+Markdown receipt links, and require a terminal recorded Codex verdict. Terminal status does not
+prove independent authorship or the reviewed SHA; those remain separate review obligations.
+Migrate the active GH-777 plan with honest pending checklists and approve only the new checker in
+the existing inventory baseline. This resolves PR #765's integration failures without a second
+gate or review framework. Rollback is a reviewed revert plus canonical ledger reconciliation;
+never mark future waves complete to make the gate pass.
+
+## 2026-09-24 — Marathon wave QA checklist contract and mechanical receipt gate (GH-784, GH-762)
+
+Bound marathon wave transitions to the `/start-task` Step 6 and Step 8 double-relay protocol:
+plans must mandate a per-wave Proof of Done test suite, an independent Post-Build Codex QA Relay
+with on-disk receipts under `relay-system/`, and adjudication of peer review findings. The
+orchestrator cannot self-attest review solely by observing passing test suites. Added mechanical gate
+`utils/pdda/check_marathon_qa.py` (wired via `pdda.sh marathon-qa` and registered in `validate.sh`),
+verifying that wave checklist items are present, references to `relay-system/` transcripts exist on disk,
+and all items are verified before PR opening or plan promotion. Addressed CodeRabbit review feedback on
+PR #765 by extending `skill-nudge.sh` to match `show [the] marathon queue` and updating `start-marathon`
+to check existing plans with `marathon-plan.sh --check` before regenerating.
+
 ## 2026-09-24 — GH-791 merge regression review
 
 - Consolidate overlapping #787/#753 mergeability polling and PR exclusion into one path,
@@ -39,6 +62,21 @@ the new cases fail 4 of 6.
 
 Run 35767844928 already passed `GET /` (HTTP 200), session create, and both joins before `remote agent2 send` missed `"turn": 2`. The 2026-09-23 entry's slow-bind explanation does not match that log. PR #761 keeps the poll and the failure diagnostics and does not close #760. The `FileNotFoundError` for `runtime/agent2.watch` in that log is from `agent-chorus.sh`, not the bridge suite.
 
+## 2026-09-23 — Start marathon preparation routing (GH-762)
+
+Renamed the marathon preparation skill to `start-marathon`, retained a legacy
+`marathon-triage` entry point, and routed ambiguous “marathon” prompts to preparation.
+The skill now reviews intake, contracts and implementation plans, obtains independent
+plan QA, forms collision-safe lanes, prepares YAML, and requires direct preflight and
+the existing full-plan dry-run before a fire request. The bet is that one preparation
+route reduces stale plans without creating another executor. Agy review and gate
+evidence belong to the PR; firing still requires exact-plan confirmation. Agy approved the revised
+skill after a dangling-link fix. Its token closeout mismatch is parked in #763; baseline macOS gate
+failures reproduced on `development` are parked in #764, so this branch remains draft-only.
+Root `PARKED/` now owns incidental out-of-scope observations; selected notes move to issue-first
+`PROJECT/1-INBOX` and RELEASES intake during triage. Standup's lens 8 recognizes only its
+`— check:` records so ordinary parked checklists do not degrade collection. #763/#764 were already
+promoted and retain their formal records, with a root PARKED pointer.
 ## 2026-09-23 — GH-764 baseline macOS gate repair
 
 Three baseline failures were traced on untouched `development`: the ATE test could reach its

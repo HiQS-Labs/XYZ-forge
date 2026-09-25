@@ -1,0 +1,6 @@
+{"timestamp": "2026-09-25T02:55:05.056879+00:00", "command": ["bash", "test/gh784-marathon-qa-gate.sh"], "source_head": "0e9c4b8859bc034bb6a15bdc635e97b8185b6d06", "exit_code": 0, "output": "0-gh784-marathon-qa-gate.log"}
+{"timestamp": "2026-09-25T02:55:12.916678+00:00", "command": ["bash", "test/xyz-harness-hooks.sh"], "source_head": "0e9c4b8859bc034bb6a15bdc635e97b8185b6d06", "exit_code": 0, "output": "1-xyz-harness-hooks.log"}
+{"timestamp": "2026-09-25T02:55:55.543125+00:00", "command": ["bash", "test/gh678-installer-live-links.sh"], "source_head": "0e9c4b8859bc034bb6a15bdc635e97b8185b6d06", "exit_code": 0, "output": "2-gh678-installer-live-links.log"}
+{"timestamp": "2026-09-25T02:56:01.537986+00:00", "command": ["bash", "test/gh77-standup-triage.sh"], "source_head": "0e9c4b8859bc034bb6a15bdc635e97b8185b6d06", "exit_code": 0, "output": "3-gh77-standup-triage.log"}
+{"timestamp": "2026-09-25T02:57:07.708810+00:00", "command": ["bash", "test/gh777-inventory-ratchet.sh"], "source_head": "0e9c4b8859bc034bb6a15bdc635e97b8185b6d06", "exit_code": 0, "output": "4-gh777-inventory-ratchet.log"}
+{"timestamp": "2026-09-25T02:57:08.250759+00:00", "command": ["bash", "utils/pdda/pdda.sh", "run"], "source_head": "0e9c4b8859bc034bb6a15bdc635e97b8185b6d06", "exit_code": 0, "output": "5-pdda.log"}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start Marathon"
+  short_description: "Prepare and verify a marathon before firing"
+  default_prompt: "Use $start-marathon to review intake and plans, prepare lanes, and dry-run the marathon."

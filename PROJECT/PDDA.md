@@ -629,6 +629,32 @@ Minimum behavior:
 gh-degrade: none. The check is purely file-driven (no GitHub calls), which is a deliberate
 simplification over the old per-tag-doc check's issue/tag cross-checks against `gh`.
 
+#### K. `pdda.sh marathon-qa` (GH-784)
+
+Purpose:
+- mechanically verify that marathon plans have honest, verified QA receipts before PR creation or
+  advancement to `3-COMPLETED`.
+
+Scope:
+- `PROJECT/2-WORKING/MARATHON-PLAN-*.md` and `PROJECT/3-COMPLETED/` marathon plan docs, or a target
+  passed via `--doc <path>`.
+
+Minimum behavior:
+- verify that the marathon plan doc carries an `## Acceptance & Quality Checklist`
+- verify each wave contains the three mandatory items: Proof of Done test suite, Post-Build Codex QA
+  relay, and peer review adjudication
+- for every checked item (`- [x]`) referencing a `relay-system/` transcript, assert that the
+  transcript file actually exists on disk; emit `error` on missing files (falsified / hollow check)
+- `--pre-pr --wave N` requires one explicit plan and a positive existing wave; require that wave's
+  items and receipts, while future waves remain pending. All waves still need mandatory structure.
+- `--pre-pr` without `--wave` requires all waves for final closeout. Docs marked `Completed` or in
+  `3-COMPLETED` always require all waves, even with a selector.
+- Codex receipts for checked or required items must have a first `STATUS:` header of `Approved` or
+  `Closed`. Accept Markdown links and backticked paths; reject empty/nonterminal receipts. This
+  verifies recorded status, not independent authorship or exact reviewed SHA.
+- during routine active development in `2-WORKING`, report unverified waves as `warn` so in-progress
+  development does not block normal gates prematurely
+
 #### RELEASES.md — release ledger
 
 **`RELEASES.md` is an optional planning aid.** It is not a required artifact, not a checklist, and
@@ -792,6 +818,38 @@ task/issue  (GH-*.md in 1-INBOX)
     → marathon (marathon/MARATHON-*.yaml + PROJECT/2-WORKING/MARATHON-PLAN-*.md)
       → release (RELEASES.md entry + GitHub Release)
 ```
+
+### Marathon plan doc contract (`PROJECT/2-WORKING/MARATHON-PLAN-*.md`)
+
+A marathon plan coordinates multiple disjoint lanes grouped into sequenced waves. In addition to
+the required active-doc frontmatter and `## Status` table, a marathon plan doc must satisfy the
+Wave QA contract (GH-784):
+
+1. **Explicit wave breakdown:** clearly labeled waves (`**Wave 1:**`, `**Wave 2:**`, etc.) with
+   lane assignments and suggested branch names.
+2. **Acceptance & Quality Checklist:** an explicit checklist per wave mandating proof-of-done
+   test verification, independent Codex QA relay, and peer review adjudication:
+
+```md
+## Acceptance & Quality Checklist
+
+### Wave 1
+- [ ] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0)
+- [ ] Wave 1 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated
+```
+
+3. **Double-relay protocol parity:** each wave must enforce `/start-task` Step 6 parity (Wave Plan QA)
+   before coding and Step 8 parity (Wave Post-Build Codex QA) before pushing branches or opening PRs.
+   The orchestrator cannot self-attest review solely by observing green test suites.
+4. **Mechanical receipt gate:** for wave admission, run
+   `check_marathon_qa.py --root <consumer-root> --pre-pr --wave N --doc <plan>`; with the dispatcher,
+   also set `PDDA_REPO_ROOT=<consumer-root>` so its activity log uses that root. Each wave retains
+   mandatory checklist structure. The selected wave must be verified with concrete, existing
+   receipts, and its Codex receipt must have first `STATUS: Approved` or `STATUS: Closed`.
+   Omit `--wave` for final all-wave closeout; completed docs always require all waves. Markdown
+   links and backticked receipt paths are supported. Recorded terminal status does not replace
+   independent review or exact-head verification.
 
 ### 2. LLM-assisted doc readiness review
 
@@ -1008,10 +1066,11 @@ Run the deterministic checks every hour in this order:
 8. `pdda.sh issue-doc-sync`
 9. `pdda.sh releases`
 10. `pdda.sh governance`
+11. `pdda.sh marathon-qa`
 
 Then run:
 
-11. `pdda.sh doc-ready`
+12. `pdda.sh doc-ready`
 
 (`pdda.sh run` runs exactly this sequence and applies the active `PDDA_MODE` gate. Scheduling the
 single aggregate command is the recommended hourly cron entry.)

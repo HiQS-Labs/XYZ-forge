@@ -27,7 +27,7 @@ It coordinates existing specialized skills (`debug-mantra`, `recon`, `ponytail`,
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Workhorse Discipline:**
-> 1. **Triage & rank intake (Rung 0).** Deconstruct walls of text, multi-symptom dumps, or LLM transcripts into an atomic priority list (P0 → P1 → P2). Hold the active queue in the session plan; for deferred/out-of-scope items, prefer the repository's canonical intake path (e.g. `PROJECT/1-INBOX/`) when available, otherwise park them in `<repo-root>/PARKED/`.
+> 1. **Triage & rank intake (Rung 0).** Deconstruct walls of text, multi-symptom dumps, or LLM transcripts into an atomic priority list (P0 → P1 → P2). Hold the active queue in the session plan; record incidental out-of-scope findings in root `PARKED/`, then promote selected items through the repo's formal intake.
 > 2. **Establish ground truth on current item (Rung 1).** For the top priority item, inspect raw artifacts and live state directly, capture a deterministic repro, trace fail paths end-to-end, and run disproofs first before theorizing.
 > 3. **Design least-mechanism & check governance (Rungs 2–3).** Apply `/ponytail` (YAGNI, standard library first, shortest diff); strictly extend existing subsystems with zero code sprawl or duplicate write paths, complying with `AGENTS.md`/`SOP.md`.
 > 4. **Stress-test via cross-model consensus (Rung 4).** Fan out the plan to independent advisors (Codex + Agy via `/consult`), surface technical disagreements without averaging, and resolve all blocking feedback.
@@ -42,7 +42,7 @@ Then begin work. When `/workhorse` is the active orchestrating skill, this recit
 ## The 7-Rung Ladder
 
 ```text
-0. Intake Triage & Queue           ──► Deconstruct wall-of-text / multi-task dump; hold active queue, prefer canonical intake (or <repo-root>/PARKED/)
+0. Intake Triage & Queue           ──► Deconstruct wall-of-text / multi-task dump; hold active queue, park incidental findings at root, promote selected work into formal intake
 1. Ground Truth & Diagnostics  (/debug-mantra)  ──► Reproduce raw artifact, trace paths, falsify hypotheses
 2. Least-Mechanism Design      (/ponytail)      ──► YAGNI, stdlib first, ZERO duplicate subsystems, minimal diff
 3. Governance & Cohesion Gate                   ──► AGENTS.md, SOP.md, GUIDING-PRINCIPLES.md, CHANGELOG parity
@@ -64,7 +64,7 @@ When `/workhorse` is invoked on a large or ambiguous problem, intake typically a
 2. **Severity/Priority Ranking:** Order the items (P0 critical / blockers → P1 core fixes → P2 polish / optimizations).
 3. **Queue Segmentation:**
    - **Active Session Queue:** Hold the immediate in-flight items (Top 1–3) in the active session plan / scratchpad.
-   - **Deferred Items (Canonical Intake First / `/PARKED/` Fallback):** For items that are out-of-scope, secondary, or deferred for a future session, check and prefer the repository's canonical structured intake path first (e.g. creating `PROJECT/1-INBOX/GH-<NUM>-<topic>.md` with immediate roadmap registration per `ROUTER.md:38–40`). If and only if the repository lacks a canonical structured intake system, write them to `<repo-root>/PARKED/YYYY-MM-DD-<topic>.md`. Always preserve links, resolve issue-first requirements before writing deferred records, and avoid creating competing records.
+   - **Incidental Findings (`PARKED/` first):** For a finding outside the current task, check for an existing record, then write a short sourced item under `<repo-root>/PARKED/` when that folder is part of the repository's governance. Do not invent the folder in another repo or open an issue merely to park the finding; follow that repo's intake policy. During triage here, promote selected work through structured intake (`PROJECT/1-INBOX/GH-<NUM>-<topic>.md` plus RELEASES roadmap); mark the PARKED item with the promoted issue/doc link. Preserve one execution record and do not duplicate a canonical plan. Work required to finish the current task stays in the active queue.
 4. **Serial Execution Loop:** Select the highest-priority item from the active queue and advance it through Rungs 1–6. Upon completion, advance to the next item in the queue until all active items are resolved.
 
 ---

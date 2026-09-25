@@ -221,7 +221,9 @@ def degradation_lines(ids):
 
 
 # ── PARKED ─────────────────────────────────────────────────────────────────────────────────────
-PARK_RE = re.compile(r"^- \[([^\]]+)\]")
+# Only standup machine records participate in fingerprint suppression. PARKED/ also holds
+# ordinary agent notes and Markdown checklists; those are not standup candidates.
+PARK_RE = re.compile(r"^- \[([^\]]+)\].* — check: ")
 
 
 def read_parked(parked_dir):
