@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked + rated (72/50/50/82) + promoted to 2-WORKING; recon picked the skills-army-hq lane as the retarget. | Implement the retarget + comment in gh251, focused run + red control in a disposable clone, matched before/after timing, one full qualifying gate, relay QA, PR to `development`. |
+| Fix landed on branch (`0f1b811e`): PATHS_FILE → `skills/3-weekly/skills-army-hq/scripts/sync.py`. Matched standalone timing **1050.6 s → 67.5 s (−93.6%)**, 6/6 assertions both sides; red control witnessed (exit 1 → restore → green); evidence in `TESTS-RESULTS/2026-09-24+GH-808/`. | Full qualifying gate (`ci-local.sh`) once in the disposable clone, final relay QA (Codex), push through pre-push gate, PR vs `development`. |
 
 ## Rating rationale (2026-09-24)
 
