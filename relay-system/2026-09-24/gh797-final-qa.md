@@ -208,4 +208,12 @@ Scope: Read all of presentation.mjs, app.js, app.css, README, work-status-checks
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) resumes the post-review gate; token completed with done.
 
+
+### Attestation · relay-drive — 2026-09-25T01:12:06Z
+task: RELAY-gh797-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: b067da6871f381fd819a316cbf094d0b594fa008
+added-range: 26049+4366
+added-sha256: 67bd51ce9aeb55c7a7d9f3a72c8813f6f2949713fb91bfb3cdc5e91915ec67e1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
