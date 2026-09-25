@@ -17,7 +17,7 @@ goal: Concurrent first use of a fresh harness telemetry DB never fails on the WA
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 implemented after Codex plan QA approved in round 3. Case 14 red on base and green with the fix; gh496 15/0; probe 29/200 → 0/200 failed rounds. | Final Codex QA, one full gate in a disposable clone, then PR. |
+| Phase 1 implemented. Codex plan QA approved in round 3 and final QA in round 1. Case 14 is red on base and green with the fix; gh496 15/0; probe 29/200 → 0/200 failed rounds. | One full gate in a disposable clone, then push and PR. |
 
 ## Problem (observed)
 
@@ -64,17 +64,17 @@ Ten `harness_app.py log` processes against a **fresh** DB (the `test/gh496-telem
 3. Add case #14 to the same suite, a deterministic red control. `init_db` has no connection parameter and calls `sqlite3.connect(db_path)` (`harness_app.py:168`), so the inline Python process saves the real `sqlite3.connect` and patches `sqlite3.connect` (the module object `harness_app` imports) with a wrapper that forwards to it with `factory=LockingConnection`. That `sqlite3.Connection` subclass's `execute` counts WAL-pragma attempts and raises a configured error for the first K of them. No production injection API is added.
    - (a) K=3 locks: `init_db` succeeds, the `harnesses` table exists, and the count shows exactly 4 attempts.
    - (b) a non-lock `OperationalError("disk I/O error")`: it propagates after exactly 1 attempt.
-   - (c) locks on every attempt: `init_db` raises `database is locked` after exactly 50 attempts. The case runs under an outer `timeout 30` so an unbounded mutant fails instead of hanging.
+   - (c) locks on every attempt: `init_db` raises `database is locked` after exactly 50 attempts. The case calls `signal.alarm(30)` inside the Python process so an unbounded mutant fails instead of hanging. macOS has no `timeout(1)`, so this replaces the outer `timeout 30` in the approved plan; the intent is unchanged.
 
    Verify: case 14 fails on base `0ae3452a` (14a raises after 1 attempt) and passes with step 1. Record both outputs in `TESTS-RESULTS/2026-09-25+GH-813/`, each with a `provenance.jsonl` row (command, commit, UTC times, exit code).
 4. Acceptance probe, not added to the gate: `repro-concurrent-init.sh … 200` on the branch reports 0/200 failed rounds and 0 rounds with a row count other than 10. Commit it as `fixed-200.txt` with a `provenance.jsonl` row, in the same shape as the base row.
 5. Run the full parallel gate `./validate.sh` once on the final approved commit, in a separate disposable full clone, with identity checked before and after. This is a full self-check, not the `ci-local.sh` qualifying record (`ROUTER.md:110-111`), which is not claimed. The pre-push gate also runs on push.
 
 **Results (2026-09-25, receipts and 4 provenance rows in `TESTS-RESULTS/2026-09-25+GH-813/`):**
-- **Red control on base runtime** (`red-control-base.txt`): exit 1, 13 pass / 2 fail. Case 14 was red as specified (`a|database is locked|1`, `c|database is locked|1`; b already correct). Case 9 also hit the live race on base, and the new stderr capture printed the worker traceback ending in `sqlite3.OperationalError: database is locked`, which satisfies step 2's stderr check with a real failure instead of a mutation.
+- **Red control on base runtime** (`red-control-base.txt`): exit 1, 13 pass / 2 fail. Case 14 was red as specified (`a|database is locked|1`, `c|database is locked|1`; b already correct). Case 9 also hit the live race on base, and the new stderr capture printed the worker traceback ending in `sqlite3.OperationalError: database is locked`, which satisfies step 2's stderr check with a real failure instead of a mutation. That receipt came from an earlier revision of the message (`tail` over every file, `==>` headers). The final code prints only non-empty files, by basename (`test/gh496-telemetry-isolation.sh:209`), and was probed separately under `set -euo pipefail`.
 - **With the fix** (`suite-fixed.txt`): exit 0, 15 pass / 0 fail.
 - **Probe** (`fixed-200.txt`): 0/200 failed rounds, 0 rounds with row count ≠ 10.
-- **Neighbouring suites** (rc=0): `gh205-gate-idempotency`, `gh346-telemetry-row-written`, `gh346-model-telemetry-honesty`, `gh777-inventory-ratchet` (connect moved :168 → :170, ratchet clean) and `gh139-pipe-grep-guard`.
+- **Neighbouring suites** (rc=0; ad-hoc local runs with no provenance rows, superseded by the final full gate): `gh205-gate-idempotency`, `gh346-telemetry-row-written`, `gh346-model-telemetry-honesty`, `gh777-inventory-ratchet` (connect moved :168 → :170, ratchet clean) and `gh139-pipe-grep-guard`.
 
 **QA:** R1 by the 0/200 probe; R2 by cases 14b and 14c; R3 by the updated case #9 and its manual stderr check; R4 because case 14a is red on base.
 
