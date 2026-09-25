@@ -702,7 +702,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(job['permissions']['issues'], 'write')
         self.assertEqual([s.get('id') for s in job['steps'][-3:-1]], ['reconcile', 'publish'])
         self.assertEqual(job['steps'][-1]['name'], 'Report hosted lane')
-        self.assertEqual(job['steps'][-1]['if'], 'always()')
+        self.assertEqual(job['steps'][-1]['if'], "always() && steps.publication.outputs.pending != 'true'")
 
     def test_publish_allowlist_and_plan_lands(self):
         module = self.publish_module()

@@ -164,6 +164,21 @@ with patch.object(a,'gh',return_value=pr), patch.object(a,'git',return_value='')
         with patch.object(a,'paged',return_value=[bad]): assert not a.catalog(r,'owner/repo',1)['approval_trusted']
     pr['user']['id']=a.OPERATOR_ID
     with patch.object(a,'paged',return_value=[review]): assert not a.catalog(r,'owner/repo',1)['approval_trusted']
+# Exercise the real push hook: a missing/stale packet stops before its expensive runner.
+import os, shutil
+(r/'utils/py').mkdir(parents=True); (r/'.github/workflows').mkdir()
+for name in ['gate_inventory.py','test_admission.py']:
+    shutil.copyfile(root/'utils/py'/name,r/'utils/py'/name)
+(r/'.github/workflows/test-admission.yml').write_text('trusted checker exists\n')
+(r/'validate.sh').write_text('#!/bin/sh\necho expensive > expensive-ran\nexit 99\n'); (r/'validate.sh').chmod(0o755)
+g('add','.'); g('commit','-qm','unadmitted proposal')
+g('update-ref','refs/remotes/origin/development',base)
+head=g('rev-parse','HEAD')
+result=subprocess.run(['bash',str(root/'githooks/pre-push'),'origin'],cwd=r,text=True,capture_output=True,
+                      input=f'refs/heads/task {head} refs/heads/task {base}\n',env={**os.environ,'XYZ_SKIP_PREPUSH':'0'})
+assert result.returncode==1 and 'refused before expensive validation' in result.stderr, result.stderr
+assert not (r/'expensive-ran').exists()
+print('PASS: real push hook refuses unadmitted changes before executing validate.sh')
 print('PASS: complete binding, stale/missing/forged/renamed/deleted controls and native review identity')
 PY_GATEWAY
 

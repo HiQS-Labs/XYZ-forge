@@ -37,6 +37,10 @@ Read `HARNESS-MODELS-REGISTRY.md` for evaluated agent harnesses, model compatibi
 Read `TESTS-RESULTS/README.md` for committed test artifacts, telemetry receipts, and benchmark logs.
 Read `SOP.md` → "Arc planning" before starting a large refactor — scheduling the follow-up arcs (review/dogfood/conformance lanes) at plan time is what keeps the arc linear.
 
+## Test admission
+
+Use the single coverage-decision gateway in [TEST-ADMISSION.md](docs/testing/TEST-ADMISSION.md) for changes that add or modify executable behavior. Disclose test growth and cost; extend existing coverage where justified. A generated packet is a proposal, never approval. Only the operator supplies the native GitHub review; agents must not submit that review using shared operator credentials. Activation requires the documented repository policy and credential separation.
+
 ## Runtime default
 
 Entry-point shims run their **Python** implementation by default (`XYZ_PYTHON` unset → Python). To
