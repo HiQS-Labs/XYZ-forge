@@ -127,4 +127,12 @@ Basis: The supplied and committed evidence supports proceeding with the proposed
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the planned trim, harness commit, merge/reconcile and gated promotion workflow.
 
+
+### Attestation · relay-drive — 2026-09-25T18:08:22Z
+task: RELAY-gh822-promotion-qa
+reviewer: codex
+status: Approved
+reviewed-head: fe7425fe29dd261bbb9fd85bea3a4d2d08531ea5
+added-range: 9192+6868
+added-sha256: 7ad4e84f687d74f1ea15b76172797746ab7ccd703f7967c4e0bc026f74daafc6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
