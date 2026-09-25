@@ -22,7 +22,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| #823 merged via PR #824 (`61f09827`) and was reconciled by the hosted lane (`a2de2359`), with hosted macOS qualification of `61f09827` at 422/422 (`validate.sh --sequential`, run 36162614517). This PR adds the GH-784 promotion QA receipt ([Codex, Approved](../../relay-system/2026-09-25/gh822-promotion-qa.md), driver-attested) and the applied 0.9.0 Cargo trim. | Merge this PR and wait for its reconcile, then recut `main`, watch `boundary-macos`, and publish the `0.9.0` Release. |
+| `main` fast-forwarded `29144118..a076b1b1` (full pre-push gate green; `enforce_admins` restored, protection identical to the snapshot). `boundary-macos` went green on the exact SHA: `MACOS-BOUNDARY: green a076b1b1`, `validate.sh --sequential` 422/422 in 78 min (CI run 36184841355). GitHub Release [0.9.0 "Cargo"](https://github.com/HiQS-Labs/XYZ-forge/releases/tag/0.9.0) published on `a076b1b1` as Latest; the ledger write-back (GH_URL plus `shipped` 2026-09-25) is in this PR. | Merge this write-back PR; the hosted reconciler closes #822 and moves this doc to 3-COMPLETED. The next promotion follows the same steps. |
 
 ## Scope
 

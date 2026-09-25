@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-25 — `main` promoted and 0.9.0 "Cargo" released (GH-822)
+
+First promotion of `main` since 2026-08-17, and the repository's first GitHub Release. `main` was fast-forwarded from `29144118` to the reconciled `development` tip `a076b1b1` (1,803 commits), which was the operator's "delete and recut" done as the equivalent fast-forward because old `main` had no commits of its own. Admin enforcement was relaxed only for the gated push and restored identical to its snapshot. The GH-509 witness passed on the exact commit: `MACOS-BOUNDARY: green`, `validate.sh --sequential` 422/422 in 78 min. That run only fits because GH-823 raised the boundary cap from 45 to 120. The GH-784 promotion QA receipt (Codex, Approved) preceded it. 0.9.0 "Cargo" was published on that commit as Latest after trimming its unfinished items to 0.6.0 Front-Door, and the ledger now records its release URL and `shipped`. Reversibility: Costly; `main` is fixed forward, never force-pushed.
+
 ## 2026-09-25 — Promotion boundary cap fits the suite (GH-823)
 
 `boundary-macos`, the GH-509 promotion witness, had a 45-minute cap sized to August's "~13-15 min locally".
