@@ -29,7 +29,6 @@
 1 test/preflight-docs.sh
 1 test/relay-dep-drift.sh
 8 test/relay-loop.sh
-9 test/signal-triage.sh
 1 test/synthetic/gh131-marathon-target-root.sh
 2 test/tick-foreign-cwd.sh
 1 test/worktree-isolation.sh
