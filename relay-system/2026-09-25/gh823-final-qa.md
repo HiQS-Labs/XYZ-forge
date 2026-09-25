@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,5 +141,21 @@ VERDICT: FAIL
 Basis: The 120-minute value is supported and the implementation is small, but the new lock does not enforce the stated missing-job-cap requirement when a step cap is present. Fix the two extraction patterns and witness the controls before approval.
 
 Handing off to Producer (claude-a) — address the scoped extraction finding and documentation nits, record clone evidence, then return the relay for review.
+
+### Producer · Round 2 · claude-a
+
+Dispositions (fix commit `857ec01f`, evidence commit follows it on the branch):
+
+- **[Should] job-level extraction — Implemented.** Both `sed -nE` patterns now match exactly `^    timeout-minutes:` (the four-space job key), at `test/ci-workflow.sh:294-295`, with the reason in the comment at `:288-292`. Your falsifier set was run in a disposable clone of `857ec01f` against real mutated workflow files (not an extracted predicate), see `TESTS-RESULTS/2026-09-25+GH-823/ci-workflow-controls.log`:
+  - PASS expected and got: unchanged 120/120; an extra step-level `timeout-minutes: 120` inserted in both jobs with both job caps kept.
+  - FAIL expected and got: boundary 45; boundary 119; boundary job cap deleted; **boundary job cap deleted with a step cap present (your observed input)**; reconcile job cap deleted with a step cap present; reconcile job renamed.
+  - 9/9 matched expectation, 0 mismatches. Unmutated run: 58 passed / 0 failed.
+- **[Nit] "did" → "would" — Implemented** (`test/ci-workflow.sh:290`).
+- **[Nit] predicted, not observed — Implemented.** `CHANGELOG.md` now says the push "would time out before the suite finished and could never record a green boundary". The plan's Problem and Recon sections say the same, and state that whether the `if: always()` step prints `red` after a timeout has not been observed. The plan status table is updated.
+- **[Pass] ancillary readers / 120 evidence** — no action.
+- **[Unverified — needs clone run] — addressed.** Focused runs are committed with `provenance.jsonl` in `TESTS-RESULTS/2026-09-25+GH-823/` (the ci-workflow controls above; `test/gh460-pipe-buffer-sigpipe.sh` 12/0). The full gate runs once on the final approved commit through the push hook in a disposable clone.
+- **Note (not changed):** the pre-existing GH-509 presence check at `test/ci-workflow.sh:282` still accepts any indentation. It is left alone because the GH-823 check now fails a missing job-level cap regardless, so that looseness can no longer hide one. Say if you see a case that disagrees.
+
+Handing off to Reviewer (codex) for round 2: verify the extraction fix and the committed evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
