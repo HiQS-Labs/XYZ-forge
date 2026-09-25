@@ -2,7 +2,7 @@
 gh_issue: 805
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/805
 title: "Audit test value and enforced test admission"
-status: "PR ready — awaiting merge"
+status: "In progress — enforced gateway"
 created: 2026-09-25
 updated: 2026-09-25
 owner: operator
@@ -22,7 +22,7 @@ related: [802, 732, 774, 801, 365]
 
 | What was just completed | What's next |
 |---|---|
-| All seven steps complete; PR #811 open; full gate 422/422 and hosted blocking smoke passed | Await maintainer merge; retain clone and evidence |
+| Bounded repairs verified; completion audit corrected the overclaim | Implement operator-approved admission gateway on PR #811 |
 
 ## Table of contents
 
@@ -50,6 +50,31 @@ Entry points and affected consumers:
 - GH177 sandbox hook is live in `.claude/settings.json`; CHANGELOG documents historical 8/22-case matrices, but no current registered regression. Recover representative block/allow/wrapper cases by sending JSON to the hook, never executing dangerous example commands. One small registered hook suite is justified; extend existing suites for all other new controls.
 - gh567 repeats filesystem discovery in its writer audit. Experiment with one discovered file list reused by policy-specific searches; retain gh269/567/568 registrations and their distinct controls. If matched evidence does not justify the change, retain the original implementation.
 - Existing telemetry/provenance under TESTS-RESULTS is the evidence writer; historical GH591 duration is 4809.278s with gh251 1044.435s, not a current baseline. Index existing parallel records by revision/width/host/result, leave unavailable dimensions unknown.
+
+## Gateway continuation — operator-approved admission
+
+User now explicitly requests finishing the gateway, reporting more than 100 added tests at roughly four per day without notification. That rate is operator-reported, not independently measured here. The operator selected **human approval of every coverage decision initially**. Existing PR author and local API identity are both `noelsaw1` (ID 56978803): same-account model signatures cannot constitute independent approval.
+
+### Recon and decision
+
+`gate_inventory.py` owns existing inventory/advisory validation; extend that CLI with a small admission module, not a second registry. `githooks/pre-push` already resolves push ranges and routes expensive validation; admission checks should run first against the integration merge-base, not merely the last push. `validate.sh`/`ci-local.sh` remain execution authorities. `gh419-gate-inventory.sh` is the existing test owner for inventory/metadata behavior.
+
+GitHub repo policy currently has no protection on development; Actions token defaults read-only and `can_approve_pull_request_reviews=false`. The organization is on Free, so an organization-required-workflow design is not available. Required status checks alone do not pin a workflow and are not the approval boundary. Use **native required CODEOWNER review by @noelsaw1, dismiss stale approvals, require last-push approval, enforce for administrators, no bypass actors**, plus a required deterministic admission check. This applies to all PRs; one coverage decision per code change (reuse/extend/add/no-add), not one approval per assertion. Operator approval is native GitHub review, never an agent-writable boolean or comment. Admin credentials remain administrative authority; this is not protection against a person/agent deliberately changing repository settings with that authority.
+
+Use `CODEOWNERS` wildcard to ensure review cannot be evaded by moving tests outside named directories or modifying the verifier/workflow. A new native Actions dispatch publisher opens bot-authored PRs from existing task branches, reading only branch data and never executing candidate code. Operator-authored PR #811 cannot receive its author's native review: bootstrap landing/activation needs explicit operator direction at handoff, not a fabricated approval or silent replacement PR.
+
+The existing hosted reconciler currently asserts development is unprotected and directly pushes via `hosted_lane_publish.py`. Add a protected-branch mode which publishes its existing allowlisted artifacts on a bot PR; never grant GitHub Actions a direct-push bypass. Skip reconciliation of that publisher's own lifecycle-only PR, and avoid repeatedly running qualification while an outstanding reconcile PR awaits review. Preserve the existing unprotected downstream behavior. These consumers must be repaired before activating protection.
+
+### Ordered implementation and acceptance
+
+1. [ ] **Single decision command and disclosure — High, quick win.** Extend inventory CLI with prepare/check admission commands. Generate `.github/test-admission.json` from a rationale file and a nonempty Git diff; bind the complete non-packet changed-file manifest (old/new blob IDs and modes) and merge-base, require outcome, behavior, existing coverage, reason, red evidence, cost/unknown explanation and issue. Report added/modified/deleted test files, registered-suite delta when parseable, and explicit unknown case counts; all executable changes require a decision, docs-only changes are explicitly classified. → An omitted file, added assertion inside an existing file, stale product edit, renamed/deleted test, malformed JSON and fabricated approval flag cannot pass; generated metadata is proposed, never approval.
+2. [ ] **Early local refusal and trusted hosted checking — High.** The push hook validates committed proposal before expensive test execution. A `pull_request_target` workflow checks out base code only, fetches candidate objects as data and calls the same checker, publishing a coverage summary/catalog artifact; never execute candidate scripts, package hooks or imports. → Missing/stale proposals refuse; docs-only changes explain no-test route; fake candidate checker is not executed. Native review, not a check-name match, supplies approval authority.
+3. [ ] **Human approval and compatible publishing — High, Costly.** Add CODEOWNERS, bot PR dispatch and protected reconciliation publication using native APIs and existing publisher. Supply an activation/read-back procedure for the exact native review/check policy and Actions PR-creation setting, with no bot bypass. → Bot and human identities are distinct; stale review is dismissed; direct integration pushes are refused after activation; reconcile artifacts arrive through reviewable PRs without recursively qualifying themselves. Prepare everything before requesting bootstrap merge/activation; no merge/settings mutation during build.
+4. [ ] **Bounded proof and truthful handoff — High.** Extend existing gh419 and hosted-publisher tests; do not add a new suite. Run focused controls in a disposable full clone, retain provenance, obtain final Codex relay QA, then the final macOS gate and hosted check where executable before bootstrap. → Distinguish implemented and locally verified from activated on development; leave live policy/approval-path checkboxes open until actually witnessed. Retain #805's broader sample/value-analysis work as incomplete rather than equating gateway work with closing the whole issue.
+
+Costly because all builders, PR reviews and hosted reconciliation cross this boundary. Rollback is a reviewed revert plus restoration of the saved repository policy; never automatic removal of protection on a failing check. Tripwires: rejected legitimate proposal, unexpected reviewer identity, candidate execution in trusted job, or blocked reconciliation without a PR; stop rollout and diagnose via debug-mantra. No new DB, service, model invocation per test, numerical cap, legacy approval backfill, or GH808/gh251 edits. Reuse the existing gh419 suite for a bounded control matrix and gh740 publisher suite for the publication branch; full-gate timing is not an admission-cost benchmark.
+
+Plan QA and final QA each use the shipped Codex relay, capped at three rounds. Implementation starts only after plan approval. Activation is a separate final, concrete operator decision because start-task does not authorize merging/deployment. Preserve existing ratings and operator scope; urgency is explicit without inventing a measured growth trend.
 
 ## Execution checklist
 
@@ -137,4 +162,4 @@ Steps 1–6 are implemented and supported by [the report](../../TESTS-RESULTS/20
 
 The first full gate failed 419/422 with intact clone identity. Two scoped integration corrections replace the fictional GH177 payload path with a real inert path and update the releases route count from 24 to 28. The third failure reproduces on unchanged 0ae3452a: GH390’s MagicMock fixture reaches its 500,000-call ceiling between RSS watchdog samples. A simple fixture-only repair holds that same bounded allocation for two pinned one-second polling intervals before its existing failure exit; production guard, allocation limit and required gate-killed verdict stay unchanged. This is an obvious local reversible test repair, so it uses start-task’s simple-change exception rather than another architecture review; final relay round 3 explicitly reviews it and its disabled-guard red control.
 
-Final full pre-push validation passed 422/422 on 9625367f with intact clone identity. The branch pushed without bypass; promotion is not claimed. Final relay round 3 approved the gate-discovered fixture amendments. [PR #811](https://github.com/HiQS-Labs/XYZ-forge/pull/811) is mergeable against development; hosted blocking smoke passed on 73e31244. All steps are complete for PR handoff, not shipped/merged.
+Final full pre-push validation passed 422/422 on 9625367f with intact clone identity. The branch pushed without bypass; promotion is not claimed. Final relay round 3 approved the gate-discovered fixture amendments. [PR #811](https://github.com/HiQS-Labs/XYZ-forge/pull/811) is mergeable against development; hosted blocking smoke passed on 73e31244. The prior all-complete claim is superseded by the completion audit and gateway continuation above. Broader acceptance and activation remain outstanding.

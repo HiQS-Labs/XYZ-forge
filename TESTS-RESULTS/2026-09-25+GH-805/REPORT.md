@@ -81,4 +81,4 @@ Final Codex relay round 3 approved the bounded amendments before the final full 
 
 ## Handoff
 
-All seven refined checklist items are complete as an implemented, verified PR handoff. PR #811 remains open and unmerged. Coverage repair is GO; mandatory admission is NO-GO for the documented missing authority, with observe mode retained. The task clone is retained for `/merge-cleanup` only after its landing is verified. GH808 remains separate; no savings are attributed to it.
+Completion audit correction: the bounded implementation is verified, but the full issue is incomplete. Comprehensive inventory, representative value analysis, enforceable admission and broader synthesis remain outstanding. PR #811 remains open and unmerged. Coverage repair is GO; mandatory admission is NO-GO for the documented missing authority, with observe mode retained. The task clone is retained for `/merge-cleanup` only after its landing is verified. GH808 remains separate; no savings are attributed to it.
