@@ -9,8 +9,8 @@ python3 -m src.flightdeck.server
 Open <http://127.0.0.1:8768/flightdeck/>. The server binds to loopback only and
 refreshes no source. The browser reads a new passive snapshot every 150 seconds.
 
-The static registry contains five independent connectors: `rebalance`, `clio`,
-`git_pulse`, `topology`, and `continuity`. Defaults discover the canonical local
+The static registry contains five connectors enabled by default (`rebalance`, `clio`,
+`git_pulse`, `topology`, and `continuity`) plus the optional `xyz_work`. Defaults discover the canonical local
 Rebalance database, `~/.claude/prompt-log.jsonl`, and `~/git-pulse-sync`. Topology
 and continuity stay unavailable until their existing producers persist versioned
 JSON and the paths are configured.

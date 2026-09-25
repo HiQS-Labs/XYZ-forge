@@ -19,15 +19,20 @@ const SOURCE_SETUP = {
   topology: 'no producer writes this feed yet; once one does, set FLIGHTDECK_TOPOLOGY_JSON',
   continuity: 'no producer writes this feed yet; once one does, set FLIGHTDECK_CONTINUITY_JSON'
 };
+// Row/root caps the connectors report in their error fields (src/flightdeck/connectors.py).
+const CAP_CODES = new Set(['issue-cap', 'root-cap']);
 // Unknown or unconfigured is "off" (grey); any read failure, including one xyz_work root, is
 // "failed" (red); a cap warning on an otherwise good read is "partial" (amber).
 export function sourceStatus(source, fresh = true) {
   const setup = SOURCE_SETUP[source.id] || 'check the Flightdeck configuration';
-  const rootError = (source.roots || []).map(root => root.error).find(Boolean);
-  const failure = rootError || (source.availability !== 'ok' && source.error);
+  const roots = source.roots || [];
+  const rootError = roots.map(root => root.error).find(error => error && !CAP_CODES.has(error));
+  const cap = [source.error, ...roots.map(root => root.error)].find(error => CAP_CODES.has(error));
+  const capOnly = cap && !rootError && roots.every(root => root.supported !== false);
+  const failure = rootError || (source.availability !== 'ok' && !capOnly && source.error);
   if (!fresh) return {tone: 'stale', label: 'stale', help: 'Snapshot is older than 5 minutes; waiting for a fresh read.'};
   if (failure) return {tone: 'failed', label: 'read failed', help: `Read failed (${failure}): ${setup}.`};
-  if (source.availability === 'ok' && source.error) return {tone: 'partial', label: 'partial', help: `Partly shown (${source.error}); the rest was read normally.`};
+  if (cap || (source.availability === 'ok' && source.error)) return {tone: 'partial', label: 'partial', help: `Partly shown (${cap || source.error}); the rest was read normally.`};
   if (source.availability === 'ok') return {tone: 'ok', label: 'ok', help: `Coverage: ${source.coverage}; observed ${source.observed_through || 'unknown'}`};
   if (source.availability === 'disabled') {
     return {tone: 'off', label: 'off', help: `Turned off. To enable: ${source.id === 'xyz_work' ? setup : `add ${source.id} to FLIGHTDECK_CONNECTORS`}.`};
