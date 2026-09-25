@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/800
 title: "Benchmark full local CI suite across three Apple devices"
 status: In progress
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-25
 owner: unassigned
 effort: 3
 complexity: 2
@@ -20,7 +20,7 @@ goal: Measure and compare matched-commit full-suite gate time on three Apple dev
 
 | What was just completed | What's next |
 |---|---|
-| M6 full trial recorded: 1,083 s, 416/420, four persistent failures at `a08f30e9`; identity intact. | Restore a green matched baseline, then run repeated trials on all three devices. |
+| M4 Pro: three trials at proposed repin `0ae3452a` — 912 s and 910 s green, 964 s refused (intermittent `gh496-telemetry-isolation` SQLite lock race). The M6 trial (1,083 s, 416/420 at `a08f30e9`) is not matched to them. | Run the M6 and M1 Max at `0ae3452a`, then compare medians. |
 
 ## Table of contents
 
@@ -56,6 +56,8 @@ Recorded one complete M6 run and its selected width, toolchain and refused verdi
 ## Phase 2 — Matched device trials
 
 Run the M4 Pro and M1 Max on the same SHA and command; repeat uncontended trials to reach at least three per device when practical.
+
+M4 Pro recorded three uncontended trials at `0ae3452a` (proposed repin after #801 and #794 fixed the four M6 failures): 912 s and 910 s green, and 964 s refused on an intermittent `gh496-telemetry-isolation.sh` SQLite `database is locked` race (reproduced 1/30 standalone). See `TESTS-RESULTS/2026-09-25+GH-800/SUMMARY.md`. The M6 and M1 Max still need trials at the same SHA.
 
 **QA:** Every trial has a complete verdict and environment record; mismatched SHAs are excluded from matched comparison.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-25 — GH-800 M4 Pro full-suite trials
+
+Recorded three MacBook Pro 14-inch M4 Pro runs of `./validate.sh` (4 workers, full tier) at proposed repin `development@0ae3452a`: 912 s and 910 s green (420/420), and 964 s refused (419/420). The refusal is an intermittent `gh496-telemetry-isolation.sh` concurrency failure, reproduced standalone as a SQLite `database is locked` race at `PRAGMA journal_mode = WAL`. This commit differs from the M6 trial's, so no cross-device comparison is made yet. Sanitized timings and provenance are in `TESTS-RESULTS/2026-09-25+GH-800/`.
+
 ## 2026-09-24 — GH-800 M6 full-suite benchmark intake
 
 Opened the three-device full-gate timing campaign at pinned `development@a08f30e9`. The first complete Mac mini M6 run took 1,083 s with 416/420 passing and four persistent failures; its clone identity stayed intact. A prior 678 s setup attempt lacked Node on PATH and was excluded. Public-safe per-suite timing and provenance are retained in `TESTS-RESULTS/2026-09-25+GH-800/`. A green matched baseline and the other two devices remain open.
