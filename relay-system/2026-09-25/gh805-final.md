@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -121,5 +121,25 @@ F1 — Implemented: Node now contributes to tier-3 TOTAL alongside gamma. The ex
 F2 — Implemented: Flightdeck is appended to pytest targets only at tier3. The controlled runner covers tier2/tier3 and child rc0/7, checking target selection, once-only execution, child failure and total accounting.
 
 The scope remains unchanged; these are corrections to step2. Supplemental focused evidence and the external denominator mutation are retained in the GH805 evidence folder. Existing provenance rows now also carry the repository's canonical `commit` field; log trailing whitespace was normalized only. Please re-review the repairs and full implementation for approval before the final full gate.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1/F2 are resolved in source and the retained controlled-runner evidence exercises the repaired boundary. The bounded implementation is ready for the planned final full gate; this is not merge readiness or an authenticated admission approval.
+swept file: yes
+
+- [Pass] **F1 resolved — complete denominator retained.** `validate.sh:1528–1534` counts shell suites, identity, selected/non-skipped Python, tier-3 gamma plus Node, and the existing tier-2 probes. The new `TOTAL=$((TOTAL + 2))` at line 1532 matches the two unconditional tier-3 non-Python lanes. `test/gh365-runner-envelope.sh:253` now extracts the actual completeness block, not a copied equation. Retained `focused/final-review-green.log` includes “PASS: validate tier 3 lane count and actual summary; child rc 0 propagated”; `focused/final-review-missing-node-total.log` contains “INTERNAL ERROR — classified 4 passed + 0 failed, expected 3”. Root provenance records the respective rc0/rc1 at `52ab4cd7`. Keep this repair and control.
+
+- [Pass] **F2 resolved — focused selection preserved.** `validate.sh:1443–1444` starts with the existing Python-layer target and appends Flightdeck only for tier 3; Node remains tier-3-only at line 1467. `test/gh365-runner-envelope.sh:267–284` checks tier 2/3, exactly one/two child calls, Flightdeck membership and rc0/7 failure classification. The retained green log includes both tier-2 cases and both ci-local cases. `ci-local.sh:323–344` retains full Python/Flightdeck and Node execution, captures child status before other commands, and sets the enclosing suite's rc on failure. Keep the existing two-runner architecture.
+
+- [Pass] **Whole-artifact/cohort review still supports all four choices (0/4 disagreement).** Read the complete seeded plan, report, requested inventory/routing/test sources and surrounding runner consumers, beyond the two repairs. GH269's “Fixture test: releases roadmap move and update CLI verbs”, GH567's `check_writer_audit`, and GH568's `check_runtime_untouched` plus Python AST checks protect distinct policies: reuse all three. GH269's `planner_status_allowed` accepts exactly 0/4: extend its existing owner. GH177's `subprocess.run(['bash', hook], input=json.dumps(payload)...)` tests the real hook without executing the payload strings: add that suite. `test/gh436-merge-cleanup.py:863–869` imports all three GH534 modules before unittest discovery: reject duplicate registration. No additional scoped pre-existing correctness defect or unnecessary parallel mechanism was identified in this sweep.
+
+- [Pass] **Observe mode and evidence limits remain explicit.** `utils/py/gate_inventory.py` derives the audit from TESTS/routes and labels literal references “not execution proof”; `decision_view` forces `approval_trusted: False` and `would_refuse_mandatory: True`. REPORT separates “Coverage: GO” from “Mandatory admission: NO-GO”, declines global invariant counts and matched runtime savings, and leaves full-gate/hosted results pending. Steps 1–6 have source and retained focused evidence sufficient for implementation review, not a completed step 7. No authority service, broad scanner, bulk deletion or ratings override is justified. Ratings remain GH805 85/75/50/35 and GH774 85/80/50/65.
+
+- [Pass] **Read-only evidence integrity probe.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` using `pathlib/json/hashlib/re/shlex` to load every root provenance row, require every referenced log to exist and be nonempty, compare the two retained identity pairs, recompute every `decisions.json` content digest, and parse TESTS with `shlex.split(..., comments=True)`; exit **0**. Decisive output: `provenance rows= 31 nonempty logs= 30`; `baseline identity_equal= True`; `focused identity_equal= True`; each of the four decisions printed `stale bindings= []`; `registered= 418`. These are file-integrity/source observations, not newly executed tests.
+
+- [Unverified — needs clone run] **Remaining evidence boundary.** The retained identity pairs identify baseline `7813ab52` and focused `e5f7659d`; they do not establish pre/post parent-clone identity for supplemental `52ab4cd7` runs. Their logs show the intended controlled outcomes, but do not upgrade them to fully attributable gate evidence. Carry final-revision pre/post identity snapshots with the upcoming disposable-clone gate. No tests, executable fixtures, pytest, or git commands were run here. Independent source comparison to base `0ae3452a5774c6e72b633dd61648137e80516e6b` remains unavailable under the no-git constraint; historical before/after conclusions rely on retained evidence. Final full-gate and applicable exact-head hosted evidence remain required before the final PR readiness claim.
+
+Relay closed (Approved), no further review turn needed. Astra resumes the already-planned final gate and evidence/PR handoff; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
