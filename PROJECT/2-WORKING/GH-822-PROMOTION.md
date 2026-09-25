@@ -77,3 +77,7 @@ Release is the first published.
   no development work.
 - **Appeal 50:** neutral.
 - **Effort 70:** mostly hosted waits and ledger verbs, little code.
+
+## Merge evidence
+
+- PR #826 merged 2026-09-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
