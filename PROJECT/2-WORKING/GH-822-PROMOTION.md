@@ -22,7 +22,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| #823 merged via PR #824 (`61f09827`) and was reconciled by the hosted lane (`a2de2359`), with hosted macOS qualification of `61f09827` at 422/422 (`validate.sh --sequential`, run 36162614517). This PR adds the GH-784 promotion QA receipt ([Codex, Approved](../../relay-system/2026-09-25/gh822-promotion-qa.md), driver-attested) and the applied 0.9.0 Cargo trim. | Merge this PR and wait for its reconcile, then recut `main`, watch `boundary-macos`, and publish the `0.9.0` Release. |
+| `main` fast-forwarded `29144118..a076b1b1` (full pre-push gate green; `enforce_admins` restored, protection identical to the snapshot). `boundary-macos` went green on the exact SHA: `MACOS-BOUNDARY: green a076b1b1`, `validate.sh --sequential` 422/422 in 78 min (CI run 36184841355). GitHub Release [0.9.0 "Cargo"](https://github.com/HiQS-Labs/XYZ-forge/releases/tag/0.9.0) published on `a076b1b1` as Latest; the ledger write-back (GH_URL plus `shipped` 2026-09-25) is in this PR. | Merge this write-back PR; the hosted reconciler closes #822 and moves this doc to 3-COMPLETED. The next promotion follows the same steps. |
 
 ## Scope
 
@@ -49,7 +49,19 @@ and `xyz-sync.sh update` preserves its ledger) is covered by gh105-vendor-releas
 gh103-timeline-exporter, gh349-releases-roadmap-vendored, gh197-vendor-tier-split and gh312-vendor-preserves-state.
 All six passed in the 2026-09-25 qualifying `ci-local.sh` run on `9ab269c8`.
 
-## Promotion steps (after this PR is reconciled)
+## Promotion steps: executed 2026-09-25 (historical record; do not re-run for 0.9.0)
+
+Results of each step below:
+
+1. `P` = `a076b1b117a68252dc3d9d1c4901b0c31fcb4db3`, the reconciled tip after #826. No other merges landed in the window.
+2. `main` was fast-forwarded `29144118..a076b1b1` at 20:16:49Z behind a green full pre-push gate. `enforce_admins` was off from
+   19:57:52Z to 20:16:49Z and restored; `enabled: true` was verified, and the protection matched its snapshot.
+3. `MACOS-BOUNDARY: green a076b1b1`: `validate.sh --sequential` 422/422 in 78 min (CI run 36184841355).
+4. [0.9.0 "Cargo"](https://github.com/HiQS-Labs/XYZ-forge/releases/tag/0.9.0) was published on `a076b1b1` as Latest at 21:37:16Z. The ledger
+   write-back (GH_URL plus `shipped`) landed in the follow-up PR.
+5. Not needed: step 3 was green.
+
+The steps as planned, kept as the template for the next promotion (use a new version, never 0.9.0 again):
 
 1. Choose the SHA `P` = the `development` tip after this PR's reconcile. Hold other merges until step 3 finishes.
 2. `gh api -X DELETE repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins`, then
@@ -59,7 +71,7 @@ All six passed in the 2026-09-25 qualifying `ci-local.sh` run on `9ab269c8`.
    `gh api repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins --jq .enabled` prints `true`.
    Do not continue until it does.
 3. Watch `boundary-macos` on that push. → expect `MACOS-BOUNDARY: green P` in the job summary.
-4. `/releases` Publish: `gh release create 0.9.0 --target P --title … --notes …` from the Cargo block, marked
+4. `/releases` Publish: `gh release create <next-version> --target P --title … --notes …` from that release's ledger block, marked
    Latest. Then write back `releases update --gh-release-url` and `releases ship --evidence` in a small follow-up PR.
 5. If step 3 is red, do not publish. Fix forward on `development` and promote again; never force-push `main`.
 
