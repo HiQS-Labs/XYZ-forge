@@ -22,7 +22,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Codex final QA approved (round 3, `relay-system/2026-09-24/gh788-final-qa.md`); gate fixes applied. | Full gate once on the final commit in a disposable clone, then PR. |
+| Original final QA approved; GH-796 integrated #794 and its local reconciliation through the canonical B1 ledger writer. Reviewed implementation files are unchanged; ledger check passes. | Verify the reconciliation base is durable on origin, run the final combined full gate with spaced Python in a disposable clone, then update and merge PR #795. |
 
 ## Problem (observed)
 
@@ -178,3 +178,7 @@ Extend, don't add systems. One small helper, the same edit at each site, and one
 ## Lessons Learned (For Future Agents)
 
 - (to be written at closeout)
+
+## GH-796 integration checkpoint
+
+Integrated against committed reconciliation base `b56220df` through the existing B1 writer, preserving current schema/history and replaying only the GH-788 roadmap row. The conflicted paths were releases.db, releases.sql and LEADERBOARD.md; no source conflict occurred. Generated view output is preserved locally and excluded from the task diff. Implementation files match original reviewed head `bdf23e77`. Evidence and provenance: `TESTS-RESULTS/2026-09-25+GH-796-PR795/`. Full combined gate remains pending; prior 417/420 is not treated as green.
