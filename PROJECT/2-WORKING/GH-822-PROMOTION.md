@@ -22,7 +22,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| #823 merged via PR #824 (`61f09827`) and was reconciled by the hosted lane (`a2de2359`), with hosted macOS qualification of `61f09827` at 422/422 (`validate.sh --sequential`, run 36162614517). This PR adds the GH-784 promotion QA receipt and trims 0.9.0 Cargo. | Merge this PR and wait for its reconcile, then recut `main`, watch `boundary-macos`, and publish the `0.9.0` Release. |
+| #823 merged via PR #824 (`61f09827`) and was reconciled by the hosted lane (`a2de2359`), with hosted macOS qualification of `61f09827` at 422/422 (`validate.sh --sequential`, run 36162614517). This PR adds the GH-784 promotion QA receipt ([Codex, Approved](../../relay-system/2026-09-25/gh822-promotion-qa.md), driver-attested) and the applied 0.9.0 Cargo trim. | Merge this PR and wait for its reconcile, then recut `main`, watch `boundary-macos`, and publish the `0.9.0` Release. |
 
 ## Scope
 
@@ -37,11 +37,12 @@ GH-784 promotion QA receipt (`AGENTS.md:302`, this PR). Operator decisions on 20
 
 ## Cargo trim (ledger, this PR)
 
-The manifest had 6 `dialed_in` items; the rest were already shipped or cut.
+The manifest had 6 `dialed_in` items; the rest were already shipped or cut. **Applied on this branch** after the
+promotion QA approved the plan, and read back with `releases show`; `releases check` is clean:
 
-- #663 was closed as completed on 2026-09-17 by `4481ab48` (`fix(GH-663)`), so it is recorded `shipped` with that evidence.
-- #342, #255, #256, #275 and #345 are still open, so they are **cut** from Cargo and **dialed into 0.6.0 "Front-Door"**,
-  the next unshipped release by target date (`releases next`).
+- #663 was closed as completed on 2026-09-17 by `4481ab48` (`fix(GH-663)`), so it was marked `shipped` with that evidence.
+- #342, #255, #256, #275 and #345 are still open, so they were **cut** from Cargo and **dialed into 0.6.0 "Front-Door"**,
+  the next unshipped release after Cargo by target date (`releases next`). Cargo now has no `dialed_in` items.
 
 The exit criterion (a vendored repo runs `releases init/add` and `export_timeline.py --preview` from `.xyz/`,
 and `xyz-sync.sh update` preserves its ledger) is covered by gh105-vendor-releases-addon, gh107-timeline-json-seam,
