@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -121,5 +121,28 @@ Dispositions for Reviewer round 1:
 - **[Unverified — needs clone run]:** accepted. Runtime receipts come with implementation.
 
 Please re-review the revised plan. Handing off to Reviewer (codex).
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The implementation design and deterministic test seam are ready; the remaining Should is the evidence contract from round 1. This needs a small documentation/provenance correction, not broader runtime work.
+swept file: yes
+
+Read the entire revised plan, both Python source files, the entire gh496 suite, and the new characterization script/receipt. No additional established pre-existing runtime defect was found in the swept source; no concurrency execution was performed here.
+
+- [Pass] **The injection seam and bounded negative controls are now specified.** Plan `PROJECT/2-WORKING/GH-813-SQLITE-WAL-INIT-RACE.md:64-69` saves the real connect function, patches the shared sqlite3 module, forwards `factory=LockingConnection`, and requires counts 4/1/50 plus an outer timeout. This reaches the internal call at `utils/py/harness_app.py:168` and its direct `conn.execute` at :171. Case 14a is specified to fail on base; b alone should pass on base, while c's count distinguishes base's one attempt from the intended fifty. These are design conclusions, not executed controls.
+
+- [Pass] **Local scope remains appropriate.** Source `utils/py/harness_app.py:165-288` centralizes initialization, including the GH-450 ALTER tolerance at :276-283; log insertion follows at :583-595. The retained receipt `TESTS-RESULTS/2026-09-25+GH-813/base-200.txt:2-6` reports 24 failed rounds and 31 WAL-pragma errors, with no observed later statement failure supporting wider retries. Plan :56-58 retains the appropriate non-goals. Jitter is acceptable as a small contention choice, not demonstrated superior to fixed sleep. Logger :132-145 retains visible nonfatal error reporting.
+
+- [Should] **Complete the required provenance, or explicitly keep the measurement provisional.** Plan :20 and :30 now treat the 24/200 run as retained proof, but the campaign contains only `base-200.txt` and `repro-concurrent-init.sh`, with no `provenance.jsonl`. AGENTS.md Rule 6 explicitly requires committed provenance for a run cited in a decision record. The receipt header is helpful, but neither the exact invocation/exit status nor the stated runtime-equivalence check is retained. Add truthful provenance for the retained run (do not reconstruct unavailable facts as observations), or label it provisional and require a freshly captured base run during implementation. Also name committed provenance alongside the planned fixed/red-control receipts at plan :69-70. No new evidence framework is requested.
+  Evidence query: `rg --files TESTS-RESULTS/2026-09-25+GH-813` exited 0 and returned exactly `TESTS-RESULTS/2026-09-25+GH-813/base-200.txt` and `TESTS-RESULTS/2026-09-25+GH-813/repro-concurrent-init.sh`. This finding concerns evidence documentation, not a runtime behavior change.
+
+- [Nit] **Finish the latency wording correction.** Plan :62 correctly distinguishes 2.45 seconds of deliberate sleep from total SQLite time, but :77 still says “At worst, an unwinnable lock now delays the failure by about 2.5 s.” Replace that sentence with the same sleep-budget qualification. No timeout redesign is needed.
+
+- [Nit] **Keep the recurrence conclusion as qualified as its input.** Plan :41 now labels the issue list examples, resolving the unsupported exhaustive-count claim; :45 still infers “no sign of rising velocity” from 3 versus 3 selected examples. Say those examples alone do not establish a trend. The qualitative rating at :35-40 is reasonable and appeal remains explicitly neutral; the issue timestamps were not independently queried in this restricted review.
+
+- [Unverified — needs clone run] Real-race reproduction, base runtime equivalence, fixed 0/200, cases 14a-c, the stderr mutation, and the final full gate remain implementation evidence obligations. The receipt was read, not rerun. No test suite or executable fixture was run here.
+
+Handing off to Producer (claude-a) — resolve the provenance finding and wording nits, then open round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
