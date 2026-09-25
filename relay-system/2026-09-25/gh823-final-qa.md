@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -104,5 +104,42 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+Swept the complete CI workflow, workflow-lock test, reference reconciliation workflow and GH-823 plan; reviewed the CHANGELOG entry (not its unrelated historical archive). No additional pre-existing runtime defect identified in that sweep. No git commands or test suites were run.
+
+- [Pass] The concrete workflow value is 120 (`.github/workflows/ci.yml:159`), matching `.github/workflows/wave-reconcile.yml:28`. The existing sequential invocation remains intact (`ci.yml:203`). The >= invariant is a reasonable conservative policy, not proof that every future run fits: both caps could drift downward together, and runtime could grow. No new mechanism is needed for this change.
+- [Pass] The cited receipt durations support increasing the cap. Read-only command `python3` loaded each `TESTS-RESULTS/2026-09-25+GH-591/wave-*/validation.jsonl` and computed `(max(ts_ms)-min(ts_ms))/60000`; exit 0, output: `wave-6f956294... 84.4`, `wave-5ac6650d... 89.2`, `wave-0ae3452a... 67.7`. Each file's first row identifies sequential mode. The separate claim about all 28 hosted job runtimes was not independently queried.
+- [Should] Scope both timeout extractions to the job-level key (`test/ci-workflow.sh:292-294`). Current `[[:space:]]*` matches step timeouts too. Two values fail closed, but a step timeout substitutes for a deleted job timeout and passes, violating DoD 3. Minimal fix: match exactly four leading spaces in this repository's workflow format; add disposable-clone controls with both job and step keys, and with only the step key, on both sides. The awk blocks also print the next job header before stopping, but no subsequent job fields, so this does not cause this failure.
+  Observed input: current boundary block with `    timeout-minutes: 120` deleted and `        timeout-minutes: 120` inserted immediately after `      - name: Check out repo`; unchanged reconciliation block. The existing extraction/comparison returns 0 despite no job cap.
+  Affected scope: job-cap extraction in the existing GH-823 lock, for either workflow when step-level timeout keys exist.
+  Falsifier: unchanged 120/120 must pass; adding a valid step cap while keeping both job caps must pass; deleting either job cap while retaining a step cap must fail. No YAML parser or framework needed.
+  Probe command (read-only in-memory input mutation, not suite/fixture execution):
+  ```python
+  # Invoked as PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' ... PY
+  from pathlib import Path
+  import subprocess, shlex
+  src = Path('test/ci-workflow.sh').read_text().splitlines()
+  def block(path, job):
+      return subprocess.run(['awk', '/^  '+job+':/{f=1} f{print} f && /^  [a-z]/ && !/^  '+job+':/{exit}'], input=Path(path).read_text(), text=True, capture_output=True, check=True).stdout
+  b = block('.github/workflows/ci.yml', 'boundary-macos')
+  r = block('.github/workflows/wave-reconcile.yml', 'reconcile')
+  b = b.replace('    timeout-minutes: 120\n', '').replace('      - name: Check out repo\n', '      - name: Check out repo\n        timeout-minutes: 120\n')
+  code = 'boundary_block='+shlex.quote(b)+'\nreconcile_block='+shlex.quote(r)+'\n'+'\n'.join(src[291:294])+' exit 0; else exit 1; fi'
+  result = subprocess.run(['bash', '-c', code], capture_output=True, text=True)
+  print(result.returncode, result.stderr)
+  ```
+  Probe driver exit 0; decisive predicate output `0` (unexpected pass). Same predicate probe also returned current=0, boundary45=1, missing-boundary=1, missing-reconcile=1, extra-step-cap=1. Thus ordinary empty inputs are rejected, but the missing-job/step-cap combination is not.
+- [Nit] Correct the historical implication in `test/ci-workflow.sh:290`: “45 against a 60-92 min suite did” reads as an observed failed promotion, whereas the plan explicitly calls it latent. Use “would”. In the plan's Problem/Recon paragraphs and `CHANGELOG.md:7`, describe predicted timeout/cancellation rather than promising the final `MACOS-BOUNDARY: red` log line; no timed-out hosted boundary run is supplied as evidence that this step executes. Update the plan status table after implementation/QA so it no longer says implementation is next.
+- [Pass] The named ancillary readers contain no competing boundary timeout value: the targeted `rg -n 'timeout|45|120|boundary' ci-local.sh utils/gate-status.sh test/gh509-gate-evidence.sh test/gh379-canary-uses-validate.sh` query (exit 0) locates trigger/status contracts, e.g. `utils/gate-status.sh:78` and `test/gh509-gate-evidence.sh:143`, rather than a cap dependency. ROUTER/AGENTS likewise prescribe qualification, not a numerical cap. Historical baseline values should remain unchanged.
+- [Unverified — needs clone run] The producer reports 58/0 and red controls in Setup; this reviewer did not run those suites or the full gate. After the extraction fix, record the focused suite and the additional controls in a disposable full clone, then let the harness run its gate. No hosted promotion result is claimed.
+
+VERDICT: FAIL
+Basis: The 120-minute value is supported and the implementation is small, but the new lock does not enforce the stated missing-job-cap requirement when a step cap is present. Fix the two extraction patterns and witness the controls before approval.
+
+Handing off to Producer (claude-a) — address the scoped extraction finding and documentation nits, record clone evidence, then return the relay for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
