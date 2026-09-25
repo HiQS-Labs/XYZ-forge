@@ -287,9 +287,10 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   # GH-487: TESTS-RESULTS receipts join the evidence side — a provenance.jsonl follow-up used
   # to re-run the full gate as an unmapped path. skills/**/SKILL.md lands here via *.md —
   # explanatory markdown is a docs change; the skill's CODE paths route through the subsystem
-  # registry instead.
+  # registry instead. Admission metadata alone is evidence; its dedicated hook/hosted
+  # checker still runs, without forcing another full suite for a receipt refresh.
   case "$path" in
-    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*)
+    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|.github/test-admission.json|TESTS-RESULTS/*)
       pdda_needed=true
       ;;
     *)
@@ -354,7 +355,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   # Tier-2 membership: only explicitly registered subsystem paths qualify; every other
   # non-doc path fails closed to tier 3.
   case "$path" in
-    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*)
+    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|.github/test-admission.json|TESTS-RESULTS/*)
       : # docs — neither disqualifies tier 1 nor joins a subsystem
       ;;
     validate.sh)

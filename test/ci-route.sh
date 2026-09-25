@@ -68,6 +68,8 @@ set -e
 # 72% of the billed minutes were pushes to `development`, every one on the full route. They now
 # classify from their pushed range exactly as a PR classifies from its diff.
 expect_route "docs-only push uses the docs gate (was blanket full)" push docs true README.md
+expect_route "admission packet alone uses metadata gate, not another full suite" push docs true .github/test-admission.json
+expect_route "admission packet never downgrades a runtime change" push full true .github/test-admission.json src/events.js
 expect_route "text documentation uses the docs gate" push docs true docs/guide.txt
 expect_route "AgentChorus skill instructions use the docs gate" push docs true skills/2-daily/agent-chorus/SKILL.md
 # GH-28 follow-up: consult.sh always writes .txt sidecars (NO-CITATION.txt, PROVENANCE.txt,

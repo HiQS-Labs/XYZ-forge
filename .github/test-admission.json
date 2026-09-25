@@ -930,7 +930,7 @@
       "status": "A"
     },
     {
-      "new_blob": "1d296846d0b47624a93a104f9e6566a4fbafdea9",
+      "new_blob": "d2a27cd8a3e0eacffedc3ecc57c65f863f82446b",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -959,6 +959,30 @@
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
       "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/red-self-review.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "3e7f57712ddef4fbdc403af1af7472a043b50754",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/renamed-gh419-gate-inventory.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "5606da1c5f51e24f31562c129a11df05f8cea54a",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/renamed-gh421-auto-wave-reconcile.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "fbae7894a2f43c0a08ef2047b42806ffb0ffa396",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/renamed-gh740-hosted-lane-publish.sh.log",
       "status": "A"
     },
     {
@@ -1042,6 +1066,14 @@
       "status": "A"
     },
     {
+      "new_blob": "604a4519c0e8c8771846fd6a6912e073c8d6fcfc",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "relay-system/2026-09-25/gh805-gateway-final.md",
+      "status": "A"
+    },
+    {
       "new_blob": "570dbfdfed0d9e1f70cdb8190fa4c0ba16ea22be",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
@@ -1074,7 +1106,7 @@
       "status": "M"
     },
     {
-      "new_blob": "e9490cd5447c1d41fa31df7e716a500edd316e5b",
+      "new_blob": "b987b329d8f7ba43b98e3e11a05b1741dd192004",
       "new_mode": "100755",
       "old_blob": "16c8c00c34a78c31db9592645afea25da385e545",
       "old_mode": "100755",
@@ -1162,7 +1194,7 @@
       "status": "M"
     },
     {
-      "new_blob": "71ef82ec1c4b93115bb3dcee6157127a279575e8",
+      "new_blob": "82fb5c909f322825f82d80630573d3658470c19a",
       "new_mode": "100755",
       "old_blob": "e68a2bd4f38ddde18d85739bd22425837187be3e",
       "old_mode": "100755",
