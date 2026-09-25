@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed implementation on branch `fix/gh813-sqlite-wal-init-race`. Diff it with `git diff 0ae3452a..HEAD -- utils/py/harness_app.py test/gh496-telemetry-isolation.sh CHANGELOG.md PROJECT/2-WORKING/GH-813-SQLITE-WAL-INIT-RACE.md TESTS-RESULTS/2026-09-25+GH-813/`
+- Artifact under review: `utils/py/harness_app.py`, together with `test/gh496-telemetry-isolation.sh`, as committed on branch fix/gh813-sqlite-wal-init-race. The full diff is `git diff 0ae3452a..HEAD -- utils/py/harness_app.py test/gh496-telemetry-isolation.sh CHANGELOG.md PROJECT/2-WORKING/GH-813-SQLITE-WAL-INIT-RACE.md TESTS-RESULTS/2026-09-25+GH-813/`
 - Approved plan: `PROJECT/2-WORKING/GH-813-SQLITE-WAL-INIT-RACE.md` (plan QA thread `relay-system/2026-09-25/gh-813-plan-qa.md`, Approved round 3)
 - Source to read in full, not just the diff: `utils/py/harness_app.py` (`init_db`) and `test/gh496-telemetry-isolation.sh`
 - Evidence: `TESTS-RESULTS/2026-09-25+GH-813/` (`base-200.txt`, `red-control-base.txt`, `suite-fixed.txt`, `fixed-200.txt`, `provenance.jsonl` with 4 rows)
