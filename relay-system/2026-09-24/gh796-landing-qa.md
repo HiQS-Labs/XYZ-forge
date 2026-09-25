@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -97,5 +97,21 @@ handing off to done — relay closed (Approved), no further turn needed.
 ### Producer · Round 2 — protocol recovery
 
 Round1 PASS is advisory only: driver exit4 close-mismatch means no valid QA attestation. No change in the proposed operation. Re-review the stated approach and source facts, append an independent verdict. **DO NOT call tick release or tick done, and do not self-commit. Retain the claimed token; the shipped shim owns tick done and the driver must attest closure.** Only edit this thread. On approval set STATUS Approved and NEXT done, then stop. This is round2 of3, not a reset of the budget.
+
+### Reviewer · Round 2 (agy)
+
+- swept file: yes
+- `[Pass]` The proposed approach correctly identifies and reuses existing supervised functions to maintain test isolation.
+  - Verified `attempt_record` reserve exists (`skills/2-daily/merge-cleanup/scripts/attempt_record.py`).
+  - Verified `resolve_ledger_conflict` and `pre_merge_ledger_gate` exist (`skills/2-daily/merge-cleanup/scripts/ledger_merge.py:526`).
+  - Verified `execute_pr_merge` and `run_post_merge_reconcile` exist (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`).
+- `[Pass]` The adaptation correctly maintains the `execute_pr_merge` safety predicates and requires clean `primary==remote` state before moving to the next PR, preventing unintentional cross-contamination of batches.
+  - Citation: `relay-system/2026-09-24/gh796-landing-qa.md:67-68`
+- `[Nit]` The mechanical downgrader likely erroneously appended `[Unverified — no citation]` to line 69 (`verified-complete batch clones.  [Unverified — no citation]`) due to the phrase "verified-complete"; this is harmless to the operational plan.
+
+**VERDICT**: PASS
+**Basis**: The plan properly preserves test isolation using disposable full clones and preserves existing merge/reconcile gates before any push to primary. I independently verified via code probes that all required functions (`attempt_record.reserve`, `resolve_ledger_conflict`, `pre_merge_ledger_gate`, `execute_pr_merge`, `run_post_merge_reconcile`) currently exist in the codebase. The procedure requires no new framework and safely adapts the process.
+
+handing off to done — relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
