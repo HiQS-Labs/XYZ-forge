@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -161,5 +161,62 @@ Reopened for a concrete concurrency correction after round 2 approval: a shared 
 Focused evidence at `gateway-record-focused/provenance.jsonl` records gh419, gh740, gh421 and ci-route passing on 3c9506c3, with unchanged clone identity. gh419 witnesses a real merge conflict for the former shared filename, a clean merge for independent UUID records, and extraction of only the incoming record after merging another branch. The full pre-push run on 2f75a185 is intermediate, not final proof of this change.
 
 Review the complete relevant files, concentrating on this changed storage contract: (1) Are all manifest callers and publisher/catch-up consumers consistent? (2) Does the immutable one-new-record rule reject omission, stale metadata and historical mutation while allowing parallel PRs? (3) Do routing/docs preserve cheap metadata follow-ups and truthful pending activation? This is round 3 of the same capped review, not a fresh review budget. A fresh tick token only accommodates the previous token's terminal approval state. No suite execution in the reviewer worktree; thread writes only. Handing off to Reviewer codex.
+
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: The UUID record correction satisfies the Gateway storage contract without a second registry or approval writer. No remaining build blocker established. Approval is source/retained-focused-evidence QA, not final-gate success, merge authorization, live activation, or completion of broader GH805.
+swept file: yes
+
+Read the entire seeded artifact, complete admission/inventory modules, push hook/router, admission/publication workflows and CODEOWNERS, protected publisher, reconciliation/catch-up consumers, runbook, CI dispatch conditions and relevant existing gh419/gh740/gh421 controls. No additional pre-existing defect established in this reviewed Gateway scope.
+
+- [Pass] **Record contract and consumers agree.** `coverage_admission.py:94-103` admits at most one new regular UUID-named record and excludes only that record from the complete manifest; `inspect` then requires it for executable changes and compares it against the recomputed manifest. All production manifest callers unpack four results (`coverage_admission.py:144,297`, `hosted_lane_publish.py:230`). Protected publication checks the original allowlist before generating its record; catch-up uses the same path predicate via `publication_landing` (`hosted_lane_publish.py:195-250`, `wave_reconcile.py:1238-1240`). Narrow parser/validator probes with Git acquisition stubbed accepted a valid proposal and refused missing/multiple records, historical modification/deletion, malformed names, symlink records and stale bindings; reproducible probe below.
+- [Pass] **Concurrency evidence is bounded and relevant.** Existing `test/gh419-gate-inventory.sh:231-254` witnesses the old shared-path merge conflict, clean independent-record merge, and extraction of only the incoming record after integration. Retained `gateway-record-focused/gh419-gate-inventory.sh.log` says “PASS: shared-record merge conflict witnessed; per-change records merge without conflict”; provenance records rc 0 on `3c9506c37488bedd442b4af614cd4fdbcf2f2992`, alongside gh740/gh421/ci-route rc 0. Retained before/after identity JSON has identical HEAD, bare flag, remotes and email. This is recorded disposable-clone evidence, not a fresh run here. After merging a newer integration base, regenerate the incoming packet as the runbook requires; conflict-free filenames do not exempt stale bindings.
+- [Pass] **Cheap follow-up and authority boundaries remain intact.** `utils/ci-route.sh:293,358` recognizes record metadata; the classifier query below returned `route=docs`, `tier=1`, `full_required=false`. `dispatch_checks` retains `publication_only=true`; `ci.yml:249` skips the advisory canary for that input while `vendored-smoke` remains unconditional. Trusted admission checks out development without persisted credentials and fetches candidate objects only; `catalog` requires the operator's current-head native approval and different PR authorship. Protected publication has no direct-push fallback, pending review pauses qualification, and landed-publication exclusion checks bot identity, namespace and allowlisted paths. The runbook explicitly says rollout is “not activated/verified.”
+- [Unverified — needs clone run] Final macOS gate and exact-head hosted checks remain outstanding after this correction. Native review dismissal, rejected direct integration push, bot event delivery and protected reconciliation require operator bootstrap and credential separation. Historical 422/422 and the intermediate pre-push run are not final Gateway proof. No Git command, suite, pytest or executable fixture ran during this review; only the relay file was edited.
+
+Probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -`, with stdin below (exit 0). Git acquisition and summary are stubbed; no candidate execution occurs.
+
+```python
+import sys, json
+from unittest.mock import patch
+sys.path.insert(0,'utils/py')
+import coverage_admission as a
+base,head='b'*40,'c'*40
+rec=a.PACKET_DIR+'/'+'a'*32+'.json'
+def row(path,status='A',old='000000',new='100644'):
+    return dict(path=path,status=status,old_mode=old,new_mode=new,old_blob='0'*40,new_blob='1'*40)
+product=row('product.py')
+decision={k:'probe' for k in a.FIELDS}
+decision.update(outcome='no-add',issue='https://github.com/owner/repo/issues/1')
+valid=a.packet(base,[product],decision)
+def probe(label,rows,data=valid):
+    raw=''.join(':'+ ' '.join(r[k] for k in ('old_mode','new_mode','old_blob','new_blob','status'))+chr(0)+r['path']+chr(0) for r in rows)
+    def fake_git(root,*args):
+        if args[0]=='merge-base': return base+chr(10)
+        if args[0]=='diff': return raw
+        if args[0]=='show': return json.dumps(data)
+        raise AssertionError(args)
+    with patch.object(a,'revision',side_effect=lambda root,ref:head if ref=='HEAD' else base),patch.object(a,'git',side_effect=fake_git),patch.object(a,'summary',return_value={'state':'proposed'}):
+        try: print(label+': '+a.inspect('.',base)['state'])
+        except ValueError as e: print(label+': REFUSED '+str(e))
+probe('valid',[product,row(rec)])
+probe('missing',[product])
+probe('multiple',[product,row(rec),row(a.PACKET_DIR+'/'+'d'*32+'.json')])
+probe('historical modification',[product,row(rec,'M','100644')])
+probe('historical deletion',[product,row(rec,'D','100644','000000')])
+probe('malformed name',[product,row(a.PACKET_DIR+'/bad.json')])
+probe('symlink record',[product,row(rec,new='120000')])
+probe('stale binding',[product,row(rec)],{**valid,'changes':[]})
+probe('ordinary docs',[row('docs/guide.md')])
+probe('executable docs',[row('docs/runner.md',new='100755')])
+```
+
+Decisive output: `valid: proposed`; missing/executable docs: `REFUSED missing regular admission packet`; multiple, historical modification/deletion, malformed name and symlink: `REFUSED one new regular admission record per change; historical records are immutable`; stale binding: `REFUSED stale/incomplete admission packet`; ordinary docs: `documentation-only; operator PR review still required`. The quoted probe spells NUL/newline as chr(0)/chr(10), equivalent to the escape literals executed.
+
+Routing command (exit 0): `printf '%s\n' '.github/test-admission/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json' | bash utils/ci-route.sh push`. Decisive output: `docs_only=true; full_required=false; route=docs; tier=1; tier_reason=docs-only`.
+
+Relay closed (Approved), no further review turn needed. Producer astra/harness next retains final disposable-clone gate evidence and prepares the separate operator rollout handoff. Approval uses terminal tick `done`; no self-commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
