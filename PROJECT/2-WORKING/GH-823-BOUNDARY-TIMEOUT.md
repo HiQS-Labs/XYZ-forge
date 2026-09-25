@@ -21,7 +21,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, captured, parked and rated 85/80/50/90; promoted to 2-WORKING with a recon-grounded plan. | Implement the two edits, witness the red control, run final Codex QA and the full gate once, then open the PR. |
+| Cap raised to 120 and the lock extended; final Codex QA round 1 found a step-level `timeout-minutes` could stand in for a deleted job cap, now fixed by job-level matching and witnessed in a disposable clone. | Codex QA round 2 on the fix; then the full gate once on the final commit and the PR. |
 
 ## Problem (observed)
 
@@ -32,13 +32,16 @@ related:
 `wave-reconcile.yml:28` runs the same `validate.sh --sequential` on the same runner with `timeout-minutes: 120`.
 Its job runtimes across the last 28 runs (2026-09-21 → 09-25) were 60–92 minutes. The committed qualification
 receipts give suite spans of 67.7 / 89.2 / 84.4 minutes (`TESTS-RESULTS/2026-09-25+GH-591/wave-*/validation.jsonl`).
-The next push to `main` would therefore time out and print `MACOS-BOUNDARY: red` for a reason unrelated to code.
+The next push to `main` would therefore time out before the suite finished, so no green boundary could be
+recorded, for a reason unrelated to code. (Predicted from those runtimes; no boundary run has timed out yet.)
 
 ## Recon
 
 - **Entry point:** `ci.yml` `boundary-macos` job, `if: push && ref == main`. Steps: checkout, git env, npm ci, pip
   deps, `test/gh421-auto-wave-reconcile.sh`, `./validate.sh --sequential`, "Promotion evidence" (prints
-  `MACOS-BOUNDARY: green|red ${GITHUB_SHA}`). A timeout cancels the job, so the `if: always()` evidence step reports red.
+  `MACOS-BOUNDARY: green|red ${GITHUB_SHA}`). A timeout cancels the job before the suite finishes, so the job
+  cannot succeed and no green line can be recorded. Whether the `if: always()` step then prints `red` has not
+  been observed.
 - **Contract test:** `test/ci-workflow.sh` extracts the job with the `boundary_block` awk at line 240 and at line
   282 checks only that some `timeout-minutes:` exists. It already monitors `wave-reconcile.yml` (line 109).
 - **Other readers of the boundary job** (`test/gh379-canary-uses-validate.sh`, `test/gh509-gate-evidence.sh`,
@@ -55,8 +58,10 @@ Extends the existing CI contract (`ci.yml` plus its lock `test/ci-workflow.sh`);
 1. `ci.yml`: set the `boundary-macos` `timeout-minutes` to 120 and rewrite the line-154 comment with the measured
    hosted runtime and the reason for matching `wave-reconcile.yml`. → expect `grep` to show 120 in `boundary_block`.
 2. `test/ci-workflow.sh`: after the existing presence check, read the boundary cap and the `wave-reconcile.yml`
-   reconcile-job cap, and fail if either is missing or the boundary cap is lower. → expect PASS at 120. Red control:
-   a copy with 45 must FAIL, and so must a copy with the timeout line deleted.
+   reconcile-job cap, and fail if either is missing or the boundary cap is lower. Only the job-level key (four-space
+   indent) counts, so a step-level `timeout-minutes` cannot stand in for a deleted job cap (final QA round 1).
+   → expect PASS at 120, and PASS with an extra step cap alongside both job caps. Red controls: 45, 119, a deleted
+   job cap, a deleted job cap replaced by a step cap (on either side), and a renamed reconcile job must all FAIL.
 3. `CHANGELOG.md`: one end-of-iteration entry.
 4. Focused check: `bash test/ci-workflow.sh` in a disposable clone of the branch. Final Codex relay QA on the diff
    and evidence. Full qualifying gate once on the final commit in a separate disposable clone. PR into `development`.
