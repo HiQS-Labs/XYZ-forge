@@ -146,4 +146,12 @@ Decisive output: `000000 100644 documentation-only; operator PR review still req
 
 Relay closed (Approved), no further review turn needed. Producer astra/harness next runs the final disposable-clone gate and retains evidence before the separate operator rollout handoff. Only this relay file was edited; no self-commit.
 
+
+### Attestation · relay-drive — 2026-09-25T05:05:21Z
+task: GH805-GATEWAY-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 164a2a0a3da65967bda8b49f52304831db9ec7d5
+added-range: 13952+4441
+added-sha256: 1786e7270ce9bb03d7d7626e44ee179aa86e4c4efa916c057a5085d9c43c67e6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
