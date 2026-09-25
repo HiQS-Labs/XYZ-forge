@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-25 — Promotion boundary cap fits the suite (GH-823)
+
+`boundary-macos`, the GH-509 promotion witness, had a 45-minute cap sized to August's "~13-15 min locally".
+The same `validate.sh --sequential` on the same `macos-latest` runner now takes 60–92 minutes per job in
+`wave-reconcile.yml`, so the next push to `main` would have reported `MACOS-BOUNDARY: red` on time rather
+than on code. The cap is now 120, matching that workflow, and `test/ci-workflow.sh` fails if the boundary cap
+drops below the wave-reconcile cap or either cap goes missing. Found by the 2026-09-25 post-merge review (#822);
+it blocked the `development` → `main` promotion. Rollback: revert the one value and its assertion.
+
 ## 2026-09-24 — Preserve sequential marathon admission during integration (GH-796, GH-784)
 
 Separate selected-wave PR readiness (`--pre-pr --wave N`) from all-wave final closeout in the
