@@ -121,4 +121,12 @@ Evidence method: Verify-tier intent; nearest graph `XYZ-forge` is the parent che
 
 Relay closed (Approved), no further review turn needed; Producer owns the remaining gate and publication steps.
 
+
+### Attestation · relay-drive — 2026-09-25T03:17:47Z
+task: RELAY-gh808-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: d157de7148d3a990ab2aafa0db4f3dea9bb58f7d
+added-range: 7965+4412
+added-sha256: 0abbb85080aab13be25f2ccd5e4b0b08c92138329350e9e6c80270a643d03b8f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
