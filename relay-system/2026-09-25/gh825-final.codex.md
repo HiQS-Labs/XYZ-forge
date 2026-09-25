@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -75,5 +75,24 @@ Questions: (1) Does the skill actually set up a 10-minute same-conversation nati
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The Markdown scope and ordinary wake/stop protocol meet the approved plan, but the setup failure instruction can misreport a created job as unarmed. One short instruction correction is required; no scheduler code or new tests are requested.
+swept file: yes
+
+- [Should] Distinguish pre-creation refusal from post-creation verification failure (.relay-artifacts/SKILL.md:33–38,54–59). The latter currently falls under “If any check fails, leave the wake **unarmed**” without cleanup. Fix: when creation has been attempted and receipt/readback fails, retain any known job identity, attempt cancellation and inactive readback using the existing stop protocol; if state cannot be established, report possibly active plus the manual stop action. Do not create a replacement until the first job's state is resolved.
+  Observed input: The instruction at line 36 requires an “active-job readback” after creation; line 54 applies “any check fails” to that check and directs “unarmed.” These literal instructions cover a successful creation followed by a failed readback without directing cancellation. This is a text-level failure-path review, not an observed scheduler incident.
+  Affected scope: Only setup attempts where creation has occurred or its outcome is unknown and subsequent verification fails; capability refusal before creation remains unarmed.
+  Falsifier: Walk through creation returning job J followed by unavailable readback: the instructions must require cancellation of J and either inactive proof or a possibly-active/manual-stop report. Conversely, missing cancellation capability before creation must create no job. An existing instruction explicitly applying that cleanup to setup failures would discharge this finding; lines 92–98 currently sit under “At each wake.”
+- [Pass] Whole 106-line seeded skill swept; no additional material or pre-existing defects found. The note is explicitly unique/non-overwriting and subordinate to canonical state (.relay-artifacts/SKILL.md:25–32); scheduling is capability-gated and CLI/IDE parity is not assumed (33–52). No change requested to those contracts.
+- [Pass] The scheduled prompt and wake steps require actual run identity, SHA and result, reject pending/empty/stale results, and advance authorized work (64–87). Deadline checks precede further action, renewal/overlap are prohibited, and normal terminal cancellation requires inactive/absent proof (75–76,92–102). These are instruction-level controls, not proof of live scheduler execution.
+- [Pass] Catalog and changelog match the requested skill scope (ARCHITECTURE.md:54; CHANGELOG.md:3–10). No new runtime machinery is called for by the artifact. Full repository diff scope is not independently attested because this turn prohibits Git commands.
+- [Nit] Include the explicit 10-minute cadence in the note's field list (.relay-artifacts/SKILL.md:28–30), as requested by plan acceptance criterion 1; it currently appears in the scheduling instructions but not the note inventory.
+- [Unverified — network unavailable] Live issue parity: command `gh issue view 825 --repo HiQS-Labs/XYZ-forge --json title,body`, exit 1, decisive output “error connecting to api.github.com”. Review uses the complete local approved plan and review packet.
+- [Unverified — needs clone run] No validate.sh, test scripts, pytest, executable fixtures, or Git commands were run. Reported structural/gate results were not rerun; the qualifying gate remains with the harness in a disposable full clone. No live scheduler was created or exercised.
+
+Handing off to Producer (claude-a) — correct the setup-failure instruction and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
