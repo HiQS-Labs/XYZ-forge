@@ -21,7 +21,8 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 FUZZ="$ROOT/utils/py/fuzz_engine.py"
 SCHEMA="$ROOT/utils/py/telemetry_schema.py"
-PY="$(command -v python3)"
+# GH-788: shell-quoted, because fuzz_engine shlex-splits --target (a spaced venv path must stay one word)
+PYQ="$(python3 -c 'import shlex, sys; print(shlex.quote(sys.executable))')"
 
 echo "== test: gh-gen4-phase3-fuzz-engine =="
 
@@ -34,9 +35,9 @@ fi
 grep -q '^\.fuzz_corpus/$' "$ROOT/.gitignore" && pass ".fuzz_corpus/ is gitignored" || fail ".fuzz_corpus/ not in .gitignore"
 
 # 1. Deterministic seed replay through the CLI: identical plans, byte for byte.
-python3 "$FUZZ" --mode plan --target "$PY tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 99 --iterations 40 --json > "$WORK/plan-a.json"
-python3 "$FUZZ" --mode plan --target "$PY tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 99 --iterations 40 --json > "$WORK/plan-b.json"
-python3 "$FUZZ" --mode plan --target "$PY tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 100 --iterations 40 --json > "$WORK/plan-c.json"
+python3 "$FUZZ" --mode plan --target "$PYQ tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 99 --iterations 40 --json > "$WORK/plan-a.json"
+python3 "$FUZZ" --mode plan --target "$PYQ tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 99 --iterations 40 --json > "$WORK/plan-b.json"
+python3 "$FUZZ" --mode plan --target "$PYQ tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 100 --iterations 40 --json > "$WORK/plan-c.json"
 require_fixture_file "$WORK/plan-a.json" "plan a"
 cmp -s "$WORK/plan-a.json" "$WORK/plan-b.json" && pass "seed replay: --seed 99 yields a byte-identical plan twice" || fail "seed replay diverged"
 ! cmp -s "$WORK/plan-a.json" "$WORK/plan-c.json" && pass "seed replay: --seed 100 yields a different plan (control)" || fail "different seeds produced the same plan"
@@ -51,7 +52,7 @@ if any(t.startswith("--") and t not in ("--jobs", "--mode") for t in a):
     sys.stderr.write("usage: tool.py --jobs N --mode M\n"); sys.exit(2)
 sys.exit(0)
 PY
-rc=0; out="$(python3 "$FUZZ" --mode fuzz --target "$PY $WORK/tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 7 --iterations 150 --cwd "$WORK" --corpus "$WORK/corpus" --telemetry-out "$WORK/fuzz.jsonl" --timeout-budget 10 --json 2>&1)" || rc=$?
+rc=0; out="$(python3 "$FUZZ" --mode fuzz --target "$PYQ $WORK/tool.py {mutant}" --base "--jobs 4 --mode fast" --seed 7 --iterations 150 --cwd "$WORK" --corpus "$WORK/corpus" --telemetry-out "$WORK/fuzz.jsonl" --timeout-budget 10 --json 2>&1)" || rc=$?
 require_fixture "$WORK/corpus" "fuzz corpus"
 executed="$(python3 -c "import json,sys; print(json.loads(sys.argv[1])['executed'])" "$out")"
 cex="$(python3 -c "import json,sys; print(len(json.loads(sys.argv[1])['counterexamples']))" "$out")"
@@ -79,7 +80,7 @@ PY
 # 3. Replay a corpus entry by id and prove the recorded vector reproduces.
 first_id="$(python3 -c "import json,sys; c=json.loads(sys.argv[1])['counterexamples']; print(c[0]['corpus_id'] or '')" "$out")"
 if [ -n "$first_id" ]; then
-  if python3 "$FUZZ" --mode replay --corpus "$WORK/corpus" --id "$first_id" --target "$PY $WORK/tool.py {mutant}" --cwd "$WORK" >/dev/null; then
+  if python3 "$FUZZ" --mode replay --corpus "$WORK/corpus" --id "$first_id" --target "$PYQ $WORK/tool.py {mutant}" --cwd "$WORK" >/dev/null; then
     pass "corpus entry $first_id replays to the recorded feedback vector"
   else
     fail "replay of $first_id did not reproduce"
@@ -95,7 +96,7 @@ import sys, hashlib
 # many distinct signatures: exit code derived from the argv hash
 sys.exit(int(hashlib.sha256(" ".join(sys.argv[1:]).encode("utf-8","replace")).hexdigest(), 16) % 7)
 PY
-python3 "$FUZZ" --mode fuzz --target "$PY $WORK/noisy.py {mutant}" --base "a b c d" --seed 3 --iterations 120 --cwd "$WORK" --corpus "$WORK/corpus2" --corpus-cap 6 --timeout-budget 10 --json > "$WORK/noisy.json" 2>&1 || true
+python3 "$FUZZ" --mode fuzz --target "$PYQ $WORK/noisy.py {mutant}" --base "a b c d" --seed 3 --iterations 120 --cwd "$WORK" --corpus "$WORK/corpus2" --corpus-cap 6 --timeout-budget 10 --json > "$WORK/noisy.json" 2>&1 || true
 n2="$(ls "$WORK/corpus2"/*.json | wc -l | tr -d ' ')"
 [ "$n2" -le 6 ] && pass "corpus honours --corpus-cap 6 under 120 novel-ish mutants ($n2 on disk)" || fail "corpus exceeded cap: $n2"
 grep -q '"evicted+added"' "$WORK/noisy.json" && pass "novelty-weighted eviction fired" || fail "no eviction recorded"
@@ -108,10 +109,10 @@ if os.environ.get("TWIN") == "1" and "0" in sys.argv[1:]:
     sys.stderr.write("twin: zero unsupported\n"); sys.exit(2)
 sys.exit(0)
 PY
-out5="$(python3 "$FUZZ" --mode fuzz --target "$PY $WORK/twin.py {mutant}" --base "x y" --seed 11 --iterations 80 --cwd "$WORK" --corpus "$WORK/corpus3" --parity-env TWIN=1 --timeout-budget 10 --json 2>&1 || true)"
+out5="$(python3 "$FUZZ" --mode fuzz --target "$PYQ $WORK/twin.py {mutant}" --base "x y" --seed 11 --iterations 80 --cwd "$WORK" --corpus "$WORK/corpus3" --parity-env TWIN=1 --timeout-budget 10 --json 2>&1 || true)"
 div="$(python3 -c "import json,sys; print(json.loads(sys.argv[1])['parity_divergences'])" "$out5")"
 [ "$div" -ge 1 ] && pass "parity oracle flags $div divergence(s) between authoritative and twin env" || fail "parity oracle silent on a diverging twin"
-out6="$(python3 "$FUZZ" --mode fuzz --target "$PY $WORK/twin.py {mutant}" --base "x y" --seed 11 --iterations 40 --cwd "$WORK" --corpus "$WORK/corpus4" --parity-env TWIN=0 --timeout-budget 10 --json 2>&1 || true)"
+out6="$(python3 "$FUZZ" --mode fuzz --target "$PYQ $WORK/twin.py {mutant}" --base "x y" --seed 11 --iterations 40 --cwd "$WORK" --corpus "$WORK/corpus4" --parity-env TWIN=0 --timeout-budget 10 --json 2>&1 || true)"
 div6="$(python3 -c "import json,sys; print(json.loads(sys.argv[1])['parity_divergences'])" "$out6")"
 [ "$div6" -eq 0 ] && pass "parity oracle silent when twins agree (control)" || fail "false parity divergence: $div6"
 

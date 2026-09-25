@@ -196,7 +196,7 @@ def run_suite(as_json: bool = False) -> int:
         sys.path.insert(0, HERE)
         from fuzz_engine import fuzz  # noqa: E402
         tel = os.path.join(td, "fuzz.jsonl")
-        rep = fuzz(f"{sys.executable} tool.py {{mutant}}", td, 7, 300, os.path.join(td, "corpus"), tel, timeout_budget=10, base=["--jobs", "4", "--mode", "fast"])
+        rep = fuzz(f"{shlex.quote(sys.executable)} tool.py {{mutant}}", td, 7, 300, os.path.join(td, "corpus"), tel, timeout_budget=10, base=["--jobs", "4", "--mode", "fast"])
         ok("fixture fuzz produced counterexamples", len(rep["counterexamples"]) >= 2, str(len(rep["counterexamples"])))
         events = list(read_jsonl(tel))
         cl = cluster(events)
