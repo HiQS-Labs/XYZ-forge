@@ -219,4 +219,12 @@ Routing command (exit 0): `printf '%s\n' '.github/test-admission/aaaaaaaaaaaaaaa
 
 Relay closed (Approved), no further review turn needed. Producer astra/harness next retains final disposable-clone gate evidence and prepares the separate operator rollout handoff. Approval uses terminal tick `done`; no self-commit.
 
+
+### Attestation · relay-drive — 2026-09-25T05:22:20Z
+task: GH805-GATEWAY-FINAL-R3
+reviewer: codex
+status: Approved
+reviewed-head: 10200510c29480600082cd0fb757a7787b6f0edb
+added-range: 20160+6646
+added-sha256: 94585dc33b4be79446c6be0588ba3730c2e06d33afa54661b8f81f23b0638f23
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
