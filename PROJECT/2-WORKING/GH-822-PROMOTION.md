@@ -71,7 +71,7 @@ The steps as planned, kept as the template for the next promotion (use a new ver
    `gh api repos/HiQS-Labs/XYZ-forge/branches/main/protection/enforce_admins --jq .enabled` prints `true`.
    Do not continue until it does.
 3. Watch `boundary-macos` on that push. → expect `MACOS-BOUNDARY: green P` in the job summary.
-4. `/releases` Publish: `gh release create 0.9.0 --target P --title … --notes …` from the Cargo block, marked
+4. `/releases` Publish: `gh release create <next-version> --target P --title … --notes …` from that release's ledger block, marked
    Latest. Then write back `releases update --gh-release-url` and `releases ship --evidence` in a small follow-up PR.
 5. If step 3 is red, do not publish. Fix forward on `development` and promote again; never force-push `main`.
 
