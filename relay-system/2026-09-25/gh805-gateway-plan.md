@@ -113,4 +113,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Handing the token to Producer (astra) for implementation and the separately required final QA; merge/settings activation remains an operator decision.
 
+
+### Attestation · relay-drive — 2026-09-25T04:41:44Z
+task: GH805-GATEWAY-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: b0ae4627f139f078b52d06eef1d00c946ad52156
+added-range: 13322+3838
+added-sha256: 77090e81be4d1bd9da5876465915bd0e6312a3a7ff319025d1ca1ca2c855bca3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
