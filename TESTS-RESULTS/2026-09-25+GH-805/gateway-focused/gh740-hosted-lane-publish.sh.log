@@ -1,0 +1,14 @@
+test_no_race_is_one_commit_one_push (__main__.PublishTests.test_no_race_is_one_commit_one_push) ... ok
+test_protected_publication_retains_receipts_without_pushing_development (__main__.PublishTests.test_protected_publication_retains_receipts_without_pushing_development) ... hosted-lane-publish: reconciliation awaits operator review: https://github.com/owner/repo/pull/1
+fatal: path 'validate.sh' does not exist in 'c0bb8b6916990c5474ade1b09e0814007d3fced5'
+ok
+test_race_publishes_receipts_first_then_recomputes_once (__main__.PublishTests.test_race_publishes_receipts_first_then_recomputes_once) ... ok
+test_race_without_receipts_exits_without_retry (__main__.PublishTests.test_race_without_receipts_exits_without_retry) ... ok
+test_retry_argv_coalesces_targets_for_the_production_parser (__main__.PublishTests.test_retry_argv_coalesces_targets_for_the_production_parser) ... ok
+test_second_race_exits_loudly_with_receipts_kept_and_one_recompute (__main__.PublishTests.test_second_race_exits_loudly_with_receipts_kept_and_one_recompute) ... ok
+test_undeclared_artifact_is_refused_before_any_push (__main__.PublishTests.test_undeclared_artifact_is_refused_before_any_push) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 3.130s
+
+OK

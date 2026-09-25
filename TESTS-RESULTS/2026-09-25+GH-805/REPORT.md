@@ -82,3 +82,12 @@ Final Codex relay round 3 approved the bounded amendments before the final full 
 ## Handoff
 
 Completion audit correction: the bounded implementation is verified, but the full issue is incomplete. Comprehensive inventory, representative value analysis, enforceable admission and broader synthesis remain outstanding. PR #811 remains open and unmerged. Coverage repair is GO; mandatory admission is NO-GO for the documented missing authority, with observe mode retained. The task clone is retained for `/merge-cleanup` only after its landing is verified. GH808 remains separate; no savings are attributed to it.
+
+
+## Enforced gateway continuation — not yet activated
+
+The operator requested finishing enforcement and selected human coverage approval. The continuation extends the inventory CLI with `admission prepare/check/publish/catalog`, complete Git-manifest binding, early push refusal, a trusted-base hosted checker, and bot PR publication. It adds zero registered suites; gh419, gh740 and gh421 carry the bounded regression controls. Native CODEOWNER review and separate agent credentials are the intended authority; generated metadata is never approval.
+
+At c91cdf31, gateway controls passed in about 1.1s. Deliberately replacing the complete-manifest equality condition with false, removing the same-author rejection, and disabling early hook refusal each made gh419 return rc1; restoring saved bytes returned green. The committed `gateway-focused/provenance.jsonl` retains those runs. Protected publisher passed in 3.2s and workflow/reconciliation controls passed in 1.7s after updating the report-step expectation to skip pending operator review. The nonexistent gh487 standalone filename produced rc127 and is retained as an invocation error; GH487 behavior resides in gh544, which passed. No result from that mistyped invocation is counted as verification.
+
+The API reports development unprotected, no rulesets, read-only default workflow tokens, and Actions PR creation disabled. Existing #811 is authored by the operator account. Implementation cannot itself prove human-only approval while agents retain that account's review/admin credentials. The activation runbook names bootstrap landing, credential separation, native review policy, bot-created/updated exact-head checks and protected reconciliation witnesses. None is declared active by local tests. Broader #805 representative value-analysis work remains open.

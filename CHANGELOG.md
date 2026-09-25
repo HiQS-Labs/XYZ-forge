@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-09-25 — GH-805 operator-reviewed test admission (PR pending)
+
+- Extend the existing inventory command with a complete-change coverage proposal, early missing/stale refusal, a trusted-base hosted check and generated catalog. Bot-authored PRs allow the operator to supply native CODEOWNER review; protected reconciliation publishes its allowlisted artifacts through review instead of bypassing protection. No additional registered test suite is introduced by the gateway continuation.
+- Bet: native GitHub review plus constrained agent credentials prevents silent test growth with one decision per PR, without an approval service. This shared merge-boundary change is Costly and reversible through a reviewed revert and saved-policy restoration. Missing operator identity, stale approval, candidate execution or reconciliation without a reviewable PR stops rollout; never remove protection to obtain green.
+- Focused gateway/publisher/workflow checks and witnessed mutation reds are retained under `TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/`. Full final verification and live activation remain pending. Correct the earlier blanket #805 completion claim: broader audit acceptance is still open, and a verified PR is not an activated gateway.
+
 ## 2026-09-25 — Bounded test-value audit and coverage repairs (GH-805)
 
 - Add existing Flightdeck and Node unit coverage to both full runners and restore four focused releases mappings (#774 partial scope).

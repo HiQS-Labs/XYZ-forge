@@ -268,8 +268,8 @@ def decision_view(root: Path, path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] == "admission":
-        import test_admission
-        return test_admission.main(argv[1:])
+        import coverage_admission
+        return coverage_admission.main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--json", action="store_true", help="emit JSON (the default output format)")

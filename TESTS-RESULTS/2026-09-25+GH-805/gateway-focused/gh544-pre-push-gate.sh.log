@@ -1,0 +1,123 @@
+== test: gh544-pre-push-gate ==
+  PASS: a red gate refuses the push (exit 1)
+  PASS:   and says the push was REFUSED
+  PASS:   and names the escape hatch rather than leaving you stuck
+  PASS:   and does not excuse the red merely because hosted CI exists
+  PASS: a green gate allows the push (exit 0)
+  PASS:   and reports the wall-clock it cost
+  PASS:   and announced the mode before running
+  PASS: a docs-only push is allowed even when validate.sh is red
+  PASS:   and runs the deterministic documentation gate
+  PASS:   and does NOT run validate.sh
+  PASS: a red documentation gate still refuses the docs-only push
+  PASS:   and names the documentation gate failure
+  PASS: a code change remains on the full gate
+  PASS:   and does NOT take the documentation route
+  PASS: an hq push with NO runnable suite falls back to the FULL gate
+  PASS:   and validate.sh was NOT asked for a narrow --paths-file run
+  PASS: an hq push with its suite present runs the tier 2 gate
+  PASS:   and validate.sh received the paths file (the hook's only narrow invocation)
+  PASS:   and the gate really ran
+  PASS: a RED tier 2 gate still refuses the utility push (exit 1)
+  PASS:   and names the tier 2 gate in the refusal
+  PASS: the FIRST push of a new branch with a verifiable base runs the tier 2 gate (GH-487)
+  PASS:   and validate.sh received the paths file (the shared narrow invocation)
+  PASS:   and the narrow gate really ran
+  PASS: a new branch with NO origin/development base evidence falls back to the full gate (GH-487)
+  PASS: a new branch with NO common ancestor to the integration branch fails closed to full (GH-487)
+  PASS: a base equal to the pushed SHA (empty range) fails closed to full (GH-487)
+  PASS: a push by URL has no configured remote name and takes the full gate (GH-487)
+  PASS:   and says WHY instead of leaving the slowness unexplained
+  PASS: a MIXED new-branch + integration-ref push still selects the narrow gate (GH-487)
+  PASS:   and validate.sh received the paths file
+  PASS: an EMPTY stdin still announces the full gate (nothing narrow can run on no input, GH-487)
+  PASS: a BACKWARD-rewritten integration branch fails closed to full (GH-487 round 1)
+  PASS: a STALE-BEHIND integration branch (fetch needed) fails closed to full (GH-487 round 1)
+  PASS: a FAILED ls-remote (partial ref emitted) fails closed to full (GH-487 round 3)
+  PASS:   and names the offline bypass levers (GH-496)
+error: unknown option `push'
+usage: git ls-remote [--branches] [--tags] [--refs] [--upload-pack=<exec>]
+                     [-q | --quiet] [--exit-code] [--get-url] [--sort=<key>]
+                     [--symref] [<repository> [<patterns>...]]
+
+    -q, --[no-]quiet      do not print remote URL
+    --[no-]upload-pack <exec>
+                          path of git-upload-pack on the remote host
+    -t, --[no-]tags       limit to tags
+    -b, --[no-]branches   limit to branches
+    --[no-]refs           do not show peeled tags
+    --[no-]get-url        take url.<base>.insteadOf into account
+    --[no-]sort <key>     field name to sort on
+    --[no-]exit-code      exit with exit code 2 if no matching refs are found
+    --[no-]symref         show underlying ref in addition to the object pointed by it
+    -o, --[no-]server-option <server-specific>
+                          option to transmit
+
+  PASS: a pushurl that disagrees with the fetch url fails closed to full (GH-487 CodeRabbit #2)
+  PASS: a NO-OP integration ref in a mixed push contributes no paths and keeps the narrow gate (GH-487 pin)
+  PASS: an AMBIGUOUS base (multiple best common ancestors) fails closed to full (GH-487 round 1)
+  PASS: XYZ_SKIP_PREPUSH=1 lets a RED tree through (exit 0)
+  PASS:   and says loudly that nothing was verified
+  PASS: a delete-only push skips the gate even when it is red (exit 0)
+  PASS:   and says why
+  PASS:   and did NOT run the gate
+  PASS: a MIXED delete+real push is still gated (exit 1)
+  PASS: --check reports NOT INSTALLED on a fresh clone (exit 1)
+  PASS:   and warns the clone will push WITHOUT the gate
+  PASS: install succeeds (exit 0)
+  PASS:   and writes the stub into the git hooks dir, not the tree
+  PASS:   and the stub is identifiable as ours
+  PASS:   and core.hooksPath is left UNSET (it would override the stub)
+  PASS: --check now reports INSTALLED (exit 0)
+  PASS: install is idempotent (exit 0 on a second run)
+  PASS: install CLEARS a legacy core.hooksPath=githooks (exit 0)
+  PASS:   and says why it cleared it (GH-549)
+  PASS:   leaving core.hooksPath unset
+  PASS:   and did NOT overwrite the in-tree hook it delegates to
+  PASS: --check FAILS when a foreign core.hooksPath overrides the stub (exit 1)
+  PASS:   and says the stub will not run
+  PASS: install REFUSES to clobber a different core.hooksPath (exit 4)
+  PASS:   and names the path it refused to overwrite
+  PASS: --uninstall leaves a foreign pre-push hook alone
+  PASS:   and says so
+  PASS: install REFUSES to overwrite a foreign pre-push hook (exit 4)
+  PASS: --uninstall removes OUR stub (exit 0)
+  PASS: REAL push on a branch WITH githooks/ is refused by the red gate
+  PASS:   and it was the IN-TREE hook that ran (not the fallback)
+  PASS: THE PIN: REAL push on a branch with NO githooks/ still runs the gate
+  PASS:   and is REFUSED, not silently allowed
+  PASS:   and announces that it fell back rather than looking normal
+  PASS: NEGATIVE CONTROL: the pre-fix core.hooksPath wiring pushes UNGATED and silent
+  PASS: XYZ_SKIP_PREPUSH=1 works on the fallback path too
+  PASS:   and still announces that nothing was verified
+  PASS: a delete-only push is not gated on the fallback path
+  PASS: a linked worktree resolves to the SAME hooks dir as its parent clone
+  PASS:   and a push FROM that worktree is gated too
+  PASS: a branch with NEITHER gate refuses the push
+  PASS:   and says a gate that cannot run is not one that passed
+  PASS: ci.yml has the restored push: trigger
+  PASS: ci.yml has the restored pull_request: trigger
+  PASS: ci.yml still exists with its jobs intact
+  PASS: the GH-509 Phase 4 cost reasoning is PRESERVED for re-arm
+  PASS: the file states that the public-repo bridge has ended
+  PASS: the macOS job still has NO workflow_dispatch of its own
+  PASS: zero configured checks does NOT refuse the merge (prose fallback)
+  PASS:   and says it is merging WITHOUT CI rather than staying silent
+  PASS:   and names GH-544 so the reason is findable
+  PASS: an empty --json bucket is accepted as no-checks even if the PROSE changes
+  PASS:   and says which signal it used
+  PASS: a NON-empty --json bucket with a failure still refuses (exit 4)
+  PASS: a genuine check FAILURE still refuses the merge (exit 4)
+  PASS:   and says checks are not green
+  PASS:   and echoes gh's own output so the failure is visible
+  PASS: passing checks proceed silently (exit 0)
+  PASS:   and do NOT claim CI was absent
+  PASS: empty repo path is REFUSED by mkremote (exit 2), not silently applied to $PWD
+  PASS:   and the caller's real clone keeps its origin
+  PASS: empty repo path is REFUSED by realpush (exit 2) — `cd ""` would push the caller's repo
+  PASS: empty repo path is REFUSED by drive (exit 2)
+  PASS: a REAL repo path outside $WORK is REFUSED (exit 2) — the guard is containment, not a null check
+  PASS:   and that real repo's origin is still untouched
+  PASS: CONTROL: a legitimate fixture under $WORK is still admitted (exit 0)
+  PASS:   and it really did get its bare origin
+  gh544-pre-push-gate: 103 pass, 0 fail

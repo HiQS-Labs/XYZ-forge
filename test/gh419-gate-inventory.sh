@@ -116,7 +116,7 @@ import copy, json, pathlib, subprocess, sys
 from unittest.mock import patch
 root, fixture = map(pathlib.Path, sys.argv[1:])
 sys.path.insert(0, str(root/'utils/py'))
-import test_admission as a
+import coverage_admission as a
 r = fixture/'admission-repo'; r.mkdir(); (r/'test').mkdir()
 def g(*args): return subprocess.check_output(['git','-C',str(r),*args], text=True).strip()
 g('init','-q','--initial-branch=development'); g('config','user.name','Fixture'); g('config','user.email','fixture@example.invalid')
@@ -189,7 +189,7 @@ with patch.object(a,'gh',return_value=pr), patch.object(a,'git',return_value='')
 # Exercise the real push hook: a missing/stale packet stops before its expensive runner.
 import os, shutil
 (r/'utils/py').mkdir(parents=True); (r/'.github/workflows').mkdir()
-for name in ['gate_inventory.py','test_admission.py']:
+for name in ['gate_inventory.py','coverage_admission.py']:
     shutil.copyfile(root/'utils/py'/name,r/'utils/py'/name)
 (r/'.github/workflows/test-admission.yml').write_text('trusted checker exists\n')
 (r/'validate.sh').write_text('#!/bin/sh\necho expensive > expensive-ran\nexit 99\n'); (r/'validate.sh').chmod(0o755)

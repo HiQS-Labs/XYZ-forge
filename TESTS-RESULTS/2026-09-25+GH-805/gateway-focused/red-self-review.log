@@ -1,0 +1,7 @@
+PASS: parser rejects empty/duplicate/dynamic input; advisory metadata never authenticates approval
+fatal: path 'validate.sh' does not exist in '5e3f71e98f87e06370ee1c1b27fc866d90c1189e'
+fatal: path 'validate.sh' does not exist in '5e3f71e98f87e06370ee1c1b27fc866d90c1189e'
+fatal: path 'validate.sh' does not exist in '5e3f71e98f87e06370ee1c1b27fc866d90c1189e'
+Traceback (most recent call last):
+  File "<stdin>", line 74, in <module>
+AssertionError

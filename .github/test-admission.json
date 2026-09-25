@@ -26,7 +26,7 @@
       "status": "A"
     },
     {
-      "new_blob": "1f94a71f6cb22ab7218cba86b1c4f51946c861ce",
+      "new_blob": "db42fde8006544a0ee35dfd86547b19e5d0d8aa2",
       "new_mode": "100644",
       "old_blob": "e73ce6d083af26d5de232de9f83ae4c2731e2072",
       "old_mode": "100644",
@@ -42,7 +42,7 @@
       "status": "M"
     },
     {
-      "new_blob": "03098089c23521ff73d8d0acd4eaca958208883d",
+      "new_blob": "01d1f3b9c4aeb8cb20e39973d6707a27dc970405",
       "new_mode": "100644",
       "old_blob": "32d6552a825de91aea9ca57a58f0ecc949fa822d",
       "old_mode": "100644",
@@ -58,7 +58,7 @@
       "status": "A"
     },
     {
-      "new_blob": "ef02cd7a9d1530993ac754aa6a3b5a468173109a",
+      "new_blob": "f161573d848c9e8436fd4c53d6fd44b420f101b1",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
       "old_mode": "000000",
@@ -842,6 +842,142 @@
       "status": "A"
     },
     {
+      "new_blob": "7537e1b4325beffe1801f6bb3aea2fcc7f8793bd",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/frozen-twin.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "0228837686f0a2548c704aea5d6ea469eb086dd6",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/gateway-final-focused.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "3df0f549529ea05bf04d0edaa604789751a611f6",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/gateway-restored.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "3039c4ecacf228926548d80db02fc38b4e91174e",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/gh419-gate-inventory.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "e3099710bda2a3143bacc02ad67548ef760cca69",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/gh421-auto-wave-reconcile.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "d47bfbddc4df70d4f20d8165a512116d93a916a3",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/gh487-draft-review-publish.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "37f80f2872bd3d0b7f8807b24618db9b6ee5b05f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/gh544-pre-push-gate.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "be942c1f1ac2729dacc05330eb64c1e9864a0f57",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/gh740-hosted-lane-publish.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "58cbd08d1aeb29fb270337400ff7b6bb70b438c8",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/identity-after.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "58cbd08d1aeb29fb270337400ff7b6bb70b438c8",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/identity-before.json",
+      "status": "A"
+    },
+    {
+      "new_blob": "99fc7f256c0904b0177851d5ddb608f85d5d5b6b",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/proposal-check.txt",
+      "status": "A"
+    },
+    {
+      "new_blob": "1d296846d0b47624a93a104f9e6566a4fbafdea9",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/provenance.jsonl",
+      "status": "A"
+    },
+    {
+      "new_blob": "c1cec647f8cdb76c3f42a115ea8c211ed0234084",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/red-binding.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "e8ef2f75e1209117dd644ba5ae94a1919a06da30",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/red-early-hook.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "3210da9c4f1cea0a7ebf1d9338130f6c80df23ac",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/red-self-review.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "dbef62d4d3cc39cc7860933bc2a4c99bae12eb98",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/retry-gh419-gate-inventory.sh.log",
+      "status": "A"
+    },
+    {
+      "new_blob": "b2bce33de6a7e2c11a3cf14b1d0a75a6f232c57f",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "TESTS-RESULTS/2026-09-25+GH-805/gateway-focused/retry-gh421-auto-wave-reconcile.sh.log",
+      "status": "A"
+    },
+    {
       "new_blob": "a3f31fc9ca86971ca675ce0f8d58dc41a3a55166",
       "new_mode": "100644",
       "old_blob": "0000000000000000000000000000000000000000",
@@ -994,7 +1130,7 @@
       "status": "M"
     },
     {
-      "new_blob": "26e04dc304c13b6e4a9d02995966af618c2746df",
+      "new_blob": "b7975567d40c39ff5e73e95922f067aa63e036e7",
       "new_mode": "100644",
       "old_blob": "d555b1e23b24273ff7adea2c8c7870afbf0cda6f",
       "old_mode": "100644",
@@ -1018,7 +1154,7 @@
       "status": "M"
     },
     {
-      "new_blob": "a1eab0e403d480bf2ef59bef597c4512b9919cc0",
+      "new_blob": "ee6ba655ec6c481d5712b714aa0c373f70b0cded",
       "new_mode": "100755",
       "old_blob": "8d9e1150ca8b5610cca0bde1ccf74a3f30286db5",
       "old_mode": "100755",
@@ -1034,7 +1170,15 @@
       "status": "M"
     },
     {
-      "new_blob": "8718e8fd92a49daaf6c2f169fdd59d0ffe7034b7",
+      "new_blob": "d135675e7a4d104d280d5deb9a35f4c17d8d3ff7",
+      "new_mode": "100644",
+      "old_blob": "0000000000000000000000000000000000000000",
+      "old_mode": "000000",
+      "path": "utils/py/coverage_admission.py",
+      "status": "A"
+    },
+    {
+      "new_blob": "7638122d7cae7cd0d6dca85a862a994cf2f56e1f",
       "new_mode": "100644",
       "old_blob": "78a0a0f38ad7e63fae9ebac73f61a859c9960d23",
       "old_mode": "100644",
@@ -1042,20 +1186,12 @@
       "status": "M"
     },
     {
-      "new_blob": "b2b7c4af9015395a4ad7494145a24313c07eafc5",
+      "new_blob": "9f807b6ffec3646e7026151174486079e607bc47",
       "new_mode": "100644",
       "old_blob": "ca2eadbc3a6c51e7163b5dee93a4dac760cc8545",
       "old_mode": "100644",
       "path": "utils/py/hosted_lane_publish.py",
       "status": "M"
-    },
-    {
-      "new_blob": "d135675e7a4d104d280d5deb9a35f4c17d8d3ff7",
-      "new_mode": "100644",
-      "old_blob": "0000000000000000000000000000000000000000",
-      "old_mode": "000000",
-      "path": "utils/py/test_admission.py",
-      "status": "A"
     },
     {
       "new_blob": "d6bba342c426b14bfe49d4d84e0eca4349967497",
@@ -1076,12 +1212,12 @@
   ],
   "decision": {
     "behavior": "Require explicit coverage decisions and operator review before agent changes land; preserve the existing coverage repairs in PR811",
-    "cost": "Gateway runtime and incremental focused test cost are not yet measured. No model runs per test; one coverage decision per change set. Human review and credential separation required before activation.",
+    "cost": "Focused gateway suite ~1.1s; publisher suite ~3.2s; workflow/reconciliation suite ~1.7s on local macOS. Zero new registered suites in gateway continuation. No model call per test; one operator review per PR. Live approval latency unknown pending activation.",
     "existing_coverage": "Extend gh419 for the admission boundary and gh740/gh421 for protected publishing. Reuse all existing suite registrations; the prior GH177 hook suite remains the only new registered suite in this PR.",
     "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/805",
     "outcome": "add",
     "reason": "Reported uncontrolled test growth requires a machine-checked proposal and authenticated operator review. The gateway continuation adds zero registered suites and no separate test framework.",
-    "red_evidence": "Focused refusal/identity/manifest controls and protected publisher controls are pending execution; historical coverage repair controls remain in TESTS-RESULTS/2026-09-25+GH-805. This is a proposal, not approval."
+    "red_evidence": "Committed gateway-focused evidence: missing/stale/omitted/forged/rename/delete and operator-review controls pass; disabling full manifest comparison, self-review rejection or early hook refusal makes gh419 fail. Protected publisher retains receipts without pushing development."
   },
   "schema": "test-admission@1"
 }

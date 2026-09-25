@@ -1,0 +1,7 @@
+PASS: parser rejects empty/duplicate/dynamic input; advisory metadata never authenticates approval
+fatal: path 'validate.sh' does not exist in 'dc78bebcc34b4fdba25bbdc9d7167ef08b54fa58'
+fatal: path 'validate.sh' does not exist in 'dc78bebcc34b4fdba25bbdc9d7167ef08b54fa58'
+fatal: path 'validate.sh' does not exist in 'dc78bebcc34b4fdba25bbdc9d7167ef08b54fa58'
+PASS: real push hook refuses unadmitted changes before executing validate.sh
+PASS: complete binding, stale/missing/forged/renamed/deleted controls and native review identity
+PASS: GH-419 inventory discovers registered gates and records only declared controls

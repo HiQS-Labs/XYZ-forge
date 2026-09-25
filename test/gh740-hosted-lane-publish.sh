@@ -140,7 +140,7 @@ class PublishTests(unittest.TestCase):
     def test_protected_publication_retains_receipts_without_pushing_development(self):
         from unittest.mock import patch
         import hosted_lane_publish as publisher
-        import test_admission as admission
+        import coverage_admission as admission
         self.reconcile()
         before = sh('git', 'rev-parse', 'HEAD', cwd=self.clone).stdout.strip()
         called = []

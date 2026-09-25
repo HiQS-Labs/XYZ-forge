@@ -1,0 +1,18 @@
+{
+  "head": {
+    "rc": 0,
+    "value": "f17caed8c517f81cb9b987ce5c4277c01e6ae310"
+  },
+  "bare": {
+    "rc": 0,
+    "value": "false"
+  },
+  "remotes": {
+    "rc": 0,
+    "value": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)"
+  },
+  "email": {
+    "rc": 1,
+    "value": ""
+  }
+}
