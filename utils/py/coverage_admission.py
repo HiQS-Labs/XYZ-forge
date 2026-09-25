@@ -118,6 +118,8 @@ def summary(root, base, head, rows, decision=None):
         import gate_inventory
         counts_by_ref = []
         for ref in (base, head):
+            if not git(root, 'ls-tree', ref, '--', 'validate.sh').strip():
+                raise ValueError('no canonical shell registry')
             source = git(root, 'show', f'{ref}:validate.sh')
             counts_by_ref.append(len(gate_inventory.registered_entries(source)))
         suite_delta = counts_by_ref[1] - counts_by_ref[0]
