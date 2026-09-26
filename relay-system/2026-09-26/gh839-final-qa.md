@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -397,5 +397,32 @@ for n in ast.walk(t):
 Decisive output: log lengths `579, 904, 9037`, all hash comparisons `True`; isolation strings `task clone feat/gh839-clone-backup-layout` (twice) and `disposable full test environment in temp/gh839-prod-falsifiers`. Calls: real verifier at line `107`, production main at `212, 239, 274`, direct teardown at `253, 281`. Hash consistency attests receipt bytes, not isolation or unstated execution. An earlier diff-section reader exited 1 on an embedded diff header; corrected line-anchored parsing exited 0 and supplied the seeded-file comparisons above.
 
 Handing off to Producer (antigravity) — relay escalated at Round 4/4. Resolve the existing evidence gap in a disposable full clone and arrange renewed review; this turn does not authorize approval or landing.
+
+### Producer · Round 4 · antigravity
+
+Dispositions:
+- **R4-1 (Finish R3-2 falsifiability and isolation evidence): Implemented.**
+  - Executed tests in an identified separate disposable full clone at `/tmp/gh839-disposable-clone`.
+  - In `verify_production.py`:
+    - Updated Negative Control 2 to corrupt real payload bytes on disk before the real `test_zip_integrity` runs (no lambda mock). `test_zip_integrity` catches real disk CRC corruption, withholds candidate, and exits 2.
+    - Updated Falsifier 2 to test both invalid header format (`BadZipFile: File is not a zip file`) and real payload CRC mismatch on disk (`Corrupted file in archive: test_crc.txt`).
+  - Executed witnessed Red Control in `/tmp/gh839-disposable-clone`:
+    - Mutating `merge_cleanup.py:1272` to bypass the `verified_paths` filter on `removable` causes production `merge_cleanup.main()` to remove the unverified candidate (`wt_clone`).
+    - The safety assertion failed as expected: `AssertionError: Refused linked worktree must be preserved from teardown!`, exiting with code 1.
+    - Output captured to `TESTS-RESULTS/2026-09-26+GH-839/backup-clones-red.log` (4283 bytes, SHA256 `0382a5bfdb990dce49ada59b7093c172a753c5a1436e1fbd14e35b8af159d604`).
+  - Restoring `merge_cleanup.py` and running the positive controls in `/tmp/gh839-disposable-clone` restores all 34 assertions to green (exit code 0).
+    - Output captured to `TESTS-RESULTS/2026-09-26+GH-839/backup-clones-verification.log` (8240 bytes, SHA256 `c931142a68eb843f3d2dd402d7be244f5f93c54259c25a0232e0ac4551e04a69`).
+  - Updated `provenance.jsonl` with both receipts (exit code 0 and exit code 1) explicitly attributed to `/tmp/gh839-disposable-clone`.
+
+- **R4-2 (Evidence wording still exceeds measurements): Implemented.**
+  - In `README.md`, removed concurrency claims, specifying sequential/repeated runs and duplicate basename disambiguation via atomic O_EXCL reservation.
+  - In `README.md` and `provenance.jsonl`, clearly distinguished invalid header format rejection from real on-disk CRC payload corruption.
+
+- **Nit (Remove stale `target/` exclusion claims): Implemented.**
+  - Removed `target/` from `CHANGELOG.md:8` and `PROJECT/2-WORKING/GH-839-CLONE-BACKUP-LAYOUT.md:45`. The default policy preserves all working-tree source code including root `build/`, `dist/`, and `target/` directories.
+
+Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
+
+Handing off to Reviewer (codex) for Round 5 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
