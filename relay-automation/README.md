@@ -42,6 +42,30 @@ parsing belong in a helper shared with that vendor's relay adapter. The Bash fal
 frozen; do not extend its dispatch table. Relay adapters retain the shared `RelayTurnLib`
 contract for claims, scoped writes, cleanup, and handoff.
 
+## The live self-sufficiency check (GH-836)
+
+`test/relay-self-sufficiency.sh` runs one real headless agent turn (agy, else codex) against the fixed fixture
+`test/fixtures/minimal-relay.md`. It checks the fixture, the turn prompt, the shim, the agent and tick working
+together. It does not exercise the template `new-relay.sh` generates.
+
+Every gate skips it by default: `ci-local.sh`, `ci.yml`, the hosted reconcile, and the pre-push hook since
+GH-836. So nothing runs it unless someone asks. **A recorded live run is owed** before landing a change to:
+
+- the turn shims (`codex-turn.sh`, `agy-turn.sh`) or the turn prompt in `relay-turn-lib.sh`;
+- the fixture itself.
+
+Run it in a disposable full clone:
+
+```bash
+RELAY_SELF_SUFFICIENCY_SKIP=0 bash test/relay-self-sufficiency.sh
+```
+
+Record the output under `TESTS-RESULTS/<date>+GH-<n>/` with its `provenance.jsonl` entry. A `SKIPPED` result
+does not count, because a machine with no agent on `PATH` also exits 0.
+
+A change to `new-relay.sh`'s turn block needs review evidence of the generated instructions themselves, such as
+a relay driven on the new scaffold, because this check does not cover them.
+
 ## Claude subscription mode
 
 Use an installed **Claude Code CLI** signed in with your own Claude.ai subscription:

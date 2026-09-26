@@ -1086,8 +1086,11 @@ sqlite3 "$FXE3/releases.db" "DROP TRIGGER work_events_no_delete; DELETE FROM wor
 RACEDIR="$WORK/race_rendezvous"; rm -rf "$RACEDIR"; mkdir -p "$RACEDIR"
 RPIDS=""
 for i in 1 2; do GH549_RACE_DIR="$RACEDIR" XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$RACE/releases_app.py" --root "$FXE3" work backfill >/dev/null 2>&1 & RPIDS="$RPIDS $!"; done
-RRC=0; for p in $RPIDS; do wait "$p" || RRC=1; done
-[ "$RRC" = "0" ] && ok "21e red: both racers exited 0" || bad "21e red: a racer exited non-zero"
+# Past the shared rows the racers run at full speed, so one may lose the writer lock: exit 4
+# (EXIT_LOCK_REFUSED, releases_app.py:91) is that designed refusal. Anything else is a crash.
+RRC=""; for p in $RPIDS; do wait "$p"; RRC="$RRC $?"; done
+case " $RRC " in *" "[!04]" "*|*" "[0-9][0-9]*" "*) bad "21e red: a racer crashed (exit codes:$RRC)" ;;
+  *) ok "21e red: no racer crashed (exit codes:$RRC; 4 = writer-lock refusal)" ;; esac
 NBF3="$(sqlite3 "$FXE3/releases.db" "SELECT count(*) FROM work_events WHERE payload LIKE '%\"source\": \"backfill\"%';")"
 [ "$NBF3" -gt "$NROWS" ] && ok "21e red: with the read moved outside the transaction, the race DUPLICATES ($NBF3 > $NROWS)" \
                           || bad "21e red did not reproduce ($NBF3 vs $NROWS)"

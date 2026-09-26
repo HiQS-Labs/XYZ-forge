@@ -12,7 +12,7 @@ non_goals:
   - New suites, registry entries or gate machinery (AGENTS.md, No new tests).
   - Moving gh549 or gh436 out of Small; that is D1, the operator's decision, taken on hosted numbers.
   - Rewriting gh549 to run in one process, or gh436 on template fixtures (deferred in #836).
-  - Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner.
+  - Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner (D2's hook default is the one operator-directed exception).
 related:
   - "#835 — the gate-timing snapshot and its three profiling reviews (closed as completed)"
   - "#831 — the three-tier gate; its Phase 3 hosted Small evidence is still owed"
@@ -129,14 +129,18 @@ witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-83
      this leg sets. It then waits, bounded at 10 s, until its peer's marker exists.
    - Both racers then sleep 0.4 s on their first 3 emits, not on every emit. The rendezvous lines them up on the
      same first row, so the window no longer depends on startup skew (Codex plan r1, S1).
-   - If the peer never arrives, the wait times out and the racer carries on. The leg's existing
-     `bad "21e red did not reproduce"` then fires loudly rather than passing quietly.
+   - If the peer never arrives, the wait times out and the racer carries on. The leg's existing duplicate
+     assertion (`bad "21e red did not reproduce"`) still judges the outcome. A peer arriving just after the
+     timeout can still overlap (Codex plan r2 nit).
    - The unmutated race, its `NROWS` fixture and both assertions are unchanged.
 
    → expect: green. **Red-control witness, in the disposable clone:**
    - the edited leg reproduces duplication (`NBF3 > NROWS`) with deliberately staggered launches: 0 s, 1.5 s and
      3 s, in both orders, which is beyond the old 1.2 s sleep budget;
-   - both workers exit 0;
+   - no racer crashes: each exits 0, or 4 (`EXIT_LOCK_REFUSED`, `utils/py/releases_app.py:91`). The first
+     after-run showed that once the racers leave the shared rows, one may lose the writer lock by design. At base,
+     the per-row sleep kept them in lockstep and both exited 0, with 550 duplicates against 278 after the
+     change. So "both exit 0" was the wrong requirement;
    - the positive `NBF2 = NROWS` holds in the same runs.
 
    **Fallback, if any offset fails:** keep the existing per-row sleep, and record 21e as untrimmed.
@@ -171,6 +175,25 @@ witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-83
    ID and duration here and in the GH-831 plan. This may land in a later docs PR if the run comes after this PR
    merges.
 
+7. **D2, decided by the operator on 2026-09-26 and folded in after plan approval: option C.**
+   - This follows a `/consult`. Codex recommended C; agy's backend stalled four times, so there was no
+     second model. Transcripts: `relay-system/2026-09-26/gh836-d2-*`.
+   - `githooks/pre-push` defaults `RELAY_SELF_SUFFICIENCY_SKIP` to 1 on its full-gate `validate.sh` call.
+     `=0` opts back in, and calling `validate.sh` directly is unchanged.
+   - `test/relay-self-sufficiency.sh`'s header and skip message say what it checks: the fixed fixture, not
+     `new-relay.sh`'s template. They also say that it is skipped by default everywhere.
+   - `relay-automation/README.md` names when a recorded live run is owed:
+     - shim or turn-prompt changes, or fixture changes;
+     - a `SKIPPED` result does not count;
+     - template changes need review evidence of the generated instructions.
+   - `relay-pkg.tar.gz` is rebuilt, because the README ships inside it.
+
+   → expect: `gh544-pre-push-gate` and `relay-pkg-freshness` green. **Witness:** the final full gate through
+   the real hook logs the suite as skipped by default.
+   **Not done here:** rebuilding the fixture from `new-relay.sh`'s output. That would change what the suite
+   tests, and needs live runs to prove; agy's backend was down today. It is a follow-up, if the operator
+   wants it.
+
 **Expected:** `gh549` from about 346 s to about 130 s and `gh436` from about 292 s to about 243 s, locally.
 Hosted Small drops by roughly the same share, from ~18 minutes to ~12–13.
 
@@ -183,8 +206,7 @@ Hosted Small drops by roughly the same share, from ~18 minutes to ~12–13.
 ## Decisions for the operator (not in this PR)
 
 - **D1:** move `gh436` alone to Large if hosted Small is still over ~12 minutes after this lands.
-- **D2:** skip `relay-self-sufficiency.sh`'s live agent turn in the local pre-push gate by default. R5 confirms
-  the claim.
+- **D2: decided, option C, and folded into this PR as step 7.**
 - **D3:** move `gh645` and `gh674` to Large, for tidiness only.
 
 ## Risk and rollback
