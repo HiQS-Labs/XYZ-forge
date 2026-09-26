@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — PR ready; awaiting merge (2-WORKING)
+status: Active — merged (#838); step 6 done; D1 and D3 await the operator (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -15,7 +15,7 @@ non_goals:
   - Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner (D2's hook default is the one operator-directed exception).
 related:
   - "#835 — the gate-timing snapshot and its three profiling reviews (closed as completed)"
-  - "#831 — the three-tier gate; its Phase 3 hosted Small evidence is still owed"
+  - "#831 — the three-tier gate; its Phase 3 hosted Small evidence is recorded (run 36276061201)"
 goal: >
   gh549 and gh436, which make up two-thirds of the hosted Small run, get cheaper where the time was measured.
   Every trimmed leg keeps its assertion and red control, and gh649 stops failing falsely under /tmp.

@@ -2,9 +2,9 @@
 gh_issue: 831
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/831
 title: "GH-831: no new tests, and three gate tiers (Small/Medium/Large) chosen by ci-route for push, per-merge reconcile and promotion; non-core suites off"
-status: Active — Phase 1 merged (#832); Phase 2 approved and gated, PR open (2-WORKING)
+status: Active — Phases 1 (#832) and 2 (#834) merged; Phase 3 hosted evidence recorded; awaiting the operator's close (2-WORKING)
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-26
 owner: operator (via /start-task)
 doc_type: feature
 branch: feat/gh831-phase2-tiers (Phase 1: feat/gh831-three-tier-gate, merged as f832ef5a)
@@ -553,14 +553,17 @@ If either fails, use the rollback below.
 
 | Landing | Hosted run | Tier and gate | Result | Duration |
 |---|---|---|---|---|
-| #834, Phase 2 (`b2c307b4`) | [36247260339](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36247260339) | tier 3, `validate.sh --sequential` | success; receipt `TESTS-RESULTS/2026-09-26+GH-591/wave-b2c307b4…/provenance.jsonl`: gate `validate.sh --sequential`, no `tier` field (full runs carry none), 414/414 | 57.2 min job |
-| #840, GH-833 (`9fd2d885`), docs-only | [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201) | tier 1, `validate.sh --sequential --subsystem small` | success; receipt `TESTS-RESULTS/2026-09-26+GH-591/wave-9fd2d88543f9f52e2e40b2cb8fc4771b08440ff6/provenance.jsonl`: `pr: 840`, `tier: 2`, 73 suites, 76/76 (the suites, the PDDA gate and the Python layer) | 15.7 min gate, 19.2 min job |
+| #834, Phase 2 (`b2c307b4`) | [36247260339](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36247260339) | tier 3, `validate.sh --sequential` | success; receipt `TESTS-RESULTS/2026-09-26+GH-591/wave-b2c307b4…/provenance.jsonl`: gate `validate.sh --sequential`, no `tier` field (full runs carry none), 414/414 | 57.2 min run (job 57.0) |
+| #840, GH-833 (`9fd2d885`), docs-only | [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201) | tier 1, `validate.sh --sequential --subsystem small` | success; receipt `TESTS-RESULTS/2026-09-26+GH-591/wave-9fd2d88543f9f52e2e40b2cb8fc4771b08440ff6/provenance.jsonl`: `pr: 840`, `tier: 2`, 73 suites, 76/76 (the suites, the PDDA gate and the Python layer) | 15.7 min gate, 19.2 min run (job 19.1) |
 
 - **Both logs name their tier.** #840's log: `Qualifying 1 landing(s) in integrated snapshot 9fd2d885… with
   \`validate.sh --sequential --subsystem small\` (tier 1)`.
 - **Faster than planned.** The plan expected about 18 minutes for Small. #836 (PR #838) had since trimmed
   `gh549` and `gh436`.
-- **For comparison:** #838, which touched tests, took the full registry in 59.9 minutes (run 36271811800).
+- **For comparison:** #838, which touched tests, took the full registry in 59.9 minutes, job 59.7 (run 36271811800).
+- **Evidence:** run and job timestamps, conclusions and each run's `Qualifying …` log line are in
+  `TESTS-RESULTS/2026-09-26+GH-831/phase3-hosted-runs.jsonl` (GitHub API, fetched 2026-09-26). "Run" minutes
+  are created → updated; "job" minutes are the reconcile job's start → completion.
 - **Largest Small suites on the hosted runner** (from the run's `validation.jsonl`): `gh436-merge-cleanup` 221 s
   (23 %), `gh549-work-events` 159 s (17 %), `pdda-install-startup-docs` 88 s, the PDDA gate 77 s,
   `pdda-repo-contract` 58 s.
