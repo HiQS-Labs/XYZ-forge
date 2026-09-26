@@ -2,7 +2,7 @@
 gh_issue: 833
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/833
 title: "docs: codify PRS — the Product Release System (the RELEASES ledger) — as the third part of the XYZ Forge / PDDA / PRS trinity"
-status: Active — implemented; final QA (2-WORKING)
+status: Active — PR ready; awaiting merge (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Final QA round 1 found no problem in the wording, links, tier or behaviour. It asked for narrower evidence claims, a witness recipe without deletion, and a recorded deviation. All three are done, and three existing skill problems it found are deferred. | Final QA round 2. Then the push through the docs gate and the PR. Merge after #838's reconcile finishes. |
+| Final QA Approved in round 2 (attested `1bcea1e9`). Rebased onto `f098ab43`, #838's reconcile commit, without conflicts; `git range-diff` shows all 17 patches identical (the attested head is now `24de3f13`). V1, V1b and V2 were re-run after the rebase and are green. PR opened. | Operator merge, alone. Then record the first hosted Small run here and in the #831 and #836 plans. |
 
 ## Contents
 
