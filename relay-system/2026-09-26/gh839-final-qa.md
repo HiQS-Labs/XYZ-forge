@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -328,5 +328,32 @@ print([c for c in calls if c in ('zf.read', 'zf.open', 'zf.extract', 'zf.extract
 ```
 
 Handing off to Producer (antigravity) — resolve R3-1/R3-2, correct the stale support documentation, and supply disposable-full-clone evidence for Round 4.
+
+### Producer · Round 3 · antigravity
+
+Dispositions:
+- **R3-1 (R1-1/R2-1 source-preservation remainder is still open): Implemented.**
+  - Completely removed `TOP_LEVEL_BUILD_DIRS` (`target`, `build`, `dist`) from exclusions in `skills/2-daily/merge-cleanup/scripts/backup_clones.py`.
+  - Default exclusions are now strictly confined to recognized disposable dependency and compiler caches (`node_modules`, `.venv`, `venv`, `__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.parcel-cache`, `.cache`, `.DS_Store`).
+  - 100% of working-tree source files and directories (including root `build/release.py`, `dist/source.py`, `target/config.py`, and nested `src/env/config.py`) are fully preserved in the archive.
+  - Verified by Falsifier 1 in `TESTS-RESULTS/2026-09-26+GH-839/verify_production.py`: `zf.read()` asserts byte-for-byte read equality for all source files and loose `.git` refs, while `node_modules` is excluded.
+
+- **R3-2 (R2-3 partially fixed; corrupt archive, red control, and byte-for-byte verification): Implemented.**
+  - Updated `verify_production.py` to directly execute archive corruption and production safeguards:
+    - Falsifier 1: `zf.read()` directly reads and asserts byte-for-byte content equality against original file bytes for `build/release.py`, `dist/source.py`, `target/config.py`, `src/env/config.py`, and loose `.git` refs (`node_modules/topic`, `venv/topic`, `build/topic`).
+    - Falsifier 2: Calls `test_zip_integrity()` on a corrupt archive, directly verifying that CRC/header corruption fails closed.
+    - Falsifier 5 (Negative Control 2): Calls production `merge_cleanup.main()` with simulated archive corruption during `--backup-first`, asserting candidate is preserved and exit code is 2.
+    - Falsifier 5 (Witnessed Red Control): Directly calls `teardown_checkout()` on the candidate without the Phase 6 verification gate, witnessing candidate deletion into Trash, proving the Phase 6 gate is load-bearing.
+    - Falsifier 5 (Positive Control): Calls production `merge_cleanup.main()` on clean standalone clone, verifying backup creation, CRC check, SHA256 calculation, and successful teardown into Trash with exit code 0.
+  - Narrowed claims in `README.md` and `provenance.jsonl`: attributed all 33 asserts, documented specific controls executed, updated verification log hash (`6e7bdfa1aa713903af479d35c404996d8624f8a5f9acb8e0430959109e374fa5`, 9037 bytes).
+
+- **Nit (Stale claims in docstrings and skill documents): Implemented.**
+  - Cleaned up `backup_clones.py` docstrings: removed stale references to `.git_admin`, binary zip execution, and fallbacks.
+  - Updated `skills/2-daily/merge-cleanup/SKILL.md` (Phase 6): explicitly documented `--backup-first`, fail-closed refusal of linked worktrees with external Git storage, and nonzero exit code 2 on backup failure.
+  - Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` (Phase 1): clarified the support boundary (airtight restore for standalone full clones; linked worktrees with external storage are refused and not analysed or torn down).
+
+Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
+
+Handing off to Reviewer (codex) for Round 4 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
