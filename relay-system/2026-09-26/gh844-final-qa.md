@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -205,5 +205,26 @@ All in `4b69c423`; the artifact is regenerated as `git diff 241bfcce 4b69c423`.
   - `CHANGELOG.md` now says "Full-gate reconcile runs that day took 57–60 minutes (jobs 57.0 and 59.7)".
 
 Handing off to Reviewer (codex) for round 3, the last in the cap.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+
+Basis: S1 is resolved. The hosted-extract provenance is present in both the seeded tree and diff, the CHANGELOG now distinguishes run and job durations, and the retained evidence supports DoD (a)–(d). No unresolved Blocker or Should remains. Approval covers this docs/evidence packet; the harness still owns the subsequent gate and commit.
+
+swept file: no
+
+Scope: read the full supplied diff, all four current plans, the complete revised checker and witness recipe, the original checker/recipe, witness logs and provenance; inspected the hosted metadata and parsed Small telemetry and the ledger read-only. This is not an exhaustive audit of historical CHANGELOG/SQL content. No additional pre-existing defect requiring a change was established in the reviewed files. No git command, suite, pytest or executable fixture was run.
+
+- **[Pass] S1 closed — the missing receipt is supplied.** `TESTS-RESULTS/2026-09-26+GH-831/provenance.jsonl:1` names the three run IDs, API run/jobs endpoints and fields, log acquisition command, approximate fetch time, source head, exit 0 and `phase3-hosted-runs.jsonl`. It explicitly discloses its retrospective creation. The diff contains that new file. `CHANGELOG.md:7` now says “reconcile runs that day took 57–60 minutes (jobs 57.0 and 59.7)”. No further fix requested.
+  - Read-only probe command: `python3 -`, parsing this receipt and its artifact, asserting the receipt exists and its `+++ b/` path is in the seeded diff, asserting three nonempty metadata rows and exit 0, then recomputing intervals with `datetime.fromisoformat`. Exit **0**. Decisive output: `receipt exists=True diff includes receipt=True rows=3`; `36247260339 run=57.2 job=57.0 success`; `36271811800 run=59.9 job=59.7 success`; `36276061201 run=19.2 job=19.1 success`. This is retained-evidence validation, not a fresh GitHub fetch.
+
+- **[Pass] Small evidence and operator authority remain consistent.** `TESTS-RESULTS/2026-09-26+GH-591/wave-9fd2d88543f9f52e2e40b2cb8fc4771b08440ff6/provenance.jsonl:1` attributes the Small gate to PR 840/run 36276061201, records tier 2, 73 suites and 76/76. The same `python3 -` probe asserted nonempty telemetry, checked SHA-256 against the receipt, and summed suite durations; exit **0**, `hash match=True suite events= 75 sum seconds= 942.276`, summary `passed: 76, failed: 0, total: 76, envelope_drift: none`. This supports 15.7 minutes and preserves the round-1 timing findings. `PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md:257` leaves D1 with the operator; no suite membership is changed.
+
+- **[Pass] GH-844's scoped correction and retained witnesses stand.** `prs-definition-check-v2.py.txt:35`, `:41`, `:45` and `:48` detect the missing heading, bound the glossary, reject outside entries and reject duplicate entries; round 1 records the corresponding read-only probe. `witness-script-v2.sh.txt:18`, `:22`, `:24` and `:40` latch unexpected results/unapplied mutations and return the aggregate. `witnesses-v2.log:43` onward records v2 rejecting the move and v1 accepting it, ending in `AGGREGATE: PASS`; `witnesses-v2-selftest.log:53` onward records `UNEXPECTED` and `AGGREGATE: FAIL`. Their exit statuses are retained at `TESTS-RESULTS/2026-09-26+GH-833/provenance.jsonl:8`. The non-goal correction is at `PROJECT/2-WORKING/GH-833-PRS-DEFINITION.md:13`. These are source/retained-log findings; a fresh executable witness run is **[Unverified — needs clone run]** in this turn.
+
+- **[Pass] Scope and lifecycle remain intact.** The diff adds only docs/evidence and ledger changes; original r0/r1 checker, recipe and log paths are untouched, and GH-833 provenance only appends. The probe extracted destination paths from the artifact, included the omitted `releases.db`, and passed them to `bash utils/ci-route.sh push`: exit **0**, `route=docs`, `tier=1`, `tier_reason=docs-only`. Its SQLite `mode=ro` query returned `(844, 'In progress', 'PROJECT/2-WORKING/GH-844-PRS-EVIDENCE-HYGIENE.md', 20, 10, 50, 90)`, agreeing with the capture's frontmatter, Status table and rating at `:34`; the SQL diff retains the writer's add/repoint/update receipts.
+
+Relay closed (Approved), no further turn needed. The token is completed with the env-pinned tick; the harness owns the one-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
