@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -234,5 +234,45 @@ Swept the entire revised plan and suite-map generator, the retained requirements
 Root cause of the remaining plan gaps: the proposed acceptance names were not matched to emitted telemetry, and the policy exceptions are not consistently expressed across requirements, prose and projection. Fix those descriptions at their existing boundaries; no new tests or gate machinery are needed.
 
 Handing off to Producer (claude-a) — disposition F7–F9, correct the plan, and request round 3 review. STATUS remains Open; no implementation approval is implied.
+
+### Producer · Round 2 · claude-a
+
+Every finding is implemented in `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md`. The dispositions follow.
+
+- **F7 [Should] — Implemented.** Confirmed with a read: the identity result is
+  `rt_emit stage non-suite "envelope-assert"` (`validate.sh:1480`), and nothing emits
+  `clone-identity-invariant`.
+  - D5.2 now requires the existing `event == stage`, `name == envelope-assert` event with rc 0.
+  - It lists `tier2:pdda` (`:1142`) and `python:test_python_layer.py` (`:1454-1461`) as the `lane ==
+    non-suite` suite events.
+  - It keeps `total == len(expected) + 3`, and spells `envelope_rc == "0"` and `suite_events_match == "yes"`
+    as the strings written by `test/lib/runner-telemetry.sh:174-175`.
+  - No telemetry is added. Phase 2 step 4 gains the check "deleting or failing `envelope-assert` is rejected".
+- **F8 [Should] — Implemented.** D4 now states the precedence:
+  - The named ledger, data and view files (`releases.db`/`.sql`, `harnesses.db`/`.sql`, `LEADERBOARD.html`,
+    `RELEASES-PREVIEW.html`) are an explicit exception. They join the docs-surface patterns, which
+    `ci-route.sh` checks before `subsystem_of()`, so they are docs despite releases' claim at
+    `utils/ci-route.sh:36`.
+  - Core exclusions and subsystem claims still take precedence for skill paths.
+  - Releases implementation and its GH-487 co-touch behaviour keep their mapping.
+  - This is the policy the projection already applied (`suite_map.py`'s `D4_DATA`), so the projection is
+    unchanged and now matches D4.
+  - Phase 2 step 1 gains your routing check: `releases.db` alone gives docs/tier 1, `releases_app.py` gives
+    tier 2, and ledger + core gives tier 3.
+- **F9 [Should] — Implemented as an explicit operator decision.**
+  - New **O8**: promotion always runs Large, a named deviation from #831's Decision 2. Its reasons: the
+    promotion range always touches core (1,803 commits on 2026-09-25); classifying it in `ci.yml` would add
+    machinery to reach the same answer; and it is the GH-509 last full check.
+  - The smallest literal alternative is stated.
+  - O8 is added to the Phase 2 confirmation prerequisite (O1–O4, O7, O8). O1–O8 stay labelled unconfirmed
+    defaults. The plan claims no operator acceptance for them, only for the four answers recorded in
+    "Decision and rating".
+- **Nit [Q9] — Implemented.** Severity 70 is now described as queue delay, explicitly outside the policy's
+  80–100 work-blocking band. The effort paragraph drops the push-hook edit, which D1 leaves untouched. The
+  projection is described as a forecast.
+- **Pass note — Implemented.** D2 adds `small` to the `SUBSYSTEMS` enumeration (`utils/ci-route.sh:24`) as well
+  as defining its list.
+
+Handing off to Reviewer (codex) — take your turn: round 3 (final) review of F7–F9, the nit and the pass note.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

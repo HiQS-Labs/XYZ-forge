@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan review round 1 (FAIL, 1 blocker + 5 shoulds) dispositioned: every finding implemented. Final suite dispositions (8 off), the projection re-run under D4/D5, a single-run D5 with an exact completeness rule, and a corrected rollback. | Codex plan review round 2. Phase 1 after approval; Phase 2 after the operator confirms O1–O4 and O7. |
+| Codex plan review round 2 (FAIL, 3 shoulds + 1 nit) dispositioned: D5 now checks the emitted `envelope-assert` stage, ledger files get an explicit docs exception ahead of subsystem claims, promotion is O8, and the rating prose is corrected. Round 1's six findings were implemented earlier. | Codex plan review round 3, the last. Phase 1 after approval; Phase 2 after the operator confirms O1–O4, O7 and O8. |
 
 ## Table of contents
 
@@ -62,15 +62,16 @@ defaults, not yet confirmed.
 
 **Rating `rated 85/70/75/40` (2026-09-25).**
 
-- **Severity 70.** Every merge waits for a 61–76-minute hosted run, and a red in any suite withholds the
-  merge's closeout. That is work-blocking but recoverable; nothing is lost, so it sits below the crash and
-  corruption band.
+- **Severity 70.** This is a queue delay, not a work-blocking defect. Every merge waits for a 61–76-minute
+  hosted run before the next can land, and a red in any suite withholds the merge's closeout until a re-run.
+  Nothing is lost and no work is blocked indefinitely, so it sits below the policy's 80–100 band for crashes,
+  corruption and work-blocking defects.
 - **Priority 85.** The operator asked for this now, and it gates every other merge.
 - **Appeal 75.** An interpretation of the operator's stated preference ("we have to start to enforce adding no
   more tests", "radical refactoring"), not a score they gave.
-- **Effort 40.** It touches `validate.sh`, `utils/ci-route.sh`, `githooks/pre-push`, `utils/py/wave_reconcile.py`,
-  `utils/py/express.py`, several existing suites that pin today's behaviour, the root rules, and about 20
-  skills. That is one to two days.
+- **Effort 40.** It touches `validate.sh`, `utils/ci-route.sh`, `utils/py/wave_reconcile.py`,
+  `utils/py/express.py`, three existing suites that pin today's behaviour, the root rules, and about 20
+  skills. The push hook is unchanged. That is one to two days.
 
 **Recurrence (14-day windows).**
 
@@ -271,7 +272,7 @@ tiers where the operator's complaint is, the hosted run after each merge, using 
 |---|---|---|---|
 | `githooks/pre-push` (a fast pre-check, unchanged) | docs gate (~1.5 min) | the area's tier-2 suites | the full registry |
 | Hosted reconcile after each merge (qualifies the landing) | `validate.sh --sequential --subsystem small`: **one** run | `validate.sh --sequential`: the full registry (O7) | `validate.sh --sequential` |
-| Promotion (`ci.yml` boundary on `main`) | — | — | `validate.sh --sequential` (unchanged; the classifier is not consulted) |
+| Promotion (`ci.yml` boundary on `main`) | — | — | `validate.sh --sequential` (unchanged; the classifier is not consulted, O8) |
 
 - **Where the classifier decides.** `utils/ci-route.sh` picks the tier at the push hook and at the hosted
   reconcile. Promotion always runs Large.
@@ -284,6 +285,8 @@ tiers where the operator's complaint is, the hosted run after each merge, using 
 
 - `SUBSYSTEM_TESTS_small` in `utils/ci-route.sh` lists the 73 Small suites (R2, `disposition == SMALL`). It is
   the one definition of Small.
+- `small` is also added to the `SUBSYSTEMS` enumeration (`utils/ci-route.sh:24`). The listing and validation
+  loop (`:52-67`) reads only enumerated names (Codex r2 pass note).
 - `validate.sh --subsystem small` already runs any listed subsystem through the tier-2 path
   (`validate.sh:934-940`).
 - The only `validate.sh` edit adds `small` to the `--subsystem` case that sets `T2_PYTEST` (`:939`), and
@@ -303,14 +306,21 @@ tiers where the operator's complaint is, the hosted run after each merge, using 
   `ci-workflow.sh` (Codex r1, Q5 pass).
 
 **D4 — Classifier (`utils/ci-route.sh`).** These join the docs surfaces, so they route to tier 1 and
-route=docs:
+route=docs. Precedence is explicit (Codex r2, F8), and D4 adds each item to the docs-surface patterns:
 
 - skill files: `skills/**`, except under `relay-xyz`, `relay`, `relay-automation`, `merge-cleanup`,
   `express` and `jog`, and except paths `subsystem_of()` claims;
 - ledger and data files: `releases.db`, `releases.sql`, `harnesses.db`, `harnesses.sql`;
 - generated views: `LEADERBOARD.html`, `RELEASES-PREVIEW.html`.
 
-Core exclusions and subsystem claims take precedence. The push hook, CI's route and `--auto` follow
+How precedence works:
+
+- **The named ledger, data and view files are an explicit exception.** They are added to the docs-surface
+  patterns, which `ci-route.sh` checks before `subsystem_of()` in the tier-2 membership case. So they are docs
+  even though `subsystem_of()` also claims `releases.db`/`.sql` for releases (`utils/ci-route.sh:36`).
+- **For skill paths, core exclusions and subsystem claims take precedence over the docs exception.**
+- **Everything else keeps its existing mapping.** Releases implementation (`utils/py/releases_app.py` etc.)
+  stays tier 2, and its dedicated-test co-touch behaviour (GH-487) is unchanged. The push hook, CI's route and `--auto` follow
 automatically. Unchanged:
 - everything that fails closed today (core surfaces, unmapped code, empty diffs);
 - the `test/` edit rules, including the GH-487 exception (R1).
@@ -330,12 +340,15 @@ receipt entry per landing, exactly as today.
    - `tier == 2`.
    - The shell suite events are the events with `lane == sequential`. Their names are unique, and equal the
      expected Small list exactly, with no more and no fewer. Every `rc` is 0.
-   - The non-suite events include `tier2:pdda`, `python:test_python_layer.py` and
-     `clone-identity-invariant`, each with rc 0.
+   - The `lane == non-suite` suite events include `tier2:pdda` (`validate.sh:1142`) and
+     `python:test_python_layer.py` (`:1454-1461`), each with rc 0.
+   - The identity check is the existing `event == stage`, `name == envelope-assert` event (`:1480`), with rc 0.
+     It is not a suite event. No telemetry is added (Codex r2, F7).
    - The Python layer actually ran: `total == len(expected) + 3`. The 3 are the always-counted identity check
      (`validate.sh:1514`), the Python layer and `tier2:pdda` (`:1515-1519`). `validate.sh` excludes a skipped
      Python layer from `total`, so the zero-rc skip event at `:1454` cannot satisfy this.
-   - `passed == total`, `failed == 0`, `envelope_rc == 0`, `suite_events_match == yes`.
+   - `passed == total`, `failed == 0`, `suite_events_match == "yes"`, and `envelope_rc == "0"`, a string as
+     written by `test/lib/runner-telemetry.sh:174-175`.
 3. **Durable replay** (Codex r1, F2).
    - The receipt entry records `tier: 2`, the gate string `validate.sh --sequential --subsystem small`, and
      the expected list.
@@ -349,8 +362,9 @@ receipt entry per landing, exactly as today.
    because a landing still has exactly one qualifying entry.
 5. **Logging.** The log line names the tier and the gate string.
 
-**D6 — Promotion is unchanged.** The boundary job still runs `validate.sh --sequential`, now the registry
-minus the 8 off suites. GH-509 becomes two rules:
+**D6 — Promotion is unchanged (O8).** The boundary job still runs `validate.sh --sequential`, now the
+registry minus the 8 off suites. #831's Decision 2 has the classifier choose at promotion too. This plan
+deliberately does not, and records that as O8 for the operator. GH-509 becomes two rules:
 
 - a landing is qualified on hosted macOS by the run D5 selects;
 - promotion needs a hosted macOS full-registry run for the exact commit.
@@ -371,7 +385,7 @@ minus the 8 off suites. GH-509 becomes two rules:
 ## Decisions for the operator
 
 **Proposed defaults, not yet confirmed.** Phase 1 does not depend on them. Phase 2 starts only after the
-operator confirms or changes O1–O4 and O7.
+operator confirms or changes O1–O4, O7 and O8.
 
 - **O1 — Pushes keep today's cheap checks for Small and Medium. Default: yes.** The hosted run after the merge
   runs the tier. Running Small at every docs push would cost about 6.5 minutes locally instead of 84 seconds,
@@ -389,6 +403,14 @@ operator confirms or changes O1–O4 and O7.
   not act on it. Recommend closing it as superseded by #831.
 - **O7 — The hosted reconcile qualifies Medium merges with the full run, not Small plus the area. Default: yes.**
   This keeps one run per landing (D5), at the cost of about 43 extra minutes on 1–4 merges a month.
+- **O8 — Promotion always runs Large; the classifier is not consulted. Default: yes.** This is a deviation
+  from #831's Decision 2, which has the classifier choose at promotion.
+  - A promotion covers every merge since the last one: 1,803 commits on 2026-09-25. That range always touches
+    core, so the classifier would pick Large anyway.
+  - Classifying `main..development` inside `ci.yml` would add machinery to reach the same answer.
+  - The promotion run is also the GH-509 witness, the last full check before a release.
+  - If the operator wants the literal requirement, the smallest form is a `ci-route.sh` classification of the
+    promotion range in the boundary job, with Large for anything but tier 1.
 
 **Expected effect** (hosted sequential; R2, R3): 32–42% of merges qualify through the Small run in about 18
 minutes instead of 61. The rest stay at about 61. The average falls from about 61 minutes to about 44–47, or
@@ -412,13 +434,18 @@ This lands first and alone, so agents see the freeze before the gate change is r
 
 ## Phase 2 — Tiers (gate code PR)
 
-This starts after the operator confirms O1–O4 and O7.
+This starts after the operator confirms O1–O4, O7 and O8.
 
 1. `utils/ci-route.sh`: add `SUBSYSTEM_TESTS_small` (D2), the Medium list additions (D3), and the D4 docs
    surfaces.
    → expect: `test/ci-route.sh` updated to the new tier table and counts. Recorded red controls:
    - removing a Small member fails it;
    - dropping a D4 exclusion (`merge-cleanup` skill code routed to tier 1) fails it.
+
+   Recorded routing check (Codex r2, F8):
+   - `releases.db` alone gives `route=docs`, `tier=1`;
+   - `utils/py/releases_app.py` gives tier 2, releases;
+   - `releases.db` + `relay-automation/relay-drive.sh` gives tier 3.
 2. `validate.sh`: add `small` to the `--subsystem` case for `T2_PYTEST`/`T2_PDDA`, and remove the 8 off entries
    from `TESTS`.
    → expect:
@@ -433,6 +460,7 @@ This starts after the operator confirms O1–O4 and O7.
    checks against real Small telemetry from step 2:
    - the complete run qualifies;
    - removing `tier2:pdda` is rejected;
+   - deleting or failing the `envelope-assert` stage is rejected;
    - removing the Python event, or substituting the skipped-Python shape, is rejected;
    - a duplicated shell event is rejected;
    - a missing Small suite is rejected;
