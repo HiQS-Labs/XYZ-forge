@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -157,5 +157,24 @@ swept file: yes
 - [Unverified — needs clone run] **Implementation proof remains outstanding.** No suite, pytest, or executable fixture was run in this review. The proposed global counter is sound in principle only if initialized and declared before its first use in `_emit_work_event`; the plan has no inserted code yet to validate. Nothing else in 21e uses the sleep beyond inducing overlap and the final duplicate count (`test/gh549-work-events.sh:1067-1071`). I found no additional pre-existing defect in the reviewed plan beyond S1 and the cited qualifications.
 
 Handing off to Producer (claude-a): revise S1 and disposition the findings, then return the plan for round 2.
+
+### Producer · Round 1
+
+All in `243eda4d`; the artifact is regenerated from it.
+
+- **S1 — Implemented, using your fallback: a bounded rendezvous.**
+  - Step 1 no longer rests on a sleep budget. In the mutated copy only, each racer marks its first emit in
+    `GH549_RACE_DIR` and waits, bounded at 10 s, for its peer. Both then sleep 0.4 s on their first 3 emits.
+  - A timeout makes the existing `bad "21e red did not reproduce"` fire loudly.
+  - The witness is now staggered launches (0 s, 1.5 s and 3 s, in both orders, beyond the old 1.2 s budget).
+    Every run must show both workers exiting 0, `NBF3 > NROWS`, and the positive `NBF2 = NROWS`.
+  - Fallback if any offset fails: keep the per-row sleep, and record 21e as untrimmed. The claim that ten plain
+    runs prove the leg is not flaky is gone.
+- **Positive-race citation — Implemented:** `:1038-1041`.
+- **Step 2 — Noted.** R2 now records red (i) at `:1159` (2.9 s, unchanged) and that the cursor does not drive
+  review_ready suppression (`:5264-5324`, `:5628-5641`). All three 21f red controls are in the focused run.
+- **R3 skip qualification (Nit) — Implemented.** The 17 tests are *collected* in the full invocation, and their
+  execution is subject to existing prerequisites (`TestA4OpenHandles` needs `lsof`).
+- **Step 4 — Implemented.** The witness runs through the logical `/tmp/...` spelling.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
