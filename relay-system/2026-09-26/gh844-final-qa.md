@@ -227,4 +227,12 @@ Scope: read the full supplied diff, all four current plans, the complete revised
 
 Relay closed (Approved), no further turn needed. The token is completed with the env-pinned tick; the harness owns the one-file commit.
 
+
+### Attestation · relay-drive — 2026-09-26T22:56:23Z
+task: RELAY-gh844-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: ce37a38e1d3a2a5c088cafcbd85c2797763d7b4b
+added-range: 21418+4287
+added-sha256: 745668c7a79f301e3d5bb3b33bde5bdb0f070438523291d5040a52d2c1a131c3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
