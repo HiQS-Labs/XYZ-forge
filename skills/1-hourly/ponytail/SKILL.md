@@ -118,7 +118,9 @@ loop, a parser, a money/security path) leaves ONE runnable check behind, the
 smallest thing that fails if the logic breaks: an `assert`-based
 `demo()`/`__main__` self-check or one small `test_*.py`. No frameworks, no
 fixtures, no per-function suites unless asked. Trivial one-liners need no
-test, YAGNI applies to tests too.
+test, YAGNI applies to tests too. Where the repo forbids new tests
+(XYZ-forge: `AGENTS.md` *No new tests*, GH-831), the check is an existing suite or a manual check recorded
+with the change, never a new test file.
 
 ## Counter-example
 

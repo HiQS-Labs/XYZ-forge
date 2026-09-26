@@ -109,7 +109,7 @@ Channel a pragmatic senior engineer: build the simplest, shortest, most durable 
    - Extending an existing abstraction beats standing up a parallel, siloed system that will silently drift.
 3. **Deliberate Shortcuts & Runnable Checks:**
    - Mark deliberate minimal simplifications with an explanatory comment (e.g. `// ponytail: sqlite single-thread, revisit if throughput exceeds threshold`).
-   - Every non-trivial change leaves behind **one runnable check** (an assert-based check, unit test, or integration probe).
+   - Every non-trivial change leaves behind **one runnable check** (an assert-based check, unit test, or integration probe). Where the repo forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), that check is an existing suite or a recorded manual check.
 
 ---
 

@@ -112,7 +112,7 @@ Apply Ponytail to engineer the **least-mechanism, foundationally sound resolutio
 4. **Frozen Twin Rule (GH-308):** Behavior fixes belong in the authoritative Python twin under `utils/py/`, NOT the frozen `.sh` fallback. If an emergency edit to a `.sh` twin is truly warranted, add the mandatory commit trailer:
    `Frozen-twin-exception: <path> — <reason>`
 5. **No Static Comment Traps (SOP §3b):** Static security guards read comments. Never write banned syntax (e.g. piped grep or credentials) inside explanatory comments.
-6. **Leave One Runnable Red Control:** Every non-trivial fix must leave behind a runnable test/assertion that proves the defect is resolved and fails when mutated.
+6. **Leave One Runnable Red Control:** Every non-trivial fix must leave behind a runnable test/assertion that proves the defect is resolved and fails when mutated. In XYZ-forge (`AGENTS.md` *No new tests*, GH-831) that check lives in an existing suite or is recorded as a manual check under `TESTS-RESULTS/`, never a new suite.
 
 ---
 

@@ -104,7 +104,8 @@ you merely ran and can no longer show counts as no claim at all.
 **A check that cannot fail is not a check.** A passing assertion is evidence only once you have seen
 it fail: mutate the thing it guards — break the code, transpose the fix, delete the value — and watch
 it go red. If you cannot make it fail, it is decorative, and it is worse than nothing because it
-reports confidence it never earned. This is the precise way this principle fails while looking
+reports confidence it never earned. Witness the failure on an existing suite or record it as a manual check.
+Never add a suite to do it; see the *No new tests* rail. This is the precise way this principle fails while looking
 satisfied: you *did* verify, and the verification was hollow. Three examples from GH-377/GH-379, all
 of which passed cleanly before they were mutated — an `awk` range that terminated on its own first
 line, `not matches -- "$pat"` where the helper already supplied `--` so the check searched for the
@@ -131,6 +132,19 @@ Most edits are small and reversible. Do not manufacture ceremony for a rename, t
 local change.
 
 ## Repo-specific rails
+
+- **No new tests (GH-831, operator decision 2026-09-25).** This covers three things:
+  - Do not add a new `test/` suite or a new entry in `validate.sh`'s `TESTS` registry.
+  - Do not add new gate machinery: guards, lanes, runners or telemetry stages.
+  - Do not add a test to enforce this rule.
+
+  Verify a change with the existing suite that covers it, or with a manual check recorded under
+  `TESTS-RESULTS/<date>+GH-<n>/` with its `provenance.jsonl`. Edit an existing suite only to keep it truthful
+  when the behaviour it pins changes. A red control (see *Verified beats plausible*) is witnessed on an
+  existing suite or recorded as a manual check. Reviewers treat a new test file as a finding.
+
+  The gate is being cut to Small/Medium/Large tiers under [#831](https://github.com/HiQS-Labs/XYZ-forge/issues/831).
+  #815, #816, #817 and #819 are superseded; do not implement them.
 
 - **This repo's purpose is to keep a long-horizon marathon under load — and that is a work-selection
   filter, not a slogan.** The harness is only proven by work long enough, parallel enough, and

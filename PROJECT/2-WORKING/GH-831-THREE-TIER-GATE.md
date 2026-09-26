@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan review done. Codex round 3 passed every technical question and escalated only for the operator's decisions on O1–O4, O7 and O8. The operator accepted all six on 2026-09-25 ([relay](../../relay-system/2026-09-25/gh831-plan-review.md)). | Phase 1: the test-freeze rules as a docs-only PR. |
+| Phase 1 built: the *No new tests* rail in `AGENTS.md`, the principle 13 change, repo-scoped rule text in 13 skills + `SOP.md`/`ARCHITECTURE.md`, `/express` using an existing suite, GH-732 deferred as superseded, pointers on #805/#732. Recorded check `phase1-rule-check.log` PASS (run 1 caught a gap in radar). The `relay-automation/`, `relay-xyz` and `.github/` lines move to Phase 2, where the full gate runs anyway. | Phase 1 QA gate: Codex final review of the diff, then the docs-gate push and the PR. |
 
 ## Table of contents
 
@@ -429,7 +429,13 @@ is felt.
 This lands first and alone, so agents see the freeze before the gate change is reviewed.
 
 1. Add the `AGENTS.md` rule and the principle 13 change (D7), and make the R4 (A)/(B) rewrites across the
-   root docs and skills. `express.py` waits for Phase 2.
+   root docs and skills. `express.py` waits for Phase 2. So do the (A) lines on full-gate paths:
+   `relay-automation/README.md:38-40`, `relay-automation/CONTRACT.example.md:59`,
+   `skills/1-hourly/relay-automation/SKILL.md:63`, the `relay-xyz` QA-brief line, and
+   `.github/pull_request_template.md:9`.
+   - Shared skills say "where the repo forbids new tests (XYZ-forge, GH-831)", because they are deployed
+     machine-wide and other repos keep their own policy.
+   - `/express`, which exists only here, states the rule unconditionally.
    → expect: `grep` for the R4 phrases in the edited files finds none. The result is recorded in
    `TESTS-RESULTS/2026-09-25+GH-831/`.
 2. Cut GH-732's parked ledger row as superseded by #802/#831 with the `releases_app.py roadmap` verbs.

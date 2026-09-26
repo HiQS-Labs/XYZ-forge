@@ -162,7 +162,9 @@ When reviewing a bug fix, apply the four debug mantras rigorously:
 
 1. **Mantra 1 — Reproduce reliably:**
    - Verify there is an automated regression test reproducing the original defect.
-   - If the regression test is missing, write one or require it before approving.
+   - If the regression test is missing, write one or require it before approving, unless the repo
+     forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831). There, require the existing suite that
+     covers it, or a recorded manual repro.
 2. **Mantra 2 — Trace the fail path:**
    - Trace from the crash or incorrect output back to the root cause origin.
    - **The Symptom-Fix Trap:** Actively scrutinize whether the fix merely patches symptoms at the
@@ -222,7 +224,7 @@ Classify every necessary adaptation or pivot on the repository's shared scale:
 │                 │ - Defensive parameter checks     │ - Implement & test     │
 │                 │ - Fixing a typo or broken regex  │ - Record in ledger     │
 │                 │ - /ponytail least-mechanism diff │ - Drive forward move   │
-│                 │ - Adding missing negative tests  │                        │
+│                 │ - Negative tests, if repo allows │                        │
 ├─────────────────┼──────────────────────────────────┼────────────────────────┤
 │ COSTLY          │ - Re-architecting shared schema  │ PREPARE ROLLBACK & ASK │
 │                 │ - Breaking public API contracts  │ - Formulate 2 options  │
@@ -295,7 +297,9 @@ exact `file:line` or symbol references.
   *Requires resolution before merge/approval.*
 - ⚠️ **`[Should]`**: Architectural gaps, missing test coverage / negative controls, non-optimal complexity,
   missing error logging, unhandled edge cases, **or non-DRY duplicate logic / redundant utility functions.**
-  *Strongly recommended improvements.*
+  *Strongly recommended improvements.* In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), a
+  missing-coverage finding asks for an existing suite or a recorded manual check, and a new test file in
+  the diff is itself a `[Should]`.
 - 💡 **`[Nit]`**: Style, documentation, variable naming, minor comment cleanups. *Non-blocking suggestions.*
 - ✅ **`[Pass]`**: Confirmed correct execution paths with firsthand citations, verified test results,
   and passing mutation checks.

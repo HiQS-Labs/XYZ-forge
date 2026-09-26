@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-25 — No new tests, and the gate moves to three tiers: rules first (GH-831, Phase 1)
+
+The operator ruled that agents stop adding tests, and that the gate be cut to Small, Medium and Large tiers
+with non-core suites turned off (#802 decision; tracked in #831). This first phase changes only rules and
+skill text. The rule is written into the skills that produce tests, so no guard suite is needed:
+
+- `AGENTS.md` gains a *No new tests* rail: no new `test/` suites, registry entries or gate machinery.
+  Verification uses an existing suite or a manual check recorded under `TESTS-RESULTS/`.
+- `GUIDING-PRINCIPLES.md` principle 13: a red control is witnessed on an existing suite or recorded, never by
+  adding one.
+- `/express` names the existing suite that covers a fix instead of a new dedicated one.
+- The instructions in thirteen skills and `SOP.md` that asked for new tests now defer to a repo's no-new-tests
+  rule. The skills are deployed machine-wide, so other repos keep their own policy.
+- GH-732's parked ledger row moves to Deferred as superseded, and #805 and #732 point to #831.
+
+The plan (`PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md`) passed three Codex review rounds on its technical
+content. The operator accepted its six proposed defaults. Its recon found that turning suites off saves
+seconds (8 suites), not minutes. The saving comes from routing docs, ledger and skill merges (32–42% of
+merges) to an ~18-minute hosted Small run instead of the ~61-minute full run. That lands in Phase 2.
+Rollback: revert this commit; it is text and one ledger row.
+
 ## 2026-09-25 — `main` promoted and 0.9.0 "Cargo" released (GH-822)
 
 First promotion of `main` since 2026-08-17, and the repository's first GitHub Release. `main` was fast-forwarded from `29144118` to the reconciled `development` tip `a076b1b1` (1,803 commits), which was the operator's "delete and recut" done as the equivalent fast-forward because old `main` had no commits of its own. Admin enforcement was relaxed only for the gated push and restored identical to its snapshot. The GH-509 witness passed on the exact commit: `MACOS-BOUNDARY: green`, `validate.sh --sequential` 422/422 in 78 min. That run only fits because GH-823 raised the boundary cap from 45 to 120. The GH-784 promotion QA receipt (Codex, Approved) preceded it. 0.9.0 "Cargo" was published on that commit as Latest after trimming its unfinished items to 0.6.0 Front-Door, and the ledger now records its release URL and `shipped`. Reversibility: Costly; `main` is fixed forward, never force-pushed.

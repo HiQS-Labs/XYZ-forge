@@ -132,7 +132,7 @@ python3 utils/ate/scripts/checkin.py --log "$SCRATCH/error_log.jsonl"
 ```
 Monitor failure clusters, category distributions (`auth_failure`, `config_error`, `env_failure`), and throughput. If a valid defect is identified:
 1. **File a GitHub tracking issue immediately (auto-file — §1; do not wait to be prompted).** Ambiguous findings: offer to file rather than holding them silently.
-2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix and regression test.
+2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix, verified with the existing suite that covers it (no new test suites; GH-831).
 3. If complex, record findings on the issue for architectural planning.
 
 ### Step 7: Commit Artifact Receipts
@@ -231,7 +231,7 @@ teardown — the same rule as `AGENTS.md` §6.
 1. **Pre-create the budgeted follow-up lanes at plan time.** Before implementation starts,
    open the three issues you already know you will need: a *review-findings* lane (the
    builder/reviewer split guarantees one), a *dogfood-findings* lane (dogfooding exists to
-   manufacture findings), and a *conformance* lane (new contracts always owe fixtures).
+   manufacture findings), and a *conformance* lane (new contracts owe a conformance check against existing suites or a recorded manual check; no new test suites, GH-831).
    Follow-ups then arrive as scheduled phases instead of surprises. Evidence this works:
    the GH-280 plan's follow-up record listed six items before execution began; all six
    landed in that order, with review findings landed on top.
