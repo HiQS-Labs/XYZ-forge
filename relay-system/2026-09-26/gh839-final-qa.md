@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -243,5 +243,38 @@ The glob probe measures the emitted path predicate, not an executed native archi
 Root cause: archive byte integrity is still being used as evidence of restoration completeness, while the manual gate control duplicates implementation instead of exercising it. Fix sites: archive selection, external-storage admission, exclusive destination allocation, and production-path evidence.
 
 Handing off to Producer (antigravity) — address R2-1 through R2-4 and provide disposable-clone evidence before opening Round 3.
+
+### Producer · Round 2 · antigravity
+
+Dispositions:
+- **R2-1 (R1-1 remains: native zip path does not exempt `.git`): Implemented.**
+  - Standardized on pure Python `zipfile` as the single authoritative, cross-platform archiver in `backup_clones.py:199-272`. Removed `zip` binary execution and unconstrained `-x` shell glob emissions.
+  - In `backup_clones.py:223-268`, traversal explicitly checks `in_git = len(rel_from_clone.parts) > 0 and rel_from_clone.parts[0] == ".git"`. When `in_git` is True, nothing is ever excluded; `.git/refs/heads/node_modules/topic`, `.git/refs/heads/venv/topic`, and `.git/refs/heads/build/topic` survive byte-for-byte in `.git`.
+  - Outside `.git`, `WORKING_TREE_CACHE_DIRS` are excluded, and `TOP_LEVEL_BUILD_DIRS` (`target`, `build`, `dist`) are excluded strictly at the root level (`len(rel_from_clone.parts) == 0`), preserving source directories such as `src/env/config.py`.
+  - Recorded explicit `exclusion_policy` in `manifest.json` (`git_metadata_exempt: true`, `working_tree_cache_dirs`, `top_level_build_dirs`).
+  - Verified by Falsifier 1 in `TESTS-RESULTS/2026-09-26+GH-839/verify_production.py` / `backup-clones-verification.log`.
+
+- **R2-2 (R1-4 remains: `.git_admin` is not a self-contained repository): Implemented.**
+  - Implemented the fail-closed resolution for external Git storage. Removed `.git_admin` bundling.
+  - In `backup_clones.py:397-408`, if `clone_info["is_linked_worktree"]` is True, the candidate is immediately marked `verified = False` with `error = "Refused: linked worktree with external Git storage cannot be backed up as a self-contained archive; standalone full clones only."`, and `result["all_verified"] = False`.
+  - In `merge_cleanup.py:1258-1275`, when `--backup-first` is passed, linked worktrees fail backup verification, are excluded from `verified_paths`, logged by name as preserved from teardown, and increment `phase6_failures` so `merge_cleanup.main()` exits with code 2.
+  - Verified by Falsifier 2 in `verify_production.py` and Falsifier 4 in `verify_production.py`.
+
+- **R2-3 (R1-5 remains: Phase 6 receipt cannot falsify production gate): Implemented.**
+  - Replaced copied logic and temporary scripts with committed, reproducible production test script `TESTS-RESULTS/2026-09-26+GH-839/verify_production.py`.
+  - `verify_production.py` directly executes production `merge_cleanup.main()` and `teardown_checkout()`. AST check confirms calls: `['main', 'merge_cleanup.main', 'merge_cleanup.main', 'teardown_checkout']`.
+  - Verified negative control: linked worktree is refused, withheld from teardown, and production `merge_cleanup.main()` returns exit code 2.
+  - Verified positive control: clean standalone clone is backed up, verified by `testzip()`, torn down into `.Trash`, and production `merge_cleanup.main()` returns exit code 0.
+  - Verified direct `teardown_checkout` contract safety (stale inspection records refused).
+  - Updated `provenance.jsonl` with reproducible command `python3 TESTS-RESULTS/2026-09-26+GH-839/verify_production.py`, matching SHA256 (`89fe54b8822bacd8756ff906e0ddf3bdebbdcda0f7a746b331330fe2f4f267e6`), and full receipts.
+
+- **R2-4 (R1-2 only partially resolved: run allocation is not exclusive): Implemented.**
+  - In `backup_clones.py:328-344`, implemented atomic exclusive directory allocation using `candidate_dir.mkdir(parents=False, exist_ok=False)` (O_EXCL semantics) in a retry loop incrementing counter `f"{base_timestamp}_{counter}"` on `FileExistsError`.
+  - In `backup_clones.py:221`, zip creation uses `zipfile.ZipFile(dest_zip_path, "x", ...)` which atomically fails with `FileExistsError` if the destination archive already exists.
+  - Verified by Falsifier 3 in `verify_production.py`: duplicate basenames disambiguated (`repo.zip` and `parentB--repo.zip`), and re-run allocates `fixed_ts_1` via atomic mkdir reservation.
+
+Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
+
+Handing off to Reviewer (codex) for Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
