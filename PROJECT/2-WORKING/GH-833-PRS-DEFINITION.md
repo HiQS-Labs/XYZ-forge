@@ -210,7 +210,7 @@ The edits are at `58256426`. The base red controls ran against `af4fef27`. Every
 | V2, tier | `route=docs tier=1 docs-only` on the committed diff; with `relay-automation/README.md` appended, `tier=3` | `v2-v4.log` |
 | V3, reader suites | `releases-skill` 40/0, `gh609` 33/0, `gh436` 180 tests OK (243 s), in a disposable clone. HEAD and porcelain were unchanged across the run. The other `AGENTS.md:370` identity fields were not retained before it; they were checked after it (clean) | `v3-reader-suites.log`, `v3-identity-and-pdda-baseline.log` |
 | V4, PDDA | no errors. Warnings compared in the disposable clone, base `af4fef27` vs `cd777ca7`: no new content warning. See the note below | `v2-v4.log`, `v3-identity-and-pdda-baseline.log` |
-| V5, push self-check | owed at push | — |
+| V5, push self-check | the pre-push hook took the documentation gate: GREEN in 59 s at `24ad92cc` (rebased onto `f098ab43`) | `push-gate-24ad92cc.log` |
 
 Notes against the plan:
 - **V4 warnings (final QA r1 F1).** The base-vs-head diff shows two changes:
