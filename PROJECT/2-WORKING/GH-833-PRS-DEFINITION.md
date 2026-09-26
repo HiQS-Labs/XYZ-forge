@@ -270,3 +270,7 @@ and pointers (DoD (d)), so they are left for a follow-up issue, which is the ope
   `utils/releases-merge-resolve.sh` if needed.
 - **Rollback:** revert the commit. There is no state to migrate. Deployed skills pick up the text on the
   operator's next skills-army-hq deploy.
+
+## Merge evidence
+
+- PR #840 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

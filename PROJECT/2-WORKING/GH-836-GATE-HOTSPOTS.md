@@ -268,3 +268,7 @@ about 4.2 minutes.
 ## Merge evidence
 
 - PR #838 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #840 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
