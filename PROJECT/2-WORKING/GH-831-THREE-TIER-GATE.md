@@ -2,12 +2,12 @@
 gh_issue: 831
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/831
 title: "GH-831: no new tests, and three gate tiers (Small/Medium/Large) chosen by ci-route for push, per-merge reconcile and promotion; non-core suites off"
-status: Active — plan under Codex review (2-WORKING)
+status: Active — Phase 1 merged (#832); Phase 2 approved and gated, PR open (2-WORKING)
 created: 2026-09-25
 updated: 2026-09-25
 owner: operator (via /start-task)
 doc_type: feature
-branch: feat/gh831-three-tier-gate
+branch: feat/gh831-phase2-tiers (Phase 1: feat/gh831-three-tier-gate, merged as f832ef5a)
 non_goals:
   - Deleting test files; "off" keeps them on disk.
   - New gate machinery of any kind (lanes, runners, telemetry, guard suites).
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 approved: Codex final QA passed in round 2, attested at reviewed head `baeb72d4` ([relay](../../relay-system/2026-09-25/gh831-phase1-final-qa.md)). Round 1's two text fixes landed: start-task's general limits restored, and ci-debug's clone recipe made to fail closed. | Phase 1 PR: push through the hook, open the PR, merge after its hosted checks. Then Phase 2 on a fresh branch from `development`. |
+| Phase 2 approved. Codex final QA passed in round 2, attested at reviewed head `c49f0caa` ([relay](../../relay-system/2026-09-25/gh831-phase2-final-qa.md)). Round 1 had one finding, text only: core skills' markdown keeps its docs routing. The build: the Small list and D4 routing, the 8 suites off, the reconcile qualifying by tier, and the docs. The first real Small run passed 76/76 in 1,233 s locally, and the step-4 reconcile check passes 19/19 against its telemetry, with red controls. See "Phase 2 — what the build found". | The full gate through the push hook, in a disposable clone. The first run, at `9060ff09`, was red on `relay-pkg-freshness` (413/414) because the packaged `relay-automation/README.md` changed and the tarball was not rebuilt. It was regenerated in `1d069cc9`, and the re-run was GREEN, 414/414 in 944 s. PR #834 is open. CodeRabbit's three text findings are fixed in `7338ca94`, and the full gate re-ran GREEN, 414/414 in 938 s. Next: the operator's merge, then Phase 3. |
 
 ## Table of contents
 
@@ -325,7 +325,9 @@ How precedence works:
 - **The named ledger, data and view files are an explicit exception.** They are added to the docs-surface
   patterns, which `ci-route.sh` checks before `subsystem_of()` in the tier-2 membership case. So they are docs
   even though `subsystem_of()` also claims `releases.db`/`.sql` for releases (`utils/ci-route.sh:36`).
-- **For skill paths, core exclusions and subsystem claims take precedence over the docs exception.**
+- **For skill paths, core exclusions and subsystem claims take precedence over the new skill-files exception.**
+  Text files (`*.md`, `*.txt`) keep their existing docs routing, checked first, and the existing full-gate
+  surfaces (`relay-xyz`, `relay-automation`) still win over it (Codex Phase 2 r1, F1).
 - **Everything else keeps its existing mapping.** Releases implementation (`utils/py/releases_app.py` etc.)
   stays tier 2, and its dedicated-test co-touch behaviour (GH-487) is unchanged. The push hook, CI's route and `--auto` follow
 automatically. Unchanged:
@@ -493,6 +495,49 @@ The operator confirmed O1–O4, O7 and O8 on 2026-09-25.
    full because `validate.sh` changed.
 
 **Phase 2 QA gate:** Codex final review, the full gate green, and the recorded checks from steps 1–4.
+
+### Phase 2 — what the build found
+
+Evidence is in `TESTS-RESULTS/2026-09-25+GH-831/` (`phase2-*`, `small-run-9ecf2071*`, `provenance.jsonl`).
+
+- **Step 1.**
+  - `releases.db` alone gives `route=docs` and `tier=1`, and `utils/py/releases_app.py` gives tier 2 for
+    releases. `releases.db` with `relay-automation/relay-drive.sh` gives tier 3.
+  - One helper, `is_docs_surface()`, replaces the two copies of the docs-pattern list.
+  - Of the tracked non-markdown `skills/` files, exactly 43 move from tier 3 to tier 1
+    (`phase2-d4-skill-files-to-tier1.txt`), and no other skill path changes tier.
+  - Red controls: dropping a Small member, or the `merge-cleanup` exclusion, turns `test/ci-route.sh` red.
+  - **A consequence to know.** A ledger dump no longer counts as releases code for GH-487's co-touch rule. So
+    an edit to a releases test that travels with only `releases.sql` now gives tier 3, not tier 2. That is the
+    fail-closed direction.
+  - `LEADERBOARD.html` and `RELEASES-PREVIEW.html` are not tracked today; the pattern covers them if they are
+    ever committed.
+- **Step 2.**
+  - `./validate.sh --list` has 411 entries and none of the 8.
+  - `--sequential --subsystem small` ran in a disposable clone at `9ecf2071`: 73 suites plus `tier2:pdda`, the
+    Python layer and the identity check. Result: 76/76, `run_set` 73, 1,233 s, identity unchanged.
+- **Step 3.** `gh306` is green with the 8 in `EXEMPT`. An unregistered probe file turns it red.
+  - `test/gh35-test-tiers.sh`'s drift fixture now creates subdirectories, because a Medium addition lives at
+    `synthetic/gh102-telemetry-schema.sh`. It was red on exactly that before the fix.
+- **Step 4.** `phase2_reconcile_check.py` replays the real Small telemetry and passes 19/19. It checks:
+  - every rejection the plan lists;
+  - that a receipt survives a later change to the Small list;
+  - that a receipt with the wrong list, tier or gate does not match;
+  - selection: docs and ledger landings pick Small; a batch with a core landing, a missing classifier or an
+    unreadable diff picks the full run.
+
+  Two red controls each disable one rule in a scratch copy of the module, and the check turns red. The
+  existing `gh425`, `gh740` and `gh421` suites stay green unchanged. `gh425`'s fixture has no classifier and a
+  root-commit landing, so it takes the fail-closed full path.
+- **Step 5.** `gh267` passes 113/113.
+- **Step 6.** `pdda.sh run` reports 0 errors. The `validate.sh` banners at `:1066-1068` ("NEVER promotion
+  evidence") stay as they are, because they are still true: the Small run qualifies a landing, not a promotion.
+  - The D7 `relay-xyz` review-brief rule is item 7 of its review scope. Four of the five lines Phase 1
+    deferred are rewritten. The fifth, `relay-automation/CONTRACT.example.md:59`, is left as it was. It is a
+    fictional contract for a *target* repository, whose own artifacts create `test/widget-empty-state.sh`, and
+    XYZ-forge's rule does not govern that repository (CodeRabbit on #834).
+  - Per CodeRabbit on #834, `AGENTS.md` keeps the rules and points to `ROUTER.md` for the tier details, and
+    the local Small command is labelled a self-check.
 
 ## Phase 3 — First hosted evidence
 

@@ -37,7 +37,7 @@ the loop still degrades to the existing manual nudge. For the current headless p
 
 The default Python implementation dispatches advisors in `utils/py/consult.py`. Add the
 vendor invocation there, reuse `guarded_with_timeout` and the existing result aggregation,
-and register a regression suite in `validate.sh`. Account-specific preflight and result
+and extend the existing consult suite that covers it (`test/consult.sh`); no new suites (GH-831). Account-specific preflight and result
 parsing belong in a helper shared with that vendor's relay adapter. The Bash fallback is
 frozen; do not extend its dispatch table. Relay adapters retain the shared `RelayTurnLib`
 contract for claims, scoped writes, cleanup, and handoff.

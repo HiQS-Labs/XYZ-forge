@@ -14,7 +14,10 @@ usage: ./validate.sh [--parallel N | --sequential | --print-mode]
                 --throttle | --quiet-cpu          2 workers under nice — quiet-machine mode (GH-35)
                 --burst                           full-core width, cores-2 capped 8 — unattended speed
   tiers (GH-35) --tier 1|2|3                      1 = docs gate · 2 = subsystem suites · 3 = full (default)
-                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems)
+                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems);
+                                                  `--sequential --subsystem small` runs the Small list:
+                                                  locally a self-check; in the hosted reconcile, the
+                                                  run that qualifies a docs/ledger/skill landing (GH-831)
                 --auto [base[.. head]]            classify the git diff, run the minimal safe tier
                 --paths-file <file>               tier 2 from a path list — what pre-push hands over
   environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
@@ -133,17 +136,11 @@ TESTS=(
   "gh308-frozen-twin-guard.sh"  # GH-308 (Python-authoritative twins: banner + committed-change guard)
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
-  "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
-  "gh778-review-code-skill.sh"    # GH-778 (review-code and review-PR ground-truth code review skill)
-  "gh798-status-skill.sh"         # GH-798 (status skill and review-code DRY / helper audit)
-  "gh779-radar-ci-health.sh"    # GH-779 (radar: trunk CI health, new-guard re-run on open PRs, regressed-after-fixed table)
-  "gh781-wam-radar-seed.sh"    # GH-781 (whack-a-mole seeds candidate clusters from recent radar reports)
+  # GH-831: eight skill-text suites are turned off (files kept in test/); their one record is
+  # the EXEMPT list in test/gh306-registry-bidirectional.sh. Do not re-register them here.
   "gh788-python-path-space.sh"    # GH-788 (stub launcher + quoted interpreter survive a spaced Python path; ratchet)
   "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)
   "gh777-inventory-ratchet.sh"  # GH-777 (inventory ratchet: shrink-only script/connect guards)
-  "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
-  "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
-  "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
   "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, expand-contract migrations, containment)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
@@ -937,6 +934,9 @@ if [ -n "$SUBSYSTEM" ]; then
   [ -n "$T2_TESTS" ] || _err2 "subsystem '$SUBSYSTEM' resolved to no suites — refusing a zero-test gate"
   TIER=2
   case "$SUBSYSTEM" in releases|pdda) T2_PYTEST=1 ;; esac
+  # GH-831 D2: small is what the hosted reconcile runs for a docs landing, so it also runs the
+  # PDDA docs gate and the Python layer — the tier-2 qualification rule requires both.
+  if [ "$SUBSYSTEM" = small ]; then T2_PYTEST=1; T2_PDDA=1; fi
   echo "validate.sh: tier 2 — subsystem $SUBSYSTEM (GH-35)"
 fi
 

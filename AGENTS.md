@@ -195,6 +195,9 @@ local change.
   restores the old full-core width), auto-sized to the host, and announces a
     sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
     the evidence record — it stays sequential and does not call `validate.sh`.
+  - **Three tiers qualify a landing (GH-831).** After a merge, the hosted reconcile qualifies each
+    landing with one run chosen by its tier, and promotion always runs the full registry. The tiers,
+    their commands and the suites turned off are in `ROUTER.md` (command rails); those suites stay off.
   - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
     deliberately, not reflexively — they skip the local boundary even when hosted CI later runs.
     Draft-review publication (GH-487) is a legitimate bypass use and is NOT merge readiness: an
@@ -407,7 +410,9 @@ local change.
   job is `continue-on-error: true`: its red means *portability drift*, not breakage, and must not be
   reported as a broken commit. Two consequences that bite: **never defer a test run to CI** — CI is
   advisory and tests the wrong OS; and **a green local run is self-reported**, so it does not qualify a
-  promotion. Promotion needs a hosted **macOS** run for that exact commit. When a claim really is about
+  promotion. Two hosted **macOS** rules follow (GH-831): a landing on `development` is qualified by the
+  reconcile run its tier selects (the tiers are in `ROUTER.md`), and promotion needs a hosted
+  full-registry run for that exact commit. When a claim really is about
   Linux, the canary is the right instrument and its red is authoritative.
 - **Commit to the QUEUE; re-anchor, don't rabbit-hole (GH-45).** A wave's committed lane list *is* the
   active commitment — after each lane attempt, re-read it before acting further. A driven lane that
