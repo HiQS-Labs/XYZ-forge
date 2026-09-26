@@ -190,4 +190,12 @@ Scope disclosure: read the complete seeded diff, complete ci-debug, express and 
 
 Relay closed (Approved), no further turn needed. The harness owns the relay-file commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-09-26T03:10:21Z
+task: RELAY-gh831-phase1-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: baeb72d412034e7b8512eed418b0fb480dc18ad9
+added-range: 15627+2984
+added-sha256: 583fda2a668ce8ac736f0b27b60a4930c2c386e04d7487b8d8cd3012893e01ed
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
