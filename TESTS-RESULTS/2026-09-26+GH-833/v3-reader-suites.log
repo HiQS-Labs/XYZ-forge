@@ -1,0 +1,12 @@
+# V3 in disposable clone <scratchpad>/v3clone
+identity before: 582564264ff009091f69ef62f113050c6c31f36a porcelain=0
+releases-skill.sh rc=0 1s :: 
+gh609-sdlc-agent-gaps.sh rc=0 0s :: 
+gh436-merge-cleanup.sh rc=0 243s :: merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (5/6) merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (6/6) 
+identity after: 582564264ff009091f69ef62f113050c6c31f36a porcelain=0
+
+# summaries
+releases-skill.sh: releases-skill: 40 pass, 0 fail
+gh609-sdlc-agent-gaps.sh: gh609-sdlc-agent-gaps: 33 pass, 0 fail
+gh436-merge-cleanup.sh: Ran 180 tests in 242.194s / OK
+PATH: venv python + /opt/homebrew/bin first

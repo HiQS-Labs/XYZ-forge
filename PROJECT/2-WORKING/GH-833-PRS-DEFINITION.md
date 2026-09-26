@@ -2,7 +2,7 @@
 gh_issue: 833
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/833
 title: "docs: codify PRS — the Product Release System (the RELEASES ledger) — as the third part of the XYZ Forge / PDDA / PRS trinity"
-status: Active — plan under review (2-WORKING)
+status: Active — implemented; final QA (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan review round 2: Codex accepted F2 and F3 and asked that `PROJECT/PDDA.md` and the skills keep a pointer to the definition, by absolute URL. That and a `provenance.jsonl` are in this revision. | Plan review round 3. Then the edits, the witnesses and final QA. |
+| Plan approved in round 3 (attested `dbce9916`). The row is admitted (In progress, accepted start). The edits are in `58256426`. V1–V4 are green and all six red controls fire (Results). | Final Codex QA. Then the push through the docs gate and the PR. Merge after #838's reconcile finishes. |
 
 ## Contents
 
@@ -36,6 +36,7 @@ goal: >
 - [Recon](#recon)
 - [Plan](#plan)
 - [Verification](#verification)
+- [Results](#results)
 - [Merge and the hosted Small run](#merge-and-the-hosted-small-run)
 - [Risk and rollback](#risk-and-rollback)
 
@@ -193,6 +194,33 @@ No new suite or registry entry (AGENTS.md, *No new tests*). Manual checks go to
 - **V4:** `utils/pdda/pdda.sh run` reports 0 errors.
 - **V5, the push gate:** the push takes the pre-push hook's tier-1 docs gate. That is a local push
   self-check, not qualification. The landing is qualified only by the hosted Small run after merge.
+
+## Results
+
+All at `58256426`, recorded in `TESTS-RESULTS/2026-09-26+GH-833/` with four `provenance.jsonl` records.
+
+| Witness | Result | Evidence |
+|---|---|---|
+| V1, definition order | 14/14 pass. At base: 0/14 | `witnesses.log`, `red-controls-base.log` |
+| V1 red control | ROUTER's trinity line removed: ROUTER fails, rc 1 | `witnesses.log` |
+| V1b, one definition and its links | pass. At base: 15 failures | `witnesses.log`, `red-controls-base.log` |
+| V1b red controls | all four fail with rc 1: entry deleted; ROUTER anchor broken; entry restated in the FAQ; a skill URL anchor broken | `witnesses.log` |
+| V2, tier | `route=docs tier=1 docs-only` on the committed diff; with `relay-automation/README.md` appended, `tier=3` | `v2-v4.log` |
+| V3, reader suites | `releases-skill` 40/0, `gh609` 33/0, `gh436` 180 tests OK (243 s), in a disposable clone with its identity unchanged | `v3-reader-suites.log` |
+| V4, PDDA | no errors; the 32 warnings were already there | `v2-v4.log` |
+| V5, push self-check | owed at push | — |
+
+Notes against the plan:
+- **`/releases`.** The spelled-out form is a new first sentence at line 8, just before "Treat the release
+  ledger", not inside it.
+- **Wording.** No original word is removed, except "four" → "five" in the glossary heading.
+  - `AGENTS.md:173` keeps its bold and its colon, and adds "it is the Product Release System, PRS" inside
+    the parenthesis.
+  - start-task keeps "the existing XYZ RELEASES vocabulary and writer", and adds a parenthesis.
+  - No test, tool or workflow anchors on any rewritten phrase (`git grep` of each over `test`, `utils`,
+    `validate.sh` and `.github`).
+- **An observation, not changed.** `10days`' frontmatter description was already 1,546 characters, above the
+  usual 1,024. The spelled-out form adds 25. No repo validator checks the length.
 
 ## Merge and the hosted Small run
 
