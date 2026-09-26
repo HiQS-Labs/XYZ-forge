@@ -574,3 +574,7 @@ If either fails, use the rollback below.
   - `ci-local.sh`, `ci.yml` and the promotion run lose the 8 off suites from `TESTS`.
   - Vendored `.xyz/` copies get the new lists on their next sync.
   - Installed skills change only when the operator re-deploys through `skills-army-hq`.
+
+## Merge evidence
+
+- PR #832 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
