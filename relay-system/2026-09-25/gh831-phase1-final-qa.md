@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -120,5 +120,35 @@ Write findings in the Log per the turn rules. Set `STATUS: Approved` only if the
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: Phase 1 substantially implements the freeze, but a shared-skill edit changes policy outside the intended repo scope. Reading beyond the changed lines also exposed an unsafe pre-existing clone recipe. Both need small text corrections, not new tests or machinery.
+
+swept file: no
+Scope disclosure: reviewed the seeded diff and surrounding instructions, including the complete express and ci-debug skills; this was not an exhaustive read of every historical entry in the large changed documentation files. No clean whole-source sweep is claimed. The pre-existing defect found is F2.
+
+- [Should] **F1 — Preserve start-task's general scope limits.** At skills/1-hourly/start-task/SKILL.md:127-131, the rewrite removes “outside stated acceptance criteria” and “test footprint must scale to implementation size.” Those deletions affect every repo; the new conditional only governs the no-suite clause. Restore the original general scope/size wording and append the repo-specific exception separately. This is required by DoD (c).
+  Observed input: the removed text in .relay-artifacts/gh831-phase1.diff:458-471 includes “outside stated acceptance criteria; test footprint must scale to implementation size”; the replacement ends the general prohibition at “fuzzers;”.
+  Affected scope: all consumers of this shared skill, including repos that permit new tests.
+  Falsifier: compare the old and new paragraphs with the XYZ-forge conditional omitted; the acceptance-scope and proportional-footprint requirements should remain equivalent. They currently do not.
+
+- [Should] **F2 — Make the existing disposable-clone recipe fail closed.** skills/2-daily/ci-debug/SKILL.md:60-62 independently evaluates the timestamp for clone and cd, then installs hooks without checking either command. A clone spanning a second boundary selects a different cd destination; failed cd leaves execution in the original checkout before the suite instructions at line 67. Compute the destination once, quote it, and stop on clone/cd failure. This pre-existing defect is in an edited file and falls under the relay's sweep rule.
+  Observed input: the adjacent commands are “git clone . /tmp/XYZ-forge-ci-debug-$$-$(date +%s)” and “cd /tmp/XYZ-forge-ci-debug-$$-$(date +%s)”, followed by “bash githooks/install.sh”, without failure guards.
+  Affected scope: this recipe when clone completion crosses an epoch-second boundary, or clone/cd fails.
+  Falsifier: in a disposable full clone, a manual check with clone completion crossing a second boundary and with an injected cd failure must enter the single created destination or stop before hook installation/testing. No executable fixture was run here.
+
+- [Pass] **Rule and coverage:** AGENTS.md:136-147 explicitly covers suites, registry entries, gate machinery, manual evidence, and the narrow existing-suite edit exception. AGENTS.md:104-108 and GUIDING-PRINCIPLES.md:85 preserve witnessed-red evidence without creating a suite. PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:431-440 explicitly defers the full-gate-path rewrites. The other reviewed R4 rewrites select existing/manual evidence or condition the exception on repo policy. Existing gate execution requirements do not themselves require creating tests.
+
+- [Pass] **Express and machinery:** skills/2-daily/express/SKILL.md:33 and :127-129 prohibit new suites unconditionally and send an uncovered fix to start-task. Its command examples name an existing suite. utils/py/express.py:536-546 accepts an existing named file present in the registry text. The seeded diff's file headers contain documentation, skill text, evidence and releases.sql; there is no test file, registry edit, hook, guard or telemetry implementation.
+
+- [Pass] **Ledger:** .relay-artifacts/gh831-phase1.diff:402-425 changes GH-732's roadmap row and its two update receipts/events, with generation metadata earlier in that section. GH-831 rows are context, not changes. GH-732 becomes “Deferred · vision” / ⛔, records supersession, and retains textual and structured 55/40/50/70 ratings. Deferral does not falsely mark it shipped.
+
+- [Pass] **Recorded evidence and accuracy:** TESTS-RESULTS/2026-09-25+GH-831/phase1-rule-check-r1-fail.log records radar at zero and ends “FAIL”; phase1-rule-check.log records radar present and ends “PASS”. provenance.jsonl:3 attributes both logs. This manual record fits AGENTS.md:141-144. CHANGELOG.md:3-23 and the plan's Status row describe Phase 1 and leave runtime tier work to Phase 2.
+
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixtures or gate run was executed here. The supplied pdda-phase1.log ends “PDDA run complete: no errors, 32 warning(s) to review”; this is supplied evidence, not an independently reproduced gate result. Live #805/#732 pointer edits were not independently queried.
+
+Handing off to Producer (claude-a): disposition F1/F2, make the minimal text corrections, and request the next reviewer turn. The harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
