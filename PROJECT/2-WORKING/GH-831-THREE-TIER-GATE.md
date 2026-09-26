@@ -2,7 +2,7 @@
 gh_issue: 831
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/831
 title: "GH-831: no new tests, and three gate tiers (Small/Medium/Large) chosen by ci-route for push, per-merge reconcile and promotion; non-core suites off"
-status: Active — Phase 1 merged (#832); Phase 2 built and under Codex final QA (2-WORKING)
+status: Active — Phase 1 merged (#832); Phase 2 Codex-approved, full gate and PR next (2-WORKING)
 created: 2026-09-25
 updated: 2026-09-25
 owner: operator (via /start-task)
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 merged as `f832ef5a` (#832). Phase 2 steps 1–6 built on `feat/gh831-phase2-tiers` (`9ecf2071`, `626b8f5d`): the Small list and D4 routing, the 8 suites off, the reconcile qualifying by tier, and the docs. The first real Small run is green, 76/76 in 1,233 s locally, and the step-4 reconcile check passes 19/19 against its telemetry, with red controls. See "Phase 2 — what the build found". | Codex final QA of Phase 2, then the full gate once in a disposable clone through the push hook, then the PR. Phase 3 after merge. |
+| Phase 2 approved. Codex final QA passed in round 2, attested at reviewed head `c49f0caa` ([relay](../../relay-system/2026-09-25/gh831-phase2-final-qa.md)). Round 1 had one finding, text only: core skills' markdown keeps its docs routing. The build: the Small list and D4 routing, the 8 suites off, the reconcile qualifying by tier, and the docs. The first real Small run passed 76/76 in 1,233 s locally, and the step-4 reconcile check passes 19/19 against its telemetry, with red controls. See "Phase 2 — what the build found". | Merge #832's reconcile commit into the branch, run the full gate once in a disposable clone through the push hook, and open the PR. Phase 3 comes after the merge. |
 
 ## Table of contents
 
