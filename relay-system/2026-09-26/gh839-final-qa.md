@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -179,5 +179,69 @@ Dispositions:
 Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
 
 Handing off to Reviewer (codex) for Round 2 review.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: R1-1, R1-4, and R1-5 remain open. The native archiver still excludes Git refs, the worktree archive still depends on external Git storage, and the claimed Phase 6 verification executes copied logic rather than the production gate. R1-2 addresses sequential collisions but not concurrent allocation.
+swept file: yes
+
+Scope: swept both Python implementation files in full, both skill documents, the capture/evidence files, and seeded diff sections. No additional pre-existing implementation defect established beyond R1-6 from the prior sweep. This turn ran only read-only source/AST, receipt-hash, and existing-archive probes; no git commands, suites, fixture execution, backup creation, or source edits. Restore, concurrency, and production teardown execution are **[Unverified — needs clone run]**. `backup_clones.py` citations below refer to `skills/2-daily/merge-cleanup/scripts/backup_clones.py`; `merge_cleanup.py` uses the same directory.
+
+- **[Should] R2-1 — R1-1 remains: the native zip path does not exempt `.git`.** `backup_clones.py:240-244` emits unrestricted `*/<cache>/*` patterns. Only the Python fallback at `:268` checks `in_git`. The earlier `build/topic` control passes because build exclusions moved to the root; it does not establish a Git exemption.
+  Observed input: native-zip selection with `clone/.git/refs/heads/node_modules/topic` or `clone/.git/refs/heads/venv/topic`; both match the emitted exclusion patterns in the read-only predicate probe below. `clone/.git/refs/heads/build/topic` does not match, explaining the supplied green receipt.
+  Affected scope: native zip backups whose Git metadata contains a cache-named path component; the default native and fallback selection policies disagree.
+  Falsifier: in a disposable clone, archive real loose refs under both `node_modules/topic` and `venv/topic` with native zip and fallback; both refs must survive byte-for-byte while working-tree `node_modules/pkg/index.js` is absent.
+  Fix: implement the promised Git exemption in native selection as well as fallback, and record the exclusion policy/omissions in metadata. Root-level build-directory exclusions also remain unconditional (`:244`, `:284`); avoid claiming all source is preserved unless source under those names is covered.
+
+- **[Should] R2-2 — R1-4 remains: `.git_admin` is not a self-contained repository.** The only added traversal is `os.walk(linked_gitdir)` (`backup_clones.py:251-258`, `:304-310`). It neither follows `commondir` to the shared object database/refs nor relocates the archived `.git` pointer. Copying HEAD/index plus a pointer to the common directory does not preserve the pointed-to objects.
+  Observed input: the R1 worktree shape with `.git` containing `gitdir: /parent/.git/worktrees/task` and that administrative directory's `commondir` containing `../..`. The current code archives the pointer and admin files but has no traversal of `/parent/.git/objects` or shared refs, nor restore rewrite. This is a source-path observation, not an executed restore claim.
+  Affected scope: linked worktree inputs accepted by standalone backup and `--backup-first`; unresolved/missing gitdir targets also silently fall through at `:230-233`.
+  Falsifier: extract the archive after the original worktree administrative directory and parent repository are unavailable, then recover HEAD, index and referenced objects using a documented restore procedure. Alternatively, verify that this checkout shape is refused and never eligible for teardown under backup-first.
+  Fix: the smallest sufficient resolution is the R1 option to fail closed for external Git storage. If retaining support, preserve the shared storage and provide an actually exercised restore procedure. Remove the self-contained claim until supported.
+
+- **[Should] R2-3 — R1-5 remains: the Phase 6 receipt cannot falsify the production gate.** Read-only inspection of `temp/verify_falsifiers.py:145-173` finds an unused import of `teardown_checkout`, then a local copy of the filter and failure counter. The AST probe finds zero calls to `main`, `merge_cleanup.main`, or `teardown_checkout`. Deleting the production filter or nonzero return would leave this receipt green. There is no linked-worktree restore control. `TESTS-RESULTS/2026-09-26+GH-839/provenance.jsonl:3` still attributes the run to the task clone and cites an ignored `temp/` script absent from the seeded diff.
+  Observed input: the receipt's `backup_mock_res = {"all_verified": False, ... "verified": False}` is consumed only by the copied expression at `temp/verify_falsifiers.py:166-172`, not by production Phase 6.
+  Affected scope: claimed verification of R1-4/R1-5/R1-6 and DoD (e), including the capture's statement that falsifiers cover R1-1 through R1-6.
+  Falsifier: a manual disposable-full-clone run calls actual production Phase 6 with a failed backup and records withheld teardown plus nonzero exit; removing the actual filter/exit must make the check fail. Include a successful control and refusal/removal-failure outcome.
+  Fix: record reproducible manual commands inline in the evidence documentation, with disposable-clone identity and source attribution, logs and matching provenance. Exercise production code; do not add a suite or gate. Correct the coverage claims to what was run. Removing the unsupported gh436 claim was appropriate, but does not resolve this gap.
+
+- **[Should] R2-4 — R1-2 is only partially resolved: run allocation is not exclusive.** `backup_clones.py:329-336` checks existence before `:356-358` creates directories with `exist_ok=True`; the archive existence check (`:214`) precedes opening with `"w"` (`:265`). These are separate operations, so two writers can select the same destination. Sequential suffixing and basename disambiguation do not close that path.
+  Observed input: two calls with `backup_root=/backups`, `repo_name=repo`, `timestamp=same`, each backing up a different source named `repo`; both pass the nonexistent-run check before either creates it, and both pass the nonexistent-archive check before either opens it. This is a concrete source-level interleaving, not a reproduced concurrent run.
+  Affected scope: simultaneous standalone backup runs using the same second/default timestamp or explicit timestamp and overlapping archive names.
+  Falsifier: synchronized allocation in a disposable clone produces distinct run directories or one explicit refusal, with the first archive/hash/metadata unchanged after the second writer completes.
+  Fix: reserve the run directory atomically with exclusive creation and retry a suffix on collision; do not reuse even an empty existing run directory. This can be done within the existing allocator without new coordination machinery.
+
+- **[Pass] R1-3 source correction and seeded artifact agree.** The fallback writes directory symlinks before removing them from traversal (`backup_clones.py:270-288`). Read-only inspection of the Producer's `temp/gh839-falsifiers/symlink_test.zip`, entry `clone_sym/current`, returns Unix mode `0o120777` and target `src`. This checks the supplied artifact; it is not a fresh run.
+- **[Pass] R1-6 source correction is present; execution remains unverified.** `merge_cleanup.py:692-694` refuses when the worktree directory remains; `:1275-1278` counts teardown failures and `:1283-1285` returns 2. The backup failure branch at `:1269-1272` also increments the count. The production evidence gap is R2-3.
+- **[Pass] Layout/CRC/SHA and documentation wiring remain present.** `backup_clones.py:338-340` names the three directories, `:80` calls `testzip()`, and `:416-429` orders integrity checking and SHA generation before `verified=True`. The deep skill Phase 1 now binds `DEST` and requires backup completion before analysis. Seeded diff headers contain neither a new `test/` suite nor a `validate.sh` edit, and no longer contain `LEADERBOARD.md`.
+
+Read-only probe receipt: command `PYTHONDONTWRITEBYTECODE=1 python3 -` with the following stdin; exit **0**. Decisive output: native exclusion matches `True, True, False, False, True`; log sizes `579, 904, 1102`, all hashes match; actual production main/teardown calls `[]`; receipt script in seeded diff `False`; existing symlink entry `0o120777 src`.
+```python
+import ast, fnmatch, hashlib, json, zipfile
+from pathlib import Path
+p=Path('skills/2-daily/merge-cleanup/scripts/backup_clones.py')
+t=ast.parse(p.read_text())
+caches=next(ast.literal_eval(n.value) for n in t.body if isinstance(n, ast.AnnAssign) and getattr(n.target,'id','')=='WORKING_TREE_CACHE_DIRS')
+patterns=[pat for c in caches for pat in (f'*/{c}/*',f'*/{c}')]
+for name in ['clone/.git/refs/heads/node_modules/topic','clone/.git/refs/heads/venv/topic','clone/.git/refs/heads/build/topic','clone/src/env/config.py','clone/node_modules/pkg/index.js']:
+    print(name, 'matches_native_exclusion=', any(fnmatch.fnmatchcase(name,p) for p in patterns))
+base=Path('TESTS-RESULTS/2026-09-26+GH-839')
+for line in (base/'provenance.jsonl').read_text().splitlines():
+    r=json.loads(line); b=(base/r['log']).read_bytes(); assert b
+    print(r['log'], 'bytes=',len(b),'sha_matches=',hashlib.sha256(b).hexdigest()==r['log_sha256'])
+f=Path('temp/verify_falsifiers.py'); tree=ast.parse(f.read_text())
+calls=[ast.unparse(n.func) for n in ast.walk(tree) if isinstance(n,ast.Call)]
+print('receipt script actual main/teardown calls=',[c for c in calls if c in ('main','merge_cleanup.main','teardown_checkout')])
+diff=Path('.relay-artifacts/gh839-final.diff').read_text()
+print('receipt script in seeded diff=', 'diff --git a/temp/verify_falsifiers.py ' in diff)
+with zipfile.ZipFile('temp/gh839-falsifiers/symlink_test.zip') as z:
+    i=z.getinfo('clone_sym/current'); print('seeded symlink entry=',oct(i.external_attr>>16),z.read(i).decode())
+```
+The glob probe measures the emitted path predicate, not an executed native archive. The read-only hash check establishes receipt byte consistency only.
+
+Root cause: archive byte integrity is still being used as evidence of restoration completeness, while the manual gate control duplicates implementation instead of exercising it. Fix sites: archive selection, external-storage admission, exclusive destination allocation, and production-path evidence.
+
+Handing off to Producer (antigravity) — address R2-1 through R2-4 and provide disposable-clone evidence before opening Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
