@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -236,5 +236,24 @@ All in `130804db`.
   appended as they run.
 
 Handing off to Reviewer (codex) for round 3, the last in the cap.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: The portable canonical pointers close the remaining F1 gap; the plan is ready for implementation. Approval is of the plan, not a claim that its future execution gates have passed.
+swept file: yes
+
+Read the entire seeded plan, including recon R1–R6, rating, all verification criteria, merge conditions and rollback. Applied the SWE and debug-mantra plan rubrics. No remaining material defects found, including in the pre-existing plan text. No source/artifact edits, git commands or suites were run.
+
+- **[Pass] F1 closed.** `.relay-artifacts/gh833-plan.md:144–153` now requires the absolute glossary URL in PDDA and all six skills, with nearby prose placements for frontmatter/recite uses. This preserves portability and DoD (c). `TESTS-RESULTS/2026-09-26+GH-833/prs-definition-check.py.txt:71–74` checks all seven portable pointers against the actual heading slug; the fourth mutation at plan line 185 targets a skill anchor. The definition remains in HOW-TO-USE's glossary, with expansion and pointers elsewhere.
+- **[Pass] Baseline witnesses and provenance.** Read-only command: `PYTHONDONTWRITEBYTECODE=1 python3 TESTS-RESULTS/2026-09-26+GH-833/prs-definition-check.py.txt "$PWD"`; exit 1, decisive output: `V1b: 15 failure(s)` (one missing entry, seven missing expansion paragraphs, seven missing portable pointers). A Python `Path.read_text()` scan over the check's nonempty 14-file ALL list, selecting each first `re.search(r'\bPRS\b', line)`, exited 0 with `V1 files=14 missing=10 bare=4`. `TESTS-RESULTS/2026-09-26+GH-833/provenance.jsonl:1` now records the base run, source/base identifiers, timestamp, exit code and artifacts. This establishes the retained baseline record, not independent attestation of its historical execution metadata.
+- **[Pass] Routing remains Small-eligible.** Probe: Python `subprocess.run(['bash','utils/ci-route.sh','push'], input='\n'.join(paths)+'\n', capture_output=True, text=True)` on the 14 docs/skills, CHANGELOG, working plan, releases.db/sql, this relay and four evidence files (23 nonempty paths). Exit 0: `route=docs tier=1 full_required=false`. Appending `relay-automation/README.md` (24 paths) exited 0: `route=full tier=3 full_required=true`. Supported by `utils/ci-route.sh:65–68` and `:336–337`; `utils/py/wave_reconcile.py:597–612` confirms classification of the pending-landings union. Final committed-diff classification remains an implementation obligation.
+- **[Pass] Scope, placements, rating and suite attribution.** The R2/R3 placements still match the cited prose, including `AGENTS.md:173`, `PROJECT/PDDA.md:948`, `ARCHITECTURE.md:406`, `README.md:145`, `skills/1-hourly/start-task/SKILL.md:240`, `skills/3-weekly/10days/SKILL.md:6` and `skills/3-weekly/end-of-week/SKILL.md:32`. Rating rationale at plan lines 44–51 follows start-task's policy at lines 248–251. The gh436 indirect reader is present at `test/gh436-merge-cleanup.py:865` and `test/gh534_phase_c_tests.py:523,877`; V3 appropriately requires a disposable full clone. No new registered suite or gate is planned.
+- **[Nit] Counting in Producer round 2.** The seven locally linked docs include HOW-TO-USE itself; the 13 other placements are six local docs plus seven portable placements. The plan/check lists already have the correct 14-file total; this arithmetic slip in the disposition requires no artifact change.
+- **[Unverified — needs clone run]** V3/V4/V5 and final hosted qualification are future work. Post-edit green checks and all scratch mutation controls remain execution obligations under plan lines 179–196. No present result is claimed for them. `gh issue view 833 --repo HiQS-Labs/XYZ-forge --json title,body` exited 1 with `error connecting to api.github.com`; scope was assessed against the supplied packet as permitted. The development glossary URL is intentionally prospective until merge (plan line 153).
+
+Root cause addressed: the planned distributed placements previously dropped the required canonical pointer; the revision fixes that contract at the documentation placements and their manual witness, without runtime changes.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may implement the approved plan and retain the specified execution evidence; final implementation QA is still required.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
