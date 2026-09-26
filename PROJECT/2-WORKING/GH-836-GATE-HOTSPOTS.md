@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — plan under Codex review, round 2 (2-WORKING)
+status: Active — implemented; final QA next (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon and a same-device baseline: `gh549` 346 s (124 passed) and `gh436` 292 s (180 passed), in a disposable clone. It traced the three hotspots to test-side causes, and the plan follows. | Codex plan review, then implementation on `fix/gh836-gate-hotspots`. |
+| Plan approved by Codex in round 2 (attested at `bae7c451`). Steps 1–4 and D2 (step 7) are implemented in `35ab75d2` and `4c5ee0bf`. Measured on the same device: `gh549` went from 346 s to 147 s and `gh436` from 292 s to 239 s. Every red-control witness passes. See Results. | Codex final QA, then the full gate once through the push hook, then the PR. Step 6, the hosted Small numbers, lands when that run exists. |
 
 ## Contents
 
@@ -167,8 +167,8 @@ witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-83
    - (a) a SKILL.md row deleted in a scratch copy fails the parity test;
    - (b) a named test forced to fail in a scratch copy still fails the `gh436` suite, now through collection.
 4. **`gh649`: `pwd -P` at line 4.**
-   → expect: green from a physical path. **Red control:** run it through the logical `/tmp/...` spelling,
-   not a physical path under the real directory `/tmp` points to: red before the fix, green after it.
+   → expect: green from a physical path. **Red control:** run it from a clone reached through the `/tmp` symlink,
+   not through the physical directory it points to: red before the fix, green after it.
 5. **Measure after.** Same device, same procedure as the baseline: `gh549` traced, `gh436` plain and
    `--durations`. The before/after table goes in this doc.
 6. **Hosted Small numbers (#836 step 2, #831 Phase 3).** When the first hosted Small run exists, record its run
@@ -196,6 +196,46 @@ witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-83
 
 **Expected:** `gh549` from about 346 s to about 130 s and `gh436` from about 292 s to about 243 s, locally.
 Hosted Small drops by roughly the same share, from ~18 minutes to ~12–13.
+
+## Results — 2026-09-26
+
+Same device, same procedure, one suite at a time, in disposable clones. The identity check before and after
+each run was clean. The evidence is in `TESTS-RESULTS/2026-09-26+GH-836/`: `baseline-*` at `9c5d294e`, and
+`after-*` and `witnesses.log` at `4c5ee0bf`.
+
+| Suite | Before | After | Where it went |
+|---|---|---|---|
+| `gh549-work-events.sh` | 346 s, 124 passed | **147 s**, 125 passed | 21e red control 124.8 s → about 12 s; the 21f backfills 68.8 + 38.0 s → about 10 s each |
+| `gh436-merge-cleanup.sh` | 292 s, 180 passed | **239 s**, 180 passed | The parity test (49.0 s) is out of the slowest list |
+| `gh649-pdda-migration.sh` | red under a `/tmp` clone | green | `pwd -P` |
+
+The +1 pass in `gh549` is the racers' crash check. Together the two suites fall from 638 s to 386 s locally,
+about 4.2 minutes.
+
+**Witnesses** (`witnesses.log`, with the script as `witness-script.sh.txt`):
+
+- **W1, the 21e race under staggered launches** (0, 1.5 and 3 s, both orders): 6/6 pass.
+  - Duplicates 277–279 against 275 rows. The positive race is exact at 275 = 275. No racer crashed.
+  - In every run one racer exited 4. That is the designed writer-lock refusal (`EXIT_LOCK_REFUSED`,
+    `utils/py/releases_app.py:91`), once the racers leave the shared rows. At base, the per-row sleep kept them
+    in lockstep, both exited 0 and every row was duplicated (550).
+  - The first after-run caught this: the "both exit 0" check I had added failed. The check now fails only on a
+    crash, meaning any exit code other than 0 or 4.
+- **W2, is the cursor advance load-bearing?** Legs 1–21f take 92 s with the advance and 104 s without it. So the
+  backlog replay it avoids is about 12 s, not the ~100 s of the per-event dispatch that step 2 removes. The
+  saving comes from turning dispatch off; the advance keeps the reconcile from paying a smaller replay.
+  Recorded, not asserted.
+- **W3a, a SKILL.md capability row deleted:** the parity test fails with `row missing: teardown-trash-only`
+  (rc 1).
+- **W3b, a SKILL.md-named test forced to fail:** the registered `gh436` wrapper exits 1 and names
+  `TestE6Gate.test_gate_red_prevents_the_merge`. The parity test alone still passes, because it checks
+  existence only; execution is the suite's.
+  - The first W3b attempt pointed at the wrong module, did not inject, and proves nothing. The log keeps it,
+    labelled as such.
+- **W4, `gh649` through the logical `/tmp` path:** `4bd8851a`'s version fails with `FAIL - resolver`; the fixed
+  version passes.
+- **D2:** `gh544-pre-push-gate` 103/103 and `relay-pkg-freshness` 3/3. The default skip is witnessed in the final
+  full gate's log.
 
 ## Verification and evidence
 

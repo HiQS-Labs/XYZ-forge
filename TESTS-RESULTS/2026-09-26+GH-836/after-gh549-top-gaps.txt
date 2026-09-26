@@ -1,0 +1,16 @@
+# gh549 after (4c5ee0bf), same procedure as the baseline; trace span 147s, 1711 lines
+   10.7s  line  1030  python3 <tmp>/app_noidem/releases_app.py --root <tmp>/fx_backfill_idem work backfill
+   10.4s  line  1045  python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_backfill_conc work backfill
+   10.3s  line   989  appd work backfill
+   10.1s  line   984  python3 <tmp>/app_nodry/releases_app.py --root <tmp>/fx_backfill_red work backfill --dry-run
+    9.9s  line   169  rr python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_interleave work backfill
+    9.7s  line   169  rr python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_rr_noexc work backfill
+    9.5s  line  1335  appk work backfill
+    7.5s  line  1091  wait 58419
+    5.1s  line   407  python3 <tmp>/dispatch_probe.py <tmp>/ledgerC/releases.db /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh549-work-e
+    4.5s  line  1088  python3 <tmp>/app_race/releases_app.py --root <tmp>/fx_backfill_race work backfill
+    3.0s  line  1009  python3 <tmp>/app_map/releases_app.py --root <tmp>/fx_backfill_map work backfill
+    2.9s  line  1184  rr python3 <tmp>/app_nosrc/releases_app.py --root <tmp>/fx_rr_nosrc work backfill
+    2.9s  line  1015  tail -1
+    2.8s  line  1377  appp work backfill
+    2.8s  line   169  rr python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_interleave work backfill
