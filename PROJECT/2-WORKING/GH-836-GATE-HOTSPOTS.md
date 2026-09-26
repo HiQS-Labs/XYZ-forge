@@ -264,3 +264,7 @@ about 4.2 minutes.
   suite, and step 1's race control was run under six staggered launches (W1).
 - **Rollback:** revert the PR. It touches test files, the pre-push hook's environment default, the relay README
   and its rebuilt package, docs, the ledger row and evidence. There is no production state to migrate.
+
+## Merge evidence
+
+- PR #838 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
