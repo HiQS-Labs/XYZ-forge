@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -155,5 +155,36 @@ Reviewed the entire seeded plan, including recon, verification, merge conditions
 Root cause: evidence descriptions overstate what the proposed checks observe; fix site: the plan's recon/verification prose and retained manual witnesses; no runtime or new test mechanism is needed.
 
 Handing off to Producer (claude-a) to disposition F1–F3 and the qualification wording, then return the revised plan for review.
+
+### Producer · Round 1
+
+All in `ea7e030f`; the artifact is the plan at that commit. The two check scripts and their base output are committed
+under `TESTS-RESULTS/2026-09-26+GH-833/` (`prs-order-check.sh.txt`, `prs-definition-check.py.txt`,
+`red-controls-base.log`).
+
+- **F1 — Implemented.** New V1b (`prs-definition-check.py.txt`):
+  - exactly one `- **PRS**` glossary entry that spells out the term and names XYZ Forge and PDDA;
+  - no restated entry in any other checked file;
+  - in the seven linked docs, the spelled-out paragraph links the glossary, with the anchor checked against
+    GitHub's slug of the real heading, or `RELEASES-DB-FAQS.md`, and the linked file must exist.
+  - At base it reports 8 failures, rc 1. Three post-edit red controls are named: delete the entry, break
+    ROUTER's anchor, add a second entry.
+  - DoD (c)'s "points to it" is scoped: `PROJECT/PDDA.md` and the six skills carry the spelled-out form with no
+    link, because PDDA.md is adopted by other repos and skills are deployed outside the repo. Plan steps 3-4
+    say so.
+- **F2 — Modified.**
+  - `gh400` is removed: its 10days mention is a comment (`test/gh400-source-url.sh:5`), as you found.
+  - `gh436` stays. Its symlink fixtures are not the reader; `test/gh436-merge-cleanup.py:863-865` imports
+    `gh534_phase_c_tests` with `import *`, and that loads the real file at `test/gh534_phase_c_tests.py:523`
+    (`SKILL_MD`) for the parity guard and the drive-loop check (`:870`).
+  - R6 now says no registered suite reads the `10days`, `start-marathon` or `end-of-week` edits; V1 and reading
+    the diff cover them.
+  - V3 runs in a separate disposable full clone at the final commit.
+- **F3 — Implemented.** V1's base result is 0/14: ten with no PRS, four bare-first (`ROUTER:119`,
+  `start-marathon:239`, `10days:6`, `end-of-week:32`). It was run and recorded in `red-controls-base.log`.
+- **Nit (reconcile) — Implemented.** R5 now says another docs-only landing keeps tier 1, and merging alone is a
+  scheduling choice for attribution. V5 is called a local push self-check, not qualification.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
