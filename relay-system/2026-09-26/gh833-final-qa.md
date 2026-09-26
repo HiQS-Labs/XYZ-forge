@@ -207,4 +207,12 @@ Read the complete regenerated seeded diff, the complete revised working plan and
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the already specified push/PR and qualification workflow; the token is completed with `done` per the approval instruction.
 
+
+### Attestation · relay-drive — 2026-09-26T21:53:00Z
+task: RELAY-gh833-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 1bcea1e9ba0d845325a17ee631805f86f24faaab
+added-range: 19379+4795
+added-sha256: b7296f6e280d87fcb88a8a55f2a338b3d78a6254795362da4d282e8843ce8495
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
