@@ -1,0 +1,147 @@
+merge	tier_as_merged	tier_no_test_edits	subject
+a0345e9c	3	1	fix(GH-808): scope gh251's nested gate runs to the cheapest .py tier-2 lane (−93.6% suite cost) (#82
+61fd2d89	1	1	chore(release): 0.9.0 "Cargo" shipped — record the GitHub Release and close the promotion (GH-822) (
+31a42867	1	1	chore(release): GH-784 promotion QA receipt and 0.9.0 Cargo trim — prepare the development → main pr
+61f09827	3	3	fix(ci): promotion boundary cap fits the suite — 45 → 120 min, pinned to wave-reconcile's cap (GH-82
+6f956294	3	3	Start marathon: reviewed preparation routing and dry-run workflow (#765)
+41c07aa4	3	3	fix(gate): suites survive a Python path with a space — quoted stub launcher, quoted fuzz interpreter
+0ae3452a	3	3	fix: repair four regressions from merge batch #791 (#794)
+93511f4f	3	3	marathon(/10days 2026-09-21): 12 lanes — vendor ESM, review-once oracle, merge-cleanup hosted lookup
+e4d7c17d	3	3	feat(GH-646): explicit task starts and confirmed endings — shared in-progress label through the road
+068d2994	3	3	fix(merge-cleanup): --exclude <PR#> drops the PR; poll post-landing UNKNOWN mergeability (GH-736 ite
+326e4812	3	3	fix(GH-773): gate RSS watchdog warns when ps is unreadable; never logs a fake 0MB peak (#782)
+322e2589	3	2	Restore baseline macOS gate suites for GH-764 (#766)
+147987dc	3	3	feat(governance): adopt prior-art recon, PR proof-of-done template, and inventory ratchet (#777) (#7
+83483a54	3	1	test: add agent-chorus-bridge failure diagnostics and a GET / ready poll (Refs #760) (#761)
+34072c86	1	1	intake(GH-768, GH-769): audits of releases_app.py and marathon_drive.py; capture #770-#775 (#776)
+adbcaa72	3	3	ci: upgrade GitHub Actions to Node 24 versions across all workflows (#754) (#755)
+8393a6a1	1	1	chore(pdda): retire 12 capture docs for closed issues; ledger rows reconciled (Refs #492) (#751)
+c0a9b899	3	3	feat(GH-749): marathon delivery — #720 review-once heading truth; #732 measurements, dated timing cl
+d3c220de	3	3	fix(hosted lane): publish survives a merge landing mid-run — receipts first, one --only-receipted re
+9c384240	1	1	feat(debug-mantra): add explicit Root Cause Analysis gate (GH-737) (#739)
+e565c0fe	3	3	fix(test, gate): agent-chorus legacy fixture dangles by construction; gate runs write no bytecode (G
+25c84cbd	1	1	intake(GH-732): capture Mid September CI/CD optimizations checklist + Codex accuracy QA relay (#734)
+5107b99d	1	1	skills(GH-724): marathon-triage drives end to end — recite block, drive loop, exit ladders, done rul
+ab3a75d5	1	1	intake(GH-720): capture review-once block-regex misgrade; park in ledger (#729)
+bd8c6950	3	3	fix(closeout): Jog carries the verified merge SHA; pre-merge receipt gate rejects contradictory outc
+39bb1392	1	1	feat(skills): /merge-cleanup-deep — read-only sub-agent triage of the checkouts /merge-cleanup prese
+a3125bfe	3	3	fix(ci): wave-reconcile.yml publish allowlist admits 1-INBOX capture promotions (GH-721) (#725)
+5e60cb01	3	3	feat(flightdeck): show established work and isolate invalid evidence (GH-673) (#719)
+d3dc6051	3	3	GH-712: offline Jev vs Tier-1/Gemma ATE triage replay — gates missed, shadow flag not started (#714)
+3ea01917	3	3	fix(marathon-plan, test): survive gh_number-NULL rows (GH-710); witnessed skips for forge-root-only 
+6928de21	3	3	pages: Skills page for the agent-driving skills; Model Catalog card → resolve.hiqs.ai (GH-700) (#706
+2707ddb0	3	3	feat(relay): offlane lookalike fix, reviewer probe env injection, and containment closeout (GH-661, 
+f4ac8860	3	3	feat(GH-698): PRS optimization — planner reads DB four-axis ratings, backfill 48 rows, F9 doc re-poi
+39a2865d	3	3	fix(express, tick): align express telemetry schema and add defensive Tick fold filter (GH-694) (#702
+1e434d58	3	3	feat(GH-648): marathon delivery — nine containment/aftermath lanes (two waves, all gates green) (#68
+7689a2ae	3	3	fix(skills): installers refuse to replace live symlinks; gate stops writing real HOME (GH-678) (#680
+cd030385	3	3	feat(GH-690): clone-retirement pointers at landing time (express, marathon_drive, start-task, jog) (
+91353ee0	3	3	fix(express): telemetry lives in .tick/express/, never inside tick's coordination log (GH-694) (#699
+9940c873	2	2	docs(reconcile): GH-693 implementation QA (agy PASS) + docstring nit (#696)
+31e9a29c	3	1	test(gh549): pin real-mock fixtures at the pristine ledger's tail; drop orphaned GH-505 intake dup (
+43cf4452	3	3	fix(reconcile): hosted lane alerts on red, catch-up skips a defective backlog item; gh53 fixture det
+3e65c369	3	3	fix(xyz-vendor): ignore only runtime subpaths when the target tracks .xyz/ (GH-644 part B) (#689)
+4af5bcfc	3	3	fix(xyz-vendor): terminate exclude/.gitignore before appending .xyz/ (GH-644 part A) (#685)
+55d8ab47	3	3	fix(relay): Reviewer may measure read-only; generalizations carry a falsifier (GH-681) (#683)
+0389dc6e	3	2	mini(GH-677): ship /unstuck in XYZ-mini (#679)
+7374a1d2	1	1	chore(skills): retire the forge's copy of the daily skill (GH-672 follow-up) (#675)
+480b76e9	1	1	chore: land stale local evidence — GH-349 consult record and GH-506 intake (#647)
+ee16f3ab	1	1	plan(GH-648): umbrella marathon — two waves, nine lanes for the headless turn-timeout family (#650)
+a604c678	3	3	fix(agy): isolate model-validation probe from caller checkout (GH-666) (#669)
+ef781146	3	1	test: repair GH642 fixture seeding and caller safety (#653, #665) (#671)
+011113f6	1	1	chore(evidence): land the GH-654 QA relay records from the gh654-offlane clone (#668)
+49e5b9a4	3	3	feat: publish standalone Skills Army mini (GH-620) (#622)
+24b387d6	3	1	skills(GH-660): port collection improvements to canonical + skills-army-hq sync.py drift gate (#664)
+74daa7d2	3	1	fix: complete GH-645 vendored tool lookup for ledger conflicts (#652)
+9e1e9bf4	3	3	GH-642: consumer-repo fruit — vendor excludes, Opus-budget warn, --force token auto-suffix, worktree
+689ce799	1	1	docs(GH-445): link the held-lane findings issue (#470) (#638)
+567d50df	1	1	feat(skills): End of Week governance review and kanban refresh (GH-606) (#637)
+c61b7f25	1	1	docs(GH-579): retain HiQS consumer integration registration and review scaffold (#636)
+29786dd0	1	1	docs(GH-522): retain issue-admission capture doc and feasibility recon (#634)
+a017a3a8	1	1	relay: retain and adjudicate DeepSeek recovery QA (GH-591) (#633)
+f28d2f04	1	1	docs(GH-591): retain PR #599 agy + DeepSeek QA evidence and adjudication (#632)
+a38d2248	1	1	docs(research): retain GH-547 / Needle-31 ModernBERT, TAWOS, and dataset-probe research records (#63
+d5c18633	3	3	fix(merge-cleanup, agent-chorus): land N PRs per run — emit after ff, wait for hosted reconcile; bin
+0b2769c3	3	1	merge-cleanup: soft collision edges, bounded+retried network calls, defer-and-continue, --resume (GH
+731ae5f0	3	3	feat(skills): umbrella — autonomous re-entry loops (GH-626) + SDLC edge-case contracts (GH-609) (#64
+106aa9b6	3	3	fix(claude): close subscription review gaps in routing, isolation and effort (#614)
+a67b3df8	3	3	draft(GH-605): evidence-based work state and Kanban policy reconciliation (#607)
+17f4e0cd	1	1	feat(skills): add 5-point discipline mantra and overall goal to merge-cleanup, start-task, workhorse
+4239b499	3	1	feat(merge-cleanup): 10m/60m activity windows, completion scan heuristics, and issue markers (#601)
+6009f102	1	1	feat(skills): radar re-scores whack-a-mole umbrellas — solved is a quiet score, not a closed issue (
+d66ddc3e	1	1	feat(skills): add ci-debug skill for governed CI/CD failure diagnosis (#602)
+3ca5ad55	3	3	feat(GH-592): express landings write a provenance receipt and reconcile under --gate (#597)
+c01310e0	1	1	chore(releases): record pr_merged work event for GH-595 (#596)
+7059ec32	3	1	fix(GH-595): require operator-owned primary cleanup deferral (#596)
+eb6de0b3	3	3	feat(GH-589): XYZ mini publisher, skill viewer, /push-to-xyz-mini; consult tolerates absent tick (#6
+ec0823ab	3	3	feat(claude): subscription-validated native consult and relay support (#611)
+eaacb048	3	3	fix(ci): recover missed reconciliations and correct hosted test setup (#600)
+38507a23	3	3	fix(ci): qualify merged PRs in automatic reconciliation (GH-546) (#599)
+80343391	3	3	feat(ledger): end-to-end retirement of RELEASES.md in favor of releases.db (#568)
+69f56d28	3	3	ci: retire the StarSling runner label; every CI job is GitHub-hosted (#590)
+2b25381a	3	3	ci: run the merge-blocking vendored smoke gate on ubuntu-latest (#588)
+78d8074e	3	1	feat(skills): add /sop and /whack-a-mole; route skill management to skills-army-hq; XYZ_SKILLS_ROOT 
+004a4138	3	3	feat(ci): fast lane push optimization and AST selective routing for validate.sh (GH-496) (#580)
+58b76a33	3	3	fix(GH-561): telemetry-only .tick/ is an uninitialized root, not an unverifiable one (#577)
+526433d4	3	3	feat(ledger): end-to-end removal of ROADMAP-DASHBOARD.md and view-staleness machinery (#567) (#576)
+69ca13ea	3	2	feat(GH-564): work backfill from ledger state + a review_ready producer in reconcile (stacked on #55
+99c263ea	3	3	fix: stage relay, Tick, and merge-cleanup hotfixes (#529, #533, #554, #555) (#573)
+beab4dc0	1	1	docs(gh556): skills-army-hq installer docs for git-backed collection roots (#557)
+308dd184	3	3	feat(GH-549): work-state event stream at the single ledger seam, with concurrent connectors (#559)
+1a88a7dd	3	3	feat(gh-496): Phase 2 — Single Reconciliation Owner, View Decoupling & Pre-Merge Closeout Checks (#5
+7a9f7105	3	3	chore(jog): queue relay and cleanup hotfixes (#563)
+e265ea69	1	1	chore(harnesses): one invocation-log row recorded on the primary during the GH-518 session (#550)
+a41925b9	1	1	chore(GH-534): PR 538 post-merge reconciliation + integration receipt (#560)
+062e94aa	3	3	GH-534: merge-cleanup failure modes — Phases A+B+C implemented; Codex implementation QA Approved (#5
+52938679	3	3	feat(telemetry): relocate routine harness telemetry out-of-tree (GH-496 PR 1) (#548)
+abe0f17a	1	1	chore: complete PR 542 post-merge reconciliation (GH-537 merge evidence) (#545)
+95a8824e	1	1	feat(skills): radar SDLC coach (GH-442) & /five decision checksum (GH-537) (#542)
+926fc85c	1	1	chore: complete PR 540 post-merge reconciliation (GH-536 -> 3-COMPLETED) (#543)
+455bae04	1	1	feat(gh536): Deployed Skills relocated into the live Git Pulse Sync checkout — executed, verified, P
+e9da0600	1	1	feat(skill): /unstuck — queue simultaneous blockers, tripwire recurring classes (GH-528) (#531)
+02268668	3	1	fix(GH-523/524): review the primary checkout before any PR, and put lab/model/effort in every AgentC
+4648460d	3	3	chore(GH-490): marathon prep — six ledger-flip lanes promoted, contracted, and planned (#495)
+d78711cd	1	1	docs(gh508): Git Sync Pulse as a portable skill projection — spike complete, all acceptance PASS (GH
+6e304820	3	3	fix(GH-527): repairable issue_url, and one bad row no longer disables reconcile-state (#532)
+03189d0c	3	3	feat(express): v2 hotfix fast lane upgrade (GH-516) (#519)
+b4966580	3	3	GH-518: muse-turn shim for Meta's native muse CLI, with a fail-closed model policy (#520)
+201fcc44	3	3	Flightdeck HTML dashboard and manual diagnostic harness (GH-494) (#504)
+ff207594	3	3	feat(GH-478): ATE runaway-process guard — shared process-group runner, in-suite watchdog, report-onl
+e62fea2d	3	3	ci(sharpen): fix unreachable PR twin guard (#459), widen Tier-2 routing (#496) (#499)
+5ba227b0	3	3	feat(GH-505/509/510): driver-attested relay approval — roles from the invocation, pinned reviewed re
+19a8224d	3	3	fix(GH-457): retire resolver Tier 4 substring fallback (Model-catalog #3 alignment) (#503)
+47f4e2a1	1	1	docs(GH-424): promote status-marker writer plan to 2-WORKING with recon + relay QA (#500)
+b9d156c0	1	1	docs(merge-cleanup): resolve routine conflicts within authorized scope (#493)
+5830b536	3	3	chore(GH-497): marathon prep — three ledger-trust lanes registered, contracted, and planned (#498)
+bc5e855b	3	3	docs: generated ledger subsystem diagram in ARCHITECTURE/ (#489)
+a58977bf	3	3	ci(GH-487): bounded gates for new-branch skill/test pushes; gh365 RT_SHARD flake fix; draft-bypass g
+03183359	1	1	chore(harness): record DeepSeek unstuck approval (#473)
+ca8645c2	1	1	fix(skill): sharpen unstuck blocker classification (#473)
+79035416	1	1	fix(skill): harden unstuck invocation metadata (#473)
+ed390b31	1	1	feat(skill): add unstuck goal-movement interrupt (#473)
+9d5efafa	1	1	fix(skill): guard workhorse irreversible operations (#471)
+bf339d00	3	3	Add Other Apps & Tools project directory (GH-465) (#466)
+bcacb910	3	3	Clarify homepage quality proposition (GH-461) (#464)
+c4f5144d	3	1	test: isolate launch artifact checks and reconcile start-task delivery (#451)
+781b43eb	3	1	fix(GH-448): dsh overlay must override agent-default-model — turns ran the bundle default, not DEEPS
+6a6a26f3	3	3	feat(ate): GH-299 Gen 4 ATE & True Evolutionary Fuzzing — all 5 phases (#441)
+fd8bcca8	1	1	feat(skill): start-task — governed intake through reviewed PRs (#440)
+bbbeda01	3	3	fix(GH-411): guard tick log for every event type except cost.* (#420)
+2526bf9b	3	3	fix(#358): resolve wave_reconcile's harness tools against the harness home (#359)
+6d23ac86	3	3	feat(releases): manifest unship — the retraction verb the ledger never had (GH-351) (#354)
+33e0dfd4	3	3	fix(releases): generalise roadmap layer for vendored installs (GH-349) (#350)
+9d44be35	1	1	chore(releases): reconcile the ledger with GitHub and dial in the Linux attestation arc (#343)
+d0c57c39	3	3	chore(intake): commit stranded captures and QA records, and clear the standing gate red (#340)
+3300cde7	1	1	chore(harness): carry forward 5 agy invocation rows stranded on local development (#339)
+55c95ecf	3	3	chore: point dead HiQS-Suite org links at HiQS-Labs (#337)
+263fd458	1	1	docs(worktree-safety): recovery, audit-trail, and containment sections (14-16) (#302)
+7dfab70f	1	1	chore(harness): restore two invocation rows and one model row lost to a bad reset (#336)
+cd698e79	3	3	fix(agent-chorus): never write telemetry inside the coordinated repository (GH-327) (#335)
+6873aeb7	3	1	fix(agent-chorus): write the replacement before closing the original (GH-328) (#334)
+2999e294	3	1	fix(agent-chorus): degrade telemetry instead of failing a written turn (GH-329) (#333)
+495e737f	1	1	docs(agent-chorus): describe the lock the code actually holds (GH-330) (#332)
+05c40f19	3	3	fix(agent-chorus): test the untested half of the #236 close fix, and keep telemetry out of the workt
+c087f7e1	3	3	fix(jog): address review blockers on writer protocol, hermetic dry-run, and landing boundary (#259)
+a7d1c2e0	3	3	docs(jog): incorporate DeepSeek QA review approvals and interactive probe fix (#259)
+371ff213	1	1	docs(relay): scaffold DeepSeek QA review thread for Phase 1 Jog (#259)
+de31c66b	3	3	feat(jog): Phase 1 serial execution queue, releases DB schema, and runner (#259)

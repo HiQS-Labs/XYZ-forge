@@ -56,10 +56,12 @@ cat .tick/gate-last.log 2>/dev/null || cat .git/pre-push.log 2>/dev/null
 ### 2. Provision Safe Full Clone Isolation (GH-564)
 **Never run test reproductions or mutation suites in the primary checkout or a linked worktree.** Suites mutate `.git/config`, remotes, and ref locks:
 ```bash
-# Provision a standalone disposable full clone outside the primary checkout
-git clone . /tmp/XYZ-forge-ci-debug-$$-$(date +%s)
-cd /tmp/XYZ-forge-ci-debug-$$-$(date +%s)
-bash githooks/install.sh
+# Provision a standalone disposable full clone outside the primary checkout.
+# Compute the destination ONCE (two $(date +%s) calls can straddle a second) and stop on any failure,
+# so a failed clone or cd can never leave you in the primary checkout with a suite about to run.
+CLONE="/tmp/XYZ-forge-ci-debug-$$-$(date +%s)"
+git clone . "$CLONE" && cd "$CLONE" && bash githooks/install.sh \
+  || { echo "ci-debug: clone setup failed; stopping before any suite runs" >&2; exit 1; }
 ```
 
 ### 3. Reproduce Deterministically
@@ -112,7 +114,7 @@ Apply Ponytail to engineer the **least-mechanism, foundationally sound resolutio
 4. **Frozen Twin Rule (GH-308):** Behavior fixes belong in the authoritative Python twin under `utils/py/`, NOT the frozen `.sh` fallback. If an emergency edit to a `.sh` twin is truly warranted, add the mandatory commit trailer:
    `Frozen-twin-exception: <path> — <reason>`
 5. **No Static Comment Traps (SOP §3b):** Static security guards read comments. Never write banned syntax (e.g. piped grep or credentials) inside explanatory comments.
-6. **Leave One Runnable Red Control:** Every non-trivial fix must leave behind a runnable test/assertion that proves the defect is resolved and fails when mutated.
+6. **Leave One Runnable Red Control:** Every non-trivial fix must leave behind a runnable test/assertion that proves the defect is resolved and fails when mutated. In XYZ-forge (`AGENTS.md` *No new tests*, GH-831) that check lives in an existing suite or is recorded as a manual check under `TESTS-RESULTS/`, never a new suite.
 
 ---
 

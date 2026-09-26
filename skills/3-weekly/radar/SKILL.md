@@ -505,7 +505,7 @@ acceptance condition, so a different agent in a later session can execute one co
 ## RADAR-ensure-gitignore — 3 issues over 47 days · first-seen: 2026-08-07 · runs: 1
 
 - [ ] Fix `ensure_gitignore()` to handle both directions (add-ignore and un-ignore) — `relay-automation/xyz-vendor.sh`
-- [ ] Add a regression test asserting both directions on a fresh vendor
+- [ ] Cover both directions on a fresh vendor in the existing vendoring suite (no new test suites in XYZ-forge: `AGENTS.md` *No new tests*, GH-831)
 - [ ] Close #18 / #314 / #440 with the commit SHA — none of them doc-only this time
 ```
 

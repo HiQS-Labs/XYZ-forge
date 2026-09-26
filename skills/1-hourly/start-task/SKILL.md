@@ -127,7 +127,10 @@ Then begin work.
    non-goals, dependencies, risks/rollback, bounded test scope (with explicit
    test non-scope: no speculative test frameworks, synthetic runners, or fuzzers
    outside stated acceptance criteria; test footprint must scale to implementation
-   size), and one ordered implementation list with verification inline. Name the
+   size; and where the repo forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*,
+   GH-831), no new suites or registry entries, with verification through existing
+   suites or manual checks recorded under `TESTS-RESULTS/`), and one ordered
+   implementation list with verification inline. Name the
    existing subsystem and canonical writer being extended. Keep changes surgical
    and DRY: reuse and extend the existing system, without similar subsystems,
    duplicate modules, parallel write paths, speculative abstractions, or unrelated
@@ -135,7 +138,8 @@ Then begin work.
    design cannot carry a requirement, show the traced constraint and propose the
    smallest change to it; do not quietly build a second system. Acceptance checks
    must detect the actual failure, reject empty input where relevant, and specify
-   a red control for new/changed gates. Scale the detail to the task and obey
+   a red control for new/changed gates. Where the repo forbids new tests
+   (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), witness it on an existing suite or record it as a manual check. Scale the detail to the task and obey
    repo-specific arc planning when applicable.
 
 6. **QA the plan before implementation.** For every non-simple change, load
@@ -198,7 +202,8 @@ Then begin work.
    speculative layers of complexity. Ask whether each issue is satisfied, its
    persisted rating matches its latest evidence and user overrides, actual codepaths
    match the plan, a duplicate subsystem or writer slipped in, and checks
-   substantiate the claims. A textual review does not replace deterministic tests.
+   substantiate the claims. In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831),
+   a new test file or registry entry in the diff is a finding. A textual review does not replace deterministic tests.
    Keep author and reviewer roles separate, adjudicate each finding against stated
    requirements (rejecting speculative scope creep with `/ponytail`), apply
    surgical fixes and rerun affected focused checks and review within the bounded

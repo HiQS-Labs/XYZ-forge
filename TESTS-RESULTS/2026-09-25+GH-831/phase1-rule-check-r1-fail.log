@@ -1,0 +1,35 @@
+# GH-831 Phase 1 — recorded manual check (no new suite): retired test-creating phrases absent; GH-831 rule present
+# base 24e6e96d + working tree, 2026-09-26T03:02:38Z
+## files: AGENTS.md GUIDING-PRINCIPLES.md SOP.md ARCHITECTURE.md skills/1-hourly/debug-mantra/SKILL.md skills/1-hourly/ponytail/SKILL.md skills/1-hourly/start-task/SKILL.md skills/1-hourly/swe/SKILL.md skills/2-daily/ci-debug/SKILL.md skills/2-daily/express/SKILL.md skills/2-daily/file-xyz-bug/SKILL.md skills/2-daily/review-code/SKILL.md skills/2-daily/review-xyz/SKILL.md skills/2-daily/workhorse/SKILL.md skills/3-weekly/radar/SKILL.md skills/3-weekly/whack-a-mole/SKILL.md skills/4-occasional/ci-optimize/SKILL.md 
+## retired phrases (expect 0 hits each)
+0  dedicated regression suite exists
+0  test/gh<N>-<slug>.sh
+0  registered regression suite
+0  its regression suite
+0  one motion: fix + suite,
+0  to synthesize a fix and regression test
+0  new contracts always owe fixtures
+0  Add regression test for edge-case
+0  Add a regression test asserting both directions
+0  A regression test covers the failure path before the fix lands
+0  Tests written **and run**
+0  Adding missing negative tests
+0  fix's regression suite exists AND is registered
+0  ships a recorded demonstration that it fails
+## GH-831 rule present in every edited skill (expect >=1 each)
+1  skills/1-hourly/debug-mantra/SKILL.md
+1  skills/1-hourly/ponytail/SKILL.md
+3  skills/1-hourly/start-task/SKILL.md
+1  skills/1-hourly/swe/SKILL.md
+1  skills/2-daily/ci-debug/SKILL.md
+2  skills/2-daily/express/SKILL.md
+1  skills/2-daily/file-xyz-bug/SKILL.md
+2  skills/2-daily/review-code/SKILL.md
+1  skills/2-daily/review-xyz/SKILL.md
+1  skills/2-daily/workhorse/SKILL.md
+0  skills/3-weekly/radar/SKILL.md
+1  skills/3-weekly/whack-a-mole/SKILL.md
+1  skills/4-occasional/ci-optimize/SKILL.md
+## red control: the same scan on the base commit (expect hits)
+1  dedicated regression suite exists (HEAD:skills/2-daily/express/SKILL.md)
+## result: FAIL
