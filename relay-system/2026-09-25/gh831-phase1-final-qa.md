@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -150,5 +150,28 @@ Scope disclosure: reviewed the seeded diff and surrounding instructions, includi
 - [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixtures or gate run was executed here. The supplied pdda-phase1.log ends “PDDA run complete: no errors, 32 warning(s) to review”; this is supplied evidence, not an independently reproduced gate result. Live #805/#732 pointer edits were not independently queried.
 
 Handing off to Producer (claude-a): disposition F1/F2, make the minimal text corrections, and request the next reviewer turn. The harness owns the relay-file commit.
+
+### Producer · Round 1 · claude-a
+
+- **F1 [Should] — Implemented.** `skills/1-hourly/start-task/SKILL.md` gets back its general limits word for
+  word: "no speculative test frameworks, synthetic runners, or fuzzers outside stated acceptance criteria;
+  test footprint must scale to implementation size". The XYZ-forge exception is appended after it as a
+  separate clause ("and where the repo forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), no
+  new suites or registry entries …"). With the conditional omitted, the paragraph matches the original.
+- **F2 [Should] — Implemented.** In `skills/2-daily/ci-debug/SKILL.md`:
+  - the destination is computed once, as `CLONE="/tmp/XYZ-forge-ci-debug-$$-$(date +%s)"`, and quoted;
+  - clone, `cd` and hook install are chained with `&&`, ending in `|| { echo "…stopping before any suite
+    runs" >&2; exit 1; }`;
+  - a comment states why.
+
+  The location is unchanged, which keeps the fix to this finding. Recorded manual check,
+  `TESTS-RESULTS/2026-09-25+GH-831/phase1-ci-debug-recipe-check.log`:
+  - run from a non-repo directory, the failed clone printed the message, returned rc 1, and did not continue;
+  - the recipe has exactly one `date +%s`.
+- **Scope note.** You marked `swept file: no` for the large documentation files. The re-seeded diff
+  (`.relay-artifacts/gh831-phase1.diff`, now `24e6e96d..HEAD`) adds only these two corrections and their
+  evidence.
+
+Handing off to Reviewer (codex) — take your turn: round 2 on F1/F2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -56,10 +56,12 @@ cat .tick/gate-last.log 2>/dev/null || cat .git/pre-push.log 2>/dev/null
 ### 2. Provision Safe Full Clone Isolation (GH-564)
 **Never run test reproductions or mutation suites in the primary checkout or a linked worktree.** Suites mutate `.git/config`, remotes, and ref locks:
 ```bash
-# Provision a standalone disposable full clone outside the primary checkout
-git clone . /tmp/XYZ-forge-ci-debug-$$-$(date +%s)
-cd /tmp/XYZ-forge-ci-debug-$$-$(date +%s)
-bash githooks/install.sh
+# Provision a standalone disposable full clone outside the primary checkout.
+# Compute the destination ONCE (two $(date +%s) calls can straddle a second) and stop on any failure,
+# so a failed clone or cd can never leave you in the primary checkout with a suite about to run.
+CLONE="/tmp/XYZ-forge-ci-debug-$$-$(date +%s)"
+git clone . "$CLONE" && cd "$CLONE" && bash githooks/install.sh \
+  || { echo "ci-debug: clone setup failed; stopping before any suite runs" >&2; exit 1; }
 ```
 
 ### 3. Reproduce Deterministically

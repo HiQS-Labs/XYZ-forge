@@ -125,10 +125,12 @@ Then begin work.
    Use the existing project plan or create the repo-governed one. Include the
    observed problem, per-issue requirements, smallest affected surface, explicit
    non-goals, dependencies, risks/rollback, bounded test scope (with explicit
-   test non-scope: no speculative test frameworks, synthetic runners, or fuzzers;
-   where the repo forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), no new suites or registry
-   entries, and verification through existing suites or manual checks recorded
-   under `TESTS-RESULTS/`), and one ordered implementation list with verification inline. Name the
+   test non-scope: no speculative test frameworks, synthetic runners, or fuzzers
+   outside stated acceptance criteria; test footprint must scale to implementation
+   size; and where the repo forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*,
+   GH-831), no new suites or registry entries, with verification through existing
+   suites or manual checks recorded under `TESTS-RESULTS/`), and one ordered
+   implementation list with verification inline. Name the
    existing subsystem and canonical writer being extended. Keep changes surgical
    and DRY: reuse and extend the existing system, without similar subsystems,
    duplicate modules, parallel write paths, speculative abstractions, or unrelated
