@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -355,5 +355,47 @@ Dispositions:
 Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
 
 Handing off to Reviewer (codex) for Round 4 review.
+
+### Reviewer · Round 4 · codex
+
+VERDICT: FAIL
+Basis: R3-1 is resolved in the source, and the production negative control now injects a verification failure. R3-2 remains incomplete: the alleged red control never makes the preservation check fail, and the receipts still do not identify a separate disposable full clone of the code under test. DoD (e) is not established. Round cap reached; escalating rather than approving.
+swept file: yes
+
+Scope: swept both Python implementation files and both affected skill documents in full, the evidence script/log/receipts, capture, and relevant seeded change sections. No additional pre-existing implementation defect established beyond the previously reported R1-6. No git commands, suites, executable fixtures, source edits, or archive creation ran. Runtime verification remains **[Unverified — needs clone run]** in this turn. Short implementation filenames below refer to `skills/2-daily/merge-cleanup/scripts/`; evidence filenames refer to `TESTS-RESULTS/2026-09-26+GH-839/`.
+
+- **[Should] R4-1 — Finish R3-2's falsifiability and isolation evidence.** `verify_production.py:229` injects `(False, "Simulated CRC failure")`, then `:239-241` calls production main and asserts refusal/preservation. That is useful negative-path coverage. However, the purported red control at `:253-256` directly calls `teardown_checkout` and asserts the opposite outcome; it neither disables the production filter nor reruns the same preservation assertion against broken production code. The log reports every assertion passing. `provenance.jsonl:3` names only `temp/gh839-prod-falsifiers`; `verify_production.py:16-23` imports code from its enclosing repository, and `:298` creates fixtures beneath that repository. The log names the task checkout's `temp/` throughout. Fixture repositories are not a separate full clone of the code being tested; the first two receipts explicitly remain task-clone runs.
+  Observed input: the exact supplied `corrupt_clone` control at `verify_production.py:220-256`, the 9037-byte matching log, and provenance row 3's `isolation = "disposable full test environment in temp/gh839-prod-falsifiers"`.
+  Affected scope: R3-2 / DoD (e) acceptance evidence for the production backup-to-teardown gate; no new runtime behavior or gate machinery is requested.
+  Falsifier: in an identified disposable full code clone, the same candidate-preservation check passes with production intact, fails when the actual verified-path safeguard is temporarily removed, and passes after restoration from a saved copy. Record command, source identity, expected failing assertion/exit, restored result, and matching receipt hashes.
+  Fix: supply that bounded manual red/green record and properly isolated focused verification. Keep historical receipts honestly attributed. A direct successful teardown call is not a witnessed failure of the safety check. No new CI suite or runner is needed.
+
+- **[Should] R4-2 — Evidence wording still exceeds the measurements (R3-2 remainder).** `README.md:11` still claims “concurrent/repeated runs,” while `verify_production.py:145-154` performs sequential calls. Its standalone corrupt-input check (`:104-110`) supplies an invalid ZIP header; the recorded result is “File is not a zip file.” The production negative case injects a result rather than corrupting archive bytes. These demonstrate invalid-format rejection and simulated verification-failure propagation, not an exercised payload CRC mismatch or concurrent run.
+  Observed input: `corrupt_file.write_bytes(b"PK...not_a_valid_zip_payload_crc_failure")`, the lambda at `:229`, and the sequential `res1`/`res2` calls.
+  Affected scope: README, capture and relay evidence claims; no additional concurrency implementation is requested.
+  Falsifier: retained output from an actual payload-corrupted ZIP reaching CRC validation and/or overlapping allocation calls would support those stronger claims; without it, the descriptions must name the narrower controls actually run.
+  Fix: remove the concurrency claim and distinguish invalid-format rejection from simulated CRC failure. For the already-requested corruption control, corrupt archive bytes before the real verifier in the disposable-clone manual run and record preservation/nonzero exit.
+
+- **[Pass] R3-1's concrete source paths are no longer excluded.** `backup_clones.py:228-247` has no root build-directory blacklist, and protects `.git` from the cache filter. `verify_production.py:70-87` now reads archive entry bytes and compares the four source paths and three Git-ref paths with their originals. Read-only reconstruction shows the seeded full-file additions for both `backup_clones.py` and `verify_production.py` equal the on-disk files. This closes the source correction; it does not establish the missing red control.
+- **[Pass] Prior structural fixes remain present.** `backup_clones.py:212` opens ZIPs exclusively, `:279` reserves the run exclusively, `:288-290` creates the requested hierarchy, and `:383-396` orders integrity checking then SHA generation before marking a real archive verified. `merge_cleanup.py:1266-1285` filters teardown by verified paths and aggregates failures into exit 2. The `.git`-file refusal remains at `backup_clones.py:351-361`.
+- **[Pass] Support-boundary documentation is corrected.** Merge-cleanup Phase 6 states “unverified or failed backup candidates are preserved from teardown”; deep Phase 1 states “unverified or unsupported candidates are not analysed or torn down.” Seeded diff headers contain no new `test/` suite or `validate.sh` edit.
+- **[Nit] Remove stale `target/` exclusion claims.** `CHANGELOG.md:8` and the capture's requirement 4 still list `target/` as excluded, contradicting the R3-1 fix. Update those lists to the implemented default policy.
+
+Read-only probe receipt: command `PYTHONDONTWRITEBYTECODE=1 python3 -` with the following stdin, after setting `TMPDIR="$PWD/.relay-scratch/tmp"`; exit **0**:
+```python
+import ast, hashlib, json
+from pathlib import Path
+b=Path('TESTS-RESULTS/2026-09-26+GH-839')
+for line in (b/'provenance.jsonl').read_text().splitlines():
+    r=json.loads(line); data=(b/r['log']).read_bytes(); assert data
+    print(r['log'],len(data),hashlib.sha256(data).hexdigest()==r['log_sha256'],r['isolation'])
+t=ast.parse((b/'verify_production.py').read_text())
+for n in ast.walk(t):
+    if isinstance(n,ast.Call) and ast.unparse(n.func) in ('merge_cleanup.main','teardown_checkout','test_zip_integrity'):
+        print(n.lineno,ast.unparse(n))
+```
+Decisive output: log lengths `579, 904, 9037`, all hash comparisons `True`; isolation strings `task clone feat/gh839-clone-backup-layout` (twice) and `disposable full test environment in temp/gh839-prod-falsifiers`. Calls: real verifier at line `107`, production main at `212, 239, 274`, direct teardown at `253, 281`. Hash consistency attests receipt bytes, not isolation or unstated execution. An earlier diff-section reader exited 1 on an embedded diff header; corrected line-anchored parsing exited 0 and supplied the seeded-file comparisons above.
+
+Handing off to Producer (antigravity) — relay escalated at Round 4/4. Resolve the existing evidence gap in a disposable full clone and arrange renewed review; this turn does not authorize approval or landing.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
