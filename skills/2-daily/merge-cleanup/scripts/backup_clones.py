@@ -17,8 +17,11 @@ Standardized hierarchy:
 
 Features:
 - Fast, selective zipping: keeps .git and all code, excludes heavy disposable caches.
+- Git metadata protected: .git contents and source directory names are never pruned.
 - Automatic integrity gate: testzip() CRC check + SHA256 generation before teardown.
-- Git metadata extraction: records branch, HEAD, commit log, unpushed commits, and porcelain diff.
+- Collision-proof naming: prevents overwriting existing archives or clobbering same-named clones.
+- Self-contained worktree handling: bundles worktree administrative state into archive.
+- Directory symlink support: both binary and pure Python fallback preserve directory symlinks.
 - Standalone CLI, callable from /merge-cleanup and /merge-cleanup-deep.
 """
 
@@ -34,22 +37,25 @@ import zipfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-# Heavy cache directories excluded to keep zips compact and fast
-DEFAULT_CACHE_EXCLUDES: Set[str] = {
+# Working-tree disposable cache directories (excluded only OUTSIDE of .git)
+WORKING_TREE_CACHE_DIRS: Set[str] = {
     "node_modules",
     ".venv",
     "venv",
-    "env",
     "__pycache__",
     ".pytest_cache",
     ".mypy_cache",
     ".ruff_cache",
-    "target",
-    "build",
-    "dist",
     ".parcel-cache",
     ".cache",
     ".DS_Store",
+}
+
+# Top-level disposable build directories (excluded ONLY at the root of the working tree)
+TOP_LEVEL_BUILD_DIRS: Set[str] = {
+    "target",
+    "build",
+    "dist",
 }
 
 
@@ -84,6 +90,8 @@ def get_git_info(clone_path: Path) -> Dict[str, Any]:
     info: Dict[str, Any] = {
         "branch": "UNKNOWN",
         "head": "UNKNOWN",
+        "is_linked_worktree": False,
+        "gitdir_target": None,
         "dirty_files_count": 0,
         "dirty_files": [],
         "unpushed_count": 0,
@@ -91,9 +99,19 @@ def get_git_info(clone_path: Path) -> Dict[str, Any]:
         "remote_urls": [],
         "summary_text": "",
     }
-    if not (clone_path / ".git").exists():
+    git_entry = clone_path / ".git"
+    if not git_entry.exists():
         info["summary_text"] = f"Warning: {clone_path} is not a valid git repository (no .git found)."
         return info
+
+    if git_entry.is_file():
+        info["is_linked_worktree"] = True
+        try:
+            content = git_entry.read_text(encoding="utf-8").strip()
+            if content.startswith("gitdir:"):
+                info["gitdir_target"] = content.split(":", 1)[1].strip()
+        except Exception:
+            pass
 
     def _run_git(args: List[str]) -> Tuple[int, str]:
         try:
@@ -148,13 +166,19 @@ def get_git_info(clone_path: Path) -> Dict[str, Any]:
             info["unpushed_count"] = len([l for l in out.splitlines() if l.strip()])
 
     # Build summary text
+    type_str = "Linked Worktree" if info["is_linked_worktree"] else "Standalone Clone"
     summary_lines = [
         f"Clone: {clone_path.name}",
         f"Path: {clone_path.resolve()}",
+        f"Type: {type_str}",
+    ]
+    if info["gitdir_target"]:
+        summary_lines.append(f"Linked Gitdir: {info['gitdir_target']}")
+    summary_lines.extend([
         f"Branch: {info['branch']}",
         f"HEAD: {info['head']}",
         f"Dirty Files ({info['dirty_files_count']}):",
-    ]
+    ])
     for d in info["dirty_files"][:50]:
         summary_lines.append(f"  {d}")
     if len(info["dirty_files"]) > 50:
@@ -178,31 +202,60 @@ def zip_clone_folder(
     exclude_caches: bool = True,
     dry_run: bool = False,
 ) -> Tuple[bool, Optional[str]]:
-    """Create a zip archive of a clone folder, excluding heavy disposable caches.
+    """Create a zip archive of a clone folder, preserving Git metadata and code.
 
-    Uses `/usr/bin/zip` if available for performance and full permission/symlink support,
-    falling back to Python's zipfile module if needed.
+    Excludes heavy disposable caches outside .git, preserves directory symlinks,
+    and bundles linked worktree administration if applicable.
     """
     if dry_run:
         return True, None
 
     dest_zip_path.parent.mkdir(parents=True, exist_ok=True)
     if dest_zip_path.exists():
-        dest_zip_path.unlink()
+        return False, f"Destination archive already exists: {dest_zip_path}"
 
     parent_dir = clone_path.parent
     clone_name = clone_path.name
+
+    git_entry = clone_path / ".git"
+    linked_gitdir: Optional[Path] = None
+    if git_entry.is_file():
+        try:
+            content = git_entry.read_text(encoding="utf-8").strip()
+            if content.startswith("gitdir:"):
+                raw_gd = content.split(":", 1)[1].strip()
+                p_gd = Path(raw_gd)
+                if not p_gd.is_absolute():
+                    p_gd = (clone_path / p_gd).resolve()
+                if p_gd.exists() and p_gd.is_dir():
+                    linked_gitdir = p_gd
+        except Exception:
+            pass
 
     zip_bin = shutil.which("zip")
     if zip_bin:
         cmd = [zip_bin, "-ryq", str(dest_zip_path.resolve()), clone_name]
         if exclude_caches:
-            for exc in sorted(DEFAULT_CACHE_EXCLUDES):
+            # Explicitly exclude caches outside .git
+            for exc in sorted(WORKING_TREE_CACHE_DIRS):
                 cmd.extend(["-x", f"*/{exc}/*", f"*/{exc}"])
+            # Root-level only build directories
+            for b_dir in sorted(TOP_LEVEL_BUILD_DIRS):
+                cmd.extend(["-x", f"{clone_name}/{b_dir}/*", f"{clone_name}/{b_dir}"])
         try:
             res = subprocess.run(cmd, cwd=str(parent_dir), capture_output=True, text=True, check=False)
             if res.returncode != 0:
                 return False, f"zip binary exited with code {res.returncode}: {res.stderr.strip()}"
+
+            # If linked worktree, append the worktree administrative state to make it self-contained
+            if linked_gitdir and linked_gitdir.is_dir():
+                with zipfile.ZipFile(dest_zip_path, "a", compression=zipfile.ZIP_DEFLATED) as zf:
+                    for root, dirs, files in os.walk(linked_gitdir):
+                        for file in files:
+                            full_f = Path(root) / file
+                            rel_admin = Path(clone_name) / ".git_admin" / full_f.relative_to(linked_gitdir)
+                            if full_f.is_file():
+                                zf.write(full_f, str(rel_admin))
             return True, None
         except Exception as exc:
             return False, f"Failed running zip command: {exc}"
@@ -211,21 +264,51 @@ def zip_clone_folder(
     try:
         with zipfile.ZipFile(dest_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
             for root, dirs, files in os.walk(clone_path):
-                if exclude_caches:
-                    dirs[:] = [d for d in dirs if d not in DEFAULT_CACHE_EXCLUDES]
-                for file in files:
-                    if exclude_caches and file in DEFAULT_CACHE_EXCLUDES:
-                        continue
-                    full_p = Path(root) / file
-                    rel_p = Path(clone_name) / full_p.relative_to(clone_path)
-                    if full_p.is_symlink():
-                        # Store symlink info
-                        zi = zipfile.ZipInfo(str(rel_p))
+                rel_from_clone = Path(root).relative_to(clone_path)
+                in_git = len(rel_from_clone.parts) > 0 and rel_from_clone.parts[0] == ".git"
+
+                # Check for directory symlinks in dirs to avoid dropping them
+                dirs_to_remove = []
+                for d in list(dirs):
+                    full_d = Path(root) / d
+                    if full_d.is_symlink():
+                        dirs_to_remove.append(d)
+                        rel_d = Path(clone_name) / rel_from_clone / d
+                        zi = zipfile.ZipInfo(str(rel_d))
                         zi.create_system = 3  # Unix
                         zi.external_attr = 0o120777 << 16  # symlink
+                        zf.writestr(zi, os.readlink(full_d))
+                    elif exclude_caches and not in_git:
+                        if d in WORKING_TREE_CACHE_DIRS:
+                            dirs_to_remove.append(d)
+                        elif len(rel_from_clone.parts) == 0 and d in TOP_LEVEL_BUILD_DIRS:
+                            dirs_to_remove.append(d)
+
+                for d in dirs_to_remove:
+                    dirs.remove(d)
+
+                for file in files:
+                    if exclude_caches and not in_git:
+                        if file in WORKING_TREE_CACHE_DIRS:
+                            continue
+                    full_p = Path(root) / file
+                    rel_p = Path(clone_name) / rel_from_clone / file
+                    if full_p.is_symlink():
+                        zi = zipfile.ZipInfo(str(rel_p))
+                        zi.create_system = 3
+                        zi.external_attr = 0o120777 << 16
                         zf.writestr(zi, os.readlink(full_p))
                     elif full_p.is_file():
                         zf.write(full_p, str(rel_p))
+
+            if linked_gitdir and linked_gitdir.is_dir():
+                for root, dirs, files in os.walk(linked_gitdir):
+                    for file in files:
+                        full_f = Path(root) / file
+                        rel_admin = Path(clone_name) / ".git_admin" / full_f.relative_to(linked_gitdir)
+                        if full_f.is_file():
+                            zf.write(full_f, str(rel_admin))
+
         return True, None
     except Exception as exc:
         return False, f"Pure Python zipping failed: {exc}"
@@ -244,6 +327,14 @@ def build_backup_layout(
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
     run_dir = backup_root / repo_name / timestamp
+    # Ensure run_dir is unique and does not overwrite existing run
+    if not dry_run and run_dir.exists() and any(run_dir.iterdir()):
+        counter = 1
+        while (backup_root / repo_name / f"{timestamp}_{counter}").exists():
+            counter += 1
+        timestamp = f"{timestamp}_{counter}"
+        run_dir = backup_root / repo_name / timestamp
+
     zips_dir = run_dir / "zips"
     meta_dir = run_dir / "metadata"
     reports_dir = run_dir / "reports"
@@ -267,17 +358,32 @@ def build_backup_layout(
         reports_dir.mkdir(parents=True, exist_ok=True)
 
     manifest_rows: List[Dict[str, Any]] = []
+    seen_zip_names: Set[str] = set()
 
     for clone_path in clones:
         clone_name = clone_path.name
+        # Collision prevention: disambiguate duplicate basenames
+        zip_base_name = clone_name
+        if zip_base_name in seen_zip_names:
+            parent_slug = clone_path.parent.name
+            zip_base_name = f"{parent_slug}--{clone_name}"
+            if zip_base_name in seen_zip_names:
+                suffix_idx = 1
+                while f"{zip_base_name}_{suffix_idx}" in seen_zip_names:
+                    suffix_idx += 1
+                zip_base_name = f"{zip_base_name}_{suffix_idx}"
+        seen_zip_names.add(zip_base_name)
+
         clone_info = get_git_info(clone_path)
-        dest_zip = zips_dir / f"{clone_name}.zip"
+        dest_zip = zips_dir / f"{zip_base_name}.zip"
 
         clone_record: Dict[str, Any] = {
             "clone": clone_name,
             "path": str(clone_path),
+            "archive_name": f"{zip_base_name}.zip",
             "branch": clone_info["branch"],
             "head": clone_info["head"],
+            "is_linked_worktree": clone_info["is_linked_worktree"],
             "dirty_files": clone_info["dirty_files_count"],
             "unpushed_commits": clone_info["unpushed_count"],
             "zip_path": str(dest_zip),
@@ -294,7 +400,7 @@ def build_backup_layout(
             continue
 
         # 1. Write per-clone git summary metadata
-        summary_file = meta_dir / f"{clone_name}.git-summary.txt"
+        summary_file = meta_dir / f"{zip_base_name}.git-summary.txt"
         summary_file.write_text(clone_info["summary_text"], encoding="utf-8")
 
         # 2. Perform zipping
@@ -355,15 +461,16 @@ def build_backup_layout(
             "",
             "## Backup Inventory",
             "",
-            "| Clone | Branch | HEAD | Dirty | Unpushed | Size (MB) | SHA256 (first 12) | Status |",
-            "|---|---|---|---|---|---|---|---|",
+            "| Clone | Branch | HEAD | Type | Dirty | Unpushed | Size (MB) | SHA256 (first 12) | Status |",
+            "|---|---|---|---|---|---|---|---|---|",
         ]
         for r in manifest_rows:
             mb = r["zip_bytes"] / (1024 * 1024)
             sha12 = r["zip_sha256"][:12] if r["zip_sha256"] else "-"
             st = "✅ PASS" if r["verified"] else f"❌ FAIL ({r['error']})"
+            ctype = "Worktree" if r["is_linked_worktree"] else "Clone"
             md_lines.append(
-                f"| `{r['clone']}` | `{r['branch']}` | `{r['head']}` | {r['dirty_files']} | {r['unpushed_commits']} | {mb:.2f} | `{sha12}` | {st} |"
+                f"| `{r['clone']}` | `{r['branch']}` | `{r['head']}` | {ctype} | {r['dirty_files']} | {r['unpushed_commits']} | {mb:.2f} | `{sha12}` | {st} |"
             )
         summary_md_path.write_text("\n".join(md_lines) + "\n", encoding="utf-8")
 
@@ -381,7 +488,6 @@ def resolve_primary_and_root(
     if primary_arg:
         primary = Path(primary_arg).resolve()
     else:
-        # Default to current directory or git toplevel
         try:
             out = subprocess.check_output(
                 ["git", "rev-parse", "--show-toplevel"],
@@ -395,7 +501,6 @@ def resolve_primary_and_root(
     if root_arg:
         root = Path(root_arg).resolve()
     else:
-        # Top-level is the parent of primary (e.g. ~/Documents/GitHub Repos/)
         root = primary.parent
 
     return primary, root
@@ -432,7 +537,6 @@ def main() -> int:
     if args.backup_root:
         backup_root = Path(args.backup_root).resolve()
     else:
-        # Standardized location: <top_level_github_folder>/_backups
         backup_root = root / "_backups"
 
     clone_paths: List[Path] = []
@@ -454,11 +558,12 @@ def main() -> int:
         cj_path = Path(args.candidates_json)
         if cj_path.exists():
             data = json.loads(cj_path.read_text(encoding="utf-8"))
-            # Handles array of dicts with 'path' or array of strings
             for item in data:
                 p_str = item.get("path") if isinstance(item, dict) else item
                 if p_str:
                     p = Path(p_str)
+                    if not p.is_absolute():
+                        p = (root / p).resolve()
                     if p.exists() and p.is_dir():
                         clone_paths.append(p.resolve())
         else:

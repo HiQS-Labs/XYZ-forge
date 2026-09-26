@@ -93,17 +93,19 @@ python3 skills/2-daily/merge-cleanup/scripts/scan_clones.py --json \
 python3 skills/2-daily/merge-cleanup/scripts/backup_clones.py \
   --primary "$PRIMARY" \
   --candidates-json "$SCRATCH/candidates.json" \
-  --backup-root "$(dirname "$PRIMARY")/_backups"
+  --backup-root "$(dirname "$PRIMARY")/_backups" \
+  --json > "$SCRATCH/backup.json"
+DEST="$(python3 -c "import json; print(json.load(open('$SCRATCH/backup.json'))['run_dir'])")"
 ```
 
 - **Standardized Directory Hierarchy**:
   `<root>/_backups/<repo-name>/<timestamp>/`
   - `zips/`: Individual `<clone>.zip` archives (with `.git` included, disposable caches like `node_modules` and `.venv` excluded).
   - `metadata/`: `MANIFEST.tsv` (SHA256, branch, HEAD, dirty count, unpushed commits, verified status), `manifest.json`, and per-clone `<clone>.git-summary.txt`.
-  - `reports/`: Triage reports and teardown logs.
+  - `reports/`: Triage reports and teardown logs (`$DEST/reports/`).
   - `SUMMARY.md`: Human-readable summary table and inventory.
 - **Integrity Validation**: Automatically tests zip CRC and compression (`testzip()`) and computes SHA256 before analysis or teardown begins.
-- Zipping is read-only for the clone; it may run in the background while Phase 2 starts.
+- Backups and integrity verification complete before sub-agent analysis begins, guaranteeing an airtight restore point.
 
 ## Phase 2 — Fan-out (≤3 read-only sub-agents)
 

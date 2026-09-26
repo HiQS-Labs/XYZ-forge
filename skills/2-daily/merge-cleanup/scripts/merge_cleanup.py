@@ -682,9 +682,17 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
         rem_res = run_git(parent_path, ["worktree", "remove", str(path)])
         if rem_res.returncode != 0:
             log_warn(f"`git worktree remove` failed ({rem_res.stderr.strip()}), retrying with prune...")
+            run_git(parent_path, ["worktree", "prune"])
+            run_git(parent_path, ["worktree", "repair"])
+            rem_res = run_git(parent_path, ["worktree", "remove", str(path)])
+        else:
+            run_git(parent_path, ["worktree", "prune"])
+            run_git(parent_path, ["worktree", "repair"])
 
-        run_git(parent_path, ["worktree", "prune"])
-        run_git(parent_path, ["worktree", "repair"])
+        if path.exists():
+            log_err(f"Failed to remove linked worktree {path}: directory still exists after worktree remove, prune, and repair")
+            return False
+
         log(f"✅ Cleaned linked worktree metadata for {path.name}")
         return True
 
@@ -1241,6 +1249,7 @@ def main():
     log("Re-inspecting every non-exempt checkout before teardown...")
     fresh = refresh_for_teardown(checkouts, primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
     removable = [c for c in fresh if c["disposition"] in ("SAFE_REMOVE_WORKTREE", "SAFE_REMOVE_CLONE")]
+    phase6_failures = 0
     if not removable:
         log("No candidate checkouts qualify for safe removal (all are preserved or active).")
     else:
@@ -1256,17 +1265,25 @@ def main():
                 dry_run=dry_run,
             )
             if not dry_run and not backup_res["all_verified"]:
-                log_err("Clone backup verification failed for some candidates; only verified checkouts will be torn down.")
+                unverified_names = [c["clone"] for c in backup_res["clones"] if not c["verified"]]
+                log_err(f"Clone backup verification failed for {len(unverified_names)} checkout(s): {', '.join(unverified_names)}; preserving from teardown.")
+                phase6_failures += 1
             verified_paths = {c["path"] for c in backup_res["clones"] if c["verified"]}
             removable = [c for c in removable if str(Path(c["path"]).resolve()) in verified_paths or c["path"] in verified_paths]
             log(f"Backup complete: {len(removable)} checkout(s) verified safe for teardown. Run dir: {backup_res['run_dir']}")
 
         for c in removable:
-            teardown_checkout(c, dry_run=dry_run)
+            ok = teardown_checkout(c, dry_run=dry_run)
+            if not ok:
+                phase6_failures += 1
 
     # Prune dangling symlinks
     prune_dangling_skill_symlinks(dry_run=dry_run)
     print("\n" + "=" * 80)
+    if phase6_failures > 0 and not dry_run:
+        log_err(f"Phase 6 completed with {phase6_failures} teardown or backup failure(s).")
+        return 2
+
     log("Merge cleanup run complete.")
     return 0
 

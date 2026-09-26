@@ -1,6 +1,6 @@
 # GH-839 Evidence — Standardized Clone Backup Layout & Integrity Verification
 
-Adheres strictly to the moratorium on adding new CI/CD tests (GH-831). Verification was conducted via existing unmodified test suites (`test/gh436-merge-cleanup.py`, `test/gh534_phase_c_tests.py`, `test/gh589-skill-viewer.sh`) plus a recorded manual verification check:
+Adheres strictly to the moratorium on adding new CI/CD tests (GH-831). Verification was conducted via existing unmodified test suites (`test/gh534_phase_c_tests.py`, `test/gh589-skill-viewer.sh`) plus a recorded reproducible falsifier test suite (`python3 temp/verify_falsifiers.py`):
 
 1. **`gh589-skill-viewer.log`**: `bash test/gh589-skill-viewer.sh` — 8/8 passed, 0 failed. Verifies skill frontmatter and directory viewer integrity for both `merge-cleanup` and `merge-cleanup-deep`.
 2. **`gh534-parity-guard.log`**: `PYTHONPATH=. python3 test/gh534_phase_c_tests.py TestParityGuard` — 7/7 passed, 0 failed. Verifies that `--backup-first` CLI option and capability table remain in 100% parity between `merge_cleanup.py` and `skills/2-daily/merge-cleanup/SKILL.md`.
