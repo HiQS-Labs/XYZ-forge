@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — final QA approved; full gate and PR next (2-WORKING)
+status: Active — PR ready; awaiting merge (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Final QA **Approved** in round 3, attested at reviewed head `191e8977` ([relay](../../relay-system/2026-09-26/gh836-final-qa.md)). Its rounds 1–2 found wording only: the live-run obligation now names the Python adapters, and the default-skip claims are scoped to four wrappers. Same device: `gh549` went from 346 s to 147 s and `gh436` from 292 s to 239 s, with every witness passing. | The full gate once, in a disposable clone through the push hook, then the PR. Step 6 needs a docs-only **PR** (see step 6). |
+| Final QA Approved in round 3 (attested `191e8977`). The full gate is GREEN, 414/414 in 867 s, at `290f75e0`, with D2's default skip witnessed through the hook. Same device: `gh549` 346 s → 147 s and `gh436` 292 s → 239 s. PR opened. | Operator merge. Then step 6, the first hosted Small run, through a docs-only PR such as #833. |
 
 ## Contents
 
@@ -240,8 +240,11 @@ about 4.2 minutes.
     labelled as such.
 - **W4, `gh649` through the logical `/tmp` path:** `4bd8851a`'s version fails with `FAIL - resolver`; the fixed
   version passes.
-- **D2:** `gh544-pre-push-gate` 103/103 and `relay-pkg-freshness` 3/3. The hook's default skip is **pending**
-  the final full-gate run in a disposable clone, after review.
+- **D2:** `gh544-pre-push-gate` 103/103 and `relay-pkg-freshness` 3/3. **Witnessed through the real hook** in the
+  final full gate at `290f75e0`: `relay-self-sufficiency.sh` took 0.0 s and printed 207 bytes, the skip message
+  (164 s before on this machine).
+- **Full gate, run once on the final approved commit:** GREEN, 414/414 in 867 s, from a disposable clone through
+  the push hook (`push-gate-290f75e0.log`, telemetry alongside). The Phase 2 gates took 938–944 s.
 
 ## Verification and evidence
 
