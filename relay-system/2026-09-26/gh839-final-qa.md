@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -496,5 +496,38 @@ Dispositions:
 Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
 
 Handing off to Reviewer (codex) for Round 6 review.
+
+### Reviewer · Round 6 · codex
+
+VERDICT: PASS
+Basis: R5-1 is resolved: the two corruption controls now target payload bytes, and the retained disposable-clone log records the underlying CRC exceptions, candidate preservation and nonzero exit. The prior implementation corrections and witnessed red control remain present. No outstanding blocking finding against the stated Definition of Done.
+swept file: yes
+
+Scope: reread both implementation Python files and both affected skill documents, the full manual verification script, capture, current receipts/logs and seeded change sections. No additional pre-existing implementation defect established beyond the previously reported and corrected R1-6. Review approval accepts retained evidence; it is not a fresh runtime or release-gate attestation. No git commands, suites, executable fixtures, archive creation, teardown or source edits ran. Independent runtime reproduction remains **[Unverified — needs clone run]**; the harness gate follows this turn. Short implementation filenames below refer to `skills/2-daily/merge-cleanup/scripts/`; evidence filenames refer to `TESTS-RESULTS/2026-09-26+GH-839/`.
+
+- **[Pass] R5-1 / R4-2 closed for the supplied controls.** `verify_production.py:119-120` and `:264-265` derive the payload offset from the selected entry and mutate its compressed payload midpoint. For these ASCII filenames with no extra fields, this corrects the previously measured header offsets. `backup-clones-verification.log:14` quotes `Bad CRC-32 for file 'test_crc.txt'`; `:85` quotes `Bad CRC-32 for file 'corrupt_clone/README.md'`. The production control asserts exit 2 and preservation, and the log records both. These are retained execution receipts, not merely the ambiguous filename returned by `testzip()`.
+- **[Pass] The preservation assertion has a witnessed failure.** `backup-clones-red.log:62` ends with `AssertionError: Refused linked worktree must be preserved from teardown!`; provenance row 4 attributes exit 1 to the mutated safeguard in the disposable full clone. Row 3 records intact execution exit 0; `backup-clones-verification.log:123` ends `ALL PRODUCTION FALSIFIER CONTROLS PASSED`. Both nonempty logs match their receipt hashes.
+- **[Pass] DoD implementation and wiring remain present.** `backup_clones.py:212` creates archives exclusively, `:279` reserves run directories exclusively, `:288-290` supplies the three subdirectories, and the SUMMARY writer supplies `SUMMARY.md`. The traversal at `:213-247` retains the reviewed source paths and exempts Git metadata from cache pruning. The linked-worktree refusal at `:351-361` remains; `:383-396` orders CRC validation and SHA generation before verified status. `merge_cleanup.py:1271-1285` filters teardown by verified paths and returns nonzero on failures. Merge-cleanup Phase 6 and deep-skill Phase 1 describe the support boundary and failure handling.
+- **[Pass] Scope and evidence remain reviewable without new CI machinery.** The seeded diff has no `test/` or `validate.sh` headers; the manual script and provenance are included under the dated evidence directory. Reconstruction of the seeded full-file additions matches both `backup_clones.py` and `verify_production.py` on disk. Historical task-clone suite receipts remain labelled as such; they are not substituted for the newer disposable-clone controls or the pending harness gate.
+- **[Nit] Capture status is one round behind.** `PROJECT/2-WORKING/GH-839-CLONE-BACKUP-LAYOUT.md` still says “34 asserts” and “Round 5”; update that status during the next authorized documentation closeout. This does not invalidate the current detailed receipts.
+
+Read-only receipt probe: command `PYTHONDONTWRITEBYTECODE=1 python3 -`, with `TMPDIR="$PWD/.relay-scratch/tmp"`, using the following stdin; exit **0**:
+```python
+import hashlib, json
+from pathlib import Path
+b = Path("TESTS-RESULTS/2026-09-26+GH-839")
+for line in (b / "provenance.jsonl").read_text().splitlines():
+    if not line.strip():
+        continue
+    r = json.loads(line)
+    data = (b / r["log"]).read_bytes()
+    assert data
+    print(r["log"], len(data),
+          hashlib.sha256(data).hexdigest() == r["log_sha256"],
+          "exit", r["exit_code"])
+```
+Decisive output: `gh589-skill-viewer.log 579 True exit 0`; `gh534-parity-guard.log 904 True exit 0`; `backup-clones-verification.log 8456 True exit 0`; `backup-clones-red.log 4377 True exit 1`. The initial probe exited **1** on a trailing blank provenance line after checking all four receipts; skipping blank lines produced the successful result. The same successful read-only invocation reconstructed added lines from line-anchored diff sections (both source equality comparisons `True`), inspected AST offset assignments at lines `119,120,264,265`, and returned `new suite/gate headers []` from a nonempty header list. No artifact execution was involved.
+
+Relay closed (Approved), no further turn needed. Producer/harness owns the subsequent file-scoped commit and required gate; this review does not claim that gate has run.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
