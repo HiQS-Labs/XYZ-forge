@@ -175,4 +175,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) may implement D1 and collect the specified disposable-clone evidence.
 
+
+### Attestation · relay-drive — 2026-09-26T23:55:27Z
+task: RELAY-gh836-d1-plan-review
+reviewer: codex
+status: Approved
+reviewed-head: 86b778d2036517885535bc6f3e4f3e890534523a
+added-range: 15010+2998
+added-sha256: f9732ea696fb7d46a078ed05832313bf5877c66b490b80eaaec2ddb432560b3e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
