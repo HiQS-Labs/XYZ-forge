@@ -532,8 +532,12 @@ Evidence is in `TESTS-RESULTS/2026-09-25+GH-831/` (`phase2-*`, `small-run-9ecf20
 - **Step 5.** `gh267` passes 113/113.
 - **Step 6.** `pdda.sh run` reports 0 errors. The `validate.sh` banners at `:1066-1068` ("NEVER promotion
   evidence") stay as they are, because they are still true: the Small run qualifies a landing, not a promotion.
-  - The D7 `relay-xyz` review-brief rule is item 7 of its review scope. The five lines Phase 1 deferred are
-    rewritten.
+  - The D7 `relay-xyz` review-brief rule is item 7 of its review scope. Four of the five lines Phase 1
+    deferred are rewritten. The fifth, `relay-automation/CONTRACT.example.md:59`, is left as it was. It is a
+    fictional contract for a *target* repository, whose own artifacts create `test/widget-empty-state.sh`, and
+    XYZ-forge's rule does not govern that repository (CodeRabbit on #834).
+  - Per CodeRabbit on #834, `AGENTS.md` keeps the rules and points to `ROUTER.md` for the tier details, and
+    the local Small command is labelled a self-check.
 
 ## Phase 3 — First hosted evidence
 

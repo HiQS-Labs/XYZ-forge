@@ -69,7 +69,7 @@ bash githooks/install.sh --check # is this clone gated? exit 1 if not
 ./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
 ./validate.sh --sequential # force the sequential run (see the hook’s measured GREEN in Ns line)
 ./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
-./validate.sh --sequential --subsystem small  # GH-831: the Small run that qualifies a docs/ledger/skill landing
+./validate.sh --sequential --subsystem small  # GH-831: the Small list — locally a self-check; hosted, the reconcile's qualifying run for docs/ledger/skill landings
 ./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
 ./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
 bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
