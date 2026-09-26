@@ -1,0 +1,24 @@
+# GH-831 Phase 2 step 4 — manual reconcile check, 2026-09-26T04:21:23Z, wave_reconcile.py at 626b8f5d
+# telemetry: TESTS-RESULTS/2026-09-25+GH-831/small-run-9ecf2071-telemetry.jsonl (validate.sh --sequential --subsystem small, disposable clone at 9ecf2071, rc 0, 1233 s)
+tested commit 9ecf2071b860eae0ccb40d668bf84b0cb43ef923; Small list at that commit: 73 suites; telemetry small-run-9ecf2071-telemetry.jsonl (78 rows)
+PASS: complete Small run qualifies (passed=76 total=76 run_set=73)
+PASS: the same telemetry does NOT pass the tier-3 rule
+PASS: removing tier2:pdda is rejected
+PASS: deleting the envelope-assert stage is rejected
+PASS: a failed envelope-assert stage is rejected
+PASS: removing the Python event is rejected
+PASS: the skipped-Python shape (total = suites + 2) is rejected
+PASS: a duplicated shell event is rejected
+PASS: a missing Small suite is rejected (counts adjusted to agree)
+PASS: the Small receipt matches through qualification_receipt_matches
+PASS: HEAD's Small list now differs from the tested commit's
+PASS: the old receipt STILL matches (replayed against the tested commit)
+PASS: a receipt recording a different list does not match
+PASS: a Small receipt without tier 2 does not match
+PASS: the full-gate string over Small telemetry does not match
+PASS: docs + ledger landings select Small (tier 1)
+PASS: a docs landing batched with a core landing selects full (tier 3)
+PASS: a classifier that cannot run selects full (the classifier could not run)
+PASS: an unreadable landing diff selects full (no diff for PR #2)
+19 pass, 0 fail
+check rc=0
