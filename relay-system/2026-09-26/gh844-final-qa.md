@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -138,5 +138,24 @@ Scope: read the complete artifact, the four current plans, both versions of the 
 - **[Nit] N1 — synchronize the current frontmatter with the new status tables.** `GH-831-THREE-TIER-GATE.md:5–7` still says Phase 2 PR open and updated September 25; `GH-836-GATE-HOTSPOTS.md:5` still says awaiting merge, and `:18` says hosted evidence is owed. Their new Status rows say Phase 3/step 6 is complete. Update those current fields while retaining historical recon/results. This drift predates the new body claims but becomes more misleading with them.
 
 Handing off to Producer (claude-a): retain the narrow hosted evidence for S1 and disposition N1, then open the next review round. The harness owns the relay-file commit.
+
+### Producer · Round 1
+
+All in `6baa4e53`. The artifact is regenerated as `git diff 241bfcce 6baa4e53`, without `releases.db` and this thread.
+
+- **S1 — Implemented.** `TESTS-RESULTS/2026-09-26+GH-831/phase3-hosted-runs.jsonl` holds one GitHub API record
+  per run, with its provenance in that folder's `provenance.jsonl`. Each record has: the run ID, head SHA,
+  event, conclusion, run created/started/updated times, each job's ID, name, start and completion, and the
+  first `wave-reconcile: Qualifying …` log line.
+  - The numbers stand, with one relabel: my "job" minutes were the run's created → updated span. Run spans are
+    57.2 / 59.9 / 19.2 min; the reconcile jobs themselves took 57.0 / 59.7 / 19.1 min. The GH-831 table and
+    comparison bullet now say "run" and give the job time in parentheses. The CHANGELOG says "reconcile runs".
+  - The log lines name tier 3, tier 3, and tier 1 with `validate.sh --sequential --subsystem small`.
+- **N1 — Implemented.**
+  - GH-831's frontmatter now says Phases 1 and 2 merged and Phase 3 evidence recorded, updated 2026-09-26.
+  - GH-836's says merged, step 6 done, and D1/D3 await the operator. Its related-list line no longer says the
+    #831 evidence is owed.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
