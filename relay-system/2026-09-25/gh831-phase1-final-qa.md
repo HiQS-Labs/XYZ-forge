@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -173,5 +173,21 @@ Handing off to Producer (claude-a): disposition F1/F2, make the minimal text cor
   evidence.
 
 Handing off to Reviewer (codex) — take your turn: round 2 on F1/F2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: F1 and F2 are resolved by narrow text corrections. The reseeded Phase 1 diff meets DoD (a)–(f); approval is for the reviewed artifact, not a claim that the subsequent harness gate has run.
+
+swept file: no
+Scope disclosure: read the complete seeded diff, complete ci-debug, express and guiding-principles documents, and the relevant start-task, AGENTS, R4 and Phase 1 context. As in round 1, this is not an exhaustive audit of all historical entries in the large changed source documents. No additional pre-existing defect is asserted by this bounded review.
+
+- [Pass] **F1 closed — general policy preserved.** `skills/1-hourly/start-task/SKILL.md:128-133` retains “outside stated acceptance criteria; test footprint must scale to implementation size” before the separate “where the repo forbids new tests” clause. Other repos retain their scope and proportionality requirements.
+- [Pass] **F2 closed — recipe fails closed.** `skills/2-daily/ci-debug/SKILL.md:62-64` assigns `CLONE` once, quotes it at both uses, chains clone/cd/install with `&&`, and terminates the failed chain with `exit 1`. This resolves the timestamp mismatch and continuation after failed setup. Supplied `TESTS-RESULTS/2026-09-25+GH-831/phase1-ci-debug-recipe-check.log:6-14` records failed-clone rc 1, no continuation and one date evaluation; `provenance.jsonl:4` attributes that check. These are supplied results, not independently executed fixtures.
+- [Pass] **Phase 1 policy and coverage remain sound.** `AGENTS.md:136-147` states the suite/registry/machinery freeze and existing/manual verification alternative; `AGENTS.md:104-108` and `GUIDING-PRINCIPLES.md:85` reconcile witnessed-red evidence with it. The R4 edits retain repo-scoped exceptions; express is unconditional at `skills/2-daily/express/SKILL.md:33` and `:127-129`. `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:431-440` explicitly defers full-gate-path instructions to Phase 2.
+- [Pass] **Ledger and scope remain bounded.** `releases.sql:710` preserves GH-732's textual and structured 55/40/50/70 rating while moving it to “Deferred · vision” with ⛔ and the superseded note. The seeded diff contains the matching roadmap-update receipts/events and generation increment; GH-831 ledger rows are context. No test suite, registry implementation, hook, guard or telemetry stage is added. `CHANGELOG.md:3-23` and the plan's Status row at `:34` describe rules-first Phase 1 and leave runtime routing to Phase 2.
+- [Unverified — needs clone run] No git command, validate.sh, test/*.sh, pytest or executable fixture was run during this turn. The harness must perform its gate after handoff. Live #805/#732 pointer updates and the excluded binary releases.db were not independently verified; no runtime or promotion qualification is claimed.  [Unverified — no citation]
+
+Relay closed (Approved), no further turn needed. The harness owns the relay-file commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
