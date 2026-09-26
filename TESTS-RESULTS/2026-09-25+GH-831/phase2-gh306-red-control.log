@@ -1,0 +1,10 @@
+# GH-831 Phase 2 step 3 — red control on the existing test/gh306-registry-bidirectional.sh, 2026-09-26T03:59:34Z, base f832ef5a + working tree
+## control: an unlisted, unregistered file in test/ (removed right after)
+  FAIL: top-level suite(s) on disk but registered nowhere and not exempt (the B3 shape, GH-306):
+        zz-gh831-unregistered-probe.sh
+  gh306-registry-bidirectional: 9 pass, 1 fail
+suite rc=1
+## restored
+  gh306-registry-bidirectional: 10 pass, 0 fail
+suite rc=0
+probe file removed

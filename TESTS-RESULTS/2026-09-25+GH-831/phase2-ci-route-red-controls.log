@@ -1,0 +1,14 @@
+# GH-831 Phase 2 step 1 — red controls on the existing test/ci-route.sh, 2026-09-26T03:58:35Z, base f832ef5a + working tree
+## control A: drop one Small member (gh306-registry-bidirectional.sh)
+small count now: 72
+  FAIL: subsystems small listed       72 suites: gh308-frozen-twin-guard.sh gh777-inventory-ratchet.sh gh400-acceptance-fidelity.sh gh400-source-url.sh litmus-r
+  FAIL: subsystems small listed       72 suites: gh308-frozen-twin-guard.sh gh777-inventory-ratchet.sh gh400-acceptance-fidelity.sh gh400-source-url.sh litmus-release.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh gh448-driver-lock-resolver.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh549-work-events.sh gh646-status-label.sh gh1-fixture-guard.sh gh1-adoption-guard.sh gh139-pipe-grep-guard.sh gh168-wave-reconcile-scope.sh gh184-no-tracked-scratch.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh releases-skill.sh gh103-timeline-exporter.sh gh75-dashboard.sh gh32-releases-app.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-releases-fuzz.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh351-manifest-unship.sh gh360-scoped-receipt-chain-rebuild.sh gh349-releases-roadmap-vendored.sh gh429-wave-reconcile-vendored-observe.sh gh358-wave-reconcile-vendored-paths.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh relay-target-root.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root-newfile.sh gh649-pdda-migration.sh pdda-changelog.sh pdda-install-startup-docs.sh pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh784-marathon-qa-gate.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh mktemp-trap-guard.sh gh567-roadmap-dashboard-retired.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh568-releases-md-retired.sh gh454-reconciler-defects.sh gh424-roadmap-status-marker.sh gh421-auto-wave-reconcile.sh gh491-roadmap-section-validation.sh gh492-roadmap-state-sweep.sh gh605-work-state.sh gh605-board-policy.sh gh436-merge-cleanup.sh gh645-merge-cleanup-xyz-tools.sh gh674-merge-cleanup-hosted-lookup.sh gh527-issue-url-repair.sh gh153-releases-sidebar-rollup.sh security-scan.sh sentinel-network-guard.sh gh107-timeline-json-seam.sh wave-reconcile.sh gh496-phase2-reconciliation-views.sh
+suite rc=1
+## control B: drop the merge-cleanup exclusion from is_docs_surface()
+  FAIL: core skill code stays off the docs gate (GH-831 D4: merge-cleanup): docs_only=true
+tier_reason=docs-only
+suite rc=1
+## restored
+  ci-route: 81 pass, 0 fail
+suite rc=0
+classifier restored byte-identical
