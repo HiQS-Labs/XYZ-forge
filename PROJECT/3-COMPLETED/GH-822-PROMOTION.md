@@ -1,6 +1,6 @@
 ---
 title: "GH-822: 2026-09-25 post-merge review — promote development to main and publish 0.9.0 Cargo"
-status: Active
+status: Complete
 gh_issue: 822
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/822
 doc_type: feedback
