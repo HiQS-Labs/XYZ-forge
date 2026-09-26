@@ -236,7 +236,8 @@ verdict. A self-reviewed plan is not complete QA. Missing runtime capability bec
 parked dependency and holds its lane.
 
 Check RELEASES ratings and the PDDA risk gate. `ratings_provisional: true` and `risk > 2` prevent
-automatic selection. #443 owns the fuller PRS freshness gate; until it lands, inspect rating and
+automatic selection. #443 owns the fuller Product Release System (PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first))
+freshness gate; until it lands, inspect rating and
 issue update timestamps and hold uncertain ratings rather than claiming planner verification.
 
 ```bash

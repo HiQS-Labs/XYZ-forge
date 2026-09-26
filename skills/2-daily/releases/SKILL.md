@@ -5,6 +5,7 @@ description: Read, synthesize, diagnose, clean, author, and publish the releases
 
 # /releases — one release-planning router
 
+The release ledger is the Product Release System (PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)).
 Treat the release ledger as an optional forward-looking planning aid, never as a second
 `CHANGELOG.md`. Start every invocation by reading and synthesizing the ledger. Route into a mutating
 subroutine only when the operator explicitly chooses or requests one.
