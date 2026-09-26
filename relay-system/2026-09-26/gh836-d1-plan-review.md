@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -108,5 +108,33 @@ Write findings in the Log per the turn rules. Set `STATUS: Approved` only if the
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The compensating route is sound in the inspected code, but the recon overstates tier-3 coverage and the proposed new cases conflict with Definition of Done (c). Two small plan corrections are needed; no broader implementation is requested.
+swept file: yes
+
+- [Should] S1 — Correct the dependency/routing claim at `.relay-artifacts/gh836-d1-plan.md:277`. “Everything else it reads is merge-cleanup code” and “already routes tier 3” are false: `test/gh534_phase_b_tests.py:32-33,163-165` copies `utils/py/releases_app.py`, `utils/releases-merge-resolve.sh` and `.gitattributes`; phase A also invokes `bin/tick` (`:36,304`). Replace the blanket claim with these dependencies and their actual tiers. The two releases files are tier 2, which still runs the full hosted reconcile (`utils/py/wave_reconcile.py:589-614`), so this needs a recon correction, not more router exceptions.
+  Observed input: `printf '%s\n' utils/py/releases_app.py | bash utils/ci-route.sh push` and the same command for `utils/releases-merge-resolve.sh`; both exited 0 with `route=fast`, `tier=2`. `.gitattributes` returned `route=fast tier=3`; `bin/tick` returned `route=full tier=3` (each rc 0).
+  Affected scope: D1's dependency inventory and explanation of hosted coverage; preserve existing tier-2 routing.
+  Falsifier: If the suite no longer copied/invoked these sources, or either releases input classified tier 3, this correction would be unnecessary. The cited source and probes show otherwise.
+
+- [Should] S2 — Reconcile Change 3/V1 with the explicit existing-assertions-only boundary. The plan says “both new cases must fail” (`.relay-artifacts/gh836-d1-plan.md:303-304`); neither document has an existing `expect_tier` case in `test/ci-route.sh:155-182`. Cheapest fix: edit the existing Small-list assertion only, and make the two document-route red/green checks recorded manual probes alongside V2, with commands, nonempty output, expected fields and exit statuses retained under the existing GH-836 evidence directory and provenance. Alternatively identify precisely which existing assertions will be updated without losing their current coverage. No new suite or gate is needed.
+  Observed input: Change 3 names two cases and V1 explicitly calls them new, against Definition of Done (c): “edits only existing assertions”.
+  Affected scope: D1's verification procedure and `test/ci-route.sh` edits only.
+  Falsifier: A plan naming existing assertions that already cover these two paths, or specifying manual red/green probes instead of new cases, satisfies this boundary.
+
+- [Pass] The two document readers are real (`test/gh534_phase_a_tests.py:125`, `test/gh534_phase_c_tests.py:523,877,924`). No additional repository document input was found in the wrapper, main suite and phase A/B/C input trace; ledger/README data in `LedgerFixture` is generated inside fixtures (`test/gh534_phase_b_tests.py:161-170`). The proposed case pattern matches the real skill path: `bash -c 'case skills/2-daily/merge-cleanup/SKILL.md in skills/*/merge-cleanup/SKILL.md) echo pattern-match=yes;; *) exit 1;; esac'` exited 0, `pattern-match=yes`. Baseline `printf '%s\n' <path> | bash utils/ci-route.sh push` returned rc 0, `route=docs tier=1` for each document and for `README.md`. The existing `full_required` precedence governs both route and tier (`utils/ci-route.sh:454-471`), so extending that case is sufficient.
+
+- [Pass] Scope and receipt compatibility are supported: `bash utils/ci-route.sh subsystems small` exited 0 with 73 names including `gh436-merge-cleanup.sh`; deleting that one name yields 72 without changing the full registry. The receipt checks the recorded list against the router at the tested commit (`utils/py/wave_reconcile.py:466-475,554-560`), so old receipts are not compared to the new list. `gh35` checks registry existence/membership and `gh306` checks full-registry bidirectionality; neither pins a 73-member Small list. D1's explicit non-goals leave D2, D3 and gh436 itself unchanged (`.relay-artifacts/gh836-d1-plan.md:299-300`).
+
+- [Nit] Record the additional CI consequence: `route=full` also selects the Ubuntu full-registry canary (`.github/workflows/ci.yml:480-489`), not only push and hosted reconcile. Also update ROUTER's statement that core skill markdown retains docs routing (currently only relay-xyz/relay-automation exceptions), even though it does not name a count; Change 4 currently conditions its update on a count (`.relay-artifacts/gh836-d1-plan.md:297`).
+
+- [Nit] Whole-file sweep found pre-existing stale frontmatter: artifact lines 5,13,15 still say D1 awaits the operator and prohibit its router/tier change. Mark those non-goals as belonging to the already-merged phase and bring the current status into agreement with the D1 section. No other actionable pre-existing plan defect found within D1's review scope.
+
+- [Unverified — needs clone run] V1/V3/V4 and post-change green routing have not run in this reviewer worktree; this is plan QA, not implementation approval. The historical seven-commit frequency claim was not independently checked because this turn forbids Git. Source-level receipt compatibility above is not an executed historical-receipt replay.
+
+Handing off to Producer (claude-a) — correct S1/S2, disposition the nits, and open Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
