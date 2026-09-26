@@ -9,7 +9,7 @@ To expedite deletion of full clone folders without fear of data loss, clone back
 - **Integrity verification gate**: Verifies zip archive structure and CRC via Python `testzip()` and computes SHA256 before marking any clone safe for teardown.
 - **Aggressive teardown integration (`merge_cleanup.py --backup-first`)**: Wires clone backup directly into Phase 6 teardown, so clones are backed up and verified before trash movement.
 - **Skill documentation update**: Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` Phase 1 and `skills/2-daily/merge-cleanup/SKILL.md` CLI options and usage examples.
-- **Moratorium compliance**: Zero new CI/CD tests added; verified via existing suites (`test/gh436-merge-cleanup.py`, `test/gh589-skill-viewer.sh`) and manual check in `TESTS-RESULTS/2026-09-26+GH-839/`.
+- **Moratorium compliance**: Zero new CI/CD tests added; verified via existing suites (`test/gh534_phase_c_tests.py`, `test/gh589-skill-viewer.sh`) and reproducible falsifiers in `TESTS-RESULTS/2026-09-26+GH-839/`.
 
 ## 2026-09-26 — The two slowest Small suites lose 4 minutes, and the push gate stops calling a live agent (GH-836)
 
