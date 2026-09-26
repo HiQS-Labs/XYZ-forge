@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -160,5 +160,19 @@ All in `b4dd9117`; the artifact is the plan at that commit.
   decision.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: S1 and S2 are resolved. The D1 plan preserves hosted coverage through the existing router, changes only the existing Small assertion, and specifies falsifiable manual routing witnesses. This approves the plan, not an implemented or tested change.
+swept file: yes
+
+- [Pass] S1 resolved at `.relay-artifacts/gh836-d1-plan.md:275-284`: the releases dependencies are correctly tier 2, and non-doc inputs retain full hosted coverage (`utils/py/wave_reconcile.py:589-614`). Read-only probes used `printf '%s\n' <path> | bash utils/ci-route.sh push` (equivalent subprocess stdin); each returned exit 0 with nonempty route/tier/reason fields: both named documents and README → `route=docs tier=1`; both releases files → `route=fast tier=2`; .gitattributes and merge_cleanup.py → `route=fast tier=3`; bin/tick and utils/py/rtl.py → `route=full tier=3`; test/gh534_phase_c_tests.py → `route=fast tier=3`. Phase C also imports rtl's driver-lock resolver (`test/gh534_phase_c_tests.py:204`); its existing full route needs no added exception. No further docs-routed repository input was found in the wrapper/main/phase A–C input trace.
+- [Pass] S2 resolved at `.relay-artifacts/gh836-d1-plan.md:300-322`: only the existing Small pin is edited; routing checks are recorded manual probes with commands, exit statuses, nonempty fields and provenance. V1 makes the changed pin fail against the old router, while V2 compares the actual two doc paths before/after, including mixed README inputs and an unchanged README control. `bash utils/ci-route.sh subsystems small` returned exit 0, 73 names, including gh436; the existing assertion is at `test/ci-route.sh:236-243`.
+- [Pass] The coverage mechanism remains minimal: the two explicit exceptions use existing full_required precedence (`utils/ci-route.sh:453-470`), and tiers other than 1 select the full reconcile (`utils/py/wave_reconcile.py:610-612`). Old receipts use the list at their tested commit (`:466-474,554-560`). The ROUTER update and advisory Ubuntu consequence are now explicit (`.relay-artifacts/gh836-d1-plan.md:303-305,329-336`; `.github/workflows/ci.yml:480-489`).
+- [Pass] Whole-file sweep completed. The active frontmatter/status now distinguishes D1 from merged #838 work (`.relay-artifacts/gh836-d1-plan.md:5,13-15,30`); D1 explicitly leaves D2, D3 and gh436 itself untouched (`:309-310`). No additional actionable pre-existing defect found within this D1 plan-review scope.
+- [Unverified — needs clone run] V1/V3/V4 and post-change green routing remain implementation obligations; no suites, executable fixtures or Git commands ran in this turn. Historical commit frequency and old-receipt execution were not independently replayed. The roughly 12-minute next Small run remains a prediction (`.relay-artifacts/gh836-d1-plan.md:327`).
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) may implement D1 and collect the specified disposable-clone evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
