@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -130,5 +130,32 @@ Write findings in the Log per the turn rules. Set `STATUS: Approved` only if the
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The measured targets and steps 2–4 are sound, but step 1 does not yet satisfy DoD (d): ten ordinary starts cannot establish that the shortened race window tolerates startup skew. Revise that acceptance criterion before implementation. This is a plan review, not a failed execution claim.
+swept file: yes
+
+- [Should] **S1 — make the shortened race's acceptance criterion sensitive to startup skew.** `.relay-artifacts/gh836-plan.md:117-121` fixes the budget at three sleeps and concludes that ten consecutive witnesses mean “not flaky.” Both workers traverse the same ordered rows (`utils/py/releases_app.py:5175`), but `test/gh549-work-events.sh:1068` merely launches two background processes; it does not synchronize their arrival at the suppression read. A worker can consume its three sleeps before its peer reaches the relevant rows. Raising three to another arbitrary number does not settle that premise. Cheapest fix: describe three as a candidate budget, explicitly require deliberate staggered-start witnesses in both launch directions in the disposable clone (including skew beyond the nominal 1.2-second sleep budget), and name the fallback if those fail: retain the existing control or use bounded rendezvous inside the existing mutated-copy leg. Do not claim ten ordinary runs prove absence of flakes. No new suite, helper framework, or gate is requested.
+  Observed input: the unsynchronized `for i in 1 2; do ... & done; wait` at `test/gh549-work-events.sh:1068`, the moved read before sleep at `:1057-1061`, and the proposed three-emission cap at plan `:118`.
+  Affected scope: only 21e's intentionally broken copy and its evidence; the positive race and production runtime stay unchanged.
+  Falsifier: run that edited existing leg in a disposable clone with controlled launch offsets in both directions; require successful worker exits and `NBF3 > NROWS` for each stated offset, alongside the unchanged positive `NBF2 = NROWS`. A demonstrated bounded overlap mechanism would remove the timing objection. Current dynamic reliability is **[Unverified — needs clone run]**.
+
+- [Pass] **R1/R2/R3 measured costs match the retained evidence.** `TESTS-RESULTS/2026-09-26+GH-836/baseline-gh549-top-gaps.txt` records “124.8s line 1068”, “68.8s line 1127”, and “38.0s line 1178”; `baseline-gh436-durations.out` records “49.01s” for the parity test and “180 passed in 291.83s”. `provenance.jsonl` identifies the disposable baseline and exit 0. Those substantiate the targets, not the projected after-times. In R1, correct the positive-race citation from `:1052-1056` to `test/gh549-work-events.sh:1038-1041`.
+
+- [Pass] **Step 2 preserves the event assertions.** `test/gh549-work-events.sh:1129-1147` and `:1179-1183` query events, not board state. The four listed calls at `:1127`, `:1132`, `:1141`, `:1178` correctly cover the positive interleave and red (iii). There is also a red (i) backfill at `:1159`; leaving it unchanged is reasonable (baseline 2.9s), but the list is not every backfill in the wider section. `utils/py/releases_app.py:5628-5641` scans before dispatch; `_scan_review_ready` at `:5264-5324` derives suppression from event history, not the cursor. Thus advancing the cursor skips old board replay without suppressing new review_ready emission. Extend `seed_cursor_tail` at `test/gh549-work-events.sh:162` with the optional id as proposed; preserve its default and both INSERT/UPDATE arms. The existing 22a board assertion at `:1104-1105` remains intact. Keep red (i) as well as (ii)/(iii) in the focused run.
+
+- [Pass] **Step 3 removes duplicate execution in the full registered invocation.** `test/gh436-merge-cleanup.py:863-869` imports the phase classes and invokes unittest; the extra invocation is precisely `test/gh534_phase_c_tests.py:587-590`, requested at `:928`. The deleted-row and forced-named-test-failure witnesses at plan `:142-143` are appropriate. An AST-only inspection found all 17 table names as public test methods in the imported phase classes, with no method/class skip decorators. A separate read-only count command, `python3` with `n=set(re.findall(r'^\|[^\n]+\| script \| (Test\w+\.test_\w+) \|$', Path('skills/2-daily/merge-cleanup/SKILL.md').read_text(), re.M)); print('named tests:',len(n)); print('open-handles named:', 'TestA4OpenHandles.test_ix_held_descriptor_is_active_process_naming_the_pid' in n)`, exited 0: `named tests: 17` / `open-handles named: True` (imports: `from pathlib import Path; import re`). No test module was executed.
+
+- [Nit] **Qualify R3's “every named test ... runs” statement.** `TestA4OpenHandles.setUp` skips when `lsof` is absent (`test/gh534_phase_a_tests.py:427-431`), including its named method at `:441`. This is an existing qualification, not a regression from removing the nested runner: unittest also treats the nested skip as successful. State that all 17 are collected in the full invocation, with execution subject to existing prerequisites; the retained macOS baseline reports no skips. Selecting only the parity test will check existence/parity, not execute the named behavioral tests. No additional guard is needed for that narrower mode.
+
+- [Pass] **Step 4 addresses the observed resolver mismatch.** `test/gh649-pdda-migration.sh:4,15` compares logical ROOT to the resolver's physical result (`skills/4-occasional/vendor-stack/find-pdda.sh:22,26`). The retained red log `TESTS-RESULTS/2026-09-26+GH-835/full-gate-b2c307b4-tmp-red.log:426` says `FAIL - resolver`. The rest of the 165-line suite uses ROOT to locate files; its other comparisons concern contents and fixture-derived state. `pwd -P` is sufficient for this ROOT mismatch. Execute the planned before/after from the logical `/tmp/...` spelling explicitly; merely storing a clone beneath `/private/tmp` would not reproduce it.
+
+- [Pass] **R5, scope and rating are reasonable.** `githooks/pre-push:295` runs validate without setting the skip; `ci-local.sh:404` and `.github/workflows/ci.yml:194,402,483` set it. This is the default behavior, subject to an inherited opt-out (`test/relay-self-sufficiency.sh:29`). D1–D3 remain operator decisions. The plan's non-goals and steps introduce no suite, registry entry, or runner change. The rating rationale explicitly says “Appeal 50. Neutral; the operator gave no score,” distinguishes unknown trend, and labels after-times “Expected”; the numerical values are judgment, not measurements. Record the existing easy reversibility explicitly if desired; no additional ceremony is needed.
+
+- [Unverified — needs clone run] **Implementation proof remains outstanding.** No suite, pytest, or executable fixture was run in this review. The proposed global counter is sound in principle only if initialized and declared before its first use in `_emit_work_event`; the plan has no inserted code yet to validate. Nothing else in 21e uses the sleep beyond inducing overlap and the final duplicate count (`test/gh549-work-events.sh:1067-1071`). I found no additional pre-existing defect in the reviewed plan beyond S1 and the cited qualifications.
+
+Handing off to Producer (claude-a): revise S1 and disposition the findings, then return the plan for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
