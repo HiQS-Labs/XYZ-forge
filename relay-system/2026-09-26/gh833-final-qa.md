@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -189,5 +189,22 @@ All in `8ebd0345`. The artifact is regenerated as `git diff af4fef27 8ebd0345`, 
   I'm reporting them to the operator for a follow-up issue.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: F1/F2 and the requested dispositions are resolved. The PRS implementation meets the documentation DoD; the retained evidence now states its limits. Push and hosted qualification remain outstanding as specified in the plan.
+swept file: yes
+
+Read the complete regenerated seeded diff, the complete revised working plan and evidence, and the plan-review approval/attestation. Rechecked the PRS placements and ledger schema. This follow-up carries forward round 1's recorded whole-doc/skill sweep; it does not claim a second independent audit of every unchanged paragraph. No additional pre-existing defect found in this follow-up. The three previously identified skill defects remain explicitly deferred, not fixed by this approval. `E/` below means `TESTS-RESULTS/2026-09-26+GH-833/`.
+
+- **[Pass] F1 closed with appropriately limited evidence.** Results at `PROJECT/2-WORKING/GH-833-PRS-DEFINITION.md:209` now says the other identity fields “were not retained before it; they were checked after it.” `E/v3-reader-suites.log:2,6` supports unchanged HEAD/porcelain; `E/v3-identity-and-pdda-baseline.log:1–19` records the later identity observations and both zero-error PDDA runs. Its warning delta is three shifted ROUTER references plus two uncached #833-state warnings, exactly as the Results note explains. `E/provenance.jsonl:5` supplies the corrective attribution. The older row 3's “pre-existing warnings” wording is historical and superseded by that correction, not independent baseline evidence. No pre-run config snapshot or historical execution metadata is inferred.
+- **[Pass] F2 closed.** The complete revised `E/witness-script.sh.txt:1–23` contains no deletion; `fresh()` allocates a new directory and refuses on failed allocation. `E/witnesses.log:1–40` records the rerun at 9aecad1b, green V1/V1b and five red controls with rc 1. `E/provenance.jsonl:6` and the Results witness-recipe note distinguish that run from the preserved historical `*-r0` files. Inspected only; neither witness recipe was executed here.
+- **[Pass] Placement deviation and pre-existing findings dispositioned.** The Results note explicitly records the second-sentence choice for PDDA. The plan's “Found in review, deferred (not in this PR)” section names all three existing skill instruction problems and leaves them for follow-up, preserving DoD (d). The Results introduction separately attributes base controls to af4fef27. The rating rationale at the plan's “Rating” section still supports `55/20/50/85`.
+- **[Pass] Definition, links and behavior remain sound.** `HOW-TO-USE.md:81–87` remains the substantive definition; `ROUTER.md:5` names the trinity and links it. Ledger contents match `utils/py/releases_app.py:523,544,633,833`; `PROJECT/PDDA.md:948` preserves the releases-mode qualification. The six skill hunks add expansion/pointers without changing task operations, rating axes or routes (including `end-of-week/SKILL.md:32`, `10days/SKILL.md:6`, and `start-task/SKILL.md:239–255`). Read-only commands `bash E/prs-order-check.sh.txt "$PWD"` and `python3 E/prs-definition-check.py.txt "$PWD"`, with E expanded and `PYTHONDONTWRITEBYTECODE=1`, returned exit 0: `V1: 14/14 pass` and `V1b: pass`. The actual heading at HOW-TO-USE:68 supports `glossary--the-five-terms-youll-hit-first`; development URLs remain prospective until merge. Red sensitivity is retained in `E/red-controls-base.log` and `E/witnesses.log`.
+- **[Pass] Expanded packet still routes to tier 1.** Read-only command: Python extracted destinations matching `^diff --git a/\S+ b/(\S+)$` from the nonempty seeded artifact, deduplicated them with `releases.db` and the plan/final relay paths, asserted more than 25 paths, then called `subprocess.run(['bash','utils/ci-route.sh','push'], input='\n'.join(paths)+'\n', text=True, capture_output=True)`. Exit 0, 31 paths: `route=docs tier=1 full_required=false`. Appending `relay-automation/README.md` produced exit 0, 32 paths: `route=full tier=3 full_required=true`. This measures the packet plus declared omitted paths, not a fresh git diff. The diff adds no suite, registry entry, runtime code or gate machinery.
+- **[Unverified — needs clone run]** No suites, executable fixtures or PDDA aggregate ran in this review worktree. The historical reader results are retained at `E/v3-reader-suites.log:9–11` (40/0, 33/0, 180 tests OK). The harness gate after this turn, V5 push self-check, and hosted Small qualification are not discharged by this review. Only the relay file was edited; no git command was run.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the already specified push/PR and qualification workflow; the token is completed with `done` per the approval instruction.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
