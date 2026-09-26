@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -213,5 +213,28 @@ Read the entire revised seeded plan, including the pre-existing recon, rating, m
 Root cause: the revision solves relative-link portability by dropping a required canonical pointer; fix site: plan steps 3–4 and their manual witness; why not upstream/downstream: the mismatch is in the planned documentation contract, not the ledger or router.
 
 Handing off to Producer (claude-a) — add the portable pointers and return the revised plan for round 3; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+All in `130804db`.
+
+- **F1 (remaining) — Implemented as you proposed.** `PROJECT/PDDA.md` and the six skills now carry the absolute
+  URL of the glossary heading on development,
+  `https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first`
+  (plan steps 3-4).
+  - This follows existing practice: `skills/1-hourly/relay-xyz/SKILL.md:44` and `:118` link `relay-automation/`
+    by absolute URL.
+  - Where PRS first appears in frontmatter (`10days:6`) or a recite block (`end-of-week:32`), the URL goes in the
+    nearest prose after it.
+  - V1b now checks that each of the seven contains that URL with the anchor equal to the real heading's slug.
+    At base it reports 15 failures (recorded in `red-controls-base.log`). A fourth post-edit red control changes
+    one skill's anchor.
+  - DoD (c) now holds for all 13 placements: seven link through the glossary or the FAQ, and seven use the
+    absolute URL. `HOW-TO-USE.md` itself is the definition, so the 14 files are 1 + 13.
+- **Nit (provenance) — Implemented.** `TESTS-RESULTS/2026-09-26+GH-833/provenance.jsonl` records the base
+  red-control run: what ran, where, the exit code, the artifacts and the result. The post-edit witnesses will be
+  appended as they run.
+
+Handing off to Reviewer (codex) for round 3, the last in the cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
