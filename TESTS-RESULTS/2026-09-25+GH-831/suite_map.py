@@ -142,9 +142,14 @@ merges = [l.split(" ", 1) for l in subprocess.check_output(
 D4_DATA = re.compile(r"^(releases|harnesses)\.(db|sql)$|^LEADERBOARD\.html$|^RELEASES-PREVIEW\.html$")
 CORE_SKILL = re.compile(r"^skills/[^/]+/(relay-xyz|relay|relay-automation|merge-cleanup|express|jog)/")
 def route(paths):
-    out = subprocess.run(["bash", "utils/ci-route.sh", "push"], input="\n".join(paths) + "\n",
-                         capture_output=True, text=True).stdout
-    t = re.search(r"^tier=(\d)", out, re.M)
+    res = subprocess.run(["bash", "utils/ci-route.sh", "push"], input="\n".join(paths) + "\n",
+                         capture_output=True, text=True, check=False)
+    if res.returncode != 0:          # a failed call must not masquerade as a fail-closed tier 3 (PR #832 review)
+        raise RuntimeError(f"ci-route.sh failed (rc {res.returncode}): {res.stderr[-300:]}")
+    out = res.stdout
+    t = re.search(r"^tier=([123])$", out, re.M)
+    if not t:
+        raise RuntimeError("ci-route.sh returned no valid tier")
     subs = (re.search(r"^tier2_subsystems=(.*)$", out, re.M) or [None, ""])[1].split()
     return (t.group(1) if t else "3"), subs
 def d4_tier(paths):

@@ -156,7 +156,7 @@ reversibility: Easy | Costly | One-way door — <one line of why>
 
 ### Phase 1 — QA checklist
 - [ ] Every todo above produced its checkable output (no orphan tasks)
-- [ ] Tests **run**: existing suites, plus new ones only where the repo allows them (not XYZ-forge: `AGENTS.md` *No new tests*, GH-831). Point to the execution artifact, not an assertion
+- [ ] Tests **run**: existing suites, plus new ones only where the repo allows them. Where it does not (XYZ-forge: `AGENTS.md` *No new tests*, GH-831) and no existing suite covers the change, a manual check recorded under `TESTS-RESULTS/` counts. Point to the execution artifact, not an assertion
 - [ ] Diagnosable: logs + correlation id present; every loop has a stop condition
 - [ ] Blast: each risky step names undo-class + shield + tripwire (or explicit "none")
 - [ ] Status table and `updated:` date refreshed before this phase is marked done

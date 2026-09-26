@@ -181,6 +181,9 @@ When reviewing a bug fix, apply the four debug mantras rigorously:
    - Run the test suite: **Did the test turn RED?**
    - If the test still passes when the fix is broken, the test is decorative and reports confidence
      it never earned. This is a mandatory `[Blocker]`.
+   - In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), where no existing suite
+     covers the fix, a manual red control recorded under `TESTS-RESULTS/` satisfies this mantra. It mutates
+     the fix and records the failing result.
 4. **Mantra 4 — Cross-reference breadcrumbs:**
    - Walk recent `CHANGELOG.md` entries and git history. Does this fix repeat a previously failed
      pattern or reopen a settled architectural decision?

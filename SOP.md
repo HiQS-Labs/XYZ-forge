@@ -132,7 +132,7 @@ python3 utils/ate/scripts/checkin.py --log "$SCRATCH/error_log.jsonl"
 ```
 Monitor failure clusters, category distributions (`auth_failure`, `config_error`, `env_failure`), and throughput. If a valid defect is identified:
 1. **File a GitHub tracking issue immediately (auto-file — §1; do not wait to be prompted).** Ambiguous findings: offer to file rather than holding them silently.
-2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix, verified with the existing suite that covers it (no new test suites; GH-831).
+2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix, verified with the existing suite that covers it. Where none does, verify it with a manual check recorded under `TESTS-RESULTS/` with its `provenance.jsonl`. No new test suites (GH-831).
 3. If complex, record findings on the issue for architectural planning.
 
 ### Step 7: Commit Artifact Receipts

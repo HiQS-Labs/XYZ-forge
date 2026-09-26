@@ -441,7 +441,8 @@ This lands first and alone, so agents see the freeze before the gate change is r
 2. Cut GH-732's parked ledger row as superseded by #802/#831 with the `releases_app.py roadmap` verbs.
    → expect: `releases check` clean, and the row out of the parked queue.
 3. Put a pointer line at the top of #805 and #732 ("superseded, see #802/#831").
-4. Push through the hook (docs gate) and open the PR.
+4. Push through the hook and open the PR. It runs the tier-2 releases lane, not the docs gate, because the
+   branch carries ledger rows; D4's ledger-as-docs routing is Phase 2. Recorded: tier 2 GREEN in 478 s.
 
 **Phase 1 QA gate:** Codex final review of the diff, the docs gate green, `pdda.sh run` 0 errors.
 
