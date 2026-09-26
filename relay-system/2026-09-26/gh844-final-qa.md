@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -110,5 +110,33 @@ Write findings in the Log per the turn rules. Set `STATUS: Approved` only if the
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PARKED
+
+Basis: The GH-844 checker changes and the Small telemetry agree with the packet. I cannot establish the job-duration portion of DoD (b) from the retained evidence, and the read-only GitHub query failed in this sandbox. This is an evidence limitation, not an observed failure of the hosted jobs. Retain the small job-metadata extract described in S1, then return for review. No suite, fixture recipe, or git command was run here.
+
+swept file: no
+
+Scope: read the complete artifact, the four current plans, both versions of the definition check and witness recipe, and both new witness logs; inspected the receipts and parsed the Small and two full-run telemetry files. Checked the ledger read-only. This was not an exhaustive review of the thousands of historical CHANGELOG/SQL lines. The pre-existing current-document drift found in the wider read is N1 below; no additional defect was found in the revised checker.
+
+- **[Should] S1 — retain the evidence for job durations and the tier-log claim.** `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:556` reports 57.2 minutes **job**, `:557` reports 19.2 minutes **job**, and `:563` reports 59.9 minutes; `:559` says both logs name their tier. The supplied qualification receipts establish passing gates, their SHAs and run URLs, but contain neither job start/end timestamps nor the two log excerpts. The gate telemetry does not substitute for job metadata: the two full-run `run.start`→`run.summary` spans are 53.4735 and 55.5461 minutes. These do not disprove the job numbers; they measure a different interval. Concrete fix: retain a small GitHub jobs response (run ID, job name/ID, start/end, conclusion) for runs 36247260339, 36276061201 and 36271811800, plus the two qualification log lines, with provenance. Alternatively narrow the prose to the measurements actually retained. No new test or automation is requested.
+  - Observed input: the claims at `:556–563`, and the three `TESTS-RESULTS/2026-09-26+GH-591/wave-*/provenance.jsonl` receipts for `b2c307b4`, `9fd2d885` and `af4fef27`.
+  - Affected scope: documentation/evidence for these three hosted jobs only.
+  - Falsifier: job metadata whose start/end differences round to 57.2, 19.2 and 59.9 minutes, and the quoted tier lines, would resolve this finding without changing the numerical claims.
+  - Probe: `gh api repos/HiQS-Labs/XYZ-forge/actions/runs/36276061201/jobs --jq '.jobs[] | {name,started_at,completed_at,conclusion}'` exited **1**: `error connecting to api.github.com`. This is not evidence that the jobs failed.
+
+- **[Pass] P1 — glossary scoping handles the three requested cases.** `TESTS-RESULTS/2026-09-26+GH-833/prs-definition-check-v2.py.txt:35` locates the heading, `:41` bounds the section, and `:45–49` reject outside/duplicate entries. A read-only `python3 -` probe compiled that exact file and used `unittest.mock.patch.object(Path, 'read_text', ...)` to substitute only HOW-TO-USE text in memory; no tree files changed. Probe exit **0**. Decisive output: `green rc=0 V1b: pass`; `moved rc=1 ... entry sits outside the glossary section`; `duplicate rc=1 ... 2 ... entries ... want 1`; `missing_heading rc=1 ... no Glossary heading`.
+
+- **[Pass] P2 — aggregate status and the recorded gap witness are consistent.** `witness-script-v2.sh.txt:18`, `:22`, `:24` latch failures; `:40` exits with that status. `witnesses-v2.log:43–53` records the moved entry rejected by v2, accepted by v1, and `AGGREGATE: PASS`. `witnesses-v2-selftest.log:53–57` records `rc=0 (want 1) UNEXPECTED` and `AGGREGATE: FAIL`; `provenance.jsonl:8` explicitly records normal exit 0 and self-test exit 1. This is source/log review, not a claim that I reran the executable witness recipe. The corrected non-goal is at `PROJECT/2-WORKING/GH-833-PRS-DEFINITION.md:13`.
+
+- **[Pass] P3 — Small counts and gate timings match retained telemetry.** In `TESTS-RESULTS/2026-09-26+GH-591/wave-9fd2d88543f9f52e2e40b2cb8fc4771b08440ff6/`, `provenance.jsonl:1` and `validation.jsonl` agree. A `python3 -` JSON/hash probe asserted nonempty rows, compared SHA-256 with `telemetry_sha256`, selected `event == 'suite'`, and summed `duration_ms`. Output: `hash match True`, `suite events 75 receipt suites 73 sum seconds 942.276`; largest entries were `gh436 220.740`, `gh549 158.665`, `pdda-install-startup-docs 87.964`, `tier2:pdda 77.232`, `pdda-repo-contract 58.301` seconds. Summary: `passed: 76, failed: 0, total: 76, envelope_drift: none`. Thus 15.7 minutes, 23%/17%, and approximately 12.0 minutes without gh436 are supported. The 76th result includes the identity check, as the plan's D5 explains. D1 remains an operator decision at `GH-836-GATE-HOTSPOTS.md:257`; the diff changes no suite membership.
+
+- **[Pass] P4 — docs routing and ledger state.** A read-only `python3 -` probe extracted the 11 `diff --git` destination paths from the seeded artifact, added the omitted `releases.db` path, and supplied them to `bash utils/ci-route.sh push`; exit **0**, `route=docs`, `tier=1`, `tier_reason=docs-only`. No original r0/r1 recipe/log/check path is modified in the supplied diff; provenance only appends. A SQLite `mode=ro` query returned `integrity_check: ok` and GH844 `(844, 'In progress', 'PROJECT/2-WORKING/GH-844-PRS-EVIDENCE-HYGIENE.md', 20, 10, 50, 90)`. The SQL diff carries add/repoint/update receipts, and the capture's rating is at `GH-844-PRS-EVIDENCE-HYGIENE.md:34`.
+
+- **[Nit] N1 — synchronize the current frontmatter with the new status tables.** `GH-831-THREE-TIER-GATE.md:5–7` still says Phase 2 PR open and updated September 25; `GH-836-GATE-HOTSPOTS.md:5` still says awaiting merge, and `:18` says hosted evidence is owed. Their new Status rows say Phase 3/step 6 is complete. Update those current fields while retaining historical recon/results. This drift predates the new body claims but becomes more misleading with them.
+
+Handing off to Producer (claude-a): retain the narrow hosted evidence for S1 and disposition N1, then open the next review round. The harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
