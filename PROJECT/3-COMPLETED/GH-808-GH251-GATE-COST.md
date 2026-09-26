@@ -2,9 +2,9 @@
 gh_issue: 808
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/808
 title: "gh251-validate-pytest-skip.sh burns ~22% of the full gate on two nested tier-2 runs — scope it to the pytest lane"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-26
 owner: agent-b
 doc_type: bugfix
 complexity: 1
