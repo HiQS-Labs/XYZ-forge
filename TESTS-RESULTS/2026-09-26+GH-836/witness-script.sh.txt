@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# GH-836 red-control witnesses. Run in the disposable after-clone ($1). Nothing here is committed to the
+# repository as a suite: the scratch copies live in the disposable clone and are removed at the end.
+set -u
+A="$1"; cd "$A" || exit 2
+export PATH="$HOME/.cache/xyz-forge-test-venv/bin:/opt/homebrew/bin:$PATH"
+echo "# GH-836 witnesses — $(date -u +%FT%TZ) — clone HEAD $(git rev-parse --short HEAD), porcelain=$(git status --porcelain | wc -l | tr -d ' ')"
+
+# ── W1: 21e race control under deliberately staggered launches (Codex plan r1 S1) ─────────────────
+W="test/zz-gh836-w1.sh"
+python3 - <<'PY'
+import io
+s = io.open("test/gh549-work-events.sh", encoding="utf-8").read()
+a = 'for i in 1 2; do GH549_RACE_DIR="$RACEDIR" XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$RACE/releases_app.py" --root "$FXE3" work backfill >/dev/null 2>&1 & RPIDS="$RPIDS $!"; done'
+assert s.count(a) == 1, "W1: launch anchor"
+s = s.replace(a, 'for i in 1 2; do ( [ "$i" = "$GH836_LATE" ] && sleep "$GH836_OFFSET"; GH549_RACE_DIR="$RACEDIR" XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 exec python3 "$RACE/releases_app.py" --root "$FXE3" work backfill >/dev/null 2>&1 ) & RPIDS="$RPIDS $!"; done')
+b = '                          || bad "21e red did not reproduce ($NBF3 vs $NROWS)"\n'
+assert s.count(b) == 1, "W1: stop anchor"
+s = s.replace(b, b + 'echo "WITNESS offset=$GH836_OFFSET late=$GH836_LATE NROWS=$NROWS NBF2=$NBF2 NBF3=$NBF3 racers_rc=$RRC"; exit 0\n')
+io.open("test/zz-gh836-w1.sh", "w", encoding="utf-8").write(s)
+PY
+echo "## W1 — 21e red control, staggered launches (worker 'late' starts OFFSET s after the other)"
+for off in 0 1.5 3; do for late in 1 2; do
+  s=$(date +%s)
+  out="$(GH836_OFFSET=$off GH836_LATE=$late bash "$W" 2>&1)"
+  line="$(grep '^WITNESS' <<<"$out")"
+  fails="$(grep -cE '^  (FAIL|not ok)' <<<"$out")"
+  eval "$(sed -n 's/.*NROWS=\([0-9]*\) NBF2=\([0-9]*\) NBF3=\([0-9]*\) .*/n=\1 b2=\2 b3=\3/p' <<<"$line")"
+  nocrash="$(grep -c 'ok  - 21e red: no racer crashed' <<<"$out")"
+  verdict=FAIL; [ -n "${n:-}" ] && [ "$b3" -gt "$n" ] && [ "$b2" = "$n" ] && [ "$nocrash" = "1" ] && [ "$fails" = "0" ] && verdict=PASS
+  echo "  $verdict  $line  suite-fails-before-stop=$fails  ($(( $(date +%s)-s ))s)"
+  unset n b2 b3
+done; done
+rm -f "$W"
+
+# ── W2: is the 21f cursor advance load-bearing? (recorded, not asserted) ─────────────────────────
+python3 - <<'PY'
+import io
+s = io.open("test/gh549-work-events.sh", encoding="utf-8").read()
+stop = '[ "$NBI" = "$NBI2" ] && ok "21f backfill after a review_ready does NOT re-emit'
+assert s.count(stop) == 1
+i = s.index(stop); j = s.index("\n", i) + 1
+with_adv = s[:j] + 'echo "WITNESS stopped after 21f second backfill"; exit 0\n'
+io.open("test/zz-gh836-w2a.sh", "w", encoding="utf-8").write(with_adv)
+a = '  seed_cursor_tail "$1/releases.db" "$(sqlite3 "$1/releases.db" "SELECT max(id) FROM work_events;")"\n'
+assert with_adv.count(a) == 1
+io.open("test/zz-gh836-w2b.sh", "w", encoding="utf-8").write(with_adv.replace(a, "  :\n"))
+PY
+echo "## W2 — 21f with vs without the cursor advance (legs 1..21f, wall time)"
+for v in a b; do
+  s=$(date +%s); out="$(PS4='+ ${LINENO}: ' bash -x "test/zz-gh836-w2$v.sh" 2>&1 >/dev/null | python3 -c '
+import sys,time,re
+last=None; worst=(0,"")
+for l in sys.stdin:
+    t=time.time()
+    if last is not None and t-last[0]>worst[0]: worst=(t-last[0], last[1])
+    last=(t,l.strip()[:90])
+print("slowest-step %.1fs: %s" % worst)')"
+  echo "  variant $v ($( [ $v = a ] && echo 'with advance' || echo 'advance removed')): wall $(( $(date +%s)-s ))s; $out"
+done
+rm -f test/zz-gh836-w2a.sh test/zz-gh836-w2b.sh
+
+# ── W3: gh436 parity guard red controls ─────────────────────────────────────────────────────────
+SK="skills/2-daily/merge-cleanup/SKILL.md"; cp "$SK" "$SK.orig"
+echo "## W3a — a SKILL.md capability row deleted: the parity test fails"
+grep -v '^| teardown-trash-only |' "$SK.orig" > "$SK"
+out="$(python3 -m pytest test/gh436-merge-cleanup.py -q -p no:cacheprovider -k test_skill_md_matches_code_and_tests 2>&1)"; rc=$?
+echo "  rc=$rc  $(grep -oE "row missing: [a-z-]+" <<<"$out" | head -1)  $(tail -1 <<<"$out")"
+cp "$SK.orig" "$SK"; rm -f "$SK.orig"
+echo "## W3b — a named behavioural test forced to fail: the registered gh436 suite fails through collection"
+PC="test/gh534_phase_c_tests.py"; cp "$PC" "$PC.orig"
+python3 - <<'PY'
+import io,re
+p="test/gh534_phase_c_tests.py"; s=io.open(p,encoding="utf-8").read()
+a="    def test_gate_red_prevents_the_merge(self):\n"
+assert s.count(a)==1, "W3b anchor"
+s=s.replace(a, a+'        self.fail("GH-836 W3b: forced failure of a SKILL.md-named test")\n')
+io.open(p,"w",encoding="utf-8").write(s)
+PY
+s=$(date +%s); out="$(bash test/gh436-merge-cleanup.sh 2>&1)"; rc=$?
+echo "  registered wrapper rc=$rc ($(( $(date +%s)-s ))s)  $(grep -E '^FAIL: test_gate_red_prevents_the_merge' <<<"$out" | head -1)  $(grep -E '^(FAILED|OK)' <<<"$out" | tail -1)"
+out2="$(python3 -m pytest test/gh436-merge-cleanup.py -q -p no:cacheprovider -k test_skill_md_matches_code_and_tests 2>&1)"; echo "  parity test alone with the forced failure: $(tail -1 <<<"$out2") (existence only — execution is the suite's)"
+cp "$PC.orig" "$PC"; rm -f "$PC.orig"
+
+# ── W4: gh649 through the logical /tmp spelling, before and after the fix ────────────────────────
+T=/tmp/gh836-w4-clone; rm -rf "$T"; git clone -q --no-local "$A" "$T"
+echo "## W4 — gh649 run from $T (logical /tmp path)"
+( cd "$T" && git checkout -q 4bd8851a -- test/gh649-pdda-migration.sh && bash test/gh649-pdda-migration.sh >/tmp/gh836-w4-before.log 2>&1; echo "  before (4bd8851a's gh649): rc=$? $(grep -m1 'FAIL' /tmp/gh836-w4-before.log)" )
+( cd "$T" && git checkout -q HEAD -- test/gh649-pdda-migration.sh && bash test/gh649-pdda-migration.sh >/tmp/gh836-w4-after.log 2>&1; echo "  after (fixed gh649):       rc=$? $(tail -1 /tmp/gh836-w4-after.log)" )
+rm -rf "$T" /tmp/gh836-w4-before.log /tmp/gh836-w4-after.log
+
+echo "# end — clone HEAD $(git rev-parse --short HEAD), porcelain=$(git status --porcelain | wc -l | tr -d ' ')"

@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-26 — The two slowest Small suites lose 4 minutes, and the push gate stops calling a live agent (GH-836)
+
+#835's profiling found that `gh549-work-events.sh` and `gh436-merge-cleanup.sh`, about two-thirds of the hosted
+Small run, spent their time in test scaffolding, not in the checks. Edits to the existing suites remove it,
+with no new suite:
+
+- **`gh549`, 346 s → 147 s locally.**
+  - A red-control copy slept 0.4 s on every row of the real ledger. Its two racers now meet at their first
+    write and race only the first few rows.
+  - Four backfills in leg 21f sent every event to the mock board, although the leg reads only events. They now
+    run with board dispatch off.
+- **`gh436`, 292 s → 239 s.** The SKILL.md parity guard re-ran 17 tests the same suite already runs. It now
+  checks that each named test exists; the suite runs them.
+- **`gh649`** no longer fails when the clone sits under the `/tmp` symlink.
+- **The pre-push full gate skips `relay-self-sufficiency.sh`'s live agent turn by default,** as CI and the
+  hosted reconcile already did. That turn cost 1–2.7 minutes and an API call per push, and a backend hiccup
+  refused the push. `RELAY_SELF_SUFFICIENCY_SKIP=0` opts back in, and `relay-automation/README.md` says when a
+  recorded live run is owed.
+
+Every trimmed check was broken on purpose and still failed, including the 21e race under deliberately staggered
+starts. `gh549` and `gh436` stay in Small, because both read files a docs-only landing can change. Rollback:
+revert; it is test files, the hook default and docs.
+
 ## 2026-09-25 — The gate qualifies each landing by tier: Small for docs, ledger and skill merges (GH-831, Phase 2)
 
 Phase 2 of #831 makes the tiers real. The push hook is unchanged. After a merge, the hosted reconcile classifies

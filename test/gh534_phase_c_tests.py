@@ -559,8 +559,12 @@ def _calls_in(src: str, func: str):
     return None
 
 
-def parity_failures(skill_text: str, cli_help: str, sources=None, run_tests: bool = False):
-    """Every way SKILL.md can drift from the code, named. Empty list = parity."""
+def parity_failures(skill_text: str, cli_help: str, sources=None):
+    """Every way SKILL.md can drift from the code, named. Empty list = parity.
+
+    A named test must EXIST here; it RUNS in this same suite invocation, because
+    test/gh436-merge-cleanup.py collects this module with `import *` (no __all__). Re-running
+    each named test inside the guard executed them twice per gate run (GH-836: 49 s of 292 s)."""
     import re
     sources = sources or {k: v[0].read_text() for k, v in AST_CALLS.items()}
     fails = []
@@ -584,10 +588,6 @@ def parity_failures(skill_text: str, cli_help: str, sources=None, run_tests: boo
             klass = globals().get(cls)
             if klass is None or not callable(getattr(klass, meth, None)):
                 fails.append(f"test missing: {cap} names {test}")
-            elif run_tests:
-                r = unittest.TextTestRunner(stream=open(os.devnull, "w")).run(klass(meth))
-                if not r.wasSuccessful():
-                    fails.append(f"test failing: {cap} → {test}")
     opts = re.search(r"CLI options this document describes[^\n]*?:\s*(.*)", m.group(0))
     for opt in re.findall(r"`(--[a-z-]+)`", opts.group(1) if opts else ""):
         if opt not in cli_help:
@@ -925,7 +925,7 @@ class TestParityGuard(unittest.TestCase):
         cls.help = subprocess.run([sys.executable, str(MC_SRC), "--help"], capture_output=True, text=True).stdout
 
     def test_skill_md_matches_code_and_tests(self):
-        self.assertEqual(parity_failures(self.skill, self.help, run_tests=True), [])
+        self.assertEqual(parity_failures(self.skill, self.help), [])
 
     def test_recon_owner_is_pinned_to_caller(self):
         self.assertEqual(REQUIRED_CAPABILITIES["code-conflict-recon"], "caller")
