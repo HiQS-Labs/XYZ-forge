@@ -1,420 +1,420 @@
-suite	class	hosted_s	skill_subject	issue_title	signals
-gh732-l3-gate-summary.sh	CORE	0.2		Mid September CI/CD optimizations — measured gate cost vs documented; render existing per-	core=1
-projection-idempotent.sh	CORE	1.0			core=1
-concurrent-claim.sh	CORE	1.0			core=1
-chaos-stale-writer.sh	CORE	1.7			core=1
-chaos-concurrent-pollers.sh	CORE	5.7			core=1
-chaos-midturn-kill.sh	CORE	2.4			core=2
-path-overlap.sh	CORE	0.9			core=1
-scope-change.sh	CORE	1.2			core=1
-tick-foreign-cwd.sh	CORE	1.2			core=1
-gh411-tick-log-foreign-cwd.sh	CORE	1.4		R2: tick log is exempt from the foreign-cwd guard — the verb that seeds every run, plus th	core=1
-gh554-tick-unknown-flags.sh	REVIEW:core-code,skill-subject	6.8	status	tick release accepts unknown flags (--status done) — reviewer 'done' silently becomes a re	core=1
-gh251-validate-pytest-skip.sh	CORE	106.7		validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent	core=2
-gh412-transient-claim-exit.sh	CORE	2.0		R3: a transient O_EXCL claim collision exits 1, identical to a durable loss — no retry cha	core=3
-gh413-launch-artifact-destination-guard.sh	CORE	32.2		R4: the launch-artifact marker authorises a destructive rebuild of any directory — marker 	core=2
-gh414-comment-reference-check.sh	CORE	13.1		R5: nothing deterministic checks whether an inline code comment is still true — extend the	core=3 pdda=2
-gh415-guard-hook-entrypoints.sh	CORE	2.3		R6: the skill-first guard hook covers 6 of 12 Tier-A entrypoints — derive the set from AGE	core=10
-handoff.sh	CORE	0.7			core=1
-handoff-exclusive.sh	CORE	1.0			core=1
-circuit-break.sh	CORE	0.7			core=1
-terminality-seal.sh	CORE	0.8			core=1
-write-ops-log.sh	CORE	1.3			core=3
-auto-sync.sh	CORE	0.7			core=1
-analyze.sh	CORE	1.8			core=1
-workstealing-verdict.sh	CORE	1.3			core=1
-verdict-edge.sh	CORE	0.7			core=1
-claim-cap.sh	CORE	1.1			core=1
-reap.sh	CORE	0.9			core=1
-heartbeat.sh	CORE	1.8			core=1
-cost.sh	CORE	3.3			core=2
-take.sh	CORE	1.0			core=1
-watchdog-liveness.sh	CORE	1.1			core=2
-runner-loop.sh	CORE	3.9			core=2
-poll-driver.sh	CORE	8.8			core=3
-relay-loop.sh	CORE	8.8			core=2
-poll-relay.sh	CORE	14.9			core=2
-watchdog-relay.sh	CORE	1.0			core=2
-codex-turn.sh	CORE	29.0			core=3
-agy-turn.sh	CORE	82.8			core=4
-pi-turn.sh	CORE	22.1			core=4
-relay-turn-trace.sh	CORE	5.0			core=3
-aider-turn.sh	CORE	30.4			core=3
-gh278-turn-timeout-parity.sh	CORE	5.0			core=3
-gh308-frozen-twin-guard.sh	SMALL:canary	4.0			core=26
-gh245-agy-probe-verb-invariant.sh	CORE	0.2		agy auth probe verb has no cross-call-site invariant — the same defect has been fixed thre	core=3
-gh267-express-skill.sh	CORE	30.6		feat(skill): /express — hotfix fast lane: fix → releases DB → PDDA docs → direct developme	core=7 prs=4
-gh578-ci-optimize-skill.sh	REVIEW:core-code,skill-subject	0.4	ci-optimize	feat(skills): add ci-optimize transferable CI/CD audit & optimization skill	core=1
-gh778-review-code-skill.sh	REVIEW:core-code,skill-subject	0.5	review-code	feat: review-code and review-PR ground-truth code review skill	core=1
-gh798-status-skill.sh	REVIEW:core-code,skill-subject	0.6	review-code	feat(skills): add status skill and DRY/centralized-helper audit in review-code	core=1
-gh779-radar-ci-health.sh	REVIEW:core-code,skill-subject	0.4	radar	radar: trunk CI health, new-guard re-run on open PRs, regressed-after-declared-fixed table	core=1
-gh781-wam-radar-seed.sh	REVIEW:core-code,skill-subject	0.4	whack-a-mole	whack-a-mole: seed candidate clusters from recent radar reports (re-verified, freshness-ga	core=1
-gh788-python-path-space.sh	CORE	0.8		gate: 10 suites fail when the Python path contains a space (shebang and unquoted sys.execu	core=1
-gh777-start-task-prior-art.sh	REVIEW:core-code,skill-subject	1.4	start-task	Umbrella: Adopt rebalanceOS #257 Retrospective Lessons & Starter Kit into XYZ Forge (PRS, 	core=1 prs=1
-gh777-inventory-ratchet.sh	SMALL:canary	0.6		Umbrella: Adopt rebalanceOS #257 Retrospective Lessons & Starter Kit into XYZ Forge (PRS, 	pdda=2
-gh615-start-task-reinforce.sh	OFF:skill/non-core	0.3	start-task	fix(skills): reinforce start-task against relay-induced overbuilding and gate thrashing	
-gh616-start-task-commensurate-envelope.sh	OFF:skill/non-core	0.2	start-task	fix(skills): enforce commensurate machinery and review-packet envelope in start-task	
-gh617-relay-xyz-commensurate-review.sh	REVIEW:no-code-ref	0.2		fix(skills): sharpen relay-xyz review scope against over-engineering and uncommensurate ma	
-gh609-sdlc-agent-gaps.sh	REVIEW:no-code-ref	1.1		feat(sdlc): address edge-case SDLC gaps in autonomous agent workflows (interrupted-work re	
-ate-run-variations.sh	MEDIUM:ate	1.1			medium=1
-gh478-runaway-guard.sh	MEDIUM:ate	26.8		Add ATE exit-cleanup / runaway-process guard — gen4 adaptive-ate test hung ~3 days at ~100	core=4
-model-alias.sh	CORE	3.4			core=2
-gh450-model-catalog-pin.sh	CORE	4.0		Consume Model-catalog v1 (Phase 1): vendored catalog + generated alias YAML + drift check 	core=10
-gh460-fuzz-resolver-smoke.sh	REVIEW:core-code,skill-subject	5.4	start-task	ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes (start-	core=3
-gh346-model-telemetry-honesty.sh	CORE	0.4		Speed up harness -> gateway -> model resolution with a real cache	core=6
-gh518-muse-model-policy.sh	CORE	15.8		harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalo	core=1
-gh518-muse-adapter-containment.sh	CORE	16.9		harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalo	core=2
-gh346-resolver-fallback.sh	CORE	0.8		Speed up harness -> gateway -> model resolution with a real cache	core=4
-gh346-telemetry-row-written.sh	CORE	1.0		Speed up harness -> gateway -> model resolution with a real cache	core=10
-gh496-telemetry-isolation.sh	MEDIUM:telemetry	1.3	ponytail	ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459)	core=5
-gh346-registry-view-freshness.sh	CORE	0.3		Speed up harness -> gateway -> model resolution with a real cache	core=2
-gh346-gateway-allowlists.sh	CORE	1.2		Speed up harness -> gateway -> model resolution with a real cache	core=10
-gh346-profile-resolve.sh	CORE	5.3		Speed up harness -> gateway -> model resolution with a real cache	core=5
-gh368-same-lane-routing.sh	CORE	0.1		Same-lane builder + reviewer cannot route: one env slot per model lane (AGY_AGENT) is over	core=3
-gh373-reviewer-validation.sh	CORE	0.1		Reviewer validation accepts gemini* but no gemini lane exists (no GEMINI_AGENT routing, no	core=1
-gh369-group-kill.sh	CORE	2.5		rtl_run_bounded's PID-only kill lets a multi-process CLI outlive its turn cap (observed: 7	core=4
-gh370-progress-telemetry.sh	CORE	3.2		Mid-turn blindness: add cheap worktree-progress telemetry to the RSS poll loop (0-byte tur	core=2
-gh371-interrupt-snapshot.sh	CORE	1.4		Interrupted-phase record doesn't snapshot the uncommitted tree — a killed turn's edits sta	core=8
-gh372-escalation-log-tail.sh	CORE	2.9		Turn-taker failure reason never reaches ESCALATION.md (codex 'workspace out of credits' su	core=8
-gh374-drift-path-filter.sh	CORE	0.6		Drift-brief prepends stale cross-repo registry entries (src/project.js warnings inside an 	core=3
-swe-diagram.sh	MEDIUM:swe_diagram	1.1	swe-diagram		medium=3
-gh610-claude-subscription.sh	REVIEW:core-code,skill-subject	35.8	consult	feat(claude): subscription-validated native consult and relay support	core=6
-gh648-l8-zero-output-handback.sh	CORE	0.1		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=1
-gh648-l9-369-regression.sh	CORE	3.1		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=1
-gh698-planner-db-ratings.sh	CORE	1.1		PRS Optimization from real world project	core=1 prs=1
-gh708-vendored-suite-skips.sh	CORE	1.0		test/gh267-express-skill.sh is red from any vendored .xyz/ (githooks/ not in VENDOR_DIRS)	core=2
-claude-turn.sh	CORE	20.0			core=3
-commandcode-turn.sh	CORE	10.6			core=3
-worktree-isolation.sh	CORE	18.3			core=3
-shim-worktree.sh	CORE	29.2			core=3
-marathon-yaml.sh	CORE	0.7			core=1
-gh391-emit-marathon-yaml.sh	CORE	1.7		AgentChorus bridge: four hardening follow-ups from the #386 review (token revocation, life	core=4
-marathon-drive.sh	CORE	124.5			core=3
-gh284-runlog-heartbeat.sh	CORE	4.2			core=4
-gh115-round-cap.sh	CORE	7.8		marathon-drive: premature round-cap escalation (exit 4) during progressive multi-round rev	core=3
-gh307-gate-env-scrub.sh	CORE	0.1		Runner hygiene: self-hosted ubuntu canary drift on 2026-08-28 — 17:42Z run fails with envi	core=2
-gh319-gate-path-with-space.sh	CORE	3.7			core=4
-gh320-twin-timeout-parity.sh	CORE	0.4			core=11
-gh322-unknown-arg-rejection.sh	CORE	0.9			core=4
-gh322-runlog-python-lane.sh	CORE	8.9			core=5
-gh331-cost-summary.sh	CORE	6.4			core=3
-gh308-poll-guards.sh	CORE	1.0			core=3
-gh308-swarm-gate-path.sh	CORE	0.7			core=1
-gh343-gate-program-target-root.sh	CORE	1.7			core=2
-gh308-consult-guards.sh	REVIEW:core-code,skill-subject	6.8	consult		core=1
-gh308-turn-shim-parity.sh	CORE	2.9			core=8
-gh342-sentinel-debug-log-python.sh	CORE	1.2		This repo is public: proxy infra details behind aliases so hosts, addresses and local path	core=5
-gh369-find-doc-root-resolution.sh	OFF:skill/non-core	0.5		rtl_run_bounded's PID-only kill lets a multi-process CLI outlive its turn cap (observed: 7	medium=1
-gh400-acceptance-fidelity.sh	SMALL:pdda	1.7			core=2
-gh557-unknown-blocks-manifest.sh	CORE	1.6			core=3
-gh400-source-url.sh	SMALL:pdda	0.8			core=2
-gh419-gate-inventory.sh	CORE	0.4		Make the three marathon process rules deterministic — umbrella issue, full clone, derived 	core=2
-litmus-release.sh	SMALL:prs	3.2			core=3
-gh418-issue-state-frozen.sh	CORE	1.3		Marathon planner still reads the frozen ROADMAP.md — 37 DB-parked items are invisible to i	core=3
-gh422-backfill-source-url.sh	SMALL:pdda	0.9			core=3
-gh425-source-url-slug.sh	SMALL:pdda	3.6		--gate's provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-e	core=2
-gh410-containment-advisory.sh	REVIEW:core-code,skill-subject	7.1	status	R1: the structural relay-block validator never runs on the driven path — and rejects the b	core=3
-gh410-relay-block-driven-path.sh	REVIEW:core-code,skill-subject	1.9	status	R1: the structural relay-block validator never runs on the driven path — and rejects the b	core=2
-gh90-allowlist-directory.sh	CORE	9.0		fix(relay): a bare DIRECTORY on ALLOW_PATHS can never match — it fails containment and kil	core=3 medium=1
-gh399-packet-acceptance-continuation.sh	CORE	4.9		Adding a model route means editing Python in three places — let the profile carry the whol	core=3
-gh417-turn-root-symlink-prefix.sh	REVIEW:core-code,skill-subject	10.6	front-door	MARATHON umbrella: GH-406 remediation — seven guards that cover a narrower path than their	core=5
-gh390-gate-guard.sh	CORE	49.8			core=5
-gh457-gate-tiers.sh	CORE	12.3		Model aliasing & canonicalization: system spec, verified behaviors, gateway-blindness defe	core=5
-gh407-gate-ran-attribution.sh	CORE	7.7		[upstream archive] GH-407: pre-advance-failed is reported for failures where the gate neve	core=4
-gh390-timeout-attribution.sh	CORE	10.7			core=4
-gh387-gate-not-first-executor.sh	CORE	7.1			core=2
-gh492-idle-kill.sh	CORE	7.7		Nothing reconciles roadmap_items against issues closed outside a merged PR — 33 rows drift	core=4
-gh432-failed-turn-persist.sh	CORE	7.8			core=3
-gh441-gate-env-contract.sh	CORE	0.7			core=8
-gh218-synthetic-nested-driver-lock.sh	REVIEW:no-code-ref	1.3		test/synthetic/gh101-relay-programmatic-stress.sh executes relay_drive.py from $ROOT with 	
-gh217-gate-env-plan-outside.sh	CORE	7.7		gate_env.py does not scrub MARATHON_ALLOW_PLAN_OUTSIDE_WORKING — leaks into pre-advance ga	core=4
-gh448-driver-lock-resolver.sh	SMALL:canary	0.6		deepseek-turn overlay registers DEEPSEEK_MODEL but the dsh agent still runs the bundle def	core=7 medium=1
-gh376-relay-drive-lock-parity.sh	CORE	1.9		Marathon umbrella: 2026-09-01 harness quick wins (#368-#374) — planned, preflighted, await	core=4
-gh505-relay-attest.sh	CORE	44.4		Builder can approve and close its own relay; no merge path checks for a reviewer (evidence	core=11
-gh397-reviewer-turn-role.sh	CORE	0.4		relay-drive --review-once reports a shim that wrote nothing as exit 5 "non-approval handba	core=2
-gh401-dry-run-no-mutation.sh	CORE	0.5			core=2
-gh375-agy-auth-preflight.sh	CORE	0.8			core=5
-gh375-auth-timeout-verdict.sh	CORE	9.4			core=4
-gh385-retry-token-satisfied.sh	CORE	19.7			core=2
-gh408-tick-failure-visibility.sh	CORE	2.1		[upstream archive] GH-408: _run_tick_loud discards stderr and then exits on it — a token-s	core=3
-nightwatch-release.sh	SMALL:prs	3.3			core=1 prs=1
-gh378-gate-requires-green-suite.sh	CORE	8.2			core=3
-gh379-claude-builder-diagnosis.sh	CORE	2.4		CI: the Ubuntu canary re-implements the test runner inline — it forfeits GH-528's 5x paral	core=4
-gh380-claude-trust.sh	CORE	0.4			core=1
-gh382-marathon-memory-telemetry.sh	CORE	4.6		Test Suite - Lighter Gate	core=4
-gh491-gate-only-refire.sh	CORE	8.4		roadmap move/update --section help advertises section names the renderer drops, and nothin	core=3
-gh551-resolver-refuses.sh	CORE	0.6		Relocated harness telemetry breaks the in-repo evidence chain: site_build bakes a frozen g	core=2
-meter-release.sh	SMALL:prs	0.8			core=1 prs=1
-ballast-release.sh	SMALL:prs	1.6			core=1 prs=1
-gh402-branch-enforcement.sh	CORE	60.1		Board-sync brainstorm: auto-add issues to the Projects board when any agent starts work (s	core=2
-gh386-turn-budget-honesty.sh	CORE	0.4			core=5
-gh514-write-set-trackable.sh	REVIEW:core-code,skill-subject	26.1	ponytail	skills: new co-author skill "keel" — balance modularity, flexibility, maintainability, and	core=2
-gh255-remedy-ordering.sh	CORE	0.3		marathon-drive's blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT, the remedy that a	core=1
-gh256-target-root-guard-root.sh	CORE	0.1		No preflight checks the builder can reach a phase's artifact paths — the phase burns its f	core=2
-gh426-worktree-leak.sh	CORE	3.5			core=2
-gh384-crash-recovery.sh	CORE	0.8		Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel	core=3
-gh388-run-log-durability.sh	CORE	4.8			core=6
-gh409-claim-leak.sh	CORE	13.8			core=2
-gh438-removal-is-progress.sh	CORE	6.8			core=2
-gh438-acceptance-recheck.sh	CORE	9.1			core=2
-gh467-index-only-lane-blocked.sh	CORE	1.8		Umbrella - Side Quest: Cactus Needle Oracle for what to do next and doc governance sentine	core=3
-hq-marathon-live.sh	MEDIUM:hq	0.3			core=1 medium=1
-debug-mantra.sh	REVIEW:core-code,skill-subject	1.1	debug-mantra		core=2
-lane-attempt-cap.sh	CORE	0.2			core=3
-driver-lock.sh	CORE	0.6			core=2
-measure.sh	CORE	0.3			core=1
-loop-stop.sh	CORE	0.2			core=1
-oracle-guard.sh	CORE	0.5			core=5
-champion.sh	CORE	0.3			core=1
-heldout-check.sh	CORE	0.2			core=1
-loop-cost.sh	CORE	0.1			core=1
-improve-loop.sh	CORE	2.2			core=2
-improve-loop-qa.sh	CORE	3.4			core=2
-improve-loop-dogfood.sh	CORE	1.3			core=1
-gh430-state-dir-tracked-default.sh	CORE	0.6			core=1
-gh536-evidence-detail.sh	CORE	0.6		relocate: Deployed Skills collection moves INTO the live Git Pulse Sync checkout (supersed	core=2
-gh549-work-events.sh	SMALL:prs	385.3		Work-state event stream + concurrent connectors: GitHub Kanban first, HQ and Flightdeck ne	core=3 prs=6
-gh646-status-label.sh	SMALL:prs	7.3	status	Shared in-progress label: explicit task starts and closure follow-up through existing XYZ 	
-gh402-board-sync.sh	CORE	1.5		Board-sync brainstorm: auto-add issues to the Projects board when any agent starts work (s	core=3 prs=1
-gh405-mock-board-harness.sh	CORE	2.0		feat(dev-tools): local debugging mock harness for GitHub Projects V2 API	core=2
-gh544-parallel-default.sh	CORE	1.6		research: archive Luna/Needle model benchmarks and Git/PR analyst findings	core=2
-gh379-canary-uses-validate.sh	CORE	2.2		CI: the Ubuntu canary re-implements the test runner inline — it forfeits GH-528's 5x paral	core=1
-gh544-pre-push-gate.sh	CORE	6.8		research: archive Luna/Needle model benchmarks and Git/PR analyst findings	core=3 medium=1 pdda=2
-gh35-test-tiers.sh	CORE	7.5		Architectural Sketch: 3-Tier Test Suite Selection (Docs, Utility/Accessory Libraries, Core	core=5 medium=2 pdda=3
-gh365-runner-envelope.sh	CORE	1.9		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=7 medium=1 pdda=2
-gh365-validate-telemetry.sh	CORE	1.9		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=6 medium=1 pdda=2
-gh365-driver-lane-registry.sh	CORE	7.5		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=6
-gh365-pdda-gov-scan.sh	CORE	74.4		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=3 pdda=3
-gh365-tier-fail-closed.sh	CORE	118.1		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=4 medium=1 pdda=1
-gh365-shellcheck-parallel.sh	CORE	0.5		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=2
-gh1-fixture-guard.sh	SMALL:canary	1.6		Test suites can escape their sandbox and rewrite the host clone's git config/remotes/refs	
-gh1-adoption-guard.sh	SMALL:canary	5.3		Test suites can escape their sandbox and rewrite the host clone's git config/remotes/refs	core=1
-gh314-transcript-writeset.sh	CORE	17.5		wave_reconcile: Completed-archive line mangles ROADMAP entries without the 'GH-N · Title' 	core=2
-gh520-default-reviewer-stub.sh	CORE	0.6			core=3
-gh527-destructive-git-guard.sh	CORE	1.0		roadmap_items.issue_url has no repair writer, and one bad row disables reconcile-state ent	core=1
-gh50-sandboxed-git-guard.sh	CORE	0.3		fix(agents): a sandboxed git --track/branch -D half-applies — it rewrites the working tree	core=1
-marathon.sh	CORE	8.9			core=4
-marathon-closeout.sh	CORE	2.5			core=4
-gh484-phase-dir-default.sh	CORE	3.0		feat(skill): deploy-skills — durable local catalog and global symlink deployment	core=2
-marathon-root-audit.sh	CORE	157.7			core=2
-rtl-orphan-backup.sh	CORE	0.3			core=1
-gh2-orphan-backup-repro.sh	CORE	1.3		Test suite run relocated an untracked file into .tick/orphan-backups/	core=1
-gh91-relay-scratch.sh	CORE	1.6		fix(relay): a build turn has nowhere to write verification output — containment kills a tu	core=1
-gh113-headless-scratch.sh	CORE	1.5		harness: headless agy builder writes root scratch files triggering containment violation (	core=1
-gh114-headless-tty.sh	CORE	10.3		harness: headless agy -p idle timeout / hang on TTY allocation and network stalls (exit 7)	core=3
-gh124-closeout.sh	REVIEW:no-code-ref	2.6		feat(harness): eliminate end-of-day closeout friction — automated phase QA receipts, auto-	
-gh129-relay-tick-root.sh	REVIEW:no-code-ref	2.6		relay-drive: unset TICK_REPO_ROOT reports 'token missing' and exits 0 on escalation	
-gh130-agy-auth-whoami.sh	REVIEW:no-code-ref	0.8		fix(relay): agy auth pre-flight kills the lane when the installed agy has no 'whoami' subc	
-gh131-marathon-target-root.sh	REVIEW:no-code-ref	11.1		fix(marathon): --target-root with a separate harness repo is a catch-22 — relay-drive want	
-gh139-pipe-grep-guard.sh	SMALL:canary	5.0		test: GH-460's SIGPIPE shape is still open across the suite — 482 pipe-into-grep -q sites;	
-synthetic/gh101-consult-programmatic.sh	REVIEW:core-code,skill-subject	2.8	consult	feat: Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core	core=1
-synthetic/gh101-relay-programmatic-stress.sh	REVIEW:core-code,skill-subject	2.4	consult	feat: Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core	core=2
-synthetic/gh102-telemetry-schema.sh	OFF:skill/non-core	2.2		feat: Unify Telemetry Schema & Inspection Tooling Across Fuzzing (utils/fuzzing) and ATE (	medium=4
-synthetic/gh94-containment-invariants.sh	CORE	1.1		research: Programmatic Tool Calling & Code-Mode Execution for Harnesses, Telemetry, and Co	core=1
-synthetic/gh94-script-serialization.sh	CORE	3.3		research: Programmatic Tool Calling & Code-Mode Execution for Harnesses, Telemetry, and Co	core=1
-synthetic/synthetic-claude-target-root.sh	REVIEW:no-code-ref	0.1			
-synthetic/synthetic-marathon-env-leak.sh	CORE	0.2			core=1
-synthetic/synthetic-marathon-worktree-guard.sh	CORE	0.2			core=1
-synthetic/synthetic-pi-model-unset.sh	CORE	0.1			core=1
-synthetic/synthetic-pi-provider-unsupported.sh	CORE	0.1			core=1
-gh141-synthetic-registry.sh	CORE	9.0		Make Fuzzing and ATE actually useful: neither currently fuzzes	core=1 medium=1
-gh141-fuzz-inputs.sh	CORE	0.9		Make Fuzzing and ATE actually useful: neither currently fuzzes	core=1
-gh142-ate-exit-contract.sh	OFF:skill/non-core	7.3		ATE exits 0 when `gh issue create` fails — the rollup issue silently never gets filed	medium=3
-gh148-deepseek-turn.sh	CORE	9.2		feat(harness): DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter Deep	core=3
-gh608-deepseek-effort.sh	CORE	0.5		fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attributio	core=1
-gh648-l7-checkout-aftermath.sh	CORE	1.9		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2
-gh648-l6-muse-attribution.sh	CORE	7.9		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2
-gh648-l5-gh237-repro.sh	CORE	1.5		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2
-gh648-l4-285-revalidate.sh	REVIEW:no-code-ref	12.0		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	
-gh648-l3-consult-cap.sh	REVIEW:core-code,skill-subject	3.5	consult	Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=3
-gh648-l2-token-aftermath.sh	CORE	15.0		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=4
-gh648-l1-turn-termination.sh	CORE	0.9		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2
-gh654-offlane-log.sh	CORE	1.0		Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no o	core=3
-gh660-skill-drift.sh	CORE	0.5		Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git	core=1
-gh156-turn-shims-help.sh	CORE	1.5		feat(shims): support --help and -h usage flags across turn shims before requiring RELAY_AG	core=7
-gh155-phase1-metamorphic-invariants.sh	CORE	5.1		ATE & Fuzzing brainstorming - 3rd gen	core=1
-gh155-phase2-differential-oracle.sh	CORE	19.3		ATE & Fuzzing brainstorming - 3rd gen	core=2
-gh155-phase3-repro-builder.sh	CORE	2.0		ATE & Fuzzing brainstorming - 3rd gen	core=4
-gh155-phase4-self-healer.sh	CORE	0.5		ATE & Fuzzing brainstorming - 3rd gen	core=2
-gh155-phase5-active-explorer.sh	CORE	1.1		ATE & Fuzzing brainstorming - 3rd gen	core=4
-gh168-wave-reconcile-scope.sh	SMALL:prs	1.3		wave_reconcile.py hard-fails (and rolls back) on pre-existing marathon-plan drift, unrelat	core=3 pdda=2 prs=4
-gh174-harness-registry.sh	CORE	0.7		Gen 3.5 — consolidated ATE review (Phases 1–5): close the loop before scaling it	core=8
-gh180-repro-timeout-crash.sh	CORE	0.4		repro_builder crashes on timeout telemetry records (exit_code: null -> TypeError)	core=2
-gh181-repro-adapter-fidelity.sh	CORE	0.7		repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquote	core=3 medium=1
-gh182-healer-facade-safety.sh	CORE	2.5		self_healer --mode heal is a facade: containment refuses any real target, CLI can never he	core=3
-gh183-explorer-env-soundness.sh	CORE	1.6		active_explorer env-family fuzzing unsound: base_env={} hardcoded, one always-deferring ve	core=2
-gh184-no-tracked-scratch.sh	SMALL:canary	0.2		committed scratch artifact .relay-scratch/probe_telemetry.json makes every real turn a tra	
-gh202-wave-reconcile-issue-state.sh	SMALL:pdda	4.3		wave_reconcile: aborts on marathon-plan exit 5 (normal items-held state) and promotes capt	core=3 pdda=2 prs=6
-gh232-wave-reconcile-multiphase.sh	SMALL:pdda	1.4		feat(reconciler): wave_reconcile should honor linked issue open/closed state before promot	core=3 pdda=2 prs=4
-consult.sh	REVIEW:core-code,skill-subject	41.1	consult		core=2
-deep-research.sh	CORE	9.1			core=1
-relay-pkg-freshness.sh	CORE	0.5			core=2
-skill-extract.sh	CORE	0.4			core=11
-releases-skill.sh	SMALL:prs	0.2			prs=2
-gh103-timeline-exporter.sh	SMALL:prs	4.9		Technical spike: render RELEASES SQLite ledger through the timeline-ui viewer	prs=4
-gh75-dashboard.sh	REVIEW:prs-code	0.8	read-only	feat(releases): single-page HTML dashboard — releases (mid/long term) + roadmap (immediate	prs=2
-gh525-unshipped-version-tokens.sh	CORE	3.2		releases_app.py: add an `unshipped_version_token` setting so a repo's "no version yet" con	core=1 prs=2
-gh32-releases-app.sh	SMALL:prs	22.4		RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEASES.md, an	prs=2
-gh32-releases-artifacts.sh	SMALL:prs	0.6		RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEASES.md, an	core=1 prs=2
-gh53-releases-merge-resolve.sh	SMALL:prs	6.2		fix(GH-32): releases.db is a committed derived binary with no .gitattributes — every concu	core=1 prs=3
-gh54-merged-dump-refusals.sh	SMALL:prs	3.7		fix(GH-32): releases.sql's `-- generation:` header conflicts on every concurrent write — n	core=1 prs=2
-gh360-dump-multiline-values.sh	CORE	1.2		releases check calls a git-induced chain fork a "forged audit trail", and --rebuild's over	core=1 prs=2
-gh57-releases-fuzz.sh	SMALL:prs	10.3		test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite	prs=3
-gh57-live-merge-resolve.sh	SMALL:prs	14.0		test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite	prs=5
-gh69-roadmap-shadow.sh	SMALL:prs	11.8		Design: should ROADMAP.md become a ledger? (it already is one — with a regex for a schema 	prs=2
-gh351-manifest-unship.sh	REVIEW:prs-code	3.3		manifest ship is terminal with no retraction verb — a false shipped row is permanent, and 	prs=2
-gh360-scoped-receipt-chain-rebuild.sh	REVIEW:prs-code	4.8		releases check calls a git-induced chain fork a "forged audit trail", and --rebuild's over	prs=3
-gh349-releases-roadmap-vendored.sh	REVIEW:prs-code	2.9		releases ledger: roadmap layer never generalised to a vendored install — 4 defects, one de	prs=2
-gh362-marathon-plan-link-bullets.sh	CORE	2.9		marathon-plan parses only bold ledger bullets, so a link-bullet ROADMAP yields zero items 	core=2
-gh429-wave-reconcile-vendored-observe.sh	SMALL:prs	2.3	status	wave_reconcile: three residual gaps on a vendored observe-mode repo — dashboard root, PDDA	core=3 pdda=2 prs=5
-gh358-wave-reconcile-vendored-paths.sh	SMALL:pdda	1.1	five	wave_reconcile.py resolves all five harness tools repo-root-relative — inert on every vend	core=3 pdda=2 prs=5
-gh77-standup-triage.sh	MEDIUM:standup	56.5	standup	feat(skills): /standup — session-scoped triage that answers 'what did I leave open, what i	core=2 medium=2 prs=2
-gh32-release-target-advisory.sh	SMALL:prs	3.5		RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEASES.md, an	prs=2
-gh39-releases-project-sync.sh	SMALL:prs	3.4		feat(releases): project RELEASES.DB into a GitHub release board	prs=2
-path-integrity.sh	CORE	6.1			core=4 pdda=1
-relay-turn-timeout.sh	CORE	16.0			core=4
-relay-target-root.sh	SMALL:canary	14.9			core=3
-relay-target-root-paths.sh	SMALL:canary	4.2			core=3
-relay-target-root-relayfile.sh	SMALL:canary	1.4			core=2
-relay-target-root-newfile.sh	SMALL:canary	3.4			core=3
-gh289-target-root-build-turn.sh	CORE	1.3		chore(merge-strategy): multi-PR merge sequence and reconciliation plan (#288, #286, #287, 	core=3
-archive-root.sh	CORE	0.6			core=2
-archive-writers.sh	CORE	7.6			core=6
-archive-commit.sh	CORE	5.6			core=3
-archive-telemetry.sh	MEDIUM:telemetry	0.9			core=1 medium=1
-relay-token-collision.sh	CORE	1.4			core=2
-relay-escalation-not-stall.sh	CORE	2.9			core=2
-relay-untracked-file-warn.sh	CORE	6.0			core=2
-relay-file-seeding-visibility.sh	CORE	0.7			core=2
-gh304-vendored-relay-path.sh	CORE	1.0			core=2
-relay-review-once.sh	CORE	9.0			core=2
-relay-artifact-file.sh	CORE	6.9			core=3
-relay-turn-handoff.sh	CORE	1.7			core=2
-relay-dep-drift.sh	CORE	1.4			core=3
-new-relay.sh	CORE	0.9			core=2
-agent-chorus.sh	MEDIUM:agent_chorus	25.6	agent-chorus		core=1 medium=3
-gh678-installer-live-links.sh	CORE	3.7		skills/*/install.sh steals app symlinks from the managed Skills Army collection	core=1
-skills-army-hq.sh	MEDIUM:skills_army_hq	30.0	skills-army-hq		
-gh620-skills-army-mini-sync.sh	MEDIUM:skills_army_hq	15.2		docs(process): reusable spin-off recipe; pilot XYZ Skills Army mini	core=1 medium=1
-agent-chorus-bridge.sh	OFF:skill/non-core	8.1	agent-chorus		medium=3
-gh233-agent-chorus-concurrency.sh	OFF:skill/non-core	4.2	agent-chorus	feat(agent-chorus): Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite	medium=1
-gh268-relay-cue-and-target-checks.sh	CORE	1.2			core=6
-xyz-vendor.sh	CORE	18.0			core=14 prs=5
-gh642-consumer-fruit.sh	CORE	10.9		Low-hanging fruit from two foreign-repo marathons (local-addon-nexus-ai gh-52 + gh-60): ma	core=8 prs=2
-xyz-sync-check.sh	CORE	2.3			core=4
-gh293-vendored-guard-drift.sh	REVIEW:core-code,skill-subject	1.7	radar	radar: XYZ-forge — recurring targets	core=5
-relay-concurrent-commit.sh	CORE	0.9			core=2
-relay-commit-pathspec.sh	CORE	1.3			core=2
-relay-case-insensitive.sh	CORE	0.4			core=2
-relay-xyz-skill-guard.sh	CORE	1.0			core=7
-find-harness.sh	CORE	1.3			core=4
-gh292-worktree-vendored-discovery.sh	CORE	0.7		Jog supervisor follow-ups: durable fixes for GH-280 Phase-4 findings 1-3	core=3
-gh649-pdda-migration.sh	SMALL:pdda	24.6		Research: make Forge canonical for PDDA; retire standalone distribution unless demand is p	core=1 medium=1 pdda=5
-pdda-changelog.sh	SMALL:pdda	3.8			pdda=2
-pdda-install-startup-docs.sh	SMALL:pdda	88.9			core=2 pdda=5
-pdda-roadmap-coverage.sh	SMALL:pdda	2.5			core=1 pdda=3
-pdda-repo-contract.sh	SMALL:pdda	47.9			pdda=2
-pdda-local-checks.sh	SMALL:pdda	13.9			core=1 pdda=3
-gh784-marathon-qa-gate.sh	REVIEW:core-code,skill-subject	5.2	start-task	umbrella: Marathon Lifecycle Hardening — Wave QA Relays, Mechanical Receipt Gates, and Sta	core=1 pdda=3
-gh460-pipe-buffer-sigpipe.sh	REVIEW:core-code,skill-subject	3.3	start-task	ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes (start-	core=2 pdda=2
-gh284-p3-release-milestone.sh	SMALL:prs	2.6			core=1 pdda=3 prs=1
-gh284-p4-release-lanes.sh	SMALL:prs	2.0			core=1 medium=1 prs=2
-swarm-preflight.sh	CORE	13.0			core=12
-ci-workflow.sh	CORE	0.5			core=3 pdda=3
-ci-route.sh	CORE	4.4			core=7 medium=7 pdda=2 prs=6
-gh509-gate-evidence.sh	CORE	0.9		Relay terminal authorization: prove a review happened without trusting builder-writable st	core=3
-gh528-parallel-contention-retry.sh	REVIEW:core-code,skill-subject	55.0	unstuck	fix(skill): /unstuck — queue simultaneous blockers, tripwire recurring blocker classes	core=2
-xyz-completion.sh	MEDIUM:telemetry	5.1			medium=3
-gh358-lock-instrumentation.sh	MEDIUM:telemetry	9.1	five	wave_reconcile.py resolves all five harness tools repo-root-relative — inert on every vend	
-gh123-lock-progress-bound.sh	OFF:skill/non-core	8.1		Linux portability canary: first real run since 2026-08-17 — 7 failing assertions across 5 	medium=1
-gh14-atomic-append.sh	CORE	0.6		appendEvent writes non-atomically, so concurrent readers can observe torn event files	core=2
-gh23-path-overlap-enforcement.sh	CORE	1.2		Kernel invariant: enforce path-overlap rejection on direct tick claim and tick scope	core=1
-gh4-ungated-clone-warning.sh	CORE	2.0		Pre-push gate does not travel with clones: fresh clones push unverified	core=1
-xyz-harness-hooks.sh	CORE	28.4			core=5 medium=1
-preflight-docs.sh	CORE	19.6			core=1 medium=1
-marathon-plan.sh	CORE	5.7			core=7
-hq.sh	MEDIUM:hq	2.2			medium=1 pdda=2
-hq-park.sh	MEDIUM:hq	0.7			medium=1 pdda=2
-hq-park-synthesis.sh	MEDIUM:hq	0.6			medium=2 pdda=2 prs=2
-hq-dispatch.sh	MEDIUM:hq	0.8			core=1 medium=1
-hq-next.sh	MEDIUM:hq	0.2			medium=1
-hq-locator.sh	MEDIUM:hq	0.2			core=1 medium=2
-hq-hardening.sh	MEDIUM:hq	1.2			medium=2 pdda=2
-hq-promote.sh	MEDIUM:hq	0.8			medium=2 pdda=2
-mktemp-trap-guard.sh	SMALL:canary	13.7			
-hq-marathon-scan.sh	MEDIUM:hq	2.5			core=1 medium=1
-hq-rollup.sh	MEDIUM:hq	4.0			core=1 medium=3 prs=2
-gh238-hq-releases-mode.sh	MEDIUM:hq	1.9		hq.sh releases-mode: park via new 'releases roadmap add' verb, read via CLI — stop touchin	core=1 medium=1 prs=2
-gh239-hq-status-releases-mode.sh	MEDIUM:hq	1.1	status	Revise HQ rollup/status to read from RELEASES DB instead of ROADMAP.md in releases-mode re	core=1 medium=2 prs=2
-gh567-roadmap-dashboard-retired.sh	SMALL:prs	0.7		feat(ledger): end-to-end removal of ROADMAP-DASHBOARD.md and view-staleness machinery	core=1 prs=3
-gh257-roadmap-ledger-fixes.sh	SMALL:prs	3.1		[Umbrella] Roadmap ledger: a malformed row is accepted, rendered as nothing, uncorrectable	core=1 prs=2
-gh703-raw-text-asterisk.sh	CORE	0.8		releases: `roadmap add` inline raw_text bypasses validate_raw_text — a title with a bare `	core=1 prs=2
-gh269-roadmap-retired.sh	SMALL:prs	19.6		Full switchover to Releases DB: retire ROADMAP.md (readers, writers, gates, canary, ATE ve	core=3 pdda=2 prs=2
-gh568-releases-md-retired.sh	SMALL:prs	2.3		feat(ledger): end-to-end retirement of RELEASES.md in favor of releases.db	core=1 prs=5
-gh423-roadmap-render.sh	CORE	0.6		releases roadmap render: emit the DB as ledger markdown — the missing verb #418 actually d	core=1 prs=3
-gh454-reconciler-defects.sh	SMALL:prs	0.9		wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode 	core=1 pdda=3 prs=7
-gh424-roadmap-status-marker.sh	REVIEW:prs-code	0.9	status	roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕	prs=3
-gh418-planner-ledger-source.sh	CORE	0.5		Marathon planner still reads the frozen ROADMAP.md — 37 DB-parked items are invisible to i	core=2 prs=2
-gh425-gate-provenance-pr.sh	CORE	4.2		--gate's provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-e	core=3 prs=1
-gh421-auto-wave-reconcile.sh	SMALL:prs	5.4		Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledge	core=3 prs=3
-gh684-hosted-lane-report.sh	CORE	1.4		Hosted wave-reconcile lane: 0 successes since 2026-09-11 (59 straight failures), three rot	core=1 prs=1
-gh740-hosted-lane-publish.sh	CORE	5.0		wave-reconcile.yml: the final fast-forward push is rejected whenever a merge lands during 	core=2 prs=3
-gh491-roadmap-section-validation.sh	REVIEW:prs-code	12.8		roadmap move/update --section help advertises section names the renderer drops, and nothin	prs=2
-gh492-roadmap-state-sweep.sh	REVIEW:prs-code	6.2		Nothing reconciles roadmap_items against issues closed outside a merged PR — 33 rows drift	pdda=2 prs=2
-gh605-work-state.sh	REVIEW:no-code-ref	1.4		fix(work): unify lifecycle events, emit terminal reconciliation, and expose projection rea	
-gh605-board-policy.sh	REVIEW:no-code-ref	0.8		fix(work): unify lifecycle events, emit terminal reconciliation, and expose projection rea	
-gh436-merge-cleanup.sh	SMALL:prs	237.4		feat(skill): /merge-cleanup — Worktree & clone consolidation, PR sequencing, and safe tear	
-gh645-merge-cleanup-xyz-tools.sh	SMALL:prs	0.3		merge-cleanup: ledger gate and reconcile fail in repos that vendor PRS tools under gitigno	prs=6
-gh674-merge-cleanup-hosted-lookup.sh	SMALL:prs	0.2		merge-cleanup: hosted wave-reconcile lookup keys on the merge SHA, misses the PR-closed ru	prs=2
-gh681-reviewer-probe-rules.sh	REVIEW:core-code,skill-subject	1.6	relay-automation	relay-automation: let the Reviewer measure read-only, and require a falsifier for reviewer	core=6
-gh527-issue-url-repair.sh	REVIEW:prs-code	2.8		roadmap_items.issue_url has no repair writer, and one bad row disables reconcile-state ent	prs=2
-gh353-vendored-router-audit.sh	REVIEW:core-code,skill-subject	14.9	status	audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates	core=2 prs=2
-jog-queue.sh	REVIEW:prs-code	5.0			prs=3
-gh290-ate-variation-grid.sh	CORE	7.0		Apply ATE variation-fuzzing to the Jog supervisor's machine contracts (GH-280 surfaces)	core=4 prs=2
-gh291-contract-goldens.sh	CORE	1.8		Jog↔Marathon: stabilize the supervisor contract and prevent second-executor drift	core=5 prs=2
-gh280-jog-marathon-adapter.sh	CORE	126.1		Recalibrate Jog as a serial supervisor over Marathon execution	core=7 pdda=2 prs=3
-gh205-gate-idempotency.sh	CORE	0.5		validate.sh mutates four tracked files on every run — benchmark rows accumulate, clean che	core=4
-gh204-sed-portability.sh	CORE	0.5		BSD `sed -i ''` idiom silently no-ops on Linux at two call sites — relay-drive.sh reports 	core=3
-gh153-releases-sidebar-rollup.sh	SMALL:prs	0.8		Add left sidebar navigation and project switcher rollup for RELEASES system	medium=1 prs=3
-transcript-audit.sh	CORE	0.2			core=2
-security-scan.sh	SMALL:canary	12.5			core=1
-sentinel-tier1.sh	CORE	0.3			core=2
-sentinel-network-guard.sh	SMALL:canary	0.3			core=1
-sentinel-driver-hooks.sh	CORE	0.1			core=2
-sentinel-overlay.sh	REVIEW:pdda-code	13.0			pdda=2
-checkjs.sh	CORE	1.2			core=1
-acorn-extract.sh	CORE	0.2			core=2
-registry-lock-concurrency.sh	REVIEW:no-code-ref	4.2			
-marathon-monitor.sh	CORE	1.3			core=3
-signal-triage.sh	CORE	0.5			core=1
-fixtures/canary-token-reuse/verify-fixture.sh	REVIEW:no-code-ref	0.2			
-fixtures/canary-peer-orphan/verify-fixture.sh	CORE	0.2			core=1
-fixtures/canary-reviewer-overstep/verify-fixture.sh	CORE	0.1			core=2
-phase3-signoff-guard.sh	CORE	0.5			core=3
-relay-self-sufficiency.sh	CORE	0.0			core=3
-agy-tui-takeover-verdict.sh	CORE	0.6			core=2
-gh105-vendor-releases-addon.sh	CORE	1.9		Vendor the RELEASES DB system + HTML timeline generator into the .xyz payload as an option	core=3 prs=3
-gh107-timeline-json-seam.sh	REVIEW:prs-code	0.5	read-only	Connect /10days, /radar, and PARKED to the RELEASES DB (read-only seams, no new writers)	prs=2
-gh132-review-xyz-skill.sh	REVIEW:core-code,skill-subject	5.7	review-xyz	feat(skills): formal /review-xyz code review skill & multi-model harness	core=2 medium=1
-gh165-governance-canonical-paths-guard.sh	CORE	0.3		Post Merge - Doc and Project Governance Cleanup Script	core=1 medium=1 pdda=3 prs=1
-gh197-vendor-tier-split.sh	CORE	11.7		Two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onbo	core=7 prs=6
-gh273-marathon-root-audit-python-shape.sh	CORE	1.0		marathon-root-audit.sh is blind to python3-spelled driver invocations (GH-195 class)	core=3 medium=1
-gh312-vendor-preserves-state.sh	CORE	3.3			core=3
-relay-uncited-findings.sh	CORE	0.5			core=3
-wave-reconcile.sh	SMALL:pdda	1.8			core=4 pdda=2 prs=6
-gh496-phase2-reconciliation-views.sh	SMALL:pdda	5.5	ponytail	ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459)	core=3 pdda=2 prs=5
-gh693-lessons-learned-advisory.sh	CORE	1.4		Lessons Learned: make the capture-doc section optional (highly recommended), not a promoti	core=3 pdda=2 prs=5
-gh306-registry-bidirectional.sh	SMALL:canary	2.4		Gate: registry check is one-directional — a test/ suite that exists but is unregistered in	core=2
-gh298-ate-gen4-ci-smoke.sh	MEDIUM:ate	1.6		test(ate): Extensively test and fuzz ATE Gen 4 against CI test suites, runner environments	core=2 prs=2
-gh-gen4-phase1-domain-oracles.sh	MEDIUM:ate	4.3			core=3
-gh-gen4-phase2-adaptive-ate.sh	MEDIUM:ate	5.8			core=3
-gh-gen4-phase3-fuzz-engine.sh	MEDIUM:ate	24.9			core=3
-gh-gen4-phase4-repro-synth.sh	MEDIUM:ate	18.4			core=4
-gh-gen4-phase5-campaign.sh	MEDIUM:ate	9.8			core=2
-gh712-jev-triage.sh	MEDIUM:ate	0.6		ate: offline Jev vs Tier-1/Gemma triage replay (74-row benchmark + GH-141 log), then a gat	core=1
-gh396-find-harness-roots.sh	REVIEW:core-code,skill-subject	2.0	radar	Harness root resolution: one resolver, two roots, pinned — retire RADAR-class-vendored-roo	core=7 prs=2
-gh393-deepseek-readiness.sh	CORE	0.9		find-harness.sh and deepseek-turn.py resolve the DeepSeek CLI by different rules — readine	core=2
-gh591-prepush-commit-boundary.sh	REVIEW:no-code-ref	0.2		umbrella: the post-merge reconciler actually lands — every merged PR reconciled with no ma	
-gh589-xyz-mini-sync.sh	REVIEW:core-code,skill-subject	5.6	agent-chorus	Build XYZ mini (formerly Lite): beginner-friendly stripped repo (relay, consult, agent-cho	core=1 medium=1
-gh589-consult-no-tick.sh	REVIEW:core-code,skill-subject	2.8	agent-chorus	Build XYZ mini (formerly Lite): beginner-friendly stripped repo (relay, consult, agent-cho	core=3 prs=1
-gh589-skill-viewer.sh	OFF:skill/non-core	0.8	agent-chorus	Build XYZ mini (formerly Lite): beginner-friendly stripped repo (relay, consult, agent-cho	medium=1
+suite	class	hosted_s	skill_subject	issue_title	signals	disposition
+gh732-l3-gate-summary.sh	CORE	0.2		Mid September CI/CD optimizations — measured gate cost vs documented; render existing per-	core=1	CORE
+projection-idempotent.sh	CORE	1.0			core=1	CORE
+concurrent-claim.sh	CORE	1.0			core=1	CORE
+chaos-stale-writer.sh	CORE	1.7			core=1	CORE
+chaos-concurrent-pollers.sh	CORE	5.7			core=1	CORE
+chaos-midturn-kill.sh	CORE	2.4			core=2	CORE
+path-overlap.sh	CORE	0.9			core=1	CORE
+scope-change.sh	CORE	1.2			core=1	CORE
+tick-foreign-cwd.sh	CORE	1.2			core=1	CORE
+gh411-tick-log-foreign-cwd.sh	CORE	1.4		R2: tick log is exempt from the foreign-cwd guard — the verb that seeds every run, plus th	core=1	CORE
+gh554-tick-unknown-flags.sh	REVIEW:core-code,skill-subject	6.8	status	tick release accepts unknown flags (--status done) — reviewer 'done' silently becomes a re	core=1	CORE
+gh251-validate-pytest-skip.sh	CORE	106.7		validate.sh reports python:test_python_layer.py as FAILED when pytest is merely absent	core=2	CORE
+gh412-transient-claim-exit.sh	CORE	2.0		R3: a transient O_EXCL claim collision exits 1, identical to a durable loss — no retry cha	core=3	CORE
+gh413-launch-artifact-destination-guard.sh	CORE	32.2		R4: the launch-artifact marker authorises a destructive rebuild of any directory — marker 	core=2	CORE
+gh414-comment-reference-check.sh	CORE	13.1		R5: nothing deterministic checks whether an inline code comment is still true — extend the	core=3 pdda=2	CORE
+gh415-guard-hook-entrypoints.sh	CORE	2.3		R6: the skill-first guard hook covers 6 of 12 Tier-A entrypoints — derive the set from AGE	core=10	CORE
+handoff.sh	CORE	0.7			core=1	CORE
+handoff-exclusive.sh	CORE	1.0			core=1	CORE
+circuit-break.sh	CORE	0.7			core=1	CORE
+terminality-seal.sh	CORE	0.8			core=1	CORE
+write-ops-log.sh	CORE	1.3			core=3	CORE
+auto-sync.sh	CORE	0.7			core=1	CORE
+analyze.sh	CORE	1.8			core=1	CORE
+workstealing-verdict.sh	CORE	1.3			core=1	CORE
+verdict-edge.sh	CORE	0.7			core=1	CORE
+claim-cap.sh	CORE	1.1			core=1	CORE
+reap.sh	CORE	0.9			core=1	CORE
+heartbeat.sh	CORE	1.8			core=1	CORE
+cost.sh	CORE	3.3			core=2	CORE
+take.sh	CORE	1.0			core=1	CORE
+watchdog-liveness.sh	CORE	1.1			core=2	CORE
+runner-loop.sh	CORE	3.9			core=2	CORE
+poll-driver.sh	CORE	8.8			core=3	CORE
+relay-loop.sh	CORE	8.8			core=2	CORE
+poll-relay.sh	CORE	14.9			core=2	CORE
+watchdog-relay.sh	CORE	1.0			core=2	CORE
+codex-turn.sh	CORE	29.0			core=3	CORE
+agy-turn.sh	CORE	82.8			core=4	CORE
+pi-turn.sh	CORE	22.1			core=4	CORE
+relay-turn-trace.sh	CORE	5.0			core=3	CORE
+aider-turn.sh	CORE	30.4			core=3	CORE
+gh278-turn-timeout-parity.sh	CORE	5.0			core=3	CORE
+gh308-frozen-twin-guard.sh	SMALL:canary	4.0			core=26	SMALL
+gh245-agy-probe-verb-invariant.sh	CORE	0.2		agy auth probe verb has no cross-call-site invariant — the same defect has been fixed thre	core=3	CORE
+gh267-express-skill.sh	CORE	30.6		feat(skill): /express — hotfix fast lane: fix → releases DB → PDDA docs → direct developme	core=7 prs=4	CORE
+gh578-ci-optimize-skill.sh	REVIEW:core-code,skill-subject	0.4	ci-optimize	feat(skills): add ci-optimize transferable CI/CD audit & optimization skill	core=1	OFF
+gh778-review-code-skill.sh	REVIEW:core-code,skill-subject	0.5	review-code	feat: review-code and review-PR ground-truth code review skill	core=1	OFF
+gh798-status-skill.sh	REVIEW:core-code,skill-subject	0.6	review-code	feat(skills): add status skill and DRY/centralized-helper audit in review-code	core=1	OFF
+gh779-radar-ci-health.sh	REVIEW:core-code,skill-subject	0.4	radar	radar: trunk CI health, new-guard re-run on open PRs, regressed-after-declared-fixed table	core=1	OFF
+gh781-wam-radar-seed.sh	REVIEW:core-code,skill-subject	0.4	whack-a-mole	whack-a-mole: seed candidate clusters from recent radar reports (re-verified, freshness-ga	core=1	OFF
+gh788-python-path-space.sh	CORE	0.8		gate: 10 suites fail when the Python path contains a space (shebang and unquoted sys.execu	core=1	CORE
+gh777-start-task-prior-art.sh	REVIEW:core-code,skill-subject	1.4	start-task	Umbrella: Adopt rebalanceOS #257 Retrospective Lessons & Starter Kit into XYZ Forge (PRS, 	core=1 prs=1	CORE
+gh777-inventory-ratchet.sh	SMALL:canary	0.6		Umbrella: Adopt rebalanceOS #257 Retrospective Lessons & Starter Kit into XYZ Forge (PRS, 	pdda=2	SMALL
+gh615-start-task-reinforce.sh	OFF:skill/non-core	0.3	start-task	fix(skills): reinforce start-task against relay-induced overbuilding and gate thrashing		OFF
+gh616-start-task-commensurate-envelope.sh	OFF:skill/non-core	0.2	start-task	fix(skills): enforce commensurate machinery and review-packet envelope in start-task		OFF
+gh617-relay-xyz-commensurate-review.sh	REVIEW:no-code-ref	0.2		fix(skills): sharpen relay-xyz review scope against over-engineering and uncommensurate ma		OFF
+gh609-sdlc-agent-gaps.sh	REVIEW:no-code-ref	1.1		feat(sdlc): address edge-case SDLC gaps in autonomous agent workflows (interrupted-work re		CORE
+ate-run-variations.sh	MEDIUM:ate	1.1			medium=1	MEDIUM:ate
+gh478-runaway-guard.sh	MEDIUM:ate	26.8		Add ATE exit-cleanup / runaway-process guard — gen4 adaptive-ate test hung ~3 days at ~100	core=4	MEDIUM:ate
+model-alias.sh	CORE	3.4			core=2	CORE
+gh450-model-catalog-pin.sh	CORE	4.0		Consume Model-catalog v1 (Phase 1): vendored catalog + generated alias YAML + drift check 	core=10	CORE
+gh460-fuzz-resolver-smoke.sh	REVIEW:core-code,skill-subject	5.4	start-task	ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes (start-	core=3	CORE
+gh346-model-telemetry-honesty.sh	CORE	0.4		Speed up harness -> gateway -> model resolution with a real cache	core=6	CORE
+gh518-muse-model-policy.sh	CORE	15.8		harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalo	core=1	CORE
+gh518-muse-adapter-containment.sh	CORE	16.9		harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalo	core=2	CORE
+gh346-resolver-fallback.sh	CORE	0.8		Speed up harness -> gateway -> model resolution with a real cache	core=4	CORE
+gh346-telemetry-row-written.sh	CORE	1.0		Speed up harness -> gateway -> model resolution with a real cache	core=10	CORE
+gh496-telemetry-isolation.sh	MEDIUM:telemetry	1.3	ponytail	ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459)	core=5	MEDIUM:telemetry
+gh346-registry-view-freshness.sh	CORE	0.3		Speed up harness -> gateway -> model resolution with a real cache	core=2	CORE
+gh346-gateway-allowlists.sh	CORE	1.2		Speed up harness -> gateway -> model resolution with a real cache	core=10	CORE
+gh346-profile-resolve.sh	CORE	5.3		Speed up harness -> gateway -> model resolution with a real cache	core=5	CORE
+gh368-same-lane-routing.sh	CORE	0.1		Same-lane builder + reviewer cannot route: one env slot per model lane (AGY_AGENT) is over	core=3	CORE
+gh373-reviewer-validation.sh	CORE	0.1		Reviewer validation accepts gemini* but no gemini lane exists (no GEMINI_AGENT routing, no	core=1	CORE
+gh369-group-kill.sh	CORE	2.5		rtl_run_bounded's PID-only kill lets a multi-process CLI outlive its turn cap (observed: 7	core=4	CORE
+gh370-progress-telemetry.sh	CORE	3.2		Mid-turn blindness: add cheap worktree-progress telemetry to the RSS poll loop (0-byte tur	core=2	CORE
+gh371-interrupt-snapshot.sh	CORE	1.4		Interrupted-phase record doesn't snapshot the uncommitted tree — a killed turn's edits sta	core=8	CORE
+gh372-escalation-log-tail.sh	CORE	2.9		Turn-taker failure reason never reaches ESCALATION.md (codex 'workspace out of credits' su	core=8	CORE
+gh374-drift-path-filter.sh	CORE	0.6		Drift-brief prepends stale cross-repo registry entries (src/project.js warnings inside an 	core=3	CORE
+swe-diagram.sh	MEDIUM:swe_diagram	1.1	swe-diagram		medium=3	MEDIUM:swe_diagram
+gh610-claude-subscription.sh	REVIEW:core-code,skill-subject	35.8	consult	feat(claude): subscription-validated native consult and relay support	core=6	CORE
+gh648-l8-zero-output-handback.sh	CORE	0.1		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=1	CORE
+gh648-l9-369-regression.sh	CORE	3.1		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=1	CORE
+gh698-planner-db-ratings.sh	CORE	1.1		PRS Optimization from real world project	core=1 prs=1	CORE
+gh708-vendored-suite-skips.sh	CORE	1.0		test/gh267-express-skill.sh is red from any vendored .xyz/ (githooks/ not in VENDOR_DIRS)	core=2	CORE
+claude-turn.sh	CORE	20.0			core=3	CORE
+commandcode-turn.sh	CORE	10.6			core=3	CORE
+worktree-isolation.sh	CORE	18.3			core=3	CORE
+shim-worktree.sh	CORE	29.2			core=3	CORE
+marathon-yaml.sh	CORE	0.7			core=1	CORE
+gh391-emit-marathon-yaml.sh	CORE	1.7		AgentChorus bridge: four hardening follow-ups from the #386 review (token revocation, life	core=4	CORE
+marathon-drive.sh	CORE	124.5			core=3	CORE
+gh284-runlog-heartbeat.sh	CORE	4.2			core=4	CORE
+gh115-round-cap.sh	CORE	7.8		marathon-drive: premature round-cap escalation (exit 4) during progressive multi-round rev	core=3	CORE
+gh307-gate-env-scrub.sh	CORE	0.1		Runner hygiene: self-hosted ubuntu canary drift on 2026-08-28 — 17:42Z run fails with envi	core=2	CORE
+gh319-gate-path-with-space.sh	CORE	3.7			core=4	CORE
+gh320-twin-timeout-parity.sh	CORE	0.4			core=11	CORE
+gh322-unknown-arg-rejection.sh	CORE	0.9			core=4	CORE
+gh322-runlog-python-lane.sh	CORE	8.9			core=5	CORE
+gh331-cost-summary.sh	CORE	6.4			core=3	CORE
+gh308-poll-guards.sh	CORE	1.0			core=3	CORE
+gh308-swarm-gate-path.sh	CORE	0.7			core=1	CORE
+gh343-gate-program-target-root.sh	CORE	1.7			core=2	CORE
+gh308-consult-guards.sh	REVIEW:core-code,skill-subject	6.8	consult		core=1	CORE
+gh308-turn-shim-parity.sh	CORE	2.9			core=8	CORE
+gh342-sentinel-debug-log-python.sh	CORE	1.2		This repo is public: proxy infra details behind aliases so hosts, addresses and local path	core=5	CORE
+gh369-find-doc-root-resolution.sh	OFF:skill/non-core	0.5		rtl_run_bounded's PID-only kill lets a multi-process CLI outlive its turn cap (observed: 7	medium=1	CORE
+gh400-acceptance-fidelity.sh	SMALL:pdda	1.7			core=2	SMALL
+gh557-unknown-blocks-manifest.sh	CORE	1.6			core=3	CORE
+gh400-source-url.sh	SMALL:pdda	0.8			core=2	SMALL
+gh419-gate-inventory.sh	CORE	0.4		Make the three marathon process rules deterministic — umbrella issue, full clone, derived 	core=2	CORE
+litmus-release.sh	SMALL:prs	3.2			core=3	SMALL
+gh418-issue-state-frozen.sh	CORE	1.3		Marathon planner still reads the frozen ROADMAP.md — 37 DB-parked items are invisible to i	core=3	CORE
+gh422-backfill-source-url.sh	SMALL:pdda	0.9			core=3	SMALL
+gh425-source-url-slug.sh	SMALL:pdda	3.6		--gate's provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-e	core=2	SMALL
+gh410-containment-advisory.sh	REVIEW:core-code,skill-subject	7.1	status	R1: the structural relay-block validator never runs on the driven path — and rejects the b	core=3	CORE
+gh410-relay-block-driven-path.sh	REVIEW:core-code,skill-subject	1.9	status	R1: the structural relay-block validator never runs on the driven path — and rejects the b	core=2	CORE
+gh90-allowlist-directory.sh	CORE	9.0		fix(relay): a bare DIRECTORY on ALLOW_PATHS can never match — it fails containment and kil	core=3 medium=1	CORE
+gh399-packet-acceptance-continuation.sh	CORE	4.9		Adding a model route means editing Python in three places — let the profile carry the whol	core=3	CORE
+gh417-turn-root-symlink-prefix.sh	REVIEW:core-code,skill-subject	10.6	front-door	MARATHON umbrella: GH-406 remediation — seven guards that cover a narrower path than their	core=5	CORE
+gh390-gate-guard.sh	CORE	49.8			core=5	CORE
+gh457-gate-tiers.sh	CORE	12.3		Model aliasing & canonicalization: system spec, verified behaviors, gateway-blindness defe	core=5	CORE
+gh407-gate-ran-attribution.sh	CORE	7.7		[upstream archive] GH-407: pre-advance-failed is reported for failures where the gate neve	core=4	CORE
+gh390-timeout-attribution.sh	CORE	10.7			core=4	CORE
+gh387-gate-not-first-executor.sh	CORE	7.1			core=2	CORE
+gh492-idle-kill.sh	CORE	7.7		Nothing reconciles roadmap_items against issues closed outside a merged PR — 33 rows drift	core=4	CORE
+gh432-failed-turn-persist.sh	CORE	7.8			core=3	CORE
+gh441-gate-env-contract.sh	CORE	0.7			core=8	CORE
+gh218-synthetic-nested-driver-lock.sh	REVIEW:no-code-ref	1.3		test/synthetic/gh101-relay-programmatic-stress.sh executes relay_drive.py from $ROOT with 		CORE
+gh217-gate-env-plan-outside.sh	CORE	7.7		gate_env.py does not scrub MARATHON_ALLOW_PLAN_OUTSIDE_WORKING — leaks into pre-advance ga	core=4	CORE
+gh448-driver-lock-resolver.sh	SMALL:canary	0.6		deepseek-turn overlay registers DEEPSEEK_MODEL but the dsh agent still runs the bundle def	core=7 medium=1	SMALL
+gh376-relay-drive-lock-parity.sh	CORE	1.9		Marathon umbrella: 2026-09-01 harness quick wins (#368-#374) — planned, preflighted, await	core=4	CORE
+gh505-relay-attest.sh	CORE	44.4		Builder can approve and close its own relay; no merge path checks for a reviewer (evidence	core=11	CORE
+gh397-reviewer-turn-role.sh	CORE	0.4		relay-drive --review-once reports a shim that wrote nothing as exit 5 "non-approval handba	core=2	CORE
+gh401-dry-run-no-mutation.sh	CORE	0.5			core=2	CORE
+gh375-agy-auth-preflight.sh	CORE	0.8			core=5	CORE
+gh375-auth-timeout-verdict.sh	CORE	9.4			core=4	CORE
+gh385-retry-token-satisfied.sh	CORE	19.7			core=2	CORE
+gh408-tick-failure-visibility.sh	CORE	2.1		[upstream archive] GH-408: _run_tick_loud discards stderr and then exits on it — a token-s	core=3	CORE
+nightwatch-release.sh	SMALL:prs	3.3			core=1 prs=1	SMALL
+gh378-gate-requires-green-suite.sh	CORE	8.2			core=3	CORE
+gh379-claude-builder-diagnosis.sh	CORE	2.4		CI: the Ubuntu canary re-implements the test runner inline — it forfeits GH-528's 5x paral	core=4	CORE
+gh380-claude-trust.sh	CORE	0.4			core=1	CORE
+gh382-marathon-memory-telemetry.sh	CORE	4.6		Test Suite - Lighter Gate	core=4	CORE
+gh491-gate-only-refire.sh	CORE	8.4		roadmap move/update --section help advertises section names the renderer drops, and nothin	core=3	CORE
+gh551-resolver-refuses.sh	CORE	0.6		Relocated harness telemetry breaks the in-repo evidence chain: site_build bakes a frozen g	core=2	CORE
+meter-release.sh	SMALL:prs	0.8			core=1 prs=1	SMALL
+ballast-release.sh	SMALL:prs	1.6			core=1 prs=1	SMALL
+gh402-branch-enforcement.sh	CORE	60.1		Board-sync brainstorm: auto-add issues to the Projects board when any agent starts work (s	core=2	CORE
+gh386-turn-budget-honesty.sh	CORE	0.4			core=5	CORE
+gh514-write-set-trackable.sh	REVIEW:core-code,skill-subject	26.1	ponytail	skills: new co-author skill "keel" — balance modularity, flexibility, maintainability, and	core=2	CORE
+gh255-remedy-ordering.sh	CORE	0.3		marathon-drive's blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT, the remedy that a	core=1	CORE
+gh256-target-root-guard-root.sh	CORE	0.1		No preflight checks the builder can reach a phase's artifact paths — the phase burns its f	core=2	CORE
+gh426-worktree-leak.sh	CORE	3.5			core=2	CORE
+gh384-crash-recovery.sh	CORE	0.8		Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel	core=3	CORE
+gh388-run-log-durability.sh	CORE	4.8			core=6	CORE
+gh409-claim-leak.sh	CORE	13.8			core=2	CORE
+gh438-removal-is-progress.sh	CORE	6.8			core=2	CORE
+gh438-acceptance-recheck.sh	CORE	9.1			core=2	CORE
+gh467-index-only-lane-blocked.sh	CORE	1.8		Umbrella - Side Quest: Cactus Needle Oracle for what to do next and doc governance sentine	core=3	CORE
+hq-marathon-live.sh	MEDIUM:hq	0.3			core=1 medium=1	MEDIUM:hq
+debug-mantra.sh	REVIEW:core-code,skill-subject	1.1	debug-mantra		core=2	CORE
+lane-attempt-cap.sh	CORE	0.2			core=3	CORE
+driver-lock.sh	CORE	0.6			core=2	CORE
+measure.sh	CORE	0.3			core=1	CORE
+loop-stop.sh	CORE	0.2			core=1	CORE
+oracle-guard.sh	CORE	0.5			core=5	CORE
+champion.sh	CORE	0.3			core=1	CORE
+heldout-check.sh	CORE	0.2			core=1	CORE
+loop-cost.sh	CORE	0.1			core=1	CORE
+improve-loop.sh	CORE	2.2			core=2	CORE
+improve-loop-qa.sh	CORE	3.4			core=2	CORE
+improve-loop-dogfood.sh	CORE	1.3			core=1	CORE
+gh430-state-dir-tracked-default.sh	CORE	0.6			core=1	CORE
+gh536-evidence-detail.sh	CORE	0.6		relocate: Deployed Skills collection moves INTO the live Git Pulse Sync checkout (supersed	core=2	CORE
+gh549-work-events.sh	SMALL:prs	385.3		Work-state event stream + concurrent connectors: GitHub Kanban first, HQ and Flightdeck ne	core=3 prs=6	SMALL
+gh646-status-label.sh	SMALL:prs	7.3	status	Shared in-progress label: explicit task starts and closure follow-up through existing XYZ 		SMALL
+gh402-board-sync.sh	CORE	1.5		Board-sync brainstorm: auto-add issues to the Projects board when any agent starts work (s	core=3 prs=1	CORE
+gh405-mock-board-harness.sh	CORE	2.0		feat(dev-tools): local debugging mock harness for GitHub Projects V2 API	core=2	CORE
+gh544-parallel-default.sh	CORE	1.6		research: archive Luna/Needle model benchmarks and Git/PR analyst findings	core=2	CORE
+gh379-canary-uses-validate.sh	CORE	2.2		CI: the Ubuntu canary re-implements the test runner inline — it forfeits GH-528's 5x paral	core=1	CORE
+gh544-pre-push-gate.sh	CORE	6.8		research: archive Luna/Needle model benchmarks and Git/PR analyst findings	core=3 medium=1 pdda=2	CORE
+gh35-test-tiers.sh	CORE	7.5		Architectural Sketch: 3-Tier Test Suite Selection (Docs, Utility/Accessory Libraries, Core	core=5 medium=2 pdda=3	CORE
+gh365-runner-envelope.sh	CORE	1.9		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=7 medium=1 pdda=2	CORE
+gh365-validate-telemetry.sh	CORE	1.9		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=6 medium=1 pdda=2	CORE
+gh365-driver-lane-registry.sh	CORE	7.5		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=6	CORE
+gh365-pdda-gov-scan.sh	CORE	74.4		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=3 pdda=3	CORE
+gh365-tier-fail-closed.sh	CORE	118.1		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=4 medium=1 pdda=1	CORE
+gh365-shellcheck-parallel.sh	CORE	0.5		Test-suite recalibration: finish tiering, prove parallel equivalence, and define smoke/pro	core=2	CORE
+gh1-fixture-guard.sh	SMALL:canary	1.6		Test suites can escape their sandbox and rewrite the host clone's git config/remotes/refs		SMALL
+gh1-adoption-guard.sh	SMALL:canary	5.3		Test suites can escape their sandbox and rewrite the host clone's git config/remotes/refs	core=1	SMALL
+gh314-transcript-writeset.sh	CORE	17.5		wave_reconcile: Completed-archive line mangles ROADMAP entries without the 'GH-N · Title' 	core=2	CORE
+gh520-default-reviewer-stub.sh	CORE	0.6			core=3	CORE
+gh527-destructive-git-guard.sh	CORE	1.0		roadmap_items.issue_url has no repair writer, and one bad row disables reconcile-state ent	core=1	CORE
+gh50-sandboxed-git-guard.sh	CORE	0.3		fix(agents): a sandboxed git --track/branch -D half-applies — it rewrites the working tree	core=1	CORE
+marathon.sh	CORE	8.9			core=4	CORE
+marathon-closeout.sh	CORE	2.5			core=4	CORE
+gh484-phase-dir-default.sh	CORE	3.0		feat(skill): deploy-skills — durable local catalog and global symlink deployment	core=2	CORE
+marathon-root-audit.sh	CORE	157.7			core=2	CORE
+rtl-orphan-backup.sh	CORE	0.3			core=1	CORE
+gh2-orphan-backup-repro.sh	CORE	1.3		Test suite run relocated an untracked file into .tick/orphan-backups/	core=1	CORE
+gh91-relay-scratch.sh	CORE	1.6		fix(relay): a build turn has nowhere to write verification output — containment kills a tu	core=1	CORE
+gh113-headless-scratch.sh	CORE	1.5		harness: headless agy builder writes root scratch files triggering containment violation (	core=1	CORE
+gh114-headless-tty.sh	CORE	10.3		harness: headless agy -p idle timeout / hang on TTY allocation and network stalls (exit 7)	core=3	CORE
+gh124-closeout.sh	REVIEW:no-code-ref	2.6		feat(harness): eliminate end-of-day closeout friction — automated phase QA receipts, auto-		CORE
+gh129-relay-tick-root.sh	REVIEW:no-code-ref	2.6		relay-drive: unset TICK_REPO_ROOT reports 'token missing' and exits 0 on escalation		CORE
+gh130-agy-auth-whoami.sh	REVIEW:no-code-ref	0.8		fix(relay): agy auth pre-flight kills the lane when the installed agy has no 'whoami' subc		CORE
+gh131-marathon-target-root.sh	REVIEW:no-code-ref	11.1		fix(marathon): --target-root with a separate harness repo is a catch-22 — relay-drive want		CORE
+gh139-pipe-grep-guard.sh	SMALL:canary	5.0		test: GH-460's SIGPIPE shape is still open across the suite — 482 pipe-into-grep -q sites;		SMALL
+synthetic/gh101-consult-programmatic.sh	REVIEW:core-code,skill-subject	2.8	consult	feat: Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core	core=1	CORE
+synthetic/gh101-relay-programmatic-stress.sh	REVIEW:core-code,skill-subject	2.4	consult	feat: Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core	core=2	CORE
+synthetic/gh102-telemetry-schema.sh	OFF:skill/non-core	2.2		feat: Unify Telemetry Schema & Inspection Tooling Across Fuzzing (utils/fuzzing) and ATE (	medium=4	MEDIUM:ate
+synthetic/gh94-containment-invariants.sh	CORE	1.1		research: Programmatic Tool Calling & Code-Mode Execution for Harnesses, Telemetry, and Co	core=1	CORE
+synthetic/gh94-script-serialization.sh	CORE	3.3		research: Programmatic Tool Calling & Code-Mode Execution for Harnesses, Telemetry, and Co	core=1	CORE
+synthetic/synthetic-claude-target-root.sh	REVIEW:no-code-ref	0.1				CORE
+synthetic/synthetic-marathon-env-leak.sh	CORE	0.2			core=1	CORE
+synthetic/synthetic-marathon-worktree-guard.sh	CORE	0.2			core=1	CORE
+synthetic/synthetic-pi-model-unset.sh	CORE	0.1			core=1	CORE
+synthetic/synthetic-pi-provider-unsupported.sh	CORE	0.1			core=1	CORE
+gh141-synthetic-registry.sh	CORE	9.0		Make Fuzzing and ATE actually useful: neither currently fuzzes	core=1 medium=1	CORE
+gh141-fuzz-inputs.sh	CORE	0.9		Make Fuzzing and ATE actually useful: neither currently fuzzes	core=1	CORE
+gh142-ate-exit-contract.sh	OFF:skill/non-core	7.3		ATE exits 0 when `gh issue create` fails — the rollup issue silently never gets filed	medium=3	MEDIUM:ate
+gh148-deepseek-turn.sh	CORE	9.2		feat(harness): DeepSeek Harness (dsh) integration & deepseek-turn shim for OpenRouter Deep	core=3	CORE
+gh608-deepseek-effort.sh	CORE	0.5		fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attributio	core=1	CORE
+gh648-l7-checkout-aftermath.sh	CORE	1.9		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2	CORE
+gh648-l6-muse-attribution.sh	CORE	7.9		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2	CORE
+gh648-l5-gh237-repro.sh	CORE	1.5		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2	CORE
+gh648-l4-285-revalidate.sh	REVIEW:no-code-ref	12.0		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (		CORE
+gh648-l3-consult-cap.sh	REVIEW:core-code,skill-subject	3.5	consult	Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=3	CORE
+gh648-l2-token-aftermath.sh	CORE	15.0		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=4	CORE
+gh648-l1-turn-termination.sh	CORE	0.9		Umbrella: headless turn-timeout family — idle-oracle overclaim + per-shim kill aftermath (	core=2	CORE
+gh654-offlane-log.sh	CORE	1.0		Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no o	core=3	CORE
+gh660-skill-drift.sh	CORE	0.5		Deployed-skills drift: express SKILL.md hot-fixed directly in the vendored collection (git	core=1	CORE
+gh156-turn-shims-help.sh	CORE	1.5		feat(shims): support --help and -h usage flags across turn shims before requiring RELAY_AG	core=7	CORE
+gh155-phase1-metamorphic-invariants.sh	CORE	5.1		ATE & Fuzzing brainstorming - 3rd gen	core=1	CORE
+gh155-phase2-differential-oracle.sh	CORE	19.3		ATE & Fuzzing brainstorming - 3rd gen	core=2	CORE
+gh155-phase3-repro-builder.sh	CORE	2.0		ATE & Fuzzing brainstorming - 3rd gen	core=4	CORE
+gh155-phase4-self-healer.sh	CORE	0.5		ATE & Fuzzing brainstorming - 3rd gen	core=2	CORE
+gh155-phase5-active-explorer.sh	CORE	1.1		ATE & Fuzzing brainstorming - 3rd gen	core=4	CORE
+gh168-wave-reconcile-scope.sh	SMALL:prs	1.3		wave_reconcile.py hard-fails (and rolls back) on pre-existing marathon-plan drift, unrelat	core=3 pdda=2 prs=4	SMALL
+gh174-harness-registry.sh	CORE	0.7		Gen 3.5 — consolidated ATE review (Phases 1–5): close the loop before scaling it	core=8	CORE
+gh180-repro-timeout-crash.sh	CORE	0.4		repro_builder crashes on timeout telemetry records (exit_code: null -> TypeError)	core=2	CORE
+gh181-repro-adapter-fidelity.sh	CORE	0.7		repro_builder emits non-reproducing reproducers from real telemetry (mis-tokenized unquote	core=3 medium=1	CORE
+gh182-healer-facade-safety.sh	CORE	2.5		self_healer --mode heal is a facade: containment refuses any real target, CLI can never he	core=3	CORE
+gh183-explorer-env-soundness.sh	CORE	1.6		active_explorer env-family fuzzing unsound: base_env={} hardcoded, one always-deferring ve	core=2	CORE
+gh184-no-tracked-scratch.sh	SMALL:canary	0.2		committed scratch artifact .relay-scratch/probe_telemetry.json makes every real turn a tra		SMALL
+gh202-wave-reconcile-issue-state.sh	SMALL:pdda	4.3		wave_reconcile: aborts on marathon-plan exit 5 (normal items-held state) and promotes capt	core=3 pdda=2 prs=6	SMALL
+gh232-wave-reconcile-multiphase.sh	SMALL:pdda	1.4		feat(reconciler): wave_reconcile should honor linked issue open/closed state before promot	core=3 pdda=2 prs=4	SMALL
+consult.sh	REVIEW:core-code,skill-subject	41.1	consult		core=2	CORE
+deep-research.sh	CORE	9.1			core=1	CORE
+relay-pkg-freshness.sh	CORE	0.5			core=2	CORE
+skill-extract.sh	CORE	0.4			core=11	CORE
+releases-skill.sh	SMALL:prs	0.2			prs=2	SMALL
+gh103-timeline-exporter.sh	SMALL:prs	4.9		Technical spike: render RELEASES SQLite ledger through the timeline-ui viewer	prs=4	SMALL
+gh75-dashboard.sh	REVIEW:prs-code	0.8	read-only	feat(releases): single-page HTML dashboard — releases (mid/long term) + roadmap (immediate	prs=2	SMALL
+gh525-unshipped-version-tokens.sh	CORE	3.2		releases_app.py: add an `unshipped_version_token` setting so a repo's "no version yet" con	core=1 prs=2	CORE
+gh32-releases-app.sh	SMALL:prs	22.4		RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEASES.md, an	prs=2	SMALL
+gh32-releases-artifacts.sh	SMALL:prs	0.6		RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEASES.md, an	core=1 prs=2	SMALL
+gh53-releases-merge-resolve.sh	SMALL:prs	6.2		fix(GH-32): releases.db is a committed derived binary with no .gitattributes — every concu	core=1 prs=3	SMALL
+gh54-merged-dump-refusals.sh	SMALL:prs	3.7		fix(GH-32): releases.sql's `-- generation:` header conflicts on every concurrent write — n	core=1 prs=2	SMALL
+gh360-dump-multiline-values.sh	CORE	1.2		releases check calls a git-induced chain fork a "forged audit trail", and --rebuild's over	core=1 prs=2	CORE
+gh57-releases-fuzz.sh	SMALL:prs	10.3		test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite	prs=3	SMALL
+gh57-live-merge-resolve.sh	SMALL:prs	14.0		test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite	prs=5	SMALL
+gh69-roadmap-shadow.sh	SMALL:prs	11.8		Design: should ROADMAP.md become a ledger? (it already is one — with a regex for a schema 	prs=2	SMALL
+gh351-manifest-unship.sh	REVIEW:prs-code	3.3		manifest ship is terminal with no retraction verb — a false shipped row is permanent, and 	prs=2	SMALL
+gh360-scoped-receipt-chain-rebuild.sh	REVIEW:prs-code	4.8		releases check calls a git-induced chain fork a "forged audit trail", and --rebuild's over	prs=3	SMALL
+gh349-releases-roadmap-vendored.sh	REVIEW:prs-code	2.9		releases ledger: roadmap layer never generalised to a vendored install — 4 defects, one de	prs=2	SMALL
+gh362-marathon-plan-link-bullets.sh	CORE	2.9		marathon-plan parses only bold ledger bullets, so a link-bullet ROADMAP yields zero items 	core=2	CORE
+gh429-wave-reconcile-vendored-observe.sh	SMALL:prs	2.3	status	wave_reconcile: three residual gaps on a vendored observe-mode repo — dashboard root, PDDA	core=3 pdda=2 prs=5	SMALL
+gh358-wave-reconcile-vendored-paths.sh	SMALL:pdda	1.1	five	wave_reconcile.py resolves all five harness tools repo-root-relative — inert on every vend	core=3 pdda=2 prs=5	SMALL
+gh77-standup-triage.sh	MEDIUM:standup	56.5	standup	feat(skills): /standup — session-scoped triage that answers 'what did I leave open, what i	core=2 medium=2 prs=2	MEDIUM:standup
+gh32-release-target-advisory.sh	SMALL:prs	3.5		RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEASES.md, an	prs=2	SMALL
+gh39-releases-project-sync.sh	SMALL:prs	3.4		feat(releases): project RELEASES.DB into a GitHub release board	prs=2	SMALL
+path-integrity.sh	CORE	6.1			core=4 pdda=1	CORE
+relay-turn-timeout.sh	CORE	16.0			core=4	CORE
+relay-target-root.sh	SMALL:canary	14.9			core=3	SMALL
+relay-target-root-paths.sh	SMALL:canary	4.2			core=3	SMALL
+relay-target-root-relayfile.sh	SMALL:canary	1.4			core=2	SMALL
+relay-target-root-newfile.sh	SMALL:canary	3.4			core=3	SMALL
+gh289-target-root-build-turn.sh	CORE	1.3		chore(merge-strategy): multi-PR merge sequence and reconciliation plan (#288, #286, #287, 	core=3	CORE
+archive-root.sh	CORE	0.6			core=2	CORE
+archive-writers.sh	CORE	7.6			core=6	CORE
+archive-commit.sh	CORE	5.6			core=3	CORE
+archive-telemetry.sh	MEDIUM:telemetry	0.9			core=1 medium=1	MEDIUM:telemetry
+relay-token-collision.sh	CORE	1.4			core=2	CORE
+relay-escalation-not-stall.sh	CORE	2.9			core=2	CORE
+relay-untracked-file-warn.sh	CORE	6.0			core=2	CORE
+relay-file-seeding-visibility.sh	CORE	0.7			core=2	CORE
+gh304-vendored-relay-path.sh	CORE	1.0			core=2	CORE
+relay-review-once.sh	CORE	9.0			core=2	CORE
+relay-artifact-file.sh	CORE	6.9			core=3	CORE
+relay-turn-handoff.sh	CORE	1.7			core=2	CORE
+relay-dep-drift.sh	CORE	1.4			core=3	CORE
+new-relay.sh	CORE	0.9			core=2	CORE
+agent-chorus.sh	MEDIUM:agent_chorus	25.6	agent-chorus		core=1 medium=3	MEDIUM:agent_chorus
+gh678-installer-live-links.sh	CORE	3.7		skills/*/install.sh steals app symlinks from the managed Skills Army collection	core=1	CORE
+skills-army-hq.sh	MEDIUM:skills_army_hq	30.0	skills-army-hq			MEDIUM:skills_army_hq
+gh620-skills-army-mini-sync.sh	MEDIUM:skills_army_hq	15.2		docs(process): reusable spin-off recipe; pilot XYZ Skills Army mini	core=1 medium=1	MEDIUM:skills_army_hq
+agent-chorus-bridge.sh	OFF:skill/non-core	8.1	agent-chorus		medium=3	MEDIUM:agent_chorus
+gh233-agent-chorus-concurrency.sh	OFF:skill/non-core	4.2	agent-chorus	feat(agent-chorus): Gen 2 Phase 2 — Lifecycle Verbs, Watch Invalidation, Concurrency Suite	medium=1	MEDIUM:agent_chorus
+gh268-relay-cue-and-target-checks.sh	CORE	1.2			core=6	CORE
+xyz-vendor.sh	CORE	18.0			core=14 prs=5	CORE
+gh642-consumer-fruit.sh	CORE	10.9		Low-hanging fruit from two foreign-repo marathons (local-addon-nexus-ai gh-52 + gh-60): ma	core=8 prs=2	CORE
+xyz-sync-check.sh	CORE	2.3			core=4	CORE
+gh293-vendored-guard-drift.sh	REVIEW:core-code,skill-subject	1.7	radar	radar: XYZ-forge — recurring targets	core=5	CORE
+relay-concurrent-commit.sh	CORE	0.9			core=2	CORE
+relay-commit-pathspec.sh	CORE	1.3			core=2	CORE
+relay-case-insensitive.sh	CORE	0.4			core=2	CORE
+relay-xyz-skill-guard.sh	CORE	1.0			core=7	CORE
+find-harness.sh	CORE	1.3			core=4	CORE
+gh292-worktree-vendored-discovery.sh	CORE	0.7		Jog supervisor follow-ups: durable fixes for GH-280 Phase-4 findings 1-3	core=3	CORE
+gh649-pdda-migration.sh	SMALL:pdda	24.6		Research: make Forge canonical for PDDA; retire standalone distribution unless demand is p	core=1 medium=1 pdda=5	SMALL
+pdda-changelog.sh	SMALL:pdda	3.8			pdda=2	SMALL
+pdda-install-startup-docs.sh	SMALL:pdda	88.9			core=2 pdda=5	SMALL
+pdda-roadmap-coverage.sh	SMALL:pdda	2.5			core=1 pdda=3	SMALL
+pdda-repo-contract.sh	SMALL:pdda	47.9			pdda=2	SMALL
+pdda-local-checks.sh	SMALL:pdda	13.9			core=1 pdda=3	SMALL
+gh784-marathon-qa-gate.sh	REVIEW:core-code,skill-subject	5.2	start-task	umbrella: Marathon Lifecycle Hardening — Wave QA Relays, Mechanical Receipt Gates, and Sta	core=1 pdda=3	SMALL
+gh460-pipe-buffer-sigpipe.sh	REVIEW:core-code,skill-subject	3.3	start-task	ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes (start-	core=2 pdda=2	CORE
+gh284-p3-release-milestone.sh	SMALL:prs	2.6			core=1 pdda=3 prs=1	SMALL
+gh284-p4-release-lanes.sh	SMALL:prs	2.0			core=1 medium=1 prs=2	SMALL
+swarm-preflight.sh	CORE	13.0			core=12	CORE
+ci-workflow.sh	CORE	0.5			core=3 pdda=3	CORE
+ci-route.sh	CORE	4.4			core=7 medium=7 pdda=2 prs=6	CORE
+gh509-gate-evidence.sh	CORE	0.9		Relay terminal authorization: prove a review happened without trusting builder-writable st	core=3	CORE
+gh528-parallel-contention-retry.sh	REVIEW:core-code,skill-subject	55.0	unstuck	fix(skill): /unstuck — queue simultaneous blockers, tripwire recurring blocker classes	core=2	CORE
+xyz-completion.sh	MEDIUM:telemetry	5.1			medium=3	MEDIUM:telemetry
+gh358-lock-instrumentation.sh	MEDIUM:telemetry	9.1	five	wave_reconcile.py resolves all five harness tools repo-root-relative — inert on every vend		MEDIUM:telemetry
+gh123-lock-progress-bound.sh	OFF:skill/non-core	8.1		Linux portability canary: first real run since 2026-08-17 — 7 failing assertions across 5 	medium=1	CORE
+gh14-atomic-append.sh	CORE	0.6		appendEvent writes non-atomically, so concurrent readers can observe torn event files	core=2	CORE
+gh23-path-overlap-enforcement.sh	CORE	1.2		Kernel invariant: enforce path-overlap rejection on direct tick claim and tick scope	core=1	CORE
+gh4-ungated-clone-warning.sh	CORE	2.0		Pre-push gate does not travel with clones: fresh clones push unverified	core=1	CORE
+xyz-harness-hooks.sh	CORE	28.4			core=5 medium=1	CORE
+preflight-docs.sh	CORE	19.6			core=1 medium=1	CORE
+marathon-plan.sh	CORE	5.7			core=7	CORE
+hq.sh	MEDIUM:hq	2.2			medium=1 pdda=2	MEDIUM:hq
+hq-park.sh	MEDIUM:hq	0.7			medium=1 pdda=2	MEDIUM:hq
+hq-park-synthesis.sh	MEDIUM:hq	0.6			medium=2 pdda=2 prs=2	MEDIUM:hq
+hq-dispatch.sh	MEDIUM:hq	0.8			core=1 medium=1	MEDIUM:hq
+hq-next.sh	MEDIUM:hq	0.2			medium=1	MEDIUM:hq
+hq-locator.sh	MEDIUM:hq	0.2			core=1 medium=2	MEDIUM:hq
+hq-hardening.sh	MEDIUM:hq	1.2			medium=2 pdda=2	MEDIUM:hq
+hq-promote.sh	MEDIUM:hq	0.8			medium=2 pdda=2	MEDIUM:hq
+mktemp-trap-guard.sh	SMALL:canary	13.7				SMALL
+hq-marathon-scan.sh	MEDIUM:hq	2.5			core=1 medium=1	MEDIUM:hq
+hq-rollup.sh	MEDIUM:hq	4.0			core=1 medium=3 prs=2	MEDIUM:hq
+gh238-hq-releases-mode.sh	MEDIUM:hq	1.9		hq.sh releases-mode: park via new 'releases roadmap add' verb, read via CLI — stop touchin	core=1 medium=1 prs=2	MEDIUM:hq
+gh239-hq-status-releases-mode.sh	MEDIUM:hq	1.1	status	Revise HQ rollup/status to read from RELEASES DB instead of ROADMAP.md in releases-mode re	core=1 medium=2 prs=2	MEDIUM:hq
+gh567-roadmap-dashboard-retired.sh	SMALL:prs	0.7		feat(ledger): end-to-end removal of ROADMAP-DASHBOARD.md and view-staleness machinery	core=1 prs=3	SMALL
+gh257-roadmap-ledger-fixes.sh	SMALL:prs	3.1		[Umbrella] Roadmap ledger: a malformed row is accepted, rendered as nothing, uncorrectable	core=1 prs=2	SMALL
+gh703-raw-text-asterisk.sh	CORE	0.8		releases: `roadmap add` inline raw_text bypasses validate_raw_text — a title with a bare `	core=1 prs=2	CORE
+gh269-roadmap-retired.sh	SMALL:prs	19.6		Full switchover to Releases DB: retire ROADMAP.md (readers, writers, gates, canary, ATE ve	core=3 pdda=2 prs=2	SMALL
+gh568-releases-md-retired.sh	SMALL:prs	2.3		feat(ledger): end-to-end retirement of RELEASES.md in favor of releases.db	core=1 prs=5	SMALL
+gh423-roadmap-render.sh	CORE	0.6		releases roadmap render: emit the DB as ledger markdown — the missing verb #418 actually d	core=1 prs=3	CORE
+gh454-reconciler-defects.sh	SMALL:prs	0.9		wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode 	core=1 pdda=3 prs=7	SMALL
+gh424-roadmap-status-marker.sh	REVIEW:prs-code	0.9	status	roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕	prs=3	SMALL
+gh418-planner-ledger-source.sh	CORE	0.5		Marathon planner still reads the frozen ROADMAP.md — 37 DB-parked items are invisible to i	core=2 prs=2	CORE
+gh425-gate-provenance-pr.sh	CORE	4.2		--gate's provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-e	core=3 prs=1	CORE
+gh421-auto-wave-reconcile.sh	SMALL:prs	5.4		Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledge	core=3 prs=3	SMALL
+gh684-hosted-lane-report.sh	CORE	1.4		Hosted wave-reconcile lane: 0 successes since 2026-09-11 (59 straight failures), three rot	core=1 prs=1	CORE
+gh740-hosted-lane-publish.sh	CORE	5.0		wave-reconcile.yml: the final fast-forward push is rejected whenever a merge lands during 	core=2 prs=3	CORE
+gh491-roadmap-section-validation.sh	REVIEW:prs-code	12.8		roadmap move/update --section help advertises section names the renderer drops, and nothin	prs=2	SMALL
+gh492-roadmap-state-sweep.sh	REVIEW:prs-code	6.2		Nothing reconciles roadmap_items against issues closed outside a merged PR — 33 rows drift	pdda=2 prs=2	SMALL
+gh605-work-state.sh	REVIEW:no-code-ref	1.4		fix(work): unify lifecycle events, emit terminal reconciliation, and expose projection rea		SMALL
+gh605-board-policy.sh	REVIEW:no-code-ref	0.8		fix(work): unify lifecycle events, emit terminal reconciliation, and expose projection rea		SMALL
+gh436-merge-cleanup.sh	SMALL:prs	237.4		feat(skill): /merge-cleanup — Worktree & clone consolidation, PR sequencing, and safe tear		SMALL
+gh645-merge-cleanup-xyz-tools.sh	SMALL:prs	0.3		merge-cleanup: ledger gate and reconcile fail in repos that vendor PRS tools under gitigno	prs=6	SMALL
+gh674-merge-cleanup-hosted-lookup.sh	SMALL:prs	0.2		merge-cleanup: hosted wave-reconcile lookup keys on the merge SHA, misses the PR-closed ru	prs=2	SMALL
+gh681-reviewer-probe-rules.sh	REVIEW:core-code,skill-subject	1.6	relay-automation	relay-automation: let the Reviewer measure read-only, and require a falsifier for reviewer	core=6	CORE
+gh527-issue-url-repair.sh	REVIEW:prs-code	2.8		roadmap_items.issue_url has no repair writer, and one bad row disables reconcile-state ent	prs=2	SMALL
+gh353-vendored-router-audit.sh	REVIEW:core-code,skill-subject	14.9	status	audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates	core=2 prs=2	CORE
+jog-queue.sh	REVIEW:prs-code	5.0			prs=3	CORE
+gh290-ate-variation-grid.sh	CORE	7.0		Apply ATE variation-fuzzing to the Jog supervisor's machine contracts (GH-280 surfaces)	core=4 prs=2	CORE
+gh291-contract-goldens.sh	CORE	1.8		Jog↔Marathon: stabilize the supervisor contract and prevent second-executor drift	core=5 prs=2	CORE
+gh280-jog-marathon-adapter.sh	CORE	126.1		Recalibrate Jog as a serial supervisor over Marathon execution	core=7 pdda=2 prs=3	CORE
+gh205-gate-idempotency.sh	CORE	0.5		validate.sh mutates four tracked files on every run — benchmark rows accumulate, clean che	core=4	CORE
+gh204-sed-portability.sh	CORE	0.5		BSD `sed -i ''` idiom silently no-ops on Linux at two call sites — relay-drive.sh reports 	core=3	CORE
+gh153-releases-sidebar-rollup.sh	SMALL:prs	0.8		Add left sidebar navigation and project switcher rollup for RELEASES system	medium=1 prs=3	SMALL
+transcript-audit.sh	CORE	0.2			core=2	CORE
+security-scan.sh	SMALL:canary	12.5			core=1	SMALL
+sentinel-tier1.sh	CORE	0.3			core=2	CORE
+sentinel-network-guard.sh	SMALL:canary	0.3			core=1	SMALL
+sentinel-driver-hooks.sh	CORE	0.1			core=2	CORE
+sentinel-overlay.sh	REVIEW:pdda-code	13.0			pdda=2	CORE
+checkjs.sh	CORE	1.2			core=1	CORE
+acorn-extract.sh	CORE	0.2			core=2	CORE
+registry-lock-concurrency.sh	REVIEW:no-code-ref	4.2				CORE
+marathon-monitor.sh	CORE	1.3			core=3	CORE
+signal-triage.sh	CORE	0.5			core=1	CORE
+fixtures/canary-token-reuse/verify-fixture.sh	REVIEW:no-code-ref	0.2				CORE
+fixtures/canary-peer-orphan/verify-fixture.sh	CORE	0.2			core=1	CORE
+fixtures/canary-reviewer-overstep/verify-fixture.sh	CORE	0.1			core=2	CORE
+phase3-signoff-guard.sh	CORE	0.5			core=3	CORE
+relay-self-sufficiency.sh	CORE	0.0			core=3	CORE
+agy-tui-takeover-verdict.sh	CORE	0.6			core=2	CORE
+gh105-vendor-releases-addon.sh	CORE	1.9		Vendor the RELEASES DB system + HTML timeline generator into the .xyz payload as an option	core=3 prs=3	CORE
+gh107-timeline-json-seam.sh	REVIEW:prs-code	0.5	read-only	Connect /10days, /radar, and PARKED to the RELEASES DB (read-only seams, no new writers)	prs=2	SMALL
+gh132-review-xyz-skill.sh	REVIEW:core-code,skill-subject	5.7	review-xyz	feat(skills): formal /review-xyz code review skill & multi-model harness	core=2 medium=1	CORE
+gh165-governance-canonical-paths-guard.sh	CORE	0.3		Post Merge - Doc and Project Governance Cleanup Script	core=1 medium=1 pdda=3 prs=1	CORE
+gh197-vendor-tier-split.sh	CORE	11.7		Two-tier xyz-vendor.sh: Tier 1 core-harness default, Tier 2 opt-in RELEASES overlay + onbo	core=7 prs=6	CORE
+gh273-marathon-root-audit-python-shape.sh	CORE	1.0		marathon-root-audit.sh is blind to python3-spelled driver invocations (GH-195 class)	core=3 medium=1	CORE
+gh312-vendor-preserves-state.sh	CORE	3.3			core=3	CORE
+relay-uncited-findings.sh	CORE	0.5			core=3	CORE
+wave-reconcile.sh	SMALL:pdda	1.8			core=4 pdda=2 prs=6	SMALL
+gh496-phase2-reconciliation-views.sh	SMALL:pdda	5.5	ponytail	ci: sharpen CI/CD per Ponytail & Guiding Principles — fix unreachable PR twin guard (#459)	core=3 pdda=2 prs=5	SMALL
+gh693-lessons-learned-advisory.sh	CORE	1.4		Lessons Learned: make the capture-doc section optional (highly recommended), not a promoti	core=3 pdda=2 prs=5	CORE
+gh306-registry-bidirectional.sh	SMALL:canary	2.4		Gate: registry check is one-directional — a test/ suite that exists but is unregistered in	core=2	SMALL
+gh298-ate-gen4-ci-smoke.sh	MEDIUM:ate	1.6		test(ate): Extensively test and fuzz ATE Gen 4 against CI test suites, runner environments	core=2 prs=2	MEDIUM:ate
+gh-gen4-phase1-domain-oracles.sh	MEDIUM:ate	4.3			core=3	MEDIUM:ate
+gh-gen4-phase2-adaptive-ate.sh	MEDIUM:ate	5.8			core=3	MEDIUM:ate
+gh-gen4-phase3-fuzz-engine.sh	MEDIUM:ate	24.9			core=3	MEDIUM:ate
+gh-gen4-phase4-repro-synth.sh	MEDIUM:ate	18.4			core=4	MEDIUM:ate
+gh-gen4-phase5-campaign.sh	MEDIUM:ate	9.8			core=2	MEDIUM:ate
+gh712-jev-triage.sh	MEDIUM:ate	0.6		ate: offline Jev vs Tier-1/Gemma triage replay (74-row benchmark + GH-141 log), then a gat	core=1	MEDIUM:ate
+gh396-find-harness-roots.sh	REVIEW:core-code,skill-subject	2.0	radar	Harness root resolution: one resolver, two roots, pinned — retire RADAR-class-vendored-roo	core=7 prs=2	CORE
+gh393-deepseek-readiness.sh	CORE	0.9		find-harness.sh and deepseek-turn.py resolve the DeepSeek CLI by different rules — readine	core=2	CORE
+gh591-prepush-commit-boundary.sh	REVIEW:no-code-ref	0.2		umbrella: the post-merge reconciler actually lands — every merged PR reconciled with no ma		CORE
+gh589-xyz-mini-sync.sh	REVIEW:core-code,skill-subject	5.6	agent-chorus	Build XYZ mini (formerly Lite): beginner-friendly stripped repo (relay, consult, agent-cho	core=1 medium=1	MEDIUM:skills_army_hq
+gh589-consult-no-tick.sh	REVIEW:core-code,skill-subject	2.8	agent-chorus	Build XYZ mini (formerly Lite): beginner-friendly stripped repo (relay, consult, agent-cho	core=3 prs=1	MEDIUM:skills_army_hq
+gh589-skill-viewer.sh	OFF:skill/non-core	0.8	agent-chorus	Build XYZ mini (formerly Lite): beginner-friendly stripped repo (relay, consult, agent-cho	medium=1	MEDIUM:skills_army_hq

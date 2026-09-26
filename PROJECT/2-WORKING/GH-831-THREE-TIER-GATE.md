@@ -19,9 +19,10 @@ related:
   - "PR #811 — test admission gateway; conflicts with this decision (see O6)"
 goal: >
   The gate runs what a change needs: Small (PDDA + PRS + canaries) for docs, ledger and skill files,
-  Medium (Small + the touched area's suites) for mapped non-core code, Large (Small + core suites) for the
-  core harness. utils/ci-route.sh picks the tier for the push hook, the hosted reconcile after each merge,
-  and promotion. Suites outside those sets are off, and agents stop adding tests.
+  Medium (the touched area's suites) for mapped non-core code, Large (the registry: Small + core + area
+  suites) for the core harness. utils/ci-route.sh picks the tier for the push hook and for the hosted
+  reconcile after each merge. Promotion always runs Large. Suites outside those sets are off, and agents stop
+  adding tests.
 ---
 
 # GH-831 — no new tests; three gate tiers; non-core suites off
@@ -30,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon done on base `37038841`: every registered suite mapped, a month of merges projected onto the tiers, gate mechanics traced, and every instruction that asks for new tests inventoried. Plan written. | Codex plan review (relay), then Phase 1. |
+| Codex plan review round 1 (FAIL, 1 blocker + 5 shoulds) dispositioned: every finding implemented. Final suite dispositions (8 off), the projection re-run under D4/D5, a single-run D5 with an exact completeness rule, and a corrected rollback. | Codex plan review round 2. Phase 1 after approval; Phase 2 after the operator confirms O1–O4 and O7. |
 
 ## Table of contents
 
@@ -47,7 +48,12 @@ goal: >
 
 The operator's decision (2026-09-25) is recorded on [#802](https://github.com/HiQS-Labs/XYZ-forge/issues/802#issuecomment-5841529958)
 and restated as the requirements of [#831](https://github.com/HiQS-Labs/XYZ-forge/issues/831). This doc does
-not restate them. Operator answers taken on 2026-09-25:
+not restate them. Retained copies for offline review:
+`TESTS-RESULTS/2026-09-25+GH-831/requirements-issue-831.md` and
+`TESTS-RESULTS/2026-09-25+GH-831/decision-802-comment-5841529958.md`.
+
+Operator answers taken on 2026-09-25. These are the only operator decisions; O1–O7 below are proposed
+defaults, not yet confirmed.
 
 - Medium = mapped non-core code.
 - "Off" = unregistered, files kept.
@@ -87,7 +93,11 @@ Base `37038841` (development after #821's reconcile). Evidence and its method ar
   - Paths claimed by `subsystem_of()` (hq, releases, telemetry, ate, swe-diagram, pdda, agent-chorus,
     standup, skills-army-hq) give tier 2 with that subsystem's `SUBSYSTEM_TESTS_*`.
   - These always give tier 3: `src/`, `bin/tick`, `relay-automation/`, `.github/workflows/`, unmapped
-    `utils/py/*`, any other unmapped path, and any `test/` edit (`utils/ci-route.sh:296-455`).
+    `utils/py/*`, and any other unmapped path (`utils/ci-route.sh:296-455`).
+  - A `test/` edit gives tier 3, with one exception (GH-487, `utils/ci-route.sh:335-347, 418-424`): a suite
+    that a subsystem claims stays in tier 2 when the same push also touches that subsystem's code.
+    Example: `utils/py/releases_app.py` + `test/gh549-work-events.sh` gives tier 2, releases. This plan keeps
+    both rules.
   - Skill code under `skills/` is unmapped unless a subsystem claims it, so a radar or status script edit goes
     to tier 3. `releases.db`/`releases.sql` go to the releases subsystem, which runs 24 suites.
 - **`validate.sh` applies the tier.**
@@ -108,58 +118,64 @@ Base `37038841` (development after #821's reconcile). Evidence and its method ar
   registry changes every full-run path consistently. The promotion boundary runs `validate.sh --sequential`
   on a push to `main` (`.github/workflows/ci.yml`).
 
-**R2 — Suite map (419 registered; hosted sequential minutes from run `a0345e9c`).**
+**R2 — Suite map (419 registered; hosted sequential minutes from run `a0345e9c`).** Every suite's final
+disposition is the `disposition` column of `suite-map.tsv`, produced by `suite_map.py`.
 
-| Class | Suites | Minutes | Notes |
+| Disposition | Suites | Minutes | What it is |
 |---|---:|---:|---|
-| Small: PDDA | 15 | 3.4 | `SUBSYSTEM_TESTS_pdda` |
-| Small: PRS | 31 | 12.7 | `SUBSYSTEM_TESTS_releases` + merge-cleanup/reconcile suites; `gh549-work-events.sh` 6.4 and `gh436-merge-cleanup.sh` 3.9 |
-| Small: canaries | 15 | 1.2 | #816's blast-radius list + #802's static guards |
-| Core | 264 | 33.2 | the suite's code references core harness paths |
-| Medium (subsystem-owned) | 31 | 4.2 | hq 13, ate 9, telemetry 4, skills-army-hq 2, agent-chorus, standup, swe-diagram |
-| Needs a call | 54 | 5.7 | reference signals and subject disagree; proposed dispositions below |
-| Off (clear) | 9 | 0.5 | skill-text or skill-feature only |
+| Small | 73 | 17.9 | PDDA (`SUBSYSTEM_TESTS_pdda` + `gh784-marathon-qa-gate`), PRS (`SUBSYSTEM_TESTS_releases`, merge-cleanup/reconcile suites, 11 ledger suites) and 15 canaries. `gh549-work-events.sh` (6.4) and `gh436-merge-cleanup.sh` (3.9) dominate it. |
+| Core | 300 | 38.1 | the suite runs core harness code |
+| Medium | 38 | 4.7 | owned by an area: hq 13, ate 11, skills-army-hq 5, telemetry 4, agent-chorus 3, standup 1, swe-diagram 1 |
+| Off | 8 | 0.1 | executes nothing but reads skill text, or runs only its own skill's `install.sh` |
 
-Proposed dispositions for the 63 "needs a call" and "off" suites. `suite-map.tsv` is the per-suite source,
-and a `disposition` column is added in Phase 2.
+The rules settled most suites. For the 63 they could not settle, the calls are recorded in `suite_map.py`'s
+`OVERRIDES`:
 
-- **Core (~30):** consult, tick, relay containment, driver lock, vendoring, turn-timeout, pre-push and
-  gate suites: `consult.sh`, `gh308-consult-guards`, `gh610-claude-subscription`, `gh554-tick-unknown-flags`,
-  `gh410-*`, `gh417-*`, `gh218-*`, `gh124-*`, `gh129-*`, `gh130-*`, `gh131-*`, `gh648-l3/l4`, `synthetic/gh101-*`,
-  `synthetic/synthetic-claude-target-root`, `gh293-*`, `gh353-*`, `gh396-*`, `gh460-*`, `gh514-*`, `gh528-*`,
-  `gh591-*`, `gh681-*`, `gh123-*`, `gh369-*`, `gh609-*`, `registry-lock-concurrency`, `fixtures/canary-token-reuse`,
-  `jog-queue`, `sentinel-overlay`.
 - **Small (12):**
-  - PRS: `gh75`, `gh107`, `gh349`, `gh351`, `gh360`, `gh424`, `gh491`, `gh492-roadmap-state-sweep`, `gh527`,
-    `gh605-*`.
-  - PDDA: `gh784-marathon-qa-gate`, which tests `pdda.sh marathon-qa`.
-
-  Together these add under a minute.
-- **Medium, joining an existing subsystem list:**
-  - ate: `gh142-ate-exit-contract`, `synthetic/gh102-telemetry-schema`.
-  - agent-chorus: `agent-chorus-bridge`, `gh233-agent-chorus-concurrency`.
-  - skills-army-hq: `gh589-xyz-mini-sync`, `gh589-consult-no-tick`, `gh589-skill-viewer`. These are the
-    spin-off publishers, alongside #830's gh620.
-- **Off (~12):** tests of skill text and skill features: `gh578-ci-optimize-skill`,
-  `gh778-review-code-skill`, `gh798-status-skill`, `gh779-radar-ci-health`, `gh781-wam-radar-seed`,
-  `gh777-start-task-prior-art`, `gh615-*`, `gh616-*`, `gh617-*`, `debug-mantra.sh`, `gh132-review-xyz-skill`.
+  - PRS: `gh75-dashboard.sh`, `gh107-timeline-json-seam.sh`, `gh349-releases-roadmap-vendored.sh`,
+    `gh351-manifest-unship.sh`, `gh360-scoped-receipt-chain-rebuild.sh`, `gh424-roadmap-status-marker.sh`,
+    `gh491-roadmap-section-validation.sh`, `gh492-roadmap-state-sweep.sh`, `gh527-issue-url-repair.sh`,
+    `gh605-work-state.sh`, `gh605-board-policy.sh`.
+  - PDDA: `gh784-marathon-qa-gate.sh`.
+- **Medium (7), joining an existing area list:**
+  - ate: `gh142-ate-exit-contract.sh`, `synthetic/gh102-telemetry-schema.sh`.
+  - agent-chorus: `agent-chorus-bridge.sh`, `gh233-agent-chorus-concurrency.sh`.
+  - skills-army-hq: `gh589-xyz-mini-sync.sh`, `gh589-consult-no-tick.sh`, `gh589-skill-viewer.sh`.
+- **Off (8).**
+  - These execute nothing, only reading skill text: `gh578-ci-optimize-skill.sh`,
+    `gh615-start-task-reinforce.sh`, `gh616-start-task-commensurate-envelope.sh`,
+    `gh617-relay-xyz-commensurate-review.sh`, `gh779-radar-ci-health.sh`, `gh781-wam-radar-seed.sh`.
+  - These read skill text and run only that skill's own `install.sh`: `gh778-review-code-skill.sh`,
+    `gh798-status-skill.sh`.
+- **Core:** every other unsettled suite. Codex round 1 (F1) moved three suites here from an earlier off list,
+  because each runs harness code:
+  - `debug-mantra.sh` runs the marathon driver's dry-run (`test/debug-mantra.sh:24-36`).
+  - `gh777-start-task-prior-art.sh` runs `utils/py/prior_art_recon.py` against the roadmap
+    (`test/gh777-start-task-prior-art.sh:8-31`).
+  - `gh132-review-xyz-skill.sh` runs `utils/py/review_xyz.py` (`test/gh132-review-xyz-skill.sh:29-31`).
+  - The rule is now: **a suite that executes harness, PDDA or PRS code is never off.** `gh527` has two suites;
+    only `gh527-issue-url-repair.sh` is Small, and `gh527-destructive-git-guard.sh` is core.
 
 **R2 finding: turning suites off saves almost no time.** This repo's suites overwhelmingly exercise its own
-harness. Once the calls above are made, "off" is about a dozen suites and seconds of runtime. Its value is less
-flake surface and no skill-text churn, not speed. The name-based estimate in #802 and #831 (~180 off) was
-wrong. The time lever is routing.
+harness. "Off" is 8 suites and about 6 seconds of runtime; its value is less flake and skill-text churn, not
+speed. The name-based estimate in #802 and #831 (~180 off) was wrong. The time lever is routing.
 
-**R3 — Merge projection.** The 146 squash merges on `development` since 2026-08-26 were classified with
-their `test/` and evidence edits removed, as in a world with no new tests:
+**R3 — Merge projection.** The 146 squash merges on `development` since 2026-08-26 were routed by D4 and
+priced by D5: tier 1 runs the hosted Small run, and tier 2 or 3 runs the hosted full run. See
+`merge-projection.tsv`.
 
-| Projected tier | Merges | Share |
-|---|---:|---:|
-| Small | 68 (48 docs/ledger/views, 17 skill code, 3 PDDA/releases code) | 47% |
-| Medium | 1 | 1% |
-| Large | 77 | 53% |
+| Variant | Tier 1 (Small run) | Tier 2 | Tier 3 |
+|---|---:|---:|---:|
+| As merged: real paths, test edits included | 47 (32%) | 1 | 98 |
+| No test edits: `test/` paths removed | 62 (42%) | 4 | 80 |
 
-Small runs about 17 minutes hosted sequentially against 61 for the full suite today. Large is about 54 minutes:
-Small plus core, without the Medium-owned and off suites. The per-merge saving concentrates on the 47%.
+Neither variant is exact:
+- **As merged understates Small.** Many of those test edits were new suites, which D7 stops.
+- **No test edits overstates Small.** It also strips repairs to existing suites, which still happen.
+
+The realistic Small share is 32–42%. At about 18 minutes for the hosted Small run and about 61 for the full
+run (the registry minus off), the average hosted qualification per merge falls from about 61 minutes to about
+44–47.
 
 **R4 — Instructions that make agents add tests.** An inventory was taken from the root docs, skills and brief
 generators. Items marked (A) ask for a new test outright; (B) require a failing-first check that in practice
@@ -254,74 +270,89 @@ tiers where the operator's complaint is, the hosted run after each merge, using 
 | Boundary | Small: docs, ledger, skill files | Medium: mapped non-core code | Large: core harness |
 |---|---|---|---|
 | `githooks/pre-push` (a fast pre-check, unchanged) | docs gate (~1.5 min) | the area's tier-2 suites | the full registry |
-| Hosted reconcile after each merge (qualifies the landing) | `validate.sh --sequential --subsystem small` | `--subsystem small`, then `--paths-file` (the area's suites) | `validate.sh --sequential` |
-| Promotion (`ci.yml` boundary on `main`) | — | — | `validate.sh --sequential` (unchanged) |
+| Hosted reconcile after each merge (qualifies the landing) | `validate.sh --sequential --subsystem small`: **one** run | `validate.sh --sequential`: the full registry (O7) | `validate.sh --sequential` |
+| Promotion (`ci.yml` boundary on `main`) | — | — | `validate.sh --sequential` (unchanged; the classifier is not consulted) |
 
-`utils/ci-route.sh` picks the tier at every boundary.
+- **Where the classifier decides.** `utils/ci-route.sh` picks the tier at the push hook and at the hosted
+  reconcile. Promotion always runs Large.
+- **Why the hosted reconcile runs Medium in full.** It qualifies Medium merges with the full run rather than
+  Small plus the area's suites, so every landing is qualified by exactly one run. This avoids a two-run
+  receipt, which the matcher's any-match lookup cannot bind to one landing (Codex r1 F2). Medium was 1–4 of
+  146 merges.
 
-- **Push hook.** It keeps its current cheap form for Small and Medium (O1). It already runs the full registry
-  for Large.
-- **Hosted reconcile.** It runs each tier's full definition. That run is what qualifies a merge.
+**D2 — Small is data.**
 
-**D2 — Small is data.** `SUBSYSTEM_TESTS_small` in `utils/ci-route.sh` lists the 61 Small suites (PDDA, PRS,
-canaries), plus R2's 12 reclassified Small suites. It is the one definition of Small.
-
-- `validate.sh --subsystem small` already runs any listed subsystem through the tier-2 path.
-- The only `validate.sh` edit is adding `small` to the `--subsystem` case that sets `T2_PYTEST`, and having it
-  also run the PDDA docs gate (`T2_PDDA=1`).
-- `subsystem_of()` claims no paths for `small`, so path classification is unchanged.
+- `SUBSYSTEM_TESTS_small` in `utils/ci-route.sh` lists the 73 Small suites (R2, `disposition == SMALL`). It is
+  the one definition of Small.
+- `validate.sh --subsystem small` already runs any listed subsystem through the tier-2 path
+  (`validate.sh:934-940`).
+- The only `validate.sh` edit adds `small` to the `--subsystem` case that sets `T2_PYTEST` (`:939`), and
+  sets `T2_PDDA=1` for it, so the Small run also runs the PDDA docs gate.
+- `subsystem_of()` claims no paths for `small`.
 
 **D3 — Registry.**
 
 - `TESTS` keeps every Small, core and Medium suite. The Medium suites stay registered, so `gh35` §4 holds;
   see O3.
-- The ~12 off suites are removed from `TESTS`, and their files stay in `test/`.
-- The off suites join `gh306`'s existing `EXEMPT` list, and that list's rule comment gains a second reason:
-  "turned off by operator decision (GH-831)". That list is the one place off is recorded. There is no
-  second list.
-- R2's Medium reclassifications join their areas' `SUBSYSTEM_TESTS_*` lists: `gh589-*` to skills-army-hq,
-  `gh142`/`gh102` to ate, and `agent-chorus-bridge`/`gh233` to agent-chorus.
+- The 8 off suites (R2) are removed from `TESTS`, not commented out; their files stay in `test/`.
+- `gh306`'s existing `EXEMPT` list (`test/gh306-registry-bidirectional.sh:46-52`) gains them, and its rule
+  comment (`:41`) gains a second allowed reason: "turned off by operator decision (GH-831)". That list is the
+  one record of off.
+- R2's 7 Medium reclassifications join their areas' `SUBSYSTEM_TESTS_*` lists.
+- None of the 8 is named by `gh141`, `gh379`'s canary skips, the four release-manifest gate lists, or
+  `ci-workflow.sh` (Codex r1, Q5 pass).
 
-**D4 — Classifier (`utils/ci-route.sh`).** Unmapped, non-core skill files and ledger or data files join the
-docs surfaces, so they route to tier 1 and route=docs:
+**D4 — Classifier (`utils/ci-route.sh`).** These join the docs surfaces, so they route to tier 1 and
+route=docs:
 
-- skill files: `skills/**` except `relay-xyz`, `relay`, `relay-automation`, `merge-cleanup`, `express`, `jog`,
-  and paths a subsystem claims;
+- skill files: `skills/**`, except under `relay-xyz`, `relay`, `relay-automation`, `merge-cleanup`,
+  `express` and `jog`, and except paths `subsystem_of()` claims;
 - ledger and data files: `releases.db`, `releases.sql`, `harnesses.db`, `harnesses.sql`;
 - generated views: `LEADERBOARD.html`, `RELEASES-PREVIEW.html`.
 
-The push hook, CI's route and `--auto` all follow automatically.
+Core exclusions and subsystem claims take precedence. The push hook, CI's route and `--auto` follow
+automatically. Unchanged:
+- everything that fails closed today (core surfaces, unmapped code, empty diffs);
+- the `test/` edit rules, including the GH-487 exception (R1).
 
-- A ledger-only push drops from the 24-suite releases lane to the docs gate. The hosted Small run, which
-  includes those suites, qualifies the merge.
-- Everything that fails closed today still fails closed to tier 3: core surfaces, unmapped code, test edits,
-  and empty diffs.
+**D5 — The hosted reconcile qualifies by tier (`utils/py/wave_reconcile.py`).** It keeps one run and one
+receipt entry per landing, exactly as today.
 
-**D5 — The hosted reconcile qualifies by tier (`utils/py/wave_reconcile.py`).**
-
-1. `qualify_landings` unions the pending landings' diffs (`mergeCommit^..mergeCommit`) and classifies them in
-   the qualification clone with `bash utils/ci-route.sh push`.
-   - Tier 1 runs `--sequential --subsystem small`.
-   - Tier 2 runs that, then `--sequential --paths-file <diff>`.
-   - Tier 3 runs `--sequential`, as today.
-   - A classifier that cannot run means tier 3.
-2. `qualification_summary` keeps its tier-3 rules unchanged. It accepts a tier-2 run only when every one of
-   these holds:
-   - `mode` is sequential and `tier` is 2.
-   - The suite event names equal the expected list exactly: `ci-route.sh subsystems small` for the Small run,
-     and the classifier's `tier2_tests` for the area run.
-   - Every `rc` is 0, `failed` is 0, and `passed` equals `total`.
-   - `envelope_rc` is 0 and `suite_events_match` is yes.
-   - The Python-layer event is present whenever the lane selected it.
-3. Each run's receipt entry records `tier` and its exact gate string. `qualification_receipt_matches` accepts
-   `validate.sh --sequential` as before, and also the two new gate strings with their tier-2 rules. Old
-   receipts match unchanged.
-4. The log line names the tier and its gate strings.
+1. **Selection.** `qualify_landings` unions the pending landings' diffs (`mergeCommit^..mergeCommit`) and
+   classifies them in the qualification clone at the tested SHA with `bash utils/ci-route.sh push`.
+   - Tier 1 runs `validate.sh --sequential --subsystem small`.
+   - Anything else runs `validate.sh --sequential`, exactly as today.
+   - A classifier that cannot run, or unreadable output, means the full run.
+2. **Tier-2 completeness rule** in `qualification_summary`, used only when the run's `tier` is 2. The tier-3
+   rules are untouched. All of these must hold:
+   - Identity is unchanged from today: one `run.start` and one `run.summary`, `commit == tested`, `mode ==
+     sequential`, one run ID, and `runner == validate` on every row.
+   - `tier == 2`.
+   - The shell suite events are the events with `lane == sequential`. Their names are unique, and equal the
+     expected Small list exactly, with no more and no fewer. Every `rc` is 0.
+   - The non-suite events include `tier2:pdda`, `python:test_python_layer.py` and
+     `clone-identity-invariant`, each with rc 0.
+   - The Python layer actually ran: `total == len(expected) + 3`. The 3 are the always-counted identity check
+     (`validate.sh:1514`), the Python layer and `tier2:pdda` (`:1515-1519`). `validate.sh` excludes a skipped
+     Python layer from `total`, so the zero-rc skip event at `:1454` cannot satisfy this.
+   - `passed == total`, `failed == 0`, `envelope_rc == 0`, `suite_events_match == yes`.
+3. **Durable replay** (Codex r1, F2).
+   - The receipt entry records `tier: 2`, the gate string `validate.sh --sequential --subsystem small`, and
+     the expected list.
+   - `qualification_receipt_matches` checks the recorded list against the `SUBSYSTEM_TESTS_small` line of
+     `utils/ci-route.sh` **at the tested commit** (`git show <tested>:utils/ci-route.sh`), not at HEAD. It then
+     applies rule 2 to the committed telemetry.
+   - A later change to the Small list therefore never invalidates, or wrongly validates, an old receipt.
+   - Receipts without `tier`, and the `validate.sh --sequential` gate string, match exactly as today.
+4. **Atomicity** is unchanged. A failed or incomplete run produces no receipt, and the landing is rolled
+   back. `--only-receipted` recovery and the any-match suppression at `:553-555, 2054-2061` stay correct,
+   because a landing still has exactly one qualifying entry.
+5. **Logging.** The log line names the tier and the gate string.
 
 **D6 — Promotion is unchanged.** The boundary job still runs `validate.sh --sequential`, now the registry
-minus the off suites. GH-509 becomes two rules:
+minus the 8 off suites. GH-509 becomes two rules:
 
-- a landing is qualified by its classified tier on hosted macOS;
+- a landing is qualified on hosted macOS by the run D5 selects;
 - promotion needs a hosted macOS full-registry run for the exact commit.
 
 **D7 — No new tests, enforced as rules.**
@@ -339,26 +370,30 @@ minus the off suites. GH-509 becomes two rules:
 
 ## Decisions for the operator
 
-Each has a default, so the work can proceed. Say otherwise to change it.
+**Proposed defaults, not yet confirmed.** Phase 1 does not depend on them. Phase 2 starts only after the
+operator confirms or changes O1–O4 and O7.
 
 - **O1 — Pushes keep today's cheap checks for Small and Medium. Default: yes.** The hosted run after the merge
-  runs the full tier. Running Small at every docs push would cost about 6.5 minutes locally instead of 84
-  seconds, because `gh549` alone takes 6.4 minutes.
+  runs the tier. Running Small at every docs push would cost about 6.5 minutes locally instead of 84 seconds,
+  because `gh549` alone takes 6.4.
 - **O2 — `gh549-work-events.sh` and `gh436-merge-cleanup.sh` stay in Small. Default: yes, by definition (PRS).**
-  They are 10.3 of Small's 17.2 hosted minutes. Moving them to the releases area would make Small about
-  7 minutes for 47% of merges.
+  They are 10.3 of Small's 17.9 hosted minutes. Moving them to the releases area would make the Small run
+  about 7.6 minutes.
 - **O3 — Medium suites stay registered, so they also run in Large. Default: yes.** Large is then the registry
-  minus off, about 60 minutes, close to today's 61. Unregistering them would save about 4 minutes on core
-  merges, but it would rewrite `gh35` §4's pin, and a Medium area's suites would then never run at promotion.
+  minus off, about 61 minutes. Unregistering them would save about 4.7 minutes on core merges, but it would
+  rewrite `gh35` §4's pin, and a Medium area's suites would never run at promotion.
 - **O4 — Unmapped non-core code goes to Large, not Medium. Default: yes, fail closed.** An unmapped script has
   no area suites to run.
 - **O5 — `/express` keeps a required `--suite` that must name an existing suite. Default: yes.**
 - **O6 — PR #811 (a test admission gateway, +21k lines) contradicts "no new gate machinery".** This issue does
   not act on it. Recommend closing it as superseded by #831.
+- **O7 — The hosted reconcile qualifies Medium merges with the full run, not Small plus the area. Default: yes.**
+  This keeps one run per landing (D5), at the cost of about 43 extra minutes on 1–4 merges a month.
 
-**Expected effect** (hosted sequential, from R2 and R3): the 47% of merges that are docs, ledger or skill-only
-qualify in about 17 minutes instead of 61. They would take about 7 minutes under O2's alternative. The 53% of
-merges that touch core stay at about 60. The average per merge falls from about 61 minutes to about 40.
+**Expected effect** (hosted sequential; R2, R3): 32–42% of merges qualify through the Small run in about 18
+minutes instead of 61. The rest stay at about 61. The average falls from about 61 minutes to about 44–47, or
+to about 39–43 with O2's alternative. The per-merge wait for docs, ledger and skill merges is where the change
+is felt.
 
 ## Phase 1 — Freeze and rules (docs-only PR)
 
@@ -377,23 +412,32 @@ This lands first and alone, so agents see the freeze before the gate change is r
 
 ## Phase 2 — Tiers (gate code PR)
 
-1. `utils/ci-route.sh`: add `SUBSYSTEM_TESTS_small` (D2), the Medium list additions (D3), and the docs-surface
-   additions (D4).
-   → expect: `test/ci-route.sh` updated to the new tier table and counts. Recorded red control: removing a
-   Small member or reverting a D4 path makes it fail.
-2. `validate.sh`: add `small` to the `--subsystem` case for `T2_PYTEST`/`T2_PDDA`, and remove the off entries
+This starts after the operator confirms O1–O4 and O7.
+
+1. `utils/ci-route.sh`: add `SUBSYSTEM_TESTS_small` (D2), the Medium list additions (D3), and the D4 docs
+   surfaces.
+   → expect: `test/ci-route.sh` updated to the new tier table and counts. Recorded red controls:
+   - removing a Small member fails it;
+   - dropping a D4 exclusion (`merge-cleanup` skill code routed to tier 1) fails it.
+2. `validate.sh`: add `small` to the `--subsystem` case for `T2_PYTEST`/`T2_PDDA`, and remove the 8 off entries
    from `TESTS`.
-   → expect: `./validate.sh --list` has no off suite, and `./validate.sh --sequential --subsystem small` runs
-   exactly the Small list.
-3. `test/gh306-registry-bidirectional.sh`: the off suites join `EXEMPT` with their reason.
+   → expect:
+   - `./validate.sh --list` has no off suite;
+   - `./validate.sh --sequential --subsystem small`, run in a disposable clone, runs exactly the 73 Small
+     suites plus `tier2:pdda`, the Python layer and the identity check.
+3. `test/gh306-registry-bidirectional.sh`: the 8 off suites join `EXEMPT` with their reason.
    → expect: green. Recorded red control: an unlisted, unregistered file still fails.
-4. `utils/py/wave_reconcile.py`: tier selection, fail-closed, the tier-2 summary rules, receipt fields and
-   matcher, and the log line (D5).
-   → expect: `test/gh425-gate-provenance-pr.sh` still green with its tier-3 cases unchanged.
-   Recorded manual checks:
-   - a docs-only landing qualifies through the Small run;
-   - a Small run missing one suite does not qualify;
-   - a classifier failure falls back to tier 3.
+4. `utils/py/wave_reconcile.py`: selection with fail-closed, the tier-2 rule, receipt fields and durable
+   replay, and the log line (D5).
+   → expect: `test/gh425-gate-provenance-pr.sh` still green, with its tier-3 cases unchanged. Recorded manual
+   checks against real Small telemetry from step 2:
+   - the complete run qualifies;
+   - removing `tier2:pdda` is rejected;
+   - removing the Python event, or substituting the skipped-Python shape, is rejected;
+   - a duplicated shell event is rejected;
+   - a missing Small suite is rejected;
+   - a receipt still matches after a later, unrelated change to `SUBSYSTEM_TESTS_small`;
+   - a classifier failure selects the full run.
 5. `utils/py/express.py` wording and `/express` skill text (D7).
    → expect: the existing express suite green.
 6. Docs:
@@ -406,31 +450,44 @@ This lands first and alone, so agents see the freeze before the gate change is r
 7. Run the full gate once on the final commit, in a disposable full clone, through the push hook. It routes
    full because `validate.sh` changed.
 
-**Phase 2 QA gate:** Codex final review, the full gate green, and the recorded red controls.
+**Phase 2 QA gate:** Codex final review, the full gate green, and the recorded checks from steps 1–4.
 
 ## Phase 3 — First hosted evidence
 
-After the Phase 2 merge, its own reconcile runs tier 3, because it touches core. The next docs-only merge must
-qualify through the Small run in about 17 minutes, and still produce its receipt and closeout.
+After the Phase 2 merge, its own reconcile runs the full registry, because it touches core. The next
+docs-only merge must qualify through the Small run in about 18 minutes, and still produce its receipt and
+closeout.
 → expect: both runs' logs name their tier, and their run IDs and durations are recorded here.
+If either fails, use the rollback below.
 
 **Phase 3 QA gate:** those two hosted runs, cited by run ID.
 
 ## Verification, rollback, blast radius
 
 - **No new tests.**
-  - Existing suites are edited only where they pin behaviour this changes: `ci-route.sh`, `gh306` and,
+  - Existing suites are edited only where they pin behaviour this changes: `test/ci-route.sh`, `gh306` and,
     if needed, `gh425`.
   - Red controls are witnessed on those existing suites or recorded as manual checks in
     `TESTS-RESULTS/2026-09-25+GH-831/`.
-  - The rest of the behaviour is proven by the Phase 3 hosted runs.
+  - Phase 3 proves the rest on hosted runs.
 - **Reversibility: Costly.** This changes what qualifies a merge. A wrong Small list or tier map could let a
-  regression land qualified by Small.
-  - **Phase 2:** rollback is reverting its PR, which returns every merge to the full run. Receipts written
-    under it stay valid, because the matcher keeps accepting them.
-  - **Phase 1:** text only, and it reverts cleanly.
+  regression land qualified by the Small run.
+- **Rollback** (Codex r1, F4).
+  - **Trigger:** any one of:
+    - a defect found on `development` that the full run would have caught, in a landing the Small run
+      qualified;
+    - a Small run that proves incomplete;
+    - a Phase 3 failure.
+  - **Action:** a small forward-fix PR that reverts **only D5's selection**, so `qualify_landings` always
+    runs the full registry again. It keeps D5's receipt reader, so every published Small receipt still
+    matches.
+  - **Check:** the next landing's receipt carries the gate string `validate.sh --sequential`.
+  - **A full revert of Phase 2 is not the rollback.** It restores the old matcher (`wave_reconcile.py:473,
+    501`), which rejects tier-2 receipts. It is allowed only after every Small-qualified landing has been
+    re-qualified with a full run.
+  - **Phase 1** is text, and reverts cleanly.
 - **Blast radius.**
   - The hosted qualification of every merge and the push route for skill and ledger files.
-  - `ci-local.sh`, `ci.yml` and the promotion run lose the off suites from `TESTS`.
+  - `ci-local.sh`, `ci.yml` and the promotion run lose the 8 off suites from `TESTS`.
   - Vendored `.xyz/` copies get the new lists on their next sync.
   - Installed skills change only when the operator re-deploys through `skills-army-hq`.

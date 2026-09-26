@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -133,5 +133,69 @@ Read the entire plan and suite-map generator; swept the requested source section
 Root cause of the plan gaps: the existing one-run/full-registry qualification contract is being generalized without spelling out its multi-run replay and rollback invariants; suite names and a different projection policy also substitute for executable scope. Fix the plan and its evidence at those boundaries, without adding new tests or machinery.
 
 Handing off to Producer (claude-a) — disposition F1–F6, resolve the requirement evidence gap, and request the next review turn.
+
+### Producer · Round 1 · claude-a
+
+Every finding is implemented in the plan (`PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md`) and in the evidence
+(`TESTS-RESULTS/2026-09-25+GH-831/`). The dispositions follow.
+
+- **F1 [Blocker] — Implemented.**
+  - Re-read every proposed off suite for what it executes. You were right on all three:
+    - `debug-mantra.sh` runs the marathon driver's dry-run (`test/debug-mantra.sh:24-36`).
+    - `gh777-start-task-prior-art.sh` runs `utils/py/prior_art_recon.py` (`:8-31`).
+    - `gh132-review-xyz-skill.sh` runs `utils/py/review_xyz.py` (`:29-31`).
+  - All three are now **Core**. New rule (plan R2): *a suite that executes harness, PDDA or PRS code is never
+    off.*
+  - The off list is now 8 exact names:
+    - six execute nothing and only read skill text: `gh578`, `gh615`, `gh616`, `gh617`, `gh779`, `gh781`;
+    - two read skill text and run only their own skill's `install.sh` (`test/gh778-review-code-skill.sh:8`,
+      `test/gh798-status-skill.sh:8`): `gh778`, `gh798`.
+  - Every one of the 63 unsettled suites now has an exact final disposition. See the `OVERRIDES` table in
+    `suite_map.py` and the `disposition` column in `suite-map.tsv`.
+  - `gh527` is two suites. `gh527-issue-url-repair.sh` is Small; `gh527-destructive-git-guard.sh` is Core.
+- **F2 [Should] — Implemented, by removing the two-run case.**
+  - The hosted reconcile now qualifies Medium merges with the full registry run (new O7; D1, D5). Medium was
+    1–4 of 146 merges.
+  - So every landing still has exactly one run and one receipt entry, and the any-match suppression at
+    `wave_reconcile.py:553-555, 2054-2061` and `--only-receipted` stay correct.
+  - Durable replay: the tier-2 entry records its expected list, and the matcher checks that list against the
+    `SUBSYSTEM_TESTS_small` line at the **tested commit** (`git show <tested>:utils/ci-route.sh`), not at
+    HEAD (D5.3).
+  - Recorded manual checks are added to Phase 2 step 4: replay after a later list change, a missing suite,
+    and a failed run.
+- **F3 [Should] — Implemented** (D5.2).
+  - Exact membership and uniqueness apply only to `lane == sequential` shell events, which must equal the
+    expected list.
+  - It requires `tier2:pdda`, `python:test_python_layer.py` and `clone-identity-invariant`, each with rc 0.
+  - It requires `total == len(expected) + 3`, correcting my own first draft of `+2`. The identity check is
+    always counted (`validate.sh:1514`), and a skipped Python layer is excluded from `total`
+    (`:1515-1519`), so the zero-rc skip event at `:1454` cannot pass.
+  - The identity, run and runner checks, and all tier-3 rules, are unchanged.
+  - Falsifier cases, each recorded as a manual check in Phase 2 step 4: missing PDDA, missing or skipped
+    Python, a duplicated shell event, a missing suite.
+- **F4 [Should] — Implemented.**
+  - The rollback is now a forward fix that reverts only D5's selection and keeps the new receipt reader, so
+    published Small receipts still match.
+  - A full revert of Phase 2 is explicitly not the rollback. It is allowed only after every Small-qualified
+    landing is re-qualified with a full run, because the old matcher (`:473, 501`) rejects them.
+  - Trigger, action and check are stated, and Phase 3 points to the rollback.
+- **F5 [Should] — Implemented.**
+  - The projection now routes with D4 exactly: core-skill exclusions and subsystem claims take precedence. It
+    prices with D5 (tier 1 runs the Small run; anything else runs the full run).
+  - It reports two variants: as merged, 32% Small; with test edits removed, 42% Small. Each variant's bias is
+    stated, including that stripping test edits also strips repairs to existing suites.
+  - The obsolete 54-minute Large claim is gone. Large is the registry minus off, about 61 minutes.
+  - Expected average: about 44–47 minutes per merge, against 61.
+- **F6 [Should] — Implemented.** R1 now states the GH-487 dedicated-test co-touch exception, and cites your
+  probe (`releases_app.py` + `gh549` gives tier 2, releases). D4 keeps it unchanged.
+- **Q2 [Unverified] — Resolved.**
+  - Retained copies are committed: `TESTS-RESULTS/2026-09-25+GH-831/requirements-issue-831.md` (the #831
+    body) and `decision-802-comment-5841529958.md` (the operator decision).
+  - The plan now labels O1–O7 as **proposed defaults, not yet confirmed**, and states that Phase 2 starts only
+    after the operator confirms O1–O4 and O7.
+  - The goal no longer says the classifier chooses at promotion; D1 and D6 state that promotion always runs
+    Large.
+
+Handing off to Reviewer (codex) — take your turn: round 2 review of the revised plan against F1–F6 and Q2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
