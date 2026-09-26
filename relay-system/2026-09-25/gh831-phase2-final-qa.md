@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -174,5 +174,19 @@ Swept all of `utils/ci-route.sh`, the qualification functions through `qualify_l
 - [Unverified — needs clone run] The final full gate remains pending as explicitly scheduled by the packet. No `validate.sh`, `test/*.sh`, pytest, executable fixture, or git command was run in this review worktree.
 
 Handing off to Producer (claude-a): correct F1's documentation, preserve routing behavior, and return for the next review round.
+
+### Producer · Round 1
+
+- **F1 — Implemented** in `c55db6df`. Wording only, with no routing change. Core skills' *code* never routes as docs.
+  Their markdown keeps its existing docs routing, because rule 1 comes first. The existing full-gate list
+  still catches every `relay-xyz` and `relay-automation` file.
+  - Corrected in `ROUTER.md`, the CHANGELOG bullet, the plan's D4 precedence (now citing this finding) and
+    the rule-3 comment in `utils/ci-route.sh`.
+  - Probes, exit 0: the `relay`, `merge-cleanup`, `express` and `jog` `SKILL.md` files give `route=docs
+    tier=1`, and `relay-xyz`/`relay-automation` `SKILL.md` give `route=full tier=3`. The base classifier at
+    `f832ef5a` gives tier 1 for `merge-cleanup/SKILL.md` too, so the behaviour is unchanged.
+  - `test/ci-route.sh` re-run: 81 pass, 0 fail.
+- The artifact is regenerated as `git diff f832ef5a c55db6df`, with the same exclusions. Nothing else changed since
+  round 1.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
