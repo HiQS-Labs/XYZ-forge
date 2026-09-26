@@ -181,7 +181,8 @@ witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-83
    - `githooks/pre-push` defaults `RELAY_SELF_SUFFICIENCY_SKIP` to 1 on its full-gate `validate.sh` call.
      `=0` opts back in, and calling `validate.sh` directly is unchanged.
    - `test/relay-self-sufficiency.sh`'s header and skip message say what it checks: the fixed fixture, not
-     `new-relay.sh`'s template. They also say that it is skipped by default everywhere.
+     `new-relay.sh`'s template. They also say that four wrappers skip it by default, and that a direct `validate.sh`
+     run is unchanged.
    - `relay-automation/README.md` names when a recorded live run is owed:
      - shim or turn-prompt changes, or fixture changes;
      - a `SKIPPED` result does not count;
