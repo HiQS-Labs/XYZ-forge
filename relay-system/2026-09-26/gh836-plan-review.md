@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -176,5 +176,43 @@ All in `243eda4d`; the artifact is regenerated from it.
 - **R3 skip qualification (Nit) — Implemented.** The 17 tests are *collected* in the full invocation, and their
   execution is subject to existing prerequisites (`TestA4OpenHandles` needs `lsof`).
 - **Step 4 — Implemented.** The witness runs through the logical `/tmp/...` spelling.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: S1 is addressed at plan level: the bounded rendezvous replaces the startup-skew assumption, the staggered witnesses are explicit, and a failed witness retains the original control. The measured targets, preserved assertions, scope and rating meet the plan-review DoD. Approval authorizes implementation; it does not attest unrun runtime or performance results.
+swept file: yes
+
+- [Pass] **S1 closed.** `.relay-artifacts/gh836-plan.md:126-142` requires rendezvous, 0/1.5/3-second launch offsets in both directions, successful workers, `NBF3 > NROWS`, and the unchanged positive count; it names the untrimmed fallback. Implement the rendezvous at the existing post-read/pre-write insertion (`test/gh549-work-events.sh:1057-1062`), with fresh per-run markers identifying distinct workers. Once both suppression reads precede either write, the first shared row supplies the duplicate witness; three sleeps are no longer the sole synchronization mechanism. Counter initialization/global placement and worker status capture remain implementation-review checks.
+
+- [Nit] **Keep timeout wording precise.** Plan `:132-133` is accurate for a peer that *never* arrives. A peer arriving just after the ten-second timeout can still overlap and duplicate, so do not describe every timeout as necessarily producing `bad`. The existing assertion (`test/gh549-work-events.sh:1070-1071`) observes duplicate count, not rendezvous completion. This does not weaken that assertion or require additional gate machinery. The ten repeats at plan `:192-193` may supplement, but cannot replace, the explicit staggered matrix.
+
+- [Pass] **Measured targets and steps 2–4 remain grounded.** `baseline-gh549-top-gaps.txt` under `TESTS-RESULTS/2026-09-26+GH-836/` records 124.8/68.8/38.0 seconds; `baseline-gh436-durations.out` records parity 49.01 seconds and 180 passed in 291.83 seconds, supported by that directory's `provenance.jsonl`. The four backfill sites and event-only assertions remain at `test/gh549-work-events.sh:1127-1147,1178-1183`; `_scan_review_ready` uses event history (`utils/py/releases_app.py:5305-5309`) before cursor dispatch (`:5633-5641`). Extending `seed_cursor_tail` at `test/gh549-work-events.sh:162-164` preserves the existing helper. Retain red (i) alongside (ii)/(iii), as the Producer states. The logical ROOT/physical resolver mismatch is at `test/gh649-pdda-migration.sh:4,15` and `skills/4-occasional/vendor-stack/find-pdda.sh:22,26`; the existing red log says `FAIL - resolver` at `TESTS-RESULTS/2026-09-26+GH-835/full-gate-b2c307b4-tmp-red.log:426`. Plan `:165-167` now explicitly exercises the logical path.
+
+- [Pass] **Parity collection and its qualification are sound.** Full invocation imports all three phases (`test/gh436-merge-cleanup.py:863-869`); the duplicate runner is `test/gh534_phase_c_tests.py:587-590,928`. Plan R3 now states the existing `lsof` prerequisite (`test/gh534_phase_a_tests.py:427-431`). Read-only AST probe below exited **0**, decisive output **`named: 17 missing: []`**; it executed no test module. The deleted-row and forced-failure witnesses at plan `:162-164` remain required.
+
+  Command (with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`):
+  ```python
+  # python3 - <<'PY'
+  import ast,re
+  from pathlib import Path
+  names=set(re.findall(r'^\|[^\n]+\| script \| (Test\w+\.test_\w+) \|$',Path('skills/2-daily/merge-cleanup/SKILL.md').read_text(),re.M))
+  assert names
+  methods=set()
+  for f in ['test/gh534_phase_a_tests.py','test/gh534_phase_b_tests.py','test/gh534_phase_c_tests.py']:
+   t=ast.parse(Path(f).read_text())
+   for c in t.body:
+    if isinstance(c,ast.ClassDef):
+     methods.update(c.name+'.'+m.name for m in c.body if isinstance(m,ast.FunctionDef) and m.name.startswith('test_'))
+  print('named:',len(names),'missing:',sorted(names-methods))
+  assert names <= methods
+  # PY
+  ```
+
+- [Pass] **Scope, R5 and rating remain appropriate.** Plan frontmatter excludes runtime, routing and new gate machinery; `:185-188` leaves tier/live-agent choices to the operator. `githooks/pre-push:295` invokes validate without setting the skip; `ci-local.sh:404` and `.github/workflows/ci.yml:194,402,483` set it. R5 describes default behavior, subject to the inherited opt-out at `test/relay-self-sufficiency.sh:29`. The rating states “Appeal 50. Neutral; the operator gave no score” and labels its historical trend unknown; after-times remain “Expected” (`:174`). Reversibility is **Easy**: existing suite edits with a PR-revert rollback (`:194`), no production state migration.
+
+- [Unverified — needs clone run] **Implementation evidence is still owed.** No suite, pytest, executable fixture or Git command ran in this turn. The staggered race, timeout behavior, red controls, final gate and after-times must be measured in the disposable clone and retained with provenance (`:123-124,177-181`). I swept the entire seeded plan; no additional pre-existing plan defect requiring another review round was found.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may implement the approved plan and collect its specified evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
