@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — implemented; final QA next (2-WORKING)
+status: Active — final QA approved; full gate and PR next (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex in round 2 (attested at `bae7c451`). Steps 1–4 and D2 (step 7) are implemented in `35ab75d2` and `4c5ee0bf`. Measured on the same device: `gh549` went from 346 s to 147 s and `gh436` from 292 s to 239 s. Every red-control witness passes. See Results. | Codex final QA, then the full gate once through the push hook, then the PR. Step 6, the hosted Small numbers, lands when that run exists. |
+| Final QA **Approved** in round 3, attested at reviewed head `191e8977` ([relay](../../relay-system/2026-09-26/gh836-final-qa.md)). Its rounds 1–2 found wording only: the live-run obligation now names the Python adapters, and the default-skip claims are scoped to four wrappers. Same device: `gh549` went from 346 s to 147 s and `gh436` from 292 s to 239 s, with every witness passing. | The full gate once, in a disposable clone through the push hook, then the PR. Step 6 needs a docs-only **PR** (see step 6). |
 
 ## Contents
 
@@ -174,6 +174,11 @@ witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-83
 6. **Hosted Small numbers (#836 step 2, #831 Phase 3).** When the first hosted Small run exists, record its run
    ID and duration here and in the GH-831 plan. This may land in a later docs PR if the run comes after this PR
    merges.
+   **Found 2026-09-26:** the reconcile's catch-up recovers merged **PRs** only. The scheduled run on the
+   direct docs commit `4bd8851a` (run 36255771642) logged `Receipt recovery found 0 pending PR(s)` and
+   `Nothing to reconcile`. So a direct push to `development` is never hosted-qualified. This predates the
+   tiers, and it is reported to the operator separately. The first hosted Small run therefore needs a docs-only
+   PR, such as #833. This PR touches `test/`, so its own reconcile runs the full registry.
 
 7. **D2, decided by the operator on 2026-09-26 and folded in after plan approval: option C.**
    - This follows a `/consult`. Codex recommended C; agy's backend stalled four times, so there was no
