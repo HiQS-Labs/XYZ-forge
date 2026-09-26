@@ -1,0 +1,51 @@
+== test: gh251-validate-pytest-skip ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.gLkc53MJLH
+  PASS: validate.sh invokes pytest when pytest is importable
+  PASS: python:test_python_layer.py is reported passed
+  FAIL: absent pytest did not output the expected SKIPPED line: validate.sh: classified tier 2 — subsystems: skills-army-hq (GH-35)
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): skills-army-hq.sh gh620-skills-army-mini-sync.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 static syntax checks on changed files
+===============================
+  python3 ast-parse skills/3-weekly/skills-army-hq/scripts/sync.py
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.gLkc53MJLH/tmp/runner-envelope.K5PF6j/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+  2 pooled suites + 0 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] skills-army-hq.sh rc=0
+[parallel] gh620-skills-army-mini-sync.sh rc=0
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+  SKIPPED: python:test_python_layer.py (pytest not present — install it to cover utils/py/)
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 2 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /tmp/xyzforge-gh808.gate/.tick/telemetry/validate-parallel-1790305750872-12378.jsonl (4 suite events, 417 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh620-skills-army-mini-sync.sh  19.845  0
+  skills-army-hq.sh  0.032  0
+re-run ladder: 0 suite(s), 0.000s total
+QUARANTINED (GH-379): 1 suite(s) did NOT run — python:test_python_layer.py
+  this run is NOT promotion evidence.
+passed: 4 / 4
+  + tier2:static
+  + skills-army-hq.sh
+  + gh620-skills-army-mini-sync.sh
+  + clone-identity-invariant
+red-run exit=1

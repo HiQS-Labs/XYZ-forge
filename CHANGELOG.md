@@ -14,6 +14,19 @@ record a green boundary, for a reason unrelated to code. The cap is now 120, mat
 missing (a step-level timeout does not count). Found by the 2026-09-25 post-merge review (#822);
 it blocked the `development` → `main` promotion. Rollback: revert the one value and its assertion.
 
+## 2026-09-24 — gh251's nested gate runs scoped to the cheapest `.py` tier-2 lane (GH-808)
+
+`test/gh251-validate-pytest-skip.sh` handed both of its nested `validate.sh --paths-file` runs a
+paths-file naming `utils/py/releases_app.py`, so each nested run executed the ~24-suite releases
+lane — 1044.4 s of a 4809.3 s hosted sequential full gate (21.7%, the single most expensive suite)
+and 1050.6 s standalone locally. The suite's assertions only need a tier-2 paths-file that sets
+`T2_PYTEST=1`; it now names `skills/3-weekly/skills-army-hq/scripts/sync.py`, the smallest measured
+`.py`-bearing lane (2 suites, 34.8 s hosted). Assertions are unchanged: 6 pass / 0 fail before and
+after; 67.5 s standalone after (−93.6%). Red control witnessed end to end: mutating the SKIPPED
+message in `validate.sh` fails the suite (exit 1, naming the tier-2 skills-army-hq classification);
+restoring it returns green. Evidence and provenance: `TESTS-RESULTS/2026-09-24+GH-808/`. This is
+the #805 audit sample's top cost item, first flagged in the GH-749 capture.
+
 ## 2026-09-24 — Preserve sequential marathon admission during integration (GH-796, GH-784)
 
 Separate selected-wave PR readiness (`--pre-pr --wave N`) from all-wave final closeout in the
