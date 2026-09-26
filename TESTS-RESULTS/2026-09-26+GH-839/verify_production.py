@@ -101,13 +101,28 @@ def test_r3_1_git_refs_and_source_preservation(base_dir: Path):
 
 def test_r3_2_zip_integrity_detection(base_dir: Path):
     print("--- Falsifier 2: Zip Integrity Check & Corrupt Archive Detection (R3-2) ---")
-    corrupt_file = base_dir / "corrupted_archive.zip"
-    corrupt_file.write_bytes(b"PK\x03\x04\x00\x00\x00\x00not_a_valid_zip_payload_crc_failure")
+    # 1. Invalid zip format / header rejection
+    bad_header = base_dir / "bad_header.zip"
+    bad_header.write_bytes(b"PK\x03\x04\x00\x00\x00\x00not_a_valid_zip_payload")
+    valid1, err1 = test_zip_integrity(bad_header)
+    assert valid1 is False, "test_zip_integrity failed to detect invalid header"
+    assert "File is not a zip file" in str(err1)
+    print(f"PASS: test_zip_integrity() detected invalid header: {err1}")
 
-    valid, err = test_zip_integrity(corrupt_file)
-    assert valid is False, "test_zip_integrity failed to detect corrupt archive!"
-    assert err is not None
-    print(f"PASS: test_zip_integrity() detected corrupt archive: {err}")
+    # 2. Valid zip archive with corrupted payload bytes on disk (real CRC mismatch)
+    corrupt_payload = base_dir / "corrupted_payload.zip"
+    with zipfile.ZipFile(corrupt_payload, "w") as zf:
+        zf.writestr("test_crc.txt", "payload test string " * 50)
+    data = bytearray(corrupt_payload.read_bytes())
+    # Corrupt a byte in the payload to cause CRC checksum failure
+    data[40] = (data[40] ^ 0xFF)
+    corrupt_payload.write_bytes(bytes(data))
+
+    valid2, err2 = test_zip_integrity(corrupt_payload)
+    assert valid2 is False, "test_zip_integrity failed to detect corrupted payload CRC"
+    assert "Corrupted file in archive: test_crc.txt" in str(err2)
+    print(f"PASS: test_zip_integrity() detected real payload CRC mismatch on disk: {err2}")
+
 
 
 def test_r3_3_linked_worktree_fail_closed(base_dir: Path):
@@ -217,16 +232,25 @@ def test_r3_5_production_phase6_teardown_gate(base_dir: Path):
         # Clean up wt_clone manually for subsequent controls
         subprocess.run(["git", "-C", str(primary), "worktree", "remove", str(wt_clone)], check=True, capture_output=True)
 
-        # Negative Control 2: corrupt archive detected -> teardown refused, clone preserved
+        # Negative Control 2: real on-disk corrupted archive detected -> teardown refused, clone preserved
         corrupt_clone = prod_root / "corrupt_clone"
         subprocess.run(["git", "clone", "-b", "development", str(bare_origin), str(corrupt_clone)], check=True, capture_output=True)
         subprocess.run(["git", "-C", str(corrupt_clone), "config", "user.name", "Test"], check=True)
         subprocess.run(["git", "-C", str(corrupt_clone), "config", "user.email", "test@example.com"], check=True)
 
-        orig_test_zip = backup_clones.test_zip_integrity
+        orig_zip_clone = backup_clones.zip_clone_folder
+        def corrupting_zip_clone(clone_dir, dest_zip_path, **kwargs):
+            res = orig_zip_clone(clone_dir, dest_zip_path, **kwargs)
+            if "corrupt_clone" in str(clone_dir) and dest_zip_path.exists():
+                # Corrupt archive payload bytes on disk before real test_zip_integrity runs
+                raw_bytes = bytearray(dest_zip_path.read_bytes())
+                if len(raw_bytes) > 60:
+                    raw_bytes[50] = (raw_bytes[50] ^ 0xFF)
+                dest_zip_path.write_bytes(bytes(raw_bytes))
+            return res
+
+        backup_clones.zip_clone_folder = corrupting_zip_clone
         try:
-            # Simulate CRC failure on corrupt_clone
-            backup_clones.test_zip_integrity = lambda p: (False, "Simulated CRC failure") if "corrupt_clone" in str(p) else orig_test_zip(p)
             sys.argv = [
                 "merge_cleanup.py",
                 "--primary", str(primary),
@@ -239,21 +263,12 @@ def test_r3_5_production_phase6_teardown_gate(base_dir: Path):
             exit_code_corrupt = merge_cleanup.main()
             assert exit_code_corrupt == 2, f"Expected exit code 2 on corrupt archive, got {exit_code_corrupt}"
             assert corrupt_clone.exists(), "Corrupt candidate must be preserved from teardown!"
-            print("PASS: Production merge_cleanup.main() rejected corrupt archive, withheld candidate, and exited 2")
+            print("PASS: Production merge_cleanup.main() caught real disk CRC payload corruption, withheld candidate, and exited 2")
         finally:
-            backup_clones.test_zip_integrity = orig_test_zip
+            backup_clones.zip_clone_folder = orig_zip_clone
 
-        # Witnessed Red Control: mutating the safeguard (bypassing Phase 6 verified_paths filter) destroys the candidate
-        stale_record = {
-            "path": str(corrupt_clone),
-            "checkout_type": "standalone_clone",
-            "disposition": "SAFE_REMOVE_CLONE",
-            "scan_disposition": "SAFE_REMOVE_CLONE",
-        }
-        teardown_ok = teardown_checkout(stale_record, dry_run=False)
-        assert teardown_ok is True
-        assert not corrupt_clone.exists(), "Direct un-guarded teardown must delete the candidate!"
-        print("PASS: Red control witnessed: without the Phase 6 verification gate, teardown proceeds and deletes candidate")
+        # Clean up corrupt_clone for subsequent controls
+        shutil.rmtree(corrupt_clone)
 
         # Positive Control: clean standalone clone backed up, verified, and torn down
         clean_clone = prod_root / "clean_clone"

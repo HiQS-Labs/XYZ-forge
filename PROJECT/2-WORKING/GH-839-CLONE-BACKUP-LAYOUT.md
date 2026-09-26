@@ -42,7 +42,7 @@ Previous work (GH-728) introduced an ad-hoc inline bash backup snippet in `skill
 3. **Integrity Gate Before Teardown**:
    - `testzip()` CRC/compression check and SHA256 verification before a clone is approved for teardown.
 4. **Cache Pruning**:
-   - Excludes heavy disposable build and package directories (`node_modules/`, `.venv/`, `venv/`, `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `target/`, `.ruff_cache/`) while preserving `.git/` and all working tree source code.
+   - Excludes heavy disposable package and cache directories (`node_modules/`, `.venv/`, `venv/`, `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.parcel-cache/`, `.cache/`, `.DS_Store`) while preserving `.git/` and all working tree source code (including build/, dist/, and target/ directories).
 5. **Aggressive Teardown Integration**:
    - Add `--backup-first` flag to `merge_cleanup.py`.
 6. **No New Tests in CI/CD**:
