@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # GH-649: source ownership, isolated consumer upgrade, and retained sync-state cutover.
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"   # GH-836: physical, like find-pdda.sh's cd -P (a /tmp clone failed :15)
 BOX="$(mktemp -d "${TMPDIR:-/tmp}/gh649.XXXXXX")"
 [ -n "$BOX" ] && [ -d "$BOX" ] || exit 1
 . "$ROOT/test/lib/fixture-guard.sh"

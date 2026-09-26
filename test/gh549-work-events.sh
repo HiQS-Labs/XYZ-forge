@@ -159,8 +159,15 @@ cp "$FX/releases.db" "$FX/releases.sql" "$PRISTINE/"
 # never "it can drain N months of history in 5s". A red-variant copy re-seeds to the SAME tail so its
 # re-replay covers the leg's own events again. Stub-connector legs keep their plain DELETE (fast).
 PRISTINE_TAIL="$(sqlite3 "$PRISTINE/releases.db" "SELECT COALESCE(MAX(id),0) FROM work_events;")"
-seed_cursor_tail() {  # <releases.db>  -> cursor for github_board = $PRISTINE_TAIL (insert or reset)
-  sqlite3 "$1" "INSERT INTO connector_cursors(connector,last_event_id,updated_at) VALUES('github_board',$PRISTINE_TAIL,'2026-09-18T00:00:00Z') ON CONFLICT(connector) DO UPDATE SET last_event_id=$PRISTINE_TAIL;"
+seed_cursor_tail() {  # <releases.db> [event id]  -> cursor for github_board = id, default $PRISTINE_TAIL (insert or reset)
+  local _id="${2:-$PRISTINE_TAIL}"
+  sqlite3 "$1" "INSERT INTO connector_cursors(connector,last_event_id,updated_at) VALUES('github_board',$_id,'2026-09-18T00:00:00Z') ON CONFLICT(connector) DO UPDATE SET last_event_id=$_id;"
+}
+# GH-836: a 21f backfill runs with board dispatch off (its assertions read events, never the board), then the
+# cursor moves to the new tail so the next reconcile does not replay the backlog — same state, ~100 s less.
+backfill_nodispatch() {  # <fixture root> [MOCKSTATE]
+  MOCKSTATE="${2:-$WORK/mock21f.json}" XYZ_WORK_CONNECTORS=0 rr python3 "$APP" --root "$1" work backfill >/dev/null 2>&1
+  seed_cursor_tail "$1/releases.db" "$(sqlite3 "$1/releases.db" "SELECT max(id) FROM work_events;")"
 }
 
 echo "8. rebuild round-trips work_events"
@@ -1058,14 +1065,29 @@ s=s.replace(b,'''    terminal_set = set(terminal)
         _pre = _latest_event(conn, gh_number, only_source=only_source, exclude_source=exclude_source)
         if _pre in suppress:
             raise _AlreadyRecorded(_pre)
-        import time as _t; _t.sleep(0.4)
+        import os as _os, time as _t
+        _n = globals().setdefault("_GH549_RACE_N", [0]); _n[0] += 1
+        _rd = _os.environ.get("GH549_RACE_DIR", "")
+        if _rd and _n[0] == 1:   # GH-836: rendezvous so both racers hold a read before either writes
+            open(_os.path.join(_rd, str(_os.getpid())), "w").close()
+            _dl = _t.time() + 10
+            while len(_os.listdir(_rd)) < 2 and _t.time() < _dl:
+                _t.sleep(0.02)
+        if _n[0] <= 3:
+            _t.sleep(0.4)
 ''',1)
 io.open(p,"w",encoding="utf-8").write(s)
 PYMUT
 [ $? -eq 0 ] || bad "21e red control mutation failed"
 FXE3="$WORK/fx_backfill_race"; rm -rf "$FXE3"; cp -R "$FXE2" "$FXE3"
 sqlite3 "$FXE3/releases.db" "DROP TRIGGER work_events_no_delete; DELETE FROM work_events WHERE payload LIKE '%backfill%'; CREATE TRIGGER work_events_no_delete BEFORE DELETE ON work_events BEGIN SELECT RAISE(ABORT,'work_events is append-only'); END;" 2>/dev/null
-for i in 1 2; do XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$RACE/releases_app.py" --root "$FXE3" work backfill >/dev/null 2>&1 & done; wait
+# GH-836: the mutated copy used to sleep 0.4 s on EVERY row (~110 s over the real ledger). The racers now meet
+# at their first emit (bounded 10 s) and sleep on their first 3 emits only; one shared row is the witness.
+RACEDIR="$WORK/race_rendezvous"; rm -rf "$RACEDIR"; mkdir -p "$RACEDIR"
+RPIDS=""
+for i in 1 2; do GH549_RACE_DIR="$RACEDIR" XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$RACE/releases_app.py" --root "$FXE3" work backfill >/dev/null 2>&1 & RPIDS="$RPIDS $!"; done
+RRC=0; for p in $RPIDS; do wait "$p" || RRC=1; done
+[ "$RRC" = "0" ] && ok "21e red: both racers exited 0" || bad "21e red: a racer exited non-zero"
 NBF3="$(sqlite3 "$FXE3/releases.db" "SELECT count(*) FROM work_events WHERE payload LIKE '%\"source\": \"backfill\"%';")"
 [ "$NBF3" -gt "$NROWS" ] && ok "21e red: with the read moved outside the transaction, the race DUPLICATES ($NBF3 > $NROWS)" \
                           || bad "21e red did not reproduce ($NBF3 vs $NROWS)"
@@ -1124,12 +1146,12 @@ PYJ
 }
 rr python3 "$APP" --root "$FXI" roadmap add --issue-num 9920 --issue-url "https://example.invalid/9920" --title "interleave" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
 prs21f
-MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work backfill  >/dev/null 2>&1   # 9920 -> parked, source=backfill
+backfill_nodispatch "$FXI"   # 9920 -> parked, source=backfill
 MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work reconcile >/dev/null 2>&1   # 405 -> review_ready (latest non-backfill was None)
 SEQ="$(sqlite3 "$FXI/releases.db" "SELECT group_concat(event,',') FROM (SELECT event FROM work_events WHERE gh_number=9920 ORDER BY id);")"
 case "$SEQ" in *",review_ready") ok "21f fixture: backfill then reconcile gives ...,review_ready ($SEQ)" ;; *) bad "21f fixture guard: unexpected sequence '$SEQ'" ;; esac
 NBI="$(sqlite3 "$FXI/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920;")"
-MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work backfill  >/dev/null 2>&1   # own latest is unchanged -> must skip
+backfill_nodispatch "$FXI"   # own latest is unchanged -> must skip
 NBI2="$(sqlite3 "$FXI/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920;")"
 [ "$NBI" = "$NBI2" ] && ok "21f backfill after a review_ready does NOT re-emit — it compares against its OWN last projection" || bad "21f backfill re-emitted ($NBI -> $NBI2)"
 MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work reconcile >/dev/null 2>&1   # latest non-backfill is review_ready -> must skip
@@ -1138,7 +1160,7 @@ NBI3="$(sqlite3 "$FXI/releases.db" "SELECT count(*) FROM work_events WHERE gh_nu
 # A completed issue with an open PR must stay put.
 rr python3 "$APP" --root "$FXI" roadmap add --issue-num 9903 --issue-url "https://example.invalid/9903" --title "done" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
 rr python3 "$APP" --root "$FXI" roadmap update --issue-num 9903 --section "Completed" >/dev/null 2>&1
-MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXI" work backfill >/dev/null 2>&1
+backfill_nodispatch "$FXI"
 cat > "$WORK/prs.json" <<'PYJ'
 [{"number": 703, "isDraft": false, "title": "late pr", "body": "Closes #9903"}]
 PYJ
@@ -1175,7 +1197,7 @@ cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR7/"; seed_cursor_tail "
 rr python3 "$APP" --root "$FXR7" roadmap add --issue-num 9920 --issue-url "https://example.invalid/9920" --title "interleave" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
 prs21f
 MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXR7" work reconcile >/dev/null 2>&1   # review_ready
-MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXR7" work backfill  >/dev/null 2>&1   # rated (backfill) now global latest
+backfill_nodispatch "$FXR7"   # rated (backfill) now global latest
 RRX="$(sqlite3 "$FXR7/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920 AND event='review_ready';")"
 MOCKSTATE="$WORK/mock21f.json" rr python3 "$EXC/releases_app.py" --root "$FXR7" work reconcile >/dev/null 2>&1
 RRY="$(sqlite3 "$FXR7/releases.db" "SELECT count(*) FROM work_events WHERE gh_number=9920 AND event='review_ready';")"
