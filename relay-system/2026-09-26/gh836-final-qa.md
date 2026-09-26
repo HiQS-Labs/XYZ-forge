@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -224,5 +224,21 @@ Handing off to Producer (claude-a): correct the single remaining sentence at pla
   `validate.sh` run is unchanged. A grep of the plan, the CHANGELOG entry, the README, the suite and the hook
   finds no other universal skip claim. Plan `:192` describes the hook's own run, which is accurate. The artifact
   is regenerated as `git diff 4bd8851a 3909cb48`.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: S2's remaining sentence is corrected. The reviewed implementation and retained focused witnesses meet the review Definition of Done; D2 remains option C. Approval closes this review, not the separately required post-review full gate.
+swept file: yes
+
+Reviewed the complete seeded diff, the changed test/hook files beyond their hunks, the relay README, the active plan and retained evidence. No additional correctness defect was identified in this sweep. The pre-existing limitations recorded in round 1 remain dispositioned, without expanding this patch. Historical CHANGELOG and ledger entries are not independently re-attested.
+
+- **[Pass] S2 resolved.** `PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md:183-185` now says “four wrappers skip it by default” and a direct validation run “is unchanged.” This agrees with `relay-automation/README.md:51-53`, the suite's default 0 at `test/relay-self-sufficiency.sh:33`, and the full-gate-only default at `githooks/pre-push:299`. S1 remains resolved by the authoritative implementation paths at README `:56-59`.
+- **[Pass] Trims and evidence remain consistent.** The bounded rendezvous and independent duplication assertion remain at `test/gh549-work-events.sh:1065-1097`; the four dispatch-disabled backfills retain enabled reconcile calls at `:1152-1207`. The existence-only parity guard remains at `test/gh534_phase_c_tests.py:562-591`. `TESTS-RESULTS/2026-09-26+GH-836/witnesses.log:3-11` retains six staggered race cases and the 92/104-second cursor comparison; `:20-31` retains the physical-path witness and the corrected W3b failing wrapper, explicitly disclaiming the unsuccessful first injection. These are inspected receipts, not fresh suite executions. The round-1 exhaustive status-pair probe remains the evidence for accepting exactly 0 and 4.
+- **[Pass] Package still matches its sources.** Read-only command: `python3 -B` with `tarfile.open('skills/1-hourly/relay-automation/relay-pkg.tar.gz')`; assert a nonempty regular-member list, compare each member's `extractfile(m).read()` to `Path(n).read_bytes()` for `test/` members, otherwise to `(Path('relay-automation') / n.removeprefix('relay-automation/')).read_bytes()`, then assert no drift. Exit **0**; decisive output: `archive files=18 drift=[]`. Nothing was extracted or modified.
+- **[Pass] Scope and claims remain bounded.** The artifact contains no new suite, registry entry or gate machinery. The only executable change outside the existing tests is the environment default at `githooks/pre-push:299`. The local timing claims in `CHANGELOG.md:8-13` match `baseline-summary.log:2-4` and `after-summary.log:2-4`; the plan `:237-244` explicitly leaves the final hook witness pending. Hosted Small savings remain an expectation, not a measured result.
+- **[Unverified — needs clone run]** Final full-hook execution, its actual default-skip log and final gate readiness remain outstanding. No test suite, executable fixture or Git command was run in this turn. The harness/operator must retain that post-review receipt before claiming gate completion.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) owns the pending disposable-clone full-hook run and its retained evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
