@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -186,5 +186,32 @@ under `TESTS-RESULTS/2026-09-26+GH-833/` (`prs-order-check.sh.txt`, `prs-definit
   scheduling choice for attribution. V5 is called a local push self-check, not qualification.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The evidence revisions resolve F2/F3, but the new no-pointer exemptions leave DoD (c) unmet. One portable-pointer correction is needed; no runtime change or new gate is requested.
+swept file: yes
+
+Read the entire revised seeded plan, including the pre-existing recon, rating, merge conditions and rollback. Applied the SWE and debug-mantra plan rubrics. No additional material defects found in that whole-plan sweep beyond the pointer gap and evidence-retention note below. No artifact/source edits, git commands or suites were run.
+
+- **[Should] F1 remains partly open — preserve the canonical pointer for adopted PDDA and deployed skills.** Plan lines 123–124 promise that every other doc points to the canonical definition, but lines 144–146 explicitly remove the pointer from PDDA and all six skills. That does not meet this relay's unchanged DoD (c): “every other placement points to it without restating it.” Avoiding broken relative links is correct; omitting the pointer is not the only solution. Use a portable absolute repository URL to the canonical glossary for these placements (a nearby prose pointer is sufficient where frontmatter/recite formatting matters). Include those pointers in V1b or the retained manual link inspection; do not add gate machinery.
+  Observed input: `.relay-artifacts/gh833-plan.md:144`: “PROJECT/PDDA.md gets no link”; `:145–146`: “The six skills: ... with no link.” The new V1b only checks the seven linked docs (`:166–168`), so the seven exemptions are intentional and unobserved by that witness.
+  Affected scope: The seven distributed-doc/skill pointers required by DoD (c), plan steps 3–4 and their manual verification; no change to their operational instructions.
+  Falsifier: Each of those seven placements names the expansion and provides a resolvable portable pointer to the one glossary definition, without duplicating its substantive contents. That satisfies (c) while surviving deployment outside this checkout.
+
+- **[Pass] F2 — the indirect reader establishes gh436's inclusion.** My round-1 reader trace stopped too early. `test/gh436-merge-cleanup.py:865` imports `gh534_phase_c_tests`; that module defines the real `SKILL_MD` at `:523` and reads it at `:877`. Retaining gh436 in V3 is justified as regression coverage of that skill's contracts, not proof of its introductory expansion. `utils/ci-route.sh:38` includes gh436 and releases-skill in Small; `validate.sh:144` registers gh609. The correction that gh400 does not read 10days and the explicit disposable-clone boundary at plan lines 179–181 resolve the remaining F2 concerns.
+
+- **[Pass] F3 and the baseline V1b failure are reproducible.** Read-only command: `python3` with `Path.read_text().splitlines()` over the 14 named paths, selecting the first `re.search(r'\bPRS\b', line)`; exit 0, decisive output: `files=14 missing=10 bare=4`. Bare-first locations were ROUTER:119, start-marathon:239, 10days:6, end-of-week:32. Command: `PYTHONDONTWRITEBYTECODE=1 python3 TESTS-RESULTS/2026-09-26+GH-833/prs-definition-check.py.txt "$PWD"`; exit 1, decisive output: `V1b: 8 failure(s)` (missing entry plus seven missing spelled-out paragraphs). This reproduces the retained base log; it does not establish the future post-edit green or mutation results.
+
+- **[Pass] R1–R5, placements, rating and routing remain sound for this plan.** Re-read the target spans: HOW-TO-USE:7/67, AGENTS:173, PDDA:948, SOP:62, ARCHITECTURE:406, FAQ:3, README:145 and the six R3 locations. The single definition's two-subsystem description is supported by AGENTS:173–178; the conditional PDDA wording preserves the legacy/release-mode distinction at PDDA:948. Rating policy at start-task:248–251 supports neutral appeal and higher-is-cheaper effort. Router probe command: `python3` calling `subprocess.run(['bash','utils/ci-route.sh','push'], input='\n'.join(paths)+'\n', capture_output=True, text=True)`; the 22 nonempty planned/evidence paths exited 0 with `route=docs tier=1 full_required=false`. Appending `relay-automation/README.md` (23 paths) exited 0 with `route=full tier=3 full_required=true`. This includes the new .txt/.log evidence files. R5's corrected scheduling distinction matches `utils/py/wave_reconcile.py:597–612`; V5 now correctly distinguishes the local self-check from hosted qualification.
+
+- **[Nit] Retain provenance with the already-recorded base results.** Plan lines 154–155 require `provenance.jsonl`, but `Path('TESTS-RESULTS/2026-09-26+GH-833/provenance.jsonl').is_file()` in the read-only Python probe exited 0 and printed `False`. The base log and check texts exist. Before citing these runs in the PR, retain their provenance alongside the final witness results as the plan already requires. Do not retrospectively invent missing execution metadata.
+
+- **[Unverified — needs clone run]** V3/V4/V5, the final committed-diff classification and hosted qualification remain future execution work. The three post-edit V1b mutations remain specified controls, not witnessed results in this turn. Live issue command `gh issue view 833 --repo HiQS-Labs/XYZ-forge --json title,body` exited 1 with `error connecting to api.github.com`; issue scope was assessed against the supplied packet, as permitted.
+
+Root cause: the revision solves relative-link portability by dropping a required canonical pointer; fix site: plan steps 3–4 and their manual witness; why not upstream/downstream: the mismatch is in the planned documentation contract, not the ledger or router.
+
+Handing off to Producer (claude-a) — add the portable pointers and return the revised plan for round 3; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
