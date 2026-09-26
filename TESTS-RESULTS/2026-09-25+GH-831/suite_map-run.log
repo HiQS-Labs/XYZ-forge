@@ -1,0 +1,24 @@
+suite map (hosted sequential minutes, a0345e9c):
+  CORE                              264 suites   33.2 min
+  MEDIUM:agent_chorus                 1 suites    0.4 min
+  MEDIUM:ate                          9 suites    1.6 min
+  MEDIUM:hq                          13 suites    0.3 min
+  MEDIUM:skills_army_hq               2 suites    0.8 min
+  MEDIUM:standup                      1 suites    0.9 min
+  MEDIUM:swe_diagram                  1 suites    0.0 min
+  MEDIUM:telemetry                    4 suites    0.3 min
+  OFF:skill/non-core                  9 suites    0.5 min
+  REVIEW:core-code,skill-subject     29 suites    4.2 min
+  REVIEW:no-code-ref                 14 suites    0.6 min
+  REVIEW:pdda-code                    1 suites    0.2 min
+  REVIEW:prs-code                    10 suites    0.7 min
+  SMALL:canary                       15 suites    1.2 min
+  SMALL:pdda                         15 suites    3.4 min
+  SMALL:prs                          31 suites   12.7 min
+  total 419
+merge projection (146 merges since 2026-08-26):
+  large                          77
+  small                          48
+  small(skill code)              17
+  small(pdda/releases code)       3
+  medium                          1
