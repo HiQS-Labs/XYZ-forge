@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved in round 3 (attested `dbce9916`). The row is admitted (In progress, accepted start). The edits are in `58256426`. V1–V4 are green and all six red controls fire (Results). | Final Codex QA. Then the push through the docs gate and the PR. Merge after #838's reconcile finishes. |
+| Final QA round 1 found no problem in the wording, links, tier or behaviour. It asked for narrower evidence claims, a witness recipe without deletion, and a recorded deviation. All three are done, and three existing skill problems it found are deferred. | Final QA round 2. Then the push through the docs gate and the PR. Merge after #838's reconcile finishes. |
 
 ## Contents
 
@@ -37,6 +37,7 @@ goal: >
 - [Plan](#plan)
 - [Verification](#verification)
 - [Results](#results)
+- [Found in review, deferred](#found-in-review-deferred-not-in-this-pr)
 - [Merge and the hosted Small run](#merge-and-the-hosted-small-run)
 - [Risk and rollback](#risk-and-rollback)
 
@@ -197,7 +198,8 @@ No new suite or registry entry (AGENTS.md, *No new tests*). Manual checks go to
 
 ## Results
 
-All at `58256426`, recorded in `TESTS-RESULTS/2026-09-26+GH-833/` with four `provenance.jsonl` records.
+The edits are at `58256426`. The base red controls ran against `af4fef27`. Everything is recorded in
+`TESTS-RESULTS/2026-09-26+GH-833/`, with one `provenance.jsonl` record per run.
 
 | Witness | Result | Evidence |
 |---|---|---|
@@ -206,11 +208,25 @@ All at `58256426`, recorded in `TESTS-RESULTS/2026-09-26+GH-833/` with four `pro
 | V1b, one definition and its links | pass. At base: 15 failures | `witnesses.log`, `red-controls-base.log` |
 | V1b red controls | all four fail with rc 1: entry deleted; ROUTER anchor broken; entry restated in the FAQ; a skill URL anchor broken | `witnesses.log` |
 | V2, tier | `route=docs tier=1 docs-only` on the committed diff; with `relay-automation/README.md` appended, `tier=3` | `v2-v4.log` |
-| V3, reader suites | `releases-skill` 40/0, `gh609` 33/0, `gh436` 180 tests OK (243 s), in a disposable clone with its identity unchanged | `v3-reader-suites.log` |
-| V4, PDDA | no errors; the 32 warnings were already there | `v2-v4.log` |
+| V3, reader suites | `releases-skill` 40/0, `gh609` 33/0, `gh436` 180 tests OK (243 s), in a disposable clone. HEAD and porcelain were unchanged across the run. The other `AGENTS.md:370` identity fields were not retained before it; they were checked after it (clean) | `v3-reader-suites.log`, `v3-identity-and-pdda-baseline.log` |
+| V4, PDDA | no errors. Warnings compared in the disposable clone, base `af4fef27` vs `cd777ca7`: no new content warning. See the note below | `v2-v4.log`, `v3-identity-and-pdda-baseline.log` |
 | V5, push self-check | owed at push | — |
 
 Notes against the plan:
+- **V4 warnings (final QA r1 F1).** The base-vs-head diff shows two changes:
+  - `ROUTER.md`'s three existing "dead reference RELEASES.md" warnings moved from lines 13/190/206 to 15/192/208,
+    under the new trinity line.
+  - Two "#833 state unavailable" warnings appear because the fresh clone has no cached `gh` state for the new
+    row.
+
+  The disposable clone reports 357/359 warnings; the task clone, with its cache, reports 32.
+- **The witness recipe (final QA r1 F2).** The first run's recipe (`witness-script-r0.sh.txt`, output
+  `witnesses-r0.log`) deleted a caller-supplied scratch path. The revised recipe (`witness-script.sh.txt`)
+  copies into a new `mktemp -d` directory per control and deletes nothing. Its re-run (`witnesses.log`) gives the
+  same results.
+- **`PROJECT/PDDA.md`.** Plan step 3 proposed a parenthetical inside the releases-mode clause. The edit keeps
+  the original sentence whole and adds a second one ("In releases-mode repos it is part of the RELEASES
+  ledger, which XYZ Forge calls the Product Release System (PRS; definition)").
 - **`/releases`.** The spelled-out form is a new first sentence at line 8, just before "Treat the release
   ledger", not inside it.
 - **Wording.** No original word is removed, except "four" → "five" in the glossary heading.
@@ -221,6 +237,18 @@ Notes against the plan:
     `validate.sh` and `.github`).
 - **An observation, not changed.** `10days`' frontmatter description was already 1,546 characters, above the
   usual 1,024. The spelled-out form adds 25. No repo validator checks the length.
+
+## Found in review, deferred (not in this PR)
+
+Final QA r1 found three existing instruction problems in two skills this PR touches. This PR only adds names
+and pointers (DoD (d)), so they are left for a follow-up issue, which is the operator's call. Each is confirmed:
+- **`skills/2-daily/releases/SKILL.md:28-31`** calls `ROADMAP.md` the human file and says to finish with
+  `releases roadmap sync`. In releases mode (this repo) the DB is the source of truth, and sync is a no-op.
+- **`skills/3-weekly/10days/SKILL.md:208,233`** call `releases_app.py roadmap show <N>`. `roadmap` has no `show`
+  subcommand; the CLI refuses it, listing sections, sync, reconcile-state, list, render, add, rate, repoint,
+  update and move.
+- **`skills/3-weekly/10days/SKILL.md:500-501`** falls back to `git worktree remove --force` when the worktree
+  still reports uncommitted state. That can discard work.
 
 ## Merge and the hosted Small run
 
