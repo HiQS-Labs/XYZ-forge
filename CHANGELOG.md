@@ -13,8 +13,9 @@ the landing's changes at the tested commit and runs **one** qualifying run:
 Promotion still runs the full registry.
 
 - `utils/ci-route.sh` defines Small as a subsystem list. It treats non-core skill files and the ledger dumps as
-  docs surfaces; core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) and
-  skills claimed by an area are not. Seven more suites join their Medium areas.
+  docs surfaces. The code of core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`,
+  `jog`) and of area-claimed skills is not; skill markdown routes as before. Seven more suites join their
+  Medium areas.
 - `utils/py/wave_reconcile.py` checks a Small run exactly: every expected suite once, the PDDA gate, the Python
   layer and the identity check. The receipt records the list it ran, and replay checks it against the list at
   the tested commit, so later edits to Small never break an old receipt. Full-run receipts are unchanged.

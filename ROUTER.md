@@ -122,8 +122,10 @@ picked by classifying the landing's changes at the tested commit:
 - **Large** — core harness, unmapped code, gate surfaces (tier 3): the full registry.
 
 Promotion always runs the full registry. Eight skill-text suites are off, recorded in
-`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). Core
-skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) are never docs.
+`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). The code of
+core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) never routes as
+docs. Skill markdown keeps its existing docs routing, except that `relay-xyz` and `relay-automation` stay
+full-gate surfaces for every file.
 Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
 
 `--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.

@@ -325,7 +325,9 @@ How precedence works:
 - **The named ledger, data and view files are an explicit exception.** They are added to the docs-surface
   patterns, which `ci-route.sh` checks before `subsystem_of()` in the tier-2 membership case. So they are docs
   even though `subsystem_of()` also claims `releases.db`/`.sql` for releases (`utils/ci-route.sh:36`).
-- **For skill paths, core exclusions and subsystem claims take precedence over the docs exception.**
+- **For skill paths, core exclusions and subsystem claims take precedence over the new skill-files exception.**
+  Text files (`*.md`, `*.txt`) keep their existing docs routing, checked first, and the existing full-gate
+  surfaces (`relay-xyz`, `relay-automation`) still win over it (Codex Phase 2 r1, F1).
 - **Everything else keeps its existing mapping.** Releases implementation (`utils/py/releases_app.py` etc.)
   stays tier 2, and its dedicated-test co-touch behaviour (GH-487) is unchanged. The push hook, CI's route and `--auto` follow
 automatically. Unchanged:

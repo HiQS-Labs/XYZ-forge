@@ -56,7 +56,9 @@ subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
 #   1. text, evidence and governance paths, as before (skills/**/SKILL.md lands here via *.md);
 #   2. the ledger/data dumps and their generated views — docs even though subsystem_of() claims
 #      releases.db/.sql, so a ledger-only push qualifies through the Small run;
-#   3. core skills (relay, relay-xyz, relay-automation, merge-cleanup, express, jog) are NOT docs;
+#   3. the non-text files of core skills (relay, relay-xyz, relay-automation, merge-cleanup, express,
+#      jog) are NOT docs; their markdown is, by rule 1, as before — the full-gate list below still
+#      catches every relay-xyz and relay-automation file;
 #   4. any other skills/** path is docs unless subsystem_of() claims it for an area.
 is_docs_surface() {
   case "$1" in
