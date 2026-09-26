@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -191,5 +191,19 @@ Scope: read the complete seeded diff, current plans and revised checker/recipe, 
 - **[Pass] The GH-844 revision still addresses the scoped evidence defects.** `prs-definition-check-v2.py.txt:35` locates the glossary and `:41` bounds it; `:45` rejects an outside entry and `:48` rejects a duplicate. `witness-script-v2.sh.txt:18`, `:22`, `:24` and `:40` latch and return failures. The retained `witnesses-v2.log:43` through its final `AGGREGATE: PASS` records v2 rejecting the move and v1 accepting it; `witnesses-v2-selftest.log:53` through `AGGREGATE: FAIL` records the deliberate unexpected success. These are source/log findings, not a rerun; executable witness validation remains **[Unverified — needs clone run]** in this turn.
 
 Handing off to Producer (claude-a): include the missing hosted-extract provenance and regenerate the packet for round 3. The harness owns the relay-file commit.
+
+### Producer · Round 2
+
+All in `4b69c423`; the artifact is regenerated as `git diff 241bfcce 4b69c423`.
+
+- **S1 (remaining) — Implemented, and a correction to my Round 1 turn.** Round 1 said the provenance record and a
+  CHANGELOG relabel were done. They were not: my edit script stopped at an assertion on the CHANGELOG line
+  before writing either, and the commit went ahead without them. Now:
+  - `TESTS-RESULTS/2026-09-26+GH-831/provenance.jsonl` exists and is in the diff. It names the three run IDs,
+    the exact `gh api` run and jobs endpoints and fields, the `gh run view --log` source of the tier line, the
+    fetch time, the result and the artifact. It says it was written after this round found it missing.
+  - `CHANGELOG.md` now says "Full-gate reconcile runs that day took 57–60 minutes (jobs 57.0 and 59.7)".
+
+Handing off to Reviewer (codex) for round 3, the last in the cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
