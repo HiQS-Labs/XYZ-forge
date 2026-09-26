@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -138,5 +138,46 @@ Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` with the above stdin. Decisive ou
 Root cause: backup verification checks the bytes selected by the archiver but not preservation of the requested clone state; fix sites are input selection, archive naming, supported checkout shapes, and failure propagation, before CRC/SHA can authorize teardown.
 
 Handing off to Producer (antigravity) — address each finding, record dispositions and disposable-clone evidence, then return for Round 2.
+
+### Producer · Round 1 · antigravity
+
+Dispositions:
+- **R1-1 (Exclusions also remove Git refs and source directories): Implemented.**
+  - Exempted `.git/` entirely from any cache exclusions in both zip archivers (`zip` CLI and Python `zipfile` fallback).
+  - Restricted `WORKING_TREE_CACHE_DIRS` exclusively to recognized disposable package/cache folders (`node_modules`, `.venv`, `venv`, `__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.parcel-cache`, `.cache`, `.DS_Store`).
+  - Constrained `TOP_LEVEL_BUILD_DIRS` (`target`, `build`, `dist`) to match only at the root level of the working tree (`clone_name/target/*`), ensuring source directories such as `src/env/config.py` and loose git refs such as `.git/refs/heads/build/topic` are fully preserved.
+  - Falsifier 1 verified in `temp/verify_falsifiers.py` / `backup-clones-verification.log`: `clone1/.git/refs/heads/build/topic` (PASS), `clone1/src/env/config.py` (PASS), `node_modules` (PASS excluded).
+
+- **R1-2 (Backup destinations collide and overwrite prior verified archives): Implemented.**
+  - Added duplicate basename disambiguation in `backup_clones.py:365-375`: duplicates automatically prefix the parent directory name (`parentB--repo.zip`) or increment numeric suffixes.
+  - Added run overwrite protection in `backup_clones.py:329-337`: if a timestamp run directory already exists and contains files, increments numeric suffix (`<timestamp>_1`) to guarantee no prior run or verified archive is overwritten.
+  - Added preflight existence check in `zip_clone_folder` (`backup_clones.py:214-215`): refuses and errors if destination zip already exists.
+  - Falsifier 2 verified in `temp/verify_falsifiers.py` / `backup-clones-verification.log`: `repo.zip` and `parentB--repo.zip` both created intact, re-run allocated `run_collisions_1`.
+
+- **R1-3 (Python fallback silently drops directory symlinks): Implemented.**
+  - In `backup_clones.py:270-289`, `os.walk` directory loop explicitly checks `full_d.is_symlink()`. Directory symlinks are written as ZipInfo symlink records (`0o120777 << 16`, create_system 3 Unix) containing the link target, and removed from `dirs` to prevent double traversal.
+  - Falsifier 3 verified in `temp/verify_falsifiers.py` / `backup-clones-verification.log`: Python fallback correctly preserved directory symlink `current -> src` with mode `0o120777`.
+
+- **R1-4 (Linked-worktree archives are not self-contained Git backups): Implemented.**
+  - Added worktree administrative state preservation in `backup_clones.py:251-258` and `:304-311`: when archiving a linked worktree, the external `gitdir` administrative state is bundled into `.git_admin/` within the archive so HEAD, index, and worktree refs are completely self-contained and restorable without the parent clone.
+  - In `get_git_info`, `is_linked_worktree` and `gitdir_target` are recorded in metadata, and `MANIFEST.tsv` / `SUMMARY.md` indicate whether each checkout is a standalone Clone or linked Worktree.
+
+- **R1-5 (Evidence does not establish the new failure gate): Implemented.**
+  - Created reproducible test script `temp/verify_falsifiers.py` executing all 4 falsifier controls and testing Phase 6 failure gate stop.
+  - Removed uncommitted `gh436` claim from `GH-839-CLONE-BACKUP-LAYOUT.md`, `README.md`, and `CHANGELOG.md`.
+  - Provenance updated with reproducible command `python3 temp/verify_falsifiers.py`, matching SHA256 (`7ee6123a60080343dbb88bd8f969d9698fdc96402779a493c3459430949fb4a9`) and positive/negative verification receipts.
+
+- **R1-6 (Teardown and backup failure reporting): Implemented.**
+  - Updated `merge_cleanup.py:681-697`: `teardown_checkout` now verifies linked worktree disappearance (`if path.exists(): return False`) and retries prune/repair on removal failure.
+  - In `merge_cleanup.py:1258-1275`, tracked `phase6_failures`. If backup verification fails for any candidate, the candidate is withheld from teardown, the unverified checkouts are explicitly named in error logs, and the run exits with code 2.
+  - Falsifier 4 verified in `temp/verify_falsifiers.py` / `backup-clones-verification.log`: corrupted archive rejected by `test_zip_integrity`, withheld from teardown, and logged.
+
+- **Nit (Routine generated-view churn & deep skill Phase 1 DEST binding): Implemented.**
+  - Reverted `LEADERBOARD.md` to `origin/development`; diff stat against origin/development shows zero routine view churn.
+  - Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md`: bound `DEST` from `--json` run_dir output, documented `$DEST/reports/`, and clarified that backup and integrity verification complete before sub-agent analysis begins.
+
+Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
+
+Handing off to Reviewer (codex) for Round 2 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
