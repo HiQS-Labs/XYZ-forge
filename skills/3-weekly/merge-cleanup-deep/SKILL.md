@@ -89,15 +89,20 @@ python3 skills/2-daily/merge-cleanup/scripts/scan_clones.py --json \
 ## Phase 1 — Backup before analysis
 
 ```bash
-DEST="$HOME/Documents/Backups/<repo>-clones-$(date +%F)"; mkdir -p "$DEST"
-printf 'clone\tbranch\thead\tdirty_files\tzip_sha256\tzip_bytes\n' > "$DEST/MANIFEST.tsv"
-( cd "$(dirname "$PRIMARY")" && zip -ryq "$DEST/<clone>.zip" "<clone>" )   # -y keeps symlinks, .git included
+# Standardized clone backup at <top-level>/_backups/<repo>/<timestamp>/
+python3 skills/2-daily/merge-cleanup/scripts/backup_clones.py \
+  --primary "$PRIMARY" \
+  --candidates-json "$SCRATCH/candidates.json" \
+  --backup-root "$(dirname "$PRIMARY")/_backups"
 ```
 
-- `.git` is included on purpose: the unpushed refs are the point. Exclude nothing but
-  `node_modules`/`.venv` if size forces it, and say so in the manifest.
-- The manifest row is written from the clone *after* the zip (branch, HEAD, dirty count, sha256,
-  bytes) so a restore can be checked against it.
+- **Standardized Directory Hierarchy**:
+  `<root>/_backups/<repo-name>/<timestamp>/`
+  - `zips/`: Individual `<clone>.zip` archives (with `.git` included, disposable caches like `node_modules` and `.venv` excluded).
+  - `metadata/`: `MANIFEST.tsv` (SHA256, branch, HEAD, dirty count, unpushed commits, verified status), `manifest.json`, and per-clone `<clone>.git-summary.txt`.
+  - `reports/`: Triage reports and teardown logs.
+  - `SUMMARY.md`: Human-readable summary table and inventory.
+- **Integrity Validation**: Automatically tests zip CRC and compression (`testzip()`) and computes SHA256 before analysis or teardown begins.
 - Zipping is read-only for the clone; it may run in the background while Phase 2 starts.
 
 ## Phase 2 — Fan-out (≤3 read-only sub-agents)
@@ -159,7 +164,7 @@ The caller does not forward verdicts; it checks them.
   identity proves content; an attestation proves review, not landing. A commit not being an ancestor
   is **not** evidence its content is missing; a clean diff is **not** provenance.
 - Produce one disposition table: clone · verdict · deciding evidence · next step. Copy the agent
-  reports into the backup folder (`<DEST>/deep-scan/`) so the analysis outlives the session.
+  reports into the backup folder (`<DEST>/reports/`) so the analysis outlives the session.
 
 ## Phase 4 — Handoff (no mutation here)
 

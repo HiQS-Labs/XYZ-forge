@@ -1058,6 +1058,8 @@ def main():
     parser.add_argument("--allow-unready-primary", action="store_true", help="Explicitly defer primary-checkout cleanup and proceed even though the primary cannot receive the landing")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
     parser.add_argument("--resume", action="store_true", help="Continue a previous run: consult each PR's attempt record and skip one that is already parked (the live refresh stays authoritative — a PR whose repair resolved and now merges cleanly still lands)")
+    parser.add_argument("--backup-first", action="store_true", help="Back up and verify candidate clone folders before tearing them down")
+    parser.add_argument("--backup-root", help="Directory where standardized clone backups are stored (defaults to <top_level_folder>/_backups)")
 
     args = parser.parse_args()
 
@@ -1242,6 +1244,23 @@ def main():
     if not removable:
         log("No candidate checkouts qualify for safe removal (all are preserved or active).")
     else:
+        if args.backup_first:
+            from backup_clones import build_backup_layout
+            backup_root = Path(args.backup_root).resolve() if args.backup_root else primary_repo.parent / "_backups"
+            log(f"Backing up {len(removable)} candidate checkout(s) to {backup_root} before teardown...")
+            backup_candidates = [Path(c["path"]).resolve() for c in removable]
+            backup_res = build_backup_layout(
+                clones=backup_candidates,
+                backup_root=backup_root,
+                repo_name=primary_repo.name,
+                dry_run=dry_run,
+            )
+            if not dry_run and not backup_res["all_verified"]:
+                log_err("Clone backup verification failed for some candidates; only verified checkouts will be torn down.")
+            verified_paths = {c["path"] for c in backup_res["clones"] if c["verified"]}
+            removable = [c for c in removable if str(Path(c["path"]).resolve()) in verified_paths or c["path"] in verified_paths]
+            log(f"Backup complete: {len(removable)} checkout(s) verified safe for teardown. Run dir: {backup_res['run_dir']}")
+
         for c in removable:
             teardown_checkout(c, dry_run=dry_run)
 

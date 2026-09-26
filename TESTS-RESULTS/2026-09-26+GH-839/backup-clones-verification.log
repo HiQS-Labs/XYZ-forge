@@ -1,0 +1,119 @@
+=== GH-839 Standardized Clone Backup Verification ===
+Timestamp: 2026-09-26T21:40:05Z
+Initialized empty Git repository in /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-verification/test-clone-source/.git/
+[main (root-commit) f3004a0] feat: initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 main.py
+=== Step 1: Execute backup_clones.py ===
+{
+  "status": "OK",
+  "run_dir": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-verification/_backups/sample-repo/2026-09-26_144000",
+  "zips_dir": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-verification/_backups/sample-repo/2026-09-26_144000/zips",
+  "metadata_dir": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-verification/_backups/sample-repo/2026-09-26_144000/metadata",
+  "reports_dir": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-verification/_backups/sample-repo/2026-09-26_144000/reports",
+  "timestamp": "2026-09-26_144000",
+  "repo_name": "sample-repo",
+  "clones": [
+    {
+      "clone": "test-clone-source",
+      "path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-verification/test-clone-source",
+      "branch": "main",
+      "head": "f3004a0277",
+      "dirty_files": 2,
+      "unpushed_commits": 0,
+      "zip_path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-verification/_backups/sample-repo/2026-09-26_144000/zips/test-clone-source.zip",
+      "zip_bytes": 20192,
+      "zip_sha256": "9debc8df3cdd8d2656b3e5d6b0af6aec84ccca5b9a8287fbc8057c45d360528d",
+      "verified": true,
+      "error": null
+    }
+  ],
+  "all_verified": true,
+  "total_bytes": 20192
+}
+=== Step 2: Verify Standardized Hierarchy ===
+total 8
+drwxr-xr-x@ 6 noelsaw  staff  192 Sep 26 14:40 .
+drwxr-xr-x@ 3 noelsaw  staff   96 Sep 26 14:40 ..
+-rw-r--r--@ 1 noelsaw  staff  456 Sep 26 14:40 SUMMARY.md
+drwxr-xr-x@ 5 noelsaw  staff  160 Sep 26 14:40 metadata
+drwxr-xr-x@ 2 noelsaw  staff   64 Sep 26 14:40 reports
+drwxr-xr-x@ 3 noelsaw  staff   96 Sep 26 14:40 zips
+total 40
+drwxr-xr-x@ 3 noelsaw  staff     96 Sep 26 14:40 .
+drwxr-xr-x@ 6 noelsaw  staff    192 Sep 26 14:40 ..
+-rw-r--r--@ 1 noelsaw  staff  20192 Sep 26 14:40 test-clone-source.zip
+total 24
+drwxr-xr-x@ 5 noelsaw  staff   160 Sep 26 14:40 .
+drwxr-xr-x@ 6 noelsaw  staff   192 Sep 26 14:40 ..
+-rw-r--r--@ 1 noelsaw  staff   191 Sep 26 14:40 MANIFEST.tsv
+-rw-r--r--@ 1 noelsaw  staff  1390 Sep 26 14:40 manifest.json
+-rw-r--r--@ 1 noelsaw  staff   316 Sep 26 14:40 test-clone-source.git-summary.txt
+=== Step 3: Verify Zip Exclusions (node_modules and .venv omitted, code/.git present) ===
+Archive:  temp/gh839-verification/_backups/sample-repo/2026-09-26_144000/zips/test-clone-source.zip
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  09-26-2026 14:40   test-clone-source/
+        0  09-26-2026 14:40   test-clone-source/.git/
+      188  09-26-2026 14:40   test-clone-source/.git/config
+        0  09-26-2026 14:40   test-clone-source/.git/objects/
+        0  09-26-2026 14:40   test-clone-source/.git/objects/f3/
+      133  09-26-2026 14:40   test-clone-source/.git/objects/f3/004a0277733e25812f9914e6b0176cc406988c
+        0  09-26-2026 14:40   test-clone-source/.git/objects/pack/
+        0  09-26-2026 14:40   test-clone-source/.git/objects/info/
+        0  09-26-2026 14:40   test-clone-source/.git/objects/b1/
+       47  09-26-2026 14:40   test-clone-source/.git/objects/b1/32fb44db426b60b9c4b4ba60782dbbe95ece0e
+        0  09-26-2026 14:40   test-clone-source/.git/objects/e6/
+       52  09-26-2026 14:40   test-clone-source/.git/objects/e6/fda3421a6a0d9180d7bbac672e95acc45b5f17
+       21  09-26-2026 14:40   test-clone-source/.git/HEAD
+        0  09-26-2026 14:40   test-clone-source/.git/info/
+      240  09-26-2026 14:40   test-clone-source/.git/info/exclude
+        0  09-26-2026 14:40   test-clone-source/.git/logs/
+      167  09-26-2026 14:40   test-clone-source/.git/logs/HEAD
+        0  09-26-2026 14:40   test-clone-source/.git/logs/refs/
+        0  09-26-2026 14:40   test-clone-source/.git/logs/refs/heads/
+      167  09-26-2026 14:40   test-clone-source/.git/logs/refs/heads/main
+       73  09-26-2026 14:40   test-clone-source/.git/description
+        0  09-26-2026 14:40   test-clone-source/.git/hooks/
+      896  09-26-2026 14:40   test-clone-source/.git/hooks/commit-msg.sample
+     4898  09-26-2026 14:40   test-clone-source/.git/hooks/pre-rebase.sample
+     1643  09-26-2026 14:40   test-clone-source/.git/hooks/pre-commit.sample
+      478  09-26-2026 14:40   test-clone-source/.git/hooks/applypatch-msg.sample
+     4726  09-26-2026 14:40   test-clone-source/.git/hooks/fsmonitor-watchman.sample
+      544  09-26-2026 14:40   test-clone-source/.git/hooks/pre-receive.sample
+     1492  09-26-2026 14:40   test-clone-source/.git/hooks/prepare-commit-msg.sample
+      189  09-26-2026 14:40   test-clone-source/.git/hooks/post-update.sample
+      416  09-26-2026 14:40   test-clone-source/.git/hooks/pre-merge-commit.sample
+      424  09-26-2026 14:40   test-clone-source/.git/hooks/pre-applypatch.sample
+     1374  09-26-2026 14:40   test-clone-source/.git/hooks/pre-push.sample
+     3650  09-26-2026 14:40   test-clone-source/.git/hooks/update.sample
+     2783  09-26-2026 14:40   test-clone-source/.git/hooks/push-to-checkout.sample
+        0  09-26-2026 14:40   test-clone-source/.git/refs/
+        0  09-26-2026 14:40   test-clone-source/.git/refs/heads/
+       41  09-26-2026 14:40   test-clone-source/.git/refs/heads/main
+        0  09-26-2026 14:40   test-clone-source/.git/refs/tags/
+      137  09-26-2026 14:40   test-clone-source/.git/index
+       21  09-26-2026 14:40   test-clone-source/.git/COMMIT_EDITMSG
+       31  09-26-2026 14:40   test-clone-source/main.py
+---------                     -------
+    24831                     42 files
+=== Step 4: Verify MANIFEST.tsv Content ===
+clone	branch	head	dirty_files	unpushed_commits	zip_sha256	zip_bytes	verified
+test-clone-source	main	f3004a0277	2	0	9debc8df3cdd8d2656b3e5d6b0af6aec84ccca5b9a8287fbc8057c45d360528d	20192	PASS
+=== Step 5: Verify SUMMARY.md Content ===
+# Clone Backup Run — sample-repo (2026-09-26_144000)
+
+- **Date**: 2026-09-26T14:40:05.495623
+- **Total Clones Backed Up**: 1
+- **Total Archive Size**: 0.02 MB (20192 bytes)
+- **Integrity Verification**: ALL VERIFIED PASS
+
+## Backup Inventory
+
+| Clone | Branch | HEAD | Dirty | Unpushed | Size (MB) | SHA256 (first 12) | Status |
+|---|---|---|---|---|---|---|---|
+| `test-clone-source` | `main` | `f3004a0277` | 2 | 0 | 0.02 | `9debc8df3cdd` | ✅ PASS |
+=== Step 6: Test merge_cleanup.py --backup-first CLI parsing ===
+                        [--backup-first] [--backup-root BACKUP_ROOT]
+  --backup-first        Back up and verify candidate clone folders before
+=== Result: ALL CHECKS PASSED ===

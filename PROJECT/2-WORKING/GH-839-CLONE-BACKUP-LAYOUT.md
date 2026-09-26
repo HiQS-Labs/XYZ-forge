@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Approved plan for GH-839 standardized clone backup layout and integrity verification. Intake registered and rated 75/60/50/75. | Provision fresh clone, execute implementation of backup_clones.py and --backup-first flag, verify with existing test suites, run Codex QA. |
+| Implemented `backup_clones.py` utility and `--backup-first` CLI option in `merge_cleanup.py`. Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` and `skills/2-daily/merge-cleanup/SKILL.md`. Verified with `gh436-merge-cleanup.py` (180/180 pass), `TestParityGuard` (7/7 pass), `gh589-skill-viewer.sh` (8/8 pass), and manual check in `TESTS-RESULTS/2026-09-26+GH-839/`. | Codex final QA relay, commit diff, push branch, and open ready PR against `development`. |
 
 ## Context & Problem Statement
 
