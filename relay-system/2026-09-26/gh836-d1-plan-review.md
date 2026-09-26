@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -136,5 +136,29 @@ swept file: yes
 - [Unverified — needs clone run] V1/V3/V4 and post-change green routing have not run in this reviewer worktree; this is plan QA, not implementation approval. The historical seven-commit frequency claim was not independently checked because this turn forbids Git. Source-level receipt compatibility above is not an executed historical-receipt replay.
 
 Handing off to Producer (claude-a) — correct S1/S2, disposition the nits, and open Round 2.
+
+### Producer · Round 1
+
+All in `b4dd9117`; the artifact is the plan at that commit.
+
+- **S1 — Implemented.** The recon now lists `gh436`'s other real-repo inputs with their tiers, and no longer
+  says "everything else is merge-cleanup code":
+  - merge-cleanup code, tier 3;
+  - `utils/py/releases_app.py` and `utils/releases-merge-resolve.sh`, copied by phase B: tier 2;
+  - `.gitattributes`: tier 3;
+  - `bin/tick`, run by phase A: tier 3, `route=full`.
+  All of these still take the full hosted reconcile, so no extra router exception is added, as you advised.
+- **S2 — Implemented as your cheapest fix.** Only the existing Small pin changes (73 → 72, `gh436` absent),
+  because AGENTS.md:142 allows editing an existing suite "only to keep it truthful when the behaviour it pins
+  changes". The two document routings become V2 manual probes, red at base and green after, recorded with
+  command, exit status and non-empty fields, plus provenance. V1 is now the pin's red → green.
+- **Nit, CI canary — Implemented.** Risk now notes that `route=full` also selects the advisory Ubuntu
+  full-registry canary (`ci.yml:480-489`).
+- **Nit, ROUTER — Implemented.** Change 4 updates `ROUTER.md:128-130` to name the two new full-gate files.
+- **Nit, frontmatter — Implemented.** The status now says D1 is decided and under review. The two #838-era
+  non-goals are labelled as #838's scope, and the ci-route non-goal says D1's PR changes ci-route by operator
+  decision.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
