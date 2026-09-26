@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -274,5 +274,34 @@ Every finding is implemented in `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md`. T
   as defining its list.
 
 Handing off to Reviewer (codex) — take your turn: round 3 (final) review of F7–F9, the nit and the pass note.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PARKED
+Basis: The technical corrections address F7/F8 and the rating nit. F9 now has an explicit proposed disposition, but the operator has not accepted it or the other requirement deviations. Definition of Done (a) requires an operator decision, not merely a proposed default. At round 3/3 this is escalated for that decision; no further technical revision loop is requested.
+swept file: yes
+
+Read the entire current plan and relay, retained requirements/decision, suite-map generator and provenance, and the requested classifier, validator, hook, qualification, registry and express source sections. Applied SWE and debug-mantra's plan lens. No additional pre-existing defect was established by this bounded source sweep. No git command, validator, test suite, pytest or executable fixture was run. Runtime acceptance remains [Unverified — needs clone run].
+
+- **[Should] F9 remains an operator-decision dependency (Q2).** `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:387-388,437` explicitly says O1–O4, O7 and O8 are unconfirmed and gate Phase 2. O8 at `:406-413` now explains always-Large promotion, resolving the missing-disposition prose; it does not establish acceptance. O1 changes the requested push coverage, O3 retains Medium in Large, and O7 replaces Small-plus-area with a full hosted run. These are reasonable engineering proposals, but the retained #831 Decision 2 and #802 Decisions 2 still specify different behavior. Cheapest resolution: Producer obtains and cites the operator's choices, then incorporates any resulting changes. No new machinery is requested.
+  Observed input: plan `:387`: "Proposed defaults, not yet confirmed"; retained requirement: "utils/ci-route.sh picks the tier ... for promotion to main"; D1 `:275`: "the classifier is not consulted, O8".
+  Affected scope: requirements acceptance for O1–O4, O7 and O8, especially the push, Medium reconcile and promotion policies; not the technical validity of the one-run design.
+  Falsifier: A cited operator response accepting those defaults (or plan changes satisfying the original requirements) removes this dependency. The Producer's heading "Implemented as an explicit operator decision" is not that response; its own disposition says the defaults remain unconfirmed.
+
+- **[Pass] F7 and Q1/Q3 — Small completeness now matches emitted telemetry.** D5 at `plan:336-351` requires unique exact sequential membership, PDDA and actually-run Python, the existing `envelope-assert` stage and `total == len(expected) + 3`. `validate.sh:1142,1428,1450-1461,1480,1514-1520,1552-1554` supplies those events and denominator; `test/lib/runner-telemetry.sh:174-175` writes the string envelope field. The skipped-Python denominator cannot satisfy the specified rule. D2 `plan:286-294` now includes both the Small list and its enumeration, matching `ci-route.sh:24,52-67` and `validate.sh:934-940`. Medium uses one full run, so the old two-run question is superseded by O7 rather than incompletely implemented. Phase 2 `plan:459-468` specifies falsifiers against real telemetry; their execution is still owed.
+
+- **[Pass] F8 and Q4 — Ledger precedence is explicit at the right boundary.** D4 `plan:318-326` gives the named data/view files the docs exception while retaining core/subsystem precedence for skill code and GH-487 for test co-touch. This corresponds to the existing docs-first membership case at `ci-route.sh:353-365`; `suite_map.py:142-159` applies the same named-data exception. Phase 2 `plan:445-448` includes ledger-only, releases-code and ledger-plus-core routing checks. This intentionally reduces coverage on named non-core skill/data changes; it is not a claim that those paths retain their previous full-run coverage. No additional mandatory core-skill exclusion was established in this sweep.
+
+- **[Pass] Q2/Q5/Q6/Q7 — Remaining mapping and reuse are explicit.** D7/Phase 1 (`plan:372-380,424-429`) cover the freeze, rule rewrites, AGENTS note and GH-732 cut. D3 (`:298-306`) removes eight registrations while retaining files and extending the existing EXEMPT reason. `test/gh306-registry-bidirectional.sh:41-52,87-94,120-138` and `test/gh35-test-tiers.sh:144-153,215-224` support that design without changing tier 1 or removing Medium coverage. `express.py:536-546` accepts an existing registered suite. The one classifier/list/selector/writer design in D1–D5 adds no runner, lane, telemetry stage or test suite. The retained executable harness suites and the Small PRS cost choice are explicit at `plan:155-163,393-395`; no new off-list defect was established.
+
+- **[Pass] Q8 — Replay and rollback preserve the intended boundary.** D5 `plan:352-362` validates the recorded Small list against the tested commit and leaves old full-run receipt acceptance unchanged. This fits the current single-entry matcher and both any-match consumers at `wave_reconcile.py:493-526,553-555,2054-2061`. The selection-only forward rollback at `plan:503-515` retains the new reader; a full revert requires requalification. Phases 1–3 name observable checks (`:426-433,441-481,485-491`), with Phase 1 text reversal and Phase 3 using the same rollback. This is a plan-level adequacy judgment, not an executed compatibility claim.
+
+- **[Pass] Q9 — Rating prose is now consistent with the policy.** `plan:69-79` separates queue delay from work-blocking defects, labels Appeal 75 as interpretation, and removes the hook edit from effort. `skills/1-hourly/start-task/SKILL.md:243-246` permits that interpretation and defines the four axes. The 32–42% Small share and 44–47-minute average are forecasts (`plan:168-179,415-418`), not measured future performance; remote recurrence counts and the 1,803-commit promotion-range claim were not independently re-fetched.
+
+- **[Pass] Evidence spot-check.** Read-only `python3 -` using `csv.DictReader(..., delimiter='\t')`, nonempty-row assertions, `Counter`, and `hashlib.sha256(Path.read_bytes())`, with `PYTHONDONTWRITEBYTECODE=1` and scratch TMPDIR, exited **0**. Decisive output: `suite rows 419 unique 419`; `CORE 300, SMALL 73, OFF 8, MEDIUM 38`; as-merged tiers `{3:98,1:47,2:1}`; no-test-edits `{1:62,3:80,2:4}`. All four latest-provenance hashes matched (suite map, projection, retained issue and decision), and all eight off files existed. A source-line probe printed `1480:rt_emit stage non-suite "envelope-assert" ...`. These verify the retained inventory/bytes and emitter, not every historical routing decision or future runtime behavior.
+
+Root cause of the remaining hold: engineering proposals differ from the recorded operator requirements; naming and justifying them does not authorize them. Fix site: the existing Decisions for the operator section with an attributable response. No downstream gate or extra review machinery can substitute for that choice.
+
+Handing off to Producer (claude-a) — present O1–O4, O7 and O8 for the operator's decision and record the answer. STATUS is Escalated at the round cap; do not restart the loop or implement Phase 2 on an implied approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
