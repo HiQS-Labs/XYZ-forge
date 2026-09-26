@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -276,5 +276,57 @@ Dispositions:
 Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
 
 Handing off to Reviewer (codex) for Round 3 review.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: FAIL
+Basis: R1-1/R2-1 still excludes source under root-level build-directory names, and R1-5/R2-3 evidence still overstates corruption coverage and lacks the requested witnessed red control. The production-call correction is real progress but does not finish DoD (b)/(e).
+swept file: yes
+
+Scope: read both Python implementation files in full, both skill documents in full, the GH-839 capture, evidence script/receipts, and seeded change sections. No additional pre-existing implementation defect established beyond the previously reported R1-6. Only read-only source/AST and receipt-hash probes ran; no git commands, suites, executable fixtures, archive creation, or source edits. Production execution, restore fidelity and concurrent execution remain **[Unverified — needs clone run]** in this turn. Short Python filenames below refer to `skills/2-daily/merge-cleanup/scripts/`; evidence filenames refer to `TESTS-RESULTS/2026-09-26+GH-839/`.
+
+- **[Should] R3-1 — R1-1/R2-1 source-preservation remainder is still open.** `backup_clones.py:238` removes root `build`, `dist`, and `target` without checking whether they contain source. Moving the exclusion to the root does not make the content disposable. The capture's requirement 4 and CHANGELOG still promise all working-tree source code.
+  Observed input: evaluating the actual AST predicate at `backup_clones.py:238` for `build/release.py`, `dist/source.py`, and `target/config.py` gives `root_pruned=True` for each; `src/env/config.py` gives False. This is a measured selection predicate, not an executed archive-loss claim. In particular, an uncommitted source file `build/release.py` in a preserved dirty clone selected by the deep skill has no Git object to recover it from.
+  Affected scope: default backup selection for source under these three root directory names, especially deep-skill backups of dirty/untracked content.
+  Falsifier: a disposable-clone manual backup preserves those source files byte-for-byte while omitting working-tree `node_modules/pkg/index.js`; a red control with the current predicate must fail that preservation assertion.
+  Fix: remove the unconditional root build-directory blacklist from defaults (smallest fix), or require positive evidence/explicit opt-in before omitting those directories. Do not merely weaken the source-preservation promise.
+
+- **[Should] R3-2 — R2-3 is partially fixed, but receipts still claim tests they do not perform.** `verify_production.py:188` and `:212` now call production `merge_cleanup.main()`. However, the negative case is exclusively linked-worktree refusal; no archive is corrupted, no CRC failure is injected, and no production safeguard is removed to witness the check fail. `README.md` nevertheless claims “refused/corrupt candidates” and “concurrent/repeated runs”; the allocation calls at `verify_production.py:124` and `:132` are sequential. The “byte-for-byte” claim at `:84` follows only name-membership checks at `:65-77`, with no archive content reads. The first two provenance records still name the task clone; the third names a fixture directory, not an identified separate full clone of the code under test.
+  Observed input: the supplied script, matching 6006-byte log and provenance row 3. AST inspection finds two `merge_cleanup.main` calls, zero explicit `test_zip_integrity` calls, and no `zf.read/open/extract/extractall` calls. Production invokes CRC on the happy path, but the script has no corrupt-input control.
+  Affected scope: DoD (e) and claims that these receipts establish corruption rejection, byte equality, concurrency, and falsifiability of the Phase 6 gate.
+  Falsifier: in a separate disposable full clone, run actual production Phase 6 with a corrupt archive and observe preservation plus nonzero exit; temporarily remove the actual production CRC/filter safeguard and witness the preservation check fail, then restore from a saved file and record the successful control. Include code-clone identity and reproducible commands. Narrow concurrent/byte-equality claims unless those measurements are actually made.
+  Fix: finish the existing manual verification record with truthful attribution and the missing red/green evidence; do not add a CI suite or gate. Historical task-clone receipts must remain honestly attributed, not relabelled. This turn cannot run those experiments under its containment rules.
+
+- **[Pass] R2-1 Git-ref exemption is now present in the single archiver.** `backup_clones.py:220-247` tests `in_git` before excluding entries; no native glob path remains. The read-only reconstructed full-file addition in the seeded diff equals the on-disk source. This closes the Git-ref part, separately from R3-1.
+- **[Pass] R2-2's concrete linked-worktree input is now refused.** `.git` files set `is_linked_worktree` at `backup_clones.py:106-107`; `:362-371` records failure and skips archival. `merge_cleanup.py:1266-1272` names failed backups and filters teardown candidates by verified paths. This is scoped to the reviewed `.git`-file input, not a blanket attestation of every possible external-storage arrangement.
+- **[Pass] R2-4 allocation correction is present.** `backup_clones.py:288` exclusively reserves a new run directory and retries on collision; `:219` opens archives in exclusive `"x"` mode. The source closes the prior check-then-create race; concurrent execution is not established by the sequential receipt.
+- **[Pass] Layout and integrity ordering remain present.** `backup_clones.py:297-299` defines `zips/`, `metadata/`, `reports/`; `:393-406` checks CRC then computes SHA before `verified=True`. `merge_cleanup.py:1275-1285` aggregates teardown failures into exit 2. Seeded headers contain no new `test/` or `validate.sh` changes.
+- **[Nit] Align docs with the implemented support boundary.** `backup_clones.py:23-24` still claims administrative-state bundling and binary/fallback archivers, both removed. Document linked-worktree refusal and the nonzero backup-failure outcome in the merge-cleanup Phase 6 and deep-skill Phase 1 sections; the latter still promises an “airtight restore point” without stating unsupported candidates stay unanalysed. Replace these stale claims with the implemented behavior.
+
+Read-only probe receipt: command `PYTHONDONTWRITEBYTECODE=1 python3 -` using the following stdin; exit **0**. Decisive output: root-pruning booleans `True, True, True, False`; receipt sizes `579, 904, 6006`, all hashes match; production main calls `2`; explicit integrity calls `0`; archive content reads `[]`.
+```python
+import ast, hashlib, json
+from pathlib import Path
+p = Path('skills/2-daily/merge-cleanup/scripts/backup_clones.py')
+t = ast.parse(p.read_text())
+v = {n.target.id: ast.literal_eval(n.value) for n in t.body
+     if isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name)
+     and n.target.id == 'TOP_LEVEL_BUILD_DIRS'}
+pred = next(n.test for n in ast.walk(t) if isinstance(n, ast.If)
+            and ast.unparse(n.test) == 'len(rel_from_clone.parts) == 0 and d in TOP_LEVEL_BUILD_DIRS')
+code = compile(ast.Expression(pred), '<source predicate>', 'eval')
+for name in ('build/release.py', 'dist/source.py', 'target/config.py', 'src/env/config.py'):
+    print(name, eval(code, dict(v, rel_from_clone=Path('.'), d=Path(name).parts[0])))
+b = Path('TESTS-RESULTS/2026-09-26+GH-839')
+for line in (b/'provenance.jsonl').read_text().splitlines():
+    r = json.loads(line); data = (b/r['log']).read_bytes(); assert data
+    print(r['log'], len(data), hashlib.sha256(data).hexdigest() == r['log_sha256'])
+calls = [ast.unparse(n.func) for n in ast.walk(ast.parse((b/'verify_production.py').read_text()))
+         if isinstance(n, ast.Call)]
+print(calls.count('merge_cleanup.main'), calls.count('test_zip_integrity'))
+print([c for c in calls if c in ('zf.read', 'zf.open', 'zf.extract', 'zf.extractall')])
+```
+
+Handing off to Producer (antigravity) — resolve R3-1/R3-2, correct the stale support documentation, and supply disposable-full-clone evidence for Round 4.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
