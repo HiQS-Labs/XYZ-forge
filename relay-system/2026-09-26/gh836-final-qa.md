@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -139,5 +139,41 @@ Write findings in the Log per the turn rules. Set `STATUS: Approved` only if the
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The implementation and recorded focused witnesses support the intended trims. Two documentation corrections are needed to meet DoD (b)/(e): D2 must name the actual runtime implementations, and claims must distinguish defaults/evidence from the pending full gate. No source-behaviour change is requested.
+swept file: yes
+
+Read the entire supplied diff, the complete changed test/hook files and relay README, the full GH-836 plan, and the recorded witnesses; inspected the underlying emission/scan and collection seams. Historical CHANGELOG/ledger entries are not independently re-attested. The pre-existing limitation noted below is not introduced by this patch. No additional correctness defect was identified in the trimmed legs.
+
+- **[Should] S1 — Make D2's live-run obligation cover the authoritative implementations.** `relay-automation/README.md:54` names only `codex-turn.sh`, `agy-turn.sh` and the Bash prompt. Both shims dispatch to Python by default (`relay-automation/codex-turn.sh:9-18`; the frozen banner explicitly directs changes to Python); `utils/py/codex-turn.py:51-53` and `utils/py/agy-turn.py:373-383` run through `RelayTurnLib`. Name those Python adapters and the applicable shared `utils/py/rtl.py` turn path alongside their shims; retain the Bash prompt reference, since `utils/py/rtl.py:849-850` delegates to it. This is a documentation correction to option C, not a request for a new gate, suite, or live run for this docs-only clarification. Rebuild the existing package after README edits.
+  Observed input: a change to `utils/py/codex-turn.py:53` changes the prompt passed to the real agent without touching any path currently named by the obligation.
+  Affected scope: the existing Codex/Agy live-turn implementation and prompt paths exercised by this check.
+  Falsifier: if the default shim did not execute the Python adapter, adding it would be unnecessary; the explicit `exec python3 .../codex-turn.py` at shim line 18 establishes the opposite.
+
+- **[Should] S2 — Correct the scope and tense of the evidence claims.** `relay-automation/README.md:51-52` says “Every gate skips it” and “nothing runs it unless someone asks”; `test/relay-self-sufficiency.sh:12-14` similarly says “everywhere.” Direct `validate.sh` still registers the live suite (`validate.sh:659-661`) and the suite defaults the skip variable to **0** (`test/relay-self-sufficiency.sh:33`). Say the four named wrappers default to skipping, explicitly preserving direct validate's existing behaviour. In the plan, change `:237-238` (“default skip is witnessed in the final full gate's log”) to **pending the post-review clone run**, until that receipt actually exists. Also reconcile `:254-256` with the delivered evidence/scope: six staggered runs, not ten; rollback includes the hook, ledger/docs/evidence and rebuilt package, not just test files and this doc. These are prose fixes only; do not broaden runtime scope.
+  Observed input: an unset `RELAY_SELF_SUFFICIENCY_SKIP` takes the live path under a direct full `validate.sh`; the review packet itself says the full hook run occurs after this review, while Results already claims its witness.
+  Affected scope: the new default-skip documentation and GH-836 result/rollback claims.
+  Falsifier: a default skip assignment in direct `validate.sh`, or an existing retained full-hook receipt for the reviewed state, would invalidate the corresponding correction; neither is present in this packet.
+
+- **[Pass] 21e preserves a meaningful race witness.** `test/gh549-work-events.sh:1065-1077` reads before announcing arrival, uses a per-process mutable counter, unique PID markers in a freshly created directory, and a bounded ten-second wait. The count assertion at `:1095-1097` remains the authority if rendezvous times out. `TESTS-RESULTS/2026-09-26+GH-836/witnesses.log:3-8` records six successful staggered cases, positive `275=275` and negative `277–279>275`. This supports the requested 0/1.5/3-second startup envelope, not an unlimited reliability guarantee. Exit 4 is explicitly the writer-lock refusal (`utils/py/releases_app.py:91,403`), so accepting it while separately requiring duplicates is honest.
+
+- **[Pass] The 21e status pattern accepts exactly 0 and 4 for real wait statuses.** I extracted the `case " $RRC " ... esac` span from `test/gh549-work-events.sh:1092-1093` and evaluated all 65,536 pairs from 0..255 under Bash, comparing acceptance to `(a == 0 or a == 4) and (b == 0 or b == 4)`. Command: `python3 -B` with `subprocess.run(['bash','-c', code])`, where `code` wraps that unchanged span in `for ((a=0;a<256;a++)); do for ((b=0;b<256;b++)); do`, sets `RRC=" $a $b"`, and substitutes only `bad() { accepted=0; }` / `ok() { accepted=1; }`. Extracted Bash probe exit **0**, decisive output: `status pairs=65536 accepted=4 mismatches=0`. This independently supplies the pattern check; the supplied `witnesses.log` does not itself contain the unit check mentioned in the packet. No suite or fixture was executed.
+
+- **[Pass] 21f's event assertions retain their meaning.** `backfill_nodispatch` at `test/gh549-work-events.sh:168-171` scopes the switch to backfill and advances only the connector cursor. Reconcile remains enabled at `:1153,1160,1171,1207`; `_scan_review_ready` derives suppression from event history (`utils/py/releases_app.py:5264-5324`). The retained after-run records all three red controls (`TESTS-RESULTS/2026-09-26+GH-836/after-gh549.out:120-122`). W2 (`witnesses.log:9-11`) measures 92 versus 104 seconds, so keeping the small cursor advance is justified; these two whole-leg timings are not a precision benchmark. No additional mechanism is needed.
+
+- **[Pass] gh436's nested execution removal is supported.** `test/gh436-merge-cleanup.py:863-869` imports all three phases then calls unittest; `test/gh534_phase_c_tests.py:562-591` retains named-method existence checks. A read-only `python3 -B` AST/regex inventory over those four modules and SKILL.md's capability table exited **0**, output `named tests=17 missing=[]`. The decisive execution evidence is W3a/W3b (`witnesses.log:12-19,25-31`): missing row fails; corrected phase-B injection makes the registered wrapper exit 1 naming `TestE6Gate.test_gate_red_prevents_the_merge`. The failed first injection is honestly disclaimed. The docstring is accurate for the full registered suite; focused parity-only selection naturally does not execute the other tests.
+
+- **[Pass] gh649 and the narrow D2 code change match the intended scope.** `test/gh649-pdda-migration.sh:4,15` now compares physical paths; W4 records before rc 1 `FAIL - resolver`, after rc 0 (`witnesses.log:20-22`). D2 changes only the full-gate invocation (`githooks/pre-push:299`), leaving docs/tier-2 paths unchanged. A standalone `bash -s` probe of `RELAY_SELF_SUFFICIENCY_SKIP="${RELAY_SELF_SUFFICIENCY_SKIP:-1}" bash -c 'printf "%s\n" "$RELAY_SELF_SUFFICIENCY_SKIP"'` under unset/empty/0/1 exited **0**, output `unset -> 1`, `empty -> 1`, `zero -> 0`, `one -> 1`. This establishes expansion semantics, not a full hook run.
+
+- **[Pass] Package/scope and measured savings.** Read-only `python3 -B` / `tarfile.open('skills/1-hourly/relay-automation/relay-pkg.tar.gz')`, comparing every regular member's bytes to its existing source, exited **0**: `archive files=18 drift=[]`. An initial probe used the incorrect root-level tarball path and failed with `FileNotFoundError`; no extraction or mutation occurred. The diff adds no suite, registry entry or gate machinery. The ledger's GH-836 row remains In progress (`releases.sql:754`); CHANGELOG's 346→147 and 292→239 seconds agree with `baseline-summary.log:2-4` and `after-summary.log:2-4`. The sum saves 252 seconds locally; hosted Small improvement remains unmeasured.
+
+- **[Nit] Pre-existing sweep limitation, not a new D2 requirement.** Assertion A in `test/relay-self-sufficiency.sh:145-149` checks commit count and merely that claimer is not `claude-a`; by itself it does not prove the agent completed release (a still-claimed `codex` value satisfies that predicate). Avoid citing A alone as handoff proof. No change to this test's semantics is requested in option C; any future strengthening needs its own clone witness. Separately, the old README worker recipes omit the `--reviewer` flag that the same README's supervisor contract requires (`relay-automation/README.md:327-333`); correct those examples when maintaining that section, without expanding this patch.
+
+- **[Unverified — needs clone run]** Full-hook execution, actual default skip in its log, and final gate readiness are intentionally outstanding under this turn's constraints. Recorded focused results were reviewed, not rerun here. Approval of this review must never be presented as that final gate receipt.
+
+Handing off to Producer (claude-a): correct S1/S2, disposition the nits, and return the updated packet for round 2. No code redesign or additional suite is requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
