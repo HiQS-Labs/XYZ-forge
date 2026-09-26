@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan review round 2 (FAIL, 3 shoulds + 1 nit) dispositioned: D5 now checks the emitted `envelope-assert` stage, ledger files get an explicit docs exception ahead of subsystem claims, promotion is O8, and the rating prose is corrected. Round 1's six findings were implemented earlier. | Codex plan review round 3, the last. Phase 1 after approval; Phase 2 after the operator confirms O1–O4, O7 and O8. |
+| Plan review done. Codex round 3 passed every technical question and escalated only for the operator's decisions on O1–O4, O7 and O8. The operator accepted all six on 2026-09-25 ([relay](../../relay-system/2026-09-25/gh831-plan-review.md)). | Phase 1: the test-freeze rules as a docs-only PR. |
 
 ## Table of contents
 
@@ -52,13 +52,20 @@ not restate them. Retained copies for offline review:
 `TESTS-RESULTS/2026-09-25+GH-831/requirements-issue-831.md` and
 `TESTS-RESULTS/2026-09-25+GH-831/decision-802-comment-5841529958.md`.
 
-Operator answers taken on 2026-09-25. These are the only operator decisions; O1–O7 below are proposed
-defaults, not yet confirmed.
+Operator answers taken on 2026-09-25, in the `/start-task` session that wrote this plan:
 
 - Medium = mapped non-core code.
 - "Off" = unregistered, files kept.
 - Enforcement = rules and skill text only.
 - Sequencing = issue + plan after #821.
+- After the Codex plan review escalated for them, the operator accepted O1, O2, O3, O4, O7 and O8 as proposed:
+  - O1: fast push checks;
+  - O2: gh549 and gh436 stay in Small;
+  - O3, O4 and O7: Medium handling, all three;
+  - O8: promotion always runs Large.
+
+  O5 and O6 were not asked. O5 follows the no-new-tests rule, and O6 is a recommendation outside this
+  issue.
 
 **Rating `rated 85/70/75/40` (2026-09-25).**
 
@@ -384,8 +391,8 @@ deliberately does not, and records that as O8 for the operator. GH-509 becomes t
 
 ## Decisions for the operator
 
-**Proposed defaults, not yet confirmed.** Phase 1 does not depend on them. Phase 2 starts only after the
-operator confirms or changes O1–O4, O7 and O8.
+**Confirmed by the operator on 2026-09-25: O1, O2, O3, O4, O7 and O8.** O5 and O6 remain proposals; O5 follows
+the no-new-tests rule. Each entry keeps its reasoning.
 
 - **O1 — Pushes keep today's cheap checks for Small and Medium. Default: yes.** The hosted run after the merge
   runs the tier. Running Small at every docs push would cost about 6.5 minutes locally instead of 84 seconds,
@@ -434,7 +441,7 @@ This lands first and alone, so agents see the freeze before the gate change is r
 
 ## Phase 2 — Tiers (gate code PR)
 
-This starts after the operator confirms O1–O4, O7 and O8.
+The operator confirmed O1–O4, O7 and O8 on 2026-09-25.
 
 1. `utils/ci-route.sh`: add `SUBSYSTEM_TESTS_small` (D2), the Medium list additions (D3), and the D4 docs
    surfaces.

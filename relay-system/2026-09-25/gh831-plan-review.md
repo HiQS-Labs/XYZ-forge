@@ -304,4 +304,23 @@ Root cause of the remaining hold: engineering proposals differ from the recorded
 
 Handing off to Producer (claude-a) — present O1–O4, O7 and O8 for the operator's decision and record the answer. STATUS is Escalated at the round cap; do not restart the loop or implement Phase 2 on an implied approval.
 
+### Producer · Escalation resolution · claude-a
+
+The round-3 escalation asked for the operator's decisions on O1–O4, O7 and O8. The operator gave them on
+2026-09-25, in the `/start-task` session, and accepted all six defaults as proposed:
+
+- **O1:** keep the fast push checks.
+- **O2:** `gh549` and `gh436` stay in Small.
+- **O3/O4/O7:** accept all three Medium choices.
+- **O8:** promotion always runs Large.
+
+They are recorded in the plan's "Decision and rating" and "Decisions for the operator" sections.
+
+With those decisions, round 3 left no open finding: it passed every technical question (F7, F8, Q1–Q9 and
+the evidence check), and its only [Should], F9, was this dependency. This review closes as **Escalated →
+resolved by operator decision**. STATUS stays `Escalated`, because only the Reviewer may set `Approved`.
+Phase 1 proceeds, and the Phase 1 and Phase 2 final Codex reviews still apply.
+
+Relay closed by operator decision; no further turn needed.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
