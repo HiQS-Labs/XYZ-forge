@@ -69,6 +69,7 @@ bash githooks/install.sh --check # is this clone gated? exit 1 if not
 ./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
 ./validate.sh --sequential # force the sequential run (see the hook’s measured GREEN in Ns line)
 ./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
+./validate.sh --sequential --subsystem small  # GH-831: the Small run that qualifies a docs/ledger/skill landing
 ./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
 ./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
 bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
@@ -104,11 +105,26 @@ and the reason, so a fallback is never silent.
 
 **GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
 owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
-agent-chorus, standup, skills-army-hq); a push the classifier rates `tier=2` runs only those focused
+agent-chorus, standup, skills-army-hq, plus `small`, a gate-only list that claims no paths); a push the classifier rates `tier=2` runs only those focused
 suites at the boundary, `--tier 1` runs the docs gate, and everything else — unknown paths, unclaimed
 test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
 Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
 sequential full run qualifies (GH-509).
+
+**GH-831 (2026-09-25) made these three tiers for what qualifies a landing.** The push hook is unchanged.
+After a merge, the hosted reconcile (`wave-reconcile.yml`) qualifies each landing with **one** run,
+picked by classifying the landing's changes at the tested commit:
+
+- **Small** — docs, the ledger dumps (`releases.*`, `harnesses.*`) and non-core skill files (tier 1):
+  `validate.sh --sequential --subsystem small`, the PDDA, PRS and canary suites plus the PDDA gate
+  and the Python layer. The receipt records the list it ran.
+- **Medium** — mapped non-core code (tier 2): the full registry at the reconcile, the area's suites at push.
+- **Large** — core harness, unmapped code, gate surfaces (tier 3): the full registry.
+
+Promotion always runs the full registry. Eight skill-text suites are off, recorded in
+`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). Core
+skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) are never docs.
+Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
 
 `--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
 Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen the run

@@ -533,10 +533,11 @@ def cmd_check(args, expect_driver=frozenset()):
                "issue #%s is %s — the work may already be landed; run the preflight "
                "already-landed probes before re-doing it" % (args.issue, meta.get("state")), issue=args.issue)
 
-    # Step 4 — the fix must carry its regression suite, registered in validate.sh.
+    # Step 4 — the fix names the existing suite that covers it, registered in validate.sh (GH-831:
+    # no new suites; a fix no existing suite covers goes through /start-task instead).
     suite = normalize_suite(args.suite)
     if not os.path.isfile(os.path.join(root, suite)):
-        refuse(root, "suite-missing", "%s does not exist — a hotfix without its regression suite is a claim, not a fix" % suite, issue=args.issue)
+        refuse(root, "suite-missing", "%s does not exist — name the existing suite that covers the fix (GH-831: no new suites)" % suite, issue=args.issue)
     validate = os.path.join(root, "validate.sh")
     with open(validate, encoding="utf-8", errors="replace") as f:
         vbody = f.read()
@@ -566,8 +567,8 @@ def cmd_docs(args):
     # GH-592 I8: the scaffold names the suite (Status table, acceptance line, CHANGELOG
     # bullet); validate it before ANY write so a missing --suite cannot leave a half-born doc.
     if not (args.suite or "").strip():
-        die("express-docs: --suite is required (the registered regression suite, e.g. test/gh%d-<slug>.sh) — "
-            "nothing was written" % args.issue)
+        die("express-docs: --suite is required (the existing registered suite that covers the fix, e.g. "
+            "test/<existing-suite>.sh) — nothing was written")
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url"])
     meta = json.loads(iv.stdout)
 
@@ -604,11 +605,11 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix qualified for /express; regression suite {suite} registered (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #{n} closes |
+| Fix qualified for /express; existing suite {suite} covers it (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #{n} closes |
 
 ## Acceptance Criteria
 
-- [x] Regression suite {suite} registered as the landing gate (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
+- [x] Existing suite {suite} covers the fix and is its landing gate; no new suite (GH-831). (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
 - [x] Single-subsystem, risk-bounded diff (express qualification passed).
 
 ## Merge evidence
@@ -627,7 +628,7 @@ goal: >
     # CHANGELOG — newest-first under a fresh dated Unreleased section.
     cl = os.path.join(root, "CHANGELOG.md")
     bullet = ("- **GH-%d: %s.** (express hotfix, GH-267 lane; "
-              "suite %s registered as the landing gate.)\n" % (args.issue, meta["title"], normalize_suite(args.suite)))
+              "existing suite %s as the landing gate.)\n" % (args.issue, meta["title"], normalize_suite(args.suite)))
     entry = "## [Unreleased] - %s\n\n### Fixed\n%s\n" % (today, bullet)
     with open(cl, encoding="utf-8", errors="replace") as f:
         cbody = f.read()
@@ -1240,7 +1241,7 @@ def main():
     p.add_argument("--issue", type=int, required=True, help="GH issue number")
     p.add_argument("--sha", help="commit SHA landed on development (resolved from git log if omitted)")
     p.add_argument("--suite", required=True,
-                   help="the registered regression suite the landing ran (GH-592: resume validates the "
+                   help="the existing registered suite the landing ran (GH-592: resume validates the "
                         "committed receipt against it; it never runs a suite or writes evidence)")
     p.add_argument("--repo", default=args_repo())
     p.add_argument("--release", help="target release GID (defaults to active release)")

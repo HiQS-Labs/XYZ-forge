@@ -56,7 +56,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Captured a missing empty-state component with a preflight contract. | Implement the component and its regression test. |
+| Captured a missing empty-state component with a preflight contract. | Implement the component and verify it with the existing suite that covers it. |
 
 ## Swarm Preflight Contract
 

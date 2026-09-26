@@ -60,7 +60,8 @@ from sources via `make-pkg.sh`). Extract into a repo that already has a capable 
 ```bash
 DIR="${1:-.}"                        # target repo root (must contain ./bin/tick)
 tar xzf skills/1-hourly/relay-automation/relay-pkg.tar.gz -C "$DIR"
-# wire the 4 tests into validate.sh's TESTS=( ... ), then:
+# in a target repo that allows new suites, wire the 4 tests into its validate.sh TESTS=( ... );
+# XYZ-forge itself registers no new suites (GH-831). Then:
 cd "$DIR" && bash validate.sh        # the relay-automation tests pass alongside tick's
 ```
 

@@ -14,7 +14,9 @@ usage: ./validate.sh [--parallel N | --sequential | --print-mode]
                 --throttle | --quiet-cpu          2 workers under nice — quiet-machine mode (GH-35)
                 --burst                           full-core width, cores-2 capped 8 — unattended speed
   tiers (GH-35) --tier 1|2|3                      1 = docs gate · 2 = subsystem suites · 3 = full (default)
-                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems)
+                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems);
+                                                  `--sequential --subsystem small` is the Small run that
+                                                  qualifies a docs/ledger/skill landing (GH-831)
                 --auto [base[.. head]]            classify the git diff, run the minimal safe tier
                 --paths-file <file>               tier 2 from a path list — what pre-push hands over
   environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
