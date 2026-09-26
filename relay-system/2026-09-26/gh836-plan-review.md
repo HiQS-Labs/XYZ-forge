@@ -215,4 +215,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may implement the approved plan and collect its specified evidence.
 
+
+### Attestation · relay-drive — 2026-09-26T16:32:56Z
+task: RELAY-gh836-plan-review
+reviewer: codex
+status: Approved
+reviewed-head: bae7c451acf908740eda3e55a3959ed66e18091f
+added-range: 18251+5184
+added-sha256: f02aeb686c7ac855f5d4364d0a885b0d0e2fd9f5fb16a239b8e680b5b7c698e8
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
