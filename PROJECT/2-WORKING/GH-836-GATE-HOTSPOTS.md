@@ -234,8 +234,8 @@ about 4.2 minutes.
     labelled as such.
 - **W4, `gh649` through the logical `/tmp` path:** `4bd8851a`'s version fails with `FAIL - resolver`; the fixed
   version passes.
-- **D2:** `gh544-pre-push-gate` 103/103 and `relay-pkg-freshness` 3/3. The default skip is witnessed in the final
-  full gate's log.
+- **D2:** `gh544-pre-push-gate` 103/103 and `relay-pkg-freshness` 3/3. The hook's default skip is **pending**
+  the final full-gate run in a disposable clone, after review.
 
 ## Verification and evidence
 
@@ -252,5 +252,6 @@ about 4.2 minutes.
 ## Risk and rollback
 
 - **Risk: a trimmed leg stops catching what it caught.** Each step witnesses its red control on the edited
-  suite, and step 1 repeats the race control 10 times.
-- **Rollback:** revert the PR. It touches only `test/` files and this doc.
+  suite, and step 1's race control was run under six staggered launches (W1).
+- **Rollback:** revert the PR. It touches test files, the pre-push hook's environment default, the relay README
+  and its rebuilt package, docs, the ledger row and evidence. There is no production state to migrate.

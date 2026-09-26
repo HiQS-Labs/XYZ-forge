@@ -48,10 +48,14 @@ contract for claims, scoped writes, cleanup, and handoff.
 `test/fixtures/minimal-relay.md`. It checks the fixture, the turn prompt, the shim, the agent and tick working
 together. It does not exercise the template `new-relay.sh` generates.
 
-Every gate skips it by default: `ci-local.sh`, `ci.yml`, the hosted reconcile, and the pre-push hook since
-GH-836. So nothing runs it unless someone asks. **A recorded live run is owed** before landing a change to:
+Four wrappers skip it by default: `ci-local.sh`, `ci.yml`, the hosted reconcile, and the pre-push hook since
+GH-836. A direct `./validate.sh` still runs it when an agent is on `PATH`, because the suite's own default is
+`RELAY_SELF_SUFFICIENCY_SKIP=0`. Nothing in the push or merge path runs it any more, so **a recorded live run
+is owed** before landing a change to:
 
-- the turn shims (`codex-turn.sh`, `agy-turn.sh`) or the turn prompt in `relay-turn-lib.sh`;
+- the turn shims: `codex-turn.sh` and `agy-turn.sh` here, and the Python adapters they dispatch to by default,
+  `utils/py/codex-turn.py` and `utils/py/agy-turn.py`;
+- the shared turn path: `utils/py/rtl.py` and the prompt in `relay-turn-lib.sh` it delegates to;
 - the fixture itself.
 
 Run it in a disposable full clone:

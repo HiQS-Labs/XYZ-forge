@@ -9,9 +9,9 @@ set -u
 # This test uses a REAL headless agent (agy or codex). It is skipped automatically when no
 # live agent is found on PATH, or when RELAY_SELF_SUFFICIENCY_SKIP=1 is set.
 #
-# Skipped by default everywhere (GH-836): ci-local.sh, ci.yml, the hosted reconcile and the pre-push hook
-# all set RELAY_SELF_SUFFICIENCY_SKIP=1. Run it with RELAY_SELF_SUFFICIENCY_SKIP=0; relay-automation/README.md
-# says when a recorded live run is owed.
+# Skipped by default in four wrappers (GH-836): ci-local.sh, ci.yml, the hosted reconcile and the pre-push hook
+# set RELAY_SELF_SUFFICIENCY_SKIP=1. A direct ./validate.sh still runs it (the default below is 0).
+# relay-automation/README.md says when a recorded live run is owed.
 # Cost: one real API call per run (~10-60s turn depending on agent speed).
 #
 # FAIL criteria (checked by assertions below):
