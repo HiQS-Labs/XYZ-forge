@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -191,11 +191,48 @@ Every finding is implemented in the plan (`PROJECT/2-WORKING/GH-831-THREE-TIER-G
 - **Q2 [Unverified] — Resolved.**
   - Retained copies are committed: `TESTS-RESULTS/2026-09-25+GH-831/requirements-issue-831.md` (the #831
     body) and `decision-802-comment-5841529958.md` (the operator decision).
-  - The plan now labels O1–O7 as **proposed defaults, not yet confirmed**, and states that Phase 2 starts only
+  - The plan now labels O1–O7 as **proposed defaults, not yet confirmed**, and states that Phase 2 starts only  [Unverified — no citation]
     after the operator confirms O1–O4 and O7.
   - The goal no longer says the classifier chooses at promotion; D1 and D6 state that promotion always runs
     Large.
 
 Handing off to Reviewer (codex) — take your turn: round 2 review of the revised plan against F1–F6 and Q2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: The single-run design resolves the multi-run receipt problem, but the Small acceptance rule names a nonexistent telemetry event, ledger routing has contradictory precedence, and promotion remains an undispositioned requirement deviation.
+swept file: yes
+
+Swept the entire revised plan and suite-map generator, the retained requirements and decision, and the requested runtime/test source sections. Reviewed using SWE and debug-mantra's plan lens. No additional pre-existing defect is asserted from this bounded source sweep; the findings below concern the proposed contracts against existing behavior. No git commands, suites, fixtures, pytest, or validator were executed. All runtime acceptance remains [Unverified — needs clone run].
+
+- **[Should] F7 — D5 requires an event the runner never emits (Q1/Q3).** Plan `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:333-334` requires a non-suite event named `clone-identity-invariant`. At `validate.sh:1480` the identity result is instead `event=stage,lane=non-suite,name=envelope-assert`; `:1483` adds `clone-identity-invariant` only to the shell's PASSED array. Requiring the proposed name rejects a complete Small run. Change D5 to consume the existing `envelope-assert` stage with rc 0 and retain the summary envelope check; keep `total == len(expected) + 3`. Do not add telemetry to satisfy the mistaken name. Also spell the summary's existing `envelope_rc` as string `"0"` (`test/lib/runner-telemetry.sh:174-175`), or explicitly normalize it.
+  Observed input: `validate.sh:1480`: `rt_emit stage non-suite "envelope-assert" "$_s" "$(rt_now_ms)" "$_re_rc"`; no emitter for `clone-identity-invariant`.
+  Affected scope: D5's new Small/tier-2 qualification rule only; existing tier-3 acceptance stays unchanged.
+  Falsifier: In the disposable-clone manual check, complete real Small telemetry must qualify; deleting or failing its envelope-assert stage must reject it without creating a new event type.
+  Probe: read-only Python over `Path('validate.sh').read_text().splitlines()`, selecting the envelope emitter and counting lines containing both `rt_emit` and `clone-identity-invariant`; exit **0**, decisive output `validate.sh:1480: rt_emit stage non-suite "envelope-assert" ...` and `clone-identity-invariant rt_emit occurrences 0`.
+
+- **[Should] F8 — Resolve ledger precedence before calling the projection D4-exact (Q4/Q9).** D4 `plan:310` promises `releases.db`/`releases.sql` route docs, but `:313` says subsystem claims take precedence, and `utils/ci-route.sh:36` already claims both for releases. Following that precedence gives tier 2 and therefore the full hosted run under D5. The projection unconditionally discards these paths before checking claims (`TESTS-RESULTS/2026-09-25+GH-831/suite_map.py:153-154`), so it implements a different policy. Cheapest fix: explicitly give these named ledger data files the intended docs exception while retaining subsystem precedence for skill/code paths; align the projection and record a ledger-only routing check alongside the existing exclusion check.
+  Observed input: the single changed path `releases.db`, claimed by `subsystem_of()`, matches both contradictory D4 rules.
+  Affected scope: the named ledger data paths; releases implementation and its dedicated-test co-touch behavior must retain their existing mapping.
+  Falsifier: `releases.db` alone must produce `route=docs,tier=1` under the intended policy, while `utils/py/releases_app.py` stays tier 2 and mixed ledger+core changes stay tier 3. If ledger is intentionally Medium instead, state that deviation and reprice the projection.
+  Probe: `printf '%s\n' releases.db | bash utils/ci-route.sh push`; exit **0**, decisive output `route=fast`, `tier=2`, `tier2_subsystems=releases`. This establishes the current claim; it does not execute the proposed classifier.
+
+- **[Should] F9 — Promotion needs an explicit requirement disposition (Q2).** The retained #831 Decision 2 and #802 Decisions 2 both say the classifier chooses at promotion. D1/D6 (`plan:271-275,352-356`) instead always run Large, but O1–O7 contains no promotion exception and the confirmation prerequisite (`:373-374`) cannot settle it. Add a named, justified promotion decision to that prerequisite, or implement the stated promotion requirement. O1, O3 and O7 are reasonable engineering proposals, but `:373` explicitly says they are unconfirmed; they must not be presented as settled operator decisions or an unconditional requirements pass. No need to reopen the sound one-run implementation choice while documenting this.
+  Observed input: retained requirement: “`utils/ci-route.sh` picks the tier ... for promotion to `main`”; proposed D1: “the classifier is not consulted”.
+  Affected scope: promotion policy and the plan's requirement-to-decision mapping, not a request to add machinery.
+  Falsifier: A cited operator decision explicitly accepting always-Large promotion, or a plan item that routes promotion as required, resolves this gap. A list of unconfirmed defaults alone does not establish that decision.
+
+- **[Pass] F1/F2/F4/F6 — Main round-1 corrections are sound (Q1/Q3/Q5/Q6/Q8).** R2 `plan:155-163` retains the three executable harness suites and distinguishes both gh527 files. D5 `:321-349` uses one qualifying run and stores the expected Small list tied to the tested commit, resolving the any-match problem at `wave_reconcile.py:553-555,2054-2061`; computing membership in that tested clone and replaying that commit's list is the correct boundary. The selection-only forward rollback `plan:475-487` keeps readers compatible with published receipts. R1 `:99-103` now names GH-487 accurately. F7 is the remaining completeness correction; F8 limits the revised forecast claim.
+
+- **[Pass] Q1/Q3/Q5/Q7 — Existing machinery supports the proposal.** `validate.sh:934-940,1113-1117,1420-1437,1552-1554` and `test/lib/runner-telemetry.sh:65-77` provide subsystem selection, numeric tier-2 start, sequential shell events and summary. `githooks/pre-push:258-295` preserves the stated dispatch; `gh306:41-52,87-94,120-138` supports explicit off exemptions; `gh35:144-153,215-224` pins retained membership and the unchanged cheap tier-1 path. The eight off names do not intersect the inspected gh141/gh379/release-manifest consumers. `express.py:536-546` still accepts existing registered coverage. D2/D3/D7 add list data and edit existing contracts, with no new suite, writer, runner or telemetry stage. Register `small` in the existing `SUBSYSTEMS` enumeration as well as defining its list: the listing loop at `ci-route.sh:52-67` ignores variables whose names are absent from that enumeration.
+
+- **[Pass] Q2/Q6 — Inventory and remaining requirement mapping are explicit.** D7 and Phase 1 map the freeze/rules; D3 maps off-with-files-kept; Phase 1 step 2 maps the GH-732 ledger cut; D1/D4/D5 map push and reconcile. Read-only Python CSV aggregation (`csv.DictReader(..., delimiter='\t')`, nonempty rows asserted) exited **0**: `suite rows 419 unique 419`, `CORE 300, SMALL 73, OFF 8, MEDIUM 38`; projection `146`, as-merged `{3:98,1:47,2:1}`, no-test-edits `{1:62,3:80,2:4}`. These reproduce table counts, not historical routing correctness. The retained suites/Small PRS cost tradeoff is explicit in R2 and O2; no further mandatory core-skill exclusion was established by this sweep.
+
+- **[Nit] Q9 — Tighten rating prose.** Appeal 75 remains an acceptable labelled interpretation under `skills/1-hourly/start-task/SKILL.md:245`. The plan's Severity 70 rationale calls the problem “work-blocking,” while the same policy's Severity row (`:243`) places work-blocking defects at 80–100. Either distinguish queue delay from that category or adjust the score. The effort paragraph still lists a pre-push-hook edit although D1 leaves it untouched. Recurrence figures were not independently re-fetched; the projection is a forecast subject to F8, not a measured future saving.
+
+Root cause of the remaining plan gaps: the proposed acceptance names were not matched to emitted telemetry, and the policy exceptions are not consistently expressed across requirements, prose and projection. Fix those descriptions at their existing boundaries; no new tests or gate machinery are needed.
+
+Handing off to Producer (claude-a) — disposition F7–F9, correct the plan, and request round 3 review. STATUS remains Open; no implementation approval is implied.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
