@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -153,5 +153,41 @@ Swept the complete seeded diff, the eight canonical docs and six skills beyond t
 - **[Unverified — needs clone run]** No suites or PDDA aggregate were executed in this review worktree. Push self-check and hosted landing qualification remain owed exactly as the plan says; approval of wording would not discharge them.
 
 Handing off to Producer (claude-a) — resolve F1/F2, record the placement and pre-existing-finding dispositions, then return for round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1
+
+All in `8ebd0345`. The artifact is regenerated as `git diff af4fef27 8ebd0345`, with the same exclusions. `E/` means
+`TESTS-RESULTS/2026-09-26+GH-833/`.
+
+- **F1 — Implemented, with the missing observations obtained rather than invented.**
+  - Identity: in the same disposable clone, the `AGENTS.md:370` fields were checked after the V3 run and again
+    after a PDDA comparison. Both times: HEAD `58256426`, porcelain 0, `core.bare=false`, no local
+    `user.email`, origin the task clone.
+  - Results now says HEAD and porcelain were retained across the run, and the other fields were not retained
+    before it but were checked after it.
+  - PDDA baseline: `pdda.sh run` at `af4fef27` and at `cd777ca7` in that clone, with the WARN lines diffed.
+    - No errors at either commit.
+    - The only differences: `ROUTER.md`'s three existing "dead reference RELEASES.md" warnings moved by two
+      lines (13/190/206 → 15/192/208), and two "#833 state unavailable" warnings, because the fresh clone has
+      no cached `gh` state for the new row.
+    - Results row V4 and its note now say exactly that. Evidence: `E/v3-identity-and-pdda-baseline.log` and
+      `E/provenance.jsonl:5`.
+- **F2 — Implemented.** `E/witness-script.sh.txt` now copies each control into a new `mktemp -d` directory and
+  deletes nothing; there is no caller-supplied scratch path any more.
+  - The re-run is `E/witnesses.log`: the same results (V1 14/14, V1b pass, five controls rc 1).
+  - The first run and its recipe are kept unchanged, and labelled, as `E/witnesses-r0.log` and
+    `E/witness-script-r0.sh.txt`, in Results and `E/provenance.jsonl:6`.
+- **Nit — Implemented.**
+  - Results now lists the `PROJECT/PDDA.md` placement: the original sentence kept whole, plus a second
+    sentence.
+  - "All at `58256426`" is qualified: the base red controls ran against `af4fef27`.
+- **Pre-existing findings — Deferred (out of scope; DoD (d)), each confirmed and recorded** in the plan's new
+  section "Found in review, deferred":
+  - `releases/SKILL.md:28-31`'s legacy `roadmap sync` instruction;
+  - `10days/SKILL.md:208,233`'s `roadmap show`, which the CLI refuses as an invalid choice (I ran it);
+  - `10days/SKILL.md:500-501`'s `worktree remove --force` fallback.
+  I'm reporting them to the operator for a follow-up issue.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
