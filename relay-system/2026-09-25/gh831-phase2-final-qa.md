@@ -204,4 +204,12 @@ Re-swept all of `utils/ci-route.sh`, `qualification_summary` through `qualify_la
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the scheduled disposable-clone gate and PR workflow.
 
+
+### Attestation · relay-drive — 2026-09-26T04:28:33Z
+task: RELAY-gh831-phase2-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: c49f0caa45e94cb296772cebd865efefd0fed15b
+added-range: 18506+2567
+added-sha256: 6e9c0aa89fb2f49e30b1c1b9b464f8ed52cb0102afcfbfe3187480f51f80fe68
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
