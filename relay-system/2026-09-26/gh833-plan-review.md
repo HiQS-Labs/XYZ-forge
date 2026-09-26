@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -123,5 +123,37 @@ Write findings in the Log per the turn rules. Set `STATUS: Approved` only if the
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The wording scope is proportionate, but R6 misattributes coverage and V1 does not witness the canonical-definition requirement. Revise the plan's evidence, not the runtime.
+swept file: yes
+
+Reviewed the entire seeded plan, including recon, verification, merge conditions and rollback. Findings include existing inaccuracies in that artifact. No artifact/source edits or suites were run.
+
+- **[Should] F1 — witness the canonical definition and its links separately from first-use expansion.** V1 at `.relay-artifacts/gh833-plan.md:145` accepts a missing glossary entry. Add a retained manual check that the glossary contains the single substantive definition and that other placements reach it (directly or through the FAQ); include a missing-entry/broken-link red control. No suite or gate machinery.
+  Observed input: An in-memory HOW-TO-USE with only the planned introductory expansion, leaving its glossary unchanged. Probe command: `python3` with `s=Path('HOW-TO-USE.md').read_text(); s=s.replace('The **releases DB\nis the commitment ledger**','The **releases DB** — the Product Release System (PRS) — **is the commitment ledger**',1); first=next(l for l in s.splitlines() if re.search(r'\bPRS\b',l))` (imports: pathlib.Path, re). Exit 0; decisive output: `V1 checker_rc=0 canonical_glossary_entry_present=False` (entry predicate: `bool(re.search(r'^- \*\*PRS\*\*',s,re.M))`).
+  Affected scope: Plan steps 1–4 and relay DoD (c), not runtime behavior.
+  Falsifier: All first-use expansions but no canonical glossary entry must fail the additional manual check; the complete linked definition must pass. V1 may remain the narrow expansion check.
+
+- **[Should] F2 — correct the reader map and coverage claims.** R6 at plan line 106 says gh400 reads 10days and gh436 reads merge-cleanup's SKILL.md. Those suites do not establish coverage of these wording edits. `test/gh400-source-url.sh:23` selects swarm_preflight.py; its unit function imports check_source_url and reads generated capture docs. Its 10days mention at line 5 is a historical comment. `test/gh436-merge-cleanup.sh:11` invokes the Python suite; `test/gh436-merge-cleanup.py:20` targets skill scripts, and its SKILL.md occurrences are temporary symlink fixtures. Reclassify these as optional code regression checks or omit them from the focused wording checks. Keep actual readers (releases-skill and gh609), and name manual text/link inspection for uncovered edits. Explicitly place any suite execution in a disposable full clone.
+  Observed input: `rg -n 'SKILL\.md|read_text|open\(' test/gh436-merge-cleanup.py` exited 0; SKILL.md hits were lines 408–409, 678, 701 and 719, all fixture paths/comments. Reading gh400-source-url.sh showed generated capture-doc inputs, not the skill.
+  Affected scope: R6, V3 and the skill-text regression coverage claim at plan line 172.
+  Falsifier: A concrete assertion reading the real edited 10days/merge-cleanup SKILL.md and rejecting its relevant malformed text would justify the attribution. Fixture symlinks and comment mentions do not.
+
+- **[Nit] F3 — correct V1's predicted baseline counts.** Plan line 148 says 13 absent and one bare use, contradicting R1. Applying its predicate with `python3`, Path.read_text and `re.search(r'\bPRS\b',line)` to the 14 named files exited 0 and reported `files=14 missing=10 bare=4 checker_rc=1`. Bare first matches: ROUTER:119, start-marathon:239, 10days:6, end-of-week:32. All 14 fail, for the stated 10/4 reasons. The in-memory ROUTER introduction/removal probe gave checker statuses 0 then 1, so that red-control design works.
+
+- **[Pass] Placements, definition scope and rating.** The selected prose placements match AGENTS.md:173, ARCHITECTURE.md:406, README.md:145, SOP.md:62 and the six cited skill locations. HOW-TO-USE.md:67 is a reasonable glossary home; AGENTS.md:173 supports the two-subsystem description. PROJECT/PDDA.md:946–948 distinguishes legacy and releases-mode repositories, so “which XYZ Forge calls” appropriately limits the naming claim. Preserve usable links for downstream adopters. The rating rationale at plan lines 44–51 matches skills/1-hourly/start-task/SKILL.md:248–251, including neutral appeal and higher-is-cheaper effort.
+
+- **[Pass] Planned paths and V2 red control.** Probe command: `python3` calling `subprocess.run(['bash','utils/ci-route.sh','push'], input='\n'.join(paths)+'\n', capture_output=True, text=True)` on the 14 named docs/skills plus CHANGELOG, the working plan, releases.db/sql, this relay and the two planned evidence paths (21 nonempty paths). Exit 0: `route=docs tier=1 full_required=false`. Repeating with `relay-automation/README.md` appended exited 0: `route=full tier=3 full_required=true`. This matches utils/ci-route.sh:64–68 and :339–341. Classification of the final committed diff remains owed.
+
+- **[Nit] Reconcile and qualification wording.** wave_reconcile.py:597–612 selects Small for a tier-1 union; another docs-only landing does not prevent Small. Keeping a single-landing schedule is sensible for attribution, but label it a scheduling choice, not a classifier necessity (R5). Call V5 a local push self-check, reserving landing qualification for hosted Small; githooks/pre-push:22 and :260 distinguish these.
+
+- **[Unverified — needs clone run]** V3/V4/V5 and final hosted qualification were not executed here. Their future results cannot be inferred from text probes. Live issue retrieval `gh issue view 833 --repo HiQS-Labs/XYZ-forge --json title,body` exited 1: `error connecting to api.github.com`; scope was assessed against the supplied review packet, as permitted.
+
+Root cause: evidence descriptions overstate what the proposed checks observe; fix site: the plan's recon/verification prose and retained manual witnesses; no runtime or new test mechanism is needed.
+
+Handing off to Producer (claude-a) to disposition F1–F3 and the qualification wording, then return the revised plan for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
