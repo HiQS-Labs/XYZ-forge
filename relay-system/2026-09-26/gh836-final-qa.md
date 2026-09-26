@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -197,5 +197,25 @@ All in `90f67716`. The artifact is regenerated as `git diff 4bd8851a 90f67716`, 
   #836's scope.
 - The unit check of the `case` pattern is yours (65,536 pairs, 0 mismatches). The packet was wrong to say
   `witnesses.log` holds one. I have left the evidence as it is rather than claim a check I did not record.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: S1 is resolved and the implementation remains consistent with the focused witnesses. S2 has one remaining inaccurate sentence in the active plan, so DoD (e) is not yet met. Only that prose correction is requested; no runtime redesign or additional suite.
+swept file: yes
+
+Reviewed the regenerated artifact, the changed test and hook files beyond their hunks, the relay README, the active plan and retained evidence. The round-1 pre-existing limitations remain dispositioned as noted by the Producer; no additional runtime defect was identified in this sweep. Historical ledger and CHANGELOG entries are not independently re-attested.
+
+- **[Pass] S1 resolved.** `relay-automation/README.md:56-59` now names both authoritative Python adapters, `utils/py/rtl.py`, the delegated Bash prompt and the fixture. The live-run instruction and rejection of skipped evidence remain explicit at `:61-71`.
+- **[Pass] Most of S2 resolved.** `relay-automation/README.md:51-53` and `test/relay-self-sufficiency.sh:12-14` distinguish the four wrapper defaults from direct validation. `PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md:237-238` now labels the full-hook witness pending; `:255-257` names the six launches and complete rollback scope.
+- **[Should] S2 residual — remove the plan's remaining universal skip claim.** `PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md:183-184` still says the header and skip message say it is “skipped by default everywhere.” They no longer say that, and direct validation retains its default live path. Replace that sentence with “The four wrappers skip it by default; direct validate remains unchanged,” or delete it and rely on the precise statement at `:181-182`. This is a one-sentence documentation correction, not a behaviour change.
+  Observed input: plan line 184's “skipped by default everywhere,” against `test/relay-self-sufficiency.sh:33`, which uses `${RELAY_SELF_SUFFICIENCY_SKIP:-0}`, and the explicit direct-validation exception at README line 52.
+  Affected scope: the active plan's description of D2 only.
+  Falsifier: a default skip in direct validation would support a broader claim; the reviewed implementation explicitly preserves the direct path, so the expected wording names only the wrapper defaults.
+- **[Pass] Rebuilt package is fresh.** Read-only command: `python3 -B` using `tarfile.open('skills/1-hourly/relay-automation/relay-pkg.tar.gz')`, iterating regular members and comparing `extractfile(m).read()` against `Path(n)` for `test/` members or `Path('relay-automation') / n.removeprefix('relay-automation/')` otherwise. Exit **0**; decisive output: `archive files=18 drift=[]`. The initial probe incorrectly prefixed the six `test/` members with `relay-automation/` and raised `AssertionError` (Python exit 1); that was a probe path-mapping error, corrected without extracting or editing any archive member.
+- **[Pass] Focused evidence still supports the trims.** `TESTS-RESULTS/2026-09-26+GH-836/witnesses.log:3-8` records all six staggered positive/negative race cases; `:9-11` records the limited 12-second cursor comparison; `:25-31` disclaims the first failed W3b injection and retains the corrected failing wrapper result. `test/gh549-work-events.sh:1091-1097` retains crash-status and duplication checks, and `test/gh534_phase_c_tests.py:562-591` retains existence checks without nested execution. The narrow hook default remains at `githooks/pre-push:299`. These are inspected retained receipts, not new suite runs.
+- **[Unverified — needs clone run]** The final full-hook run, its actual default-skip log and final gate readiness remain outstanding. No test suite, executable fixture or Git command was run in this turn.
+
+Handing off to Producer (claude-a): correct the single remaining sentence at plan line 184 and return for round 3. The recorded full-gate requirement remains after review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
