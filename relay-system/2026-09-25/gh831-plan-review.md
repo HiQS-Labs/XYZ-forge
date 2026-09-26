@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -86,5 +86,52 @@ Write findings in the Log per the turn rules (grades, `swept file:` line, `Obser
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The design reuses the existing machinery, but the off-list contradicts its own scope, D5 does not specify complete two-run qualification/replay, and the stated rollback cannot preserve new receipts. Correct these before implementation.
+swept file: yes
+
+Read the entire plan and suite-map generator; swept the requested source sections and gh306 in full. Pre-existing behavior relevant to this change is called out below; this is not a claim of an exhaustive audit of every runtime file. No suites, fixtures, validator, pytest, or git commands were executed. Execution claims below are source traces, not green gate evidence.
+
+- **[Blocker] F1 — R2's off list removes actual harness/PRS coverage (Q5–6).** Plan `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:143-145` calls these skill-text/feature tests, but `test/debug-mantra.sh:24-36,57-95` invokes the marathon driver's real dry-run renderer and checks prior-attempt behavior and root-path containment. `test/gh777-start-task-prior-art.sh:8-31` executes `utils/py/prior_art_recon.py` and asserts roadmap/query results. `test/gh132-review-xyz-skill.sh:29-31,51-81,84-100` exercises engine selection, verdict exit codes and worktree isolation through `utils/py/review_xyz.py`, not just skill prose. This is an observed classification error, not an assertion that a suite currently fails. Cheapest fix: retain debug-mantra as Core, disposition prior-art against PRS/core, and explicitly disposition the review engine against the actual harness boundary rather than its filename. Produce exact final names (including the ambiguous `gh527` Small entry) before removing registrations.
+  Observed input: The three executable call sites above are included in the plan's off list.
+  Affected scope: Proposed off suites that execute harness/PRS behavior, not pure skill-text assertions.
+  Falsifier: Show these paths are outside the operator's retained core/PDDA/PRS definition, or that the cited calls no longer exercise that behavior; pure prose-only suites should remain eligible for off.
+
+- **[Should] F2 — D5 needs a landing-level proof contract for BOTH Medium runs (Q3,7).** Plan `:304-318` says two runs and “each run's receipt entry,” but current `utils/py/wave_reconcile.py:553-555,2054-2061` suppresses qualification when **any** entry matches. Its writer stores one `validation.jsonl` (`:620-635`), and its parser requires exactly one start/summary (`:466-469`). Merely admitting the two gate strings makes a Small-only entry sufficient to suppress a Medium landing. Specify the smallest extension to this existing writer/matcher that binds both required runs, hashes, process identities, classification inputs and expected sets to one landing decision; retain atomic no-receipt-on-second-run-failure behavior. State how expected sets are recovered for old tier-2 receipts after lists evolve, rather than recomputing against current HEAD. Add recorded manual checks for missing area evidence, failed second run, and replay after list changes; no new suite is needed.
+  Observed input: D5's per-run entries plus the existing `any(qualification_receipt_matches(...))` call sites above.
+  Affected scope: Medium qualification and every receipt consumer, including `--only-receipted` recovery.
+  Falsifier: A retained Medium proof with only the Small component must fail lookup/replay; complete Small+area proof must pass, including after unrelated registry evolution.
+
+- **[Should] F3 — Make the tier-2 completeness equation precise (Q3).** D5 `:311-315` compares “suite event names” to shell suite names, but `validate.sh:1142,1174,1454-1457` also emits `event=suite,lane=non-suite` for PDDA/static/Python. Literal all-event equality would reject every Small run. Restrict exact membership and uniqueness to sequential shell events and explicitly require selected non-suite events and the expected denominator. Presence+rc=0 alone is insufficient for Python: `:1450-1454` emits a zero-rc Python event when pytest is unavailable, and `:1514-1520` excludes skipped Python from total. The qualifier currently preflights pytest (`wave_reconcile.py:598`), which mitigates the live path but does not make the proposed receipt rules prove completeness. For Small, require shell count + identity + PDDA + actually-run Python; define the corresponding area-run extras. Preserve existing SHA/run/runner identity checks and all tier-3 rules.
+  Observed input: The real `python:test_python_layer.py` skip event at `validate.sh:1454` and PDDA suite event at `:1142`.
+  Affected scope: New tier-2 acceptance only.
+  Falsifier: Real complete Small/area telemetry passes; remove PDDA or Python, duplicate a shell event, or substitute the skipped-Python shape and acceptance must fail.
+
+- **[Should] F4 — Rollback claim is false as written (Q8).** Plan `:429-430` says reverting Phase 2 keeps its receipts valid “because the matcher keeps accepting them.” Reverting that PR restores `wave_reconcile.py:501` (only `validate.sh --sequential`) and `:473` (only tier 3). The new receipt shapes are then rejected. Choose and document either restoring full-run production while retaining backward-compatible readers, or a full revert with explicit requalification of affected landings. Add a concrete trigger and recovery check; Phase 3 should point to the same rollback.
+  Observed input: New tier-2 gate strings in D5 `:316-318` versus the pre-change matcher at `:501`.
+  Affected scope: Rollback after at least one Small/Medium receipt has been published.
+  Falsifier: Under the selected rollback, an already-published tier-2 receipt is either accepted intentionally or requalified by the documented full-run recovery; no claim that a reverted old matcher accepts it.
+
+- **[Should] F5 — Projection does not simulate D4 (Q4,9).** `TESTS-RESULTS/2026-09-25+GH-831/suite_map.py:124-130` treats all skill-only changes except relay/relay-xyz as Small, including mapped subsystems and merge-cleanup; D4 `:288-289` explicitly excludes those. Concrete output: `merge-projection.tsv:11` classifies merge-cleanup fix `068d2994` as `small(skill code)`, and `:54` classifies the skills-army-hq sync change `24b387d6` likewise. It also labels PDDA/releases implementation Small where D5 would select tier 2. Recompute against the final classifier policy, or clearly separate the counterfactual from the design's expected savings. Resolve the obsolete 54-minute Large claim at plan `:161-162` against O3's 60 minutes at `:350-352`. Retain the explicit caveat that stripping all test edits also strips existing-test repairs, not only hypothetical new suites.
+  Observed input: The cited projection rows and source branch, compared with D4's exclusion list.
+  Affected scope: The 47% Small/40-minute-average forecast and its rating rationale, not the routing runtime.
+  Falsifier: Applying final D4 to the retained path sets reproduces each tier and the aggregate forecast; merge-cleanup code cannot remain Small under the stated exclusions.
+
+- **[Should] F6 — Correct R1's unconditional test-edit statement (Q1).** Plan `:89-90` says any test edit gives tier 3, but the GH-487 dedicated-test co-touch exception at `utils/ci-route.sh:335-347,418-424` remains active. Read-only probe: `printf '%s\n' utils/py/releases_app.py test/gh549-work-events.sh | bash utils/ci-route.sh push` exited **0**, decisive output `route=fast`, `tier=2`, `tier2_subsystems=releases`. Update R1 and D4's “test edits” language to preserve and name the existing exception; no runtime behavior change requested.
+
+- **[Pass] Q1/Q3 — Runner reuse is grounded.** `validate.sh:934-940` selects subsystem tier 2; `:1113-1117` starts telemetry before tier-2 work; `:1420-1437` emits sequential shell events; `:1552-1554` writes the summary. `test/lib/runner-telemetry.sh:65-77,164-175` supplies numeric tier/start and summary events in the existing format. `githooks/pre-push:258-295` supports R1's three dispatch arms. `gh306:41-52,88-94` and `gh35:144-153,215-224` support R5's exemption, membership and no-suite tier-1 claims. Computing expected lists in the exact tested clone is sound at production time; F2 covers replay durability. Actual new commands: **[Unverified — needs clone run]**.
+
+- **[Pass] Q5/Q7 — No second subsystem or test machinery is necessary.** D2/D3/D7 (`plan:266-283,327-338`) reuse list data, selector, EXEMPT and existing rules. EXEMPT's existence/disjointness checks (`test/gh306-registry-bidirectional.sh:120-138`) suit retained-but-disabled files. The proposed off names do not intersect gh141's synthetic inventory (`test/gh141-synthetic-registry.sh:34-48`), gh379's canary skip contract (`:275-285`), or the four release-manifest gate lists. Keeping Medium registered preserves gh35 and full-run consumers. `express.py:536-546` accepts an existing registered suite; a hotfix whose sole suite is deliberately off would remain ineligible, consistent with O5. Small's expensive PRS suites are a deliberate O2 tradeoff, not an obvious mapping error. F1 concerns what should be off, not registry plumbing.
+
+- **[Unverified — source unavailable] Q2 — Requirement coverage and operator deviations.** Against the review packet: no-new-tests/rules and AGENTS freeze map to D7/Phase 1; retained files/unregistration map to D3/Phase 2; classifier and hosted tiers map to D1/D4/D5; GH-732 cut maps to Phase 1 step 2. O1 and O3 are justified proposals (push cost; preserving promotion coverage), but `plan:342` labels them defaults, not recorded operator decisions. Promotion is always Large in D6, despite the goal `:23-24` saying the classifier chooses at promotion; explicitly map this exception too. Direct verification failed: `gh issue view 831 --repo HiQS-Labs/XYZ-forge --json body` and `gh api repos/HiQS-Labs/XYZ-forge/issues/comments/5841529958 --jq .body` each exited **1**, `error connecting to api.github.com`. Supply the authoritative requirement/decision spans or a retained accessible copy before claiming DoD(a); do not represent proposed defaults as operator acceptance.
+
+- **[Pass] Q4/Q9 — Bounded policy and rating judgment.** D4 intentionally weakens the gate for named skill/data paths; core exclusions and unmapped fallback must take precedence. The inspected additional skill executable `skills/2-daily/relay-to-issue/relay-to-issue.sh:3-36` handles issue publication, not driver execution/containment; no additional mandatory core exclusion established in this sweep. Appeal 75 is allowed as a labelled interpretation of an explicit desirability preference by `skills/1-hourly/start-task/SKILL.md:245`; plan `:63-64` supplies that label. Priority/severity/effort have stated rationales (`:59-67`), but the empirical forecast needs F5 and the remote recurrence counts were not independently verified. Read-only CSV probe exited **0**: `suite rows: 419 unique: 419`, `small: 61`; these support inventory size, not every disposition.
+
+Root cause of the plan gaps: the existing one-run/full-registry qualification contract is being generalized without spelling out its multi-run replay and rollback invariants; suite names and a different projection policy also substitute for executable scope. Fix the plan and its evidence at those boundaries, without adding new tests or machinery.
+
+Handing off to Producer (claude-a) — disposition F1–F6, resolve the requirement evidence gap, and request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
