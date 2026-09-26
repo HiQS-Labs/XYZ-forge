@@ -111,17 +111,31 @@ def test_r3_2_zip_integrity_detection(base_dir: Path):
 
     # 2. Valid zip archive with corrupted payload bytes on disk (real CRC mismatch)
     corrupt_payload = base_dir / "corrupted_payload.zip"
-    with zipfile.ZipFile(corrupt_payload, "w") as zf:
-        zf.writestr("test_crc.txt", "payload test string " * 50)
+    with zipfile.ZipFile(corrupt_payload, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("test_crc.txt", b"ABCDEF0123456789" * 40)
+
+    with zipfile.ZipFile(corrupt_payload, "r") as zf:
+        zi = zf.getinfo("test_crc.txt")
+        payload_start = zi.header_offset + 30 + len(zi.filename) + len(zi.extra)
+        flip_offset = payload_start + (zi.compress_size // 2)
+
     data = bytearray(corrupt_payload.read_bytes())
-    # Corrupt a byte in the payload to cause CRC checksum failure
-    data[40] = (data[40] ^ 0xFF)
+    data[flip_offset] ^= 0xFF
     corrupt_payload.write_bytes(bytes(data))
 
     valid2, err2 = test_zip_integrity(corrupt_payload)
     assert valid2 is False, "test_zip_integrity failed to detect corrupted payload CRC"
     assert "Corrupted file in archive: test_crc.txt" in str(err2)
+
+    with zipfile.ZipFile(corrupt_payload, "r") as zf:
+        try:
+            zf.read("test_crc.txt")
+            assert False, "Direct read of corrupt entry should have raised BadZipFile"
+        except zipfile.BadZipFile as bzf:
+            assert "Bad CRC-32" in str(bzf), f"Expected Bad CRC-32 exception, got: {bzf}"
+            print(f"PASS: Direct read confirmed real underlying CRC exception: {bzf}")
     print(f"PASS: test_zip_integrity() detected real payload CRC mismatch on disk: {err2}")
+
 
 
 
@@ -237,15 +251,20 @@ def test_r3_5_production_phase6_teardown_gate(base_dir: Path):
         subprocess.run(["git", "clone", "-b", "development", str(bare_origin), str(corrupt_clone)], check=True, capture_output=True)
         subprocess.run(["git", "-C", str(corrupt_clone), "config", "user.name", "Test"], check=True)
         subprocess.run(["git", "-C", str(corrupt_clone), "config", "user.email", "test@example.com"], check=True)
+        (corrupt_clone / "README.md").write_text("corrupt candidate contents\n" * 50, encoding="utf-8")
+        subprocess.run(["git", "-C", str(corrupt_clone), "commit", "-am", "expand readme"], check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(corrupt_clone), "push", "origin", "development"], check=True, capture_output=True)
 
         orig_zip_clone = backup_clones.zip_clone_folder
         def corrupting_zip_clone(clone_dir, dest_zip_path, **kwargs):
             res = orig_zip_clone(clone_dir, dest_zip_path, **kwargs)
             if "corrupt_clone" in str(clone_dir) and dest_zip_path.exists():
-                # Corrupt archive payload bytes on disk before real test_zip_integrity runs
+                with zipfile.ZipFile(dest_zip_path, "r") as zf:
+                    zi = zf.getinfo("corrupt_clone/README.md")
+                    payload_start = zi.header_offset + 30 + len(zi.filename) + len(zi.extra)
+                    flip_offset = payload_start + (zi.compress_size // 2)
                 raw_bytes = bytearray(dest_zip_path.read_bytes())
-                if len(raw_bytes) > 60:
-                    raw_bytes[50] = (raw_bytes[50] ^ 0xFF)
+                raw_bytes[flip_offset] ^= 0xFF
                 dest_zip_path.write_bytes(bytes(raw_bytes))
             return res
 
@@ -263,6 +282,20 @@ def test_r3_5_production_phase6_teardown_gate(base_dir: Path):
             exit_code_corrupt = merge_cleanup.main()
             assert exit_code_corrupt == 2, f"Expected exit code 2 on corrupt archive, got {exit_code_corrupt}"
             assert corrupt_clone.exists(), "Corrupt candidate must be preserved from teardown!"
+
+            # Verify direct read on the written archive raises Bad CRC-32
+            run_dirs = sorted(list((prod_root / "_backups" / primary.name).glob("*")))
+            if run_dirs:
+                corrupt_zip = run_dirs[-1] / "zips" / "corrupt_clone.zip"
+                if corrupt_zip.exists():
+                    with zipfile.ZipFile(corrupt_zip, "r") as zf:
+                        try:
+                            zf.read("corrupt_clone/README.md")
+                            assert False, "Direct read of corrupt clone archive should have raised BadZipFile"
+                        except zipfile.BadZipFile as bzf:
+                            assert "Bad CRC-32" in str(bzf)
+                            print(f"PASS: Direct read confirmed real underlying CRC exception on clone archive: {bzf}")
+
             print("PASS: Production merge_cleanup.main() caught real disk CRC payload corruption, withheld candidate, and exited 2")
         finally:
             backup_clones.zip_clone_folder = orig_zip_clone
