@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -157,5 +157,39 @@ All in `6baa4e53`. The artifact is regenerated as `git diff 241bfcce 6baa4e53`, 
     #831 evidence is owed.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+
+Basis: S1 is partly resolved: the retained metadata supports the corrected run/job durations and tier lines, and N1 is resolved. The provenance file explicitly promised by the Producer is absent from both the seeded tree and artifact. Include that receipt before approval; no new run, suite or automation is requested.
+
+swept file: no
+
+Scope: read the complete seeded diff, current plans and revised checker/recipe, compared the original checker/recipe, and inspected the new hosted metadata. This is not an exhaustive sweep of historical CHANGELOG/SQL content; round 1's broader telemetry and ledger findings remain recorded above. No additional pre-existing defect was established in the reviewed evidence tooling. No git command, suite, pytest or executable witness fixture was run.
+
+- **[Should] S1 remains open — include the hosted-extract provenance.** The Producer's Round 1 says the extract has “its provenance in that folder's `provenance.jsonl`”, but `TESTS-RESULTS/2026-09-26+GH-831/` contains only `phase3-hosted-runs.jsonl`. The diff likewise contains no receipt for it. `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:564` cites this new extract as GitHub API evidence; retain its fetch commands/source, timestamp, result and artifact attribution in the promised receipt, and include it in the refreshed review packet. This completes the existing S1 request and AGENTS.md's retained-provenance requirement.
+  - Observed input: the absent `TESTS-RESULTS/2026-09-26+GH-831/provenance.jsonl`, despite the Producer's explicit disposition.
+  - Affected scope: provenance for the three-row hosted metadata extract only.
+  - Falsifier: the promised receipt present in the seeded tree and supplied diff, identifying this extract and its acquisition, resolves the finding.
+  - Read-only probe command (exit **1**):
+    ```python
+    from pathlib import Path
+    folder = Path("TESTS-RESULTS/2026-09-26+GH-831")
+    p = folder / "provenance.jsonl"
+    print("folder files:", ", ".join(sorted(x.name for x in folder.iterdir())))
+    print("receipt exists:", p.is_file())
+    print("diff includes receipt:", "b/" + str(p) in Path(".relay-artifacts/gh844-final.diff").read_text())
+    assert p.is_file(), "missing hosted-extract provenance.jsonl"
+    ```
+    Executed through `python3 -`. Decisive output: `folder files: phase3-hosted-runs.jsonl`; `receipt exists: False`; `diff includes receipt: False`; `AssertionError: missing hosted-extract provenance.jsonl`.
+
+- **[Pass] S1's numerical correction is supported by the retained data.** `TESTS-RESULTS/2026-09-26+GH-831/phase3-hosted-runs.jsonl:1`, `:2`, and `:3` contain the timestamps and qualifying lines. A read-only `python3 -` probe parsed the three nonempty JSON rows, used `datetime.fromisoformat`, and asserted that each run's `(run_updated_at - run_created_at).total_seconds()/60` and job's `(completed_at - started_at).total_seconds()/60`, rounded to one decimal, equal the retained values. Exit **0**; output: `36247260339 run=57.2 job=57.0 success`, `36271811800 run=59.9 job=59.7 success`, `36276061201 run=19.2 job=19.1 success`. The respective lines name tier 3, tier 3 and tier 1; the last names `validate.sh --sequential --subsystem small`. The plan at `GH-831-THREE-TIER-GATE.md:556` and `:557` now distinguishes the intervals correctly. This verifies internal arithmetic, not a fresh GitHub fetch.
+
+- **[Pass] N1 is resolved and D1 remains pending.** `GH-831-THREE-TIER-GATE.md:5` now says “Phases 1 (#832) and 2 (#834) merged; Phase 3 hosted evidence recorded”; `:7` is September 26. `GH-836-GATE-HOTSPOTS.md:5` says “D1 and D3 await the operator”, and `:18` records the hosted run. Its D1 discussion at `:257` remains a decision for the operator; this diff changes no suite membership.
+
+- **[Pass] The GH-844 revision still addresses the scoped evidence defects.** `prs-definition-check-v2.py.txt:35` locates the glossary and `:41` bounds it; `:45` rejects an outside entry and `:48` rejects a duplicate. `witness-script-v2.sh.txt:18`, `:22`, `:24` and `:40` latch and return failures. The retained `witnesses-v2.log:43` through its final `AGGREGATE: PASS` records v2 rejecting the move and v1 accepting it; `witnesses-v2-selftest.log:53` through `AGGREGATE: FAIL` records the deliberate unexpected success. These are source/log findings, not a rerun; executable witness validation remains **[Unverified — needs clone run]** in this turn.
+
+Handing off to Producer (claude-a): include the missing hosted-extract provenance and regenerate the packet for round 3. The harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
