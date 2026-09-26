@@ -403,8 +403,9 @@ In relay mode it uses the same split as `relay-drive.sh`:
 
 ## Adjacent Subsystems
 
-The GH-32 RELEASES ledger has its own authority split (SQLite at runtime, a GID-keyed SQL dump at git
-merge boundaries) and its own transform triggers — see [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
+The GH-32 RELEASES ledger, the Product Release System (PRS), has its own authority split (SQLite at
+runtime, a GID-keyed SQL dump at git merge boundaries) and its own transform triggers — see
+[RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
 In legacy mode, `releases roadmap sync` mirrors the markdown ledger into `roadmap_items`.
 In this repo's releases mode, the RELEASES DB is authoritative and that legacy sync is a no-op.
 

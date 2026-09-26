@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-09-26 — PRS gets one definition: the Product Release System, the RELEASES ledger (GH-833)
+
+Agents, plans and issues call the RELEASES ledger "PRS", but no doc defined the term. `ROUTER.md` used it
+undefined for the Small tier.
+
+- **One definition,** in `HOW-TO-USE.md`'s glossary, now "the five terms you'll hit first". PRS is the Product
+  Release System: `releases.db` and its dump `releases.sql`, written only through `releases_app.py`. It is the
+  third part of the XYZ Forge / PDDA / PRS trinity. PRS names the system; no file, table, verb or doc is renamed.
+- **`ROUTER.md`** names the trinity under its intro.
+- **The other canonical docs** spell the term out where they introduce the ledger, and link the definition:
+  `AGENTS.md`, `SOP.md`, `ARCHITECTURE.md`, `RELEASES-DB-FAQS.md`, `README.md` and `PROJECT/PDDA.md`.
+- **Six skills** do the same: `/releases`, `/start-task`, `merge-cleanup`, `start-marathon`, `10days` and
+  `end-of-week`.
+  - `PROJECT/PDDA.md` and the skills link by absolute GitHub URL, because they are read outside this checkout.
+  - Deployed skills pick up the text on the next skills-army-hq deploy.
+
+No suite was added. Two manual checks, with red controls at base, are recorded under
+`TESTS-RESULTS/2026-09-26+GH-833/`:
+- every file's first "PRS" is spelled out;
+- there is exactly one definition, and every placement links to it.
+
+The merge is docs-only, so it should be the first landing the hosted reconcile qualifies with the Small gate
+(#831 Phase 3).
+
 ## 2026-09-26 — The two slowest Small suites lose 4 minutes, and the push gate stops calling a live agent (GH-836)
 
 #835's profiling found that `gh549-work-events.sh` and `gh436-merge-cleanup.sh`, about two-thirds of the hosted

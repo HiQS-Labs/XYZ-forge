@@ -170,7 +170,8 @@ local change.
   4. **The point is the failures.** A marathon that completes cleanly and teaches nothing is a
      weaker result than one that escalates and names a defect. Report what broke; do not smooth it.
 
-- **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`): the GH-32
+- **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`; it is the
+  Product Release System, [PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)): the GH-32
   release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
   flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: park intake
   with `releases roadmap add` (or `hq park`), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
