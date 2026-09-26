@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-26 — The first hosted Small run qualified a docs landing in 15.7 minutes (GH-831 Phase 3)
+
+#840 (GH-833) was the first docs-only merge after the three-tier gate landed. The hosted reconcile qualified it
+with `validate.sh --sequential --subsystem small`: tier 1, 76/76, in 15.7 minutes (run 36276061201). Full-gate
+reconcile runs that day took 57–60 minutes (jobs 57.0 and 59.7). The receipt is committed with `tier: 2` and its
+73-suite list.
+
+- **GH-831:** Phase 3's QA gate is met. Both hosted runs are cited in its plan.
+- **GH-836:** step 6 is done. Hosted, `gh436` takes 221 s and `gh549` 159 s. Small is over the ~12-minute line, so
+  D1, moving `gh436` to Large, is now the operator's call.
+- **GH-844:** GH-833's manual check now confines the PRS entry to the glossary, and its witness recipe exits
+  non-zero on any unexpected result, with a self-test to prove it. These were CodeRabbit findings on #840; the
+  other child of umbrella #845, #843, is the relay-path fix.
+
 ## 2026-09-26 — PRS gets one definition: the Product Release System, the RELEASES ledger (GH-833)
 
 Agents, plans and issues call the RELEASES ledger "PRS", but no doc defined the term. `ROUTER.md` used it

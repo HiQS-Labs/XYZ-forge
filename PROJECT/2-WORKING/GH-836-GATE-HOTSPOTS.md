@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — PR ready; awaiting merge (2-WORKING)
+status: Active — merged (#838); step 6 done; D1 and D3 await the operator (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -15,7 +15,7 @@ non_goals:
   - Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner (D2's hook default is the one operator-directed exception).
 related:
   - "#835 — the gate-timing snapshot and its three profiling reviews (closed as completed)"
-  - "#831 — the three-tier gate; its Phase 3 hosted Small evidence is still owed"
+  - "#831 — the three-tier gate; its Phase 3 hosted Small evidence is recorded (run 36276061201)"
 goal: >
   gh549 and gh436, which make up two-thirds of the hosted Small run, get cheaper where the time was measured.
   Every trimmed leg keeps its assertion and red control, and gh649 stops failing falsely under /tmp.
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Final QA Approved in round 3 (attested `191e8977`). The full gate is GREEN, 414/414 in 867 s, at `290f75e0`, with D2's default skip witnessed through the hook. Same device: `gh549` 346 s → 147 s and `gh436` 292 s → 239 s. PR opened. | Operator merge. Then step 6, the first hosted Small run, through a docs-only PR such as #833. |
+| Merged in PR #838 (`af4fef27`); its reconcile ran the full registry in 59.9 min. **Step 6 is done:** the first hosted Small run, [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201) for #840, took 15.7 minutes. Hosted, `gh549` now takes 159 s (8.0 min in #835's profile) and `gh436` 221 s (4.4 min). | **D1 is now the operator's call:** hosted Small is 15.7 min, over the ~12-minute threshold. Moving `gh436` alone would take it to about 12.0 min. D3 is still open. |
 
 ## Contents
 
@@ -255,6 +255,11 @@ about 4.2 minutes.
 ## Decisions for the operator (not in this PR)
 
 - **D1:** move `gh436` alone to Large if hosted Small is still over ~12 minutes after this lands.
+  - **Hosted numbers (2026-09-26, run [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201)):** Small is 15.7 min (942 s over 75 entries).
+    - `gh436` is 221 s (23 %) and `gh549` 159 s (17 %).
+    - Without `gh436` it would be about 721 s (12.0 min).
+    - `gh436` stays a tier-1 reader: it loads merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md`. Moving it
+      means a docs-only change to those files is checked only at promotion (O8).
 - **D2: decided, option C, and folded into this PR as step 7.**
 - **D3:** move `gh645` and `gh674` to Large, for tidiness only.
 
