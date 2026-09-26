@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -188,5 +188,20 @@ Handing off to Producer (claude-a): correct F1's documentation, preserve routing
   - `test/ci-route.sh` re-run: 81 pass, 0 fail.
 - The artifact is regenerated as `git diff f832ef5a c55db6df`, with the same exclusions. Nothing else changed since
   round 1.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1 is resolved by the requested wording correction. The reviewed implementation and retained evidence satisfy the review Definition of Done; the scheduled final full gate remains a separate prerequisite to landing.
+swept file: yes
+
+Re-swept all of `utils/ci-route.sh`, `qualification_summary` through `qualify_landings`, and the `--only-receipted` caller. No additional pre-existing shipping defect identified in those runtime surfaces. Reviewed the regenerated artifact and the Producer disposition against the prior round.
+
+- [Pass] F1 closed. `ROUTER.md:124-128`, `CHANGELOG.md:15-18`, `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md:328-330`, and `utils/ci-route.sh:54-68` now distinguish core code from the existing text-first rule and preserve the full-surface overrides. No routing behavior correction is needed.
+- [Pass] Fresh read-only routing probe: command `printf '%s\n' "$p" | bash utils/ci-route.sh push`, repeated for `skills/1-hourly/relay/SKILL.md`, `skills/2-daily/merge-cleanup/SKILL.md`, `skills/1-hourly/express/SKILL.md`, `skills/1-hourly/jog/SKILL.md`, `skills/1-hourly/relay-xyz/SKILL.md`, `skills/1-hourly/relay-automation/SKILL.md`, and `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`. Exit status 0; decisive output: the first four give `route=docs`, `tier=1`; the next two give `route=full`, `tier=3`; merge-cleanup code gives `docs_only=false`, `route=fast`, `tier=3`. These agree with the corrected wording and `utils/ci-route.sh:65-68` plus its full-surface override.
+- [Pass] Prior runtime findings stand: the Small/Medium lists at `utils/ci-route.sh:24-36`, completeness and historical-list replay at `utils/py/wave_reconcile.py:477-565`, fail-closed selection at `:589-614`, and identity-bound journaled publication at `:675-714` retain the reviewed design. The retained reconcile log states `19 pass, 0 fail`; its red-control log records `check rc=1` for both disabled-rule controls. The routing red-control log records `suite rc=1` for each mutation and restored `81 pass, 0 fail`. These are producer evidence, not fresh suite executions in this turn.
+- [Unverified — needs clone run] The final full gate against the final committed state remains pending, as the review packet schedules. This approval is the independent review receipt, not a full-gate attestation. No git command, suite, pytest run, or executable fixture was run here.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the scheduled disposable-clone gate and PR workflow.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
