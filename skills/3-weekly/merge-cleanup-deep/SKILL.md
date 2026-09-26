@@ -105,7 +105,7 @@ DEST="$(python3 -c "import json; print(json.load(open('$SCRATCH/backup.json'))['
   - `reports/`: Triage reports and teardown logs (`$DEST/reports/`).
   - `SUMMARY.md`: Human-readable summary table and inventory.
 - **Integrity Validation**: Automatically tests zip CRC and compression (`testzip()`) and computes SHA256 before analysis or teardown begins.
-- Backups and integrity verification complete before sub-agent analysis begins, guaranteeing an airtight restore point.
+- Backups and integrity verification complete before sub-agent analysis begins, guaranteeing an airtight restore point for standalone full clones. Linked worktrees with external Git storage cannot produce self-contained archives and are refused; unverified or unsupported candidates are not analysed or torn down.
 
 ## Phase 2 — Fan-out (≤3 read-only sub-agents)
 

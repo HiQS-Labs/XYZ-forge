@@ -16,12 +16,12 @@ Standardized hierarchy:
     └── SUMMARY.md
 
 Features:
-- Fast, selective zipping: keeps .git and all code, excludes heavy disposable caches.
-- Git metadata protected: .git contents and source directory names are never pruned.
+- Authoritative pure-Python archiver: keeps .git and all code, excludes heavy disposable caches.
+- Git metadata protected: .git contents, refs, and source directory names are never pruned.
 - Automatic integrity gate: testzip() CRC check + SHA256 generation before teardown.
-- Collision-proof naming: prevents overwriting existing archives or clobbering same-named clones.
-- Self-contained worktree handling: bundles worktree administrative state into archive.
-- Directory symlink support: both binary and pure Python fallback preserve directory symlinks.
+- Collision-proof naming: atomic O_EXCL run reservation and archive creation prevent clobbering.
+- Fail-closed linked worktree handling: external Git storage cannot be self-contained and is refused.
+- Directory symlink support: preserves directory symlinks with Unix mode 0o120777.
 - Standalone CLI, callable from /merge-cleanup and /merge-cleanup-deep.
 """
 
@@ -49,13 +49,6 @@ WORKING_TREE_CACHE_DIRS: Set[str] = {
     ".parcel-cache",
     ".cache",
     ".DS_Store",
-}
-
-# Top-level disposable build directories (excluded ONLY at the root of the working tree)
-TOP_LEVEL_BUILD_DIRS: Set[str] = {
-    "target",
-    "build",
-    "dist",
 }
 
 
@@ -235,8 +228,6 @@ def zip_clone_folder(
                     elif exclude_caches and not in_git:
                         if d in WORKING_TREE_CACHE_DIRS:
                             dirs_to_remove.append(d)
-                        elif len(rel_from_clone.parts) == 0 and d in TOP_LEVEL_BUILD_DIRS:
-                            dirs_to_remove.append(d)
 
                 for d in dirs_to_remove:
                     dirs.remove(d)
@@ -309,7 +300,6 @@ def build_backup_layout(
         "exclusion_policy": {
             "git_metadata_exempt": True,
             "working_tree_cache_dirs": sorted(list(WORKING_TREE_CACHE_DIRS)),
-            "top_level_build_dirs": sorted(list(TOP_LEVEL_BUILD_DIRS)),
         },
         "clones": [],
         "all_verified": True,
