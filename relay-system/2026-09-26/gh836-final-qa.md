@@ -241,4 +241,12 @@ Reviewed the complete seeded diff, the changed test/hook files beyond their hunk
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) owns the pending disposable-clone full-hook run and its retained evidence.
 
+
+### Attestation · relay-drive — 2026-09-26T18:19:24Z
+task: RELAY-gh836-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 191e89774f032cf3593be0d7b62467ebcd512323
+added-range: 24559+3272
+added-sha256: c905426d15464df1f90ae43536287be825e5f6a75f80151fd055e3c1c36362f4
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
