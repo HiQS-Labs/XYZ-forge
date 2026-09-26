@@ -7,8 +7,9 @@ Usage: prs-definition-check.py <tree root>   Exit 0 = pass; 1 = any failure.
    and no other checked file has one.
 2. In each linked doc, the paragraph holding "Product Release System" links either the glossary heading
    (anchor = GitHub's slug of the real heading) or RELEASES-DB-FAQS.md, and the link's file exists.
-   PROJECT/PDDA.md and the skills are exempt: PDDA.md is adopted by other repos where paths differ, and
-   skills are deployed outside the repo, so relative links would break there.
+3. PROJECT/PDDA.md and the six skills are read outside this checkout (PDDA.md is adopted by other repos;
+   skills are deployed), so a relative link would break. Each must instead carry the absolute URL of the
+   glossary heading on development, with the anchor checked against the real heading.
 """
 import re
 import sys
@@ -21,6 +22,8 @@ ALL = ["HOW-TO-USE.md", "ROUTER.md", "AGENTS.md", "PROJECT/PDDA.md", "SOP.md", "
        "RELEASES-DB-FAQS.md", "README.md", "skills/2-daily/releases/SKILL.md", "skills/1-hourly/start-task/SKILL.md",
        "skills/2-daily/merge-cleanup/SKILL.md", "skills/2-daily/start-marathon/SKILL.md",
        "skills/3-weekly/10days/SKILL.md", "skills/3-weekly/end-of-week/SKILL.md"]
+PORTABLE = ["PROJECT/PDDA.md"] + ALL[8:]
+URL = "https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#"
 LINKED = ["HOW-TO-USE.md", "ROUTER.md", "AGENTS.md", "SOP.md", "ARCHITECTURE.md", "RELEASES-DB-FAQS.md", "README.md"]
 
 
@@ -64,6 +67,11 @@ for f in LINKED:
             ok = True
     if not ok:
         fails.append(f"{f}: the spelled-out paragraph links neither the glossary (#{anchor}) nor RELEASES-DB-FAQS.md")
+
+for f in PORTABLE:
+    text = (root / f).read_text(encoding="utf-8")
+    if anchor is None or URL + anchor not in text:
+        fails.append(f"{f}: no absolute pointer {URL}{anchor}")
 
 for x in fails:
     print("FAIL", x)

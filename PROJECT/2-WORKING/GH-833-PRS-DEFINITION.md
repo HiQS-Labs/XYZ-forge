@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan review round 1: Codex asked for a check of the one definition and its links (F1), a corrected list of the suites that read the skills (F2), and corrected red-control counts (F3). All three are in this revision. | Plan review round 2. Then the edits, the witnesses and final QA. |
+| Plan review round 2: Codex accepted F2 and F3 and asked that `PROJECT/PDDA.md` and the skills keep a pointer to the definition, by absolute URL. That and a `provenance.jsonl` are in this revision. | Plan review round 3. Then the edits, the witnesses and final QA. |
 
 ## Contents
 
@@ -141,9 +141,16 @@ once and points there or to `RELEASES-DB-FAQS.md` (PDDA Principle #4).
    and `RELEASES-DB-FAQS.md` links the glossary. `HOW-TO-USE.md` line 7 links its own glossary heading.
    - `PROJECT/PDDA.md`'s wording has to stand for other repos that adopt the PDDA contract: "in `releases.db` in
      releases-mode repos (the RELEASES ledger, which XYZ Forge calls the Product Release System, PRS)".
-   - `PROJECT/PDDA.md` gets no link: other repos adopt it, and there the path differs.
-4. **The six skills:** the spelled-out form at the R3 placement, with no link. Skills are deployed outside the
-   repo, where a relative link breaks.
+   - `PROJECT/PDDA.md` is read in other repos, where a relative path differs. Its placement links the glossary
+     by absolute URL, `https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first`.
+4. **The six skills:** the spelled-out form at the R3 placement, and the same absolute URL, since skills are
+   deployed outside the repo and a relative link breaks there.
+   - Absolute GitHub URLs are the existing practice for this; `relay-xyz`'s SKILL.md links
+     `relay-automation/` that way.
+   - Where the first use is in frontmatter (`10days` line 6) or a recite block (`end-of-week` line 32), the
+     URL goes in the nearest prose after it: `10days`' first body paragraph, and one line after
+     `end-of-week`'s recite block.
+   - The URL resolves once this merges, because the heading exists only on this branch until then.
 5. **`CHANGELOG.md`:** one top entry.
 6. **Witnesses:** see Verification.
 
@@ -168,11 +175,15 @@ No new suite or registry entry (AGENTS.md, *No new tests*). Manual checks go to
     `RELEASES-DB-FAQS.md`.
     - A glossary link's anchor must equal GitHub's slug of the real heading.
     - The linked file must exist.
-  - Red control, at base: 8 failures (no entry; no spelled-out paragraph in any of the seven).
+  - `PROJECT/PDDA.md` and the six skills must each contain the absolute glossary URL, with the anchor equal to
+    the slug of the real heading (Codex r2).
+  - Red control, at base: 15 failures: no entry, no spelled-out paragraph in any of the seven linked docs, and no
+    absolute pointer in any of the seven others.
   - Red controls after the edits, each in a scratch copy:
     - delete the glossary entry, and the check fails;
     - change ROUTER's anchor, and the check fails;
-    - add a second `- **PRS**` entry to `RELEASES-DB-FAQS.md`, and the check fails.
+    - add a second `- **PRS**` entry to `RELEASES-DB-FAQS.md`, and the check fails;
+    - change one skill's URL anchor, and the check fails.
 - **V2, tier 1.** `git diff --no-renames --name-only origin/development...HEAD | bash utils/ci-route.sh push`
   prints `tier=1`, the input `select_qualification_gate()` uses.
   - Red control: the same pipe with `relay-automation/README.md` appended prints `tier=3`.
