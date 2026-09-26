@@ -2,7 +2,7 @@
 gh_issue: 833
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/833
 title: "docs: codify PRS — the Product Release System (the RELEASES ledger) — as the third part of the XYZ Forge / PDDA / PRS trinity"
-status: Active — PR ready; awaiting merge (2-WORKING)
+status: Active — merged; Small run recorded (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -10,7 +10,7 @@ doc_type: docs
 branch: feat/gh833-prs-docs
 non_goals:
   - Renaming code, files, tables, CLI verbs or the RELEASES-* docs.
-  - Any new check or suite (AGENTS.md, No new tests).
+  - No new automated suite or registry entry (AGENTS.md, No new tests). Manual checks under TESTS-RESULTS/ are allowed. (Wording corrected by GH-844.)
   - Any file the tier router treats as non-docs; this landing must qualify through the hosted Small run.
   - Generated views (LEADERBOARD.md, PAGES/*), historical plans, CHANGELOG history and ledger row titles that already say "PRS".
 related:
@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Final QA Approved in round 2 (attested `1bcea1e9`). Rebased onto `f098ab43`, #838's reconcile commit, without conflicts; `git range-diff` shows all 17 patches identical (the attested head is now `24de3f13`). V1, V1b and V2 were re-run after the rebase and are green. PR opened. | Operator merge, alone. Then record the first hosted Small run here and in the #831 and #836 plans. |
+| Merged in PR #840 (`9fd2d885`). Its reconcile, [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201), is the first hosted Small run: tier 1, `validate.sh --sequential --subsystem small`, 76/76, 15.7 minutes, `tier: 2` receipt. CodeRabbit's post-merge findings are in umbrella #845. #844 (this evidence's check scope and recipe status) is fixed in the follow-up PR. | Close #833. Deployed skills pick up the text on the operator's next skills-army-hq deploy. |
 
 ## Contents
 

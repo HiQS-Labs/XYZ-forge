@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 2 approved. Codex final QA passed in round 2, attested at reviewed head `c49f0caa` ([relay](../../relay-system/2026-09-25/gh831-phase2-final-qa.md)). Round 1 had one finding, text only: core skills' markdown keeps its docs routing. The build: the Small list and D4 routing, the 8 suites off, the reconcile qualifying by tier, and the docs. The first real Small run passed 76/76 in 1,233 s locally, and the step-4 reconcile check passes 19/19 against its telemetry, with red controls. See "Phase 2 — what the build found". | The full gate through the push hook, in a disposable clone. The first run, at `9060ff09`, was red on `relay-pkg-freshness` (413/414) because the packaged `relay-automation/README.md` changed and the tarball was not rebuilt. It was regenerated in `1d069cc9`, and the re-run was GREEN, 414/414 in 944 s. PR #834 is open. CodeRabbit's three text findings are fixed in `7338ca94`, and the full gate re-ran GREEN, 414/414 in 938 s. Next: the operator's merge, then Phase 3. |
+| **Phase 3's QA gate is met (2026-09-26):** two hosted runs, cited below. #834's own reconcile ran the full registry (tier 3), and #840, the first docs-only landing after it, qualified through the Small run [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201) in 15.7 minutes with a `tier: 2` receipt. | Operator: close #831. D1 (move `gh436` to Large) is open in #836, because hosted Small is 15.7 minutes, over its ~12-minute threshold. |
 
 ## Table of contents
 
@@ -548,6 +548,23 @@ closeout.
 If either fails, use the rollback below.
 
 **Phase 3 QA gate:** those two hosted runs, cited by run ID.
+
+### Phase 3 results — 2026-09-26
+
+| Landing | Hosted run | Tier and gate | Result | Duration |
+|---|---|---|---|---|
+| #834, Phase 2 (`b2c307b4`) | [36247260339](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36247260339) | tier 3, `validate.sh --sequential` | success; receipt `TESTS-RESULTS/2026-09-26+GH-591/wave-b2c307b4…/provenance.jsonl`: gate `validate.sh --sequential`, no `tier` field (full runs carry none), 414/414 | 57.2 min job |
+| #840, GH-833 (`9fd2d885`), docs-only | [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201) | tier 1, `validate.sh --sequential --subsystem small` | success; receipt `TESTS-RESULTS/2026-09-26+GH-591/wave-9fd2d88543f9f52e2e40b2cb8fc4771b08440ff6/provenance.jsonl`: `pr: 840`, `tier: 2`, 73 suites, 76/76 (the suites, the PDDA gate and the Python layer) | 15.7 min gate, 19.2 min job |
+
+- **Both logs name their tier.** #840's log: `Qualifying 1 landing(s) in integrated snapshot 9fd2d885… with
+  \`validate.sh --sequential --subsystem small\` (tier 1)`.
+- **Faster than planned.** The plan expected about 18 minutes for Small. #836 (PR #838) had since trimmed
+  `gh549` and `gh436`.
+- **For comparison:** #838, which touched tests, took the full registry in 59.9 minutes (run 36271811800).
+- **Largest Small suites on the hosted runner** (from the run's `validation.jsonl`): `gh436-merge-cleanup` 221 s
+  (23 %), `gh549-work-events` 159 s (17 %), `pdda-install-startup-docs` 88 s, the PDDA gate 77 s,
+  `pdda-repo-contract` 58 s.
+- **No rollback trigger fired:** no Small-qualified landing hid a defect, and no Phase 3 run failed.
 
 ## Verification, rollback, blast radius
 
