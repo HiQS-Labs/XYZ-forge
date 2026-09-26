@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 built: the *No new tests* rail in `AGENTS.md`, the principle 13 change, repo-scoped rule text in 13 skills + `SOP.md`/`ARCHITECTURE.md`, `/express` using an existing suite, GH-732 deferred as superseded, pointers on #805/#732. Recorded check `phase1-rule-check.log` PASS (run 1 caught a gap in radar). The `relay-automation/`, `relay-xyz` and `.github/` lines move to Phase 2, where the full gate runs anyway. | Phase 1 QA gate: Codex final review of the diff, then the docs-gate push and the PR. |
+| Phase 1 approved: Codex final QA passed in round 2, attested at reviewed head `baeb72d4` ([relay](../../relay-system/2026-09-25/gh831-phase1-final-qa.md)). Round 1's two text fixes landed: start-task's general limits restored, and ci-debug's clone recipe made to fail closed. | Phase 1 PR: push through the hook, open the PR, merge after its hosted checks. Then Phase 2 on a fresh branch from `development`. |
 
 ## Table of contents
 
