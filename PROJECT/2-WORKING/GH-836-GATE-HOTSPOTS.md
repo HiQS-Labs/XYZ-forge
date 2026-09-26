@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — plan under Codex review (2-WORKING)
+status: Active — plan under Codex review, round 2 (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -69,7 +69,10 @@ before and after.
   about 274 roadmap rows.
 - The sleep runs on **every** row, so each racer crawls through 274 × 0.4 s ≈ 110 s in lockstep.
 - The leg needs only one duplicate (`NBF3 > NROWS`, `:1070`). A race window on the first few rows is enough.
-- The positive race itself (`:1052-1056`, two unmutated backfills) costs about 10 s and is not the problem.
+- The positive race itself (`:1038-1041`, two unmutated backfills) costs about 10 s and is not the problem.
+- The two racers are launched with a plain `for i in 1 2; do … & done; wait` (`:1068`). Nothing synchronises
+  them, and they walk the same ordered rows (`utils/py/releases_app.py:5175`). The per-row sleep is what
+  currently absorbs their startup skew (Codex plan r1, S1).
 
 **R2 — two `work backfill` calls with the board connector on cost 68.8 s + 38.0 s** (lines 1127 and 1178,
 section 21f).
@@ -78,8 +81,12 @@ section 21f).
 - `work backfill` projects every ledger row (`releases work backfill` has no issue filter). Each emit
   dispatches to the connector post-commit (`_dispatch_work_connectors`, `utils/py/releases_app.py:1613`), one
   mock-board subprocess per event.
-- Leg 21f's assertions read only `work_events` rows for issues 9920 and 9903 (`:1129-1146`), and its red (iii)
-  reads 9920's review_ready count (`:1180-1182`). None of them reads board state.
+- Leg 21f's assertions read only `work_events` rows for issues 9920 and 9903 (`:1129-1147`), and its red (iii)
+  reads 9920's review_ready count (`:1179-1183`). None of them reads board state.
+- `_scan_review_ready` runs before dispatch and derives its suppression from event history, not the cursor
+  (`utils/py/releases_app.py:5264-5324`, `:5628-5641`). So advancing the cursor skips only the old board
+  replay (Codex plan r1).
+- Red (i)'s backfill at `:1159` costs 2.9 s and stays as it is.
 - Connector dispatch is covered by legs 12–20. The same `work reconcile` alone, with the cursor at the tail,
   ran in 1 s on a scratch fixture.
 - `XYZ_WORK_CONNECTORS=0` skips dispatch (`:1620`) and the review_ready scan (`:5269`). So it may be set only on
@@ -93,7 +100,9 @@ section 21f).
   (`test/gh534_phase_c_tests.py:928`), which re-runs each script row's named test (`:587-590`).
 - A probe loaded `gh436`'s collection (180 tests). All 17 distinct named tests are in it: `gh436` imports
   phases A, B and C with `import *` (`test/gh436-merge-cleanup.py:863-865`), and phase C defines no `__all__`.
-  Every named test therefore already runs once in the same suite run, and a failing one fails the suite.
+  Every named test is therefore collected in the full invocation, and a failing one fails the suite.
+  Execution is subject to each test's existing prerequisites: `TestA4OpenHandles` skips without `lsof`
+  (`test/gh534_phase_a_tests.py:427-431`), exactly as its nested run does today. The baseline reports no skips.
 - No other caller passes `run_tests=True`. The five mutation controls (`:935-966`) call `_fails()`, which
   leaves it off.
 - GH-534's spec says the guard "asserts every named test exists and runs"
@@ -114,11 +123,23 @@ full gate makes a real agent call when agy or codex is on `PATH` (`test/relay-se
 Every step is an edit to an existing suite. Nothing is added to `test/` or the registry. Each red control is
 witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-836/`.
 
-1. **`gh549` 21e red control: bound the race window.** In the mutated copy only (`:1057-1062`), sleep for the
-   first 3 emits of each process instead of every emit, with a process-global counter in the inserted text.
-   The unmutated race, its `NROWS` fixture and both assertions are unchanged.
-   → expect: green. **Red control:** the mutated copy still duplicates (`NBF3 > NROWS`). It is witnessed 10
-   times in a row, so the smaller window is not flaky.
+1. **`gh549` 21e red control: a rendezvous, then a short race window.** This changes only the mutated copy's
+   inserted text (`:1057-1062`) and its launch line (`:1068`).
+   - On its first emit, each racer creates a marker file in a directory named by `GH549_RACE_DIR`, which only
+     this leg sets. It then waits, bounded at 10 s, until its peer's marker exists.
+   - Both racers then sleep 0.4 s on their first 3 emits, not on every emit. The rendezvous lines them up on the
+     same first row, so the window no longer depends on startup skew (Codex plan r1, S1).
+   - If the peer never arrives, the wait times out and the racer carries on. The leg's existing
+     `bad "21e red did not reproduce"` then fires loudly rather than passing quietly.
+   - The unmutated race, its `NROWS` fixture and both assertions are unchanged.
+
+   → expect: green. **Red-control witness, in the disposable clone:**
+   - the edited leg reproduces duplication (`NBF3 > NROWS`) with deliberately staggered launches: 0 s, 1.5 s and
+     3 s, in both orders, which is beyond the old 1.2 s sleep budget;
+   - both workers exit 0;
+   - the positive `NBF2 = NROWS` holds in the same runs.
+
+   **Fallback, if any offset fails:** keep the existing per-row sleep, and record 21e as untrimmed.
 2. **`gh549` 21f: backfill without board dispatch.**
    - Set `XYZ_WORK_CONNECTORS=0` on the `work backfill` calls in 21f and 21f red (iii) (`:1127`, `:1132`,
      `:1141`, `:1178`), and only those.
@@ -142,8 +163,8 @@ witnessed on the edited suite and recorded under `TESTS-RESULTS/2026-09-26+GH-83
    - (a) a SKILL.md row deleted in a scratch copy fails the parity test;
    - (b) a named test forced to fail in a scratch copy still fails the `gh436` suite, now through collection.
 4. **`gh649`: `pwd -P` at line 4.**
-   → expect: green from a physical path. **Red control:** from a clone under `/tmp`, red before the fix and
-   green after it.
+   → expect: green from a physical path. **Red control:** run it through the logical `/tmp/...` spelling,
+   not a physical path under the real directory `/tmp` points to: red before the fix, green after it.
 5. **Measure after.** Same device, same procedure as the baseline: `gh549` traced, `gh436` plain and
    `--durations`. The before/after table goes in this doc.
 6. **Hosted Small numbers (#836 step 2, #831 Phase 3).** When the first hosted Small run exists, record its run
