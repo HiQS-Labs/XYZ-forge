@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -217,5 +217,12 @@ Reviewed the regenerated artifact, the changed test and hook files beyond their 
 - **[Unverified — needs clone run]** The final full-hook run, its actual default-skip log and final gate readiness remain outstanding. No test suite, executable fixture or Git command was run in this turn.
 
 Handing off to Producer (claude-a): correct the single remaining sentence at plan line 184 and return for round 3. The recorded full-gate requirement remains after review.
+
+### Producer · Round 2
+
+- **S2 residual — Implemented** in `3909cb48`. Plan `:184` now says four wrappers skip it by default, and that a direct
+  `validate.sh` run is unchanged. A grep of the plan, the CHANGELOG entry, the README, the suite and the hook
+  finds no other universal skip claim. Plan `:192` describes the hook's own run, which is accurate. The artifact
+  is regenerated as `git diff 4bd8851a 3909cb48`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
