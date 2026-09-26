@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md` (the plan), with its evidence in `TESTS-RESULTS/2026-09-25+GH-831/` (`suite_map.py`, `suite-map.tsv`, `merge-projection.tsv`, `provenance.jsonl`). Requirements: GitHub issue #831 (body reproduced in the plan's Decision section by reference) and the operator decision on #802.
+- Artifact under review: `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md` (the plan). Evidence: `TESTS-RESULTS/2026-09-25+GH-831/suite_map.py`, `TESTS-RESULTS/2026-09-25+GH-831/suite-map.tsv`, `TESTS-RESULTS/2026-09-25+GH-831/merge-projection.tsv`, `TESTS-RESULTS/2026-09-25+GH-831/provenance.jsonl`. Requirements: GitHub issue #831 and the operator decision on #802.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-25
 - Definition of Done: the plan is **Approved** when (a) every #831 requirement maps to a plan item or to an explicit, justified operator decision (O1–O6); (b) the recon claims (R1, R5) match the code at the cited `file:line`s; (c) the design extends the existing classifier, registry, `--subsystem` selector and reconcile writer rather than adding a subsystem, writer, lane or **any new test suite**; (d) each phase has a falsifiable check and a rollback; (e) the 4-axis rating is grounded.
