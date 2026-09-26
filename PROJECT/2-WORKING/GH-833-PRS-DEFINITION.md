@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake (`7ee0ec0d`), recon and this plan. | Codex plan review. Then the edits, the witnesses and final QA. |
+| Plan review round 1: Codex asked for a check of the one definition and its links (F1), a corrected list of the suites that read the skills (F2), and corrected red-control counts (F3). All three are in this revision. | Plan review round 2. Then the edits, the witnesses and final QA. |
 
 ## Contents
 
@@ -100,12 +100,21 @@ Every file this plan touches is markdown or the ledger dump, and none is under t
 - It pipes the union of the pending landings' `git diff --name-only <merge>^ <merge>` through
   `utils/ci-route.sh push`.
 - It runs Small only if the result is `tier=1`.
-- The union covers every merged PR the run picks up, so #833 must be the only landing in its reconcile.
+- The union covers every merged PR the run picks up. Another docs-only landing in the same run would still
+  be tier 1, so merging #833 alone is a scheduling choice for a clean attribution of the first Small run, not
+  something the classifier needs.
 
 **R6 — suites that read these files.**
-- `releases-skill.sh` reads `/releases`, `gh400-source-url.sh` reads `10days`, and `gh436-merge-cleanup.sh`
-  reads merge-cleanup's SKILL.md. All three are in Small.
-- `gh609-sdlc-agent-gaps.sh` reads start-task's SKILL.md. It is registered, but not in Small.
+- `releases-skill.sh` reads `/releases`' SKILL.md, and is in Small.
+- `gh436-merge-cleanup.sh` reads the real merge-cleanup SKILL.md, and is in Small.
+  - `test/gh436-merge-cleanup.py:863-865` imports `gh534_phase_c_tests` with `import *`, and that module loads
+    `SKILL_MD` (`test/gh534_phase_c_tests.py:523`) for the capability-table parity guard and the drive-loop
+    check (`:870`).
+  - The SKILL.md paths in `gh436-merge-cleanup.py` itself are symlink fixtures (Codex r1 F2).
+- `gh609-sdlc-agent-gaps.sh` reads start-task's SKILL.md (`:33`). It is registered, but not in Small.
+- No registered suite reads the edited text of `10days`, `start-marathon` or `end-of-week`.
+  - `gh400-source-url.sh` mentions `10days` only in a comment (`:5`); it tests `swarm_preflight.py` (Codex r1 F2).
+  - Those three edits are checked by V1 and by reading the diff.
 - `gh615` and `gh616` also read start-task, but are off the registry since #834.
 - `gh778` and `gh798` read `ARCHITECTURE.md`'s skill table, which this plan does not touch.
 
@@ -128,10 +137,13 @@ once and points there or to `RELEASES-DB-FAQS.md` (PDDA Principle #4).
 2. **`ROUTER.md`:** one line after the intro naming the trinity. PRS is spelled out, and the line links the
    glossary entry.
 3. **The other six canonical docs:** the spelled-out form at the R2 placement, as a parenthetical or
-   appositive, with no restated definition.
+   appositive, with no restated definition. Its paragraph links the glossary heading or `RELEASES-DB-FAQS.md`,
+   and `RELEASES-DB-FAQS.md` links the glossary. `HOW-TO-USE.md` line 7 links its own glossary heading.
    - `PROJECT/PDDA.md`'s wording has to stand for other repos that adopt the PDDA contract: "in `releases.db` in
      releases-mode repos (the RELEASES ledger, which XYZ Forge calls the Product Release System, PRS)".
-4. **The six skills:** the spelled-out form at the R3 placement.
+   - `PROJECT/PDDA.md` gets no link: other repos adopt it, and there the path differs.
+4. **The six skills:** the spelled-out form at the R3 placement, with no link. Skills are deployed outside the
+   repo, where a relative link breaks.
 5. **`CHANGELOG.md`:** one top entry.
 6. **Witnesses:** see Verification.
 
@@ -145,21 +157,36 @@ No new suite or registry entry (AGENTS.md, *No new tests*). Manual checks go to
 - **V1, the definition-order check.** For each of the eight canonical docs and six skills, the first line
   matching `\bPRS\b` must also contain "Product Release System". Every file must have at least one match.
   Script: `prs-order-check.sh.txt`.
-  - Red control, at base: the same check fails on all 14 files, 13 with no match and `ROUTER.md` on line 119.
+  - Red control, at base (run 2026-09-26 against `af4fef27`): 0/14 pass. Ten files have no PRS. Four have a bare
+    PRS first: `ROUTER.md:119`, `start-marathon:239`, `10days:6` and `end-of-week:32`.
   - A second red control: remove the new ROUTER line in a scratch copy, and ROUTER fails again.
+- **V1b, the one definition and its links** (Codex r1 F1). Script: `prs-definition-check.py.txt`.
+  - `HOW-TO-USE.md`'s glossary has exactly one `- **PRS**` entry. It spells out "Product Release System" and
+    names XYZ Forge and PDDA. No other checked file has such an entry.
+  - In each of the seven linked docs (`HOW-TO-USE.md`, `ROUTER.md`, `AGENTS.md`, `SOP.md`, `ARCHITECTURE.md`,
+    `RELEASES-DB-FAQS.md`, `README.md`), the paragraph that spells out the term links either the glossary or
+    `RELEASES-DB-FAQS.md`.
+    - A glossary link's anchor must equal GitHub's slug of the real heading.
+    - The linked file must exist.
+  - Red control, at base: 8 failures (no entry; no spelled-out paragraph in any of the seven).
+  - Red controls after the edits, each in a scratch copy:
+    - delete the glossary entry, and the check fails;
+    - change ROUTER's anchor, and the check fails;
+    - add a second `- **PRS**` entry to `RELEASES-DB-FAQS.md`, and the check fails.
 - **V2, tier 1.** `git diff --no-renames --name-only origin/development...HEAD | bash utils/ci-route.sh push`
   prints `tier=1`, the input `select_qualification_gate()` uses.
   - Red control: the same pipe with `relay-automation/README.md` appended prints `tier=3`.
-- **V3, the suites that read the edited skills:** `releases-skill.sh`, `gh400-source-url.sh`,
-  `gh436-merge-cleanup.sh` and `gh609-sdlc-agent-gaps.sh`, run one at a time and all green.
+- **V3, the registered suites that read an edited skill** (R6): `releases-skill.sh`, `gh436-merge-cleanup.sh`
+  and `gh609-sdlc-agent-gaps.sh`. They run one at a time, in a separate disposable full clone at the final
+  commit, and must all be green.
 - **V4:** `utils/pdda/pdda.sh run` reports 0 errors.
-- **V5, the push gate:** a docs-only push takes the tier-1 docs gate, which is the qualifying local gate for
-  this tier. The full registry is not run locally; the hosted Small run is this landing's qualification.
+- **V5, the push gate:** the push takes the pre-push hook's tier-1 docs gate. That is a local push
+  self-check, not qualification. The landing is qualified only by the hosted Small run after merge.
 
 ## Merge and the hosted Small run
 
-- **Merge after #838's reconcile finishes** (run 36271811800), and when no other PR is merging, so #833 is the
-  only landing in its reconcile (R5).
+- **Merge after #838's reconcile finishes** (run 36271811800). Merge it when no other PR is landing, so the
+  first Small run is attributable to one docs-only landing (R5; a scheduling choice).
 - **After merge,** the reconcile should log `validate.sh --sequential --subsystem small` and write a
   `tier: 2` receipt with the Small list.
 - **Record** the run's ID, duration and suite count here and in `GH-831-THREE-TIER-GATE.md` and
@@ -170,7 +197,8 @@ No new suite or registry entry (AGENTS.md, *No new tests*). Manual checks go to
 ## Risk and rollback
 
 - **Risk:** a wording change breaks a skill-text assertion. V3 runs every registered suite that reads an
-  edited skill; `gh615`/`gh616` are off the registry.
+  edited skill; `gh615`/`gh616` are off the registry. The three skills no suite reads are checked by V1 and by
+  reading the diff.
 - **Risk:** the ledger dump conflicts with #838's reconcile commit. Rebase before push; resolve with
   `utils/releases-merge-resolve.sh` if needed.
 - **Rollback:** revert the commit. There is no state to migrate. Deployed skills pick up the text on the
