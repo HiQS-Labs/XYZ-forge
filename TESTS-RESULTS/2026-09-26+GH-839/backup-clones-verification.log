@@ -4,26 +4,27 @@ merge-cleanup: ERROR — Clone backup verification failed for 1 checkout(s): cor
 merge-cleanup: ERROR — Phase 6 completed with 1 teardown or backup failure(s).
 merge-cleanup: ERROR — Refusing to tear down fake: not a fresh Phase 6 inspection
 === GH-839 Production Verification & Falsifiers (Codex R3 Review) ===
-Timestamp: "2026-09-26T22:03:29Z"
+Timestamp: "2026-09-26T22:10:30Z"
 --- Falsifier 1: Git Refs & 100% Source Preservation (R3-1) ---
 PASS: Byte-for-byte read equality verified for all source (build/, dist/, target/, src/env/) and loose .git refs
 PASS: Working-tree node_modules excluded from archive
 PASS: manifest.json records git_metadata_exempt=True
 --- Falsifier 2: Zip Integrity Check & Corrupt Archive Detection (R3-2) ---
-PASS: test_zip_integrity() detected corrupt archive: Failed reading archive: File is not a zip file
+PASS: test_zip_integrity() detected invalid header: Failed reading archive: File is not a zip file
+PASS: test_zip_integrity() detected real payload CRC mismatch on disk: Corrupted file in archive: test_crc.txt
 --- Falsifier 3: Linked Worktree Fail-Closed Refusal (R2-2) ---
 PASS: Linked worktree with external Git storage is refused and fails verification closed
 --- Falsifier 4: Exclusive Run Allocation & Suffixing (R2-4) ---
 PASS: Duplicate basenames disambiguated: repo.zip and parentB--repo.zip
 PASS: Re-run allocated fixed_ts_1 via atomic mkdir reservation
 --- Falsifier 5: Production Phase 6 Teardown Gate Execution (R2-3 / R3-2) ---
-merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+merge-cleanup: Operating on primary repo: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+Primary checkout: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -44,18 +45,18 @@ PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
 ================================================================================
 
 merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
-merge-cleanup: Backing up 1 candidate checkout(s) to /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
-merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_150331
+merge-cleanup: Backing up 1 candidate checkout(s) to /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
+merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151032
 
 ================================================================================
 PASS: Production merge_cleanup.main() returned exit code 2 and preserved unverified worktree
-merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+merge-cleanup: Operating on primary repo: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+Primary checkout: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -76,21 +77,18 @@ PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
 ================================================================================
 
 merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
-merge-cleanup: Backing up 1 candidate checkout(s) to /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
-merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_150332
+merge-cleanup: Backing up 1 candidate checkout(s) to /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
+merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151033
 
 ================================================================================
-PASS: Production merge_cleanup.main() rejected corrupt archive, withheld candidate, and exited 2
-merge-cleanup: Removing verified clean standalone clone: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/corrupt_clone...
-merge-cleanup: ✅ Moved clone corrupt_clone to Trash (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/fake_home/.Trash/corrupt_clone-97406)
-PASS: Red control witnessed: without the Phase 6 verification gate, teardown proceeds and deletes candidate
-merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+PASS: Production merge_cleanup.main() caught real disk CRC payload corruption, withheld candidate, and exited 2
+merge-cleanup: Operating on primary repo: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+Primary checkout: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -111,10 +109,10 @@ PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
 ================================================================================
 
 merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
-merge-cleanup: Backing up 1 candidate checkout(s) to /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
-merge-cleanup: Backup complete: 1 checkout(s) verified safe for teardown. Run dir: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_150333
-merge-cleanup: Removing verified clean standalone clone: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/clean_clone...
-merge-cleanup: ✅ Moved clone clean_clone to Trash (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/fake_home/.Trash/clean_clone-97406)
+merge-cleanup: Backing up 1 candidate checkout(s) to /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
+merge-cleanup: Backup complete: 1 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151034
+merge-cleanup: Removing verified clean standalone clone: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/clean_clone...
+merge-cleanup: ✅ Moved clone clean_clone to Trash (/private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/fake_home/.Trash/clean_clone-59427)
 
 ================================================================================
 merge-cleanup: Merge cleanup run complete.
