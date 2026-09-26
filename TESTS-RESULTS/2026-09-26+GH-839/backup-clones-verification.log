@@ -4,13 +4,14 @@ merge-cleanup: ERROR — Clone backup verification failed for 1 checkout(s): cor
 merge-cleanup: ERROR — Phase 6 completed with 1 teardown or backup failure(s).
 merge-cleanup: ERROR — Refusing to tear down fake: not a fresh Phase 6 inspection
 === GH-839 Production Verification & Falsifiers (Codex R3 Review) ===
-Timestamp: "2026-09-26T22:10:30Z"
+Timestamp: "2026-09-26T22:17:08Z"
 --- Falsifier 1: Git Refs & 100% Source Preservation (R3-1) ---
 PASS: Byte-for-byte read equality verified for all source (build/, dist/, target/, src/env/) and loose .git refs
 PASS: Working-tree node_modules excluded from archive
 PASS: manifest.json records git_metadata_exempt=True
 --- Falsifier 2: Zip Integrity Check & Corrupt Archive Detection (R3-2) ---
 PASS: test_zip_integrity() detected invalid header: Failed reading archive: File is not a zip file
+PASS: Direct read confirmed real underlying CRC exception: Bad CRC-32 for file 'test_crc.txt'
 PASS: test_zip_integrity() detected real payload CRC mismatch on disk: Corrupted file in archive: test_crc.txt
 --- Falsifier 3: Linked Worktree Fail-Closed Refusal (R2-2) ---
 PASS: Linked worktree with external Git storage is refused and fails verification closed
@@ -46,7 +47,7 @@ PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
 
 merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
 merge-cleanup: Backing up 1 candidate checkout(s) to /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
-merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151032
+merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151710
 
 ================================================================================
 PASS: Production merge_cleanup.main() returned exit code 2 and preserved unverified worktree
@@ -78,9 +79,10 @@ PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
 
 merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
 merge-cleanup: Backing up 1 candidate checkout(s) to /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
-merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151033
+merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151711
 
 ================================================================================
+PASS: Direct read confirmed real underlying CRC exception on clone archive: Bad CRC-32 for file 'corrupt_clone/README.md'
 PASS: Production merge_cleanup.main() caught real disk CRC payload corruption, withheld candidate, and exited 2
 merge-cleanup: Operating on primary repo: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/primary
 
@@ -110,9 +112,9 @@ PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
 
 merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
 merge-cleanup: Backing up 1 candidate checkout(s) to /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
-merge-cleanup: Backup complete: 1 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151034
+merge-cleanup: Backup complete: 1 checkout(s) verified safe for teardown. Run dir: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_151712
 merge-cleanup: Removing verified clean standalone clone: /private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/prod_env/clean_clone...
-merge-cleanup: ✅ Moved clone clean_clone to Trash (/private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/fake_home/.Trash/clean_clone-59427)
+merge-cleanup: ✅ Moved clone clean_clone to Trash (/private/tmp/gh839-disposable-clone/temp/gh839-prod-falsifiers/fake_home/.Trash/clean_clone-63718)
 
 ================================================================================
 merge-cleanup: Merge cleanup run complete.
