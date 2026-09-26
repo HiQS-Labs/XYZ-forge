@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — merged (#838); step 6 done; D1 and D3 await the operator (2-WORKING)
+status: Active — merged (#838); step 6 done; D1 decided (gh436 to Large), plan under review; D3 awaits the operator (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -10,9 +10,9 @@ doc_type: fix
 branch: fix/gh836-gate-hotspots
 non_goals:
   - New suites, registry entries or gate machinery (AGENTS.md, No new tests).
-  - Moving gh549 or gh436 out of Small; that is D1, the operator's decision, taken on hosted numbers.
+  - (#838's scope) Moving gh549 or gh436 out of Small. That was D1, the operator's decision on hosted numbers, decided 2026-09-26 and done in its own PR (see "D1 — gh436 to Large").
   - Rewriting gh549 to run in one process, or gh436 on template fixtures (deferred in #836).
-  - Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner (D2's hook default is the one operator-directed exception).
+  - (#838's scope) Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner (D2's hook default is the one operator-directed exception). D1's PR changes ci-route by operator decision.
 related:
   - "#835 — the gate-timing snapshot and its three profiling reviews (closed as completed)"
   - "#831 — the three-tier gate; its Phase 3 hosted Small evidence is recorded (run 36276061201)"
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Merged in #838; step 6 recorded in #847. **The operator decided D1 on 2026-09-26:** move `gh436` to Large "if relatively safe". The plan is below, in "D1 — `gh436` to Large". | Codex plan review of D1, then the edit, the witnesses, the full gate and final QA. |
+| D1 plan review round 1 (Codex): recon inputs corrected (S1); the routing checks become recorded probes, not new cases (S2); ROUTER and CI-canary notes and the stale frontmatter fixed. | Plan review round 2. |
 
 ## Contents
 
@@ -274,8 +274,14 @@ Removing it gives about 721 s (12.0 min).
 **Recon at `1eef93a3`.**
 - **What `gh436` reads.** Its only tier-1 (docs) inputs are `WORKTREE-SAFETY.md` (`test/gh534_phase_a_tests.py:125`)
   and merge-cleanup's `SKILL.md` (`test/gh534_phase_c_tests.py:523`, the parity guard and drive-loop check).
-  Everything else it reads is merge-cleanup code. That is not docs (`utils/ci-route.sh:67`) and already routes
-  tier 3 (`test/ci-route.sh:165`).
+  Its other real-repo inputs (corrected after Codex plan r1 S1) all route as non-docs, so a landing that changes
+  them already takes the full hosted reconcile (tier 2 or 3 → `wave_reconcile.py:589-614`):
+  - merge-cleanup code, tier 3 (`utils/ci-route.sh:67`, `test/ci-route.sh:165`);
+  - `utils/py/releases_app.py` and `utils/releases-merge-resolve.sh`, which phase B copies into fixtures
+    (`test/gh534_phase_b_tests.py:32-33,163-165`): tier 2;
+  - `.gitattributes`, copied by the same fixture: tier 3;
+  - `bin/tick`, invoked by phase A (`test/gh534_phase_a_tests.py:36,304`): tier 3, `route=full`.
+  The fixture ledger and README data are generated inside the fixtures (`gh534_phase_b_tests.py:161-170`).
 - **How the two files route today.** Both are docs, tier 1 (`is_docs_surface` rule 1, `*.md`).
 - **The gap without a compensating route.** A docs-only landing that edits either file would qualify through
   Small without `gh436`. Only the next full run, or promotion, would check it.
@@ -291,27 +297,40 @@ Removing it gives about 721 s (12.0 min).
 2. Add `WORKTREE-SAFETY.md` and `skills/*/merge-cleanup/SKILL.md` to the `full_required` case, with a GH-836 D1
    comment. A landing that touches either now takes the full registry at push and at the reconcile, so
    `gh436` still checks every change to its inputs.
-3. `test/ci-route.sh` edits to existing assertions and cases, no new suite:
-   - the Small pin goes 73 → 72, and asserts `gh436` is absent;
-   - two `expect_tier` cases say the two files take tier 3.
-4. Docs: `ROUTER.md`'s tier text if it names the count, the `CHANGELOG`, and this plan's Results.
+3. `test/ci-route.sh`: only the existing Small pin changes, 73 → 72, with `gh436` absent. That keeps the suite
+   truthful about the list it pins (AGENTS.md: "edit an existing suite only to keep it truthful"). The two new
+   routings are witnessed as recorded manual probes, not new cases (Codex plan r1 S2).
+4. Docs:
+   - `ROUTER.md:128-130`, which says skill markdown keeps docs routing except `relay-xyz` and
+     `relay-automation`, adds merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` as full-gate files (GH-836 D1);
+   - the `CHANGELOG`;
+   - this plan's Results.
 
 **Non-goals.** Changing any other suite's tier (D3, `gh645`/`gh674`, stays open); changing `gh436` itself;
 changing D2's hook default.
 
 **Verification (no new tests).**
-- **V1, red, then green:** run the edited `test/ci-route.sh` against the unedited `utils/ci-route.sh`. The Small
-  pin and both new cases must fail. Then run it against the edited router, where they must pass.
-- **V2, routing:** `WORKTREE-SAFETY.md`, merge-cleanup's `SKILL.md`, and each paired with `README.md`, route
-  `route=full tier=3`. `README.md` alone stays `tier=1`. `subsystems small` lists 72 suites, without `gh436`.
+- **V1, the pin, red then green:** run the edited `test/ci-route.sh` against the unedited `utils/ci-route.sh`
+  (a scratch copy). The Small-pin assertion must fail (73 listed). Against the edited router the whole suite
+  must pass.
+- **V2, routing, as recorded manual probes** (`TESTS-RESULTS/2026-09-26+GH-836/d1-routing-probes.log`, with
+  provenance):
+  - each probe records the command, exit status and non-empty `route=`/`tier=`/`tier_reason=` output;
+  - at base: `WORKTREE-SAFETY.md` and merge-cleanup's `SKILL.md` give `route=docs tier=1` (red);
+  - after: both, alone and each paired with `README.md`, give `route=full tier=3`, and `README.md` alone stays
+    `tier=1`;
+  - `subsystems small` lists 72 suites, without `gh436`.
 - **V3:** `gh306-registry-bidirectional.sh` and `gh35-test-tiers.sh` pass. They pin the registry and tier
   contracts.
 - **V4, the qualifying gate:** the push hook's full gate, once, on the final commit, in a disposable clone. This
   PR touches `utils/ci-route.sh` and a test, so its own reconcile runs the full registry.
 - **After merge,** the next docs-only landing's hosted Small run should list 72 suites and take about 12 min.
 
-**Risk.** A docs-only landing that edits either file now pays a full gate: about 15 min locally and 57–60 min
-hosted. By the 30-day count, that is about one landing a month.
+**Risk.**
+- **The cost:** a docs-only landing that edits either file now pays a full gate: about 15 min locally and 57–60
+  min hosted. By the 30-day count, that is about one landing a month.
+- **More CI:** `route=full` also selects CI's Ubuntu full-registry canary for such a PR (`.github/workflows/ci.yml:480-489`).
+  It is advisory, and it is extra runner time, not a new blocker.
 
 **Rollback.** Revert. Old receipts stay valid, because a receipt replays its own recorded list
 (`wave_reconcile.py:556`).
