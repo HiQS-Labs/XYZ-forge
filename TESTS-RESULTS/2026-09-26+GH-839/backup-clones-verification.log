@@ -1,22 +1,85 @@
-=== GH-839 Comprehensive Verification & Falsifiers (Codex R1 Review) ===
-Timestamp: "2026-09-26T21:47:44Z"
---- Falsifier 1: Git Refs & Source Directory Preservation (R1-1) ---
-Checking zip contents for Falsifier 1:
-      17  clone1/.git/refs/heads/build/topic
-      13  clone1/src/env/config.py
-PASS: .git ref preserved
-PASS: src/env preserved
-PASS: node_modules excluded
---- Falsifier 2: Duplicate Basename Collision & Run Overwrite Protection (R1-2) ---
-Checking disambiguated zip files in collision run:
- - parentB--repo.zip (15766 bytes)
- - repo.zip (15766 bytes)
-PASS: repo.zip exists
-PASS: parentB--repo.zip exists disambiguated
-PASS: rerun allocated run_collisions_1 without clobbering run_collisions
---- Falsifier 3: Python Fallback Directory Symlinks (R1-3) ---
-PASS: Python fallback correctly preserved directory symlink current pointing to src
---- Falsifier 4: Corrupted Zip Integrity Gate & Failed Teardown Stop (R1-5, R1-6) ---
-PASS: Corrupted zip was rejected: Failed reading archive: File is not a zip file
-PASS: Phase 6 failure gate logic verified
-=== ALL FALSIFIER CONTROLS PASSED ===
+merge-cleanup: ERROR — Clone backup verification failed for 1 checkout(s): wt_clone; preserving from teardown.
+merge-cleanup: ERROR — Phase 6 completed with 1 teardown or backup failure(s).
+merge-cleanup: ERROR — Refusing to tear down fake: not a fresh Phase 6 inspection
+=== GH-839 Production Verification & Falsifiers (Codex R2 Review) ===
+Timestamp: "2026-09-26T21:56:54Z"
+--- Falsifier 1: Git Refs & Source Directory Preservation (R2-1) ---
+PASS: Loose refs under node_modules/, venv/, build/ preserved byte-for-byte in .git
+PASS: Source directory src/env/config.py preserved
+PASS: Working-tree node_modules/pkg/index.js excluded
+PASS: manifest.json records git_metadata_exempt=True
+--- Falsifier 2: Linked Worktree Fail-Closed Refusal (R2-2) ---
+PASS: Linked worktree with external Git storage is refused and fails verification closed
+--- Falsifier 3: Exclusive Run Allocation & Suffixing (R2-4) ---
+PASS: Duplicate basenames disambiguated: repo.zip and parentB--repo.zip
+PASS: Re-run allocated fixed_ts_1 via atomic mkdir reservation
+--- Falsifier 4: Production Phase 6 Teardown Gate Execution (R2-3) ---
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (2 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `primary` | standalone_clone | `development` | ✅ | 🔥 Active (1 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+| `wt_clone` | linked_worktree | `feat/wt2` | ✅ | 🔥 Active (2 in 10m) | 0 | 0 | **SAFE_REMOVE_WORKTREE** | Clean linked worktree, safe to remove via `git worktree remove` |
+
+merge-cleanup: No open PRs found for this repository.
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: Backing up 1 candidate checkout(s) to /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
+merge-cleanup: Backup complete: 0 checkout(s) verified safe for teardown. Run dir: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_145656
+
+================================================================================
+PASS: Production merge_cleanup.main() returned exit code 2 and preserved unverified worktree
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (2 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `primary` | standalone_clone | `development` | ✅ | 🔥 Active (1 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+| `clean_clone` | standalone_clone | `development` | ✅ | 🔥 Active (1 in 10m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+
+merge-cleanup: No open PRs found for this repository.
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: Backing up 1 candidate checkout(s) to /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups before teardown...
+merge-cleanup: Backup complete: 1 checkout(s) verified safe for teardown. Run dir: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/_backups/primary/2026-09-26_145657
+merge-cleanup: Removing verified clean standalone clone: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/prod_env/clean_clone...
+merge-cleanup: ✅ Moved clone clean_clone to Trash (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh839-backup-layout/temp/gh839-prod-falsifiers/fake_home/.Trash/clean_clone-40572)
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+PASS: Production merge_cleanup.main() backed up, verified, and tore down clean clone (exit 0)
+PASS: Production teardown_checkout() correctly refused stale record
+=== ALL PRODUCTION FALSIFIER CONTROLS PASSED ===

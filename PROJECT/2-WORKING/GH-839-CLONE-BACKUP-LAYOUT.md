@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implemented `backup_clones.py` utility and `--backup-first` CLI option in `merge_cleanup.py`. Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` and `skills/2-daily/merge-cleanup/SKILL.md`. Verified with `TestParityGuard` (7/7 pass), `gh589-skill-viewer.sh` (8/8 pass), and comprehensive falsifiers testing R1-1 through R1-6 in `TESTS-RESULTS/2026-09-26+GH-839/`. | Codex final QA relay, commit diff, push branch, and open ready PR against `development`. |
+| Implemented `backup_clones.py` utility and `--backup-first` CLI option in `merge_cleanup.py`. Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` and `skills/2-daily/merge-cleanup/SKILL.md`. Verified with `TestParityGuard` (7/7 pass), `gh589-skill-viewer.sh` (8/8 pass), and production falsifiers testing R2-1 through R2-4 (`verify_production.py`, 16 asserts) in `TESTS-RESULTS/2026-09-26+GH-839/`. | Codex final QA relay, commit diff, push branch, and open ready PR against `development`. |
 
 ## Context & Problem Statement
 

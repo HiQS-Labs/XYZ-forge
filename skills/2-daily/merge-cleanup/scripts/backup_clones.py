@@ -204,65 +204,19 @@ def zip_clone_folder(
 ) -> Tuple[bool, Optional[str]]:
     """Create a zip archive of a clone folder, preserving Git metadata and code.
 
-    Excludes heavy disposable caches outside .git, preserves directory symlinks,
-    and bundles linked worktree administration if applicable.
+    Uses standard library zipfile with atomic exclusive creation (mode 'x').
+    Strictly exempts .git metadata from any cache exclusion: refs, objects, and
+    HEAD are fully preserved regardless of branch or directory name.
+    Excludes heavy disposable caches outside .git, and preserves directory symlinks.
     """
     if dry_run:
         return True, None
 
     dest_zip_path.parent.mkdir(parents=True, exist_ok=True)
-    if dest_zip_path.exists():
-        return False, f"Destination archive already exists: {dest_zip_path}"
-
-    parent_dir = clone_path.parent
     clone_name = clone_path.name
 
-    git_entry = clone_path / ".git"
-    linked_gitdir: Optional[Path] = None
-    if git_entry.is_file():
-        try:
-            content = git_entry.read_text(encoding="utf-8").strip()
-            if content.startswith("gitdir:"):
-                raw_gd = content.split(":", 1)[1].strip()
-                p_gd = Path(raw_gd)
-                if not p_gd.is_absolute():
-                    p_gd = (clone_path / p_gd).resolve()
-                if p_gd.exists() and p_gd.is_dir():
-                    linked_gitdir = p_gd
-        except Exception:
-            pass
-
-    zip_bin = shutil.which("zip")
-    if zip_bin:
-        cmd = [zip_bin, "-ryq", str(dest_zip_path.resolve()), clone_name]
-        if exclude_caches:
-            # Explicitly exclude caches outside .git
-            for exc in sorted(WORKING_TREE_CACHE_DIRS):
-                cmd.extend(["-x", f"*/{exc}/*", f"*/{exc}"])
-            # Root-level only build directories
-            for b_dir in sorted(TOP_LEVEL_BUILD_DIRS):
-                cmd.extend(["-x", f"{clone_name}/{b_dir}/*", f"{clone_name}/{b_dir}"])
-        try:
-            res = subprocess.run(cmd, cwd=str(parent_dir), capture_output=True, text=True, check=False)
-            if res.returncode != 0:
-                return False, f"zip binary exited with code {res.returncode}: {res.stderr.strip()}"
-
-            # If linked worktree, append the worktree administrative state to make it self-contained
-            if linked_gitdir and linked_gitdir.is_dir():
-                with zipfile.ZipFile(dest_zip_path, "a", compression=zipfile.ZIP_DEFLATED) as zf:
-                    for root, dirs, files in os.walk(linked_gitdir):
-                        for file in files:
-                            full_f = Path(root) / file
-                            rel_admin = Path(clone_name) / ".git_admin" / full_f.relative_to(linked_gitdir)
-                            if full_f.is_file():
-                                zf.write(full_f, str(rel_admin))
-            return True, None
-        except Exception as exc:
-            return False, f"Failed running zip command: {exc}"
-
-    # Pure Python zipfile fallback
     try:
-        with zipfile.ZipFile(dest_zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        with zipfile.ZipFile(dest_zip_path, "x", compression=zipfile.ZIP_DEFLATED) as zf:
             for root, dirs, files in os.walk(clone_path):
                 rel_from_clone = Path(root).relative_to(clone_path)
                 in_git = len(rel_from_clone.parts) > 0 and rel_from_clone.parts[0] == ".git"
@@ -301,17 +255,11 @@ def zip_clone_folder(
                     elif full_p.is_file():
                         zf.write(full_p, str(rel_p))
 
-            if linked_gitdir and linked_gitdir.is_dir():
-                for root, dirs, files in os.walk(linked_gitdir):
-                    for file in files:
-                        full_f = Path(root) / file
-                        rel_admin = Path(clone_name) / ".git_admin" / full_f.relative_to(linked_gitdir)
-                        if full_f.is_file():
-                            zf.write(full_f, str(rel_admin))
-
         return True, None
+    except FileExistsError:
+        return False, f"Destination archive already exists (exclusive creation refused overwrite): {dest_zip_path}"
     except Exception as exc:
-        return False, f"Pure Python zipping failed: {exc}"
+        return False, f"Zip archive creation failed: {exc}"
 
 
 def build_backup_layout(
@@ -326,13 +274,24 @@ def build_backup_layout(
     if not timestamp:
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
-    run_dir = backup_root / repo_name / timestamp
-    # Ensure run_dir is unique and does not overwrite existing run
-    if not dry_run and run_dir.exists() and any(run_dir.iterdir()):
-        counter = 1
-        while (backup_root / repo_name / f"{timestamp}_{counter}").exists():
-            counter += 1
-        timestamp = f"{timestamp}_{counter}"
+    base_timestamp = timestamp
+    counter = 0
+    run_dir: Path
+
+    if not dry_run:
+        # Atomic, exclusive run directory allocation (O_EXCL semantics via mkdir)
+        while True:
+            ts_str = f"{base_timestamp}_{counter}" if counter > 0 else base_timestamp
+            candidate_dir = backup_root / repo_name / ts_str
+            try:
+                candidate_dir.parent.mkdir(parents=True, exist_ok=True)
+                candidate_dir.mkdir(parents=False, exist_ok=False)
+                run_dir = candidate_dir
+                timestamp = ts_str
+                break
+            except FileExistsError:
+                counter += 1
+    else:
         run_dir = backup_root / repo_name / timestamp
 
     zips_dir = run_dir / "zips"
@@ -347,6 +306,11 @@ def build_backup_layout(
         "reports_dir": str(reports_dir),
         "timestamp": timestamp,
         "repo_name": repo_name,
+        "exclusion_policy": {
+            "git_metadata_exempt": True,
+            "working_tree_cache_dirs": sorted(list(WORKING_TREE_CACHE_DIRS)),
+            "top_level_build_dirs": sorted(list(TOP_LEVEL_BUILD_DIRS)),
+        },
         "clones": [],
         "all_verified": True,
         "total_bytes": 0,
@@ -393,6 +357,19 @@ def build_backup_layout(
             "error": None,
         }
 
+        # R2-2: Fail closed for external Git storage. A linked worktree depends on its parent
+        # repository's objects and common directory; it cannot be backed up as a self-contained archive.
+        if clone_info["is_linked_worktree"]:
+            clone_record["archive_name"] = "-"
+            clone_record["zip_path"] = ""
+            clone_record["error"] = (
+                "Refused: linked worktree with external Git storage cannot be backed up as a self-contained archive; standalone full clones only."
+            )
+            result["all_verified"] = False
+            manifest_rows.append(clone_record)
+            result["clones"].append(clone_record)
+            continue
+
         if dry_run:
             clone_record["verified"] = True
             manifest_rows.append(clone_record)
@@ -432,16 +409,20 @@ def build_backup_layout(
         manifest_rows.append(clone_record)
         result["clones"].append(clone_record)
 
+    result["status"] = "OK" if result["all_verified"] else "FAIL"
+
     if not dry_run:
         # Write MANIFEST.tsv
         tsv_path = meta_dir / "MANIFEST.tsv"
         with open(tsv_path, "w", encoding="utf-8") as f:
-            f.write("clone\tbranch\thead\tdirty_files\tunpushed_commits\tzip_sha256\tzip_bytes\tverified\n")
+            f.write("clone\tbranch\thead\ttype\tdirty_files\tunpushed_commits\tzip_sha256\tzip_bytes\tverified\terror\n")
             for r in manifest_rows:
                 ver_str = "PASS" if r["verified"] else "FAIL"
+                type_str = "worktree" if r["is_linked_worktree"] else "clone"
+                err_str = r["error"] or "-"
                 f.write(
-                    f"{r['clone']}\t{r['branch']}\t{r['head']}\t{r['dirty_files']}\t"
-                    f"{r['unpushed_commits']}\t{r['zip_sha256']}\t{r['zip_bytes']}\t{ver_str}\n"
+                    f"{r['clone']}\t{r['branch']}\t{r['head']}\t{type_str}\t{r['dirty_files']}\t"
+                    f"{r['unpushed_commits']}\t{r['zip_sha256']}\t{r['zip_bytes']}\t{ver_str}\t{err_str}\n"
                 )
 
         # Write manifest.json
