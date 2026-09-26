@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -424,5 +424,55 @@ Dispositions:
 Seeded diff refreshed at `.relay-artifacts/gh839-final.diff`.
 
 Handing off to Reviewer (codex) for Round 5 review.
+
+### Reviewer · Round 5 · codex
+
+VERDICT: FAIL
+Basis: The supplied disposable-clone red/green receipts address the prior preservation-assertion gap, but R4-2 remains open: both alleged payload-corruption controls modify ZIP filenames. Their green messages do not demonstrate a payload CRC mismatch. Round 5/5 ends Escalated.
+swept file: yes
+
+Scope: swept both implementation Python files, both affected skill documents, the complete manual verification script, capture, receipts/logs and relevant seeded change sections. No additional pre-existing implementation defect established beyond the previously reported R1-6. No git commands, suites, executable fixtures, archive creation, source edits or teardown ran. Runtime reproduction remains **[Unverified — needs clone run]**. Short implementation filenames below refer to `skills/2-daily/merge-cleanup/scripts/`; evidence filenames refer to `TESTS-RESULTS/2026-09-26+GH-839/`.
+
+- **[Should] R5-1 — R4-2 payload-CRC evidence remains unproven because the corruption offsets hit filenames.** `verify_production.py:115-123` writes `test_crc.txt`, then flips byte 40. Its local header is 30 bytes plus the 12-byte filename, so the payload begins at 42: byte 40 is the `x` in the filename. The production control at `:248` flips byte 50; for its first root file `corrupt_clone/README.md`, the payload starts at 53, and byte 50 is the filename dot. `ZipFile.testzip()` catches any `BadZipFile` and returns the offending filename, including when opening an entry fails because local and central filenames differ. Consequently `"Corrupted file in archive: test_crc.txt"` is not specific evidence of a CRC failure. The README and log messages still claim real payload CRC corruption.
+  Observed input: the exact filename strings and offsets above, present identically in the seeded diff and source; the read-only standard-library header probe below measures `payload_start=42/53`, `in_filename=True/True`. No fixture was executed.
+  Affected scope: R4-2 / DoD (e) manual corruption evidence and its coverage descriptions. No production behavior change or new CI suite is requested.
+  Falsifier: select an existing entry, compute its data start from its actual local-header offset plus filename and extra-field lengths, and mutate within its nonempty payload while leaving both filenames/headers intact. A disposable-clone run must observe an actual CRC/decompression failure from reading that entry, production preservation and nonzero exit, followed by the intact positive control.
+  Fix: correct the two corruption targets in the existing manual verification, record the underlying verifier failure (not only `testzip()` returning a name), rerun in a disposable full clone and refresh logs/hashes. Keep the already supplied gate-mutation red control. This is a bounded correction to the outstanding evidence request, not a request for broader coverage.
+
+- **[Pass] R4-1 now has a recorded failing preservation assertion.** `backup-clones-red.log` ends with `AssertionError: Refused linked worktree must be preserved from teardown!` after removing `wt_clone`; `provenance.jsonl:4` records exit 1 and the mutated source identity. The positive log ends with `=== ALL PRODUCTION FALSIFIER CONTROLS PASSED ===`, and row 3 records exit 0. Both logs name `/private/tmp/gh839-disposable-clone/`, matching the declared disposable-clone path after macOS path resolution. Their nonempty bytes match the supplied hashes. This accepts the retained red/green record, not a firsthand rerun; that clone is no longer available at the named path in this review environment.
+- **[Pass] Prior implementation corrections remain present.** `backup_clones.py:212` uses exclusive ZIP creation, `:279` exclusively reserves each run, `:228-247` preserves root build/dist/target and exempts Git metadata from cache pruning, `:351-361` refuses the reviewed `.git`-file checkout shape, and `:383-396` checks archive integrity then computes SHA256 before marking verified. `merge_cleanup.py:1271-1285` retains the verified-path filter and nonzero failure aggregation. These are source findings, not fresh execution claims.
+- **[Pass] Prior wording and scope corrections are retained.** Evidence README now says “sequential/repeated runs”; CHANGELOG and capture requirement 4 preserve `build/dist/target`. Both skills document linked-worktree refusal. Seeded diff headers contain no new `test/` suite or `validate.sh` edit. Read-only reconstruction of the two full-file additions (`backup_clones.py`, `verify_production.py`) equals the on-disk files.
+
+Read-only probe receipt: command `PYTHONDONTWRITEBYTECODE=1 python3 -`, with `TMPDIR="$PWD/.relay-scratch/tmp"`, using this stdin; exit **0**:
+```python
+import inspect, struct, zipfile
+for name, offset in [("test_crc.txt", 40), ("corrupt_clone/README.md", 50)]:
+    zi = zipfile.ZipInfo(name)
+    zi.CRC = 0
+    header = zi.FileHeader()
+    n, extra = struct.unpack_from("<HH", header, 26)
+    print(name, "filename_length", n, "payload_start", len(header),
+          "flip_offset", offset, "in_filename", 30 <= offset < 30+n,
+          "original_byte", chr(header[offset]))
+print(inspect.getsource(zipfile.ZipFile.testzip))
+```
+Decisive output: `test_crc.txt filename_length 12 payload_start 42 flip_offset 40 in_filename True original_byte x`; `corrupt_clone/README.md filename_length 23 payload_start 53 flip_offset 50 in_filename True original_byte .`; `testzip` source catches `BadZipFile` around both `self.open(...)` and reads, then returns `zinfo.filename`. This constructs header bytes in memory only, not an archive. An initial version exited **1** because `ZipInfo.CRC` was unset; assigning zero for header layout produced the successful probe above. The probe establishes offsets and exception handling, not a production execution result.
+
+Receipt-byte probe: command `PYTHONDONTWRITEBYTECODE=1 python3 -` using the following stdin; exit **0**:
+```python
+import hashlib, json
+from pathlib import Path
+b = Path("TESTS-RESULTS/2026-09-26+GH-839")
+for line in (b / "provenance.jsonl").read_text().splitlines():
+    r = json.loads(line)
+    data = (b / r["log"]).read_bytes()
+    assert data
+    print(r["log"], len(data), hashlib.sha256(data).hexdigest() == r["log_sha256"])
+```
+Decisive output: log sizes `579, 904, 8240, 4283`, all hash comparisons `True`. Hash consistency establishes the retained bytes, not the stronger CRC interpretation.
+
+Root cause: fixed byte offsets target variable-length ZIP headers, while `testzip()` collapses header and payload errors into the same result; fix site: manual corruption controls and their evidence descriptions, not the production verifier.
+
+Handing off to Producer (antigravity) — relay escalated at Round 5/5. Correct R5-1 in a disposable full clone and arrange renewed review; no approval or landing authorization is given.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
