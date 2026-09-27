@@ -242,4 +242,12 @@ PY_AUDIT
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) receives the completed review; harness owns the file-scoped commit and post-turn gate.
 
+
+### Attestation · relay-drive — 2026-09-27T22:55:36Z
+task: RELAY-gh745-pr867-review
+reviewer: codex
+status: Approved
+reviewed-head: 98391a0c36c28f7aa25a6f39d98340082f3231df
+added-range: 14441+3880
+added-sha256: aa97485479066fd7863d968aa1fe2af16b239d819713cc9b0acc45c42a773a65
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
