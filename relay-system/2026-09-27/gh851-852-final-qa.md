@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -96,5 +96,83 @@ multi-tenant or adversarial threat models, and do not ask for new infrastructure
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: F1/F2/F3/F5 are present and the recorded focused evidence supports their stated cases, but F4 does not preserve its head invariant through the subsequent mergeability poll. The full runtime-file sweep also found an existing hosted-wait failure path inconsistent with DoD (e). One-round adjudication belongs to the Producer and operator.
+swept file: yes
+
+Sweep scope: both complete runtime scripts, all three listed test files, SKILL.md, the complete plan and evidence summary, witness source and base/head records; CHANGELOG's current task entry. Historical CHANGELOG entries were not exhaustively audited. No Git commands, test suites, executable fixtures, network calls, or writers were run. Source-only probes below compile individual function ASTs with inert dependencies.
+
+- **[Blocker] R1 — the post-B1 mergeability poll can replace the head that F4 just checked.** At `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1000` the head is checked against `b1["commit"]`; at `:1004` `_await_mergeable` may refresh it again. The `:1005` stop tests only error/mergeability, and `:1008` prepares whatever head that later read returned. The probe below observes the changed-head read passing that stop. This is a concrete violation of “F4 cannot land a head other than the pushed one,” not a request for new infrastructure.
+  Observed input: pushed head `c*40`; first accepted observation `{headRefOid: c*40, mergeable: UNKNOWN, state: OPEN}`; next observation `{headRefOid: d*40, mergeable: MERGEABLE, state: OPEN}`.
+  Affected scope: post-B1 polling where the head differs on a later mergeability read, including a stale response or an ordinary later branch update.
+  Falsifier: the same sequence returning `c*40/MERGEABLE` must proceed; the `d*40/MERGEABLE` sequence must stop before preparing/merging that other head. Current probe accepts both.
+  Root cause: head equality is treated as a fact that survives another remote read; Fix site: the post-B1 acceptance predicate after `_await_mergeable`; Why not upstream/downstream: the earlier equality check cannot certify the later response. Recheck equality there and retain the expected SHA through the merge request (the existing merge call at `:157` is by PR number only). Record a manual negative control in the existing evidence area; add no suite.
+
+- **[Should] R2 — pre-existing hosted-wait fallback forgets observed activity after a read error.** `merge_cleanup.py:457` returns `fallback` on every lookup error, even after observing run 99 active on H; `:574` then invokes `run_local_wave_reconcile`. The narrow probe below observes `active_on_H then read_error -> fallback`. This contradicts SKILL.md:155's “Never invoke that local writer while the observed hosted run is queued or in progress” and prevents an unqualified DoD (e) attestation. The downstream writer's own guard may refuse (the plan cites exit 8); this finding does **not** claim concurrent writes or data loss were witnessed.
+  Observed input: run list first returns run 99, `headSha=a*40`, `status=in_progress`; next lookup exits 1 with `connection reset`, with no completion observed.
+  Affected scope: lookup failure after a matching active hosted run has already been observed during this wait.
+  Falsifier: active → completed/success must return success; active → lookup error must not authorize the local fallback. Both branches are measured below.
+  Root cause: a failed observation is treated as evidence that local reconciliation is safe; Fix site: `wait_for_hosted_reconcile`'s error exit after observed activity; Why not downstream: the downstream guard limits damage but does not satisfy this caller's promised no-invocation contract. Preserve that known-active state and stop on lost visibility, using the existing stop result; no new helper family is needed. Producer/operator may explicitly adjudicate this pre-existing defect, but should not attest the stronger safety claim unchanged.
+
+- **[Pass] F1/F2/F5, within measured scope.** `merge_cleanup.py:325,352,567,618,622` use `_net_git`, with `:618` passing `PUSH_GATE_TIMEOUT_S=3600`; `scan_clones.py:437` passes 180. Both mains use `setdefault` (`merge_cleanup.py:1084`, `scan_clones.py:1260`), preserving operator values. Recovery at `merge_cleanup.py:166` requires both MERGED and a merge oid. The default is 5400 at `:442`. The corresponding base/head rows in `TESTS-RESULTS/2026-09-27+GH-851/witness/{base,head}.jsonl` change in the expected directions, with the OPEN and permanent-error controls unchanged. No additional unbounded remote clone/fetch/push call was found in the two scripts: the remaining plain fetch, `merge_cleanup.py:329`, reads a local `source_clone`, as the plan explicitly excludes.
+
+- **[Pass] F3's intended refusal and SHA selection.** `merge_cleanup.py:1151` checks the PR read, MERGED state and merge oid before calling reconciliation with both SHAs. `witness/head.jsonl` records OPEN/read-error cases with zero reconciliation calls, and the stable active-run case with zero local-writer calls; the injected red control records one. These establish the listed scenarios, not R2's later-read-error scenario. `emit_pr_merged`'s revised docstring at `merge_cleanup.py:377` accurately distinguishes merge witnessing from recovery reconciliation.
+
+- **[Pass] Existing test corrections and focused receipts.** `test/gh436-merge-cleanup.py:308,361,379` and `test/gh534_phase_a_tests.py:505,632` contain the specified stub/fixture corrections. `test/gh534_phase_b_tests.py:521` injects MERGED and checks `reconcile.assert_called_once()`: this is within keeping the existing test truthful, not a new test case. The retained focused logs report 180 OK (`focused/gh436-merge-cleanup.log:2050`), 6 OK (`focused/gh674-merge-cleanup-hosted-lookup.log:5`), 8 OK (`focused/gh645-merge-cleanup-xyz-tools.log:3`), and the red-control `AssertionError: 0 != 2` (`focused/red-control.log:9`) followed by restore OK. `provenance.jsonl` names the commits and commands. A read-only size enumeration reported `logs 31 empty []` (exit 0). The manual witnesses record outcomes, rather than exiting nonzero on every behavioral regression; their base/head differences supply the negative controls. The F4 witness stops deliberately at clone preparation and covers only a head that remains unchanged afterward, so it does not falsify R1.
+
+- **[Pass] Specific questions 1–2.** Stopping on an exhausted post-push refresh error is consistent with Plan F4 and the existing post-resolution stop (`merge_cleanup.py:1004`); expanding deferral is not required by this plan. The diagnostic includes the error. Yes, dry-run `--reconcile-pr` now performs the PR read before the dry-run return in `run_post_merge_reconcile` (`:543`). This adds a bounded network dependency and possible exit 2, but no writer; it is consistent with the planned state check. Neither is a blocker.
+
+- **[Nit] Current plan status is stale.** `PROJECT/2-WORKING/GH-851-MERGE-CLEANUP-LANDING-RESILIENCE.md:34` still says implementation and witnesses are next. Update that table at adjudication to reflect the existing implementation/evidence and this FAIL. The #851/#852 ratings remain proportionate to the incidents described under “Ratings”; the review does not establish a different incident severity.
+
+- **[Unverified — needs clone run] Final-state gate and exact diff scope.** Per the operator's restriction, no suites were rerun and no `git diff 030ab5ba..HEAD` was obtained. The recorded focused runs name `9319ea9a`, and witnesses name `04fd21bf`; exact current-HEAD equivalence and the absence of other added files/registry entries require the harness's diff/gate attestation. No full local gate is claimed or requested beyond the agreed #854 staging route.
+
+Probe command (exit **0**; no imports of the application or fixtures, all dependencies inert):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, json
+from pathlib import Path
+from typing import Any, Dict, Optional
+from types import SimpleNamespace as S
+p = Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py")
+tree = ast.parse(p.read_text())
+def load(name, ns):
+    fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == name)
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), str(p), "exec"), ns)
+    return ns[name]
+for head in ("c"*40, "d"*40):
+    ns = dict(Dict=Dict, Any=Any, Path=Path, MERGEABLE_POLL_ATTEMPTS=6,
+              MERGEABLE_POLL_S=15, log=lambda _: None, _sleep=lambda _: None,
+              refresh_pr_with_retry=lambda *_, h=head: dict(headRefOid=h, mergeable="MERGEABLE", state="OPEN"))
+    info = load("_await_mergeable", ns)(5, dict(headRefOid="c"*40, mergeable="UNKNOWN", state="OPEN"), Path("."))
+    print("pushed=cccc returned="+info["headRefOid"][:4]+" post_poll_stop="+str(bool(info.get("error") or info.get("mergeable") != "MERGEABLE")))
+for next_state in ("success", "read_error"):
+    def row(status, conclusion):
+        return S(returncode=0, stdout=json.dumps([dict(databaseId=99, headSha="a"*40, status=status, conclusion=conclusion)]), stderr="")
+    responses = iter([row("in_progress", None), row("completed", "success") if next_state == "success" else S(returncode=1, stdout="", stderr="connection reset")])
+    ns = dict(Optional=Optional, Path=Path, json=json, HOSTED_WAIT_ENV="wait",
+              HOSTED_POLL_ENV="poll", HOSTED_GRACE_ENV="grace", _seconds_from_env=lambda _, d: d,
+              time=S(monotonic=lambda: 0, sleep=lambda _: None),
+              _gh=lambda *a, **k: next(responses), log=lambda _: None,
+              log_warn=lambda _: None, log_err=lambda _: None)
+    result = load("wait_for_hosted_reconcile", ns)("b"*40, Path("."), "development", pr_head="a"*40)
+    print("active_on_H then "+next_state+" -> "+result)
+PY
+```
+
+Decisive output:
+
+```text
+pushed=cccc returned=cccc post_poll_stop=False
+pushed=cccc returned=dddd post_poll_stop=False
+active_on_H then success -> success
+active_on_H then read_error -> fallback
+```
+
+Handing off to Producer (claude-a) for operator adjudication of R1/R2; STATUS is Escalated because this was the sole permitted round. No second review round is requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
