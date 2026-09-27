@@ -12,6 +12,9 @@ catalog entry.
 Follow-up: `start-task` now selects the final gate by changed-path scope, using the existing docs
 route for Markdown/text-only edits. Rename the deep topic assessment skill from `status` to
 `where-are-we-at` to avoid a name collision with agent-native status commands.
+Its installer removes a dangling `status` link only when it points to this skill's old path.
+If an old `status` link is still live, inspect its target and unlink it manually if it is the
+former skill; the installer leaves live links alone.
 
 ## 2026-09-25 — Promotion boundary cap fits the suite (GH-823)
 
