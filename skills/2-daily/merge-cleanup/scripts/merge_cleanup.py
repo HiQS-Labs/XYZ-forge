@@ -450,9 +450,14 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     ]
     expected_heads = {head for head in (merged_head, pr_head) if head}
     adopted_run_id = None
+    seen_active = None  # GH-852: once a run is seen in flight, losing sight of it is not "no run"
 
     while True:
         res = _gh(query, repo_path, timeout=60)
+        if res.returncode != 0 and seen_active is not None:
+            log_err(f"Hosted wave-reconcile run #{seen_active} was in flight and the lookup is now unavailable "
+                    f"({res.stderr.strip() or f'gh exited {res.returncode}'}); refusing to start the local reconciler")
+            return "active_timeout"
         if res.returncode != 0:
             log_warn(
                 "Hosted wave-reconcile lookup unavailable; using local reconciliation: "
@@ -464,6 +469,10 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             if not isinstance(runs, list):
                 raise ValueError("expected a JSON array")
         except (TypeError, ValueError) as exc:
+            if seen_active is not None:
+                log_err(f"Hosted wave-reconcile run #{seen_active} was in flight and the lookup returned unusable "
+                        f"JSON ({exc}); refusing to start the local reconciler")
+                return "active_timeout"
             log_warn(f"Hosted wave-reconcile lookup returned unusable JSON ({exc}); using local reconciliation")
             return "fallback"
         elapsed = time.monotonic() - started
@@ -503,6 +512,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             )
             return "fallback"
 
+        seen_active = run_id
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             log_err(
@@ -1002,6 +1012,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                             f"not the pushed {b1['commit'][:10]} — stopping")
                     return 2
                 info = _await_mergeable(p_num, info, primary_repo)
+                if not info.get("error") and info.get("headRefOid") != b1["commit"]:
+                    log_err(f"PR #{p_num}: head moved to {str(info.get('headRefOid'))[:10]} after the pushed "
+                            f"{b1['commit'][:10]} — stopping")
+                    return 2
                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                     return 2

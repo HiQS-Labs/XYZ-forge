@@ -262,6 +262,56 @@ def f4_regate(mc, sc, tmp):
     return {"rc": rc, "refresh_reads_head": reads, "landing_clone_heads": preps}
 
 
+def r1_head_moved_after_poll(mc, sc, tmp):
+    """Final QA R1: the pushed head arrives UNKNOWN, then the mergeability poll returns ANOTHER head."""
+    base = {"number": 5, "state": "OPEN", "headRefName": "feat/x", "baseRefName": "development", "labels": [],
+            "mergeCommit": None, "url": "u"}
+    other = "e" * 40
+    seq = [dict(base, headRefOid=P_OLD, mergeable="CONFLICTING"),
+           dict(base, headRefOid=P_NEW, mergeable="UNKNOWN"),
+           dict(base, headRefOid=other, mergeable="MERGEABLE")]
+    reads = []
+    def refresh(n, repo):
+        i = min(len(reads), len(seq) - 1)
+        reads.append(f"{seq[i]['headRefOid'][:4]}/{seq[i]['mergeable']}")
+        return dict(seq[i])
+    preps = []
+    def prep(info, primary, branch, workdir):
+        preps.append(info["headRefOid"][:4])
+        if len(preps) == 1:
+            return {"clone": Path(tmp), "merge_rc": 1, "error": ""}
+        return {"clone": Path(tmp), "merge_rc": None, "error": "WITNESS: reached the landing clone"}
+    b1 = {"resolved": True, "handoff": False, "reason": "", "commit": P_NEW, "log": [], "conflict_set": []}
+    args = argparse.Namespace(integration_branch="development", resume=False)
+    ar = mc.attempt_record
+    with mock.patch.object(mc, "refresh_pr_with_retry", side_effect=refresh), \
+         mock.patch.object(mc, "origin_url", return_value="https://example.invalid/x.git"), \
+         mock.patch.object(mc, "prepare_landing_clone", side_effect=prep), \
+         mock.patch.object(mc, "resolve_ledger_conflict", return_value=b1), \
+         mock.patch.object(mc, "validate_head_in_second_clone", return_value=(True, "ok")), \
+         mock.patch.object(mc, "push_resolved_head", return_value=(True, f"pushed {P_NEW[:10]}")), \
+         mock.patch.object(ar, "record_path", return_value=Path(tmp) / "rec.json"), \
+         mock.patch.object(ar, "reserve", return_value=(0, "slot reserved")), \
+         mock.patch.object(ar, "finish"), mock.patch.object(ar, "set_conflicts"), \
+         mock.patch.object(mc, "_sleep", lambda s: None):
+        rc = mc.land_prs([{"number": 5}], Path(tmp), args, dry_run=False)
+    return {"rc": rc, "refresh_reads": reads, "landing_clone_heads": preps,
+            "prepared_a_head_other_than_pushed": other[:4] in preps}
+
+
+def r2_active_then_lookup_error(mc, sc, tmp):
+    """Final QA R2: the run on H is seen in flight, then the next lookup fails."""
+    active = json.dumps([{"databaseId": 99, "status": "in_progress", "conclusion": None, "headSha": H, "event": "pull_request"}])
+    answers = iter([subprocess.CompletedProcess([], 0, active, ""),
+                    subprocess.CompletedProcess([], 1, "", "error: connection reset by peer")])
+    os.environ.update({"MERGE_CLEANUP_HOSTED_WAIT_S": "60", "MERGE_CLEANUP_HOSTED_POLL_S": "0",
+                       "MERGE_CLEANUP_HOSTED_GRACE_S": "0"})
+    with mock.patch.object(mc, "_gh", side_effect=lambda *a, **k: next(answers)), \
+         mock.patch.object(mc.time, "sleep", lambda s: None):
+        result = mc.wait_for_hosted_reconcile(M, Path(tmp), "development", pr_head=H)
+    return {"result": result, "local_writer_would_run": result == "fallback"}
+
+
 def f5_default(mc, sc, tmp):
     seen = []
     def spy(name, default):
@@ -275,7 +325,8 @@ def f5_default(mc, sc, tmp):
 
 
 CASES = [w1_clone_stall, w2_timeouts, w2a_scan_fetch_stall, w3_env, w4_transient, f2_merge_recovery,
-         f2_control_open, f3_lookup, f3_open_refused, f3_view_error, f3_red_control, f4_regate, f5_default]
+         f2_control_open, f3_lookup, f3_open_refused, f3_view_error, f3_red_control, f4_regate, f5_default,
+         r1_head_moved_after_poll, r2_active_then_lookup_error]
 
 
 def run_one(checkout, case, result_path):
@@ -291,6 +342,7 @@ def main():
     ap.add_argument("--label", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--one"), ap.add_argument("--result")
+    ap.add_argument("--cases", help="comma-separated subset of case names")
     a = ap.parse_args()
     if a.one:
         return run_one(a.checkout, a.one, a.result)
@@ -299,6 +351,8 @@ def main():
     with open(out / f"{a.label}.jsonl", "w") as jl:
         for case in CASES:
             name = case.__name__
+            if a.cases and name not in a.cases.split(","):
+                continue
             res_file = out / f".{a.label}-{name}.json"
             log_file = out / f"{a.label}-{name}.log"
             t0 = time.time()
