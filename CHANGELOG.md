@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-26 — `gh436` moves from Small to Large; its two docs inputs now take the full gate (GH-836 D1)
+
+The first hosted Small run took 15.7 minutes, over D1's ~12-minute line. `gh436-merge-cleanup.sh` was its largest
+suite at 221 s. The operator moved it to Large, and Small is now 72 suites, projected at about 12 minutes.
+
+`gh436` reads two docs: `WORKTREE-SAFETY.md` and merge-cleanup's `SKILL.md`. A docs-only landing that edits
+either would otherwise have qualified without it, so `utils/ci-route.sh` now routes both to the full gate. Every
+landing that changes something `gh436` reads still runs `gh436` at its hosted reconcile. Its code inputs already
+did. The cost is a full gate on the rare docs-only edits to those two files: one in the last 30 days.
+
+The existing `test/ci-route.sh` Small pin moves 73 → 72. The routing is witnessed by recorded probes (red at
+base, green after), not a new test.
+
 ## 2026-09-26 — The first hosted Small run qualified a docs landing in 15.7 minutes (GH-831 Phase 3)
 
 #840 (GH-833) was the first docs-only merge after the three-tier gate landed. The hosted reconcile qualified it
