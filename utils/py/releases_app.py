@@ -1367,19 +1367,6 @@ def refresh_preview(root):
         except Exception as exc:  # never let a rendered artifact break a committed write
             print("warning: %s refresh failed (the write itself is committed): %s"
                   % (name, exc), file=sys.stderr)
-    # LEADERBOARD.md rides the same adoption signal — generated, never hand-edited.
-    board = os.path.join(root, "LEADERBOARD.md")
-    script = os.path.join(root, "utils", "leaderboard.sh")
-    if os.path.exists(board) and os.path.exists(script):
-        try:
-            r = subprocess.run(["bash", script], cwd=root, capture_output=True, text=True,
-                               timeout=60)
-            if r.returncode != 0:
-                print("warning: LEADERBOARD.md refresh failed (the write itself is committed): %s"
-                      % (r.stderr.strip() or "exit %d" % r.returncode), file=sys.stderr)
-        except Exception as exc:
-            print("warning: LEADERBOARD.md refresh failed (the write itself is committed): %s"
-                  % exc, file=sys.stderr)
 
 
 # ── GH-549: work-state events ───────────────────────────────────────────────────────────────────
