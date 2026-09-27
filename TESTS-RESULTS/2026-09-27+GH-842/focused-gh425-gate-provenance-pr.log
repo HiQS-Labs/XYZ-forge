@@ -1,20 +1,20 @@
-test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing) ... wave-reconcile: Qualifying 2 landing(s) in integrated snapshot dbd600ed8e39efb18cd9b87487086ae1bd6db6cc with `validate.sh --sequential` (no diff for PR #425)
-wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-dbd600ed8e39efb18cd9b87487086ae1bd6db6cc/provenance.jsonl
+test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing) ... wave-reconcile: Qualifying 2 landing(s) in integrated snapshot 3b5be2b8d7d555e199e85e11f281bf8f87b35da8 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-3b5be2b8d7d555e199e85e11f281bf8f87b35da8/provenance.jsonl
 ok
-test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh591-qualification-f4rc_86y/source', '/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/wave-qualification-nrjbd2bt/repo']' returned non-zero exit status 124.
+test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh591-qualification-w9r__n8k/source', '/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/wave-qualification-2n85p840/repo']' returned non-zero exit status 124.
 ok
-test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c546b295d539b288719c43339c565451453b722f with `validate.sh --sequential` (no diff for PR #425)
-wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-c546b295d539b288719c43339c565451453b722f/provenance.jsonl
+test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 3b5be2b8d7d555e199e85e11f281bf8f87b35da8 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-3b5be2b8d7d555e199e85e11f281bf8f87b35da8/provenance.jsonl
 ok
-test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 27f5e45ad1abacd97f3e259d039ee2326154ea29 with `validate.sh --sequential` (no diff for PR #425)
-wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-27f5e45ad1abacd97f3e259d039ee2326154ea29/provenance.jsonl
-wave-reconcile:   Full-suite integration receipt matched for PR #425: TESTS-RESULTS/2026-09-27+GH-591/wave-27f5e45ad1abacd97f3e259d039ee2326154ea29/provenance.jsonl:1
+test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 84a6a6f3f18c06b9fd56b6b82260c8da21faff7b with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-84a6a6f3f18c06b9fd56b6b82260c8da21faff7b/provenance.jsonl
+wave-reconcile:   Full-suite integration receipt matched for PR #425: TESTS-RESULTS/2026-09-27+GH-591/wave-84a6a6f3f18c06b9fd56b6b82260c8da21faff7b/provenance.jsonl:1
 ok
-test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 27f5e45ad1abacd97f3e259d039ee2326154ea29 with `validate.sh --sequential` (no diff for PR #425)
-wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-27f5e45ad1abacd97f3e259d039ee2326154ea29/provenance.jsonl
+test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c1d06613e08a06d92600c254f5949588a87df66c with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-c1d06613e08a06d92600c254f5949588a87df66c/provenance.jsonl
 ok
-test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 6de92a492b2f0f8d206a4eadf18bddf8b91a5bf8 with `validate.sh --sequential` (no diff for PR #425)
-wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-6de92a492b2f0f8d206a4eadf18bddf8b91a5bf8/provenance.jsonl
+test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 1c873cfb625d42c5b9ab676cb477dffb408930a8 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-1c873cfb625d42c5b9ab676cb477dffb408930a8/provenance.jsonl
 wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
 wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
 wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
@@ -23,21 +23,21 @@ wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl
 wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
 wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
 ok
-test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ea1da61b31d4daf90d28deeb487505d3ba54b667 with `validate.sh --sequential` (no diff for PR #425)
-wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-ea1da61b31d4daf90d28deeb487505d3ba54b667/provenance.jsonl
+test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 1c873cfb625d42c5b9ab676cb477dffb408930a8 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-09-27+GH-591/wave-1c873cfb625d42c5b9ab676cb477dffb408930a8/provenance.jsonl
 wave-reconcile: Rolling back all uncommitted mutations...
 ok
-test_red_partial_and_identity_drift_produce_no_receipt (__main__.Qualification.test_red_partial_and_identity_drift_produce_no_receipt) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ea1da61b31d4daf90d28deeb487505d3ba54b667 with `validate.sh --sequential` (no diff for PR #425)
+test_red_partial_and_identity_drift_produce_no_receipt (__main__.Qualification.test_red_partial_and_identity_drift_produce_no_receipt) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot a9d513f734b7a23139615c61adb4bba827f0dfac with `validate.sh --sequential` (no diff for PR #425)
 wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['bash', 'validate.sh', '--sequential']' returned non-zero exit status 42.
-wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ea1da61b31d4daf90d28deeb487505d3ba54b667 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot a9d513f734b7a23139615c61adb4bba827f0dfac with `validate.sh --sequential` (no diff for PR #425)
 wave-reconcile: ERROR — Qualification failed; no receipt produced: validation telemetry has no unique completed run
-wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ea1da61b31d4daf90d28deeb487505d3ba54b667 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot a9d513f734b7a23139615c61adb4bba827f0dfac with `validate.sh --sequential` (no diff for PR #425)
 wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'status', '--porcelain']' returned non-zero exit status 128.
-wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ea1da61b31d4daf90d28deeb487505d3ba54b667 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot a9d513f734b7a23139615c61adb4bba827f0dfac with `validate.sh --sequential` (no diff for PR #425)
 wave-reconcile: ERROR — Qualification failed; no receipt produced: missing or malformed validation telemetry
-wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ea1da61b31d4daf90d28deeb487505d3ba54b667 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot a9d513f734b7a23139615c61adb4bba827f0dfac with `validate.sh --sequential` (no diff for PR #425)
 wave-reconcile: ERROR — Qualification failed; no receipt produced: missing or malformed validation telemetry
-wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ea1da61b31d4daf90d28deeb487505d3ba54b667 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot a9d513f734b7a23139615c61adb4bba827f0dfac with `validate.sh --sequential` (no diff for PR #425)
 wave-reconcile: ERROR — Qualification telemetry does not identify the launched validation process
 ok
 test_wrong_landing_fails_before_qualification (__main__.Qualification.test_wrong_landing_fails_before_qualification) ... wave-reconcile: ERROR — Qualification refuses PR #425: merge not in the tested development snapshot
@@ -59,6 +59,6 @@ test_unattributable_receipts_fail (__main__.Receipts.test_unattributable_receipt
 test_wrong_pr_is_rejected (__main__.Receipts.test_wrong_pr_is_rejected) ... ok
 
 ----------------------------------------------------------------------
-Ran 23 tests in 7.251s
+Ran 23 tests in 7.262s
 
 OK

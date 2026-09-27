@@ -1353,8 +1353,9 @@ def express_landings(repo_root):
 def unreconciled_commits(repo_root, metadata):
     """GH-842: first-parent direct commits since the cutover with no PR, bot or express landing.
 
-    PR landings are the merge commits unreconciled_prs already recorded in `metadata`; each pending
-    commit is added to `metadata` as ("commit", sha), where main() picks it up as a landing.
+    PR landings are the merge commits unreconciled_prs already recorded in `metadata`. Every eligible
+    commit is kept in `metadata` as ("commit", sha) so the newest-owner rule sees receipted ones too;
+    only those flagged `catchUp` (unqualified here, or owning drift in catch_up_prs) become landings.
     """
     merged_shas = {(meta.get("mergeCommit") or {}).get("oid") for (kind, _), meta in metadata.items() if kind == "pr"}
     if subprocess.run(["git", "cat-file", "-e", f"{DIRECT_COMMIT_CUTOVER}^{{commit}}"],
@@ -1374,8 +1375,12 @@ def unreconciled_commits(repo_root, metadata):
         if sha in merged_shas or sha in express or author == BOT_AUTHOR_EMAIL:
             continue
         meta = fetch_commit_metadata(repo_root, sha)
+        # Same clock as a PR's merged_at (UTC "Z"), so owner ranks compare across both kinds.
+        meta["mergedAt"] = datetime.fromisoformat(meta["mergedAt"]).astimezone(timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ")
+        metadata[("commit", sha)] = meta
         if not any(qualification_receipt_matches(repo_root, entry, meta) for entry in previous):
-            metadata[("commit", sha)] = meta
+            meta["catchUp"] = True
             pending.append(sha)
     log(f"Receipt recovery found {len(pending)} pending direct commit(s) since {DIRECT_COMMIT_CUTOVER[:12]}")
     return pending
@@ -1430,12 +1435,20 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
         matches = [pr for pr in candidates if pr.get("state", "").upper() == "MERGED"
                    and pr.get("baseRefName") == "development"
                    and issue in extract_linked_issues(pr, repo_slug)[0]]
+        # GH-842: a post-cutover direct commit that closes the issue competes for ownership too.
+        matches += [meta for (kind, _), meta in (qualification_metadata or {}).items()
+                    if kind == "commit" and issue in extract_linked_issues(meta, repo_slug)[0]]
         if not matches:
             log(f"WARNING — Closed GH-{issue} has reconciliation drift but no attributable merged development PR; "
                 "leaving this legacy row unchanged and continuing (GH-584; non-PR closure tracked by GH-492)")
             continue
-        # The most recent closing PR owns the current lifecycle transition.
-        found.add(str(max(matches, key=lambda pr: (pr.get("mergedAt") or "", pr["number"]))["number"]))
+        # The most recent closer owns the current lifecycle transition.
+        owner = max(matches, key=lambda pr: (pr.get("mergedAt") or "", pr.get("artifactKind") != "commit",
+                                             0 if pr.get("artifactKind") == "commit" else pr["number"]))
+        if owner.get("artifactKind") == "commit":
+            owner["catchUp"] = True
+        else:
+            found.add(str(owner["number"]))
     if qualification_metadata is not None:
         return sorted(found, key=lambda n: (qualification_metadata.get(("pr", n), {}).get("mergedAt") or "", int(n)))
     return sorted(found, key=int)
@@ -2175,7 +2188,7 @@ def main():
                 landing_items.extend(("pr", str(n)) for n in catch_up_prs(
                     repo_root, repo_slug, offline_manifest, qualification_metadata=metadata if args.qualify else None))
                 # GH-842: catch-up records pending direct commits in `metadata` alongside the PRs.
-                landing_items.extend(key for key in metadata if key[0] == "commit")
+                landing_items.extend(key for key, meta in metadata.items() if key[0] == "commit" and meta.get("catchUp"))
             landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
             if args.qualify and landing_items:
                 for kind, value in landing_items:
