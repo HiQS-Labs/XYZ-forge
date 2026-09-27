@@ -1,0 +1,9 @@
+failed rounds: 29/200
+error classes:
+  35 sqlite3.OperationalError: database is locked
+raising frames:
+  35   utils/py/harness_app.py, line 171, in init_db
+failure latency (s):
+0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 
+rounds with row count != 10:
+29
