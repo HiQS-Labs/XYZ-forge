@@ -160,6 +160,7 @@ the answer will inform a landing.
 - **Linked Worktrees:** Always removed via `git worktree remove <path>` from parent clone, followed by `git worktree prune` and `git worktree repair`. **Zero `rm -rf` on linked worktrees!**
 - **Fresh inspection first (A.5):** the Phase 1–3 table is display. Before any removal, **every** non-exempt checkout (all `PRESERVE_*` and `SAFE_REMOVE_*` alike; only `PRIMARY_CHECKOUT`, `PRESERVED_USER_EXCLUDE`, `PRESERVE_WIKI` are exempt) is re-inspected after a fresh fetch, and only that verdict is acted on. A `PRESERVE_UNPUSHED` clone whose PR landed in Phase 5 becomes eligible here; anything that became dirty, claimed, or grew a local ref since the scan is preserved. `teardown_checkout()` refuses a record that is not a fresh Phase 6 inspection.
 - **Standalone Clones:** Only removed if verified 100% clean across Phase 2 & 3, and only by moving to Trash (`~/.Trash`). If Trash is unavailable the removal is **refused** — `rmtree` is not a removal path.
+- **Backup Before Teardown (`--backup-first`):** When `--backup-first` is passed, candidate checkouts are backed up and verified via `backup_clones.py` before teardown. Standalone full clones are archived into `<backup-root>/<repo>/<timestamp>/zips/<clone>.zip` and verified with `testzip()` CRC and SHA256 before removal. Linked worktrees (external Git storage) cannot produce self-contained archives and are refused for backup; unverified or failed backup candidates are preserved from teardown, their names logged, and Phase 6 exits with code 2.
 - **Symlink Cleanup:** Prunes dangling skill symlinks in `~/.claude/skills/` and `~/.gemini/**/skills/`.
 
 ---
@@ -235,7 +236,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | mergeable-unknown-poll | 5 | script | TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands |
 | exclude-drops-pr | 4 | script | TestPhase5EndToEnd.test_exclude_pr_number_drops_it_from_the_queue |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--resume`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`.
 
 ## CLI Usage
 
@@ -254,8 +255,8 @@ python3 skills/2-daily/merge-cleanup/scripts/toposort_prs.py
 # 4. Execute Full Sequence (Merges, Reconciliation, and Teardown)
 python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --execute
 
-# 5. Teardown Only (Clean Clones/Worktrees without merging PRs)
-python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --teardown-only --execute
+# 5. Teardown Only with Verified Backup (Safe aggressive deletion)
+python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --teardown-only --backup-first --execute
 
 # 6. Exclude Active In-Flight Work (e.g. PR 427)
 python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --exclude 427 --execute
