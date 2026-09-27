@@ -52,7 +52,7 @@ ROUND: 1 / 1
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the diff `030ab5ba..HEAD` on `fix/gh851-852-merge-cleanup-network` — `skills/2-daily/merge-cleanup/{SKILL.md,scripts/merge_cleanup.py,scripts/scan_clones.py}`, `test/gh436-merge-cleanup.py`, `test/gh534_phase_a_tests.py`, `test/gh534_phase_b_tests.py`, `CHANGELOG.md`, `TESTS-RESULTS/2026-09-27+GH-851/`, `PROJECT/2-WORKING/GH-851-MERGE-CLEANUP-LANDING-RESILIENCE.md`. Read in place; do NOT edit.
+- Artifact under review: the implementation diff from base 030ab5ba to HEAD on branch fix/gh851-852-merge-cleanup-network. Files: `skills/2-daily/merge-cleanup/SKILL.md`, `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, `skills/2-daily/merge-cleanup/scripts/scan_clones.py`, `test/gh436-merge-cleanup.py`, `test/gh534_phase_a_tests.py`, `test/gh534_phase_b_tests.py`, `CHANGELOG.md`, `TESTS-RESULTS/2026-09-27+GH-851/SUMMARY.md`, `PROJECT/2-WORKING/GH-851-MERGE-CLEANUP-LANDING-RESILIENCE.md`. Read in place; do NOT edit.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-27
 - Definition of Done: see *Review packet* below (a)–(f). **One round only** (operator, 2026-09-27: minimum ceremony; #854 staging route). A FAIL is adjudicated by the Producer and the operator, not re-reviewed.
