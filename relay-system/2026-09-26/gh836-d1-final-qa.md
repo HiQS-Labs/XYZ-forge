@@ -119,4 +119,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) should obtain V4 on the final commit in a disposable full clone before treating the change as gate-qualified.
 
+
+### Attestation · relay-drive — 2026-09-27T00:00:09Z
+task: RELAY-gh836-d1-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 12d7266777d2fca394d232a0ea67ed35157ff546
+added-range: 7677+3748
+added-sha256: ba720a706015a7e1c23c6ebf54de685c128efb58a8ca7ce148555e0ebf540b46
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
