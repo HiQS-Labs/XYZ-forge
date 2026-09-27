@@ -86,13 +86,15 @@ RETRY_BACKOFF_S = (2, 4)      # sleeps BETWEEN attempts: 3 calls, 2 sleeps
 MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll up to 6 × 15s
 MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
+PUSH_GATE_TIMEOUT_S = 3600    # a push to the integration branch runs the pre-push hook, which can run a gate
 
 # `execute_pr_merge` intentionally keeps its long-standing signature: Phase-A callers replace it
 # with a three-argument stub. Phase 5 records the exceptional PRs here before calling it.
 _WITHHOLD_BRANCH_DELETE: set[int] = set()
 
 TRANSIENT_RE = re.compile(
-    r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit",
+    r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit"
+    r"|operation too slow|connection reset",
     re.I,
 )
 
@@ -160,6 +162,13 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry
     log(f"Merging PR #{pr_num} via `gh {' '.join(merge_args)}`...")
     res = _gh(merge_args, repo_path, timeout=600)
     if res.returncode != 0:
+        # GH-852: gh can fail or be killed after GitHub has merged (#810). Only GitHub's own
+        # MERGED + merge commit counts, the same evidence the zero-exit path requires below.
+        info = refresh_pr(pr_num, repo_path)
+        oid = (info.get("mergeCommit") or {}).get("oid")
+        if info.get("state") == "MERGED" and oid:
+            log_warn(f"`gh pr merge` exited {res.returncode} but PR #{pr_num} reads MERGED as {oid[:10]} — continuing")
+            return True
         log_err(f"Failed to merge PR #{pr_num}: {res.stderr.strip()}")
         return False
     # E: a zero exit is not a landing (#510 class). The remote must say MERGED.
@@ -313,7 +322,7 @@ def validate_head_in_second_clone(primary_repo: Path, source_clone: Path, sha: s
     verified before and after (origin URL unchanged, HEAD is the sha we fetched)."""
     url = origin_url(primary_repo)
     second = workdir / f"verify-{sha[:8]}"
-    r = run_git(workdir, ["clone", "--quiet", url or "", str(second)])
+    r = _net_git(workdir, ["clone", "--quiet", url or "", str(second)])
     if r.returncode != 0:
         return False, f"second clone failed: {r.stderr.strip()[:200]}"
     ident_before = origin_url(second)
@@ -340,7 +349,7 @@ def push_resolved_head(pr: Dict[str, Any], clone: Path, sha: str, primary_repo: 
         return False, live["error"]
     if live.get("headRefOid") != pr["headRefOid"]:
         return False, f"remote head moved from {pr['headRefOid'][:10]} to {str(live.get('headRefOid'))[:10]} during resolution — not pushing"
-    r = run_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"])
+    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"])
     if r.returncode != 0:
         return False, f"push refused: {r.stderr.strip()[-400:]}"
     return True, f"pushed {sha[:10]} to {pr['headRefName']}"
@@ -370,10 +379,12 @@ def emit_pr_merged(repo_path, pr, dry_run=False):
 
     Placed here, and only here, for a reason the plan review made explicit: a completed roadmap
     marker does not prove a PR merged, and neither does a generic reconcile. The only honest
-    source for `merged` is a `gh pr merge` that returned 0, which is the caller's `if merged:`.
+    source for `merged` is the caller's `if merged:` — a `gh pr merge` whose PR then reads MERGED
+    with a merge commit, whether gh exited 0 or failed after GitHub had merged (GH-852).
 
-    Deliberately NOT emitted from --reconcile-pr, which never verifies merge state at all; that
-    path is covered by `releases work reconcile`.
+    Deliberately NOT emitted from --reconcile-pr. That mode now verifies the PR is MERGED before
+    reconciling (GH-852), but it did not witness the merge; that path is covered by
+    `releases work reconcile`.
 
     Keyed on the issues the PR closes, not the PR number — the board tracks issues, so emitting
     a PR number would create a card for something that is not on the board. A PR that closes
@@ -428,7 +439,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     window may be tracked by database id until GitHub populates its headSha. Only a matching
     SHA can attest success; unidentified activity only prevents racing the hosted writer.
     """
-    wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 1800)
+    wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 5400)
     poll_s = _seconds_from_env(HOSTED_POLL_ENV, 30)
     grace_s = _seconds_from_env(HOSTED_GRACE_ENV, 60)
     started = time.monotonic()
@@ -523,8 +534,12 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
 def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
                              dry_run: bool = True,
-                             pr_head: Optional[str] = None) -> bool:
-    """Wait for hosted reconciliation (or fall back locally), then run governance checks."""
+                             pr_head: Optional[str] = None,
+                             merged_head: Optional[str] = None) -> bool:
+    """Wait for hosted reconciliation (or fall back locally), then run governance checks.
+
+    `merged_head`, when given, is the PR's merge commit as GitHub reports it (--reconcile-pr);
+    otherwise the primary's HEAD, which the Phase-5 fast-forward has just moved to the merge."""
     if dry_run:
         log(f"[DRY RUN] Would wait for hosted reconciliation or run wave_reconcile.py --pr {pr_num}")
         return True
@@ -538,16 +553,18 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
     # 1. The merge fast-forward immediately before this call pins the workflow lookup to the
     # exact triggering head. Hosted success is authoritative; only an absent/completed-red run
     # selects the local writer. An active timeout stops instead of racing that writer.
-    head = run_git(repo_path, ["rev-parse", "HEAD"])
-    if head.returncode != 0 or not head.stdout.strip():
-        log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
-        return False
+    if not merged_head:
+        head = run_git(repo_path, ["rev-parse", "HEAD"])
+        if head.returncode != 0 or not head.stdout.strip():
+            log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
+            return False
+        merged_head = head.stdout.strip()
     hosted = wait_for_hosted_reconcile(
-        head.stdout.strip(), repo_path, integration_branch, pr_head=pr_head)
+        merged_head, repo_path, integration_branch, pr_head=pr_head)
     if hosted == "active_timeout":
         return False
     if hosted == "success":
-        fetched = run_git(repo_path, ["fetch", "origin", integration_branch])
+        fetched = _net_git(repo_path, ["fetch", "origin", integration_branch])
         if fetched.returncode != 0:
             log_err(f"Hosted reconciliation succeeded but fetch of origin/{integration_branch} failed: {fetched.stderr.strip()}")
             return False
@@ -598,11 +615,11 @@ def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_bran
             log_err(f"PR #{pr_num}: could not commit post-merge writes: {committed.stderr.strip()}")
             return False
 
-    pushed = run_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"])
+    pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
     if pushed.returncode != 0:
         log_err(f"PR #{pr_num}: could not push post-merge writes: {pushed.stderr.strip()}")
         return False
-    fetched = run_git(repo_path, ["fetch", "origin", integration_branch])
+    fetched = _net_git(repo_path, ["fetch", "origin", integration_branch])
     if fetched.returncode != 0:
         log_err(f"PR #{pr_num}: could not verify pushed integration head: {fetched.stderr.strip()}")
         return False
@@ -969,7 +986,22 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     keep_workdir = True
                     return 2
                 log(f"PR #{p_num}: {why}; re-fetching and re-gating the new head")
-                info = _await_mergeable(p_num, refresh_pr_with_retry(p_num, primary_repo), primary_repo)
+                # GH-851: straight after the push GitHub still reports the old head's CONFLICTING.
+                # Wait (bounded, GH-736's budget) until it reports the pushed head, then re-gate.
+                info = refresh_pr_with_retry(p_num, primary_repo)
+                polls = 0
+                while (not info.get("error") and info.get("headRefOid") != b1["commit"]
+                       and polls < MERGEABLE_POLL_ATTEMPTS):
+                    polls += 1
+                    log(f"PR #{p_num}: GitHub still reports head {str(info.get('headRefOid'))[:10]} — waiting "
+                        f"{MERGEABLE_POLL_S}s for {b1['commit'][:10]} ({polls}/{MERGEABLE_POLL_ATTEMPTS})")
+                    _sleep(MERGEABLE_POLL_S)
+                    info = refresh_pr_with_retry(p_num, primary_repo)
+                if not info.get("error") and info.get("headRefOid") != b1["commit"]:
+                    log_err(f"PR #{p_num}: GitHub still reports head {str(info.get('headRefOid'))[:10]}, "
+                            f"not the pushed {b1['commit'][:10]} — stopping")
+                    return 2
+                info = _await_mergeable(p_num, info, primary_repo)
                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                     return 2
@@ -1046,6 +1078,11 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
 
 
 def main():
+    # GH-852: every child git (including the pre-push hook's and releases_app's) aborts an HTTP
+    # transfer stalled below 1000 B/s for 120 s instead of waiting on a dead socket after a
+    # wake. An operator's own values win.
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_TIME", "120")
     parser = argparse.ArgumentParser(
         description="/merge-cleanup — Consolidate checkouts, sequence PRs, reconcile docs, and tear down safely."
     )
@@ -1109,9 +1146,20 @@ def main():
     if args.reconcile_pr > 0:
         if _primary_blocks("reconcile"):
             return 2
+        # GH-852: look up the hosted run by this PR's own head and merge commit, not the
+        # primary's HEAD; a PR GitHub does not report as merged has nothing to reconcile.
+        info = refresh_pr_with_retry(args.reconcile_pr, primary_repo)
+        if info.get("error"):
+            log_err(f"PR #{args.reconcile_pr}: cannot read its state — {info['error']}")
+            return 2
+        merge_oid = (info.get("mergeCommit") or {}).get("oid")
+        if info.get("state") != "MERGED" or not merge_oid:
+            log_err(f"PR #{args.reconcile_pr} is {info.get('state')}, not merged — nothing to reconcile")
+            return 2
         return 0 if run_post_merge_reconcile(
             args.reconcile_pr, primary_repo,
             integration_branch=args.integration_branch, dry_run=dry_run,
+            pr_head=info.get("headRefOid"), merged_head=merge_oid,
         ) else 2
 
     # Phase 1..3: Scan & Audit checkouts
