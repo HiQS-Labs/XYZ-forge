@@ -25,6 +25,8 @@ The skill serves as the canonical curation method for full-suite audits (GH-854,
 3. **Proposes Verdicts; Humans Decide:** The skill generates structured recommendations with citations and confidence ratings. It **never** directly edits `validate.sh`, `test/`, `utils/ci-route.sh`, or GitHub Actions workflows, never deletes files, and never opens pull requests. Changes to the registry or test files must be reviewed and approved by an operator per verdict class.
 4. **Restricted GitHub Writes:** The skill's only permitted GitHub write operations are creating/updating its own dedicated report issue and appending per-turn decision comments on that issue (see *Report Issue & Per-turn Comments*). It never modifies or comments on any other issue or PR.
 5. **Freeze & No New Tests Compliance (GH-831):** The skill respects repository test freezes. It introduces no new gate machinery, no new runner scripts, and no new test arrays (`NIGHTLY_TESTS` stays out of tree; candidates remain in `TESTS`). Quarantined suites use the existing unregister-and-exempt mechanism in `test/gh306-registry-bidirectional.sh`.
+6. **Honest Metrics:** Anything not measured is `UNKNOWN`; nothing is estimated silently.
+7. **Log Evidence Preservation:** Save each downloaded or extracted workflow log, run summary, or receipt into the evidence folder (`TESTS-RESULTS/<date>+GH-<n>/`) the first time it is read.
 
 ---
 
@@ -34,7 +36,8 @@ The skill serves as the canonical curation method for full-suite audits (GH-854,
 The unit of curation is **one entry in the `TESTS=(...)` array in `validate.sh`** (411 suites).
 - Anything the suite executes via `bash`, `python3`, `node`, or binary invocation belongs to its unit (e.g. `gh436-merge-cleanup.sh` running `gh436-merge-cleanup.py`).
 - Sourced libraries (`test/_setup.sh`, `test/lib/*.sh`) provide shared fixture and containment context.
-- Always record the `validate.sh` commit SHA and the current `test/gh306-registry-bidirectional.sh` `EXEMPT` list before scoring. Assert the list is non-empty and matches the registry count.
+- Always record the `validate.sh` commit SHA and the current `test/gh306-registry-bidirectional.sh` `EXEMPT` list before scoring. Assert `TESTS` is non-empty and matches `validate.sh --list`, and record `EXEMPT` separately.
+- **Subdirectory Suites:** Note that `test/gh306-registry-bidirectional.sh` `EXEMPT` only governs top-level `test/*.sh` files. Subdirectory suites (e.g. `synthetic/*`) that are turned off come out of `TESTS` and their own registry pin (`test/gh141-synthetic-registry.sh`), not into gh306 `EXEMPT`.
 
 ### Access Modes
 
@@ -52,6 +55,7 @@ Every audit report must explicitly disclose data boundaries:
 - **Committed Receipts:** Committed validation receipts represent passing (`green`) runs by construction; they provide accurate runtime distributions but no failure signal.
 - **Hosted CI Logs:** Historical failure logs are extracted from hosted `validate.sh` summary `failed:` blocks. Log retention is subject to GitHub Actions artifact windows (typically 14–90 days).
 - **Label Coverage:** Some test runs or shims may produce partial test label manifests (e.g. 355 of 411 suites labeled). Unlabeled suites are marked `UNKNOWN` for label-based heuristics.
+- **Unmeasured Signals:** Any signal, log, or receipt not directly observed or parsed is recorded as `UNKNOWN`; it is never estimated silently.
 
 ---
 
@@ -59,7 +63,7 @@ Every audit report must explicitly disclose data boundaries:
 
 | Signal | Source | Collection Rule |
 |---|---|---|
-| **Registry** | `validate.sh` `TESTS`, gh306 `EXEMPT` | Record commit SHA; assert list is non-empty and count matches `validate.sh --list`. |
+| **Registry** | `validate.sh` `TESTS`, gh306 `EXEMPT` | Record commit SHA; assert `TESTS` is non-empty and its count matches `validate.sh --list`. Record gh306 `EXEMPT` list separately. |
 | **Current Tier** | `utils/ci-route.sh` registry mapping | Record Small (tier 1/2), Medium, or Large-only for each suite. |
 | **Runtime** | `TESTS-RESULTS/.../validation.jsonl` (`event:"suite"`, `duration_ms`) | Compute median duration across at least 3 green full-gate receipts. Record runner host architecture. |
 | **Failure Tally** | Hosted `validate.sh` job summary `failed:` logs | Record failures as `k of N runs` over the analysis window (never report "never failed"). |
@@ -131,6 +135,7 @@ For every evaluated suite:
 2. *What credible regression makes it fail?* (State the failure scenario).
 3. *Why doesn't existing coverage catch it?* (Identify the unique boundary).
 4. *Does it require a test-only seam in production code?* (Reject artificial test-only hooks).
+- *Verdict Effect:* A suite with no clear answer to Q1 or Q2 is a candidate for `TURN-OFF` or `MERGE` (it guards no identified behavior or failure mode). A suite with answers to Q1 and Q2 but no answer to Q3 is a candidate for `MERGE` into its covering sibling.
 
 ---
 
@@ -154,7 +159,7 @@ For every evaluated suite:
 | **KEEP** | Meets retention bar, catches regressions, or uniquely guards a contract. | Retain in `validate.sh` `TESTS`. |
 | **KEEP-FIX** | Retained suite that is coupled, flaky, or host-sensitive with an active fix path. | Retain in `TESTS`; link fix issue or #853 umbrella. |
 | **NIGHTLY** (candidate) | Heavy suite with a faster PR-time sibling covering its full target set (see NIGHTLY Rule). | Listed as candidate for future scheduled runs (#859). Remains in `TESTS`. |
-| **QUARANTINE** | Flaky suite blocking CI with no immediate fix at HEAD. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with `quarantine: <issue>` reason. Keep file on disk. |
+| **QUARANTINE** | Flaky suite blocking CI with no immediate fix at HEAD. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with `quarantine: <issue>` reason. Keep file on disk. If multiple suites share the same root cause, recommend running `whack-a-mole` instead of isolated quarantines. |
 | **SPLIT** | Mixed suite (D5 prose ratio 0.2–0.6) combining behavioral checks with prose greps. | Propose splitting: retain executable contract checks; drop or move wording greps. |
 | **MERGE** | Redundant suite whose unique assertions are folded into a named keeper suite. | Propose folding assertions into keeper after red control; then turn off. |
 | **TURN-OFF** | Obsolete suite (target removed), pure prose suite (ratio ≥ 0.6 executing nothing), or fully covered sibling with no unique assertions. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with audit reason. Keep file on disk. |
@@ -175,7 +180,7 @@ Always **KEEP** a suite that independently guards:
 ### The NIGHTLY Rule
 A heavy suite $H$ is a candidate for NIGHTLY only when **all four conditions hold**:
 1. $H$ is heavy (D1: rank ≤ 10 or ≥ 1.0% gate time) and has **no** `regression-caught` failures in the audit window or issue history.
-2. A named sibling suite $S$ remains on the PR gate, and $S$'s invoked target scripts/binaries are a **superset** of $H$'s invoked targets (D3).
+2. A named sibling suite $S$ remains on the PR gate, and $S$'s invoked target scripts/binaries are a **superset** of $H$'s invoked targets (D3). Static reads, greps, and written files do not count toward superset target invocations; only invoked target scripts/binaries count.
 3. $S$ is significantly faster (median duration of $S \le 20\%$ of $H$) and has no open flakes.
 4. If $H$ guards a retention-bar contract, $S$ must guard that same contract.
 
@@ -188,7 +193,7 @@ A heavy suite $H$ is a candidate for NIGHTLY only when **all four conditions hol
 - **Check Pinned Suites:** Before proposing `TURN-OFF`, verify whether other suites assert the entry in `TESTS` (e.g. `gh35-test-tiers.sh`, `gh365-driver-lane-registry.sh`, `gh141-synthetic-registry.sh`, `ci-workflow.sh`, `gh379-canary-uses-validate.sh`, or release manifest suites).
 - **No Unbacked Merges:** If a proposed survivor for `MERGE` or `SPLIT` does not exist, mark the row as `parked: no survivor` rather than creating new suites under the freeze.
 - **High Confidence Required:** Non-KEEP recommendations require full source inspection and `HIGH` or `MED` confidence.
-- **14-Day Observation Window:** Approved turn-offs are moved to `EXEMPT` and observed for at least 14 days before any future file deletion is ever considered.
+- **Observation Window:** Approved turn-offs are moved to `EXEMPT` (or removed from registry pin) for an observation window before anyone considers deleting a file (at least 14 days).
 
 ---
 
@@ -219,6 +224,7 @@ The summary report includes:
 ## Report Issue & Per-turn Comments
 
 ### Report Issue Creation & Deduplication
+- **Title Format:** `ci-suite-audit: <audit date> report @ <registry SHA>` (e.g. `ci-suite-audit: 2026-09-27 report @ a076b1b1`).
 - **Deduplication Marker:** The report issue body begins with an HTML comment marker:
   `<!-- ci-suite-audit:<registry-sha>:<audit-date> -->`
 - **Dedupe First:** Before opening a new issue, search open issues for this marker (by label `ci-suite-audit` or title prefix `ci-suite-audit:`).
@@ -227,6 +233,7 @@ The summary report includes:
   - *Closed match:* Open a new issue referencing the previous closed report.
 - **Labels:** Apply `ci` and `stability`, plus `ci-suite-audit` if that label exists in the repository. **Never apply the `radar` label.**
 - **GitHub Size Limit (65,536 chars):** If the full report exceeds GitHub's issue body limit, place the summary, verdict counts, non-KEEP rows, and reminders in the issue body. Post the full per-suite TSV/table across sequentially numbered issue comments (`table part k of n`).
+- **Posting Fallback:** Attempt issue creation via GitHub CLI (`gh issue create`). If CLI is unavailable or unauthorized, create via GitHub connector tools. If running offline or without GitHub write permissions, write the formatted report to the evidence directory (`TESTS-RESULTS/<date>+GH-<issue>/ISSUE.md`) and alert the operator.
 
 ### Per-Turn Comments
 - In interactive audit sessions, after each turn where a decision is reached, post **one** structured comment detailing:

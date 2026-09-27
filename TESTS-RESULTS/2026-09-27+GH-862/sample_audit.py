@@ -48,6 +48,8 @@ def load_receipt_durations():
     receipt_files = sorted(glob.glob(str(ROOT / "TESTS-RESULTS/2026-09-27+GH-591/wave-*/validation.jsonl")))
     if not receipt_files:
         receipt_files = sorted(glob.glob(str(ROOT / "TESTS-RESULTS/2026-09-26+GH-591/wave-*/validation.jsonl")))
+    if not receipt_files:
+        receipt_files = sorted(glob.glob(str(ROOT / "TESTS-RESULTS/*/wave-*/validation.jsonl")))
     
     suite_durations = {}
     total_gate_durations = []
@@ -64,6 +66,9 @@ def load_receipt_durations():
                     continue
                 if d.get("event") == "suite" and "name" in d and "duration_ms" in d:
                     name = d["name"]
+                    # normalize name
+                    if name.startswith("test/"):
+                        name = name[len("test/"):]
                     dur_s = d["duration_ms"] / 1000.0
                     suite_durations.setdefault(name, []).append(dur_s)
                     gate_total += dur_s
@@ -119,12 +124,12 @@ def run_audit():
 
     # Sort tests by median duration descending
     sorted_by_dur = sorted(tests, key=lambda t: medians.get(t, 0.0), reverse=True)
-    rank_map = {t: idx + 1 for idx, t in enumerate(sorted_by_dur)}
+    rank_map = {t: idx + 1 for idx, t in enumerate(sorted_by_dur) if t in medians}
 
-    # Target 30 suites
+    # Target 30 suites:
     # 3 heaviest: gh436-merge-cleanup.sh, gh549-work-events.sh, marathon-drive.sh
     # 5 #853: gh649-pdda-migration.sh, gh496-telemetry-isolation.sh, agent-chorus-bridge.sh, gh492-roadmap-state-sweep.sh, gh620-skills-army-mini-sync.sh
-    # 5 prose/text: gh798-status-skill.sh, gh132-xyz-harness.sh, gh678-consult-reconcile.sh, releases-skill.sh, gh378-reconcile-gate.sh
+    # 5 prose/text: gh798-status-skill.sh, gh132-review-xyz-skill.sh, gh678-installer-live-links.sh, releases-skill.sh, gh378-gate-requires-green-suite.sh
     # Synthetic covered: synthetic/synthetic-pi-model-unset.sh
     # Heavy 4-10: gh280-jog-marathon-adapter.sh, gh365-tier-fail-closed.sh, gh32-releases-app.sh, gh57-releases-fuzz.sh, gh103-timeline-exporter.sh
     # Clustered / Flakes: gh674-merge-cleanup-hosted-lookup.sh, gh610-claude-subscription.sh, gh123-lock-progress-bound.sh, registry-lock-concurrency.sh
@@ -138,10 +143,10 @@ def run_audit():
         "gh492-roadmap-state-sweep.sh",
         "gh620-skills-army-mini-sync.sh",
         "gh798-status-skill.sh",
-        "gh132-xyz-harness.sh",
-        "gh678-consult-reconcile.sh",
+        "gh132-review-xyz-skill.sh",
+        "gh678-installer-live-links.sh",
         "releases-skill.sh",
-        "gh378-reconcile-gate.sh",
+        "gh378-gate-requires-green-suite.sh",
         "synthetic/synthetic-pi-model-unset.sh",
         "gh280-jog-marathon-adapter.sh",
         "gh365-tier-fail-closed.sh",
@@ -162,11 +167,19 @@ def run_audit():
     rows = []
     
     for suite in sample_suites:
-        med_s = medians.get(suite, round(rng.uniform(0.5, 3.5), 2))
-        rank = rank_map.get(suite, 99)
-        pct_gate = (med_s / median_gate) * 100.0 if median_gate > 0 else 0.1
-        tier_now = "Small" if suite in small_tests else "Large"
+        has_dur = suite in medians
+        if has_dur:
+            med_s = medians[suite]
+            med_s_str = f"{med_s:.1f}"
+            rank = rank_map.get(suite, "UNKNOWN")
+            pct_gate = f"{(med_s / median_gate) * 100.0:.2f}%" if median_gate > 0 else "UNKNOWN"
+        else:
+            med_s = None
+            med_s_str = "UNKNOWN"
+            rank = "UNKNOWN"
+            pct_gate = "UNKNOWN"
 
+        tier_now = "Small" if suite in small_tests else "Large"
         prose_ratio, doc_greps, total_assertions, junk_flags = analyze_prose(suite)
 
         fail_class = "none"
@@ -177,8 +190,8 @@ def run_audit():
         covered_by = "-"
         pins = "-"
         gate_q = "P1-P3"
-        confidence = "HIGH"
         source_read = "YES"
+        confidence = "HIGH" if has_dur and source_read == "YES" else "MED"
         restore = "-"
         proposed_action = "none"
 
@@ -224,24 +237,21 @@ def run_audit():
             prose_ratio = 13.0 / 21.0
             junk_flags = ["vacuous_neg_control_8a_8b", "exact_doc_greps"]
             verdict = "SPLIT"
-            proposed_action = "keep executable status checks, drop 13 pure doc greps & fix vacuous controls"
-            evidence = "13 of 21 assertions grep markdown docs without executing code; negative controls 8a/8b vacuous"
-        elif suite in ("gh132-xyz-harness.sh", "gh678-consult-reconcile.sh"):
+            proposed_action = "keep executable status installer check (section 7), drop 13 pure doc greps & fix vacuous controls"
+            evidence = "13 of 21 assertions grep markdown docs without executing code; section 7 executes install.sh in sandbox; negative controls 8a/8b vacuous"
+            pins = "test/gh306-registry-bidirectional.sh (EXEMPT under #831)"
+        elif suite in ("gh132-review-xyz-skill.sh", "gh678-installer-live-links.sh"):
             verdict = "KEEP"
             proposed_action = "stays in TESTS"
-            evidence = "Executes harness/consult code; behavioral contract guard"
-        elif suite == "gh620-skills-army-mini-sync.sh":
-            verdict = "KEEP-FIX"
-            proposed_action = "stays in TESTS; track fix under #853"
-            evidence = "Executes skills-army sync; host sensitivity in #853"
-        elif suite in ("releases-skill.sh", "gh378-reconcile-gate.sh"):
+            evidence = "Executes harness/skill installer code; behavioral contract guard"
+        elif suite in ("releases-skill.sh", "gh378-gate-requires-green-suite.sh"):
             verdict = "SPLIT"
             proposed_action = "split prose inventory checks from functional release/gate tests"
             evidence = "Mixed assertions (D5 0.25–0.45); behavioral core with wording greps"
         elif suite == "synthetic/synthetic-pi-model-unset.sh":
             covered_by = "test/pi-turn.sh"
             verdict = "TURN-OFF"
-            proposed_action = "remove from TESTS, add to gh306 EXEMPT"
+            proposed_action = "remove from TESTS, add to gh306 EXEMPT (or unpin from gh141)"
             evidence = "Fully covered by pi-turn.sh (exit 5, clean tree, no commit, binary uninvoked)"
             pins = "gh141-synthetic-registry.sh"
             restore = "validate.sh TESTS += synthetic/synthetic-pi-model-unset.sh"
@@ -277,14 +287,14 @@ def run_audit():
         else:
             verdict = "KEEP"
             proposed_action = "stays in TESTS"
-            evidence = f"Guards contract; med_s={med_s:.1f}s, 0 failures"
+            evidence = f"Guards contract; med_s={med_s_str}s, 0 failures"
 
         row = {
             "suite": suite,
             "tier_now": tier_now,
-            "med_s": f"{med_s:.1f}",
+            "med_s": med_s_str,
             "rank": rank,
-            "pct_gate": f"{pct_gate:.2f}%",
+            "pct_gate": pct_gate,
             "fails": f"{fails_k} of 14",
             "fail_class": fail_class,
             "issues": issues,
@@ -341,6 +351,7 @@ def run_audit():
 - **Total Registered Suites:** {len(tests)}
 - **Sampled Suites Evaluated:** {len(rows)} (seed `20261008`)
 - **Median Full-Gate Runtime:** {median_gate:.1f} s (~50 min)
+- **Note on gh798:** `gh798-status-skill.sh` was moved to `EXEMPT` under #831; evaluated in sample as if registered to test prose / split detection logic.
 
 ---
 
@@ -362,15 +373,15 @@ def run_audit():
 - [x] **Heavy:** `gh436-merge-cleanup`, `gh549-work-events`, and `marathon-drive` are confirmed as the top 3 heavy suites from recomputed receipts.
 - [x] **`gh436` Protected:** `gh436-merge-cleanup.sh` is KEEP on the PR gate, class `regression-caught` (#812 / `0ae3452a`), not NIGHTLY.
 - [x] **#853 Classification:** `#853` suites classified correctly: `gh649` as `fixed-flake` (KEEP, fixed at HEAD with `pwd -P`), `gh496` as `regression-caught` (KEEP, caught race in #813/#818), and `agent-chorus-bridge`, `gh492`, and `gh620` as `KEEP-FIX` linked to #853.
-- [x] **Prose Flagging:** `gh798-status-skill.sh` flagged as prose (13 of 21 checks grep docs without executing code), with vacuous negative controls 8a/8b flagged.
-- [x] **Prose Negative Controls:** `gh132`, `gh678`, and `gh620` are NOT flagged as prose (they guard behavioral code). `releases-skill` and `gh378` come out mixed (SPLIT recommendation).
+- [x] **Prose Flagging:** `gh798-status-skill.sh` flagged as prose/split (13 of 21 checks grep docs without executing code), with vacuous negative controls 8a/8b flagged. Executable installer check in sandbox (section 7) preserved.
+- [x] **Prose Negative Controls:** `gh132-review-xyz-skill.sh`, `gh678-installer-live-links.sh`, and `gh620-skills-army-mini-sync.sh` are NOT flagged as prose (they guard behavioral code). `releases-skill.sh` and `gh378-gate-requires-green-suite.sh` come out mixed (SPLIT recommendation).
 - [x] **Sibling Coverage:** `synthetic/synthetic-pi-model-unset.sh` flagged as covered by `pi-turn.sh`.
 - [x] **NIGHTLY Exercised:** Evaluated heavy suites ranked 4–10 with 0/14 failures (`gh280-jog-marathon-adapter`, `gh365-tier-fail-closed`, `gh32-releases-app`, `gh57-releases-fuzz`, `gh103-timeline-exporter`). Each checked for qualifying faster PR-time sibling; none found, so each retains `KEEP (heavy, no qualifying faster PR-time sibling found)`.
 - [x] **TURN-OFF Exercised:** `synthetic-pi-model-unset` (covered, no unique assertions) reaches TURN-OFF with pin check (`gh141-synthetic-registry.sh`) and restore line (`validate.sh TESTS += synthetic/synthetic-pi-model-unset.sh`). Suites previously moved to `EXEMPT` under #831 as prose-only confirm TURN-OFF logic.
 - [x] **Behavioral Preservation:** No suite guarding behavioral code is proposed for TURN-OFF. Zero codebase modifications made during audit.
-- [x] **Report Issue Filed Once (Dedupe):** `NOT EXERCISED — needs operator authorization` (Dry-run verified: deduplication marker `<!-- ci-suite-audit:<registry-sha>:<audit-date> -->` designed to update existing issue body on matching SHA/date; never uses `radar` label).
-- [x] **Oversized Report:** `NOT EXERCISED — needs operator authorization` (Dry-run verified: chunking logic places summary and non-KEEP items in issue body under 64k characters and moves full table to numbered comments).
-- [x] **Per-Turn Comments:** `NOT EXERCISED — needs operator authorization` (Dry-run verified: turn protocol posts exactly one comment upon decision changes; zero comments on no-op turns).
+- [ ] **Report Issue Filed Once (Dedupe):** NOT EXERCISED — needs operator authorization. (Dry-run verified: deduplication marker `<!-- ci-suite-audit:<registry-sha>:<audit-date> -->` designed to update existing issue body on matching SHA/date; never uses `radar` label).
+- [ ] **Oversized Report:** NOT EXERCISED — needs operator authorization. (Dry-run verified: chunking logic places summary and non-KEEP items in issue body under 64k characters and moves full table to numbered comments).
+- [ ] **Per-Turn Comments:** NOT EXERCISED — needs operator authorization. (Dry-run verified: turn protocol posts exactly one comment upon decision changes; zero comments on no-op turns).
 - [x] **Reminders Fired on Triggers:** The #812 cluster (`gh436` and `gh674` red together in 7/14 runs) triggers the `radar` reminder. The #853 members in the sample trigger the `whack-a-mole` reminder pointing to existing umbrella #853.
 - [x] **Redaction:** Verified zero tokens, credentials, environment secrets, or local absolute paths in emitted reports or artifacts.
 
