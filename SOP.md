@@ -195,6 +195,7 @@ teardown — the same rule as `AGENTS.md` §6.
 > maintainers to ignore them, or write a script that strips this section on pull from upstream.
 > Nothing in the codebase enforces them.
 
+- **CI churn recovery.** When CI churn is suspected, follow [`docs/CI-CHURN-RECOVERY-SOP.md`](docs/CI-CHURN-RECOVERY-SOP.md) (#857). It covers the entry gate for declaring an episode, the phased strategy checklist, and the exit gates for closing it. It grants no standing exception to `AGENTS.md`.
 - **The primary clone stays on `development`.** Each device has exactly one
   **operator-designated primary clone** — the long-lived checkout the operator opens by default
   and keeps mapped to GitHub. That clone is always kept on the `development` branch. This rule
