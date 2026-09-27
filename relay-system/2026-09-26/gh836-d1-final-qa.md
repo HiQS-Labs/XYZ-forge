@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -103,5 +103,20 @@ Write findings in the Log per the turn rules. Set `STATUS: Approved` only if the
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: D1 matches the approved plan, preserves hosted coverage through the existing full-required routing, and changes only the existing Small pin. The supplied V1–V3 evidence supports the Results table; V4 remains explicitly owed. Approval is review approval, not full-gate or promotion qualification.
+swept file: yes
+
+- [Pass] Implementation scope matches `relay-system/2026-09-26/gh836-d1-plan-review.md` Round 2: `utils/ci-route.sh:38` removes only gh436 from Small, `:333-338` adds the two specified document exceptions, and `test/ci-route.sh:239-246` updates only the existing pin. `validate.sh:619` still registers gh436. No new suite, registry entry or gate machinery appears in the seeded diff.
+- [Pass] Coverage and controls: ran the equivalent of `printf '%s\n' <paths> | bash utils/ci-route.sh <event>` through Python subprocess stdin, for both `push` and `pull_request`. Every invocation exited 0 with nonempty output. `WORKTREE-SAFETY.md` and `skills/2-daily/merge-cleanup/SKILL.md`, alone and each paired with README, returned `pdda_needed=true route=full tier=3 tier_reason=kernel/gate surface (route=full)`. README, releases/SKILL.md, merge-cleanup/README.md and docs/WORKTREE-SAFETY.md controls returned `pdda_needed=true route=docs tier=1 tier_reason=docs-only`. The case at `utils/ci-route.sh:336` matches the real reader paths (`test/gh534_phase_a_tests.py:125`, `test/gh534_phase_c_tests.py:523`); full-required wins at `utils/ci-route.sh:459-477`. No unintended routing change found.
+- [Pass] Non-doc dependencies retain their routes: the same probes returned releases_app.py and releases-merge-resolve.sh → `route=fast tier=2 pdda_needed=false`; .gitattributes and merge_cleanup.py → `route=fast tier=3 pdda_needed=false`; bin/tick and utils/py/rtl.py → `route=full tier=3 pdda_needed=true` (all rc 0). `utils/py/wave_reconcile.py:589-614` selects the full registry for every non-1 tier. `.github/workflows/ci.yml:480-489` also selects the advisory full canary for the new full routes, as the plan records.
+- [Pass] Evidence correspondence: `bash utils/ci-route.sh subsystems small` exited 0 with 72 names and no gh436. Python hashlib over the router returned `9881afe850a20e3da4b51098b4e34e5add9b9a9472c722c93ae86c0a443dc5db`, matching the recorded edited-router prefix. `TESTS-RESULTS/2026-09-26+GH-836/d1-routing-probes.log:1-17` records old/new routing and the two controls; `d1-v1-pin-red-green.log:1-9` records the pin's rc 1 red and rc 0 / 81-pass green; `d1-v3-registry-tier-suites.log:1-2` records 10/0 and 72/0. The final two provenance records identify those artifacts and distinguish manual probes from disposable-clone suite execution. These are supplied execution receipts, not suites rerun by this reviewer.
+- [Pass] Swept the full router, its existing test file, the plan and ROUTER beyond the changed hunks, and reviewed the diff's documentation/evidence in context. No actionable pre-existing defect found in that sweep. `ROUTER.md:127-132` names the exceptions, `CHANGELOG.md:6` calls the approximately 12-minute result a projection, and `PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md:342-345` matches the supplied evidence and explicitly says V4 is owed.
+- [Unverified — needs clone run] The final full gate remains owed at `PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md:345`. No suites, executable fixtures or Git commands ran in this turn. Historical change frequency and future hosted timing were not independently measured; neither is claimed as fresh verification here.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) should obtain V4 on the final commit in a disposable full clone before treating the change as gate-qualified.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
