@@ -2,9 +2,9 @@
 gh_issue: 797
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/797
 title: Flightdeck explains unknown progress and source states
-status: In progress
+status: Complete
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-27
 owner: Claude
 goal: Unknown and unconfigured states read as "not measured / not set up" with a how-to-enable hint; red stays reserved for read failures.
 doc_type: project
