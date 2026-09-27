@@ -76,3 +76,7 @@ masked flake trains operators to ignore the gate. pri 55: severity-led plus a sa
 appeal 50 neutral (no user preference given). effort 92: ten one-line rewrites, established
 pattern, existing guard. Recurrence window 2026-09-10 → 2026-09-24: #801 (same class, different
 files), #807; prior 14 days: none found. Coverage limit: issue search only, no gate-log corpus.
+
+## Merge evidence
+
+- PR #810 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
