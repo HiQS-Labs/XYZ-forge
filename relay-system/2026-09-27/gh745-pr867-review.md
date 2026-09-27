@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -206,5 +206,40 @@ index 300488c9..d360c16c 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+VERDICT: PASS
+Basis: The supplied PR scope meets (a)–(d); approve the squash into `staging/stabilize-2026-10` under the stated #854 window contract. This is a source/evidence review, not a new suite run or development/promotion qualification.
+
+- [Pass] Root cause: `utils/py/wave_reconcile.py:187–204` adds pid/random uniqueness and exclusive creation while retaining the envelope and best-effort exception boundary. `src/events.js:209–210` parses the entire file with `JSON.parse(raw)`, so preventing a second appended object addresses the recorded failure directly. `base-collision.txt` says `records per file: [2]` and `tick claims rc: 3`; `head-collision.txt` says `[1, 1]` and `tick claims rc: 0` (both under `TESTS-RESULTS/2026-09-27+GH-745/`). No fix requested.
+- [Pass] Fixture containment: the three changed constructors explicitly receive the private fixture at `test/gh421-auto-wave-reconcile.sh:369`, `test/gh424-roadmap-status-marker.sh:140`, and `test/gh425-gate-provenance-pr.sh:333`; production already supplies its target at `utils/py/wave_reconcile.py:2067`. The supplied patch removes or weakens no assertion. Swept the complete reconciler and all three edited suites, plus `test/wave-reconcile.sh`; no additional pre-existing defect established in that sweep. No fix requested.
+- [Pass] Retained evidence matches the claims: `base-leak.txt` records `rollback events written into the real clone: 3`; head leak logs 1–5 record zero. All three suite logs end in `OK` on every head run (36/6/23 unittest cases), and every head wave log records `23 passed, 0 failed`. The 13 rows in `provenance.jsonl` identify their logs and disclose the rebased-code attribution. The read-only audit below exited **0**, output: `36 non-empty artifacts; 13 resolved receipts; 5/5 runs: three suites OK, leak=0, wave=23/23`. No fix requested.
+- [Pass] Scope and reporting: the packet's complete name-status list contains only the four implementation/suite edits, CHANGELOG, and retained GH-745 evidence; no ledger, PROJECT, new suite, or registry change. `CHANGELOG.md:3–11` matches the recorded collision, leak counts, and five wave results. `SUMMARY.md` explicitly places the tier-3 obligation at the #854 window landing; `route.txt` reports `tier=3`. No fix requested.
+- [Unverified — needs clone run] No tests, executable witnesses, or gate were run in this worktree. The post-turn harness gate remains required. Exact Git ancestry/rebase identity was not independently queried because this turn prohibits Git; scope and rebase attribution are those supplied in the packet and provenance.
+
+Evidence-audit command (read-only; exit 0; output quoted above):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY_AUDIT'
+from pathlib import Path
+import json,re
+p=Path('TESTS-RESULTS/2026-09-27+GH-745')
+files=list(p.iterdir()); assert len(files)==36 and all(f.stat().st_size for f in files)
+rows=[json.loads(s) for s in (p/'provenance.jsonl').read_text().splitlines()]
+assert len(rows)==13 and all(r['rc']==0 and (p/r['log']).stat().st_size for r in rows)
+for i in range(1,6):
+    assert 'rollback events written into the real clone: 0' in (p/f'head{i}-leak.txt').read_text()
+    for suite in ('gh421-auto-wave-reconcile','gh424-roadmap-status-marker','gh425-gate-provenance-pr'):
+        assert re.search(r'^OK$',(p/f'head{i}-{suite}.log').read_text(),re.M)
+        assert f'{suite} rc=0 OK' in (p/f'head{i}-leak.txt').read_text()
+    assert '23 passed, 0 failed' in (p/f'head{i}-wave-reconcile.log').read_text()
+print('36 non-empty artifacts; 13 resolved receipts; 5/5 runs: three suites OK, leak=0, wave=23/23')
+PY_AUDIT
+```
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) receives the completed review; harness owns the file-scoped commit and post-turn gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
