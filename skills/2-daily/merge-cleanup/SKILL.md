@@ -5,7 +5,7 @@ description: Consolidate multiple Git worktrees and clones of a repository into 
 
 # /merge-cleanup — Worktree Consolidation, PR Sequencing, and Safe Teardown
 
-`merge-cleanup` consolidates multiple active Git worktrees and clones of a repository into a single clean primary checkout, determines optimal topological PR merge sequences, executes GitHub PR merges, triggers post-merge PDDA & RELEASES DB reconciliations, and safely tears down disposable worktrees/clones without data loss or active process disruption.
+`merge-cleanup` consolidates multiple active Git worktrees and clones of a repository into a single clean primary checkout, determines optimal topological PR merge sequences, executes GitHub PR merges, triggers post-merge PDDA & RELEASES DB reconciliations (the RELEASES DB is the Product Release System, PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)), and safely tears down disposable worktrees/clones without data loss or active process disruption.
 
 Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/WORKTREE-SAFETY.md) and [`AGENTS.md`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/AGENTS.md).
 

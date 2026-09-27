@@ -94,3 +94,7 @@ Reviewed headless by agy on 2026-08-26, verdict **Changes requested**, all seven
 accepted and folded in above. The load-bearing one — that `XYZ_ARCHIVE_ROOT` does not cover
 `marathon-system/` — was independently verified against `marathon_drive.py:2374-2418` before
 being accepted. Thread: `relay-system/2026-08-26/gh255-plan-qa.md`.
+
+## Merge evidence
+
+- PR #826 merged 2026-09-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

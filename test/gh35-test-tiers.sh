@@ -160,7 +160,8 @@ DRIFT_ROOT="$WORK/drift"; DRIFT_DIR="$DRIFT_ROOT/utils"
 mkdir -p "$DRIFT_DIR" "$DRIFT_ROOT/test"
 require_fixture "$DRIFT_ROOT" "drift registry root"
 bash "$ROUTER" subsystems | cut -f2 | tr ' ' '\n' | while IFS= read -r _t; do
-  [ -n "$_t" ] && : > "$DRIFT_ROOT/test/$_t"
+  # GH-831: a registered suite may live in a subdirectory (synthetic/gh102-telemetry-schema.sh).
+  [ -n "$_t" ] && mkdir -p "$(dirname "$DRIFT_ROOT/test/$_t")" && : > "$DRIFT_ROOT/test/$_t"
 done
 cp "$ROUTER" "$DRIFT_DIR/ci-route.sh"
 sed 's/^SUBSYSTEM_TESTS_ate="\(.*\)"$/SUBSYSTEM_TESTS_ate="\1 ghost-suite.sh"/' \

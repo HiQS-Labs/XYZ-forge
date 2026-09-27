@@ -2,6 +2,9 @@
 
 This repository includes the RELEASES add-on.
 
+The RELEASES ledger is the Product Release System (PRS), the third part of the XYZ Forge / PDDA / PRS
+trinity. See the [glossary](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first) for the definition.
+
 ## Enable the RELEASES ledger
 To enable the ledger, simply initialize it:
 ```bash

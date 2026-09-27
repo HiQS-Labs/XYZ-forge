@@ -88,3 +88,7 @@ evidence is a negative: no `### Round N · Builder · agy` block was ever append
    should not have to be inferred from an absent block.
 3. **Pin it with a test** driving the `--target-root` topology specifically, asserting the shim's
    guard root equals the worktree root. That is the invariant; the no-op turns were the symptom.
+
+## Merge evidence
+
+- PR #826 merged 2026-09-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

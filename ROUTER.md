@@ -2,6 +2,8 @@
 
 This file is the first entry point for an AI agent working in this repo: it tells you what to read, what to run, and which files are canonical.
 
+XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md`); **PDDA**, project-doc governance (`PROJECT/PDDA.md`); and **PRS**, the Product Release System, which is the RELEASES ledger (`RELEASES-DB-FAQS.md`). Definition: [HOW-TO-USE.md → Glossary](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first).
+
 ## Role split
 
 - `ROUTER.md` = startup order and canonical entry points
@@ -14,6 +16,7 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - `HARNESS-MODELS-REGISTRY.md` = evaluated agent harnesses, supported model grades (A/B/C), and CLI flags
 - `MACHINE-CONTRACTS.md` = the Jog ↔ Preflight ↔ Marathon machine-contract reference (`marathon-invocation@1`, `marathon-drive/result@1`) and their version/deprecation policy
 - `PROJECT/**` docs = canonical execution detail for a specific effort
+- `PARKED/` = root holding area for incidental agent findings outside the current task; triage may promote an item into issue-first PDDA intake
 - `PROJECT/PDDA.md` = shared PDDA document contract maintained in Forge (incl. CHANGELOG); repo-specific adoption policy stays in this router
 - `PROJECT/CONSTITUTION.md` = locally maintained PDDA-layer policy of record, with verified-success, reversibility and local-first safeguards adopted by XYZ; advisory-only LLM checking is PDDA-specific and does not replace XYZ relay approval
 - `PROJECT/DO-NOT-BUILD.md` = locally maintained PDDA anti-scope; XYZ product scope remains in GUIDING-PRINCIPLES, not a blanket prohibition on coordination or execution
@@ -36,8 +39,14 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer row in the roadmap ledger (the RELEASES DB) that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Governance lives in `PROJECT/PDDA.md` → "ROADMAP contract".
 - Promoting a capture from `1-INBOX` to `2-WORKING` is a DB-verb procedure (`roadmap repoint` + `roadmap update` / `roadmap move`), never a markdown edit — the exact steps and their two known gate traps (`updated:` frontmatter key, bullet-format `raw_text`) live in `SOP.md` → "Step 1b: Promoting a capture from 1-INBOX to 2-WORKING (releases-mode)".
 - Every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be parked as a queue row immediately at intake — `python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P` (or `hq park`, which routes there automatically in this repo) — then promoted or removed later. Governance lives in `PROJECT/PDDA.md` → "GitHub issue intake" + "ROADMAP contract".
+- Incidental findings outside the active task go first to root `PARKED/` under its README contract.
+  They need no issue or roadmap row until triage promotes them. “Queue / parked intake” in RELEASES
+  names the later, formal issue queue; it is not a replacement for the root folder. Required work
+  in the current task remains in its active plan rather than being parked.
 - Do not create a second competing plan when a canonical `PROJECT/**` doc already exists.
 - Issue-first: any change beyond a **2–3 line** fix opens a GitHub issue first, then a pointer doc **named after the issue** (`GH-<number>-VERY-SHORT-DESC.md`, e.g. `GH-1234-SHOWME-COMMAND.md`), and that capture is **parked in the roadmap ledger immediately** (`releases roadmap add`) before execution begins. The issue is the signal stream; the pointer doc is the execution surface of record. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt. Governed by `PROJECT/PDDA.md` → "GitHub issue intake".
+- Issue-first applies when a parked observation is promoted into work, not when an agent first
+  records an out-of-scope observation in `PARKED/`.
 - Runtime triage labels: since the `XYZ_PYTHON` flip the harness is dual-runtime, so any harness-bug issue gets a `runtime:` label — `runtime:python` (default path), `runtime:bash` (`XYZ_PYTHON=0` opt-out), or `runtime:parity` (the twins diverge). `/file-xyz-bug` harvests and applies it; for in-repo intake (`/triage`, hand-filed `gh issue create`) apply it by hand. Omit rather than guess — a wrong runtime tag misroutes triage.
 - **`GH-<n>` numbering spans two repos.** This repo succeeded [`Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm) and the migration did **not** renumber references, so a `GH-<n>` in a source comment, test name, or CHANGELOG entry may belong to either repo. Upstream ledger entries are preserved verbatim in [`docs/ROADMAP-UPSTREAM-ARCHIVE.md`](docs/ROADMAP-UPSTREAM-ARCHIVE.md), which states its own numbering caveat and is not parsed by anything. Where an upstream number is cited from code that ships here, mirror it as a closed `[upstream archive]` issue so the citation resolves locally (#407, #408 are the pattern) rather than editing the comment. Raised externally as GH-406 §3.1.
 - Do not override deterministic PDDA findings with prose.
@@ -62,6 +71,7 @@ bash githooks/install.sh --check # is this clone gated? exit 1 if not
 ./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
 ./validate.sh --sequential # force the sequential run (see the hook’s measured GREEN in Ns line)
 ./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
+./validate.sh --sequential --subsystem small  # GH-831: the Small list — locally a self-check; hosted, the reconcile's qualifying run for docs/ledger/skill landings
 ./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
 ./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
 bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
@@ -97,11 +107,29 @@ and the reason, so a fallback is never silent.
 
 **GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
 owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
-agent-chorus, standup, skills-army-hq); a push the classifier rates `tier=2` runs only those focused
+agent-chorus, standup, skills-army-hq, plus `small`, a gate-only list that claims no paths); a push the classifier rates `tier=2` runs only those focused
 suites at the boundary, `--tier 1` runs the docs gate, and everything else — unknown paths, unclaimed
 test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
 Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
 sequential full run qualifies (GH-509).
+
+**GH-831 (2026-09-25) made these three tiers for what qualifies a landing.** The push hook is unchanged.
+After a merge, the hosted reconcile (`wave-reconcile.yml`) qualifies each landing with **one** run,
+picked by classifying the landing's changes at the tested commit:
+
+- **Small** — docs, the ledger dumps (`releases.*`, `harnesses.*`) and non-core skill files (tier 1):
+  `validate.sh --sequential --subsystem small`, the PDDA, PRS and canary suites plus the PDDA gate
+  and the Python layer. The receipt records the list it ran.
+- **Medium** — mapped non-core code (tier 2): the full registry at the reconcile, the area's suites at push.
+- **Large** — core harness, unmapped code, gate surfaces (tier 3): the full registry.
+
+Promotion always runs the full registry. Eight skill-text suites are off, recorded in
+`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). The code of
+core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) never routes as
+docs. Skill markdown keeps its existing docs routing, except that `relay-xyz` and `relay-automation` stay
+full-gate surfaces for every file. merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` are full-gate files too:
+they are what `gh436-merge-cleanup` reads, and GH-836 D1 moved that suite from Small to Large.
+Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
 
 `--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
 Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen the run
@@ -135,6 +163,8 @@ utils/pdda/pdda.sh releases         # legacy releases check (skips when RELEASES
 utils/pdda/pdda.sh releases-current # read-only roll-up: queries releases.db (GH-568)
 utils/pdda/pdda.sh quad-concepts    # opt-in: requires a "## Quad Concepts" section of 1-4 bullets (lever: .pdda-quad / PDDA_QUAD)
 utils/pdda/pdda.sh glance           # read-only roll-up: title + Quad Concepts for each PROJECT/2-WORKING doc
+utils/pdda/pdda.sh governance       # repo-root governance-doc cross-reference + doc/code drift
+utils/pdda/pdda.sh marathon-qa      # mechanical marathon Wave QA receipt & checklist gate (GH-784)
 utils/pdda/pdda.sh gh-refresh       # refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
 utils/pdda/pdda.sh catchup          # LLM repo triage + ROUTER.md recommendations (delegates to pdda-catchup.sh)
 utils/pdda/pdda.sh doc-ready        # LLM readiness review — set PDDA_LLM_BIN (codex/claude/agy) for recommendations, else it self-skips
