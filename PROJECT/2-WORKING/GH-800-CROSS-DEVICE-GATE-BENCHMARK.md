@@ -66,3 +66,7 @@ M4 Pro recorded three uncontended trials at `0ae3452a` (proposed repin after #80
 Compute medians and ranges from completed matched trials, separate refused runs and retry cost, and link any newly discovered optimization to a separate issue.
 
 **QA:** Recomputable timings and no public machine identifiers or absolute home paths.
+
+## Merge evidence
+
+- PR #803 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
