@@ -1,0 +1,5 @@
+merge-cleanup: ERROR — PR #5: after resolution the PR reads CONFLICTING — stopping
+merge-cleanup: PR #5: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #5: attempt record /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpew5z2yit/rec.json
+merge-cleanup: PR #5: slot reserved
+merge-cleanup: PR #5: pushed cccccccccc; re-fetching and re-gating the new head
