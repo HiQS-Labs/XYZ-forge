@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -87,5 +87,40 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: The locally measurable merge-sanity criteria hold for the seeded head `606ef435` (PR code at `6555fc2e`, evidence at `fe5f27bd`). Approve the staging squash under the packet's #854 D2 route; Producer still owns confirming run 36355233260's blocking job before merging. This is not a full-gate or promotion attestation.
+
+swept file: no
+
+Review scope: read the relay, the merge-cleanup orchestrator and surrounding control flow, the complete net implementation/test diff, the retry-only diff, prior QA dispositions, and evidence. Compared whole committed file contents for staging preservation and code freshness. Did not repeat the prior implementation review's whole-file audit of every unchanged scanner/test/changelog line: the packet explicitly scopes this turn to a merge sanity check. No additional pre-existing defect was established in the reviewed scope; no broader absence-of-defects claim is made.
+
+- **[Pass] Scope and staging preservation.** Read-only object inspection (including SHA-1 verification of decoded objects) found the PR range `dcc449fb..fe5f27bd` confined to the packet's allowlist. No added test file, PROJECT change, gate/registry/workflow change, or ledger/view change. The seeded `606ef435` adds only this `gh863-merge-sanity.md` thread, an expected review-scaffold exception to (a), not a product change. `releases.db`, `releases.sql`, and `LEADERBOARD.md` have identical staging/head blobs. The complete CHANGELOG comparison is one insertion of 27 lines after `# Changelog`; every staging line remains, including GH-813 and GH-800 M4 Pro/M6 at `CHANGELOG.md:178,182,186`. No fix needed.
+
+- **[Pass] Retry cleanup is minimal and contained in this operating envelope.** `merge_cleanup.py:19` imports `shutil`; `:295` creates a fresh per-PR directory with `mkdtemp(..., dir=str(workdir))`; `:298-302` clears only that directory before each clone attempt. `land_prs` owns the freshly allocated workdir at `:840`. Comparing `9a7b9fb3` to `6555fc2e` shows only the lambda-to-`_clone_once` replacement in production code; its companion change is the manual witness. The recorded input/result at `witness/r3-before.jsonl:1` is `clone_retry_failed_on_leftover_dir: true`; `witness/r3-after.jsonl:1` is `clone_succeeded_on_retry: true` (the later fixture fetch failure is intentional). No fix needed.
+
+- **[Pass] Evidence matches the code, and logs are populated.** The only `6555fc2e..fe5f27bd` changes are in `TESTS-RESULTS/2026-09-27+GH-851/`; the only subsequent seed change is this relay. `SUMMARY.md:50-56`, `provenance.jsonl:12`, and `focused-6555fc2e/identity.txt:1-2` identify `6555fc2e`. The logs report 180 tests OK (`focused-6555fc2e/gh436-merge-cleanup.log:2050-2052`), 6 OK (`gh674-merge-cleanup-hosted-lookup.log:5-7`), and 8 OK (`gh645-merge-cleanup-xyz-tools.log:3-5`). `red-control.log:9` records `AssertionError: 0 != 2`; `red-control-restore.log:5` records `OK`. All 47 `.log` files are non-empty. These are inspected committed receipts, not suites rerun in this turn. No fix needed.
+
+- **[Pass] Local CI configuration agrees with the packet.** `.github/workflows/ci.yml:99-104` limits pull requests to main/development and permits dispatch; `:245-252` permits the advisory Ubuntu canary on dispatch with `continue-on-error: true`; `:519-522` declares blocking vendored-smoke. **[Unverified — external result]** No local artifact establishes the live conclusion of run 36355233260, CodeRabbit's current result, or the current PR-body disclosure. Producer must confirm those as assigned by (e). The disclosed absence of a local full gate is preserved (`SUMMARY.md:35`); none was run here.
+
+- **[Nit] Moved-plan pointer.** `SUMMARY.md:3` still points to `PROJECT/2-WORKING/GH-851-MERGE-CLEANUP-LANDING-RESILIENCE.md`, which is absent after the move. Update this pointer to `TESTS-RESULTS/2026-09-27+GH-851/PLAN.md` when touching the evidence next. This does not invalidate the named commits or receipts and need not hold the squash.
+
+Probe receipt: command `PYTHONDONTWRITEBYTECODE=1 python3 "$TMPDIR/object_probe.py"` (scratch-only read-only decoder of loose/packed commit/tree/blob objects, no Git invocation), exit **0**. Decisive output:
+
+```text
+STAGING_IDENTICAL releases.db True
+STAGING_IDENTICAL releases.sql True
+STAGING_IDENTICAL LEADERBOARD.md True
+RETRY_COMMIT ['TESTS-RESULTS/2026-09-27+GH-851/witness.py.txt', 'skills/2-daily/merge-cleanup/scripts/merge_cleanup.py']
+RELAY_SEED_COMMIT ['relay-system/2026-09-27/gh863-merge-sanity.md']
+WORKTREE_MISMATCHES []
+LOGS 47 EMPTY []
+```
+
+The same command printed the full changed-path list and complete retry/CHANGELOG diffs summarized above. A separate `rg -n 'Ran [0-9]+ tests|^OK$|FAILED' TESTS-RESULTS/2026-09-27+GH-851/focused-6555fc2e/*.log` (exit **0**) produced the cited 180/6/8 totals, expected failing red control, and passing restore. No Git command, suite, fixture, or source mutation was performed.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) owns the already-required live CI confirmation and squash into staging; the harness owns committing this relay file.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
