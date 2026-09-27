@@ -2,9 +2,9 @@
 gh_issue: 813
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/813
 title: "harness_app init_db: concurrent first-use races on PRAGMA journal_mode=WAL"
-status: In progress
+status: Complete
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-09-27
 owner: claude
 phases: 1
 doc_type: bugfix
