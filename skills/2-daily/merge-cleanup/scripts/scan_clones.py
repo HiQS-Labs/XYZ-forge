@@ -434,7 +434,7 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
     """
     out: Dict[str, Any] = {"ok": False, "failed_query": "", "unlanded": [], "landed": []}
     remote_ref = f"origin/{integration_branch}"
-    fetched = run_git(repo_path, ["fetch", "--quiet", "origin", integration_branch])
+    fetched = run_git(repo_path, ["fetch", "--quiet", "origin", integration_branch], timeout=180)  # GH-852
     if fetched.returncode != 0:
         out["failed_query"] = f"git fetch origin {integration_branch}: {fetched.stderr.strip() or 'failed'}"
         return out
@@ -1256,6 +1256,9 @@ def format_completion_and_followup_summary(checkouts: List[Dict[str, Any]]) -> s
 
 def main():
     import argparse
+    # GH-852: abort a stalled HTTP transfer instead of waiting on a dead socket (see merge_cleanup.main).
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_TIME", "120")
     parser = argparse.ArgumentParser(description="Scan and audit Git worktrees and clones.")
     parser.add_argument("--root", action="append", help="Root directory to scan (defaults to standard repo roots)")
     parser.add_argument("--prefix", default="", help="Filter checkouts by name prefix/substring")

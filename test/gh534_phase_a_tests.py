@@ -502,10 +502,10 @@ class TestA5FailClosed(_Fixture):
     def _fail(self, prefix):
         real = scan_clones.run_git
 
-        def flaky(cwd, args):
+        def flaky(cwd, args, **kw):
             if list(args[:len(prefix)]) == list(prefix):
                 return subprocess.CompletedProcess(args=args, returncode=1, stdout="", stderr=f"{' '.join(prefix)} refused")
-            return real(cwd, args)
+            return real(cwd, args, **kw)
         return mock.patch.object(scan_clones, "run_git", side_effect=flaky)
 
     def test_baseline_is_eligible(self):
@@ -629,10 +629,10 @@ class TestA5FreshInspection(unittest.TestCase):
                               (["for-each-ref"], "git for-each-ref"), (["fetch"], "git fetch")):
             real = scan_clones.run_git
 
-            def flaky(cwd, args, _p=prefix):
+            def flaky(cwd, args, _p=prefix, **kw):
                 if list(args[:len(_p)]) == list(_p):
                     return subprocess.CompletedProcess(args=args, returncode=1, stdout="", stderr="refused")
-                return real(cwd, args)
+                return real(cwd, args, **kw)
             with mock.patch.object(scan_clones, "run_git", side_effect=flaky):
                 rc, removed = self._run()
             self.assertEqual(removed, [], label)

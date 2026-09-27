@@ -305,10 +305,10 @@ class TestPrimaryLandingEvidence(unittest.TestCase):
         """THE PIN (R2-3): a probe that cannot answer must not read as 'no operation in progress'."""
         real = scan_clones.run_git
 
-        def flaky(cwd, args):
+        def flaky(cwd, args, **kw):
             if args[:2] == ["rev-parse", "--git-path"]:
                 return subprocess.CompletedProcess(args=args, returncode=1, stdout="", stderr="probe refused")
-            return real(cwd, args)
+            return real(cwd, args, **kw)
 
         with mock.patch.object(scan_clones, "run_git", side_effect=flaky):
             info = inspect_primary_landing(self.repo, integration_branch="development")
@@ -357,6 +357,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
              mock.patch.object(merge_cleanup, "inspect_primary_landing", return_value=verdict) as insp, \
              mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
+             mock.patch.object(merge_cleanup, "refresh_pr_with_retry", return_value={
+                 "number": 42, "state": "MERGED", "headRefOid": "h" * 40, "mergeCommit": {"oid": "m" * 40}}), \
              mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
              mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=[]):
             rc = merge_cleanup.main()
@@ -376,6 +378,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertTrue(insp.called)
         reconcile.assert_called_once()
+        self.assertEqual(reconcile.call_args.kwargs.get("pr_head"), "h" * 40)
+        self.assertEqual(reconcile.call_args.kwargs.get("merged_head"), "m" * 40)
 
     def test_integration_branch_is_threaded_into_the_readiness_check(self):
         _, insp, _ = self._run_main(
