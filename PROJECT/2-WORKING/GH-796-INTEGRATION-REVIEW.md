@@ -233,3 +233,7 @@ that clone, both #794 repair candidates and this integration review clone. No cl
 
 The new future simplification issue GH-804 is filed and parked. This coordinator did not implement
 its test simplification; external GH-804 work is outside the frozen merge set.
+
+## Merge evidence
+
+- PR #799 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
