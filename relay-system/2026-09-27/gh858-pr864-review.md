@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -78,5 +78,35 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: the capture removes the pipe race, but also removes the producer-status assertion, violating DoD (a). Recorded runs support the reported green result; they do not exercise this lost failure detection. One-round limit reached; Producer must disposition before merge.
+
+swept file: no
+Scope: read the entire 389-line `test/gh69-roadmap-shadow.sh`, complete baseline, SUMMARY and provenance; inspected all twelve logs programmatically, the base log directly, and relevant `releases_app.py` implementations. Read the current CHANGELOG entry, not its entire 3,303-line history. No git, suite, fixture, or application command executed; only read-only evidence inspection and an isolated shell-semantics probe. No artifact edits.
+
+- [Should] Preserve command failure at `test/gh69-roadmap-shadow.sh:129`, `:174`, `:190`. `grep -q PAT <<<"$(cmd)"` returns grep's status even when `cmd` fails. The old pipe with `pipefail` also checked the producer. Fix with a status-preserving capture (`out="$(cmd)" && grep -q PAT <<<"$out"`, escaped appropriately inside `ok`), or capture rc separately and assert both rc and match. This is an Easy, local assertion repair; no new test or infrastructure needed.
+  Observed input: the exact replacement form at line 129, given a producer that prints `OK: receipt chain intact` and `FAIL: rule=dump-missing`, then returns 3. This is a shell-status witness, not a claimed application reproduction. The real application can report dump failure and intact receipts in one check: `utils/py/releases_app.py:5722`, `:5783`, `:5878` accumulate failures independently of the receipt success message.
+  Affected scope: only the three changed assertions when the producer emits matching output but exits nonzero; successful output must retain its existing match semantics.
+  Falsifier: matching output + rc 0 must pass; matching output + rc 3 must fail; nonmatching output + rc 0 must fail. A status-preserving capture meets this contract while still draining the producer before grep starts. Recheck the actual suite in a disposable full clone.
+  Probe command (non-mutating, `bash -o pipefail` heredoc; overall exit 0):
+  ```bash
+  producer() { printf '%s\n' 'OK: receipt chain intact' 'FAIL: rule=dump-missing'; return 3; }
+  producer | grep -q 'receipt chain intact'
+  printf 'pipeline_rc=%s\n' "$?"
+  grep -q 'receipt chain intact' <<<"$(producer)"
+  printf 'replacement_rc=%s\n' "$?"
+  out="$(producer)" && grep -q 'receipt chain intact' <<<"$out"
+  printf 'status_preserving_capture_rc=%s\n' "$?"
+  ```
+  Decisive output: `pipeline_rc=3`, `replacement_rc=0`, `status_preserving_capture_rc=3`.
+- [Pass] Recorded evidence is nonempty and internally consistent: `TESTS-RESULTS/2026-09-27+GH-858/base-unbuffered.log` reports `FAIL:   and the receipt chain is still intact` and `84 pass, 1 fail`; all five `head-unbuffered-*.log` and five `head-default-*.log` report `85 pass, 0 fail`; `gh139.log` reports `3 passed, 0 failed`. Read-only command: `python3` parsed every JSONL row, asserted 12 rows, nonempty referenced files, failure presence matching recorded rc, and the exact head summary. Exit 0; all eleven suite logs are 5,531 bytes, guard log 173 bytes. These are inspected receipts, not independently rerun tests. Retain these artifacts and refresh evidence after the assertion repair.
+- [Nit] `CHANGELOG.md:5` says all three checks failed “whenever” output was unbuffered, but the base log shows only the receipt check failing; the two calc checks passed. Say “three susceptible pipelines; the receipt check reproduced the failure.” `SUMMARY.md` also has the incomplete `( pass, 0 fail)`; fill in 85.
+- [Nit] Whole-suite sweep found an existing coverage caveat at `test/gh69-roadmap-shadow.sh:352`: the absent-GID branch counts `true` as a pass. The supplied logs explicitly show that branch, so they do not establish successful `--gid` scoring coverage. Label this as skipped coverage in evidence; do not add a new suite for this PR. No other concrete pre-existing defect identified in the swept suite.
+- [Unverified — needs clone run] Fresh execution, exact base-to-head changed-path scope, and final revision attribution remain outstanding. No seeded diff was found, and this turn explicitly forbids git and suite execution. Thus DoD (c) cannot be independently attested here. Provenance head rows say `HEAD (this commit)`, so a harness/Producer revision check must establish attribution. Obtain the permitted external diff check and clone-run receipt before approval.
+
+Handing off to Producer (claude-a) — disposition the status-preservation finding and remaining verification, then request review again; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
