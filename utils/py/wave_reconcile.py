@@ -184,10 +184,14 @@ class RollbackJournal:
                 now = datetime.now(timezone.utc)
                 ts = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
                 filename_ts = ts.replace(":", "-")
+                # GH-745: tick parses each event file as ONE record. A timestamp-only
+                # name plus append mode put two rollbacks in one file and made the whole
+                # log unreadable. One record per file: a unique name, created exclusively.
                 evt = os.path.join(
-                    events_dir, f"{filename_ts}-wave-reconcile-rollback.jsonl"
+                    events_dir,
+                    f"{filename_ts}-{os.getpid()}-{os.urandom(4).hex()}-wave-reconcile-rollback.jsonl",
                 )
-                with open(evt, "a", encoding="utf-8") as fh:
+                with open(evt, "x", encoding="utf-8") as fh:
                     fh.write(json.dumps({
                         "schema_version": "0.2.0",
                         "ts": ts,
