@@ -1,6 +1,6 @@
 # GH-851 / GH-852 — evidence
 
-Plan: `PROJECT/2-WORKING/GH-851-MERGE-CLEANUP-LANDING-RESILIENCE.md`. Base `030ab5ba`. Implementation `04fd21bf`.
+Plan: `TESTS-RESULTS/2026-09-27+GH-851/PLAN.md (moved from PROJECT/ for the staging branch; the landing ledger commit re-registers it)`. Base `030ab5ba`. Implementation `04fd21bf`.
 There are no new tests (AGENTS.md). The witnesses are manual checks, and the focused suites are the existing ones.
 
 ## Witnesses (`witness.py.txt`, the same script at base and head)
