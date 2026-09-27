@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-27 — merge-cleanup: no hang on a dead network call, no stop on a stale answer (GH-851, GH-852)
+
+Found in the #849 merge batch. Five fixes to `skills/2-daily/merge-cleanup/scripts/`:
+
+- **Bounded network git (GH-852).** Five git calls had no time limit: the second-clone `clone`, the
+  B1 `push`, and the post-merge `fetch`, `push` and `fetch`. One of these clones sat for 36 minutes on
+  a dead socket. They now go through `_net_git`: 180 s each, or 3600 s for the push to the integration
+  branch, because the pre-push hook can run a gate. The Phase-3 `fetch` in `scan_clones.py` gets 180 s.
+  Both `main()`s default `GIT_HTTP_LOW_SPEED_LIMIT=1000` / `GIT_HTTP_LOW_SPEED_TIME=120`, so a
+  stalled transfer aborts; an operator's own values win. `Operation too slow` and `Connection reset`
+  now count as transient, so GH-623's retries apply.
+- **Merge-call recovery (GH-852).** When `gh pr merge` fails or is killed after GitHub has merged,
+  the PR is re-read. If it shows `MERGED` with a merge commit, the post-merge steps run, where before
+  they were skipped (#810).
+- **`--reconcile-pr` (GH-852).** It now refuses (exit 2) a PR that is not merged, or whose state
+  it cannot read. It waits on the hosted run for that PR's own head and merge commit, not the
+  primary's `HEAD`.
+- **Re-gate after a B1 push (GH-851).** The run now waits, within the 6 × 15 s mergeable-poll
+  budget, until GitHub reports the pushed head before reading mergeability. Before, it read the old
+  head's `CONFLICTING` and stopped, which happened on every B1 repair in #849.
+- **Hosted-wait default** 1800 → 5400 s (#854 D5). Full-registry reconciles take 53–66 min.
+
+No new tests. Existing stubs got signature-only edits, and the two `--reconcile-pr` fixtures now
+inject a merged PR. Base-versus-head witnesses and a red control are in
+`TESTS-RESULTS/2026-09-27+GH-851/`. A Python timeout still counts only awake time on macOS; the
+wall-clock rule is #854's host rule (`caffeinate -i`, or an always-on host). Rollback: revert the squash.
+
 ## 2026-09-26 — Standardized clone backup layout and integrity verification for merge-cleanup-deep and merge-cleanup (GH-839)
 
 To expedite deletion of full clone folders without fear of data loss, clone backup and verification is automated into a standardized hierarchy under `<root>/_backups/<repo-name>/<timestamp>/`:
