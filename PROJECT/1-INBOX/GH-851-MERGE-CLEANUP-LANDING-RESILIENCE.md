@@ -3,7 +3,7 @@ gh_issue: 851
 related_issues: [852]
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/851
 title: "merge-cleanup landing resilience: stale re-gate after a B1 push (#851), unbounded network calls, merge-call recovery, --reconcile-pr SHA, hosted-wait default (#852, #854 D5)"
-status: Inbox — plan drafted, Codex plan QA next
+status: Inbox — plan revised after Codex plan QA round 1 (C1–C3); round 2 next
 created: 2026-09-27
 updated: 2026-09-27
 owner: operator (via /start-task, #854 direct-path item 1)
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon at `030ab5ba` (post-#846 `development`); plan drafted. | Codex plan QA (relay-xyz, review-once). |
+| Plan QA round 1: FAIL with C1–C3 (low-speed failures not classified as transient; the witness recipe; existing-test adaptations). The plan is revised below. | Plan QA round 2. |
 
 ## Issues
 
@@ -54,7 +54,7 @@ goal: >
 
 - **R1. Existing bounds.**
   - `_gh` (`merge_cleanup.py:70`) defaults to `timeout=180`; `gh pr merge` gets 600 (`:161`); `wait_for_hosted_reconcile` uses 60 (`:444`).
-  - `_net_git` (`:106`, GH-623) bounds git at the retry sites at 180 s: the landing clone and fetches (`:289`, `:294`, `:298`) and the Phase-0 refresh fetches (`:1006`, `:1200`).
+  - `_net_git` (`:106`, GH-623) bounds git at the retry sites at 180 s: the landing clone and fetches (`:289`, `:294`, `:298`) and the pre-merge refresh fetches (`:1006` post-merge, `:1200` Phase 5 entry).
 - **R2. Unbounded network git calls.** These are plain `run_git` calls with no timeout:
   - `merge_cleanup.py:316`: `clone` in `validate_head_in_second_clone`. This is the #852 incident: `verify-760ba1ff` sat at 0% CPU for 36+ min on an ESTABLISHED socket.
   - `:343`: `push` in `push_resolved_head`.
@@ -83,23 +83,34 @@ goal: >
 ## Plan (extends GH-623's `_net_git` / `_retry_call` and GH-736's poll; no new module or helper family)
 
 1. **F5, D5 default.**
-   - Change: `wait_for_hosted_reconcile` defaults to 5400 (`:431`); `SKILL.md:153` says "default 5400".
-   - Check: `grep`, and the `TestParityGuard` in gh436 stays green.
-2. **F1, bounded network git.**
-   - `_net_git` passes `-c http.lowSpeedLimit=1000 -c http.lowSpeedTime=120` in front of the git arguments. This covers every network call already routed through it.
-   - Route the R2 call sites through `_net_git`:
-     - clone `:316`, push `:343`, fetch `:550`, fetch `:605`: the default 180 s;
-     - push `:601` (it runs the pre-push hook): 3600 s;
-     - `scan_clones.py:437`: 180 s.
+   - Change: `wait_for_hosted_reconcile` defaults to 5400 (`:431`). `SKILL.md:153` says "default 5400", and the same sentence is corrected (plan QA nit): the lookup does not pass `--branch`/`--commit`; it lists runs and matches the PR head or merge commit (`:436-439`).
+   - Check: the witness records the default `_seconds_from_env` receives, 1800 at base and 5400 at head. The `TestParityGuard` in gh436 stays green.
+2. **F1, bounded network git.** This changes the environment, not the argv, so every existing `run_git` stub keeps matching.
+   - **Transfer-stall abort.** Call `os.environ.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")` and `os.environ.setdefault("GIT_HTTP_LOW_SPEED_TIME", "120")` at the top of `merge_cleanup.main()` and `scan_clones.main()`.
+     - Every child `git` inherits them, including git run by the pre-push hook and by `releases_app.py`. These are the exact values #849 ran with.
+     - `setdefault` keeps an operator's own values.
+     - Passing `-c` arguments instead was rejected: it would change the argv that existing stubs match exactly (`test/gh534_phase_c_tests.py:756,816,839`; `test/gh436-merge-cleanup.py:413-421`, from plan QA C3).
+   - **Time bound.** Route these through `_net_git`:
+     - the clone at `:316`, the push at `:343`, the fetch at `:550` and the fetch at `:605`: default 180 s;
+     - the push at `:601`: 3600 s, because it runs the pre-push hook, which can run a gate.
 
-     `scan_clones` cannot import `merge_cleanup`, so it passes `timeout=` and the same `-c` pair through its own `run_git`. That uses the existing parameter, not a new helper.
-   - A timeout keeps today's failure shape: rc 124, "timed out". The callers' existing non-zero handling applies unchanged; nothing new is retried or deferred.
-   - Check, as a manual red/green witness against a stub `git` on `PATH` that sleeps forever for `clone`:
-     - red at base: `validate_head_in_second_clone` is still blocked after a 5 s watchdog;
-     - green at head: it returns `(False, "second clone failed: timed out …")` within the bound, with the bound shortened for the witness by patching `NET_TIMEOUT_S`.
-   - Also check that the `-c` pair appears in the argv the stub `git` records.
+     Every `merge_cleanup.run_git` stub already accepts `timeout` (`**kw`, or `timeout=None`).
+   - **`scan_clones.py:437`** gets only the transfer-stall abort, with no `timeout=`. Its stubs are `flaky(cwd, args)` (`test/gh534_phase_a_tests.py:504,631`; `test/gh436-merge-cleanup.py:308`), and they reach it through `classify_local_refs`. A stalled fetch there is the #852 transfer-stall shape, which the abort covers.
+   - **C1: classify the new failure as transient.** Add `operation too slow` (libcurl's low-speed abort) and `connection reset` to `TRANSIENT_RE` (`:94-97`). Both texts were observed in #849:
+     - `error: RPC failed; curl 28 Operation too slow. Less than 1000 bytes/sec transferred the last 120 seconds`;
+     - `error: RPC failed; curl 56 Recv failure: Connection reset by peer`.
+
+     So GH-623's three attempts and defer apply to them. Nothing else is added.
+   - A timeout keeps today's failure shape: rc 124, "timed out", which `TRANSIENT_RE` already matches.
+   - **Witness (C2), manual, in `TESTS-RESULTS/`:**
+     1. A stub `git` first on `PATH` sleeps forever for `clone`. Call `validate_head_in_second_clone` with `merge_cleanup.run_git` wrapped to forward `min(timeout, 2)`. The shortened bound reaches the real `run_git` call; patching `NET_TIMEOUT_S` would not, since it is captured when `_net_git` is defined (C2).
+        - Base: still blocked when a 10 s outer watchdog fires.
+        - Head: returns `(False, "second clone failed: timed out …")` inside it.
+     2. Record the `timeout` each of the five `merge_cleanup` sites passes. None at base; 180, 180, 180, 3600 and 180 at head.
+     3. After `main()` has set up, the environment holds `GIT_HTTP_LOW_SPEED_LIMIT=1000` and `GIT_HTTP_LOW_SPEED_TIME=120`, and an operator's own value is kept.
+     4. `_transient()` is True for both observed texts at head (False at base). It stays False for `remote: Repository not found.` and for `fatal: Authentication failed`.
 3. **F2, merge-call recovery.**
-   - Change: in `execute_pr_merge`, on a non-zero exit, call `refresh_pr` once. If it reads `MERGED` with a `mergeCommit`, log a warning (`gh pr merge exited N but the PR reads MERGED as <sha> — continuing`) and return True, so the existing post-merge sequence runs.
+   - Change: in `execute_pr_merge`, on a non-zero exit, call `refresh_pr` once. If it reads `MERGED` with a non-empty `mergeCommit.oid` (the success branch's own test), log a warning (`gh pr merge exited N but the PR reads MERGED as <sha> — continuing`) and return True, so the existing post-merge sequence runs.
    - Otherwise keep today's `Failed to merge` return False.
    - Check (witness): stub `_gh` so `pr merge` returns rc 1, and `pr view` returns `MERGED` plus a merge commit. Base returns False; head returns True with the warning. Control: `pr view` returns `OPEN`, so head still returns False.
 4. **F3, `--reconcile-pr` SHA.**
@@ -108,11 +119,14 @@ goal: >
      - A PR that is not `MERGED` also stops with exit 2: "not merged — nothing to reconcile".
    - Otherwise pass `pr_head=headRefOid`, and a new optional `merged_head=mergeCommit.oid` argument to `run_post_merge_reconcile`. That argument replaces the `HEAD` lookup (`:538-541`) when given; the Phase-5 caller is unchanged.
    - Check (witness): stub `gh`, where `pr view` gives head H and merge M, and `run list` has a run on H. Base logs `No hosted wave-reconcile run listed yet for <primary HEAD>`; head waits on the run for H.
+   - **Existing tests to keep truthful (C3).** These edit what the tests inject; they add no test case.
+     - `test/gh436-merge-cleanup.py:352-363` (`_run_main`): stub `refresh_pr_with_retry` to return a `MERGED` PR 42 with head H and merge M. The ready-primary test (`:374-379`) then also asserts that `run_post_merge_reconcile` got `pr_head=H` and `merged_head=M`.
+     - `test/gh534_phase_b_tests.py:522-525` (`test_reconcile_pr_failure_propagates`): give PR 7 a `MERGED` state, so rc 2 still comes from the reconciliation failure and not from the new refusal. A red control checks this: making `main` ignore `run_post_merge_reconcile`'s result must turn it red.
 5. **F4, #851.**
    - Change: after `push_resolved_head` succeeds, poll `refresh_pr_with_retry` until `headRefOid == b1["commit"]`. Use the same budget as `MERGEABLE_POLL_ATTEMPTS` × `MERGEABLE_POLL_S`, then go through `_await_mergeable` as today. It is a small loop in `land_prs`, beside `_await_mergeable`, not a new abstraction.
    - If the head never arrives within the budget, stop as today, and the message names the head GitHub still reports.
    - Check (witness): stub `refresh_pr_with_retry` to return the old head plus CONFLICTING once, then the new head plus UNKNOWN, then MERGEABLE. Base stops with `after resolution the PR reads CONFLICTING`; head proceeds to the landing clone.
-6. **Evidence.**
+6. **Evidence and diagnosis.** Any unexpected red during execution is diagnosed with `/debug-mantra`: ground truth first, and no fix before the root cause is stated.
    - The witness script goes in `TESTS-RESULTS/2026-09-27+GH-851/witness.py.txt`: one script run against a base checkout and a head checkout, with logs and `provenance.jsonl`.
    - Existing suites, run focused once: `gh436`, `gh674`, `gh645`.
    - The full gate runs once, through the pre-push hook on the final commit, from a disposable full clone, under `caffeinate -i`.

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,28 @@ print("curl28 transient:", ns["_transient"](s))
 Decisive output: `patched constant: 0.01 effective default: 180`; `curl28 transient: False`. Source reads/AST inventory exited 0. Read-only `gh api repos/HiQS-Labs/XYZ-forge/issues/comments/{5852638878,5857312850}` and issue 851/852/854 queries succeeded (exit 0); an intervening `gh issue view` batch failed with `error connecting to api.github.com` (exit 1), then API reads recovered. These are source/incident checks, not executed red/green implementation evidence.
 
 Handing off to Producer (claude-a) — address C1–C3, disposition the nits, then return the revised plan for review.
+
+### Producer · Round 2 (claude-a)
+
+The revised plan is the committed artifact (`PROJECT/1-INBOX/GH-851-MERGE-CLEANUP-LANDING-RESILIENCE.md`, *Plan* steps 1–6).
+
+- **C1: Implemented.** `TRANSIENT_RE` gains exactly `operation too slow` and `connection reset`. Observed inputs, both from the #849 run logs:
+  - `error: RPC failed; curl 28 Operation too slow. Less than 1000 bytes/sec transferred the last 120 seconds` (the run-5 Phase-0 refresh);
+  - `error: RPC failed; curl 56 Recv failure: Connection reset by peer` (PR #820's landing clone, driver run after #818).
+
+  Witness 4 is the falsifier: both are True at head and False at base, and `remote: Repository not found.` and `fatal: Authentication failed` stay False.
+- **C2: Implemented.**
+  - The witness wraps `merge_cleanup.run_git` to forward `min(timeout, 2)`, so the bound reaches the real call site; it no longer patches the captured default.
+  - It records each site's `timeout`, with none at base.
+  - F5's witness records the default `_seconds_from_env` receives: 1800 at base, 5400 at head.
+- **C3: Implemented, modified.** F1 no longer adds `-c` arguments. The transfer-stall abort goes through `os.environ.setdefault(GIT_HTTP_LOW_SPEED_*)` in both `main()`s, so no argv changes and none of the stubs you cited need editing.
+  - The time bound uses `_net_git`'s existing `timeout` keyword. Every `merge_cleanup.run_git` stub already accepts it (`**kw` at `test/gh534_phase_c_tests.py:752,815,838`; `timeout=None` at `test/gh436-merge-cleanup.py:413`).
+  - `scan_clones.py:437` gets the environment abort only. Its stubs are `flaky(cwd, args)` (`test/gh534_phase_a_tests.py:504,631`), and they reach that fetch through `classify_local_refs`.
+  - F3's two test adaptations are now named, with a red control for the propagation test.
+- **[Pass] R1–R9: acknowledged.** The R1 label is corrected: `:1006` is the post-merge refresh.
+- **[Pass] Q3–Q5:** F2's condition now says "non-empty `mergeCommit.oid`", which is the success branch's own test.
+- **[Nit]: Implemented.** The `SKILL.md:153` sentence is corrected alongside the 5400 edit, and `/debug-mantra` is named for execution-time diagnosis (step 6).
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
