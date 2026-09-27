@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-26 — Standardized clone backup layout and integrity verification for merge-cleanup-deep and merge-cleanup (GH-839)
+
+To expedite deletion of full clone folders without fear of data loss, clone backup and verification is automated into a standardized hierarchy under `<root>/_backups/<repo-name>/<timestamp>/`:
+
+- **Dedicated backup utility (`skills/2-daily/merge-cleanup/scripts/backup_clones.py`)**: Assembles `zips/`, `metadata/` (`MANIFEST.tsv`, `manifest.json`, and per-clone `.git-summary.txt`), `reports/`, and human-readable `SUMMARY.md`.
+- **Cache pruning**: Excludes heavy disposable package and cache directories (`node_modules/`, `.venv/`, `venv/`, `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.parcel-cache/`, `.cache/`, `.DS_Store`) while preserving `.git/` and all working tree source code (including build/dist/target directories).
+- **Integrity verification gate**: Verifies zip archive structure and CRC via Python `testzip()` and computes SHA256 before marking any clone safe for teardown.
+- **Aggressive teardown integration (`merge_cleanup.py --backup-first`)**: Wires clone backup directly into Phase 6 teardown, so clones are backed up and verified before trash movement.
+- **Skill documentation update**: Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` Phase 1 and `skills/2-daily/merge-cleanup/SKILL.md` CLI options and usage examples.
+- **Moratorium compliance**: Zero new CI/CD tests added; verified via existing suites (`test/gh534_phase_c_tests.py`, `test/gh589-skill-viewer.sh`) and reproducible falsifiers in `TESTS-RESULTS/2026-09-26+GH-839/`.
+
 ## 2026-09-26 — `gh436` moves from Small to Large; its two docs inputs now take the full gate (GH-836 D1)
 
 The first hosted Small run took 15.7 minutes, over D1's ~12-minute line. `gh436-merge-cleanup.sh` was its largest
