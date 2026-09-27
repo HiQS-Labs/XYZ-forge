@@ -22,7 +22,15 @@ def ok(name, cond, detail=""):
     if cond: P += 1; print(f"  PASS: {name}")
     else: F += 1; print(f"  FAIL: {name} {detail}".rstrip())
 def sh(*cmd, env=None): return subprocess.run(list(cmd), capture_output=True, text=True, env=env)
-def git(repo, *args): return sh("git", "-C", repo, *args)
+def git(repo, *args):
+    # GH-830: every git call here builds or reads a fixture and must succeed. A failure stops the
+    # suite and names the command and git's own stderr, instead of surfacing lines later as an
+    # unrelated crash (2026-09-25: a failed seed-owner clone read as FileNotFoundError on TODO.md).
+    r = sh("git", "-C", repo, *args)
+    if r.returncode != 0:
+        print(f"  FAIL: fixture setup failed: git -C {repo} {' '.join(args)} (exit {r.returncode}): {r.stderr.strip()}")
+        sys.exit(1)
+    return r
 def tree(root):
     root = pathlib.Path(root)
     if not root.exists(): return None
