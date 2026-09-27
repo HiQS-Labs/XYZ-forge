@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-09-27 — rollback events no longer poison `.tick/events`, and tests keep them out of the real clone (GH-745)
+
+`wave_reconcile`'s rollback event was appended to a timestamp-named file. Two rollbacks in the same instant wrote two records into one file, and `tick claims` then failed `events-unreadable` for the whole clone, which made merge-cleanup preserve it forever. Each event is now its own file: the name carries the pid and 8 random hex characters, and the file is created exclusively. Three suites (`gh424`, `gh425`, `gh421`) built the journal with no root and wrote events into the real clone. They now use their fixture root.
+
+Evidence is in `TESTS-RESULTS/2026-09-27+GH-745/`:
+- **Leak witness:** 3 events leaked into the real clone at base, 0 at head (5 of 5 runs).
+- **Same-instant witness:** `tick claims` exits 3 at base and 0 at head.
+- **`wave-reconcile.sh`:** 23 of 23, 5 of 5 runs.
+
 ## 2026-09-27 — gh620 names a failed fixture git call instead of crashing later (GH-830)
 
 `test/gh620-skills-army-mini-sync.sh` ignored the exit code of about 30 fixture git calls and dropped their stderr. So a failed `seed-owner` clone on the hosted gate (run 36194249895) surfaced as an unrelated `FileNotFoundError`, and cost one full hosted qualification. `git()` now stops the suite with the failing command and git's stderr. There are no retries, and no assertion changed. The red control, with the fixture clone pointed at a missing repo, now names the clone. The normal run passes 5 of 5 (28/28). Evidence is in `TESTS-RESULTS/2026-09-27+GH-830/`.
