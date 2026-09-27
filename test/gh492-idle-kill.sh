@@ -127,7 +127,8 @@ awk -v v="$IDLE_A" 'BEGIN{exit !(v+0 >= 1.0)}' 2>/dev/null \
 # actually took, whichever is larger. On a fast host that is still 1.0 s.
 GAP_B="$(get GAP_B)"
 CTRL_MAX="$(awk -v g="$GAP_B" 'BEGIN{m=2*g; if (m < 1.0) m = 1.0; printf "%.3f", m}')"
-awk -v v="$IDLE_B" -v m="$CTRL_MAX" 'BEGIN{exit !(v+0 <= m+0)}' 2>/dev/null \
+# GH-793 review: awk reads "None" as 0, so an unmeasured reading must fail, never prove progress.
+awk -v v="$IDLE_B" -v m="$CTRL_MAX" 'BEGIN{exit !(v ~ /^[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$/ && v+0 <= m+0)}' 2>/dev/null \
   && pass "CONTROL: a slow-but-progressing turn stays un-idle (idle=${IDLE_B}s <= ${CTRL_MAX}s; largest sample gap ${GAP_B}s) — not killed" \
   || fail "CONTROL FAILED: a progressing turn reported idle=${IDLE_B}s — this bound is trigger-happy and would kill good reviews"
 
@@ -229,7 +230,7 @@ if grep -q "^SCOPED_IDLE=" "$SCOPE_OUT"; then
   # GH-793: the busy sibling is only seen at a sample, so "not idle" is resolved to one sample gap.
   U_GAP="$(grep '^UNSCOPED_GAP=' "$SCOPE_OUT" | cut -d= -f2)"
   U_MAX="$(awk -v g="$U_GAP" 'BEGIN{m=2*g; if (m < 1.0) m = 1.0; printf "%.3f", m}')"
-  awk -v v="$U_IDLE" -v m="$U_MAX" 'BEGIN{exit !(v+0 < m+0)}' 2>/dev/null \
+  awk -v v="$U_IDLE" -v m="$U_MAX" 'BEGIN{exit !(v ~ /^[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$/ && v+0 < m+0)}' 2>/dev/null \
     && pass "CONSULT: the SHARED-parent scope masks that same hang (idle=${U_IDLE}s < ${U_MAX}s) — which is why root_pid exists" \
     || fail "CONSULT: the shared-parent scope reported idle=${U_IDLE}s, so this case proves nothing about scoping"
 else
