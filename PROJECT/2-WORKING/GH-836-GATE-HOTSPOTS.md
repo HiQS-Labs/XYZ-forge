@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — merged (#838); step 6 done; D1 decided (gh436 to Large) and implemented, final QA next; D3 awaits the operator (2-WORKING)
+status: Active — merged (#838); step 6 done; D1 decided (gh436 to Large), implemented and gated, PR ready; awaiting merge; D3 awaits the operator (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| D1 plan Approved in round 2 (attested `86b778d2`). D1 is implemented: `gh436` left Small (72 suites), and its two docs inputs route to the full gate. V1–V3 are green, with red controls. | Final Codex QA, then the full gate through the push hook, then the PR. |
+| D1: plan Approved in round 2 (`86b778d2`) and final QA Approved in round 1 (`12d72667`). Rebased onto `fe2fa18b`; `git range-diff` shows the 9 reviewed patches identical. The full gate is GREEN, 414/414 in 1,049 s, at `4e1ac5e7`. PR opened. The O2 consult transcripts that informed D1 are preserved in `relay-system/2026-09-26/gh831-o2-small-*`. | Operator merge. This PR touches `utils/ci-route.sh`, so its reconcile runs the full registry. The next docs-only landing should show a 72-suite Small run of about 12 min. D3 stays open. |
 
 ## Contents
 
@@ -342,7 +342,7 @@ changing D2's hook default.
 | V1, pin red → green | Edited `test/ci-route.sh` vs the unedited router: rc 1, exactly one FAIL (the Small pin, 73 listed). Vs the edited router: rc 0, 81 pass / 0 fail | `d1-v1-pin-red-green.log` |
 | V2, routing probes | Before: all six probes `route=docs tier=1`, and Small is 73 with `gh436`. After: both files, alone and with `README.md`, give `route=full tier=3`; the two controls stay `tier=1`; Small is 72 without `gh436` | `d1-routing-probes.log`, `d1-probes.sh.txt` |
 | V3, registry and tiers | `gh306-registry-bidirectional` 10/0, `gh35-test-tiers` 72/0 | `d1-v3-registry-tier-suites.log` |
-| V4, the full gate | owed: through the push hook, once, on the final commit, in a disposable clone | — |
+| V4, the full gate | Through the push hook from a disposable clone at `4e1ac5e7`, rebased onto `fe2fa18b`: **GREEN, 414/414 in 1,049 s**. Re-run ladder 0 suites, runner envelope clean, identity unchanged | `d1-push-gate-4e1ac5e7.log` |
 
 ## Risk and rollback
 
