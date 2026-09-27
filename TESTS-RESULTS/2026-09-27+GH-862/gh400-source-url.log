@@ -1,5 +1,5 @@
 == test: gh400-source-url ==
-  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh400-srcurl.P3ift5
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh400-srcurl.lkAwT8
   PASS: C1 gh_issue with no source: is refused
   PASS: C2 'source: issue#202' is not diffable and is refused
   PASS: C3 a URL citing issue #999 under gh_issue: 202 is refused

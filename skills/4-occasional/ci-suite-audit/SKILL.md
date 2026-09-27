@@ -14,6 +14,8 @@ A structured, evidence-governed method for evaluating and curating test suites i
 It inspects runtime performance, defect and flake history, touch-set overlap, sibling coverage, and
 assertion quality (prose and junk checks) to classify test suites into actionable, defensible verdicts.
 
+**Primary Mission:** Reversing the registry expansion from 207 to 419+ suites (the GH-854 CI stabilization objective). The skill aggressively curates dead, redundant, prose-only, flake-prone, and unbacked test suites back down to a fast, reliable, regression-focused gate while fiercely protecting verified regression guards.
+
 The skill serves as the canonical curation method for full-suite audits (GH-854, GH-862).
 
 ---
@@ -22,11 +24,33 @@ The skill serves as the canonical curation method for full-suite audits (GH-854,
 
 1. **Manual Invocation Only:** The skill is invoked by an operator for occasional audits (e.g. quarterly sweeps or after major CI churn windows). It is not automated, not scheduled, not wired into CI workflows, and does not run on pull requests.
 2. **Text-Only Skill:** Contains instructions and documentation only. No executable scripts live in the skill directory or under `utils/`, `scripts/`, or `bin/`. Any one-off extraction or scoring code needed during an audit belongs in that run's evidence directory (`TESTS-RESULTS/<date>+GH-<n>/`).
-3. **Proposes Verdicts; Humans Decide:** The skill generates structured recommendations with citations and confidence ratings. It **never** directly edits `validate.sh`, `test/`, `utils/ci-route.sh`, or GitHub Actions workflows, never deletes files, and never opens pull requests. Changes to the registry or test files must be reviewed and approved by an operator per verdict class.
-4. **Restricted GitHub Writes:** The skill's only permitted GitHub write operations are creating/updating its own dedicated report issue and appending per-turn decision comments on that issue (see *Report Issue & Per-turn Comments*). It never modifies or comments on any other issue or PR.
-5. **Freeze & No New Tests Compliance (GH-831):** The skill respects repository test freezes. It introduces no new gate machinery, no new runner scripts, and no new test arrays (`NIGHTLY_TESTS` stays out of tree; candidates remain in `TESTS`). Quarantined suites use the existing unregister-and-exempt mechanism in `test/gh306-registry-bidirectional.sh`.
-6. **Honest Metrics:** Anything not measured is `UNKNOWN`; nothing is estimated silently.
-7. **Log Evidence Preservation:** Save each downloaded or extracted workflow log, run summary, or receipt into the evidence folder (`TESTS-RESULTS/<date>+GH-<n>/`) the first time it is read.
+3. **Target Branch Requirement:** The audit **must** run against the active target development branch (`development` or the active stabilization staging branch such as `staging/stabilize-2026-10`). Auditing `main` is prohibited because `main` retains obsolete pre-freeze suites and stale registries.
+4. **Proposes Verdicts; Humans Decide:** The skill generates structured recommendations with citations and confidence ratings. It **never** directly edits `validate.sh`, `test/`, `utils/ci-route.sh`, or GitHub Actions workflows, never deletes files, and never opens pull requests. Changes to the registry or test files must be reviewed and approved by an operator per verdict class.
+5. **Restricted GitHub Writes:** The skill's only permitted GitHub write operations are creating/updating its own dedicated report issue and appending per-turn decision comments on that issue (see *Report Issue & Per-turn Comments*). It never modifies or comments on any other issue or PR.
+6. **Freeze & No New Tests Compliance (GH-831):** The skill respects repository test freezes. It introduces no new gate machinery, no new runner scripts, and no new test arrays (`NIGHTLY_TESTS` stays out of tree; candidates remain in `TESTS`). Quarantined suites use the existing unregister-and-exempt mechanism in `test/gh306-registry-bidirectional.sh`.
+7. **No Keep-by-Default (Honest Metrics):** Anything not measured is `UNKNOWN`; nothing is estimated silently. Unmeasured suites or suites with missing telemetry/source data must receive `UNKNOWN` or `INVESTIGATE`, **never** silently `KEEP`. A suite must earn `KEEP` through verified regression catching, unique core contract guarding, or confirmed passing behavioral execution.
+8. **Multi-Source Failure Signals:** Failure data must be synthesized across three independent sources: (1) hosted CI job summary `failed:` blocks, (2) local gate receipts (`validation.jsonl`, `ci-local.sh` records), and (3) active tracking issues/clusters (#853 test isolation tracker, #812, #813, #793).
+9. **Exact Entity Matching:** Known flakes, defects, and tracking umbrellas must be matched by exact suite filename or canonical mapping. Loose prefix matching (e.g. `gh492` matching `gh492-roadmap-state-sweep.sh` instead of `gh492-idle-kill.sh`) is strictly prohibited.
+10. **Log Evidence Preservation:** Save each downloaded or extracted workflow log, run summary, or receipt into the evidence folder (`TESTS-RESULTS/<date>+GH-<n>/`) the first time it is read.
+
+---
+
+## Pre-Flight Calibration Step (Mandatory Gate)
+
+Before scoring any suites in the active registry, the skill **must** execute a pre-flight calibration test against the 8 known bad suites turned off by operator decision #831 (their files remain on disk):
+- `gh578-ci-optimize-skill.sh`
+- `gh778-review-code-skill.sh`
+- `gh798-status-skill.sh`
+- `gh779-radar-ci-health.sh`
+- `gh781-wam-radar-seed.sh`
+- `gh615-start-task-reinforce.sh`
+- `gh616-start-task-commensurate-envelope.sh`
+- `gh617-relay-xyz-commensurate-review.sh`
+
+### Calibration Criteria:
+1. **At least 7 of the 8 suites** must evaluate as `TURN-OFF` or `MERGE` under the skill's detector rules.
+2. `gh798-status-skill.sh` must be classified as a wording-only/prose suite (`TURN-OFF`).
+3. **Hard Stop:** If the calibration step fails (fewer than 7 turn-offs or `gh798` not classified as wording-only/TURN-OFF), the audit run is declared **INVALID** and must immediately halt without publishing or acting on any verdicts.
 
 ---
 
@@ -42,7 +66,7 @@ The unit of curation is **one entry in the `TESTS=(...)` array in `validate.sh`*
 ### Access Modes
 
 1. **In-Checkout Mode (Preferred):**
-   - The operator invokes the skill inside an active, clean repository checkout on the target branch (e.g. `development`).
+   - The operator invokes the skill inside an active, clean repository checkout on the target branch (e.g. `development` or staging branch).
    - The skill does not pull or clone automatically.
    - Uses local disk tools (`rg`, file inspections, committed receipts) to inspect full source, helpers, and test definitions across all registered suites.
 2. **Connector-Only Mode (Fallback):**
@@ -54,6 +78,7 @@ The unit of curation is **one entry in the `TESTS=(...)` array in `validate.sh`*
 Every audit report must explicitly disclose data boundaries:
 - **Committed Receipts:** Committed validation receipts represent passing (`green`) runs by construction; they provide accurate runtime distributions but no failure signal.
 - **Hosted CI Logs:** Historical failure logs are extracted from hosted `validate.sh` summary `failed:` blocks. Log retention is subject to GitHub Actions artifact windows (typically 14–90 days).
+- **Local Gate Receipts:** Local gate runs (`validation.jsonl`, `ci-local.sh` logs) supply historical failure signals not captured in hosted runs.
 - **Label Coverage:** Some test runs or shims may produce partial test label manifests (e.g. 355 of 411 suites labeled). Unlabeled suites are marked `UNKNOWN` for label-based heuristics.
 - **Unmeasured Signals:** Any signal, log, or receipt not directly observed or parsed is recorded as `UNKNOWN`; it is never estimated silently.
 
@@ -66,25 +91,26 @@ Every audit report must explicitly disclose data boundaries:
 | **Registry** | `validate.sh` `TESTS`, gh306 `EXEMPT` | Record commit SHA; assert `TESTS` is non-empty and its count matches `validate.sh --list`. Record gh306 `EXEMPT` list separately. |
 | **Current Tier** | `utils/ci-route.sh` registry mapping | Record Small (tier 1/2), Medium, or Large-only for each suite. |
 | **Runtime** | `TESTS-RESULTS/.../validation.jsonl` (`event:"suite"`, `duration_ms`) | Compute median duration across at least 3 green full-gate receipts. Record runner host architecture. |
-| **Failure Tally** | Hosted `validate.sh` job summary `failed:` logs | Record failures as `k of N runs` over the analysis window (never report "never failed"). |
+| **Failure Tally** | Hosted CI summary logs, local `validation.jsonl` receipts, and tracking umbrellas | Record failures as `k of N runs` over the analysis window (never report "never failed"). Combine hosted CI logs and local gate records. |
 | **Failure Cause** | PRs/issues linked to failures; #853 tracking list | Classify failure mechanisms using the Failure Taxonomy. |
 | **Labels & Hints** | `PASS:` / `ok -` output in full run logs | Extract sub-check counts and keyword hints for overlap and prose checks. |
 | **Source Code** | Suite file, executed scripts, sourced helpers | Full source read required for every non-KEEP recommendation. |
 
 ### Known Flake Candidates to Seed
 When initializing an audit, seed known non-deterministic candidates identified in prior windows:
-- `gh610-claude-subscription` (intermittent across PR runs)
-- `gh123-lock-progress-bound` (timing and progress bounds)
-- `registry-lock-concurrency` (intermittent contention / race)
-- Active `#853` suite isolation tracker members (`agent-chorus-bridge`, `gh492`, `gh620`, etc.)
+- `gh610-claude-subscription.sh` (intermittent across PR runs)
+- `gh123-lock-progress-bound.sh` (timing and progress bounds)
+- `registry-lock-concurrency.sh` (intermittent contention / race)
+- Active `#853` suite isolation tracker members (`agent-chorus-bridge.sh`, `gh492-idle-kill.sh`, `gh620-skills-army-mini-sync.sh`, etc.)
 
 ---
 
 ## Detectors (D1–D9)
 
-### D1: Runtime Profiling
+### D1: Runtime Profiling & Heavy Suite Leverage
 - Measure median execution time in seconds, global runtime rank, and share of the median full gate (currently ~2988 s / ~50 min).
 - **Heavy Suite:** Rank ≤ 10 or consuming ≥ 1.0% of the total gate runtime.
+- **High-Leverage Heavy Suites:** Special priority is given to analyzing the heaviest suites that dominate gate time (e.g. `gh251-validate-pytest-skip.sh` consuming ~22% / >1,000s of full gate time due to nested `validate.sh` invocations; `gh436-merge-cleanup.sh`; `gh549-work-events.sh`; `marathon-drive.sh`). Investigate whether nested executions can be bounded, faster siblings exist, or candidate status for NIGHTLY applies.
 - Recompute rankings from fresh receipts after any suite trimming PR.
 - *Role:* Runtime breaks ties and nominates NIGHTLY candidates. **Runtime alone never justifies turning off a test.**
 
@@ -92,7 +118,7 @@ When initializing an audit, seed known non-deterministic candidates identified i
 - Classify all observed failures across the audit window using the Failure Taxonomy.
 - Same-commit / same-SHA divergence (passing on one run, failing on another) serves as primary evidence of non-determinism (`flake`).
 
-### D3: Touch-Set Overlap
+### D3: Touch-Set Overlap & Duplicate Analysis
 - For each suite, statically analyze:
   1. Binaries and scripts executed (`bash <x>`, `python3 utils/py/<y>`, `bin/tick <verb>`, `node <z>`).
   2. Library files sourced (`test/_setup.sh`, `test/lib/*.sh`).
@@ -100,17 +126,18 @@ When initializing an audit, seed known non-deterministic candidates identified i
   4. Repository paths written or modified.
 - Two suites overlap when their **invoked target entry points overlap**.
 - Text similarity (e.g. 5-token shingle Jaccard ≥ 0.6) or label similarity is a secondary tiebreaker only after touch-sets overlap. Filename similarity (e.g. `gh155-phase3` vs `gh155-phase5`) is not overlap if distinct subsystems are invoked.
+- When two suites share identical target entry points and duplicate contract assertions, nominate the redundant suite for `MERGE`.
 
 ### D4: Sibling Coverage
 - A suite is **covered** when a named sibling suite tests the same target entry points with an equal or superset set of behavioral assertions.
 - *Example:* `synthetic/synthetic-pi-model-unset.sh` is covered by `test/pi-turn.sh` (which asserts exit code 5, clean working tree, no commit, and uninvoked model binary).
 
-### D5: Prose Check
+### D5: Prose & Non-Core Text Check
 - Count assertions that inspect documentation and markdown files (`*.md`, `SKILL.md`, `docs/*`, `README`, `ROUTER.md`, `AGENTS.md`) versus assertions that execute codebase scripts/binaries and verify behavioral contracts.
 - Exclude generated fixture files or runtime-emitted docs created inside a test sandbox (e.g. asserting `ESCALATION.md` was created by an agent turn is behavioral).
 - **Prose Ratio:** `(doc-grep assertions) / (total assertions)`.
-  - **Ratio ≥ 0.6 (Prose-only):** Candidate for TURN-OFF if no code is executed and no user-facing key/path is guarded.
-  - **Ratio 0.2–0.6 (Mixed):** Candidate for SPLIT (keep behavioral checks; drop/move pure wording assertions).
+  - **Ratio ≥ 0.6 or Pure Skill/Doc Text (GH-831):** Candidate for `TURN-OFF` if the suite merely asserts wording, markdown structure, or non-core skill text rather than runtime harness behavior.
+  - **Ratio 0.2–0.6 (Mixed):** Candidate for `SPLIT` (keep behavioral checks; drop/move pure wording assertions).
   - **Ratio < 0.2 (Behavioral):** Retain on gate.
 
 ### D6: Junk Pattern Detection
@@ -144,8 +171,8 @@ For every evaluated suite:
 | Class | Evidence Required | Verdict Effect |
 |---|---|---|
 | `regression-caught` | Failure directly caught a real bug, confirmed by a subsequent product code fix (e.g. `gh436` in #812 caught by `0ae3452a`/#794; `gh496` caught race in #813/#818). | **Protected.** Stays on the PR gate regardless of runtime. |
-| `coupling` | Failure caused by unrelated inventory changes, doc rewordings, or count shifts. | **KEEP-FIX.** Flag fragile D6 assertions for trimming. |
-| `flake` | Same commit passed in another run; or error log cites timing bound/port race with no fix at HEAD. | **QUARANTINE** if no fix in progress; **KEEP-FIX** if fix is actively open. |
+| `coupling` | Failure caused by unrelated inventory changes, doc rewordings, or count shifts. | **TURN-OFF** (if prose/skill-text per GH-831) or **KEEP-FIX** (if trimming fragile D6 assertions on core code). |
+| `flake` | Same commit passed in another run; or error log cites timing bound/port race with no fix at HEAD. | **QUARANTINE** if no fix landed at HEAD; **KEEP-FIX** only if an active fix issue is assigned in current window. |
 | `host` | Failure caused by runner environment (macOS vs Linux paths, `/tmp` contention, host Python). | **KEEP-FIX**, linked to #853 tracking umbrella. |
 | `fixed-flake` | Cause of failure was resolved by a landed commit at HEAD (D8). | **KEEP.** Cite fixing commit. Do not quarantine. |
 | `unattributed` | Unexplained timeout or missing summary log. | No change to verdict. Noted in coverage summary. |
@@ -156,14 +183,14 @@ For every evaluated suite:
 
 | Verdict | Definition & Rule | Proposed Action (Requires Approval) |
 |---|---|---|
-| **KEEP** | Meets retention bar, catches regressions, or uniquely guards a contract. | Retain in `validate.sh` `TESTS`. |
-| **KEEP-FIX** | Retained suite that is coupled, flaky, or host-sensitive with an active fix path. | Retain in `TESTS`; link fix issue or #853 umbrella. |
+| **KEEP** | Meets retention bar, catches regressions, or uniquely guards a core contract with passing behavioral receipts. | Retain in `validate.sh` `TESTS`. |
+| **KEEP-FIX** | Retained suite that is host-sensitive or has an active, assigned fix issue open in the current window. | Retain in `TESTS`; link fix issue or #853 umbrella. |
 | **NIGHTLY** (candidate) | Heavy suite with a faster PR-time sibling covering its full target set (see NIGHTLY Rule). | Listed as candidate for future scheduled runs (#859). Remains in `TESTS`. |
-| **QUARANTINE** | Flaky suite blocking CI with no immediate fix at HEAD. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with `quarantine: <issue>` reason. Keep file on disk. If multiple suites share the same root cause, recommend running `whack-a-mole` instead of isolated quarantines. |
+| **QUARANTINE** | Flaky suite blocking CI with no fix landed at HEAD and no active fix lane assigned. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with `quarantine: <issue>` reason. Keep file on disk. If multiple suites share root cause, recommend `whack-a-mole`. |
 | **SPLIT** | Mixed suite (D5 prose ratio 0.2–0.6) combining behavioral checks with prose greps. | Propose splitting: retain executable contract checks; drop or move wording greps. |
 | **MERGE** | Redundant suite whose unique assertions are folded into a named keeper suite. | Propose folding assertions into keeper after red control; then turn off. |
-| **TURN-OFF** | Obsolete suite (target removed), pure prose suite (ratio ≥ 0.6 executing nothing), or fully covered sibling with no unique assertions. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with audit reason. Keep file on disk. |
-| **INVESTIGATE** | Insufficient evidence or conflicting signals. | Retain in `TESTS` pending further telemetry. |
+| **TURN-OFF** | Obsolete suite (target removed), pure prose/skill-text suite (GH-831), or fully covered sibling with no unique assertions. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with audit reason. Keep file on disk. |
+| **INVESTIGATE** / **UNKNOWN** | Insufficient telemetry or unmeasured metrics. | Retain in `TESTS` pending further telemetry; never default to KEEP. |
 
 ### The Retention Bar
 Always **KEEP** a suite that independently guards:
@@ -175,7 +202,10 @@ Always **KEEP** a suite that independently guards:
 - Gate routing or CI test selection contracts (`ci-route.sh`, `gh308`).
 - Source inspection when it is the cheapest independent guard of a user-facing configuration key or path.
 
-*Mantra:* **Static or slow is not a reason to delete.**
+*Mantra:* **Static or slow is not a reason to delete; but redundant, dead, or unmeasured is never a reason to keep.**
+
+### Sibling Deduplication Precedence
+**Sibling coverage and deduplication take precedence over the retention bar.** Even if a suite tests a retention-bar contract, if another faster suite already guards that exact contract with equal or superset assertions (D4), the redundant duplicate is nominated for `MERGE` or `TURN-OFF`.
 
 ### The NIGHTLY Rule
 A heavy suite $H$ is a candidate for NIGHTLY only when **all four conditions hold**:
@@ -194,6 +224,21 @@ A heavy suite $H$ is a candidate for NIGHTLY only when **all four conditions hol
 - **No Unbacked Merges:** If a proposed survivor for `MERGE` or `SPLIT` does not exist, mark the row as `parked: no survivor` rather than creating new suites under the freeze.
 - **High Confidence Required:** Non-KEEP recommendations require full source inspection and `HIGH` or `MED` confidence.
 - **Observation Window:** Approved turn-offs are moved to `EXEMPT` (or removed from registry pin) for an observation window before anyone considers deleting a file (at least 14 days).
+
+---
+
+## 8-Point Acceptance Test for Audit Runs
+
+Every completed audit run must pass this 8-point acceptance check before findings or report issues are accepted:
+
+1. **Calibration Passed:** Calibration against the 8 suites turned off by #831 passed (at least 7 of 8 scored `TURN-OFF`/`MERGE`, and `gh798` scored wording-only/`TURN-OFF`).
+2. **Target Branch Pinned:** Audit was executed strictly on `development` or active stabilization staging branch (not `main`).
+3. **Honest Metrics:** All unmeasured suites, missing durations, or unobserved failure signals are recorded as `UNKNOWN` or `INVESTIGATE`, with zero keep-by-default fallbacks.
+4. **Multi-Source Failures:** Failure signal combines hosted CI logs, local validation receipts, and #853 tracking.
+5. **Flakes Quarantined:** Unresolved flakes without a landed fix at HEAD (`gh610`, `gh123`, `registry-lock-concurrency`) receive `QUARANTINE`.
+6. **Heavy Suites Profiled:** High-leverage heavy suites (including `gh251`, `gh436`, `gh549`, `marathon-drive`) are analyzed for nested runners and faster siblings.
+7. **Redundant Suites Merged:** Duplicate suites with overlapping touch sets receive `MERGE` recommendations naming a surviving keeper.
+8. **Sibling Skills Triggered:** Sibling skill recommendations (`radar` for trunk-red clusters, `whack-a-mole` for shared root causes) fire accurately based on objective criteria.
 
 ---
 
