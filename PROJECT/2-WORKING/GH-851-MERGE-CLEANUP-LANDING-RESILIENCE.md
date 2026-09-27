@@ -3,7 +3,7 @@ gh_issue: 851
 related_issues: [852]
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/851
 title: "merge-cleanup landing resilience: stale re-gate after a B1 push (#851), unbounded network calls, merge-call recovery, --reconcile-pr SHA, hosted-wait default (#852, #854 D5)"
-status: Inbox — plan QA closed 2026-09-27 by operator-directed final adjudication after round 2 (D1, D2 and nits accepted in full; no round 3); implementation next
+status: Working — admitted 2026-09-27 (accepted-start on both rows); implementing F1–F5
 created: 2026-09-27
 updated: 2026-09-27
 owner: operator (via /start-task, #854 direct-path item 1)
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA closed. Codex round 1 (C1–C3) and round 2 (D1, D2, nits) were both FAIL; each finding was accepted and written into this plan. The operator directed the Producer to adjudicate round 2 and close the loop, so there was no round 3 and no Codex approval (see *Plan QA record*). | Implementation, then the full gate and final Codex QA. |
+| Admitted (`--accepted-start` on #851 and #852) and moved to `2-WORKING`. Plan QA had closed by operator-directed adjudication after round 2 (see *Plan QA record*). | Implement F1–F5, witnesses, focused suites, final Codex QA, then the full gate and a ready PR. |
 
 ## Issues
 
