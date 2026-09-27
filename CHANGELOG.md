@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-27 — gh492's idle checks no longer depend on how fast `ps` answers (GH-793)
+
+`test/gh492-idle-kill.sh` failed only under the parallel gate. Its sampler shells out to `ps`, `pgrep` and `lsof`, which slow down under gate load. The test's fixed 4 s window, a fixed 1.0 s bound, and an idle reading taken after the sampler threads were joined made that slowdown read as "a progressing turn looks idle" and "the blocked turn is unclassified". Delaying just those tools reproduces both at base. The windows now run until enough samples exist (capped at 30 s), idle is read when the window closes, and the two "not idle" bounds are `max(1.0 s, 2 × the largest observed sample gap)`. The product code is unchanged, and mutations that break file-progress or pid scoping still fail the suite. Evidence is in `TESTS-RESULTS/2026-09-27+GH-793/`.
+
+## 2026-09-27 — rollback events no longer poison `.tick/events`, and tests keep them out of the real clone (GH-745)
+
+`wave_reconcile`'s rollback event was appended to a timestamp-named file. Two rollbacks in the same instant wrote two records into one file, and `tick claims` then failed `events-unreadable` for the whole clone, which made merge-cleanup preserve it forever. Each event is now its own file: the name carries the pid and 8 random hex characters, and the file is created exclusively. Three suites (`gh424`, `gh425`, `gh421`) built the journal with no root and wrote events into the real clone. They now use their fixture root.
+
+Evidence is in `TESTS-RESULTS/2026-09-27+GH-745/`:
+- **Leak witness:** 3 events leaked into the real clone at base, 0 at head (5 of 5 runs).
+- **Same-instant witness:** `tick claims` exits 3 at base and 0 at head.
+- **`wave-reconcile.sh`:** 23 of 23, 5 of 5 runs.
+
+## 2026-09-27 — gh620 names a failed fixture git call instead of crashing later (GH-830)
+
+`test/gh620-skills-army-mini-sync.sh` ignored the exit code of about 30 fixture git calls and dropped their stderr. So a failed `seed-owner` clone on the hosted gate (run 36194249895) surfaced as an unrelated `FileNotFoundError`, and cost one full hosted qualification. `git()` now stops the suite with the failing command and git's stderr. There are no retries, and no assertion changed. The red control, with the fixture clone pointed at a missing repo, now names the clone. The normal run passes 5 of 5 (28/28). Evidence is in `TESTS-RESULTS/2026-09-27+GH-830/`.
+
+## 2026-09-27 — gh69-roadmap-shadow no longer goes red under PYTHONUNBUFFERED=1 (GH-858)
+
+`test/gh69-roadmap-shadow.sh` had three `cmd | grep -q` checks that could fail whenever Python output was unbuffered: `grep -q` exits on the match, the writer gets EPIPE, and `pipefail` reports a failure. The receipt check is the one that failed. They now capture first, then match, and keep the producer's exit status (`_gh858="$(cmd)" && grep -q …`), so a failing command still fails its check. The suite's GH-139 baseline entry drops from 3 to 0. The red control at base fails, and the head passes 5 of 5 both with and without the variable. Evidence is in `TESTS-RESULTS/2026-09-27+GH-858/`.
+
 ## 2026-09-27 — ci-suite-audit: test suite curation, runtime profiling, and retention/quarantine triage skill (GH-862)
 
 Adds the `ci-suite-audit` occasional skill (`skills/4-occasional/ci-suite-audit/`), item 5 of the #854 CI stabilization umbrella and the canonical method for the 2026-10-08 full-suite audit.
@@ -192,6 +213,18 @@ When several `harness_app.py` processes opened a brand-new telemetry database at
 ## 2026-09-25 — GH-800 M4 Pro full-suite trials
 
 Recorded three MacBook Pro 14-inch M4 Pro runs of `./validate.sh` (4 workers, full tier) at proposed repin `development@0ae3452a`: 912 s and 910 s green (420/420), and 964 s refused (419/420). The refusal is an intermittent `gh496-telemetry-isolation.sh` concurrency failure, reproduced standalone as a SQLite `database is locked` race at `PRAGMA journal_mode = WAL`. This commit differs from the M6 trial's, so no cross-device comparison is made yet. Sanitized timings and provenance are in `TESTS-RESULTS/2026-09-25+GH-800/`.
+
+## 2026-09-24 — Flightdeck explains unknown states instead of looking broken (GH-797)
+
+Cards said "Progress coverage unknown" with no explanation, and sources with no producer
+(topology, continuity) got a red dot. Cards now read **Progress not measured**, with a
+tooltip saying it is not an error and why. Source pills say `off` or `not set up` in grey,
+with a tooltip naming the variable that turns them on (for example `FLIGHTDECK_XYZ_ROOTS`
+for the in-progress view). Red now means an actual read failure, including a single failed `xyz_work` root.
+A row or root cap with nothing failing shows amber `partial`. Presentation only:
+no server or snapshot change. Reversibility: **Easy**. Verification: node
+`work-status-checks.mjs` (a mutation that paints an unconfigured source red fails it),
+`pytest test/flightdeck` 39/39, and the real-Chrome browser check.
 
 ## 2026-09-24 — GH-800 M6 full-suite benchmark intake
 

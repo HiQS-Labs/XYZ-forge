@@ -137,7 +137,7 @@ class MarkerTests(unittest.TestCase):
                 (self.root / name).unlink()
         before = self.snapshot() if not absent else {
             n: (self.root / n).read_bytes() if (self.root / n).exists() else None for n in artifacts}
-        journal = wave.RollbackJournal()
+        journal = wave.RollbackJournal(self.root)  # GH-745: never the real clone's .tick/events
         self.addCleanup(journal.cleanup)
         calls = []
 

@@ -366,7 +366,7 @@ class ReconcileTests(unittest.TestCase):
         legacy.mkdir()
         (legacy / 'releases.db').touch()
         (legacy / 'ROADMAP.md').write_text('### In progress\n- **GH-421** — fixture\n### Completed\n')
-        journal = wave.RollbackJournal()
+        journal = wave.RollbackJournal(legacy)  # GH-745: never the real clone's .tick/events
         self.addCleanup(journal.cleanup)
         wave.update_roadmap_entry(str(legacy), 421, 42, '2026-09-08', journal=journal)
         self.assertIn('### Completed\n- **GH-421** ✅ **SHIPPED', (legacy / 'ROADMAP.md').read_text())
