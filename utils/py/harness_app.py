@@ -11,10 +11,12 @@ import functools
 import hashlib
 import json
 import os
+import random
 import re
 import sqlite3
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -168,7 +170,18 @@ def init_db(db_path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
-    conn.execute("PRAGMA journal_mode = WAL;")
+    # GH-813: switching a FRESH database to WAL needs an exclusive lock, and when concurrent first
+    # users collide on it SQLite returns "database is locked" at once — the busy handler never waits
+    # (measured: every failure in 0.06-0.07 s). Retry just that, briefly; any other error, or a lock
+    # that outlasts 50 attempts (at most ~2.45 s of added sleep), still raises.
+    for attempt in range(50):
+        try:
+            conn.execute("PRAGMA journal_mode = WAL;")
+            break
+        except sqlite3.OperationalError as e:
+            if "database is locked" not in str(e).lower() or attempt == 49:
+                raise
+            time.sleep(0.02 + random.random() * 0.03)
 
     with conn:
         conn.executescript("""

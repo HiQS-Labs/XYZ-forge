@@ -2,7 +2,7 @@
 gh_issue: 836
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/836
 title: "CI refactor: trim the measured gate hotspots (gh549 race leg and board-dispatch backfills, gh436 parity double-run, gh649 /tmp bug); take the tier decisions on hosted Small numbers"
-status: Active — merged (#838); step 6 done; D1 and D3 await the operator (2-WORKING)
+status: Active — merged (#838); step 6 done; D1 decided (gh436 to Large), implemented and gated, PR ready; awaiting merge; D3 awaits the operator (2-WORKING)
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
@@ -10,9 +10,9 @@ doc_type: fix
 branch: fix/gh836-gate-hotspots
 non_goals:
   - New suites, registry entries or gate machinery (AGENTS.md, No new tests).
-  - Moving gh549 or gh436 out of Small; that is D1, the operator's decision, taken on hosted numbers.
+  - (#838's scope) Moving gh549 or gh436 out of Small. That was D1, the operator's decision on hosted numbers, decided 2026-09-26 and done in its own PR (see "D1 — gh436 to Large").
   - Rewriting gh549 to run in one process, or gh436 on template fixtures (deferred in #836).
-  - Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner (D2's hook default is the one operator-directed exception).
+  - (#838's scope) Any change to utils/py/releases_app.py, the merge-cleanup scripts, ci-route or the runner (D2's hook default is the one operator-directed exception). D1's PR changes ci-route by operator decision.
 related:
   - "#835 — the gate-timing snapshot and its three profiling reviews (closed as completed)"
   - "#831 — the three-tier gate; its Phase 3 hosted Small evidence is recorded (run 36276061201)"
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Merged in PR #838 (`af4fef27`); its reconcile ran the full registry in 59.9 min. **Step 6 is done:** the first hosted Small run, [36276061201](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36276061201) for #840, took 15.7 minutes. Hosted, `gh549` now takes 159 s (8.0 min in #835's profile) and `gh436` 221 s (4.4 min). | **D1 is now the operator's call:** hosted Small is 15.7 min, over the ~12-minute threshold. Moving `gh436` alone would take it to about 12.0 min. D3 is still open. |
+| D1: plan Approved in round 2 (`86b778d2`) and final QA Approved in round 1 (`12d72667`). Rebased onto `fe2fa18b`; `git range-diff` shows the 9 reviewed patches identical. The full gate is GREEN, 414/414 in 1,049 s, at `4e1ac5e7`. PR opened. The O2 consult transcripts that informed D1 are preserved in `relay-system/2026-09-26/gh831-o2-small-*`. | Operator merge. This PR touches `utils/ci-route.sh`, so its reconcile runs the full registry. The next docs-only landing should show a 72-suite Small run of about 12 min. D3 stays open. |
 
 ## Contents
 
@@ -259,9 +259,90 @@ about 4.2 minutes.
     - `gh436` is 221 s (23 %) and `gh549` 159 s (17 %).
     - Without `gh436` it would be about 721 s (12.0 min).
     - `gh436` stays a tier-1 reader: it loads merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md`. Moving it
-      means a docs-only change to those files is checked only at promotion (O8).
+      alone would mean a docs-only change to those files is checked only by the next full run (any tier-2 or
+      tier-3 landing's reconcile) or at promotion (O8).
+  - **Decided 2026-09-26: move it, with the compensating route below** ("if relatively safe"). See "D1 —
+    `gh436` to Large".
 - **D2: decided, option C, and folded into this PR as step 7.**
 - **D3:** move `gh645` and `gh674` to Large, for tidiness only.
+
+## D1 — `gh436` to Large (operator decision 2026-09-26)
+
+**Why now.** Hosted Small was 15.7 min, over D1's ~12-minute line. `gh436` is its largest suite at 221 s (23 %).
+Removing it gives about 721 s (12.0 min).
+
+**Recon at `1eef93a3`.**
+- **What `gh436` reads.** Its only tier-1 (docs) inputs are `WORKTREE-SAFETY.md` (`test/gh534_phase_a_tests.py:125`)
+  and merge-cleanup's `SKILL.md` (`test/gh534_phase_c_tests.py:523`, the parity guard and drive-loop check).
+  Its other real-repo inputs (corrected after Codex plan r1 S1) all route as non-docs, so a landing that changes
+  them already takes the full hosted reconcile (tier 2 or 3 → `wave_reconcile.py:589-614`):
+  - merge-cleanup code, tier 3 (`utils/ci-route.sh:67`, `test/ci-route.sh:165`);
+  - `utils/py/releases_app.py` and `utils/releases-merge-resolve.sh`, which phase B copies into fixtures
+    (`test/gh534_phase_b_tests.py:32-33,163-165`): tier 2;
+  - `.gitattributes`, copied by the same fixture: tier 3;
+  - `bin/tick`, invoked by phase A (`test/gh534_phase_a_tests.py:36,304`): tier 3, `route=full`.
+  The fixture ledger and README data are generated inside the fixtures (`gh534_phase_b_tests.py:161-170`).
+- **How the two files route today.** Both are docs, tier 1 (`is_docs_surface` rule 1, `*.md`).
+- **The gap without a compensating route.** A docs-only landing that edits either file would qualify through
+  Small without `gh436`. Only the next full run, or promotion, would check it.
+- **How often that happens.** Seven commits touched the two files in the 30 days to 2026-09-26. Only one was
+  docs-only (#840, wording); the other six also changed code and took the full gate anyway.
+- **Precedence.** `full_required` takes precedence over docs-only in the tier resolution
+  (`utils/ci-route.sh:467-471`). Its block comment already names "worktree safety" among the surfaces that
+  require the full suite (`:319-321`).
+
+**Change (existing subsystem, existing writer: `utils/ci-route.sh`).**
+1. Remove `gh436-merge-cleanup.sh` from `SUBSYSTEM_TESTS_small` (`:38`). It stays registered in `validate.sh`,
+   so every full run (Medium and Large reconciles, the full push gate, promotion) still runs it.
+2. Add `WORKTREE-SAFETY.md` and `skills/*/merge-cleanup/SKILL.md` to the `full_required` case, with a GH-836 D1
+   comment. A landing that touches either now takes the full registry at push and at the reconcile, so
+   `gh436` still checks every change to its inputs.
+3. `test/ci-route.sh`: only the existing Small pin changes, 73 → 72, with `gh436` absent. That keeps the suite
+   truthful about the list it pins (AGENTS.md: "edit an existing suite only to keep it truthful"). The two new
+   routings are witnessed as recorded manual probes, not new cases (Codex plan r1 S2).
+4. Docs:
+   - `ROUTER.md:128-130`, which says skill markdown keeps docs routing except `relay-xyz` and
+     `relay-automation`, adds merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` as full-gate files (GH-836 D1);
+   - the `CHANGELOG`;
+   - this plan's Results.
+
+**Non-goals.** Changing any other suite's tier (D3, `gh645`/`gh674`, stays open); changing `gh436` itself;
+changing D2's hook default.
+
+**Verification (no new tests).**
+- **V1, the pin, red then green:** run the edited `test/ci-route.sh` against the unedited `utils/ci-route.sh`
+  (a scratch copy). The Small-pin assertion must fail (73 listed). Against the edited router the whole suite
+  must pass.
+- **V2, routing, as recorded manual probes** (`TESTS-RESULTS/2026-09-26+GH-836/d1-routing-probes.log`, with
+  provenance):
+  - each probe records the command, exit status and non-empty `route=`/`tier=`/`tier_reason=` output;
+  - at base: `WORKTREE-SAFETY.md` and merge-cleanup's `SKILL.md` give `route=docs tier=1` (red);
+  - after: both, alone and each paired with `README.md`, give `route=full tier=3`, and `README.md` alone stays
+    `tier=1`;
+  - `subsystems small` lists 72 suites, without `gh436`.
+- **V3:** `gh306-registry-bidirectional.sh` and `gh35-test-tiers.sh` pass. They pin the registry and tier
+  contracts.
+- **V4, the qualifying gate:** the push hook's full gate, once, on the final commit, in a disposable clone. This
+  PR touches `utils/ci-route.sh` and a test, so its own reconcile runs the full registry.
+- **After merge,** the next docs-only landing's hosted Small run should list 72 suites and take about 12 min.
+
+**Risk.**
+- **The cost:** a docs-only landing that edits either file now pays a full gate: about 15 min locally and 57–60
+  min hosted. By the 30-day count, that is about one landing a month.
+- **More CI:** `route=full` also selects CI's Ubuntu full-registry canary for such a PR (`.github/workflows/ci.yml:480-489`).
+  It is advisory, and it is extra runner time, not a new blocker.
+
+**Rollback.** Revert. Old receipts stay valid, because a receipt replays its own recorded list
+(`wave_reconcile.py:556`).
+
+**Results (2026-09-26).** Evidence is in `TESTS-RESULTS/2026-09-26+GH-836/`, with `provenance.jsonl`.
+
+| Witness | Result | Evidence |
+|---|---|---|
+| V1, pin red → green | Edited `test/ci-route.sh` vs the unedited router: rc 1, exactly one FAIL (the Small pin, 73 listed). Vs the edited router: rc 0, 81 pass / 0 fail | `d1-v1-pin-red-green.log` |
+| V2, routing probes | Before: all six probes `route=docs tier=1`, and Small is 73 with `gh436`. After: both files, alone and with `README.md`, give `route=full tier=3`; the two controls stay `tier=1`; Small is 72 without `gh436` | `d1-routing-probes.log`, `d1-probes.sh.txt` |
+| V3, registry and tiers | `gh306-registry-bidirectional` 10/0, `gh35-test-tiers` 72/0 | `d1-v3-registry-tier-suites.log` |
+| V4, the full gate | Through the push hook from a disposable clone at `4e1ac5e7`, rebased onto `fe2fa18b`: **GREEN, 414/414 in 1,049 s**. Re-run ladder 0 suites, runner envelope clean, identity unchanged | `d1-push-gate-4e1ac5e7.log` |
 
 ## Risk and rollback
 
@@ -281,3 +362,7 @@ about 4.2 minutes.
 ## Merge evidence
 
 - PR #847 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #848 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

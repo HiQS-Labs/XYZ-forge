@@ -237,10 +237,11 @@ out="$(bash "$ROUTER" subsystems skills-army-hq)"
   && pass "subsystems skills-army-hq lists its two dedicated suites plus GH-831's three gh589 suites (GH-487/GH-620)" \
   || fail "subsystems skills-army-hq listed $(wc -w <<<"$out") suites: $out"
 # GH-831 D2: Small is what the hosted reconcile runs for a tier-1 landing. Its count is pinned so a
-# dropped member is a visible change, not a quieter gate.
+# dropped member is a visible change, not a quieter gate. GH-836 D1 moved gh436-merge-cleanup to Large.
 out="$(bash "$ROUTER" subsystems small)"
-[[ "$(wc -w <<<"$out")" -eq 73 && "$out" == *"gh306-registry-bidirectional.sh"* && "$out" == *"wave-reconcile.sh"* ]] \
-  && pass "subsystems small lists its 73 suites (GH-831)" \
+[[ "$(wc -w <<<"$out")" -eq 72 && "$out" == *"gh306-registry-bidirectional.sh"* && "$out" == *"wave-reconcile.sh"* \
+   && "$out" != *"gh436-merge-cleanup.sh"* ]] \
+  && pass "subsystems small lists its 72 suites, without gh436 (GH-831; GH-836 D1)" \
   || fail "subsystems small listed $(wc -w <<<"$out") suites: $out"
 
 # ── GH-496: validate.sh append-only test registration routing ─────────────────────────────────

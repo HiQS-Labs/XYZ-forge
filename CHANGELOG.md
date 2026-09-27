@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-26 — `gh436` moves from Small to Large; its two docs inputs now take the full gate (GH-836 D1)
+
+The first hosted Small run took 15.7 minutes, over D1's ~12-minute line. `gh436-merge-cleanup.sh` was its largest
+suite at 221 s. The operator moved it to Large, and Small is now 72 suites, projected at about 12 minutes.
+
+`gh436` reads two docs: `WORKTREE-SAFETY.md` and merge-cleanup's `SKILL.md`. A docs-only landing that edits
+either would otherwise have qualified without it, so `utils/ci-route.sh` now routes both to the full gate. Every
+landing that changes something `gh436` reads still runs `gh436` at its hosted reconcile. Its code inputs already
+did. The cost is a full gate on the rare docs-only edits to those two files: one in the last 30 days.
+
+The existing `test/ci-route.sh` Small pin moves 73 → 72. The routing is witnessed by recorded probes (red at
+base, green after), not a new test.
+
 ## 2026-09-26 — The first hosted Small run qualified a docs landing in 15.7 minutes (GH-831 Phase 3)
 
 #840 (GH-833) was the first docs-only merge after the three-tier gate landed. The hosted reconcile qualified it
@@ -139,6 +152,10 @@ record a green boundary, for a reason unrelated to code. The cap is now 120, mat
 `test/ci-workflow.sh` fails if the boundary's job-level cap drops below the wave-reconcile cap or either goes
 missing (a step-level timeout does not count). Found by the 2026-09-25 post-merge review (#822);
 it blocked the `development` → `main` promotion. Rollback: revert the one value and its assertion.
+
+## 2026-09-25 — harness_app: concurrent first use no longer fails on the WAL switch (GH-813)
+
+When several `harness_app.py` processes opened a brand-new telemetry database at once, one could fail with `database is locked` at `PRAGMA journal_mode = WAL`. SQLite returns that error immediately, without the busy timeout, so the process died and the turn lost its telemetry row. It also randomly failed the `gh496-telemetry-isolation.sh` concurrency case, which failed one M4 Pro gate run in #800. `init_db` now retries only that statement, only on `database is locked`, up to 50 attempts with short jittered sleeps. Every other error still raises immediately. The gh496 suite now prints a failing worker's stderr, and a new case 14 checks the retry deterministically: it is red on the old code and green now. A 200-round × 10-worker probe went from 29/200 failed rounds to 0/200. Receipts are in `TESTS-RESULTS/2026-09-25+GH-813/`.
 
 ## 2026-09-24 — gh251's nested gate runs scoped to the cheapest `.py` tier-2 lane (GH-808)
 
