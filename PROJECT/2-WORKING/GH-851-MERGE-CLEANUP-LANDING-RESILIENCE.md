@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Admitted (`--accepted-start` on #851 and #852) and moved to `2-WORKING`. Plan QA had closed by operator-directed adjudication after round 2 (see *Plan QA record*). | Implement F1–F5, witnesses, focused suites, final Codex QA, then the full gate and a ready PR. |
+| Admitted (`--accepted-start` on #851 and #852) and moved to `2-WORKING`. Plan QA had closed by operator-directed adjudication after round 2 (see *Plan QA record*). | Implement F1–F5, witnesses, focused suites and one Codex QA round; then a ready PR into `staging/stabilize-2026-10` once it is cut (D2 bypass, no local full gate). |
 
 ## Issues
 
@@ -136,7 +136,9 @@ goal: >
 6. **Evidence and diagnosis.** Any unexpected red during execution is diagnosed with `/debug-mantra`: ground truth first, and no fix before the root cause is stated.
    - The witness script goes in `TESTS-RESULTS/2026-09-27+GH-851/witness.py.txt`: one script run against a base checkout and a head checkout, with logs and `provenance.jsonl`.
    - Existing suites, run focused once: `gh436`, `gh674`, `gh645`.
-   - The full gate runs once, through the pre-push hook on the final commit, from a disposable full clone, under `caffeinate -i`.
+   - **Route changed (operator, 2026-09-27, #854 comment 5858552134):** this PR moves from the direct path to the
+     `staging/stabilize-2026-10` branch. There is no local full gate: it pushes with `XYZ_SKIP_PREPUSH=1` under #854 D2, disclosed
+     in the PR body. The receipt is the witnesses, the focused suites above and one Codex QA round (D3). The staging landing gate re-runs it.
 7. **Docs.**
    - Update the `emit_pr_merged` docstring (`merge_cleanup.py:365-371`, plan QA nit). Under F2 a merge is also witnessed by a `MERGED` re-query after a non-zero merge call. Under F3, `--reconcile-pr` now verifies merge state; it still does not emit.
    - `SKILL.md`: the F5 default, plus one sentence under Phase 5 on F2 and F4.
