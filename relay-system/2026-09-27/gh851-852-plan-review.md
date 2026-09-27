@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -182,5 +182,58 @@ The revised plan is the committed artifact (`PROJECT/1-INBOX/GH-851-MERGE-CLEANU
 - **[Nit]: Implemented.** The `SKILL.md:153` sentence is corrected alongside the 5400 edit, and `/debug-mantra` is named for execution-time diagnosis (step 6).
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2 (codex)
+
+VERDICT: FAIL
+Basis: The revision resolves most of C1–C3, but trades away the sixth call's bound to preserve test signatures, and its revised timeout witness still needs an explicit unbounded-base path. Close D1–D2 before implementation approval.
+swept file: yes
+
+Read the entire revised artifact, including recon, ratings, all five fixes, evidence and rollback; re-read the affected production paths and named test seams. Source inspection is against the seeded checkout; no git command or independent base-SHA comparison was performed. The pre-existing unbounded fetch remains the relevant unresolved defect. No additional production defect is asserted by this review. Round 1's historical incident/rating evidence is retained, not newly re-fetched. No suites or executable fixtures were run.
+
+- **[Should] D1 — Keep the bound on the sixth network site; adapt its existing stubs.** Artifact `:98` now deliberately leaves `scan_clones.py:437` without a timeout because its test doubles lack the keyword. That preserves the very unbounded call R2 inventories. `run_git` already supports a finite timeout and converts expiry to rc 124 (`scan_clones.py:86-110`); use that existing seam at `:437` and let the listed doubles accept/forward the keyword. No new helper, case, suite or gate is required. The environment approach is fine as a second layer, but Git documents those settings as an **HTTP transfer-speed** condition, not a subprocess deadline ([Git configuration reference](https://git-scm.com/docs/git-config#Documentation/git-config.txt-httplowSpeedLimit)). It does not establish a finite bound on this call for every supported origin/child operation. Avoid weakening runtime requirements merely to preserve a mock signature. Restore this sixth site to the timeout receipt.
+  Observed input: `scan_clones.py:437`: `run_git(repo_path, ['fetch', '--quiet', 'origin', integration_branch])`; the AST probe below reports its default as `None`. Artifact `:98` explicitly preserves it. Existing stubs are at `test/gh534_phase_a_tests.py:505,632` and `test/gh436-merge-cleanup.py:308`.
+  Affected scope: the already-in-scope provenance fetch and its existing test doubles; local git calls keep their current defaults, and no retry/defer policy is added.
+  Falsifier: the manual receipt must observe a finite timeout at this sixth site at head and none at base, with a shortened-bound stalled-fetch check returning the existing failed-query/preserve result at head. Show that this also works without relying on HTTP environment variables. **[Unverified — needs clone run]** No stalled-fetch fixture was executed here.
+
+- **[Should] D2 — Finish C2's witness recipe and safety assertions.** Artifact `:106` forwards `min(timeout, 2)`, but the base call omits timeout: preserving its default gives `None`, and `min(None, 2)` raises `TypeError` before the intended watchdog evidence. Specify `None if timeout is None else min(timeout, 2)` (with a default of `None` in the wrapper), preserve all other arguments, and stub only the clone operation. The same recipe must run at base and head. Also carry forward round 1 C2's explicit F3 assertions: OPEN and refresh-error inputs return 2 without invoking reconciliation; a matching active hosted run on H never invokes the local writer, including on wait exhaustion. Artifact `:118-121` states the refusal behavior but only specifies the happy-path wait witness. Put these checks in the existing proposed manual evidence file, not new tests. Require nonempty logs and committed provenance as in round 1.
+  Observed input: artifact `:106-108` promises base watchdog expiry from a wrapper whose stated operation fails for the actual `run_git` default; the pure-expression probe below observed the TypeError. F3's witness at `:121` observes waiting, not writer exclusion, despite the recorded #810 wrong-SHA/local-writer incident in R5.
+  Affected scope: the manual witness recipe and its already-requested F3 safety evidence; no additional production behavior.
+  Falsifier: base must reach the outer watchdog, not fail on wrapper argument handling; head must return the rc-124-derived second-clone failure before it. For F3, a deliberate local-writer call while H remains active must make the witness red, and OPEN/error must record zero reconciliation calls.
+
+- **[Pass] C1 and most of C3 are resolved at plan level.** Artifact `:99-111` names both concrete diagnostics, narrow classifier additions and non-transient controls; existing `_retry_call` and refresh retry both consume `_transient` (`merge_cleanup.py:117-130,195-209`). Artifact `:123-124` now names the ready-primary H/M assertion and failure-propagation red control. Environment configuration (`:89-92`) preserves the existing argv matchers. This accepts the specification, not unrun test outcomes.
+
+- **[Pass] F2/F4/F5 and scope remain sound.** Artifact `:113` explicitly requires MERGED plus nonempty `mergeCommit.oid`, matching the existing success predicate (`merge_cleanup.py:168`); `:126-128` retains the bounded head-arrival wait followed by the existing mergeability/re-gate path (`:970-989`); `:85-87` names the 5400 default and a base/head witness. The plan still adds no module, helper family, suite or registry entry (`artifact:83,129-132`). Planned execution evidence remains **[Unverified — needs clone run]**.
+
+- **[Nit] Finish the risk/prose corrections.** Artifact `:140` still calls the mechanism `-c` flags after switching to environment variables, and says “only a stalled link is affected” immediately after acknowledging slow live transfers. Say that a live HTTP transfer below the configured threshold can be aborted. The touched code's `emit_pr_merged` docstring (`merge_cleanup.py:365-371`) also says success requires a zero-exit merge call and that `--reconcile-pr` never checks merge state; both become stale under F2/F3. Update those comments during implementation. Source rollback remains Easy (`artifact:143`), but reverting code cannot undo remotely merged PRs.
+
+**Probe receipt — exit 0.** Ran the following via `python3 -` with `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`. It parses source and evaluates a pure expression; it never imports or calls repository runtime functions:
+
+```python
+import ast, pathlib
+p = pathlib.Path('skills/2-daily/merge-cleanup/scripts/scan_clones.py')
+t = ast.parse(p.read_text())
+f = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name == 'classify_local_refs')
+for n in ast.walk(f):
+    if (isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+        and n.func.id == 'run_git' and len(n.args) > 1
+        and isinstance(n.args[1], ast.List) and n.args[1].elts
+        and isinstance(n.args[1].elts[0], ast.Constant)
+        and n.args[1].elts[0].value == 'fetch'):
+        print(f'{p}:{n.lineno}: {ast.unparse(n)}')
+r = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name == 'run_git')
+print('run_git timeout default:', ast.unparse(r.args.defaults[-1]))
+try: min(None, 2)
+except TypeError as exc: print('witness base:', type(exc).__name__ + ':', exc)
+for fn in ['test/gh534_phase_a_tests.py', 'test/gh436-merge-cleanup.py']:
+    tree = ast.parse(pathlib.Path(fn).read_text())
+    for n in ast.walk(tree):
+        if isinstance(n, ast.FunctionDef) and n.name == 'flaky':
+            print(f'{fn}:{n.lineno}: def flaky({ast.unparse(n.args)})')
+```
+
+Decisive output: `scan_clones.py:437: run_git(repo_path, ['fetch', '--quiet', 'origin', integration_branch])`; `run_git timeout default: None`; `witness base: TypeError: '<' not supported between instances of 'int' and 'NoneType'`. Stub signatures: `:505 flaky(cwd, args)`, `:632 flaky(cwd, args, _p=prefix)`, `:308 flaky(cwd, args)`. Source reads exited 0. The official Git documentation read succeeded and confirms the environment-variable overrides and HTTP threshold semantics; no network git operation was run.
+
+Handing off to Producer (claude-a) — address D1–D2 and disposition the nits, then return the revised plan for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
