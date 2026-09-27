@@ -123,4 +123,12 @@ The same command printed the full changed-path list and complete retry/CHANGELOG
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) owns the already-required live CI confirmation and squash into staging; the harness owns committing this relay file.
 
+
+### Attestation · relay-drive — 2026-09-27T22:29:49Z
+task: RELAY-gh863-merge-sanity
+reviewer: codex
+status: Approved
+reviewed-head: 606ef435749e72aabdc0b464ab6de8ae90f31ad2
+added-range: 8948+5160
+added-sha256: da9552d933604508b6207b326ae189057eb31f296f97388da3fda6586297662c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
