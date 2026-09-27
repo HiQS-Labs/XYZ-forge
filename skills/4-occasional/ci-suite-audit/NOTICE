@@ -1,0 +1,117 @@
+# NOTICE
+
+## ci-suite-audit provenance and upstream credits
+
+`ci-suite-audit` incorporates concepts, taxonomies, and authoring guidelines adapted from three open-source MIT-licensed upstream skills:
+
+1. **petrkindlmann/qa-skills** (`skills/test-suite-curation/SKILL.md`)
+   - Source: https://github.com/petrkindlmann/qa-skills/blob/main/skills/test-suite-curation/SKILL.md
+   - Pinned revision: `ac52a6fa` (2026-06-10)
+   - License: MIT
+   - Copyright: Copyright (c) 2026 Petr Kindlmann
+   - Adapted: Four core categorization buckets (redundant / obsolete / low-value / keep); CI-history mining discipline (never-failing means investigate, flake means quarantine and fix rather than delete); risk- and defect-calibrated tiering with runtime as tiebreaker; quarantine-before-delete workflow; human sign-off per verdict class; and structured audit record format.
+   - Omitted / Replaced: Language-specific coverage contexts, AST clustering, and mutation tooling (replaced by static touch-set/invocation fingerprints, shingle similarity, and contained red controls).
+
+2. **mblode/agent-skills** (`skills/test-audit/SKILL.md`)
+   - Source: https://github.com/mblode/agent-skills/blob/main/skills/test-audit/SKILL.md
+   - Pinned revision: `1c003441` (2026-09-27)
+   - License: MIT
+   - Copyright: Copyright (c) 2026 Matthew Blode
+   - Adapted: Junk pattern catalog adapted to Bash/Python harnesses (exact source-string assertions, duplicate contract checks, stubs implementing asserted behavior, private call shape checks, vacuous negative controls); retention bar ("static or slow is not a reason to delete"); per-candidate evidence fields; and closing handoff proposing authoring gate improvements based on empirical findings.
+   - Omitted / Replaced: Autonomous deletion permissions and arbitrary percentage reduction quotas (curation is strictly read-only and evidence-governed).
+
+3. **openclaw/openclaw** (`.agents/skills/test-audit/SKILL.md`)
+   - Source: https://github.com/openclaw/openclaw/blob/main/.agents/skills/test-audit/SKILL.md
+   - Pinned revision: `80930af4` (2026-09-23)
+   - License: MIT
+   - Copyright: Copyright (c) 2026 OpenClaw Foundation
+   - Adapted: Four-question authoring gate; primary contract ownership principle ("one primary owner per contract at the strongest boundary"); and read-only discovery discipline prior to candidate proposal.
+   - Omitted / Replaced: OpenClaw-specific runner and review tooling (`run-vitest.mjs`, `check-changed.mjs`, `$crabbox`, `$autoreview`, `scripts/pr`).
+
+---
+
+## MIT License Texts
+
+### petrkindlmann/qa-skills
+
+```text
+MIT License
+
+Copyright (c) 2026 Petr Kindlmann
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### mblode/agent-skills
+
+```text
+MIT License
+
+Copyright (c) 2026 Matthew Blode
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### openclaw/openclaw
+
+```text
+MIT License
+
+Copyright (c) 2026 OpenClaw Foundation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## XYZ Forge Additions
+
+XYZ Forge's root licensing terms apply to Forge's own skill implementation, heuristics, detectors, and tooling adaptations.
