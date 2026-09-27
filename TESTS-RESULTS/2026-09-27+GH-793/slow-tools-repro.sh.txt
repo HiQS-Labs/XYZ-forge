@@ -1,0 +1,11 @@
+#!/bin/bash
+# GH-793 deterministic repro: the gate's process churn makes ps/pgrep/lsof slow. Emulate that with PATH
+# shims that delay each call, then run gh492 unchanged. usage: slow-tools-repro.sh.txt <checkout> <ps_delay> <lsof_delay> <out>
+set -u
+cd "$1"; D=$(mktemp -d); trap 'rm -rf "$D"' EXIT
+for t in ps pgrep lsof; do
+  real=$(command -v $t); delay=$2; [ $t = lsof ] && delay=$3
+  printf '#!/bin/bash\nsleep %s\nexec %s "$@"\n' "$delay" "$real" > "$D/$t"; chmod +x "$D/$t"
+done
+PATH="$D:$PATH" bash test/gh492-idle-kill.sh > "$4" 2>&1; rc=$?
+echo "ps/pgrep delay=$2 lsof delay=$3 rc=$rc | $(tail -1 "$4") | $(grep -hoE 'CONTROL FAILED[^—]*|got timeout-[a-z-]*|IDLE_[AB]=[0-9.]+' "$4" | tr '\n' ' ')"
