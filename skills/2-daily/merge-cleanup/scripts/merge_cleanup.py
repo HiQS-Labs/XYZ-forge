@@ -295,7 +295,11 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
     clone = Path(tempfile.mkdtemp(prefix=f"pr-{pr['number']}-{pr['headRefOid'][:8]}-", dir=str(workdir)))
     clone.rmdir()  # git clone wants to create it
     # GH-623: clone and fetches are network calls — bounded and retried on transient failures.
-    r = _retry_call(lambda: _net_git(workdir, ["clone", "--quiet", url, str(clone)]), f"PR #{pr['number']} clone")
+    def _clone_once():
+        # GH-852: a clone killed at its bound leaves a partial directory; a retry into it can never succeed.
+        shutil.rmtree(clone, ignore_errors=True)
+        return _net_git(workdir, ["clone", "--quiet", url, str(clone)])
+    r = _retry_call(_clone_once, f"PR #{pr['number']} clone")
     if r.returncode != 0:
         return {"clone": None, "merge_rc": None, "error": f"git clone failed: {r.stderr.strip()[:300]}"}
     for k, v in (("user.name", "merge-cleanup"), ("user.email", "merge-cleanup@local")):

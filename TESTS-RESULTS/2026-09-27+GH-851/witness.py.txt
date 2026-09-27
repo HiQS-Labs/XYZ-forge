@@ -312,6 +312,33 @@ def r2_active_then_lookup_error(mc, sc, tmp):
     return {"result": result, "local_writer_would_run": result == "fallback"}
 
 
+def r3_clone_retry_after_stall(mc, sc, tmp):
+    """#820 landing, 2026-09-27: the landing clone stalls past its bound after creating its directory;
+    the GH-623 retry must not then fail on 'destination path already exists'."""
+    real = subprocess.run(["which", "git"], capture_output=True, text=True).stdout.strip()
+    bare = Path(tmp) / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "development", str(bare)], check=True)
+    seed = _repo(tmp, "seed")
+    subprocess.run(["git", "-C", str(seed), "push", "-q", str(bare), "HEAD:refs/heads/development"], check=True)
+    primary = _repo(tmp)
+    subprocess.run(["git", "-C", str(primary), "remote", "set-url", "origin", str(bare)], check=True)
+    d = Path(tmp) / "stubbin"; d.mkdir(); flag = Path(tmp) / "first-clone-done"
+    (d / "git").write_text(f'''#!/bin/bash
+for a in "$@"; do if [ "$a" = clone ] && [ ! -e "{flag}" ]; then
+  touch "{flag}"; dest="${{@: -1}}"; mkdir -p "$dest/.git"; echo partial > "$dest/.git/HEAD"; exec sleep 600
+fi; done
+exec "{real}" "$@"
+''')
+    (d / "git").chmod(0o755)
+    os.environ["PATH"] = f"{d}:{os.environ['PATH']}"
+    pr = {"number": 820, "headRefOid": H, "headRefName": "feat/x"}
+    with mock.patch.object(mc, "run_git", side_effect=_shorten(mc)), mock.patch.object(mc, "_sleep", lambda s: None):
+        out = mc.prepare_landing_clone(pr, primary, "development", Path(tmp))
+    err = out.get("error") or ""
+    return {"error": err[:200], "clone_retry_failed_on_leftover_dir": "already exists" in err,
+            "clone_succeeded_on_retry": not err.startswith("git clone failed")}
+
+
 def f5_default(mc, sc, tmp):
     seen = []
     def spy(name, default):
@@ -326,7 +353,7 @@ def f5_default(mc, sc, tmp):
 
 CASES = [w1_clone_stall, w2_timeouts, w2a_scan_fetch_stall, w3_env, w4_transient, f2_merge_recovery,
          f2_control_open, f3_lookup, f3_open_refused, f3_view_error, f3_red_control, f4_regate, f5_default,
-         r1_head_moved_after_poll, r2_active_then_lookup_error]
+         r1_head_moved_after_poll, r2_active_then_lookup_error, r3_clone_retry_after_stall]
 
 
 def run_one(checkout, case, result_path):
