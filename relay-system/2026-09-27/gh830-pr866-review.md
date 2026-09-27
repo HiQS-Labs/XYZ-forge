@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -78,5 +78,21 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PARKED
+Basis: The seeded helper and recorded evidence support the fix, but the staging-to-head diff was unavailable, so DoD (a)'s assertion-preservation claim and (c)'s per-PR scope cannot be independently established. No observed code failure warrants FAIL. One-round limit reached.
+
+swept file: no
+The complete 222-line `test/gh620-skills-army-mini-sync.sh`, SUMMARY, provenance and red-control recipe were read; no actionable pre-existing defect was found in that suite. The GH-830 CHANGELOG entry was reviewed, not all 3,307 historical lines, and the full PR file set could not be established.
+
+- [Pass] Root-cause correction: `test/gh620-skills-army-mini-sync.sh:25-33` checks every helper result, prints the command, exit status and stderr, then exits 1. Its call sites build/read fixtures; negative product cases still use `sh()` and check product return codes (e.g. lines 128-129, 152-153, 217-218). No retry is introduced. Fix: none.
+- [Pass] Saved evidence is internally consistent: `TESTS-RESULTS/2026-09-27+GH-830/provenance.jsonl:1-8` references eight nonempty logs. Read-only probe command: `python3 -` with pathlib/json, parsing all eight rows, asserting each log is nonempty; for normal logs asserting rc=0, exactly 28 `  PASS:` lines, `28 passed, 0 failed`, and no `FAIL:`; for controls asserting rc=1 and the respective exception/diagnostic signatures. Exit 0; decisive output: `8 nonempty logs; base normal + five head runs 28/28; red-control signatures consistent`. Base control ends in `FileNotFoundError .../seed-owner/TODO.md`; head control names `clone -q .../mini.git-missing .../seed-owner (exit 128): fatal: repository ... does not exist`. This audits supplied receipts, not independently witnessed executions. Fix: none.
+- [Pass] `CHANGELOG.md:3-5` accurately describes fail-fast diagnostics and the saved five-run result; `SUMMARY.md:3` discloses base `bc0a291e`, rebase target `6653ab16`, and tested fix `e628df51`. It does not claim to repair the underlying hosted clone failure. Fix: none.
+- [Unverified — scope unavailable] Commands `gh pr diff 866 --repo HiQS-Labs/XYZ-forge --name-only` and `gh pr diff 866 --repo HiQS-Labs/XYZ-forge --patch` both failed; combined shell exit 1, output `error connecting to api.github.com`. The operator prohibits all Git commands in this turn. Producer action: supply the staging-to-head file list and patch for independent confirmation that assertions were preserved and no ledger, PROJECT, registry or new-suite changes ride along. This is an evidence gap, not an allegation of prohibited edits.
+- [Unverified — needs clone run] No suite, fixture or gate was executed in this worktree. The supplied logs support the recorded run claims; final-state execution remains with the disposable-clone harness gate as instructed.
+
+Handing off to Producer (claude-a) — supply the missing diff/scope evidence and resolve the one-round escalation; go to the Producer window and say 'take your turn'. No artifact/source edits or Git commands were made.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
