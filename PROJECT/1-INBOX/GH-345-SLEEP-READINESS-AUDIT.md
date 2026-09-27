@@ -61,3 +61,7 @@ The fix is four lines, and the correct idiom already appears **twice in the same
 - #123 (Linux canary remainder) · #224 (Linux MVP RC umbrella)
 - GH-528 (the wall-clock counterpart; same hypothesis, same verdict)
 - Evidence: `relay-system/2026-08-31/gh123-sleep-readiness-audit.md`
+
+## Merge evidence
+
+- PR #826 merged 2026-09-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

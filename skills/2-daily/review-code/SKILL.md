@@ -37,7 +37,7 @@ It coordinates four specialized disciplines into a cohesive review workflow:
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Review-Code Discipline:**
-> 1. **Ingest target & map blast radius (Phase 1 /recon).** Ingest the diff or PR (`review-PR`), map callers, state mutations, contracts, and failure paths before evaluating code.
+> 1. **Ingest target & map blast radius (Phase 1 /recon).** Ingest the diff or PR (`review-PR`), map callers, state mutations, contracts, failure paths, and audit adherence to centralized helpers and zero parallel subsystems (DRY).
 > 2. **Meticulously test fixes & features (Phase 2 /debug-mantra).** Test every fix against root cause (falsify symptom patches; mutate guards to watch them fail) and verify feature acceptance criteria with measured ground truth and negative controls.
 > 3. **Autonomous resolution & anti-hesitation (Phase 3 /workhorse + /unstuck).** If pivots or adaptations are needed, classify reversibility (`Easy`/`Costly`/`One-way door`): autonomously adapt and test `Easy` changes without operator round-trips; freeze cogs and execute foundational unblocking moves.
 > 4. **Grade & synthesize verified findings (Phase 4).** Categorize findings (`[Blocker]`, `[Should]`, `[Nit]`, `[Pass]`) with exact `file:line` citations, emit the actionable checklist, and post or report PR verdict.
@@ -57,7 +57,7 @@ without conflicting recitals.
 Phase 0: Target Intake & Scope Resolution  ──► Local diff/branch vs GitHub PR (`review-PR`); isolate refs & context
                  │
                  ▼
-Phase 1: Seam & Blast Radius Recon (/recon)──► Map callers (Lane A), state (Lane B), contracts (Lane C), tests (Lane D)
+Phase 1: Seam & Blast Radius Recon (/recon)──► Map callers (Lane A), state (Lane B), contracts (Lane C), tests (Lane D), DRY (Lane E)
                  │
                  ▼
 Phase 2: Meticulous Ground-Truth Testing   ──► Fixes: Repro -> trace fail path -> mutate-to-red (falsify)
@@ -109,7 +109,7 @@ gh pr checks <PR#>
 
 **Scope Invariant:**
 - Identify the target branch: ensure the PR targets the active WIP branch (`development`), not `main` (per orchestrator rails).
-- Size the diff: a targeted bug fix should typically be focused (< 500 lines); large architectural diffs require all 4 recon lanes.
+- Size the diff: a targeted bug fix should typically be focused (< 500 lines); large architectural diffs require all 5 recon lanes.
 
 ---
 
@@ -118,7 +118,7 @@ gh pr checks <PR#>
 A diff read in isolation is plausible fiction. Code review requires knowing what callers, state,
 contracts, and failure modes are touched by the modification.
 
-Run the four recon lanes across the touched symbols:
+Run the five recon lanes across the touched symbols:
 
 | Lane | Focus | Review Inquiry & Verification |
 |---|---|---|
@@ -126,6 +126,23 @@ Run the four recon lanes across the touched symbols:
 | **Lane B. State & Data Flow** | Readers & Writers | What state is mutated? Verify the single-writer invariant. Are SQLite locks, file descriptors, transactions, or cache layers handled? Does this introduce competing write paths or dirty reads? |
 | **Lane C. Contracts & Boundaries** | APIs & Protocols | Do changes alter public APIs, CLI flags, JSON schemas, environment variables, or error codes? Check consumers across sibling modules or external repositories. |
 | **Lane D. Build, Failure & Tests** | Errors & Coverage | How does this code fail? Trace timeouts, process exits, broken pipes, signal handling (`SIGINT`/`SIGTERM`), and missing input files. What existing test suites cover this seam? |
+| **Lane E. Centralized Helpers & DRY** | Helpers & Anti-Reinvention | Does this change reinvent functionality that already exists in centralized helpers (e.g. `utils/py/`, canonical CLI shims, standard libraries)? Does it construct a parallel subsystem instead of extending existing modules (violating `GUIDING-PRINCIPLES.md` North Star)? Check for copy-pasted blocks or duplicate helper definitions across the diff. |
+
+### Lane E: Centralized Helpers & Anti-Redundancy (DRY) Audit
+
+The North Star (`GUIDING-PRINCIPLES.md`) requires: *durable, reversible, DRY; extend what exists rather than forking a parallel system.*
+A diff that works but reinvents existing wheels introduces long-term tech debt, bugs, performance overhead, and maintenance drag.
+
+Reviewers must audit three anti-redundancy checks:
+1. **Centralized Helper Adherence:**
+   - Did the diff implement custom logic (e.g. subprocess execution, lock management, path/root resolution, JSON parsing, git mutation guards, or date formatting) where a canonical helper already exists in `utils/py/`, `src/`, or shared runtime modules?
+   - Bypassing an established helper in favor of an ad-hoc inline solution is a `[Blocker]`.
+2. **Parallel Subsystem / Reinvention Trap:**
+   - Does the change build parallel shadow machinery instead of extending established subsystems (e.g. custom telemetry logging instead of `.tick` events, custom runner loops instead of the existing driver)?
+   - Standing up a parallel subsystem is an architectural violation and a mandatory `[Blocker]`.
+3. **Intra-Diff & Cross-Module Duplication (DRY):**
+   - Are there duplicated helper functions or copy-pasted logic across multiple files in the PR?
+   - Code duplication that can be extracted cleanly into an existing shared utility is a `[Should]`.
 
 **Graph & Source Lookup:**
 - Prefer MCP graph tools (`search_graph`, `trace_path`, `get_code_snippet`) when available to locate callers and dependencies in one call.
@@ -145,7 +162,9 @@ When reviewing a bug fix, apply the four debug mantras rigorously:
 
 1. **Mantra 1 — Reproduce reliably:**
    - Verify there is an automated regression test reproducing the original defect.
-   - If the regression test is missing, write one or require it before approving.
+   - If the regression test is missing, write one or require it before approving, unless the repo
+     forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831). There, require the existing suite that
+     covers it, or a recorded manual repro.
 2. **Mantra 2 — Trace the fail path:**
    - Trace from the crash or incorrect output back to the root cause origin.
    - **The Symptom-Fix Trap:** Actively scrutinize whether the fix merely patches symptoms at the
@@ -162,6 +181,9 @@ When reviewing a bug fix, apply the four debug mantras rigorously:
    - Run the test suite: **Did the test turn RED?**
    - If the test still passes when the fix is broken, the test is decorative and reports confidence
      it never earned. This is a mandatory `[Blocker]`.
+   - In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), where no existing suite
+     covers the fix, a manual red control recorded under `TESTS-RESULTS/` satisfies this mantra. It mutates
+     the fix and records the failing result.
 4. **Mantra 4 — Cross-reference breadcrumbs:**
    - Walk recent `CHANGELOG.md` entries and git history. Does this fix repeat a previously failed
      pattern or reopen a settled architectural decision?
@@ -205,7 +227,7 @@ Classify every necessary adaptation or pivot on the repository's shared scale:
 │                 │ - Defensive parameter checks     │ - Implement & test     │
 │                 │ - Fixing a typo or broken regex  │ - Record in ledger     │
 │                 │ - /ponytail least-mechanism diff │ - Drive forward move   │
-│                 │ - Adding missing negative tests  │                        │
+│                 │ - Negative tests, if repo allows │                        │
 ├─────────────────┼──────────────────────────────────┼────────────────────────┤
 │ COSTLY          │ - Re-architecting shared schema  │ PREPARE ROLLBACK & ASK │
 │                 │ - Breaking public API contracts  │ - Formulate 2 options  │
@@ -272,10 +294,15 @@ exact `file:line` or symbol references.
 ### 1. Finding Categories
 
 - 🛑 **`[Blocker]`**: Correctness defects, regressions, security/credential leaks, data loss hazards,
-  untested error states, symptom patches hiding root causes, or tests that pass on broken code.
+  untested error states, symptom patches hiding root causes, tests that pass on broken code,
+  **reinventing a parallel subsystem when an established canonical mechanism exists (North Star violation),
+  or bypassing established centralized helpers in favor of ad-hoc implementations.**
   *Requires resolution before merge/approval.*
 - ⚠️ **`[Should]`**: Architectural gaps, missing test coverage / negative controls, non-optimal complexity,
-  missing error logging, or unhandled edge cases. *Strongly recommended improvements.*
+  missing error logging, unhandled edge cases, **or non-DRY duplicate logic / redundant utility functions.**
+  *Strongly recommended improvements.* In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), a
+  missing-coverage finding asks for an existing suite or a recorded manual check, and a new test file in
+  the diff is itself a `[Should]`.
 - 💡 **`[Nit]`**: Style, documentation, variable naming, minor comment cleanups. *Non-blocking suggestions.*
 - ✅ **`[Pass]`**: Confirmed correct execution paths with firsthand citations, verified test results,
   and passing mutation checks.
@@ -304,6 +331,7 @@ Every `/review-code` report follows this structure:
 - **Entry Points & Callers:** `src/entry.py:42`, `utils/cli.py:105` (all callers verified).
 - **State & Data Invariants:** Single-writer verified; SQLite lock budget respected.
 - **Contracts & Boundaries:** Public API backward-compatible; no breaking schema drift.
+- **Centralized Helpers & DRY:** Canonical helpers used; zero parallel subsystems or reinvention detected.
 
 ---
 
@@ -319,6 +347,7 @@ Every `/review-code` report follows this structure:
 
 #### 🛑 Blockers
 - [ ] `src/auth.py:112` — Token comparison uses non-constant-time equality. `[Blocker]`
+- [ ] `src/utils.py:45` — Reinvented git lock parsing instead of calling centralized helper `utils/py/rtl.py`. `[Blocker]`
 
 #### ⚠️ Should Address
 - [ ] `src/worker.py:45` — Missing negative control test for timeout event. `[Should]`

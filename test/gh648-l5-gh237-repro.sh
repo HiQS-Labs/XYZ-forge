@@ -10,6 +10,8 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+sys.path.insert(0, os.path.join(os.environ["GH648_ROOT"], "test", "lib"))
+import pystub  # GH-788: stub header that survives a spaced interpreter path
 import tempfile
 import time
 from types import SimpleNamespace
@@ -32,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix='gh648-l5-', dir=scratch) as tmp:
     print('PASS: startup exception surfaced', flush=True)
 
     advisor = work / 'agy-stub'
-    advisor.write_text('#!' + sys.executable + '''
+    advisor.write_text(pystub.launcher() + '''
 import os, pathlib, socket, sys, time
 assert '--dangerously-skip-permissions' in sys.argv
 assert '--print-timeout' in sys.argv

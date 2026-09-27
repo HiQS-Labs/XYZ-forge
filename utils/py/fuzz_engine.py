@@ -372,14 +372,14 @@ def run_suite(as_json: bool = False) -> int:
                      "if '-1' in a: sys.stderr.write('ValueError: negative jobs\\n'); sys.exit(1)\n"
                      "if any('\\u202e' in x for x in a): sys.stderr.write('Traceback: rtl\\n'); sys.exit(1)\n"
                      "sys.exit(0)\n")
-        rep = fuzz(f"{sys.executable} {tool} {{mutant}}", td, 7, 120, os.path.join(td, "fc"), os.path.join(td, "t.jsonl"), timeout_budget=10)
+        rep = fuzz(f"{shlex.quote(sys.executable)} {shlex.quote(tool)} {{mutant}}", td, 7, 120, os.path.join(td, "fc"), os.path.join(td, "t.jsonl"), timeout_budget=10)
         ok("fuzz executes the whole plan", rep["executed"] == 120, str(rep["executed"]))
         ok("fuzz finds the planted counterexamples", rep["counts"]["fail"] >= 1, str(rep["counts"]))
         ok("corpus grows with novel vectors", rep["corpus_size"] >= 2, str(rep["corpus_size"]))
         n_lines = sum(1 for _ in open(os.path.join(td, "t.jsonl")))
         ok("one telemetry row per mutant", n_lines == 120, str(n_lines))
-        rep2 = fuzz(f"{sys.executable} {tool} {{mutant}}", td, 7, 30, os.path.join(td, "fc2"), None, timeout_budget=10)
-        rep3 = fuzz(f"{sys.executable} {tool} {{mutant}}", td, 7, 30, os.path.join(td, "fc3"), None, timeout_budget=10)
+        rep2 = fuzz(f"{shlex.quote(sys.executable)} {shlex.quote(tool)} {{mutant}}", td, 7, 30, os.path.join(td, "fc2"), None, timeout_budget=10)
+        rep3 = fuzz(f"{shlex.quote(sys.executable)} {shlex.quote(tool)} {{mutant}}", td, 7, 30, os.path.join(td, "fc3"), None, timeout_budget=10)
         ok("same seed replays the same counterexample set", [c["mutant"] for c in rep2["counterexamples"]] == [c["mutant"] for c in rep3["counterexamples"]])
         # parity: twin env flips behaviour on one token
         twin = os.path.join(td, "twin.py")
@@ -387,9 +387,9 @@ def run_suite(as_json: bool = False) -> int:
             fh.write("import os,sys\na=sys.argv[1:]\n"
                      "if os.environ.get('TWIN')=='1' and '0' in a: sys.stderr.write('twin: zero unsupported\\n'); sys.exit(2)\n"
                      "sys.exit(0)\n")
-        rep4 = fuzz(f"{sys.executable} {twin} {{mutant}}", td, 11, 80, os.path.join(td, "fc4"), None, timeout_budget=10, parity_env={"TWIN": "1"})
+        rep4 = fuzz(f"{shlex.quote(sys.executable)} {shlex.quote(twin)} {{mutant}}", td, 11, 80, os.path.join(td, "fc4"), None, timeout_budget=10, parity_env={"TWIN": "1"})
         ok("parity oracle detects a diverging twin", rep4["parity_divergences"] >= 1, str(rep4["parity_divergences"]))
-        rep5 = fuzz(f"{sys.executable} {twin} {{mutant}}", td, 11, 40, os.path.join(td, "fc5"), None, timeout_budget=10, parity_env={"TWIN": "0"})
+        rep5 = fuzz(f"{shlex.quote(sys.executable)} {shlex.quote(twin)} {{mutant}}", td, 11, 40, os.path.join(td, "fc5"), None, timeout_budget=10, parity_env={"TWIN": "0"})
         ok("parity oracle is silent when twins agree", rep5["parity_divergences"] == 0, str(rep5["parity_divergences"]))
 
     failed = [c for c in checks if not c[1]]

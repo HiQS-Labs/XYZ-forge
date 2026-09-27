@@ -305,6 +305,23 @@ bash "$ROOT_DIR/skills/1-hourly/standup/collect.sh" --fixture "$ROOT_DIR/skills/
 out="$(T "$W/deg_lens8_schema.json" --dry-run 2>&1)" || true
 has "lens 8 degrades loudly on malformed check object" "$out" "no PARKED/"
 
+# General PARKED notes are not standup records. A Markdown checklist formerly matched
+# the broad '- [' prefix and degraded lens 8 instead of being left for human triage.
+mkdir -p "$W/general-parked/PARKED"
+cat > "$W/general-parked/PARKED/notes.md" <<'EOF'
+# Incidental finding
+
+- [ ] Review the source during triage.
+- [follow-up] Keep this observation visible; no standup check was declared.
+EOF
+bash "$ROOT_DIR/skills/1-hourly/standup/collect.sh" --fixture "$W/general-parked" > "$W/general-parked.json" 2>/dev/null
+is "general PARKED checklist leaves lens 8 healthy" \
+   "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["lenses"]["8"]["status"])' "$W/general-parked.json")" "ok"
+is "general PARKED note is not a standup candidate" \
+   "$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["lenses"]["8"]["candidates"]))' "$W/general-parked.json")" "0"
+is "general PARKED note does not enter standup fingerprint suppression" \
+   "$(PYTHONPATH="$ROOT_DIR/skills/1-hourly/standup" python3 -c 'import sys,triage; print(len(triage.read_parked(sys.argv[1])))' "$W/general-parked/PARKED")" "0"
+
 echo
 # ── 13. The collector's own dependency is not allowed to fail silently ───────────────────
 # Blocker 4's fix made `jq` load-bearing: every candidate and the branch name are encoded through it,

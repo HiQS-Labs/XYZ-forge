@@ -1,0 +1,47 @@
+== test: gh784-marathon-qa-gate ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh784-marathon-qa-gate.XXXXXX.tIAyNP4Ayr
+  PASS: 1: Valid marathon plan with on-disk receipt passes --pre-pr cleanly
+  PASS: 1b: Declared wave without checklist section is caught as error (F1)
+  PASS: 1c: Declared wave appearing after checklist is caught as error (F1 order independence)
+  PASS: 2: Missing checklist section in marathon plan is flagged as error under --pre-pr
+  PASS: 3: Missing mandatory Post-Build Codex QA Relay checklist item is flagged as error
+  PASS: 3b: Checked Codex item with no receipt citation is caught as error (F2)
+  PASS: 4: Checked item with missing on-disk transcript is flagged as error
+  PASS: 5: Checked item with unexpanded placeholder transcript is flagged as error
+  PASS: 6a: In-flight unchecked item emits WARN and exits 0 in observe mode
+  PASS: 6b: In-flight unchecked item emits ERROR and exits non-zero under --pre-pr
+  PASS: 7: Completed marathon doc with unchecked items in 3-COMPLETED fails
+  PASS: 8: Non-marathon doc with generic checklist skipped without false positive (F4)
+  PASS: 9a: pdda.sh marathon-qa passes against valid marathon doc
+  PASS: 9b: pdda.sh marathon-qa --pre-pr enforces error under observe mode (F3)
+  PASS: 9c: pdda.sh marathon-qa propagates child argument errors in observe mode (F3)
+  PASS: 9d: pdda.sh marathon-qa propagates missing transcript error and returns non-zero
+control: Wave 1 can land before pending Wave 2
+control: whole-plan closeout still rejects pending Wave 2
+control: selected pending Wave 2 fails
+control: invalid or absent wave 0
+control: invalid or absent wave -1
+control: invalid or absent wave banana
+control: invalid or absent wave 3
+control: wave requires pre-PR mode
+control: wave requires marathon plan
+control: wave requires explicit document
+control: wave requires exactly one document
+control: completed status cannot bypass future wave
+control: completed directory cannot bypass future wave
+control: receipt form/status (False, 'STATUS: Approved\n')
+control: receipt form/status (False, 'STATUS: Closed\n')
+control: receipt form/status (False, '')
+control: receipt form/status (False, 'STATUS: Changes Requested\n')
+control: receipt form/status (False, 'STATUS: Changes Requested\nSTATUS: Approved\n')
+control: missing receipt form False
+control: receipt form/status (True, 'STATUS: Approved\n')
+control: receipt form/status (True, 'STATUS: Closed\n')
+control: receipt form/status (True, '')
+control: receipt form/status (True, 'STATUS: Changes Requested\n')
+control: receipt form/status (True, 'STATUS: Changes Requested\nSTATUS: Approved\n')
+control: missing receipt form True
+control: consumer receipt and activity log are bound to consumer root
+  PASS: Selected-wave, final-closeout, receipt and consumer-root controls
+  PASS: 10: Mutation control: removing on-disk receipt turns clean check red (falsifiable)
+All gh784-marathon-qa-gate tests passed.

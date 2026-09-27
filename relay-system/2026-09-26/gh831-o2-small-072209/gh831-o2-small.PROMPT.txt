@@ -1,0 +1,62 @@
+# Consult: should gh549 and gh436 leave the Small tier?
+
+**Advisory only.** Do not edit files. Answer from the repository, and cite `file:line` for every claim.
+
+## Background
+
+XYZ-forge's gate now has three tiers (GH-831, merged in #834). After each merge, the hosted reconcile
+(`utils/py/wave_reconcile.py`, `select_qualification_gate` and `qualify_landings`) classifies the landing's
+changes with `utils/ci-route.sh`:
+
+- **Tier 1** means docs, the ledger dumps (`releases.db`/`.sql`, `harnesses.*`) and non-core skill files. See
+  `is_docs_surface()` in `utils/ci-route.sh`. The reconcile runs only the Small list,
+  `SUBSYSTEM_TESTS_small` (73 suites), through `validate.sh --sequential --subsystem small`.
+- **Anything else** runs the full registry, which includes every Small suite. Medium merges also run the full
+  registry at the reconcile (operator decision O7).
+
+Promotion always runs the full registry (O8).
+
+The operator defined Small as "PDDA, PRS and canaries", where PRS is the RELEASES ledger and the post-merge
+reconcile tools. Decision O2 in `PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md` kept `gh549-work-events.sh`
+and `gh436-merge-cleanup.sh` in Small.
+
+**Measured cost** (issue #835; hosted sequential run on macOS, commit `f832ef5a`):
+
+| Suite | Hosted | Local, 4-wide |
+|---|---|---|
+| `gh549-work-events.sh` | 8.0 min | 5.9 min |
+| `gh436-merge-cleanup.sh` | 4.4 min | 3.7 min |
+
+Together they are about 12 of Small's ~18 hosted minutes. Without them, Small would take about 7 minutes.
+
+## The question
+
+Should `gh549-work-events.sh` and `gh436-merge-cleanup.sh` move from Small to Large? Large means the full
+registry only: they stay registered and still run for every non-tier-1 landing and at promotion.
+
+The deciding test: **can a tier-1 landing break what either suite checks?**
+
+- If neither suite reads anything a tier-1 landing can change, it adds cost to Small without protecting it.
+  Any change to its code is tier 2 or 3, so it gets the full run anyway.
+- If a suite does read something tier-1-routable, it earns its place. Examples: the committed `releases.sql`
+  or `releases.db`, a `SKILL.md`, a non-core skill script, a PROJECT doc, or ledger rows the reconcile writes.
+
+## Please
+
+1. For each suite, list what it reads or executes from the tracked tree. Read `test/gh549-work-events.sh` and
+   `test/gh436-merge-cleanup.sh` and follow what they call. Mark each input tier-1-routable or not, using
+   `is_docs_surface()` and `subsystem_of()`.
+   - Pay attention to fixtures that copy the real `releases.sql`/`releases.db`, or read skill markdown such as
+     `skills/2-daily/merge-cleanup/SKILL.md` (docs by rule 1), or any file under `skills/` that
+     `is_docs_surface()` treats as docs.
+   - Note whether a suite builds its own synthetic ledger instead.
+2. Give a verdict for **each suite separately**: move to Large, keep in Small, or keep with a cheaper
+   alternative. Name the concrete input that decides it.
+3. Name the risk of moving it. Which tier-1 landing could then qualify while one of these suites would have
+   failed on that commit? How would it be caught later: at the next full-run landing, or at promotion?
+4. Is there a cheaper option than moving? Examples: a known slow section to trim, or splitting the part that
+   reads tier-1 inputs from the part that doesn't. The repository rule forbids **new** test suites (AGENTS.md,
+   *No new tests*), so no new suites. Editing an existing suite to keep it truthful or faster is allowed.
+5. Anything in `SUBSYSTEM_TESTS_small` that this reasoning says is also misplaced, in either direction?
+
+Keep it tight. End with a one-line recommendation.

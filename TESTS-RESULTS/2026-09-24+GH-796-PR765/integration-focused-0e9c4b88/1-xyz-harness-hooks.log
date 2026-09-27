@@ -1,0 +1,72 @@
+== test: xyz-harness-hooks ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-xyz-harness-hooks.XXXXXX.xccqshou2e
+  PASS: nudge: start marathon
+  PASS: nudge: bare marathon
+  PASS: nudge: add item to marathon
+  PASS: nudge: fire marathon
+  PASS: nudge: preflight sweep
+  PASS: nudge: preflight all
+  PASS: nudge: dry-run each plan
+  PASS: nudge: show marathon queue
+  PASS: nudge: show marathon queue without the
+  PASS: nudge: commit/push + close issues
+  PASS: nudge: commit/push + archive/PDDA
+  PASS: nudge: foreign CWD falls back to a skill name
+  PASS: silent: unrelated roadmap request
+  PASS: silent: marathon used in unrelated prose
+  PASS: silent: plan a marathon
+  PASS: silent: unrelated fire request
+  PASS: silent: unrelated preflight
+  PASS: silent: commit/push alone
+  PASS: silent: closeout detail without commit/push
+  PASS: skill nudge fails open on malformed JSON
+  PASS: XYZ_NO_SKILL_NUDGE suppresses output
+  PASS: relay Approved exits 0
+  PASS: relay green writes exactly one record
+  PASS: relay green harness=relay
+  PASS: relay green health=green
+  PASS: relay title from '# ' heading
+  PASS: relay sessionId = thread slug
+  PASS: re-run prepends (2 records), no clobber
+  PASS: GH-505: re-driving an already-approved file is red (unattested-terminal), not green
+  PASS: nested relay (marathon-phase) writes NO record
+  PASS: relay Escalated exits 4
+  PASS: relay Escalated writes one record (not silently absent)
+  PASS: relay Escalated health=orange
+  PASS: relay round-cap exits 4
+  PASS: relay round-cap writes one record (not silently absent)
+  PASS: relay round-cap health=red
+  PASS: bare marathon-drive success exits 0
+  PASS: bare marathon-drive writes one record
+  PASS: bare marathon-drive harness=marathon
+  PASS: bare marathon-drive health=green
+  PASS: marathon title = phase-brief basename
+  PASS: swarm-context marathon-drive writes one record
+  PASS: swarm-context marathon-drive harness=swarm (not marathon)
+  PASS: marathon-phase marathon-drive writes NO record
+  PASS: bare marathon-drive halt exits 4
+  PASS: halt writes one record (not silently absent)
+  PASS: halt health=red
+  PASS: halt description says 'halted at phase'
+  PASS: marathon.sh 2-phase run exits 0
+  PASS: marathon.sh 2-phase → exactly ONE record (not per-phase)
+  PASS: marathon.sh record harness=marathon
+  PASS: marathon.sh sessionId = plan name
+  PASS: marathon.sh desc = 'N of M phase(s) approved'
+  PASS: marathon.sh halt propagates the phase exit (4)
+  PASS: marathon.sh halt → exactly ONE record (not silently absent)
+  PASS: marathon.sh halt health=red
+  PASS: marathon.sh halt harness=marathon
+  PASS: marathon.sh halt desc names the failing phase
+  PASS: XYZ_SESSION_ID overrides sessionId (not the constant p1)
+  PASS: XYZ_SESSION_ID run still tags harness=swarm
+  PASS: sessionId falls back to PHASE_ID when unset
+  PASS: review-once approval exits 0
+  PASS: review-once approval → relay/green record
+  PASS: review-once handback exits 5
+  PASS: review-once handback → relay/orange record
+  PASS: review-once stall exits 3
+  PASS: review-once stall → relay/red record
+  PASS: multi-round no-progress exits 3
+  PASS: multi-round no-progress → relay/red record
+  xyz-harness-hooks: 69 pass, 0 fail

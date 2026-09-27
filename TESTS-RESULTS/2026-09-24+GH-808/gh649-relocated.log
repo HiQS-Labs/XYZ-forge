@@ -1,0 +1,10 @@
+ok - Forge resolves without sibling PDDA; invalid override fails
+ok - fresh payload is complete; upgrades preserve target-owned files
+ok - observe/light report; full rejects invalid document and install
+ok - missing and empty manifests fail
+ok - vendored source uses its own payload rather than the parent repository index
+ok - dry-run preserves payload/state/registry; live default preserves divergence and deferred deletion
+ok - copy and rename failures in new/update branches leave target and old stamps intact
+ok - failed deletion backup/removal preserves bytes and deletion tracking
+ok - explicit adoption backs up both divergent files; normal advances work; full restore verified
+GH-649 migration checks passed

@@ -326,7 +326,7 @@ def run_suite(as_json: bool = False) -> int:
             fh.write("#!/usr/bin/env bash\necho poisoned > POISON.txt\nexit 0\n")
         subprocess.run(["git", "-C", host, "add", "."], check=True)
         subprocess.run(["git", "-C", host, "commit", "-q", "-m", "init"], check=True)
-        targets = [{"name": "clean", "target": f"{sys.executable} tool.py {{mutant}}", "base": ["--jobs", "4"], "timeout": 10}]
+        targets = [{"name": "clean", "target": f"{shlex.quote(sys.executable)} tool.py {{mutant}}", "base": ["--jobs", "4"], "timeout": 10}]
         out = os.path.join(td, "out")
         s = run_campaign(host, out, duration=20, targets=targets, sandbox_root=os.path.join(td, "sb"), batch=15, seed=1, max_mutations=60, synth=True, progress=False)
         ok("bounded soak stops at --max-mutations", s["mutations"] == 60, str(s["mutations"]))

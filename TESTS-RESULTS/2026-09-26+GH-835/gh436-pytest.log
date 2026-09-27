@@ -1,0 +1,43 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/tmp-gh835/xyz-forge
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collected 180 items
+
+test/gh436-merge-cleanup.py ............................................ [ 24%]
+........................................................................ [ 64%]
+................................................................         [100%]
+
+============================= slowest 30 durations =============================
+51.76s call     test/gh436-merge-cleanup.py::TestParityGuard::test_skill_md_matches_code_and_tests
+8.88s call     test/gh436-merge-cleanup.py::TestCScript::test_dependent_of_a_handed_off_pr_is_not_attempted_and_an_independent_pr_proceeds
+8.27s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_soft_edge_predecessor_does_not_block_a_collision_dependent
+8.09s call     test/gh436-merge-cleanup.py::TestA5FreshInspection::test_fault_injection_at_teardown_time_blocks_removal
+7.70s call     test/gh436-merge-cleanup.py::TestCScript::test_two_ledger_prs_emit_only_after_fast_forward_and_finish_durable
+7.64s call     test/gh436-merge-cleanup.py::TestCScript::test_view_deletion_on_the_pr_side_is_preserved_through_b1
+7.27s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it
+7.18s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_pr_list_discovery_is_bounded_in_time
+5.73s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_remote_head_moved_during_resolution_is_not_pushed
+4.99s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_second_clone_validation_failure_is_not_pushed
+4.90s call     test/gh436-merge-cleanup.py::TestE6Gate::test_gate_runs_against_the_current_integration_head
+4.72s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_resume_lands_a_pr_whose_last_repair_resolved
+4.72s call     test/gh436-merge-cleanup.py::TestCScript::test_generator_failure_means_no_push
+4.49s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_generation_rewind_refusal_stops_and_keeps_the_clone
+4.41s call     test/gh436-merge-cleanup.py::TestCScript::test_genuinely_invalid_final_head_fails_second_clone_validation_and_is_not_pushed
+4.39s call     test/gh436-merge-cleanup.py::TestCScript::test_b1_attempt_is_recorded_at_the_pinned_coordinator
+4.29s call     test/gh436-merge-cleanup.py::TestCScript::test_two_clones_one_coordinator_third_repair_is_refused
+4.11s call     test/gh436-merge-cleanup.py::TestCScript::test_unreadable_record_stops_the_script
+4.06s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_same_key_update_on_both_sides_is_handoff_and_nothing_is_overwritten
+3.91s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_conflicting_pr_is_never_gh_merged_on_handoff
+3.82s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_resume_skips_a_still_conflicting_exhausted_pr
+3.81s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_without_resume_the_park_path_is_unchanged
+3.80s call     test/gh436-merge-cleanup.py::TestCScript::test_hosted_run_is_waited_for_and_fast_forwarded_before_emission
+3.78s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_extraction_error_is_handoff_not_no_conflict
+3.71s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_transient_view_failure_defers_and_independents_land
+3.63s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_harnesses_conflict_is_handoff
+3.60s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_code_conflict_is_handoff
+3.59s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_hold_label_is_skipped_and_the_next_pr_still_lands
+3.52s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_hung_landing_clone_times_out_and_defers
+3.41s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_exclude_pr_number_drops_it_from_the_queue
+======================= 180 passed in 300.67s (0:05:00) ========================
