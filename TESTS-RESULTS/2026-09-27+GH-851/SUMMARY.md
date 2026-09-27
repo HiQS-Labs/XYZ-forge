@@ -35,3 +35,14 @@ Each case runs in its own process group under a 10 s outer watchdog. The results
 | Restore control | passes; tree clean |
 
 Logs are in `focused/`. There is no local full gate: the PR goes to `staging/stabilize-2026-10` under #854 D2 (operator, 2026-09-27).
+
+## Final QA findings R1 / R2 (commit `fab979c4`)
+
+Codex's one-round final QA (`relay-system/2026-09-27/gh851-852-final-qa.md`) found two defects. Both are fixed and witnessed.
+
+| Case | Before (`04fd21bf`) | After (`fab979c4`) |
+|---|---|---|
+| `r1_head_moved_after_poll`: the pushed head reads UNKNOWN, then the poll returns another head | prepares the foreign head `eeee` | stops: `head moved to eeeeeeeeee after the pushed cccccccccc` |
+| `r2_active_then_lookup_error`: the run on H is in flight, then the lookup fails | `fallback`, so the local writer would run | `active_timeout`: `refusing to start the local reconciler` |
+
+The focused suites were re-run on `fab979c4` (`focused-fab979c4/`): gh436 180 OK, gh674 6 OK, gh645 8 OK. The red control still fails (`0 != 2`), and the restore passes.

@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Admitted (`--accepted-start` on #851 and #852) and moved to `2-WORKING`. Plan QA had closed by operator-directed adjudication after round 2 (see *Plan QA record*). | Implement F1–F5, witnesses, focused suites and one Codex QA round; then a ready PR into `staging/stabilize-2026-10` once it is cut (D2 bypass, no local full gate). |
+| Implemented F1–F5 (`04fd21bf`) and the final-QA fixes R1/R2 (`fab979c4`). Witnessed base/head, focused suites green, one Codex QA round adjudicated and closed (`relay-system/2026-09-27/gh851-852-final-qa.md`). | Ready PR into `staging/stabilize-2026-10` once the operator has the branch cut (D2 bypass, no local full gate). |
 
 ## Issues
 

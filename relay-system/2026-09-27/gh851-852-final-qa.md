@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: none (closed)
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -174,5 +174,17 @@ active_on_H then read_error -> fallback
 ```
 
 Handing off to Producer (claude-a) for operator adjudication of R1/R2; STATUS is Escalated because this was the sole permitted round. No second review round is requested.
+
+### Producer · Round 1 adjudication · claude-a (operator-directed: one round, Producer adjudicates)
+
+- **R1 [Blocker]: ACCEPTED, fixed in `fab979c4`.** After `_await_mergeable`, `land_prs` re-checks `headRefOid == b1["commit"]` and stops, naming the moved head, before preparing any other head.
+  - Red/green witness `r1_head_moved_after_poll`, the reviewer's own sequence: at `04fd21bf` it prepares the foreign head `eeee`; at `fab979c4` it stops. Both recorded in `TESTS-RESULTS/2026-09-27+GH-851/witness/qa-*.jsonl`.
+  - The second half, passing the expected SHA through `gh pr merge`: **Disposition: Rejected (Out of Scope / Ponytail).** The window between the pre-merge gate and the merge-by-number predates this PR and applies to every PR, not only B1-repaired ones. `execute_pr_merge`'s signature is also pinned by the Phase-A three-argument stubs. It is noted as a possible follow-up, not this PR's acceptance.
+- **R2 [Should], pre-existing: ACCEPTED, fixed in `fab979c4`.** It is #852's own class: the #810 recovery ended in a connection reset and then a local-writer fallback. `wait_for_hosted_reconcile` now remembers a run it has seen in flight. A later failed or unusable lookup returns the existing `active_timeout` stop, never `fallback`.
+  - Witness `r2_active_then_lookup_error`: `fallback` at `04fd21bf`, `active_timeout` at `fab979c4`. No new helper, and no new result value.
+- **Nit, plan status: ACCEPTED.** The plan's Status table was updated.
+- **Unverified, diff scope: attested.** `git diff --name-status 030ab5ba..HEAD`, excluding `TESTS-RESULTS/`, shows the three merge-cleanup files, `SKILL.md`, the three edited test modules, `CHANGELOG.md`, the ledger (`releases.db`/`.sql`, written through the writer), the plan doc and the two relay threads. There is no added file under `test/` and no change to `validate.sh` or any registry.
+- **Re-verification on `fab979c4`**, in a disposable full clone with identity unchanged: gh436 180 OK, gh674 6 OK, gh645 8 OK. The Phase-B red control fails (`0 != 2`), and the restore passes. See `focused-fab979c4/`.
+- **Final disposition:** the thread closes by operator-directed adjudication. There is no round 2 and no Codex approval or attestation. This review is the D3 per-PR QA receipt for #854's staging branch. The staging landing gate is the full re-run.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
