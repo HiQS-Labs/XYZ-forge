@@ -2,7 +2,7 @@
 gh_issue: 831
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/831
 title: "GH-831: no new tests, and three gate tiers (Small/Medium/Large) chosen by ci-route for push, per-merge reconcile and promotion; non-core suites off"
-status: Active — Phases 1 (#832) and 2 (#834) merged; Phase 3 hosted evidence recorded; awaiting the operator's close (2-WORKING)
+status: Complete
 created: 2026-09-25
 updated: 2026-09-26
 owner: operator (via /start-task)

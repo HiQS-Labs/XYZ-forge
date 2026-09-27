@@ -2,7 +2,7 @@
 gh_issue: 844
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/844
 title: "GH-833 evidence: V1b must scope the PRS entry to the glossary, the witness recipe must return an aggregate status, and the plan's non-goal wording (CodeRabbit on #840)"
-status: Active — PR ready; awaiting merge (2-WORKING)
+status: Complete
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via umbrella #845)

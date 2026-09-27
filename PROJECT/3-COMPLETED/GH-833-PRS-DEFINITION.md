@@ -2,7 +2,7 @@
 gh_issue: 833
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/833
 title: "docs: codify PRS — the Product Release System (the RELEASES ledger) — as the third part of the XYZ Forge / PDDA / PRS trinity"
-status: Active — merged; Small run recorded (2-WORKING)
+status: Complete
 created: 2026-09-26
 updated: 2026-09-26
 owner: operator (via /start-task)
