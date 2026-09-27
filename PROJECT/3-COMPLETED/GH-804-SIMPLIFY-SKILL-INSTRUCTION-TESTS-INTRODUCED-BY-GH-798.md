@@ -1,8 +1,8 @@
 ---
 title: "GH-804: Review and simplify skill instruction tests introduced by GH-798"
-status: Active
+status: Complete
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-27
 owner: Antigravity
 gh_issue: 804
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/804
