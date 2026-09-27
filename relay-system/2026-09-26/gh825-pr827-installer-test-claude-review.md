@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -123,5 +123,38 @@ Handing off to Producer — go to the codex window and say "take your turn": dis
 - Nits — Left the historical `gh798` test filename and header in place. The user's moratorium forbids new CI tests, so no test file, assertion, or suite registration was added.
 
 Round 2 reviewer: inspect current head `bd1380ea` and the fresh seeded patch, probe only inside scratch if useful, and decide whether S1 and S2 are closed. Do not run a test script or full gate in the relay worktree. Handing off to Reviewer (claude).
+
+### Round 2 · Reviewer · claude
+
+VERDICT: PASS
+Basis: Both round-1 findings are closed at head `bd1380ea` and probe-verified in a contained scratch sandbox (HOME and all five `*_SKILLS_DIR` vars pinned into `.relay-scratch/probe2`; nothing outside scratch touched). S1: every mutating command now carries `|| return 1` and the unwritable-target probe returns rc=1 with no false success line and no link. S2: a dangling legacy `status` link whose target ends in `/skills/2-daily/status` is removed on both the fresh-install and already-installed paths; live links and foreign-target dangling links are left untouched, matching GH-678's conservatism, and the CHANGELOG documents the manual step for live old links. GH-678 refusal, dangling-replacement, and real-directory backup behavior are unregressed. Remaining risk is confined to the already-declared clone-run items below.
+swept file: yes
+
+Sweep: re-read the complete fresh seeded patch (all 235 lines; exactly 4 files: CHANGELOG.md, deleted `skills/2-daily/status/install.sh`, new `skills/2-daily/where-are-we-at/install.sh`, `test/gh798-status-skill.sh`), the full current `install.sh` on disk (all 72 lines — byte-consistent with the patch's new-file content), and the full `test/gh798-status-skill.sh` (126 lines — unchanged since round 1 beyond the already-reviewed rename edits). No new pre-existing defect found in either file this round; round 1's S1 was the only pre-existing defect and it is now fixed.
+
+Probes (run in `.relay-scratch/probe2`; scratch is discarded, decisive output quoted; `run` = `bash install.sh` with HOME and all five dir vars pinned into scratch):
+- R1 fresh: rc=0, all five links → `.../skills/2-daily/where-are-we-at`.
+- R2 (S1): claude target `chmod 555`, link absent → overall rc=1, `claude-success-lines: 0` (grep count of "installed for Claude Code"), output line 1 `ln: .../claude/where-are-we-at: Permission denied`, claude link ABSENT; the other four targets still install (per-target `|| rc=1` aggregation preserved, install.sh:67-71). Round 1's P6 false success is gone.
+- R3 (S2, fresh path): pre-seeded `claude/status -> .../old-clone/skills/2-daily/status` (dangling) → rc=0, `removed dangling legacy link .../claude/status` printed, link REMOVED.
+- R4 (S2, rerun path): dangling legacy link seeded after a full install, rerun → rc=0, 5 × "already installed", legacy link REMOVED via the already-installed branch (install.sh:43).
+- R5 (S2 guard): LIVE old `status` link to an existing dir → rc=0, link PRESERVED, `legacy-lines: 0`. Matches CHANGELOG's manual-migration guidance for live links (patch lines 20-22).
+- R6 (S2 guard): dangling `status` link with a foreign target (`.../somewhere-else/my-status-tool`) → rc=0, link PRESERVED — the `*/skills/2-daily/status` pattern (install.sh:23) correctly scopes removal to this skill's old path.
+- R7 (GH-678 regression): live foreign `where-are-we-at` link → rc=1, `not replacing a live link` (1 match), link unchanged (install.sh:47-53).
+- R8 (backup path with new mv guard): real dir at target → rc=0, `backing up to ... .bak-20260926172401` printed, backup present, link created (install.sh:55-61). `bash -n install.sh` OK.
+
+Findings:
+- [Pass] S1 closed — `mkdir -p ... || return 1` (install.sh:39), `rm -f ... || return 1` (:24, :54), `mv ... || return 1` (:58), `ln -s ... || return 1` (:61), and the success `echo` now sits after the guarded `ln`/cleanup (:63). Probe R2 quoted above: rc=1, no false success, no link.
+- [Pass] S2 closed — `remove_stale_status_link` (install.sh:18-28) fires only on a symlink that is dangling (`[ -L ] && [ ! -e ]`, :20) AND whose `readlink` target ends in `/skills/2-daily/status` (:22-23), invoked on both install paths (:43, :62). Probes R3-R6 quoted above. Every real prior install matches the pattern: the old installer linked absolute `$SELF_DIR` (deleted install.sh, patch line 80), so targets always end in `/skills/2-daily/status`.
+- [Pass] No regression to round-1-verified behavior: R1/R7/R8 quoted above; the gh798 test's section-7 assertions (test/gh798-status-skill.sh:63-75) still describe the actual installer behavior.
+- [Nit] `remove_stale_status_link`'s pattern would miss a hand-crafted trailing-slash or bare-relative `status` target — unreachable from any prior installer run (absolute `$SELF_DIR` targets only); no action needed.
+- Round-1 nits (stale test header comment; claude-only section-7 assertions): Producer declined under the user's no-new-tests moratorium and the fail-closed filename anchor (utils/ci-route.sh:399-406) — reasonable, accepted.
+
+Packet answers (round-2 delta):
+- Q1: Yes — all five targets (R1), GH-678 preserved (R7), dangling replaced (test :71-75, round-1 P4), real collisions backed up (R8), and the S1 false-success hole is closed (R2).
+- Q2: Resolved — prior installs' dangling `status` links are now removed on the next install run (R3/R4); live old links in stale clones are deliberately left and the CHANGELOG (patch lines 20-22) tells operators to inspect and unlink manually. No stranded-link path remains that the installer can safely fix on its own.
+- Q3: Unchanged from round 1 — assertions are meaningful and falsifiable; no new checks were added, honoring the moratorium. The new `remove_stale_status_link` behavior itself has no CI assertion — probe-verified only here (moratorium respected; noted, not requested).
+- Q4: Still yes, more than the Markdown/text gate: `test/gh798-status-skill.sh` in the diff keeps this on the full gate (utils/ci-route.sh:399-401, 446). [Unverified — needs clone run]: the gh798 suite actually passing at head `bd1380ea`, and the full qualifying gate + hosted CI on the pushed head. No validate.sh, test scripts, pytest, or git mutations were run this turn; the installer was exercised only inside `.relay-scratch/` with every destination env-pinned there.
+
+Relay closed (Approved), no further turn needed — the harness commits this file and the token is handed off with done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
