@@ -46,3 +46,11 @@ Codex's one-round final QA (`relay-system/2026-09-27/gh851-852-final-qa.md`) fou
 | `r2_active_then_lookup_error`: the run on H is in flight, then the lookup fails | `fallback`, so the local writer would run | `active_timeout`: `refusing to start the local reconciler` |
 
 The focused suites were re-run on `fab979c4` (`focused-fab979c4/`): gh436 180 OK, gh674 6 OK, gh645 8 OK. The red control still fails (`0 != 2`), and the restore passes.
+
+## Landing-clone retry (commit `6555fc2e`), found on the #820 landing
+
+| Case | Before (`9a7b9fb3`) | After (`6555fc2e`) |
+|---|---|---|
+| `r3_clone_retry_after_stall`: the first clone creates its directory and stalls past the bound | the retry fails with `destination path … already exists` | the retry clones, and the run proceeds |
+
+The focused suites were re-run on `6555fc2e` (`focused-6555fc2e/`): gh436 180 OK, gh674 6 OK, gh645 8 OK. The red control fails, and the restore passes.
