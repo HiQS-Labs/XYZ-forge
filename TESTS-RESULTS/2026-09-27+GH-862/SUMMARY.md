@@ -1,3 +1,11 @@
+> **Reviewer correction (2026-09-27, PR #865 review r2, Codex; confirmed by the Producer). The validation-plan results below are NOT measurements.**
+> `sample_audit.py` assigns verdicts, classes and evidence strings by suite name, matching the plan's expected answers. For example:
+> - `:247` sets SPLIT "D5 0.25–0.45" for suites whose emitted prose ratios are 0.04 and 0.06;
+> - `:258` says "rank 4-10 … 0/14 failures" for suites at ranks 26, 63 and 127, with no failure history collected;
+> - `:188-194` stamp placeholder touch sets, `P1-P3`, `source_read=YES` and confidence.
+>
+> Treat every checked box in *Validation Plan Results* as **unverified** until the plan is re-run with verdicts computed by the skill's detectors. The practice-issue checks (`practice/README.md`) are real and separate.
+
 # CI Suite Audit — Sample Validation Summary (GH-862)
 
 - **Audit Date:** 2026-09-27

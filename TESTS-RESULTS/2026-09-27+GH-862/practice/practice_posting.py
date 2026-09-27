@@ -23,12 +23,16 @@ def comments(n):
 import os
 RECORD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report-issue.txt")
 def recorded():
-    """SKILL.md dedupe step 1: the local record, immediately consistent."""
+    """SKILL.md dedupe step 1: the local record, immediately consistent. A recorded report that has
+    since been CLOSED is a "closed match" (SKILL.md): it is not reused, and a new report is opened."""
     try:
         num, marker = open(RECORD).read().split(None, 1)
-        return [int(num)] if marker.strip() == MARKER else []
     except (OSError, ValueError):
         return []
+    if marker.strip() != MARKER:
+        return []
+    state = json.loads(gh("issue", "view", num, "-R", REPO, "--json", "state"))["state"]
+    return [int(num)] if state == "OPEN" else []
 def file_report(body):
     """The protocol's dedupe-first filing: update + delta comment on a match, else create and record."""
     m = recorded() or open_matches()

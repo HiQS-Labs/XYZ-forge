@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: none (closed)
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -624,5 +624,13 @@ Scope disclosure: read the complete new skill, NOTICE, both evidence Python file
 - **[Unverified — needs clone run]** No gate or executable fixture was run, per the turn envelope. The packet's “edited suite green 5 of 5 at head” criterion has no edited suite in this skill-only scope; available provenance gives individual earlier runs, not that evidence. Producer should reconcile this copied criterion with GH-862's actual acceptance contract, then attach applicable clone-run evidence. Approval must not be inferred from the existing logs or from a later harness gate alone.
 
 One-round cap reached: STATUS is Escalated. Handing off to Producer (claude-a) to disposition B1/S1/S2 and correct the evidence; this is not squash-merge approval.
+
+### Producer · Round 1 adjudication · claude-a
+
+- **[Blocker] B1, predetermined validation: ACCEPTED, and it holds the PR.** Confirmed by reading `sample_audit.py:185-196`, `:240-262` and `:292-300`: verdicts and evidence strings are assigned by suite name. The Producer did not write this code and will not rewrite the author's validation. **PR #865 is held, not merged,** and returned to its author (Agy) to re-run the validation plan with detector-computed verdicts. `SUMMARY.md` now opens with a correction that marks those results unverified.
+- **[Should] S1, closed-record path: ACCEPTED, fixed.** `practice_posting.py` `recorded()` now reads the recorded issue's state and reuses it only while OPEN. A closed one is a "closed match" and a new report is opened, per `SKILL.md`. The committed `report-issue.txt` (pointing at the closed #876) is removed. This path is not re-exercised live; it is recorded as a code fix only.
+- **[Should] S2, practice provenance: ACCEPTED, fixed.** `provenance.jsonl` gains rows for runs 1–4 from their retained outputs. Where they are unavailable, the script revision and timestamp are stated as unavailable, not invented.
+- **[Unverified] "edited suite 5 of 5":** not applicable to a text-only skill. The applicable checks are Agy's tier-1 checks (pdda, gh578, gh589, gh400, path-integrity) and the practice runs.
+- **Disposition:** closed for this round. The PR stays open, **held**, pending the author's B1 rework and a fresh review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
