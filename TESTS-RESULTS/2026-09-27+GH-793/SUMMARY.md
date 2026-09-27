@@ -1,6 +1,6 @@
 # GH-793: gh492 idle-kill fails under the parallel gate, passes alone
 
-Base `bc0a291e`. Fix `067f7253`, rebased unchanged onto the staging tip.
+Base `bc0a291e`. Fix `067f7253`, rebased, plus the review fix `c9fa6fde`. Every head row is at `c9fa6fde`.
 
 ## Root cause (reproduced deterministically)
 
@@ -25,6 +25,10 @@ CPU saturation alone does not reproduce it: 5 of 5 green at base under 2×ncpu b
 1. **Windows are measured in samples as well as seconds.** Each run lasts at least 4 s (3 s for consult) **and** until each sampler has `IDLE_MIN_SAMPLES + 1` samples, with a hard cap of 30 s. On a fast host it is unchanged.
 2. **Idle is read when the window closes,** before `stop()` and the kills.
 3. **The two "not idle" bounds scale to what the sampler can resolve.** Progress is only visible at a sample. So the progressing-turn control and the shared-parent consult check allow `max(1.0 s, 2 × the largest sample gap actually observed)`. On a fast host that is still 1.0 s. The blocked-turn checks (`≥ 1.0 s`), the separation check (blocked > progressing + 0.5 s) and all classification checks are unchanged.
+
+## Review fix (PR #869, Codex)
+
+`awk` read an unmeasured `None` as 0, so an absent reading passed both "not idle" checks. Base logs show `PASS … idle=Nones`. Both checks now require a numeric reading first (scientific notation allowed). Replaying the falsifier: `None`, empty and `abc` fail; `0.42` and `5.2e-05` pass; `1.7` fails at a bound of 1.0.
 
 ## The checks still bite (mutations of `turn_diagnostics.py`, restored after)
 

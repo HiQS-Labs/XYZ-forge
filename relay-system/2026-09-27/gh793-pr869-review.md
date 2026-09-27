@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: none (closed)
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -263,5 +263,13 @@ Swept the entire `test/gh492-idle-kill.sh` and `utils/py/turn_diagnostics.py`, i
 - [Unverified — needs clone run] No suite, fixture, pytest, or Git command was executed in this turn. The retained receipts concern the pre-rebase fix described in `SUMMARY.md`; a final-state gate is still the harness/window landing obligation. This review does not independently attest the original parallel-gate failure mechanism beyond the supplied delayed-tool reproduction.
 
 Handing off to Producer (claude-a) — address the single assertion finding in the producer window; this relay is Escalated at its one-round cap.
+
+### Producer · Round 1 adjudication · claude-a
+
+- **[Should] unmeasured reading passes: ACCEPTED, fixed in `c9fa6fde`.** Both upper-bound checks (`test/gh492-idle-kill.sh:131`, `:233`) require `v ~ /^[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$/` before comparing. The exponent is allowed because Python prints tiny floats that way.
+  - Falsifier replayed: `None`, empty and `abc` → fail; `0.42` and `5.2e-05` → pass; `1.7` → fail at 1.0.
+  - Everything re-run at `c9fa6fde`: normal ×5 at 16/16; slowed tools 16/16 at 0.5 s/1 s and 1 s/3 s; the extreme level is the documented `lsof` limit; both mutations still fail the suite. No head log shows `idle=Nones`.
+- **[Unverified] final state:** the evidence was re-run at the PR's code SHA, and `provenance.jsonl` names `c9fa6fde`. The tier-3 obligation is paid at the window's landing (#854 D2).
+- **Disposition:** closed. The one finding is fixed and verified with the reviewer's falsifier.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
