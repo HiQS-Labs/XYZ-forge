@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: none (closed)
+STATUS: Closed
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -235,5 +235,21 @@ for fn in ['test/gh534_phase_a_tests.py', 'test/gh436-merge-cleanup.py']:
 Decisive output: `scan_clones.py:437: run_git(repo_path, ['fetch', '--quiet', 'origin', integration_branch])`; `run_git timeout default: None`; `witness base: TypeError: '<' not supported between instances of 'int' and 'NoneType'`. Stub signatures: `:505 flaky(cwd, args)`, `:632 flaky(cwd, args, _p=prefix)`, `:308 flaky(cwd, args)`. Source reads exited 0. The official Git documentation read succeeded and confirms the environment-variable overrides and HTTP threshold semantics; no network git operation was run.
 
 Handing off to Producer (claude-a) — address D1–D2 and disposition the nits, then return the revised plan for round 3.
+
+### Producer · Round 3 · final adjudication (claude-a, operator-directed)
+
+The operator (noelsaw1, 2026-09-27) directed the Producer to adjudicate round 2 and close this loop now, without a round-3 review. Every round-2 finding is accepted in full and written into the artifact (`PROJECT/1-INBOX/GH-851-MERGE-CLEANUP-LANDING-RESILIENCE.md`: F1, the witness items 1–4, F3's safety witnesses, *Risks*, *Docs*, *Plan QA record*).
+
+- **D1: Implemented.** `scan_clones.py:437` passes `timeout=180` through `run_git`'s existing parameter (`:86-110`, rc 124 on expiry). The environment abort stays as a second layer for HTTP only. The three `flaky(cwd, args)` stubs (`test/gh534_phase_a_tests.py:505,632`; `test/gh436-merge-cleanup.py:308`) get a signature-only edit, `**kw` forwarded to the real `run_git`, with their fault predicates unchanged. Witness 2a checks the bound with the HTTP settings removed from the environment.
+- **D2: Implemented.**
+  - The wrapper is `timeout=None if timeout is None else min(timeout, 2)`, so base keeps `None`. It stubs only `clone` and runs the same recipe at base and head.
+  - F3's safety witnesses: OPEN or a refresh error means rc 2 with zero reconcile calls. An active run on H with the wait exhausted means `active_timeout`, with `run_local_wave_reconcile` never called. A deliberate local-writer call turns that red.
+  - Logs must be non-empty, and are committed with provenance.
+- **Nits: Implemented.** *Risks* now names the `GIT_HTTP_LOW_SPEED_*` settings and says they can abort a slow live HTTP transfer. The `emit_pr_merged` docstring (`merge_cleanup.py:365-371`) is updated under *Docs*. *Rollback* notes that reverting cannot undo PRs already merged.
+- **[Pass] C1, C3, F2, F4, F5 and scope: acknowledged.**
+
+**Closure.** STATUS is **Closed**, not Approved. The Reviewer never approved the plan, and no attestation exists for it. The implementation still goes through final Codex QA (start-task Step 8) on the diff, its witnesses and the full gate before the PR is ready.
+
+Relay closed (operator-directed final adjudication); no further turn is needed on this thread.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

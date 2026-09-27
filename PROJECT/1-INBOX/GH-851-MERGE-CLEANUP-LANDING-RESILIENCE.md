@@ -3,7 +3,7 @@ gh_issue: 851
 related_issues: [852]
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/851
 title: "merge-cleanup landing resilience: stale re-gate after a B1 push (#851), unbounded network calls, merge-call recovery, --reconcile-pr SHA, hosted-wait default (#852, #854 D5)"
-status: Inbox — plan revised after Codex plan QA round 1 (C1–C3); round 2 next
+status: Inbox — plan QA closed 2026-09-27 by operator-directed final adjudication after round 2 (D1, D2 and nits accepted in full; no round 3); implementation next
 created: 2026-09-27
 updated: 2026-09-27
 owner: operator (via /start-task, #854 direct-path item 1)
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1: FAIL with C1–C3 (low-speed failures not classified as transient; the witness recipe; existing-test adaptations). The plan is revised below. | Plan QA round 2. |
+| Plan QA closed. Codex round 1 (C1–C3) and round 2 (D1, D2, nits) were both FAIL; each finding was accepted and written into this plan. The operator directed the Producer to adjudicate round 2 and close the loop, so there was no round 3 and no Codex approval (see *Plan QA record*). | Implementation, then the full gate and final Codex QA. |
 
 ## Issues
 
@@ -95,7 +95,7 @@ goal: >
      - the push at `:601`: 3600 s, because it runs the pre-push hook, which can run a gate.
 
      Every `merge_cleanup.run_git` stub already accepts `timeout` (`**kw`, or `timeout=None`).
-   - **`scan_clones.py:437`** gets only the transfer-stall abort, with no `timeout=`. Its stubs are `flaky(cwd, args)` (`test/gh534_phase_a_tests.py:504,631`; `test/gh436-merge-cleanup.py:308`), and they reach it through `classify_local_refs`. A stalled fetch there is the #852 transfer-stall shape, which the abort covers.
+   - **`scan_clones.py:437`** is bounded too (plan QA D1). It passes `timeout=180` through `run_git`'s existing parameter, which already converts expiry to rc 124 (`scan_clones.py:86-110`). The failure goes to the existing failed-query/preserve result. The environment abort is a second layer only: it covers stalled HTTP transfers, not a subprocess deadline. **Existing stubs to keep truthful (a signature-only edit):** the three `flaky(cwd, args)` doubles at `test/gh534_phase_a_tests.py:505,632` and `test/gh436-merge-cleanup.py:308` accept `**kw` and forward it to the real `run_git`. Their fault predicates are unchanged.
    - **C1: classify the new failure as transient.** Add `operation too slow` (libcurl's low-speed abort) and `connection reset` to `TRANSIENT_RE` (`:94-97`). Both texts were observed in #849:
      - `error: RPC failed; curl 28 Operation too slow. Less than 1000 bytes/sec transferred the last 120 seconds`;
      - `error: RPC failed; curl 56 Recv failure: Connection reset by peer`.
@@ -103,12 +103,14 @@ goal: >
      So GH-623's three attempts and defer apply to them. Nothing else is added.
    - A timeout keeps today's failure shape: rc 124, "timed out", which `TRANSIENT_RE` already matches.
    - **Witness (C2), manual, in `TESTS-RESULTS/`:**
-     1. A stub `git` first on `PATH` sleeps forever for `clone`. Call `validate_head_in_second_clone` with `merge_cleanup.run_git` wrapped to forward `min(timeout, 2)`. The shortened bound reaches the real `run_git` call; patching `NET_TIMEOUT_S` would not, since it is captured when `_net_git` is defined (C2).
+     1. A stub `git` first on `PATH` sleeps forever for `clone` only; every other subcommand passes through to the real git. Call `validate_head_in_second_clone` with `merge_cleanup.run_git` wrapped as `def wrap(cwd, args, timeout=None, **kw): return real(cwd, args, timeout=None if timeout is None else min(timeout, 2), **kw)`. This keeps base's unbounded `None` (D2), and the shortened bound still reaches the real `run_git` call. The same recipe runs unchanged at base and at head.
         - Base: still blocked when a 10 s outer watchdog fires.
         - Head: returns `(False, "second clone failed: timed out …")` inside it.
-     2. Record the `timeout` each of the five `merge_cleanup` sites passes. None at base; 180, 180, 180, 3600 and 180 at head.
+     2. Record the `timeout` each of the six sites passes: the five in `merge_cleanup` and `scan_clones.py:437`. None at base; 180, 180, 180, 3600, 180 and 180 at head.
+     2a. A stalled `fetch` at `scan_clones.py:437`, with the bound shortened through the same wrapper and **no** `GIT_HTTP_LOW_SPEED_*` in the environment, returns the existing failed-query result at head. At base it is still blocked at the outer watchdog.
      3. After `main()` has set up, the environment holds `GIT_HTTP_LOW_SPEED_LIMIT=1000` and `GIT_HTTP_LOW_SPEED_TIME=120`, and an operator's own value is kept.
      4. `_transient()` is True for both observed texts at head (False at base). It stays False for `remote: Repository not found.` and for `fatal: Authentication failed`.
+     - Every witness log must be non-empty. The logs are committed with `provenance.jsonl`.
 3. **F2, merge-call recovery.**
    - Change: in `execute_pr_merge`, on a non-zero exit, call `refresh_pr` once. If it reads `MERGED` with a non-empty `mergeCommit.oid` (the success branch's own test), log a warning (`gh pr merge exited N but the PR reads MERGED as <sha> — continuing`) and return True, so the existing post-merge sequence runs.
    - Otherwise keep today's `Failed to merge` return False.
@@ -119,6 +121,11 @@ goal: >
      - A PR that is not `MERGED` also stops with exit 2: "not merged — nothing to reconcile".
    - Otherwise pass `pr_head=headRefOid`, and a new optional `merged_head=mergeCommit.oid` argument to `run_post_merge_reconcile`. That argument replaces the `HEAD` lookup (`:538-541`) when given; the Phase-5 caller is unchanged.
    - Check (witness): stub `gh`, where `pr view` gives head H and merge M, and `run list` has a run on H. Base logs `No hosted wave-reconcile run listed yet for <primary HEAD>`; head waits on the run for H.
+   - **Safety witnesses (plan QA D2, carried from round 1):**
+     - An `OPEN` PR returns 2 with **zero** `run_post_merge_reconcile` calls.
+     - A `gh pr view` error returns 2 with zero calls.
+     - With an active hosted run on H and the wait exhausted (shortened `MERGE_CLEANUP_HOSTED_WAIT_S`), the result is `active_timeout`, and `run_local_wave_reconcile` is never called.
+     - Red control: a deliberate local-writer call while the run on H is active must turn that witness red.
    - **Existing tests to keep truthful (C3).** These edit what the tests inject; they add no test case.
      - `test/gh436-merge-cleanup.py:352-363` (`_run_main`): stub `refresh_pr_with_retry` to return a `MERGED` PR 42 with head H and merge M. The ready-primary test (`:374-379`) then also asserts that `run_post_merge_reconcile` got `pr_head=H` and `merged_head=M`.
      - `test/gh534_phase_b_tests.py:522-525` (`test_reconcile_pr_failure_propagates`): give PR 7 a `MERGED` state, so rc 2 still comes from the reconciliation failure and not from the new refusal. A red control checks this: making `main` ignore `run_post_merge_reconcile`'s result must turn it red.
@@ -131,13 +138,32 @@ goal: >
    - Existing suites, run focused once: `gh436`, `gh674`, `gh645`.
    - The full gate runs once, through the pre-push hook on the final commit, from a disposable full clone, under `caffeinate -i`.
 7. **Docs.**
+   - Update the `emit_pr_merged` docstring (`merge_cleanup.py:365-371`, plan QA nit). Under F2 a merge is also witnessed by a `MERGED` re-query after a non-zero merge call. Under F3, `--reconcile-pr` now verifies merge state; it still does not emit.
    - `SKILL.md`: the F5 default, plus one sentence under Phase 5 on F2 and F4.
    - `CHANGELOG.md`: one entry.
    - Close #851/#852 at merge through `Closes` lines.
 
 ## Risks and rollback
 
-- **The `-c http.lowSpeed*` flags abort a slow but live transfer.** At 1 KB/s for 120 s, only a stalled link is affected, and the retry sites already retry transient failures. #849 ran with these values, and the later runs were clean.
+- **The `GIT_HTTP_LOW_SPEED_*` settings can abort a live HTTP transfer.** A live transfer that stays below 1,000 bytes/s for 120 s is aborted along with a stalled one. The retry sites treat that as transient (C1) and retry it; #849 ran with these values, and the later runs were clean.
 - **F2 hides a real merge failure.** It returns True only when GitHub itself reports `MERGED` with a merge commit, which is the same evidence the zero-exit path already requires.
 - **F3 refuses a PR it used to "reconcile".** Before, `--reconcile-pr` on an unmerged PR ran the local writer against a merge that did not exist. Refusing is the fail-closed reading of #674.
-- **Rollback:** revert the squash. There is no state or format change.
+- **Rollback:** revert the squash. There is no state or format change. Reverting the code cannot undo PRs that were already merged with it.
+
+## Plan QA record
+
+- Thread: `relay-system/2026-09-27/gh851-852-plan-review.md`. Reviewer Codex (`relay-xyz --review-once`, `ALLOW_PATHS=""`).
+- **Round 1: FAIL.**
+  - C1: the low-speed diagnostic was not classified as transient.
+  - C2: the witness patched a default already captured at definition time.
+  - C3: existing stubs and tests had to be named.
+  - Recon R1–R9, F2–F5, the ratings and the rollback were Pass. All three findings were implemented; for C3, `-c` arguments were replaced by environment settings.
+- **Round 2: FAIL.**
+  - D1: keep a time bound on `scan_clones.py:437`.
+  - D2: the witness wrapper's `None` handling, and the F3 safety witnesses.
+  - Two nits: *Risks* wording, and a stale docstring.
+  - C1, most of C3, F2, F4, F5 and the scope were Pass.
+- **Final adjudication (2026-09-27, operator-directed, Producer):** D1, D2 and both nits are **accepted in full** and written above.
+  - Each is a correction to the plan or its evidence that Codex backed with a probe. None expands production behaviour, adds a helper, or adds a test. D1 adds only a `timeout` that `run_git` already supports, plus signature-only stub edits.
+  - The operator directed closing the loop without a round 3. So the thread is **Closed**, not Approved, and there is no Codex attestation for the plan.
+  - Final Codex QA on the implementation, its evidence and the full gate still applies before the PR is ready (start-task Step 8).
