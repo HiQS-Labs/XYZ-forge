@@ -24,8 +24,14 @@ Each case runs in its own process group under a 10 s outer watchdog. The results
 | `f4_regate` (old head CONFLICTING → new head UNKNOWN → MERGEABLE) | F4 | stops after the stale read; landing clone never built for the new head | waits for the pushed head, then reaches the landing clone at it |
 | `f5_default` | F5 | `MERGE_CLEANUP_HOSTED_WAIT_S` default 1800 | 5400 |
 
-## Focused suites and red control
+## Focused suites and red control (commit `9319ea9a`, disposable full clone, identity unchanged)
 
-See `provenance.jsonl`. They are `test/gh436-merge-cleanup.sh`, `test/gh674-merge-cleanup-hosted-lookup.sh` and
-`test/gh645-merge-cleanup-xyz-tools.sh`, run in a disposable full clone. There is also the Phase-B red control (`main`
-ignoring `run_post_merge_reconcile`'s result must turn `test_reconcile_pr_failure_propagates` red).
+| Check | Result |
+|---|---|
+| `test/gh436-merge-cleanup.sh` (includes `gh534_phase_{a,b,c}`) | 180 tests OK (239 s) |
+| `test/gh674-merge-cleanup-hosted-lookup.sh` | 6 tests OK |
+| `test/gh645-merge-cleanup-xyz-tools.sh` | 8 tests OK |
+| Red control: `main` ignores `run_post_merge_reconcile`'s result | `test_reconcile_pr_failure_propagates` FAILS (`0 != 2`) |
+| Restore control | passes; tree clean |
+
+Logs are in `focused/`. There is no local full gate: the PR goes to `staging/stabilize-2026-10` under #854 D2 (operator, 2026-09-27).
