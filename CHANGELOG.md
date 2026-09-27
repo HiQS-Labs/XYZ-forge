@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-26 — Standardized clone backup layout and integrity verification for merge-cleanup-deep and merge-cleanup (GH-839)
+
+To expedite deletion of full clone folders without fear of data loss, clone backup and verification is automated into a standardized hierarchy under `<root>/_backups/<repo-name>/<timestamp>/`:
+
+- **Dedicated backup utility (`skills/2-daily/merge-cleanup/scripts/backup_clones.py`)**: Assembles `zips/`, `metadata/` (`MANIFEST.tsv`, `manifest.json`, and per-clone `.git-summary.txt`), `reports/`, and human-readable `SUMMARY.md`.
+- **Cache pruning**: Excludes heavy disposable package and cache directories (`node_modules/`, `.venv/`, `venv/`, `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.parcel-cache/`, `.cache/`, `.DS_Store`) while preserving `.git/` and all working tree source code (including build/dist/target directories).
+- **Integrity verification gate**: Verifies zip archive structure and CRC via Python `testzip()` and computes SHA256 before marking any clone safe for teardown.
+- **Aggressive teardown integration (`merge_cleanup.py --backup-first`)**: Wires clone backup directly into Phase 6 teardown, so clones are backed up and verified before trash movement.
+- **Skill documentation update**: Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` Phase 1 and `skills/2-daily/merge-cleanup/SKILL.md` CLI options and usage examples.
+- **Moratorium compliance**: Zero new CI/CD tests added; verified via existing suites (`test/gh534_phase_c_tests.py`, `test/gh589-skill-viewer.sh`) and reproducible falsifiers in `TESTS-RESULTS/2026-09-26+GH-839/`.
+
 ## 2026-09-26 — `gh436` moves from Small to Large; its two docs inputs now take the full gate (GH-836 D1)
 
 The first hosted Small run took 15.7 minutes, over D1's ~12-minute line. `gh436-merge-cleanup.sh` was its largest
@@ -137,6 +148,14 @@ record a green boundary, for a reason unrelated to code. The cap is now 120, mat
 missing (a step-level timeout does not count). Found by the 2026-09-25 post-merge review (#822);
 it blocked the `development` → `main` promotion. Rollback: revert the one value and its assertion.
 
+## 2026-09-25 — harness_app: concurrent first use no longer fails on the WAL switch (GH-813)
+
+When several `harness_app.py` processes opened a brand-new telemetry database at once, one could fail with `database is locked` at `PRAGMA journal_mode = WAL`. SQLite returns that error immediately, without the busy timeout, so the process died and the turn lost its telemetry row. It also randomly failed the `gh496-telemetry-isolation.sh` concurrency case, which failed one M4 Pro gate run in #800. `init_db` now retries only that statement, only on `database is locked`, up to 50 attempts with short jittered sleeps. Every other error still raises immediately. The gh496 suite now prints a failing worker's stderr, and a new case 14 checks the retry deterministically: it is red on the old code and green now. A 200-round × 10-worker probe went from 29/200 failed rounds to 0/200. Receipts are in `TESTS-RESULTS/2026-09-25+GH-813/`.
+
+## 2026-09-25 — GH-800 M4 Pro full-suite trials
+
+Recorded three MacBook Pro 14-inch M4 Pro runs of `./validate.sh` (4 workers, full tier) at proposed repin `development@0ae3452a`: 912 s and 910 s green (420/420), and 964 s refused (419/420). The refusal is an intermittent `gh496-telemetry-isolation.sh` concurrency failure, reproduced standalone as a SQLite `database is locked` race at `PRAGMA journal_mode = WAL`. This commit differs from the M6 trial's, so no cross-device comparison is made yet. Sanitized timings and provenance are in `TESTS-RESULTS/2026-09-25+GH-800/`.
+
 ## 2026-09-24 — Flightdeck explains unknown states instead of looking broken (GH-797)
 
 Cards said "Progress coverage unknown" with no explanation, and sources with no producer
@@ -148,6 +167,10 @@ A row or root cap with nothing failing shows amber `partial`. Presentation only:
 no server or snapshot change. Reversibility: **Easy**. Verification: node
 `work-status-checks.mjs` (a mutation that paints an unconfigured source red fails it),
 `pytest test/flightdeck` 39/39, and the real-Chrome browser check.
+
+## 2026-09-24 — GH-800 M6 full-suite benchmark intake
+
+Opened the three-device full-gate timing campaign at pinned `development@a08f30e9`. The first complete Mac mini M6 run took 1,083 s with 416/420 passing and four persistent failures; its clone identity stayed intact. A prior 678 s setup attempt lacked Node on PATH and was excluded. Public-safe per-suite timing and provenance are retained in `TESTS-RESULTS/2026-09-25+GH-800/`. A green matched baseline and the other two devices remain open.
 
 ## 2026-09-24 — gh251's nested gate runs scoped to the cheapest `.py` tier-2 lane (GH-808)
 

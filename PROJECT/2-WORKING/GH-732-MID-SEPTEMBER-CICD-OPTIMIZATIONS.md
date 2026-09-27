@@ -259,3 +259,7 @@ The local push gate was observed at 18–23 min against docs that promise 4–6;
 ## Merge evidence
 
 - PR #832 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #803 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

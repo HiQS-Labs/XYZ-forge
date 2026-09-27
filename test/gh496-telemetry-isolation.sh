@@ -15,6 +15,7 @@
 #  11. Row persistence: exact row count query on SQLite invocation_logs.
 #  12. Red control: invalid/unregistered harness fails foreign key check.
 #  13. Negative control: tracked repo files remain 100% byte-unchanged across turns.
+#  14. GH-813 red control: init_db retries ONLY "database is locked" on the WAL switch, within a bound.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -186,7 +187,7 @@ for i in $(seq 1 10); do
     --shim "codex-turn.py" \
     --task-scope "GH-496 concurrency test worker $i" \
     --seconds 0.5 \
-    --exit-code 0 >/dev/null 2>&1 &
+    --exit-code 0 >/dev/null 2>"$WORK/concur_test/err_$i" &
   pids+=($!)
 done
 
@@ -204,7 +205,9 @@ if [ "$concur_err" -eq 0 ]; then
     fail "Concurrency test mismatch: count=$c_count, check=$c_integ"
   fi
 else
-  fail "Concurrency test: $concur_err worker processes exited with error"
+  # GH-813: the worker's own stderr is the only record of WHY it failed — print it.
+  concur_why="$(for f in "$WORK"/concur_test/err_*; do if [ -s "$f" ]; then echo "${f##*/}:"; tail -n 3 "$f"; fi; done)"
+  fail "Concurrency test: $concur_err worker processes exited with error: $concur_why"
 fi
 
 # 10. Working tree cleanliness: running HarnessTurnLogger leaves git status 100% clean
@@ -278,6 +281,59 @@ if [ "$BEFORE_DB_CKSUM" = "$AFTER_DB_CKSUM" ] && \
   pass "Negative control: tracked root files remain 100% byte-identical"
 else
   fail "Negative control failed: tracked root files were modified during tests"
+fi
+
+# 14. GH-813 red control. Concurrent first users of a fresh DB collide on the WAL switch and SQLite
+# returns "database is locked" at once, without the busy handler (case 9's intermittent failure). A
+# Connection subclass, injected through sqlite3.connect's factory, fails the WAL pragma on demand:
+# (a) 3 locks then success -> 4 attempts; (b) any other error -> raised after 1; (c) endless locks ->
+# raised after the 50-attempt bound. alarm(30) turns an unbounded retry into a failure, not a hang.
+rc14=0
+out14="$(python3 - "$WORK/wal_retry" 2>&1 <<'PY'
+import os, signal, sqlite3, sys
+import harness_app
+
+signal.alarm(30)
+base = sys.argv[1]
+os.makedirs(base, exist_ok=True)
+real_connect = sqlite3.connect
+state = {"attempts": 0, "fail_first": 0, "error": ""}
+
+
+class LockingConnection(sqlite3.Connection):
+    def execute(self, sql, *args):
+        if "journal_mode" in sql:
+            state["attempts"] += 1
+            if state["attempts"] <= state["fail_first"]:
+                raise sqlite3.OperationalError(state["error"])
+        return super().execute(sql, *args)
+
+
+sqlite3.connect = lambda *a, **k: real_connect(*a, factory=LockingConnection, **k)
+
+
+def run(name, fail_first, error):
+    state.update(attempts=0, fail_first=fail_first, error=error)
+    try:
+        conn = harness_app.init_db(os.path.join(base, name + ".db"))
+        seeded = conn.execute("SELECT COUNT(*) FROM harnesses").fetchone()[0] > 0
+        result = "ok" if seeded else "unseeded"
+    except sqlite3.OperationalError as e:
+        result = str(e)
+    print(f"{name}|{result}|{state['attempts']}")
+
+
+run("a", 3, "database is locked")
+run("b", 1, "disk I/O error")
+run("c", 10**6, "database is locked")
+PY
+)" || rc14=$?
+
+if [ "$rc14" -eq 0 ] && grep -qxF "a|ok|4" <<<"$out14" && grep -qxF "b|disk I/O error|1" <<<"$out14" \
+   && grep -qxF "c|database is locked|50" <<<"$out14"; then
+  pass "WAL-switch retry: locks retried to success (4), other errors raised at once (1), endless locks bounded (50)"
+else
+  fail "WAL-switch retry control: rc=$rc14, got: $out14"
 fi
 
 echo "gh496-telemetry-isolation: $PASS pass, $FAIL fail"
