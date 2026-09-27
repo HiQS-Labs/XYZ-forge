@@ -1,0 +1,103 @@
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GH Repos/XYZ-forge
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GH Repos/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (16 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge` | standalone_clone | `development` | ✅ | 🔥 Active (5 in 10m) | ⚠️ 1 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+| `XYZ-forge-gh237-idle-hang` | standalone_clone | `fix/gh648-turn-timeout-umbrella` | ❌ (12) | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_DIRTY** | Working tree is dirty (12 modified/untracked files): ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-150946-60754.log, ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-151441-4509.log, ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-152536-43900.log, ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-153425-42405.log, ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-173141-63320.log, ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-180901-71521.log, ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-210430-13449.log, ?? relay-system/run-logs/2026-09-16/marathon-MARATHON_-223833-86455.log, ?? relay-system/run-logs/2026-09-17/marathon-MARATHON_-074633-44569.log, ?? relay-system/run-logs/2026-09-17/marathon-MARATHON_-142944-76302.log, ?? relay-system/run-logs/2026-09-17/marathon-MARATHON_-163559-83936.log, ?? test/gh698-planner-db-ratings.sh |
+| `XYZ-forge-gh646` | standalone_clone | `feat/gh646-writer-refresh` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh646-writer-refresh @ 458057a22e: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh698-prs` | standalone_clone | `fix/698-prs-optimization` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/fix/698-prs-optimization @ 7b1c1445e3: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh700-pages-skills` | standalone_clone | `feat/gh700-pages-skills` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh700-pages-skills @ bc27241ae1: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh710-gh708` | standalone_clone | `fix/gh710-gh708-consumer-revendor` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNVERIFIED_SESSION** | Cannot verify tick claims: tick claims exit 3: tick claims: events-unreadable: Unexpected non-whitespace character after JSON at position 97 (line 2 column 1) |
+| `XYZ-forge-gh736-merge-cleanup-poll` | standalone_clone | `fix/gh736-merge-cleanup-exclude-unknown-poll` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNVERIFIED_SESSION** | Cannot verify tick claims: tick claims exit 3: tick claims: events-unreadable: Unexpected non-whitespace character after JSON at position 97 (line 2 column 1) |
+| `XYZ-forge-gh788-gate` | standalone_clone | `fix/gh788-python-path-space` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **ACTIVE_PROCESS** | Open file handles inside the checkout: PID 81869 (claude) (Dormant handle: 0 files modified in >60m) |
+| `XYZ-forge-gh788-python-path-space` | standalone_clone | `fix/gh788-python-path-space` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **ACTIVE_PROCESS** | Open file handles inside the checkout: PID 81869 (claude) (Dormant handle: 0 files modified in >60m) |
+| `XYZ-forge-gh789` | standalone_clone | `fix/gh789-gh786-merge-cleanup` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/fix/gh789-gh786-merge-cleanup @ 08bb06559e: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh791-merge-regressions` | standalone_clone | `fix/gh791-merge-regressions` | ❌ (1) | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_DIRTY** | Working tree is dirty (1 modified/untracked files):  M LEADERBOARD.md |
+| `XYZ-forge-integration-review-20260924` | standalone_clone | `feat/gh796-integration-review` | ❌ (1) | ⏳ Idle (6 in 60m) | 0 | ⚠️ 1 | **PRESERVE_DIRTY** | Working tree is dirty (1 modified/untracked files):  M LEADERBOARD.md |
+| `XYZ-forge.wiki` | standalone_clone | `master` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVE_WIKI** | GitHub wiki repository |
+| `XYZ-forge-status-skill` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+| `XYZ-forge-gh609` | standalone_clone | `feat/gh609-sdlc-agent-gaps` | ✅ | 💤 Dormant | 0 | ⚠️ 2 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh609-sdlc-agent-gaps @ b89abcb01d: not reachable from origin/development; no merged PR has this head; refs/heads/fix/gh615-wrapping-tolerant-review-contract @ 0cb3d2a8e3: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh737` | standalone_clone | `feat/gh737-debug-mantra-rca` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNVERIFIED_SESSION** | Cannot verify tick claims: tick claims exit 3: tick claims: events-unreadable: Unexpected non-whitespace character after JSON at position 97 (line 2 column 1) |
+
+### 📋 In-Flight Checkouts & Follow-up Guidance
+
+#### `XYZ-forge` (Linked Issue: GH-#801)
+- **Completion Status**: Open task checklists (129 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (agent-b) in `XYZ-forge` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh237-idle-hang` (Linked Issue: GH-#648)
+- **Completion Status**: In-flight uncommitted modifications (12 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh237-idle-hang` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh698-prs` (Linked Issue: GH-#698)
+- **Completion Status**: Open task checklists (133 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh698-prs` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh736-merge-cleanup-poll` (Linked Issue: GH-#736)
+- **Completion Status**: Open task checklists (131 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh736-merge-cleanup-poll` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh791-merge-regressions` (Linked Issue: GH-#791)
+- **Completion Status**: In-flight uncommitted modifications (1 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh791-merge-regressions` to close or finish remaining tasks.
+
+#### `XYZ-forge-integration-review-20260924` (Linked Issue: GH-#796)
+- **Completion Status**: In-flight uncommitted modifications (1 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-integration-review-20260924` to close or finish remaining tasks.
+
+#### `XYZ-forge-status-skill` (Linked Issue: GH-#798)
+- **Completion Status**: Open task checklists (129 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-status-skill` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh609` (Linked Issue: GH-#609)
+- **Completion Status**: Open task checklists (132 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh609` to close or finish remaining tasks.
+
+merge-cleanup: PR #803: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #799: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #795: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #765: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #759: excluded by --exclude; not sequenced this run
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#794](https://github.com/HiQS-Labs/XYZ-forge/pull/794) | fix: repair four regressions from merge  | `fix/gh791-merge-regressions` | `development` | PASS | CONFLICTING | 25 |
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Resume mode: attempt records under /Users/noelsaw/Documents/GH Repos/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge are consulted only after each PR's live refresh; a repaired, now-mergeable PR still lands.
+merge-cleanup: PR #794: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #794: attempt record /Users/noelsaw/Documents/GH Repos/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-794.json
+merge-cleanup: PR #794: dry run: no slot reserved
+merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(1123, 1132) replay=2 op(s)
+merge-cleanup: ERROR — PR #794: B1 stopped — [DRY RUN] B1 would keep the theirs side and replay 2 roadmap change(s) through the writer, then run the resolver (clone kept at /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-gmwz9r6b/pr-794-1712a579-k0dfv2x8)
+merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-gmwz9r6b
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: [DRY RUN] Would remove verified standalone clone: /Users/noelsaw/agent-workspaces/XYZ-forge-status-skill
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.

@@ -1,0 +1,19 @@
+== test: gh-gen4-phase1-domain-oracles ==
+  PASS: utils/py/domain_oracles.py exists and is executable
+  PASS: utils/py/telemetry_schema.py exists and is executable
+  PASS: telemetry_schema.py --mode suite passes
+  PASS: domain_oracles.py --mode suite passes (embedded +/- controls)
+  PASS: zero-state (+): read-only command leaves the tree digest untouched
+  PASS: zero-state (-): writer detected (tree digest changed)
+  PASS: containment (+): write inside the work root leaves the host untouched
+  PASS: containment (-): host remote table change detected
+  PASS: containment: refuses a work root that is not disjoint from the host
+  PASS: idempotence (+): de-duplicating receipt writer is monotonic
+  PASS: idempotence (-): duplicate receipts detected
+  PASS: crash-recovery (+): stale lock reclaimed after SIGKILL, JSONL line-valid
+  PASS: crash-recovery (-): naive acquirer blocked by stale lock detected
+  PASS: telemetry JSONL is line-level valid
+  PASS: 8 oracle telemetry rows emitted (4 oracles × +/-)
+  PASS: telemetry carries both pass and fail tier-1 verdicts
+  FAIL: zero-state: validate.sh --print-mode mutated the clone or leaked a handle
+== gh-gen4-phase1-domain-oracles: 16 passed, 1 failed ==
