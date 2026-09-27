@@ -156,6 +156,18 @@ When several `harness_app.py` processes opened a brand-new telemetry database at
 
 Recorded three MacBook Pro 14-inch M4 Pro runs of `./validate.sh` (4 workers, full tier) at proposed repin `development@0ae3452a`: 912 s and 910 s green (420/420), and 964 s refused (419/420). The refusal is an intermittent `gh496-telemetry-isolation.sh` concurrency failure, reproduced standalone as a SQLite `database is locked` race at `PRAGMA journal_mode = WAL`. This commit differs from the M6 trial's, so no cross-device comparison is made yet. Sanitized timings and provenance are in `TESTS-RESULTS/2026-09-25+GH-800/`.
 
+## 2026-09-24 — Flightdeck explains unknown states instead of looking broken (GH-797)
+
+Cards said "Progress coverage unknown" with no explanation, and sources with no producer
+(topology, continuity) got a red dot. Cards now read **Progress not measured**, with a
+tooltip saying it is not an error and why. Source pills say `off` or `not set up` in grey,
+with a tooltip naming the variable that turns them on (for example `FLIGHTDECK_XYZ_ROOTS`
+for the in-progress view). Red now means an actual read failure, including a single failed `xyz_work` root.
+A row or root cap with nothing failing shows amber `partial`. Presentation only:
+no server or snapshot change. Reversibility: **Easy**. Verification: node
+`work-status-checks.mjs` (a mutation that paints an unconfigured source red fails it),
+`pytest test/flightdeck` 39/39, and the real-Chrome browser check.
+
 ## 2026-09-24 — GH-800 M6 full-suite benchmark intake
 
 Opened the three-device full-gate timing campaign at pinned `development@a08f30e9`. The first complete Mac mini M6 run took 1,083 s with 416/420 passing and four persistent failures; its clone identity stayed intact. A prior 678 s setup attempt lacked Node on PATH and was excluded. Public-safe per-suite timing and provenance are retained in `TESTS-RESULTS/2026-09-25+GH-800/`. A green matched baseline and the other two devices remain open.

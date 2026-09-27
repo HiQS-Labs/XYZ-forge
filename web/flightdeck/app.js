@@ -1,4 +1,4 @@
-import {snapshotFresh, progressTone} from './presentation.mjs';
+import {snapshotFresh, progressTone, sourceStatus, PROGRESS_HELP} from './presentation.mjs';
 import {numbers, laneIssues, issueCards, issueStatus} from './issue-context.mjs';
 'use strict';
 
@@ -38,9 +38,9 @@ function sourcesFor(repo) {
 function health(repo) {
   const tone = progressTone(repo, state.snapshot, state.failures > 0);
   const intentAge = ageMinutes(repo.last_intent_at);
-  const labels = {green: 'Progress this hour', amber: 'Quiet · check in', red: 'No covered progress for 2h', unknown: 'Progress coverage unknown'};
+  const labels = {green: 'Progress this hour', amber: 'Quiet · check in', red: 'No covered progress for 2h', unknown: 'Progress not measured'};
   const detail = repo.last_progress_at ? `Last seen ${ageLabel(repo.last_progress_at)} ago` : 'No attested progress anchor';
-  return {tone, label: labels[tone], detail: tone === 'unknown' && intentAge !== null && intentAge < 60 ? `Recent intent ${ageLabel(repo.last_intent_at)} ago · progress unverified` : detail};
+  return {tone, label: labels[tone], help: tone === 'unknown' ? PROGRESS_HELP : '', detail: tone === 'unknown' && intentAge !== null && intentAge < 60 ? `Recent intent ${ageLabel(repo.last_intent_at)} ago · progress unverified` : detail};
 }
 function recent(items, field, minutes = 60) {
   return (items || []).filter(item => {
@@ -109,6 +109,7 @@ function repoCard(repo, index, total, issue = null) {
   card.querySelector('.repo-summary').textContent = issue ? `${repo.name} · ${issue.workflow.label} · ${issue.workflow.reason}` : (repo.summary || 'Keep this lane visible and moving.');
   const healthEl = card.querySelector('.health');
   healthEl.classList.add(status.tone);
+  healthEl.title = status.help;
   healthEl.querySelector('strong').textContent = status.label;
   healthEl.querySelector('span').textContent = status.detail;
   const nextAction = lanes[0]?.task || repo.next_actions?.[0]?.title || 'Re-establish context with this lane.';
@@ -162,12 +163,13 @@ function renderSources() {
   const fresh = snapshotFresh(state.snapshot) && state.failures === 0;
   $('connectionStatus').textContent = state.failures ? `Read failed · ${state.failures >= 3 ? 'polling paused · ' : ''}last snapshot ${ageLabel(state.snapshot?.generated_at)} ago` : `Last snapshot ${ageLabel(state.snapshot?.generated_at)} ago${fresh ? '' : ' · stale'}`;
   (state.snapshot?.sources || []).forEach(source => {
-    const availability = fresh ? source.availability : 'stale';
-    const pill = node('span', `source-pill ${availability}`);
-    pill.title = source.error || `Coverage: ${source.coverage}; observed ${source.observed_through || 'unknown'}`;
+    const status = sourceStatus(source, fresh);
+    const pill = node('span', `source-pill ${status.tone}`);
+    pill.title = status.help;
     const excluded = (source.roots || []).reduce((count, root) => count + (root.excluded_rows || 0), 0);
     if (excluded) pill.title += `; ${excluded} unresolvable ledger row(s) excluded`;
-    pill.append(node('i'), node('span', '', `${source.id} · ${availability}`));
+    pill.setAttribute('aria-label', `${source.id} ${status.label}. ${pill.title}`);
+    pill.append(node('i'), node('span', '', `${source.id} · ${status.label}`));
     refs.sourceStrip.append(pill);
   });
 }
