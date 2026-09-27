@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -216,5 +216,56 @@ index 300488c9..f8e81733 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The r1 metadata omission is fixed, and the retained focused evidence agrees with its receipts. However, the newly added drift-owner selector disagrees with the lifecycle-owner selector on tied timestamps, leaving a recovery hole in DoD (c).
+swept file: yes
+
+- [Should] **Use one consistent owner ordering for discovery and lifecycle writes.** The new selector at `utils/py/wave_reconcile.py:1446` prefers a PR over a direct commit on a timestamp tie; `main` at `:2225` instead compares stringified numbers, so a hexadecimal commit prefix can win. With both landings already receipted, discovery queues the PR alone (`:1451`), does not flag the commit `catchUp`, and the lifecycle guard at `:2271` skips the PR because the commit owns the issue. Drift therefore survives each retry.
+  Observed input: the source expressions below, evaluated with PR number `5` and commit number `bbbbbbbbbbbb`, both `mergedAt="2026-09-27T12:00:00Z"`. For the recovery case, both close GH-421, both have matching receipts, and GH-421 is closed with an active doc. The expression disagreement was observed; the full recovery scenario has not been executed.
+  Affected scope: catch-up recovery with equally timestamped closers whose discovery and lifecycle rankings differ; particularly an already-receipted direct commit competing with a receipted PR.
+  Falsifier: in a disposable full clone, use the r1 witness's closed GH-421 setup with equal timestamps and both receipts. Recovery must select and process the same owner, complete the lifecycle without requalification, and do nothing on repeat. A successful current-code run would disprove the inferred recovery failure. The distinct-time control below already shows this is specifically a tie problem.
+  Fix: reuse the same deterministic ranking in both selectors, including a consistent tie-break between commits. No new suite or registry entry is requested.
+  Root cause: duplicated owner ordering diverged when direct commits were added; Fix site: the two owner selectors; Why not downstream: the lifecycle guard cannot process an owner discovery never queued.
+  Probe command (read-only AST expression evaluation; exit **0**; no module import, Git, or fixture execution):
+  ```sh
+  PYTHONDONTWRITEBYTECODE=1 python3 - <<'PYPROBE'
+  import ast
+  from pathlib import Path
+  tree = ast.parse(Path("utils/py/wave_reconcile.py").read_text())
+  catch = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "catch_up_prs")
+  main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main")
+  owner = next(n for n in ast.walk(catch) if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "owner" for t in n.targets))
+  key = next(k.value for k in owner.value.keywords if k.arg == "key")
+  rank = next(n.value for n in ast.walk(main) if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "rank" for t in n.targets))
+  discovery = eval(compile(ast.Expression(key), "<source-key>", "eval"))
+  def lifecycle(meta):
+      return eval(compile(ast.Expression(rank), "<source-rank>", "eval"), {"meta": meta})
+  pr = dict(number=5, mergedAt="2026-09-27T12:00:00Z")
+  commit = dict(number="bbbbbbbbbbbb", artifactKind="commit", mergedAt=pr["mergedAt"])
+  for label, stamp in [("distinct-time control", "2026-09-27T12:00:01Z"), ("same-second input", pr["mergedAt"])]:
+      commit["mergedAt"] = stamp
+      chosen = max([pr, commit], key=discovery)
+      writer = max([pr, commit], key=lifecycle)
+      print(label, "discovery=", chosen["number"], "lifecycle=", writer["number"], "agree=", chosen is writer)
+  print("discovery:", ast.unparse(key))
+  print("lifecycle:", ast.unparse(rank))
+  PYPROBE
+  ```
+  Decisive output:
+  ```text
+  distinct-time control discovery= bbbbbbbbbbbb lifecycle= bbbbbbbbbbbb agree= True
+  same-second input discovery= 5 lifecycle= bbbbbbbbbbbb agree= False
+  ```
+  [Unverified — needs clone run] End-to-end recovery and publish retry for this tie case; this turn deliberately ran no suites or executable fixtures.
+
+- [Pass] **The r1 omission is addressed.** `utils/py/wave_reconcile.py:1381` retains every eligible direct commit before receipt filtering; `:2191` queues only flagged commits. `qualify_landings` at `:626` still filters matching receipts before invoking a gate. Supplied `witness-owner-head.log` says `direct commit visible: True | catchUp: True`, followed by `repeat: found PRs: [] | catchUp: False`; its r1 control says `RESULT: FAIL`. This witness covers distinct dates, not the tied-owner case above.
+- [Pass] **Evidence and scope checked.** The three retained focused logs end in `Ran 36 tests ... OK`, `Ran 23 tests ... OK`, and `Ran 6 tests ... OK`, consistent with `TESTS-RESULTS/2026-09-27+GH-842/provenance.jsonl:1` through its third record. The history witness ends `pending: 5`; the express witness labels `1370765938 express`. The supplied patch changes only the reconciler plus evidence and relay notes, with no new registered suite. These are inspected producer receipts, not freshly rerun gates.
+- [Pass] **Whole-file sweep completed.** Read `utils/py/wave_reconcile.py` through its final `main()` call, both witness sources, retained logs, summary, and previous review. No additional actionable pre-existing defect found beyond the owner-order interaction above.
+
+Handing off to Producer (claude-a) — align owner selection and run the tie-case falsifier in a disposable full clone; this one-round review is escalated.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
