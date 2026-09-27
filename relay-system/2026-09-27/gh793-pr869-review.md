@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -244,5 +244,24 @@ index 36ec37e1..19257764 100644
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The timing repair and recorded red/green evidence are sound, but the edited negative controls still accept an unmeasured reading as proof of progress. Resolve the narrow existing-suite assertion defect below before approval. One-round limit reached.
+
+swept file: yes
+Swept the entire `test/gh492-idle-kill.sh` and `utils/py/turn_diagnostics.py`, including pre-existing code, plus the evidence scripts and summary. Reviewed the GH-793 CHANGELOG entry; unrelated historical changelog entries were not re-audited. The pre-existing assertion defect found by this sweep is listed below; no other demonstrated runtime defect was established.
+
+- [Should] Reject unmeasured values before the two numeric negative-control comparisons (`test/gh492-idle-kill.sh:130`, `test/gh492-idle-kill.sh:232`). AWK converts `None` to zero, so an absent measurement earns a PASS claiming that progress/scoping was observed. The 30-second cap still permits insufficient samples; the consult section has no separate minimum-sample assertion for its unscoped sampler. Fix within this existing suite: require a present numeric idle reading before either upper-bound comparison, retaining the new timing bounds and the fresh-sampler None check. No new suite or product change is needed.
+  Observed input: `TESTS-RESULTS/2026-09-27+GH-793/base-slow-1-3.log:5` and `:13` explicitly print `PASS ... idle=Nones`; `base-slow-1.5-6.log:5` and `:13` repeat it. These base runs fail overall for other reasons; this finding concerns the false individual assertions, not a claim that those runs were green.
+  Affected scope: `IDLE_B` and `U_IDLE` values passed through `v+0` in the two edited upper-bound checks; invalid or absent values must fail the measurement check rather than establish progress.
+  Falsifier: replay the recorded `None` through the current comparison: it should exit nonzero. Read-only probe `awk -v v="None" -v m="1.000" 'BEGIN{print "UNSCOPED_IDLE=None -> numeric=" v+0 "; assertion passes=" (v+0 < m+0); exit !(v+0 < m+0)}'` exited **0**, output `UNSCOPED_IDLE=None -> numeric=0; assertion passes=1`. After correction, this input should fail while the recorded finite head readings still pass. Full-suite replay remains for a disposable clone.
+- [Pass] The sample-count windows and earlier idle reads address the reproduced timing mechanism (`test/gh492-idle-kill.sh:69`, `:81`, `:204`, `:208`). Separation and attribution remain asserted (`:136`, `:141`, `:144`). Retain these changes. The supplied mutation logs show the file-progress mutation fails both the control and separation (`head-teeth-progress.log:5`, `:6`) and ignored PID scoping fails the hung-advisor check (`head-teeth-scope.log:12`), under `TESTS-RESULTS/2026-09-27+GH-793/`.
+- [Pass] Recorded evidence agrees with the summary: `head-normal-1.log` through `head-normal-5.log` each end `gh492-idle-kill: 16 pass, 0 fail`; the moderate delayed-tool base/head pairs are red/green. A read-only Python JSON/log probe (parse each `provenance.jsonl` row, expand `base-load-1..5.log`, assert nonempty text and match the final fail count to `rc`) exited **0**: `14 receipts; 18 nonempty referenced logs; all rc/verdict pairs agree`. The extreme-delay head failure is retained and disclosed (`SUMMARY.md`, “Limit”; `head-slow-1.5-6.log:8`). Retain that disclosure.
+- [Pass] The supplied scope contains the existing suite, CHANGELOG and evidence only; it lists no ledger, PROJECT, registry or new executable test addition (Review packet, “Scope”). The GH-793 entry at `CHANGELOG.md:3` accurately describes the implemented windows, bounds and recorded mutations. No expansion of scope requested.
+- [Unverified — needs clone run] No suite, fixture, pytest, or Git command was executed in this turn. The retained receipts concern the pre-rebase fix described in `SUMMARY.md`; a final-state gate is still the harness/window landing obligation. This review does not independently attest the original parallel-gate failure mechanism beyond the supplied delayed-tool reproduction.
+
+Handing off to Producer (claude-a) — address the single assertion finding in the producer window; this relay is Escalated at its one-round cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
