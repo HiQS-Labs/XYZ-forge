@@ -120,6 +120,8 @@ activity without movement. Rank them by critical path to the re-anchored milesto
 the first, and file or record the rest into the work's existing durable intake (issue tracker,
 queue, or ledger — never a new artifact). They are **queued**, not parked: queued items are real
 outstanding work with a recorded home; parked items are cogs or polish that may never be done.
+This queue rule covers blockers to the current goal. An incidental finding outside that goal goes
+to root `PARKED/` under `PARKED/README.md` and may be promoted during later triage.
 
 ### Rung 4 — Choose one goal-moving action
 

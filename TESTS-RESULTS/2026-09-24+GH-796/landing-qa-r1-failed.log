@@ -1,0 +1,19 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924 (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924) changed-files=0
+relay-turn: ⚠️  NOTICE: tracking ref origin/development is 4 commits ahead. Consider rebasing between phases.
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.Onnpfo)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.Onnpfo) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924/relay-system/2026-09-24/gh796-landing-qa.md
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: WARN could not `tick done RELAY-gh796-landing-qa` as agy (not current owner?) — inspect `tick info RELAY-gh796-landing-qa`
+relay-drive: terminal STATUS Approved by reviewer agy REFUSED — close-mismatch
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 3m 38s
+per done-task: ≥0 tokens, 3m 38s wall-clock
+  turn peak RSS: agy: 163MB peak RSS
+

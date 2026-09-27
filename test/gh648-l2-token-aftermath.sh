@@ -10,6 +10,8 @@ import os
 import pathlib
 import subprocess
 import sys
+sys.path.insert(0, os.path.join(os.environ["GH648_ROOT"], "test", "lib"))
+import pystub  # GH-788: stub header that survives a spaced interpreter path
 import tempfile
 
 root = pathlib.Path(os.environ['GH648_ROOT'])
@@ -62,7 +64,7 @@ with patch.object(adapter, 'RelayTurnLib', Boundary), patch.object(adapter, 'Tur
     adapter.main()
 ''')
     stub = work / 'cmd'
-    stub.write_text('#!' + sys.executable + '\nimport os, time\nif os.environ["GH648_MODE"] != "timeout-empty": print("fixture output", flush=True)\nif os.environ["GH648_MODE"].startswith("timeout"): time.sleep(30)\n')
+    stub.write_text(pystub.launcher() + 'import os, time\nif os.environ["GH648_MODE"] != "timeout-empty": print("fixture output", flush=True)\nif os.environ["GH648_MODE"].startswith("timeout"): time.sleep(30)\n')
     stub.chmod(0o755)
     adapter = os.environ.get('GH648_ADAPTER', str(root / 'utils/py/commandcode-turn.py'))
     for name, mode, status, offlane, enforce_rc, expected_rc in (

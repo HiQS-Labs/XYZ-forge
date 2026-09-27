@@ -26,3 +26,7 @@ GH-791 batch. This is distinct from GH-502's security-dialog detection failure.
 See `TESTS-RESULTS/2026-09-24+GH-791/idle-parallel.log`, `idle-alone.log`, and provenance.
 Reproduce in a disposable full clone with `bash validate.sh`; compare with
 `bash test/gh492-idle-kill.sh` alone. Root cause remains unverified. No runtime fix is in GH-791.
+
+## Merge evidence
+
+- PR #794 merged 2026-09-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

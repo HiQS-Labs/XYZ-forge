@@ -10,6 +10,8 @@ import json
 import os
 from pathlib import Path
 import sys
+sys.path.insert(0, os.path.join(os.environ["GH648_ROOT"], "test", "lib"))
+import pystub  # GH-788: stub header that survives a spaced interpreter path
 import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -30,7 +32,7 @@ class Logger:
 with tempfile.TemporaryDirectory(prefix='gh648-l6-', dir=scratch) as tmp:
     work = Path(tmp)
     stub = work / 'muse-stub'
-    stub.write_text('#!' + sys.executable + '''
+    stub.write_text(pystub.launcher() + '''
 import os, pathlib, sys, time
 assert sys.argv[1] == 'exec'
 assert '--trust-workspace' in sys.argv
