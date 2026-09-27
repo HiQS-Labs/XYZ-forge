@@ -157,4 +157,12 @@ Packet answers (round-2 delta):
 
 Relay closed (Approved), no further turn needed — the harness commits this file and the token is handed off with done.
 
+
+### Attestation · relay-drive — 2026-09-27T00:26:29Z
+task: RELAY-gh825-pr827-installer-test-claude
+reviewer: claude
+status: Approved
+reviewed-head: c7ec5946fe96790b2e9cf1a74f8dcd008feee1dc
+added-range: 17373+6010
+added-sha256: 293b39cd5b5971e3a139a92021dd596a11ca1e28e88df2745c281d27d38af142
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
