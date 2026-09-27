@@ -126,7 +126,7 @@ ok "  and GH-32's GID is stable across the update" \
    "[ \"\$(sqlite3 '$R/releases.db' \"SELECT global_id FROM roadmap_items WHERE gh_number=32\")\" = \"$GID32\" ]"
 ok "  and the removed row is gone" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT COUNT(*) FROM roadmap_items')\" = '3' ]"
-ok "  and the receipt chain is still intact" "ra check 2>&1 | grep -q 'receipt chain intact'"
+ok "  and the receipt chain is still intact" "grep -q 'receipt chain intact' <<<\"\$(ra check 2>&1)\""
 
 # ── 5. the shadow rides the merge machinery: full rebuild round-trip ────────────────────────────
 git -C "$R" add -A; git -C "$R" commit -qm shadow
@@ -171,7 +171,7 @@ ok "  and the four axes land in the rating_ columns, in pri/sev/appeal/effort or
 ok "  and no override is implied by its absence" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr IS NULL FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
 ok "  and calc is DERIVED at read time, never stored (roadmap list shows the sum)" \
-   "ra roadmap list 2>/dev/null | grep -q 'calc=225'"
+   "grep -q 'calc=225' <<<\"\$(ra roadmap list 2>/dev/null)\""
 ok "  and calc appears nowhere in the dump (a stored derived value is the drift class this avoids)" \
    "! grep -q 'calc' '$R/releases.sql'"
 ok "  and the word \"rated\" in the entry's own TITLE is prose, not a second score token" \
@@ -187,7 +187,7 @@ out="$(ra roadmap sync 2>&1)"
 ok "an override parses and rides alongside the honest axes" \
    "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr = 350 AND rating_pri = 70 FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
 ok "  and the override wins over calc for ranking (roadmap list shows calc>ovr)" \
-   "ra roadmap list 2>/dev/null | grep -q 'calc=225>350'"
+   "grep -q 'calc=225>350' <<<\"\$(ra roadmap list 2>/dev/null)\""
 G7="$(gen_now)"
 refuses(){ # <label> <rule> <entry text>
   write_ledger "$3"
