@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -184,5 +184,59 @@ index 300488c9..b0d525ea 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The discovery path is minimal and the supplied focused logs agree with their receipts, but DoD (c)'s newest-owner preservation is not met for an already-qualified direct closer. One source-level finding; runtime reproduction remains outstanding under this turn's constraints.
+swept file: yes
+
+- [Should] **Retain already-qualified direct commits as lifecycle-owner metadata, separately from pending qualification work.** At `utils/py/wave_reconcile.py:1377`, both metadata insertion and pending insertion are inside the no-matching-receipt branch. In contrast, PR metadata is retained before that branch at `:1316`. Consequently the owner loop at `:2209` cannot see a receipted direct closer on a later catch-up, and an older PR can own the lifecycle writes at `:2256`. This also leaves no direct-commit recovery path after receipts were published but the bounded recompute failed: `catch_up_prs` recovers lifecycle drift only through PR candidates (`:1422`).
+  Observed input: the seeded source branch at `utils/py/wave_reconcile.py:1377–1379`: when `qualification_receipt_matches(...)` is true for a direct commit, its metadata is omitted. Concrete reproduction input derived from the existing direct-commit case (`test/gh421-auto-wave-reconcile.sh:145`): SHA `bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb`, message `Closes #421`, plus a matching committed qualification receipt; pair it with an older PR closing #421 and leave lifecycle drift to reconcile. This is a proposed clone reproduction, not a claim that this historical failure was observed live.
+  Affected scope: eligible post-cutover direct closers with valid qualification receipts, absent from explicit `--commit` targets, when catch-up must choose the newest closer or recover an interrupted closeout.
+  Falsifier: in a disposable full clone, the newer receipted direct closer must remain the lifecycle owner over an older PR; catch-up must finish its outstanding lifecycle work without another qualification run, and a completed repeat must write nothing. Also retain the existing explicit `--commit` publish-retry case. A passing run on the current implementation would disprove the finding.
+  Fix: separate the complete direct-commit metadata set from pending work, as PR recovery already does; consume only pending commits for qualification while recovering outstanding direct lifecycle work. Do not merely move `metadata[...] = meta` outside the condition: `:2178` currently turns every commit metadata key into work. No new suite or registry entry is requested.
+  Root cause: qualification eligibility also controls lifecycle visibility; Fix site: direct discovery and its catch-up handoff; Why not downstream: the owner selector cannot recover metadata that discovery discarded.
+  [Unverified — needs clone run] The end-to-end reproduction above was not executed. Static inspection establishes the conditional metadata loss. The immediate successful publisher retry is **not** claimed broken: `hosted_lane_publish.py:221` names its freshly receipted commits explicitly, and `wave_reconcile.py:2183` fetches those targets again.
+
+- [Pass] **Basic discovery and qualification reuse match the intended scope.** `wave_reconcile.py:1364` uses the forward-only first-parent range; `:1374` excludes PR merges, express receipts and the configured bot; `:2203` calls the existing qualifier, whose `select_qualification_gate` uses the landing diff (`:602`). The embedded patch changes no test registry or assertion. No additional pre-existing defects were identified in the whole-file sweep.
+
+- [Pass] **Recorded focused results are internally consistent.** All three nonempty `focused-*.log` files end in `OK` (36 / 23 / 6 cases), matching the three `rc: 0` rows in `TESTS-RESULTS/2026-09-27+GH-842/provenance.jsonl`. `base-control.log` records zero discovery matches; `witness-head.log` ends `pending: 5`; `witness-express.log` classifies `1370765938 express` and its two closeout commits as `QUALIFY`. These are supplied execution records, not reviewer reruns. They do not measure the receipted-direct-owner case above.
+
+Read-only probe command (exit 0; no application function or fixture executed):
+```python
+# Invoked as: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'
+import ast, json
+from pathlib import Path
+p=Path('utils/py/wave_reconcile.py')
+t=ast.parse(p.read_text())
+for name in ('unreconciled_prs','unreconciled_commits'):
+    f=next(n for n in t.body if isinstance(n,ast.FunctionDef) and n.name==name)
+    for n in ast.walk(f):
+        if isinstance(n,ast.If) and 'qualification_receipt_matches' in ast.unparse(n.test):
+            print(f'{name}:{n.lineno}: '+ast.unparse(n))
+d=Path('TESTS-RESULTS/2026-09-27+GH-842')
+rows=[json.loads(s) for s in (d/'provenance.jsonl').read_text().splitlines()]
+assert rows
+for r in rows:
+    p=d/('focused-'+Path(r['command'].split()[-1]).stem+'.log')
+    body=p.read_text()
+    assert body.strip()
+    print(p.name, 'receipt_rc='+str(r['rc']), 'ends_OK='+str(body.rstrip().endswith('OK')))
+# PY
+```
+Decisive output:
+```text
+unreconciled_prs:1317: if not any((qualification_receipt_matches(repo_root, entry, meta) for entry in previous)):
+    pending.append(str(pr['number']))
+unreconciled_commits:1377: if not any((qualification_receipt_matches(repo_root, entry, meta) for entry in previous)):
+    metadata['commit', sha] = meta
+    pending.append(sha)
+focused-gh421-auto-wave-reconcile.log receipt_rc=0 ends_OK=True
+focused-gh425-gate-provenance-pr.log receipt_rc=0 ends_OK=True
+focused-gh740-hosted-lane-publish.log receipt_rc=0 ends_OK=True
+```
+
+No git commands, suites, pytest or executable fixtures were run. Only this relay file was edited. The one-round cap is exhausted, so STATUS is Escalated. Handing off to Producer (claude-a) — disposition the finding and obtain the disposable-clone evidence before merge; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
