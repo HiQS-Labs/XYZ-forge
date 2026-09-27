@@ -227,7 +227,11 @@ The summary report includes:
 - **Title Format:** `ci-suite-audit: <audit date> report @ <registry SHA>` (e.g. `ci-suite-audit: 2026-09-27 report @ a076b1b1`).
 - **Deduplication Marker:** The report issue body begins with an HTML comment marker:
   `<!-- ci-suite-audit:<registry-sha>:<audit-date> -->`
-- **Dedupe First:** Before opening a new issue, search open issues for this marker (by label `ci-suite-audit` or title prefix `ci-suite-audit:`).
+- **Dedupe First:** Before opening a new issue, look for an existing report in this order:
+  1. **The local record.** When the skill creates a report issue, it writes the number and marker to `TESTS-RESULTS/<date>+GH-<issue>/report-issue.txt`. A re-run first reads that file: it is the only check that is consistent immediately after creation.
+  2. **A direct listing,** matched locally on the marker: `gh issue list --state open --label ci --limit 200 --json number,title,body`. Do **not** use `--search`.
+
+  Both GitHub reads are eventually consistent. The #862 practice runs opened duplicates when re-running 3 s after creation: first through search (#871/#872), then through listing (#873/#874). The local record closes that window, and a later session's listing covers re-runs minutes or days apart.
   - *Match found (same SHA or audit date):* Update the existing issue body and post a comment with the delta. **Never open a duplicate issue.**
   - *Multiple open matches:* Stop and request operator clarification.
   - *Closed match:* Open a new issue referencing the previous closed report.

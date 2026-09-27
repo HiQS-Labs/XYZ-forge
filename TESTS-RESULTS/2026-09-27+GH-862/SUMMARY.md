@@ -46,3 +46,7 @@
 
 - **radar:** trigger met (trunk-red cluster in window: `gh436` and `gh674` red together in 7 of 14 runs in #812; evaluates broad SDLC churn)
 - **whack-a-mole:** trigger met (3 suites share runner host environment sensitivity in #853; points to existing #853 umbrella)
+
+## Report-issue checks: exercised for real (reviewer, 2026-09-27)
+
+The three checks marked NOT EXERCISED above were run on practice issues with the operator's authorization. See [`practice/README.md`](practice/README.md). The dedupe check **failed twice** (search, then listing, both eventually consistent), which led to the `SKILL.md` fix in this PR (a local record first). It **passed** on run 4. The oversized report (411 of 411 rows intact), per-turn comments (1 and 0), redaction and labels all passed.
