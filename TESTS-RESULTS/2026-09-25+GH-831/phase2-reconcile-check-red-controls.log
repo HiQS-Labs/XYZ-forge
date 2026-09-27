@@ -1,0 +1,14 @@
+# red controls on phase2_reconcile_check.py — each disables one rule in a SCRATCH copy of wave_reconcile.py (/private/tmp/claude-501/-Users-noelsaw-Documents-GitHub-Repos-XYZ-forge/0cc9b6f4-22bd-4606-b4ec-21e1b8f38591/scratchpad/rc-root), 2026-09-26T04:21:39Z
+## control A: drop the tier2:pdda / Python-layer presence clause
+clause occurrences left: 0
+FAIL: removing tier2:pdda is rejected
+FAIL: removing the Python event is rejected
+17 pass, 2 fail
+check rc=1
+## control B: replay against HEAD instead of the tested commit
+mutation applied: 1
+FAIL: the old receipt STILL matches (replayed against the tested commit)
+18 pass, 1 fail
+check rc=1
+## the real module is untouched
+utils/py/wave_reconcile.py unchanged from 626b8f5d

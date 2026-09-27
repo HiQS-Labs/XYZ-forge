@@ -1,0 +1,17 @@
+merge-cleanup: ERROR — PR #1: mergeable is 'UNKNOWN' — GitHub has not decided; stopping rather than guessing
+merge-cleanup: PR #1: mergeable is 'UNKNOWN'; polling 1/6 in 15s
+merge-cleanup: PR #1: mergeable is 'UNKNOWN'; polling 2/6 in 15s
+merge-cleanup: PR #1: mergeable is 'UNKNOWN'; polling 3/6 in 15s
+merge-cleanup: PR #1: mergeable is 'UNKNOWN'; polling 4/6 in 15s
+merge-cleanup: PR #1: mergeable is 'UNKNOWN'; polling 5/6 in 15s
+merge-cleanup: PR #1: mergeable is 'UNKNOWN'; polling 6/6 in 15s
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (1/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (2/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (3/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (4/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (5/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (6/6)
+rc=2 refreshes=13 sleeps=12
+Traceback (most recent call last):
+  File "<stdin>", line 9, in <module>
+AssertionError

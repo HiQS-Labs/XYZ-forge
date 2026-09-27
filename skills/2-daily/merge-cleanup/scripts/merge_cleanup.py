@@ -86,8 +86,6 @@ RETRY_BACKOFF_S = (2, 4)      # sleeps BETWEEN attempts: 3 calls, 2 sleeps
 MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll up to 6 × 15s
 MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
-MERGEABLE_POLL_ATTEMPTS = 6
-MERGEABLE_POLL_S = 15
 
 # `execute_pr_merge` intentionally keeps its long-standing signature: Phase-A callers replace it
 # with a three-argument stub. Phase 5 records the exceptional PRs here before calling it.
@@ -224,18 +222,6 @@ def fetch_open_prs_with_retry(repo_path: str) -> List[Dict[str, Any]]:
                     f"retry {attempt + 2}/{RETRY_ATTEMPTS} in {wait}s")
                 _sleep(wait)
     raise last  # type: ignore[misc]
-
-
-def _poll_mergeable(info: Dict[str, Any], pr_num: int, repo_path: Path) -> Dict[str, Any]:
-    """Give GitHub's asynchronous mergeability calculation a bounded chance to settle."""
-    for attempt in range(MERGEABLE_POLL_ATTEMPTS):
-        if info.get("mergeable") in ("MERGEABLE", "CONFLICTING") or info.get("error"):
-            break
-        log(f"PR #{pr_num}: mergeable is {info.get('mergeable')!r}; polling "
-            f"{attempt + 1}/{MERGEABLE_POLL_ATTEMPTS} in {MERGEABLE_POLL_S}s")
-        _sleep(MERGEABLE_POLL_S)
-        info = refresh_pr_with_retry(pr_num, repo_path)
-    return info
 
 
 def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, Any]],
@@ -439,7 +425,8 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     """Return success, fallback, or active_timeout for this merge head's hosted run.
 
     Match either the PR head or merge commit. An active run first seen inside the listing grace
-    window is adopted by database id even when GitHub has not populated its headSha yet.
+    window may be tracked by database id until GitHub populates its headSha. Only a matching
+    SHA can attest success; unidentified activity only prevents racing the hosted writer.
     """
     wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 1800)
     poll_s = _seconds_from_env(HOSTED_POLL_ENV, 30)
@@ -470,10 +457,12 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             return "fallback"
         elapsed = time.monotonic() - started
         matching = [run for run in runs if str(run.get("headSha") or "") in expected_heads]
-        if adopted_run_id is not None:
-            matching = [run for run in runs if run.get("databaseId") == adopted_run_id] or matching
+        if not matching and adopted_run_id is not None:
+            matching = [run for run in runs if run.get("databaseId") == adopted_run_id
+                        and not run.get("headSha")]
         if not matching and (elapsed <= grace_s or grace_s == 0):
-            active = [run for run in runs if str(run.get("status") or "").lower()
+            active = [run for run in runs if not run.get("headSha")
+                      and str(run.get("status") or "").lower()
                       in {"queued", "in_progress", "waiting", "requested"}]
             if active:
                 matching = active
@@ -494,7 +483,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
         conclusion = str(run.get("conclusion") or "").lower()
         run_id = run.get("databaseId") or "unknown"
         if status == "completed":
-            if conclusion == "success":
+            if conclusion == "success" and str(run.get("headSha") or "") in expected_heads:
                 log(f"✅ Hosted wave-reconcile run #{run_id} succeeded for {merged_head[:10]}")
                 return "success"
             log_warn(
@@ -856,16 +845,6 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     continue
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
                 return 2
-            if info.get("mergeable") not in ("MERGEABLE", "CONFLICTING"):
-                info = _poll_mergeable(info, p_num, primary_repo)
-                if info.get("error"):
-                    if _transient(info["error"]):
-                        log_err(f"PR #{p_num}: DEFERRED — network unavailable while polling mergeability: "
-                                f"{info['error']}")
-                        failed[p_num] = f"deferred: network ({info['error'][:120]})"
-                        continue
-                    log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
-                    return 2
             label = hold_label(info)
             if label:
                 log(f"PR #{p_num}: carries hold label '{label}' — skipped (#444)")
@@ -1169,23 +1148,13 @@ def main():
     ordered_prs: List[Dict[str, Any]] = []
     # `--exclude <N>` (a bare PR number) drops that PR from the queue, as SKILL.md's example 6
     # documents; other patterns still apply to checkouts only.
-    excluded_prs = {int(x) for x in (args.exclude or []) if str(x).isdigit()}
+    excluded_prs = {int(str(x).lstrip("#")) for x in (args.exclude or [])
+                    if str(x).lstrip("#").isdigit()}
     if excluded_prs:
         skipped = [p for p in prs if int(p.get("number", 0)) in excluded_prs]
         prs = [p for p in prs if int(p.get("number", 0)) not in excluded_prs]
         for p in skipped:
             log(f"PR #{p['number']}: excluded by --exclude; not sequenced this run")
-    if prs:
-        excluded_pr_numbers = {int(value.lstrip("#")) for value in args.exclude
-                               if value.lstrip("#").isdigit()}
-        if excluded_pr_numbers:
-            kept = []
-            for pr in prs:
-                if pr.get("number") in excluded_pr_numbers:
-                    log(f"PR #{pr['number']}: excluded by --exclude; not sequenced this run")
-                else:
-                    kept.append(pr)
-            prs = kept
     if prs:
         ordered_prs, _, warnings = toposort_prs(prs)
         print("=" * 80)

@@ -1,0 +1,7 @@
+FIRSTHAND_COUNT=28
+ECHOED_COUNT=5
+ECHOED `validate.sh`
+ECHOED `ci-local.sh:404`
+ECHOED `validate.sh`
+ECHOED `ci-local.sh:404`
+ECHOED `validate.sh`

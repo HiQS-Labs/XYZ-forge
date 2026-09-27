@@ -1,0 +1,31 @@
+# GH-836 witnesses — 2026-09-26T17:43:25Z — clone HEAD 4c5ee0bf, porcelain=0
+## W1 — 21e red control, staggered launches (worker 'late' starts OFFSET s after the other)
+  PASS  WITNESS offset=0 late=1 NROWS=275 NBF2=275 NBF3=279 racers_rc= 4 0  suite-fails-before-stop=0  (80s)
+  PASS  WITNESS offset=0 late=2 NROWS=275 NBF2=275 NBF3=277 racers_rc= 4 0  suite-fails-before-stop=0  (81s)
+  PASS  WITNESS offset=1.5 late=1 NROWS=275 NBF2=275 NBF3=277 racers_rc= 0 4  suite-fails-before-stop=0  (81s)
+  PASS  WITNESS offset=1.5 late=2 NROWS=275 NBF2=275 NBF3=277 racers_rc= 4 0  suite-fails-before-stop=0  (82s)
+  PASS  WITNESS offset=3 late=1 NROWS=275 NBF2=275 NBF3=278 racers_rc= 4 0  suite-fails-before-stop=0  (82s)
+  PASS  WITNESS offset=3 late=2 NROWS=275 NBF2=275 NBF3=278 racers_rc= 0 4  suite-fails-before-stop=0  (83s)
+## W2 — 21f with vs without the cursor advance (legs 1..21f, wall time)
+  variant a (with advance): wall 92s; slowest-step 10.2s: + 1030: python3 /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh549-work-events.JvKtWh
+  variant b (advance removed): wall 104s; slowest-step 10.8s: + 1045: python3 /private/tmp/claude-501/-Users-noelsaw-Documents-GitHub-Repos-XYZ-forge/0c
+## W3a — a SKILL.md capability row deleted: the parity test fails
+  rc=1  row missing: teardown-trash-only  ====================== 1 failed, 179 deselected in 0.19s =======================
+## W3b — a named behavioural test forced to fail: the registered gh436 suite fails through collection
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+AssertionError: W3b anchor
+  registered wrapper rc=0 (235s)    OK
+  parity test alone with the forced failure: ====================== 1 passed, 179 deselected in 0.14s ======================= (existence only — execution is the suite's)
+## W4 — gh649 run from /tmp/gh836-w4-clone (logical /tmp path)
+  before (4bd8851a's gh649): rc=1 FAIL - resolver
+  after (fixed gh649):       rc=0 GH-649 migration checks passed
+# end — clone HEAD 4c5ee0bf, porcelain=0
+
+# NOTE: the W3b block above did not run (its anchor pointed at phase C; the test lives in phase B), so its rc=0 proves nothing. The re-run with the correct anchor follows.
+
+## W3b (re-run, correct anchor in test/gh534_phase_b_tests.py) — 2026-09-26T17:59:47Z, clone HEAD 4c5ee0bf, porcelain=0
+  injected: 1
+  registered wrapper rc=1 (232s)  FAIL: test_gate_red_prevents_the_merge (gh534_phase_b_tests.TestE6Gate.test_gate_red_prevents_the_merge)  FAILED (failures=1)
+  parity test alone with the forced failure: ====================== 1 passed, 179 deselected in 0.14s ======================= (existence only — execution is the suite's)
+  restored; porcelain=0

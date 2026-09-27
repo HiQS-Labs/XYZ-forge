@@ -1,0 +1,166 @@
+== test: gh77-standup-triage ==
+  PASS: corruption from a FAIL: line classifies tier 1
+  PASS:   and the opening line counts it as critical
+  PASS:   and it is not silently dropped as a degraded lens
+  PASS: 8 tier-1 items: exactly 7 rendered
+  PASS:   and the 8th is counted, not silenced
+  PASS:   and the notices line names the escape hatch
+  PASS:   and page 2 renders the 8th
+  PASS:   and the render is exactly 12 lines, inside the 15-line cap
+  PASS: a tier-1 item re-renders on the second run (never suppressed)
+  PASS:   and is not counted as suppressed
+  PASS: an unchanged tier-5 item is suppressed on rerun
+  PASS:   and does not re-render
+  PASS:   but a changed live state re-raises it (fingerprint, not display string)
+  PASS:   and the escalation to tier 4 is visible
+  PASS: an unmeasured item never jumps a known-age peer
+  PASS: two lenses reporting one entity collapse to one item
+  PASS: overflow parks into the frozen PARKED/ schema
+  PASS:   and the record carries a fingerprint
+  PASS:   and carries a read-only check probe
+  PASS:   and a rerun over unchanged state writes nothing (byte no-op)
+  PASS: a fully degraded run exits 3 (degraded, not clean)
+  PASS:   and still fits the 15-line cap
+  PASS:   and names every degradation id (lossless collapse)
+  PASS:   and names D6 too
+  PASS:   and reports an empty list honestly
+  PASS: an unknown verdict code is refused
+  PASS: an over-long verdict clause is refused (no wall of text via the clause)
+  PASS: an embedded delimiter is escaped, so the line keeps exactly 2 top-level separators
+  PASS:   and the payload text survives the escape (lossless)
+
+  PASS: lens 2 artifact classifies to tier 1
+  PASS: lens 2 degrades loudly with D5
+  PASS: lens 3 behind classifies to tier 5
+  PASS: lens 3 degrades loudly with D5
+  PASS: lens 7 diverged classifies to tier 5
+  PASS: lens 4 finds open PR 51
+  PASS: lens 4 pin classification for CLEAN
+  PASS: lens 4 pin classification for non-CLEAN (BLOCKED goes to 6)
+  PASS: lens 4 structured candidate emits merge_state
+  PASS: lens 4 degrades loudly with D1
+  PASS: lens 4 truncates at 50 and degrades with D2
+  PASS: lens 4 D2 case still emits its 50 candidates
+  PASS: lens 4 D2 case expected first candidate remains present
+  PASS: lens 5 finds triage issue
+  PASS: lens 5 structured candidate emits live_state with updatedAt
+  PASS: lens 5 degrades loudly with D1
+  PASS: lens 5 manifest source contributes exactly its issue number
+  PASS: unchanged lens 5 item is suppressed on rerun
+  PASS:   and does not re-render
+  PASS:   but a changed live state (updatedAt) re-raises it
+  PASS: lens 1 finds session mention
+  PASS: lens 1 degrades loudly with D6
+  PASS: lens 6 finds overdue release
+  PASS: lens 6 degrades loudly with D5
+  PASS: lens 8 finds done work
+  PASS: lens 8 degrades loudly with D3
+  PASS: lens 7 degrades loudly with D4
+  PASS: all-degraded cleanly triggers all degradation modes (D1, D3, D4, D5, D6)
+  PASS: all-degraded reports D3
+  PASS: all-degraded reports D4
+  PASS: all-degraded reports D5
+  PASS: all-degraded reports D6
+  PASS: all-degraded fits within 15-line display cap
+
+  PASS: lens degrades loudly when fixture is missing
+  PASS: lens 3 degrades loudly on non-integer rev-list
+  PASS: lens 3 degrades loudly on failed dirty-tree check
+  PASS: JSON encoding handles branch name with double quotes
+  PASS: lens 1 degrades loudly on malformed session schema
+  PASS: lens 1 degrades loudly on empty session
+  PASS: lens 8 degrades loudly on malformed check object
+  PASS: general PARKED checklist leaves lens 8 healthy
+  PASS: general PARKED note is not a standup candidate
+  PASS: general PARKED note does not enter standup fingerprint suppression
+
+  PASS: collector exits non-zero when jq is unavailable (got 3)
+  PASS: it still emits VALID JSON with jq unavailable — never an empty stdin
+  PASS: fallback document contains exactly lenses 1-8 all as D5
+  PASS: every lens degrades loudly with D5 when jq is unavailable
+
+  PASS: an unparseable roadmap-sync summary degrades to D4
+  PASS:   and fabricates no candidate from it
+  PASS: a real diverged summary yields the canonical counts payload
+  PASS: an ordinary degraded lens exits 3, as SKILL.md publishes
+  PASS:   and a fully clean collection still exits 0
+  PASS: a fixture that supplies no mtime degrades D5 rather than emitting a null-staleness item
+  PASS:   and a supplied mtime is carried as the candidate's staleness
+  PASS: an adversarial path is single-quoted in the close command
+  PASS:   the path survives shell word-splitting as one literal token (substitution is inert)
+  PASS: no upstream (exit 128) falls back to the trunk and says so
+  PASS:   its staleness is unknown, never a fabricated date
+  PASS:   and its close is an inspect action, never a bare git push
+  PASS: a tracked divergence carries a committer date as staleness
+  PASS:   and an unreadable date degrades rather than emitting a dateless item
+  PASS: lens 7 carries the ROADMAP.md mtime as staleness
+  PASS: lens 7's close syncs the roadmap ledger
+
+  PASS: a count-shaped fragment inside a non-summary line degrades to D4
+  PASS:   and yields no candidate from the decoy counts
+  PASS: a staged rename yields the destination path
+  PASS: an UNSTAGED rename (" R") is handled by the same path as a staged one
+  PASS: a rename whose SOURCE contains " -> " is still parsed correctly
+  PASS:   and a rename entry with no source field degrades rather than misreading the next entry
+  PASS: a UTF-8 pathname needs no decoding and arrives intact
+  PASS:   as does a pathname containing a double quote
+  PASS: an entry with a status and no pathname degrades
+  PASS: a whitespace-only entry degrades rather than being skipped as blank
+  PASS: an unrecognised status field degrades
+  PASS:   and none of them is reported as a successful collection
+  PASS: a newline pathname is emitted with an escaped one-line display
+  PASS:   as an inspect action, not a command built from an unrenderable name
+  PASS:   and it is never dropped — the operator still learns the file is there
+  PASS:   so the rendered screen keeps one physical line per item
+  PASS: a non-integer mtime degrades instead of producing invalid JSON at exit 0
+  PASS: an untracked PARKED/ path is excluded without degrading the lens
+  PASS: a date stream with a malformed line degrades rather than filtering it away
+  PASS: a date stream shorter than the divergence count degrades
+  PASS: an unterminated final entry is a truncated read, not a finding
+  PASS: a rename with an empty source field degrades
+  PASS: a status pair git cannot emit degrades
+  PASS:   but the ignored pair (!!) is legal and still yields a candidate
+  PASS:   and the unmerged pair (UU) is legal too
+  PASS: a staged type-change (T) is valid porcelain, not a degradation
+  PASS:   as is an unstaged one
+  PASS: a pathname ending in LF keeps its trailing byte through the shell handoff
+  PASS:   and its stat resolves on the exact bytes, not the stripped name
+  PASS: a non-UTF-8 pathname is escaped unambiguously, not normalised away
+  PASS:   and gets an inspect close, never a runnable command built from it
+  PASS:   while the lens stays ok — the item is escaped, not dropped or degraded
+  PASS:   and its stat resolves on the exact bytes
+  PASS: every fixture yields a parseable document — no input silences the collector
+
+  PASS: lens 1 degrades loudly (D6) if actionable item has missing/malformed quote/what/close
+  PASS: lens 6 extracts overdue candidate from show output even without check warning
+  PASS: lens 8 success control for test-e yields candidate
+  PASS: lens 8 success control for git-log yields candidate
+  PASS: lens 8 success control for releases-check yields candidate
+  PASS: lens 8 explicit state is preserved in live_state for test-e
+  PASS: lens 8 failure controls yield zero candidates
+  PASS: lens 8 degrades loudly with D3 on unreadable PARKED record
+  PASS: lens 6 degrades loudly with D5 on unreadable fixture
+
+  PASS: Lens 1 works outside fixture mode when .standup-transcript.json is present at repo root
+
+
+  PASS: lens 4 degrades loudly with D5 on missing/malformed API fields
+  PASS: lens 5 degrades loudly with D5 on missing/malformed API fields
+  PASS: lens 5 degrades loudly with D5 on mismatched issue number
+  PASS: collector still emits valid JSON when gh is missing
+  PASS: lens 4 degrades loudly with D1 when gh is missing
+  PASS: lens 5 degrades loudly with D1 when gh is missing
+  PASS: lens 5 non-root invocation finds repo root ROADMAP and DB bounded inputs
+  PASS: lens 5 degrades loudly with D5 on missing/unreadable ROADMAP
+  PASS: lens 5 degrades loudly with D5 on missing/unreadable releases.db
+  PASS: lens 5 degrades loudly with D5 on malformed session.json
+  PASS: lens 5 degrades loudly with D5 on invalid shape session.json
+
+  PASS: install.sh --check exits 1 when uninstalled
+  PASS: install.sh --check exits 0 when installed
+  PASS: ci-route.sh resolves skills/1-hourly/standup/* to standup subsystem
+  PASS: ci-route.sh selects gh77-standup-triage.sh for standup subsystem
+
+  PASS: all-degraded collector exits 3
+  PASS: all-degraded document contains exactly lenses 1 through 8
+  gh77-standup-triage: 153 pass, 0 fail

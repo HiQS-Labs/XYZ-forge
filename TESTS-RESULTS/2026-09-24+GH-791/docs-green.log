@@ -1,0 +1,33 @@
+PROJECT/2-WORKING/GH-791-MERGE-REGRESSIONS.md: frontmatter rc=0
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+PROJECT/2-WORKING/GH-791-MERGE-REGRESSIONS.md: status-table rc=0
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+PROJECT/2-WORKING/GH-791-MERGE-REGRESSIONS.md: hardcoded-paths rc=0
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+PROJECT/1-INBOX/GH-793-IDLE-CONTROL-PARALLEL.md: frontmatter rc=0
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+PROJECT/1-INBOX/GH-793-IDLE-CONTROL-PARALLEL.md: status-table rc=0
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+PROJECT/1-INBOX/GH-793-IDLE-CONTROL-PARALLEL.md: hardcoded-paths rc=0
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+releases check rc=0
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1123 (DB <-> dump)
+OK: receipt chain intact (1289 receipt(s), business-state digest matches, 147 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 37 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-overdue: 0.9.0 Cargo is active and 5 day(s) past its target of 2026-09-19 — if the exit criterion is met, `releases ship` it; if not, `releases update` the target
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))

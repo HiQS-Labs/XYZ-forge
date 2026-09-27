@@ -1,0 +1,9 @@
+# V1 red: edited test/ci-route.sh vs the UNEDITED utils/ci-route.sh (sha256 16d2ea180947)
+rc=1
+  FAIL: subsystems small listed       73 suites: gh308-frozen-twin-guard.sh gh777-inventory-ratchet.sh gh400-acceptance-fidelity.sh gh400-source-url.sh litmus-release.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh gh448-driver-lock-resolver.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh549-work-events.sh gh646-status-label.sh gh1-fixture-guard.sh gh1-adoption-guard.sh gh
+
+# V1 green: edited test vs the EDITED router (sha256 9881afe850a2)
+rc=0
+  PASS: subsystems small lists its 72 suites, without gh436 (GH-831; GH-836 D1)
+  ci-route: 81 pass, 0 fail
+(red run: exactly 1 FAIL line — the Small pin; green run: ci-route: 81 pass, 0 fail)

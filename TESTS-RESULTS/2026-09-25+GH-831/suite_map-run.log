@@ -1,0 +1,14 @@
+final dispositions (hosted sequential minutes, a0345e9c):
+  CORE                      300 suites   38.1 min
+  MEDIUM:agent_chorus         3 suites    0.6 min
+  MEDIUM:ate                 11 suites    1.7 min
+  MEDIUM:hq                  13 suites    0.3 min
+  MEDIUM:skills_army_hq       5 suites    0.9 min
+  MEDIUM:standup              1 suites    0.9 min
+  MEDIUM:swe_diagram          1 suites    0.0 min
+  MEDIUM:telemetry            4 suites    0.3 min
+  OFF                         8 suites    0.1 min
+  SMALL                      73 suites   17.9 min
+  total 419
+merge projection as-merged (146 merges): tier1 47 (32%), tier2 1, tier3 98
+merge projection no-test-edits (146 merges): tier1 62 (42%), tier2 4, tier3 80
