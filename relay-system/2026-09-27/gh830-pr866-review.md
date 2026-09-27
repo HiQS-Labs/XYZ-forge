@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: none (closed)
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -94,5 +94,70 @@ The complete 222-line `test/gh620-skills-army-mini-sync.sh`, SUMMARY, provenance
 - [Unverified — needs clone run] No suite, fixture or gate was executed in this worktree. The supplied logs support the recorded run claims; final-state execution remains with the disposable-clone harness gate as instructed.
 
 Handing off to Producer (claude-a) — supply the missing diff/scope evidence and resolve the one-round escalation; go to the Producer window and say 'take your turn'. No artifact/source edits or Git commands were made.
+
+### Producer · Round 1 adjudication · claude-a
+
+The reviewer's only open item was evidence: its sandbox has no git and no GitHub access, so it could not read the PR's scope. Here is the scope, from `git diff --name-status origin/staging/stabilize-2026-10...HEAD` at the PR head, before this block:
+
+```
+M	CHANGELOG.md
+A	TESTS-RESULTS/2026-09-27+GH-830/SUMMARY.md
+A	TESTS-RESULTS/2026-09-27+GH-830/base-normal.log
+A	TESTS-RESULTS/2026-09-27+GH-830/base-redcontrol.log
+A	TESTS-RESULTS/2026-09-27+GH-830/head-normal-1.log
+A	TESTS-RESULTS/2026-09-27+GH-830/head-normal-2.log
+A	TESTS-RESULTS/2026-09-27+GH-830/head-normal-3.log
+A	TESTS-RESULTS/2026-09-27+GH-830/head-normal-4.log
+A	TESTS-RESULTS/2026-09-27+GH-830/head-normal-5.log
+A	TESTS-RESULTS/2026-09-27+GH-830/head-redcontrol.log
+A	TESTS-RESULTS/2026-09-27+GH-830/provenance.jsonl
+A	TESTS-RESULTS/2026-09-27+GH-830/redcontrol.sh.txt
+A	relay-system/2026-09-27/gh830-pr866-review.md
+M	test/gh620-skills-army-mini-sync.sh
+```
+
+The code patch (everything except `TESTS-RESULTS/` and this thread):
+
+```diff
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c843c9e4..dd63e8bb 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,9 @@
+ # Changelog
+ 
++## 2026-09-27 — gh620 names a failed fixture git call instead of crashing later (GH-830)
++
++`test/gh620-skills-army-mini-sync.sh` ignored the exit code of about 30 fixture git calls and dropped their stderr. So a failed `seed-owner` clone on the hosted gate (run 36194249895) surfaced as an unrelated `FileNotFoundError`, and cost one full hosted qualification. `git()` now stops the suite with the failing command and git's stderr. There are no retries, and no assertion changed. The red control, with the fixture clone pointed at a missing repo, now names the clone. The normal run passes 5 of 5 (28/28). Evidence is in `TESTS-RESULTS/2026-09-27+GH-830/`.
++
+ ## 2026-09-27 — gh69-roadmap-shadow no longer goes red under PYTHONUNBUFFERED=1 (GH-858)
+ 
+ `test/gh69-roadmap-shadow.sh` had three `cmd | grep -q` checks that could fail whenever Python output was unbuffered: `grep -q` exits on the match, the writer gets EPIPE, and `pipefail` reports a failure. The receipt check is the one that failed. They now capture first, then match, and keep the producer's exit status (`_gh858="$(cmd)" && grep -q …`), so a failing command still fails its check. The suite's GH-139 baseline entry drops from 3 to 0. The red control at base fails, and the head passes 5 of 5 both with and without the variable. Evidence is in `TESTS-RESULTS/2026-09-27+GH-858/`.
+diff --git a/test/gh620-skills-army-mini-sync.sh b/test/gh620-skills-army-mini-sync.sh
+index 1bb71e27..c6b42213 100755
+--- a/test/gh620-skills-army-mini-sync.sh
++++ b/test/gh620-skills-army-mini-sync.sh
+@@ -22,7 +22,15 @@ def ok(name, cond, detail=""):
+     if cond: P += 1; print(f"  PASS: {name}")
+     else: F += 1; print(f"  FAIL: {name} {detail}".rstrip())
+ def sh(*cmd, env=None): return subprocess.run(list(cmd), capture_output=True, text=True, env=env)
+-def git(repo, *args): return sh("git", "-C", repo, *args)
++def git(repo, *args):
++    # GH-830: every git call here builds or reads a fixture and must succeed. A failure stops the
++    # suite and names the command and git's own stderr, instead of surfacing lines later as an
++    # unrelated crash (2026-09-25: a failed seed-owner clone read as FileNotFoundError on TODO.md).
++    r = sh("git", "-C", repo, *args)
++    if r.returncode != 0:
++        print(f"  FAIL: fixture setup failed: git -C {repo} {' '.join(args)} (exit {r.returncode}): {r.stderr.strip()}")
++        sys.exit(1)
++    return r
+ def tree(root):
+     root = pathlib.Path(root)
+     if not root.exists(): return None
+```
+
+- **Assertions preserved (DoD a).** The patch changes only the body of `git()`: a return-code check that prints the command, exit status and stderr, then exits. No `ok(...)` line, no product call and no `sh()` call changed.
+- **Per-PR scope (DoD c).** No `releases.db`, `.sql` or `LEADERBOARD.md`, no `PROJECT/`, no new test file and no `validate.sh` registry change. The files are the suite, `CHANGELOG.md`, the evidence folder and this thread.
+- **Disposition:** closed. The reviewer's three [Pass] findings stand, and the scope evidence it asked for is above. No code finding was raised. Harness lesson: later branch-PR reviews embed the diff in the packet, because the reviewer cannot run git.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
