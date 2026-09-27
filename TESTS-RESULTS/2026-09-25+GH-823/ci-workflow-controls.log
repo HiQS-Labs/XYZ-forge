@@ -1,0 +1,604 @@
+head=857ec01f7c4e81f13c3b63d3b5b3604c02e622b6
+=== [PASS] unchanged 120/120
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  PASS: the boundary cap (120m) fits the suite: >= wave-reconcile's 120m for the same sequential run
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 58
+  failed: 0
+  skipped: 0
+rc=0 expected=PASS got=PASS OK
+=== [PASS] extra step caps on both sides, job caps kept
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  PASS: the boundary cap (120m) fits the suite: >= wave-reconcile's 120m for the same sequential run
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 58
+  failed: 0
+  skipped: 0
+rc=0 expected=PASS got=PASS OK
+=== [FAIL] boundary 45
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  FAIL: GH-823: boundary timeout-minutes '45' must be >= wave-reconcile's '120' — the same sequential suite on the same runner needs that long
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 57
+  failed: 1
+  skipped: 0
+rc=1 expected=FAIL got=FAIL OK
+=== [FAIL] boundary 119
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  FAIL: GH-823: boundary timeout-minutes '119' must be >= wave-reconcile's '120' — the same sequential suite on the same runner needs that long
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 57
+  failed: 1
+  skipped: 0
+rc=1 expected=FAIL got=FAIL OK
+=== [FAIL] boundary job cap deleted
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  FAIL: GH-509: the boundary job needs timeout-minutes — an unbounded hang on macOS is the costly case
+  FAIL: GH-823: boundary timeout-minutes 'missing' must be >= wave-reconcile's '120' — the same sequential suite on the same runner needs that long
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 56
+  failed: 2
+  skipped: 0
+rc=1 expected=FAIL got=FAIL OK
+=== [FAIL] boundary job cap deleted + step cap present (Codex falsifier)
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  FAIL: GH-823: boundary timeout-minutes 'missing' must be >= wave-reconcile's '120' — the same sequential suite on the same runner needs that long
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 57
+  failed: 1
+  skipped: 0
+rc=1 expected=FAIL got=FAIL OK
+=== [FAIL] reconcile job cap deleted + step cap present
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  FAIL: GH-823: boundary timeout-minutes '120' must be >= wave-reconcile's 'missing' — the same sequential suite on the same runner needs that long
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 57
+  failed: 1
+  skipped: 0
+rc=1 expected=FAIL got=FAIL OK
+=== [FAIL] reconcile job renamed
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  FAIL: GH-823: boundary timeout-minutes '120' must be >= wave-reconcile's 'missing' — the same sequential suite on the same runner needs that long
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 57
+  failed: 1
+  skipped: 0
+rc=1 expected=FAIL got=FAIL OK
+=== [PASS] restored
+== test: ci-workflow ==
+  workflow: <scratchpad>/focus-gh823/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  PASS: the boundary cap (120m) fits the suite: >= wave-reconcile's 120m for the same sequential run
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 58
+  failed: 0
+  skipped: 0
+rc=0 expected=PASS got=PASS OK

@@ -1,0 +1,21 @@
+# Consult (advisory only, no edits): should the local pre-push gate skip a live agent call by default?
+
+`test/relay-self-sufficiency.sh` runs one REAL headless agent turn (agy or codex) against the fixed fixture
+`test/fixtures/minimal-relay.md`, which is unchanged since 2026-08-15. It does NOT exercise the live template
+from `relay-automation/new-relay.sh`, which changed on 09-11, 09-17 and 09-22. It fails (exit 1) when the turn
+fails; it skips when no agent is present or when `RELAY_SELF_SUFFICIENCY_SKIP=1`.
+
+Every CI path already sets the skip: `ci-local.sh:404`, `.github/workflows/ci.yml:194/402/483`, and the hosted
+reconcile at `utils/py/wave_reconcile.py:648`. The local pre-push hook (`githooks/pre-push:295`) does not. So
+only local full gates make the call, which costs about 1–2.7 min plus API usage, and a backend hiccup blocks
+the push. The repo forbids new tests and new gate machinery.
+
+Options:
+- **A:** keep as is.
+- **B:** default the skip in the hook only (`RELAY_SELF_SUFFICIENCY_SKIP="${RELAY_SELF_SUFFICIENCY_SKIP:-1}"`).
+  The check then runs nowhere unless someone opts in.
+- **C:** B, plus a named obligation to record a non-skipped live run before relay-automation releases or
+  shim/prompt changes, using existing evidence conventions.
+
+Pick one, give the risk, and suggest any better option that adds no machinery. Keep it to 15 lines, cite
+`file:line` for any claim you verify, and end with a one-line recommendation.

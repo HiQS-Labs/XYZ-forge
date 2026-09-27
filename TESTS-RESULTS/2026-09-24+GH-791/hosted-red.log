@@ -1,0 +1,57 @@
+.FFFmerge-cleanup: WARNING — Hosted wave-reconcile run #1 completed as failure; using local reconciliation
+F..
+======================================================================
+FAIL: test_foreign_or_unidentified_success_cannot_attest_this_merge (__main__.HostedLookup.test_foreign_or_unidentified_success_cannot_attest_this_merge) (initial_sha='foreign', final_sha='foreign')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 92, in test_foreign_or_unidentified_success_cannot_attest_this_merge
+AssertionError: 'success' != 'fallback'
+- success
++ fallback
+
+
+======================================================================
+FAIL: test_foreign_or_unidentified_success_cannot_attest_this_merge (__main__.HostedLookup.test_foreign_or_unidentified_success_cannot_attest_this_merge) (initial_sha=None, final_sha='foreign')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 92, in test_foreign_or_unidentified_success_cannot_attest_this_merge
+AssertionError: 'success' != 'fallback'
+- success
++ fallback
+
+
+======================================================================
+FAIL: test_foreign_or_unidentified_success_cannot_attest_this_merge (__main__.HostedLookup.test_foreign_or_unidentified_success_cannot_attest_this_merge) (initial_sha=None, final_sha=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 92, in test_foreign_or_unidentified_success_cannot_attest_this_merge
+AssertionError: 'success' != 'fallback'
+- success
++ fallback
+
+
+======================================================================
+FAIL: test_matching_run_takes_precedence_over_unidentified_adoption (__main__.HostedLookup.test_matching_run_takes_precedence_over_unidentified_adoption)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 106, in test_matching_run_takes_precedence_over_unidentified_adoption
+AssertionError: 'fallback' != 'success'
+- fallback
++ success
+
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.061s
+
+FAILED (failures=4)
+merge-cleanup: Hosted wave-reconcile run #791 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #791 succeeded for mmmmmmmmmm
+merge-cleanup: Hosted wave-reconcile run #791 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #791 succeeded for mmmmmmmmmm
+merge-cleanup: Hosted wave-reconcile run #791 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #791 succeeded for mmmmmmmmmm
+merge-cleanup: Hosted wave-reconcile run #1 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #67401 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #67401 succeeded for mmmmmmmmmm
+merge-cleanup: Hosted wave-reconcile run #62901 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #62901 succeeded for mmmmmmmmmm

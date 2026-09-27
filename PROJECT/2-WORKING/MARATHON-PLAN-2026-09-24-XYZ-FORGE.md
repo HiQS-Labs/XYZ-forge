@@ -25,7 +25,7 @@ goal: >
 
 | Lane | Subsystem Target | Primary Write Set (Disjoint) | Tests & Verification |
 |---|---|---|---|
-| **Wave 1 Lane 1** | `/start-task` Prior-Art Fan-Out | `skills/1-hourly/start-task/SKILL.md`, `skills/2-daily/marathon-triage/SKILL.md`, `utils/py/prior_art_recon.py` | `test/gh777-start-task-prior-art.sh` |
+| **Wave 1 Lane 1** | `/start-task` Prior-Art Fan-Out | `skills/1-hourly/start-task/SKILL.md`, `skills/2-daily/start-marathon/SKILL.md`, `utils/py/prior_art_recon.py` | `test/gh777-start-task-prior-art.sh` |
 | **Wave 1 Lane 2** | PDDA Proof-of-Done Gate | `.github/pull_request_template.md`, `utils/pdda/pdda-doc-ready.sh`, `utils/pdda/pdda-install.sh` | `test/gh777-pdda-doc-ready.sh` |
 | **Wave 2 Lane 1** | Shrink-Only Inventory Ratchet | `utils/pdda/check_inventory_ratchet.py`, `utils/pdda/inventory_ratchet_baseline.json` | `test/gh777-inventory-ratchet.sh` |
 | **Wave 2 Lane 2** | Tri-State Health & Non-Inert Testing | `utils/py/gate_status.py`, `src/flightdeck/connectors.py` | `test/gh777-tri-state-health.sh` |
@@ -37,7 +37,7 @@ goal: >
 
 ### Lane 1: Sub-Agent Prior-Art Recon in `/start-task`
 - **Goal:** Update `/start-task` Step 0 to execute a bounded, single-child read-only probe across open PRs (`gh pr list`), `releases.db` roadmap, and existing `lib/*` / `utils/py/*` helpers before authoring new utilities. Reports `UNKNOWN` gracefully if sibling repos are offline.
-- **Write Set:** `skills/1-hourly/start-task/SKILL.md`, `skills/2-daily/marathon-triage/SKILL.md`, `utils/py/prior_art_recon.py`.
+- **Write Set:** `skills/1-hourly/start-task/SKILL.md`, `skills/2-daily/start-marathon/SKILL.md`, `utils/py/prior_art_recon.py`.
 - **Proof of Done:** `test/gh777-start-task-prior-art.sh` passes; dry run demonstrates prior-art citation in plan output.
 
 ### Lane 2: PR Template & PDDA "Proof of Done" Mechanical Gate
@@ -66,8 +66,20 @@ goal: >
 
 ---
 
-## Acceptance & Quality Checklist
+## Execution constraints
 - [ ] Every lane runs in an isolated task clone branched from `development`.
 - [ ] Central registries (`validate.sh`, `releases.db`) are modified only by Lane 3 in Wave 2.
 - [ ] Wave 1 merges and passes full gate before Wave 2 commences.
 - [ ] All inventory ratchets ratchet downward permanently.
+
+## Acceptance & Quality Checklist
+
+### Wave 1
+- [ ] Wave 1 Proof of Done Test Suite Green (record runnable command and passing output)
+- [ ] Wave 1 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)
+- [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated
+
+### Wave 2
+- [ ] Wave 2 Proof of Done Test Suite Green (record runnable command and passing output)
+- [ ] Wave 2 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)
+- [ ] Wave 2 CodeRabbit / Peer Review findings adjudicated

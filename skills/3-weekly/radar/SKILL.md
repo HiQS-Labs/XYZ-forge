@@ -13,7 +13,7 @@ description: >-
   "what keeps breaking", "did we introduce any regressions", "summarize radar history", "radar arc",
   "summarize radar reports", "what should we fix once to stop the bleeding", "is the plan still right",
   "strategic review", "impact review", "run the radar", "/radar", or "/radar --arc". Not for end-user
-  shipped recaps (weekly-shipped), not for ranking marathon candidates (marathon-triage), not for
+  shipped recaps (weekly-shipped), not for ranking marathon candidates (start-marathon), not for
   maturity assessment (/honest), and it never executes fixes (/10days does that).
 ---
 
@@ -505,7 +505,7 @@ acceptance condition, so a different agent in a later session can execute one co
 ## RADAR-ensure-gitignore — 3 issues over 47 days · first-seen: 2026-08-07 · runs: 1
 
 - [ ] Fix `ensure_gitignore()` to handle both directions (add-ignore and un-ignore) — `relay-automation/xyz-vendor.sh`
-- [ ] Add a regression test asserting both directions on a fresh vendor
+- [ ] Cover both directions on a fresh vendor in the existing vendoring suite (no new test suites in XYZ-forge: `AGENTS.md` *No new tests*, GH-831)
 - [ ] Close #18 / #314 / #440 with the commit SHA — none of them doc-only this time
 ```
 
@@ -543,7 +543,7 @@ umbrella found by signal 8.** The first line is the fixed row; the second is a c
 ### Confirmation
 
 Preview both artifacts, write on **one** confirmation covering both sinks. Never ask twice.
-Then offer — do not assume — to hand the targets to `marathon-triage`.
+Then offer — do not assume — to hand the targets to `start-marathon`.
 
 ## Degradation table
 
@@ -563,7 +563,7 @@ Always state which rows applied and what they cost the verdict.
 | Tool | Owns | Radar's difference |
 |---|---|---|
 | `weekly-shipped` | Outward recap of what shipped | Inward, diagnostic, judgmental |
-| `marathon-triage` | Ranking marathon candidates | Radar asks what deserves to be a candidate; feeds it, never requires it |
+| `start-marathon` | Ranking and preparing marathon candidates | Radar asks what deserves to be a candidate; feeds it, never requires it |
 | `/honest` | Whole-repo maturity read | Windowed (21 days) and mix-focused |
 | `pdda.sh glance` / `releases-current` | Doc-state inventory | A verdict across git + issues + docs + releases, not an inventory |
 | `/10days` | Sweeps issues then **executes** | Radar never executes anything |

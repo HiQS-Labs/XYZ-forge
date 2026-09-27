@@ -177,7 +177,7 @@ Show the full body in a fenced block before filing. Task list lives in the body 
 
 ## Remediation — fix the invariant, not the call sites
 - [ ] **Reproduce:** <deterministic repro or test that fails today>
-- [ ] **Guard:** <test/assertion/type that makes the invariant violation impossible or loud>
+- [ ] **Guard:** <assertion/type, or an existing suite's check, that makes the violation impossible or loud; no new test suites where the repo forbids them (XYZ-forge: `AGENTS.md` *No new tests*, GH-831)>
 - [ ] **Fix:** <the structural change> — touches <files>
 - [ ] **Sweep:** <retire the symptom patches that are now redundant, one per line with sha/PR>
 - [ ] **Verify:** <the signal that proves it: reopens stop, test green, metric>

@@ -3,7 +3,7 @@ name: express
 description: >
   Hotfix fast lane (GH-267/GH-516) for an explicit `/express`, "express this hotfix",
   or "express GH-N" request. Carries a critical, risk-bounded fix, registered
-  regression suite, releases-ledger updates, born-complete PDDA doc, CHANGELOG,
+  existing covering suite, releases-ledger updates, born-complete PDDA doc, CHANGELOG,
   landing, and reconciliation in one operator-authorized motion. Requires a
   task clone branched from origin/development (carrying <= 2 local commits) with the
   canonical pre-push gate installed, authenticated gh, and the root releases ledger. The
@@ -19,7 +19,7 @@ description: >
 
 # /express — hotfix fast lane through the whole paper trail
 
-One verb, one motion: the fix, its regression suite, the ledger writes, the
+One verb, one motion: the fix, the existing suite that covers it, the ledger writes, the
 born-complete capture doc, the CHANGELOG entry, the landing, and the
 reconciliation — all before the operator's coffee cools. The guardrails are the
 skill; the speed is a side effect.
@@ -30,7 +30,7 @@ skill; the speed is a side effect.
 
 > **Express Discipline:**
 > 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/development` ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
-> 2. **Validate issue & registered regression suite (Phases 3–4).** Confirm the tracking issue is OPEN; verify that a dedicated regression suite exists (`test/gh<N>-<slug>.sh`) and is registered in `validate.sh TESTS` (hotfix without a registered suite is refused).
+> 2. **Validate issue & existing covering suite (Phases 3–4).** Confirm the tracking issue is OPEN; name the existing suite that covers the fix and verify it is registered in `validate.sh TESTS`. Do not add a new suite (GH-831: no new tests). A hotfix with no covering registered suite is refused; take it through `/start-task`.
 > 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
 > 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute regression suite green, prove tree identity, and re-snapshot tree to prevent drift.
 > 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
@@ -57,28 +57,28 @@ Run the driver; it enforces the order. Do not hand-perform steps the driver owns
 
 ```bash
 # 0. From the task clone carrying the fix (SOP §4 clone, <= 2 commits ahead, hooks installed):
-python3 utils/py/express.py check --issue <N> --suite test/gh<N>-<slug>.sh   # steps 0–4
-python3 utils/py/express.py docs  --issue <N> --suite test/gh<N>-<slug>.sh --summary "<one line>"  # step 5
+python3 utils/py/express.py check --issue <N> --suite test/<existing-suite>.sh   # steps 0–4
+python3 utils/py/express.py docs  --issue <N> --suite test/<existing-suite>.sh --summary "<one line>"  # step 5
 python3 utils/py/express.py ledger --issue <N>                               # step 6
-python3 utils/py/express.py land  --issue <N> --suite test/gh<N>-<slug>.sh   # steps 7–11
+python3 utils/py/express.py land  --issue <N> --suite test/<existing-suite>.sh   # steps 7–11
 # or the whole motion at once:
-python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summary "<one line>"
+python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --summary "<one line>"
 
 # Inspect what would happen without modifying disk, DB, or git state:
-python3 utils/py/express.py run --issue <N> --suite test/gh<N>-<slug>.sh --summary "<one line>" --dry-run
+python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --summary "<one line>" --dry-run
 
 # Recover/resume an interrupted express run (e.g. dropped network or post-push closeout fault).
 # --suite names the registered suite the landing ran: resume validates the COMMITTED receipt
 # (read from HEAD, never the working tree) against it and never runs a suite or writes evidence
 # (GH-592). With no committed valid receipt it refuses BEFORE closing the issue or shipping and
 # prints the recovery recipe below.
-python3 utils/py/express.py resume --issue <N> --suite test/gh<N>-<slug>.sh [--sha <SHA>]
+python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh [--sha <SHA>]
 
 # Recovery recipe when resume refuses. Run in a FRESH disposable full clone. Every inspection fails
 # closed: `set -euo pipefail` is active (not a comment), cleanliness is asserted with git's own exit
 # codes (never by an empty-stdout test), and snap() aborts on the first failing command.
 set -euo pipefail
-SHA=<SHA>; N=<N>; SUITE=test/gh<N>-<slug>.sh
+SHA=<SHA>; N=<N>; SUITE=test/<existing-suite>.sh
 git checkout "$SHA"
 git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
 LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
@@ -124,8 +124,9 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    coordination-kernel and containment surfaces (AGENTS: at least Costly).
 3. **Issue first** — the tracking issue exists and is OPEN. Closed => the work
    may already be landed; run the preflight probes instead of re-doing it.
-4. **Suite** — the fix's regression suite exists AND is registered in
-   `validate.sh` TESTS. A hotfix without its suite is a claim, not a fix.
+4. **Suite** — an existing suite that covers the fix is named, and it is registered in
+   `validate.sh` TESTS. A hotfix without a covering suite is a claim, not a fix. Do not
+   add a new suite to get one (GH-831: no new tests); an uncovered fix goes through `/start-task`.
 5. **Docs born complete** — capture doc scaffolded in `2-WORKING` with Status,
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
    present from birth (highly recommended — since GH-693 the reconciler warns

@@ -1,0 +1,50 @@
+stamped commands: 1420   traced span: 5.75 min   summed gaps: 5.75 min
+
+per-command aggregation (top 20 by summed time):
+  python3 releases_app.py                           47 calls     169.9 s   49.2%
+  rr                                                22 calls     114.8 s   33.3%
+  appk                                              63 calls      21.7 s    6.3%
+  appd                                              11 calls      12.0 s    3.5%
+  echo                                             153 calls       7.8 s    2.3%
+  appp                                               3 calls       3.2 s    0.9%
+  EVA=708                                            1 calls       3.0 s    0.9%
+  NB0=1                                              2 calls       2.9 s    0.8%
+  app                                                6 calls       1.8 s    0.5%
+  python3 mock_gh_board.py                          12 calls       1.0 s    0.3%
+  rm                                                44 calls       1.0 s    0.3%
+  cp                                                49 calls       0.8 s    0.2%
+  sqlite3                                           30 calls       0.7 s    0.2%
+  '['                                              158 calls       0.7 s    0.2%
+  mkdir                                             35 calls       0.5 s    0.1%
+  appn                                               3 calls       0.4 s    0.1%
+  python3 mutA.py                                    2 calls       0.4 s    0.1%
+  :                                                  9 calls       0.4 s    0.1%
+  cat                                               28 calls       0.4 s    0.1%
+  B4=absent                                          1 calls       0.3 s    0.1%
+
+top 25 individual gaps:
+    125.61 s  python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/app_race/releases_app.py --root /var/folders/69
+     65.73 s  rr python3 /Users/noelsaw/tmp-gh835/xyz-forge/utils/py/releases_app.py --root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh
+     36.64 s  rr python3 /Users/noelsaw/tmp-gh835/xyz-forge/utils/py/releases_app.py --root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh
+     11.00 s  python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/app_noidem/releases_app.py --root /var/folders/
+     10.62 s  appd work backfill
+     10.59 s  python3 /Users/noelsaw/tmp-gh835/xyz-forge/utils/py/releases_app.py --root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549
+     10.56 s  python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/app_nodry/releases_app.py --root /var/folders/6
+     10.51 s  appk work backfill
+      5.07 s  echo '  ok  - two connectors, one failing: the good one advanced, the bad one did not, its error was recorded'
+      3.12 s  python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/app_map/releases_app.py --root /var/folders/69/
+      3.09 s  rr python3 /Users/noelsaw/tmp-gh835/xyz-forge/utils/py/releases_app.py --root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh
+      2.99 s  EVA=708
+      2.99 s  rr python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/app_nosrc/releases_app.py --root /var/folder
+      2.97 s  appp work backfill
+      2.86 s  python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/app_cap/releases_app.py --root /var/folders/69/
+      2.85 s  NB0=1
+      2.83 s  rr python3 /Users/noelsaw/tmp-gh835/xyz-forge/utils/py/releases_app.py --root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh
+      2.83 s  appk work backfill
+      2.05 s  echo '  ok  - two 5s connectors finished in 5.04s — launched concurrently, not serially'
+      1.68 s  python3 /Users/noelsaw/tmp-gh835/xyz-forge/utils/py/releases_app.py --root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549
+      1.66 s  python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/wc_nolock/releases_app.py --root /var/folders/6
+      1.17 s  app check --rebuild
+      0.94 s  rm -f /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/killswitch.sentinel
+      0.40 s  rr python3 /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh549-work-events.f5FRDE/app_evname/releases_app.py --root /var/folde
+      0.39 s  python3 /Users/noelsaw/tmp-gh835/xyz-forge/utils/py/mock_gh_board.py --seed --state /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn

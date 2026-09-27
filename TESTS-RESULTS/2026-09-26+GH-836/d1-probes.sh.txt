@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# GH-836 D1 V2 routing probes. Usage: d1-probes.sh <repo root> <label>
+set -u
+R="$1"; echo "# D1 routing probes — $2 — $(git -C "$R" rev-parse --short HEAD) — utils/ci-route.sh sha256 $(shasum -a 256 "$R/utils/ci-route.sh" | cut -c1-12)"
+probe() {  # <description> <paths...>
+  local d="$1"; shift
+  local out rc
+  out="$(printf '%s\n' "$@" | bash "$R/utils/ci-route.sh" push 2>&1)"; rc=$?
+  local f; f="$(printf '%s\n' "$out" | grep -E '^(route|tier|tier_reason)=' | tr '\n' ' ')"
+  [ -n "$f" ] || f="<EMPTY OUTPUT>"
+  printf '%-58s rc=%s  %s\n' "$d [$*]" "$rc" "$f"
+}
+probe "worktree-safety alone" WORKTREE-SAFETY.md
+probe "merge-cleanup SKILL.md alone" skills/2-daily/merge-cleanup/SKILL.md
+probe "worktree-safety + README" WORKTREE-SAFETY.md README.md
+probe "merge-cleanup SKILL.md + README" skills/2-daily/merge-cleanup/SKILL.md README.md
+probe "control: README alone" README.md
+probe "control: another skill's SKILL.md" skills/2-daily/releases/SKILL.md
+n=$(bash "$R/utils/ci-route.sh" subsystems small | wc -w | tr -d ' ')
+has=$(bash "$R/utils/ci-route.sh" subsystems small | tr ' ' '\n' | grep -c '^gh436-merge-cleanup.sh$')
+echo "subsystems small: $n suites; gh436 present: $has"

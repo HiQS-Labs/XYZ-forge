@@ -1,0 +1,37 @@
+# V2 at 58256426: git diff --no-renames --name-only origin/development(af4fef27)...HEAD | bash utils/ci-route.sh push
+  AGENTS.md
+  ARCHITECTURE.md
+  CHANGELOG.md
+  HOW-TO-USE.md
+  PROJECT/2-WORKING/GH-833-PRS-DEFINITION.md
+  PROJECT/PDDA.md
+  README.md
+  RELEASES-DB-FAQS.md
+  ROUTER.md
+  SOP.md
+  TESTS-RESULTS/2026-09-26+GH-833/provenance.jsonl
+  TESTS-RESULTS/2026-09-26+GH-833/prs-definition-check.py.txt
+  TESTS-RESULTS/2026-09-26+GH-833/prs-order-check.sh.txt
+  TESTS-RESULTS/2026-09-26+GH-833/red-controls-base.log
+  relay-system/2026-09-26/gh833-plan-review.md
+  releases.db
+  releases.sql
+  skills/1-hourly/start-task/SKILL.md
+  skills/2-daily/merge-cleanup/SKILL.md
+  skills/2-daily/releases/SKILL.md
+  skills/2-daily/start-marathon/SKILL.md
+  skills/3-weekly/10days/SKILL.md
+  skills/3-weekly/end-of-week/SKILL.md
+full_required=false
+route=docs
+tier=1
+tier_reason=docs-only
+
+# red control: the same paths + relay-automation/README.md
+full_required=true
+route=full
+tier=3
+tier_reason=kernel/gate surface (route=full)
+
+# V4: utils/pdda/pdda.sh run at 58256426
+PDDA run complete: no errors, 32 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
