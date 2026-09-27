@@ -1,11 +1,11 @@
 ---
 title: "GH-839: feat(skills): standardize clone backup layout and integrity verification for merge-cleanup-deep and merge-cleanup"
-status: Active (2-WORKING)
+status: Complete
 gh_issue: 839
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/839
 doc_type: enhancement
 created: 2026-09-26
-updated: 2026-09-26
+updated: 2026-09-27
 owner: Antigravity
 complexity: 2
 risk: 1
