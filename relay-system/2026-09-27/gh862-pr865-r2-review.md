@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -585,5 +585,44 @@ index 00000000..dac93466
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The sample's checked acceptance claims contradict its own TSV, so DoD (b)'s evidence requirement is not satisfied. The text-only skill is reversible, but its supplied audit results are not yet a trustworthy basis for curation.
+
+swept file: no
+Scope disclosure: read the complete new skill, NOTICE, both evidence Python files, sample TSV, summary, practice README/JSON/record, ci-optimize skill, and ARCHITECTURE; inspected the CHANGELOG addition and surrounding entries, not its entire historical archive. No claim of a complete historical CHANGELOG sweep. Reviewed the entire relay packet. No additional pre-existing defect established in the fully read existing ci-optimize/ARCHITECTURE files; their unrelated runtime claims were not re-executed.
+
+- **[Blocker] B1 — The sample reports predetermined conclusions as measured validation.** `TESTS-RESULTS/2026-09-27+GH-862/sample_audit.py:247` hardcodes SPLIT and “D5 0.25–0.45” for rows whose emitted prose ratios are 0.04 and 0.06. Line 258 hardcodes “rank 4-10” for suites recorded at ranks 26, 63, and 127 (all below 1% gate time). Lines 188–194 stamp placeholder touch sets, `P1-P3`, `source_read=YES`, and confidence; line 298 supplies a fixed denominator of 14 without collecting failure runs. `SUMMARY.md:34` nevertheless checks NIGHTLY validation complete. Fix: reconcile the existing sample with cited source/receipt observations, identify actual heavy candidates and sibling comparisons, and mark unmeasured fields UNKNOWN and unperformed checks pending. Manual source analysis is sufficient; no new detector framework or tests requested.
+  Observed input: `ci-suite-audit-sample.tsv` rows for gh32, gh57, gh103, releases-skill, and gh378; all 30 touch sets equal `test/..; utils/py/..`.
+  Affected scope: GH-862 sample generator, TSV, and summary claims, not the production registry.
+  Falsifier: named receipts/source citations supporting corrected ranks, prose counts, failure denominators, and coverage comparisons; the summary must agree with those rows. Present evidence fails that consistency check.
+  Root cause: name-specific expected answers are emitted independently of measured fields; fix site: sample evidence construction and summary; changing skill thresholds would hide the discrepancy.
+
+  Read-only probe (no fixture execution), exit **1**:
+  ```python
+  import csv
+  from pathlib import Path
+  rows=list(csv.DictReader(Path('TESTS-RESULTS/2026-09-27+GH-862/ci-suite-audit-sample.tsv').open(), delimiter='	'))
+  assert rows
+  bad=[(r['suite'],r['rank'],r['pct_gate']) for r in rows if 'rank 4-10' in r['evidence'] and not 4 <= int(r['rank']) <= 10]
+  print('contradictory_rank_claims:',bad)
+  assert not bad, 'recorded ranks contradict claimed validation'
+  ```
+  Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` with the above stdin. Decisive output: `[('gh32-releases-app.sh', '26', '0.80%'), ('gh57-releases-fuzz.sh', '63', '0.34%'), ('gh103-timeline-exporter.sh', '127', '0.14%')]`, then `AssertionError: recorded ranks contradict claimed validation`.
+
+- **[Should] S1 — Practice evidence does not cover the closed-record path it currently seeds.** `practice/practice_posting.py:25` accepts the local number solely by marker; lines 34–39 update it without reading issue state. The committed `practice/report-issue.txt:1` names 876 and `practice-run-4-record.json` records `final_state: CLOSED`. Rerunning this script therefore selects that closed report, contrary to `skills/4-occasional/ci-suite-audit/SKILL.md:237` (“Closed match: Open a new issue referencing the previous closed report”). Fix the existing practice flow to resolve the recorded issue's state before choosing update/create, and clarify that step in the skill. This is a source trace, not a live GitHub mutation.
+  Observed input: `876 <!-- ci-suite-audit:practice862d:2026-09-27 -->` plus the recorded CLOSED state.
+  Affected scope: report reruns with a matching local record pointing to a closed issue.
+  Falsifier: a recorded closed-match exercise creates a successor referencing 876; an open-match exercise still updates the same issue. Do not silently redefine closure as an open match.
+
+- **[Should] S2 — Record provenance for the practice runs cited as proof.** `SUMMARY.md:52` and `practice/README.md` rely on runs 1, 2, and 4, but `provenance.jsonl:1` through :7 contain only the earlier gates and sample command. A read-only JSON/count probe (`python3 -`, exit 0) printed `provenance_records= 7 practice_records= 0`; all six checked-in root logs were non-empty. Add truthful command/revision/exit-status/log attribution from retained run records, or mark missing attribution unavailable. Do not manufacture timestamps or imply the current practice script produced the older search/listing runs.
+
+- **[Pass] Scope constraints visible in the supplied name-status packet:** no PROJECT, release-ledger, LEADERBOARD, test-suite, or validate registry change. `skills/4-occasional/ci-suite-audit/SKILL.md:23`–:27 explicitly confines the feature to instructions, recommendations, and its own report issue. No source change or Git command was made in this turn.
+
+- **[Unverified — needs clone run]** No gate or executable fixture was run, per the turn envelope. The packet's “edited suite green 5 of 5 at head” criterion has no edited suite in this skill-only scope; available provenance gives individual earlier runs, not that evidence. Producer should reconcile this copied criterion with GH-862's actual acceptance contract, then attach applicable clone-run evidence. Approval must not be inferred from the existing logs or from a later harness gate alone.
+
+One-round cap reached: STATUS is Escalated. Handing off to Producer (claude-a) to disposition B1/S1/S2 and correct the evidence; this is not squash-merge approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
