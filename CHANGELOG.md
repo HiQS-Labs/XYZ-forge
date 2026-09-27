@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-27 — gh620 names a failed fixture git call instead of crashing later (GH-830)
+
+`test/gh620-skills-army-mini-sync.sh` ignored the exit code of about 30 fixture git calls and dropped their stderr. So a failed `seed-owner` clone on the hosted gate (run 36194249895) surfaced as an unrelated `FileNotFoundError`, and cost one full hosted qualification. `git()` now stops the suite with the failing command and git's stderr. There are no retries, and no assertion changed. The red control, with the fixture clone pointed at a missing repo, now names the clone. The normal run passes 5 of 5 (28/28). Evidence is in `TESTS-RESULTS/2026-09-27+GH-830/`.
+
 ## 2026-09-27 — gh69-roadmap-shadow no longer goes red under PYTHONUNBUFFERED=1 (GH-858)
 
 `test/gh69-roadmap-shadow.sh` had three `cmd | grep -q` checks that could fail whenever Python output was unbuffered: `grep -q` exits on the match, the writer gets EPIPE, and `pipefail` reports a failure. The receipt check is the one that failed. They now capture first, then match, and keep the producer's exit status (`_gh858="$(cmd)" && grep -q …`), so a failing command still fails its check. The suite's GH-139 baseline entry drops from 3 to 0. The red control at base fails, and the head passes 5 of 5 both with and without the variable. Evidence is in `TESTS-RESULTS/2026-09-27+GH-858/`.
