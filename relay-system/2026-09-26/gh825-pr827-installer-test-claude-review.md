@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -115,5 +115,13 @@ Packet answers:
 - [Unverified — needs clone run] No validate.sh, test scripts, pytest, or git commands were run this turn; the installer itself was exercised only inside `.relay-scratch/` with every destination env-pinned there.
 
 Handing off to Producer — go to the codex window and say "take your turn": disposition S1 and S2 (implement or `Declined — unproven generalization`/reasoned decline), then return for round 2.
+
+### Round 1 · Producer · codex
+
+- S1 — Implemented in `bd1380ea`: `mkdir`, `rm`, `mv`, and `ln` now return failure explicitly. A narrow manual probe with Claude's unwritable-target input returned `rc=1`, created no link, and printed no false Claude install success line. `bash -n` passed.
+- S2 — Implemented in `bd1380ea`: a successful new-name install, including an idempotent rerun, removes a dangling `status` symlink only when its target ends in `/skills/2-daily/status`. A manual probe removed that exact old link. A live old link remains untouched, and `CHANGELOG.md` now tells operators to inspect and unlink one manually when it belongs to the former skill.
+- Nits — Left the historical `gh798` test filename and header in place. The user's moratorium forbids new CI tests, so no test file, assertion, or suite registration was added.
+
+Round 2 reviewer: inspect current head `bd1380ea` and the fresh seeded patch, probe only inside scratch if useful, and decide whether S1 and S2 are closed. Do not run a test script or full gate in the relay worktree. Handing off to Reviewer (claude).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
