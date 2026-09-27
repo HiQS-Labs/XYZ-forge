@@ -456,10 +456,30 @@ def landing_label(meta):
 
 QUALIFICATION_SCHEMA = "wave-qualification@1"
 QUALIFICATION_PATH = r"TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/validation\.jsonl"
+QUALIFICATION_GATE = "validate.sh --sequential"
+# GH-831 D5: a landing whose changes classify tier 1 (docs, ledger, non-core skill files) qualifies
+# through the Small run. Its receipt records the list it ran, replayed against the tested commit.
+SMALL_GATE = "validate.sh --sequential --subsystem small"
+SMALL_NON_SUITE = ("tier2:pdda", "python:test_python_layer.py")
 
 
-def qualification_summary(raw, tested_sha):
-    """Require the existing runner's complete, unquarantined sequential evidence."""
+def small_suites_at(repo_root, commit):
+    """The SUBSYSTEM_TESTS_small line of utils/ci-route.sh at <commit>, never at HEAD."""
+    shown = subprocess.run(["git", "show", f"{commit}:utils/ci-route.sh"], cwd=repo_root,
+                           capture_output=True, text=True, check=False)
+    found = (re.findall(r'^SUBSYSTEM_TESTS_small="([^"]*)"$', shown.stdout, re.M)
+             if shown.returncode == 0 else [])
+    if len(found) != 1 or not found[0].split():
+        raise ValueError(f"no single Small list in utils/ci-route.sh at {commit}")
+    return found[0].split()
+
+
+def qualification_summary(raw, tested_sha, expected=None):
+    """Require the existing runner's complete, unquarantined sequential evidence.
+
+    expected=None is the full registry (tier 3). A list is the Small run (GH-831 D5): tier 2, its
+    shell suites exactly that list, plus the PDDA gate, the Python layer and the identity check.
+    """
     rows = [json.loads(line) for line in raw.splitlines() if line.strip()]
     if not rows or any(not isinstance(row, dict) for row in rows):
         raise ValueError("missing or malformed validation telemetry")
@@ -470,12 +490,26 @@ def qualification_summary(raw, tested_sha):
     start, summary = starts[0], summaries[0]
     registered = start.get("registered")
     if (start.get("commit") != tested_sha or start.get("mode") != "sequential"
-            or start.get("tier") != 3 or type(registered) is not int or registered <= 0
+            or start.get("tier") != (3 if expected is None else 2)
+            or type(registered) is not int or registered <= 0
             or not start.get("run") or any(row.get("run") != start["run"]
                 or row.get("runner") != "validate" for row in rows)):
         raise ValueError("validation run identity, mode or registry does not match")
     suites = [row for row in rows if row.get("event") == "suite"]
     sequential = [row for row in suites if row.get("lane") == "sequential"]
+    if expected is not None:
+        names = [row.get("name") for row in sequential]
+        extra = {row.get("name") for row in suites if row.get("lane") == "non-suite"}
+        identity = [row for row in rows if row.get("event") == "stage" and row.get("name") == "envelope-assert"]
+        if (len(set(expected)) != len(expected) or len(set(names)) != len(names)
+                or sorted(names) != sorted(expected) or not set(SMALL_NON_SUITE) <= extra
+                or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites + identity)
+                or len(identity) != 1 or summary.get("failed") != 0
+                or summary.get("total") != len(expected) + 3 or summary.get("passed") != summary["total"]
+                or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
+                or str(summary.get("run_set")) != str(len(expected))):
+            raise ValueError("Small-run telemetry is failed, incomplete or not the expected list")
+        return summary
     if (len(sequential) != registered or len({row.get("name") for row in sequential}) != registered
             or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites)
             or summary.get("failed") != 0 or summary.get("total") != registered + 3
@@ -498,7 +532,7 @@ def qualification_receipt_matches(repo_root, entry, meta):
             or not isinstance(landing, str) or not re.fullmatch(r"[0-9a-f]{40}", landing)
             or entry.get("landing_commit") != landing
             or entry.get("result") != "pass" or type(entry.get("rc")) is not int or entry["rc"] != 0
-            or entry.get("gate") != "validate.sh --sequential"
+            or entry.get("gate") not in (QUALIFICATION_GATE, SMALL_GATE)
             or entry.get("artifact_kind") != meta.get("artifactKind", "pr")):
         return False
     if meta.get("artifactKind") != "commit" and (
@@ -516,7 +550,14 @@ def qualification_receipt_matches(repo_root, entry, meta):
         raw = path.read_bytes()
         if hashlib.sha256(raw).hexdigest() != entry.get("telemetry_sha256"):
             return False
-        qualification_summary(raw, tested)
+        expected = None
+        if entry["gate"] == SMALL_GATE:
+            # Durable replay: the recorded list must be the Small list AT THE TESTED COMMIT, so a
+            # later change to SUBSYSTEM_TESTS_small never invalidates, or validates, an old receipt.
+            expected = entry.get("suites")
+            if entry.get("tier") != 2 or expected != small_suites_at(repo_root, tested):
+                return False
+        qualification_summary(raw, tested, expected)
         for older, newer in ((landing, tested), (tested, "HEAD")):
             if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer],
                               cwd=repo_root, capture_output=True, check=False).returncode:
@@ -545,8 +586,36 @@ def committed_qualifications(repo_root):
     return found
 
 
+def select_qualification_gate(clone, metas, env):
+    """GH-831 D5: classify the pending landings' union diff at the tested commit.
+
+    Tier 1 runs the Small list; anything else, or any doubt, runs the full registry.
+    Returns (gate, expected Small list or None, reason).
+    """
+    paths = []
+    try:
+        for meta in metas:
+            landing = meta["mergeCommit"]["oid"]
+            diff = subprocess.run(["git", "diff", "--no-renames", "--name-only", f"{landing}^", landing],
+                                  cwd=clone, env=env, capture_output=True, text=True, check=False, timeout=120)
+            if diff.returncode:
+                return QUALIFICATION_GATE, None, f"no diff for {landing_label(meta)}"
+            paths += diff.stdout.splitlines()
+        routed = subprocess.run(["bash", "utils/ci-route.sh", "push"], cwd=clone, env=env,
+                                input="".join(p + "\n" for p in paths), capture_output=True,
+                                text=True, check=False, timeout=120)
+        tier = re.findall(r"^tier=(\S*)$", routed.stdout, re.M)
+        if routed.returncode or len(tier) != 1:
+            return QUALIFICATION_GATE, None, "the classifier could not run"
+        if tier[0] != "1":
+            return QUALIFICATION_GATE, None, f"tier {tier[0]}"
+        return SMALL_GATE, small_suites_at(clone, "HEAD"), "tier 1"
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as exc:
+        return QUALIFICATION_GATE, None, f"classification failed: {exc}"
+
+
 def qualify_landings(repo_root, metas, journal):
-    """Produce retained provenance in the existing closeout transaction, after a real full gate."""
+    """Produce retained provenance in the existing closeout transaction, after a real gate run."""
     from gate_env import gate_env
     from proc_group import run_bounded
 
@@ -564,7 +633,6 @@ def qualify_landings(repo_root, metas, journal):
                 or subprocess.run(["git", "merge-base", "--is-ancestor", landing, tested],
                                   cwd=repo_root, capture_output=True, check=False).returncode):
             die(f"Qualification refuses {landing_label(meta)}: merge not in the tested development snapshot", code=6)
-    log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with the full sequential suite")
     with tempfile.TemporaryDirectory(prefix="wave-qualification-") as temporary:
         scratch = Path(temporary).resolve()
         clone = scratch / "repo"
@@ -597,7 +665,10 @@ def qualify_landings(repo_root, metas, journal):
             before_config = command(["git", "config", "--local", "--list"], True).stdout
             command(["python3", "-c", "import pytest"])
             command(["npm", "ci"])
-            validation = command(["bash", "validate.sh", "--sequential"])
+            gate, expected, reason = select_qualification_gate(clone, pending, env)
+            log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with "
+                f"`{gate}` ({reason})")
+            validation = command(["bash", *gate.split()])
             if (command(["git", "rev-parse", "HEAD"], True).stdout.strip() != tested
                     or command(["git", "status", "--porcelain"], True).stdout.strip()
                     or command(["git", "config", "--local", "--list"], True).stdout != before_config):
@@ -608,11 +679,11 @@ def qualify_landings(repo_root, metas, journal):
             if len(files) != 1:
                 die("Qualification requires exactly one retained validation run", code=6)
             raw = files[0].read_bytes()
-            summary = qualification_summary(raw, tested)
+            summary = qualification_summary(raw, tested, expected)
             if summary['run'] != f"{tested[:9]}-{validation.pgid}":
                 die("Qualification telemetry does not identify the launched validation process", code=6)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
-            die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+            die(f"Qualification failed; no receipt produced: {exc}", code=6)
     if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip() != tested:
         die("Publishing HEAD changed during qualification; rerun from fresh development", code=6)
     check_porcelain_cleanliness(repo_root)
@@ -629,10 +700,12 @@ def qualify_landings(repo_root, metas, journal):
     for meta in pending:
         entry = dict(schema_version=QUALIFICATION_SCHEMA, artifact_kind=meta.get("artifactKind", "pr"),
                      tested_commit=tested, landing_commit=meta["mergeCommit"]["oid"], result="pass", rc=0,
-                     gate="validate.sh --sequential", timestamp=now.isoformat(),
+                     gate=gate, timestamp=now.isoformat(),
                      telemetry=str(telemetry_path.relative_to(repo_root)),
                      telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=summary["passed"],
                      total=summary["total"])
+        if expected is not None:
+            entry.update(tier=2, suites=expected)
         if meta.get("artifactKind") != "commit":
             entry["pr"] = meta["number"]
         if os.environ.get("GITHUB_ACTIONS") == "true":
@@ -640,7 +713,7 @@ def qualify_landings(repo_root, metas, journal):
                                 f"{os.environ.get('GITHUB_RUN_ID', '')}")
         entries.append(json.dumps(entry, sort_keys=True))
     receipt_path.write_text("\n".join(entries) + "\n", encoding="utf-8")
-    log(f"Full-suite qualification passed; retained {receipt_path.relative_to(repo_root)}")
+    log(f"Qualification passed (`{gate}`); retained {receipt_path.relative_to(repo_root)}")
 
 
 def check_provenance_receipts(repo_root, pr_meta):

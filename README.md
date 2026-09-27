@@ -142,7 +142,7 @@ durable surface here:
 | **Wave planner** — exact write-set intersection, zone caps, dependency gating | "Can these lanes run together without colliding?" |
 | **Preflight** — freshness probes, already-landed detection, readiness verdict | "Is this specified well enough to run while I sleep?" |
 | **Verification gates** — a gate must be able to *start* before turn 1, with CPU/wall/RSS caps | "Did anything actually prove this works?" |
-| **Release ledger** — SQLite + a git-mergeable SQL dump, receipted writes | "What did we promise, and what shipped with evidence?" |
+| **Release ledger**, the Product Release System ([PRS](RELEASES-DB-FAQS.md)) — SQLite + a git-mergeable SQL dump, receipted writes | "What did we promise, and what shipped with evidence?" |
 | **Doc governance (PDDA)** — frontmatter, status tables, ledger coverage | "Can an agent resume this work tomorrow from the docs alone?" |
 | **HQ** — multi-repo resolution, capability tiers, previewed writes | "Do that, for project Acme, from wherever I am" |
 | **~50 skills** | Reusable procedures for all of the above |

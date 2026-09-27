@@ -1,0 +1,110 @@
+# ledger + doc checks at 6dda2bdd (2026-09-25T18:18:43Z)
+$ python3 utils/py/releases_app.py check
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1184 (DB <-> dump)
+OK: receipt chain intact (1350 receipt(s), business-state digest matches, 150 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 38 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-overdue: 0.9.0 Cargo is active and 6 day(s) past its target of 2026-09-19 — if the exit criterion is met, `releases ship` it; if not, `releases update` the target
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))
+$ python3 utils/py/releases_app.py show --gid rel-01M0GKP4YGTHVTXHVV5WAP08B5  (0.9.0 Cargo)
+GID:           rel-01M0GKP4YGTHVTXHVV5WAP08B5
+Release:       0.9.0
+Status:        active
+Codename:      Cargo
+Target Date:   2026-09-19
+Milestone:     Cargo
+Description:   The harness travels with its ledger: the RELEASES DB system (releases_app.py CLI + merge resolver + FAQs) and the GH-103 HTML timeline generator (utils/timeline/) ship inside every vendored .xyz/ payload as an optional, never-wired-by-defau… (448 chars total; --full to print it all)
+Exit criterion: A repo vendored with xyz-vendor.sh can, with zero extra downloads, run releases init/add and export_timeline.py --preview from .xyz/ against its own root, and xyz-sync.sh update preserves the target's ledger state (GH-312 preserve list). No… (277 chars total; --full to print it all)
+Tracking:      https://github.com/HiQS-Labs/XYZ-forge/issues/105
+Manifest:      36 item(s)
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/105 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/107 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/201 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/182 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/193 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/222 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/223 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/342 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/251 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/255 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/256 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/275 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/345 [cut]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/267 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/565 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/578 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/608 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/610 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/615 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/616 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/617 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/645 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/654 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/658 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/659 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/658 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/660 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/663 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/672 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/693 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/778 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/779 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/781 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/736 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/798 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/801 [shipped]
+$ python3 utils/py/releases_app.py show --gid rel-01M0BTBRMKX17AQN7Q11A0YCD7  (0.6.0 Front-Door)
+GID:           rel-01M0BTBRMKX17AQN7Q11A0YCD7
+Release:       0.6.0
+Status:        draft
+Codename:      Front-Door
+Target Date:   2026-09-26
+Milestone:     Front-Door
+GH_URL:        https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/563
+Description:   XYZ can be handed to a stranger: an unauthenticated clone reaches a documented entry path and exercises a supported happy path with no private context, from a sanitized, secret-scanned tree. RE-SCOPED 2026-08-15 by explicit operator decisio… (504 chars total; --full to print it all)
+Exit criterion: bash test/meter-release.sh --release-gate exits 0. NOT BUILT — written first, before any sanitization (the Litmus/Nightwatch ordering). Half A AUDITS the launch artifact: single-commit sanitized clone at the declared path; CHANGELOG.md byte… (791 chars total; --full to print it all)
+Front-door reviewed: Yes
+Shakedown reviewed: Yes
+License file:  Yes
+Tracking:      MIG-751A4C
+Manifest:      14 item(s)
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/413 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/416 [dialed_in]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/414 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/410 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/411 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/415 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/412 [shipped]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/418 [dialed_in]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/419 [dialed_in]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/342 [dialed_in]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/255 [dialed_in]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/256 [dialed_in]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/275 [dialed_in]
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/345 [dialed_in]
+Legacy lines:  6 (imported verbatim, pending disposition)
+  | Iterations: 0.6.0-0.6.4
+  | **RE-SCOPED 2026-08-15 by explicit operator decision — Meter is now the public-repository release candidate, and the paragraph above describes what Meter *was*.** The new sentence is: **XYZ can be handed to a stranger.** An unauthenticated … (1131 chars total; --full to print it all)
+  | Publication target — **the deliverable is a sanitized clone, not this repository.** The public artifact is a new working tree cut from `development`, stripped of runtime state and internal working documents, committed as **fresh history wit… (1235 chars total; --full to print it all)
+  | Scope boundary — Meter vs Lantern: **Lantern owns how a failure is described; Meter owns what a run consumed and what it required.** Route by asking whether the issue names a *resource or a precondition* — dollars, turns, memory, swap, a tr… (1082 chars total; --full to print it all)
+  | Manifest: FROZEN 2026-08-11 on creation — #378, #379, #380, #382, #491. **RE-SCOPED TO SIX on 2026-08-12 by explicit operator decision: #509 admitted.** **RE-SCOPED TO SIX on 2026-08-14 (second decision the same day): #509 RETIRED as comple… (6972 chars total; --full to print it all)
+  | Manifest-Members: 555 563
+Grandfathered: exit-criterion-length x1, manifest-bare-numbers x1, tracking-issue-missing x1
+$ utils/pdda/pdda.sh frontmatter
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+$ utils/pdda/pdda.sh status-table
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+$ utils/pdda/pdda.sh roadmap-coverage
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=69
+$ utils/pdda/pdda.sh hardcoded-paths
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+$ utils/pdda/pdda.sh releases
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1

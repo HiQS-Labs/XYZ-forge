@@ -94,3 +94,7 @@ Source of truth for scope: https://github.com/HiQS-Labs/XYZ-forge/issues/275
   ]
 }
 ```
+
+## Merge evidence
+
+- PR #826 merged 2026-09-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

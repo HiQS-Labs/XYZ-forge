@@ -26,7 +26,8 @@ Agy, and OpenRouter) into a safe, throwaway-worktree isolated review loop.
 2. **Citation-Checked Graded Findings:**
    Enforces standardized finding categories with mandatory `file:line` or symbol citations:
    - `[Blocker]`: Correctness regressions, security defects, or data loss hazards.
-   - `[Should]`: Architectural gaps, missing test coverage, or edge-case handling.
+   - `[Should]`: Architectural gaps, missing test coverage, or edge-case handling. Where the repo forbids new
+     tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), coverage means an existing suite or a recorded manual check.
    - `[Nit]`: Style, documentation, minor cleanups.
    - `[Pass]`: Confirmed correct execution paths with firsthand citations.
 3. **GitHub Integration:**
@@ -100,6 +101,6 @@ Every `/review-xyz` report is structured consistently:
 <Detailed review critique citing exact file:line spans>
 
 ### 📋 Actionable Checklist
-- [ ] Add regression test for edge-case — `[Should]` `src/engine.py:45`
+- [ ] Cover the edge case in the existing suite — `[Should]` `src/engine.py:45`
 - [ ] Rename confusing variable `x` — `[Nit]` `src/engine.py:82`
 ```

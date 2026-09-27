@@ -21,6 +21,10 @@ Nothing here requires a paid tier, a dedicated runner vendor, or speculative sub
 
 ## The 12 Foundational Principles
 
+> **Repos that forbid new tests** (XYZ-forge: `AGENTS.md` *No new tests*, GH-831): recommend nothing that adds a suite, a registry entry, or gate
+> machinery there. Principles 7, 8 and 10 are then met with existing suites or recorded manual checks, and
+> Wave 2's mutation controls run on existing suites.
+
 ### 1. Gate at the Push Boundary, Not the Commit
 * **Mechanism:** Local commits remain unblocked, fast, and offline-friendly. The pre-push hook runs the qualifying gate; hosted CI independently attests after push. Bypasses (e.g. `--no-verify` or explicit skip flags) are logged to auditable telemetry, never silent. The hook is installed via an idempotent script and verified with an automated check.
 * **Prevents:** Broken `main`/`development` integration branches and the gradual cultural decay into "CI is advisory."

@@ -1,0 +1,13 @@
+PASS: codex pty=0
+PASS: agy pty=0
+PASS: agy pty=1
+Traceback (most recent call last):
+  File "<stdin>", line 140, in run_case
+PermissionError: [Errno 1] Operation not permitted
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 161, in <module>
+  File "<stdin>", line 151, in run_case
+PermissionError: [Errno 1] Operation not permitted

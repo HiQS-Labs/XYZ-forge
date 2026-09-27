@@ -59,7 +59,8 @@ This document outlines the standard operating procedure for designing, executing
 ### Step 1: Intake & Working Doc
 1. File the tracking GitHub issue.
 2. Scaffold the active doc in `PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
-3. Park the ledger row **in the RELEASES DB** (`ROADMAP.md` is retired per GH-269):
+3. Park the ledger row **in the RELEASES DB**, the Product Release System ([PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first))
+   (`ROADMAP.md` is retired per GH-269):
    `python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P`
    (`hq park` routes there automatically). Note `roadmap sync` is a **legacy-mode-only** verb — in
    this repo it refuses with "releases-mode repo" and is never part of the flow.
@@ -132,7 +133,7 @@ python3 utils/ate/scripts/checkin.py --log "$SCRATCH/error_log.jsonl"
 ```
 Monitor failure clusters, category distributions (`auth_failure`, `config_error`, `env_failure`), and throughput. If a valid defect is identified:
 1. **File a GitHub tracking issue immediately (auto-file — §1; do not wait to be prompted).** Ambiguous findings: offer to file rather than holding them silently.
-2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix and regression test.
+2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix, verified with the existing suite that covers it. Where none does, verify it with a manual check recorded under `TESTS-RESULTS/` with its `provenance.jsonl`. No new test suites (GH-831).
 3. If complex, record findings on the issue for architectural planning.
 
 ### Step 7: Commit Artifact Receipts
@@ -231,7 +232,7 @@ teardown — the same rule as `AGENTS.md` §6.
 1. **Pre-create the budgeted follow-up lanes at plan time.** Before implementation starts,
    open the three issues you already know you will need: a *review-findings* lane (the
    builder/reviewer split guarantees one), a *dogfood-findings* lane (dogfooding exists to
-   manufacture findings), and a *conformance* lane (new contracts always owe fixtures).
+   manufacture findings), and a *conformance* lane (new contracts owe a conformance check against existing suites or a recorded manual check; no new test suites, GH-831).
    Follow-ups then arrive as scheduled phases instead of surprises. Evidence this works:
    the GH-280 plan's follow-up record listed six items before execution began; all six
    landed in that order, with review findings landed on top.

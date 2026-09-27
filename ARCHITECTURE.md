@@ -70,17 +70,17 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 |---|---|
 | [agent-chorus](skills/2-daily/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
 | [ci-debug](skills/2-daily/ci-debug/SKILL.md) | Debug failing CI pipelines and pre-push gates in safe full-clone isolation via debug-mantra, recon, and ponytail. |
-| [express](skills/2-daily/express/SKILL.md) | Hotfix fast lane — one motion: fix + suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
+| [express](skills/2-daily/express/SKILL.md) | Hotfix fast lane — one motion: fix + its existing covering suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
 | [file-xyz-bug](skills/2-daily/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
-| [marathon-triage](skills/2-daily/marathon-triage/SKILL.md) | Triage intake into a ranked, preflight-checked marathon candidate queue. |
 | [merge-cleanup](skills/2-daily/merge-cleanup/SKILL.md) | Land open PRs in dependency order, reconcile, and tear down clones/worktrees that are proven landed. |
 | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
 | [relay-to-issue](skills/2-daily/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
 | [review-code](skills/2-daily/review-code/SKILL.md) | Meticulous ground-truth code and PR review using recon, debug-mantra, and workhorse/unstuck ladders. |
 | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
+| [start-marathon](skills/2-daily/start-marathon/SKILL.md) | Review intake and plans, prepare collision-safe lanes, and dry-run the marathon. |
 | [status](skills/2-daily/status/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
@@ -403,8 +403,9 @@ In relay mode it uses the same split as `relay-drive.sh`:
 
 ## Adjacent Subsystems
 
-The GH-32 RELEASES ledger has its own authority split (SQLite at runtime, a GID-keyed SQL dump at git
-merge boundaries) and its own transform triggers — see [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
+The GH-32 RELEASES ledger, the Product Release System (PRS), has its own authority split (SQLite at
+runtime, a GID-keyed SQL dump at git merge boundaries) and its own transform triggers — see
+[RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
 In legacy mode, `releases roadmap sync` mirrors the markdown ledger into `roadmap_items`.
 In this repo's releases mode, the RELEASES DB is authoritative and that legacy sync is a no-op.
 

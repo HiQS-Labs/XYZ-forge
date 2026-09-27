@@ -199,7 +199,7 @@ Body:
 
 ### QA checklist — Phase 0
 - [ ] The repro is confirmed from the report, not assumed
-- [ ] A regression test covers the failure path before the fix lands
+- [ ] An existing suite, or a recorded manual check, covers the failure path before the fix lands (no new test suites: `AGENTS.md` *No new tests*, GH-831)
 - [ ] The fix composes with the existing harness rather than adding a parallel path
 ```
 
