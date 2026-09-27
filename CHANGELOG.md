@@ -152,6 +152,14 @@ it blocked the `development` → `main` promotion. Rollback: revert the one valu
 
 When several `harness_app.py` processes opened a brand-new telemetry database at once, one could fail with `database is locked` at `PRAGMA journal_mode = WAL`. SQLite returns that error immediately, without the busy timeout, so the process died and the turn lost its telemetry row. It also randomly failed the `gh496-telemetry-isolation.sh` concurrency case, which failed one M4 Pro gate run in #800. `init_db` now retries only that statement, only on `database is locked`, up to 50 attempts with short jittered sleeps. Every other error still raises immediately. The gh496 suite now prints a failing worker's stderr, and a new case 14 checks the retry deterministically: it is red on the old code and green now. A 200-round × 10-worker probe went from 29/200 failed rounds to 0/200. Receipts are in `TESTS-RESULTS/2026-09-25+GH-813/`.
 
+## 2026-09-25 — GH-800 M4 Pro full-suite trials
+
+Recorded three MacBook Pro 14-inch M4 Pro runs of `./validate.sh` (4 workers, full tier) at proposed repin `development@0ae3452a`: 912 s and 910 s green (420/420), and 964 s refused (419/420). The refusal is an intermittent `gh496-telemetry-isolation.sh` concurrency failure, reproduced standalone as a SQLite `database is locked` race at `PRAGMA journal_mode = WAL`. This commit differs from the M6 trial's, so no cross-device comparison is made yet. Sanitized timings and provenance are in `TESTS-RESULTS/2026-09-25+GH-800/`.
+
+## 2026-09-24 — GH-800 M6 full-suite benchmark intake
+
+Opened the three-device full-gate timing campaign at pinned `development@a08f30e9`. The first complete Mac mini M6 run took 1,083 s with 416/420 passing and four persistent failures; its clone identity stayed intact. A prior 678 s setup attempt lacked Node on PATH and was excluded. Public-safe per-suite timing and provenance are retained in `TESTS-RESULTS/2026-09-25+GH-800/`. A green matched baseline and the other two devices remain open.
+
 ## 2026-09-24 — gh251's nested gate runs scoped to the cheapest `.py` tier-2 lane (GH-808)
 
 `test/gh251-validate-pytest-skip.sh` handed both of its nested `validate.sh --paths-file` runs a
