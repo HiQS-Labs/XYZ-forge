@@ -132,8 +132,9 @@ Work phases in order. Later phases may overlap once earlier ones are stable.
 - [ ] Find the **rule or incentive** producing the growth, not just the growth. Inventory the
       instructions (root docs, skills, brief generators, tool refusals) that push agents to add
       what is growing. #831 R4 is the model inventory.
-- [ ] Rewrite those instructions in the same change as the freeze. A freeze without removing the
-      instruction fights the agents every day.
+- [ ] Rewrite those instructions in the same change as the freeze, landed through the normal
+      issue-first PR **before the window opens** (a Day 0 prerequisite). A freeze without removing
+      the instruction fights the agents every day. In 2026-09 this was #831 (`f832ef5a`, `b2c307b4`).
 - [ ] Verify the freeze with a count at two SHAs, posted daily. Do not add a suite to enforce it.
 
 ### 4.2 Phase B — Triage and cluster
@@ -167,7 +168,9 @@ Work phases in order. Later phases may overlap once earlier ones are stable.
 - [ ] Branch PRs write **no** shared/generated files (ledger rows, views, PDDA moves). Write them
       once, at landing, through their normal writer.
 - [ ] Items that change landing machinery (merge-cleanup, reconcile, workflows) go **direct** to
-      `development` through the normal gate. The staging branch cannot exercise them.
+      `development` through the normal gate by default. The staging branch cannot exercise them.
+      The operator may move one onto the branch when nothing in the window depends on it landing
+      early (2026-09: #851/#852, #854 comment 5858552134).
 - [ ] Do not run trunk-pinned automation against the staging base. Merge by hand; dispatch CI
       with `gh workflow run <wf> --ref <branch>`.
 - [ ] Batch same-seam fixes into one PR (SOP.md §4 Arc planning, item 2).
@@ -182,8 +185,10 @@ Every exception is a dated operator decision on the tracking issue. Each must be
 - [ ] **Scoped** to PRs whose base is the staging branch. Never `development`, never `main`, never
       promotion or teardown.
 - [ ] **Declared** in each PR body: which gate was skipped, and a link to the evidence directory.
-- [ ] **Compensated:** the PR still runs its edited suites plus its area suites; the skipped
-      obligation is paid by the daily full run and by the landing's full gate.
+- [ ] **Compensated:** before its staging merge, the PR's edited suites, its area suites and its
+      fails-before/passes-after receipt (Phase F) must pass. Only the **full-registry** run moves: it is
+      paid locally, by the daily `ci-local.sh` run and by the landing PR's non-bypassed pre-push
+      gate, both before `development` is touched. Nothing is deferred to hosted CI.
 - [ ] **Revoked** at landing. Ad-hoc bypasses outside the window return to the GH-487 rule.
 - [ ] **Absorbing:** informal bypasses already happening are routed through the window, not tolerated
       alongside it.
@@ -201,7 +206,9 @@ Every exception is a dated operator decision on the tracking issue. Each must be
 - [ ] Sync `origin/development` into the branch. Ledger conflicts via `utils/releases-merge-resolve.sh`.
 - [ ] Full registry (`bash ci-local.sh`) at the branch tip, disposable full clone, stable host.
 - [ ] Red full run → stop merges until the red is attributed to one commit and fixed or reverted.
-- [ ] Hosted dispatch on the branch; merge-blocking jobs must be green.
+- [ ] Hosted dispatch on the branch (`gh workflow run ci.yml --ref <branch>`): `vendored-smoke` must
+      be green (it runs on dispatch, `continue-on-error: false`). The Ubuntu canary is advisory.
+      Nothing enforces this on the branch, so a red `vendored-smoke` stops merges like a red full run.
 - [ ] One status comment: date, tip SHA, PRs merged, gate result + duration + host, run IDs, M1–M3.
 - [ ] Stop/continue check: are exit gates trending toward met by the hard stop? If not, cut scope
       today, not on the last day.
@@ -282,8 +289,9 @@ Every exception is a dated operator decision on the tracking issue. Each must be
       - **turn off**: unregister and exempt, file kept.
       Nothing changes without operator sign-off (#854 comment 5857449176).
 - [ ] **Retro and lessons entry** in `LESSONS-LEARNED.md`: what happened, the lesson, how to apply.
-- [ ] **Policy changes** (AGENTS.md, ROUTER.md, skills) proposed via the normal issue-first PR,
-      never landed inside the window.
+- [ ] **Policy changes the retro produces** (AGENTS.md, ROUTER.md, skills) go through the normal
+      issue-first PR after the window. A tool the window itself needs (2026-09: the #862 audit skill)
+      is a window item and follows the per-PR rule on the branch.
 - [ ] **Follow-up check** scheduled (default 14 days after landing): the class has no new member,
       the freeze held, and E1–E8 are all below threshold. Post the result on the umbrella.
 - [ ] Update this SOP's defaults if the episode showed a threshold was wrong.
@@ -364,7 +372,7 @@ sources or a recurrence), **HYPOTHESIS** (inferred; not yet tested). Times are P
 | A16 | Host sleep stretched a push gate to 8,967 s and produced re-run-alone rescues; under `caffeinate -i` full gates took 862–874 s. | PATTERN (self-reported) | #849 comment 5857312850; #854 review 5857379277; graded self-reported in reply 5857409572 (862 s may predate sleep) |
 | A17 | Unbounded network calls and a merge call that "failed" after GitHub merged skipped post-merge steps. | FACT | #852 comments 5855239082, 5855372014; #849 comment 5857312850 (#810) |
 | A18 | A PR with no closing keyword left its issue open; merges into a non-default branch close nothing. | FACT | #810 / #807; #854 Day 0 and landing sections |
-| A19 | Trunk-pinned automation (merge-cleanup reconcile exits 4 off `development`; `wave-reconcile.yml` and `ci.yml` triggers pinned) cannot serve a staging branch. | FACT | `merge_cleanup.py:545-559` → `wave_reconcile.py:2168-2173`; #854 router facts |
+| A19 | Trunk-pinned automation cannot serve a staging branch: merge-cleanup's reconcile exits 4 off `development`, `wave-reconcile.yml` qualifies `development` only, and `ci.yml`'s `push`/`pull_request` triggers cover `main`/`development` only. `ci.yml`'s `workflow_dispatch` does run `vendored-smoke` on the branch. | FACT | `merge_cleanup.py:545-559` → `wave_reconcile.py:2168-2173`; `ci.yml:98-103`, `:519-522`; run 36358027559 |
 | A20 | A configured hosted step never ran on PRs (job not triggered on `pull_request`). | FACT | `ci.yml:398-400` vs `:248-250`; #854 |
 | A21 | Informal bypasses (`--no-verify`, `XYZ_SKIP_PREPUSH=1`) appeared under queue pressure and were routed into the window. | FACT | #846, #827; #854 D1 |
 | A22 | Per-PR fails-before/passes-after receipts were kept, not replaced by one combined QA, so a red landing can be attributed. | FACT (decision) | #854 D3; comment 5857449176 |
