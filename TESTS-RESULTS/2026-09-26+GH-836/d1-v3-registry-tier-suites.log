@@ -1,0 +1,2 @@
+gh306-registry-bidirectional.sh rc=0 2s ::   gh306-registry-bidirectional: 10 pass, 0 fail
+gh35-test-tiers.sh rc=0 13s ::   gh35-test-tiers: 72 pass, 0 fail

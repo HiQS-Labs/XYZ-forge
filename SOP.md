@@ -59,7 +59,8 @@ This document outlines the standard operating procedure for designing, executing
 ### Step 1: Intake & Working Doc
 1. File the tracking GitHub issue.
 2. Scaffold the active doc in `PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
-3. Park the ledger row **in the RELEASES DB** (`ROADMAP.md` is retired per GH-269):
+3. Park the ledger row **in the RELEASES DB**, the Product Release System ([PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first))
+   (`ROADMAP.md` is retired per GH-269):
    `python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P`
    (`hq park` routes there automatically). Note `roadmap sync` is a **legacy-mode-only** verb — in
    this repo it refuses with "releases-mode repo" and is never part of the flow.

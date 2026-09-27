@@ -11,6 +11,57 @@ To expedite deletion of full clone folders without fear of data loss, clone back
 - **Skill documentation update**: Updated `skills/3-weekly/merge-cleanup-deep/SKILL.md` Phase 1 and `skills/2-daily/merge-cleanup/SKILL.md` CLI options and usage examples.
 - **Moratorium compliance**: Zero new CI/CD tests added; verified via existing suites (`test/gh534_phase_c_tests.py`, `test/gh589-skill-viewer.sh`) and reproducible falsifiers in `TESTS-RESULTS/2026-09-26+GH-839/`.
 
+## 2026-09-26 — `gh436` moves from Small to Large; its two docs inputs now take the full gate (GH-836 D1)
+
+The first hosted Small run took 15.7 minutes, over D1's ~12-minute line. `gh436-merge-cleanup.sh` was its largest
+suite at 221 s. The operator moved it to Large, and Small is now 72 suites, projected at about 12 minutes.
+
+`gh436` reads two docs: `WORKTREE-SAFETY.md` and merge-cleanup's `SKILL.md`. A docs-only landing that edits
+either would otherwise have qualified without it, so `utils/ci-route.sh` now routes both to the full gate. Every
+landing that changes something `gh436` reads still runs `gh436` at its hosted reconcile. Its code inputs already
+did. The cost is a full gate on the rare docs-only edits to those two files: one in the last 30 days.
+
+The existing `test/ci-route.sh` Small pin moves 73 → 72. The routing is witnessed by recorded probes (red at
+base, green after), not a new test.
+
+## 2026-09-26 — The first hosted Small run qualified a docs landing in 15.7 minutes (GH-831 Phase 3)
+
+#840 (GH-833) was the first docs-only merge after the three-tier gate landed. The hosted reconcile qualified it
+with `validate.sh --sequential --subsystem small`: tier 1, 76/76, in 15.7 minutes (run 36276061201). Full-gate
+reconcile runs that day took 57–60 minutes (jobs 57.0 and 59.7). The receipt is committed with `tier: 2` and its
+73-suite list.
+
+- **GH-831:** Phase 3's QA gate is met. Both hosted runs are cited in its plan.
+- **GH-836:** step 6 is done. Hosted, `gh436` takes 221 s and `gh549` 159 s. Small is over the ~12-minute line, so
+  D1, moving `gh436` to Large, is now the operator's call.
+- **GH-844:** GH-833's manual check now confines the PRS entry to the glossary, and its witness recipe exits
+  non-zero on any unexpected result, with a self-test to prove it. These were CodeRabbit findings on #840; the
+  other child of umbrella #845, #843, is the relay-path fix.
+
+## 2026-09-26 — PRS gets one definition: the Product Release System, the RELEASES ledger (GH-833)
+
+Agents, plans and issues call the RELEASES ledger "PRS", but no doc defined the term. `ROUTER.md` used it
+undefined for the Small tier.
+
+- **One definition,** in `HOW-TO-USE.md`'s glossary, now "the five terms you'll hit first". PRS is the Product
+  Release System: `releases.db` and its dump `releases.sql`, written only through `releases_app.py`. It is the
+  third part of the XYZ Forge / PDDA / PRS trinity. PRS names the system; no file, table, verb or doc is renamed.
+- **`ROUTER.md`** names the trinity under its intro.
+- **The other canonical docs** spell the term out where they introduce the ledger, and link the definition:
+  `AGENTS.md`, `SOP.md`, `ARCHITECTURE.md`, `RELEASES-DB-FAQS.md`, `README.md` and `PROJECT/PDDA.md`.
+- **Six skills** do the same: `/releases`, `/start-task`, `merge-cleanup`, `start-marathon`, `10days` and
+  `end-of-week`.
+  - `PROJECT/PDDA.md` and the skills link by absolute GitHub URL, because they are read outside this checkout.
+  - Deployed skills pick up the text on the next skills-army-hq deploy.
+
+No suite was added. Two manual checks, with red controls at base, are recorded under
+`TESTS-RESULTS/2026-09-26+GH-833/`:
+- every file's first "PRS" is spelled out;
+- there is exactly one definition, and every placement links to it.
+
+The merge is docs-only, so it should be the first landing the hosted reconcile qualifies with the Small gate
+(#831 Phase 3).
+
 ## 2026-09-26 — The two slowest Small suites lose 4 minutes, and the push gate stops calling a live agent (GH-836)
 
 #835's profiling found that `gh549-work-events.sh` and `gh436-merge-cleanup.sh`, about two-thirds of the hosted

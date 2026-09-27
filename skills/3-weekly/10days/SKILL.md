@@ -3,7 +3,7 @@ name: 10days
 description: >
   Sweep GitHub issues opened or updated in an age window (default: last 10 days; the
   window is adjustable, e.g. an 11-14-day slice to avoid overlapping another sweep),
-  evaluate PRS 4-axis ratings (priority, severity, appeal, effort cheapness, calc sum,
+  evaluate Product Release System (PRS) 4-axis ratings (priority, severity, appeal, effort cheapness, calc sum,
   and manual ovr overrides) taking highest-scored issues and operator overrides as a strong
   prioritization signal, verify each issue is still valid, reproducible, and not already
   fixed (fan out subagents to check issue state, comments, and git/commit history for completion
@@ -22,6 +22,8 @@ description: >
 ---
 
 # /10days — recent-issue sweep → PRS rating prioritization → marathon → fire
+
+PRS is the Product Release System, the RELEASES ledger ([definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)).
 
 Turn "what's landed in GitHub in the last N days that's still worth doing" into a fired
 marathon, unattended. This is `start-marathon`'s more automated sibling: where

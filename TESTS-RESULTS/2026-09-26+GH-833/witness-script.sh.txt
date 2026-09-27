@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# GH-833 witnesses: V1 + V1b on the tree, then five red controls, each in a fresh scratch copy of the 14 files.
+# Revised after final QA r1 (F2): every copy goes into a new `mktemp -d` directory, and nothing is deleted, so
+# no caller-supplied path can be removed.
+set -u
+REPO="$1" CHK="$2"   # repo root, dir holding the two checks
+FILES="HOW-TO-USE.md ROUTER.md AGENTS.md PROJECT/PDDA.md SOP.md ARCHITECTURE.md RELEASES-DB-FAQS.md README.md skills/2-daily/releases/SKILL.md skills/1-hourly/start-task/SKILL.md skills/2-daily/merge-cleanup/SKILL.md skills/2-daily/start-marathon/SKILL.md skills/3-weekly/10days/SKILL.md skills/3-weekly/end-of-week/SKILL.md"
+fresh() {  # sets W to a NEW scratch dir holding the 14 files; refuses to continue without one
+  W="$(mktemp -d "${TMPDIR:-/tmp}/gh833-wit.XXXXXX")" && [ -d "$W" ] || { echo "mktemp failed" >&2; exit 2; }
+  (cd "$REPO" && tar -cf - $FILES) | tar -xf - -C "$W"
+}
+v1()  { bash "$CHK/prs-order-check.sh" "$1"; }
+v1b() { python3 "$CHK/prs-definition-check.py" "$1"; }
+echo "## green: V1 and V1b on the tree at $(git -C "$REPO" rev-parse --short HEAD)"; v1 "$REPO"; echo "rc=$?"; v1b "$REPO"; echo "rc=$?"
+ctl() {  # <name> <check fn> <python mutation over the scratch copy>
+  fresh; python3 - "$W" <<<"$3" || { echo "MUTATION DID NOT APPLY: $1"; return; }
+  echo; echo "## red control: $1"; "$2" "$W" | grep -E "FAIL|pass"; echo "rc=${PIPESTATUS[0]} (want 1)"
+}
+ctl "remove ROUTER's trinity line (V1)" v1 'import sys,re;p=sys.argv[1]+"/ROUTER.md";s=open(p).read();n=re.sub(r"\nXYZ Forge is three parts:[^\n]*\n","\n",s);assert n!=s;open(p,"w").write(n)'
+ctl "delete the glossary entry (V1b)" v1b 'import sys,re;p=sys.argv[1]+"/HOW-TO-USE.md";s=open(p).read();n=re.sub(r"\n- \*\*PRS\*\*.*?(?=\n\n)","",s,flags=re.S);assert n!=s;open(p,"w").write(n)'
+ctl "break ROUTER's glossary anchor (V1b)" v1b 'import sys;p=sys.argv[1]+"/ROUTER.md";s=open(p).read();n=s.replace("HOW-TO-USE.md#glossary--the-five-terms","HOW-TO-USE.md#glossary--the-four-terms");assert n!=s;open(p,"w").write(n)'
+ctl "restate the entry in RELEASES-DB-FAQS.md (V1b)" v1b 'import sys;p=sys.argv[1]+"/RELEASES-DB-FAQS.md";s=open(p).read();open(p,"w").write(s+"\n- **PRS** — the Product Release System.\n")'
+ctl "break one skill URL anchor (V1b)" v1b 'import sys;p=sys.argv[1]+"/skills/3-weekly/10days/SKILL.md";s=open(p).read();n=s.replace("#glossary--the-five-terms-youll-hit-first","#glossary");assert n!=s;open(p,"w").write(n)'

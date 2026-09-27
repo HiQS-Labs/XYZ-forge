@@ -237,7 +237,8 @@ Then begin work.
 
 ## Task rating policy
 
-Rate **every task**, using the existing XYZ RELEASES vocabulary and writer. The
+Rate **every task**, using the existing XYZ RELEASES vocabulary and writer (the RELEASES ledger is the
+Product Release System, PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)). The
 canonical schema is four integer axes, **1–100**: `pri/sev/appeal/effort`, stored as
 `rated N/N/N/N`. It is not a three-level scale. "Impact" describes the consequences
 and reach used to assess severity and priority; do not invent an impact column or

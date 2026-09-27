@@ -1,0 +1,1 @@
+{"issue":807,"base":"0ae3452a5774c6e72b633dd61648137e80516e6b","host":"noels-Mac-Studio.local","date":"2026-09-25T02:49:43Z","red_control":"8-wide parallel at origin/development: 2/8 runs 43/44 with Broken pipe","green":"8-wide parallel + serial at fix commit: 9/9 runs 44/44, 0 Broken pipe"}

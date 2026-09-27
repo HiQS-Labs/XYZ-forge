@@ -2,6 +2,8 @@
 
 This file is the first entry point for an AI agent working in this repo: it tells you what to read, what to run, and which files are canonical.
 
+XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md`); **PDDA**, project-doc governance (`PROJECT/PDDA.md`); and **PRS**, the Product Release System, which is the RELEASES ledger (`RELEASES-DB-FAQS.md`). Definition: [HOW-TO-USE.md → Glossary](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first).
+
 ## Role split
 
 - `ROUTER.md` = startup order and canonical entry points
@@ -125,7 +127,8 @@ Promotion always runs the full registry. Eight skill-text suites are off, record
 `test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). The code of
 core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) never routes as
 docs. Skill markdown keeps its existing docs routing, except that `relay-xyz` and `relay-automation` stay
-full-gate surfaces for every file.
+full-gate surfaces for every file. merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` are full-gate files too:
+they are what `gh436-merge-cleanup` reads, and GH-836 D1 moved that suite from Small to Large.
 Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
 
 `--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
