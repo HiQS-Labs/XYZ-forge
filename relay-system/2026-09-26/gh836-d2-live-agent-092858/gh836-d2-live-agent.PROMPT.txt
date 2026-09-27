@@ -1,0 +1,47 @@
+# Consult: should the local pre-push gate stop making a live agent call?
+
+**Advisory only.** Do not edit files. Answer from the repository, and cite `file:line`.
+
+## Facts (verify them)
+
+- `test/relay-self-sufficiency.sh` runs a **real headless agent turn** (agy, or codex as fallback) against a
+  minimal relay template. It checks that the `▶ TAKE YOUR TURN` block is enough for a context-free agent to
+  complete a turn: shim exit 0, token handoff, and valid VERDICT and Basis fields (`:1-11`, `:75-129`).
+- It skips (exit 0) when no agent is on `PATH` or when `RELAY_SELF_SUFFICIENCY_SKIP=1`. When an agent is present
+  and the turn fails, it **fails** (exit 1).
+- `ci-local.sh:404` and all three `.github/workflows/ci.yml` jobs (`:194`, `:402`, `:483`) set
+  `RELAY_SELF_SUFFICIENCY_SKIP=1`. That covers the promotion boundary, the hosted reconcile's run
+  (`utils/py/wave_reconcile.py` inherits `ci.yml`'s env? check) and `ci-local`. The **local pre-push hook**
+  (`githooks/pre-push` → `validate.sh`) does not set it.
+- So on a developer machine with agy or codex installed, **every local full gate** makes one real API call.
+  That costs about 2.3–2.7 minutes of wall time (measured on two Macs, #835) plus API cost. A backend or
+  network hiccup refuses the push.
+- It is not in the Small tier (`utils/ci-route.sh` `SUBSYSTEM_TESTS_small`).
+- The template it protects comes from `relay-automation/new-relay.sh`. Any change there routes the full gate
+  (`utils/ci-route.sh`, `relay-automation/*` is full-required).
+- The repo rule: **no new tests and no new gate machinery** (AGENTS.md, *No new tests*). Editing an existing
+  suite or setting an environment default is allowed; a new routing lane is not.
+
+## The question (#836 decision D2)
+
+Should the local pre-push full gate skip this live agent turn by default?
+
+- **A — keep as is.** Every local full gate makes the live call when an agent is on `PATH`.
+- **B — skip by default in the pre-push path.** Set `RELAY_SELF_SUFFICIENCY_SKIP=1` in the hook or where the hook
+  calls `validate.sh`, with an explicit opt-in to run it. Consequence: it then runs **nowhere** unless someone
+  opts in, because every CI path already skips it.
+- **C — something narrower,** without new machinery. For example: run it only when the push touches the
+  template's source, if the existing hook or classifier can express that; make it opt-in but require it in a
+  named manual step such as the relay-automation release or promotion checklist; or keep it but make an
+  agent/network failure a witnessed skip instead of a push-blocking red. Say whether any of these needs new
+  machinery.
+
+## Please
+
+1. Verify the facts, and correct any that are wrong. In particular, does the hosted reconcile's
+   `validate.sh --sequential` run inherit `RELAY_SELF_SUFFICIENCY_SKIP`?
+2. What does this suite actually protect, and how often does the protected template change? Check
+   `git log -- relay-automation/new-relay.sh`.
+3. Recommend A, B or C, with the specific form, and name its risk. If B, what keeps the check from quietly
+   never running again?
+4. One-line recommendation at the end.

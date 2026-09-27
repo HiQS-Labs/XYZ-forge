@@ -21,16 +21,21 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # and list its suites in SUBSYSTEM_TESTS_<name>. Every listed suite must exist in test/ AND
 # be registered in validate.sh's TESTS array — test/gh35-test-tiers.sh enforces both, because
 # a registry naming a suite that never runs is a green lie (the releases-skill lesson).
-SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent-chorus standup skills-army-hq"
+SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent-chorus standup skills-army-hq small"
 SUBSYSTEM_TESTS_hq="hq.sh hq-park.sh hq-park-synthesis.sh hq-dispatch.sh hq-next.sh hq-locator.sh hq-hardening.sh hq-promote.sh hq-marathon-scan.sh hq-rollup.sh hq-marathon-live.sh gh238-hq-releases-mode.sh gh239-hq-status-releases-mode.sh"
 SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh549-work-events.sh gh567-roadmap-dashboard-retired.sh gh568-releases-md-retired.sh gh646-status-label.sh"
 SUBSYSTEM_TESTS_telemetry="xyz-completion.sh gh358-lock-instrumentation.sh archive-telemetry.sh gh496-telemetry-isolation.sh"
-SUBSYSTEM_TESTS_ate="ate-run-variations.sh gh298-ate-gen4-ci-smoke.sh gh-gen4-phase1-domain-oracles.sh gh-gen4-phase2-adaptive-ate.sh gh-gen4-phase3-fuzz-engine.sh gh-gen4-phase4-repro-synth.sh gh-gen4-phase5-campaign.sh gh478-runaway-guard.sh gh712-jev-triage.sh"
+SUBSYSTEM_TESTS_ate="ate-run-variations.sh gh298-ate-gen4-ci-smoke.sh gh-gen4-phase1-domain-oracles.sh gh-gen4-phase2-adaptive-ate.sh gh-gen4-phase3-fuzz-engine.sh gh-gen4-phase4-repro-synth.sh gh-gen4-phase5-campaign.sh gh478-runaway-guard.sh gh712-jev-triage.sh synthetic/gh102-telemetry-schema.sh gh142-ate-exit-contract.sh"
 SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
 SUBSYSTEM_TESTS_pdda="gh649-pdda-migration.sh pdda-changelog.sh pdda-install-startup-docs.sh pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh400-acceptance-fidelity.sh gh400-source-url.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh wave-reconcile.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh gh358-wave-reconcile-vendored-paths.sh gh496-phase2-reconciliation-views.sh"
-SUBSYSTEM_TESTS_agent_chorus="agent-chorus.sh"
+SUBSYSTEM_TESTS_agent_chorus="agent-chorus.sh agent-chorus-bridge.sh gh233-agent-chorus-concurrency.sh"
 SUBSYSTEM_TESTS_standup="gh77-standup-triage.sh"
-SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh gh620-skills-army-mini-sync.sh"
+SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh gh620-skills-army-mini-sync.sh gh589-xyz-mini-sync.sh gh589-consult-no-tick.sh gh589-skill-viewer.sh"
+# GH-831 D2: Small — the PDDA and PRS (releases/reconcile) suites plus the canaries. The hosted
+# reconcile qualifies a tier-1 landing with `validate.sh --sequential --subsystem small`, and
+# utils/py/wave_reconcile.py replays old receipts against THIS line at the tested commit, so keep
+# it one literal line. subsystem_of() claims no paths for small: it is a gate, not an area.
+SUBSYSTEM_TESTS_small="gh308-frozen-twin-guard.sh gh777-inventory-ratchet.sh gh400-acceptance-fidelity.sh gh400-source-url.sh litmus-release.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh gh448-driver-lock-resolver.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh549-work-events.sh gh646-status-label.sh gh1-fixture-guard.sh gh1-adoption-guard.sh gh139-pipe-grep-guard.sh gh168-wave-reconcile-scope.sh gh184-no-tracked-scratch.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh releases-skill.sh gh103-timeline-exporter.sh gh75-dashboard.sh gh32-releases-app.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-releases-fuzz.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh351-manifest-unship.sh gh360-scoped-receipt-chain-rebuild.sh gh349-releases-roadmap-vendored.sh gh429-wave-reconcile-vendored-observe.sh gh358-wave-reconcile-vendored-paths.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh relay-target-root.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root-newfile.sh gh649-pdda-migration.sh pdda-changelog.sh pdda-install-startup-docs.sh pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh784-marathon-qa-gate.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh mktemp-trap-guard.sh gh567-roadmap-dashboard-retired.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh568-releases-md-retired.sh gh454-reconciler-defects.sh gh424-roadmap-status-marker.sh gh421-auto-wave-reconcile.sh gh491-roadmap-section-validation.sh gh492-roadmap-state-sweep.sh gh605-work-state.sh gh605-board-policy.sh gh436-merge-cleanup.sh gh645-merge-cleanup-xyz-tools.sh gh674-merge-cleanup-hosted-lookup.sh gh527-issue-url-repair.sh gh153-releases-sidebar-rollup.sh security-scan.sh sentinel-network-guard.sh gh107-timeline-json-seam.sh wave-reconcile.sh gh496-phase2-reconciliation-views.sh gh306-registry-bidirectional.sh"
 
 subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
   case "$1" in
@@ -43,6 +48,25 @@ subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
     skills/*/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
     skills/*/standup/*)                                                                      printf '%s\n' standup ;;
     skills/*/skills-army-hq/*|skills/*/push-to-skills-army-mini/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
+  esac
+}
+
+# Docs surfaces: route=docs and tier 1 when nothing else is touched (GH-509, widened by GH-35 and
+# GH-487). GH-831 D4 adds skill files and the ledger. Precedence, in order:
+#   1. text, evidence and governance paths, as before (skills/**/SKILL.md lands here via *.md);
+#   2. the ledger/data dumps and their generated views — docs even though subsystem_of() claims
+#      releases.db/.sql, so a ledger-only push qualifies through the Small run;
+#   3. the non-text files of core skills (relay, relay-xyz, relay-automation, merge-cleanup, express,
+#      jog) are NOT docs; their markdown is, by rule 1, as before — the full-gate list below still
+#      catches every relay-xyz and relay-automation file;
+#   4. any other skills/** path is docs unless subsystem_of() claims it for an area.
+is_docs_surface() {
+  case "$1" in
+    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*) return 0 ;;
+    releases.db|releases.sql|harnesses.db|harnesses.sql|LEADERBOARD.html|RELEASES-PREVIEW.html) return 0 ;;
+    skills/*/relay/*|skills/*/relay-xyz/*|skills/*/relay-automation/*|skills/*/merge-cleanup/*|skills/*/express/*|skills/*/jog/*) return 1 ;;
+    skills/*) [ -z "$(subsystem_of "$1" || true)" ] ;;
+    *) return 1 ;;
   esac
 }
 
@@ -285,17 +309,13 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   # Docs surfaces (GH-35 Phase 1 widened the GH-509 list): evidence, transcripts, notes, and
   # governance levers (*.txt anywhere, decisions/, .pdda-* levers, .xyz-launch-artifact).
   # GH-487: TESTS-RESULTS receipts join the evidence side — a provenance.jsonl follow-up used
-  # to re-run the full gate as an unmapped path. skills/**/SKILL.md lands here via *.md —
-  # explanatory markdown is a docs change; the skill's CODE paths route through the subsystem
-  # registry instead.
-  case "$path" in
-    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*)
-      pdda_needed=true
-      ;;
-    *)
-      docs_only=false
-      ;;
-  esac
+  # to re-run the full gate as an unmapped path. GH-831: skill files and the ledger too; the
+  # precedence lives in is_docs_surface() above.
+  if is_docs_surface "$path"; then
+    pdda_needed=true
+  else
+    docs_only=false
+  fi
 
   # These surfaces own the coordination kernel, containment boundary, frozen twins,
   # worktree safety, or CI gate itself. They require the full suite before merge.
@@ -353,10 +373,9 @@ while IFS= read -r path || [[ -n "$path" ]]; do
 
   # Tier-2 membership: only explicitly registered subsystem paths qualify; every other
   # non-doc path fails closed to tier 3.
-  case "$path" in
-    *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*)
-      : # docs — neither disqualifies tier 1 nor joins a subsystem
-      ;;
+  if is_docs_surface "$path"; then
+    : # docs — neither disqualifies tier 1 nor joins a subsystem
+  else case "$path" in
     validate.sh)
       if ! is_validate_append_only; then
         unmapped="$path"
@@ -385,7 +404,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
           ;;
       esac
       ;;
-  esac
+  esac; fi
 
   case "$path" in
     validate.sh)

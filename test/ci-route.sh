@@ -36,7 +36,7 @@ expect_route "CI workflow changes require the full pre-merge gate" pull_request 
 # (issue #35, subsystem 6): the focused PDDA suites run instead of the whole pool. PDDA itself
 # still gates (pdda_needed=true). utils/pdda/** staying tier 3 was the pre-GH-35 posture.
 expect_route "PDDA implementation changes run the PDDA subsystem gate (GH-35)" pull_request fast true utils/pdda/pdda.sh
-expect_route "releases DB changes run the releases subsystem gate (GH-496)" pull_request fast false releases.sql releases.db
+expect_route "releases DB and dump files are docs surfaces (GH-831 D4; the releases gate before, GH-496)" pull_request docs true releases.sql releases.db
 expect_route "wave_reconcile changes run the PDDA subsystem gate (GH-496)" pull_request fast true utils/py/wave_reconcile.py
 shell_suffix=sh
 deleted_test="test/removed-regression.${shell_suffix}"
@@ -157,7 +157,13 @@ expect_tier "docs-only changes are tier 1" pull_request 1 README.md PROJECT/x.md
 expect_tier "text and markdown anywhere are docs (GH-35 widened)" pull_request 1 relay-system/2026-08-18/run/NOTE.txt
 expect_tier "HQ utility changes are tier 2" pull_request 2 utils/hq/hq.sh skills/2-daily/hq/find-hq.sh
 expect_tier "releases subsystem (incl. the one non-twin utils/py file) is tier 2" pull_request 2 utils/py/releases_app.py utils/release-lanes.sh
-expect_tier "releases DB and dump files are tier 2 (GH-496)" pull_request 2 releases.sql releases.db
+expect_tier "releases DB and dump files are tier 1 (GH-831 D4; tier 2 before, GH-496)" pull_request 1 releases.sql releases.db
+# GH-831 D4 precedence: a ledger dump is docs, a non-core skill's code is docs, a core skill's code
+# and an area-claimed skill are not, and a ledger dump beside core still fails closed.
+expect_tier "the other data dumps are tier 1 too (GH-831 D4)" pull_request 1 harnesses.sql harnesses.db
+expect_tier "non-core skill code is tier 1 (GH-831 D4)" pull_request 1 skills/3-weekly/radar/install.sh skills/4-occasional/rpr/scan.py
+expect_tier "core skill code stays off the docs gate (GH-831 D4: merge-cleanup)" pull_request 3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+expect_tier "a ledger dump beside core fails closed to tier 3 (GH-831 D4)" pull_request 3 releases.db relay-automation/relay-drive.sh
 expect_tier "releases utilities are tier 2 (GH-496)" pull_request 2 utils/releases-merge-resolve.sh utils/leaderboard.sh
 expect_tier "wave_reconcile is tier 2 under PDDA (GH-496)" pull_request 2 utils/py/wave_reconcile.py
 expect_tier "telemetry is tier 2" pull_request 2 utils/telemetry/health-lib.sh
@@ -227,9 +233,15 @@ out="$(bash "$ROUTER" subsystems pdda)"
   && pass "subsystems pdda lists its 15 suites (GH-649 adds migration, changelog and installer checks)" \
   || fail "subsystems pdda listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems skills-army-hq)"
-[[ "$(wc -w <<<"$out")" -eq 2 && "$out" == *"skills-army-hq.sh"* && "$out" == *"gh620-skills-army-mini-sync.sh"* ]] \
-  && pass "subsystems skills-army-hq lists its two dedicated suites (GH-487/GH-620)" \
+[[ "$(wc -w <<<"$out")" -eq 5 && "$out" == *"skills-army-hq.sh"* && "$out" == *"gh620-skills-army-mini-sync.sh"* ]] \
+  && pass "subsystems skills-army-hq lists its two dedicated suites plus GH-831's three gh589 suites (GH-487/GH-620)" \
   || fail "subsystems skills-army-hq listed $(wc -w <<<"$out") suites: $out"
+# GH-831 D2: Small is what the hosted reconcile runs for a tier-1 landing. Its count is pinned so a
+# dropped member is a visible change, not a quieter gate.
+out="$(bash "$ROUTER" subsystems small)"
+[[ "$(wc -w <<<"$out")" -eq 73 && "$out" == *"gh306-registry-bidirectional.sh"* && "$out" == *"wave-reconcile.sh"* ]] \
+  && pass "subsystems small lists its 73 suites (GH-831)" \
+  || fail "subsystems small listed $(wc -w <<<"$out") suites: $out"
 
 # ── GH-496: validate.sh append-only test registration routing ─────────────────────────────────
 # When validate.sh only appends new test suites to its TESTS array, it should route to fast/Tier-2

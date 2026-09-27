@@ -1,5 +1,66 @@
 # Changelog
 
+## 2026-09-26 — The first hosted Small run qualified a docs landing in 15.7 minutes (GH-831 Phase 3)
+
+#840 (GH-833) was the first docs-only merge after the three-tier gate landed. The hosted reconcile qualified it
+with `validate.sh --sequential --subsystem small`: tier 1, 76/76, in 15.7 minutes (run 36276061201). Full-gate
+reconcile runs that day took 57–60 minutes (jobs 57.0 and 59.7). The receipt is committed with `tier: 2` and its
+73-suite list.
+
+- **GH-831:** Phase 3's QA gate is met. Both hosted runs are cited in its plan.
+- **GH-836:** step 6 is done. Hosted, `gh436` takes 221 s and `gh549` 159 s. Small is over the ~12-minute line, so
+  D1, moving `gh436` to Large, is now the operator's call.
+- **GH-844:** GH-833's manual check now confines the PRS entry to the glossary, and its witness recipe exits
+  non-zero on any unexpected result, with a self-test to prove it. These were CodeRabbit findings on #840; the
+  other child of umbrella #845, #843, is the relay-path fix.
+
+## 2026-09-26 — PRS gets one definition: the Product Release System, the RELEASES ledger (GH-833)
+
+Agents, plans and issues call the RELEASES ledger "PRS", but no doc defined the term. `ROUTER.md` used it
+undefined for the Small tier.
+
+- **One definition,** in `HOW-TO-USE.md`'s glossary, now "the five terms you'll hit first". PRS is the Product
+  Release System: `releases.db` and its dump `releases.sql`, written only through `releases_app.py`. It is the
+  third part of the XYZ Forge / PDDA / PRS trinity. PRS names the system; no file, table, verb or doc is renamed.
+- **`ROUTER.md`** names the trinity under its intro.
+- **The other canonical docs** spell the term out where they introduce the ledger, and link the definition:
+  `AGENTS.md`, `SOP.md`, `ARCHITECTURE.md`, `RELEASES-DB-FAQS.md`, `README.md` and `PROJECT/PDDA.md`.
+- **Six skills** do the same: `/releases`, `/start-task`, `merge-cleanup`, `start-marathon`, `10days` and
+  `end-of-week`.
+  - `PROJECT/PDDA.md` and the skills link by absolute GitHub URL, because they are read outside this checkout.
+  - Deployed skills pick up the text on the next skills-army-hq deploy.
+
+No suite was added. Two manual checks, with red controls at base, are recorded under
+`TESTS-RESULTS/2026-09-26+GH-833/`:
+- every file's first "PRS" is spelled out;
+- there is exactly one definition, and every placement links to it.
+
+The merge is docs-only, so it should be the first landing the hosted reconcile qualifies with the Small gate
+(#831 Phase 3).
+
+## 2026-09-26 — The two slowest Small suites lose 4 minutes, and the push gate stops calling a live agent (GH-836)
+
+#835's profiling found that `gh549-work-events.sh` and `gh436-merge-cleanup.sh`, about two-thirds of the hosted
+Small run, spent their time in test scaffolding, not in the checks. Edits to the existing suites remove it,
+with no new suite:
+
+- **`gh549`, 346 s → 147 s locally.**
+  - A red-control copy slept 0.4 s on every row of the real ledger. Its two racers now meet at their first
+    write and race only the first few rows.
+  - Four backfills in leg 21f sent every event to the mock board, although the leg reads only events. They now
+    run with board dispatch off.
+- **`gh436`, 292 s → 239 s.** The SKILL.md parity guard re-ran 17 tests the same suite already runs. It now
+  checks that each named test exists; the suite runs them.
+- **`gh649`** no longer fails when the clone sits under the `/tmp` symlink.
+- **The pre-push full gate skips `relay-self-sufficiency.sh`'s live agent turn by default,** as CI and the
+  hosted reconcile already did. That turn cost 1–2.7 minutes and an API call per push, and a backend hiccup
+  refused the push. `RELAY_SELF_SUFFICIENCY_SKIP=0` opts back in, and `relay-automation/README.md` says when a
+  recorded live run is owed.
+
+Every trimmed check was broken on purpose and still failed, including the 21e race under deliberately staggered
+starts. `gh549` and `gh436` stay in Small, because both read files a docs-only landing can change. Rollback:
+revert; it is test files, the hook default and docs.
+
 ## 2026-09-25 — Bounded handsfree agent wakeups (GH-825)
 
 Add a `handsfree` skill for checking CI and other asynchronous results and then continuing the
@@ -16,6 +77,59 @@ Its installer removes a dangling `status` link only when it points to this skill
 If an old `status` link is still live, inspect its target and unlink it manually if it is the
 former skill; the installer leaves live links alone.
 
+## 2026-09-25 — The gate qualifies each landing by tier: Small for docs, ledger and skill merges (GH-831, Phase 2)
+
+Phase 2 of #831 makes the tiers real. The push hook is unchanged. After a merge, the hosted reconcile classifies
+the landing's changes at the tested commit and runs **one** qualifying run:
+
+- **Small**, `validate.sh --sequential --subsystem small`, when the changes are docs, the ledger dumps or
+  non-core skill files. Small is 73 suites: the PDDA and PRS suites and the canaries. The run also includes the
+  PDDA gate and the Python layer.
+- **The full registry** for anything else, or whenever the classification is in doubt.
+
+Promotion still runs the full registry.
+
+- `utils/ci-route.sh` defines Small as a subsystem list. It treats non-core skill files and the ledger dumps as
+  docs surfaces. The code of core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`,
+  `jog`) and of area-claimed skills is not; skill markdown routes as before. Seven more suites join their
+  Medium areas.
+- `utils/py/wave_reconcile.py` checks a Small run exactly: every expected suite once, the PDDA gate, the Python
+  layer and the identity check. The receipt records the list it ran, and replay checks it against the list at
+  the tested commit, so later edits to Small never break an old receipt. Full-run receipts are unchanged.
+- Eight skill-text suites are turned off. Their files stay, and `test/gh306-registry-bidirectional.sh`'s
+  EXEMPT list is their record.
+- `ROUTER.md`, `AGENTS.md`, `/express`'s capture doc, `relay-xyz`'s review scope and the PR template describe
+  the tiers and the no-new-tests rule.
+
+Verification used existing suites and recorded manual checks, with no new suite. The first Small run passed
+76/76 in about 20 minutes locally. The reconcile's rules pass 19 checks against that run's real telemetry.
+Rollback is a small PR that makes the reconcile always pick the full run, keeping the receipt reader.
+
+## 2026-09-25 — No new tests, and the gate moves to three tiers: rules first (GH-831, Phase 1)
+
+The operator ruled that agents stop adding tests, and that the gate be cut to Small, Medium and Large tiers
+with non-core suites turned off (#802 decision; tracked in #831). This first phase changes only rules and
+skill text. The rule is written into the skills that produce tests, so no guard suite is needed:
+
+- `AGENTS.md` gains a *No new tests* rail: no new `test/` suites, registry entries or gate machinery.
+  Verification uses an existing suite or a manual check recorded under `TESTS-RESULTS/`.
+- `GUIDING-PRINCIPLES.md` principle 13: a red control is witnessed on an existing suite or recorded, never by
+  adding one.
+- `/express` names the existing suite that covers a fix instead of a new dedicated one.
+- The instructions in thirteen skills and `SOP.md` that asked for new tests now defer to a repo's no-new-tests
+  rule. The skills are deployed machine-wide, so other repos keep their own policy.
+- GH-732's parked ledger row moves to Deferred as superseded, and #805 and #732 point to #831.
+
+The plan (`PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md`) passed three Codex review rounds on its technical
+content. The operator accepted its six proposed defaults. Its recon found that turning suites off saves
+seconds (8 suites), not minutes. The saving comes from routing docs, ledger and skill merges (32–42% of
+merges) to an ~18-minute hosted Small run instead of the ~61-minute full run. That lands in Phase 2.
+Rollback: revert this commit; it is text and one ledger row.
+
+## 2026-09-25 — `main` promoted and 0.9.0 "Cargo" released (GH-822)
+
+First promotion of `main` since 2026-08-17, and the repository's first GitHub Release. `main` was fast-forwarded from `29144118` to the reconciled `development` tip `a076b1b1` (1,803 commits), which was the operator's "delete and recut" done as the equivalent fast-forward because old `main` had no commits of its own. Admin enforcement was relaxed only for the gated push and restored identical to its snapshot. The GH-509 witness passed on the exact commit: `MACOS-BOUNDARY: green`, `validate.sh --sequential` 422/422 in 78 min. That run only fits because GH-823 raised the boundary cap from 45 to 120. The GH-784 promotion QA receipt (Codex, Approved) preceded it. 0.9.0 "Cargo" was published on that commit as Latest after trimming its unfinished items to 0.6.0 Front-Door, and the ledger now records its release URL and `shipped`. Reversibility: Costly; `main` is fixed forward, never force-pushed.
+
 ## 2026-09-25 — Promotion boundary cap fits the suite (GH-823)
 
 `boundary-macos`, the GH-509 promotion witness, had a 45-minute cap sized to August's "~13-15 min locally".
@@ -25,6 +139,19 @@ record a green boundary, for a reason unrelated to code. The cap is now 120, mat
 `test/ci-workflow.sh` fails if the boundary's job-level cap drops below the wave-reconcile cap or either goes
 missing (a step-level timeout does not count). Found by the 2026-09-25 post-merge review (#822);
 it blocked the `development` → `main` promotion. Rollback: revert the one value and its assertion.
+
+## 2026-09-24 — gh251's nested gate runs scoped to the cheapest `.py` tier-2 lane (GH-808)
+
+`test/gh251-validate-pytest-skip.sh` handed both of its nested `validate.sh --paths-file` runs a
+paths-file naming `utils/py/releases_app.py`, so each nested run executed the ~24-suite releases
+lane — 1044.4 s of a 4809.3 s hosted sequential full gate (21.7%, the single most expensive suite)
+and 1050.6 s standalone locally. The suite's assertions only need a tier-2 paths-file that sets
+`T2_PYTEST=1`; it now names `skills/3-weekly/skills-army-hq/scripts/sync.py`, the smallest measured
+`.py`-bearing lane (2 suites, 34.8 s hosted). Assertions are unchanged: 6 pass / 0 fail before and
+after; 67.5 s standalone after (−93.6%). Red control witnessed end to end: mutating the SKIPPED
+message in `validate.sh` fails the suite (exit 1, naming the tier-2 skills-army-hq classification);
+restoring it returns green. Evidence and provenance: `TESTS-RESULTS/2026-09-24+GH-808/`. This is
+the #805 audit sample's top cost item, first flagged in the GH-749 capture.
 
 ## 2026-09-24 — Preserve sequential marathon admission during integration (GH-796, GH-784)
 
