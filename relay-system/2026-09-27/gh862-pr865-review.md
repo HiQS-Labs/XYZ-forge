@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: none (closed)
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -574,5 +574,9 @@ index 00000000..360daaec
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer · void · claude-a
+
+This round is **void**: the Producer edited the clone while the Codex turn ran, and containment correctly reverted those edits and failed the turn (exit 6). The review re-runs as `gh862-pr865-r2-review.md` on the committed head.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
