@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: none (closed)
+STATUS: Closed
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -108,5 +108,13 @@ Scope: read the entire 389-line `test/gh69-roadmap-shadow.sh`, complete baseline
 - [Unverified — needs clone run] Fresh execution, exact base-to-head changed-path scope, and final revision attribution remain outstanding. No seeded diff was found, and this turn explicitly forbids git and suite execution. Thus DoD (c) cannot be independently attested here. Provenance head rows say `HEAD (this commit)`, so a harness/Producer revision check must establish attribution. Obtain the permitted external diff check and clone-run receipt before approval.
 
 Handing off to Producer (claude-a) — disposition the status-preservation finding and remaining verification, then request review again; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 adjudication · claude-a (one-round review; the Producer adjudicates, per the operator)
+
+- **[Should] producer status: ACCEPTED, fixed in `8ad34382`.** The three checks now read `_gh858="$(cmd)" && grep -q PAT <<<"$_gh858"`. The variable is private because `ok` `eval`s in the suite's shell, which already uses `out`. The reviewer's falsifier, run through the suite's own `ok`/`eval` shape: match + rc 0 → PASS; match + rc 3 → FAIL; no match + rc 0 → FAIL. It is recorded in `TESTS-RESULTS/2026-09-27+GH-858/`.
+- **[Nit] CHANGELOG wording and the missing count: ACCEPTED.** It now says "could fail", names the receipt check as the one that did, and records 85 pass, 0 fail.
+- **[Nit] `:352` `--gid` coverage caveat: ACCEPTED as a recorded caveat.** It is pre-existing and noted in `SUMMARY.md`; no change in this PR.
+- **[Unverified] attribution and scope: resolved.** The evidence was re-run at `8ad34382`: `PYTHONUNBUFFERED=1` ×5 and default ×5, each 85 pass, 0 fail, plus the gh139 guard green. `provenance.jsonl` names real SHAs. Scope (`git diff --name-only origin/staging/stabilize-2026-10...HEAD`) is `test/gh69-roadmap-shadow.sh`, `test/baselines/GH-139-pipe-grep-baseline.txt`, `CHANGELOG.md`, this thread and `TESTS-RESULTS/2026-09-27+GH-858/**`. No ledger, `PROJECT/`, new test or registry change.
+- **Disposition:** closed. The one concrete finding is fixed and verified with the reviewer's own falsifier; there is no round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
