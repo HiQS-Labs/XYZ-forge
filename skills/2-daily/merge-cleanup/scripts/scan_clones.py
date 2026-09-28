@@ -13,6 +13,7 @@ import sys
 import json
 import subprocess
 import shutil
+import signal
 import tempfile
 import time
 from pathlib import Path
@@ -94,20 +95,51 @@ def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subp
     ledger caller keeps today's behavior; network call sites pass a finite value (see
     merge_cleanup._net_git). A timeout is reported as a non-zero exit — the same "git said no"
     shape — never as an exception.
+
+    A bounded call runs in its own process group and the WHOLE group is ended on expiry: a push's
+    pre-push hook (and the gate it runs) are git's children, and killing git alone left them
+    running after merge-cleanup had already reported failure (PR #880 review, P1).
     """
+    argv = ["git", "-C", str(cwd)] + args
     try:
-        return subprocess.run(
-            ["git", "-C", str(cwd)] + args,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=timeout
-        )
-    except subprocess.TimeoutExpired as exc:
-        return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
-                                           stderr=f"timed out after {exc.timeout}s: git {' '.join(args)}")
+        if timeout is None:
+            return subprocess.run(argv, capture_output=True, text=True, check=False)
+        proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                start_new_session=True)
     except OSError as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=f"{exc}")
+    try:
+        out, err = proc.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(args=args, returncode=proc.returncode, stdout=out, stderr=err)
+    except subprocess.TimeoutExpired:
+        _kill_group(proc.pid)
+        try:
+            proc.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            pass
+        return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
+                                           stderr=f"timed out after {timeout}s: git {' '.join(args)}")
+
+
+def _kill_group(pgid: int, grace: float = 5.0) -> None:
+    """TERM the group, wait out a grace window, then KILL. Same sequence as utils/py/proc_group.py
+    kill_existing, which this skill cannot import: it ships standalone (Deployed Skills) and vendored
+    .xyz/ installs carry no utils/py/proc_group.py."""
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+    except OSError:
+        return
+    deadline = time.monotonic() + grace
+    while time.monotonic() < deadline:
+        try:
+            os.killpg(pgid, 0)
+        except OSError:
+            return
+        time.sleep(0.1)
+    try:
+        os.killpg(pgid, signal.SIGKILL)
+    except OSError:
+        pass
 
 
 def is_pid_alive(pid: int) -> bool:
