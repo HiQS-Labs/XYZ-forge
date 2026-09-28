@@ -1,0 +1,6 @@
+== test: gh39-releases-project-sync ==
+  PASS: dry-run plans cards but leaves GitHub unchanged
+  PASS: apply creates one card per immutable Release ID
+  PASS: repeat apply updates cards without duplicates
+  PASS: missing required Project field fails loudly
+== result: 4 pass, 0 fail ==

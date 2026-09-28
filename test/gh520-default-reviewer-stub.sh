@@ -46,14 +46,14 @@ printf 'CODEX_BIN=%s\n' "${CODEX_BIN:-UNSET}"
 EOF
 OUT="$(REPO_UNDER_TEST="$REPO" bash "$PROBE" 2>/dev/null || true)"
 ok "a sourcing fixture inherits a CODEX_BIN" \
-   "printf '%s' \"\$OUT\" | grep -q 'CODEX_BIN=/'"
+   "grep -q 'CODEX_BIN=/' <<<\"\$OUT\""
 ok "the inherited stub is executable" \
-   "printf '%s' \"\$OUT\" | grep -q 'EXECUTABLE=yes'"
+   "grep -q 'EXECUTABLE=yes' <<<\"\$OUT\""
 
 # --- (3) an explicit CODEX_BIN still wins -----------------------------------------------------
 OUT="$(REPO_UNDER_TEST="$REPO" CODEX_BIN=/usr/bin/true bash "$PROBE" 2>/dev/null || true)"
 ok "an explicit CODEX_BIN overrides the default" \
-   "printf '%s' \"\$OUT\" | grep -q 'CODEX_BIN=/usr/bin/true'"
+   "grep -q 'CODEX_BIN=/usr/bin/true' <<<\"\$OUT\""
 rm -f "$PROBE"
 
 # --- (4) THE COMPANION: the probe must still fire on a genuinely missing binary ----------------

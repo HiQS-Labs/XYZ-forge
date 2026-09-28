@@ -1,0 +1,13 @@
+== test: gh520-default-reviewer-stub ==
+  PASS: _setup.sh declares a default CODEX_BIN
+  PASS: _setup.sh does NOT clobber an explicit CODEX_BIN (uses :- default)
+  PASS: a sourcing fixture inherits a CODEX_BIN
+  PASS: the inherited stub is executable
+  PASS: an explicit CODEX_BIN overrides the default
+  PASS: marathon-drive still asserts a missing reviewer binary fails fast
+  PASS: marathon-drive still asserts the message names the missing binary
+  PASS: the probe itself is still wired before dispatch
+  PASS: gh402-branch-enforcement sources the shared setup (so it inherits the stub)
+  PASS: gh514-write-set-trackable sources the shared setup (so it inherits the stub)
+  PASS: gh388-run-log-durability sources the shared setup (so it inherits the stub)
+  gh520-default-reviewer-stub: 11 pass, 0 fail

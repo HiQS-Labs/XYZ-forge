@@ -1,0 +1,83 @@
+== test: gh57-live-merge-resolve ==
+-- 1: the shape of a real conflict
+  PASS: a concurrent ledger write conflicts BOTH artifacts, not just the dump
+  PASS:   and git wrote conflict markers into releases.sql
+  PASS:   and the conflicted dump carries both sides' generation headers
+-- 2: refusals against a genuinely conflicted index
+  PASS: resolver refuses while releases.sql is unmerged (rc=1)
+  PASS:   and says which file needs judgment
+  PASS:   and did NOT touch the live DB (byte-identical after the refusal)
+  PASS: resolver refuses a staged dump that still contains conflict markers (rc=1)
+  PASS:   and names the markers as the reason
+-- 3: conflict -> resolve dump -> resolver -> commit
+  PASS: resolver completes a real hand-resolved merge (rc=0)
+  PASS:   and says it deliberately did not commit
+  PASS:   and left no unmerged paths
+  PASS:   and the ledger checks clean afterwards
+  PASS:   and BOTH sides' releases survived the merge
+  PASS:   and `git commit` closes the merge
+  PASS:   and the committed tree carries both artifacts
+-- 4: the failure path leaves the merge open (regression: it did not)
+  PASS: fixture has a release row to duplicate
+  PASS:   and that GID now appears twice in the dump
+  PASS: resolver fails on an unsettleable content conflict (rc=1)
+  PASS:   and releases.db is STILL unmerged — the merge is open, as the message claims
+-- 5: a rewound generation header is refused (regression: it was accepted)
+  PASS: fixture really has unequal parent generations (HEAD=2 MERGE_HEAD=4)
+  PASS: resolver refuses a header below the highest parent (rc=1)
+  PASS:   and names both parents' generations
+  PASS:   and says what to set it to
+  PASS: POSITIVE CONTROL: the SAME merge with the highest header resolves cleanly (rc=0)
+  PASS:   and the ledger's generation did not go backwards
+-- 6: releases.db.bak is ignored, not merely unmentioned
+  PASS: the rebuild really produced a .bak to worry about
+  PASS: this repo's .gitignore covers releases.db.bak
+-- 7: --root '' is a caller bug, not a request for the current repo
+  PASS: resolver refuses an explicitly empty --root (rc=2)
+  PASS:   and says it will not fall back to the current repository
+  PASS:   and this repo's ledger is byte-identical after that call
+-- 8: adopted views are regenerated + staged (GH-272)
+wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c8/RELEASES-PREVIEW.html (0 releases, self-contained, read-only snapshot of /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c8/releases.db)
+wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c8/LEADERBOARD.html (0 rated task(s), self-contained)
+leaderboard: wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh57-live.YWEokS/c8/LEADERBOARD.md
+  PASS: fixture adopted RELEASES-PREVIEW.html before the merge
+  PASS: fixture adopted LEADERBOARD.html before the merge
+  PASS: fixture adopted LEADERBOARD.md before the merge
+  PASS: the adopted views really conflicted (both sides wrote them)
+  PASS: resolver completes with adopted views in play (rc=0)
+  PASS:   and says it regenerated them
+  PASS:   and left no unmerged paths (views included)
+  PASS:   RELEASES-PREVIEW.html is staged resolved
+  PASS:   RELEASES-PREVIEW.html carries no conflict markers
+  PASS:   RELEASES-PREVIEW.html carries neither side's stale touch
+  PASS:   LEADERBOARD.html is staged resolved
+  PASS:   LEADERBOARD.html carries no conflict markers
+  PASS:   LEADERBOARD.html carries neither side's stale touch
+  PASS:   LEADERBOARD.md is staged resolved
+  PASS:   LEADERBOARD.md carries no conflict markers
+  PASS:   LEADERBOARD.md carries neither side's stale touch
+leaderboard: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh57-live.YWEokS/c8/LEADERBOARD.md is in sync
+  PASS: staged LEADERBOARD.md matches a fresh render (--check in sync)
+  PASS: staged RELEASES-PREVIEW.html reflects the MERGED ledger (both sides' releases present)
+wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c9-deleted-on-incoming/RELEASES-PREVIEW.html (0 releases, self-contained, read-only snapshot of /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c9-deleted-on-incoming/releases.db)
+wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c9-deleted-on-incoming/LEADERBOARD.html (0 rated task(s), self-contained)
+leaderboard: wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh57-live.YWEokS/c9-deleted-on-incoming/LEADERBOARD.md
+  PASS: [deleted-on-incoming] the view really is a delete/modify conflict
+  PASS: [deleted-on-incoming] resolver completes (rc=0)
+  PASS: [deleted-on-incoming] it says it honoured the deletion
+  PASS: [deleted-on-incoming] RELEASES-PREVIEW.html is GONE from the working tree (not regenerated)
+  PASS: [deleted-on-incoming] RELEASES-PREVIEW.html is GONE from the index
+  PASS: [deleted-on-incoming] no unmerged paths remain
+  PASS: [deleted-on-incoming] the still-adopted leaderboard was regenerated anyway
+wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c9-deleted-on-head/RELEASES-PREVIEW.html (0 releases, self-contained, read-only snapshot of /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c9-deleted-on-head/releases.db)
+wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh57-live.YWEokS/c9-deleted-on-head/LEADERBOARD.html (0 rated task(s), self-contained)
+leaderboard: wrote /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh57-live.YWEokS/c9-deleted-on-head/LEADERBOARD.md
+  PASS: [deleted-on-head] the view really is a delete/modify conflict
+  PASS: [deleted-on-head] resolver completes (rc=0)
+  PASS: [deleted-on-head] it says it honoured the deletion
+  PASS: [deleted-on-head] RELEASES-PREVIEW.html is GONE from the working tree (not regenerated)
+  PASS: [deleted-on-head] RELEASES-PREVIEW.html is GONE from the index
+  PASS: [deleted-on-head] no unmerged paths remain
+  PASS: [deleted-on-head] the still-adopted leaderboard was regenerated anyway
+
+  gh57-live-merge-resolve: 62 pass, 0 fail

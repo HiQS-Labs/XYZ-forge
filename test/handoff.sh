@@ -20,7 +20,7 @@ TICK_TS=2026-05-04T10:00:06.000Z tick_a release TASK-007 --agent alice --to bob 
 
 POST=$(tick_b next --agent bob)
 echo "  post-handoff, bob's next: $POST"
-if echo "$POST" | grep -q "TASK-007" && echo "$POST" | grep -q "handoff"; then
+if grep -q "TASK-007" <<<"$POST" && grep -q "handoff" <<<"$POST"; then
   pass "bob's next returns TASK-007 with handoff marker, despite TASK-099 having higher priority"
 else
   fail "expected handoff TASK-007 to win for bob, got: $POST"

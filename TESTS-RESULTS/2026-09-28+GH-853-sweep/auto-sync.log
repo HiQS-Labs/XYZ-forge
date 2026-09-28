@@ -1,0 +1,9 @@
+== test: auto-sync ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-auto-sync.XXXXXX.YhSGGnZlhO
+  alice: tick: error: another tick claim is in progress for this clone (lock held) — retry shortly, or remove .tick/locks/claim.lock if a prior claim was killed
+  bob:   won: TASK-L1 claimed by bob
+  PASS: exactly one agent won the concurrent claim
+  PASS: exactly one agent lost the concurrent claim
+  PASS: exactly one task.claimed event written (lock integrity)
+  PASS: projection succeeded after concurrent claims (no corrupted state)
+  auto-sync: 4 pass, 0 fail
