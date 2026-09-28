@@ -3357,4 +3357,12 @@ Scope of that declaration: the entire embedded review packet/combined patch, not
 
 STATUS is Approved. Relay closed (Approved), no further review turn needed. Producer (claude-a) receives the verdict for the harness gate and the authorized landing sequence. Only this relay file was edited; no Git command was run. Closing the token with `done`, per the approval-specific instruction.
 
+
+### Attestation · relay-drive — 2026-09-28T01:25:03Z
+task: RELAY-gh854-prlanding-review
+reviewer: codex
+status: Approved
+reviewed-head: 3f98c8e6cdc4922b0637afc02413039b68e45715
+added-range: 229345+6978
+added-sha256: f3c6c5c1d1b91c51296d57f93de898aec4d8983aa08b8f9577378406ad82f8f0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
