@@ -455,6 +455,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     expected_heads = {head for head in (merged_head, pr_head) if head}
     adopted_run_id = None
     seen_active = None  # GH-852: once a run is seen in flight, losing sight of it is not "no run"
+    seen_ours = None    # the in-flight run was identified by this merge's SHA, not adopted unidentified
 
     while True:
         res = _gh(query, repo_path, timeout=60)
@@ -499,6 +500,10 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
                     f"waiting up to {grace_left:.0f}s more before assuming there is none")
                 time.sleep(min(poll_s, grace_left) or 0.1)
                 continue
+            if seen_ours is not None:
+                log_err(f"Hosted wave-reconcile run #{seen_ours} was in flight and is no longer listed; "
+                        "refusing to start the local reconciler")
+                return "active_timeout"
             log(f"No hosted wave-reconcile run found for {merged_head[:10]}; using local reconciliation")
             return "fallback"
 
@@ -517,6 +522,8 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             return "fallback"
 
         seen_active = run_id
+        if str(run.get("headSha") or "") in expected_heads:
+            seen_ours = run_id
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             log_err(
