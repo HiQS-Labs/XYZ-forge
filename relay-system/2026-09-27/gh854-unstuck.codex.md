@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -181,4 +181,48 @@ index 2c358be1..847bcc87 100644
  the first, and file or record the rest into the work's existing durable intake (issue tracker,
 ```
 
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: The supplied baseline diff resolves Round 1's evidence request and matches the current skill. Whole-file instruction review satisfies all five acceptance cases. Approval covers instruction correctness, not measured model behavior or merge readiness; gate receipts remain the separate obligation in Setup.
+swept file: yes
+
+- [Pass] Baseline comparison — the Producer's three supplied hunks change the trigger description, add the immediate tripwire and extend existing Rung 3. The read-only probe below matched every new-side hunk against the candidate and reconstructed the supplied old blob. Attribution to `b25584c3` relies on the Producer's supplied diff, not an independent Git query. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` with the following inline body (exit 0; variable names abbreviated here):
+
+```python
+from pathlib import Path
+import re, hashlib
+s=Path('relay-system/2026-09-27/gh854-unstuck.codex.md').read_text()
+d=s.split('```diff\n',1)[1].split('\n```',1)[0]
+current=Path('skills/1-hourly/unstuck/SKILL.md').read_text().splitlines(keepends=True)
+base=current.copy()
+for h in reversed(re.split(r'(?m)^@@ ',d)[1:]):
+    header,body=h.split('\n',1)
+    a,b,c,e=map(int,re.match(r'-(\d+),(\d+) \+(\d+),(\d+) @@',header).groups())
+    old=[x[1:]+'\n' for x in body.splitlines() if x.startswith((' ','-'))]
+    new=[x[1:]+'\n' for x in body.splitlines() if x.startswith((' ','+'))]
+    assert len(old)==b and len(new)==e
+    assert base[c-1:c-1+e]==new
+    base[c-1:c-1+e]=old
+for name,lines,prefix in [('candidate',current,'847bcc87'),('reconstructed baseline',base,'2c358be1')]:
+    b=''.join(lines).encode()
+    digest=hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+    assert digest.startswith(prefix)
+    print(name,len(lines),'lines; blob',digest)
+```
+
+  Decisive output: `candidate 217 lines; blob 847bcc87b91550be440f9b40c73a6403e338e24b`; `reconstructed baseline 196 lines; blob 2c358be11428b5bc98c62e4171d8e1c3980b8f6b`. No Git command or executable fixture was run.
+- [Pass] Case 1 — `skills/1-hourly/unstuck/SKILL.md:56` interrupts immediately; `:120–130` requires per-topic evidence, rejects repeated preferences and directs execution of the next accepted step. No change requested.
+- [Pass] Case 2 — `skills/1-hourly/unstuck/SKILL.md:123–130` checks existing coverage and forbids duplicate checklist files, gates, recon passes or review rounds. No change requested.
+- [Pass] Case 3 — `skills/1-hourly/unstuck/SKILL.md:111` preserves failing checks; `:132–137` reopens only the affected decision, routes unknown failures to debug-mantra and conditions bounded recon on untraced existing-code impact. No change requested.
+- [Pass] Case 4 — `skills/1-hourly/unstuck/SKILL.md:124` and `:132–137` accept changed user requirements independently of demonstrated failures and retain unaffected decisions. No change requested.
+- [Pass] Case 5 — `skills/1-hourly/unstuck/SKILL.md:184` requires re-driving the primary engine after a micro-action; `:203–207` preserves the parent ladder and outer driver. These instructions are unchanged by the supplied diff. No change requested.
+- [Pass] Whole-file sweep — read all 217 lines, including blocker classification (`skills/1-hourly/unstuck/SKILL.md:98–118`), recurrence routing (`:161–165`), authorization boundaries (`:176–178`) and genuine-dependency exit (`:199–205`). No concrete pre-existing defect found. These are textual assessments, not measured model behavior.
+- [Unverified — needs clone run] Gate receipts remain the separately collected obligation in Setup. No tests or executable fixtures were run; no green gate or merge readiness is claimed.
+
+Relay closed (Approved), no further review turn needed. Producer continues the separately required verification and outer workflow.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-09-28T00:33:35Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
