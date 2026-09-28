@@ -1,8 +1,8 @@
 ---
 title: "GH-793: idle-kill control fails under parallel load"
-status: queued
+status: Complete
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-28
 owner: unassigned
 goal: Diagnose the idle-control parallel failure without weakening its negative control.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/793

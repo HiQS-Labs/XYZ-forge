@@ -1,11 +1,11 @@
 ---
-gh_issue: 852
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/852
-title: "merge-cleanup: a stalled git clone in the landing gate hangs the whole run with no timeout"
-status: Proposed (1-INBOX — not yet active)
+gh_issue: 860
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/860
+title: "skills: radar and whack-a-mole flag CI churn, apply the repo's CI churn SOP (#857) when one exists, and propose a pause for root-cause work when none does"
+status: Complete
 created: 2026-09-27
 owner: unassigned
-doc_type: bugfix
+doc_type: feedback
 complexity: 2
 risk: 1
 effort: 2
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# merge-cleanup: a stalled git clone in the landing gate hangs the whole run with no timeout
+# skills: radar and whack-a-mole flag CI churn, apply the repo's CI churn SOP (#857) when one exists, and propose a pause for root-cause work when none does
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at bc0a291e (#854 window); plan: TESTS-RESULTS/2026-09-27+GH-851/PLAN.md; lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-851/. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at 81888838 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-860. Full scope is in the GitHub issue.
 
 ## Why
 

@@ -1,9 +1,9 @@
 ---
-gh_issue: 858
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/858
-title: "gh69-roadmap-shadow: `ra check | grep -q` goes red on every run under PYTHONUNBUFFERED=1 (GH-139 baselined shape)"
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-27
+gh_issue: 842
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/842
+title: "reconcile: ad-hoc direct pushes to development are never qualified by a hosted run (catch-up discovers PRs only)"
+status: Complete
+created: 2026-09-26
 owner: unassigned
 doc_type: bugfix
 complexity: 2
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# gh69-roadmap-shadow: `ra check | grep -q` goes red on every run under PYTHONUNBUFFERED=1 (GH-139 baselined shape)
+# reconcile: ad-hoc direct pushes to development are never qualified by a hosted run (catch-up discovers PRs only)
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at 6653ab16 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-858. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at e927c5b0 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-842. Full scope is in the GitHub issue.
 
 ## Why
 

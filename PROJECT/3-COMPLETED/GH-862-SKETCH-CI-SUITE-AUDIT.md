@@ -1,8 +1,8 @@
 ---
-gh_issue: 860
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/860
-title: "skills: radar and whack-a-mole flag CI churn, apply the repo's CI churn SOP (#857) when one exists, and propose a pause for root-cause work when none does"
-status: Proposed (1-INBOX — not yet active)
+gh_issue: 862
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/862
+title: "Sketch: ci-suite-audit skill — manual audit of the bash CI suites that files its own report issue (replaces the #861 adaptation; method for the 2026-10-08 audit)"
+status: Complete
 created: 2026-09-27
 owner: unassigned
 doc_type: feedback
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# skills: radar and whack-a-mole flag CI churn, apply the repo's CI churn SOP (#857) when one exists, and propose a pause for root-cause work when none does
+# Sketch: ci-suite-audit skill — manual audit of the bash CI suites that files its own report issue (replaces the #861 adaptation; method for the 2026-10-08 audit)
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at 81888838 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-860. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at ed92f4dd (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-862. Full scope is in the GitHub issue.
 
 ## Why
 

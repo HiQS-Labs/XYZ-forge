@@ -1,11 +1,11 @@
 ---
-gh_issue: 745
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/745
-title: "wave_reconcile RollbackJournal writes second-granular, appended .tick events into the real clone from tests — one two-record file makes tick claims events-unreadable and merge-cleanup preserve the clone forever"
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-22
+gh_issue: 857
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/857
+title: "SOP: CI churn recovery — entry gate, strategy checklist, exit gates (draft)"
+status: Complete
+created: 2026-09-27
 owner: unassigned
-doc_type: bugfix
+doc_type: feedback
 complexity: 2
 risk: 1
 effort: 2
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# wave_reconcile RollbackJournal writes second-granular, appended .tick events into the real clone from tests — one two-record file makes tick claims events-unreadable and merge-cleanup preserve the clone forever
+# SOP: CI churn recovery — entry gate, strategy checklist, exit gates (draft)
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at fb1364fa (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-745. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at 52c9acce (#854 window); lands with the window's landing PR. Evidence: see the commit. Full scope is in the GitHub issue.
 
 ## Why
 

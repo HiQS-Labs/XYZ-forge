@@ -1,9 +1,9 @@
 ---
-gh_issue: 842
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/842
-title: "reconcile: ad-hoc direct pushes to development are never qualified by a hosted run (catch-up discovers PRs only)"
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-26
+gh_issue: 745
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/745
+title: "wave_reconcile RollbackJournal writes second-granular, appended .tick events into the real clone from tests — one two-record file makes tick claims events-unreadable and merge-cleanup preserve the clone forever"
+status: Complete
+created: 2026-09-22
 owner: unassigned
 doc_type: bugfix
 complexity: 2
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# reconcile: ad-hoc direct pushes to development are never qualified by a hosted run (catch-up discovers PRs only)
+# wave_reconcile RollbackJournal writes second-granular, appended .tick events into the real clone from tests — one two-record file makes tick claims events-unreadable and merge-cleanup preserve the clone forever
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at e927c5b0 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-842. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at fb1364fa (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-745. Full scope is in the GitHub issue.
 
 ## Why
 

@@ -1,11 +1,11 @@
 ---
-gh_issue: 857
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/857
-title: "SOP: CI churn recovery — entry gate, strategy checklist, exit gates (draft)"
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-27
+gh_issue: 830
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/830
+title: "test: gh620 ignores failed git calls in fixture setup — a transient clone failure becomes an unexplained crash in the hosted gate"
+status: Complete
+created: 2026-09-26
 owner: unassigned
-doc_type: feedback
+doc_type: bugfix
 complexity: 2
 risk: 1
 effort: 2
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# SOP: CI churn recovery — entry gate, strategy checklist, exit gates (draft)
+# test: gh620 ignores failed git calls in fixture setup — a transient clone failure becomes an unexplained crash in the hosted gate
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at 52c9acce (#854 window); lands with the window's landing PR. Evidence: see the commit. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at 04b66e00 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-830. Full scope is in the GitHub issue.
 
 ## Why
 

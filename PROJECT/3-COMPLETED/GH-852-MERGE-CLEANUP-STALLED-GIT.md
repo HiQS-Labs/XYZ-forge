@@ -1,9 +1,9 @@
 ---
-gh_issue: 830
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/830
-title: "test: gh620 ignores failed git calls in fixture setup — a transient clone failure becomes an unexplained crash in the hosted gate"
-status: Proposed (1-INBOX — not yet active)
-created: 2026-09-26
+gh_issue: 852
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/852
+title: "merge-cleanup: a stalled git clone in the landing gate hangs the whole run with no timeout"
+status: Complete
+created: 2026-09-27
 owner: unassigned
 doc_type: bugfix
 complexity: 2
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# test: gh620 ignores failed git calls in fixture setup — a transient clone failure becomes an unexplained crash in the hosted gate
+# merge-cleanup: a stalled git clone in the landing gate hangs the whole run with no timeout
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at 04b66e00 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-830. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at bc0a291e (#854 window); plan: TESTS-RESULTS/2026-09-27+GH-851/PLAN.md; lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-851/. Full scope is in the GitHub issue.
 
 ## Why
 

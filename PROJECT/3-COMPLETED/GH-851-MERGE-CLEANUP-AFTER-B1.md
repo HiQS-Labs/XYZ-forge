@@ -1,11 +1,11 @@
 ---
-gh_issue: 862
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/862
-title: "Sketch: ci-suite-audit skill — manual audit of the bash CI suites that files its own report issue (replaces the #861 adaptation; method for the 2026-10-08 audit)"
-status: Proposed (1-INBOX — not yet active)
+gh_issue: 851
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/851
+title: "merge-cleanup: after a B1 push the re-gate reads GitHub's stale CONFLICTING for the old head and stops the run"
+status: Complete
 created: 2026-09-27
 owner: unassigned
-doc_type: feedback
+doc_type: bugfix
 complexity: 2
 risk: 1
 effort: 2
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# Sketch: ci-suite-audit skill — manual audit of the bash CI suites that files its own report issue (replaces the #861 adaptation; method for the 2026-10-08 audit)
+# merge-cleanup: after a B1 push the re-gate reads GitHub's stale CONFLICTING for the old head and stops the run
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at ed92f4dd (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-862. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at bc0a291e (#854 window); plan: TESTS-RESULTS/2026-09-27+GH-851/PLAN.md; lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-851. Full scope is in the GitHub issue.
 
 ## Why
 

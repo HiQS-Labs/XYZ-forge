@@ -1,8 +1,8 @@
 ---
-gh_issue: 851
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/851
-title: "merge-cleanup: after a B1 push the re-gate reads GitHub's stale CONFLICTING for the old head and stops the run"
-status: Proposed (1-INBOX — not yet active)
+gh_issue: 858
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/858
+title: "gh69-roadmap-shadow: `ra check | grep -q` goes red on every run under PYTHONUNBUFFERED=1 (GH-139 baselined shape)"
+status: Complete
 created: 2026-09-27
 owner: unassigned
 doc_type: bugfix
@@ -26,7 +26,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# merge-cleanup: after a B1 push the re-gate reads GitHub's stale CONFLICTING for the old head and stops the run
+# gh69-roadmap-shadow: `ra check | grep -q` goes red on every run under PYTHONUNBUFFERED=1 (GH-139 baselined shape)
 
 ## Status
 
@@ -36,7 +36,7 @@ goal: >
 
 ## Idea
 
-Shipped on staging/stabilize-2026-10 at bc0a291e (#854 window); plan: TESTS-RESULTS/2026-09-27+GH-851/PLAN.md; lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-851. Full scope is in the GitHub issue.
+Shipped on staging/stabilize-2026-10 at 6653ab16 (#854 window); lands with the window's landing PR. Evidence: TESTS-RESULTS/2026-09-27+GH-858. Full scope is in the GitHub issue.
 
 ## Why
 
