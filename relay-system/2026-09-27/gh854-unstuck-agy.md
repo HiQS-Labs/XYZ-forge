@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -119,7 +119,7 @@ Models must self-invoke `/unstuck` as an immediate blocking interrupt when any o
 
 ```text
 1. Freeze the cogs       ──► Stop adding machinery, reviews, and scope; preserve current work
-2. Re-anchor the goal    ──► Original outcome, current milestone, last verified movement
+2. Re-anchor the goal    ──► Original outcome, current milestone, last verified movement  [Unverified — no citation]
 3. Test the blocker      ──► Required to advance, required for safety, polish, or machinery?
 4. Choose one next move  ──► Smallest bounded action that changes task state (foundational, no bandages)
 5. Act, verify, re-drive ──► One action, one movement check, re-launch primary engine, explicit next state
@@ -352,5 +352,34 @@ index 2c358be1..847bcc87 100644
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+VERDICT: PASS
+Basis: The reviewed-plan check additions to /unstuck (Tripwire 5, Rung 3 "Reviewed-plan check", and description updates) correctly prevent circular re-litigation of already-reviewed plans without suppressing genuine failures or changing outer-workflow resumption contracts. Pre-existing file content was swept with no defects found, and focused evidence confirms all doc and schema checks pass with zero errors.
+
+#### Findings vs Definition of Done & Questions
+* **[Pass] Q1 — Identification requirements for reopened topic:** Under `skills/1-hourly/unstuck/SKILL.md:120-126` (`**Reviewed-plan check.** Treat a sound plan reviewed at least once as the execution baseline. Before spending more work on each reopened topic, the agent must identify, in the existing thread:`), the three necessary criteria are explicitly enforced:
+  1. `- the settled decision and its review or acceptance reference (use the existing context; do not demand a new sign-off artifact);`
+  2. `- what evidence or explicit user requirement changed since that decision, and which acceptance criterion, safety invariant, required gate or next milestone it affects;`
+  3. `- whether the plan already covers the concern, and whether the proposed response resolves the evidenced gap or merely adds ceremony.`
+  This is matched by Tripwire 5 at `skills/1-hourly/unstuck/SKILL.md:56` (`"5. **Reviewed-Plan Re-litigation:** The agent is about to reopen a settled decision in a sound plan reviewed at least once, without identifying new contradictory evidence or an explicit changed user requirement. Interrupt immediately, before adding another review round or prerequisite; apply the reviewed-plan check in Rung 3."`).
+* **[Pass] Q2 — Resume accepted step without new ceremony for covered concerns:** Confirmed in `skills/1-hourly/unstuck/SKILL.md:127-130`:
+  `"No qualifying change, or an already-covered concern: stop re-litigating it and execute the next accepted step. A different preference, speculative edge case or repeated reviewer objection is not new evidence. Do not create a checklist file, new gate, recon pass or review round to prove that nothing changed. Record the disposition briefly in the existing thread or UNSTUCK receipt."`
+* **[Pass] Q3 — Real failures and explicit changed requirements reopen only affected decisions:** Confirmed in `skills/1-hourly/unstuck/SKILL.md:132-137`:
+  `"New contradictory evidence or an explicit changed user requirement: reopen only the affected decision and retain the rest of the plan."`
+  Guarded by:
+  `"Never use prior approval to dismiss a demonstrated failure, changed requirement or required safety check."`
+  and bounded by existing Rung 3 rules at `skills/1-hourly/unstuck/SKILL.md:162-164` (`"A newly discovered issue still blocks when it demonstrates an acceptance failure, safety invariant, or required gate; otherwise classify the new work as polish or a cog."`) and `skills/1-hourly/unstuck/SKILL.md:177-178` (`"Conversely, do not relabel a real failure as polish merely to create motion."`).
+* **[Pass] Q4 — Debug-mantra and recon are conditional:** Confirmed in `skills/1-hourly/unstuck/SKILL.md:133-137`:
+  `"Diagnose a genuinely unknown failure with [`/debug-mantra`](../debug-mantra/SKILL.md); if resolving it requires changing existing code whose impact is not yet traced, use a bounded [`/recon`](../recon/SKILL.md) on that seam before revising the step. These are conditional routes, not mandatory reviews of an unchanged plan."`
+* **[Pass] Q5 — Outer-workflow resumption preserved:** Preserved in `skills/1-hourly/unstuck/SKILL.md:184` (`"**Re-drive the primary execution engine:** For batch runners or orchestrators (`merge-cleanup`, `jog`, `marathon`), taking a micro-action (resolving a single conflict, granting a permission, deleting a stale lock) is only the first beat of the recovery. The action MUST include re-launching the primary command (e.g. re-running the orchestrator with `--resume`). The recovery is not complete and this interrupt must not exit until the autonomous execution loop is actively moving again."`), `skills/1-hourly/unstuck/SKILL.md:203-205` (`"If `/workhorse` invoked this skill, return to that parent ladder once movement resumes. Resume at the appropriate rung for the action; its governance, preservation, verification, and ledger closeout still apply. `/unstuck` is a blocking interrupt, not an escape from the parent workflow."`), and `skills/1-hourly/unstuck/SKILL.md:207` (`"**Bi-directional watchdog handshake:** If the stall stemmed from a recurring defect class, architectural flaw, or broad dependency conflict, hand off to `/workhorse` for the durable root-cause fix; `/workhorse` must return by re-entering the outer driver loop rather than terminating."`).
+* **[Pass] Q6 — Consistency and minimal necessity:** In `skills/1-hourly/unstuck/SKILL.md:8-10`, the description cleanly includes `"false completion, or re-litigating a reviewed plan"` in the list of self-trigger tripwires, exactly mirroring Tripwire 5 at line 56 and the Rung 3 guidance at lines 120-137. No conflicting, redundant, or unnecessary statements were introduced.
+* **[Pass] Pre-existing file sweep (GH-268):** `swept file: yes`. Full text of `skills/1-hourly/unstuck/SKILL.md` (lines 1–218) audited. Preamble 5-rung recitation block, 5 autonomous tripwires, 5 operational rungs, receipt template, and routing boundaries are consistent with zero pre-existing defects found. Relative links `../debug-mantra/SKILL.md` and `../recon/SKILL.md` resolve to existing files.
+* **[Pass] Focused evidence verification:** Verified against `TESTS-RESULTS/2026-09-27+GH-854-unstuck/CHECKS.md:6-20`, which reports `PDDA run complete: no errors` (`SUMMARY [pdda-check-frontmatter] errors=0`, `SUMMARY [pdda-check-status-table] errors=0`, `SUMMARY [pdda-check-hardcoded-paths] errors=0`, `SUMMARY [pdda-check-changelog] errors=0`, `SUMMARY [pdda-doc-ready] errors=0`) and valid skill syntax at line 27 (`"Skill is valid!"`). Markdown-only doc change confirmed classified as `route=docs`, `tier=1`.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
