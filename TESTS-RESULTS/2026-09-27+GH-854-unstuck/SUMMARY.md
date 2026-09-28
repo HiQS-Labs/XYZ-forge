@@ -25,4 +25,8 @@ The baseline has no explicit per-topic reviewed-plan check or immediate re-litig
 
 ## Verification
 
-Pending focused documentation checks and independent QA. No full gate is required for this Markdown-only window PR. Provenance will be embedded in Markdown to preserve the user's `.md`-only scope; this is an explicit departure from the usual separate provenance.jsonl filename.
+PDDA: rc=0, zero errors and 368 existing-tree warnings. Skill frontmatter validator: rc=0 using the existing test virtualenv (default Python first failed for missing PyYAML). Both added local skill links resolve. Final independent QA remains pending round 3. See CHECKS.md for receipts. No full gate is required for this Markdown-only window PR. Provenance will be embedded in Markdown to preserve the user's `.md`-only scope; this is an explicit departure from the usual separate provenance.jsonl filename.
+
+## Review execution record
+
+Round 1: instruction cases passed; verdict PARKED because the harness forbids Git and the baseline diff was not supplied. Producer supplied the exact diff without changing the skill. Round 2: reviewer approved, but harness rc=6 invalidated that approval when the producer concurrently wrote CHECKS.md outside the reviewer allowlist. The harness saved the file in its orphan backup; it was restored and committed before round 3. No skill change or discarded user work. Round 3 is the final bounded review; no concurrent tree writes.

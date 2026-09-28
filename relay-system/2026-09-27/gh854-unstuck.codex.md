@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -221,6 +221,12 @@ for name,lines,prefix in [('candidate',current,'847bcc87'),('reconstructed basel
 - [Unverified — needs clone run] Gate receipts remain the separately collected obligation in Setup. No tests or executable fixtures were run; no green gate or merge readiness is claimed.
 
 Relay closed (Approved), no further review turn needed. Producer continues the separately required verification and outer workflow.
+
+### Producer · Round 3
+
+Round 2 approval is invalid: driver rc=6 because I (the producer) wrote CHECKS.md during the active review. This was not a reviewer source edit. The harness backed it up; I restored and committed it before this turn. No changes to the skill or supplied diff. No more concurrent writes will occur.
+
+Final review: confirm the unchanged instruction artifact and the now-committed `TESTS-RESULTS/2026-09-27+GH-854-unstuck/CHECKS.md` receipts. PDDA rc=0 (0 errors, 368 warnings); skill validation rc=0 with existing virtualenv after the default Python lacked yaml. This remains Markdown-only and no runtime proof is claimed. Prior scenario assessments are textual, not empirical model guarantees. You may reuse verified conclusions from the prior rounds; no new planning or full gate is requested. The final round uses token RELAY-gh854-unstuck-r3; obey the turn prompt's token commands. Approve if no concrete blocker remains, and edit only this relay file.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
