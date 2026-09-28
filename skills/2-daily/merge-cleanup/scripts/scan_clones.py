@@ -111,8 +111,12 @@ def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subp
     try:
         out, err = proc.communicate(timeout=timeout)
         return subprocess.CompletedProcess(args=args, returncode=proc.returncode, stdout=out, stderr=err)
-    except subprocess.TimeoutExpired:
+    except BaseException as exc:
+        # Its own session means a terminal Ctrl-C no longer reaches git, so an interrupt (or any other
+        # escape) must end the group too before it propagates, or a cancelled push still lands.
         _kill_group(proc.pid)
+        if not isinstance(exc, subprocess.TimeoutExpired):
+            raise
         try:
             proc.communicate(timeout=10)
         except subprocess.TimeoutExpired:
@@ -123,8 +127,8 @@ def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subp
 
 def _kill_group(pgid: int, grace: float = 5.0) -> None:
     """TERM the group, wait out a grace window, then KILL. Same sequence as utils/py/proc_group.py
-    kill_existing, which this skill cannot import: it ships standalone (Deployed Skills) and vendored
-    .xyz/ installs carry no utils/py/proc_group.py."""
+    kill_existing, which this skill does not import: it ships standalone (Deployed Skills), and
+    .xyz/ installs vendored before utils/ was mirrored carry no utils/py/proc_group.py."""
     try:
         os.killpg(pgid, signal.SIGTERM)
     except OSError:

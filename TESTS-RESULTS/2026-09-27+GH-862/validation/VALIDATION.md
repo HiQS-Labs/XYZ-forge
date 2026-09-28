@@ -35,7 +35,7 @@ snapshot <sha>`); a PR run's `headSha` is the PR head. Example: run 36087662555 
 
 **Fix.** `collect_d2.py` now also records `tested` (from the log; null if absent), and `measure.py` uses only `tested` for
 same-SHA pairing. Re-collected: the same 93 runs, identical suite summaries; all 77 runs with a summary name their
-snapshot, and in **58 of 77** it differs from `headSha`. D1 and D5 values are byte-identical; only `same_sha_divergence`
+snapshot, and in **57 of 77** it differs from `headSha` (58 of the 78 runs that name one, counting one run with no summary). D1 and D5 values are byte-identical; only `same_sha_divergence`
 changed (`measured.json` re-run at `eb007978`, same 411-suite registry).
 
 | Suite | Same-SHA divergence before → after | Effect on this report |
@@ -52,5 +52,6 @@ red since 2026-09-25 (29 consecutive green hosted reconciles to 2026-09-28). Whe
 (`fixed-flake`, KEEP) or not (`flake`, QUARANTINE) is not established here, so the measured verdict is **INVESTIGATE**,
 carried to the 2026-10-08 audit. Item 5 stays unchecked.
 
-**SPLIT at 0.74 (row 5).** `releases-skill` is SPLIT above the 0.20–0.60 band because 7 assertions run the installer and no
-sibling covers them. The skill's D5 rule, verdict table and summary item 7 now state that case explicitly (same PR).
+**SPLIT at 0.74 (row 5).** `releases-skill` is SPLIT above the 0.20–0.60 band because 7 assertions check the installer and no
+sibling covers them: `test/releases-skill.sh:97,99,102,105,114,123` run it (success, plural symlink and target, legacy
+alias retirement, idempotent rerun, refusal of a real legacy directory) and `:73` parses it. The skill's D5 rule, verdict table and summary item 7 now state that case explicitly (same PR).

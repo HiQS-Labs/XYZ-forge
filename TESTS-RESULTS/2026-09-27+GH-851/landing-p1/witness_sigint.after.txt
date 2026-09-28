@@ -1,0 +1,2 @@
+child_rc=-2 grandchild_alive_after_sigint=False
+PASS
