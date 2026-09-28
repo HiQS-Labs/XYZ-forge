@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-27 — unstuck checks before reopening reviewed plans (GH-854)
+
+`unstuck` now interrupts re-litigation immediately and requires each reopened topic to identify the settled decision, changed evidence or user requirement, and an actual gap. Already-covered concerns return to execution. Debug-mantra and bounded recon are conditional routes for genuine blockers; the existing outer-workflow resumption remains intact. Verification is recorded in `TESTS-RESULTS/2026-09-27+GH-854-unstuck/`.
+
 ## 2026-09-27 — gh492's idle checks no longer depend on how fast `ps` answers (GH-793)
 
 `test/gh492-idle-kill.sh` failed only under the parallel gate. Its sampler shells out to `ps`, `pgrep` and `lsof`, which slow down under gate load. The test's fixed 4 s window, a fixed 1.0 s bound, and an idle reading taken after the sampler threads were joined made that slowdown read as "a progressing turn looks idle" and "the blocked turn is unclassified". Delaying just those tools reproduces both at base. The windows now run until enough samples exist (capped at 30 s), idle is read when the window closes, and the two "not idle" bounds are `max(1.0 s, 2 × the largest observed sample gap)`. The product code is unchanged, and mutations that break file-progress or pid scoping still fail the suite. Evidence is in `TESTS-RESULTS/2026-09-27+GH-793/`.
