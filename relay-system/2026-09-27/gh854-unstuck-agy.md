@@ -382,4 +382,12 @@ Basis: The reviewed-plan check additions to /unstuck (Tripwire 5, Rung 3 "Review
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-28T00:48:45Z
+task: RELAY-gh854-unstuck-agy
+reviewer: agy
+status: Approved
+reviewed-head: f31460cf542c08b7c6a095ea63eb5d35fc2f5cd7
+added-range: 26307+6169
+added-sha256: c17cb4af2250505d565351fbd9c3c0579c2770f44ad0717865df7bb55eda18e0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
