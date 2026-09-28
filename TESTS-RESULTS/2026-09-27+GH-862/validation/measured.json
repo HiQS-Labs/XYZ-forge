@@ -14,7 +14,7 @@
  "exempt": 13,
  "median_gate_s": 2989.0,
  "registered": 411,
- "registry_sha": "54bd4ae63f6633ed9c090f2bf861093d089dd1ad",
+ "registry_sha": "eb007978fae83ea743f5ee78282be54655de4176",
  "suites": {
   "_scratch-repo.sh": {
    "d5": {
@@ -76,7 +76,10 @@
    "rank": 89,
    "registered": true,
    "runs": 107,
-   "same_sha_divergence": [],
+   "same_sha_divergence": [
+    "0ae3452a",
+    "44e96b77"
+   ],
    "share": 0.23,
    "tier": "Large"
   },
@@ -844,7 +847,9 @@
    "rank": 73,
    "registered": true,
    "runs": 107,
-   "same_sha_divergence": [],
+   "same_sha_divergence": [
+    "0ae3452a"
+   ],
    "share": 0.28,
    "tier": "Large"
   },
@@ -1983,7 +1988,10 @@
    "registered": true,
    "runs": 111,
    "same_sha_divergence": [
-    "24b387d6"
+    "24b387d6",
+    "9e1e9bf4",
+    "ab7ab1d5",
+    "e88ebddb"
    ],
    "share": 0.8,
    "tier": "Small"
@@ -3712,7 +3720,10 @@
    "rank": 202,
    "registered": true,
    "runs": 107,
-   "same_sha_divergence": [],
+   "same_sha_divergence": [
+    "24b387d6",
+    "ea5c8e40"
+   ],
    "share": 0.06,
    "tier": "Large"
   },
@@ -3905,7 +3916,13 @@
    "registered": true,
    "runs": 111,
    "same_sha_divergence": [
-    "24b387d6"
+    "0389dc6e",
+    "24b387d6",
+    "9e1e9bf4",
+    "ab7ab1d5",
+    "d5c18633",
+    "e88ebddb",
+    "ec0823ab"
    ],
    "share": 0.22,
    "tier": "Small"
@@ -4258,7 +4275,12 @@
    "rank": 17,
    "registered": true,
    "runs": 105,
-   "same_sha_divergence": [],
+   "same_sha_divergence": [
+    "0ae3452a",
+    "1e434d58",
+    "337813e0",
+    "a08f30e9"
+   ],
    "share": 1.27,
    "tier": "Large"
   },

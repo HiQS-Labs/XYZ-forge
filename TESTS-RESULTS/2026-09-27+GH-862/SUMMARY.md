@@ -1,7 +1,8 @@
 # CI Suite Audit — Sample Validation Summary (GH-862)
 
 > **Correction, 2026-09-28 (#854 landing QA B1, `relay-system/2026-09-27/gh854-landing-combined-qa.md`).**
-> The skill text in `skills/4-occasional/ci-suite-audit/` is unchanged. This summary's sample results are **superseded by
+> The skill text in `skills/4-occasional/ci-suite-audit/` is unchanged except for two rules amended after the PR #880 review
+> (D2 binds runs to the tested snapshot; SPLIT allows ≥ 0.60 with uncovered behavioral assertions). This summary's sample results are **superseded by
 > [`validation/VALIDATION.md`](validation/VALIDATION.md)**. That report is computed from 8 committed receipts (median gate 2,989 s),
 > 93 failed hosted runs and suite source, and no script in it branches on a suite name (`validation/*.py`).
 >
@@ -14,6 +15,10 @@
 > - `gh378` MERGE into `utils/ci-route.sh / validate.sh`. Those are production scripts, not a keeper suite. Measured: 2 of 7
 >   assertions grep docs, so `gh378` is SPLIT.
 > - Quarantine verdicts fixed by suite name.
+>
+> - Revision 2026-09-28: with D2 bound to the tested snapshot, `gh610`, `gh123` and `registry-lock-concurrency` all show
+>   same-SHA flake evidence, but none has been red since 2026-09-25 and no fix is attributed, so their measured verdict is
+>   INVESTIGATE, not QUARANTINE ([`VALIDATION.md`](validation/VALIDATION.md#revision-2026-09-28-d2-bound-to-the-tested-snapshot-pr-880-codex-review-p2)).
 >
 > Acceptance items 4, 5 and 7 below are unchecked accordingly. The rest of this file is kept as Agy's record.
 

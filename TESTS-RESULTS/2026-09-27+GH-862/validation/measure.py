@@ -30,10 +30,13 @@ for r in receipts:
 for l in open(f"{here}/d2-hosted-failed-runs.jsonl"):
     run = json.loads(l); s = run["summary"]
     if not s: continue
+    tested = run.get("tested")  # the qualified snapshot, not headSha; None = attribution unknown
     for t in s["passed"]:
-        exec_n[t] = exec_n.get(t, 0) + 1; green_shas.setdefault(t, set()).add(run["sha"])
+        exec_n[t] = exec_n.get(t, 0) + 1
+        if tested: green_shas.setdefault(t, set()).add(tested)
     for t in s["failed"]:
-        exec_n[t] = exec_n.get(t, 0) + 1; fail_k[t] = fail_k.get(t, 0) + 1; red_shas.setdefault(t, set()).add(run["sha"])
+        exec_n[t] = exec_n.get(t, 0) + 1; fail_k[t] = fail_k.get(t, 0) + 1
+        if tested: red_shas.setdefault(t, set()).add(tested)
 unattributed = sum(1 for l in open(f"{here}/d2-hosted-failed-runs.jsonl") if json.loads(l)["summary"] is None)
 # ---- D5: per assertion line (a `pass`/`ok` call), does it grep a repo doc, run repo code, or neither? ----
 DOC = re.compile(r"\.md\b|SKILL|/docs/|README|ROUTER|AGENTS|ARCHITECTURE|CHANGELOG")

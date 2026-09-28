@@ -118,6 +118,7 @@ When initializing an audit, seed known non-deterministic candidates identified i
 ### D2: Failure History & Defect Attribution
 - Classify all observed failures across the audit window using the Failure Taxonomy.
 - Same-commit / same-SHA divergence (passing on one run, failing on another) serves as primary evidence of non-determinism (`flake`).
+- Bind each run to the commit it actually tested. A hosted `wave-reconcile` run qualifies an integrated snapshot named in its log (`Qualifying N landing(s) in integrated snapshot <sha>`); its `headSha` is the workflow's ref (a PR run's is the PR head) and must not be used. When the tested commit cannot be established, count the result but mark its SHA attribution `unknown`; it is not flake evidence.
 
 ### D3: Touch-Set Overlap & Duplicate Analysis
 - For each suite, statically analyze:
@@ -138,7 +139,7 @@ When initializing an audit, seed known non-deterministic candidates identified i
 - Executing code counts only when an assertion checks that code's behaviour. Running a script and then grepping a doc does not count.
 - Exclude generated fixture files or runtime-emitted docs created inside a test sandbox (e.g. asserting `ESCALATION.md` was created by an agent turn is behavioral).
 - **Prose Ratio:** `(doc-grep assertions) / (total assertions)`.
-  - **Ratio ≥ 0.6 or Pure Skill/Doc Text (GH-831):** Candidate for `TURN-OFF` if the suite merely asserts wording, markdown structure, or non-core skill text rather than runtime harness behavior.
+  - **Ratio ≥ 0.6 or Pure Skill/Doc Text (GH-831):** Candidate for `TURN-OFF` if the suite merely asserts wording, markdown structure, or non-core skill text rather than runtime harness behavior. A suite at ≥ 0.6 that still has behavioral assertions no sibling covers (D4) is `SPLIT`, not `TURN-OFF`; name those assertions.
   - **Ratio 0.2–0.6 (Mixed):** Candidate for `SPLIT` (keep behavioral checks; drop/move pure wording assertions).
   - **Ratio < 0.2 (Behavioral):** Retain on gate.
 
@@ -189,7 +190,7 @@ For every evaluated suite:
 | **KEEP-FIX** | Retained suite that is host-sensitive or has an active, assigned fix issue open in current window (requires cited open issue/PR). | Retain in `TESTS`; link fix issue or #853 umbrella. |
 | **NIGHTLY** (candidate) | Heavy suite with a faster PR-time sibling covering its full target set (see NIGHTLY Rule). | Listed as candidate for future scheduled runs (#859). Remains in `TESTS`. |
 | **QUARANTINE** | Flaky suite blocking CI with no fix landed at HEAD and no active fix lane assigned. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with `quarantine: <issue>` reason. Keep file on disk. If multiple suites share root cause, recommend `whack-a-mole`. |
-| **SPLIT** | Mixed suite (D5 prose ratio 0.2–0.6) combining behavioral checks with prose greps. | Propose splitting: retain executable contract checks; drop or move wording greps. |
+| **SPLIT** | Mixed suite (D5 prose ratio 0.2–0.6, or ≥ 0.6 with uncovered behavioral assertions) combining behavioral checks with prose greps. | Propose splitting: retain executable contract checks; drop or move wording greps. |
 | **MERGE** | Redundant suite whose unique assertions are folded into a named keeper suite. | Propose folding assertions into keeper after red control; then turn off. |
 | **TURN-OFF** | Obsolete suite (target removed), pure prose/skill-text suite (GH-831), or fully covered sibling with no unique assertions. | Move from `TESTS` to `test/gh306-registry-bidirectional.sh` `EXEMPT` with audit reason. Keep file on disk. |
 | **INVESTIGATE** / **UNKNOWN** | Insufficient telemetry or unmeasured metrics. | Retain in `TESTS` pending further telemetry; never default to KEEP. |
@@ -271,7 +272,7 @@ The summary report includes:
 4. **Verdict Breakdown Table:** Tally of suites per verdict class (including INVESTIGATE and UNKNOWN) and count/percentage of suites proposed to leave the PR gate (QUARANTINE + TURN-OFF + MERGE).
 5. **D3 Shared Entry-Point Clusters Table:** Entry points invoked by $\ge 3$ suites, listing overlapping suites, overlap details, and nominated MERGE candidate or retention reason.
 6. **Heavy Suites & NIGHTLY Evaluation Table:** Top heavy suites by runtime, evaluating the 4 NIGHTLY conditions (1: heavy & no regression-caught, 2: superset sibling on PR gate, 3: sibling duration $\le 20\%$, 4: sibling guards retention contract), nearest sibling, sibling median duration, and candidate verdict.
-7. **SPLIT Ratio Band Verification Table:** Verification that every SPLIT candidate's prose ratio strictly falls within the 0.20–0.60 range.
+7. **SPLIT Ratio Band Verification Table:** Verification that every SPLIT candidate's prose ratio falls within the 0.20–0.60 range, or is ≥ 0.60 with its uncovered behavioral assertions named (D5).
 8. **Actionable Proposals Table:** Itemized list of all non-KEEP candidates with suite name, tier, median duration, failure history, proposed action, evidence/citations, and mandatory `confidence` column.
 9. **Diagnostic & Remediation Reminders:** Measured sibling skill trigger formulas (`radar` share $(unattributed + coupling)/red\_runs \ge 25\%$; `whack-a-mole` cluster $\ge 3$ parallel-load/host races in #853).
 

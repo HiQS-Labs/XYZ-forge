@@ -26,3 +26,31 @@ style. **No script branches on a suite name.**
 **New findings the known answers didn't contain:**
 - `agy-turn` was red in 10 of 107 runs, all on 2026-09-15/16, and green in every run since. The cause is not traced (`unattributed`).
 - `gh777-inventory-ratchet` was red in 7 runs on 2026-09-24, and `pdda-repo-contract` in 5 runs on 2026-09-17/24. Both are candidates for the `coupling` class at the Oct 8 audit.
+
+## Revision 2026-09-28: D2 bound to the tested snapshot (PR #880 Codex review, P2)
+
+**Defect.** `collect_d2.py` recorded each hosted run's `headSha`, and `measure.py` paired red and green by it. A
+`wave-reconcile` run qualifies an *integrated snapshot* named in its log (`Qualifying N landing(s) in integrated
+snapshot <sha>`); a PR run's `headSha` is the PR head. Example: run 36087662555 has `headSha` `df1353de`, tested `0ae3452a`.
+
+**Fix.** `collect_d2.py` now also records `tested` (from the log; null if absent), and `measure.py` uses only `tested` for
+same-SHA pairing. Re-collected: the same 93 runs, identical suite summaries; all 77 runs with a summary name their
+snapshot, and in **58 of 77** it differs from `headSha`. D1 and D5 values are byte-identical; only `same_sha_divergence`
+changed (`measured.json` re-run at `eb007978`, same 411-suite registry).
+
+| Suite | Same-SHA divergence before → after | Effect on this report |
+|---|---|---|
+| `gh496-telemetry-isolation` | none → `24b387d6`, `ea5c8e40` | Row 3 unchanged: the #813 race is non-deterministic by nature and was fixed in product code (#818), so `regression-caught`, KEEP. |
+| `agent-chorus-bridge` | none → `0ae3452a`, `44e96b77` | Row 3 unchanged (KEEP-FIX #853, #760); the flake evidence now agrees. |
+| `gh610-claude-subscription` | none → 4 snapshots | **New flake evidence.** Red 6 times, 2026-09-18 to 2026-09-25. |
+| `gh123-lock-progress-bound` | none → `0ae3452a` | **New flake evidence.** Red twice, last 2026-09-25. |
+| `gh32-releases-app`, `gh53-releases-merge-resolve` | 1 → 4 and 1 → 7 snapshots | Reds end 2026-09-18 and 2026-09-17; green since. |
+
+**Acceptance item 5 (flakes quarantined).** With the binding fixed, all three suites that item names (`gh610`, `gh123`,
+`registry-lock-concurrency`) show same-SHA divergence, which the earlier measurement missed for two of them. None has been
+red since 2026-09-25 (29 consecutive green hosted reconciles to 2026-09-28). Whether a landed fix explains that
+(`fixed-flake`, KEEP) or not (`flake`, QUARANTINE) is not established here, so the measured verdict is **INVESTIGATE**,
+carried to the 2026-10-08 audit. Item 5 stays unchecked.
+
+**SPLIT at 0.74 (row 5).** `releases-skill` is SPLIT above the 0.20–0.60 band because 7 assertions run the installer and no
+sibling covers them. The skill's D5 rule, verdict table and summary item 7 now state that case explicitly (same PR).
