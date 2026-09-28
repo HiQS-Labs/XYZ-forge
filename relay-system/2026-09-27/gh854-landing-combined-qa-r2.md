@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -3310,5 +3310,51 @@ index 300488c9..44bb5e10 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: No additional merge-blocking defect found in the supplied combined landing artifact. S1 now fails closed when an identified active run disappears; the #853 conversions preserve the inspected assertion predicates. The #862 sample-evidence caveat remains operator-disclosed, as instructed. This is the combined QA approval; the harness still owes the final integrated gate before landing.
+
+swept file: yes
+
+Scope of that declaration: the entire embedded review packet/combined patch, not only S1 or the newly added #853 hunks. Also traced surrounding production code for hosted lookup, B1 re-gating, bounded git calls, rollback journaling, qualification, catch-up and lifecycle ownership. No additional pre-existing defect was established in those inspected paths. This does not claim an exhaustive audit of every unchanged source line in all 55 files.
+
+- **[Pass] #853 assertion conversions.** Across the supplied hunks, flags, patterns, `--`, negations and Boolean chains remain intact. In particular, `test/gh369-find-doc-root-resolution.sh:69` retains `-- '--root'`, `test/gh57-live-merge-resolve.sh:31` retains `-Fq --`, and `test/gh23-path-overlap-enforcement.sh:75` retains the positive-and-negative predicate. The gh460 deliberate control is absent from the patch; the baseline retains its seven sites. The producer-command checks in gh69 retain the producer status through `_gh858="$(...)" && grep ...` (`test/gh69-roadmap-shadow.sh:129`). No fix requested.
+
+  Narrow independent probe, command below, **exit 0**; decisive output: `pipe=141 here_string=0 absent_pattern=1`. This witnesses both the original SIGPIPE mechanism and a negative control without executing any suite:
+  ```bash
+  bash -c 'set -o pipefail; v=$(printf "match\n"; printf "%1000000s" x); printf "%s\n" "$v" | grep -q match; old=$?; grep -q match <<<"$v"; new=$?; grep -q absent <<<"$v"; negative=$?; printf "pipe=%s here_string=%s absent_pattern=%s\n" "$old" "$new" "$negative"; test "$old" -ne 0 && test "$new" -eq 0 && test "$negative" -eq 1'
+  ```
+- **[Pass] S1 is closed without removing the foreign-run fallback.** `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:503` refuses local reconciliation after an identified active run disappears; `:525` records that identity only for an expected SHA. The in-memory probe below returned `error=active_timeout`, `empty=active_timeout`, `success=success`, `foreign=fallback`, **exit 0**. It executes only the extracted decision function with in-memory observations; no git, network, reconciler or executable fixture runs. Prior red/green evidence also exists at `TESTS-RESULTS/2026-09-27+GH-851/provenance.jsonl:14` and `landing-s1/before.log` / `after.log`. No fix requested.
+
+  Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` with this stdin:
+  ```python
+  import ast,json
+  from pathlib import Path
+  from types import SimpleNamespace
+  from typing import Optional
+  p=Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py')
+  f=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='wait_for_hosted_reconcile')
+  for case in ('error','empty','success','foreign'):
+      clock=SimpleNamespace(now=0)
+      clock.monotonic=lambda:clock.now
+      def sleep(n): clock.now+=n
+      clock.sleep=sleep
+      active=dict(databaseId=42,status='in_progress',conclusion='',headSha='' if case=='foreign' else 'h')
+      last=dict(active,status='completed',conclusion='success',headSha='foreign' if case=='foreign' else 'h')
+      responses=iter([SimpleNamespace(returncode=0,stdout=json.dumps([active]),stderr=''),SimpleNamespace(returncode=1 if case=='error' else 0,stdout=json.dumps([last] if case in ('success','foreign') else []),stderr='lookup failed' if case=='error' else '')])
+      env=dict(Path=Path,Optional=Optional,json=json,time=clock,HOSTED_WAIT_ENV='wait',HOSTED_POLL_ENV='poll',HOSTED_GRACE_ENV='grace',_seconds_from_env=lambda key,default:{'wait':90,'poll':30,'grace':0}[key],_gh=lambda *a,**kw:next(responses),log=lambda x:None,log_warn=lambda x:None,log_err=lambda x:None)
+      exec(compile(ast.Module(body=[f],type_ignores=[]),str(p),'exec'),env)
+      result=env['wait_for_hosted_reconcile']('m',Path('.'),'development',pr_head='h')
+      print(case+'='+result)
+      assert result=={'error':'active_timeout','empty':'active_timeout','success':'success','foreign':'fallback'}[case]
+  ```
+- **[Pass] No observed cross-fix interaction.** `utils/py/wave_reconcile.py:193` uses exclusive creation for one-record rollback files; `:1389` retains eligible direct-commit metadata even when already receipted; `:1459` and `:2235` use the same `owner_rank` for discovery and lifecycle writes. The existing qualifier and receipt matcher remain the qualification path (`:621`, `:531`). The B1 path checks the pushed head both before and after mergeability polling (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1021`, `:1026`), and `scan_clones.py:105` translates timeouts into a nonzero result. Prior ownership/idempotency receipts: `TESTS-RESULTS/2026-09-27+GH-842/witness-owner-head.log` and `witness-tie-head.log` both end `RESULT: PASS`. These are inspected prior receipts, not suites rerun here. No fix requested.
+- **[Pass] Scope and documentation remain aligned.** The packet adds no test suite, test registry entry, workflow or router change. SOP §4 points to the recovery SOP; radar Step 2c defers to its landed thresholds; whack-a-mole's CI pre-check points back to Step 2c. The audit skill's “Tier-Based Flake Rule (#802/#853)” agrees with the added AGENTS rail. The unstuck reviewed-plan rule explicitly preserves demonstrated failures and required safety checks. #862's sample caveat is accepted per this packet, not silently certified. No fix requested.
+- **[Pass] Seeded patch and syntax check.** A read-only Python probe parsed this relay's `diff` fence, compared each new hunk with its named file at the hunk's new line number, then ran `bash -n <path>` for the changed shell files and `ast.parse(Path(path).read_text())` for changed Python files. **Exit 0**; decisive output: `patch_files=55 hunks=132 mismatches=[]`; `syntax_only: 34 shell files, 6 Python files; no suites executed`. This checks the supplied patch against disk; it does not independently establish the Git base or omitted ledger diff.
+- **[Unverified — needs clone run]** The final integrated runtime gate was not run here, as explicitly prohibited. The harness must run it in a disposable full clone. Syntax checks and prior per-fix receipts do not substitute for that gate or independently prove the landing PR's live base/mergeability.
+
+STATUS is Approved. Relay closed (Approved), no further review turn needed. Producer (claude-a) receives the verdict for the harness gate and the authorized landing sequence. Only this relay file was edited; no Git command was run. Closing the token with `done`, per the approval-specific instruction.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
