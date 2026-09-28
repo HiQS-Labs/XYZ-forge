@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-28 — Skills Army fleet repair: 10days, codebase-memory and start-marathon reach every app; publisher role goes device-agnostic (GH-881)
+
+`/10days` had never been added to the Skills Army collection, so no app on this device could see it. The
+check found three more gaps in the same fleet. Every fix went through `intake.py`/`sync.py`, with no hand
+edits or copies:
+
+- **Blocked collection.** The `marathon-triage` → `start-marathon` rename (#765) left a receipt pointing at
+  a folder that no longer existed. Every `intake.py` command, even a preview, refused with
+  `Unexplained missing skills: ['marathon-triage']`. `intake.py --apply remove marathon-triage`
+  acknowledged the removal, and `sync.py` then withdrew the stale links.
+- **10days never added.** `intake.py --apply add skills/3-weekly/10days` (forge `058ae276`) added it.
+- **start-marathon arrived by Pulse pull without a receipt.** `intake.py --apply catalog` adopted it. Its
+  bytes match the forge, and the drift check lists it as `ok`.
+- **codebase-memory stranded on one device.** It had been added here from `codebase-memory-mcp`
+  (`e4140019`), but it was never committed to Pulse and never linked to any target. The sync linked it on
+  this device, and Pulse `55da56c5` published its payload together with 10days' so other devices receive them.
+
+`sync.py --apply --canonical` linked all three skills into all five targets (claude, codex, antigravity,
+zcode, grok-bot) with zero errors, warnings or drift. A follow-up `--status` shows no pending actions, and
+Claude Code discovered the new skills in the running session.
+
+**Open issues on this arc:** the SOP still names one "designated publisher" machine. The operator ruled that
+any device may publish, and GH-881 tracks that rewording along with an amendment to GH-676. The
+codebase-memory skill is vendored from the unmerged `feat/committed-skill-file` branch of
+`codebase-memory-mcp`, which should land upstream. The gap that stranded codebase-memory (added
+locally, never committed to the transport) is the check GH-881 proposes.
+
 ## 2026-09-27 — unstuck checks before reopening reviewed plans (GH-854)
 
 `unstuck` now interrupts re-litigation immediately and requires each reopened topic to identify the settled decision, changed evidence or user requirement, and an actual gap. Already-covered concerns return to execution. Debug-mantra and bounded recon are conditional routes for genuine blockers; the existing outer-workflow resumption remains intact. Verification is recorded in `TESTS-RESULTS/2026-09-27+GH-854-unstuck/`.
