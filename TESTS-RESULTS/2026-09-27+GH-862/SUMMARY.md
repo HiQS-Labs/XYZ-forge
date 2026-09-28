@@ -19,4 +19,5 @@ SUMMARY. They assigned verdicts by suite name (review B1, `relay-system/2026-09-
 | `test/path-integrity.sh` | 3 pass, 0 fail |
 | `utils/pdda/pdda.sh run` | 0 errors |
 
-**Detector validation plan (#862 *Validation plan*):** measured in `validation/VALIDATION.md`. 12 of 14 checks as expected; gh492 and gh620 read `fixed-flake` because their fixes landed in this window.
+**Detector validation plan (#862 *Validation plan*):** not yet run with measured values. It is the next commit
+on this issue, computed from receipts, hosted logs and suite source; no row is chosen by suite name.
