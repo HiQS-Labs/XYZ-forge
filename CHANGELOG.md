@@ -21,16 +21,6 @@ Evidence is in `TESTS-RESULTS/2026-09-27+GH-745/`:
 
 `test/gh69-roadmap-shadow.sh` had three `cmd | grep -q` checks that could fail whenever Python output was unbuffered: `grep -q` exits on the match, the writer gets EPIPE, and `pipefail` reports a failure. The receipt check is the one that failed. They now capture first, then match, and keep the producer's exit status (`_gh858="$(cmd)" && grep -q …`), so a failing command still fails its check. The suite's GH-139 baseline entry drops from 3 to 0. The red control at base fails, and the head passes 5 of 5 both with and without the variable. Evidence is in `TESTS-RESULTS/2026-09-27+GH-858/`.
 
-## 2026-09-27 — ci-suite-audit: test suite curation, runtime profiling, and retention/quarantine triage skill (GH-862)
-
-Adds the `ci-suite-audit` occasional skill (`skills/4-occasional/ci-suite-audit/`), item 5 of the #854 CI stabilization umbrella and the canonical method for the 2026-10-08 full-suite audit.
-
-- **Unit & data access:** Evaluates individual entries in `validate.sh` `TESTS` (411 suites) across in-checkout (preferred) and connector-only (fallback) modes with stated data limits.
-- **Nine detectors (D1–D9):** Combines runtime metrics (median seconds, heavy suites ≥ 1% or rank ≤ 10), failure history taxonomy (regression-caught, coupling, flake, host, fixed-flake, unattributed), touch-set overlap (scripts/binaries executed, files sourced/grepped/written), sibling coverage, prose-assertion ratio (≥ 0.6 prose, 0.2–0.6 mixed), junk patterns (mblode exact strings, duplicate contracts, stubs, private shapes, vacuous negative controls), can-it-fail verification, fixed-at-HEAD checks, and OpenClaw 4-question gate.
-- **Decision rules & retention bar:** Classifies suites into KEEP, KEEP-FIX, NIGHTLY candidate (requires fast PR-time sibling with superset coverage, no new gate machinery under #831 freeze), QUARANTINE (gh306 `EXEMPT` with `quarantine:` reason, no separate array), SPLIT, MERGE, TURN-OFF (obsolete, pure prose, or covered with no unique assertions), or INVESTIGATE. Pinned suites and regression-caught suites remain protected on PR gates.
-- **Deduplicated reporting:** Scaffolds issue reporting and per-turn decision comments with SHA/date deduplication marker, 64k character boundary splitting, secret/path redaction, and diagnostic/remediation reminders for sibling skills (`radar` and `whack-a-mole`).
-- **Attribution & compliance:** MIT upstream attribution (`petrkindlmann/qa-skills`, `mblode/agent-skills`, `openclaw/openclaw`) in `NOTICE`. Cross-linked from `ci-optimize` and registered in `ARCHITECTURE.md` Skills Index. Zero new CI tests added; verified via existing test suites (`test/gh578-ci-optimize-skill.sh`, `test/gh589-skill-viewer.sh`, `test/gh400-source-url.sh`) and `pdda.sh run`.
-
 ## 2026-09-27 — merge-cleanup: no hang on a dead network call, no stop on a stale answer (GH-851, GH-852)
 
 Found in the #849 merge batch. Five fixes to `skills/2-daily/merge-cleanup/scripts/`:

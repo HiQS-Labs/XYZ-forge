@@ -1,5 +1,0 @@
-{"timestamp":"2026-09-28T00:46:20Z","issue":862,"case":"tier1","command":"bash test/gh578-ci-optimize-skill.sh","rc":0,"result":"pass","base":"81888838ca00e760a0bf34cd610e944580d4ae46"}
-{"timestamp":"2026-09-28T00:46:20Z","issue":862,"case":"tier1","command":"bash test/gh589-skill-viewer.sh","rc":0,"result":"pass","base":"81888838ca00e760a0bf34cd610e944580d4ae46"}
-{"timestamp":"2026-09-28T00:46:20Z","issue":862,"case":"tier1","command":"bash test/gh400-source-url.sh","rc":0,"result":"pass","base":"81888838ca00e760a0bf34cd610e944580d4ae46"}
-{"timestamp":"2026-09-28T00:46:20Z","issue":862,"case":"tier1","command":"bash test/path-integrity.sh","rc":0,"result":"pass","base":"81888838ca00e760a0bf34cd610e944580d4ae46"}
-{"timestamp":"2026-09-28T00:46:20Z","issue":862,"case":"tier1","command":"bash utils/pdda/pdda.sh run","rc":0,"result":"pass","base":"81888838ca00e760a0bf34cd610e944580d4ae46"}
