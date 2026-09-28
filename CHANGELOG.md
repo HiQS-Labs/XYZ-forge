@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-09-27 — gh492's idle checks no longer depend on how fast `ps` answers (GH-793)
+
+`test/gh492-idle-kill.sh` failed only under the parallel gate. Its sampler shells out to `ps`, `pgrep` and `lsof`, which slow down under gate load. The test's fixed 4 s window, a fixed 1.0 s bound, and an idle reading taken after the sampler threads were joined made that slowdown read as "a progressing turn looks idle" and "the blocked turn is unclassified". Delaying just those tools reproduces both at base. The windows now run until enough samples exist (capped at 30 s), idle is read when the window closes, and the two "not idle" bounds are `max(1.0 s, 2 × the largest observed sample gap)`. The product code is unchanged, and mutations that break file-progress or pid scoping still fail the suite. Evidence is in `TESTS-RESULTS/2026-09-27+GH-793/`.
+
+## 2026-09-27 — rollback events no longer poison `.tick/events`, and tests keep them out of the real clone (GH-745)
+
+`wave_reconcile`'s rollback event was appended to a timestamp-named file. Two rollbacks in the same instant wrote two records into one file, and `tick claims` then failed `events-unreadable` for the whole clone, which made merge-cleanup preserve it forever. Each event is now its own file: the name carries the pid and 8 random hex characters, and the file is created exclusively. Three suites (`gh424`, `gh425`, `gh421`) built the journal with no root and wrote events into the real clone. They now use their fixture root.
+
+Evidence is in `TESTS-RESULTS/2026-09-27+GH-745/`:
+- **Leak witness:** 3 events leaked into the real clone at base, 0 at head (5 of 5 runs).
+- **Same-instant witness:** `tick claims` exits 3 at base and 0 at head.
+- **`wave-reconcile.sh`:** 23 of 23, 5 of 5 runs.
+
+## 2026-09-27 — gh620 names a failed fixture git call instead of crashing later (GH-830)
+
+`test/gh620-skills-army-mini-sync.sh` ignored the exit code of about 30 fixture git calls and dropped their stderr. So a failed `seed-owner` clone on the hosted gate (run 36194249895) surfaced as an unrelated `FileNotFoundError`, and cost one full hosted qualification. `git()` now stops the suite with the failing command and git's stderr. There are no retries, and no assertion changed. The red control, with the fixture clone pointed at a missing repo, now names the clone. The normal run passes 5 of 5 (28/28). Evidence is in `TESTS-RESULTS/2026-09-27+GH-830/`.
+
+## 2026-09-27 — gh69-roadmap-shadow no longer goes red under PYTHONUNBUFFERED=1 (GH-858)
+
+`test/gh69-roadmap-shadow.sh` had three `cmd | grep -q` checks that could fail whenever Python output was unbuffered: `grep -q` exits on the match, the writer gets EPIPE, and `pipefail` reports a failure. The receipt check is the one that failed. They now capture first, then match, and keep the producer's exit status (`_gh858="$(cmd)" && grep -q …`), so a failing command still fails its check. The suite's GH-139 baseline entry drops from 3 to 0. The red control at base fails, and the head passes 5 of 5 both with and without the variable. Evidence is in `TESTS-RESULTS/2026-09-27+GH-858/`.
+
+## 2026-09-27 — merge-cleanup: no hang on a dead network call, no stop on a stale answer (GH-851, GH-852)
+
+Found in the #849 merge batch. Five fixes to `skills/2-daily/merge-cleanup/scripts/`:
+
+- **Bounded network git (GH-852).** Five git calls had no time limit: the second-clone `clone`, the
+  B1 `push`, and the post-merge `fetch`, `push` and `fetch`. One of these clones sat for 36 minutes on
+  a dead socket. They now go through `_net_git`: 180 s each, or 3600 s for the push to the integration
+  branch, because the pre-push hook can run a gate. The Phase-3 `fetch` in `scan_clones.py` gets 180 s.
+  Both `main()`s default `GIT_HTTP_LOW_SPEED_LIMIT=1000` / `GIT_HTTP_LOW_SPEED_TIME=120`, so a
+  stalled transfer aborts; an operator's own values win. `Operation too slow` and `Connection reset`
+  now count as transient, so GH-623's retries apply.
+- **Merge-call recovery (GH-852).** When `gh pr merge` fails or is killed after GitHub has merged,
+  the PR is re-read. If it shows `MERGED` with a merge commit, the post-merge steps run, where before
+  they were skipped (#810).
+- **`--reconcile-pr` (GH-852).** It now refuses (exit 2) a PR that is not merged, or whose state
+  it cannot read. It waits on the hosted run for that PR's own head and merge commit, not the
+  primary's `HEAD`.
+- **Re-gate after a B1 push (GH-851).** The run now waits, within the 6 × 15 s mergeable-poll
+  budget, until GitHub reports the pushed head before reading mergeability. Before, it read the old
+  head's `CONFLICTING` and stopped, which happened on every B1 repair in #849.
+- **Hosted-wait default** 1800 → 5400 s (#854 D5). Full-registry reconciles take 53–66 min.
+
+No new tests. Existing stubs got signature-only edits, and the two `--reconcile-pr` fixtures now
+inject a merged PR. Base-versus-head witnesses and a red control are in
+`TESTS-RESULTS/2026-09-27+GH-851/`. A Python timeout still counts only awake time on macOS; the
+wall-clock rule is #854's host rule (`caffeinate -i`, or an always-on host). Rollback: revert the squash.
+
 ## 2026-09-26 — Standardized clone backup layout and integrity verification for merge-cleanup-deep and merge-cleanup (GH-839)
 
 To expedite deletion of full clone folders without fear of data loss, clone backup and verification is automated into a standardized hierarchy under `<root>/_backups/<repo-name>/<timestamp>/`:

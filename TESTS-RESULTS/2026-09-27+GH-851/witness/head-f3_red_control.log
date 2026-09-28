@@ -1,0 +1,14 @@
+merge-cleanup: ERROR — Hosted wave-reconcile run #99 is still in_progress after 1s; refusing to start the local reconciler while it is in flight
+merge-cleanup: Operating on primary repo: /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpqxc7zh44/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpqxc7zh44/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #42 in /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpqxc7zh44/primary...
+merge-cleanup: Hosted wave-reconcile run #99 is in_progress; waiting

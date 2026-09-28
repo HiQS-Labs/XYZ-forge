@@ -19,7 +19,6 @@
 2 test/gh528-parallel-contention-retry.sh
 18 test/gh544-parallel-default.sh
 2 test/gh57-live-merge-resolve.sh
-3 test/gh69-roadmap-shadow.sh
 1 test/gh77-standup-triage.sh
 1 test/handoff.sh
 13 test/hq-hardening.sh

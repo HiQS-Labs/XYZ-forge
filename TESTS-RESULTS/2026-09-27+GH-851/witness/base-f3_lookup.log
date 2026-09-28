@@ -1,0 +1,14 @@
+merge-cleanup: Operating on primary repo: /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpahsz1rx9/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpahsz1rx9/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #42 in /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpahsz1rx9/primary...
+merge-cleanup: No hosted wave-reconcile run listed yet for 6c844a4bb3; waiting up to 1s more before assuming there is none
+merge-cleanup: No hosted wave-reconcile run found for 6c844a4bb3; using local reconciliation

@@ -1,0 +1,22 @@
+  PASS: first publication pushes and reads back
+  PASS: literal inclusion-only payload set
+  PASS: manifest names exactly the nine managed payloads
+  PASS: root README matches its canonical package source
+  PASS: revision records exact parent commit
+  PASS: republication is idempotent
+  PASS: default sibling path uses the public repository casing
+  PASS: matching metadata plus unrelated amended file is not an exact retry
+  PASS: exact retained publisher commit retries push
+  PASS: retry refuses a restored previously managed deletion
+  PASS: retry refuses takeover of an unmanifested operator-owned path
+  PASS: default-profile retry may restore an absent seed
+Traceback (most recent call last):
+  File "<stdin>", line 120, in <module>
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 809, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh620-skills-army.dD8p7e/seed-owner/TODO.md'
+red-control rc=1

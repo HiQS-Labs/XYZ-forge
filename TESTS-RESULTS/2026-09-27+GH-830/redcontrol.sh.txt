@@ -1,0 +1,7 @@
+#!/bin/bash
+# red control for GH-830: point the seed-owner fixture clone (gh620:135, the 2026-09-25 incident site) at a missing repo
+set -u
+cd "$1"; M=test/.gh620-redcontrol-$$.sh
+sed 's|git(WORK, "clone", "-q", mini_bare, seed_owner)|git(WORK, "clone", "-q", mini_bare + "-missing", seed_owner)|' test/gh620-skills-army-mini-sync.sh > "$M"
+cmp -s "$M" test/gh620-skills-army-mini-sync.sh && { echo "MUTATION DID NOT APPLY"; rm -f "$M"; exit 9; }
+bash "$M"; rc=$?; rm -f "$M"; echo "red-control rc=$rc"; exit $rc
