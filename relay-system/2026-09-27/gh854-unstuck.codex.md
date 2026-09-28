@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -250,3 +250,7 @@ Relay closed (Approved), no further review turn needed. Producer resumes the out
 
 ### System · relay-drive — 2026-09-28T00:33:35Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+### Producer closeout — QA protocol blocked
+
+Round 3 driver exited 4: `review-body-rewritten`. The reviewer placed its block before the earlier system note, changing pre-existing body ordering. Its textual PASS is not a valid harness approval. The three-round cap is exhausted; no additional review turn is authorized by this run. Draft publication only; not merge-ready. The skill's content remained unchanged across all three rounds.
