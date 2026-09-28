@@ -204,4 +204,12 @@ pre-existing defects in file: none observed.
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-09-28T23:40:02Z
+task: RELAY-sidequest-llm-bench-plan-qa
+reviewer: agy
+status: Approved
+reviewed-head: ef04dfe3afb89a59aca494a5141ce885d85ab1b4
+added-range: 16592+3407
+added-sha256: 1872f421a0de4a1860cd55d6654eca687e8ba5d5ea725dc8f7f8075e148f7768
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
