@@ -43,6 +43,6 @@ test_report_step_and_permissions (__main__.WorkflowTests.test_report_step_and_pe
 test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... ok
 
 ----------------------------------------------------------------------
-Ran 36 tests in 3.631s
+Ran 36 tests in 3.453s
 
 OK

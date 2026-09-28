@@ -19,6 +19,7 @@ qualifies (D-c).
 | Witness, real history, cutover `development~25` (`witness-head.log`) | 25 first-parent commits: 10 PR merges and 10 bot commits skipped; **5 direct pushes qualify** (`85a60f2c`, `07f0c46d`, `4909c482`, `42e85b1c`, `41db4367`) |
 | Witness, express range (`witness-express.log`) | express landing `13707659` (GH-801) excluded; its two closeout commits qualify (tier 1, Small) |
 | Codex r1 falsifier (`witness-owner.py.txt`) | older PR #5 and a newer, **already-receipted** direct commit both close drifted GH-421. At the reviewed commit `3e58be2d`: commit invisible, PR #5 owns → **FAIL** (`witness-owner-r1.log`). At head: commit owns and is a catch-up landing; after the closeout, a repeat run adds nothing → **PASS** (`witness-owner-head.log`) |
+| Codex r2 falsifier (`witness-tie.py.txt`) | evaluates the catch-up owner key and `main()`'s lifecycle rank from source. At the reviewed commit `aeeb782d`, a same-second PR/direct-commit tie disagrees (discovery=#5, lifecycle=commit) → **FAIL** (`witness-tie-r2.log`). At head both use `owner_rank` and agree → **PASS** (`witness-tie-head.log`) |
 | `test/gh421-auto-wave-reconcile.sh` | OK (catch-up, direct commit, only-receipted owners) |
 | `test/gh425-gate-provenance-pr.sh` | OK |
 | `test/gh740-hosted-lane-publish.sh` | OK (`--commit` receipt round-trip) |
@@ -31,6 +32,10 @@ direct commit's metadata was dropped, so an older PR could own its issue's lifec
 not be recovered. Now every eligible direct commit stays in `metadata` (commit time normalised to UTC like a PR's
 `merged_at`), the closed-issue drift loop lets a direct closer own the issue, and only commits flagged `catchUp` become
 landings. The real-history witnesses were re-run from a detached `development` worktree, since the hosted lane runs on `development`.
+
+**Codex r2 (`relay-system/2026-09-27/gh842-prdirect-r2-review.md`): FAIL, one finding, accepted and fixed.** The two
+owner selectors broke same-second ties differently. Both now call `owner_rank` (PR outranks a direct commit on a tie, then
+PR number or SHA). Owner witness and focused suites re-run green on the final code.
 
 **Known behaviour, by design:** if the cutover commit is absent (a fixture repo), discovery logs
 `Direct-commit recovery inactive` and adds nothing; the hosted lane requires a full clone, so the cutover is present there.

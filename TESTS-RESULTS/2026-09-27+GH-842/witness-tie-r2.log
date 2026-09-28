@@ -1,0 +1,5 @@
+distinct-time: discovery=bbbbbbbbbbbb lifecycle=bbbbbbbbbbbb agree=True
+same-second: discovery=5 lifecycle=bbbbbbbbbbbb agree=False
+discovery: lambda pr: (pr.get('mergedAt') or '', pr.get('artifactKind') != 'commit', 0 if pr.get('artifactKind') == 'commit' else pr['number'])
+lifecycle: (meta.get('mergedAt') or '', str(meta['number']))
+RESULT: FAIL

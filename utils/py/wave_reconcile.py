@@ -1350,6 +1350,13 @@ def express_landings(repo_root):
     return found
 
 
+def owner_rank(meta):
+    """Newest closer owns an issue's lifecycle. One ordering for discovery and lifecycle writes (GH-842);
+    on a same-second tie a PR outranks a direct commit, then the higher PR number or commit SHA wins."""
+    commit = meta.get("artifactKind") == "commit"
+    return (meta.get("mergedAt") or "", not commit, 0 if commit else int(meta["number"]), meta.get("sha") or "")
+
+
 def unreconciled_commits(repo_root, metadata):
     """GH-842: first-parent direct commits since the cutover with no PR, bot or express landing.
 
@@ -1443,8 +1450,7 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
                 "leaving this legacy row unchanged and continuing (GH-584; non-PR closure tracked by GH-492)")
             continue
         # The most recent closer owns the current lifecycle transition.
-        owner = max(matches, key=lambda pr: (pr.get("mergedAt") or "", pr.get("artifactKind") != "commit",
-                                             0 if pr.get("artifactKind") == "commit" else pr["number"]))
+        owner = max(matches, key=owner_rank)
         if owner.get("artifactKind") == "commit":
             owner["catchUp"] = True
         else:
@@ -2222,7 +2228,7 @@ def main():
                 for key, meta in metadata.items():
                     if meta.get('state') != 'MERGED' or meta.get('baseRefName') != 'development':
                         continue
-                    rank = (meta.get('mergedAt') or '', str(meta['number']))
+                    rank = owner_rank(meta)
                     for issue in extract_linked_issues(meta, repo_slug)[0]:
                         if issue not in issue_owners or rank > issue_owners[issue][0]:
                             issue_owners[issue] = (rank, key)

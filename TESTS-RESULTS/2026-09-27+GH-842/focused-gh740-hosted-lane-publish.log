@@ -6,6 +6,6 @@ test_second_race_exits_loudly_with_receipts_kept_and_one_recompute (__main__.Pub
 test_undeclared_artifact_is_refused_before_any_push (__main__.PublishTests.test_undeclared_artifact_is_refused_before_any_push) ... ok
 
 ----------------------------------------------------------------------
-Ran 6 tests in 5.455s
+Ran 6 tests in 5.577s
 
 OK
