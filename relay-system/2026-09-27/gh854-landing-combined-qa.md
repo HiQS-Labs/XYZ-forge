@@ -2399,4 +2399,13 @@ Scope disclosure: read the entire relay packet, including every embedded patch; 
 
 One-round cap reached: STATUS is Escalated. Handing off to Producer (claude-a) to disposition B1/S1 and correct or withdraw the unsupported evidence. This is not approval to merge into development; no source/artifact edits or Git commands were performed.
 
+### Producer · Round 1 disposition · claude-a
+
+- **B1: Implemented (operator chose the most durable path, 2026-09-28).**
+  - `TESTS-RESULTS/2026-09-27+GH-862/validation/` is restored from `15c58b15`: D1/D2 computed from 8 receipts and 93 failed hosted runs, D5 read from source, no script branching on a suite name.
+  - `sample_audit.py` and `ci-suite-audit-sample.tsv` are removed from the tree (history: `ed92f4dd`).
+  - `SUMMARY.md` opens with a dated correction and unchecks acceptance items 4, 5 and 7 (the unsupported k-of-14 tallies, name-fixed quarantines, and the `gh378` MERGE into production scripts).
+  - Skill text is unchanged.
+- **S1: Implemented** in `fd234368` (identified run only; the gh674 foreign-run fallback is kept). Approved in `gh854-landing-combined-qa-r2.md`.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -1,5 +1,22 @@
 # CI Suite Audit — Sample Validation Summary (GH-862)
 
+> **Correction, 2026-09-28 (#854 landing QA B1, `relay-system/2026-09-27/gh854-landing-combined-qa.md`).**
+> The skill text in `skills/4-occasional/ci-suite-audit/` is unchanged. This summary's sample results are **superseded by
+> [`validation/VALIDATION.md`](validation/VALIDATION.md)**. That report is computed from 8 committed receipts (median gate 2,989 s),
+> 93 failed hosted runs and suite source, and no script in it branches on a suite name (`validation/*.py`).
+>
+> **What was wrong here.** The generating script (`sample_audit.py`, removed from the tree, still in history at `ed92f4dd`) read
+> its failure tallies and coverage/duplicate answers from hand-entered tables keyed by suite name, which the skill forbids
+> (*No name-keyed scoring*).
+>
+> **Claims not supported by measurement:**
+> - Failure denominators "k of 14". Measured: `gh436` red 7 of 109 hosted executions; `gh496` 2 of 107.
+> - `gh378` MERGE into `utils/ci-route.sh / validate.sh`. Those are production scripts, not a keeper suite. Measured: 2 of 7
+>   assertions grep docs, so `gh378` is SPLIT.
+> - Quarantine verdicts fixed by suite name.
+>
+> Acceptance items 4, 5 and 7 below are unchecked accordingly. The rest of this file is kept as Agy's record.
+
 - **Audit Date:** 2026-09-27
 - **Registry SHA:** f84f711c
 - **Target Branch:** `feat/gh862-ci-suite-audit` (branched from `staging/stabilize-2026-10`)
@@ -126,10 +143,10 @@
 - [x] **1. Calibration Passed:** Calibration against the 8 suites turned off by #831 passed (8 of 8 scored TURN-OFF, `gh798` scored wording-only/TURN-OFF).
 - [x] **2. Target Branch Pinned:** Audit ran on `feat/gh862-ci-suite-audit` (staging base), not `main`.
 - [x] **3. Honest Metrics:** Unmeasured suites report UNKNOWN metrics with zero keep-by-default fallbacks.
-- [x] **4. Multi-Source Failures:** Failure signals combine hosted CI logs, local validation receipts, and #853 tracking.
-- [x] **5. Flakes Quarantined:** Unresolved flakes without a landed fix (`gh610-claude-subscription`, `gh123-lock-progress-bound`, `registry-lock-concurrency`) receive QUARANTINE.
+- [ ] ~~**4. Multi-Source Failures:** Failure signals combine hosted CI logs, local validation receipts, and #853 tracking.~~ *Not supported by measurement; see the correction above.*
+- [ ] ~~**5. Flakes Quarantined:** Unresolved flakes without a landed fix (`gh610-claude-subscription`, `gh123-lock-progress-bound`, `registry-lock-concurrency`) receive QUARANTINE.~~ *Not supported by measurement; see the correction above.*
 - [x] **6. Heavy Suites Profiled:** High-leverage heavy suites (including `gh251` at 79.2s / 2.71% gate time, `gh436`, `gh549`, `marathon-drive`) profiled with 4-condition NIGHTLY breakdown.
-- [x] **7. Redundant Suites Merged:** Duplicate contract suites (`gh378-gate-requires-green-suite`) receive MERGE.
+- [ ] ~~**7. Redundant Suites Merged:** Duplicate contract suites (`gh378-gate-requires-green-suite`) receive MERGE.~~ *Not supported by measurement; see the correction above.*
 - [x] **8. Sibling Skills Triggered:** `radar` triggered for #812 trunk-red cluster ($(0+1)/4 = 25%$ share); `whack-a-mole` triggered for #853 runner port/host cluster (≥3 suites).
 
 ---
