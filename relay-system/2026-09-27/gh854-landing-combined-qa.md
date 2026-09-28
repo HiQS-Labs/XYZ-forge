@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -2325,5 +2325,78 @@ index 300488c9..44bb5e10 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: DoD (c)/(d) is not established: GH-862's supplied validation still contradicts the skill's evidence contract and reports an unsupported merge recommendation as validated. The existing GH-862 review explicitly held that evidence; the changed sample does not discharge it. One additional hosted-wait decision gap is reproduced below. No full-gate or merge approval is given.
+
+swept file: no
+Scope disclosure: read the entire relay packet, including every embedded patch; read the complete new recovery SOP and audit skill/NOTICE in that packet, and inspected current runtime call paths, sample source/TSV/summary, prior review dispositions and per-fix summaries. This is not a complete sweep of every pre-existing line in all touched runtime, test and historical documentation files. The blocker below is sufficient to withhold approval; uninspected code is not declared defect-free. S1 concerns a pre-existing missing-result branch adjacent to the new tracking guards.
+
+- **[Blocker] B1 — GH-862 still presents unsupported sample conclusions as completed validation.** The current skill explicitly requires scoring from saved inputs and forbids name-keyed scoring values (`skills/4-occasional/ci-suite-audit/SKILL.md:27`). Nevertheless `sample_audit.py:32`, `:85`, and `:89` contain ten fixed failure tallies and two fixed coverage/duplicate maps; `:385`–`:403` consume them, and `:445`–`:449` directly turn the duplicate map into MERGE. The actual TSV's gh378 row names **production scripts** `utils/ci-route.sh / validate.sh` as its merge destination, not an existing keeper suite, while `SUMMARY.md:129` and `:132` mark multi-source failures and duplicate-suite validation complete. This contradicts the skill's “No Unbacked Merges” rule. The earlier held-review disposition is in `relay-system/2026-09-27/gh862-pr865-r2-review.md`, Producer adjudication B1; recalculated prose ratios alone do not establish the remaining claims.
+  Observed input: `TESTS-RESULTS/2026-09-27+GH-862/ci-suite-audit-sample.tsv:15`: `gh378-gate-requires-green-suite.sh`, verdict `MERGE`, confidence `HIGH`, survivor `utils/ci-route.sh / validate.sh`; current sample source maps and checked summary claims cited above.
+  Affected scope: GH-862 evidence and its claimed acceptance only; no production registry change requested.
+  Falsifier: saved run-level observations supporting the claimed failure denominators, and a named existing **test suite** with cited equal/superset assertions supporting the gh378 merge. A corrected sample and summary must agree; lacking those observations, UNKNOWN/INVESTIGATE and unchecked acceptance claims are the honest result.
+  Fix: correct or explicitly withdraw the unsupported sample claims, preserving measurements that are backed by receipts; identify a real keeper or mark `parked: no survivor`. Record the applicable evidence correction and independent disposition before using this packet as merge approval. No new tests or scoring framework requested.
+  Root cause: predetermined suite-name values still feed purportedly measured verdicts; fix site: sample evidence and summary, not relaxed skill thresholds.
+
+  Read-only source/data probe; command `PYTHONDONTWRITEBYTECODE=1 python3 -` with the following stdin; **exit 1**:
+  ```python
+  import ast,csv
+  from pathlib import Path
+  root=Path('TESTS-RESULTS/2026-09-27+GH-862')
+  tree=ast.parse((root/'sample_audit.py').read_text())
+  for n in tree.body:
+      if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id in ('EVIDENCE_FAILURE_RECORDS','KNOWN_COVERAGE_MAP','KNOWN_DUPLICATE_CONTRACTS') for t in n.targets):
+          d=ast.literal_eval(n.value)
+          print(n.targets[0].id, 'name_keyed_rows=',len(d),'line=',n.lineno)
+  rows=list(csv.DictReader((root/'ci-suite-audit-sample.tsv').open(),delimiter='\t'))
+  assert rows
+  bad=[(r['suite'],r['overlap_with']) for r in rows if r['verdict']=='MERGE' and not Path(r['overlap_with']).is_file()]
+  print('sample_rows=',len(rows))
+  print('MERGE_without_existing_survivor=',bad)
+  assert not bad, 'sample claims MERGE without a named existing keeper suite'
+  ```
+  Decisive output: `EVIDENCE_FAILURE_RECORDS name_keyed_rows= 10 line= 32`; coverage and duplicate maps each have 1 row; `sample_rows= 30`; `MERGE_without_existing_survivor= [('gh378-gate-requires-green-suite.sh', 'utils/ci-route.sh / validate.sh')]`; `AssertionError: sample claims MERGE without a named existing keeper suite`. This reads the generator; it does not execute it or any fixture.
+
+- **[Should] S1 — Remember observed activity when a successful run listing loses the run too.** `merge_cleanup.py:459` and `:475` stop after an error/malformed lookup once activity was observed, but `:495`–`:503` return `fallback` for a successful empty listing after the grace window, disregarding `seen_active`. `run_post_merge_reconcile` then selects the local-reconciler call. Its separate hosted guard (`utils/py/wave_reconcile.py:82`) mitigates this; this probe does **not** establish concurrent writes or corruption, so this is not graded Blocker.
+  Observed input: first response `[{'databaseId':42,'status':'in_progress','conclusion':'','headSha':'h'}]`, then successful JSON `[]`, expected PR head `h`, merge head `m`, grace 0, wait 90, poll 30. Actual decision: `fallback`.
+  Affected scope: an already-observed active hosted run that disappears from the limited listing without an observed terminal state.
+  Falsifier: the same sequence returns `active_timeout` (or continues bounded observation), while active→matching completed-success still returns `success`, and an initially absent run retains the existing grace/fallback behavior.
+  Fix: apply the existing `seen_active` refusal to the missing-match path, or resolve the remembered run directly before selecting fallback. Root cause: activity memory is consulted only for lookup failures, not missing matches; the decision belongs in the existing wait function.
+
+  Narrow in-memory probe; command `PYTHONDONTWRITEBYTECODE=1 python3 -` with stdin below; **exit 0**. It extracts only the wait function and replaces its external observations; no git, network, fixture or reconciler executes.
+  ```python
+  import ast, json
+  from pathlib import Path
+  from types import SimpleNamespace
+  from typing import Optional
+  p = Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py')
+  tree = ast.parse(p.read_text())
+  node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'wait_for_hosted_reconcile')
+  for second in ('error', 'empty', 'success'):
+      clock = SimpleNamespace(now=0)
+      clock.monotonic = lambda: clock.now
+      def sleep(n): clock.now += n
+      clock.sleep = sleep
+      active = dict(databaseId=42, status='in_progress', conclusion='', headSha='h')
+      complete = dict(active, status='completed', conclusion='success')
+      responses = iter([SimpleNamespace(returncode=0, stdout=json.dumps([active]), stderr=''),
+          SimpleNamespace(returncode=1 if second == 'error' else 0, stdout=json.dumps([complete] if second == 'success' else []), stderr='lookup failed' if second == 'error' else '')])
+      env = dict(Path=Path, Optional=Optional, json=json, time=clock,
+          HOSTED_WAIT_ENV='wait', HOSTED_POLL_ENV='poll', HOSTED_GRACE_ENV='grace',
+          _seconds_from_env=lambda key, default: {'wait':90,'poll':30,'grace':0}[key],
+          _gh=lambda *a, **kw: next(responses), log=lambda x: None, log_warn=lambda x: None, log_err=lambda x: None)
+      exec(compile(ast.Module(body=[node], type_ignores=[]), str(p), 'exec'), env)
+      print('active_then_' + second + '=' + env['wait_for_hosted_reconcile']('m', Path('.'), 'development', pr_head='h'))
+  ```
+  Decisive output: `active_then_error=active_timeout`, `active_then_empty=fallback`, `active_then_success=success`.
+
+- **[Pass] Supplied patch scope stays within the registry freeze.** The name-status packet adds no `test/` suite and contains no `validate.sh`, workflow or router edit; the only added Python files shown are GH-862 evidence. This attests the supplied packet, not an independently queried Git diff (Git was prohibited).
+- **[Pass] The two wave-reconcile fixes use separate existing paths.** `utils/py/wave_reconcile.py:193` creates rollback event files exclusively; `:1369` retains eligible direct-commit metadata; `:2235` uses the shared owner rank for lifecycle writes. No direct interaction defect was established in those inspected paths. This is source inspection, not executed qualification evidence.
+- **[Unverified — needs clone run]** No gate, test suite, pytest or executable fixture ran in this turn. Integrated tip qualification and the remaining full-file sweep are not attested. Per-fix summaries are prior evidence, not a substitute for the harness's final gate.
+
+One-round cap reached: STATUS is Escalated. Handing off to Producer (claude-a) to disposition B1/S1 and correct or withdraw the unsupported evidence. This is not approval to merge into development; no source/artifact edits or Git commands were performed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
