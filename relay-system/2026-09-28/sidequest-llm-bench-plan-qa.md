@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Open
-ROUND: 1 / 3
+STATUS: Approved
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,49 @@ pre-existing defects in file: none observed beyond the findings graded below.
 **Basis:** The benchmark plan is well-scoped, disciplined about not inventing specs, and light-medium. However, it requires three actionable adjustments before approval: correcting `llama-bench` flag syntax (`-fa 1`), directing ANEMLL metrics extraction to `tests/chat_full.py`, and recording GPU/ANE rail power in the schema to fully answer Goal Q3.
 
 handing off to claude-a — go to the claude-a window and say 'take your turn'
+
+### Producer · Round 1 · claude-a
+
+The artifact has been regenerated as plan v2 (`.relay-artifacts/sidequest-llm-bench-plan.md` is re-seeded for this round). Dispositions:
+
+- **[Should] llama-bench `-fa on` → `-fa 1`: Declined, with a hedge added.** The current upstream README lists `-fa, --flash-attn <on|off|auto> (default: auto)` (ggml-org/llama.cpp `tools/llama-bench/README.md:68`, fetched 2026-09-28). The Debian `llama-bench(1)` manpage agrees. `-fa on` is correct for current builds. The integer form belongs to older builds, so v2 keeps `-fa on` and adds "(older builds use `-fa 1`)" to the runtime matrix.
+- **[Should] ANEMLL `tests/chat.py` → `tests/chat_full.py`: Declined, because the observed claim is false.** Upstream `tests/chat.py` prints the metrics itself: `print(f"\nPrefill: {prefill_ms:.1f}ms ({prefill_tokens_per_sec:.1f} t/s)")` and `print(f"Inference: {inference_tokens_per_sec:.1f} t/s")` (Anemll/Anemll `tests/chat.py:1536-1538`, main, fetched 2026-09-28). `chat_full.py` is the multi-turn history variant. `anemll-bench` measures ANE bandwidth on its own lm_head models, not end-to-end LLM tok/s. v2 now names the exact `Prefill:`/`Inference:` lines to record (Phase 3).
+- **[Should] add `gpu_power_w` / `ane_power_w` columns: Implemented.** Added to the schema. Methodology now requires storing the GPU and ANE rails separately for Q3.
+- **[Nit] iPad Auto-Lock: Implemented** ("Auto-Lock set to Never" in the same-conditions list).
+- **[Nit] TTFT derivation: Implemented.** Prefill latency ≈ prompt_tokens/prompt_tps. `ttft_s` = prefill + 1/gen_tps, labelled as derived.
+- **[Nit] iPad power `na`: Implemented** in Methodology and the Scaffold note (power fields are `na` unless an external USB-C meter is used).
+
+ROUND bumped to 2. Handing off to Reviewer (agy): please re-review plan v2 against the DoD, and check specifically that the two declines are backed by the cited sources.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+pre-existing defects in file: none observed.
+
+#### Definition of Done Assessment
+- **(a) Tool names, CLI commands, and flags:** All verified and accurate for current releases. The Producer's decline of `-fa 1` in favor of `-fa on` is confirmed via upstream `llama.cpp` documentation (`tools/llama-bench/README.md:68`), and the hedge `(older builds use -fa 1)` at `plan:49` provides safe backward compatibility. The Producer's decline of `tests/chat_full.py` is likewise confirmed; upstream `tests/chat.py` directly logs `Prefill: … t/s` and `Inference: … t/s`, which `plan:109` now explicitly targets.
+- **(b) Methodology fairness:** Identical files (SHA-256 pinned), warm-up (1 discarded run, ≥3 trials with mean ± stddev), and power/thermal controls are specified across all three devices. iPad testing explicitly specifies `Auto-Lock set to Never` at `plan:59`. Prefill and decode are separated.
+- **(c) Measurement completeness:** All three target questions are fully addressed. `gpu_power_w` and `ane_power_w` are integrated into the `results.csv` schema (`plan:88`) and methodology (`plan:66`) to resolve Q3. TTFT derivation is documented as `ttft_s = prefill + 1/gen_tps` (`plan:48`). ANE fallback detection requires op placement and non-zero `ane_power`.
+- **(d) Light-medium sizing:** Remains pragmatic and lean; avoids extraneous benchmarking machinery.
+- **(e) Checklist & done criteria:** Complete, phased logically (Phase 0–6), and testable against concrete outputs.
+- **(f) Invented numbers:** None. All specs and expected results use `_record_` placeholders, with M6 accelerators marked as `believed` and ANE core count clearly attributed (`user reports 32`).
+
+---
+
+#### Findings
+
+- `[Pass]` **llama-bench Flash Attention syntax & hedge (`plan:49`):** Verified upstream `llama-bench` flag syntax (`-fa on|off|auto`); `plan:49` accurately specifies `llama-bench -m <gguf> -p 512,2048,8192 -n 128 -r 5 -fa on -o csv` and includes the backward-compatibility hedge `(older builds use -fa 1)`.
+- `[Pass]` **ANEMLL metric extraction target (`plan:50, plan:109`):** Verified upstream `tests/chat.py` prints `Prefill: … t/s` and `Inference: … t/s`; `plan:109` instructs to "Record the `Prefill: … t/s` and `Inference: … t/s` lines it prints."
+- `[Pass]` **Dedicated power rails in schema & methodology (`plan:66, plan:88`):** `plan:66` specifies "Store the average combined W **plus the GPU and ANE rails separately** (`gpu_power_w`, `ane_power_w`), which Q3 needs", and `plan:88` includes `gpu_power_w, ane_power_w` in `results.csv`.
+- `[Pass]` **iPad Auto-Lock control (`plan:59`):** `plan:59` specifies "on the iPad, Low Power Mode off and Auto-Lock set to Never".
+- `[Pass]` **Derived TTFT formulation (`plan:48, plan:88`):** `plan:48` specifies "record it as `ttft_s` = prefill + 1/gen_tps and label it derived", matching `ttft_s` in the schema (`plan:88`).
+- `[Pass]` **iPad power telemetry expectation (`plan:66, plan:84`):** `plan:66` specifies "iPad power columns are `na` unless an external USB-C power meter is used", and `plan:84` confirms "iPad power fields are `na` (see Methodology)."
+
+---
+
+**VERDICT: PASS**
+**Basis:** All Round 1 findings have been resolved or soundly declined with upstream evidence. Plan v2 satisfies all criteria (a)-(f) of the Definition of Done.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
