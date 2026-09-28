@@ -1,0 +1,14 @@
+== test: gh1-adoption-guard ==
+  PASS: zero unaudited fixture-creating suites (every match adopted or declared-exempt)
+  PASS: the adoption ledger exists and records ZERO unaudited suites
+  PASS: the ledger names every declared exemption with a reason (currently: the static audit)
+  PASS: mktemp-trap-guard.sh carries the in-file exemption marker the derivation honors
+  PASS: CONTROL A: an unguarded new suite is DETECTED (not waved through)
+  PASS: CONTROL B: an adopted suite with its guard stripped is DETECTED
+  PASS:   and Control A's file is still named alongside it (both sins in one pass)
+  PASS: CONTROL D: an _setup consumer is adopted while central adoption is INTACT
+  PASS:   and stripping _setup.sh's central adoption RE-FLAGS the consumer
+  PASS: CONTROL E: a comment naming the lib does NOT count as adoption
+  PASS: CONTROL C: a declared exemption is honored (file NOT flagged)
+  PASS:   and removing the marker puts it BACK on the offenders list
+  gh1-adoption-guard: 11 pass, 0 fail

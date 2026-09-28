@@ -5,8 +5,8 @@ description: >-
   outcome. Use proactively when the agent is passive, trapped in narration,
   halting on tool exits, or reporting activity without milestone change, as well as
   when overengineering, inventing machinery around work, or reopening settled decisions.
-  Fires autonomously on 4 self-trigger tripwires (two turns without milestone change,
-  tool exit code inertia, passive waiting narration, or false completion), and on
+  Fires autonomously on self-trigger tripwires (two turns without milestone change,
+  tool exit code inertia, passive waiting narration, false completion, or re-litigating a reviewed plan), and on
   operator triggers /unstuck, "we're stuck", "rabbit hole", "stop overengineering",
   "the cogs are moving but the goal isn't", or "get back to the plan". Do not use
   for a new ambiguous problem that needs the full /workhorse ladder, a still-unknown
@@ -47,12 +47,14 @@ Then begin work.
 ---
 ## Autonomous Trigger Tripwires
 
-Models must self-invoke `/unstuck` as an immediate blocking interrupt when any of these 4 tripwires fire — **do NOT wait for the operator to intervene**:
+Models must self-invoke `/unstuck` as an immediate blocking interrupt when any of these tripwires fire — **do NOT wait for the operator to intervene**:
 
 1. **Two-Turn No-Milestone Tripwire:** The agent has communicated with the operator across two consecutive turns without advancing the observable milestone (e.g. outputting progress updates, narrating next steps without executing them, asking redundant permission for an already-authorized goal).
 2. **Tool Exit Code Inertia:** A CLI tool, test, or runner script exited non-zero (e.g., rc=2, rc=3), and the agent stops, narrates waiting, or asks what to do rather than diagnosing the error and executing an unblocking action.
 3. **Passive Narration Detection:** The agent catches itself typing passive waiting phrases ("Waiting for the run to finish...", "Now I will wait for...", "Let me know how to proceed", "Should I continue?") on an active in-flight task.
 4. **False Completion Detection:** The agent is about to report "Done" or "Complete", but the original prompt's core deliverables (e.g., merging PRs, running test suites) were bypassed or unattempted.
+5. **Reviewed-Plan Re-litigation:** The agent is about to reopen a settled decision in a sound plan reviewed at least once, without identifying new contradictory evidence or an explicit changed user requirement. Interrupt immediately, before adding another review round or prerequisite; apply the reviewed-plan check in Rung 3.
+
 ## The five-rung recovery ladder
 
 ```text
@@ -114,6 +116,25 @@ Classify it from evidence, not discomfort:
 A review finding is not automatically blocking because a reviewer found it. Tie it to an acceptance
 criterion, observable failure, safety invariant, or required gate. Conversely, do not relabel a real
 failure as polish merely to create motion.
+
+**Reviewed-plan check.** Treat a sound plan reviewed at least once as the execution baseline.
+Before spending more work on each reopened topic, the agent must identify, in the existing thread:
+
+- the settled decision and its review or acceptance reference (use the existing context; do not demand a new sign-off artifact);
+- what evidence or explicit user requirement changed since that decision, and which acceptance criterion, safety invariant, required gate or next milestone it affects;
+- whether the plan already covers the concern, and whether the proposed response resolves the evidenced gap or merely adds ceremony.
+
+No qualifying change, or an already-covered concern: stop re-litigating it and execute the next
+accepted step. A different preference, speculative edge case or repeated reviewer objection is not
+new evidence. Do not create a checklist file, new gate, recon pass or review round to prove that
+nothing changed. Record the disposition briefly in the existing thread or UNSTUCK receipt.
+
+New contradictory evidence or an explicit changed user requirement: reopen only the affected
+decision and retain the rest of the plan. Diagnose a genuinely unknown failure with
+[`/debug-mantra`](../debug-mantra/SKILL.md); if resolving it requires changing existing code whose
+impact is not yet traced, use a bounded [`/recon`](../recon/SKILL.md) on that seam before revising the
+step. These are conditional routes, not mandatory reviews of an unchanged plan. Never use prior
+approval to dismiss a demonstrated failure, changed requirement or required safety check.
 
 A fan of simultaneous genuine blockers is itself a stall signal — working them in parallel is
 activity without movement. Rank them by critical path to the re-anchored milestone, act only on

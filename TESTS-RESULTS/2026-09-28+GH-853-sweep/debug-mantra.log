@@ -1,0 +1,20 @@
+== test: debug-mantra ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-debug-mantra.XXXXXX.V4tPmyzDvE
+  PASS: relay-automation/DEBUG-MANTRA.md exists
+  PASS: DEBUG-MANTRA.md carries all four discipline steps
+  PASS: first fire: dry-run emits a render
+  PASS: first fire: relay file has no debug-mantra note
+  PASS: first fire: phase brief still rendered normally
+  PASS: first fire: dry-run wrote nothing to disk (GH-401)
+  PASS: one prior attempt: debug-mantra note appears
+  PASS: note references the DEBUG-MANTRA.md file by name
+  PASS: GH-410: the rendered note carries no absolute repo root
+  PASS: note states the prior-attempt count (1)
+  PASS: peek never mutated .tick/attempts/p1 (still 1 line — read-only)
+  PASS: with ESCALATION.md: debug-mantra note appears
+  PASS: note cites the last recorded ESCALATION.md reason (pre-advance-failed)
+  PASS: two prior attempts: note states count (2)
+  PASS: debug_mantra_prior_attempts defined
+  PASS: debug_mantra_note defined
+  PASS: GH-162 helpers stay outside the GH-45 byte-identical mirror block
+== debug-mantra: 17 passed, 0 failed ==

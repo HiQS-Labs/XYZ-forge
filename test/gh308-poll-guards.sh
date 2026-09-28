@@ -64,7 +64,7 @@ fi
 printf '{"parked_suspects":["FOO-1"]}\n' >"$A/analysis.json"
 WD_ARGS=(--mode xyz --agent me --task T --analysis-file "$A/analysis.json" --watchdog-authority)
 pywd="$(TICK_REPO_ROOT="$A" bash "$POLL" "${WD_ARGS[@]}" 2>&1)"
-if printf '%s' "$pywd" | grep -q 'DECISION: run-watchdog' && printf '%s' "$pywd" | grep -q '^watchdog:'; then
+if grep -q 'DECISION: run-watchdog' <<<"$pywd" && grep -q '^watchdog:' <<<"$pywd"; then
   pass "poll [watchdog default]: run-watchdog dispatches the default watchdog.sh on the live lane"
 else
   fail "poll [watchdog default]: run-watchdog dispatched nothing (default watchdog.sh not wired): $pywd"

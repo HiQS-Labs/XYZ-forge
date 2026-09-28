@@ -1,0 +1,3 @@
+# at 8f2554c3 (before), same witness:
+rc=124 grandchild_alive_after_timeout=True
+FAIL

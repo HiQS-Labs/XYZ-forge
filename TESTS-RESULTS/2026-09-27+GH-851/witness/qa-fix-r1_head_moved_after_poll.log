@@ -1,0 +1,6 @@
+merge-cleanup: ERROR — PR #5: head moved to eeeeeeeeee after the pushed cccccccccc — stopping
+merge-cleanup: PR #5: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #5: attempt record /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpynvvdm0f/rec.json
+merge-cleanup: PR #5: slot reserved
+merge-cleanup: PR #5: pushed cccccccccc; re-fetching and re-gating the new head
+merge-cleanup: PR #5: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (1/6)

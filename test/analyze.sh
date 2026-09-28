@@ -63,7 +63,7 @@ fi
 grep -q "collisions (overlapping concurrent claims): 0" <<<"$(echo "$HUMAN")" \
   && pass "verdict: 0 collisions on disjoint lanes" \
   || fail "expected 0 collisions in: $(echo "$HUMAN" | grep -i collision)"
-echo "$HUMAN" | grep -qE "VERDICT: FAIL" && echo "$HUMAN" | grep -q "TASK-003" \
+grep -qE "VERDICT: FAIL" <<<"$HUMAN" && grep -q "TASK-003" <<<"$HUMAN" \
   && pass "verdict: FAIL — a claimed lane (TASK-003) did not reach done" \
   || fail "expected VERDICT: FAIL citing TASK-003 in: $(echo "$HUMAN" | grep -i verdict)"
 

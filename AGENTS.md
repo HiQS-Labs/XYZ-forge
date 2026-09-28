@@ -111,6 +111,10 @@ of which passed cleanly before they were mutated — an `awk` range that termina
 line, `not matches -- "$pat"` where the helper already supplied `--` so the check searched for the
 literal string `--`, and a telemetry `rc` assertion that no *passing* run could ever exercise.
 
+**A flaky suite is fixed in place if it is in a tier, and turned off if it is not.** Tier membership comes from
+`utils/ci-route.sh` (`SUBSYSTEM_TESTS_small`). Turning off means removing it from `validate.sh` `TESTS` and adding it to the
+gh306 `EXEMPT` list, keeping the file (#802 operator decision, comment 5841529958; #853).
+
 **An empty input passes every check.** Before asserting anything about extracted data, assert that
 you extracted some: a failed command substitution yields an empty string, a shell redirect creates
 the file regardless, and a scanner then reports CLEAN against zero bytes. Size-check the artifact,

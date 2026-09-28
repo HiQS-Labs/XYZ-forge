@@ -21,14 +21,14 @@ loop(){ POLL_GIT_ROOT="$A" bash "$LOOP" "$@" --mode relay --agent alice --turn-s
 
 # (1) default one-tick: my turn + clean + --dry-run -> NEXT-POLL: 0, exit 0
 out="$(loop --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --dry-run 2>&1)"; rc=$?
-{ printf '%s\n' "$out" | grep -q '^NEXT-POLL: 0$'; } && [ "$rc" -eq 0 ] \
+{ grep -q '^NEXT-POLL: 0$' <<<"$out"; } && [ "$rc" -eq 0 ] \
   && pass "default tick: run-runner -> NEXT-POLL: 0, exit 0" || fail "expected NEXT-POLL 0 / exit 0 (rc=$rc): $out"
 
 # (2) default one-tick: NEXT-POLL reflects the idle backoff for a not-my-turn relay
 printf 'STATUS: Open\nNEXT: bob\n# body\n' >"$A/relay-other.md"
 git -C "$A" add relay-other.md >/dev/null 2>&1; git -C "$A" commit -q -m other >/dev/null 2>&1
 out="$(loop --relay-file "$A/relay-other.md" --artifact "$A/art.md" --claude-agents alice,bob --dry-run 2>&1)"
-{ printf '%s\n' "$out" | grep -q '^NEXT-POLL: 300$'; } \
+{ grep -q '^NEXT-POLL: 300$' <<<"$out"; } \
   && pass "default tick: idle (not my turn) -> NEXT-POLL: 300 (adaptive backoff)" || fail "expected NEXT-POLL 300: $out"
 
 # (3) default one-tick dispatch: runner fires once on my-turn+clean
@@ -73,14 +73,14 @@ echo ran >>"$SENT6"
 RS
 chmod +x "$RUN6"
 out="$(loop --background --bg-pidfile "$BGPID" --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --runner-cmd "$RUN6" 2>&1)"; rc=$?
-{ printf '%s\n' "$out" | grep -q '^BG-DISPATCH: pid='; } && [ -f "$BGPID" ] \
+{ grep -q '^BG-DISPATCH: pid=' <<<"$out"; } && [ -f "$BGPID" ] \
   && [ "$(grep -c ran "$SENT6" 2>/dev/null || true)" -eq 0 ] && [ "$rc" -eq 0 ] \
   && pass "background: dispatches detached (returns before runner finishes; pidfile written)" \
   || fail "expected immediate BG-DISPATCH + pidfile + runner-not-yet-done (rc=$rc): $out"
 
 # (7) background: while a turn runs, a second tick holds (BG-RUNNING) — no double-dispatch.
 out="$(loop --background --bg-pidfile "$BGPID" --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --runner-cmd "$RUN6" 2>&1)"
-{ printf '%s\n' "$out" | grep -q '^BG-RUNNING: pid='; } \
+{ grep -q '^BG-RUNNING: pid=' <<<"$out"; } \
   && pass "background: a running turn blocks a second dispatch (BG-RUNNING)" || fail "expected BG-RUNNING: $out"
 # let the bg turn finish (poll the pidfile, don't rely on this shell's job table)
 for _ in $(seq 1 60); do p="$(cat "$BGPID" 2>/dev/null || true)"; { [ -n "$p" ] && kill -0 "$p" 2>/dev/null; } || break; sleep 0.1; done
@@ -128,12 +128,12 @@ echo ran >>"$SENT11"
 RS
 chmod +x "$RUN11"
 out="$(loop --background --bg-pidfile "$BGP11" --cross-model-cmd "$RUN11" --relay-file "$A/relay-cross.md" --artifact "$A/art.md" --claude-agents alice,bob 2>&1)"; rc=$?
-{ printf '%s\n' "$out" | grep -q '^BG-DISPATCH: pid='; } && [ -f "$BGP11" ] \
+{ grep -q '^BG-DISPATCH: pid=' <<<"$out"; } && [ -f "$BGP11" ] \
   && [ "$(grep -c ran "$SENT11" 2>/dev/null || true)" -eq 0 ] && [ "$rc" -eq 0 ] \
   && pass "background: nudge-cross-model dispatches the configured cross-model shim" \
   || fail "expected BG-DISPATCH for cross-model cmd (rc=$rc): $out"
 out="$(loop --background --bg-pidfile "$BGP11" --cross-model-cmd "$RUN11" --relay-file "$A/relay-cross.md" --artifact "$A/art.md" --claude-agents alice,bob 2>&1)"
-{ printf '%s\n' "$out" | grep -q '^BG-RUNNING: pid='; } \
+{ grep -q '^BG-RUNNING: pid=' <<<"$out"; } \
   && pass "background: cross-model dispatch reuses the single-turn pidfile lock" \
   || fail "expected BG-RUNNING on second cross-model tick: $out"
 for _ in $(seq 1 60); do p="$(cat "$BGP11" 2>/dev/null || true)"; { [ -n "$p" ] && kill -0 "$p" 2>/dev/null; } || break; sleep 0.1; done
@@ -145,8 +145,8 @@ for _ in $(seq 1 60); do p="$(cat "$BGP11" 2>/dev/null || true)"; { [ -n "$p" ] 
 #      existing human nudge, with no pidfile or dispatch side effect.
 BGP12="$WORK/bg12.pid"; SENT12="$WORK/ran12.txt"; : >"$SENT12"
 out="$(loop --background --bg-pidfile "$BGP12" --relay-file "$A/relay-cross.md" --artifact "$A/art.md" --claude-agents alice,bob 2>&1)"; rc=$?
-{ printf '%s\n' "$out" | grep -q 'manual nudge required'; } \
-  && { printf '%s\n' "$out" | grep -q '^NEXT-POLL: 120$'; } \
+{ grep -q 'manual nudge required' <<<"$out"; } \
+  && { grep -q '^NEXT-POLL: 120$' <<<"$out"; } \
   && [ ! -f "$BGP12" ] && [ "$(grep -c ran "$SENT12" 2>/dev/null || true)" -eq 0 ] && [ "$rc" -eq 0 ] \
   && pass "background: cross-model without a command degrades to the manual nudge" \
   || fail "expected manual nudge + no dispatch/pidfile (rc=$rc): $out"

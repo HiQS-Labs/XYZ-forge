@@ -54,7 +54,7 @@ RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-drift 
 brief="$(cat "$WORK/claude-args" 2>/dev/null || true)"
 [ "$rc" -eq 0 ] && pass "claude-turn default lane: turn still completes with a peer drift pending (exit 0)" \
   || fail "claude-turn default lane: turn failed (rc=$rc)"
-if printf '%s' "$brief" | grep -qi 'dependency' && printf '%s' "$brief" | grep -q 'src/project.js'; then
+if grep -qi 'dependency' <<<"$brief" && grep -q 'src/project.js' <<<"$brief"; then
   pass "claude-turn default lane: the GH-68 peer drift brief is prepended to the turn prompt"
 else
   fail "claude-turn default lane: no drift brief in the turn prompt — the Bash-only feature is dead here: $brief"

@@ -739,9 +739,14 @@ class TestGh623Resilience(LedgerFixture):
         with mock.patch.object(scan_clones.subprocess, "run") as m:
             scan_clones.run_git(self.primary, ["status"])
         self.assertIsNone(m.call_args.kwargs.get("timeout"))
-        with mock.patch.object(scan_clones.subprocess, "run") as m2:
+        # A bounded call runs in its own process group so expiry can end git's children too
+        # (PR #880 review, P1).
+        with mock.patch.object(scan_clones.subprocess, "Popen") as m2:
+            m2.return_value.communicate.return_value = ("", "")
+            m2.return_value.returncode = 0
             scan_clones.run_git(self.primary, ["status"], timeout=5)
-        self.assertEqual(m2.call_args.kwargs.get("timeout"), 5)
+        self.assertTrue(m2.call_args.kwargs.get("start_new_session"))
+        self.assertEqual(m2.return_value.communicate.call_args.kwargs.get("timeout"), 5)
 
     def test_hung_landing_clone_times_out_and_defers(self):
         """RED on current code: run_git has no timeout, so the hung clone propagates as an

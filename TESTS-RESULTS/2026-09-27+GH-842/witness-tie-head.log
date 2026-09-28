@@ -1,0 +1,5 @@
+distinct-time: discovery=bbbbbbbbbbbb lifecycle=bbbbbbbbbbbb agree=True
+same-second: discovery=5 lifecycle=5 agree=True
+discovery: owner_rank
+lifecycle: owner_rank(meta)
+RESULT: PASS

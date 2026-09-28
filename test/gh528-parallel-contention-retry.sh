@@ -116,7 +116,7 @@ fi
 
 # (3) it must NOT be silently absorbed: the point of failing under concurrency is that the lane list
 #     is incomplete, and that has to reach a human or it never gets fixed.
-if printf '%s' "$out" | grep -q "WARNING (GH-528)" && printf '%s' "$out" | grep -q "$PROBE_NAME"; then
+if grep -q "WARNING (GH-528)" <<<"$out" && grep -q "$PROBE_NAME" <<<"$out"; then
   pass "the contended suite is named in a warning (an incomplete lane list cannot fail silently)"
 else
   fail "GH-528: no warning named the contended suite — the lane-list gap would go unnoticed"
@@ -166,7 +166,7 @@ fi
 # (8) the evidence is complete: no INTERNAL ERROR, and both probes reached the summary — nothing lost
 if grep -q "INTERNAL ERROR" <<<"$(printf '%s' "$out2")"; then
   fail "GH-15: the run reported incomplete evidence — the tally guard fired on a case it should handle"
-elif printf '%s' "$out2" | grep -qE "^  \+ $SWALLOWER_NAME" && printf '%s' "$out2" | grep -qE "^  - $VICTIM_NAME"; then
+elif grep -qE "^  \+ $SWALLOWER_NAME" <<<"$out2" && grep -qE "^  - $VICTIM_NAME" <<<"$out2"; then
   pass "every pooled suite is classified exactly once — the verdict rests on complete evidence"
 else
   fail "GH-15: a probe suite never reached the summary — a result line was lost"

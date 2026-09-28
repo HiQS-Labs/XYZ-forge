@@ -30,7 +30,7 @@ pass=0; fail=0
 ok(){ if [ "$2" = "0" ]; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 # compute-then-assert: values are gathered with normal quoting, then compared.
 is(){ [ "$1" = "$2" ]; }
-has(){ printf '%s' "$1" | grep -q "$2"; }
+has(){ grep -q "$2" <<<"$1"; }
 
 echo "== test: gh32-releases-app =="
 

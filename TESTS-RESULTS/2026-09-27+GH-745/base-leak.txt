@@ -1,0 +1,7 @@
+gh424-roadmap-status-marker rc=0 OK
+gh425-gate-provenance-pr rc=0 OK
+gh421-auto-wave-reconcile rc=0 OK
+rollback events written into the real clone: 3
+2026-09-27T22-49-29.765Z-wave-reconcile-rollback.jsonl
+2026-09-27T22-49-29.871Z-wave-reconcile-rollback.jsonl
+2026-09-27T22-49-34.524Z-wave-reconcile-rollback.jsonl
