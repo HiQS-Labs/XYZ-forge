@@ -32,3 +32,11 @@ PDDA: rc=0, zero errors and 368 existing-tree warnings. Skill frontmatter valida
 Round 1: instruction cases passed; verdict PARKED because the harness forbids Git and the baseline diff was not supplied. Producer supplied the exact diff without changing the skill. Round 2: reviewer approved, but harness rc=6 invalidated that approval when the producer concurrently wrote CHECKS.md outside the reviewer allowlist. The harness saved the file in its orphan backup; it was restored and committed before round 3. No skill change or discarded user work. Round 3 is the final bounded review; no concurrent tree writes.
 
 Final disposition: round 3 reviewer moved an earlier system note; driver rc=4 refused approval. No further review round after the cap. The transcript is retained under `relay-system/2026-09-27/gh854-unstuck.codex.md`. This task is implemented and document-checked, but not merge-ready. A valid independent QA receipt remains required before promotion.
+
+## Superseding QA result — operator-authorized Agy relay
+
+The operator requested a fresh Agy QA run capped at five rounds. Round 1 approved with driver rc=0 and a valid harness attestation. Reviewed head: `f31460cf542c08b7c6a095ea63eb5d35fc2f5cd7`; skill unchanged from the checked revision. Receipt: `relay-system/2026-09-27/gh854-unstuck-agy.md`. This resolves the earlier QA blocker; the historical failed Codex runs remain above. No empirical model-compliance guarantee or full-gate claim is made. Agy's quoted spans support the findings; two ancillary Q3 line references are offset (the quoted passages are at skill lines 102–104 and 118), without changing the verdict.
+
+```jsonl
+{"command": "AGY_AGENT=agy RELAY_PEER=codex-author ALLOW_PATHS='' bash relay-automation/relay-drive.sh --relay-file relay-system/2026-09-27/gh854-unstuck-agy.md --relay-task RELAY-gh854-unstuck-agy --agent-cmd relay-automation/agy-turn.sh --reviewer agy --round-cap 5 --review-once", "rc": 0, "result": "Approved in round 1; harness attested", "commit": "f31460cf542c08b7c6a095ea63eb5d35fc2f5cd7", "timestamp": "2026-09-28T00:48:45Z", "host": "Darwin arm64"}
+```
