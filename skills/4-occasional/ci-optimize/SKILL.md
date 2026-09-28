@@ -149,3 +149,10 @@ Evaluate a repository against each standard (0 = Absent, 1 = Partial / Ad-hoc, 2
 * **20–24 Points (A - Resilient):** Production-grade CI/CD with robust isolation, fast feedback loops, and zero false confidence.
 * **14–19 Points (B - Solid):** Functional pipeline with minor contention or isolation gaps; prioritize Wave 2 & 3 improvements.
 * **<14 Points (C - High Risk):** Fragile pipeline prone to false greens, flaky builds, or workspace corruption; adopt Wave 1 immediately.
+
+---
+
+## Related Skills
+
+- **[ci-suite-audit](../ci-suite-audit/SKILL.md):** Individual test suite curation, runtime profiling, flake history, and retention/quarantine/nightly triage (unit: one suite; `ci-optimize` unit: pipeline architecture).
+
