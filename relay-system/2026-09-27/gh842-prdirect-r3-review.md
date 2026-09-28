@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -235,5 +235,46 @@ index 300488c9..10722db3 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: The prior metadata-loss and tied-owner findings are addressed at their source. The bounded change reuses qualification, receipt matching and retry filtering; supplied focused evidence supports approval. No further actionable pre-existing defect found in the whole-file sweep.
+swept file: yes
+
+- [Pass] **One owner ordering closes r2.** Both discovery at `utils/py/wave_reconcile.py:1453` and lifecycle ownership at `:2231` call `owner_rank` (`:1353`). A read-only AST probe evaluated those exact expressions and the helper, without importing the application or running fixtures. Command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with the body below; exit **0**. Decisive output: `distinct-time discovery= bbbbbbbbbbbb lifecycle= bbbbbbbbbbbb agree= True`; `same-second discovery= 5 lifecycle= 5 agree= True`; `old-rank red control agree= False`. The retained `witness-tie-r2.log` / `witness-tie-head.log` independently record the same FAIL → PASS.
+- [Pass] **Receipt and ownership state stay separate.** Every eligible commit enters metadata before receipt filtering (`utils/py/wave_reconcile.py:1388`); only flagged commits enter the landing list (`:2197`). The existing qualifier filters matching receipts before running a gate (`:617`), and `--only-receipted` filters landings while retaining owner metadata (`:2204`). Tier selection and receipt validation remain in the existing helpers (`:589`, `:527`). `witness-owner-head.log` records `direct commit visible: True | catchUp: True` and then `repeat: found PRs: [] | catchUp: False`.
+- [Pass] **Evidence and scope agree with the packet.** Read the complete reconciler, witness sources, supplied logs, summary, prior findings and hosted caller. The nonempty focused logs report `Ran 36 tests`, `Ran 23 tests`, and `Ran 6 tests`, each ending `OK`, matching `TESTS-RESULTS/2026-09-27+GH-842/provenance.jsonl:1`–3. `base-control.log` records no commit discovery; `witness-head.log` records `pending: 5`; `witness-express.log` identifies `1370765938 express`. The embedded patch changes the reconciler plus evidence/relay files only, with no new suite, registry or ledger changes.
+- [Unverified — needs clone run] This turn did not execute full recovery/publish retry, suites or executable fixtures. The tie witness measures selector agreement, not an end-to-end lifecycle transition. Supplied focused runs are producer evidence; the harness gate after this turn remains required.
+
+Read-only probe body (source-only evaluation; no Git, application import or filesystem mutation):
+```python
+import ast
+from pathlib import Path
+t = ast.parse(Path("utils/py/wave_reconcile.py").read_text())
+fn = {n.name:n for n in t.body if isinstance(n,ast.FunctionDef)}
+ns = {}
+exec(compile(ast.Module(body=[fn["owner_rank"]],type_ignores=[]),"<owner_rank>","exec"),ns)
+owner = next(n for n in ast.walk(fn["catch_up_prs"]) if isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=="owner" for x in n.targets))
+key = next(k.value for k in owner.value.keywords if k.arg=="key")
+rank = next(n.value for n in ast.walk(fn["main"]) if isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=="rank" for x in n.targets))
+discovery = eval(compile(ast.Expression(key),"<key>","eval"),ns)
+def lifecycle(meta):
+    return eval(compile(ast.Expression(rank),"<rank>","eval"),dict(ns,meta=meta))
+pr = dict(number=5,mergedAt="2026-09-27T12:00:00Z")
+commit = dict(number="bbbbbbbbbbbb",sha="b"*40,artifactKind="commit",mergedAt=pr["mergedAt"])
+for label, stamp in [("distinct-time","2026-09-27T12:00:01Z"),("same-second",pr["mergedAt"])]:
+    commit["mergedAt"]=stamp
+    a,b=max([pr,commit],key=discovery),max([pr,commit],key=lifecycle)
+    print(label,"discovery=",a["number"],"lifecycle=",b["number"],"agree=",a is b)
+    assert a is b
+old = lambda m:(m.get("mergedAt") or "",str(m["number"]))
+print("old-rank red control agree=",max([pr,commit],key=discovery) is max([pr,commit],key=old))
+assert max([pr,commit],key=discovery) is not max([pr,commit],key=old)
+print("selectors:",ast.unparse(key),"/",ast.unparse(rank))
+```
+
+Relay closed (Approved), no further turn needed. Producer/harness owns the subsequent gate and file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
