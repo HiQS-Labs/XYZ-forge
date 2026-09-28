@@ -277,4 +277,12 @@ print("selectors:",ast.unparse(key),"/",ast.unparse(rank))
 
 Relay closed (Approved), no further turn needed. Producer/harness owns the subsequent gate and file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-09-28T00:03:12Z
+task: RELAY-gh842-prdirect-r3-review
+reviewer: codex
+status: Approved
+reviewed-head: 1800df040c729304b0db2eec78d936e91545044f
+added-range: 15989+4246
+added-sha256: abc2e8d8f5c78d83a4b2c87135cedc944fb3b4c964e6a644e419b55e6fc067df
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
