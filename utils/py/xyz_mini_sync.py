@@ -5,10 +5,23 @@ HiQS-Labs/XYZ-mini, commit with the source SHA, optionally push. (GH-589)
 The manifest lives in this file so a publication is a function of (source revision, this file).
 Preview by default; --apply writes and commits; --push also pushes and reads origin/main back.
 
+The source revision is whatever the forge checkout holds at run time, on any branch — publishing
+from a feature branch is the sanctioned exception path (mini/ADAPTATIONS.md). The tool records
+source_repo/source_sha/source_branch in the child's .xyz-forge-revision and warns on stderr when
+the branch is not development; re-publish from development once the branch lands to re-baseline.
+
+Modes:
+  * managed — byte-identical contract: replaced every run, deleted from the child when dropped
+  * seed    — copied only when absent; never replaced, never deleted (child-owned, e.g. TODO.md)
+  * adapted — the child owns the bytes: copied only when absent, never replaced, deleted only
+              when dropped; the forge source must stay tracked (upstream of record) and every
+              adapted destination must be documented in mini/ORIGIN.md or the run refuses
+
 Guards (deliberately few):
   * every manifest source must exist and be tracked, or nothing is written (exit 2)
   * an existing destination file at an output path that the previous publication did not write is
     never overwritten (exit 2) — the one ownership guard
+  * an adapted destination missing from the child is refused, never fabricated from forge bytes
   * the files about to ship are regex-scanned for secrets before anything is written (exit 4)
 
 Usage: utils/py/xyz_mini_sync.py [--dest PATH] [--apply] [--push] [--allow-dirty] [--print-manifest]
@@ -25,6 +38,9 @@ import sys
 # (source path in XYZ-forge, destination path in XYZ mini, mode)
 #   managed: replaced every run, deleted from mini when dropped from this list
 #   seed:    copied only when absent in mini; never replaced, never deleted
+#   adapted: mini owns the bytes — copied only when absent, never replaced, deleted only when
+#            dropped; the forge source stays tracked as the upstream of record and every adapted
+#            destination must be documented in mini/ORIGIN.md (see mini/ADAPTATIONS.md)
 # A directory entry ships every TRACKED file beneath it.
 MANIFEST = (
     ("skills/1-hourly/relay", "skills/relay", "managed"),
@@ -32,6 +48,10 @@ MANIFEST = (
     ("skills/3-weekly/honest", "skills/honest", "managed"),
     ("skills/1-hourly/debug-mantra", "skills/debug-mantra", "managed"),
     ("skills/1-hourly/unstuck", "skills/unstuck", "managed"),
+    ("skills/2-daily/review-code", "skills/review-code", "managed"),
+    # adapted: mini-flat layout + child-side hardening (GH-889 QA); upstream of record stays here
+    ("skills/3-weekly/weekly-planner", "skills/weekly-planner", "adapted"),
+    ("skills/2-daily/daily-planner", "skills/daily-planner", "adapted"),
     # agent-chorus runtime only (its standalone publish pipeline stays behind)
     ("skills/2-daily/agent-chorus/SKILL.md", "skills/agent-chorus/SKILL.md", "managed"),
     ("skills/2-daily/agent-chorus/README.md", "skills/agent-chorus/README.md", "managed"),
@@ -137,7 +157,27 @@ def expected_revision(sha, branch, dirty):
     return f"source_repo=XYZ-forge\nsource_sha={sha}\nsource_branch={branch}\nsource_dirty={int(dirty)}\n"
 
 
-def destination_ready(source, dest, files, managed, revision, message):
+DOC_TOKEN_RX = re.compile(r"[A-Za-z0-9_./-]+")
+
+
+def origin_documented(dest, doc):
+    """True when the origin doc names the destination file or one of its ancestor directories.
+
+    Matching is token-exact (maximal path-like runs), not substring: a bare "skills/" inside
+    "skills/daily-planner/" must not document everything under skills/.
+    """
+    tokens = set(DOC_TOKEN_RX.findall(doc))
+    if dest in tokens:
+        return True
+    parent = os.path.dirname(dest)
+    while parent:
+        if parent in tokens or parent + "/" in tokens:
+            return True
+        parent = os.path.dirname(parent)
+    return False
+
+
+def destination_ready(source, dest, files, tracked, revision, message):
     """Refuse stale or unrelated history before writing; permit an exact failed-push retry."""
     current_branch = git(dest, "symbolic-ref", "--quiet", "--short", "HEAD", check=False)
     if current_branch.returncode != 0 or current_branch.stdout.strip() != "main":
@@ -158,13 +198,13 @@ def destination_ready(source, dest, files, managed, revision, message):
         old_revision = git(dest, "show", f"{head}:{REVISION_FILE}", check=False)
         remote_manifest = git(dest, "show", f"{remote}:{MANIFEST_FILE}", check=False)
         changed = git(dest, "diff", "--name-only", remote, head, check=False)
-        wanted_manifest = "".join(path + "\n" for path in managed)
+        wanted_manifest = "".join(path + "\n" for path in tracked)
         if (parent.returncode == subject.returncode == old_manifest.returncode == old_revision.returncode == 0
                 and parent.stdout.strip() == remote and subject.stdout.strip() == message
                 and old_manifest.stdout == wanted_manifest and old_revision.stdout == revision):
             previous = set(remote_manifest.stdout.splitlines()) if remote_manifest.returncode == 0 else set()
             seeds = {dst for _, dst, mode in files if mode == "seed"}
-            allowed = set(managed) | previous | seeds | {MANIFEST_FILE, REVISION_FILE}
+            allowed = set(tracked) | previous | seeds | {MANIFEST_FILE, REVISION_FILE}
             changed_paths = set(changed.stdout.splitlines()) if changed.returncode == 0 else {"<unreadable>"}
             payload_matches = all(not os.path.lexists(os.path.join(dest, old))
                                   for old in previous - set(managed))
@@ -229,9 +269,24 @@ def main(argv=None):
 
         files = expand(source, profile["manifest"])
         managed = sorted({d for _, d, m in files if m == "managed"})
+        adapted = sorted({d for _, d, m in files if m == "adapted"})
+        tracked = sorted(managed + adapted)
+        if adapted:
+            origin_doc_path = os.path.join(source, "mini", "ORIGIN.md")
+            if not os.path.isfile(origin_doc_path):
+                raise Refuse("adapted manifest entries require mini/ORIGIN.md in the source repo")
+            origin_doc = open(origin_doc_path).read()
+            # a dest counts as documented when the doc names the file or any ancestor directory
+            undocumented = [d for d in adapted if not origin_documented(d, origin_doc)]
+            if undocumented:
+                raise Refuse("adapted destinations not documented in mini/ORIGIN.md: "
+                             + " ".join(undocumented))
         revision = expected_revision(sha, branch, dirty)
         message = f"sync: XYZ-forge@{sha[:12]} ({branch}){' [dirty source]' if dirty else ''}"
-        destination_ready(source, dest, files, managed, revision, message)
+        if branch != "development":
+            log(f"note: publishing from {branch!r}, not development — recorded in {REVISION_FILE} "
+                f"and the child's ORIGIN.md", profile["log"])
+        destination_ready(source, dest, files, tracked, revision, message)
         prev_path = os.path.join(dest, MANIFEST_FILE)
         prev = set(open(prev_path).read().split()) if os.path.isfile(prev_path) else set()
         owned = prev | {MANIFEST_FILE, REVISION_FILE}
@@ -240,7 +295,13 @@ def main(argv=None):
         for _, d, m in files:
             if m != "seed" and d not in owned and os.path.lexists(os.path.join(dest, d)):
                 raise Refuse(f"{d} exists in the destination but was not published by this tool — refusing to overwrite")
-        deletions = sorted(d for d in prev - set(managed) if os.path.lexists(os.path.join(dest, d)))
+        missing_adapted = sorted(d for _, d, m in files
+                                 if m == "adapted" and not os.path.lexists(os.path.join(dest, d)))
+        if missing_adapted:
+            raise Refuse("adapted destination missing in the child — restore it from the child's "
+                         "git history or re-adapt; the tool will not fabricate it from forge bytes: "
+                         + " ".join(missing_adapted))
+        deletions = sorted(d for d in prev - set(tracked) if os.path.lexists(os.path.join(dest, d)))
         copies = [(s, d) for s, d, m in files if m == "managed" or not os.path.exists(os.path.join(dest, d))]
 
         scan(source, [s for s, _ in copies])
@@ -258,7 +319,7 @@ def main(argv=None):
             shutil.copy(os.path.join(source, s), dp)  # copy() keeps the executable bit
             git(dest, "add", "--", d)
         with open(prev_path, "w") as fh:
-            fh.write("".join(p + "\n" for p in managed))
+            fh.write("".join(p + "\n" for p in tracked))
         with open(os.path.join(dest, REVISION_FILE), "w") as fh:
             fh.write(revision)
         git(dest, "add", "--", MANIFEST_FILE, REVISION_FILE)

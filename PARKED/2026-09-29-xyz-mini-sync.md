@@ -21,3 +21,8 @@
   planner divergence in the forge and re-vendor, or extend the tool with a transformed-vendoring
   mode; then add `skills/2-daily/review-code` → `skills/review-code` to the tool MANIFEST so the
   hand publication is re-owned by the script.
+- **Resolved 2026-09-29:** the tool gained an `adapted` mode (mini owns the bytes; the forge
+  source stays tracked as upstream of record; every adapted path must be documented in the
+  child's `ORIGIN.md` or the run refuses). Planner entries re-owned as `adapted`, review-code
+  published as `managed`, and the chain of origin shipped to the child as `ORIGIN.md`. Policy in
+  `mini/ADAPTATIONS.md`. Kept as a pointer.
