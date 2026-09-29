@@ -72,6 +72,7 @@ MANIFEST = (
     # mini-only sources authored in forge under mini/
     ("mini/skills/skill-viewer", "skills/skill-viewer", "managed"),
     ("mini/README.md", "README.md", "managed"),
+    ("mini/ORIGIN.md", "ORIGIN.md", "managed"),
     ("mini/gitignore", ".gitignore", "managed"),
     ("mini/TODO.md", "TODO.md", "seed"),
     ("LICENSE", "LICENSE", "managed"),
