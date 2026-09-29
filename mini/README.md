@@ -7,7 +7,10 @@ XYZ mini is the beginner-sized sibling of [XYZ-forge](https://github.com/HiQS-La
 The forge carries the full harness: marathons, release ledgers, governance docs, dozens of skills.
 Mini carries eleven skills and a `TODO.md`. Everything here is published from the forge by a
 deterministic script, so every managed file (everything listed in `MANIFEST.txt`) is byte-identical
-to its forge source at the revision named in `.xyz-forge-revision`. `TODO.md` is yours.
+to its forge source at the revision named in `.xyz-forge-revision` — except paths registered as
+adapted in [ORIGIN.md](ORIGIN.md), which carry mini-local changes and name their upstream there.
+Publications may run from any forge branch; `.xyz-forge-revision` records which one. `TODO.md` is
+yours.
 
 ## What is in the box
 
