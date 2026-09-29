@@ -21,7 +21,9 @@ Guards (deliberately few):
   * every manifest source must exist and be tracked, or nothing is written (exit 2)
   * an existing destination file at an output path that the previous publication did not write is
     never overwritten (exit 2) — the one ownership guard
-  * an adapted destination missing from the child is refused, never fabricated from forge bytes
+  * an adapted destination deleted from the child is refused, never fabricated from forge bytes;
+    a fresh child (or a newly added adapted entry) materializes the path from forge bytes as the
+    re-adaptation starting point
   * the files about to ship are regex-scanned for secrets before anything is written (exit 4)
 
 Usage: utils/py/xyz_mini_sync.py [--dest PATH] [--apply] [--push] [--allow-dirty] [--print-manifest]
@@ -299,9 +301,18 @@ def main(argv=None):
         missing_adapted = sorted(d for _, d, m in files
                                  if m == "adapted" and not os.path.lexists(os.path.join(dest, d)))
         if missing_adapted:
-            raise Refuse("adapted destination missing in the child — restore it from the child's "
-                         "git history or re-adapt; the tool will not fabricate it from forge bytes: "
-                         + " ".join(missing_adapted))
+            # lost (the child's history knows the path) vs fresh (it never had it)
+            lost, fresh = [], []
+            for d in missing_adapted:
+                known = git(dest, "rev-list", "HEAD", "--", d, check=False).stdout.strip()
+                (lost if known else fresh).append(d)
+            if lost:
+                raise Refuse("adapted destination deleted from the child — restore it from the "
+                             "child's git history or re-adapt; the tool will not fabricate it "
+                             "from forge bytes: " + " ".join(lost))
+            if fresh:
+                log("fresh child: adapted paths materialized from forge bytes — re-adapt per the "
+                    "child's ORIGIN.md: " + " ".join(fresh), profile["log"])
         deletions = sorted(d for d in prev - set(tracked) if os.path.lexists(os.path.join(dest, d)))
         copies = [(s, d) for s, d, m in files if m == "managed" or not os.path.exists(os.path.join(dest, d))]
 
