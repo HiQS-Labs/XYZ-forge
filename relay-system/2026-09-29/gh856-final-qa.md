@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -105,5 +105,22 @@ Handing off to Producer — go to the Producer window and say 'take your turn'.
 - The revised implementation and evidence are committed at `17c00562`. The single full qualifying gate remains for the approved revision.
 
 Handing off to Reviewer — review the revised committed branch in round 2.
+
+### Reviewer · Round 2
+
+swept file: yes — read the entire locator, existing test, installer, skill, and GH-856 project doc, including pre-existing portions of the touched files. No other concrete acceptance defect was found in that sweep.
+
+- [Pass] The stale-lock advisory now distinguishes a live PID from a dead or missing PID (`skills/1-hourly/relay-xyz/find-harness.sh:471-485`), using the selected harness's shared resolver loaded at `:267-273`. Read-only probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; XYZ_HARNESS="/Users/noelsaw/marathon-clones/xyz-gh856-relay-locator" bash skills/1-hourly/relay-xyz/find-harness.sh --check > "$TMPDIR/gh856-round2-check.out" 2>&1; rc=$?; printf 'rc=%s\n' "$rc"; rg -n 'driver lock|harness clone is|save this harness' "$TMPDIR/gh856-round2-check.out"` exited 0 and printed `rc=0` plus `stale driver lock (.../.git/relay-driver.lock, pid 31041) — the driver will try to reclaim it`. The existing fixture now checks both live and stale output (`test/find-harness.sh:237-261`).
+- [Pass] The copied deployment guidance accepts a foreign checkout (`skills/1-hourly/relay-xyz/SKILL.md:9-13,59-60`); the locator retains override, vendored, git-root, and self precedence before config/search (`find-harness.sh:171-246`). The config hint is shell-quoted (`:402-408`) and the fixture executes it using a path with spaces (`test/find-harness.sh:145-147,205-217`). The seven bounded roots, wrong-origin rejection, ambiguity, lag, branch, and vendored-drift checks are present in the existing fixture (`test/find-harness.sh:145-203,222-268`). The project doc records focused disposable-clone results (`GH-856-RELAY-LOCATOR.md:71-76`), and the ledger row retains `86/82/50/55` with neutral appeal (`releases.sql:773`).
+- [Should] The new `--env` fixture reports that tick is usable while never reading `$TICK`: it checks `$HARNESS`, `$TICK_REPO_ROOT`, and `$RELAY_HAS_TICK` only (`test/find-harness.sh:218-221`). Removing the actual `export TICK` line (`find-harness.sh:381`) would leave that assertion green. Strengthen this existing assertion to require the absolute, executable `$TICK` under the selected harness, then witness its red control in the disposable full clone. Narrow read-only probe of the current predicate: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; env -u TICK bash -c 'export HARNESS=/tmp/XYZ-forge TICK_REPO_ROOT=/tmp/XYZ-forge RELAY_HAS_TICK=1; test "$HARNESS" = "$1" && test "$TICK_REPO_ROOT" = "$1" && test "$RELAY_HAS_TICK" = 1; rc=$?; printf "rc=%s TICK=%s\n" "$rc" "${TICK-UNSET}"; exit "$rc"' _ /tmp/XYZ-forge` exited 0 with `rc=0 TICK=UNSET`.
+  Observed input: the copied-skill fixture at `test/find-harness.sh:218-221` with `TICK` absent and the other three tested exports set as above.
+  Affected scope: this existing copied-skill `--env` assertion only; no locator behavior change requested.
+  Falsifier: in a disposable full clone, temporarily remove `find-harness.sh:381` and run the existing `test/find-harness.sh`; the strengthened assertion should fail, while the restored locator should pass. [Unverified — needs clone run] for that mutation result.
+- [Unverified — turn constraint] I did not run git or mutation-heavy suites in this relay worktree. The Producer's reported `origin/development...HEAD` file list and focused clone results are the available diff and suite evidence; the final qualifying gate remains outstanding.
+
+VERDICT: FAIL
+Basis: The round-1 behavior fixes and copied-skill guidance are supported, but the new `--env` control does not establish that the tick export exists or is usable.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
