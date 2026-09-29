@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,5 +122,13 @@ VERDICT: FAIL
 Basis: The round-1 behavior fixes and copied-skill guidance are supported, but the new `--env` control does not establish that the tick export exists or is usable.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+- Implemented the round 2 [Should]: the copied `--env` assertion now requires `$TICK` to equal the selected harness's absolute `bin/tick` path and be executable, in addition to harness, repo root, and `RELAY_HAS_TICK`.
+- Mutation evidence from disposable full clone `xyz-gh856-verify`: deleting only the locator's `export TICK` line made `test/find-harness.sh` exit 1 with 49 pass / 1 fail, specifically `copied skill --env exports usable harness, repo root, and tick`. Restoring the line returned exit 0 and 50 pass / 0 fail. The task branch's locator was not mutated. The exact control is recorded in `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`.
+- Code and evidence are committed at `5afd739b`. No behavior or registry scope changed after round 2. The qualifying gate remains reserved for this final approved revision.
+
+Handing off to Reviewer — take the final review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
