@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: issue #856 at https://github.com/HiQS-Labs/XYZ-forge/issues/856, approved `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`, and the committed `origin/development..HEAD` diff, especially `skills/1-hourly/relay-xyz/find-harness.sh`, `SKILL.md`, `install.sh`, and the extended `test/find-harness.sh`.
+- Artifact under review: `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`, `skills/1-hourly/relay-xyz/find-harness.sh`, `skills/1-hourly/relay-xyz/SKILL.md`, `skills/1-hourly/relay-xyz/install.sh`, and `test/find-harness.sh`. Compare the committed branch against origin/development; issue #856 is https://github.com/HiQS-Labs/XYZ-forge/issues/856.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-09-29
 - Definition of Done: the copied skill resolves the canonical XYZ-forge clone from the seven bounded roots or a per-Mac config while preserving override, vendored, git-root, and self precedence; search rejects task clones and wrong origins, reports ambiguity and attempted locations; shared lock helpers load from the selected harness; `--check` warns on cached upstream lag, branch, held lock, and vendored drift without fetching, and prints an executable config-save hint. Bash 3.2 and existing suites remain green. No new suite or registry entry. The RELEASES row for #856 has the rated `86/82/50/55` and accepted start, with appeal neutral as the user supplied no appeal score.
