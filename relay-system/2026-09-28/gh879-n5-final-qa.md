@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-28.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -79,5 +79,22 @@ Reviewer is read-only except for this relay thread. Do not run `validate.sh`, `t
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**VERDICT:** PASS
+**Basis:** The skill correctly eliminates `KEEP` defaults, requires source inspection for removal verdicts, isolates issue/commit counts from run denominators, and ensures calibration halts publication if failed. The widened matcher correctly detects quiet-grep pipes while excluding `|| grep` forms and non-quiet pipes, and the baseline is accurately measured at 81 lines (16 comments, 65 code).
+
+swept file: yes
+
+* **[Pass]** Can any remaining rule give KEEP without D2 N>0, source D3/D5, and source read? **No.** `SKILL.md` (L32): "A row gets `KEEP` only when D2 has an observed execution denominator $N > 0$ for that suite and D3/D5 produced outputs for it. Otherwise the verdict is `INVESTIGATE`...".
+* **[Pass]** Can LOW/UNKNOWN become a removal verdict? **No.** `SKILL.md` (L236): "High Confidence Required: QUARANTINE, TURN-OFF, MERGE, SPLIT, and NIGHTLY require full source inspection and `HIGH` or `MED` confidence."
+* **[Pass]** Are calibration rows scored on the same inputs while still halting before target publication? **Yes.** `SKILL.md` (L55): "Score calibration rows with the same saved inputs and scoring pass as target rows... Check the calibration verdicts before publishing any target verdict."
+* **[Pass]** Are issue/commit counts kept apart from executable `k of N`? **Yes.** `SKILL.md` (L33): "Only executed runs contribute to a suite's `k of N` denominator; issues and commits provide attribution, not extra runs." and L124.
+* **[Pass]** Does the matcher cover quiet grep variants and skip `|| grep`? **Yes.** `test/gh139-pipe-grep-guard.sh` L43 strips `||` via `sed 's/||//g'`, preventing `|| grep` matches. The regex at L44 (`\|[[:space:]]*grep[[:space:]]+(-[^[:space:]|]+[[:space:]]+)*(-[[:alpha:]]*q[[:alpha:]]*|--quiet)`) covers `-Fq`, `-iq`, `-qF`, `--quiet`, and `-F --quiet`.
+* **[Pass]** Could the matcher cross another pipe or count a clearly non-quiet grep? **No.** The option-matching portion `(-[^[:space:]|]+[[:space:]]+)*` explicitly rejects `|`, meaning it cannot cross pipes. It requires `-q` or `--quiet`, ensuring no non-quiet grep is matched (falsifier: `echo x | grep -F y` contains no `q` flag or `--quiet` so the regex fails to match).
+* **[Pass]** Is the 81-line baseline a tight inventory and are claims honest? **Yes.** Counting `test/baselines/GH-139-pipe-grep-baseline.txt` values yields exactly 81 lines across 27 files. Re-running the script's regex loop directly matches exactly 16 lines starting with a comment (`#`) and 65 code lines. The `gh139` guard script passes. No assertions are unmeasured or flagged as unverified.
+
+handing off to Producer — relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
