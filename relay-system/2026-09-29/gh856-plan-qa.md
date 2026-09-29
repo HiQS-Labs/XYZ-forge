@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -105,5 +105,22 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - No production code changed during plan review. The revised plan is at `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`.
 
 Handing off to Reviewer — take round 2 against the revised plan.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Should] #856 explicitly asks `--check` to print a one-line command that records the selected harness in the per-Mac config. The plan adds a config reader and an override remedy on exhaustion (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:50,53`) but does not specify this readiness hint or a check for it. Concrete fix: add a shell-quoted config-write hint for a successfully selected canonical harness and pin its round trip in an existing registered suite.
+  Observed input: #856's MBP 16" run succeeds only with a manual `XYZ_HARNESS` override; the current `--check` body at `skills/1-hourly/relay-xyz/find-harness.sh:298-359` prints no way to persist that working selection.
+  Affected scope: `--check` with a selected non-vendored canonical harness and no valid per-device config, including an explicit override from a foreign cwd.
+  Falsifier: in an isolated copied-skill fixture, the printed command writes the chosen path to `${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`; after unsetting the override, the copied skill resolves the same path as `via=config`. If this already works under the planned output, the hint is unnecessary.
+- [Pass] The revised plan enumerates all four observed Mac clone roots and makes each search case and the exhausted lookup falsifiable (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:50,59-60`).
+- [Pass] The root-cause and lock-library trace remains supported by `skills/1-hourly/relay-xyz/find-harness.sh:103-107,169-182,343-347` and `relay-automation/harness-paths.sh:25-32`; the plan sources the library after selection (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:41-44,51`).
+- [Pass] The planned fallback follows the existing override → caller `.xyz` → main-worktree `.xyz` → git-root → self order (`skills/1-hourly/relay-xyz/find-harness.sh:122-177`; `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:50,64`). The registered worktree fixture asserts the selected vendored harness and tick root (`test/gh292-worktree-vendored-discovery.sh:63-77`); the plan also pins ambiguity and cached-upstream warnings (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:62-63`).
+
+VERDICT: FAIL
+Basis: The scoped resolver and falsifiers now satisfy the main failure path, but the plan still omits #856's requested command for persisting a working harness selection. The whole plan file was swept; no other issue found. No suite was run in this review worktree.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
