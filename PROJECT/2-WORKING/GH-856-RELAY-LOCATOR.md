@@ -74,6 +74,7 @@ Discovery can select the wrong clone when multiple copies exist. Origin validati
 - Plan relay `RELAY-GH856-PLAN` closed Approved in round 3 with a Codex attestation. Its thread records the two revised search/diagnostic controls and the config persistence control.
 - Focused tests ran in disposable full clone `xyz-gh856-verify`: `test/find-harness.sh` 50/50, `test/gh396-find-harness-roots.sh` 41/41, `test/gh292-worktree-vendored-discovery.sh` 7/7, and `test/gh448-driver-lock-resolver.sh` 18/18. A temporary regression in the GH-396 suite was compared with a full clone of base `c7ea57fd` (41/41), corrected, then confirmed green at head.
 - The copied-skill fixture tests all seven bounded roots, wrong-origin and task-clone rejection, ambiguity, config round trip, usable `--env` exports, non-`development` warning, stale config fallback, cached-upstream warning, live and stale lock states, and config-backed vendored drift. These are fixture results on this Mac; the four-device rollout remains a post-merge step.
+- The `--env` tick assertion was mutation-checked in the disposable clone: removing only `export TICK` made `test/find-harness.sh` fail (49 pass, 1 fail, specifically the copied `--env` check). Restoring the line returned 50/50. The task branch's locator was never mutated for this control.
 
 ## Observed failure
 

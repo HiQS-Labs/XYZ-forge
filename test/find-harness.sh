@@ -216,7 +216,8 @@ if grep -Fq "HARNESS=${GH856_ROOTS[0]}" <<<"$_out" && grep -q 'via=config' <<<"$
   pass=$((pass+1)); echo "  PASS: copied skill resolves the saved config"
 else fail=$((fail+1)); echo "  FAIL: copied skill resolves the saved config"; fi
 _env="$(copied_run --env 2>/dev/null)"
-if bash -c "$_env; test \"\$HARNESS\" = \"\$1\" && test \"\$TICK_REPO_ROOT\" = \"\$1\" && test \"\$RELAY_HAS_TICK\" = 1" _ "${GH856_ROOTS[0]}"; then
+_env_check='test "$HARNESS" = "$1" && test "$TICK_REPO_ROOT" = "$1" && test "$RELAY_HAS_TICK" = 1 && test "${TICK:-}" = "$1/bin/tick" && test -x "${TICK:-/nonexistent}"'
+if bash -c "$_env"$'\n'"$_env_check" _ "${GH856_ROOTS[0]}"; then
   pass=$((pass+1)); echo "  PASS: copied skill --env exports usable harness, repo root, and tick"
 else fail=$((fail+1)); echo "  FAIL: copied skill --env exports usable harness, repo root, and tick"; fi
 git -C "${GH856_ROOTS[0]}" switch -qc topic
