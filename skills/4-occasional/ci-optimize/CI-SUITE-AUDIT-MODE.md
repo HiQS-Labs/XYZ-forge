@@ -1,14 +1,4 @@
----
-name: ci-suite-audit
-description: >-
-  Audit registered CI test suites and recommend retention, split, nightly,
-  quarantine, or turn-off verdicts based on runtime receipts, failure history,
-  touch-set overlap, and prose/junk assertion analysis. Use when an operator asks
-  to "audit test suites", "curate CI tests", "find slow tests", "identify redundant tests",
-  "review test retention", "evaluate test gate health", or prepare the full-suite audit.
----
-
-# ci-suite-audit — Test Suite Curation & Retention Triage Playbook
+# CI Optimize Suite Audit Mode
 
 A structured, evidence-governed method for evaluating and curating test suites in large CI registries.
 It inspects runtime performance, defect and flake history, touch-set overlap, sibling coverage, and
@@ -318,7 +308,7 @@ The skill recommends sibling skills for broader coordination; it never invokes t
   - *Trigger:* $\ge 25\%$ of red runs in the window are `unattributed` or `coupling`, or a trunk-red cluster appears (e.g. `gh436` and `gh674` red together across multiple runs, as in #812).
 - **[whack-a-mole](../../3-weekly/whack-a-mole/SKILL.md):** The **remediation** sibling. Recommends running whack-a-mole when recurring test failures share a single root cause:
   - *Trigger:* $\ge 3$ suites fail due to the same underlying mechanism (e.g. shared runner port race or `/tmp` collision). If an existing umbrella covers the pattern (such as #853 for test isolation), cross-reference that issue instead of opening a new one.
-- **[ci-optimize](../ci-optimize/SKILL.md):** Pipeline architecture cross-link (unit: entire CI/CD pipeline; `ci-suite-audit` unit: one test suite).
+- **Parent skill:** `SKILL.md` covers the entire CI/CD pipeline; this companion mode covers one test suite.
 
 ### Sibling Reminder Block
 Every audit report and issue concludes with a status block:

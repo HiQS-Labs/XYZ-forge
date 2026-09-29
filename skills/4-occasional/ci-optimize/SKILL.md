@@ -17,6 +17,11 @@ the **mechanism**, the **failure it prevents**, and the **audit check** to verif
 
 Nothing here requires a paid tier, a dedicated runner vendor, or speculative subsystems.
 
+Detailed suite-by-suite curation is the optional audit mode in
+`CI-SUITE-AUDIT-MODE.md`. Use it when the question is which registered suites
+to keep, merge, quarantine, move to nightly, or turn off. The main skill stays
+focused on pipeline-wide design; the companion mode handles one-suite evidence.
+
 ---
 
 ## The 12 Foundational Principles
@@ -154,5 +159,5 @@ Evaluate a repository against each standard (0 = Absent, 1 = Partial / Ad-hoc, 2
 
 ## Related Skills
 
-- **[ci-suite-audit](../ci-suite-audit/SKILL.md):** Individual test suite curation, runtime profiling, flake history, and retention/quarantine/nightly triage (unit: one suite; `ci-optimize` unit: pipeline architecture).
+- **Suite audit mode:** `CI-SUITE-AUDIT-MODE.md` covers individual test suite curation, runtime profiling, flake history, and retention/quarantine/nightly triage (unit: one suite; `ci-optimize` unit: pipeline architecture).
 

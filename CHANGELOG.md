@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-28 — Consolidate CI skills into diagnostic and optimization lanes (GH-855)
+
+The four CI skills now have two entry points. `ci-debug` owns failure diagnosis and includes the former
+`ci-doctor` existing-run and runner-benchmark mode. `ci-optimize` owns pipeline design and includes the
+former `ci-suite-audit` suite-curation mode. The detailed procedures and benchmark utility remain in
+companion files under those two skills, so no guidance or executable capability was dropped.
+
 ## 2026-09-28 — Skills Army fleet repair: 10days, codebase-memory and start-marathon reach every app; publisher role goes device-agnostic (GH-881)
 
 `/10days` had never been added to the Skills Army collection, so no app on this device could see it. The

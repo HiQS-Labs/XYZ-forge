@@ -164,3 +164,17 @@ If a defect, failed workflow, test artifact, or prompt transcript exposes API ke
 * ❌ **Symptom Bandages via Ponytail:** Injecting arbitrary `sleep`s or skipping safety guards under the guise of "simplicity."
 * ❌ **Gate Bypasses as Merge Readiness:** Using `git push --no-verify` or `XYZ_SKIP_PREPUSH=1` for anything other than operator-requested WIP drafts.
 * ❌ **Editing Frozen Twins Silently:** Modifying frozen `.sh` files without updating the authoritative Python implementation and providing explicit trailers (GH-308/GH-321).
+
+## Optional Benchmark Mode
+
+For CI-speed questions, use `CI-BENCHMARK-MODE.md`. It diagnoses existing
+history first, then runs the benchmark script only for a side-by-side
+`workflow_dispatch` comparison. This keeps failure diagnosis and performance
+comparison under one CI skill without making benchmarking the default path.
+
+```bash
+skills/2-daily/ci-debug/benchmark-runners.sh \
+   --repo OWNER/REPO --workflow .github/workflows/ci.yml --base development \
+   --find 'runs-on: ubuntu-latest' \
+   --variant 'github-hosted=runs-on: ubuntu-latest'
+```

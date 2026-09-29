@@ -1,17 +1,4 @@
----
-name: ci-doctor
-description: >-
-  Diagnose CI health and, when needed, benchmark a config change side by side —
-  without re-deriving either from scratch each time. Use when the operator asks
-  "why is CI slow", "diagnose our CI", "is our CI healthy", "what's the
-  bottleneck", or wants to compare wall-clock across two or more `runs-on` (or
-  other config) variants — e.g. GitHub-hosted vs. a paid runner vendor, or a
-  small vs. large runner tier. Not for writing new workflows from scratch, not
-  for non-GitHub-Actions CI systems, not for security/posture audits (a
-  separate free skill, `ci-secure`, from the same catalog, covers that).
----
-
-# ci-doctor — reusable CI diagnosis + benchmark harness
+# CI Debug Benchmark Mode
 
 Born from GH-161: diagnosing and benchmarking this repo's CI was ad-hoc every
 time — the same dispatch/poll/watch/tabulate loop hand-written three separate
@@ -47,7 +34,7 @@ comparison runs across config variants. That's the one real gap this skill
 fills, with [`benchmark-runners.sh`](benchmark-runners.sh):
 
 ```bash
-skills/4-occasional/ci-doctor/benchmark-runners.sh \
+skills/2-daily/ci-debug/benchmark-runners.sh \
   --repo OWNER/REPO --workflow .github/workflows/ci.yml --base development \
   --find 'runs-on: ubuntu-latest' \
   --variant 'github-hosted=runs-on: ubuntu-latest' \

@@ -69,7 +69,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | Skill | Purpose |
 |---|---|
 | [agent-chorus](skills/2-daily/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
-| [ci-debug](skills/2-daily/ci-debug/SKILL.md) | Debug failing CI pipelines and pre-push gates in safe full-clone isolation via debug-mantra, recon, and ponytail. |
+| [ci-debug](skills/2-daily/ci-debug/SKILL.md) | Debug failing CI pipelines and pre-push gates in safe full-clone isolation via debug-mantra, recon, and ponytail; includes the optional existing-run and runner-benchmark mode. |
 | [express](skills/2-daily/express/SKILL.md) | Hotfix fast lane — one motion: fix + its existing covering suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
 | [file-xyz-bug](skills/2-daily/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
@@ -114,9 +114,7 @@ _setup, audits, one-off tooling and specialist lenses._
 |---|---|
 | [ate](skills/4-occasional/ate/SKILL.md) | Drive bounded, unattended variation-test matrices and roll findings into one issue. |
 | [browserbase](skills/4-occasional/browserbase/SKILL.md) | Give an agent a real cloud browser (Browserbase) for research, scraping, form-driving and site monitoring. |
-| [ci-doctor](skills/4-occasional/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
-| [ci-optimize](skills/4-occasional/ci-optimize/SKILL.md) | Audit, harden and optimize CI/CD pipelines using zero-cost, production-tested principles. |
-| [ci-suite-audit](skills/4-occasional/ci-suite-audit/SKILL.md) | Audit registered CI test suites and recommend retention, split, nightly, quarantine or turn-off verdicts. |
+| [ci-optimize](skills/4-occasional/ci-optimize/SKILL.md) | Audit, harden and optimize CI/CD pipelines using zero-cost, production-tested principles; includes the optional registered-suite curation mode. |
 | [feynman](skills/4-occasional/feynman/SKILL.md) | Translate dense technical material into accurate, layered plain language. |
 | [front-door](skills/4-occasional/front-door/SKILL.md) | Audit whether a newcomer can actually go from clone to working install. |
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |

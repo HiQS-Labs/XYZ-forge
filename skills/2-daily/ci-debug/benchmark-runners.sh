@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# ci-doctor: benchmark-runners.sh
+# ci-debug: benchmark-runners.sh
 #
 # Dispatches one full-route CI run per named `runs-on` (or other config) variant
 # and prints a wall-clock + conclusion comparison table. This is the one piece
-# ci-speedup (the diagnosis half of ci-doctor) does not do: it analyzes EXISTING
+# ci-speedup (the existing-history part of ci-debug) does not do: it analyzes EXISTING
 # run history, it does not orchestrate NEW side-by-side comparison runs.
 #
 # ALWAYS forces workflow_dispatch (never relies on a push/PR event) so a repo's
@@ -41,7 +41,7 @@ USAGE
 REPO="" WORKFLOW="" BASE="" FIND="" JOB="" KEEP_BRANCHES=0
 declare -a LABELS=() LINES=()
 
-need_arg() { [ "$#" -ge 2 ] || { echo "ci-doctor: '$1' needs an argument" >&2; usage >&2; exit 2; }; }
+need_arg() { [ "$#" -ge 2 ] || { echo "ci-debug: '$1' needs an argument" >&2; usage >&2; exit 2; }; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -55,22 +55,22 @@ while [ $# -gt 0 ]; do
       need_arg "$@"
       case "$2" in
         *=*) ;;
-        *) echo "ci-doctor: --variant expects LABEL=LINE (got '$2')" >&2; exit 2 ;;
+        *) echo "ci-debug: --variant expects LABEL=LINE (got '$2')" >&2; exit 2 ;;
       esac
       LABELS+=("${2%%=*}"); LINES+=("${2#*=}"); shift 2 ;;
     -h|--help) usage; exit 0 ;;
-    *) echo "ci-doctor: unknown arg '$1'" >&2; usage >&2; exit 2 ;;
+    *) echo "ci-debug: unknown arg '$1'" >&2; usage >&2; exit 2 ;;
   esac
 done
 
 [ -n "$REPO" ] && [ -n "$WORKFLOW" ] && [ -n "$BASE" ] && [ -n "$FIND" ] && [ "${#LABELS[@]}" -ge 1 ] \
   || { usage >&2; exit 2; }
 
-gh auth status >/dev/null 2>&1 || { echo "ci-doctor: gh not authenticated — run 'gh auth login'" >&2; exit 1; }
-git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "ci-doctor: run this from inside a git clone of $REPO" >&2; exit 1; }
-command -v python3 >/dev/null 2>&1 || { echo "ci-doctor: python3 is required" >&2; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo "ci-debug: gh not authenticated — run 'gh auth login'" >&2; exit 1; }
+git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "ci-debug: run this from inside a git clone of $REPO" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "ci-debug: python3 is required" >&2; exit 1; }
 { git diff --quiet && git diff --cached --quiet; } \
-  || { echo "ci-doctor: local clone has uncommitted changes — commit or stash first" >&2; exit 1; }
+  || { echo "ci-debug: local clone has uncommitted changes — commit or stash first" >&2; exit 1; }
 
 STAMP="$(date +%s)"
 declare -a RESULT_LABEL=() RESULT_SEC=() RESULT_CONCLUSION=() RESULT_URL=()
@@ -95,33 +95,33 @@ back_to_base() {
 for i in "${!LABELS[@]}"; do
   label="${LABELS[$i]}"; line="${LINES[$i]}"
   slug="$(echo "$label" | tr -c 'a-zA-Z0-9' '-' | tr -s '-')"
-  branch="ci-doctor-bench-${slug}-${STAMP}"
+  branch="ci-debug-bench-${slug}-${STAMP}"
 
   echo "== [$label] preparing $branch ==" >&2
   git fetch origin "$BASE" --quiet
   git checkout -B "$branch" "origin/$BASE" --quiet
 
   if ! grep -qF "$FIND" "$WORKFLOW"; then
-    echo "ci-doctor: '$FIND' not found verbatim in $WORKFLOW — skipping $label" >&2
+    echo "ci-debug: '$FIND' not found verbatim in $WORKFLOW — skipping $label" >&2
     back_to_base
     continue
   fi
   count="$(grep -cF "$FIND" "$WORKFLOW" || true)"
-  [ "$count" -gt 1 ] && echo "ci-doctor: NOTE — '$FIND' appears $count times; all occurrences replaced for $label" >&2
+  [ "$count" -gt 1 ] && echo "ci-debug: NOTE — '$FIND' appears $count times; all occurrences replaced for $label" >&2
 
   literal_replace "$FIND" "$line" "$WORKFLOW" > "$WORKFLOW.tmp" && mv "$WORKFLOW.tmp" "$WORKFLOW"
   if ! grep -qF "$line" "$WORKFLOW"; then
-    echo "ci-doctor: substitution did not apply for $label — skipping" >&2
+    echo "ci-debug: substitution did not apply for $label — skipping" >&2
     back_to_base
     continue
   fi
 
   git add "$WORKFLOW"
-  git -c user.name=ci-doctor -c user.email=ci-doctor@local commit -q -m "ci-doctor benchmark: $label"
+  git -c user.name=ci-debug -c user.email=ci-debug@local commit -q -m "ci-debug benchmark: $label"
   git push -q -u origin "$branch"
 
   if ! dispatch_out="$(gh workflow run "$WORKFLOW" --repo "$REPO" --ref "$branch" 2>&1)"; then
-    echo "ci-doctor: dispatch failed for $label — skipping: $dispatch_out" >&2
+    echo "ci-debug: dispatch failed for $label — skipping: $dispatch_out" >&2
     back_to_base
     continue
   fi
@@ -138,7 +138,7 @@ for i in "${!LABELS[@]}"; do
     sleep 2
   done
   if [ -z "$run_id" ]; then
-    echo "ci-doctor: could not find the dispatched run for $label — skipping" >&2
+    echo "ci-debug: could not find the dispatched run for $label — skipping" >&2
     back_to_base
     continue
   fi
@@ -197,7 +197,7 @@ print(int((b - a).total_seconds()))
 done
 
 echo
-echo "== ci-doctor benchmark results =="
+echo "== ci-debug benchmark results =="
 if [ "${#RESULT_LABEL[@]}" -eq 0 ]; then
   echo "(no variant produced a result — see the skip/warning lines above)"
 else
