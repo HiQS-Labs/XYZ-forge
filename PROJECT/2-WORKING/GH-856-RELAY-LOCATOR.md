@@ -2,7 +2,7 @@
 gh_issue: 856
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/856
 title: "Locate the relay harness from a deployed relay-xyz skill"
-status: Active (2-WORKING — plan review)
+status: Active (2-WORKING — implementation verified; final review pending)
 created: 2026-09-27
 updated: 2026-09-29
 owner: Codex
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fresh full clone at `c7ea57fd`, issue captured and parked, locator failures reproduced, and current resolver/test seams traced. | Review this plan with Codex; then implement the scoped resolver change and verify it in a disposable full clone. |
+| Codex approved the plan in relay `RELAY-GH856-PLAN`. The locator and existing suite were extended, and focused tests passed in a disposable full clone. | Final Codex relay review, one qualifying gate on the approved commit, then a ready PR to `development`. |
 
 ## Rating — 2026-09-29: `86/82/50/55` (priority/severity/appeal/effort)
 
@@ -67,6 +67,13 @@ goal: >
 ## Risk and rollback
 
 Discovery can select the wrong clone when multiple copies exist. Origin validation, an exact directory name, and ambiguity refusal constrain that risk. The config file is read-only and explicit override remains highest precedence. Revert the locator commit to restore the previous behavior; `XYZ_HARNESS` remains the immediate workaround. Four-device confirmation and Skills Army redeployment occur after merge and are not claimed by this local PR.
+
+## Verification — 2026-09-29
+
+- The installed copied locator failed from the Jev checkout with both overrides unset (exit 1). With an override, `--check` printed `driver_lock_path_for_repo: command not found` before the fix.
+- Plan relay `RELAY-GH856-PLAN` closed Approved in round 3 with a Codex attestation. Its thread records the two revised search/diagnostic controls and the config persistence control.
+- Focused tests ran in disposable full clone `xyz-gh856-verify`: `test/find-harness.sh` 47/47, `test/gh396-find-harness-roots.sh` 41/41, `test/gh292-worktree-vendored-discovery.sh` 7/7, and `test/gh448-driver-lock-resolver.sh` 18/18. A temporary regression in the GH-396 suite was compared with a full clone of base `c7ea57fd` (41/41), corrected, then confirmed green at head.
+- The copied-skill fixture tests all seven bounded roots, wrong-origin and task-clone rejection, ambiguity, config round trip, stale config fallback, cached-upstream warning, held lock, and config-backed vendored drift. These are fixture results on this Mac; the four-device rollout remains a post-merge step.
 
 ## Observed failure
 

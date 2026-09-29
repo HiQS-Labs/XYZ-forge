@@ -115,8 +115,11 @@ rm -rf "$FS"
 
 # GH-856: Skills Army copies the skill outside the harness. Use an isolated HOME
 # so the bounded search cannot read a real Mac's canonical clone or config.
+FHWORK="$(cd -P "$FHWORK" && pwd)"
+fixture_guard_init "$FHWORK"
 COPIED="$FHWORK/Deployed Skills/relay-xyz/find-harness.sh"
 mkdir -p "$(dirname "$COPIED")" "$FHWORK/gh856-home" "$FHWORK/gh856-foreign"
+git -C "$FHWORK/gh856-foreign" init -q
 cp "$FH" "$COPIED"
 GH856_HOME="$FHWORK/gh856-home"
 GH856_CONFIG="$FHWORK/gh856-config"
@@ -153,13 +156,29 @@ if [ "$_rc" -eq 1 ] && grep -q 'attempted locations:' <<<"$_out" \
    && grep -q "XYZ_HARNESS='/path/to/XYZ-forge'" <<<"$_out"; then
   pass=$((pass+1)); echo "  PASS: copied skill gives an actionable no-candidate failure"
 else fail=$((fail+1)); echo "  FAIL: copied skill gives an actionable no-candidate failure (rc=$_rc)"; fi
+seed_canonical "$GH856_HOME/Documents/GH Repos/XYZ-forge-gh123"
+_rc=0; _ignored="$(copied_run --root 2>&1)" || _rc=$?
+if [ "$_rc" -eq 1 ]; then
+  pass=$((pass+1)); echo "  PASS: similarly named task clone cannot win discovery"
+else fail=$((fail+1)); echo "  FAIL: similarly named task clone cannot win discovery"; fi
+require_fixture "$GH856_HOME/Documents/GH Repos/XYZ-forge-gh123" "GH-856 task clone"
+rm -rf "$GH856_HOME/Documents/GH Repos/XYZ-forge-gh123"
+seed_canonical "${GH856_ROOTS[0]}"
+git -C "${GH856_ROOTS[0]}" remote set-url origin https://github.com/other/XYZ-forge.git
+_rc=0; _ignored="$(copied_run --root 2>&1)" || _rc=$?
+if [ "$_rc" -eq 1 ]; then
+  pass=$((pass+1)); echo "  PASS: wrong-origin XYZ-forge cannot win discovery"
+else fail=$((fail+1)); echo "  FAIL: wrong-origin XYZ-forge cannot win discovery"; fi
+require_fixture "${GH856_ROOTS[0]}" "GH-856 wrong-origin clone"
+rm -rf "${GH856_ROOTS[0]}"
 for _root in "${GH856_ROOTS[@]}"; do
   if grep -Fq "$_root" <<<"$_out"; then
     pass=$((pass+1)); echo "  PASS: no-candidate diagnostic lists $_root"
   else fail=$((fail+1)); echo "  FAIL: no-candidate diagnostic omits $_root"; fi
   seed_canonical "$_root"
   _rc=0; _found="$(copied_run --root 2>&1)" || _rc=$?
-  if [ "$_rc" -eq 0 ] && grep -Fq "HARNESS=$_root" <<<"$_found" \
+  _found_path="${_found##*$'\n'}"
+  if [ "$_rc" -eq 0 ] && [ "$_found_path" -ef "$_root" ] \
      && grep -q 'via=search' <<<"$_found"; then
     pass=$((pass+1)); echo "  PASS: copied skill searches $_root"
   else fail=$((fail+1)); echo "  FAIL: copied skill searches $_root (rc=$_rc, out=$_found)"; fi
@@ -196,6 +215,12 @@ _out="$(copied_run --root 2>&1)"
 if grep -Fq "HARNESS=${GH856_ROOTS[0]}" <<<"$_out" && grep -q 'via=config' <<<"$_out"; then
   pass=$((pass+1)); echo "  PASS: copied skill resolves the saved config"
 else fail=$((fail+1)); echo "  FAIL: copied skill resolves the saved config"; fi
+printf '/missing/XYZ-forge\n' > "$GH856_CONFIG/xyz/harness"
+_out="$(copied_run --root 2>&1)"
+if grep -q 'ignoring invalid config' <<<"$_out" && grep -q 'via=search' <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: invalid config falls through to canonical search"
+else fail=$((fail+1)); echo "  FAIL: invalid config falls through to canonical search"; fi
+bash -c "$_hint"
 
 # The library must come from the selected harness; lock and cached-upstream
 # warnings are advisory and require no network access.
@@ -215,7 +240,14 @@ if [ "$_rc" -eq 0 ] && grep -q 'driver lock is currently HELD' <<<"$_out" \
    && grep -q '1 commits behind origin/development (last fetch ' <<<"$_out" \
    && ! grep -q 'command not found' <<<"$_out"; then
   pass=$((pass+1)); echo "  PASS: copied skill reports held lock and cached-upstream lag"
-else fail=$((fail+1)); echo "  FAIL: copied skill reports held lock and cached-upstream lag (rc=$_rc)"; fi
+else fail=$((fail+1)); echo "  FAIL: copied skill reports held lock and cached-upstream lag (rc=$_rc, out=$_out)"; fi
+git -C "${GH856_ROOTS[0]}" reset -q --hard "$_new"
+seed_vendored_harness "$FHWORK/gh856-foreign"
+printf 'source_commit=%s\n' "$_base" > "$FHWORK/gh856-foreign/.xyz/VERSION"
+_out="$(copied_run --check 2>&1)"
+if grep -q 'vendored .xyz harness is behind the live harness' <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: copied skill compares vendored drift with configured live harness"
+else fail=$((fail+1)); echo "  FAIL: copied skill compares vendored drift with configured live harness"; fi
 require_fixture "$FHWORK/Deployed Skills" "GH-856 copied skill"
 require_fixture "$GH856_HOME" "GH-856 isolated HOME"
 require_fixture "$GH856_CONFIG" "GH-856 isolated config"

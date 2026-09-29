@@ -119,7 +119,7 @@ VENDORED_STATUS=""
 MAIN_CHECKOUT_VENDORED=""
 VIA=""
 CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness"
-SEARCH_CANDIDATES=()
+SEARCH_CANDIDATES=("")
 SEARCH_ROOTS=(
   "$HOME/Documents/GH Repos/XYZ-forge"
   "$HOME/Documents/GitHub/XYZ-forge"
@@ -138,25 +138,29 @@ _read_config() {
   _canon_dir "$_configured"
 }
 _search_clone() {
-  SEARCH_CANDIDATES=()
+  SEARCH_CANDIDATES=("")
   FOUND_CLONE=""
   for _path in "${SEARCH_ROOTS[@]}"; do
     if _canonical_clone "$_path"; then
-      _path="$(_canon_dir "$_path")"
-      case " ${SEARCH_CANDIDATES[*]} " in *" $_path "*) ;; *) SEARCH_CANDIDATES+=("$_path") ;; esac
+      _path="$(cd -P "$_path" >/dev/null 2>&1 && pwd)"
+      _duplicate=0
+      for _seen in "${SEARCH_CANDIDATES[@]:1}"; do
+        [ "$_path" -ef "$_seen" ] && _duplicate=1 && break
+      done
+      [ "$_duplicate" = 1 ] || SEARCH_CANDIDATES+=("$_path")
     fi
   done
-  [ "${#SEARCH_CANDIDATES[@]}" -gt 0 ] || return 1
-  if [ "${#SEARCH_CANDIDATES[@]}" -eq 1 ]; then
-    FOUND_CLONE="${SEARCH_CANDIDATES[0]}"
+  [ "${#SEARCH_CANDIDATES[@]}" -gt 1 ] || return 1
+  if [ "${#SEARCH_CANDIDATES[@]}" -eq 2 ]; then
+    FOUND_CLONE="${SEARCH_CANDIDATES[1]}"
     return 0
   fi
-  _development=()
-  for _path in "${SEARCH_CANDIDATES[@]}"; do
+  _development=("")
+  for _path in "${SEARCH_CANDIDATES[@]:1}"; do
     [ "$(_branch "$_path")" = development ] && _development+=("$_path")
   done
-  if [ "${#_development[@]}" -eq 1 ]; then
-    FOUND_CLONE="${_development[0]}"
+  if [ "${#_development[@]}" -eq 2 ]; then
+    FOUND_CLONE="${_development[1]}"
     return 0
   fi
   return 2
@@ -254,9 +258,9 @@ if [ -z "$HARNESS" ]; then
   printf '    %s\n' "${SEARCH_ROOTS[@]}" >&2
   if [ "$SEARCH_STATUS" -eq 2 ]; then
     echo "  multiple canonical candidates:" >&2
-    printf '    %s\n' "${SEARCH_CANDIDATES[@]}" >&2
+    printf '    %s\n' "${SEARCH_CANDIDATES[@]:1}" >&2
   fi
-  echo "  remedy: export XYZ_HARNESS='/path/to/XYZ-forge'; bash '$SELF_DIR/find-harness.sh' --check" >&2
+  printf "  remedy: export XYZ_HARNESS='/path/to/XYZ-forge'; bash %q --check\n" "$SELF_DIR/find-harness.sh" >&2
   exit 1
 fi
 
@@ -291,7 +295,7 @@ if [ "$VENDORED" = 1 ]; then
   done
   if [ -z "$LIVE_HARNESS" ]; then
     _cand="$(_canon_dir "$SELF_DIR/../../.." || true)"
-    if _canonical_clone "$_cand" && [ "$_cand" != "$HARNESS" ]; then
+    if _has_harness "$_cand" && [ "$_cand" != "$HARNESS" ]; then
       LIVE_HARNESS="$_cand"
     fi
   fi
