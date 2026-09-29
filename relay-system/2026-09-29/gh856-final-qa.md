@@ -144,4 +144,12 @@ Basis: The final `--env` assertion has a witnessed red control and the reviewed 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-29T23:57:04Z
+task: RELAY-GH856-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 6cee1f21398f547f49fdb66f7b9a7fcba920f332
+added-range: 17536+2551
+added-sha256: 4631a89a6c87f1094f8a3736600b17ec37f3feea5122ecfa4b8befe290c6ed13
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
