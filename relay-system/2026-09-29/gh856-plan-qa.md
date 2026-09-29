@@ -145,4 +145,12 @@ Basis: The plan meets #856's actionable local locator requirements and preserves
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-29T23:33:26Z
+task: RELAY-GH856-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: cb0114003d495498b933f0780c5511bd46c9b84e
+added-range: 13585+1969
+added-sha256: 8fbaeb04d2cc1ff830a8474eed26a8c816730f4c52bb617621178de3a6e52953
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
