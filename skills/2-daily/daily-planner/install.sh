@@ -25,6 +25,17 @@ fi
 
 mkdir -p "$DEST_DIR"
 
+# Ensure weekly-planner dependency is installed
+WEEKLY_INSTALLER="$SELF_DIR/../../3-weekly/weekly-planner/install.sh"
+if [ -f "$WEEKLY_INSTALLER" ]; then
+  echo "$SKILL_NAME: ensuring required dependency weekly-planner is installed..."
+  bash "$WEEKLY_INSTALLER"
+elif [ ! -e "$DEST_DIR/weekly-planner" ]; then
+  echo "$SKILL_NAME: ERROR - weekly-planner is a required dependency but was not found in $DEST_DIR/weekly-planner or adjacent directory." >&2
+  echo "Please install weekly-planner first: bash skills/3-weekly/weekly-planner/install.sh" >&2
+  exit 1
+fi
+
 if [ -L "$LINK" ]; then
   if [ -e "$LINK" ] && [ "$(cd -P "$LINK" >/dev/null 2>&1 && pwd)" = "$SELF_DIR" ]; then
     echo "$SKILL_NAME: already installed → $LINK -> $SELF_DIR"

@@ -73,11 +73,11 @@ Run the shared sequencing engine:
 ```bash
 python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --mode sequence
 ```
-The sequence classifies all open PRs into 4 distinct phases:
-1. **Phase 1: Ready to Land** — Approved and `mergeable: MERGEABLE`.
-2. **Phase 2: Blockers to Fix** — `reviewDecision: CHANGES_REQUESTED` or red CI.
-3. **Phase 3: Needs Rebase** — Approved but `mergeable: CONFLICTING` (conflicts on `development`).
-4. **Phase 4: In Review / WIP** — Awaiting reviews or local browser verification.
+The sequence classifies all open PRs into 4 distinct phases with CI validation and dependency ordering:
+1. **Phase 1: Ready to Land** — Approved, `mergeable: MERGEABLE`, passing/neutral CI (`statusCheckRollup`), and unblocked by prerequisite PRs.
+2. **Phase 2: Blockers to Fix** — `reviewDecision: CHANGES_REQUESTED` or red/failing CI (must be fixed to unblock downstream).
+3. **Phase 3: Needs Rebase** — `mergeable: CONFLICTING` against base.
+4. **Phase 4: In Review / WIP** — Awaiting reviews, pending CI, or draft state.
 
 ### Step 3: Apply the Provisional Decisions Protocol
 1. Scan for any requirement waiting on external input (e.g. Elan, Sam, Legal, Marketing).
@@ -104,10 +104,10 @@ In environments where subagents cannot be spawned, invoke `/relay-xyz` or `/cons
 - *Check 1: Duplication.* Are two PRs fixing the same issue or touching the same reset logic?
 - *Check 2: Contradictions.* Will landing PR A break PR B's tests or assumptions?
 - *Check 3: Concurrency Hazards.* Will running a backfill script collide with active rolling reconcilers?
-- *Check 4: Merge Friction.* Are multiple PRs modifying `CHANGELOG.md` simultaneously? (Mitigate by enforcing single-file rebase at merge time).
+- *Check 4: Merge Friction.* Are multiple PRs modifying `CHANGELOG.md` or shared migrations simultaneously? (Mitigate by enforcing single-file rebase at merge time).
 
 ### Step 5: Deliver Output & Calibrate
-1. Generate the light weekly outline and save to `temp/planner/WEEKLY-PLAN-<date>.md`.
+1. Generate both machine-readable (`temp/planner/weekly-plan-<date>.json`) and human-readable (`temp/planner/WEEKLY-PLAN-<date>.md`) outlines.
 2. Present the plan grouped by teammate, highlighting:
    - **Immediate P0 Blockers** at the top.
    - **Merge sequence roadmap**.
@@ -120,10 +120,11 @@ In environments where subagents cannot be spawned, invoke `/relay-xyz` or `/cons
 
 The companion `daily-planner` skill relies on `planner_core.py` to pivot the active weekly plan:
 ```bash
-python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --mode daily --plan-file temp/planner/WEEKLY-PLAN-<date>.json
+python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --mode daily
 ```
-1. Queries what merged and closed in the last 24 hours.
-2. Marks completed items `[DONE]`.
-3. Re-sequences the remaining open PRs.
+1. Queries PRs merged and issues closed in the last 24–36 hours (filtered by `mergedAt` and `closedAt`).
+2. Compares against the baseline weekly plan (`temp/planner/weekly-plan-*.json` or `WEEKLY-PLAN-*.md`) and marks completed items `[DONE]`.
+3. Re-sequences the remaining open PRs with statusCheckRollup CI verification.
 4. Promotes newly unblocked tasks to the top of today's operator queue.
 5. Runs the Adversarial Northstars check on the pivoted day plan before presenting to the user.
+6. Emits both `temp/planner/daily-pivot-<date>.json` and `temp/planner/DAILY-PIVOT-<date>.md`.
