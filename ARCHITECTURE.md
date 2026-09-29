@@ -99,7 +99,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [marathon-cleanup](skills/3-weekly/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
 | [merge-cleanup-deep](skills/3-weekly/merge-cleanup-deep/SKILL.md) | Back up and triage the checkouts /merge-cleanup preserved with read-only sub-agents: PR-worthy, superseded, or scrap. |
 | [push-to-skills-army-mini](skills/3-weekly/push-to-skills-army-mini/SKILL.md) | Publish the parent-managed Skills Army HQ package into its generated child through the shared manifest publisher (GH-620). |
-| [push-to-xyz-mini](skills/3-weekly/push-to-xyz-mini/SKILL.md) | Publish the curated XYZ mini skill subset into the local XYZ-mini checkout and push it, via the deterministic embedded-manifest publisher `utils/py/xyz_mini_sync.py` (GH-589). |
+| [push-to-xyz-mini](skills/3-weekly/push-to-xyz-mini/SKILL.md) | Publish the curated XYZ mini skill subset into the local XYZ-mini checkout and push it, via the deterministic embedded-manifest publisher `utils/py/xyz_mini_sync.py` (GH-589). Publications may run from any forge branch; `adapted` destinations are mini-owned bytes whose chain of origin the child's `ORIGIN.md` records (see `mini/ADAPTATIONS.md`). |
 | [radar](skills/3-weekly/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
 | [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |

@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-29 — XYZ-mini publisher gains the adaptation exception path: adapted mode with an enforced chain of origin (GH-589)
+
+The GH-889 planner skills were vendored into XYZ-mini as deliberate mini-side adaptations (flat
+paths, `/relay` instead of `/relay-xyz`, child-only hardening), which the byte-identity publisher
+could not express: its next `--apply` would have deleted them along with the hand-published
+review-code (witnessed: the old tool planned `delete 7` against the live child). The publisher now
+has three modes — `managed` (byte-identical, replaced every run), `seed` (copied once), and the new
+`adapted` (the child owns the bytes; the forge source stays tracked as the upstream of record). An
+adapted destination deleted from the child is refused, never fabricated from forge bytes; a fresh
+child materializes adapted paths from forge bytes as the re-adaptation starting point. Publications
+may run from any forge branch — the tool records `source_repo`/`source_sha`/`source_branch` in the
+child's `.xyz-forge-revision` and warns when the branch is not `development`; re-publish from
+`development` after the branch lands to re-baseline. The chain of origin is enforced, not
+aspirational: every adapted path must be documented in `mini/ORIGIN.md`, which ships to the child
+as `ORIGIN.md`, or the run refuses (token-exact matching per file or ancestor directory — a bare
+`skills/` inside a longer path documents nothing). Policy: `mini/ADAPTATIONS.md`. The planner
+entries are now `adapted`; review-code is `managed`; `test/gh589-xyz-mini-sync.sh` pins all of it
+(21 assertions, run in a disposable full clone).
+
 ## 2026-09-28 — Skills Army fleet repair: 10days, codebase-memory and start-marathon reach every app; publisher role goes device-agnostic (GH-881)
 
 `/10days` had never been added to the Skills Army collection, so no app on this device could see it. The

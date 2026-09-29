@@ -25,8 +25,9 @@ hardening). The `adapted` mode covers them:
 - the forge source must exist and stay tracked — it is the upstream of record;
 - the tool copies it to the child only when the destination is absent, never replaces an existing
   adapted destination, and deletes it only when dropped from the manifest;
-- an adapted destination missing from the child is refused — the tool never fabricates one from
-  forge bytes (that would silently un-adapt it);
+- an adapted destination **deleted from the child** is refused — the tool never fabricates it from
+  forge bytes (that would silently un-adapt it); a **fresh child** (or a newly added adapted entry)
+  materializes the path from forge bytes as the re-adaptation starting point;
 - **every adapted path must be documented in `mini/ORIGIN.md`** (shipped to the child as
   `ORIGIN.md`); the tool refuses (exit 2) to publish an adapted path that file does not name.
 
