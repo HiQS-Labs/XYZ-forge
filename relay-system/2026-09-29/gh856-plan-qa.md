@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,5 +122,13 @@ VERDICT: FAIL
 Basis: The scoped resolver and falsifiers now satisfy the main failure path, but the plan still omits #856's requested command for persisting a working harness selection. The whole plan file was swept; no other issue found. No suite was run in this review worktree.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 3
+
+- Implemented the round 2 [Should]: `--check` now has a specified shell-quoted config-write hint for a selected canonical non-vendored harness, and acceptance executes that hint then proves a subsequent no-override lookup returns the same path as `via=config`.
+- Included all seven bounded roots suggested in #856; the four observed Mac locations remain explicitly identified.
+- No production code changed during plan review. Revised plan: `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`.
+
+Handing off to Reviewer — take the final plan review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
