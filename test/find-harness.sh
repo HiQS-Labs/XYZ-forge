@@ -113,5 +113,113 @@ ok "ignorecase=false collision: --check exits 0"       "[ '$rc7' -eq 0 ]"
 ok "ignorecase=false collision: warning absent"        "! grep -q 'case-collision:' <<<\"\$out7\""
 rm -rf "$FS"
 
+# GH-856: Skills Army copies the skill outside the harness. Use an isolated HOME
+# so the bounded search cannot read a real Mac's canonical clone or config.
+COPIED="$FHWORK/Deployed Skills/relay-xyz/find-harness.sh"
+mkdir -p "$(dirname "$COPIED")" "$FHWORK/gh856-home" "$FHWORK/gh856-foreign"
+cp "$FH" "$COPIED"
+GH856_HOME="$FHWORK/gh856-home"
+GH856_CONFIG="$FHWORK/gh856-config"
+seed_canonical() {
+  _target="$1"
+  mkdir -p "$_target/relay-automation" "$_target/bin"
+  git -C "$_target" init -q -b development
+  git -C "$_target" config user.email gh856@test
+  git -C "$_target" config user.name gh856
+  git -C "$_target" remote add origin https://github.com/HiQS-Labs/XYZ-forge.git
+  printf '#!/usr/bin/env bash\n:\n' > "$_target/relay-automation/relay-drive.sh"
+  chmod +x "$_target/relay-automation/relay-drive.sh"
+  cp "$REPO/relay-automation/harness-paths.sh" "$REPO/relay-automation/driver-lock-lib.sh" "$_target/relay-automation/"
+  printf '#!/usr/bin/env bash\n:\n' > "$_target/bin/tick"
+  chmod +x "$_target/bin/tick"
+  git -C "$_target" add .
+  git -C "$_target" commit -qm seed
+}
+copied_run() {
+  (cd "$FHWORK/gh856-foreign" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT \
+    HOME="$GH856_HOME" XDG_CONFIG_HOME="$GH856_CONFIG" bash "$COPIED" "$@")
+}
+GH856_ROOTS=(
+  "$GH856_HOME/Documents/GH Repos/XYZ-forge"
+  "$GH856_HOME/Documents/GitHub/XYZ-forge"
+  "$GH856_HOME/Documents/GitHub Repos/XYZ-forge"
+  "$GH856_HOME/Documents/GitHub-Repos/XYZ-forge"
+  "$GH856_HOME/Documents/Github/XYZ-forge"
+  "$GH856_HOME/XYZ-forge"
+  "$GH856_HOME/Developer/XYZ-forge"
+)
+_rc=0; _out="$(copied_run --check 2>&1)" || _rc=$?
+if [ "$_rc" -eq 1 ] && grep -q 'attempted locations:' <<<"$_out" \
+   && grep -q "XYZ_HARNESS='/path/to/XYZ-forge'" <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: copied skill gives an actionable no-candidate failure"
+else fail=$((fail+1)); echo "  FAIL: copied skill gives an actionable no-candidate failure (rc=$_rc)"; fi
+for _root in "${GH856_ROOTS[@]}"; do
+  if grep -Fq "$_root" <<<"$_out"; then
+    pass=$((pass+1)); echo "  PASS: no-candidate diagnostic lists $_root"
+  else fail=$((fail+1)); echo "  FAIL: no-candidate diagnostic omits $_root"; fi
+  seed_canonical "$_root"
+  _rc=0; _found="$(copied_run --root 2>&1)" || _rc=$?
+  if [ "$_rc" -eq 0 ] && grep -Fq "HARNESS=$_root" <<<"$_found" \
+     && grep -q 'via=search' <<<"$_found"; then
+    pass=$((pass+1)); echo "  PASS: copied skill searches $_root"
+  else fail=$((fail+1)); echo "  FAIL: copied skill searches $_root (rc=$_rc, out=$_found)"; fi
+  require_fixture "$_root" "GH-856 searched clone"
+  rm -rf "$_root"
+done
+
+# Exact-name and origin filters; two equal canonical candidates must be named.
+seed_canonical "${GH856_ROOTS[0]}"
+seed_canonical "${GH856_ROOTS[1]}"
+_rc=0; _out="$(copied_run --root 2>&1)" || _rc=$?
+if [ "$_rc" -eq 1 ] && grep -q 'multiple canonical candidates:' <<<"$_out" \
+   && grep -Fq "${GH856_ROOTS[0]}" <<<"$_out" && grep -Fq "${GH856_ROOTS[1]}" <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: equally qualified clones cause a named refusal"
+else fail=$((fail+1)); echo "  FAIL: equally qualified clones cause a named refusal"; fi
+git -C "${GH856_ROOTS[1]}" switch -qc topic
+_out="$(copied_run --root 2>&1)"
+if grep -Fq "HARNESS=${GH856_ROOTS[0]}" <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: unique development clone wins"
+else fail=$((fail+1)); echo "  FAIL: unique development clone wins"; fi
+require_fixture "${GH856_ROOTS[1]}" "GH-856 alternate clone"
+rm -rf "${GH856_ROOTS[1]}"
+
+# An override-selected canonical clone prints an executable per-device config
+# command. The second run must resolve from that file without an override.
+_hint="$(cd "$FHWORK/gh856-foreign" && XYZ_HARNESS="${GH856_ROOTS[0]}" \
+  HOME="$GH856_HOME" XDG_CONFIG_HOME="$GH856_CONFIG" bash "$COPIED" --check \
+  | sed -n 's/^  save this harness on this Mac: //p')"
+if [ -n "$_hint" ] && bash -c "$_hint" \
+   && [ "$(cat "$GH856_CONFIG/xyz/harness")" = "${GH856_ROOTS[0]}" ]; then
+  pass=$((pass+1)); echo "  PASS: --check config hint writes the chosen path"
+else fail=$((fail+1)); echo "  FAIL: --check config hint writes the chosen path"; fi
+_out="$(copied_run --root 2>&1)"
+if grep -Fq "HARNESS=${GH856_ROOTS[0]}" <<<"$_out" && grep -q 'via=config' <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: copied skill resolves the saved config"
+else fail=$((fail+1)); echo "  FAIL: copied skill resolves the saved config"; fi
+
+# The library must come from the selected harness; lock and cached-upstream
+# warnings are advisory and require no network access.
+mkdir -p "${GH856_ROOTS[0]}/.git/relay-driver.lock"
+git -C "${GH856_ROOTS[0]}" config branch.development.remote origin
+git -C "${GH856_ROOTS[0]}" config branch.development.merge refs/heads/development
+_base="$(git -C "${GH856_ROOTS[0]}" rev-parse HEAD)"
+printf 'new\n' > "${GH856_ROOTS[0]}/new"
+git -C "${GH856_ROOTS[0]}" add new
+git -C "${GH856_ROOTS[0]}" commit -qm newer
+_new="$(git -C "${GH856_ROOTS[0]}" rev-parse HEAD)"
+git -C "${GH856_ROOTS[0]}" update-ref refs/remotes/origin/development "$_new"
+git -C "${GH856_ROOTS[0]}" reset -q --hard "$_base"
+printf 'cached fetch\n' > "${GH856_ROOTS[0]}/.git/FETCH_HEAD"
+_rc=0; _out="$(copied_run --check 2>&1)" || _rc=$?
+if [ "$_rc" -eq 0 ] && grep -q 'driver lock is currently HELD' <<<"$_out" \
+   && grep -q '1 commits behind origin/development (last fetch ' <<<"$_out" \
+   && ! grep -q 'command not found' <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: copied skill reports held lock and cached-upstream lag"
+else fail=$((fail+1)); echo "  FAIL: copied skill reports held lock and cached-upstream lag (rc=$_rc)"; fi
+require_fixture "$FHWORK/Deployed Skills" "GH-856 copied skill"
+require_fixture "$GH856_HOME" "GH-856 isolated HOME"
+require_fixture "$GH856_CONFIG" "GH-856 isolated config"
+rm -rf "$FHWORK/Deployed Skills" "$GH856_HOME" "$GH856_CONFIG" "$FHWORK/gh856-foreign"
+
 echo "  find-harness: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
