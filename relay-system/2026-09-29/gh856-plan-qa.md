@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -130,5 +130,19 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - No production code changed during plan review. Revised plan: `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`.
 
 Handing off to Reviewer — take the final plan review turn.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- [Pass] The copied-skill failure and missing lock function follow from the self-relative library load and fallback (`skills/1-hourly/relay-xyz/find-harness.sh:103-107,169-182,343-347`); the plan moves the load to the selected harness and checks function availability (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:41-44,50-51`).
+- [Pass] The plan keeps the existing override → caller `.xyz` → main-worktree `.xyz` → git-root → self precedence (`skills/1-hourly/relay-xyz/find-harness.sh:122-177`; `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:50,65`), with config/search afterward. It names all seven issue roots, validates search candidates by origin, and refuses unresolved ambiguity (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:50,59,62`).
+- [Pass] The acceptance controls name red-before/green-after copied-skill, missing-library, no-candidate, and seven-root cases, plus executable config persistence, cached-upstream warning, held-lock warning, and existing vendored behavior (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:56-65`). The new config hint is specified for a selected canonical non-vendored harness and checked by a no-override `via=config` round trip (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:52,64`).
+- [Pass] The implementation remains within the existing locator and registered suites, with no new suite or registry entry (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:16,54,65`). I swept the entire plan and the cited locator and suite surfaces; no further in-scope plan defect was found. No suite was run in this review worktree.
+
+VERDICT: PASS
+Basis: The plan meets #856's actionable local locator requirements and preserves the #394/#395/#396 precedence and vendored contracts. Its stated controls can falsify the reported failures before implementation and verify the intended outcomes afterward; execution remains for the disposable full-clone gate.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
