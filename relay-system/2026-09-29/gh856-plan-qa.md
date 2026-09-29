@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -77,5 +77,25 @@ Operational envelope: this is a local CLI locator for one repository family, acr
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Should] The fallback roots are not enumerated in the plan (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:50`), so a build can pass one search fixture while still missing a reported Mac. Name the exact bounded roots from #856 and pin each observed spelling in the registered suite, including `~/Documents/GH Repos/XYZ-forge`, `~/Documents/GitHub/XYZ-forge`, `~/Documents/GitHub Repos/XYZ-forge`, and `~/Documents/GitHub-Repos/XYZ-forge`. Concrete fix: list the roots and require a red-before/green-after copied-skill lookup for each.
+  Observed input: #856's per-Mac table reports those four different canonical clone paths; the deployed skill exits 1 from `~` on the surveyed Macs.
+  Affected scope: copied skill, no override or usable caller harness, no config, with exactly one canonical clone in a documented search root.
+  Falsifier: for each listed root, a fixture containing only an origin-validated `XYZ-forge` there must resolve it as `via=search`; a root omitted by the implementation must fail that fixture before the fix.
+- [Should] The no-candidate failure contract is too vague: step 4 says only “actionable failure message,” and acceptance omits the issue's required list of attempted paths and runnable remedy (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:53-62`). Pin an exact no-config/no-candidate assertion in an existing suite, including exit 1, attempted locations, and a quoted `XYZ_HARNESS` or config remedy; verify it goes red on today's message at `skills/1-hourly/relay-xyz/find-harness.sh:179-182`.
+  Observed input: #856's `cd ~ && env -u XYZ_HARNESS -u XYZ_REPO_ROOT ... --check` exits 1 and says only `Set XYZ_HARNESS=/path/to/your/xyz-3-agents-swarm clone and retry` (`find-harness.sh:180-182`).
+  Affected scope: every lookup that exhausts override, vendored, current-root, self-relative, config, and bounded search candidates.
+  Falsifier: an isolated copied-skill fixture with no candidate exits 1 and prints every attempted location plus a runnable remedy naming `XYZ-forge`; a fixture with one valid candidate still resolves it.
+- [Pass] Root-cause trace matches source: self-relative loading is at `find-harness.sh:103-107`, self-relative selection at `:169-177`, and the unchecked lock call at `:343-347`; `relay-automation/harness-paths.sh:25-32` sources the shared lock library.
+- [Pass] The proposed order at `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:50` preserves the existing override → caller `.xyz` → main-worktree `.xyz` → git-root → self order in `find-harness.sh:122-177`; `test/gh396-find-harness-roots.sh:149-185` pins the override, vendored, git-root, and self cases. A current harness repo and a caller or parent vendored `.xyz` therefore retain priority over config/search as written.
+
+VERDICT: FAIL
+Basis: The diagnosis and precedence are sound, but the plan does not yet make the four observed search roots or the required no-candidate diagnostic falsifiable. The whole plan file was swept; no other issue found.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
