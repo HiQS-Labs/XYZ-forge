@@ -774,12 +774,15 @@ def main():
     parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake"], default="weekly")
     parser.add_argument("--plan-file", help="Path to existing weekly plan JSON/MD")
     parser.add_argument("--decisions-issue", help="Canonical GH issue number for provisional decisions tracker")
-    parser.add_argument("--team-issue", type=int, help="Team weekly issue number for focus assignments")
+    parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int, help="Team weekly issue number for focus assignments")
     parser.add_argument("--hours", type=int, default=36, help="Lookback interval in hours for daily mode")
     parser.add_argument("--fallback", action="store_true", help="Force scratch markdown fallback intake")
 
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
+    if not repo_root.is_dir():
+        print(f"[ERROR] repo root not found: {repo_root}", file=sys.stderr)
+        sys.exit(2)
     temp_dir = ensure_temp_dir(repo_root)
 
     prs = get_open_prs(repo_root, args.gh_repo)
