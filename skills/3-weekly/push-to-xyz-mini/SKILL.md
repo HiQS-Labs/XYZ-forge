@@ -10,8 +10,12 @@ around it. Read `utils/py/xyz_mini_sync.py` for the manifest (what ships) and th
 
 ## Preconditions
 
-- You are inside an XYZ-forge clone whose HEAD is what you intend to publish (usually `development`
-  after a merge). The source must be clean; `--allow-dirty` exists but is recorded in the mini commit.
+- You are inside an XYZ-forge clone whose HEAD is what you intend to publish. Any branch is
+  sanctioned — publishing from a feature branch is the documented exception path; the tool records
+  `source_branch` in the child's `.xyz-forge-revision`, warns when the branch is not `development`,
+  and a re-publication from `development` after the branch lands re-baselines the pin. A branch
+  that predates a manifest source refuses (exit 2). The source must be clean; `--allow-dirty`
+  exists but is recorded in the mini commit.
 - A local checkout of `https://github.com/HiQS-Labs/XYZ-mini` exists at `../XYZ-mini` relative to
   the forge toplevel, or at `$XYZ_MINI_REPO`, on branch `main`, clean, with no unpushed non-sync commits.
 
@@ -43,8 +47,12 @@ around it. Read `utils/py/xyz_mini_sync.py` for the manifest (what ships) and th
 
 Edit the `MANIFEST` tuple in `utils/py/xyz_mini_sync.py` in a forge PR. Dropping an entry deletes
 it from mini on the next publication (mini's `MANIFEST.txt` records what the last run wrote); adding
-one ships it. Seeds (`TODO.md`) are copied once and never touched again. `test/gh589-xyz-mini-sync.sh`
-is the contract test.
+one ships it. Seeds (`TODO.md`) are copied once and never touched again. `adapted` entries are the
+exception path for mini-owned bytes: the forge source stays tracked as the upstream of record, the
+tool never replaces the child's copy, and every adapted path must be documented in `mini/ORIGIN.md`
+or the run refuses (exit 2). An adapted path deleted from the child is refused — restore it from
+the child's git history; a fresh child materializes it from forge bytes as the re-adaptation
+starting point. Policy: `mini/ADAPTATIONS.md`. `test/gh589-xyz-mini-sync.sh` is the contract test.
 
 ## What this skill never does
 
