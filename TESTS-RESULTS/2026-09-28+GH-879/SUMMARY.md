@@ -19,3 +19,7 @@ These are method checks, not a new full audit. The #854 handoff schedules the fu
 - Replacing that probe with `false || grep -Fq x <<<"x"` passed (3 pass, 0 fail). The existing `gh460-pipe-buffer-sigpipe.sh` suite passed 12/12. The disposable file was restored from a byte copy, not Git checkout/reset.
 
 No new suite, registry entry, or gate machinery was added.
+
+## Full local gate at the reviewed commit
+
+`caffeinate -i ./validate.sh` ran in a separate disposable full clone at `fd5a36407ed66cbd3eac83390dee327c6969156c` after the independent Agy relay QA attestation. It passed **414/414** checks (411 registered suites plus gate invariants), with **zero re-runs**. The full output is committed as `validate-full.log`. The clone's `HEAD`, `core.bare=false`, origin URL, and local user identity were unchanged after the run. This is a local four-wide gate, not the sequential `ci-local.sh` promotion receipt required at Landing 2.
