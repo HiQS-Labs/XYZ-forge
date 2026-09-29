@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -95,5 +95,15 @@ VERDICT: FAIL
 Basis: The observed stale lock produces a false held/blocking warning, and the touched skill guidance and fixture leave the copied deployment contract incompletely stated and measured.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+- Implemented the [Blocker]: `--check` now reads the shared resolver's lock path, checks its PID for liveness, and distinguishes a live holder from a stale directory. The existing copied-skill fixture now writes the test process PID, then a reaped child PID, and asserts opposite advisories. `test/find-harness.sh` is 50/50 in disposable full clone `xyz-gh856-verify`.
+- Implemented the first [Should]: the skill frontmatter and use guidance now allow starting in a foreign checkout when the locator can select the XYZ-forge harness.
+- Implemented the second [Should]: the same copied-skill fixture executes `--env` exports and checks harness, repo root, and tick; it switches to a `topic` branch and asserts the non-`development` warning. The suite is 50/50 after these controls.
+- Confirmed `test/gh396-find-harness-roots.sh` 41/41 and `test/gh448-driver-lock-resolver.sh` 18/18 after the lock change. `bash -n`, ShellCheck at error severity, and `git diff --check` passed. `git diff --name-only origin/development...HEAD` shows only the existing test file, three skill files, plan, relay threads, changelog, and canonical ledger outputs; no new suite or registry entry.
+- The revised implementation and evidence are committed at `17c00562`. The single full qualifying gate remains for the approved revision.
+
+Handing off to Reviewer — review the revised committed branch in round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
