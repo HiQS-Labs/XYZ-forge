@@ -215,6 +215,16 @@ _out="$(copied_run --root 2>&1)"
 if grep -Fq "HARNESS=${GH856_ROOTS[0]}" <<<"$_out" && grep -q 'via=config' <<<"$_out"; then
   pass=$((pass+1)); echo "  PASS: copied skill resolves the saved config"
 else fail=$((fail+1)); echo "  FAIL: copied skill resolves the saved config"; fi
+_env="$(copied_run --env 2>/dev/null)"
+if bash -c "$_env; test \"\$HARNESS\" = \"\$1\" && test \"\$TICK_REPO_ROOT\" = \"\$1\" && test \"\$RELAY_HAS_TICK\" = 1" _ "${GH856_ROOTS[0]}"; then
+  pass=$((pass+1)); echo "  PASS: copied skill --env exports usable harness, repo root, and tick"
+else fail=$((fail+1)); echo "  FAIL: copied skill --env exports usable harness, repo root, and tick"; fi
+git -C "${GH856_ROOTS[0]}" switch -qc topic
+_out="$(copied_run --check 2>&1)"
+if grep -q 'harness clone is on topic, expected development' <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: copied skill warns on a non-development branch"
+else fail=$((fail+1)); echo "  FAIL: copied skill warns on a non-development branch"; fi
+git -C "${GH856_ROOTS[0]}" switch -q development
 printf '/missing/XYZ-forge\n' > "$GH856_CONFIG/xyz/harness"
 _out="$(copied_run --root 2>&1)"
 if grep -q 'ignoring invalid config' <<<"$_out" && grep -q 'via=search' <<<"$_out"; then
@@ -225,6 +235,7 @@ bash -c "$_hint"
 # The library must come from the selected harness; lock and cached-upstream
 # warnings are advisory and require no network access.
 mkdir -p "${GH856_ROOTS[0]}/.git/relay-driver.lock"
+printf '%s\n' "$$" > "${GH856_ROOTS[0]}/.git/relay-driver.lock/pid"
 git -C "${GH856_ROOTS[0]}" config branch.development.remote origin
 git -C "${GH856_ROOTS[0]}" config branch.development.merge refs/heads/development
 _base="$(git -C "${GH856_ROOTS[0]}" rev-parse HEAD)"
@@ -241,6 +252,13 @@ if [ "$_rc" -eq 0 ] && grep -q 'driver lock is currently HELD' <<<"$_out" \
    && ! grep -q 'command not found' <<<"$_out"; then
   pass=$((pass+1)); echo "  PASS: copied skill reports held lock and cached-upstream lag"
 else fail=$((fail+1)); echo "  FAIL: copied skill reports held lock and cached-upstream lag (rc=$_rc, out=$_out)"; fi
+sleep 0.01 & _dead_pid=$!
+wait "$_dead_pid"
+printf '%s\n' "$_dead_pid" > "${GH856_ROOTS[0]}/.git/relay-driver.lock/pid"
+_out="$(copied_run --check 2>&1)"
+if grep -q 'stale driver lock' <<<"$_out" && ! grep -q 'driver lock is currently HELD' <<<"$_out"; then
+  pass=$((pass+1)); echo "  PASS: dead holder is reported as a stale lock"
+else fail=$((fail+1)); echo "  FAIL: dead holder is reported as a stale lock"; fi
 git -C "${GH856_ROOTS[0]}" reset -q --hard "$_new"
 seed_vendored_harness "$FHWORK/gh856-foreign"
 printf 'source_commit=%s\n' "$_base" > "$FHWORK/gh856-foreign/.xyz/VERSION"

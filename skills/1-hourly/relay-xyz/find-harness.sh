@@ -470,7 +470,19 @@ case "$ACTION" in
         # neither hardcoded candidate above matched, so this warning silently never fired.
         if type driver_lock_path_for_repo >/dev/null 2>&1; then
           _lk="$(driver_lock_path_for_repo "$HARNESS")"
-          [ -d "$_lk" ] && echo "  !   a driver lock is currently HELD ($_lk) — a relay started here will BLOCK until it frees"
+          if [ -d "$_lk" ]; then
+            _holder=""
+            [ ! -f "$_lk/pid" ] || IFS= read -r _holder < "$_lk/pid" || true
+            case "$_holder" in
+              ''|*[!0-9]*) _lock_live=0 ;;
+              *) if [ "$_holder" -gt 0 ] && kill -0 "$_holder" 2>/dev/null; then _lock_live=1; else _lock_live=0; fi ;;
+            esac
+            if [ "$_lock_live" = 1 ]; then
+              echo "  !   a driver lock is currently HELD ($_lk, pid $_holder) — a relay started here will BLOCK until it frees"
+            else
+              echo "  !   stale driver lock ($_lk, pid ${_holder:-none}) — the driver will try to reclaim it"
+            fi
+          fi
         else
           echo "  !   driver lock state unavailable: selected harness has no shared lock resolver"
         fi

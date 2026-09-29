@@ -72,8 +72,8 @@ Discovery can select the wrong clone when multiple copies exist. Origin validati
 
 - The installed copied locator failed from the Jev checkout with both overrides unset (exit 1). With an override, `--check` printed `driver_lock_path_for_repo: command not found` before the fix.
 - Plan relay `RELAY-GH856-PLAN` closed Approved in round 3 with a Codex attestation. Its thread records the two revised search/diagnostic controls and the config persistence control.
-- Focused tests ran in disposable full clone `xyz-gh856-verify`: `test/find-harness.sh` 47/47, `test/gh396-find-harness-roots.sh` 41/41, `test/gh292-worktree-vendored-discovery.sh` 7/7, and `test/gh448-driver-lock-resolver.sh` 18/18. A temporary regression in the GH-396 suite was compared with a full clone of base `c7ea57fd` (41/41), corrected, then confirmed green at head.
-- The copied-skill fixture tests all seven bounded roots, wrong-origin and task-clone rejection, ambiguity, config round trip, stale config fallback, cached-upstream warning, held lock, and config-backed vendored drift. These are fixture results on this Mac; the four-device rollout remains a post-merge step.
+- Focused tests ran in disposable full clone `xyz-gh856-verify`: `test/find-harness.sh` 50/50, `test/gh396-find-harness-roots.sh` 41/41, `test/gh292-worktree-vendored-discovery.sh` 7/7, and `test/gh448-driver-lock-resolver.sh` 18/18. A temporary regression in the GH-396 suite was compared with a full clone of base `c7ea57fd` (41/41), corrected, then confirmed green at head.
+- The copied-skill fixture tests all seven bounded roots, wrong-origin and task-clone rejection, ambiguity, config round trip, usable `--env` exports, non-`development` warning, stale config fallback, cached-upstream warning, live and stale lock states, and config-backed vendored drift. These are fixture results on this Mac; the four-device rollout remains a post-merge step.
 
 ## Observed failure
 

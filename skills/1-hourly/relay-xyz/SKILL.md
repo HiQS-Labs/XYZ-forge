@@ -6,11 +6,11 @@ description: >-
   poll.sh) rather than improvising the handoff by hand. Use when the operator
   wants to "run an automated relay", "have Codex or agy review this
   end-to-end", "drive a relay to completion headless", "run the relay harness",
-  or set up the all-Claude hands-free poll loop — and the working tree is a
-  clone of the XYZ-forge repo (it ships relay-automation/). /relay
+  or set up the all-Claude hands-free poll loop. The skill can start from a
+  foreign repo because its locator selects a separate XYZ-forge harness. /relay
   scaffolds the thread and owns the turn protocol; relay-xyz is the repo-specific
   layer that runs the real scripts. NOT for scaffolding a thread from scratch
-  (that is /relay), NOT for repos without relay-automation/.
+  (that is /relay).
 ---
 
 # relay-xyz — automated relays on the shipped harness
@@ -56,11 +56,10 @@ Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`),
 - Running automated relays in **two different repos at the same time on one machine** — see
   [Concurrent relays across repos](#concurrent-relays-across-repos-same-machine) (each repo needs its own
   vendored `.xyz/`).
-- You have a relay thread (or are about to scaffold one with `/relay`) **and** the working tree is a
-  clone of this repo.
+- You have a relay thread (or are about to scaffold one with `/relay`); the current working tree may
+  be a foreign repo if the locator can reach a canonical XYZ-forge harness.
 
-**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), repos that don't ship
-`relay-automation/`, or work that needs a human checkpoint between every turn (use plain `/relay`
+**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), or work that needs a human checkpoint between every turn (use plain `/relay`
 manual mode).
 
 ## First-time setup on a new clone or machine (make the skill discoverable)
