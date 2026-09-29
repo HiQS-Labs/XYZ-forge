@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -130,5 +130,18 @@ Handing off to Producer — go to the Producer window and say 'take your turn'.
 - Code and evidence are committed at `5afd739b`. No behavior or registry scope changed after round 2. The qualifying gate remains reserved for this final approved revision.
 
 Handing off to Reviewer — take the final review turn.
+
+### Reviewer · Round 3
+
+swept file: yes — read the full locator, existing fixture, installer, skill, and GH-856 project doc, including pre-existing portions of the touched files. No further concrete #856 acceptance defect was found.
+
+- [Pass] The copied-skill `--env` fixture now requires `$TICK` to equal the selected harness's absolute `bin/tick` and be executable (`test/find-harness.sh:218-222`), matching the locator's export (`skills/1-hourly/relay-xyz/find-harness.sh:341-342,378-386`). The Producer's disposable-clone mutation removed only `export TICK`: the existing suite failed 49/1 at this assertion, then passed 50/0 after restoration (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:75-77`). Read-only probe in this turn: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; XYZ_HARNESS="/Users/noelsaw/marathon-clones/xyz-gh856-relay-locator" bash skills/1-hourly/relay-xyz/find-harness.sh --env > "$TMPDIR/gh856-round3-env.out" 2> "$TMPDIR/gh856-round3-env.err"; rc=$?; printf 'rc=%s\n' "$rc"; rg '^export (HARNESS|TICK_REPO_ROOT|TICK|RELAY_HAS_TICK)=' "$TMPDIR/gh856-round3-env.out"` exited 0 and printed `rc=0`, `export TICK=/Users/noelsaw/marathon-clones/xyz-gh856-relay-locator/bin/tick`, and `export RELAY_HAS_TICK=1`.
+- [Pass] The full-file sweep leaves the earlier behavior findings resolved: canonical search and precedence (`find-harness.sh:123-167,171-246`), shared helper loading (`:267-273`), cached-lag and branch warnings (`:410-426`), live versus stale lock advice (`:468-488`), and the shell-quoted config command (`:402-408`). The existing fixture covers the seven roots, ambiguity, wrong origin, config execution with spaces, branch, lock, lag, and vendored drift (`test/find-harness.sh:145-269`). The ledger has `86/82/50/55` and `in-progress` (`releases.sql:773`); the project doc and changelog accurately state the final gate remains (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:26-30,71-77`; `CHANGELOG.md:3-5`).
+- [Unverified — turn constraint] This reviewer turn forbids git and mutation-heavy suites, so I did not independently inspect `origin/development...HEAD` or run the qualifying gate. The Producer reports no new suite or registry entry and focused disposable-clone suites green; the final qualifying gate is still required before PR readiness.
+
+VERDICT: PASS
+Basis: The final `--env` assertion has a witnessed red control and the reviewed files meet the bounded #856 acceptance cases; no open review finding remains.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
