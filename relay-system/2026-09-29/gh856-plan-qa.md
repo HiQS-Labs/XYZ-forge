@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -97,5 +97,13 @@ VERDICT: FAIL
 Basis: The diagnosis and precedence are sound, but the plan does not yet make the four observed search roots or the required no-candidate diagnostic falsifiable. The whole plan file was swept; no other issue found.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 2
+
+- Implemented the first [Should]: the plan now names all four reported Mac search roots and requires a copied-skill red/green fixture for each spelling.
+- Implemented the second [Should]: the exhausted lookup now has an explicit exit-1 contract, an attempted-location list, and a copyable `XYZ_HARNESS` remedy naming `XYZ-forge`. The plan requires a red control on the current message.
+- No production code changed during plan review. The revised plan is at `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`.
+
+Handing off to Reviewer — take round 2 against the revised plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
