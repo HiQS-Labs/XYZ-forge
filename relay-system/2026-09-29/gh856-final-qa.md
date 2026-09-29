@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -77,5 +77,23 @@ Operational envelope: a local Bash locator for one repository family across four
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes — read the full locator, existing test, installer, skill, and GH-856 project doc, including pre-existing code in the touched files.
+
+- [Blocker] `--check` calls a stale lock **currently HELD** and says a relay will block. `find-harness.sh:471-474` equates an existing directory with a live holder, while `relay_drive.py:523-547` reclaims a directory whose PID is dead. Read-only probe from this worktree: `XYZ_HARNESS=/Users/noelsaw/marathon-clones/xyz-gh856-relay-locator bash skills/1-hourly/relay-xyz/find-harness.sh --check` exited 0 and printed `a driver lock is currently HELD (.../.git/relay-driver.lock) — a relay started here will BLOCK until it frees`; `cat .../.git/relay-driver.lock/pid` returned `14444`, and `kill -0 14444` exited 1. Probe output was saved under `.relay-scratch/tmp/gh856-foreign-check.out` and `.relay-scratch/tmp/gh856-lock-state.out`. Fix the advisory to distinguish a live holder from a stale directory, and make the existing lock fixture at `test/find-harness.sh:227-243` exercise a live PID plus the stale case; its bare `mkdir` currently proves only directory presence.
+  Observed input: selected harness `/Users/noelsaw/marathon-clones/xyz-gh856-relay-locator`; `.git/relay-driver.lock/pid` is `14444`, a non-running PID.
+  Affected scope: non-vendored selected harnesses with an existing driver-lock directory, especially stale locks after a killed run.
+  Falsifier: a directory containing a live holder PID must still print HELD; the observed dead-PID directory must report stale/reclaimable or avoid the held warning, matching the driver's decision.
+- [Should] The copied-skill use case is contradicted by the skill's frontmatter and use guidance: `SKILL.md:9-13` and `:59-64` exclude repos without `relay-automation/`, while `:84-89` expressly says a copied deployment works from a foreign repo. Update the entry/use wording so an agent in the GH-856 foreign checkout can invoke the skill and let the locator select the harness. Concrete input: `test/find-harness.sh:120-143` places the copied skill under `Deployed Skills/relay-xyz` and runs it from `gh856-foreign`.
+- [Should] The existing copied-skill fixture checks `--root` and `--check`, but never calls copied `--env` (`test/find-harness.sh:141-256`), although the acceptance in `GH-856-RELAY-LOCATOR.md:58` requires usable exports. It also never asserts the non-`development` warning, although `find-harness.sh:412-414` implements it. Add both assertions to this existing suite. Concrete falsifiers: removing `export TICK_REPO_ROOT` at `find-harness.sh:380`, or removing the branch warning at `:412-414`, should turn the corresponding fixture red; the current copied-fixture calls would not observe either output. [Unverified — needs clone run] for the mutation/red-control result.
+- [Pass] The seven bounded paths in `find-harness.sh:123-131` match the project plan at `GH-856-RELAY-LOCATOR.md:50`, and the existing fixture iterates those paths at `test/find-harness.sh:145-186`. The RELEASES row has `86/82/50/55` and `in-progress` (`releases.sql:773`); the changelog records the GH-856 work (`CHANGELOG.md:3-5`).
+- [Unverified — turn constraint] I did not run `git diff origin/development...HEAD` or the mutation-heavy suites: this reviewer turn explicitly forbids running git and test scripts. The reported disposable-clone focused results remain the only suite evidence here; changed-file/new-suite diff scope still needs the harness or Producer's independent check.
+
+VERDICT: FAIL
+Basis: The observed stale lock produces a false held/blocking warning, and the touched skill guidance and fixture leave the copied deployment contract incompletely stated and measured.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
