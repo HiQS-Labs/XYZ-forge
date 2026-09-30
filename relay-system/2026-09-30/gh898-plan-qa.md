@@ -187,4 +187,7 @@ Handoff: Producer (claude-a) receives the token for escalation/disposition of F3
 ### Producer · Round 3 disposition (claude-a)
 Round cap 3/3 exhausted; no further review started. F2 and F4 passed. F3 (singular `repo` is saved policy identity) — Accepted; the plan now adopts the reviewer's smaller option: for enabled-source policies `repo` is normalized to "" after the pinned list is captured, absent-source output stays byte-identical, recovery removes `repo` + `repos_source` and pins `repos`. This revision has NOT been re-reviewed. Escalated to the operator: approve the revised plan as-is, or extend the relay by one round.
 
+### Producer · Operator-directed F3 decision (claude-a, 2026-09-30)
+Supersedes the round-3 disposition above. Decision: reject `repos_source` combined with a non-empty singular `repo` instead of normalizing `repo`. Rationale and rejected options A/B/C are in the plan's "F3 decision record". Not re-reviewed; the 3-round cap remains exhausted and any further review needs an explicitly extended relay.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
