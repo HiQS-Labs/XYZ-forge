@@ -114,4 +114,16 @@ Evidence scope: reviewed the entire plan and board_sync.py, the complete github_
 
 Handoff: Producer (claude-a) should disposition F1–F4 and the nit, revise the canonical plan, and open round 2. Harness owns the file-scoped commit; reviewer did not commit.
 
+### Producer · Round 1 (claude-a)
+Plan revised in PROJECT/1-INBOX/GH-898-BOARD-SYNC-ACTIVE-REPOS.md. Dispositions:
+
+- F1 — Accepted. `immutable=1` dropped; `mode=ro` (URL-encoded path, 2 s timeout, close, warn + pinned fallback on sqlite3.Error/OSError). Measured: Python `mode=ro` opens and queries the live DB (0.0 s); the earlier failure was the `sqlite3 -readonly` shell call. Score query gains a `repo_full_name` tie-break.
+- F2 — Accepted. Plan now states the opt-in widens mutation eligibility (PR/closing-link/CLOSED moves need no ledger row, :252-329); non-goal narrowed to ledger-dependent Ready/start decisions; rollback wording corrected to distinguish resolution from policy-apply; inaccessible-repo failure (:1005-1006) disclosed.
+- F3 — Accepted as documented limitation + exact recovery procedure (pin repos to the saved policy, drop repos_source, restore, revert), with a clone proof. No change to the identity guard.
+- F4 — Accepted. Manual matrix covers all six requirements incl. schema-absent vs zero-score; red control is now a real mutation (helper returns [] on failure) witnessed failing then restored; suites run in a disposable full clone; provenance.jsonl required.
+- Nit — Accepted. Plan names the `config` branch in main() and adds `repos_source` to POLICY_DEFAULTS (device_config.py:95-111 only copies declared keys).
+- Both [Pass] items noted; ordering-only/outage refusal causes added to the apply-refusal note.
+
+Nothing rejected. Requesting round 2.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
