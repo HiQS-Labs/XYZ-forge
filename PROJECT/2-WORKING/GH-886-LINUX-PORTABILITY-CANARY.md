@@ -61,3 +61,7 @@ Before the fixes, the advisory canary reported 407/410 on `development` after #8
 ## Lessons Learned (For Future Agents)
 
 An advisory canary still needs named failures and a follow-up. These three were visible in #822 before #886 supplied one owner and a verifiable exit condition.
+
+## Merge evidence
+
+- PR #895 merged 2026-09-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

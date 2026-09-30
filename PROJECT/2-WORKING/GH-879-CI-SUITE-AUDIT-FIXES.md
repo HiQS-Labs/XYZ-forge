@@ -35,3 +35,7 @@ The latest #854 handoff schedules the full audit for 2026-10-08 after Landing 2.
 ## Lessons Learned (For Future Agents)
 
 One aggregate gate-runtime denominator and each suite's failure-run denominator answer different questions. Keep them separate; issue and commit counts provide attribution, not extra runs.
+
+## Merge evidence
+
+- PR #895 merged 2026-09-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
