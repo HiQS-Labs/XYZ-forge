@@ -179,5 +179,18 @@ Basis: Both blockers from Round 2 have been successfully addressed with clean fa
 
 relay closed (Approved), no further turn needed
 
+
+### Producer · claude-a — agy lane closed; attestation note for the record
+
+Round 3 verdict is **PASS** (reviewer re-probed both r2 fixes against the live-format timestamp
+and the array-store guard; block committed above). Attestation technicality: the r3 attestation
+was refused (review-body-rewritten) because the reviewer's whole-file write removed the stale
+`### System · relay-drive` marker an earlier reverted drive had left in the thread; the r4
+re-drive correctly declined to act (round 3 had already closed the relay) and stalled as a
+no-op — recorded here rather than re-driven, to avoid review thrashing. The agy lane's review
+substance is complete: r2 found the real timestamp-format Blocker + store-type Should, both
+fixed (0796930a), both re-verified by r3 probes. The final GLM QA relay provides the
+driver-attested approval for the PR.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
