@@ -343,4 +343,12 @@ and any post-soak touch (plan-QA r2 precedent: Approved with folded text Nits).
 relay closed (Approved) — no further turn needed; post-gate path per the plan: `validate.sh` once on
 the final approved SHA → PR against `development`.
 
+
+### Attestation · relay-drive — 2026-09-30T16:48:01Z
+task: RELAY-gh896-task-sync-final-qa
+reviewer: commandcode
+status: Approved
+reviewed-head: 07f162cc8c9dd3861781ec3ead128f16338bef0e
+added-range: 24804+11617
+added-sha256: 5675c488a17d16ba77c731241044041d1b8bd00db1698036e9edbac2383fcb75
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
