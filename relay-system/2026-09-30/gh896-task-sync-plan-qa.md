@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -210,6 +210,86 @@ All dispositions applied in-tree at `PROJECT/2-WORKING/GH-896-UNIFIED-TASK-SYNC.
 
 handing off to Reviewer (commandcode) — take your turn: re-review the amended plan
 against the r1 findings and set the verdict (line starts exactly `VERDICT: `).
+
+### Reviewer — Round 2 (commandcode)
+
+swept file: yes — the whole amended artifact (220 lines) re-read end to end; the full r1→r2
+amendment diff (`git diff 8c688a20 def998bd -- PROJECT/2-WORKING/GH-896-UNIFIED-TASK-SYNC.md`,
+180 lines); the cited ground-truth spans re-checked (agy_task_sync.py re-read at :230-339; both
+scripts `wc -l`); the r1 block recounted for the Nit tally. All probes read-only (diff, git
+ls-tree/ls-files/rev-parse/status, gh api, grep, wc), `PYTHONDONTWRITEBYTECODE=1`, output under
+`.relay-scratch/tmp`; commands + rc + decisive output quoted inline. Seeded artifact == in-tree
+working tree == HEAD (diff rc=0; `git diff --stat HEAD` empty). Pre-existing defects: none new
+beyond r1's already-logged stale self-path, now fenced by Phase 2b (artifact:192-195).
+
+**Disposition verification (every r1 finding)**
+
+- [Pass] Blocker — port sources absent from base: fixed and factually accurate. "Absent from
+  base, not modified by this PR" (artifact:99-105); "Port sources (executability)" naming the
+  read-only absolute paths + holding branches (artifact:129-136); rollback cell reworded to
+  "holding branches (#893/#894 heads) and primary-checkout copies" (artifact:147). Every claim
+  re-probed: `git ls-tree origin/development --name-only utils/zcode/task-stamp
+  utils/skills/agy-task-sync` → empty, rc=0; `git rev-parse origin/development` →
+  `c24a2bc381...`; gh api PR #893 → head `feat/zcode-task-stamp`, open, rc=0; PR #894 → head
+  `feat/gh-892-agy-task-sync`, open, rc=0; primary checkout on `feat/gh-889-weekly-daily-planner-skills`
+  with `utils/zcode/task-stamp` tracked (ls-files: SKILL.md + sweep_tasks.py) and
+  `utils/skills/agy-task-sync/` untracked (`??`); the plan's absolute paths equal this relay's
+  Setup ground truth. Phase 1a is executable by a fresh session as written.
+- [Pass] Should — Agy pin derive-vs-mirror: resolved. R1 "**Pin policy is adapter-declared**:
+  ZCode derives pins ... the Antigravity adapter is **mirror-app-owned**" (artifact:59-64);
+  Observed #1 states the divergence (artifact:40-42); Phase 2a "mirror-app-owned pins"
+  (artifact:186-188); probes check "pin policy per R1's adapter-declared models"
+  (artifact:157-158). Matches source: ZCode window-derived writes (sweep_tasks.py:209-215) vs
+  Agy app-storage mirror (agy_task_sync.py:269). One residual clarity Nit below.
+- [Pass] Should — probe store-targeting: resolved. R4 `--zcode-db PATH` / `--agy-root PATH`
+  (constructor-injected) (artifact:76-78); step 1c lists both (artifact:179-180); bounded
+  verification targets copies via the overrides, "never live stores" (artifact:154-156).
+- [Pass] Should — A3 red control: resolved. Bounded verification mandates the same
+  malformed-read fault against the ORIGINAL `agy_task_sync.py` on a copy, citing the witnessed
+  strip in the TESTS-RESULTS record (artifact:158-163).
+- [Pass] Nit dispositions: 404+338 (`wc -l` re-run: 404 / 338, artifact:37); "four ways"
+  (artifact:53-55); JSON default-and-only stdout contract with `--json` dropped from 1c
+  (artifact:72-78, 179-181); R5 `heartbeat: pending — no receipt yet` non-red state
+  (artifact:79-82), which also unblocks Phase 1c's "doctor green on live stores" (artifact:182);
+  A2 lead-in qualified "under R2's unified stamp semantics" (artifact:209-211); Phase 2b
+  stale-self-path fence (artifact:192-195); Status/Dependencies genericized to the relay id with
+  "model per operator choice" (artifact:33, 139-141). Appeal-labeling Declined is a valid
+  disposition — the r1 finding itself allowed "otherwise leave as is".
+
+**Round-2 findings (whole-file sweep; all Nits, none blocking)**
+
+- [Nit] Status-table tally: "three Shoulds ... and seven Nits — all addressed as plan
+  amendments" (artifact:33) — r1 issued **eight** Nits (grep `^- \[Nit\]` over the r1 block: 8;
+  the Producer logged 8 dispositions, 7 Implemented + 1 Declined). Reword to "eight Nits (seven
+  amended, one declined)".
+- [Nit] Step 3 still hardcodes "final GLM 5.3 Max relay QA" (artifact:201) — grep "GLM" over the
+  artifact returns exactly one hit, this line — though the r1 disposition says step-3 was
+  genericized. The load-bearing half (this relay's seat) is fixed at artifact:33/139-141; fix
+  the residual whenever the plan is next amended, or note the disposition overstated.
+- [Nit] `--auto-pin` write target is inferable but unstated: R1's "no derived pin writes, so the
+  dangerous `app_storage.json` surface stays out of the sweep path" (artifact:63-64) sits beside
+  Phase 2a's "atomic backed-up `app_storage.json` write" (artifact:188-189). The only coherent
+  reading is that `--auto-pin` opts into derived pin writes including app_storage — the
+  original's semantics (pin=True on annotations, `pinned_ids.append`, `save_pinned_ids`:
+  agy_task_sync.py:295-300, 307-308) — made safe by R3's gate/backup/atomic rename. One clause
+  stating that removes the doubt; both readings stay safe under R3, so Nit.
+
+VERDICT: PASS
+
+**Basis:** The Definition of Done is met. Executability — the port-sources Blocker is fixed with
+verified facts (ls-tree empty at the pinned base; holding branches, PR heads, and primary-checkout  [Unverified — no citation]
+state all re-probed true), so a fresh session in the prescribed clone can run Phase 1a as written.
+Grounding — every claim about the two sources re-checks at cited lines (404+338 counts, the
+:246-248 early return, pin models, the blind rewrite). Safety — R3's "a failed or empty
+authoritative read never triggers a destructive write" plus A3's byte-identical-abort check plus
+the now-mandated red control against the original close the witnessed destructive edge, and the
+store-path overrides keep every probe off live stores. Commensurability — no new suites or gate
+machinery (GH-831 respected). The three residual Nits are text-precision items at the Producer's
+discretion, suitable to fold into the implementation PR's doc touch-ups; none affects
+executability, safety, or verification power.
+
+relay closed (Approved) — no further turn needed. Next action is the operator's per the plan:
+`roadmap update --gid rmi-01M3SBWHWGSWAFVKTW7ZAE1MMX --accepted-start`, then Phase 1.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
