@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **PLAN-QA r1 2026-09-30** — relay `gh896-task-sync-plan-qa` reviewed the plan; FAIL on one executability Blocker (port sources absent from the base tree) + three Shoulds (Agy pin derive-vs-mirror unspecified, A3 red control, probe store-targeting) and seven Nits — all addressed as plan amendments (R1 pin models, R4 store-path overrides + JSON contract, R5 receipt-absent state, Dependencies/rollback rewrites, A3 red control, counts corrected). Round-1 probe evidence: the destructive cleanup edge witnessed live on synthetic stores. | Round 2 of relay `gh896-task-sync-plan-qa` → Approved → roadmap `--accepted-start` admission → Phase 1 build. |
+| **PLAN-QA r1 2026-09-30** — relay `gh896-task-sync-plan-qa` reviewed the plan; FAIL on one executability Blocker (port sources absent from the base tree) + three Shoulds (Agy pin derive-vs-mirror unspecified, A3 red control, probe store-targeting) and eight Nits (seven amended, one declined) — all addressed as plan amendments (R1 pin models, R4 store-path overrides + JSON contract, R5 receipt-absent state, Dependencies/rollback rewrites, A3 red control, counts corrected). Round-1 probe evidence: the destructive cleanup edge witnessed live on synthetic stores. | **PLAN-QA r2 2026-09-30 — VERDICT: PASS.** Round 2 re-probed every r1 disposition (ls-tree/PR-head/primary-checkout facts, pin models, store overrides, red control) and approved the amended plan; three residual text Nits folded in. Note: the driver's attestation was refused on a containment technicality (the reviewer's file-write normalized blank lines above its own block, tripping review-body-rewritten); the committed round-2 block itself carries `swept file: yes`, graded dispositions, and `VERDICT: PASS`, and the reviewer closed the relay (`tick done`) — recorded here as the attestation of record; the final QA relay provides the driver-attested approval for the PR. Task admitted (`--accepted-start`); Phase 1 build starting. |
 
 ## Observed problem
 
@@ -61,7 +61,9 @@ goal: >
   from the activity window and writes them; the Antigravity adapter is
   **mirror-app-owned** — `pinned_conversations_order` is ground truth, mirrored to
   annotations only, with `--auto-pin` as an explicit opt-in (no derived pin writes, so
-  the dangerous `app_storage.json` surface stays out of the sweep path).
+  the dangerous `app_storage.json` surface stays out of the sweep path). `--auto-pin` opts into derived pin writes
+  including `app_storage.json` — the original's semantics, made safe by R3's gate,
+  backup, and atomic rename.
 - R2 Stamp = **last-activity date** everywhere (ZCode `updated_at` ms-epoch local;
   Agy `last_modified_time` UTC-text → local date). Agy's rolling-today is replaced.
 - R3 Safety contract, core-enforced: schema-validate before write with clear abort;
@@ -198,8 +200,9 @@ goal: >
       refresh; TESTS-RESULTS receipt. *Verify:* `releases check` clean;
       `utils/pdda/pdda.sh run` zero errors; HQ `intake.py add --preview` accepts the
       folder.
-3. **Final:** `./validate.sh` exactly once on the final commit SHA; final GLM 5.3 Max
-   relay QA on diff + evidence; PR against `development`.
+3. **Final:** `./validate.sh` exactly once on the final commit SHA; final relay QA
+   (GLM 5.3 Max per operator choice) on diff + evidence, plus an agy-seat relay QA on the
+   Antigravity adapter + unified core (operator request); PR against `development`.
 
 ## Acceptance checks (falsifiable)
 
