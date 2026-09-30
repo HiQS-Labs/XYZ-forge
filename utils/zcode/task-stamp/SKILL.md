@@ -36,17 +36,23 @@ python3 utils/zcode/task-stamp/scripts/sweep_tasks.py --sweep
 # activity date; does not pin history)
 python3 utils/zcode/task-stamp/scripts/sweep_tasks.py --sweep --all --no-pin
 
-# Replace a raw prompt title with a reviewed summary (agent-written)
+# Replace a raw prompt title with a reviewed summary (agent-written; the
+# MM-DD stamp is taken from the task's own last-activity date, so the next
+# sweep never reverts it)
 python3 utils/zcode/task-stamp/scripts/sweep_tasks.py \
   --set-title sess_<uuid> "Fix relay driver lock parity"
 ```
 
 Useful flags: `--hours N` (sweep window, default 24) · `--pin-hours N`
-(pin window, default 24) · `--no-pin` · `--unpin-days N` (unpin stale pins)
-· `--include-cron` (default skips automation-owned tasks — their titles
+(pin window, default 24) · `--no-pin` (skip pinning; does not disable
+`--unpin-days`, which is its own explicit action) · `--unpin-days N`
+(unpin tasks inactive for N days; `0` unpins everything pinned) ·
+`--include-cron` (default skips automation-owned tasks — their titles
 come from the automation and the sweep's own runs must not be restamped)
-· `--group NAME` (also add pinned-window tasks to a named task group;
-a task can belong to only one group) · `--db PATH` (test against a copy).
+· `--group NAME` (also add pinned-window tasks to a named task group; the
+app's schema keys membership on `(workspace_key, task_id)`, so a task
+belongs to exactly one group and the sweep moves it if it was elsewhere)
+· `--db PATH` (test against a copy).
 
 ## Agent workflow (the "refresh")
 
@@ -55,7 +61,10 @@ a task can belong to only one group) · `--db PATH` (test against a copy).
 3. For each entry in the report's `needs_summary` (titles still raw prompt
    text), craft a ≤8-word present-tense description of what the task last
    did — read its `searchable_text` from the DB if needed — then apply with
-   `--set-title <task_id> "<description>"` (the stamp is auto-prepended).
+   `--set-title <task_id> "<description>"` (the stamp is taken from the
+   task's last-activity date). `needs_summary` is one-shot: a task the
+   sweep has stamped leaves the list on the next run even if it was never
+   summarized, so summarize promptly or check titles directly.
 4. Report one line: renamed / pinned / summarized counts.
 
 ## Recurring refresh (every 15 minutes)
