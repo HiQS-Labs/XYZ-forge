@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -130,5 +130,37 @@ swept file: yes
 **Basis:** Corrupting `.pbtxt` annotations when titles contain existing escaped quotes blocks safe execution.
 
 Handing off to Producer — go to the claude-a window and say 'take your turn'.
+
+### Producer · Round 2
+
+- **[Blocker] `update_annotation_file` regex fails on existing escaped quotes**: Implemented. Updated regex pattern to `r'title:\s*"(?:\\.|[^"\\])*"'` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:157`), which properly handles escaped quotes and backslashes within the quoted string without premature truncation. Tested against `title:"A \"quote\"" pinned:true` and verified full replacement.
+- **[Should] Uncaught SQLite exceptions in `sync_conversations` crash daemon**: Implemented. Wrapped all SQLite database operations in `try ... except sqlite3.Error` and `except Exception` blocks (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:198-275`), returning a structured error dictionary. Additionally wrapped `sync_conversations` invocation in `run_cycle` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:317-338`) to ensure transient database lock errors log a warning rather than killing the long-running daemon loop.
+- Swept and verified with unit assertions.
+
+Handing off to Reviewer for Round 3 review.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- **[Blocker]** `sync_conversations` leaks SQLite file descriptors on transient database errors, crashing the 15-minute daemon loop over time.
+  Observed input: `sqlite3.OperationalError` (e.g., database is locked) raised during `c.execute(...)`.
+  Affected scope: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:198-278` inside `sync_conversations`.
+  Falsifier: If `c.execute` throws an exception, execution jumps directly to the `except sqlite3.Error` block at line 273, skipping `conn.close()` at line 271. Over multiple 15-minute cycles, this exhausts file descriptors. Fix by wrapping the connection usage in a `try...finally:` block (e.g. `finally: if 'conn' in locals(): conn.close()`) or `with contextlib.closing(...)`.
+- **[Blocker]** `update_annotation_file` blindly replaces or searches for the literal string `pinned:true`, which corrupts the title if it contains that string.
+  Observed input: `content = 'title:"A pinned:true task"'` and `pin = True` (or `pin = False`).
+  Affected scope: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:165-168` inside `update_annotation_file`.
+  Falsifier: If the user's title includes `pinned:true`, `"pinned:true" in content` is True, so `pin = True` fails to append the flag to the `.pbtxt`. Conversely, `pin = False` calls `content.replace("pinned:true", "")`, corrupting the title to `title:"A  task"`. Fix by ignoring content inside quotes when checking or removing the flag, for example by temporarily stripping quoted strings (e.g., `if "pinned:true" not in re.sub(r'("(?:\\.|[^"\\])*")', '', content):`) and similarly using a regex for unquoted removal.
+
+**VERDICT:** FAIL
+**Basis:** File descriptor leaks will crash the background daemon, and brittle string replacement will corrupt titles in `.pbtxt` annotations.
+
+### Producer · Round 3
+
+- **[Blocker] `sync_conversations` leaks SQLite file descriptors on transient database errors**: Implemented. Wrapped connection lifecycle with `try ... finally: if conn: conn.close()` in `sync_conversations` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:198-281`) and in `args.list_pinned` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:314-328`). Even when errors or early returns occur, connections are deterministically closed, preventing file descriptor exhaustion across daemon iterations.
+- **[Blocker] `update_annotation_file` blindly replaces or searches for literal string `pinned:true`**: Implemented. Strips quoted string literals `r'"(?:\\.|[^"\\])*"'` before checking for unquoted `\bpinned:\s*true\b` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:165-167`), and uses a quotation-aware substitution callback `_remove_unquoted_pin` to remove `\bpinned:\s*true\b` only outside quoted spans (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:169-175`). Validated with test fixture `title:"A pinned:true task"` preserving title contents exactly.
+- Swept and verified with test executions.
+
+Handing off to Reviewer for Round 4 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
