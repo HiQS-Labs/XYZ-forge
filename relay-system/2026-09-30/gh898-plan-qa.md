@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -125,5 +125,33 @@ Plan revised in PROJECT/1-INBOX/GH-898-BOARD-SYNC-ACTIVE-REPOS.md. Dispositions:
 - Both [Unverified — no citation] items noted; ordering-only/outage refusal causes added to the apply-refusal note.
 
 Nothing rejected. Requesting round 2.
+
+### Reviewer · Round 2
+swept file: yes
+
+VERDICT: FAIL
+Basis: the minimal resolver approach is sound and the live SQLite read contract is repaired, but the documented restore recovery and red control still need precise corrections. These are small plan fixes, not requests for new infrastructure.
+
+Evidence scope: swept the entire revised plan and board_sync.py, the entire github_board connector, relevant device_config/HQ paths and rebalanceOS activity SQL/path resolver. No additional independently established pre-existing source defect found. Applied the SWE planning rubric. Verify-tier graph: XYZ-forge points at a different checkout, generation 2026-09-01T15:54:30Z; resolve_selection_policy search returned zero (has_more=false). Coverage: board_sync.py/github_board.py not_tracked, device_config.py/hq-lib.sh metadata_changed. Read exact local source as fallback; no completeness claim about the graph. Source-read commands exited 0. No git, suites, executable fixtures or live mutations ran. Implementation/recovery measurements remain [Unverified — needs clone run].
+
+- [Should] **F3 remains open — make the recovery reconstruct the actual saved policy.** Plan :46 says set repos to saved policy.repos and remove repos_source. With singular repo still configured, resolve_selection_policy rejects a widened repos list before restore (board_sync.py:125-128). Moreover the resolver returns the complete cfg (:162), and restore compares the whole dict (:1244-1246): deleting source cannot recover equality if the result saved source configuration/label, or if the absent-source key is now None. Requirement 5 (:39) does not specify whether the label is display-only or part of the saved policy. Cheapest fix: explicitly define that representation and give an equality-preserving recovery for it; remove/clear singular repo when pinning the full saved list, preserve all other saved policy fields and account for env overrides. Keeping source diagnostics outside policy identity can simplify recovery, provided absent-source byte compatibility is preserved. Do not edit the result artifact or bypass the board identity guard.
+  Observed input: the supported singular-repo config {"repo":"pinned/r"} (board_sync.py:125-128), followed by the documented recovery adding repos=["pinned/r","active/a"], satisfies the existing "policy repo and repos disagree" predicate. Plan :46 explicitly removes repos_source although :39 adds it to POLICY_DEFAULTS.
+  Affected scope: recovery of dynamic-policy results when singular repo is set, or source metadata participates in saved policy equality.
+  Falsifier: in the disposable clone, generate the saved policy through the actual resolver from a singular-repo + enabled-source config, then change active membership. The revised recovery must produce a dict exactly equal to result.policy before conditional restore readback; changing owner/number must still refuse. A hand-constructed result omitting source fields does not falsify this finding.
+
+- [Should] **F4 red control is still underspecified at the wrong boundary.** Plan :73 mutates _rebalance_active_repos to return [] on failure, but :36/:38 requires the resolver to retain pinned repos when activity contributes nothing. For the natural implementation pinned + helper_result, [] is exactly the fallback contribution; that mutation leaves the pinned-list assertion green. Cheapest fix: mutate the final resolved fallback list to [] (or remove the pinned contribution at the resolver merge), then run the same nonempty/equality assertion, require nonzero exit, restore from a copy and require zero exit. Keep the helper return contract explicit so the control cannot be a no-op.
+  Observed input: plan :63 helper takes only source; :36 specifies pinned repos followed by added activity repos; :73 changes only the helper's failure return to [].
+  Affected scope: the manual red control's ability to detect loss of pinned repos on source failure.
+  Falsifier: record the exact mutation and decisive output showing the existing fallback assertion changes from exit 0 to nonzero, then back to 0. If helper=[] truly erases the final pinned list in the chosen implementation, that output establishes the original control is adequate. This is [Unverified — needs clone run].
+
+- [Should] **F2 documentation is contradictory rather than fully dispositioned.** Plan :29 still says "card moves for those repos still need a per-repo ledger root"; :52 still excludes "moving cards for non-Forge repos". Both contradict :48's accepted GitHub-authoritative moves, grounded in board_sync.py:252-279/:309-329. Replace those two old statements with the narrower ledger-dependent Ready/start non-goal already written at :48. No runtime change requested.
+
+- [Pass] **F1 / failure contract / minimal mechanism.** Plan :37-38 explicitly specifies mode=ro, encoded path, 2 s timeout, close, sqlite3.Error/OSError fallback and separate schema-absent/zero-row warnings; :44 keeps one helper in board_sync.py with deterministic tie ordering and no parallel writer. This is an appropriate plan contract for the stated single-operator scope. Actual locked/live-WAL outcomes await clone evidence; timeout bounds lock waiting, not total query duration.
+
+- [Pass] **Consumer and mutation scope.** board_sync.py:204/:224/:986/:1256 consume policy repos for observations/planning/collection/restore allowlisting; _policy_board_cfg (:975-979) copies that list into writer cfg. Legacy cfg comes from resolve_settings (:1407) and github_board.apply_event uses its own cfg repos[0] (:96-99); github_board.run only compares policy board owner/number (:126-134). Plan :48 correctly accepts the widened GitHub-authoritative mutation scope and collection-failure exposure. No additional repo-list consumer missed in the swept source.
+
+- [Pass] **Apply drift and remaining proof matrix.** Plan :44 explicitly accepts re-preview for membership/order/outage drift; board_sync.py:1166-1168 refuses before mutation. Plan :67-72 requires absent-source compatibility, validation, pinned order/dedupe/cap, schema/empty fallback, labels and committed provenance; :66 places suites in a disposable full clone. F4's red-control fix and F3's actual-resolver recovery proof remain required before approval.
+
+Handoff: Producer (claude-a) should resolve F3/F4 and remove the two stale F2 statements, then open round 3. Harness owns the file-scoped commit; reviewer did not commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
