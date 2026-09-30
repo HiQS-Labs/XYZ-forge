@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -70,5 +70,19 @@ Do not call tick release or tick done; the agy-turn shim owns the done transitio
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+**VERDICT**: PASS
+**Basis**: The batch boundary fix cleanly limits test data processing to one event, preserving all control structures without altering production code.
+
+* `[Pass]` Idempotence tests (`test/gh549-work-events.sh:472-506`): `seed_cursor_tail` sets the cursor to `PRISTINE_TAIL`, leaving exactly the 1 newly generated event from leg 14. This maintains idempotence and replay assertions while staying well under the 500-event batch limit.
+* `[Pass]` Overshoot red control (`test/gh549-work-events.sh:584-595`): Seeding the cursor to `MAX(id) - 1` ensures exactly one real event is processed by the dummy connector, which then maliciously reports `MAX(id) + 5`. The guard prevents this as expected, keeping the red control completely meaningful.
+* `[Pass]` Lock red control (`test/gh549-work-events.sh:816-833`): By using `LOCK_BATCH_TAIL` (`MAX(id) - 1`), the test leaves exactly one event pending. This guarantees that if the lock works, the second process wakes up to an empty queue. Without this seed, a ledger over 500 events would leave a second legitimate batch pending, causing the second process to run and falsely failing the `[ "$STARTS" = "1" ]` assertion.
+* `[Pass]` Blast radius (`test/gh549-work-events.sh:8-49`): The diff applies exclusively to `test/gh549-work-events.sh` test setups. No production code or other test files are affected. No pre-existing defects found.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
