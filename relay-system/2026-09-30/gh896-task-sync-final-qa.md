@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -206,5 +206,141 @@ branches (PDDA hardcoded-paths now clean).
 
 handing off to Reviewer (commandcode) — take your turn: re-review against the r1 findings and set
 the verdict (line starts exactly `VERDICT: `).
+
+
+### Reviewer · Round 2 (commandcode)
+
+swept file: yes — the whole GH-896 surface at HEAD 07f162cc: `skills/3-weekly/task-sync/` end-to-end
+(SKILL.md, scripts/core.py, scripts/task_sync.py, scripts/adapters/{__init__,antigravity,zcode}.py),
+both committed batteries + provenance.jsonl under `TESTS-RESULTS/2026-09-30+GH-896/`, the plan doc
+incl. Status table and de-pathed port sources, the ARCHITECTURE.md:106 Skills Index row, the complete
+07f162cc diff (9 files), and the seeded artifact `.relay-artifacts/gh896-impl.diff` (unchanged since
+r1's end-to-end sweep — 230,369 bytes, sha1 a71e1f5d, mtime 09:30). All probes contained
+(`PYTHONDONTWRITEBYTECODE=1`; scratch under `.relay-scratch/`; synthetic fixtures plus read-only seed
+base `/tmp/ts-probes/zcode-copy.sqlite` and primary-checkout ORIG scripts; no live store touched; no
+validate.sh / test/*.sh / pytest run). Commands + rc + decisive output quoted inline. Pre-existing
+defects in the files this change sits on, beyond the graded findings below: none found.
+
+**r1 dispositions — each re-measured, none taken on trust:**
+
+- [Pass] r1 [Blocker] (committed battery contradicted its receipt) — RESOLVED. The committed
+  `TESTS-RESULTS/2026-09-30+GH-896/agy_battery.py` is the updated live-format version: fixture seeds
+  `2026-09-29 23:19:00.047628+00:00` / `2026-09-30 02:00:00.931256+00:00` (agy_battery.py:19), UNIFIED
+  derives repo-relatively (agy_battery.py:7 — from its committed location `parents[2]` is the repo root,
+  so the receipt's command runs from a fresh clone, self-built fixtures), and the red-control dead arm
+  is gone (agy_battery.py:107). My verbatim replica (only 3 path lines patched to `.relay-scratch`;
+  patch diff quoted in scratch): **rc=0, 24 PASS / 0 FAIL** — incl. A3 abort with byte-identical
+  annotations and untouched DB, the RED CONTROL against the ORIGINAL (pins stripped on the same fault),
+  the app-running gate, mirror pins, UTC→local per-row stamps, auto-pin with `.bak` + idempotency.
+  The receipt's `passed: 23` is an off-by-one undercount (Nit 2 below); the pass / 0-failed claim
+  itself is true.
+- [Pass] r1 [Should] (R5 staleness surfaced but never judged) — RESOLVED. `run_doctor` now parses the
+  receipt's `at` and reds past 2h (task_sync.py:79-86). Probe (receipt path monkeypatched to scratch,
+  healthy zcode fixture copy): forged `{"at": "2026-09-01T00:00:00"}` → red=1, exit-would-be=3,
+  `heartbeat receipt stale: last apply 2026-09-01T00:00:00 (705.7h ago) — heartbeat may be dead`;
+  fresh receipt → red=0; absent → state `absent`, red=0 (R5's pending state intact); garbage-`at` and
+  invalid JSON → clean `heartbeat receipt unreadable` red. 2h = 8× the 15-minute interval — a
+  reasonable "may be dead" threshold.
+- [Pass] r1 [Should] (A1-zcode + A5 governance arms unevidenced) — RESOLVED. Parity battery extended
+  to 12 checks incl. the three zcode doctor faults (zcode_parity.py:85, 100, 105); my replica (output
+  paths patched to scratch; seed base + ORIG read-only): **rc=0, 12/12** — rename sets identical vs
+  the ORIGINAL sweep_tasks.py on identically seeded copies, t2 restamped from its own `updated_at`
+  (09-30, not wall-clock), bare date untouched, cron-owned skipped, needs_summary, idempotent second
+  run, missing store → red named, dropped columns → red named, healthy copy → green/wal.
+  provenance.jsonl:5 records `releases check` (clean, 9 pre-existing warnings) and `pdda.sh run` (no
+  errors); :6 records the HQ `intake.py --dry-run add` preview as `result: blocked` on pre-existing
+  collection reconciliation (unacknowledged removed skill `marathon-triage`) — honestly recorded, not
+  mutated by a probe; :7 defers `bash validate.sh` to the final approved SHA (`PENDING-FINAL-SHA`),
+  matching the tiered-verification discipline the DoD runs under (harness gate runs after this turn).
+  Plan de-pathing verified by grep: no `/Users/` path remains in the plan doc or skill tree — only the
+  two battery ORIG lines (run-provenance, r1-sanctioned).
+- [Pass] r1 Nits (all six) — landed: docstring states the naive=local convention (core.py:36-46);
+  non-str guard verified (`utc_text_to_local_dt(123)` / `None` / `[]` → None; str-subclass parses);
+  SKILL.md:125 now points at `TESTS-RESULTS/2026-09-30+GH-896/`; `pinned_source` dry-run wording fixed
+  (antigravity.py:263); battery debris removed (diff vs the /tmp scratch version shows exactly 3
+  hunks: portability, red-control cleanup, falsifier rewording); UNIFIED portable (above). Two
+  residuals graded below (Nits 6-7).
+
+**Q1-Q5 (delta since r1):** Q1 — R1-R4/R6-R8 unchanged and re-witnessed via the batteries plus a
+fresh isolation probe: `task_sync.py --ide zcode,agy --zcode-db <scratch healthy copy> --agy-root
+<missing>` → one merged JSON report, zcode `error: null` (swept 5), agy section carrying its own
+`electron store not found … refusing to infer pin state`, rc=3; R5 now judged (above). Q2 — A1-A5
+arms committed and re-run green (above); receipt honest modulo Nits 2-3. Q3 — both r2 fixes
+re-verified on committed code: live format `2026-06-19 01:31:58.720731+00:00` → `2026-06-18
+18:31:58-07:00` (PDT) and `2026-09-30 02:00:00.931256+00:00` → `2026-09-29 19:00-07:00`; JSON-array
+store → clean AdapterError `is list, not an object`; empty/garbage/None-ish → None; one new edge
+found (Nit 7). Q4 — 07f162cc touches exactly 9 files, all inside the plan's smallest-affected surface
+plus this relay's own thread and the receipt; no debug code, no secrets. Q5 — no new `test/` suites,
+no validate.sh TESTS-registry changes, no gate machinery (diffstat enumerated).
+
+**New findings — all [Nit], none blocking:**
+
+1. [Nit] `run_doctor`'s new receipt parsing crashes uncaught (traceback, no JSON report) instead of a
+   named red on three malformed shapes — all unreachable via `write_receipt`'s own output (it always
+   writes a dict with a naive-ISO string `at`) and fail-safe in direction (crash precedes any write):
+   receipt `[]` → `AttributeError: 'list' object has no attribute 'get'` (task_sync.py:74);
+   `{"at": 123}` → `TypeError: fromisoformat: argument must be str` (task_sync.py:79); aware
+   `{"at": "2026-09-30T16:00:00+00:00"}` → `TypeError: can't subtract offset-naive and offset-aware
+   datetimes` (task_sync.py:79). The `except (OSError, ValueError)` at task_sync.py:84 misses all
+   three. Fix: widen to `(OSError, ValueError, TypeError, AttributeError)` + `isinstance(at, str)`,
+   mirroring the antigravity.py:114-149 ladder.
+   - Observed input: the three probe outputs above (receipt path monkeypatched to scratch, healthy zcode fixture).
+   - Affected scope: run_doctor's receipt branch only (task_sync.py:70-87).
+   - Falsifier: any of the three shapes being producible by `write_receipt` — it cannot (always a dict, `at` always a naive ISO string).
+2. [Nit] Battery count off-by-one: the committed agy battery executes 24 checks (replica: 24 PASS
+   lines, rc=0) but provenance.jsonl:2 records `passed: 23`, and the r1 disposition + commit message
+   say 23/23. The result claim (pass, 0 failed) is true; the count is stale — the /tmp scratch version
+   r1 ran also executes 24, so the undercount predates the commit. Fix when the receipt is regenerated
+   at the final SHA.
+3. [Nit] provenance.jsonl:1-6 cite `"commit": "ca74eaa6…"` — the pre-fix relay commit. The batteries
+   and staleness judgment those lines describe exist only as of 07f162cc (checkout ca74eaa6 and the
+   cited commands fail — the updated battery is not there). Line 7 already carries the
+   `PENDING-FINAL-SHA` convention; fold the commit-field correction into that final regeneration.
+4. [Nit] The parity battery's seed base `/tmp/ts-probes/zcode-copy.sqlite` (zcode_parity.py:36-37) is
+   a machine-local `.backup` copy — that one receipt command is not reproducible from a fresh clone
+   (the agy battery now is). Disclosed by the receipt's environment field ("probe stores are .backup
+   copies") and adjacent to the r1-sanctioned ORIG retention — but if portability is ever wanted,
+   synthesize the schema (`CREATE TABLE tasks …`); do NOT commit the live-store copy itself, it holds
+   real task data.
+5. [Nit] SKILL.md:71-72's doctor red enumeration ("missing store, schema drift, app running → Agy
+   writes gated") omits the new stale-receipt red; one phrase fixes it.
+6. [Nit] The replacement falsifier `"r2 Blocker falsifier: aware UTC input converts to a LOCAL-aware
+   datetime"` (agy_battery.py:137-138) still cannot fail: every return path of
+   `utc_text_to_local_dt` goes through `.astimezone()` (core.py:51, 66), which always yields an aware
+   datetime, so `tzinfo is not None and utcoffset() is not None` holds whenever the preceding
+   not-None check (agy_battery.py:136) passed — decorative (AGENTS §6). The r1 disposition called the
+   replacement "discriminating"; it is not. The suite's real teeth for the r2 fix are the
+   fixture-level stamp checks (`stamp from UTC last_modified -> LOCAL 09-29 (not 09-30, not 09-28)`
+   and `set-title stamps from row's own UTC last_modified (09-29)`), which do discriminate. A
+   discriminating form would assert the local offset, e.g.
+   `_d.utcoffset() == datetime.now().astimezone().utcoffset()`.
+7. [Nit] The corrected docstring's fallback sentence inverts for inputs that actually reach the
+   fallback: "The fallback chain also accepts offset-naive `%Y-%m-%d %H:%M:%S` text and — deliberately
+   … — treats NAIVE text as already local" (core.py:43-45), but the fallback marks naive as UTC
+   (`parsed.replace(tzinfo=timezone.utc)`, core.py:65). Witnessed on this Python 3.14.7 machine:
+   padded naive `"2026-09-30 02:00:00"` → `2026-09-30 02:00:00-07:00` (local, via fromisoformat),
+   while non-padded `"2026-9-30 02:00:00"` (fromisoformat rejects; strptime accepts) →
+   `2026-09-29 19:00:00-07:00` — UTC semantics. Same wall-clock text flips convention on zero-padding.
+   Unreachable with live-store data (ISO+offset). Fix: drop the two %z-less fallback formats
+   (fromisoformat already covers padded naive) or mark them local to match the stated convention.
+
+VERDICT: PASS
+
+Basis: every r1 finding is resolved and re-measured, not taken on trust: the committed battery is the
+live-format version and passes 24/24 against committed code (replica rc=0); doctor judges heartbeat
+receipt staleness (705.7h-stale → red/exit 3; fresh/absent non-red); parity is 12/12 incl. the three
+zcode doctor faults; the A5 governance arms are recorded (releases/pdda clean, HQ honestly blocked on
+pre-existing collection state, validate.sh deferred to the post-approval gate per tier discipline);
+all six r1 Nits landed. DoD met: R1-R8 re-witnessed, A1-A5 substantiated by committed re-runnable
+evidence, no scope creep (9-file diff inside the plan's surface), no new suites (GH-831), machinery
+commensurate with a local developer CLI. Seven new residual Nits — crash-instead-of-red on
+unreachable malformed receipts, a 24-vs-23 receipt undercount, a lagging commit field, one
+non-portable parity seed base, a SKILL.md red-enumeration gap, one still-decorative falsifier, and a
+docstring/fallback convention flip on non-padded naive text — are all unreachable-in-practice edges or
+receipt-precision items that undermine no DoD claim; fold them into the final-SHA receipt regeneration
+and any post-soak touch (plan-QA r2 precedent: Approved with folded text Nits).
+
+relay closed (Approved) — no further turn needed; post-gate path per the plan: `validate.sh` once on
+the final approved SHA → PR against `development`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
