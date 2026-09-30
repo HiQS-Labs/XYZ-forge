@@ -71,11 +71,13 @@ def ms_to_local_dt(ms: int) -> datetime:
     return datetime.fromtimestamp(ms / 1000)
 
 
-def clean_base(raw: str, *, slash_stamps: bool = False) -> str:
+def clean_base(raw: str, *, slash_stamps: bool = False,
+               max_length: int | None = MAX_BASE) -> str:
     """Strip any existing stamp and collapse whitespace so re-stamping
     never stacks prefixes; cap length so long prompt-derived titles stay
     scannable. A bare date is not a description.
 
+    max_length=None preserves the full descriptive text (Codex native titles).
     slash_stamps=True also strips the legacy mm/dd form (Antigravity)."""
     base = raw.strip()
     if slash_stamps:
@@ -85,8 +87,8 @@ def clean_base(raw: str, *, slash_stamps: bool = False) -> str:
     base = re.sub(r"\s+", " ", base).strip()
     if BARE_DATE_RE.fullmatch(base):
         return ""
-    if len(base) > MAX_BASE:
-        base = base[: MAX_BASE - 1].rstrip() + "…"
+    if max_length is not None and len(base) > max_length:
+        base = base[: max_length - 1].rstrip() + "…"
     return base
 
 

@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import math
 import os
 import sys
 from datetime import datetime, timedelta
@@ -32,7 +33,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import core  # noqa: E402
 
-ADAPTERS = ("zcode", "agy")
+ADAPTERS = ("zcode", "agy", "codex")
 
 SWEEP_KNOBS = ("hours", "all", "pin_hours", "no_pin", "unpin_days", "include_cron", "group")
 
@@ -40,6 +41,8 @@ SWEEP_KNOBS = ("hours", "all", "pin_hours", "no_pin", "unpin_days", "include_cro
 def _build_adapter(name: str, args, apply: bool):
     module_name = "antigravity" if name == "agy" else name
     module = importlib.import_module(f"adapters.{module_name}")
+    if name == "codex":
+        return module.CodexAdapter(args.codex_snapshot, args.exclude_thread, apply=apply)
     if name == "zcode":
         return module.ZcodeAdapter(db_path=args.zcode_db, apply=apply)
     if name == "agy":
@@ -68,7 +71,7 @@ def run_doctor(args) -> tuple[dict, int]:
     receipt = core.receipt_path()
     receipt_state = "absent"
     receipt_red = None
-    if os.path.exists(receipt):
+    if args.ide != ["codex"] and os.path.exists(receipt):
         try:
             with open(receipt, "r", encoding="utf-8") as f:
                 at = json.load(f).get("at", "unreadable")
@@ -102,6 +105,9 @@ def run_doctor(args) -> tuple[dict, int]:
         },
         "ides": ides,
     }
+    if args.ide == ["codex"]:
+        report["heartbeat"] = {"state": "native-tools-required",
+                               "note": "snapshot readiness only; verify native changes in the app"}
     if receipt_red:
         report["heartbeat"]["red"] = receipt_red
         red = 1
@@ -162,6 +168,10 @@ def main(argv=None) -> int:
     parser.add_argument("--agy-root", metavar="PATH", default=None,
                         help="override the Antigravity root dir; its electron store is "
                              "<root>/app_storage.json (probes use fixture roots)")
+    parser.add_argument("--codex-snapshot", metavar="PATH",
+                        help="fresh native Codex state + actual turn activity snapshot (planning only)")
+    parser.add_argument("--exclude-thread", metavar="ID",
+                        help="Codex heartbeat chat ID; required to avoid self-grooming")
     parser.add_argument("--hours", type=float, default=24.0,
                         help="sweep window in hours of last activity (default 24)")
     parser.add_argument("--all", action="store_true",
@@ -191,6 +201,16 @@ def main(argv=None) -> int:
         parser.error("--ide resolved to an empty list")
     if args.group and args.set_title:
         parser.error("--group applies to sweeps only; not valid with --set-title")
+
+    if "codex" in args.ide:
+        if args.apply or args.set_title or args.unpin_days is not None or args.group:
+            parser.error("Codex plans only: apply titles/pins via native tools; "
+                         "--apply/--set-title/--unpin-days/--group unsupported")
+        if not args.codex_snapshot or not args.exclude_thread:
+            parser.error("Codex requires --codex-snapshot and --exclude-thread")
+        if any(not math.isfinite(v) or v <= 0
+               for v in (args.hours, args.pin_hours)):
+            parser.error("Codex hours/pin-hours must be positive finite numbers")
 
     if args.doctor:
         report, red = run_doctor(args)
