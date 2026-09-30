@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -376,5 +376,118 @@ Because code changed after your r2 approval, this round requests fresh attestati
 
 handing off to Reviewer (commandcode) — take your turn: adjudicate the GH-777 disposition (marker vs
 alternatives) and re-attest the implementation on the new commit.
+
+
+### Reviewer · Round 3 (commandcode)
+
+swept file: yes — the whole r3 surface: the complete 6f82a1f3 diff (all 4 files; both adapter hunks
+read verbatim — connect calls byte-identical modulo the trailing comment), the full delta
+`git diff --stat 07f162cc 6f82a1f3` (exactly 4 files; code-wise only the two comment-only lines),
+the GH-777 checker end-to-end (utils/pdda/check_inventory_ratchet.py, 171 lines) plus baseline
+presence and its suite's cases (test/gh777-inventory-ratchet.sh — read, not run),
+`releases_app.connect` (releases_app.py:431-443), both committed batteries re-read in full and
+re-run verbatim, the adapters' default-path lines, and the re-seeded artifact
+`.relay-artifacts/gh896-impl.diff` (re-seeded post-6f82a1f3: 245,354 bytes, sha1 5f4491df, mtime
+10:11 — its adapter post-image blobs match HEAD exactly: antigravity `index 00000000..19111d06`,
+zcode `index 00000000..b7c3a303` = `git ls-files -s` HEAD blobs). All probes contained
+(`PYTHONDONTWRITEBYTECODE=1`; scratch under `.relay-scratch/`; battery fixtures in their own
+`/tmp/ts-probes/` area outside the tree; no live store touched; no validate.sh / test/*.sh run —
+the ratchet was measured via its own read-only `--check` entry point, not the suite). Commands +
+rc + decisive output quoted inline. Pre-existing defects in the files this change sits on, beyond
+the graded findings: one, recorded below (the GH-777 suite has no marker-positive case); otherwise
+none new found.
+
+**Adjudication of the GH-777 disposition (the round-3 question):**
+
+- [Pass] The failure was real and the diagnosis correct. The checker scans the whole tree for
+  direct connects, pruning test/TESTS-RESULTS/relay-system (check_inventory_ratchet.py:26-39,
+  72-73 — which is why the batteries' own five unmarked `sqlite3.connect` lines never counted),
+  exempting only releases_app.py (CANONICAL_GATEWAYS, :45-47), and refuses any NEW connect file
+  (:152-156). The two adapters are new files with direct connects — without action the ratchet is
+  red. Measured on this exact tree at HEAD 6f82a1f3:
+  `python3 utils/pdda/check_inventory_ratchet.py --check` →
+  `inventory_ratchet: clean (matches baseline, 0 new scripts/connects)` RC=0 — the Producer's
+  claim verified by direct read-only measurement, not taken on trust.
+- [Pass] The marker is the checker's OWN pre-existing mechanism, not new machinery: the skip is
+  check_inventory_ratchet.py:79-80 and `git log -S SQLITE-BYPASS-OK` names 147987dc — the original
+  GH-777 adoption commit. 6f82a1f3 touches exactly 4 files (plan GATE row, this thread, two
+  adapter comment lines); the checker, the baseline JSON, and the suite are untouched — GH-831
+  intact, no gate modified, no baseline hand-edit. Red control on the mechanism via the checker's
+  own scan function against a scratch root (one marked + one unmarked file):
+  `scan hits: ['sub/unmarked.py:2']` → `MARKER RED CONTROL OK: marked line skipped, unmarked
+  flagged` RC=0. The check can fail; it is not decorative.
+- [Pass] The alternatives were correctly ruled out, and the decisive reason is now measured, not
+  asserted. (a) `releases_app.connect` (releases_app.py:431-443) opens with `isolation_level=None`
+  — probe on this machine: a mid-write failure inside `with conn:` leaves the write COMMITTED
+  under `isolation_level=None` (1 row) vs rolled back under default isolation (0 rows) — i.e.
+  routing the adapters through the gateway would silently break the `with conn:` atomicity the
+  QA'd safety contract relies on (zcode.py:170, 221, 303; antigravity.py:253); it further asserts
+  `PRAGMA foreign_keys = ON` and `refuse()`s with releases-ledger error surfaces
+  ("run `releases init` first") on an external app store it does not own. (b) `--update-baseline`
+  refuses growth by design (check_inventory_ratchet.py:128-134, verified in code), so baseline
+  registration was unavailable and hand-editing the baseline would be growth-through-the-back-door.
+  The inline marker with a stated reason is the only sanctioned mechanism — the checker's designed
+  escape hatch. Reason strings accurate: zcode default `~/.zcode/v2/tasks-index.sqlite`
+  (zcode.py:22), agy root `~/.gemini/antigravity` (antigravity.py:39).
+- [Nit] One precision defect in the recorded rationale (commit message + the plan's GATE row):
+  "Row factory + autocommit would break … (`with conn:` short transactions; tuple-row reads)" —
+  the Row-factory half is overstated: sqlite3.Row supports integer indexing (probe:
+  `Row factory integer-index access: 1 2`; the adapters only ever index rows — zcode.py:69, 102,
+  106, 219; antigravity.py:107, 184, 280), so Row would NOT break the reads. The decisive reasons
+  are autocommit + ledger ownership. The GATE row also cites "check_inventory_ratchet.py:73-74" for
+  the skip — the actual lines are 79-80 (73-74 are the PRUNED_DIRS/CANONICAL_GATEWAYS checks).
+  Fix both clauses in the GATE row when the plan is next touched; a future maintainer reading the
+  rationale as-is could "fix" the wrong half.
+  - Observed input: probe outputs above (Row index access `1 2`; autocommit 1-row vs 0-row; checker
+    lines 79-80 vs 73-74).
+  - Affected scope: the rationale text in the GATE row of
+    PROJECT/2-WORKING/GH-896-UNIFIED-TASK-SYNC.md (the commit message is immutable, noted for the
+    record).
+  - Falsifier: if sqlite3.Row index access raised on the adapters' access patterns, or the skip
+    really sat at :73-74, the rationale would be accurate as written — the probes show it is not.
+- [Nit] The GH-777 suite never tests the marker path this approval now relies on:
+  test/gh777-inventory-ratchet.sh covers only the negatives (rogue script :20, rogue unmarked
+  connect :38); no case asserts a marked line is skipped. Pre-existing gap since 147987dc,
+  fail-safe in direction (a typo'd marker gets flagged loudly, not hidden), and my scratch-root
+  red control above covers this round's attestation need. Per GH-831 do NOT add a test; recorded
+  so the next GH-777 touch knows the path is suite-untested.
+
+**Re-attestation on the new commit (6f82a1f3):**
+
+- [Pass] The code delta since the r2-approved head is exactly two comment-only lines — both connect
+  calls byte-identical modulo the trailing `# SQLITE-BYPASS-OK: …` comment (zcode.py:62,
+  antigravity.py:101). R1-R8 semantics unchanged by construction — and re-measured anyway, not
+  assumed: both committed batteries re-run verbatim (the receipt's own commands, from this tree):
+  agy battery **24 PASS / 0 FAIL, RC=0** (per-row UTC→local stamps, mirror pins, A3 abort with
+  byte-identical annotations + untouched DB, RED CONTROL vs the ORIGINAL still strips pins on the
+  same fault, app-running gate, doctor faults, r2 falsifiers); zcode parity **12/12, RC=0** (rename
+  sets identical vs the ORIGINAL sweep_tasks.py on identically seeded copies, per-row stamps,
+  bare-date untouched, cron-owned skipped, idempotency, the three A1 doctor faults). The
+  comment-only change provably broke nothing.
+- [Pass] Scope & hygiene: no stray files, no debug code, no secrets; the plan's GATE row honestly
+  documents the gate finding and disposition. GH-831: no new test/ suites, no TESTS-registry
+  changes, no gate machinery (diffstat enumerated above).
+- The seven r2 residual Nits (run_doctor crash shapes, 24-vs-23 receipt count, stale `commit:`
+  field, non-portable parity seed base, SKILL.md red-enumeration gap, decorative falsifier,
+  docstring/fallback flip) remain open and untouched by 6f82a1f3 — still deferred per the r2
+  basis; the final-SHA receipt regeneration must now target the post-r3 head.
+
+VERDICT: PASS
+
+Basis: The GH-777 disposition is adjudicated sound on every axis I could measure: the marker is the
+checker's own pre-existing sanctioned mechanism (147987dc), red-controlled via the checker's own
+scan function; the ratchet is clean on this exact tree (my read-only `--check` run, RC=0); the
+gateway alternative is measurably worse (autocommit breaks `with conn:` atomicity — probed 1-row
+vs 0-row — plus FK assertion and wrong ownership/error surfaces); baseline growth is refused by
+design; and the change since the r2 approval is two comment-only lines, with both batteries
+re-run green verbatim (24/24, 12/12, RC=0) and the re-seeded artifact blob-verified against HEAD.  [Unverified — no citation]
+DoD stands on the new commit: R1-R8 unchanged and re-witnessed, A1-A5 evidence arms re-run green,
+no scope creep, GH-831 intact. Two new Nits (one overstated rationale clause + miscited checker
+lines in the GATE row; one pre-existing suite-untested marker path — recorded, no new test per
+GH-831) and the seven deferred r2 Nits undermine no DoD claim; fold the GATE-row text fixes and
+the final-SHA receipt regeneration into the post-approval pass.
+
+relay closed (Approved) — no further turn needed; post-gate path per the plan: `validate.sh` once on
+the final approved SHA → PR against `development`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
