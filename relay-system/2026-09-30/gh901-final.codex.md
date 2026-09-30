@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -106,10 +106,24 @@ approval use the absolute env-pinned tick `done gh901-final --agent codex
 The shim owns the commit; never run git. Current development was merged with no
 source changes to task-sync; canonical ledger resolver retained both branches'
 rows and check is clean. Native smoke succeeded: 5 renamed, 6 newly pinned, all
-readbacks verified, aggregate provenance committed. ARCHITECTURE now names Codex.
+readbacks verified, aggregate provenance committed. ARCHITECTURE now names Codex.  [Unverified — no citation]
 Existing legacy ZCode automation found active. Native installer will pause it
 through app UI before enabling one replacement heartbeat that invokes the
 existing ZCode adapter and native Codex procedure; no new Antigravity enablement.
 Gate remains for the separate disposable full clone. No further code changes.
+
+### Reviewer · Round 2
+swept file: yes
+
+VERDICT: PASS
+Basis: Read the complete embedded artifact, GH-901 working document, task-sync skill, core.py, task_sync.py, codex.py, and all three GH-901 evidence files. No blocking correctness defect or additional pre-existing defect found in the reviewed extension surfaces within the stated local desktop envelope. Approval is review completion; the disposable-clone gate and scheduler consolidation remain separate delivery obligations.
+
+- [Pass] Core reuse and read-only boundary: skills/3-weekly/task-sync/scripts/core.py:74 keeps the default cap with optional max_length; adapters/codex.py:103 disables truncation for native titles. task_sync.py preflight states “Codex plans only: apply titles/pins via native tools”; it runs before dispatch. Historical identity of old adapters against PR #900 is not attested because git is prohibited.
+- [Pass] Validation, actual activity and preservation: skills/3-weekly/task-sync/scripts/adapters/codex.py:30 rejects stale captures; :39 rejects empty inventory; :66 rejects pin/sidebar disagreement; :90 excludes heartbeat, other hosts/kinds and custom sections; :96 refuses missing/invalid activity; :104 stamps actual turn seconds. Independent narrow probe command: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - (inline Python importing core/CodexAdapter, synthetic TemporaryDirectory JSON only). Input x: local Codex chats row, updatedAt=now, activity=now-60, title='Investigate '+'word '*40. Controls: activity={}, captured_at=now-301, threads=[], section='pinned' with no pinned inventory, activity=now-90000; stable replan uses proposed title and pin. Exit 0. Decisive output: “positive: rename=1 pin=1 full wording retained”; “missing activity: refused: Codex actual turn activity missing/invalid for x”; “stale: refused: Codex snapshot stale or invalid (freshness limit 300s)”; “empty: refused: Codex empty inventory refused”; “pin mismatch: refused: Codex pinned inventory disagrees with sidebar sections”; “metadata recent / actual old: swept=0”; “stable replan: rename=0 pin=0”.
+- [Pass] Native procedure requires refreshed observed identity/title/section/activity, exclusion, recent-window checks, readback, and title-then-pin sequencing. Exact skill spans: “If both apply, the pin precheck expects the newly verified title instead of the original”; “On tool failure stop; read native state before retrying”; “Native tools have no compare-and-swap”. This explicitly retains the residual concurrent manual-edit race rather than claiming atomicity. Single-scheduler migration requires “retire/disable the previous job before enabling the replacement”.
+- [Pass] Recorded manual evidence is meaningful: TESTS-RESULTS/2026-09-30+GH-901/manual_probe.py includes invalid/stale/empty/activity controls and the deleted-rename red assertion; manual-probe.json reports “passed”: 28. The same independent inline probe computed SHA256 efdaeaba837800f0cbb8423ec1ef6b0ef0af47f362431622a611206e852ea2df (exit 0), matching provenance.jsonl. The native smoke provenance reports 5 renames, 6 pins and 6 readbacks; this is coordinator-recorded aggregate evidence, not an independently rerun native smoke.
+- [Unverified — needs clone run] Full gate not run here; no validate.sh, test/*.sh, pytest or executable fixture was invoked. Native deployment/consolidation not performed by this reviewer. Graph project XYZ-forge generation 2026-09-01T15:54:30Z returned zero task-sync symbols and missing freshness for all four queried code/evidence paths; complete exact seeded-source reads supplied fallback evidence. No graph completeness claim.
+
+Relay closed (Approved), no further review turn needed. Producer owns the separate disposable-clone gate and delivery; closing the token with done, without release.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
