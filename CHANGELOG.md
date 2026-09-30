@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-09-30 — GH-549 fixture replay bounded to its own event (#854)
+
+Landing 2's first frozen-tip `ci-local.sh` exposed three false reds in the existing GH-549 work-event suite after the staging ledger crossed the connector's 500-event batch limit. The suite now seeds its fixture cursors at the event under test, so idempotence, overshoot, and lock assertions do not mistake a second valid batch for a defect. The unchanged production connector keeps its 500-event limit. Focused evidence: 122/3 red before and 125/0 green after. A clean-environment `ci-local.sh` rerun at `2dba66a2` passed all nine stages, with 412 suite passes and one intentional skip recorded in `TESTS-RESULTS/2026-09-30+GH-854/`.
+
+## 2026-09-28 — CI audit method corrected and GH-139 quiet-grep inventory widened (GH-879, GH-853)
+
+The `ci-suite-audit` skill now requires source-derived evidence for KEEP and removal verdicts, four separately reported failure/attribution sources, an independent registry count, and runtime computed from compatible receipts. Historical same-SHA flakes without a current red remain INVESTIGATE under #854's newer handoff. The full audit remains scheduled for October 8, after Landing 2.
+
+The existing GH-139 ratchet now recognizes `|grep`, combined quiet flags, and `--quiet`. On staging it found 81 pre-existing lines in 27 files, including 65 code lines, versus 11 in 5 files under the literal matcher. The regenerated per-file baseline records those sites; #853 retains the work of converting remaining unsafe pipelines. Five quiet-flag variants made the existing guard fail in a disposable full clone, while an `|| grep` control stayed green. Evidence: `TESTS-RESULTS/2026-09-28+GH-879/`.
+
 ## 2026-09-28 — Skills Army fleet repair: 10days, codebase-memory and start-marathon reach every app; publisher role goes device-agnostic (GH-881)
 
 `/10days` had never been added to the Skills Army collection, so no app on this device could see it. The
