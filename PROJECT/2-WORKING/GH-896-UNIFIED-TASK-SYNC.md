@@ -30,30 +30,38 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **INTAKE 2026-09-30** — issue #896 filed; capture parked in the RELEASES ledger (`rmi-01M3SBWHWGSWAFVKTW7ZAE1MMX`) and rated `65/35/70/50` (calc 220); disposable task clone on `feat/gh-896-unified-task-sync` off `origin/development` (`c24a2bc3`) with per-clone hooks installed; prior-art recon clean (only #893/#894 on this seam). | Plan QA via GLM 5.3 Max relay → adjudicate to Approved → roadmap `--accepted-start` admission → Phase 1 build. |
+| **PLAN-QA r1 2026-09-30** — relay `gh896-task-sync-plan-qa` reviewed the plan; FAIL on one executability Blocker (port sources absent from the base tree) + three Shoulds (Agy pin derive-vs-mirror unspecified, A3 red control, probe store-targeting) and seven Nits — all addressed as plan amendments (R1 pin models, R4 store-path overrides + JSON contract, R5 receipt-absent state, Dependencies/rollback rewrites, A3 red control, counts corrected). Round-1 probe evidence: the destructive cleanup edge witnessed live on synthetic stores. | Round 2 of relay `gh896-task-sync-plan-qa` → Approved → roadmap `--accepted-start` admission → Phase 1 build. |
 
 ## Observed problem
 
-1. **Duplicated semantics, divergent behavior.** Two same-goal scripts (404 + 311 lines)
-   share stamp-prefix logic, idempotent retitle, pin policy, dry-run/apply split, and
-   report shape, but disagree on stamp semantics (Agy: rolling *today* reapplied to every
-   synced task; ZCode: the task's own last-activity date) and safety posture.
+1. **Duplicated semantics, divergent behavior.** Two same-goal scripts (404 + 338 lines)
+   share stamp-prefix logic, idempotent retitle, dry-run/apply split, and report shape,
+   but disagree on stamp semantics (Agy: rolling *today* reapplied to every synced task;
+   ZCode: the task's own last-activity date), pin model (ZCode derives pins from an
+   activity window and writes them; Agy mirrors the app's own
+   `pinned_conversations_order` as ground truth), and safety posture.
 2. **One destructive edge in agy-task-sync.** `load_pinned_ids()` returns `[]` on any
    `app_storage.json` read failure, and the empty-pinned early return
    (`agy_task_sync.py:246-248`) still runs `cleanup_stale_pinned_annotations([], apply)` —
    under `--apply` that strips `pinned:true` from **every** annotation file. Untriggered on
    current data, catastrophic if `app_storage.json` is ever locked/absent during a run.
+   Witnessed by the plan-QA relay probe on synthetic stores (malformed read + apply →
+   both annotations stripped; valid-read control discriminated correctly).
 3. **App-owned Electron state written blind.** `save_pinned_ids()` rewrites the whole
    `app_storage.json` (reformatted, `indent=2`) with no app-running gate, no backup, no
    atomic rename — last-writer-wins against a running Antigravity.
 4. **Scheduler sprawl.** Agy ships three scheduling options (in-session `/schedule`,
-   built-in daemon, launchd) beside task-stamp's ZCode cron — five ways to double-run the
-   same writes.
+   built-in daemon, launchd) beside task-stamp's one ZCode cron automation — four ways
+   to double-run the same writes.
 
 ## Requirements (per issue #896)
 
-- R1 One core owning stamp logic, report schema, windows/pin policy, and the safety
-  contract; adapters own only store I/O.
+- R1 One core owning stamp logic, report schema, windowing, and the safety contract;
+  adapters own only store I/O. **Pin policy is adapter-declared**: ZCode derives pins
+  from the activity window and writes them; the Antigravity adapter is
+  **mirror-app-owned** — `pinned_conversations_order` is ground truth, mirrored to
+  annotations only, with `--auto-pin` as an explicit opt-in (no derived pin writes, so
+  the dangerous `app_storage.json` surface stays out of the sweep path).
 - R2 Stamp = **last-activity date** everywhere (ZCode `updated_at` ms-epoch local;
   Agy `last_modified_time` UTC-text → local date). Agy's rolling-today is replaced.
 - R3 Safety contract, core-enforced: schema-validate before write with clear abort;
@@ -62,10 +70,16 @@ goal: >
   Antigravity writes gated on the app not running; `app_storage.json` backed up and
   replaced atomically.
 - R4 CLI: `task_sync.py --ide zcode,agy [--apply] [--set-title ID DESC] [--doctor]`
-  with a merged JSON report; per-IDE isolation (one IDE's store failure never blocks
-  or corrupts the other).
+  with a merged JSON report (JSON is the default and only stdout contract — the
+  heartbeat and installer consume it; per-IDE sections keep `needs_summary`
+  machine-addressable); per-IDE isolation (one IDE's store failure never blocks or
+  corrupts the other). Store-path overrides for probes: `--zcode-db PATH` and
+  `--agy-root PATH` (constructor-injected into the adapters), so no probe can touch a
+  live store.
 - R5 `--doctor`: per-IDE store reachability, schema check, app-running detection,
-  heartbeat receipt staleness; exits nonzero on any red.
+  heartbeat receipt staleness; exits nonzero on any red. **Receipt-absent is a distinct
+  non-red state** (`heartbeat: pending — no receipt yet`) so doctor is green before the
+  installer ever repoints a heartbeat.
 - R6 Canonical home `skills/3-weekly/task-sync/` (SKILL.md + scripts/), Skills Army
   HQ-deployable; SKILL.md carries the install SOP (HQ intake → sync targets →
   heartbeat → doctor) and ARCHITECTURE.md Skills Index gains the 3-weekly row.
@@ -82,8 +96,13 @@ goal: >
   `scripts/adapters/{__init__,zcode,antigravity}.py`).
 - Modified: `ARCHITECTURE.md` (one Skills Index row), the RELEASES ledger rows for this
   issue, `TESTS-RESULTS/` receipt.
-- Untouched: `utils/zcode/task-stamp/`, `utils/skills/agy-task-sync/` (superseded after
-  soak in a follow-up), both IDE apps, all existing gates/test suites.
+- Absent from base, not modified by this PR: the port sources do not exist on
+  `origin/development` @ `c24a2bc3` (verified by `git ls-tree` during plan QA). They live
+  on their holding branches — task-stamp at PR #893 head `feat/zcode-task-stamp` (also
+  tracked on the primary checkout's `feat/gh-889-weekly-daily-planner-skills`),
+  agy-task-sync at PR #894 head `feat/gh-892-agy-task-sync` (plus untracked working-tree
+  copies in the primary checkout). Both are superseded after soak in a follow-up; this PR
+  neither merges nor edits them.
 
 ## Existing subsystems extended (no parallel systems)
 
@@ -107,28 +126,42 @@ goal: >
 
 ## Dependencies & sequencing
 
-- None on #893/#894 landing: both adapters port logic into new files; those PRs are held
-  and superseded (operator decision). Their review findings are reused as evidence.
-- Base: `origin/development` @ `c24a2bc3`. Plan QA (GLM 5.3 Max) gates execution start
+- **Port sources (executability):** a fresh session in the task clone will not find the
+  two source implementations in the base tree. Port from these read-only locations —
+  - ZCode: primary checkout `/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/zcode/task-stamp/`
+    (branch `feat/gh-889-weekly-daily-planner-skills`; PR #893 head `feat/zcode-task-stamp`)
+  - Antigravity: primary checkout `/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/skills/agy-task-sync/`
+    (PR #894 head `feat/gh-892-agy-task-sync`)
+  Copies of both travel with this relay thread's Setup block; the port is
+  behavior-verbatim, so the branch copies are reference evidence, not build inputs.
+- No landing dependency on #893/#894: both adapters port logic into new files; those PRs
+  are held and superseded (operator decision). Their review findings are reused as evidence.
+- Base: `origin/development` @ `c24a2bc3`. Plan QA (relay `gh896-task-sync-plan-qa`,
+  model per operator choice) gates execution start
   (`roadmap update --gid rmi-01M3SBWHWGSWAFVKTW7ZAE1MMX --accepted-start` after approval).
 
 ## Risks & rollback
 
 | Risk | Mitigation | Rollback |
 |---|---|---|
-| Antigravity store format drift | Adapter schema/pattern checks abort with clear message; doctor surfaces red | Revert PR; originals untouched and still deployable |
+| Antigravity store format drift | Adapter schema/pattern checks abort with clear message; doctor surfaces red | Revert PR; originals remain intact on their holding branches (#893/#894 heads) and primary-checkout copies, still deployable |
 | App clobbers externally-written state | Known, documented (ZCode proved it); sweep re-applies next tick; app-running gate blocks Agy writes while app is open | Stop heartbeat; state self-heals on next app write |
 | `app_storage.json` corruption on write | Backup per write + temp-file atomic rename; write only after successful read | Restore `.bak-<ts>` written immediately before |
 | Heartbeat double-run with old scripts during transition | Installer SOP repoints the single automation; old scripts have no other scheduler (daemon/launchd never deployed) | Revert cron prompt |
 
 ## Bounded verification (and explicit non-scope)
 
-- **In scope:** python functional probes on `.backup` DB copies for both adapters (stamp
-  from last-activity incl. UTC→local correctness, idempotent second run, no-write-on-
-  no-change, `needs_summary` on ZCode, pin policy, per-row set-title); doctor fault
-  injection (missing store, dropped column, unreadable `app_storage.json` with non-empty
-  annotations must NOT strip pins, app running + `--apply` must refuse Agy writes);
-  `./validate.sh` once on the final commit; TESTS-RESULTS receipt with `provenance.jsonl`.
+- **In scope:** python functional probes on `.backup` DB copies for both adapters —
+  targeted via the R4 store-path overrides (`--zcode-db`, `--agy-root`), never live
+  stores (stamp from last-activity incl. UTC→local correctness, idempotent second run,
+  no-write-on-no-change, `needs_summary` on ZCode, pin policy per R1's adapter-declared
+  models, per-row set-title); doctor fault injection (missing store, dropped column,
+  unreadable `app_storage.json` with non-empty annotations must NOT strip pins, app
+  running + `--apply` must refuse Agy writes); **A3 red control**: the same malformed-
+  read fault run against the ORIGINAL `agy_task_sync.py` on a copy, witnessing the pin
+  strip the fix guards (already witnessed by the plan-QA relay probe; cited in the
+  TESTS-RESULTS record); `./validate.sh` once on the final commit; TESTS-RESULTS
+  receipt with `provenance.jsonl`.
 - **Non-scope:** no synthetic fuzzers, no new registries, no CI wiring, no multi-device
   matrix; Skills Army HQ deployment is previewed (`intake.py add` preview + `sync.py`
   preview); actual device apply is the operator running the installer skill.
@@ -144,17 +177,22 @@ goal: >
       per-row stamps). *Verify:* probe battery on DB copies — dry-run/apply/idempotency/
       no-change-no-write; diff against `sweep_tasks.py` outputs on the same copy.
    c. `scripts/task_sync.py`: CLI (`--ide`, `--apply`, `--set-title`, `--doctor`,
-      `--json`), per-IDE isolation, merged report, heartbeat receipt write.
+      `--zcode-db`, `--agy-root`), per-IDE isolation, merged JSON report, heartbeat
+      receipt write.
       *Verify:* doctor green on live stores read-only; fault injection red cases exit
       nonzero with clear messages.
 2. **Phase 2 — Antigravity adapter + docs + deployment SOP.**
    a. `scripts/adapters/antigravity.py`: port summaries-DB + pbtxt + transcript-preview
-      logic; last-activity stamps (UTC→local); app-running write gate; atomic backed-up
-      `app_storage.json` write; cleanup only after verified authoritative read.
+      logic; last-activity stamps (UTC→local); **mirror-app-owned pins**
+      (`pinned_conversations_order` ground truth, mirrored to annotations only;
+      `--auto-pin` opt-in); app-running write gate; atomic backed-up `app_storage.json`
+      write; cleanup only after verified authoritative read.
       *Verify:* probe battery on copies of all three stores (synthetic + real copies
       with app closed); destructive-cleanup fault injection proves the GH-896 fix.
    b. `SKILL.md`: operations, doctor, install SOP (HQ intake → targets → heartbeat →
-      doctor), caveats (app-overwrites-active-titles, UI refresh, Agy write gating).
+      doctor), caveats (app-overwrites-active-titles, UI refresh, Agy write gating);
+      self-path references point at `skills/3-weekly/task-sync/` (the superseded
+      original's `skills/2-daily/...` self-path is stale — do not inherit).
       *Verify:* every documented command runs as documented on this machine.
    c. `ARCHITECTURE.md` Skills Index row (3-weekly); ledger `roadmap update` raw-text
       refresh; TESTS-RESULTS receipt. *Verify:* `releases check` clean;
@@ -168,8 +206,9 @@ goal: >
 - A1 `task_sync.py --doctor` exits 0 on this machine with all stores present; exits
   nonzero with a named red on each injected fault (missing store / dropped column /
   unreadable app_storage / app running).
-- A2 On identical DB copies, unified adapters reproduce the QA'd scripts' verified
-  behavior: second run reports zero writes; stamps derive from each row's own
+- A2 On identical DB copies, unified adapters reproduce the QA'd scripts' storage
+  behavior (idempotency, no-write-on-no-change, bare-date handling) under R2's unified
+  stamp semantics: second run reports zero writes; stamps derive from each row's own
   last-activity time (UTC conversion covered for Agy); a raw `09-29`-only title is
   not restacked.
 - A3 The GH-896 destructive edge is closed: unreadable `app_storage.json` + `--apply`

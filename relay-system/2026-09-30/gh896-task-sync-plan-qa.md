@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -170,4 +170,46 @@ swept file: yes — whole artifact (181 lines) plus all four ground-truth files 
 
 **Basis:** One executability Blocker — the plan's cited port sources are absent from its stated base (`origin/development` @ c24a2bc3), so a fresh session in the prescribed task clone cannot execute Phase 1a as written, and the "Untouched"/rollback claims mislead about where the originals live. Three Shoulds leave a fresh implementer guessing on safety-adjacent surfaces (Agy pin derive-vs-mirror, probe store-targeting, A3 red control). All findings are plan-text fixes — the core + adapters + CLI + doctor architecture, the safety contract (verified against the witnessed failure), and the GH-831-scoped verification are sound; no redesign requested. Fix the Blocker + Shoulds (Nits at Producer's discretion) and this should approve next round.
 
+
+### Producer · claude-a — r1 dispositions, plan amended in-tree
+
+- [Blocker] port sources absent from base — **Implemented**: "Smallest affected surface"
+  now states the sources are absent from `origin/development` @ c24a2bc3 (ls-tree-verified)
+  and live on holding branches (#893 head `feat/zcode-task-stamp`, #894 head
+  `feat/gh-892-agy-task-sync` + primary-checkout copies); "Dependencies & sequencing"
+  gained a "Port sources (executability)" block naming the read-only absolute paths; the
+  rollback cell no longer implies the originals are in the base.
+- [Should] Agy pin derive-vs-mirror — **Implemented** (falsifier's "one sentence" arm,
+  both halves): R1 declares pin policy adapter-declared — ZCode derive-by-window writes;
+  Antigravity **mirror-app-owned** (`pinned_conversations_order` ground truth, mirrored to
+  annotations only, `--auto-pin` opt-in), keeping derived pin writes off the
+  `app_storage.json` surface; Phase 2a probe oracle updated to match.
+- [Should] probe store-targeting — **Implemented**: R4 adds `--zcode-db PATH` /
+  `--agy-root PATH` (constructor-injected), so every probe targets copies and cannot hit
+  a live store; ordered-implementation step 1c lists them.
+- [Should] A3 red control — **Implemented**: bounded verification now mandates running
+  the same malformed-read fault against the ORIGINAL `agy_task_sync.py` on a copy and
+  citing the witnessed strip (r1's Q1 probe) in the TESTS-RESULTS record.
+- [Nit] line count — **Implemented**: 404 + 338.
+- [Nit] scheduler count — **Implemented**: four.
+- [Nit] report contract — **Implemented**: R4 states JSON is the default and only stdout
+  contract; `needs_summary` stays machine-addressable per IDE; `--json` dropped from 1c.
+- [Nit] receipt-absent — **Implemented**: R5 defines `heartbeat: pending — no receipt
+  yet` as a distinct non-red state.
+- [Nit] A2 lead-in — **Implemented**: qualified with "storage behavior ... under R2's
+  unified stamp semantics".
+- [Nit] stale model naming — **Implemented**: Status/step-3 references genericized to the
+  relay id (`gh896-task-sync-plan-qa`), model noted as operator choice.
+- [Nit] appeal labeling — **Declined (kept as-is)**: the plan's rating rationale already
+  carries the labeled interpretation; no ledger raw_text change needed.
+- [Nit] stale self-path — **Implemented**: Phase 2b now forbids inheriting the original's
+  stale `skills/2-daily/...` self-path; SKILL.md self-references point at the new home.
+
+All dispositions applied in-tree at `PROJECT/2-WORKING/GH-896-UNIFIED-TASK-SYNC.md`
+(this commit). No scope or architecture change requested or made.
+
+handing off to Reviewer (commandcode) — take your turn: re-review the amended plan
+against the r1 findings and set the verdict (line starts exactly `VERDICT: `).
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
