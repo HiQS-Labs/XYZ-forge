@@ -34,19 +34,35 @@ def local_stamp(dt: datetime) -> str:
 
 
 def utc_text_to_local_dt(text: str) -> datetime | None:
-    """Parse an app's UTC '%Y-%m-%d %H:%M:%S' text into local time.
+    """Parse an app's UTC timestamp text into local time.
 
-    Returns None when the text is absent or unparseable — callers decide
-    whether that skips the row or aborts."""
+    Handles the formats actually seen in Antigravity's
+    ``conversation_summaries.last_modified_time`` — ISO-8601 with
+    fractional seconds and an explicit offset
+    (``2026-06-19 01:31:58.720731+00:00``) as well as the plain
+    ``%Y-%m-%d %H:%M:%S`` form. Returns None when the text is absent or
+    unparseable — callers decide whether that skips the row or aborts."""
     if not text:
         return None
+    cleaned = text.strip()
     try:
-        utc = datetime.strptime(text.strip(), "%Y-%m-%d %H:%M:%S").replace(
-            tzinfo=timezone.utc
-        )
+        return datetime.fromisoformat(cleaned).astimezone()
     except ValueError:
-        return None
-    return utc.astimezone()
+        pass
+    for fmt in (
+        "%Y-%m-%d %H:%M:%S.%f%z",
+        "%Y-%m-%d %H:%M:%S%z",
+        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
+    ):
+        try:
+            parsed = datetime.strptime(cleaned, fmt)
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone()
+    return None
 
 
 def ms_to_local_dt(ms: int) -> datetime:

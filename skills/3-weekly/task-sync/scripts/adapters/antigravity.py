@@ -127,6 +127,11 @@ class AntigravityAdapter:
                 f"agy: failed to read app_storage.json ({exc}) — refusing to "
                 "infer pin state; no writes performed"
             ) from exc
+        if not isinstance(data, dict):
+            raise core.AdapterError(
+                f"agy: app_storage.json is {type(data).__name__}, not an object — "
+                "refusing to infer pin state; no writes performed"
+            )
         pinned = data.get("pinned_conversations_order", [])
         if isinstance(pinned, str):
             try:

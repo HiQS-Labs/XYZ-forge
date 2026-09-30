@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -119,12 +119,54 @@ swept file: yes
 - [Pass] Safety contract (writes & gating): The `app_running` check cleanly fails closed if `pgrep` throws an exception (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:1265-1275`). The electron store update process correctly uses `.bak-<ts>` for backups and `os.replace` via a temporary file for atomic writes (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:1362-1374`). 
 - [Pass] Core contract: `core.py` successfully unifies common semantics. `clean_base` correctly strips legacy formats via `slash_stamps=True` while ensuring bare dates are not considered descriptions (`skills/3-weekly/task-sync/scripts/core.py:56-72`).
 - [Pass] Edge cases: A successful but empty read correctly propagates an authoritative empty list, mirroring zero pins to annotations (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:1658-1678`). Missing transcripts gracefully return "No transcript recorded" (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:1564-1565`). Missing titles in annotations correctly prepend the title instead of failing (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:1624-1626`).
-- [Pass] Commensurability: Perfectly scoped for a local CLI. No stray files, no over-engineered daemon logic, just direct SQLite queries and file operations.
+- [Unverified — no citation] Commensurability: Perfectly scoped for a local CLI. No stray files, no over-engineered daemon logic, just direct SQLite queries and file operations.
 
 VERDICT: PASS
 Basis: The implementation faithfully meets all stated requirements, ports the behaviors correctly with the requested safety improvements, and is right-sized for a local developer tool.
 
 relay closed (Approved), no further turn needed
+
+### Reviewer (agy) — Round 2
+swept file: yes
+
+- [Blocker] Port fidelity / Core contract: `utc_text_to_local_dt` fails to parse Antigravity's `last_modified_time` format (`skills/3-weekly/task-sync/scripts/core.py:44-46`). The SQLite DB stores timestamps with fractional seconds and timezone offsets (e.g., `2026-06-19 01:31:58.720731+00:00`), but `strptime(..., "%Y-%m-%d %H:%M:%S")` throws `ValueError: unconverted data remains: .720731+00:00`. Since `ValueError` is swallowed and returns `None`, the script silently fails to generate any mm-dd stamps for Antigravity tasks.
+  Observed input: `2026-06-19 01:31:58.720731+00:00`
+  Affected scope: `utc_text_to_local_dt` timestamp parsing logic.
+  Falsifier: A test passing a DB-formatted timestamp string to `utc_text_to_local_dt` must return a valid datetime, not `None`.
+  Fix: Replace `datetime.strptime(...)` with `datetime.fromisoformat(text.strip())` (or a fallback chain if necessary), which handles fractional seconds and timezone offsets natively.
+
+- [Should] Safety contract: `_read_pinned_ids` assumes the parsed JSON is always a dictionary (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:130`). If `app_storage.json` is a valid JSON array (`[]`), `data.get(...)` crashes with `AttributeError: 'list' object has no attribute 'get'` instead of raising a clean `AdapterError` as required by the fail-closed contract.
+  Observed input: `[]` (valid JSON array in `app_storage.json`)
+  Affected scope: `_read_pinned_ids` dictionary validation.
+  Falsifier: Mocking `json.load` to return a list must raise `core.AdapterError`, not crash with `AttributeError`.
+  Fix: Add `if not isinstance(data, dict): raise core.AdapterError(...)` before accessing `data.get()`.
+
+- [Pass] The atomicity (temporary file + os.replace + backups) in `_write_pinned_ids` (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:147-158`) and the regex preserving inside quotes in `_update_annotation_file` (`skills/3-weekly/task-sync/scripts/adapters/antigravity.py:428-435`) are correctly scoped and safely implemented.
+
+VERDICT: FAIL
+Basis: The `strptime` format mismatch entirely breaks the core feature (last-activity date-stamping) by swallowing `ValueError` and skipping all stamps.
+
+handing off to Producer — go to the claude-a window and say 'take your turn'
+
+
+### Producer · claude-a — r2 dispositions, fixes landed
+
+- [Blocker] `utc_text_to_local_dt` format mismatch — **Implemented** per the falsifier: parser
+  now uses `datetime.fromisoformat` first (handles `2026-06-19 01:31:58.720731+00:00` natively)
+  with a strptime fallback chain (`%f%z`, `%z`, `%f`, plain) for older/odd formats; garbage still
+  returns None (skip, not crash). Verified against the LIVE `conversation_summaries.db`
+  (read-only): every row carries microseconds + `+00:00`; fixture DB now seeds the real format so
+  the battery's stamp checks exercise the true path. Falsifier probe added and passing.
+- [Should] JSON-array `app_storage.json` — **Implemented** per the falsifier: `_read_pinned_ids`
+  raises a clean `AdapterError` ("app_storage.json is list, not an object — refusing to infer pin
+  state; no writes performed") instead of `AttributeError`; falsifier probe added and passing.
+- [Pass] atomic electron write + quoted-regex annotation editing — unchanged, re-verified.
+
+Battery now 23/23 (19 original + 4 falsifier probes); zcode parity re-run still 9/9. Provenance
+receipt updated. No other behavior changed.
+
+handing off to Reviewer (agy) — take your turn: re-review the fixes against the r2 findings and
+set the verdict (line starts exactly `VERDICT: `).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
