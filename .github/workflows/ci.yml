@@ -395,6 +395,12 @@ jobs:
           git config --global user.email "ci@runner.invalid"
           git config --global user.name "CI Runner"
 
+      # Same install as the promotion-boundary job: without pytest, wave_reconcile's qualification
+      # refuses by design (#750), so gh425 went red here and the python lane was skipped (#886).
+      - name: Install Python dependencies for the full suite
+        if: steps.route.outputs.docs_only != 'true'
+        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
+
       - name: Run Fast Gate tests (Pull Request)
         # Whole-job budget target: < 3 minutes for a code-only fast PR.
         if: github.event_name == 'pull_request' && steps.route.outputs.route == 'fast'
