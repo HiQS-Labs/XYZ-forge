@@ -20,3 +20,7 @@ was active on the host. Git identity remained intact. It is not passing evidence
 The canonical ci-route classification against origin/development is tier 1,
 route docs, full_required=false; required verification uses Small in a separate
 full clone with the ambient harness override removed. Result will be retained.
+
+Native scheduler consolidation verified: legacy ZCode job disabled and idle;
+Codex heartbeat ACTIVE every 15 minutes, using the retained pilot source clone.
+Global skill publication awaits dependency landing; clone must remain available.
