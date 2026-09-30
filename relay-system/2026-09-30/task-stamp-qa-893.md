@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -199,5 +199,54 @@ stamp source + no-revert confirmed; dry-run report confirmed. PR branch pushed: 
 
 handing off to Reviewer (commandcode) — take your turn: re-review bb2b35d2 against the round-1
 findings and set the verdict (start the line exactly with `VERDICT: `).
+
+### Reviewer · Round 2
+
+swept file: yes — both files re-read in full post-bb2b35d2 (SKILL.md 103 lines, sweep_tasks.py 325 lines) plus the full 460-line artifact; in-tree copies verified byte-identical to the artifact by extraction+compare (SKILL.md 5284/5284 chars, sweep_tasks.py 13289/13289, symlink target `../../utils/zcode/task-stamp` matches, `utils/README.md` row present; probe rc 0). Live DB probed `file:...?mode=ro` (rc 0); all behavior probes ran on `.backup` copies under `.relay-scratch/` via `--db <copy>` — live DB and artifact untouched. The artifact adds only new files + one README row, so there is no pre-existing code under these paths; no pre-existing defects found in the surface touched.
+
+Decisive schema probe (read-only `sqlite_master`, live DB): `task_group_members` is `PRIMARY KEY (workspace_key, task_id)` (+ FK `group_id → task_groups(group_id) ON DELETE CASCADE`); its indexes are `sqlite_autoindex_task_group_members_1 (workspace_key, task_id)` [pk] and `idx_task_group_members_group_order (group_id, sort_order, added_at)`. **The r1 G2 schema read was wrong** — the `(group_id, …)` it reported is the order index, not the PK. `tasks` PK is `(workspace_key, task_id)`; `journal_mode=wal`; every EXPECTED_* column exists live; 0 duplicate task_ids across workspaces (93 tasks / 3 members / 1 group).
+
+Probe evidence (copies under `.relay-scratch/`, `python3 utils/zcode/task-stamp/scripts/sweep_tasks.py --db <copy>`, rc 0 unless noted):
+- P1: task updated 09-29 23:19, `--set-title` at 09-30 00:44 → `09-29 Reviewed summary two`, meta_json `{"title": "09-29 Reviewed summary two", "titleOverridden": true}`; caller-supplied `09-28 manually stamped desc` → stored `09-29 manually stamped desc`; following `--sweep --all --no-pin` renamed nothing for it.
+- P2: `--sweep --group R2G1` twice → run2 `group_added: []` (all), member rows byte-stable; then `--group R2G2` → all 3 moved, rows-per-task = 1; run4 `group_added: []`.
+- P3: ('ws-r2b','shared', pinned, 1h old) + ('ws-r2c','shared', pinned, 10d old); `--sweep --hours 1 --no-pin --unpin-days 7` → unpinned only the ws-r2c row; flags ws-r2b=1, ws-r2c=0.
+- P4: copy with `workspace_path` dropped → rc 1, no traceback, stderr `task-stamp: tasks table missing expected columns: ['workspace_path']`.
+- P5: `--set-title r2-t5 "Dry run description" --dry-run` → report `renamed: [{"old": "raw prompt five", "new": "09-29 Dry run description"}]`; DB row unchanged.
+- P6: title exactly `09-29` → sweep renamed nothing, title kept; `--set-title r2-t6 "09-29"` → rc 1 `task-stamp: --set-title requires a non-empty description`.
+- P7: `--unpin-days 0` → 5-day-old pinned task unpinned (flag 0).
+- P8: `--help` shows `--no-pin skip pinning recently-active tasks (does not disable --unpin-days)`.
+- P9: copy with both group tables dropped → `--sweep --group R2GX` rc 1, raw `sqlite3.OperationalError: no such table: task_groups` traceback.
+- P10: one task_id in ws-r2d (2d old) + ws-r2e (9d old) → `--set-title dup "Multi row desc"` wrote `09-28 Multi row desc` on BOTH rows; next sweep renamed ws-r2e's row to `09-21 Multi row desc`.
+- P11: `--sweep --dry-run --group R2G9` → `group_added: [{"note": "dry-run: would ensure group 'R2G9'"}]` only.
+- P12: two plain sweeps → run1 renamed 3/pinned 1, run2 renamed 0/pinned 0/unpinned 0; fixture listed in run1 `needs_summary`, gone in run2.
+- P13: meta_json `not-json{{{` and `["not","a","dict"]` → set-title rc 0, title written, original meta_json kept.
+
+**r1 dispositions — all nine re-checked against code + probes:**
+- [Pass] Q1 set-title stamps from the task's `updated_at` — sweep_tasks.py:261 (`stamp = local_stamp(rows[0][4])`), caller stamp normalized via `clean_base` (:262), bare date rejected (:263-264); P1/P6, and no sweep revert (P1).
+- [Pass] Q2 `--group` idempotent — membership pre-check :202-207 gates the INSERT OR REPLACE; P2 run2/run4 `group_added: []`, member rows stable.
+- [Pass] Q2 unpin keyed on `(workspace_key, task_id)` — SELECT :226-230, UPDATE :233-236; P3.
+- [Pass] Q3 `--no-pin` help reworded — :298-299 "skip pinning recently-active tasks (does not disable --unpin-days)" (P8); `--unpin-days 0` honored via `is not None` (:146-150); P7.
+- [Pass] Q5 schema-drift — `EXPECTED_TASK_COLUMNS` now has `workspace_path`/`workspace_identity` (:45-49); P4 aborts with the clear message, no traceback.
+- [Pass] Q5 G2 Declined — **decline upheld**: live PK is `(workspace_key, task_id)` (sqlite_master quote above), so SKILL.md:52-54 ("belongs to exactly one group and the sweep moves it if it was elsewhere") is accurate; P2 shows the move with rows-per-task staying 1. The r1 G1/G2 fixtures lacked the composite PK; G1's fix is still right under the real schema (a run-2 REPLACE would re-inflate sort_order and clobber created_at).
+- [Pass] Q3 needs_summary one-shot documented — SKILL.md:65-67; P12 shows the documented behavior.
+- [Pass] Q3 dry-run set-title reports the planned rename — :268-271 appends before the `if args.dry_run: continue`; P5.
+- [Pass] Q3 bare-date — :69-70 `re.fullmatch(r"\d{2}-\d{2}", base)` → ""; sweep keeps the title (:183); P6.
+
+Unchanged r1 [Pass]es re-checked at the same lines, re-exercised where probed: sweep stamp from `updated_at` (:181, P1), no stacked prefixes (:62-73, P12), meta sync (:108-109, P1/P13), invalid/non-dict meta tolerated (:102-107, P13), unknown-id clean exit (:255-256), `--all` pins no history (:195-201), cron skip (:176-178), empty/whitespace title untouched (:183), stdlib-only imports (:30-37), parameterized writes + `busy_timeout=5000` (:94) + short transactions (:165-167, :238-241, :273).
+
+**New findings:**
+- [Should] The `--set-title` help and module docstring still state the pre-fix semantics r1 removed: :290 "set one task's title; prepends today's mm-dd stamp if missing" (verbatim from `--help`) and :15 "Writes a reviewed title (auto-prepends today's stamp if missing)". Both particulars are now false — the stamp is the task's last-activity date (:261; P1 wrote `09-29`, not today's `09-30`), and a caller-supplied stamp is not kept (:262 strips it; P1: `09-28 manually stamped desc` → `09-29 manually stamped desc`). SKILL.md:39-41 documents the new behavior, so the CLI surface contradicts both the code and the skill doc — DoD "docs match behavior".
+  - Observed input: the `--help` line quoted above; P1 input `--set-title r2-t1 "09-28 manually stamped desc"` on a task with updated_at 09-29 23:19 → stored `09-29 manually stamped desc`.
+  - Affected scope: anyone running the script directly and reading `--help`/the docstring instead of SKILL.md — "if missing" tells them an existing stamp is preserved when :262 replaces it.
+  - Falsifier: if "today's" were intended to mean the task's last-activity date, the reword is still needed because "if missing" misleads exactly as above; after the fix `--help` contains neither "today's" nor "if missing".
+  - Fix: reword :290 to e.g. "set one task's title; stamps it with the task's own last-activity mm-dd date (a supplied stamp is normalized)" and :15 to match.
+- [Nit] `--group` on a DB whose group tables are absent aborts with a raw traceback, not the promised clear message: check_schema skips absent tables (:84-87 `if columns(table)`), then ensure_group's SELECT (:131) raises. Observed input: copy with `task_groups` + `task_group_members` dropped → `--sweep --group R2GX` rc 1, `sqlite3.OperationalError: no such table: task_groups` traceback (P9), vs SKILL.md:90-91 "aborts with a clear message if the app changes its index shape". Fix: require the group tables in check_schema when `--group` is set, or narrow the caveat to "validates the columns of the tables present".
+- [Nit] `--dry-run --group` under-reports: group_id stays None in dry-run (:164-169) so the membership branch (:202) never plans; the report shows only `{"note": "dry-run: would ensure group 'R2G9'"}` (P11) while SKILL.md:59 makes the dry-run report the review step. Fix: resolve the group and list would-be member adds in dry-run.
+- [Nit] `--set-title` stamps every row of a task_id from `rows[0]`'s `updated_at` (SELECT :251-254 has no ORDER BY; one stamp for all rows at :261), so a task_id spanning workspaces on different days takes one churn rename on the next sweep — observed both rows written `09-28 Multi row desc`, then ws-r2e renamed to `09-21 Multi row desc` (P10). Unreachable on live data (0 duplicate task_ids, live probe). Fix: stamp per row inside the loop, or declare task_id unique and simplify.
+
+VERDICT: FAIL
+Basis: all nine r1 dispositions hold under probe — six [Should]s and three [Nit]s genuinely fixed, and the G2 decline is upheld by the live schema (`task_group_members` PK is `(workspace_key, task_id)`; r1's schema read was wrong and SKILL.md:52-54 is accurate). One new [Should] remains: the `--set-title` help (sweep_tasks.py:290) and docstring (:15) still state the old "today's stamp if missing" semantics the r1 fix removed, contradicting :261-262 and SKILL.md:39-41 — the DoD's "docs match behavior" is not met until those two strings are reworded. The three [Nit]s (P9/P11/P10 above) do not block. No [Blocker]: stamp/pin/unpin/group/cron/meta paths all behaved correctly and idempotently on live-schema copies (P2, P3, P12).
+
+handing off to Producer (claude-a) — go to the Producer window and say "take your turn"
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
