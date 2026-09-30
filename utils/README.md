@@ -121,6 +121,7 @@ Both `utils/fuzzing/` and `utils/ate/` emit newline-delimited JSON (`JSONL`) adh
 | [`utils/telemetry/`](telemetry/) | **Telemetry & Receipts:** Telemetry collector adapters, cost summary collectors, and test evidence recorders. |
 | [`utils/swe-diagram/`](swe-diagram/) | **SWE Architecture Diagrams:** Automated diagram generator mapping repository workflows and kernel states. |
 | [`utils/vndr/`](vndr/) | **Vendored Assets & Tools:** Vendoring tools and third-party scripts. |
+| [`utils/zcode/`](zcode/) | **ZCode (agent-IDE) Tooling:** Skills and scripts for the ZCode app itself. `task-stamp/` grooms the app's task index — date-stamps titles (`09-29 LTvera 676` style), rewrites raw prompt titles with a summary of the task's last action, and pins recently-active tasks. Discovered in-workspace via the `.zcode/skills/task-stamp` symlink. |
 
 ---
 
