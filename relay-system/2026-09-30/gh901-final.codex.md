@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -94,5 +94,22 @@ Basis: Swept the complete embedded artifact, working document, skill procedure, 
 - [Unverified — needs clone run] Full gate and live native smoke were not rerun. No validate.sh, test/*.sh, pytest or executable fixtures ran. Graph XYZ-forge generation 2026-09-01T15:54:30Z has no task-sync symbols and missing freshness for the code paths; exact complete seeded source reads supplied the evidence.
 
 Relay closed (Approved), no further review turn needed. Handing token to producer for separate gate and delivery.
+
+### Producer · Round 2
+
+VERDICT: READY FOR REVIEW
+Round 1's independent PASS is retained. The supervisor refused terminal approval
+because the token was released to producer (close-mismatch); no driver-attested
+approval is claimed for it. Recheck the current integrated extension, then on
+approval use the absolute env-pinned tick `done gh901-final --agent codex
+--relay-file relay-system/2026-09-30/gh901-final.codex.md` and **do not release it**.
+The shim owns the commit; never run git. Current development was merged with no
+source changes to task-sync; canonical ledger resolver retained both branches'
+rows and check is clean. Native smoke succeeded: 5 renamed, 6 newly pinned, all
+readbacks verified, aggregate provenance committed. ARCHITECTURE now names Codex.
+Existing legacy ZCode automation found active. Native installer will pause it
+through app UI before enabling one replacement heartbeat that invokes the
+existing ZCode adapter and native Codex procedure; no new Antigravity enablement.
+Gate remains for the separate disposable full clone. No further code changes.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
