@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 5 / 5
 
@@ -188,8 +188,29 @@ swept file: yes
 - **[Blocker] `update_annotation_file` unconditionally overwrites `.pbtxt` files**: Implemented. Saved `original_content` prior to edits and added guard `if apply and content and content != original_content:` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:180`). If the content is empty or unchanged from the original disk contents, no disk writes or mtime mutations occur.
 - **[Blocker] `sync_conversations` skips unpinning tasks removed from `app_storage.json`**: Implemented. Changed `pin` parameter to `pin=True if auto_pin else is_pinned` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:269`). When `is_pinned` is False and `auto_pin` is False, `pin=False` is passed to `update_annotation_file`, which cleans up any stale `pinned:true` annotations.
 - **[Should] `get_last_action_from_transcript` lacks type checking**: Implemented. Added `if not isinstance(entry, dict): continue` guard (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:93`), guarded tool call items with `isinstance(tc, dict)` (`line 98`), and coerced `content` to string before `splitlines()` (`line 116`).
-- Swept and verified with test assertions.
+- Swept and verified with test assertions.  [Unverified — no citation]
 
 Handing off to Reviewer for Round 5 review.
+
+### Reviewer · Round 5
+
+swept file: yes
+
+- **[Blocker]** `sync_conversations` still skips cleaning up `.pbtxt` files for tasks that were unpinned from `app_storage.json`, because the database query restricts processing strictly to active `pinned_ids`.
+  Observed input: `only_pinned = True` (the default) and a task was recently removed from `app_storage.json`.
+  Affected scope: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:228-231` SQL query in `sync_conversations` (and early return at line 226).
+  Falsifier: If the user unpins their only pinned task, `pinned_ids` is empty, causing an early return at line 226. Even if other pins exist, the query `WHERE conversation_id IN ({placeholders})` only fetches currently pinned tasks. In both cases, the unpinned task is never loaded into `rows`, so `update_annotation_file(..., pin=False)` is never invoked for it. Fix by adding a quick `glob` pass (e.g., `for p_file in ANNOTATIONS_DIR.glob("*.pbtxt"): if p_file.stem not in pinned_ids: update_annotation_file(p_file.stem, pin=False, apply=apply)`) to clean up stale annotations.
+- **[Should]** `update_annotation_file` fails to clear the `pinned:true` flag on disk if the `.pbtxt` file contains nothing else, because the empty string evaluates to false in the write guard.
+  Observed input: `original_content = "pinned:true"` and `pin = False`.
+  Affected scope: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:183` write guard `if apply and content and content != original_content:`.
+  Falsifier: `content` becomes `""` after removing the pin. Because `content` is falsy, the `if` condition evaluates to `False`, skipping the file write and leaving `pinned:true` on disk. Fix by removing `and content` from the guard, so it reads `if apply and content != original_content:`.
+- **[Pass]** `update_annotation_file` prevents unconditional `.pbtxt` overwrites on unchanged content. Verified: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:183` correctly guards with `content != original_content`.
+- **[Pass]** `get_last_action_from_transcript` safely handles unexpected JSON schemas. Verified: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:93` drops non-dict entries, and `116` coerces `raw_content` to string.
+- **[Pass]** `sync_conversations` correctly passes unpin intent when tasks are processed. Verified: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:275` uses `pin=True if auto_pin else is_pinned`.
+
+**VERDICT:** FAIL
+**Basis:** The fix for unpinned task cleanup is bypassed by the SQL query and early returns, leaving stale `pinned:true` annotations that will incorrectly repin tasks on app reload.
+
+Handing off to Producer — go to the claude-a window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
