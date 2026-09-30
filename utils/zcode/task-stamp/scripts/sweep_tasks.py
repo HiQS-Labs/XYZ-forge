@@ -12,7 +12,8 @@ Sweep mode (--sweep):
     description of the task's last action via ``--set-title``.
 
 Set-title mode (--set-title TASK_ID TITLE):
-  * Writes a reviewed title (auto-prepends today's stamp if missing).
+  * Writes a reviewed title, stamped with the task's own last-activity
+    mm-dd date (a caller-supplied stamp is normalized, never kept).
 
 The ZCode app keeps its task index in ``~/.zcode/v2/tasks-index.sqlite``.
 Writes here are short WAL transactions against the live DB — safe to run
@@ -73,7 +74,7 @@ def clean_base(raw: str) -> str:
     return base
 
 
-def check_schema(conn: sqlite3.Connection) -> None:
+def check_schema(conn: sqlite3.Connection, require_groups: bool = False) -> None:
     def columns(table: str) -> set[str]:
         rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
         return {row[1] for row in rows}
@@ -81,18 +82,23 @@ def check_schema(conn: sqlite3.Connection) -> None:
     missing = EXPECTED_TASK_COLUMNS - columns("tasks")
     if missing:
         raise SystemExit(f"task-stamp: tasks table missing expected columns: {sorted(missing)}")
-    if columns("task_groups") and EXPECTED_GROUP_COLUMNS - columns("task_groups"):
-        raise SystemExit("task-stamp: task_groups table has unexpected shape")
-    if columns("task_group_members") and EXPECTED_MEMBER_COLUMNS - columns("task_group_members"):
-        raise SystemExit("task-stamp: task_group_members table has unexpected shape")
+    for table, expected in (("task_groups", EXPECTED_GROUP_COLUMNS),
+                            ("task_group_members", EXPECTED_MEMBER_COLUMNS)):
+        present = columns(table)
+        if not present:
+            if require_groups:
+                raise SystemExit(f"task-stamp: --group needs the {table} table; not found in this index")
+            continue
+        if expected - present:
+            raise SystemExit(f"task-stamp: {table} table missing expected columns: {sorted(expected - present)}")
 
 
-def open_db(path: str) -> sqlite3.Connection:
+def open_db(path: str, require_groups: bool = False) -> sqlite3.Connection:
     if not os.path.exists(path):
         raise SystemExit(f"task-stamp: task index DB not found at {path}")
     conn = sqlite3.connect(path, timeout=5.0)
     conn.execute("PRAGMA busy_timeout=5000")
-    check_schema(conn)
+    check_schema(conn, require_groups=require_groups)
     return conn
 
 
@@ -162,11 +168,19 @@ def run_sweep(conn: sqlite3.Connection, args) -> dict:
     }
     rows = swept_rows(conn, args.hours, args.all)
     group_id = None
-    if args.group and not args.dry_run:
-        with conn:
-            group_id = ensure_group(conn, args.group, now_ms)
-    elif args.group:
-        report["group_added"] = [{"note": f"dry-run: would ensure group {args.group!r}"}]
+    if args.group:
+        if args.dry_run:
+            # Read-only: plan against the group if it exists, else note it.
+            row = conn.execute(
+                "SELECT group_id FROM task_groups WHERE title=?", (args.group,)
+            ).fetchone()
+            if row:
+                group_id = row[0]
+            else:
+                report["group_added"] = [{"note": f"dry-run: would create group {args.group!r}"}]
+        else:
+            with conn:
+                group_id = ensure_group(conn, args.group, now_ms)
 
     writes: list[tuple[str, tuple]] = []
 
@@ -255,17 +269,16 @@ def run_set_title(conn: sqlite3.Connection, args) -> dict:
     if not rows:
         raise SystemExit(f"task-stamp: no task with id {task_id!r}")
 
-    # Stamp from the task's own last-activity date, matching the sweep's
+    # Stamp from each row's own last-activity date, matching the sweep's
     # semantics — a wall-clock stamp here would be silently reverted by
     # the next sweep of a task last active on an earlier day.
-    stamp = local_stamp(rows[0][4])
     base = clean_base(desired)
     if not base:
         raise SystemExit("task-stamp: --set-title requires a non-empty description")
-    desired = f"{stamp} {base}"
 
     out = {"task_id": task_id, "renamed": [], "dry_run": args.dry_run}
-    for ws_key, _, old, meta_json, _ in rows:
+    for ws_key, _, old, meta_json, updated_at in rows:
+        desired = f"{local_stamp(updated_at)} {base}"
         out["renamed"].append({"old": old, "new": desired})
         if args.dry_run:
             continue
@@ -287,7 +300,7 @@ def main(argv=None) -> int:
     mode.add_argument("--sweep", action="store_true", help="groom the task list (default)")
     mode.add_argument(
         "--set-title", nargs=2, metavar=("TASK_ID", "TITLE"),
-        help="set one task's title; prepends today's mm-dd stamp if missing",
+        help="set one task's title; stamps it with the task's own last-activity mm-dd date (a supplied stamp is normalized)",
     )
     parser.add_argument("--hours", type=float, default=24.0,
                         help="sweep window in hours of last activity (default 24)")
@@ -307,7 +320,7 @@ def main(argv=None) -> int:
                         help="add pinned-window tasks to this named task group")
     args = parser.parse_args(argv)
 
-    conn = open_db(args.db)
+    conn = open_db(args.db, require_groups=bool(args.group))
     try:
         if args.set_title:
             report = run_set_title(conn, args)
