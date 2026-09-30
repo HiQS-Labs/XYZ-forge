@@ -87,4 +87,12 @@ Basis: The seeded fixture preserves the positive, red, reset, and explicit zero-
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-09-30T01:16:29Z
+task: RELAY-GH856-GATE-FIXTURE
+reviewer: codex
+status: Approved
+reviewed-head: afc131e96be9b41ab9ee94e2b8bba69efb1509fd
+added-range: 6935+3542
+added-sha256: cc5bdf505c7c54983dad5f5e21d1ddc4b49874dc09ec56cc5dcb5e911cf4010f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
