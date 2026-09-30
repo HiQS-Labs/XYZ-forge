@@ -37,6 +37,8 @@ The engine automatically:
 - Scans issues closed in the last 24–36 hours (`gh issue list --state closed` bounded by `closedAt`).
 - Reconciles baseline items from the weekly plan against these closures and marks completed items `[DONE]`.
 
+Before presenting a status change, recheck current sources and the latest explicit owner decisions; a merged PR alone does not prove deployment, backfill, or production acceptance.
+
 ### Step 3: Re-Sequence & Promote Unblocked Work
 
 - Open PRs are re-sorted topologically into the 4 phases (Ready to Land, Blockers to Fix, Needs Rebase, In Review) with CI status check validation (`statusCheckRollup`).
@@ -53,7 +55,9 @@ Before presenting the pivoted day plan, the engine executes the 2nd-Pass Adversa
 ### Step 5: Output Daily Action Queue
 
 Emits both machine-readable `temp/planner/daily-pivot-<date>.json` and human-readable `temp/planner/DAILY-PIVOT-<date>.md`:
-1. **Accomplished Yesterday:** Landed PRs and closed items from the last 24–36 hours.
+1. **Accomplished Yesterday:** Include only updates evidenced within the stated calendar day and cite their dates/sources; keep older context separate, even when the ingestion window spans 24–36 hours.
 2. **Today's Immediate P0 Blocker:** The single item the operator should clear first.
 3. **Today's Teammate Action Queues:** Focused tasks for each member.
 4. **Active Merge Sequence:** Live status of the PR queue with passing CI requirements.
+
+Apply the weekly planner's Step 5 calibration checks to the daily queue, using fresh per-owner and per-applicable-tenant evidence rather than carrying forward an old success count.
