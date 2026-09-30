@@ -90,25 +90,30 @@ def get_last_action_from_transcript(conversation_id: str) -> str:
         except Exception:
             continue
 
+        if not isinstance(entry, dict):
+            continue
+
         tool_calls = entry.get("tool_calls")
         if tool_calls and isinstance(tool_calls, list) and len(tool_calls) > 0:
             tc = tool_calls[0]
-            args = tc.get("args", {})
-            summary = tc.get("toolSummary")
-            if not summary and isinstance(args, dict):
-                summary = args.get("toolSummary")
-            if not summary:
-                summary = tc.get("toolAction")
-            if not summary and isinstance(args, dict):
-                summary = args.get("toolAction")
-            if not summary:
-                summary = tc.get("name", "Tool call")
-            summary = str(summary).strip('"\'')
-            last_action = f"[Tool] {summary}"
-            break
+            if isinstance(tc, dict):
+                args = tc.get("args", {})
+                summary = tc.get("toolSummary")
+                if not summary and isinstance(args, dict):
+                    summary = args.get("toolSummary")
+                if not summary:
+                    summary = tc.get("toolAction")
+                if not summary and isinstance(args, dict):
+                    summary = args.get("toolAction")
+                if not summary:
+                    summary = tc.get("name", "Tool call")
+                summary = str(summary).strip('"\'')
+                last_action = f"[Tool] {summary}"
+                break
 
         step_type = entry.get("type")
-        content = entry.get("content", "")
+        raw_content = entry.get("content", "")
+        content = raw_content if isinstance(raw_content, str) else (str(raw_content) if raw_content is not None else "")
         if step_type == "PLANNER_RESPONSE" and content:
             # First non-empty line of response
             for cl in content.splitlines():
@@ -151,6 +156,8 @@ def update_annotation_file(conversation_id: str, new_title: str | None = None, p
         except Exception as e:
             print(f"[WARN] Failed to read {pbtxt_path}: {e}", file=sys.stderr)
 
+    original_content = content
+
     # Update or insert title with protobuf text-format escaping
     if new_title is not None:
         escaped_title = new_title.replace("\\", "\\\\").replace('"', '\\"')
@@ -173,7 +180,7 @@ def update_annotation_file(conversation_id: str, new_title: str | None = None, p
         content = re.sub(r'("(?:\\.|[^"\\])*")|\bpinned:\s*true\b', _remove_unquoted_pin, content)
         content = re.sub(r'[ \t]+', ' ', content).strip()
 
-    if apply:
+    if apply and content and content != original_content:
         ANNOTATIONS_DIR.mkdir(parents=True, exist_ok=True)
         try:
             with open(pbtxt_path, "w", encoding="utf-8") as f:
@@ -263,7 +270,7 @@ def sync_conversations(
                 update_annotation_file(
                     cid,
                     new_title=new_title if changes["title_changed"] else None,
-                    pin=True if (is_pinned or auto_pin) else None,
+                    pin=True if auto_pin else is_pinned,
                     apply=True,
                 )
                 # 3. Add to pinned_conversations_order if auto_pin requested
