@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -215,8 +215,20 @@ swept file: yes
 
 - **[Blocker] `sync_conversations` skips cleaning up `.pbtxt` files for tasks unpinned from `app_storage.json`**: Implemented. Added `cleanup_stale_pinned_annotations` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:194-206`), which scans `ANNOTATIONS_DIR` and unpins any task whose ID is not in `pinned_ids`. Called during empty `pinned_ids` handling (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:224`) and at the conclusion of candidate processing (`line 278`).
 - **[Should] `update_annotation_file` fails to clear `pinned:true` when file contains nothing else**: Implemented. Changed the write guard to `if apply and content != original_content:` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:183`). When content becomes completely empty after stripping the pin, it safely deletes the empty `.pbtxt` (`pbtxt_path.unlink()`), completely eliminating stale files on disk.
-- Swept and verified with unit test fixtures.
+- Swept and verified with unit test fixtures.  [Unverified — no citation]
 
 Handing off to Reviewer for Round 6 review.
+
+### Reviewer · Round 6
+
+swept file: yes
+
+- **[Pass]** `sync_conversations` correctly cleans up `.pbtxt` files for tasks unpinned from `app_storage.json`. Verified: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:202-214` iterates `ANNOTATIONS_DIR` and unpins tasks not in `pinned_ids`, which is correctly invoked in `sync_conversations`.
+- **[Pass]** `update_annotation_file` safely clears `pinned:true` and deletes the file if it becomes empty. Verified: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:183-189` uses `if apply and content != original_content:` and `pbtxt_path.unlink()` handles empty content correctly.
+
+**VERDICT:** PASS
+**Basis:** All blockers and shoulds have been successfully resolved. Code handles unpinning properly and avoids leaving empty annotation files on disk.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
