@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,24 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — Round 1 (agy)
+
+swept file: yes
+
+- `[Pass]` #879 audit rules: `skills/4-occasional/ci-suite-audit/SKILL.md` is updated. It correctly removes KEEP defaults and requires source-derived evidence (e.g., `Scoring code and input tables ... must derive every field from saved source artifacts` on line 46).
+- `[Pass]` #853 N5 GH-139 matcher/baseline: The `test/gh139-pipe-grep-guard.sh` regex correctly captures quiet flag variants (`grep -Ec '\|[[:space:]]*grep[[:space:]]+(-[^[:space:]|]+[[:space:]]+)*(-[[:alpha:]]*q[[:alpha:]]*|--quiet)'` on line 44) and `GH-139-pipe-grep-baseline.txt` is updated.
+- `[Pass]` #886 Linux fixes:
+  - `test/gh153-releases-sidebar-rollup.sh` bypasses 128KB arg cap by passing payload via file (`printf '%s' "$EXPORT_JSON" > "$WORK/export.json"` on line 103).
+  - `test/gh478-runaway-guard.sh` clears inherited EXIT trap in subshell (`trap - EXIT` on line 135).
+  - `.github/workflows/ci.yml` conditionally adds python dependencies `pytest requests PyYAML` for full gate (line 401).
+- `[Pass]` Ratings and active row: #879 rating is `75/55/70/85` (`PROJECT/2-WORKING/GH-879-CI-SUITE-AUDIT-FIXES.md` line 21). #886 active row `rmi-01M3QTAKQ8AKTW6QC8EG80G6TK` is present and In progress in `releases.db` (verified via `releases_app.py roadmap list`).
+- `[Pass]` Containment: `$WORK/export.json` writes into `$TMPDIR` (`test/gh153-releases-sidebar-rollup.sh` line 103). No root-level scratch files are created.
+- `[Pass]` #886 lifecycle: `PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md` states it "remains open until development canary confirmation" (line 22).
+
+**VERDICT**: PASS
+**Basis**: All diffs correctly address the acceptance criteria without correctness or containment defects. Evidence for ratings and active rows is present.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
