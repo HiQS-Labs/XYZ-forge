@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 5 / 5
+ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -211,6 +211,12 @@ swept file: yes
 **VERDICT:** FAIL
 **Basis:** The fix for unpinned task cleanup is bypassed by the SQL query and early returns, leaving stale `pinned:true` annotations that will incorrectly repin tasks on app reload.
 
-Handing off to Producer — go to the claude-a window and say 'take your turn'.
+### Producer · Round 5
+
+- **[Blocker] `sync_conversations` skips cleaning up `.pbtxt` files for tasks unpinned from `app_storage.json`**: Implemented. Added `cleanup_stale_pinned_annotations` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:194-206`), which scans `ANNOTATIONS_DIR` and unpins any task whose ID is not in `pinned_ids`. Called during empty `pinned_ids` handling (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:224`) and at the conclusion of candidate processing (`line 278`).
+- **[Should] `update_annotation_file` fails to clear `pinned:true` when file contains nothing else**: Implemented. Changed the write guard to `if apply and content != original_content:` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:183`). When content becomes completely empty after stripping the pin, it safely deletes the empty `.pbtxt` (`pbtxt_path.unlink()`), completely eliminating stale files on disk.
+- Swept and verified with unit test fixtures.
+
+Handing off to Reviewer for Round 6 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

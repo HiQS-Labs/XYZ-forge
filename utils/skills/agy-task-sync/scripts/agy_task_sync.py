@@ -180,7 +180,14 @@ def update_annotation_file(conversation_id: str, new_title: str | None = None, p
         content = re.sub(r'("(?:\\.|[^"\\])*")|\bpinned:\s*true\b', _remove_unquoted_pin, content)
         content = re.sub(r'[ \t]+', ' ', content).strip()
 
-    if apply and content and content != original_content:
+    if apply and content != original_content:
+        if not content:
+            if pbtxt_path.exists():
+                try:
+                    pbtxt_path.unlink()
+                except Exception as e:
+                    print(f"[WARN] Failed to delete empty {pbtxt_path}: {e}", file=sys.stderr)
+            return True
         ANNOTATIONS_DIR.mkdir(parents=True, exist_ok=True)
         try:
             with open(pbtxt_path, "w", encoding="utf-8") as f:
@@ -190,6 +197,20 @@ def update_annotation_file(conversation_id: str, new_title: str | None = None, p
             print(f"[WARN] Failed to write {pbtxt_path}: {e}", file=sys.stderr)
             return False
     return True
+
+
+def cleanup_stale_pinned_annotations(pinned_ids: list[str], apply: bool = False):
+    """Scans annotations directory and removes pinned:true for conversations not in pinned_ids."""
+    if not ANNOTATIONS_DIR.exists():
+        return
+    try:
+        pinned_set = set(pinned_ids)
+        for p_file in ANNOTATIONS_DIR.glob("*.pbtxt"):
+            cid = p_file.stem
+            if cid not in pinned_set:
+                update_annotation_file(cid, pin=False, apply=apply)
+    except Exception as e:
+        print(f"[WARN] Failed during annotation pin cleanup: {e}", file=sys.stderr)
 
 
 def sync_conversations(
@@ -223,6 +244,7 @@ def sync_conversations(
         elif only_pinned:
             if not pinned_ids:
                 print("[INFO] No pinned conversations found in app_storage.json.")
+                cleanup_stale_pinned_annotations(pinned_ids, apply=apply)
                 return {"synced": 0, "results": []}
             placeholders = ",".join("?" for _ in pinned_ids)
             c.execute(
@@ -276,6 +298,9 @@ def sync_conversations(
                 # 3. Add to pinned_conversations_order if auto_pin requested
                 if auto_pin and cid not in pinned_ids:
                     pinned_ids.append(cid)
+
+        # Clean up stale pinned:true in annotations for any conversations no longer in pinned_ids
+        cleanup_stale_pinned_annotations(pinned_ids, apply=apply)
 
         if apply:
             conn.commit()
