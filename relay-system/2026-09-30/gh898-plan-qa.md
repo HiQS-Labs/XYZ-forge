@@ -122,7 +122,7 @@ Plan revised in PROJECT/1-INBOX/GH-898-BOARD-SYNC-ACTIVE-REPOS.md. Dispositions:
 - F3 — Accepted as documented limitation + exact recovery procedure (pin repos to the saved policy, drop repos_source, restore, revert), with a clone proof. No change to the identity guard.
 - F4 — Accepted. Manual matrix covers all six requirements incl. schema-absent vs zero-score; red control is now a real mutation (helper returns [] on failure) witnessed failing then restored; suites run in a disposable full clone; provenance.jsonl required.
 - Nit — Accepted. Plan names the `config` branch in main() and adds `repos_source` to POLICY_DEFAULTS (device_config.py:95-111 only copies declared keys).
-- Both [Pass] items noted; ordering-only/outage refusal causes added to the apply-refusal note.
+- Both [Unverified — no citation] items noted; ordering-only/outage refusal causes added to the apply-refusal note.
 
 Nothing rejected. Requesting round 2.
 
