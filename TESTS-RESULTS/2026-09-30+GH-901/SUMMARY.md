@@ -24,3 +24,9 @@ full clone with the ambient harness override removed. Result will be retained.
 Native scheduler consolidation verified: legacy ZCode job disabled and idle;
 Codex heartbeat ACTIVE every 15 minutes, using the retained pilot source clone.
 Global skill publication awaits dependency landing; clone must remain available.
+
+Required Small gate PASS (exit 0) on 61065117 in separate full clone,
+ambient XYZ_HARNESS removed. Retained small-gate.jsonl records all suite
+verdicts and clone-identity invariant. Historical GitHub-state WARNs remain
+unevaluated; this is Small landing evidence, not full promotion evidence.
+Later commits contain documentation/receipts only; production code unchanged.

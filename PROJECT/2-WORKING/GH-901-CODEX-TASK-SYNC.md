@@ -24,7 +24,7 @@ Live requirements and discussion: [GH-901](https://github.com/HiQS-Labs/XYZ-forg
 
 | What was just completed | What's next |
 |---|---|
-| 28 manual probes pass; 5 native renames + 6 pins readback verified; independent reviewer PASS | Disposable-clone gate, push and native heartbeat consolidation |
+| 28 manual probes pass; 5 native renames + 6 pins readback verified; independent reviewer PASS | Small gate 75/75 PASS and native heartbeat ACTIVE; publish dependent PR and await #900 landing |
 
 ## Recon and decisions
 
@@ -63,8 +63,8 @@ Independent Codex final review: VERDICT PASS with firsthand narrow positive,
 missing-activity, old-actual-activity and idempotence probes. The first supervisor
 run exited 4 (close-mismatch): the reviewer authored Approved but released the
 coordination token back to producer rather than closing it. That protocol failure
-is not recorded as a driver-attested approval. A second turn will verify closure
-and the integrated state. Source was unchanged by integrating current development;
+is not recorded as a driver-attested approval. The second turn reached driver-attested Approved against 0b18f924
+and verified the integrated state. Source was unchanged by integrating current development;
 ledger conflicts retained both branches' keyed rows and higher generation before
 the canonical resolver rebuilt and checked the DB. Code was not hand-merged.
 
@@ -72,6 +72,6 @@ Live native smoke: five recent loose chats renamed, six newly pinned, all six
 read back successfully; current heartbeat chat separately renamed/pinned. Raw
 private titles/IDs and undo receipt remain in local temp; committed provenance
 retains aggregate observations. Existing legacy ZCode task-stamp heartbeat found
-active; installer will pause it through app UI and carry its ZCode grooming into
-the single native Codex heartbeat. Antigravity is not newly enabled. The branch
+active; paused through app UI and readback verified disabled/idle before enabling
+the single native Codex heartbeat every 15 minutes with shared ZCode grooming. Antigravity is not newly enabled. The branch
 contains PR #900 as a prerequisite; neither PR is considered landed.
