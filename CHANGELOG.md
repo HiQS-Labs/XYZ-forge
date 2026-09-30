@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-09-30 — Native Codex sidebar grooming shares task-sync (GH-901)
+
+Codex desktop now has a read-only snapshot adapter in the GH-896 task-sync CLI.
+It reuses shared stamp/report semantics; native app tools own title and pin
+writes. Actual latest turn activity supplies the date, so grooming metadata does
+not renew an old conversation. Defaults preserve full title wording, existing
+pins, project/custom grouping and sorting, with a bounded recent inventory and
+24-hour pin window. Missing/stale/empty snapshots fail closed. The installer
+moves the existing ZCode grooming into one native 15-minute heartbeat rather
+than adding a competing writer; no direct Codex store writes or Antigravity
+activation. Native prechecks cannot eliminate concurrent manual-edit races.
+
+Independent Codex final QA is driver-attested Approved; 28 recorded manual
+probes and the native title/pin smoke are retained under
+`TESTS-RESULTS/2026-09-30+GH-901/`. The dependent branch requires PR #900 to land
+first; the pilot clone is retained until its heartbeat can be repointed.
+
 ## 2026-09-30 — GH-549 fixture replay bounded to its own event (#854)
 
 Landing 2's first frozen-tip `ci-local.sh` exposed three false reds in the existing GH-549 work-event suite after the staging ledger crossed the connector's 500-event batch limit. The suite now seeds its fixture cursors at the event under test, so idempotence, overshoot, and lock assertions do not mistake a second valid batch for a defect. The unchanged production connector keeps its 500-event limit. Focused evidence: 122/3 red before and 125/0 green after. A clean-environment `ci-local.sh` rerun at `2dba66a2` passed all nine stages, with 412 suite passes and one intentional skip recorded in `TESTS-RESULTS/2026-09-30+GH-854/`.
