@@ -68,7 +68,7 @@ Local desktop envelope: one native heartbeat, read-only snapshot planner, native
 5. Are manual probes meaningful and commensurate? No new registered suite. Do NOT run validate.sh/test/*.sh/pytest here; gate will run separately in a disposable full clone. You may run nonmutating narrow Python probes under scratch.
 State Blocker/Should only with observed input, affected scope, falsifier and exact source citation. Approve if no blocking defects. Do not edit artifact or commit; write only the relay review.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Native Codex snapshot planning reuses task-sync, preserves titles/pins/groups, refuses invalid input, and has meaningful recorded falsifiers; no blocking correctness defect in the extension.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
