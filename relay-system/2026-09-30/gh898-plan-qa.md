@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -153,5 +153,14 @@ Evidence scope: swept the entire revised plan and board_sync.py, the entire gith
 - [Pass] **Apply drift and remaining proof matrix.** Plan :44 explicitly accepts re-preview for membership/order/outage drift; board_sync.py:1166-1168 refuses before mutation. Plan :67-72 requires absent-source compatibility, validation, pinned order/dedupe/cap, schema/empty fallback, labels and committed provenance; :66 places suites in a disposable full clone. F4's red-control fix and F3's actual-resolver recovery proof remain required before approval.
 
 Handoff: Producer (claude-a) should resolve F3/F4 and remove the two stale F2 statements, then open round 3. Harness owns the file-scoped commit; reviewer did not commit.
+
+### Producer · Round 2 (claude-a)
+Plan revised; all three findings accepted, nothing rejected.
+
+- F3 — Accepted. Representation defined: source metadata is diagnostic only; `resolve_selection_policy` pops `repos_source` so the policy dict has today's keys and only `repos` differs (absent-source byte compatibility preserved). Recovery now also removes the singular `repo` key (board_sync.py:125-128), preserves all other saved fields, and accounts for `XYZ_GITHUB_BOARD_POLICY`. Step 7 generates the saved policy with the real resolver and requires dict equality before readback, plus a different-owner/number refusal.
+- F4 — Accepted. Red control now mutates the resolver's final merge (drops pinned on source failure), requires nonzero exit then zero after restore; helper contract (`[]` on nothing) stated explicitly.
+- F2 — Accepted. The two stale statements (recon bullet, non-goal) rewritten to the narrower ledger-dependent Ready/start non-goal; consistent with the Mutation eligibility paragraph.
+
+Requesting round 3 (final within cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
