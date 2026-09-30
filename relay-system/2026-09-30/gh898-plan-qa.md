@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -77,5 +77,41 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+swept file: yes
+
+VERDICT: FAIL
+Basis: the one-file approach is appropriate, but the plan assumes an unsafe live-DB read and understates existing mutation/restore behavior. Revise the plan before implementation; no new writer, locks, modules or test suites requested.
+
+Evidence scope: reviewed the entire plan and board_sync.py, the complete github_board connector, the relevant HQ read paths, and rebalanceOS's activity query and database resolver. No additional independently established pre-existing source defect found; the findings below concern the proposed feature's interaction with existing behavior. Verify-tier graph attempt: XYZ-forge generation 2026-09-01T15:54:30Z points at another checkout; symbol search returned zero and coverage reports board_sync.py / github_board.py freshness not_tracked, hq-lib.sh metadata_changed. Used this worktree's exact source as fallback; graph completeness is not claimed. Read commands exited 0. No suites, executable fixtures, live mutation, or git commands ran.
+
+- [Should] **F1 — Replace immutable live reads with a safe read-only attempt and pinned fallback.** Plan :27, :37 and :59 treat successful immutable opening as justification for using it on the live WAL DB. SQLite explicitly disables locking/change detection for immutable files and warns of incorrect results or SQLITE_CORRUPT if the file changes ([SQLite URI §3.3](https://www.sqlite.org/uri.html)). This is more than a tolerable older activity snapshot. Smallest fix: URI mode=ro (properly encoded path), bounded timeout, close the handle, warn and retain pinned repos on sqlite3.Error/OSError; do not retry with immutable against the changing live file. An immutable read is appropriate only for an actually stable snapshot. No need to copy 4.9 GB or fix the writer.
+  Observed input: plan :24/:27 names the live 4.9 GB WAL DB; Setup question 4 identifies its concurrent launchd writer. This is a documented safety-contract conflict, not a witnessed corrupt query; no Blocker grade claimed.
+  Affected scope: reads of a database that another process can modify/checkpoint.
+  Falsifier: demonstrate that the chosen input is an unchanging snapshot for the full connection lifetime; immutable would then be valid. In the intended live case, a read-only open failure must warn and return pinned repos. Concurrent-WAL measurement is [Unverified — needs clone run].
+
+- [Should] **F2 — Correct the visibility-only and rollback claims.** Plan :29/:48 says non-Forge card moves need per-repo ledgers. Existing planner deliberately moves OPEN PRs without ledger rows (board_sync.py:252-255), follows closing links without a row (:262-279), and handles CLOSED issues before the missing-ledger guard (:309-329). Those changes flow to the existing writer (:1217-1219). Cheapest fix: explicitly accept/document these existing GitHub-authoritative moves for added repos; reserve the non-goal for ledger-dependent Ready/start decisions. Describe the opt-in as widening mutation eligibility as well as visibility, and replace “No data written anywhere” (:55) with the actual distinction between source resolution and a subsequent policy-apply.
+  Observed input: board_sync.py:254-255 sets an allowed OPEN PR target to in_review with no ledger lookup; :262-279 explicitly permits an OPEN closing-linked issue with zero ledger rows.
+  Affected scope: newly allowed repos' PRs, closing-linked issues and terminal issues; ordinary OPEN unlinked issues still hit :328-330.
+  Falsifier: in a disposable clone, allowed repo other/r with ledger=[] and GitHub OPEN PR #1 must yield an In review change; an OPEN unlinked issue #2 with ledger=[] must remain unresolved. If both remain unchanged, this scope finding is wrong. These executions are [Unverified — needs clone run].
+
+- [Should] **F3 — Account for policy-restore drift, not just preview/apply drift.** restore_policy_result compares the whole resolved policy with the saved result (board_sync.py:1244-1246) before readback. An activity-list change, even ordering alone, prevents restoring a previously applied result; deleting repos_source also does not make the old result match. Cheapest fix within the stated scope: explicitly document the limitation and an exact recovery procedure that reconstructs the saved resolved policy (including its source metadata) before conditional restore, with a clone check proving it. Alternatively propose a narrowly scoped restore compatibility change, with its own proof; do not silently remove the identity guard.
+  Observed input: board_sync.py:1245-1246 contains 'if policy != result.get("policy")' and raises 'current policy does not match the result artifact'; plan :44 only covers apply refusal, :55 supplies no board-restore procedure.
+  Affected scope: a saved applied result whose dynamic list/source differs from current resolution.
+  Falsifier: saved result repos=[pinned/r,active/a], current repos=[pinned/r,active/b] must refuse; then the documented recovery must permit conditional restore readback while still refusing a genuinely different board owner/number. Execution is [Unverified — needs clone run].
+
+- [Should] **F4 — Make manual proof cover all six requirements and witness a real red control.** Plan :59-63 does not assert pinned order/dedupe/cap, unchanged absent-source behavior, since_days/type validation, schema-absent versus empty-result fallback, or source labeling on fallback. An empty DB producing the intended warning is a positive failure-path check, not the AGENTS.md red control: no assertion has been shown to fail. Add a compact manual matrix and an intentional temporary mutation of the implementation in the disposable clone (e.g. return [] on DB failure), then witness the same pinned-list assertion fail and restore from a copy. Assert extracted data is nonempty; commit provenance.jsonl with the evidence. Explicitly put test/*.sh runs in a disposable full clone.
+  Observed input: plan :63 calls the expected successful empty-file fallback the 'Red control'; :60 lists only bad top_n values, and :62 records a directory without requiring provenance.jsonl.
+  Affected scope: acceptance evidence for this opt-in resolver; no new test files or gate machinery.
+  Falsifier: the manual pinned-list assertion passes on correct fallback and fails on the deliberate [] mutation. A schema-present zero-score DB must warn/fallback separately from a DB lacking github_activity; both must preserve a nonempty pinned list.
+
+- [Pass] **Consumer trace / minimum mechanism.** Legacy touch/default paths consume resolve_settings(), not the saved selection policy (board_sync.py:1407/main cfg assignment, :736/:802/:902); keeping pinned order is sensible for _policy_board_cfg (:975-979), but does not itself change legacy settings. github_board.run uses policy only for board-target exclusion (:126-134); its own cfg repos[0] (:96-99) stays legacy and replay remains refused for the policy-managed board. No parallel writer is needed. Direct stdlib SQL is a reasonable small coupling when the package is unavailable (plan :28/:44), with schema failure mapped to fallback.
+
+- [Pass] **Apply refusal is acceptable with an explicit limitation.** board_sync.py:1166-1168 rejects differing policy before mutations, and :1187-1191 additionally rechecks a fresh preview. Re-preview is a defensible single-operator response (plan :44). Document ordering-only changes and source outages as refusal causes too, and use a deterministic score tie-break in the copied query if reproducibility is desired; rebalanceOS github.py:36 currently orders only by score. The org-rename gap is explicitly bounded in plan :49; keep it and disclose that an inaccessible added repo can fail the whole collection (board_sync.py:1005-1006).
+
+- [Nit] There is no cmd_config function: config is a branch inside main (board_sync.py, 'if args.cmd == "config"'). Name that existing branch in the plan, and state how repos_source enters resolution: resolve_device_block only copies keys in defaults (device_config.py:95-111), so a helper alone cannot see an undeclared policy key. Keep the absent-source policy/output compatibility contract precise when adding source metadata.
+
+Handoff: Producer (claude-a) should disposition F1–F4 and the nit, revise the canonical plan, and open round 2. Harness owns the file-scoped commit; reviewer did not commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
