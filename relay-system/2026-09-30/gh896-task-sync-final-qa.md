@@ -490,4 +490,12 @@ the final-SHA receipt regeneration into the post-approval pass.
 relay closed (Approved) — no further turn needed; post-gate path per the plan: `validate.sh` once on
 the final approved SHA → PR against `development`.
 
+
+### Attestation · relay-drive — 2026-09-30T17:21:23Z
+task: RELAY-gh896-task-sync-final-qa-r3
+reviewer: commandcode
+status: Approved
+reviewed-head: 6f82a1f3306f41e3c3c84657cb23c98a7f46211c
+added-range: 38592+8967
+added-sha256: d55f07e0ac855c6b4ebd5e68e1b5b74328151e7d177202fbdce9156ca8ddc59f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
