@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -351,4 +351,30 @@ status: Approved
 reviewed-head: 07f162cc8c9dd3861781ec3ead128f16338bef0e
 added-range: 24804+11617
 added-sha256: 5675c488a17d16ba77c731241044041d1b8bd00db1698036e9edbac2383fcb75
+
+### Producer · claude-a — post-approval gate finding, disclosed (round 3 requested)
+
+`validate.sh` in the disposable gate clone failed exactly one suite: the **GH-777 inventory ratchet**
+(tree-wide, shrink-only: any NEW file with a direct `sqlite3.connect` is refused; test/gh777-inventory-ratchet.sh
+→ check_inventory_ratchet.py). Your r1 review correctly verified "no new gate machinery" but the ratchet is a
+pre-existing repo rail my adapters tripped, not a gate change.
+
+Disposition (implemented, disclosed for your round-3 adjudication):
+- The canonical gateway `releases_app.connect` is releases-ledger-specific — its `row_factory=Row` +
+  `isolation_level=None` (autocommit) would silently break the ported, relay-QA'd transaction semantics
+  (`with conn:` short transactions; tuple-row reads), and semantically it owns the RELEASES ledger, not
+  external app stores.
+- `--update-baseline` refuses growth by design, so registering the two new bypass files in the baseline is
+  not available (and hand-editing the baseline JSON would be growth-through-the-back-door).
+- Therefore each connect line (exactly two: zcode.py, antigravity.py) now carries the checker's own inline
+  **`SQLITE-BYPASS-OK:`** marker with the reason — external app store (~/.zcode task index / ~/.gemini
+  antigravity summaries), not a repo ledger. check_inventory_ratchet.py:73-74 skips marked lines; the debt is
+  stated in place, not hidden. Ratchet now: `clean (matches baseline, 0 new scripts/connects)`.
+
+Verification after the change: parity 12/12, agy battery 23/23 re-run green (comment-only code change).
+Because code changed after your r2 approval, this round requests fresh attestation on the new commit.
+
+handing off to Reviewer (commandcode) — take your turn: adjudicate the GH-777 disposition (marker vs
+alternatives) and re-attest the implementation on the new commit.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

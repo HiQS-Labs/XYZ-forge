@@ -59,7 +59,7 @@ class ZcodeAdapter:
     def _connect(self) -> sqlite3.Connection:
         if not os.path.exists(self.db_path):
             raise core.AdapterError(f"zcode: task index DB not found at {self.db_path}")
-        conn = sqlite3.connect(self.db_path, timeout=5.0)
+        conn = sqlite3.connect(self.db_path, timeout=5.0)  # SQLITE-BYPASS-OK: external app store (~/.zcode task index), not a repo ledger — GH-777 gateway is releases-ledger-specific
         conn.execute("PRAGMA busy_timeout=5000")
         return conn
 

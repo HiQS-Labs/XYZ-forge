@@ -98,7 +98,7 @@ class AntigravityAdapter:
     def _connect(self) -> sqlite3.Connection:
         if not self.db_path.exists():
             raise core.AdapterError(f"agy: summaries DB not found at {self.db_path}")
-        conn = sqlite3.connect(str(self.db_path), timeout=10.0)
+        conn = sqlite3.connect(str(self.db_path), timeout=10.0)  # SQLITE-BYPASS-OK: external app store (~/.gemini antigravity summaries), not a repo ledger — GH-777 gateway is releases-ledger-specific
         conn.execute("PRAGMA busy_timeout=5000")
         return conn
 
