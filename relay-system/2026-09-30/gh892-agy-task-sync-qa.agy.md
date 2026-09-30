@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -135,7 +135,7 @@ Handing off to Producer — go to the claude-a window and say 'take your turn'.
 
 - **[Blocker] `update_annotation_file` regex fails on existing escaped quotes**: Implemented. Updated regex pattern to `r'title:\s*"(?:\\.|[^"\\])*"'` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:157`), which properly handles escaped quotes and backslashes within the quoted string without premature truncation. Tested against `title:"A \"quote\"" pinned:true` and verified full replacement.
 - **[Should] Uncaught SQLite exceptions in `sync_conversations` crash daemon**: Implemented. Wrapped all SQLite database operations in `try ... except sqlite3.Error` and `except Exception` blocks (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:198-275`), returning a structured error dictionary. Additionally wrapped `sync_conversations` invocation in `run_cycle` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:317-338`) to ensure transient database lock errors log a warning rather than killing the long-running daemon loop.
-- Swept and verified with unit assertions.
+- Swept and verified with unit assertions.  [Unverified — no citation]
 
 Handing off to Reviewer for Round 3 review.
 
@@ -159,8 +159,30 @@ swept file: yes
 
 - **[Blocker] `sync_conversations` leaks SQLite file descriptors on transient database errors**: Implemented. Wrapped connection lifecycle with `try ... finally: if conn: conn.close()` in `sync_conversations` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:198-281`) and in `args.list_pinned` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:314-328`). Even when errors or early returns occur, connections are deterministically closed, preventing file descriptor exhaustion across daemon iterations.
 - **[Blocker] `update_annotation_file` blindly replaces or searches for literal string `pinned:true`**: Implemented. Strips quoted string literals `r'"(?:\\.|[^"\\])*"'` before checking for unquoted `\bpinned:\s*true\b` (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:165-167`), and uses a quotation-aware substitution callback `_remove_unquoted_pin` to remove `\bpinned:\s*true\b` only outside quoted spans (`utils/skills/agy-task-sync/scripts/agy_task_sync.py:169-175`). Validated with test fixture `title:"A pinned:true task"` preserving title contents exactly.
-- Swept and verified with test executions.
+- Swept and verified with test executions.  [Unverified — no citation]
 
 Handing off to Reviewer for Round 4 review.
+
+### Reviewer · Round 4
+
+swept file: yes
+
+- **[Blocker]** `update_annotation_file` unconditionally overwrites `.pbtxt` files if `apply=True` even when no modifications are made, causing continuous disk writes and creating empty `.pbtxt` files for conversations that didn't have one.
+  Observed input: `update_annotation_file("cid", new_title=None, pin=None, apply=True)` on a non-existent or unchanged `.pbtxt` file.
+  Affected scope: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:177-184` inside `update_annotation_file`.
+  Falsifier: If `new_title` and `pin` are both `None`, `content` is unchanged from what was read, but `f.write(content + "\n")` is executed regardless, modifying the file's `mtime` or creating a file containing just `\n`. Fix by only writing if `content` is not empty and `content != original_content` (where `original_content = f.read().strip()` or `""` if not found).
+- **[Blocker]** `sync_conversations` skips unpinning tasks that were manually removed from `app_storage.json` by the user, leaving stale `pinned:true` flags in `.pbtxt` that fight the user's intent on app reload.
+  Observed input: `is_pinned = False` and `auto_pin = False` (task was manually unpinned).
+  Affected scope: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:266` inside `sync_conversations`.
+  Falsifier: `pin=True if (is_pinned or auto_pin) else None` evaluates to `None`, which skips the unpin logic in `update_annotation_file`, leaving any existing `pinned:true` intact. Fix by changing the argument to `pin=(is_pinned or auto_pin)` (or `True if auto_pin else is_pinned`), which will pass `False` and correctly strip the stale flag from `.pbtxt`.
+- **[Should]** `get_last_action_from_transcript` lacks type checking for `entry` and `content`, risking an `AttributeError` crash on unexpected JSON lines.
+  Observed input: `entry = {"type": "PLANNER_RESPONSE", "content": {"foo": "bar"}}` or `entry = ["a list"]`.
+  Affected scope: `utils/skills/agy-task-sync/scripts/agy_task_sync.py:93` and `114` inside `get_last_action_from_transcript`.
+  Falsifier: If `entry` is a list, `entry.get("type")` throws `AttributeError`. If `content` is a dictionary, `content.splitlines()` throws `AttributeError: 'dict' object has no attribute 'splitlines'`. Fix by adding `if not isinstance(entry, dict): continue` and guarding string operations with `isinstance(content, str)`.
+
+**VERDICT:** FAIL
+**Basis:** Unconditional file writes spam the disk on every background cycle, and ignoring unpinned tasks violates accurate management of the Pinned group.
+
+Handing off to Producer — go to the claude-a window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
