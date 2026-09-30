@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,5 +72,19 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes — read all 1,506 lines of `test/gh549-work-events.sh`, the GH-856 plan, the changed changelog entry, and the prior final QA. No pre-existing defect in the touched fixture's GH-856 operational scope was found.
+
+- [Pass] The three stub cases replay their own events: `PRISTINE_TAIL` and `seed_cursor_tail` are defined at `test/gh549-work-events.sh:162-166`; the bounds positive and red copies reseed at `:524` and `:587`, and the lock positive and red copies reseed at `:819` and `:853`. The bounds assertions require refusal with the cursor still at the tail and then storage of `MAXID+5` after the guard is removed (`:533-545,589-594`). The lock assertions require one child with the lock and at least two without it (`:826-864`). A read-only `bash -n test/gh549-work-events.sh` exited 0. A read-only source probe for these seed patterns exited 0 and found the bounds seeds once each and the lock red seed once.
+- [Pass] Seeding does not erase intentional replay-from-zero checks: `work reconcile --reset` remains at `test/gh549-work-events.sh:500-504,937-941`; later cases explicitly delete cursors at `:557,595,777,868,885,892,932`. The connector reads only `id > last_id` with `limit=500` (`utils/py/work_connectors/__init__.py:128-139`), so starting these controls at the pristine tail keeps their own new events in the dispatched batch. Read-only `sqlite3 -readonly releases.db "SELECT 'total='||COUNT(*)||' tail='||COALESCE(MAX(id),0) FROM work_events; SELECT id,gh_number,event FROM work_events WHERE gh_number=856 ORDER BY id;"` exited 0: `total=496 tail=496`, followed by #856 event IDs `492` through `496`.
+- [Pass] The plan calls the first full gate red `123/125`, the base fixture `125/125`, the revised focused clone run `125/125`, and reserves a new full gate (`PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md:28-30,75-78`). The changelog names the fixture correction (`CHANGELOG.md:3-5`), and the roadmap row retains `86/82/50/55` and `in-progress` (`releases.sql:773`). The prior locator approval remains a separate review of the earlier code (`relay-system/2026-09-29/gh856-final-qa.md`, Reviewer Round 3); current locator selection, shared helper loading, and readiness paths remain visible at `skills/1-hourly/relay-xyz/find-harness.sh:171-273,402-488`.
+- [Unverified — turn constraint] No mutation-heavy suite or qualifying gate ran in this valued worktree. The exact committed `origin/development...HEAD` diff could not be independently obtained without Git: the graph change request was denied by approval policy, and read-only `gh api 'repos/HiQS-Labs/XYZ-forge/contents/test/gh549-work-events.sh?ref=c7ea57fded7a8810547cd1b6dd86d31ab73dfd5e' --jq .content` exited 1 with `error connecting to api.github.com`. A read-only `diff -u` against the separate main checkout showed only the expected fixture seeding hunks, and `cmp -s` found the production connector module identical there; that checkout is on another branch, so neither comparison attests the committed branch diff. The harness must inspect that diff and run the reserved full gate before PR readiness.
+
+VERDICT: PASS
+Basis: The seeded fixture preserves the positive, red, reset, and explicit zero-cursor controls at the observed 496-event ledger size; the documents distinguish the red first gate from the focused green rerun. No concrete GH-856 regression was found in the reviewed files. Full branch-diff attestation and the qualifying gate remain with the harness.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
