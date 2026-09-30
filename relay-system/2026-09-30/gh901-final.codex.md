@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -79,5 +79,20 @@ State Blocker/Should only with observed input, affected scope, falsifier and exa
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+swept file: yes
+
+VERDICT: PASS
+Basis: Swept the complete embedded artifact, working document, skill procedure, core.py, task_sync.py, codex.py and manual-probe source/output/provenance. No blocking correctness defect or additional pre-existing defect found in these files within the native desktop envelope. Disposable-clone gate and native deployment remain pending.
+
+- [Pass] Reuse: core.py:74 retains the default title cap; adapters/codex.py:103 uses max_length=None. CLI default is still “zcode,agy”; Codex preflight refuses unsupported writes before dispatch. Historical old-adapter identity against PR #900 was not diffed (git prohibited), so historical diff identity is not attested.
+- [Pass] Validation/preservation: adapters/codex.py:30, :39, :59, :66, :96 reject stale/empty/ambiguous/pin-disagreement/missing-activity inputs. Lines 90-99 skip heartbeat, other hosts/kinds/custom groups and old actual activity. Line 104 stamps actual turn seconds.
+- [Pass] Independent narrow probe command: PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - (inline Python importing core/CodexAdapter, using TemporaryDirectory snapshots only). Input: fresh local chats row x with long title, updatedAt=now and activity=now-60; controls: activity={}, activity=now-90000; stable replan: proposed title and pinned section applied to synthetic snapshot. Exit 0. Decisive output: “positive: rename=1 pin=1 full wording retained”; “missing activity: refused: Codex actual turn activity missing/invalid for x”; “metadata recent / actual old: swept=0”; “stable replan: rename=0 pin=0”. Guards: adapters/codex.py:95-110.
+- [Pass] Native procedure specifies refreshed title/section/activity preconditions, exclusion, title-then-pin sequencing, readback and no blind retry. Its explicit caveat is “Native tools have no compare-and-swap: the prechecks reduce, but cannot eliminate, a concurrent manual-edit race.” Sufficient for the stated local envelope, without promising CAS.
+- [Pass] Recorded manual_probe.py contains invalid/stale/empty/activity controls and deleted-rename assertion control; manual-probe.json records 28 checks. Independent command hashlib.sha256(Path('TESTS-RESULTS/2026-09-30+GH-901/manual-probe.json').read_bytes()).hexdigest() returned efdaeaba837800f0cbb8423ec1ef6b0ef0af47f362431622a611206e852ea2df, exit 0, matching provenance.jsonl. Recorded executable was read, not run here.
+- [Unverified — needs clone run] Full gate and live native smoke were not rerun. No validate.sh, test/*.sh, pytest or executable fixtures ran. Graph XYZ-forge generation 2026-09-01T15:54:30Z has no task-sync symbols and missing freshness for the code paths; exact complete seeded source reads supplied the evidence.
+
+Relay closed (Approved), no further review turn needed. Handing token to producer for separate gate and delivery.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
