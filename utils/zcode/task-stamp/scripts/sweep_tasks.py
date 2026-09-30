@@ -43,8 +43,9 @@ STAMP_RE = re.compile(r"^(\d{2}-\d{2})\s+(\S.*)$", re.DOTALL)
 MAX_BASE = 72  # keep the descriptive part readable in the task list
 
 EXPECTED_TASK_COLUMNS = {
-    "workspace_key", "task_id", "title", "title_overridden", "pinned",
-    "updated_at", "deleted", "archived", "meta_json", "cron_automation_id",
+    "workspace_key", "workspace_path", "workspace_identity", "task_id",
+    "title", "title_overridden", "pinned", "updated_at", "deleted",
+    "archived", "meta_json", "cron_automation_id",
 }
 EXPECTED_GROUP_COLUMNS = {"group_id", "title", "color", "created_at", "updated_at"}
 EXPECTED_MEMBER_COLUMNS = {
@@ -58,17 +59,15 @@ def local_stamp(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000).strftime("%m-%d")
 
 
-def today_stamp() -> str:
-    return datetime.now().strftime("%m-%d")
-
-
 def clean_base(raw: str) -> str:
     """Strip any existing stamp and collapse whitespace so re-stamping
     never stacks prefixes; cap length so long prompt-derived titles stay
-    scannable."""
+    scannable. A bare date is not a description."""
     match = STAMP_RE.match(raw.strip())
     base = match.group(2) if match else raw.strip()
     base = re.sub(r"\s+", " ", base).strip()
+    if re.fullmatch(r"\d{2}-\d{2}", base):
+        return ""
     if len(base) > MAX_BASE:
         base = base[: MAX_BASE - 1].rstrip() + "…"
     return base
@@ -146,7 +145,7 @@ def run_sweep(conn: sqlite3.Connection, args) -> dict:
     pin_cutoff = int((datetime.now().timestamp() - args.pin_hours * 3600) * 1000)
     unpin_cutoff = (
         int((datetime.now().timestamp() - args.unpin_days * 86400) * 1000)
-        if args.unpin_days
+        if args.unpin_days is not None
         else None
     )
 
@@ -201,17 +200,22 @@ def run_sweep(conn: sqlite3.Connection, args) -> dict:
                     (ws_key, task_id),
                 ))
             if args.group and group_id:
-                writes.append((
-                    "INSERT OR REPLACE INTO task_group_members"
-                    " (group_id, workspace_key, workspace_path, workspace_identity,"
-                    " task_id, sort_order, added_at, created_at, updated_at)"
-                    " VALUES (?,?,?,?,?,"
-                    " (SELECT COALESCE(MAX(sort_order),-1)+1 FROM task_group_members WHERE group_id=?),"
-                    " ?,?,?)",
-                    (group_id, ws_key, ws_path, ws_identity, task_id,
-                     group_id, now_ms, now_ms, now_ms),
-                ))
-                report["group_added"].append({"task_id": task_id, "group": args.group})
+                existing = conn.execute(
+                    "SELECT group_id FROM task_group_members WHERE workspace_key=? AND task_id=?",
+                    (ws_key, task_id),
+                ).fetchone()
+                if existing is None or existing[0] != group_id:
+                    writes.append((
+                        "INSERT OR REPLACE INTO task_group_members"
+                        " (group_id, workspace_key, workspace_path, workspace_identity,"
+                        " task_id, sort_order, added_at, created_at, updated_at)"
+                        " VALUES (?,?,?,?,?,"
+                        " (SELECT COALESCE(MAX(sort_order),-1)+1 FROM task_group_members WHERE group_id=?),"
+                        " ?,?,?)",
+                        (group_id, ws_key, ws_path, ws_identity, task_id,
+                         group_id, now_ms, now_ms, now_ms),
+                    ))
+                    report["group_added"].append({"task_id": task_id, "group": args.group})
 
         if title_overridden == 0:
             report["needs_summary"].append(
@@ -220,13 +224,16 @@ def run_sweep(conn: sqlite3.Connection, args) -> dict:
 
     if unpin_cutoff is not None:
         stale = conn.execute(
-            "SELECT task_id, title FROM tasks WHERE pinned=1 AND deleted=0 AND archived=0"
-            " AND updated_at < ?",
+            "SELECT workspace_key, task_id, title FROM tasks WHERE pinned=1 AND deleted=0"
+            " AND archived=0 AND updated_at < ?",
             (unpin_cutoff,),
         ).fetchall()
-        for task_id, title in stale:
+        for ws_key, task_id, title in stale:
             report["unpinned"].append({"task_id": task_id, "title": title})
-            writes.append(("UPDATE tasks SET pinned=0 WHERE task_id=?", (task_id,)))
+            writes.append((
+                "UPDATE tasks SET pinned=0 WHERE workspace_key=? AND task_id=?",
+                (ws_key, task_id),
+            ))
 
     if not args.dry_run and writes:
         with conn:
@@ -238,30 +245,37 @@ def run_sweep(conn: sqlite3.Connection, args) -> dict:
 
 def run_set_title(conn: sqlite3.Connection, args) -> dict:
     task_id, desired = args.set_title
-    desired = desired.strip()
-    if not desired:
+    if not desired.strip():
         raise SystemExit("task-stamp: --set-title requires a non-empty title")
-    if not STAMP_RE.match(desired):
-        desired = f"{today_stamp()} {desired}"
 
     rows = conn.execute(
-        "SELECT workspace_key, task_id, title, meta_json FROM tasks WHERE task_id=?",
+        "SELECT workspace_key, task_id, title, meta_json, updated_at FROM tasks WHERE task_id=?",
         (task_id,),
     ).fetchall()
     if not rows:
         raise SystemExit(f"task-stamp: no task with id {task_id!r}")
 
+    # Stamp from the task's own last-activity date, matching the sweep's
+    # semantics — a wall-clock stamp here would be silently reverted by
+    # the next sweep of a task last active on an earlier day.
+    stamp = local_stamp(rows[0][4])
+    base = clean_base(desired)
+    if not base:
+        raise SystemExit("task-stamp: --set-title requires a non-empty description")
+    desired = f"{stamp} {base}"
+
     out = {"task_id": task_id, "renamed": [], "dry_run": args.dry_run}
-    if not args.dry_run:
+    for ws_key, _, old, meta_json, _ in rows:
+        out["renamed"].append({"old": old, "new": desired})
+        if args.dry_run:
+            continue
+        meta = sync_meta(meta_json, desired)
         with conn:
-            for ws_key, _, old, meta_json in rows:
-                meta = sync_meta(meta_json, desired)
-                conn.execute(
-                    "UPDATE tasks SET title=?, title_overridden=1, meta_json=?"
-                    " WHERE workspace_key=? AND task_id=?",
-                    (desired, meta if meta is not None else meta_json, ws_key, task_id),
-                )
-                out["renamed"].append({"old": old, "new": desired})
+            conn.execute(
+                "UPDATE tasks SET title=?, title_overridden=1, meta_json=?"
+                " WHERE workspace_key=? AND task_id=?",
+                (desired, meta if meta is not None else meta_json, ws_key, task_id),
+            )
     return out
 
 
@@ -282,7 +296,7 @@ def main(argv=None) -> int:
     parser.add_argument("--pin", dest="pin", action="store_true", default=True,
                         help="pin tasks active within --pin-hours (default)")
     parser.add_argument("--no-pin", dest="pin", action="store_false",
-                        help="leave the pinned flag untouched")
+                        help="skip pinning recently-active tasks (does not disable --unpin-days)")
     parser.add_argument("--pin-hours", type=float, default=24.0,
                         help="pin window in hours of last activity (default 24)")
     parser.add_argument("--unpin-days", type=float, default=None, metavar="N",
