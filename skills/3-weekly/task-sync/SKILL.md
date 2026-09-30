@@ -122,4 +122,4 @@ self-restamping loop.
 No new `test/` suites — this skill is verified by the functional probe battery,
 doctor fault injection, the A3 red control against the superseded original, one
 full `validate.sh` on the final commit, and the TESTS-RESULTS receipt with
-provenance (see `TESTS-RESULTS/GH-896-UNIFIED-TASK-SYNC/`).
+provenance (see `TESTS-RESULTS/2026-09-30+GH-896/`).

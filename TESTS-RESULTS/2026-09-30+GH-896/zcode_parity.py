@@ -73,6 +73,37 @@ u2 = subprocess.run(["python3", TS, "--ide", "zcode", "--zcode-db", "/tmp/ts-pro
                      "--apply", "--all", "--hours", "9999"], capture_output=True, text=True)
 u2j = json.loads(u2.stdout)["ides"]["zcode"]
 checks.append(("second run: zero writes (idempotent)", len(u2j['renamed']) == 0 and len(u2j['pinned']) == 0))
+# -- A1 zcode doctor faults (final-QA r1 Should) -----------------------------
+def check(name, ok):
+    checks.append((name, ok))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "skills", "3-weekly", "task-sync", "scripts"))
+import core as _core
+from adapters import zcode as _zc
+
+ad = _zc.ZcodeAdapter(db_path="/tmp/ts-probes/definitely-missing.sqlite", apply=False)
+d = ad.doctor()
+check("A1 zcode doctor fault: missing store -> red, named message",
+      d["ok"] is False and "not found" in d["reds"][0])
+
+import shutil as _sh, sqlite3 as _s2
+import os as _os
+if _os.path.exists("/tmp/ts-probes/nocol.sqlite"):
+    _sh.rmtree("/tmp/ts-probes/nocol.sqlite") if _os.path.isdir("/tmp/ts-probes/nocol.sqlite") else _os.remove("/tmp/ts-probes/nocol.sqlite")
+_sh.copy("/tmp/ts-probes/a.sqlite", "/tmp/ts-probes/nocol.sqlite")
+_c = _s2.connect("/tmp/ts-probes/nocol.sqlite")
+_c.execute("CREATE TABLE tasks_drop AS SELECT workspace_key, workspace_path, workspace_identity, task_id, title, title_overridden, pinned, updated_at, deleted, archived, cron_automation_id FROM tasks")
+_c.execute("DROP TABLE tasks")
+_c.execute("ALTER TABLE tasks_drop RENAME TO tasks")
+_c.commit(); _c.close()
+ad2 = _zc.ZcodeAdapter(db_path="/tmp/ts-probes/nocol.sqlite", apply=False)
+d2 = ad2.doctor()
+check("A1 zcode doctor fault: dropped columns -> red, named message",
+      d2["ok"] is False and "missing expected columns" in d2["reds"][0])
+
+ad3 = _zc.ZcodeAdapter(db_path="/tmp/ts-probes/a.sqlite", apply=False)
+d3 = ad3.doctor()
+check("A1 zcode doctor green on healthy copy", d3["ok"] is True and d3.get("journal_mode") == "wal")
+
 fails = 0
 for name, ok in checks:
     print(("PASS" if ok else "FAIL"), "-", name)

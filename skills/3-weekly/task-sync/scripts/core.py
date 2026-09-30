@@ -39,10 +39,12 @@ def utc_text_to_local_dt(text: str) -> datetime | None:
     Handles the formats actually seen in Antigravity's
     ``conversation_summaries.last_modified_time`` — ISO-8601 with
     fractional seconds and an explicit offset
-    (``2026-06-19 01:31:58.720731+00:00``) as well as the plain
-    ``%Y-%m-%d %H:%M:%S`` form. Returns None when the text is absent or
-    unparseable — callers decide whether that skips the row or aborts."""
-    if not text:
+    (``2026-06-19 01:31:58.720731+00:00``). The fallback chain also
+    accepts offset-naive ``%Y-%m-%d %H:%M:%S`` text and — deliberately,
+    matching the superseded original — treats NAIVE text as already
+    local. Returns None for absent, non-string, or unparseable input —
+    callers decide whether that skips the row or aborts."""
+    if not text or not isinstance(text, str):
         return None
     cleaned = text.strip()
     try:

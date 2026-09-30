@@ -260,7 +260,7 @@ class AntigravityAdapter:
             if auto_pin_ids:
                 self._auto_pin(auto_pin_ids, pinned_ids, rep)
         else:
-            rep["pinned_source"] = "not read (dry-run)"
+            rep["pinned_source"] = "app_storage.json (read for candidate selection; pin writes deferred to --apply)"
 
         return rep
 

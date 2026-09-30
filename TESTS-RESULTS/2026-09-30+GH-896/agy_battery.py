@@ -3,7 +3,9 @@ import json, os, shutil, sqlite3, sys, importlib.util, hashlib
 
 FIX = "/tmp/ts-probes/agy-fixture"
 FIX2 = "/tmp/ts-probes/agy-malformed"
-UNIFIED = "/tmp/xyz-gh896-clone/skills/3-weekly/task-sync/scripts"
+import os as _os
+_ROOT = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", ".."))
+UNIFIED = _os.path.join(_ROOT, "skills", "3-weekly", "task-sync", "scripts")
 ORIG = "/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/skills/agy-task-sync/scripts/agy_task_sync.py"
 
 def build_fixture(root, app_storage_raw=None):
@@ -14,8 +16,8 @@ def build_fixture(root, app_storage_raw=None):
                  " title TEXT, preview TEXT, status TEXT, last_modified_time TEXT)")
     # UTC texts: 2026-09-29 23:19:00 UTC -> local 09-29 16:19 (UTC-7); 09-30 02:00 UTC -> local 09-29 19:00
     conn.executemany("INSERT INTO conversation_summaries VALUES (?,?,?,?,?)", [
-        ("conv-a", "09-28 old title a", "old preview a", "active", "2026-09-29 23:19:00"),
-        ("conv-b", "conv b title",      "old preview b", "active", "2026-09-30 02:00:00"),
+        ("conv-a", "09-28 old title a", "old preview a", "active", "2026-09-29 23:19:00.047628+00:00"),
+        ("conv-b", "conv b title",      "old preview b", "active", "2026-09-30 02:00:00.931256+00:00"),
     ])
     conn.commit(); conn.close()
     if app_storage_raw is None:
@@ -103,7 +105,7 @@ m.BRAIN_DIR = pathlib.Path(f"{FIX2}/brain")
 res = m.sync_conversations(only_pinned=True, apply=True)
 pb_after_orig = {p: digest(f"{FIX2}/annotations/{p}.pbtxt") for p in ("conv-a", "conv-b")}
 check("A3 RED CONTROL: original strips pins on the same fault (witnessed)",
-      pb_before == pb_after_orig and pb_after_orig != pb_after if False else (pb_after_orig != pb_before))
+      pb_after_orig != pb_before)
 
 # -- app-running gate --------------------------------------------------------
 ad3 = antigravity.AntigravityAdapter(agy_root=FIX, apply=True, app_running_fn=lambda: True)
@@ -126,6 +128,29 @@ conn.commit(); conn.close()
 ad5 = antigravity.AntigravityAdapter(agy_root=f"{FIX}/../agy-nocol", apply=False, app_running_fn=not_running)
 d5 = ad5.doctor()
 check("doctor fault: dropped column -> red with clear message", d5["ok"] is False and "missing expected columns" in d5["reds"][0])
+
+# -- r2 falsifiers (agy round-2) ---------------------------------------------
+from datetime import datetime as _dt
+import core as _core
+_d = _core.utc_text_to_local_dt("2026-06-19 01:31:58.720731+00:00")
+check("r2 Blocker falsifier: real-format timestamp parses (not None)", _d is not None)
+check("r2 Blocker falsifier: aware UTC input converts to a LOCAL-aware datetime",
+      _d is not None and _d.tzinfo is not None and _d.utcoffset() is not None)
+_d2 = _core.utc_text_to_local_dt("2026-09-29 23:19:00")
+check("plain-format timestamp still parses (fallback chain)", _d2 is not None)
+_d3 = _core.utc_text_to_local_dt("garbage")
+check("garbage still returns None (skip, not crash)", _d3 is None)
+
+# -- app_storage.json as a JSON ARRAY (r2 Should falsifier) -------------------
+build_fixture(f"{FIX}/../agy-array", app_storage_raw='[]')
+ad6 = antigravity.AntigravityAdapter(agy_root=f"{FIX}/../agy-array", apply=True, app_running_fn=not_running)
+try:
+    ad6.sweep()
+    check("r2 Should falsifier: JSON-array store -> AdapterError (not AttributeError)", False)
+except core.AdapterError as e:
+    check("r2 Should falsifier: JSON-array store -> AdapterError (not AttributeError)", "not an object" in str(e))
+except AttributeError:
+    check("r2 Should falsifier: JSON-array store -> AdapterError (not AttributeError)", False)
 
 fails = sum(0 if ok else 1 for _, ok in checks)
 for name, ok in checks: print(("PASS" if ok else "FAIL"), "-", name)

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -162,5 +162,49 @@ VERDICT: FAIL
 Basis: One Blocker — the committed evidence chain contradicts itself: provenance.jsonl:2 claims 23/23 for a battery whose committed version has 19 checks and FAILS (18/19, rc=1) against the committed code, because the r2-updated battery was never committed (0796930a's diffstat proves it). The implementation itself is sound — parity 9/9 re-verified, all battery behavior checks pass against committed code, both r2 fixes re-verified, the safety contract and per-IDE isolation re-witnessed by my probes — so the fix is mechanical: commit the updated battery (it already passes 23/23), add the zcode doctor-fault checks, record or explicitly defer the A5 governance checks, and take the R5 staleness decision. Two Shoulds (R5 staleness check; A1/A5 evidence coverage) and six Nits; none requires touching adapter/core behavior.
 
 handing off to Producer — go to the claude-a window and say 'take your turn'
+
+
+### Producer · claude-a — r1 dispositions, fixes landed
+
+- [Blocker] committed battery contradicted its receipt — **Implemented**: the UPDATED 23-check
+  battery is now the committed `TESTS-RESULTS/2026-09-30+GH-896/agy_battery.py` (r1's replica
+  finding was correct — the r2 fixes had only been run from session scratch). The committed copy
+  now seeds the live ISO microseconds+offset fixture format, derives its `UNIFIED` scripts path
+  repo-relatively (portable from a fresh clone), and carries the cleaned red-control/falsifier
+  arms (dead `if False else` removed; the never-failing "converts to LOCAL" check replaced with a
+  discriminating aware-datetime check). Re-ran from the tree: 23/23, rc=0. `provenance.jsonl`
+  regenerated to describe exactly the committed batteries (parity 12, agy 23).
+- [Should] R5 receipt staleness never judged — **Implemented**: `run_doctor` now parses the
+  receipt's `at` and goes RED when it is older than 2 hours ("heartbeat receipt stale: last apply
+  ... — heartbeat may be dead"); receipt-absent remains the non-red pending state. Probe: forged
+  29-day-old receipt -> rc=3 with the named red; restored fresh receipt -> green again.
+- [Should] A1 zcode arms + A5 governance arms unevidenced — **Implemented**: parity battery
+  extended with three zcode doctor checks (missing store -> red named; dropped columns -> red
+  named; healthy copy -> green/wal) — now 12/12; `releases check` (clean, 9 pre-existing
+  warnings) and `pdda.sh run` (no errors) recorded in provenance; the HQ `intake.py --dry-run
+  add` preview was attempted and is **blocked by pre-existing collection reconciliation**
+  (unacknowledged removed skill `marathon-triage`) — recorded as `blocked` in the receipt rather
+  than mutated by a probe; deployment preview/apply stays in the installer SOP (SKILL.md step 2)
+  on the operator's device.
+- [Nit] naive-string docstring flip — **Implemented**: docstring now states the convention
+  explicitly (offset-naive `%Y-%m-%d %H:%M:%S` text is treated as ALREADY LOCAL, matching the
+  superseded original); the fallback chain's UTC assumption for `%z`-less forms was the docstring
+  lie, now corrected.
+- [Nit] non-str input crash — **Implemented**: `utc_text_to_local_dt` guards
+  `isinstance(text, str)` and returns None (skip semantics, same as unparseable).
+- [Nit] SKILL.md receipts path — **Implemented**: `TESTS-RESULTS/2026-09-30+GH-896/`.
+- [Nit] `pinned_source` dry-run wording — **Implemented**: "app_storage.json (read for candidate
+  selection; pin writes deferred to --apply)".
+- [Nit] battery debris + decorative check — **Implemented** (see Blocker disposition).
+- [Nit] hardcoded UNIFIED path — **Implemented** (repo-relative); the parity battery's ORIG path
+  to the primary checkout is retained deliberately — it is inherent to the parity claim and is
+  recorded as run-provenance, per r1's own note.
+
+No code-behavior regressions: parity 12/12 and battery 23/23 re-run after every change; doctor
+faults and staleness probed. Plan Status table updated; port-source section de-pathed to holding
+branches (PDDA hardcoded-paths now clean).
+
+handing off to Reviewer (commandcode) — take your turn: re-review against the r1 findings and set
+the verdict (line starts exactly `VERDICT: `).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

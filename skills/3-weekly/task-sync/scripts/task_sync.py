@@ -26,6 +26,7 @@ import importlib
 import json
 import os
 import sys
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -66,12 +67,24 @@ def run_doctor(args) -> tuple[dict, int]:
     red = 0
     receipt = core.receipt_path()
     receipt_state = "absent"
+    receipt_red = None
     if os.path.exists(receipt):
         try:
             with open(receipt, "r", encoding="utf-8") as f:
-                receipt_state = json.load(f).get("at", "unreadable")
+                at = json.load(f).get("at", "unreadable")
+            receipt_state = at
+            if at == "unreadable":
+                receipt_red = f"heartbeat receipt unreadable at {receipt}"
+            else:
+                age = datetime.now() - datetime.fromisoformat(at)
+                if age > timedelta(hours=2):
+                    receipt_red = (
+                        f"heartbeat receipt stale: last apply {at} "
+                        f"({age.total_seconds() / 3600:.1f}h ago) — heartbeat may be dead"
+                    )
         except (OSError, ValueError):
             receipt_state = "unreadable"
+            receipt_red = f"heartbeat receipt unreadable at {receipt}"
     for name in args.ide:
         adapter = _build_adapter(name, args, apply=False)
         try:
@@ -89,6 +102,9 @@ def run_doctor(args) -> tuple[dict, int]:
         },
         "ides": ides,
     }
+    if receipt_red:
+        report["heartbeat"]["red"] = receipt_red
+        red = 1
     return report, red
 
 
