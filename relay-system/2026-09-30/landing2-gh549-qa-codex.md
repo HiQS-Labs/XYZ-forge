@@ -85,4 +85,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer claude-a owns the pending final full-clone gate; approval covers this focused review only. User-directed tick done supersedes the embedded shim-owned transition instruction; harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-09-30T08:50:36Z
+task: RELAY-landing2-gh549-qa-codex
+reviewer: codex
+status: Approved
+reviewed-head: 981e990884a14ba851a6833f9bb97678d4875229
+added-range: 5897+3847
+added-sha256: c18c8a53b9684cb4830e01e0c39a461e4ad79b482de4c33e8580435ebab1cc5f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
