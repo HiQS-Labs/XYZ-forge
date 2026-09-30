@@ -2,7 +2,7 @@
 gh_issue: 856
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/856
 title: "Locate the relay harness from a deployed relay-xyz skill"
-status: Active (2-WORKING — implementation verified; final review pending)
+status: Active (2-WORKING — implementation verified; final review refresh pending)
 created: 2026-09-27
 updated: 2026-09-29
 owner: Codex
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex approved the plan in relay `RELAY-GH856-PLAN`. The locator and existing suite were extended, and focused tests passed in a disposable full clone. | Final Codex relay review, one qualifying gate on the approved commit, then a ready PR to `development`. |
+| Codex approved the plan in relay `RELAY-GH856-PLAN`. The locator and existing suite were extended. A full gate exposed a ledger-size assumption in an existing connector fixture; its focused correction passed 125/125. | Fresh final Codex review, a qualifying gate on the revised approved commit, then a ready PR to `development`. |
 
 ## Rating — 2026-09-29: `86/82/50/55` (priority/severity/appeal/effort)
 
@@ -75,6 +75,7 @@ Discovery can select the wrong clone when multiple copies exist. Origin validati
 - Focused tests ran in disposable full clone `xyz-gh856-verify`: `test/find-harness.sh` 50/50, `test/gh396-find-harness-roots.sh` 41/41, `test/gh292-worktree-vendored-discovery.sh` 7/7, and `test/gh448-driver-lock-resolver.sh` 18/18. A temporary regression in the GH-396 suite was compared with a full clone of base `c7ea57fd` (41/41), corrected, then confirmed green at head.
 - The copied-skill fixture tests all seven bounded roots, wrong-origin and task-clone rejection, ambiguity, config round trip, usable `--env` exports, non-`development` warning, stale config fallback, cached-upstream warning, live and stale lock states, and config-backed vendored drift. These are fixture results on this Mac; the four-device rollout remains a post-merge step.
 - The `--env` tick assertion was mutation-checked in the disposable clone: removing only `export TICK` made `test/find-harness.sh` fail (49 pass, 1 fail, specifically the copied `--env` check). Restoring the line returned 50/50. The task branch's locator was never mutated for this control.
+- The first full `ci-local.sh --base origin/development` run on final-relay-approved `b6f9ca06` was red solely in GH-549 (123/125). The base `c7ea57fd` passes GH-549 125/125. The five legitimate #856 ledger events increase the starting tail from 491 to 496; the fixture's cursor deletion caused a full replay past the connector's 500-event batch limit. Its overshoot red control saw batch max 500 instead of the new fixture max 501, and its lock control correctly dispatched the remaining event on a second batch. In a disposable full clone, seeding the existing fixture cursor to its pristine tail for those stub cases restored 125/125. No connector production code changed. The full gate on this revised branch is pending fresh final review.
 
 ## Observed failure
 
