@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apple Silicon Testing — XYZ Forge</title>
+<meta name="description" content="Local LLM inference benchmarks on Apple Silicon — M6 Mac mini, M4 Pro MacBook Pro, Mac Studio M1 Max — across MLX, llama.cpp and the Neural Engine: prompt throughput, decode tok/s, memory, power and efficiency. Source of truth: HiQS-AI-Resolve-Catalog issue #5.">
+<link rel="canonical" href="https://hiqs-labs.github.io/XYZ-forge/apple-silicon-testing.html">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%E2%9A%99%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">XYZ Forge</a>
+    <nav aria-label="Site">
+      <a href="index.html">Welcome</a>
+      <a href="use-cases.html">Use Cases</a>
+      <a href="how-it-works.html">How it Works</a>
+      <a href="skills.html">Skills</a>
+      <a href="faq.html">FAQ</a>
+      <a href="models-harnesses.html">Models &amp; Harnesses</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="apple-silicon-testing.html" aria-current="page">Apple Silicon Testing</a>
+      <a href="issues.html">Issues</a>
+      <a href="other-apps-tools.html">Other Apps &amp; Tools</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1>Apple Silicon Testing</h1>
+    <p class="page-intro">A benchmark side quest measuring <strong>local LLM inference on Apple
+    Silicon</strong>: single-stream prompt throughput (prefill / TTFT), decode tok/s, peak memory,
+    and power efficiency across three inference paths — <strong>MLX</strong> (GPU),
+    <strong>llama.cpp</strong> (Metal cross-check), and the <strong>Neural Engine</strong> via
+    ANEMLL/Core ML. The single source of truth, with every raw number and method note, is
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5">HiQS-AI-Resolve-Catalog&nbsp;#5</a>;
+    this page is the readable overview. <em>Last updated 2026-09-30.</em></p>
+
+    <h2>Devices</h2>
+    <div class="table-wrap"><table>
+      <tr><th>Device</th><th>Chip / RAM</th><th>Status</th><th>Coverage</th></tr>
+      <tr><td>Mac mini</td><td>Apple M6, 32 GB</td><td>Complete</td><td>S/M/L2 on MLX + llama.cpp (powered), ANE, sustained</td></tr>
+      <tr><td>MacBook Pro 14&rdquo;</td><td>Apple M4 Pro, 24 GB</td><td>Complete</td><td>S/M/L2 on MLX + llama.cpp (High Power), ANE with measured <code>ane_power</code></td></tr>
+      <tr><td>Mac Studio</td><td>Apple M1 Max, 64 GB</td><td>Runbook ready</td><td>Full set incl. tier L (30B-A3B) native — runbook in issue #5</td></tr>
+      <tr><td>iPad</td><td>Apple M5</td><td>Pending</td><td>Geekbench AI, MLX Swift, Core ML report</td></tr>
+    </table></div>
+    <p>Models (revisions + SHA-256 pinned): Qwen3-1.7B / 8B / 30B-A3B (4-bit MLX, Q4_K_M GGUF)
+    and gpt-oss-20b MXFP4 (MLX + GGUF) — gpt-oss-20b is the large-model tier that fits the
+    24&nbsp;GB MacBook where 30B-A3B cannot. Comparisons are made within one runtime per device;
+    MLX 4-bit and GGUF Q4_K_M are not the same quantization.</p>
+
+    <h2>Q1 — GPU neural accelerators (prefill)</h2>
+    <p>The M6 is the only tested chip whose GPU has the new tensor units (MLX ships 6,322
+    <code>_nax</code> kernels in its wheel on the M6's macOS 27 vs <em>zero</em> on the M4 Pro's
+    macOS 15; llama.cpp reports <code>has tensor = true</code> only on the M6). With both laptops
+    at full power, MLX prefill on the M6 is:</p>
+    <div class="table-wrap"><table>
+      <tr><th>Model</th><th>M6 vs M4 Pro prefill</th><th>Decode (M4 Pro faster)</th></tr>
+      <tr><td>Qwen3-1.7B</td><td><strong>+185% → +212%</strong> (p512 → p8192)</td><td>M6 −28% → −30%</td></tr>
+      <tr><td>Qwen3-8B</td><td><strong>+190% → +212%</strong></td><td>M6 −37% → −34%</td></tr>
+      <tr><td>gpt-oss-20b</td><td><strong>+120% → +180%</strong></td><td>M6 −35% → −29%</td></tr>
+    </table></div>
+    <p>So: prefill (compute-bound) is <strong>2.2–3.1× faster on the M6</strong> — roughly
+    2.9–4.2× per GPU core with 12 cores against 16 — while decode (bandwidth-bound) is
+    <strong>1.3–1.6× faster on the M4 Pro</strong>. The first (superseded) comparison measured
+    the M4 Pro in Low Power Mode and overstated the prefill gap at 4.1–4.8× and hid the decode
+    gap entirely; the corrected comparison is the one above.</p>
+
+    <h2>Q2 — decode tok/s</h2>
+    <p>Decode is memory-bandwidth-bound, and here the ranking inverts: the M4 Pro decodes
+    28–37% faster on every model and depth. Neither chip dominates end to end — long-prompt
+    interactive workloads trade M6 TTFT against M4 Pro decode. A 10-minute sustained run on the
+    M6 (Qwen3-8B, 16,978 tokens, 28.29 tok/s average, sampling every 30&nbsp;s) showed
+    <strong>no thermal throttling</strong>, validating the short-benchmark numbers.</p>
+
+    <h2>Q3 — the Neural Engine (ANE)</h2>
+    <p>The ANEMLL Qwen3-1.7B Core ML build was measured on both laptops:</p>
+    <div class="table-wrap"><table>
+      <tr><th>Metric</th><th>M6 (macOS 27)</th><th>M4 Pro (macOS 15.6)</th></tr>
+      <tr><td>ANE decode</td><td>44.1–44.4 tok/s</td><td>26.6 tok/s</td></tr>
+      <tr><td>ANE prefill @ 516 tok</td><td>1605.8 tok/s</td><td>942.7 tok/s</td></tr>
+      <tr><td>ANE ÷ own-MLX decode</td><td>0.33×</td><td>0.14×</td></tr>
+      <tr><td>ANE power (rail)</td><td>unmeasurable — macOS 27 hides the rail</td><td>~2.1 W (GPU below idle during inference)</td></tr>
+      <tr><td>Efficiency</td><td>MLX GPU reference: 19.9 tok/J</td><td>6.8–7.7 tok/J (ANE path)</td></tr>
+      <tr><td><code>ane_verified</code></td><td>n (rail hidden by OS)</td><td><strong>y</strong> — campaign first</td></tr>
+    </table></div>
+    <p>Findings: ANE placement is verified three independent ways on the M6 (static
+    MLComputePlan — 99–100% of ops on ANE; GPU rail at idle during ANE inference; and
+    <code>CPU_AND_NE ≡ ALL</code> at runtime while <code>CPU_AND_GPU</code> cannot even compile
+    the LUT matmul for Metal). The M6 ANE is a flat <strong>1.66–1.70× the M4 Pro's</strong> on
+    every metric. The M4 Pro's whole-session ANE efficiency (6.8–7.7 tok/J) is
+    <em>below</em> the M6 GPU's 19.9 tok/J — at S-tier the ANE is not the efficiency win; its
+    real trick is dropping GPU power to zero. And the M6 shows a unique bimodal speed state
+    (fast/slow runs, 29/11 of 40) that did not reproduce on the M4 Pro — an M6-side anomaly,
+    still open.</p>
+
+    <h2>Source of truth &amp; key entries</h2>
+    <p>All numbers, methods, caveats and raw-log paths live in
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5">HiQS-AI-Resolve-Catalog&nbsp;#5</a>.
+    Key entries: <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5892492722">handoff packet</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5893413426">gpt-oss-20b on M6 (both runtimes)</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5893639942">MBP setup &amp; download runbook</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5894521473">Phase 3 ANE on M6</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5897339601">sustained run</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5898382075">powered gpt-oss (tok/J)</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5899768725">ane_power OS limitation</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5903321989">headless Core ML performance report</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5903690330">Key comparison v2 (High Power)</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5904021973">M4 Pro ANE datapoint</a> ·
+    <a href="https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/issues/5#issuecomment-5904182723">ANE M6 vs M4 Pro</a>.</p>
+
+    <p class="note">Raw benchmark logs and the measurement scaffold (run scripts, parsers,
+    checksum manifests) live on the benchmark machines and are not yet published to a
+    repository. Nothing on this page is a quality/accuracy evaluation — throughput, latency,
+    memory and power only.</p>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>XYZ Forge — local-first engineering operations for AI coding agents. Provided “AS IS,” without warranty.</span>
+    <span>
+      <a href="https://github.com/HiQS-Labs/XYZ-forge">GitHub</a> ·
+      <a href="issues.html">Issues</a> ·
+      <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/LICENSE">License</a>
+    </span>
+  </div>
+</footer>
+</body>
+</html>
