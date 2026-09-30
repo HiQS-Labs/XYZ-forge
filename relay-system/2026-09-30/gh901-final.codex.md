@@ -126,4 +126,12 @@ Basis: Read the complete embedded artifact, GH-901 working document, task-sync s
 
 Relay closed (Approved), no further review turn needed. Producer owns the separate disposable-clone gate and delivery; closing the token with done, without release.
 
+
+### Attestation · relay-drive — 2026-09-30T18:52:59Z
+task: gh901-final
+reviewer: codex
+status: Approved
+reviewed-head: 0b18f924a0645c66dc93f20dfe55e0272898cd16
+added-range: 10960+3871
+added-sha256: 78d6ea56667a6782d9027723031519a19a10a8d512de200c73df46897eb409aa
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
