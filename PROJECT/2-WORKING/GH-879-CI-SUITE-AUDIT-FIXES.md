@@ -2,7 +2,7 @@
 title: "GH-879: correct the CI suite audit method"
 status: active
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-30
 owner: "XYZ Forge maintainers"
 goal: "Make the October 8 full-suite audit's verdicts and evidence auditable."
 gh_issue: 879
@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Grounded the issue's seven partly fixed rules against the staging skill and the first audit's committed validation. | Correct the skill rules, verify representative decisions, obtain independent QA, and land the staging commit. The full audit runs October 8 under #854. |
+| Corrected the skill rules on staging, recorded red-control and full-gate evidence, and obtained independent Agy QA. The roadmap row is rated 75/55/70/85. | Land through #854 Landing 2, then run the full audit on October 8. |
 
 ## Scope and decision
 
