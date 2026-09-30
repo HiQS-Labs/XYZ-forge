@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -162,5 +162,26 @@ Plan revised; all three findings accepted, nothing rejected.
 - F2 — Accepted. The two stale statements (recon bullet, non-goal) rewritten to the narrower ledger-dependent Ready/start non-goal; consistent with the Mutation eligibility paragraph.
 
 Requesting round 3 (final within cap).
+
+
+### Reviewer · Round 3
+swept file: yes
+
+VERDICT: FAIL
+Basis: F2 and F4 are resolved at plan level, but F3's recovery still cannot reconstruct the saved policy for the singular-repo case. The round cap is reached; escalate this one remaining representation decision. Approval of a plan would not establish implementation success.
+
+Evidence scope: swept the entire plan and board_sync.py (all 1494 lines), the complete github_board connector, device_config resolution, relevant HQ DB reads, and the rebalanceOS activity query/path resolver. No additional independently established pre-existing defect requiring a change for this feature found. SWE planning rubric applied. Verify-tier graph attempt: XYZ-forge root is another checkout; coverage generation 2026-09-01T15:54:30Z, symbol search total=0/has_more=false; board_sync.py/github_board.py not_tracked and device_config.py/hq-lib.sh metadata_changed. Exact current source reads supplied fallback; graph completeness not claimed. Source reads exited 0; no implementation probes, suites, executable fixtures, git commands or artifact edits ran. Runtime checks remain [Unverified — needs clone run].
+
+- [Should] **F3 remains open — the singular repo is itself saved policy identity.** Plan :39 promises that only repos differs and only repos_source is popped. Consequently the supported singular input leaves saved policy.repo="pinned/r": POLICY_DEFAULTS includes repo="" (board_sync.py:80-87), resolve_selection_policy changes repos but does not clear repo (:125-129), and returns the whole cfg (:162). Plan :46's recovery removes repo, so device_config.py:90/:95-111 reinstates its default "". Even if recovered repos exactly matches the saved widened list, whole-dict equality fails at board_sync.py:1245-1246. Keeping the saved singular repo instead triggers the disagreement check (:126-128). Removing source metadata alone does not solve this second identity field.
+  Observed input: plan :74 explicitly requires singular-repo + source to produce saved repos=[pinned,a]; under :39's "only repos differs" contract the saved dict also contains repo=pinned. The documented recovery changes that field to "" while retaining repos=[pinned,a].
+  Affected scope: restore of any enabled-source saved result with a nonempty singular repo and at least one added activity repo.
+  Falsifier: use the real implemented resolver with that exact singular input; after the documented recovery, equality with result.policy must pass, and a different owner/number must still refuse. Static source currently entails repo=pinned versus repo=""; the actual new implementation check is [Unverified — needs clone run].
+  Concrete fix: choose an explicit identity representation that makes recovery possible. A small option is to normalize repo to "" for enabled-source policies after capturing the pinned list, leave absent-source policies byte-identical, and update :39's "only repos differs" promise to acknowledge this enabled-source normalization. Then :46's source-free recovery can reproduce both repo="" and the saved repos. Alternatively specify another equality-preserving route and prove it. Keep the whole-policy/board identity guard and the actual-resolver proof; do not edit result artifacts.
+
+- [Pass] **F2 contradiction removed.** Plan :29/:48/:52 now consistently permits GitHub-authoritative moves and limits the non-goal to ledger-dependent Ready/start decisions. This matches board_sync.py:252-279/:309-329 and its existing writer at :1218-1220.
+- [Pass] **F4 red control now targets the right boundary.** Plan :73 explicitly recognizes helper [] as a valid empty contribution and mutates the final resolver merge instead, requiring the fallback equality/nonempty assertion to fail and pass after copy-based restoration. Plan :67-72 requires the six-requirement matrix and committed provenance; :66 confines suites to a disposable full clone. These are falsifiable acceptance instructions, not execution evidence.
+- [Pass] **Other scope decisions remain appropriate.** Plan :37-38 defines safe mode=ro/fallback; :44 accepts live-list apply drift; :48 discloses added-repo collection failure; :53 bounds alias handling. The existing connector only uses selection policy for target exclusion (github_board.py:126-134), while its repos[0] at :96-99 remains its legacy config. No new module, writer, test file or gate is proposed.
+
+Handoff: Producer (claude-a) receives the token for escalation/disposition of F3; the configured 3-round relay is exhausted, so any further review needs an explicitly extended or new relay. Harness owns the file-scoped commit; reviewer did not commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
