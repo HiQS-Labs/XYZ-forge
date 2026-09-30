@@ -32,6 +32,27 @@
 <main>
   <div class="wrap">
     <h1>Apple Silicon Testing</h1>
+
+    <div class="note" id="tldr">
+      <strong>TL;DR — M6 vs M4 Pro for AI workloads: neither chip dominates; it splits by phase.</strong>
+      <ul>
+        <li><strong>Ingesting prompts (prefill / time-to-first-token): the M6 is ~2&ndash;3&times; faster</strong>
+        (+120% to +212% across all three models and prompt lengths 512&rarr;8192; roughly 3&ndash;4&times; per GPU core).
+        This is the M6's new GPU tensor units at work.</li>
+        <li><strong>Generating tokens (decode): the M4 Pro is ~1.4&ndash;1.6&times; faster</strong>
+        (the M6 is 28&ndash;37% slower on every model and depth). Decode is memory-bandwidth-bound and the
+        M4 Pro has more of it.</li>
+        <li><strong>Mixed chat roughly cancels</strong> — short-prompt conversations lean M4 Pro, long-context
+        work leans M6. Prompt-heavy pipelines (RAG, long documents, coding context) are the M6's clear win;
+        long generations are the M4 Pro's.</li>
+        <li><strong>The Neural Engine is not the shortcut</strong> (at small-model scale): 3&ndash;7&times; slower
+        than each chip's own GPU at decode, and on the measured device (M4 Pro) less efficient
+        (6.8&ndash;7.7 tok/J vs the M6 GPU's 19.9 tok/J). Its real trick: GPU power drops to ~zero during
+        ANE inference.</li>
+        <li><strong>Memory:</strong> gpt-oss-20b (12.1&nbsp;GB peak) runs on both laptops; Qwen3-30B-A3B needs
+        the 64&nbsp;GB Mac Studio.</li>
+      </ul>
+    </div>
     <p class="page-intro">A benchmark side quest measuring <strong>local LLM inference on Apple
     Silicon</strong>: single-stream prompt throughput (prefill / TTFT), decode tok/s, peak memory,
     and power efficiency across three inference paths — <strong>MLX</strong> (GPU),
