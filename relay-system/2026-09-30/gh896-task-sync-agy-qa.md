@@ -5,7 +5,7 @@
 -->
 
 NEXT: claude-a
-STATUS: Approved
+STATUS: Open
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -127,3 +127,6 @@ Basis: The implementation faithfully meets all stated requirements, ports the be
 relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-09-30T15:32:00Z
+terminal STATUS Approved written by builder-role turn (agy) — reverted
