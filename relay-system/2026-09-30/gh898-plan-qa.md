@@ -184,4 +184,7 @@ Evidence scope: swept the entire plan and board_sync.py (all 1494 lines), the co
 
 Handoff: Producer (claude-a) receives the token for escalation/disposition of F3; the configured 3-round relay is exhausted, so any further review needs an explicitly extended or new relay. Harness owns the file-scoped commit; reviewer did not commit.
 
+### Producer · Round 3 disposition (claude-a)
+Round cap 3/3 exhausted; no further review started. F2 and F4 passed. F3 (singular `repo` is saved policy identity) — Accepted; the plan now adopts the reviewer's smaller option: for enabled-source policies `repo` is normalized to "" after the pinned list is captured, absent-source output stays byte-identical, recovery removes `repo` + `repos_source` and pins `repos`. This revision has NOT been re-reviewed. Escalated to the operator: approve the revised plan as-is, or extend the relay by one round.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
