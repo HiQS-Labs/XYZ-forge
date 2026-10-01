@@ -21,13 +21,13 @@ TC="$ROOT/relay-automation/target-checks.sh"
 # thread, marathon_drive.py renders the per-phase one. Fixing one and not the other leaves half the
 # users with the reported behavior.
 rendered="$(bash "$ROOT/relay-automation/new-relay.sh" --title "gh268 cue check" --reviewer agy --print 2>/dev/null)"
-printf '%s' "$rendered" | grep -Fq "Hand off explicitly" \
+printf '%s' "$rendered" | grep -F "Hand off explicitly" >/dev/null \
   && pass "new-relay template carries the hand-off cue" \
   || fail "new-relay template has no hand-off cue"
-printf '%s' "$rendered" | grep -Fq "EVERY turn, not just the first" \
+printf '%s' "$rendered" | grep -F "EVERY turn, not just the first" >/dev/null \
   && pass "new-relay cue says EVERY turn (the reported defect was first-turn-only)" \
   || fail "new-relay cue does not say it applies to every turn"
-printf '%s' "$rendered" | grep -Fq "take your turn" \
+printf '%s' "$rendered" | grep -F "take your turn" >/dev/null \
   && pass "new-relay cue names the words to say to the other window" \
   || fail "cue must name the actual phrase, not just 'hand off'"
 
@@ -43,7 +43,7 @@ grep -Fq "HAND OFF EXPLICITLY (GH-268)" "$py" \
   || fail "cue must be in BOTH turn blocks — the reviewer turn is the one the report flagged"
 
 # ── item 8b: the reviewer file-sweep prompt, in both templates ───────────────────────────
-printf '%s' "$rendered" | grep -Fq "not just the diff" \
+printf '%s' "$rendered" | grep -F "not just the diff" >/dev/null \
   && pass "new-relay template tells the reviewer to sweep the whole file" \
   || fail "new-relay template has no file-sweep prompt"
 grep -Fq "NOT JUST THE DIFF (GH-268)" "$py" \
@@ -51,14 +51,14 @@ grep -Fq "NOT JUST THE DIFF (GH-268)" "$py" \
   || fail "marathon relay template has no file-sweep prompt"
 # The phrase is line-wrapped in the template, so flatten whitespace before matching rather than
 # reflowing the template to suit the test.
-printf '%s' "$rendered" | tr -s '[:space:]' ' ' | grep -Fq "are IN SCOPE" \
+printf '%s' "$rendered" | tr -s '[:space:]' ' ' | grep -F "are IN SCOPE" >/dev/null \
   && pass "the prompt states pre-existing defects are in scope" \
   || fail "prompt must say pre-existing defects are in scope, not merely 'read more'"
 
 # Phase 3's own QA checklist asks for this: a reviewer that SKIPPED the sweep must be visibly
 # distinguishable in the transcript from one that ran it and found nothing. A prompt to "look
 # harder" is unfalsifiable; a required declaration is not.
-printf '%s' "$rendered" | grep -Fq "swept file: yes" \
+printf '%s' "$rendered" | grep -F "swept file: yes" >/dev/null \
   && pass "new-relay requires an explicit 'swept file: yes/no' declaration" \
   || fail "the sweep must be declared, not assumed — no 'swept file:' line required"
 grep -Fq "swept file: yes" "$py" \
@@ -74,7 +74,7 @@ EMPTY="$WORK/empty"; mkdir -p "$EMPTY"
 out="$(bash "$TC" detect --root "$EMPTY" 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && pass "detect exits 3 when the target has no checks" \
   || fail "expected exit 3 for an empty target, got $rc"
-printf '%s' "$out" | grep -Fq "not a passing gate" \
+printf '%s' "$out" | grep -F "not a passing gate" >/dev/null \
   && pass "the no-checks message says an empty gate is not a pass" \
   || fail "an empty gate must be described as a non-gate: $out"
 
@@ -85,10 +85,10 @@ printf '{"require-dev":{"wp-coding-standards/wpcs":"^3.0"}}\n' > "$PHP/composer.
 out="$(bash "$TC" detect --root "$PHP" 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "detect exits 0 when the target has checks" \
   || fail "expected exit 0 for a PHP target, got $rc"
-printf '%s' "$out" | grep -Fq "php -l" \
+printf '%s' "$out" | grep -F "php -l" >/dev/null \
   && pass "a PHP target is gated on php -l (the report's own example)" \
   || fail "php -l not detected for a *.php target: $out"
-printf '%s' "$out" | grep -Fq "WordPress" \
+printf '%s' "$out" | grep -F "WordPress" >/dev/null \
   && pass "a wpcs composer dep asks for the WordPress ruleset by name" \
   || fail "WordPress ruleset not selected despite a wpcs dependency: $out"
 
@@ -126,9 +126,9 @@ fault_out="$(
   gh732_php_assertions
 )"; fault_rc=$?
 [ "$fault_rc" -eq 0 ] && [ -n "$fault_out" ] \
-  && printf '%s' "$fault_out" | grep -Fq 'ENVIRONMENT FAULT: php present but unusable (missing libaspell)' \
-  && printf '%s' "$fault_out" | grep -Fq 'SKIP: environment fault (php present but unusable)' \
-  && ! printf '%s' "$fault_out" | grep -Fq 'clean PHP did not pass' \
+  && printf '%s' "$fault_out" | grep -F 'ENVIRONMENT FAULT: php present but unusable (missing libaspell)' >/dev/null \
+  && printf '%s' "$fault_out" | grep -F 'SKIP: environment fault (php present but unusable)' >/dev/null \
+  && ! printf '%s' "$fault_out" | grep -F 'clean PHP did not pass' >/dev/null \
   && pass "broken php is a named environment fault, not a clean-PHP failure" \
   || fail "broken php fault handling regressed: $fault_out"
 
@@ -138,10 +138,10 @@ fault_out="$(
 SKIP="$WORK/skiponly"; mkdir -p "$SKIP"
 printf '{"require-dev":{"wp-coding-standards/wpcs":"^3.0"}}\n' > "$SKIP/composer.json"
 out="$(bash "$TC" run --root "$SKIP" 2>&1)"; rc=$?
-if printf '%s' "$out" | grep -Fq "SKIP"; then
+if printf '%s' "$out" | grep -F "SKIP" >/dev/null; then
   [ "$rc" -eq 3 ] && pass "a run where every check was skipped exits 3, not 0" \
     || fail "all-skipped must not report success (exit $rc): $out"
-  printf '%s' "$out" | grep -Fq "NO GATE, not as a pass" \
+  printf '%s' "$out" | grep -F "NO GATE, not as a pass" >/dev/null \
     && pass "all-skipped says plainly that nothing was gated" \
     || fail "all-skipped must state it is not a pass: $out"
 else
@@ -190,10 +190,10 @@ mk_repo "$HASV" '#!/usr/bin/env bash
 exit 0
 '
 out="$(MARATHON_ROOT="$MROOT" bash "$DRV" --target-root "$HASV" --phase-brief "$BRIEF" --reviewer agy --builder codex --dry-run 2>&1)"
-printf '%s' "$out" | grep -Fq "$HASV/validate.sh" \
+printf '%s' "$out" | grep -F "$HASV/validate.sh" >/dev/null \
   && pass "a --target-root with its own validate.sh is gated on the TARGET's copy" \
   || fail "gate did not select the target's validate.sh: $(printf '%s' "$out" | grep -i gate)"
-printf '%s' "$out" | grep -Fq "$ROOT/validate.sh" \
+printf '%s' "$out" | grep -F "$ROOT/validate.sh" >/dev/null \
   && fail "gate selected the HARNESS validate.sh for a foreign target — Codex Blocker 1 is back" \
   || pass "the harness validate.sh is not used against a foreign target"
 
@@ -205,10 +205,10 @@ printf '{"require-dev":{"wp-coding-standards/wpcs":"^3.0"}}\n' > "$VEND/composer
 printf '#!/usr/bin/env bash\necho vendor-local-phpcs-ran\nexit 0\n' > "$VEND/vendor/bin/phpcs"
 chmod +x "$VEND/vendor/bin/phpcs"
 out="$(bash "$TC" run --root "$VEND" 2>&1)"
-printf '%s' "$out" | grep -Fq "vendor-local-phpcs-ran" \
+printf '%s' "$out" | grep -F "vendor-local-phpcs-ran" >/dev/null \
   && pass "a project-local vendor/bin tool is RUN, not skipped as 'not installed'" \
   || fail "vendor/bin/phpcs was not used — the WordPress ruleset silently never ran: $out"
-printf '%s' "$out" | grep -Fq "SKIP phpcs" \
+printf '%s' "$out" | grep -F "SKIP phpcs" >/dev/null \
   && fail "phpcs reported as skipped despite existing at vendor/bin" \
   || pass "no false 'not installed' skip when the tool is project-local"
 
@@ -218,10 +218,10 @@ NOV="$WORK/no-validate"
 mk_repo "$NOV"
 printf '<?php\nfunction gh268_n(){return 1;}\n' > "$NOV/plugin.php"
 out="$(MARATHON_ROOT="$MROOT" bash "$DRV" --target-root "$NOV" --phase-brief "$BRIEF" --reviewer agy --builder codex --dry-run 2>&1)"
-printf '%s' "$out" | grep -Fq "target-checks.sh" \
+printf '%s' "$out" | grep -F "target-checks.sh" >/dev/null \
   && pass "a --target-root with no validate.sh falls back to target-checks.sh" \
   || fail "no target-checks fallback for a target lacking validate.sh: $out"
-printf '%s' "$out" | grep -Fq -- "--strict" \
+printf '%s' "$out" | grep -F -- "--strict" >/dev/null \
   && pass "the auto-wired gate is --strict (a missing detected tool fails it)" \
   || fail "auto-wired gate is not --strict — a missing tool would silently narrow it: $out"
 
@@ -234,8 +234,8 @@ out="$(bash "$TC" run --root "$PART" 2>&1)"
 # some skip → PARTIAL GATE. On a clean runner with no php at all, EVERY check skips and the tool
 # correctly says the stronger "NO GATE" (first hosted macOS boundary run, 31661285957). Both
 # labels satisfy the property; requiring only PARTIAL GATE graded the tool's honesty as a failure.
-if printf '%s' "$out" | grep -Fq "SKIP"; then
-  if printf '%s' "$out" | grep -Fq "PARTIAL GATE" || printf '%s' "$out" | grep -Fq "NO GATE"; then
+if printf '%s' "$out" | grep -F "SKIP" >/dev/null; then
+  if printf '%s' "$out" | grep -F "PARTIAL GATE" >/dev/null || printf '%s' "$out" | grep -F "NO GATE" >/dev/null; then
     pass "a run with skipped checks is labelled PARTIAL GATE or NO GATE, not a clean pass"
   else
     fail "partial run did not say so: $out"
@@ -248,7 +248,7 @@ fi
 # so substituting produced "/path/to/phpfind . -name ..." — a command-not-found that fails the gate
 # for a reason unrelated to the code under review.
 detected="$(bash "$TC" detect --root "$PHP" 2>/dev/null)"
-printf '%s' "$detected" | grep -Fq "phpfind" \
+printf '%s' "$detected" | grep -F "phpfind" >/dev/null \
   && fail "prefix substitution mangled the php-lint command — agy Blocker 1 is back" \
   || pass "php-lint's command is not mangled by tool-path substitution"
 
@@ -259,7 +259,7 @@ printf '<?php\nfunction gh268_lp(){return 1;}\n' > "$LOCALPHP/a.php"
 printf '#!/usr/bin/env bash\necho "LOCAL-PHP-SAW: $*"\nexit 0\n' > "$LOCALPHP/vendor/bin/php"
 chmod +x "$LOCALPHP/vendor/bin/php"
 out="$(bash "$TC" run --root "$LOCALPHP" 2>&1)"; rc=$?
-printf '%s' "$out" | grep -Fq "phpfind" \
+printf '%s' "$out" | grep -F "phpfind" >/dev/null \
   && fail "a project-local non-leading tool still mangles the command: $out" \
   || pass "a project-local non-leading tool is reached via PATH, not string splicing"
 [ "$rc" -ne 127 ] && pass "the resulting command is executable (not command-not-found)" \
@@ -267,13 +267,13 @@ printf '%s' "$out" | grep -Fq "phpfind" \
 
 # [Blocker] xargs empty-match. GNU xargs runs the command ONCE on empty input, so `php -l` with no
 # arguments reads stdin and hangs — permanently blocking a lane. -r is the portable guard.
-printf '%s' "$detected" | grep -Fq "xargs -0 -r" \
+printf '%s' "$detected" | grep -F "xargs -0 -r" >/dev/null \
   && pass "php-lint passes -r so an empty match cannot hang the lane on GNU xargs" \
   || fail "php-lint's xargs has no -r — empty input hangs the lane on ubuntu CI"
 
 # [Should] bash -c does not inherit this script's pipefail, so a failing find would be masked by a
 # passing xargs and the gate would report green.
-printf '%s' "$detected" | grep -Fq "set -o pipefail" \
+printf '%s' "$detected" | grep -F "set -o pipefail" >/dev/null \
   && pass "php-lint sets pipefail so a failing find cannot be masked" \
   || fail "php-lint pipeline can mask a find failure"
 
