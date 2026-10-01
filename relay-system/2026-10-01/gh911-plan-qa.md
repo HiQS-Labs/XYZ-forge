@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -144,5 +144,26 @@ Handing off to claude-a (Producer) — disposition S1/S2, revise the plan, and o
   `skills/2-daily/workhorse/install.sh:48,53`. It states that the `CLAUDE_SKILLS_DIR` override is not covered.
 
 Handing off to codex (Reviewer) for Round 2.
+
+### Reviewer · Round 2 (codex)
+
+VERDICT: PASS
+
+Basis: S1 and S2 are addressed. The plan covers all five approved asks with a small skill edit and session-scoped hook, preserves the parent resume and preservation contracts, and specifies falsifiable manual evidence within GH-831. This approves the plan for implementation; it does not attest runtime behavior.
+
+swept file: yes
+
+Read the whole revised plan, whole workhorse skill, whole gh609 suite and per-skill installer, plus the applicable governance. No additional pre-existing defect requiring a change was established within this review's scope. Verify-tier graph context: project `XYZ-forge`, generation `2026-09-01T15:54:30Z`, belongs to another checkout; coverage reports missing/untracked/changed metadata for the evidence paths. Direct seeded-source reads support the findings. No git commands, suites, pytest or executable fixtures were run.
+
+- **[Pass] S1 closed — consistent summaries.** `PROJECT/1-INBOX/GH-911-WORKHORSE-DIRECT-REENTRY.md:119-125` explicitly updates the recital queue, fan-out, overall goal and operating rule, while retaining `skills/2-daily/workhorse/SKILL.md:285`'s emergency-rollback restriction. This addresses the contradictory source instructions identified in Round 1.
+- **[Pass] S2 closed — falsifiable, attributable proof.** Plan `:133-138` requires a disabled-predicate scratch copy to fail the block assertion, the real hook to pass on the same input, and committed `SUMMARY.md` plus `provenance.jsonl`. The existing suite and full gate are confined to a disposable full clone (`:133,148-149`). The project-path/user-symlink/neither-path matrix is explicit (`:143-146`); no new suite or gate is requested. This meets `AGENTS.md:100-108,145-148` at plan level.
+- **[Pass] Current-state claims and queue progression.** The source claims still match `SKILL.md:66,68,164,242-256,262-267`. Plan `:78-89` makes the durable checklist the direct-run resume target and moves the completion summary to end-of-run; its “orchestrator --resume clause stays as-is” retains the attempt record and immediate parent resume at `SKILL.md:253-255`.
+- **[Pass] Hook envelope and installation.** Plan `:90-111` limits blocking to open checkbox lines in the current session's file, specifies fail-open errors and `[!]`/`[-]` escapes, and resolves the standard project/user paths. Default whole-folder symlinking is grounded in `skills/2-daily/workhorse/install.sh:48,53`; custom `CLAUDE_SKILLS_DIR` is explicitly excluded (`plan:72`). The documented skill-hook session lifetime and default eight-continuation limit support this design ([hooks reference](https://code.claude.com/docs/en/hooks#stop)); the limit can be overridden by the operator's environment, so this is reliance on the documented default, not an independent hard cap. An uninvoked fresh session has no skill hook; a completed checklist has no open line to block.
+- **[Pass] Consult scope and Rung 5.** Plan `:112-125` retains mandatory consult for architecture, boundaries, state, public contracts, dependencies, material security/performance and Costly/One-way-door work. The local Easy example requires recovery from a Git ref and no remote/shared/published side effect (`:116-118`); it does not waive `SKILL.md:164-224`'s preservation or external-operation rules. No governor, counters, run schema or additional abstraction is needed.
+- **[Unverified — needs clone run] Implementation evidence remains outstanding.** Hook error handling, exact checkbox matching, stdin typing, session/path resolution and the matrix at plan `:130-149` need implementation and the disposable-clone run. No executed-hook or gate success is claimed here.
+
+Revision-presence probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` with `Path(...).read_text()`, line enumeration and assertions for the eight S1/S2/resolution clauses → exit 0. Decisive output: `S1 summary updates: [119]`, `S1 safety restriction: [125]`, `S2 mutation assertion: [137]`, `S2 provenance: [134]`, `clone boundary: [133]`, `project resolution: [144]`, `user resolution: [145]`, `custom path limitation: [72]`. This is a text-presence probe supported by the full-file reads, not a runtime check.
+
+Relay closed (Approved), no further review turn needed. Returning completion to claude-a (Producer) for implementation and the specified clone verification; only this relay file was edited.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
