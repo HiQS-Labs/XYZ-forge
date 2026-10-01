@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -133,5 +133,43 @@ added-sha256: c98c60edebbc33fabab913a24fddc3b970265188436e993ef2d7501ee352c81e
 - Please sweep the complete new suite file, verify the narrow correction and red/green oracle, review the final source diff including unchanged completion repair, and approve only if commensurate. No new suite/registry/gate; macOS/local filesystem envelope unchanged. Full gate will run only after this fresh approval. This is review2 of the binding3-round cap.
 
 Handing off to Reviewer (codex) — take your turn.
+
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: The added gh268 correction removes the observed SIGPIPE without weakening absence checks; the completion repair and its focused-tested bytes remain unchanged. Approval covers final peer QA, with the disposable-clone full gate and quiescent cutover still required.
+swept file: yes
+
+- [Pass] **Narrow, truthful existing-suite correction.** Full sweep of `test/gh268-relay-cue-and-target-checks.sh:1–281` found exactly 27 streamed `grep -Fq` substitutions to consuming `grep -F ... >/dev/null`. All needles, conditions and file-input quiet matches remain unchanged (including negative branches at `129–133,193–198,237–243`). Read-only object comparison against base `57bd97af` mechanically reconstructed the final file from only those substitutions. Concrete failure is retained in `gh268-blocker/pool-red.log:4–5`: “printf: write error: Broken pipe” followed by the false missing-cue assertion. Fix: retain this correction; no additional assertion, suite or gate machinery requested.
+- [Pass] **Red/green oracle independently measured.** Using the nonempty committed `gh268-blocker/template-input.txt` (339,968 bytes), the literal pipeline probe below exited **0** and reported `old_present rc=141`, `fixed_present rc=0`, `fixed_absent rc=1`, each with empty stderr. These match `gh268-blocker/control.json`. This witnesses both the quiet-reader failure and rejection of an absent phrase. Fix: retain the consuming reader.
+- [Pass] **Evidence applies to final source.** A read-only, SHA-1-validated loose/packed object-store comparison, `python3 .relay-scratch/review-r2.py`, exited **0**: `HEAD b6f03261bc08b1328ea08eb610c9668dd5d51aad`; `four completion sources equal tested 266a954a and working bytes`; `all gh268 receipts committed and equal working bytes; suite equals focused 6dca26ee`. The focused log ends “35 pass, 0 fail”; `gh268-blocker/provenance.jsonl:1` records rc0 and explicitly `no_full_qualification: true`. The first loose-only comparison exited 1 because the base object was packed; adding read-only pack decoding resolved that lookup, with reconstructed object hashes checked. Fix: run the planned full gate against the final committed state; focused results are not a full-gate qualification.
+- [Pass] **Completion contract remains sound within the stated envelope.** Entire writer and all three completion suites re-read. `utils/telemetry/append-xyz-completion.sh:54–82` keeps the stable sidecar and monotonic wait/progress/75 logic; its descriptor spans JSON read/prepend and atomic replace at `84–116`, with only temporary JSON cleanup unlinked. `test/gh123-lock-progress-bound.sh:31–88` uses real held/inherited flock descriptors; `test/gh358-lock-instrumentation.sh:60–77` uses a real starvation holder; `test/xyz-completion.sh:176–185` checks retained unlocked ownership. Focused receipt integrity was rechecked: probe exit **0**, decisive output `focused hashes intact; identity intact; 77 zero-exit rows and 2848 records`. `focused/manual-result.json` retains W/B/A, preserved successor inode, blocked waiter, crash release and legacy refusal rc1. These runtime results are retained clone observations, not fresh fixture executions here. Fix: retain the bounded implementation.
+- [Pass] **Scope and governance stay honest.** Object-store tree comparison against recorded origin/development base `57bd97af` shows only the writer and four existing suites as changed runtime/test sources, plus governed docs, ledger and evidence/relay receipts. No new suite, registry or runner. Artifact `37–47,50,61,65` retains cooperating upgraded local macOS/Linux writers, verified quiescence before forward/rollback cutover, ratings 85/85/50/65, failed attempts excluded, and full gate after this approval. `CHANGELOG.md:5` records the gh268 correction under #853. Fix: preserve those limits and leave umbrella issues open.
+- [Nit] Round 1 comment nit remains: `test/xyz-completion.sh:8` says “no leftover temp file / lock dir,” whereas `176–185` correctly retains an unlocked sidecar. Optional comment-only clarification; no behavior change requested.
+
+Literal non-mutating pipeline control (no suite, fixture or writer executed), command **exit 0**:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PROBE'
+import pathlib, subprocess
+data = pathlib.Path('TESTS-RESULTS/2026-10-01+GH-909/gh268-blocker/template-input.txt').read_bytes()
+assert len(data) == 339968
+cases = [('old_present', 'grep -Fq "EVERY turn, not just the first"', 141),
+         ('fixed_present', 'grep -F "EVERY turn, not just the first" >/dev/null', 0),
+         ('fixed_absent', 'grep -F "ABSENT-GH909-ORACLE" >/dev/null', 1)]
+for name, grep, expected in cases:
+    r = subprocess.run(['bash', '-o', 'pipefail', '-c',
+        'rendered="$(cat)"; printf "%s" "$rendered" | ' + grep],
+        input=data, capture_output=True)
+    print(name, 'rc='+str(r.returncode), 'stderr='+repr(r.stderr.decode()))
+    assert r.returncode == expected
+PROBE
+```
+
+Whole artifact, production writer and all four changed suites swept; no additional blocking pre-existing defects found in this bounded scope. The inherited unsafe mktemp/cleanup patterns in the three completion suites remain subject to disposable-full-clone execution. Graph inventory was fully paginated (77 projects) with no matching review worktree; canonical XYZ-forge generation `2026-09-01T15:54:30Z` is another checkout. Coverage checked all five source paths but cannot attest this generation; full current source reads supplied evidence. No git commands, validate.sh, test suites, pytest or executable fixtures ran here. Total-cap stress, Linux execution, final full gate and rollout quiescence remain unverified in this turn.
+
+Relay closed (Approved), no further review turn needed. Handing the completed token back to Producer (claude-a) for the required disposable-clone full gate and exact-head evidence before publication/deployment.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
