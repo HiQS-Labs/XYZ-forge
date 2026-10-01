@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-10-01 — Direct /workhorse runs keep going until their queue is resolved (GH-911)
+
+A directly invoked `/workhorse` stopped after two or three turns with work still queued. Three things caused it:
+
+- Rung 6 ended every item with a completion report, a natural place to stop.
+- The "a repair is a checkpoint, not the end of the turn" rule from #626 applied only under a parent orchestrator.
+- The queue lived in the session scratchpad, where nothing outside the conversation could see it.
+
+Changes, all in `skills/2-daily/workhorse/`:
+
+- **Run checklist.** The active queue is now a run checklist at `<repo-root>/.workhorse/<session-id>.md`, excluded
+  via `.git/info/exclude`, with `- [ ]` open, `[x]` done, `[-]` parked and `[!]` blocked lines.
+- **Report once.** Rung 6 ticks each item and continues; the completion report fires once, when no open line remains.
+- **Direct re-entry.** Re-entry now covers direct invocations, with the checklist as the resume target.
+- **Stop hook.** A new Claude Code Stop hook (`stop-hook.sh`, wired from the skill's frontmatter) blocks the stop
+  while this session's checklist has an open line. It fails open on any error. Loop safety is the harness's
+  8-continuation cap plus the `[!]`/`[-]` escape.
+- **Proportional consult.** Rung 4 can be skipped for a focused, Easy-to-reverse change on a local task branch. It
+  stays mandatory for architecture, contracts, persistent state, dependencies and Costly/One-way-door work.
+- **Rung 5 example.** Rung 5 names local task-branch edits as an Easy example.
+
+Deliberately minimal: no governor role, progress fingerprints, budget counters or run schema. Further tuning may
+follow once standalone runs have been observed.
+
+Verification: `test/gh609-sdlc-agent-gaps.sh` (existing) plus a manual hook matrix with a mutation red control,
+recorded in `TESTS-RESULTS/2026-10-01+GH-911/`.
+
 ## 2026-10-01 — Successful completion appends retain mutual exclusion (GH-909)
 
 A controlled handoff showed a stale waiter deleting a live successor’s PID-directory lock: all three writers returned success, but only two records survived. The existing completion writer now holds a stable-inode OS advisory lock through its atomic JSON transaction, preserving bounded per-holder wait and the absolute queue cap. The three covering fixtures use real OS locks. Upgrade and rollback require stopping and retiring old writers sharing the records path; mixed protocols are unsupported. Evidence is retained under `TESTS-RESULTS/2026-10-01+GH-909/`. The full-gate follow-up witnessed a quiet-grep SIGPIPE false-red in gh268 (#853). Because it is outside Small, standing policy turns it off through TESTS removal and gh306 EXEMPT; its file stays unchanged. A consuming-grep diagnostic demonstrated the cause but is not shipped. This fixes a proven loss mechanism; the exact historical CI interleaving and separate relay/registry flakes remain unproven.
