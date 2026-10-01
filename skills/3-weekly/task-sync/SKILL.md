@@ -40,8 +40,9 @@ behavior of `utils/zcode/task-stamp` (PR #893) and `utils/skills/agy-task-sync`
 
 - Dry-run by default; `--apply` commits.
 - Schema-validate before any write; abort with a named, clear message on drift.
+  Antigravity requires an explicitly present pin list; missing state is not empty.
 - Write only on change — re-runs are no-ops.
-- **A failed or empty-authoritative read never triggers a destructive write.**
+- **A failed or missing authoritative read never triggers a destructive write. An explicit valid empty pin list is authoritative.**
   An unreadable `app_storage.json` aborts the whole Antigravity sweep (the
   superseded original stripped every annotation pin on this path — witnessed;
   the red control lives in the GH-896 TESTS-RESULTS receipt).
@@ -71,7 +72,8 @@ root; its electron store is `<root>/app_storage.json`).
 Doctor exit codes: `0` all green · `3` any red (missing store, schema drift,
 app running → Agy writes gated). `heartbeat: pending — no receipt yet` is a
 non-red state (nothing has applied on this machine yet); the receipt lives at
-`~/.cache/task-sync/last-run.json` (machine-local, written on `--apply`).
+`~/.cache/task-sync/last-run.json` (machine-local, atomically written when an apply
+sweep succeeds for at least one IDE, retaining errors from the other IDE).
 
 ## Codex desktop (GH-901)
 
@@ -166,7 +168,7 @@ not authorize enabling absent ZCode/Agy stores. Keep it quiet while unchanged.
    `python3 <collection>/task-sync/scripts/task_sync.py --apply --ide zcode,agy`,
    then for each `needs_summary` entry in the ZCode section read the task's
    `searchable_text`, craft a ≤8-word last-action summary, apply
-   `--set-title <task_id> "<summary>"`, touch nothing else, and report one line
+   `--ide zcode --apply --set-title <task_id> "<summary>"`, touch nothing else, and report one line
    (`task-sync: renamed=N pinned=M summarized=K`).
 4. **Doctor again:** green (or Agy red only because the app is open — that gate
    clears on the next tick after the app closes).

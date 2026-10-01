@@ -1,12 +1,15 @@
 """Agy adapter probes: mirror pins, safety fixes, A3 red control."""
 import json, os, shutil, sqlite3, sys, importlib.util, hashlib
 
-FIX = "/tmp/ts-probes/agy-fixture"
-FIX2 = "/tmp/ts-probes/agy-malformed"
+PROBE_ROOT = os.path.abspath(os.environ.get("TASK_SYNC_PROBE_ROOT", "temp/task-sync-probes"))
+FIX = os.path.join(PROBE_ROOT, "agy-fixture")
+FIX2 = os.path.join(PROBE_ROOT, "agy-malformed")
 import os as _os
 _ROOT = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", ".."))
 UNIFIED = _os.path.join(_ROOT, "skills", "3-weekly", "task-sync", "scripts")
-ORIG = "/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/skills/agy-task-sync/scripts/agy_task_sync.py"
+ORIG = os.environ.get("TASK_SYNC_AGY_ORIGINAL")
+if not ORIG or not os.path.isfile(ORIG):
+    sys.exit("Set TASK_SYNC_AGY_ORIGINAL to the predecessor script for the required red control")
 
 def build_fixture(root, app_storage_raw=None):
     if os.path.exists(root): shutil.rmtree(root)
@@ -116,7 +119,7 @@ except core.AdapterError as e:
     check("app-running gate: apply refused while app 'running'", "writes are gated" in str(e))
 
 # -- doctor faults -----------------------------------------------------------
-ad4 = antigravity.AntigravityAdapter(agy_root="/tmp/ts-probes/nonexistent", apply=False, app_running_fn=not_running)
+ad4 = antigravity.AntigravityAdapter(agy_root=os.path.join(PROBE_ROOT, "nonexistent"), apply=False, app_running_fn=not_running)
 d4 = ad4.doctor()
 check("doctor fault: missing root -> red", d4["ok"] is False)
 import shutil as _sh

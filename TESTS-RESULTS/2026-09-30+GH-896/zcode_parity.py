@@ -3,7 +3,12 @@ import json, sqlite3, subprocess, sys, os
 from datetime import datetime, timedelta
 
 TS = "skills/3-weekly/task-sync/scripts/task_sync.py"
-ORIG = "/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/zcode/task-stamp/scripts/sweep_tasks.py"
+ORIG = os.environ.get("TASK_SYNC_ZCODE_ORIGINAL")
+SEED = os.environ.get("TASK_SYNC_ZCODE_SEED")
+if not ORIG or not os.path.isfile(ORIG) or not SEED or not os.path.isfile(SEED):
+    sys.exit("Set TASK_SYNC_ZCODE_ORIGINAL and TASK_SYNC_ZCODE_SEED to existing fixture inputs")
+PROBE_ROOT = os.path.abspath(os.environ.get("TASK_SYNC_PROBE_ROOT", "temp/task-sync-probes"))
+os.makedirs(PROBE_ROOT, exist_ok=True)
 
 def seed(path):
     conn = sqlite3.connect(path)
@@ -31,16 +36,16 @@ def seed(path):
 
 import shutil
 for f in ("a.sqlite", "b.sqlite"):
-    p = f"/tmp/ts-probes/{f}"
+    p = f"{PROBE_ROOT}/{f}"
     if os.path.exists(p): os.remove(p)
-shutil.copy("/tmp/ts-probes/zcode-copy.sqlite", "/tmp/ts-probes/a.sqlite")
-shutil.copy("/tmp/ts-probes/zcode-copy.sqlite", "/tmp/ts-probes/b.sqlite")
-for p in ("/tmp/ts-probes/a.sqlite", "/tmp/ts-probes/b.sqlite"):
+shutil.copy(SEED, f"{PROBE_ROOT}/a.sqlite")
+shutil.copy(SEED, f"{PROBE_ROOT}/b.sqlite")
+for p in (f"{PROBE_ROOT}/a.sqlite", f"{PROBE_ROOT}/b.sqlite"):
     seed(p)
 
-u = subprocess.run(["python3", TS, "--ide", "zcode", "--zcode-db", "/tmp/ts-probes/a.sqlite",
+u = subprocess.run(["python3", TS, "--ide", "zcode", "--zcode-db", f"{PROBE_ROOT}/a.sqlite",
                     "--apply", "--all", "--hours", "9999"], capture_output=True, text=True)
-o = subprocess.run(["python3", ORIG, "--db", "/tmp/ts-probes/b.sqlite", "--sweep", "--all"],
+o = subprocess.run(["python3", ORIG, "--db", f"{PROBE_ROOT}/b.sqlite", "--sweep", "--all"],
                    capture_output=True, text=True)
 assert u.returncode == 0, u.stderr[-500:]
 assert o.returncode == 0, o.stderr[-500:]
@@ -52,12 +57,12 @@ def state(path):
     conn.close()
     return {r[0]: (r[1], r[2], r[3]) for r in rows}
 
-sa, sb = state("/tmp/ts-probes/a.sqlite"), state("/tmp/ts-probes/b.sqlite")
+sa, sb = state(f"{PROBE_ROOT}/a.sqlite"), state(f"{PROBE_ROOT}/b.sqlite")
 checks = []
 checks.append(("rename sets identical", {(r['task_id'], r['new']) for r in uj['renamed']} == {(r['task_id'], r['new']) for r in oj['renamed']}))
 checks.append(("final title/pinned state identical", {k: v[:2] for k, v in sa.items()} == {k: v[:2] for k, v in sb.items()}))
 import sqlite3 as _s
-_t2upd = _s.connect('/tmp/ts-probes/a.sqlite').execute("SELECT updated_at FROM tasks WHERE task_id='t2-stale'").fetchone()[0]
+_t2upd = _s.connect(f'{PROBE_ROOT}/a.sqlite').execute("SELECT updated_at FROM tasks WHERE task_id='t2-stale'").fetchone()[0]
 from datetime import datetime as _dt
 _exp = _dt.fromtimestamp(_t2upd/1000).strftime("%m-%d")
 checks.append((f"t2 restamped from its own updated_at ({_exp}), not wall-clock",
@@ -65,11 +70,11 @@ checks.append((f"t2 restamped from its own updated_at ({_exp}), not wall-clock",
 checks.append(("t3 bare date untouched", sa['t3-bare'][0] == "09-29"))
 checks.append(("t4 pinned by window", sa['t4-active'][1] == 1))
 checks.append(("t1 stamped from 10-day-old updated_at, still unpinned",
-               sa['t1-raw-old'][0].startswith(datetime.fromtimestamp(sa['t1-raw-old'][0] and __import__('sqlite3').connect('/tmp/ts-probes/a.sqlite').execute("SELECT updated_at FROM tasks WHERE task_id='t1-raw-old'").fetchone()[0]/1000).strftime("%m-%d")) and "Fix the relay driver lock parity" in sa['t1-raw-old'][0]))
+               sa['t1-raw-old'][0].startswith(datetime.fromtimestamp(sa['t1-raw-old'][0] and __import__('sqlite3').connect(f'{PROBE_ROOT}/a.sqlite').execute("SELECT updated_at FROM tasks WHERE task_id='t1-raw-old'").fetchone()[0]/1000).strftime("%m-%d")) and "Fix the relay driver lock parity" in sa['t1-raw-old'][0]))
 checks.append(("t5 cron-owned skipped by both", "t5-cron" not in {r['task_id'] for r in uj['renamed']} and "t5-cron" not in {r['task_id'] for r in oj['renamed']}))
 checks.append(("needs_summary lists t1 (raw title)", any(r['task_id'] == 't1-raw-old' for r in uj['needs_summary'])))
 # idempotency
-u2 = subprocess.run(["python3", TS, "--ide", "zcode", "--zcode-db", "/tmp/ts-probes/a.sqlite",
+u2 = subprocess.run(["python3", TS, "--ide", "zcode", "--zcode-db", f"{PROBE_ROOT}/a.sqlite",
                      "--apply", "--all", "--hours", "9999"], capture_output=True, text=True)
 u2j = json.loads(u2.stdout)["ides"]["zcode"]
 checks.append(("second run: zero writes (idempotent)", len(u2j['renamed']) == 0 and len(u2j['pinned']) == 0))
@@ -80,27 +85,27 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import core as _core
 from adapters import zcode as _zc
 
-ad = _zc.ZcodeAdapter(db_path="/tmp/ts-probes/definitely-missing.sqlite", apply=False)
+ad = _zc.ZcodeAdapter(db_path=f"{PROBE_ROOT}/definitely-missing.sqlite", apply=False)
 d = ad.doctor()
 check("A1 zcode doctor fault: missing store -> red, named message",
       d["ok"] is False and "not found" in d["reds"][0])
 
 import shutil as _sh, sqlite3 as _s2
 import os as _os
-if _os.path.exists("/tmp/ts-probes/nocol.sqlite"):
-    _sh.rmtree("/tmp/ts-probes/nocol.sqlite") if _os.path.isdir("/tmp/ts-probes/nocol.sqlite") else _os.remove("/tmp/ts-probes/nocol.sqlite")
-_sh.copy("/tmp/ts-probes/a.sqlite", "/tmp/ts-probes/nocol.sqlite")
-_c = _s2.connect("/tmp/ts-probes/nocol.sqlite")
+if _os.path.exists(f"{PROBE_ROOT}/nocol.sqlite"):
+    _sh.rmtree(f"{PROBE_ROOT}/nocol.sqlite") if _os.path.isdir(f"{PROBE_ROOT}/nocol.sqlite") else _os.remove(f"{PROBE_ROOT}/nocol.sqlite")
+_sh.copy(f"{PROBE_ROOT}/a.sqlite", f"{PROBE_ROOT}/nocol.sqlite")
+_c = _s2.connect(f"{PROBE_ROOT}/nocol.sqlite")
 _c.execute("CREATE TABLE tasks_drop AS SELECT workspace_key, workspace_path, workspace_identity, task_id, title, title_overridden, pinned, updated_at, deleted, archived, cron_automation_id FROM tasks")
 _c.execute("DROP TABLE tasks")
 _c.execute("ALTER TABLE tasks_drop RENAME TO tasks")
 _c.commit(); _c.close()
-ad2 = _zc.ZcodeAdapter(db_path="/tmp/ts-probes/nocol.sqlite", apply=False)
+ad2 = _zc.ZcodeAdapter(db_path=f"{PROBE_ROOT}/nocol.sqlite", apply=False)
 d2 = ad2.doctor()
 check("A1 zcode doctor fault: dropped columns -> red, named message",
       d2["ok"] is False and "missing expected columns" in d2["reds"][0])
 
-ad3 = _zc.ZcodeAdapter(db_path="/tmp/ts-probes/a.sqlite", apply=False)
+ad3 = _zc.ZcodeAdapter(db_path=f"{PROBE_ROOT}/a.sqlite", apply=False)
 d3 = ad3.doctor()
 check("A1 zcode doctor green on healthy copy", d3["ok"] is True and d3.get("journal_mode") == "wal")
 

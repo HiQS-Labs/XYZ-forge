@@ -145,6 +145,7 @@ class ZcodeAdapter:
         conn = self._connect()
         out = {"task_id": task_id, "found": False, "renamed": []}
         try:
+            self._check_schema(conn, require_groups=False)
             rows = conn.execute(
                 "SELECT workspace_key, task_id, title, meta_json, updated_at"
                 " FROM tasks WHERE task_id=?",
@@ -167,6 +168,12 @@ class ZcodeAdapter:
             for ws_key, _, old, meta_json, updated_at in rows:
                 desired = f"{core.local_stamp(core.ms_to_local_dt(updated_at))} {base}"
                 meta = _sync_meta(meta_json, desired)
+                current_override = conn.execute(
+                    "SELECT title_overridden FROM tasks WHERE workspace_key=? AND task_id=?",
+                    (ws_key, task_id),
+                ).fetchone()[0]
+                if desired == old and current_override and (meta is None or meta == meta_json):
+                    continue
                 with conn:
                     conn.execute(
                         "UPDATE tasks SET title=?, title_overridden=1, meta_json=?"
@@ -289,7 +296,8 @@ class ZcodeAdapter:
         if unpin_cutoff is not None:
             stale = conn.execute(
                 "SELECT workspace_key, task_id, title FROM tasks WHERE pinned=1 AND deleted=0"
-                " AND archived=0 AND updated_at < ?",
+                " AND archived=0 AND updated_at < ?"
+                + ("" if include_cron else " AND (cron_automation_id IS NULL OR cron_automation_id='')"),
                 (unpin_cutoff,),
             ).fetchall()
             for ws_key, task_id, title in stale:

@@ -118,6 +118,28 @@ def receipt_path() -> str:
     return os.path.expanduser("~/.cache/task-sync/last-run.json")
 
 
+def atomic_write_text(path, content: str) -> None:
+    """Replace one file from a unique sibling temp; retain old bytes on failure."""
+    import os
+    import tempfile
+    from pathlib import Path
+
+    target = Path(path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                                         dir=target.parent, prefix=target.name + ".",
+                                         delete=False) as f:
+            temporary = f.name
+            f.write(content)
+        if target.exists():
+            os.chmod(temporary, target.stat().st_mode & 0o777)
+        os.replace(temporary, target)
+    finally:
+        if temporary is not None and os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 def write_receipt(mode: str, ide_reports: dict) -> str:
     """Heartbeat receipt — written on apply runs only. Doctor reads it;
     a missing receipt is a distinct non-red 'pending' state."""
@@ -126,22 +148,19 @@ def write_receipt(mode: str, ide_reports: dict) -> str:
 
     path = receipt_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(
-            {
-                "at": datetime.now().isoformat(timespec="seconds"),
-                "mode": mode,
-                "ides": {
-                    name: {
-                        "swept": rep.get("swept", 0),
-                        "renamed": len(rep.get("renamed", [])),
-                        "error": rep.get("error"),
-                    }
-                    for name, rep in ide_reports.items()
-                },
+    atomic_write_text(path, json.dumps(
+        {
+            "at": datetime.now().isoformat(timespec="seconds"),
+            "mode": mode,
+            "ides": {
+                name: {
+                    "swept": rep.get("swept", 0),
+                    "renamed": len(rep.get("renamed", [])),
+                    "error": rep.get("error"),
+                }
+                for name, rep in ide_reports.items()
             },
-            f,
-            indent=2,
-        )
-        f.write("\n")
+        },
+        indent=2,
+    ) + "\n")
     return path

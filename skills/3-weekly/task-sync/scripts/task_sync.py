@@ -27,6 +27,7 @@ import json
 import math
 import os
 import sys
+import sqlite3
 from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -74,12 +75,16 @@ def run_doctor(args) -> tuple[dict, int]:
     if args.ide != ["codex"] and os.path.exists(receipt):
         try:
             with open(receipt, "r", encoding="utf-8") as f:
-                at = json.load(f).get("at", "unreadable")
+                data = json.load(f)
+                if not isinstance(data, dict) or not isinstance(data.get("at"), str):
+                    raise ValueError("receipt must be an object with a timestamp")
+                at = data["at"]
             receipt_state = at
             if at == "unreadable":
                 receipt_red = f"heartbeat receipt unreadable at {receipt}"
             else:
-                age = datetime.now() - datetime.fromisoformat(at)
+                last_apply = datetime.fromisoformat(at)
+                age = datetime.now(last_apply.tzinfo) - last_apply
                 if age > timedelta(hours=2):
                     receipt_red = (
                         f"heartbeat receipt stale: last apply {at} "
@@ -92,7 +97,7 @@ def run_doctor(args) -> tuple[dict, int]:
         adapter = _build_adapter(name, args, apply=False)
         try:
             ides[name] = adapter.doctor()
-        except core.AdapterError as exc:
+        except (core.AdapterError, OSError, sqlite3.Error) as exc:
             ides[name] = {"ok": False, "reds": [str(exc)]}
         if not ides[name].get("ok"):
             red = 1
@@ -121,12 +126,12 @@ def run_sweep(args, apply: bool) -> tuple[dict, int]:
         adapter = _build_adapter(name, args, apply=apply)
         try:
             ides[name] = adapter.sweep(**_sweep_kwargs(args))
-        except core.AdapterError as exc:
+        except (core.AdapterError, OSError, sqlite3.Error) as exc:
             ides[name] = core.new_ide_report()
             ides[name]["error"] = str(exc)
             red = 1
     report = core.merge_report("apply" if apply else "dry-run", ides)
-    if apply and red == 0:
+    if apply and any(rep.get("error") is None for rep in ides.values()):
         report["receipt"] = core.write_receipt(report["mode"], ides)
     return report, red
 
@@ -143,7 +148,7 @@ def run_set_title(args) -> tuple[dict, int]:
                 ides[name] = adapter.set_title(task_id, description, auto_pin=args.auto_pin)
             else:
                 ides[name] = adapter.set_title(task_id, description)
-        except core.AdapterError as exc:
+        except (core.AdapterError, OSError, sqlite3.Error) as exc:
             ides[name] = {"task_id": task_id, "found": False, "renamed": [], "error": str(exc)}
             red = 1
     report = core.merge_report("apply" if apply else "dry-run", ides)
