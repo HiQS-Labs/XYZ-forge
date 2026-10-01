@@ -12,3 +12,6 @@ Commit under test: d3e1b631 (round 3 evidence; implementation unchanged since eb
 | Existing suites: gh402 / gh405 / gh549 / test_gh605_board_policy | 34 / 19 / 125 / 52 passed |
 
 Not run here: the full `validate.sh` gate (run once on the final approved commit); a live `policy-preview` (the live section resolves the repo list only); URI paths with spaces/unicode and a locked-DB execution (static review only).
+
+## Marker round (2026-10-01, commit ea460d22)
+The first full pre-push gate (at 84d6f0a2) was RED and the push was refused: `gh777-inventory-ratchet` (caused by this change: SQLite connect count 32 -> 33) plus 12 harness-discovery suites that inherit the session's `XYZ_HARNESS` and fail identically on base 57bd97af (all 12 pass with it unset). The operator approved annotating the one connect line with the ratchet's own `SQLITE-GATEWAY-OK:` marker. Evidence under `marker/`: matrix 34 PASS, ratchet suite PASS (`clean (matches baseline, 0 new scripts/connects)`), gh402/405/549/605 34/19/125/52. The full gate is re-run once on the final commit with `XYZ_HARNESS` unset.
