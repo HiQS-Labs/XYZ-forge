@@ -66,8 +66,10 @@ Rung 5's Costly/One-way-door proof, or `install.sh`. We may continue fine-tuning
   - No repo-level `.claude/settings.json` Stop hook exists.
 - **Blast radius.**
   - Consumers: Claude Code (honors `hooks`), Codex/Agy (read the markdown, ignore unknown frontmatter).
-  - Deployed copies are whole-folder copies (`~/.claude/skills/workhorse` → Deployed Skills), so a
-    bundled script ships with it.
+  - Distribution carries the whole skill folder, so a bundled script ships with it. Direct install
+    symlinks the source folder into the app (`skills/2-daily/workhorse/install.sh:48,53`). Skills Army
+    copies the owning repo's folder into the Pulse collection, then app symlinks point at that copy.
+    The installer's `CLAUDE_SKILLS_DIR` override is not covered by the hook's path resolution.
   - No XYZ-mini mirror.
   - `test/gh609-sdlc-agent-gaps.sh` pins Rung 5 strings that this change does not touch.
 
@@ -114,23 +116,37 @@ Rung 5's Costly/One-way-door proof, or `install.sh`. We may continue fine-tuning
 6. **Rung 5 one-liner.** Add one sentence to `SKILL.md:164`: an edit confined to a local task branch/clone,
    recoverable from a Git ref and with no remote/shared/published side effect, is Easy and needs only the
    one-line note.
-7. **CHANGELOG.md** entry (newest-first, dated).
+7. **Keep the skill's own summaries consistent (relay S1).** Update the existing lines rather than adding
+   a new policy:
+   - Recital `SKILL.md:30`: the queue lives in the run checklist.
+   - Recital `:33`: fan out per Rung 4's proportional rule.
+   - Overall goal `:36`: "validated across independent models where Rung 4 requires it".
+   - Operating rule `:292`: Rungs 1–6 per item, with Rung 4 per its own skip rule.
+   - Keep `:285`'s emergency-rollback restriction unchanged and explicit.
+8. **CHANGELOG.md** entry (newest-first, dated).
 
 ## Verification (existing suites + manual checks; no new tests, GH-831)
 
 - `bash test/gh609-sdlc-agent-gaps.sh` stays green (workhorse contract strings untouched).
 - `bash -n` and `shellcheck` (if present) on `stop-hook.sh`. YAML frontmatter parses
   (`python3 -c 'import yaml…'`), and `hooks.Stop[0].hooks[0].command` is present.
-- Manual hook matrix recorded under `TESTS-RESULTS/2026-10-01+GH-911/`:
-  - **red:** open `- [ ]` line → block JSON naming the item.
-  - **green:** only `[x]/[-]/[!]` lines → no output, exit 0.
+- Manual hook matrix, run in a **disposable full clone** (as are gh609 and the full gate). Commit
+  `TESTS-RESULTS/2026-10-01+GH-911/SUMMARY.md` plus `provenance.jsonl` (command, sha, exit status,
+  decisive output per check) in the implementation PR.
+  - **Red control (relay S2):** run a scratch copy of `stop-hook.sh` with the open-item predicate disabled
+    against an open `- [ ]` checklist. The assertion "stdout is block JSON naming the item" must **fail**.
+  - **Green:** the real hook on the same input → assertion passes.
+  - Only `[x]/[-]/[!]` lines → no output, exit 0.
   - No checklist file → exit 0.
   - Another session's id → exit 0.
-  - Garbage stdin → exit 0.
-  - Hook command with neither install path present → exit 0.
+  - Garbage or wrongly typed stdin → exit 0.
+  - Hook command resolution:
+    - project path present → it runs.
+    - user-symlink path present → it runs.
+    - neither present → exit 0.
   - `stop_hook_active:true` with an open item → still blocks; the cap is the harness's job.
 - Full gate (`./validate.sh` / `ci-local.sh` per repo policy) exactly once on the final approved commit, in
-  a disposable clone.
+  that disposable clone.
 
 ## Risks / rollback
 

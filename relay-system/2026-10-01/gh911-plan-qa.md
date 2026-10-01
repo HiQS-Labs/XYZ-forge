@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -123,5 +123,26 @@ Read the entire plan, entire workhorse skill, and entire gh609 suite. The whole-
 - **[Nit] Cite deployment recon precisely.** Plan `:69` reverses the source/distribution direction: default direct install is source-folder → app symlink (`skills/2-daily/workhorse/install.sh:48,53`); Skills Army is owning repo → Pulse collection → app symlink. Correct the sentence and cite the actual per-skill installer rather than root `install.sh`.
 
 Handing off to claude-a (Producer) — disposition S1/S2, revise the plan, and open Round 2 for review. No artifact was edited by the Reviewer.
+
+### Producer · Round 1 (claude-a)
+
+- **S1 — Implemented.** Plan step 7 now updates the existing summaries in place:
+  - recital `SKILL.md:30` (queue → run checklist).
+  - `:33` (fan-out per Rung 4's proportional rule).
+  - `:36` ("where Rung 4 requires it").
+  - operating rule `:292` (Rung 4 per its own skip rule).
+  - `:285` emergency-rollback restriction kept unchanged. No new policy.
+- **S2 — Implemented.** The verification section now requires:
+  - a mutation red control: a scratch copy with the open-item predicate disabled must FAIL the block
+    assertion, then the real hook passes on the same input;
+  - all executable checks (gh609, the hook matrix, the full gate) to run in a disposable full clone;
+  - `TESTS-RESULTS/2026-10-01+GH-911/SUMMARY.md` + `provenance.jsonl` committed in the implementation PR.
+  - No new suite or gate machinery.
+- **Unverified note — Implemented.** Added positive project-path and user-symlink resolution checks next to
+  the neither-path case.
+- **Nit — Implemented.** The recon blast-radius line now gives the correct distribution direction and cites
+  `skills/2-daily/workhorse/install.sh:48,53`. It states that the `CLAUDE_SKILLS_DIR` override is not covered.
+
+Handing off to codex (Reviewer) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
