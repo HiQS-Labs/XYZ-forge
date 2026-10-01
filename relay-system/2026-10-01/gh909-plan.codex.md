@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -98,5 +98,49 @@ Handing off to Producer (claude-a) — address both Should findings and take you
 - No production edits or new runtime evidence. Please review the complete revised plan against both findings; ATE remains optional diagnostic variation after causal correction, excluded from qualification counts.
 
 Handing off to Reviewer (codex) — review the revised plan.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: Both Round 1 Should findings are addressed. The revised plan is grounded and surgical: one stable lock domain for upgraded writers, explicit quiescent cutover, preserved JSON contracts, and bounded verification in a disposable full clone. This approves implementation planning, not runtime or merge readiness.
+swept file: yes
+
+- [Pass] **Cutover and lock identity are now explicit.** `.relay-artifacts/GH-909-COMPLETION-LOCK-LOSS.md:35` names `<XYZ_JSON_PATH>.lock`, forbids unlink on release, and places flock around the existing Python transaction. Line 38 requires stopping and retiring old running/waiting writers before rollout, defers rollout without that proof, and states “That refusal is a diagnostic guard, not proof of live mixed-version safety.” This resolves the concrete old-waiter deletion at `utils/telemetry/append-xyz-completion.sh:85–101`. Quiescence is the deployment shield; cooperating upgraded writers are the safety envelope. Retain that restriction through implementation and rollback.
+
+- [Pass] **Recon and evidence pointers resolve the missing-grounding finding.** Artifact lines 24–29 now identify the target selection, entire JSON transaction, legacy reclamation/release branches, best-effort callers, vendor path, fixtures and all five red-control files. Source reads support these anchors: writer lines 27–36, 45–102, 105–146; relay emitter lines 491–504; marathon emitter lines 1323–1335; `relay-automation/marathon.sh:69–79`; `relay-automation/xyz-vendor.sh:236`. The receipt reports three zero exits, B/A records, W missing, and the live successor pathname removed. Read-only consistency/source-equivalence probe below exited **0**; it did not execute the replay:
+
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PY'
+  import json,pathlib,ast
+  p=pathlib.Path("TESTS-RESULTS/2026-10-01+GH-909/red-handoff")
+  for n in ("result.json","records.json","provenance.jsonl","replay.py","writer.sh"):
+      assert (p/n).stat().st_size > 0, n
+  r=json.loads((p/"result.json").read_text())
+  assert r == json.loads((p/"provenance.jsonl").read_text())
+  assert r["writer_rcs"] == [0,0,0]
+  assert [x["sessionId"] for x in json.loads((p/"records.json").read_text())] == r["records"] == ["B","A"]
+  assert r["lock_exists_while_b_paused_after_w"] is False and r["lost_record"] == "W"
+  s=pathlib.Path("utils/telemetry/append-xyz-completion.sh").read_text()
+  count=0
+  for node in ast.parse((p/"replay.py").read_text()).body:
+      if isinstance(node,ast.Assign) and any(isinstance(t,ast.Name) and t.id=="s" for t in node.targets) and isinstance(node.value,ast.Call) and isinstance(node.value.func,ast.Attribute) and node.value.func.attr=="replace":
+          old,new=map(ast.literal_eval,node.value.args)
+          assert s.count(old)==1
+          s=s.replace(old,new)
+          count+=1
+  assert count==3 and s==(p/"writer.sh").read_text()
+  print("nonempty receipts; rcs=0,0,0; records=B,A; missing=W; successor lock removed; receipt consistent; writer equals current source plus three barriers")
+  PY
+  ```
+
+  Decisive output: `nonempty receipts; rcs=0,0,0; records=B,A; missing=W; successor lock removed; receipt consistent; writer equals current source plus three barriers`. Receipt SHA/commit ancestry was not independently queried; no git ran.
+
+- [Pass] **Scope, bounds and fixture adaptations remain proportionate.** Artifact lines 35, 38, 42–45 preserve default 30s, default 4x total cap, monotonic deadlines, acquisition-token progress, exit 75 and fail-closed errors; retain JSON arguments/schema/order/recovery/atomic replacement. The three fixture dependencies are concrete: cleanup assertion at `test/xyz-completion.sh:179`, fabricated stuck/moving holders in `test/gh123-lock-progress-bound.sh:31–72`, and starvation holder at `test/gh358-lock-instrumentation.sh:60–64`. Actual flock holders and no early unlocked acquisition are specified; no new suites or gate machinery are warranted. Artifact lines 32, 38, 48 correctly separate costly telemetry risk from unproven agent-work loss and require quiescent rollback. Implement the already specified acceptance gates; do not expand the repair to caller error propagation.
+
+- [Unverified — needs clone run] Corrected replay, crash release, genuine progress rearming, unchanged total cap/defaults/exit diagnostics, legacy-directory refusal, and all three adapted suites still need focused execution and the final gate per artifact lines 43–45. ATE is optional diagnosis, not qualification. No suite, pytest, executable fixture, or git command ran here. Graph discovery/coverage was attempted at Verify tier: no indexed project matches this relay worktree; canonical `XYZ-forge` is a different root, generation `2026-09-01T15:54:30Z`, with missing/changed receipt and Python coverage and partial shell ranges. Its results were not treated as current-worktree proof; direct source/receipt reads supplied the evidence, including the reported shell ranges. Entire 51-line artifact swept; no additional material pre-existing plan defects found. Full current writer and the fixture sources were read for plan context; this is not an exhaustive caller/runtime audit.
+
+Relay closed (Approved), no further plan-review turn needed. Producer (claude-a) may proceed to the plan's implementation and disposable-clone verification gates.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
