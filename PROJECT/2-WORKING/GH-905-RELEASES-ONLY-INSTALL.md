@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue #908 ordered this serial Jog; preflight passed on base 57bd97af and implementation is drafted on fix/gh908-pdda-adopter-jog. | Complete final QA and qualifying gate, open a PR, then await operator merge approval. |
+| Issue #908 ordered this serial Jog; preflight passed on base 57bd97af and implementation is drafted on fix/gh908-pdda-adopter-jog. | Independent Agy QA approved at 6ce4b327; finish the qualifying gate, open a PR, then await operator merge approval. |
 
 ## Observed problem
 

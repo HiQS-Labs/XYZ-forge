@@ -1,0 +1,7 @@
+# GH-908 PDDA adopter Jog verification (2026-10-01)
+
+Source commit: `4251b01c26c6e549d72db6ae4df6405ba20f7bc5` on `fix/gh908-pdda-adopter-jog`. Focused suites ran in a separate full clone with isolated Git config: roadmap coverage 11/11, vendored router audit 108/108, installer startup docs 40/40, Releases CLI 145/145. Its Git identity (core.bare=false, local origin, HEAD) was unchanged after the suite run.
+
+Manual controls: #904 base empty-DB failure became a pass while uncovered-doc and corrupt-DB cases stayed errors; #906 base aborted before mode/buckets while fixed install completed and wrote one registry row despite denied optional skill copy; #907 base suggested a missing bare path while the fixed hint points to an existing vendored script; #905 fresh releases-only install created a checked DB/dump, no MD ledgers, clean router audit, zero PDDA errors, and `projections=off`. An adopted preview stayed unchanged with off and refreshed with on.
+
+The initial installer suite failed one help-text assertion (39/40); the help was corrected and the final 40/40 log is retained. The audit commands for #907 intentionally exit 1 because the fixture router is drifted; the assertion concerns the remediation path. Agy relay QA is recorded in `relay-system/2026-10-01/gh908-final-qa.md` and attested Approved at reviewed HEAD `6ce4b327`. The full qualifying gate is pending and must run on the final commit.
