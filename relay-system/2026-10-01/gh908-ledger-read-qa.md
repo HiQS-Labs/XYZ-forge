@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -71,5 +71,24 @@ Independently review commit 55b9d05d in utils/py/wave_reconcile.py, following tw
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+**VERDICT: PASS**
+**Basis:** Reviewed the entire embedded brief, the seeded reconciler source with emphasis on complete `ledger_rows` and `run_subprocesses`, all local ledger-reader callers, main orchestration/rollback, snapshot/fingerprint helpers, resolver, and canonical projections getter/setter. Acceptance criteria inferred from the brief: explicit off suppresses adopted exporters; absent/legacy/schema-error reads preserve default adoption; no added CLI import/subprocess or competing setting store; existing check/rollback authority remains intact. No additional pre-existing defect identified in the reviewed source. Approval covers this correction, not pending full-gate qualification.
+
+- [Pass] Explicit off is read from the target ledger and suppresses both adopted exporter steps (`utils/py/wave_reconcile.py:1813-1829`). This matches the canonical exact-value policy at `utils/py/releases_app.py:1344-1357`; the supported setter permits only `on` or `off` (`:3843-3844`). Keep this predicate. Narrow probe command: `python3 - <<'PY'`, parse the seeded AST, compile only `ReconcileError/log_err/die/ledger_rows` and the existing try/assignment nodes at `:1812-1818`; obtain input mappings through the real helper using `ledger_rows(str(root), "SELECT ? AS value", (val,))`, then evaluate the exact selection nodes with those mappings. Exit **0**; decisive output: `SQL value='off' -> views_enabled=False`; `'on'`, `''`, `' off '`, and `None` each produce `True`. This measures SQLite row shape and the selection predicate, not an exporter run. The whitespace result matches the canonical getter; no normalization change is requested.
+- [Pass] The existing helper opens `releases.db` with `mode=ro`, parameterizes the setting key, closes the connection, and creates no DB (`utils/py/wave_reconcile.py:1206-1227,1813-1815`). Same probe command called the real helper with `SELECT value FROM settings WHERE key = ?`, parameters `("projections",)`: exit **0**, decisive output `seeded projections rows: []`, `seeded selection: True`. Against nonexistent scratch root `.relay-scratch/tmp/absent-ledger-root`, output `absent ledger: []`; asserted the root remained nonexistent. Nonzero DB size was asserted before querying and SHA256 compared afterward: `seeded DB SHA256 unchanged; no missing DB created`. Keep the shared reader; no ledger writer added.
+- [Pass] Compatibility fallback is localized to the optional setting: missing DB or legacy zero-byte placeholder yields no rows (`utils/py/wave_reconcile.py:1209-1216`); SQLite errors become `ReconcileError` (`:1226-1227`) and this caller defaults to adoption (`:1816-1818`). Same probe routed the selection's reader through a read-only query against an intentionally nonexistent table in the seeded DB: `ledger_rows(str(root), "SELECT value FROM __gh908_missing_settings_probe")`. Wrapper exit **0**; decisive stderr `Cannot read reconciliation ledger: no such table: __gh908_missing_settings_probe`; output `observed schema-error fallback: [] True`. This witnesses the SQLite-schema-error/catch path; actual corrupt/zero-byte/missing-settings ledgers were not manufactured or executed here. Those cases are source-checked, not runtime-attested.
+- [Pass] Prior subprocess/CWD objections are resolved by removing that settings process entirely: the selected target root is used directly at `utils/py/wave_reconcile.py:1813-1815`, normalized by main at `:2146`; no Releases CLI import appears in this function. AST command `[ast.unparse(n.func) for n in ast.walk(fn) if isinstance(n, ast.Call)]`, filtered for `subprocess.`, exited **0** with `run_subprocesses subprocess call sites: ['subprocess.run']` — the existing downstream loop at `:1861`. Tool selection for downstream commands remains at `:1789-1794`, with target CWD at `:1861`. Keep this implementation; the earlier settings-stub import and extra mock-call failure mechanisms no longer apply to this read.
+- [Pass] No hidden new ledger-data-loss path identified: sync and check are first in the ordered step list (`utils/py/wave_reconcile.py:1800-1803`), their nonzero status stops before exporters (`:1852-1865`), ledger/view snapshots precede this read (`:1771,1707-1727`), and main rolls back failures (`:2423-2430`). The optional setting catch does not suppress those check failures. Other ledger-reader callers retain their existing fail behavior (`:1241,1409,1479,1485`). The setting remains solely in the target DB; no parallel settings source is introduced. Retain these contracts.
+- [Unverified — needs clone run] The ten reported suite passes, original full-gate failures and pending final full gate were not independently run. End-to-end off exporter suppression, corrupt/legacy ledger reconciliation, actual missing-settings schema reconciliation, vendored tool execution and rollback under executable stubs require the harness's disposable full clone. This review does not attest merge readiness.
+
+Evidence limits: no Git command, CLI writer, reconciler, exporter, suite, pytest or executable fixture was run. Probe environment: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`. Only isolated read helper/selection AST nodes were executed; source and seeded DB were unchanged. Graph tools are unavailable in this session, so current seeded source supplies citations; no graph generation/coverage claim is made. Commit identity `55b9d05d` is supplied by the brief and was not independently checked under the no-Git constraint. The relay file is the only tracked edit; the harness owns its commit.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) should arrange the pending disposable-clone qualification. Marking the token done under the explicit approval instruction.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
