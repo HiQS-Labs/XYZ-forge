@@ -1,5 +1,10 @@
 ---
-status: proposed
+status: active
+title: "GH-909: completion lock repair"
+created: 2026-10-01
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/909
+owner: "XYZ Forge maintainers"
+goal: "Preserve every successful concurrent completion append."
 gh_issue: 909
 updated: 2026-10-01
 effort: medium
@@ -10,12 +15,9 @@ phases: 1
 # GH-909 — completion lock loses successful records
 
 ## Status
-| Phase | Status | Notes |
-|---|---|---|
-| Recon and red control | Complete | Three successful writers produce two records in controlled handoff |
-| Plan QA | Pending | Codex independent relay |
-| Implementation and verification | Pending | No production changes |
-| Final QA and PR | Pending | Ready PR, no merge implied |
+| What was just completed | What's next |
+|---|---|
+| Controlled red replay and independent Codex plan QA Approved. | Implement the reviewed lock and three existing fixture adaptations; verify in a disposable full clone. |
 
 ## Problem and source of truth
 Tracking: https://github.com/HiQS-Labs/XYZ-forge/issues/909; parent #854/#853 remain open. Base development 57bd97af4a0e8d456927e20b49d64b232d95f36d. xyz-completion pooled failure observed16 exits0 but15 records. Controlled replay proves stale waiter deletes a live successor lock and loses one of three successful records; exact historical interleaving unknown. Recon below and committed manual receipt distinguish proof from inference.
