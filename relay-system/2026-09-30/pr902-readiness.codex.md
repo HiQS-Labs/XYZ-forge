@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -72,5 +72,44 @@ Questions: 1. Are missing/unreadable transcript previews preserved without disab
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+VERDICT: FAIL
+Basis: The three PR902 fixes are supported by source and retained red/green evidence, but two review threads remain unresolved. No gate or executable fixture was run here; final clone verification remains Producer-owned.
+swept file: yes
+
+- [Should] Empty authoritative pins bypass schema validation before annotation mutation. `skills/3-weekly/task-sync/scripts/adapters/antigravity.py:367` returns before opening/checking the summaries DB; `:268` checks schema only when title/preview writes exist; `:278` still reaches the annotation writer. This contradicts SKILL.md's “Schema-validate before any write; abort … on drift.” Fix within the existing apply preflight: validate the summaries schema even when candidates/writes are empty, before annotation mutations.
+  Observed input: apply=True, app stopped, authoritative `pinned_conversations_order=[]`, unavailable summaries DB. A non-mutating mock probe reaches the annotation writer with no connection attempt and returns error=None.
+  Affected scope: Antigravity apply sweeps with empty candidate/title-write sets, including a missing or drifted summaries DB.
+  Falsifier: empty authoritative pins plus a healthy summaries schema must still permit stripping stale annotation pins; empty pins plus missing/drifted schema must raise AdapterError before any annotation write. Preserve valid empty-list authority.
+  Command (exit 0; imports only, all write entry points mocked):
+  ```python
+  import sys
+  from unittest.mock import patch
+  sys.path.insert(0, 'skills/3-weekly/task-sync/scripts')
+  from adapters.antigravity import AntigravityAdapter
+  a = AntigravityAdapter(agy_root='/nonexistent/synthetic', apply=True, app_running_fn=lambda: False)
+  events = []
+  with patch.object(a, '_read_pinned_ids', return_value=[]), patch.object(a, '_connect', side_effect=AssertionError('schema validation attempted')), patch.object(a, '_mirror_annotations', side_effect=lambda ids, rep: events.append('annotation writer reached')):
+      r = a.sweep()
+  print(events, r['error'])
+  ```
+  Decisive output: `['annotation writer reached'] None`. Executed with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`.
+
+- [Should] PR900 Status row remains outside the table: `PROJECT/2-WORKING/GH-896-UNIFIED-TASK-SYNC.md:36` is blank, followed by the headerless readiness row at `:37`. Remove that intervening blank line so the row belongs to the existing two-column table. This is a concrete document-format repair, not a runtime behavior expansion.
+
+- [Pass] Missing/unreadable preview preservation is narrowly implemented at `adapters/antigravity.py:241`–243; successful previews still enter the existing update branch at `:250`. `TESTS-RESULTS/2026-09-30+GH-901/review-controls.txt` records both failure inputs false on baseline / true after fix. Multi-workspace title updates share `with conn:` at `adapters/zcode.py:168`, and the same receipt records injected second-row ABORT rollback false/true. These are retained controls, not firsthand fixture runs this turn.
+
+- [Pass] Local naive timestamps: `core.py:51` and `:64` both use `astimezone()`. Firsthand pure parser probe, `TZ=America/Los_Angeles python3 -`, normal parser and mocked fromisoformat ValueError fallback on `2026-09-30 01:00:00`, exit 0: both emitted `2026-09-30T01:00:00-07:00`. No new suite required.
+
+- [Pass] Integration preserves the measured core/CLI/Codex implementation: inline `python3 -` SHA256 comparison against the last GH901 provenance row, exit 0, returned True for core.py, task_sync.py, adapters/antigravity.py, adapters/zcode.py and adapters/codex.py. `task_sync.py:210`–218 refuses unsupported Codex mixed writes before dispatch; `:75` and `:113` isolate native-only doctor from CLI receipts; `codex.py:90`–110 preserves exclusions/manual pins and uses actual activity. Historical merge ancestry was not independently queried (no git authorized).
+
+- [Unverified — no citation] Eight-thread disposition: preview, transaction and timestamp have the cited fixes/controls; Codex-only receipt documentation is explicit in SKILL.md (“A Codex-only native heartbeat does not refresh that receipt”); portable parity inputs use TASK_SYNC_ZCODE_ORIGINAL/SEED and TASK_SYNC_AGY_ORIGINAL in the retained GH896 batteries. Heading/count evidence is truthful: GH901 SUMMARY says “28 recorded manual probes”, GH896 provenance says “count corrected … to 24”. Status-table and schema-before-write threads remain open above.
+
+- [Unverified — needs clone run] No current final-state gate attestation was generated here. GH901 provenance records the historical Small run against 61065117364152bbbf5a63a8db7cd8b0945fcd4b; it cannot attest subsequent source fixes. Producer must retain the appropriate final full-clone gate receipt. Full-file sweep found the pre-existing schema bypass and Status-table defect above; no other material defect identified in the bounded reviewed files.
+
+Graph evidence: XYZ-forge generation 2026-09-01T15:54:30Z; coverage reports missing freshness for all five source paths. Full exact-source fallback covered all six script files, SKILL.md, GH901 working doc, review-controls and provenance; GH896 Status/parity inputs were read for the inherited threads.
+
+Handing off to Producer — fix/disposition the two Shoulds and retain final clone verification, then request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
