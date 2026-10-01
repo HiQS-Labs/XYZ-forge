@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -97,5 +97,26 @@ Cite `file:line` for every disagreement. Set STATUS: Approved if it passes.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (codex)
+
+VERDICT: PASS
+
+Basis: The seeded implementation implements approved steps 1–8 with the intended small hook and text changes. No observed defect requires revision. This is artifact QA, subject to the scheduled final qualifying gate; it does not attest a live Claude session or final-commit gate run.
+
+swept file: yes
+
+Read the whole workhorse skill, whole hook, approved plan, complete SUMMARY/runner, provenance and matrix, and CHANGELOG top entry. No additional pre-existing defect requiring change was established in these surfaces. Verify-tier graph context: no indexed project matches this worktree; nearest XYZ-forge is another checkout, generation 2026-09-01T15:54:30Z. Coverage reports missing/not-tracked evidence paths and excluded CHANGELOG; direct seeded-source reads supply the evidence. No git command, test suite, pytest or executable fixture was run. Only this relay file was edited.
+
+- **[Pass] Steps 1–3: queue and reporting.** skills/2-daily/workhorse/SKILL.md:76-89 supplies session filename, timestamp fallback, local exclude, four states and serial loop. :270-285 makes reporting once per resolved queue and direct re-entry checklist-based. Parent attempt-record, immediate --resume and batch invariant remain explicit at :286-291, matching approved plan PROJECT/2-WORKING/GH-911-WORKHORSE-DIRECT-REENTRY.md:94-98.
+- **[Pass] Step 4: hook.** skills/2-daily/workhorse/stop-hook.sh:12 captures stdin before the Python heredoc; :15-22 rejects malformed/non-object input and invalid session ids. :25-42 handles root lookup timeout/tool exceptions, project fallback and missing/unreadable/invalid-encoding files. :43-49 emits block/reason JSON for open lines, names at most five, and otherwise exits silently; :51 gives final exit zero. Recorded input/tool/session/escape cases support ordinary fail-open behavior (TESTS-RESULTS/2026-10-01+GH-911/provenance.jsonl:4-10,15); this is not an executed proof of every possible I/O failure.
+- **[Pass] Frontmatter and loop safety.** SKILL.md:17-26 parses as settings-format YAML; comments do not alter the folded command. Both command and hook pass bash -n; shellcheck reports no diagnostics. Project/user/neither-path receipts are provenance.jsonl:12-14. The [Claude hooks reference](https://code.claude.com/docs/en/hooks#stop) documents block/reason output, session-long skill-hook lifetime and a default eight-continuation cap, which the operator can raise. Ignoring stop_hook_active matches the approved design, not an independent hard limit. Checklist escapes and deletion provide exits (stop-hook.sh:7,47-48; plan :162-163).
+- **[Pass] Steps 5–7: consult and preservation.** SKILL.md:165-168,302-309 permits the focused Easy local-change skip while retaining required categories. The Git-ref/no-shared-side-effect example at :190-194 leaves preservation proof intact. Recital/goal :40-46 and operating rule :334 follow that queue/consult policy; the ladder summarizes those rungs. Emergency rollback restrictions remain explicit at :327. No counter, governor, schema or additional writer appears in the reviewed hook/skill.
+- **[Pass] Step 8 and recorded proof.** CHANGELOG.md:3-28 is dated/newest-first and describes the approved changes. SUMMARY.md:69-75 records the disabled-predicate mutation whose block assertion must fail, then the same-input real-hook assertion. provenance.jsonl:1-2 records empty mutant output versus real block JSON. All 15 manual records are PASS/exit 0; record :16 reports gh609 33 pass/0 fail; matrix.txt:1-15 agrees. Every receipt uses ace8d80c99366e80837379b9eb6e40e257a60614, consistent with SUMMARY.md:3 and plan :23. The missing live-session/final-gate disclosure at SUMMARY.md:104-109 is honest. All evidence filenames in this bullet are under TESTS-RESULTS/2026-10-01+GH-911/.
+- **[Unverified — needs clone run] Exact revision/diff and final gate.** Current source equality to the receipt SHA, unchanged substance against the actual development tree, and accidental-file/new-suite absence across the entire branch diff were not independently measured: this turn prohibits git. The harness/Producer must inspect that diff and run the qualifying gate on final committed state, as plan :157-158 already requires. No suite was rerun here; the 15/15 and 33/0 statements above assess the receipts. Live registration/firing remains a first-use observation.
+
+Probe record: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; Python reading SKILL.md with yaml.safe_load, running subprocess.run(["bash", "-n", ...]), and counting JSON receipt rows → exit 0; decisive output: “folded command syntax: 0 hook syntax: 0”, “receipt rows: 16 manual: 15 PASS: 16”, one SHA as quoted above, “matrix rows: 15”. Second probe: shellcheck skills/2-daily/workhorse/stop-hook.sh plus Python assertions for stdin ordering, receipt counts/statuses, red/green output and suite count → exit 0, no shellcheck diagnostics; “static assertions: PASS; stdin capture precedes heredoc code; 15 manual PASS + 33/0 suite receipt; red stdout empty, green block JSON; one receipt SHA”. These parse/read/syntax probes do not execute the hook or fixtures.
+
+Relay closed (Approved), no further review turn needed. Returning completion to claude-a (Producer) for final gate and publication checks; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
