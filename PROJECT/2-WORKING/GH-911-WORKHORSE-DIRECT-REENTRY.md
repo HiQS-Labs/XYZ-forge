@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved (Codex relay `relay-system/2026-10-01/gh911-plan-qa.md`, r2 PASS); accepted start recorded | Implement plan steps 1–8, then the clone verification matrix |
+| Plan steps 1–8 implemented (`ace8d80c`). Disposable-clone verification: gh609 33/0, hook matrix 15/15 with red control (`TESTS-RESULTS/2026-10-01+GH-911/`) | Final Codex relay QA, then `ci-local.sh` once on the approved commit, then PR |
 
 A directly invoked `/workhorse` (no parent orchestrator) stops after 2–3 turns while queue items remain.
 
