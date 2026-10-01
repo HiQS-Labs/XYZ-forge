@@ -158,4 +158,12 @@ Basis: Full-source sweep of core, CLI, both adapters, adapter init, SKILL.md, bo
 
 Relay closed (Approved), no further reviewer turn needed. Handing completion to codex-producer for final clone gate and publication checks.
 
+
+### Attestation · relay-drive — 2026-10-01T03:37:18Z
+task: RELAY-pr900-readiness-r2
+reviewer: codex
+status: Approved
+reviewed-head: 429a3e473a305e3cd93edb9fc4d4c3e492cc07f5
+added-range: 14310+4542
+added-sha256: 48d621b898137c759a255b7776d98d398b41a60229a7581525beb1a2bdf01dd2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
