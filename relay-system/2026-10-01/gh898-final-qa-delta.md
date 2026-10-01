@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -125,5 +125,19 @@ No validate.sh, test/*.sh, pytest, executable fixture, git or artifact mutation 
 - F1, F2, F4, F5 — Pass; no change. Noted: the exemption is line-scoped (a second connect on the marked physical line would also be shielded); the plan's record already names removal as recovery via option A. Single-connect line retained.
 
 Requesting round 2.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+VERDICT: PASS
+Basis: F3 is resolved by the newly supplied base controls and environment-specific provenance. The marker remains the smallest justified exception. Approval covers this delta review; it does not attest a green full gate on the final commit.
+
+- [Pass] **F3 closed — evidence attribution now supported.** `TESTS-RESULTS/2026-09-30+GH-898/marker/base-controls/run-set.rc.txt:1-15` records base 57bd97af, gh777 rc=0, the other twelve rc=1, and unchanged HEAD/clean tree after; `run-unset.rc.txt:3-16` records the same base and twelve rc=0. Raw logs support the summaries: `xyz-harness-set/gh396-find-harness-roots.log:39` reports the override selecting the primary clone instead of the verify clone, :43 reports 40 pass/1 fail; `xyz-harness-unset/gh396-find-harness-roots.log:43` reports 41 pass/0 fail. All 25 per-suite logs are nonempty; each set non-ratchet log contains a failure, and each unset log ends with zero failures. `marker/provenance.jsonl:1,3-10` now distinguishes inherited versus unset environments, attributes controls to base, and labels the rc127 attempt INVALID. The inherited values printed at the beginning of run-unset are context, not evidence that the per-suite env -u was absent; provenance :9 explicitly records its removal. No further fix requested.
+- [Pass] **F1/F2 retained — line-scoped exemption and fail-closed removal.** `utils/py/board_sync.py:143-152` still has one read-only connect on the marked physical line and closes it after SELECT. The other connect at :511 is unmarked. `utils/pdda/check_inventory_ratchet.py:78-82` skips a physical line by substring; thus a hypothetical second connect on that same line would also be shielded, while an adjacent line would not. The round-1 quoted probe remains the evidence for marked [511] versus removed [148,511], 32 versus 33. Scanner :128-134 refuses growth updates and :155-156 rejects count growth. `PROJECT/2-WORKING/GH-898-BOARD-SYNC-ACTIVE-REPOS.md:98` discloses scanner-rewrite risk and recovery. No scanner/baseline/module change needed.
+- [Pass] **F4/F5 retained — accurate scope and limits.** `CHANGELOG.md:5` claims focused checks rather than a green full gate; `TESTS-RESULTS/2026-09-30+GH-898/SUMMARY.md:17` leaves the final full gate pending. The new receipts resolve the evidence gap without runtime machinery. Swept the complete board_sync.py and scanner, plan, summary, provenance and supplied control evidence; no additional observed pre-existing defect found. Graph coverage is not current-worktree evidence: canonical XYZ-forge generation 2026-09-01T15:54:30Z returned not_tracked for both code paths, so source conclusions use direct reads. Exact diff completeness remains limited to the seeded delta description because git is prohibited.
+
+Read-only evidence probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with pathlib reading each base-controls/xyz-harness-{set,unset}/*.log and regex `FAIL|[0-9]+ pass.*[0-9]+ fail|clean \(matches` to report byte size and final decisive lines; exit 0. Decisive output: set gh777 216 bytes, "inventory_ratchet: clean (matches baseline, 0 new scripts/connects)"; twelve other set logs contain FAIL; unset summaries are respectively find-harness 23/0, gh280 223/0, gh292 7/0, gh358 8/0, gh362 9/0, gh372 3/0, gh396 41/0, gh429 15/0, gh448 18/0, hq-locator 8/0, marathon-drive 162/0, xyz-vendor 98/0. This checks committed receipts; no suite was executed here.
+
+Only this relay file edited. No git, validate.sh, test/*.sh, pytest or executable fixture run. Relay closed (Approved), no further turn needed; Producer/harness owns the pending final-commit full gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
