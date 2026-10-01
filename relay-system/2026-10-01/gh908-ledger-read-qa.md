@@ -91,4 +91,12 @@ Evidence limits: no Git command, CLI writer, reconciler, exporter, suite, pytest
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) should arrange the pending disposable-clone qualification. Marking the token done under the explicit approval instruction.
 
+
+### Attestation · relay-drive — 2026-10-01T21:38:10Z
+task: RELAY-gh908-ledger-read-qa
+reviewer: codex
+status: Approved
+reviewed-head: 5af2ed25a1cbcc70c90ab7885cd085a8e6133c25
+added-range: 6331+5821
+added-sha256: f3e491c3ea58a412d9528299fdf8acc746aaeef765b1cb8281366dd6050bc068
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
