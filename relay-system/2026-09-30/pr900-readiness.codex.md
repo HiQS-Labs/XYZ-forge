@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -131,9 +131,31 @@ S1 Implemented: existing false/true pin field replaced once, quoted literals unt
 S2 Implemented: title matching supports both quote forms outside quoted values; unpin no longer collapses whitespace in any value. Existing escaping control and manual exact inputs passed, including actual single-quoted title.
 S3 Implemented: receipt object/string shape validated through named unreadable-red path; aware timestamps supported. [], invalid-type at and bad text red without crash.
 Recovered own producer edits from containment guard's orphan backups after r1; no reviewer edit is blamed for the root dirty delta. R1 independent findings retained as evidence, but its driver exited6 (containment); r2 must obtain actual passing attestation.
-Manual controls and existing Agy24/24 verified after changes; Small gate of prior code is still running, final gate will cover final state in disposable full clone. Do not rerun mutation-heavy suites inside review worktree.
+Manual controls and existing Agy24/24 verified after changes; Small gate of prior code is still running, final gate will cover final state in disposable full clone. Do not rerun mutation-heavy suites inside review worktree.  [Unverified — no citation]
 Questions: re-probe S1-S3 with exact inputs and verify full current code has no material remaining blockers. Run no operator store writes; write only this relay. Prior baseline code hashes in provenance line8 reflect earlier code; latest line9 hashes are current and historical SHAs intentionally remain historical.
 
 Handing off to Reviewer for final verdict.
+
+
+### Reviewer · Round 2
+
+swept file: yes
+VERDICT: PASS
+Basis: Full-source sweep of core, CLI, both adapters, adapter init, SKILL.md, both batteries, manual receipt, provenance and GH-896 plan. S1–S3 resolved; no further material inherited code defect found within these bounded inputs. Approval covers independent code QA; final disposable-clone Small gate and publication/merge reconciliation remain separate requirements.
+
+- [Pass] S1 resolved at skills/3-weekly/task-sync/scripts/adapters/antigravity.py:473: exact input title:"Keep" pinned:false with pin=True yielded title:"Keep" pinned:true. Already-true control yielded NO WRITE.
+- [Pass] S2 resolved at antigravity.py:457 and :460: title:'Old' became exactly title:"New"; notes containing the single-quoted literal title:"Keep this literal" retained that literal while actual title changed from Old to New. Unpin retained title:"Keep  exact spacing". Backslash/quote control retained escaped backslash and double-quote bytes.
+- [Pass] S3 resolved at skills/3-weekly/task-sync/scripts/task_sync.py:75: [], {"at":null}, {"at":[]} and {"at":"bad"} all returned red=1/state=unreadable and still returned the synthetic successful ZCode doctor section. Fresh aware ISO timestamp returned red=0; two-day-old timestamp red=1.
+  Probe command: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - (exit 0). Inline body imported skill-local core/task_sync/AntigravityAdapter, created only TMPDIR/r2-review annotations/receipt, replaced core.atomic_write_text with in-memory capture and task_sync._build_adapter with synthetic Good.doctor, then called _update_annotation_file on exact inputs above and run_doctor on the listed receipts. Decisive outputs: false 'title:"Keep" pinned:true'; true 'NO WRITE'; single 'title:"New"'; spaces 'title:"Keep  exact spacing"'; doctor [] rc 1 state unreadable ides {'zcode': {'ok': True}}. No adapter store writes executed.
+- [Pass] Same scratch inline command called _read_pinned_ids: {}, null pin list and [3] produced AdapterError; explicit [] returned []. Authority precedes apply writes at antigravity.py:259 and annotation preflight at :262. Pin-list representation preserved by _write_pinned_ids; safe IDs checked by _check_conversation_id.
+- [Pass] Partial success retains errors and requests receipt at task_sync.py:119–129. Second command, PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - (exit 0), injected Good.sweep returning core.new_ide_report, Bad.sweep raising AdapterError('agy: synthetic refusal'), and an in-memory core.write_receipt capture. run_sweep(apply=True) decisive output: partial 1 scratch-captured agy: synthetic refusal. Atomic sibling-temp replacement remains at core.py:119.
+- [Pass] Cron stale-unpin exclusion is at zcode.py:300; repeated applied-title guard at :175. Skill-local import path is at task_sync.py:32; adapters import core. SKILL.md's "The heartbeat (single scheduler)" documents the single existing automation. No further material ZCode/core inherited defect found in the full sweep.
+- [Pass] Latest receipt hashes match all five source files: inline SHA256 comparison of final provenance.jsonl row (line 9) exited 0, output latest-hashes True. Line 7's gate remains historical evidence, not current-fix qualification.
+- [Nit] SKILL.md:45's phrase "empty-authoritative read never triggers a destructive write" is ambiguous beside valid explicit [] mirroring. Clarify failed/missing authority versus successfully read empty list, as already explained in antigravity.py's opening docstring. No behavior change requested.
+- [Unverified — needs clone run] Batteries and recorded atomic-failure controls read, not executed here. No suites, pytest, gate or executable fixtures run. Final Small gate remains outstanding, as the latest GH-896 status row states. HQ preview is honestly recorded blocked in provenance line 6; deployment not verified.
+- [Unverified] No git commands run. Local merge-resolution scope, exact committed SHA and current remote readiness cannot be attested in this turn.
+- Graph limitation: list_projects returned all 77 projects (has_more=false); this worktree and PR900 review clone are unindexed. Nearest XYZ-forge coverage generation 2026-09-01T15:54:30Z has zero entries in task-sync scope. Used direct full-source fallback, without claiming graph freshness/completeness.
+
+Relay closed (Approved), no further reviewer turn needed. Handing completion to codex-producer for final clone gate and publication checks.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
