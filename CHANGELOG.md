@@ -4,7 +4,7 @@
 
 A four-issue serial Jog now has capture contracts, rated RELEASES rows, and queue positions 1–4. PDDA roadmap coverage recognizes an empty but queryable releases ledger and still reports corrupt ledgers or uncovered docs. Vendored router-audit hints use the executing script path. The PDDA installer treats the optional Claude skill copy as best-effort, then completes core setup. A new releases-only install mode initializes the DB without retired Markdown ledgers, writes a mode-correct router, and can set `projections=off`; the Releases writer and hosted reconciler honor that setting. This cross-module setting is reversible with `releases settings set projections on`.
 
-The 2026-10-01 fixture matrix and focused existing suites passed, and an independent Agy relay review approved the implementation at `6ce4b327`; qualifying CI remains required before the PR is merge-ready. No issue is marked shipped until landing.
+The 2026-10-01 fixture matrix and focused existing suites passed. Independent Agy and Codex relay reviews approved the final correction; a clean-environment macOS `ci-local.sh` passed all steps at `5af2ed25` with clone identity unchanged. The first clean full run exposed reconcile fixture compatibility defects, which were corrected and retained with red/green evidence in `TESTS-RESULTS/2026-10-01+GH-908/`. Hosted PR CI and merge approval remain; no issue is marked shipped until landing.
 
 ## 2026-09-30 — GH-549 fixture replay bounded to its own event (#854)
 
