@@ -55,3 +55,7 @@ Original conc-1 interleaving, external lock-path users and network-filesystem be
 ## Verification checkpoint
 
 At 266a954a in a disposable full clone, all three existing suites passed. Manual handoff kept W/B/A, all exits 0; crash released the lock; a legacy directory was refused and unchanged. ATE ran 77 successful variations (16/32/64 writers, 0/.01s launch delays), preserving all 2,848 records. Receipts and intact identity: `TESTS-RESULTS/2026-10-01+GH-909/focused/`. These are diagnostic/focused evidence, excluded from #854 clean development counts. The first scratch replay failed due to a missing instrumentation import and was corrected; production code was unaffected.
+
+## Full-gate environment diagnosis
+
+The first push gate at 1cad5dce was aborted on gh372 pool rc1, preserving identity and refusing publication. Its focused replay created a 45-line turn log but escalation looked at the primary checkout incident because ambient `XYZ_HARNESS` pointed there. At both candidate and unmodified development 57bd97af, ambient configuration gives rc1; clearing only `XYZ_HARNESS` gives 3/0, rc0. No source fix or timeout change is needed. Receipts: `TESTS-RESULTS/2026-10-01+GH-909/blocked-push/`. Repeat the final gate with the locator-only override absent; all other normal environment/defaults remain. This failed attempt is excluded and cannot be reported as a clean full gate.
