@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -82,5 +82,19 @@ Evidence already observed in a disposable full clone: pdda-roadmap-coverage 11/1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1
+
+swept file: yes
+
+* `[Pass]` #904 distinguishes an empty queryable roadmap_items table and avoids stale ROADMAP.md authority in releases mode. Citations: `utils/pdda/pdda.sh:343` `if sqlite3 "$PDDA_REPO_ROOT/releases.db" "SELECT 1 FROM roadmap_items LIMIT 0" >/dev/null 2>&1; then db_ledger_ready=1` and `utils/pdda/pdda.sh:351` `[ "$releases_mode" -eq 0 ] && [ -f "$PDDA_ROADMAP" ] && grep -Fq "$1" "$PDDA_ROADMAP" && return 0`.
+* `[Pass]` #907 printed command is executable for vendored paths and spaces. Citation: `utils/py/router_audit.py:800` `print("Remediation available: run \`python3 %s --fix %s\`" % (shlex.quote(os.path.abspath(__file__)), shlex.quote(root)))`.
+* `[Pass]` #906 optionally installs the skill, avoids failing the router advice on failure, and continues core install. Citation: `utils/pdda/pdda-install.sh:637` `if mkdir -p "$TARGET/.claude/skills/pdda" 2>/dev/null && cp ...` and `utils/pdda/templates/ROUTER.target.md:78` `- To re-run this startup sequence mid-session, invoke the optional \`/pdda\` skill (\`.claude/skills/pdda/SKILL.md\`) if installed; otherwise read this sequence again.`.
+* `[Pass]` #905 provides direct releases-only setup without MD ledger seeds and uses explicit projection checks, while legacy defaults remain untouched. Citations: `utils/pdda/pdda-install.sh:767` `ROADMAP_SOURCE=releases` conditional skipping `ROADMAP.md` seed, and `utils/py/releases_app.py:1352` `row = conn.execute("SELECT value FROM settings WHERE key = ?", (PROJECTIONS_KEY,)).fetchone()`.
+* `[Pass]` Contracts, PRS ledger writes, Jog order (904, 907, 906, 905), and no-new-tests rule are respected. No `test/` files or gates modified. Citations: `releases.sql:790-793` jog queue records.
+
+**VERDICT: PASS**
+**Basis:** All criteria from the review brief are met. #904 handles empty vs missing DBs correctly, #907 safely quotes remediation paths, #906 prevents optional skill failure from halting core install, and #905 safely gates projections while keeping legacy defaults. No testing constraints or architectural boundaries were violated.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
