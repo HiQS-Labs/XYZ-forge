@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-10-01 — Skills Army HQ upstream moves to XYZ-skills-army-mini; forge keeps a vendored copy (GH-882)
+
+Operator decision (recorded on XYZ-skills-army-mini#2): `HiQS-Labs/XYZ-skills-army-mini` is the canonical
+upstream for Skills Army HQ from today. XYZ Forge becomes a consumer:
+
+- **Vendored copy kept.** `skills/3-weekly/skills-army-hq/` stays as a vendored copy with a forge-only
+  `UPSTREAM.md` pointer. Refreshes are ad-hoc vendor PRs from a tagged mini release, with no freshness
+  guarantee. This replaces the earlier plan to delete the forge copy.
+- **Republisher retired.** `push-to-skills-army-mini` is marked retired. Running it would overwrite
+  upstream; its own history check also refuses once mini has non-publisher commits. It and its `gh620`
+  suite are removed after the #854 freeze, through the 2026-10-08 suite audit.
+- **Issues moved.** #506, #676, #837 and #881 were transferred to mini as #4, #5, #6 and #7.
+  - #676 is narrowed to link-drift reporting.
+  - #506's forge ledger row moved to *Deferred · vision* with a transfer note, and its capture doc
+    moved to `PROJECT/4-MISC/`.
+- **Upstream changes in mini#3.** Skills Army HQ becomes source-agnostic: deploy a skill from any
+  folder, drift warns by default, source rules are opt-in, and any device may publish. The forge copy
+  picks this up at its next vendor PR. Until then, a stale forge copy only produces a drift warning.
+
+Verification: `python3 utils/py/releases_app.py check` clean; existing suites per the push gate.
+
 ## 2026-10-01 — Successful completion appends retain mutual exclusion (GH-909)
 
 A controlled handoff showed a stale waiter deleting a live successor’s PID-directory lock: all three writers returned success, but only two records survived. The existing completion writer now holds a stable-inode OS advisory lock through its atomic JSON transaction, preserving bounded per-holder wait and the absolute queue cap. The three covering fixtures use real OS locks. Upgrade and rollback require stopping and retiring old writers sharing the records path; mixed protocols are unsupported. Evidence is retained under `TESTS-RESULTS/2026-10-01+GH-909/`. The full-gate follow-up witnessed a quiet-grep SIGPIPE false-red in gh268 (#853). Because it is outside Small, standing policy turns it off through TESTS removal and gh306 EXEMPT; its file stays unchanged. A consuming-grep diagnostic demonstrated the cause but is not shipped. This fixes a proven loss mechanism; the exact historical CI interleaving and separate relay/registry flakes remain unproven.
