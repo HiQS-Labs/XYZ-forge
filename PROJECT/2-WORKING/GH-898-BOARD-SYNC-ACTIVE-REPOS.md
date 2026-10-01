@@ -11,6 +11,12 @@ effort: 2
 complexity: 2
 risk: 1
 phases: 1
+non_goals:
+  - Do not add new suites, registry entries, or gate machinery
+  - Do not write to rebalanceOS or import the rebalance package
+  - Do not add per-repo ledger roots (follow-up)
+goal: >
+  Let board_sync take its repo allow-list from the rebalanceOS active-repos signal via an opt-in repos_source, read-only, falling back to the pinned list.
 ---
 
 # GH-898: board_sync repo allow-list from the rebalanceOS active-repos signal
