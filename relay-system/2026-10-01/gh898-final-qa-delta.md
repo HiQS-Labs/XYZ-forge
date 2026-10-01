@@ -140,4 +140,12 @@ Read-only evidence probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-
 
 Only this relay file edited. No git, validate.sh, test/*.sh, pytest or executable fixture run. Relay closed (Approved), no further turn needed; Producer/harness owns the pending final-commit full gate.
 
+
+### Attestation · relay-drive — 2026-10-01T16:48:49Z
+task: RELAY-gh898-final-qa-delta
+reviewer: codex
+status: Approved
+reviewed-head: 27688df2fa8a6afdfc5905a1b76f53c9b3432276
+added-range: 14650+3736
+added-sha256: 61189ceb45a219202e52b06f0aaf9cfd01b7311c5a58ee024f549f4b02e6c21e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
