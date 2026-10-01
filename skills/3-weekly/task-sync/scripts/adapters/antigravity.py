@@ -452,23 +452,35 @@ class AntigravityAdapter:
                 ) from exc
 
         original = content
+        # Quoted tokens are consumed first, so field-looking text inside a
+        # double- or single-quoted value is preserved byte-for-byte.
+        quoted = r'''("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')'''
         if new_title is not None:
             escaped = new_title.replace("\\", "\\\\").replace('"', '\\"')
-            title_pattern = r'\btitle:\s*"(?:\\.|[^"\\])*"'
-            if re.search(title_pattern, content):
-                content = re.sub(title_pattern, lambda _: f'title:"{escaped}"', content)
-            else:
+            pattern = quoted + r'''|\btitle:\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')'''
+            found = False
+            def replace_title(match):
+                nonlocal found
+                if match.group(1) is not None:
+                    return match.group(0)
+                found = True
+                return f'title:"{escaped}"'
+            content = re.sub(pattern, replace_title, content)
+            if not found:
                 content = f'title:"{escaped}" {content}'.strip()
 
-        if pin is True:
-            unquoted = re.sub(r'"(?:\\.|[^"\\])*"', "", content)
-            if not re.search(r"\bpinned:\s*true\b", unquoted):
+        if pin is not None:
+            pattern = quoted + r"|\bpinned:\s*(?:true|false)\b"
+            found = False
+            def replace_pin(match):
+                nonlocal found
+                if match.group(1) is not None:
+                    return match.group(0)
+                found = True
+                return "pinned:true" if pin else ""
+            content = re.sub(pattern, replace_pin, content).strip()
+            if pin and not found:
                 content = f"{content} pinned:true".strip()
-        elif pin is False:
-            def _remove(m):
-                return m.group(1) if m.group(1) else ""
-            content = re.sub(r'("(?:\\.|[^"\\])*")|\bpinned:\s*true\b', _remove, content)
-            content = re.sub(r"[ \t]+", " ", content).strip()
 
         if apply and content != original:
             self.annotations_dir.mkdir(parents=True, exist_ok=True)

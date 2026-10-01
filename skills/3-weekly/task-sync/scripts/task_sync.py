@@ -72,12 +72,16 @@ def run_doctor(args) -> tuple[dict, int]:
     if os.path.exists(receipt):
         try:
             with open(receipt, "r", encoding="utf-8") as f:
-                at = json.load(f).get("at", "unreadable")
+                data = json.load(f)
+                if not isinstance(data, dict) or not isinstance(data.get("at"), str):
+                    raise ValueError("receipt must be an object with a timestamp")
+                at = data["at"]
             receipt_state = at
             if at == "unreadable":
                 receipt_red = f"heartbeat receipt unreadable at {receipt}"
             else:
-                age = datetime.now() - datetime.fromisoformat(at)
+                last_apply = datetime.fromisoformat(at)
+                age = datetime.now(last_apply.tzinfo) - last_apply
                 if age > timedelta(hours=2):
                     receipt_red = (
                         f"heartbeat receipt stale: last apply {at} "

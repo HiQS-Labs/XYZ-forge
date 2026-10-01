@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -66,5 +66,74 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1
+
+swept file: yes
+VERDICT: FAIL
+Basis: Full sweep of core, CLI, both adapters, adapter init, SKILL.md, both evidence batteries, provenance/manual receipt and GH-896 plan found three actionable inherited defects. Only the relay file is changed; scratch annotation inputs and captured writes were used, no operator stores or suites.
+
+- [Should] **S1 — explicit false pin becomes duplicate scalar fields.** At `skills/3-weekly/task-sync/scripts/adapters/antigravity.py:463`, pin=True detects only an existing true and appends rather than replacing false.
+  Observed input: `title:"Keep" pinned:false` with pin=True → `title:"Keep" pinned:false pinned:true`.
+  Affected scope: false-pinned annotations selected for mirroring/auto-pin.
+  Falsifier: the input must yield one true pin; already-true must remain unchanged. Fix the existing boolean field in place.
+
+- [Should] **S2 — annotation transformations corrupt quoted values.** `skills/3-weekly/task-sync/scripts/adapters/antigravity.py:457` recognizes only double-quoted titles and matches inside other strings; line 471 normalizes whitespace inside values.
+  Observed input: `title:'Old'` plus new_title='New' → `title:"New" title:'Old'`; `notes:'title:"Keep this literal"' title:"Old"` → `notes:'title:"New"' title:"New"`; `title:"Keep  exact spacing" pinned:true` plus pin=False → `title:"Keep exact spacing"`.
+  Affected scope: single-quoted protobuf titles, quoted title-like literals, and repeated spaces inside strings during unpin.
+  Falsifier: produce exactly one updated title; preserve the notes value and two spaces inside the last title. Escaped-double-quote/backslash controls must still work. Extend the existing helper to edit fields outside both protobuf quote forms, preserving unrelated bytes; no new suite/coordinator.
+
+  S1/S2 probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` with the following inline Python (exit 0; decisive outputs quoted above):
+  ```python
+  import sys, os
+  from pathlib import Path
+  sys.path.insert(0, "skills/3-weekly/task-sync/scripts")
+  import core
+  from adapters.antigravity import AntigravityAdapter
+  root = Path(os.environ["TMPDIR"]) / "review-parser"
+  (root / "annotations").mkdir(parents=True, exist_ok=True)
+  captured = []
+  core.atomic_write_text = lambda p, c: captured.append(c.strip())
+  ad = AntigravityAdapter(agy_root=str(root))
+  cases = [
+      ('false_pin', 'title:"Keep" pinned:false', dict(pin=True)),
+      ('spaces', 'title:"Keep  exact spacing" pinned:true', dict(pin=False)),
+      ('single_quote', """notes:'title:"Keep this literal"' title:"Old" """, dict(new_title='New')),
+      ('single_title', "title:'Old'", dict(new_title='New')),
+  ]
+  for cid, text, kw in cases:
+      (root / "annotations" / f"{cid}.pbtxt").write_text(text)
+      ad._update_annotation_file(cid, apply=True, **kw)
+      print(cid, repr(captured[-1]))
+  ```
+  The command above consolidates the two inline invocations actually run; both exited 0 and returned the quoted transformations.
+
+- [Should] **S3 — malformed heartbeat receipt crashes doctor before IDE checks.** `skills/3-weekly/task-sync/scripts/task_sync.py:75` calls .get on arbitrary JSON; line 86 does not catch AttributeError/TypeError.
+  Observed input: receipt `[]` → `AttributeError 'list' object has no attribute 'get'`.
+  Affected scope: non-object receipts or invalid-type at values.
+  Falsifier: `[]` and `{"at":null}` must yield a named unreadable heartbeat red while IDE checks still run; fresh/stale/absent controls retain their current outcomes. Validate object/string shape through the existing unreadable-red path.
+  Probe command: `python3 -` with the import/root setup above plus `import task_sync; from types import SimpleNamespace; receipt=root/'receipt.json'; receipt.write_text('[]'); core.receipt_path=lambda:str(receipt)`, then diagnostic try/except around `task_sync.run_doctor(SimpleNamespace(ide=[]))`, printing exception type/message. Exit 0 from wrapper; decisive output: `doctor array receipt -> AttributeError 'list' object has no attribute 'get'`.
+
+- [Pass] Authority distinguishes missing/malformed from explicit empty: `antigravity.py:135`, `:148`, `:153`, `:157`. Inline scratch JSON probe invoked _read_pinned_ids on {}, null list, [3], and []; exit 0, first three produced AdapterErrors, last returned []. Sweep authority precedes writes at `:260`; auto-pin title preflight is at `:312`.
+- [Pass] Partial success retains errors and refreshes receipt at `task_sync.py:119` and `:124`. Inline run_sweep probe injected a successful fake ZCode and Agy raising AdapterError('agy: synthetic refusal'), captured core.write_receipt in memory; exit 0, output `partial-success rc=1 receipt=scratch-captured agy error=agy: synthetic refusal`. Shared atomic writes are at `core.py:119`; imports are skill-local at `task_sync.py:32`. Cron stale-unpin exclusion exists at `zcode.py:300`; repeated applied title has a no-op guard at `:175`.
+- [Pass] All five code hashes in `TESTS-RESULTS/2026-09-30+GH-896/provenance.jsonl:8` match current files. Inline Python loaded the last JSONL row and compared hashlib.sha256(Path(p).read_bytes()).hexdigest() to each code_sha256; exit 0, output `receipt code hashes match= True`. Line 7's gate is historical, not current-fix gate evidence.
+- [Unverified — needs clone run] Existing batteries, current Small gate, governance/deployment preview and atomic-failure controls were read, not run here. No additional actionable ZCode/core defects found in the full sweep within these bounded inputs. Standalone deployment uses only skill-local imports; single scheduler is documented in SKILL.md.
+- [Unverified] Local merge-resolution scope cannot be attested under the no-git restriction. `gh pr view 900 --repo HiQS-Labs/XYZ-forge --json baseRefName,headRefOid,mergeable` exited 0: base development, remote head da53dd95432ac9cb9702ebd5aaf1102ef7168e52, CONFLICTING. This older remote head is distinct from the seeded fixes; publication and gate evidence remain outstanding.
+
+Handoff bookkeeping: the first relay-write command failed with a Python quoting SyntaxError before editing the file, but its following tick release succeeded. A retry claim was refused as spent/reserved; this corrected write records the completed review without touching any other artifact. Token is already released to codex-producer.
+
+Handing off to codex-producer — address S1–S3 with narrow recorded falsifiers, then open the next review round.
+
+### Producer · Round 2
+
+S1 Implemented: existing false/true pin field replaced once, quoted literals untouched.
+S2 Implemented: title matching supports both quote forms outside quoted values; unpin no longer collapses whitespace in any value. Existing escaping control and manual exact inputs passed, including actual single-quoted title.
+S3 Implemented: receipt object/string shape validated through named unreadable-red path; aware timestamps supported. [], invalid-type at and bad text red without crash.
+Recovered own producer edits from containment guard's orphan backups after r1; no reviewer edit is blamed for the root dirty delta. R1 independent findings retained as evidence, but its driver exited6 (containment); r2 must obtain actual passing attestation.
+Manual controls and existing Agy24/24 verified after changes; Small gate of prior code is still running, final gate will cover final state in disposable full clone. Do not rerun mutation-heavy suites inside review worktree.
+Questions: re-probe S1-S3 with exact inputs and verify full current code has no material remaining blockers. Run no operator store writes; write only this relay. Prior baseline code hashes in provenance line8 reflect earlier code; latest line9 hashes are current and historical SHAs intentionally remain historical.
+
+Handing off to Reviewer for final verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -107,3 +107,10 @@ with tempfile.TemporaryDirectory(dir="temp") as t:
  assert red==1 and report["ides"]["agy"]["error"] and report["ides"]["zcode"]["error"] is None
 print("PASS additional controls: path containment, protobuf escaping, set-title idempotency, atomic receipt red/green, pin doctor, cron unpin opt-in, SQLite error isolation")
 ```
+
+Independent QA r1 reproduced four additional failures; producer replay after fix:
+PASS false_pin: title:"Keep" pinned:false -> title:"Keep" pinned:true (one field).
+PASS spaces: title:"Keep  exact spacing" pinned:true -> title:"Keep  exact spacing" (quoted bytes retained).
+PASS single_quote: notes containing a quoted title literal retained while actual title changes.
+PASS doctor: [], {"at": []}, {"at": "bad"} report red rather than crash; aware ISO timestamp accepted.
+Existing Agy battery rerun after parser changes: 24/24.
