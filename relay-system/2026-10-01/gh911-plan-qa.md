@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -92,5 +92,36 @@ Cite `file:line` for every disagreement. Set STATUS: Approved if the plan passes
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+
+Basis: The five asks fit this envelope, but the plan leaves contradictory instructions in the skill and does not yet specify the required witnessed failure control or committed manual-check provenance. Two small plan revisions suffice; no additional subsystem is requested.
+
+swept file: yes
+
+Read the entire plan, entire workhorse skill, and entire gh609 suite. The whole-file sweep found the existing recital/operating-rule inconsistencies below; no other pre-existing defect requiring a change was established. Graph context: `XYZ-forge`, generation `2026-09-01T15:54:30Z`, is a different checkout; coverage reported missing/untracked/changed metadata for the relevant plan, skill, suite and AGENTS paths. Findings use the seeded files directly, not stale graph claims. No git commands, suites, pytest, or executable fixtures were run.
+
+- **[Should] S1 — Include the recital and operating rules in the text consistency edit.** Plan `PROJECT/1-INBOX/GH-911-WORKHORSE-DIRECT-REENTRY.md:76-87,110-116` changes Rung 0, Rung 6, Rung 4 and Fast-Track, but does not include `skills/2-daily/workhorse/SKILL.md:30,33,36,292`. Those lines still instruct a session-plan queue, unconditional advisor fan-out/cross-model validation, and all six rungs per item. These would contradict the proposed durable queue and focused-change consult exception. Cheapest fix: explicitly update these existing summaries to reference the durable checklist and the same proportional-consult rule; do not add another policy. Keep `:285`'s emergency-rollback safety restriction explicit.
+  - Observed input: `SKILL.md:33` says “Fan out the plan to independent advisors”; `:36` says “each item ... validated across independent models”; `:292` says “apply Rungs 1–6 in order for each active queue item”. The plan's new skip at `:110-113` does not amend these instructions.
+  - Affected scope: workhorse's own summaries of the queue and Rung 4; focused Easy local-branch items eligible for the proposed exception.
+  - Falsifier: read the complete resulting skill for an eligible focused Easy item and an architecture-change item; the first must consistently permit the documented skip, the second must consistently require consult. An explicit existing precedence rule reconciling these lines would make this revision unnecessary; none is stated here.
+  - Probe: `rg -n 'Hold the active queue|Fan out the plan|validated across independent|apply Rungs 1–6 in order' skills/2-daily/workhorse/SKILL.md` → exit 0; decisive output identifies lines `30`, `33`, `36`, `292` with the instructions quoted above.
+
+- **[Should] S2 — Complete the manual proof contract without adding tests.** Plan `PROJECT/1-INBOX/GH-911-WORKHORSE-DIRECT-REENTRY.md:119-133` calls an open-item/block result “red”, but that is expected behavior, not a witnessed failing assertion. It also names a results directory without requiring `provenance.jsonl`. `AGENTS.md:100-108,145-148` requires both a failure witnessed by mutating the guarded behavior and committed provenance. Cheapest fix: explicitly require a manual control against a scratch copy with the open-item predicate disabled (the block assertion must fail), then the real hook with the same input (assertion passes), plus the existing no-open-item checks; commit the command/status/decisive-output receipts and `provenance.jsonl` in the implementation PR. Specify all executable checks, including gh609, run in the disposable full clone. No new suite or gate machinery.
+  - Observed input: verification `:125` labels `- [ ] → block JSON` red; `:124-131` contains no mutation control or provenance requirement.
+  - Affected scope: evidence for the new hook's open-item blocking claim; retain all listed fail-open/session/escape checks.
+  - Falsifier: an explicitly required manual assertion that fails when blocking is disabled, passes on the real hook, and has committed provenance would satisfy this finding. A normal hook returning block JSON alone does not.
+  - Probe: `python3 -c 'from pathlib import Path; s=Path("PROJECT/1-INBOX/GH-911-WORKHORSE-DIRECT-REENTRY.md").read_text().split("## Verification",1)[1].split("## Risks",1)[0]; print("provenance.jsonl:", "provenance.jsonl" in s); print("mutation control:", any(w in s.lower() for w in ("mutant", "mutation", "mutate")))'` → exit 0; output `provenance.jsonl: False` and `mutation control: False`. This is a text check; the finding also rests on reading the complete matrix.
+
+- **[Pass] Current-state citations and re-entry.** The plan's claims about skill lines `66`, `68`, `164`, `242`, `250-256`, `262-267` match the seeded source. Plan `:83-87` makes reporting end-of-run and direct re-entry checklist-based while preserving `SKILL.md:253-255`'s attempt-record and immediate parent `--resume` contract. No mismatch in the asked-for line citations.
+- **[Pass] Hook design is proportional at plan level.** Plan `:90-98` specifies session-filename lookup, only open checkbox lines causing block, fail-open errors, and parked/blocked escape. Skill hooks activate on invocation and remain for the session; the documented eight-consecutive-continuation cap supports ignoring `stop_hook_active` for this design ([Claude hooks reference](https://code.claude.com/docs/en/hooks#stop)). Thus a fresh session that never invoked the skill has no registered skill hook; an invoked session with no matching checklist is inert. No counters/governor/schema are needed. This is a design judgment, not executed hook evidence.
+- **[Pass] Default installation paths resolve the bundle.** `skills/2-daily/workhorse/install.sh:48,53` links the whole source folder into `$HOME/.claude/skills/workhorse`; the observed user link points to `/Users/noelsaw/git-pulse-sync/Deployed Skills/workhorse`. The project/user fallback in plan `:106-109` follows either folder link. Skills Army's whole-folder distribution and app symlinks are described in its `SKILL.md:42-51,65-69`. No install change is needed for this operator's default path. The installer's `CLAUDE_SKILLS_DIR` override at `:53` is outside this default-path conclusion; do not claim arbitrary custom paths are covered. `${CLAUDE_SESSION_ID}` is documented for skill content ([Claude skills reference](https://code.claude.com/docs/en/skills#available-string-substitutions)).
+- **[Pass] Consult bounds and preservation.** Plan `:110-113` retains consult for architecture, boundaries, state, contracts, dependencies, material security/performance and Costly/One-way-door work. Its `:114-116` Easy example requires Git-ref recovery and no remote/shared/published side effect; keep that as an example under `SKILL.md:164-169`'s actual reversibility classification, not a waiver of the remaining preservation rules. `test/gh609-sdlc-agent-gaps.sh:53-91` pins the retained Rung 5/6 strings and already has adversarial controls at `:274-312`.
+- **[Unverified — needs clone run] Implementation behavior and gates.** The hook is planned, not implemented; fail-open on missing tools, malformed/incorrectly typed JSON and unreadable files, exact checkbox matching, command resolution, and the complete manual matrix need the disposable-clone run. Include positive project-path and user-symlink resolution in that manual matrix alongside its existing neither-path case (`plan:130`). No executed-test success is claimed.
+- **[Nit] Cite deployment recon precisely.** Plan `:69` reverses the source/distribution direction: default direct install is source-folder → app symlink (`skills/2-daily/workhorse/install.sh:48,53`); Skills Army is owning repo → Pulse collection → app symlink. Correct the sentence and cite the actual per-skill installer rather than root `install.sh`.
+
+Handing off to claude-a (Producer) — disposition S1/S2, revise the plan, and open Round 2 for review. No artifact was edited by the Reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
