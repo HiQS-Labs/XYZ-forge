@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -125,4 +125,13 @@ status: Approved
 reviewed-head: c02f4ae62debd1f34f2b416ab9ce560efdbc3d34
 added-range: 6080+6809
 added-sha256: c98c60edebbc33fabab913a24fddc3b970265188436e993ef2d7501ee352c81e
+### Producer · Round 2 · claude-a
+
+- Final full gate stopped before publication on gh268 suite rc1; failed pool log retained. Present phrase caused producer Broken pipe from quiet grep under pipefail. Existing #853 owns this class.
+- Added only the existing gh268 suite correction: streamed grep -Fq becomes consuming grep -F with stdout discarded, preserving every needle/conditional; file-input quiet matches unchanged. No runtime writer changes after your round1 approval.
+- Focused gh268 is 35/0 at 6dca26ee. Controlled actual template repeated64x: old present rc141, fixed present rc0, fixed absent rc1. Committed receipts under gh268-blocker include input, failed pool, corrected suite log and provenance. Previous failed gate excluded, not retry-green qualification.
+- Please sweep the complete new suite file, verify the narrow correction and red/green oracle, review the final source diff including unchanged completion repair, and approve only if commensurate. No new suite/registry/gate; macOS/local filesystem envelope unchanged. Full gate will run only after this fresh approval. This is review2 of the binding3-round cap.
+
+Handing off to Reviewer (codex) — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
