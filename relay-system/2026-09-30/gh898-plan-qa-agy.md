@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer (agy) — Round 1
+
+swept file: yes. No pre-existing defects found in the touched `board_sync.py` config branch or `resolve_selection_policy` footprint.
+
+- `[Pass]` **Question 1 (F3 decision & recovery):** The F3 decision is sound. Because `repos_source` is popped from the dictionary before it is returned, the resolved policy dictionary contains exactly the 14 original keys from `POLICY_DEFAULTS` (`board_sync.py:82-89`). Furthermore, `resolve_device_block` isolates the environment/file merge to only declared keys. Consequently, a policy saved with an active source will have `repo: ""` and `repos: [pinned, active1...]`. The documented recovery (setting `repos` to exactly the saved list and leaving `repo` unset) will perfectly recreate this dictionary, satisfying the exact equality check at `board_sync.py:1244-1246`.
+- `[Pass]` **Question 2 (`repos_source` visibility & `github_board.py` compatibility):** `repos_source` is correctly visible to `resolve_device_block` when added to `POLICY_DEFAULTS`. The connector at `work_connectors/github_board.py:126-134` inspects only `project_owner` and `project_number`, so popping `repos_source` before returning the dictionary is completely safe.
+- `[Pass]` **Question 3 (`_resolve_policy_and_label` signature):** Splitting the logic into a private `_resolve_policy_and_label()` that returns `(cfg, label)` while `resolve_selection_policy(required=False)` returns only `cfg` flawlessly isolates the change. All existing callers (`board_sync.py:1114`, `:1166`, `:1244`, and `work_connectors/github_board.py:126`) remain untouched and oblivious to the label.
+- `[Pass]` **Question 4 (Collection failure disclosure):** The collection failure disclosure at `board_sync.py:1005-1006` (`raise RuntimeError("GitHub returned no %s collection for %s" % (field, repo_name))`) is accurate and correctly names the unreachable repository. For a local single-operator CLI, failing fast and loud is exactly the right remedy.
+- `[Pass]` **Question 5 (Falsifiable verification):** The verification plan is fully falsifiable without introducing new tests. Step 6's red control instructs the operator to temporarily mutate the fallback merge logic so that it drops the pinned repos upon source failure. Testing this mutation against the fallback assertion guarantees that the check verifies the real behavior rather than passing vacuously.
+- `[Pass]` **Question 6 (Over-building):** The implementation is surgical and direct. It correctly anticipates that `resolve_device_block` (`device_config.py:112-117`) cannot coerce an environment variable into a dictionary when the default is `None`, and elegantly turns this into a structured `ValueError`. No speculative machinery is introduced.
+
+**VERDICT:** PASS
+**Basis:** The plan meets all requirements, strictly follows the codebase's existing patterns (including the `resolve_device_block` coercion mechanics), ensures backward compatibility with zero artifacts migration, and defines a highly rigorous, falsifiable manual test matrix without adding prohibited test suites.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
