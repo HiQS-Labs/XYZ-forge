@@ -1,0 +1,1 @@
+{"tested_sha": "bdc399f54e3814eada97d437ec5b95b35aed8c59", "push_rc": 1, "registered": 410, "suite_failures": 0, "envelope": "tree drift: untracked XYZ.json.lock", "identity_intact": true, "not_qualification": true, "source_fix": "old ignore rule directory-only; drop trailing slash for stable runtime file"}
