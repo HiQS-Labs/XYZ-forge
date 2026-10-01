@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-30 — board_sync repo allow-list can follow the rebalanceOS active-repos signal (GH-898)
+
+`github_board_selection_policy` gains an opt-in `repos_source` so the board policy's repo allow-list no longer has to be hand-maintained: it reads rebalanceOS's top active repos read-only (`mode=ro`, no import of rebalanceOS) and appends them after the pinned `repos`, falling back to the pinned list with a warning when the database is missing, unreadable or empty. Combining it with the singular `repo` is refused so a saved policy stays restorable. Absent-source behavior is byte-identical to the base resolver. Verified by a manual matrix, a witnessed red control, and the existing GH-402/405/549/605 suites in a disposable clone; evidence under `TESTS-RESULTS/2026-09-30+GH-898/`. Plan, relay QA and limits: `PROJECT/2-WORKING/GH-898-BOARD-SYNC-ACTIVE-REPOS.md`.
+
 ## 2026-09-30 — GH-549 fixture replay bounded to its own event (#854)
 
 Landing 2's first frozen-tip `ci-local.sh` exposed three false reds in the existing GH-549 work-event suite after the staging ledger crossed the connector's 500-event batch limit. The suite now seeds its fixture cursors at the event under test, so idempotence, overshoot, and lock assertions do not mistake a second valid batch for a defect. The unchanged production connector keeps its 500-event limit. Focused evidence: 122/3 red before and 125/0 green after. A clean-environment `ci-local.sh` rerun at `2dba66a2` passed all nine stages, with 412 suite passes and one intentional skip recorded in `TESTS-RESULTS/2026-09-30+GH-854/`.
