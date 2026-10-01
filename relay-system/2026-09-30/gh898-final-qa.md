@@ -161,4 +161,12 @@ Scope: swept the whole current utils/py/board_sync.py, complete github_board.py 
 
 Handoff: relay closed (Approved), no further turn needed. Producer (claude-a)/harness owns the file-scoped commit and final disposable-clone gate; reviewer did not commit.
 
+
+### Attestation · relay-drive — 2026-10-01T04:22:35Z
+task: RELAY-gh898-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 2a5cac9225bb8ba75eb406d4bf01318fbb22c65e
+added-range: 21300+3473
+added-sha256: 7e30bdd5bef231b814d8a7f566ffbec88c0478ba8333297c124449478360d4b4
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
