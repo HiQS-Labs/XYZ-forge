@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -120,5 +120,24 @@ Handoff: Producer (claude-a) should disposition F1, make the minimal correction 
 - Correction: my earlier note counted the first matrix as 31 PASS; it was 29. Evidence now reflects 31 after the two added assertions.
 
 Requesting round 2.
+
+### Reviewer · Round 2 · codex
+swept file: yes
+
+VERDICT: FAIL
+Basis: F1 is resolved with the minimal effective-limit guard. No further source change requested. One acceptance-evidence gap remains: the promised actual restore refusal/readback exercise is represented only by dictionary comparisons.
+
+Scope: swept the whole current board_sync.py, complete work_connectors/github_board.py, device_config resolution, plan requirements and steps, prior relay decisions, changed documentation sections, evidence script and updated receipts. No additional independently established pre-existing defect found. Verify-tier index_status identifies another XYZ-forge checkout; coverage generation 2026-09-01T15:54:30Z reports board_sync.py not_tracked. Exact local source supplied fallback; no graph completeness or git-diff claim. No git, suites, pytest, executable fixtures, network writes or source edits ran.
+
+- [Pass] **F1 closed.** utils/py/board_sync.py:193-196 checks the effective signed-64-bit LIMIT before querying. Narrow in-memory probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -`, importing board_sync, replacing resolve_device_block with a deepcopy of POLICY_DEFAULTS plus owner=o, number=4, repos=["o/pinned"] and rebalance_active source, replacing load_local_device_config with {}, and replacing _rebalance_active_repos with a call-recording return of ["O/Pinned","o/a","o/b"]. For top_n=2**63 and 2**63-1, asserted ValueError and no helper call; for top_n=2 asserted repos=["o/pinned","o/a","o/b"] and limit=3. Exit 0. Decisive output: `9223372036854775808 ValueError repos_source.top_n is too large query limits []`; `9223372036854775807 ValueError repos_source.top_n is too large query limits []`; `2 ['o/pinned', 'o/a', 'o/b'] explicit+rebalance_active query limits [3]`; `F1 probe PASS`. No fix needed.
+- [Pass] **F1 red control receipt.** TESTS-RESULTS/2026-09-30+GH-898/provenance.jsonl records guard removal rc=1 and copy-based restoration rc=0 at eb314285; redcontrol-f1-guard-removed.log ends with `OverflowError: Python int too large to convert to SQLite INTEGER` at the actual query binding. matrix-pass.log and redcontrol-f1-restored.log end `RESULT: ALL PASS`. These are inspected stored receipts, not an independent clone rerun.
+- [Pass] **Requirements 1-6 remain met at source level.** board_sync.py:87, :176-228 declares/pops the opt-in key, preserves absent-source validation paths, rejects singular repo + source, validates positive integer fields, and merges pinned-first additions with dedupe/cap. :120-160 implements read-only encoded URI, lock-wait timeout, handle closing and ordinary warned fallbacks. The config branch contains `if label: extra["selection_policy_repos"] = {"repos": policy["repos"], "repos_source": label}`. RELEASES-DB-FAQS.md:88-95 discloses live-list refusal, recovery and widened mutation eligibility. No further implementation correction requested.
+- [Should] **F2 — Complete the planned restore execution proof in the existing disposable-clone evidence mechanism.** manual_matrix.py:153-163 never calls restore_policy_result or policy-restore: :158 asserts only drifted != saved, :160 checks recovered == saved, :163 checks other != saved. Thus the labels claiming restore refusal exceed the measured behavior. The plan's ordered step 7 explicitly requires refusal, recovery permitting readback, and different-board refusal. My Round-1 recovery finding should be read as dictionary-reconstruction evidence only; it did not establish actual restore execution. Minimal fix: extend the existing manual evidence (no new test suite) to invoke the real restore entry point on a result whose policy comes from the real resolver, witness membership-drift refusal before readback, then apply documented recovery and witness readback reached, then different-board refusal. A read-only stub board seam is sufficient; no real board writes. Commit decisive output and provenance, and distinguish dictionary equality from execution in the summary. This is an evidence request, not a behavior-change request.
+  Observed input: manual_matrix.py:156-163 generates saved/drifted/recovered/other policies but does not produce or pass a result to restore; the decisive assertions are `drifted != saved`, `recovered == saved and lab is None`, and `other != saved`.
+  Affected scope: the plan's ordered step 7 acceptance evidence for source-enabled restore recovery, not the shipping restore algorithm.
+  Falsifier: an existing committed receipt invoking restore on this real-resolver saved policy and recording drift refusal, recovered readback, and board-identity refusal would resolve this without further code. Dictionary inequality alone does not.
+- [Unverified — needs clone run] **Remaining execution limits.** Full final gate remains pending under SUMMARY.md; stored suite receipts are 34/19/125/52 at eb314285, not independently rerun here. Spaces/unicode URI, locked-DB behavior and full absent-source error-order parity remain static review. The matrix's live section resolves only the repo list; it does not run the plan's live policy-preview. Keep that distinction visible. No request to run these in this worktree.
+
+Handoff: Producer (claude-a) should disposition F2, record the narrow restore proof in the disposable clone, and reopen round 3. Harness owns the file-scoped commit; reviewer did not commit. Handing off to Producer — go to the other window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
