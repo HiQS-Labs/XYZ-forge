@@ -1347,7 +1347,7 @@ def projections_enabled(root):
     if not os.path.isfile(db):
         return True
     try:
-        conn = sqlite3.connect("file:%s?mode=ro" % urllib.parse.quote(db, safe="/"), uri=True)
+        conn = connect(db)
         try:
             row = conn.execute("SELECT value FROM settings WHERE key = ?", (PROJECTIONS_KEY,)).fetchone()
         finally:

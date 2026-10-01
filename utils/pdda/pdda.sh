@@ -347,10 +347,9 @@ check_roadmap_coverage() {
   fi
   if ([ "$releases_mode" -eq 1 ] || [ ! -f "$PDDA_ROADMAP" ]) \
      && [ -f "$PDDA_REPO_ROOT/releases.db" ] && command -v sqlite3 >/dev/null 2>&1; then
-    if sqlite3 "$PDDA_REPO_ROOT/releases.db" "SELECT 1 FROM roadmap_items LIMIT 0" >/dev/null 2>&1; then
+    if db_doc_paths="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
+        "SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL" 2>/dev/null)"; then
       db_ledger_ready=1
-      db_doc_paths="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
-        "SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL" 2>/dev/null)" || db_ledger_ready=0
       db_raw_texts="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
         "SELECT raw_text FROM roadmap_items WHERE raw_text IS NOT NULL" 2>/dev/null)" || db_ledger_ready=0
     fi
