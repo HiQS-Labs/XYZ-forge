@@ -42,7 +42,7 @@ behavior of `utils/zcode/task-stamp` (PR #893) and `utils/skills/agy-task-sync`
 - Schema-validate before any write; abort with a named, clear message on drift.
   Antigravity requires an explicitly present pin list; missing state is not empty.
 - Write only on change — re-runs are no-ops.
-- **A failed or empty-authoritative read never triggers a destructive write.**
+- **A failed or missing authoritative read never triggers a destructive write. An explicit valid empty pin list is authoritative.**
   An unreadable `app_storage.json` aborts the whole Antigravity sweep (the
   superseded original stripped every annotation pin on this path — witnessed;
   the red control lives in the GH-896 TESTS-RESULTS receipt).
