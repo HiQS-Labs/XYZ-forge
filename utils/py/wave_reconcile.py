@@ -1807,14 +1807,15 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     plan_fp = compute_marathon_planner_fingerprint(repo_root)
 
     if not dry_run:
-        # Read the setting through the selected Releases CLI. Vendored and legacy
-        # fixtures may carry an older CLI without this setting; their established
-        # view-adoption behavior remains the default.
-        projection_setting = subprocess.run(
-            ["python3", releases_app, "--root", repo_root, "settings", "get", "projections"],
-            cwd=repo_root, capture_output=True, text=True, check=False,
-        )
-        views_enabled = projection_setting.returncode != 0 or projection_setting.stdout.strip() != "off"
+        # Read through the reconciler's existing read-only ledger path. Older
+        # adopters without this optional setting keep view adoption by presence.
+        try:
+            projection_rows = ledger_rows(
+                repo_root, "SELECT value FROM settings WHERE key = ?", ("projections",)
+            )
+        except ReconcileError:
+            projection_rows = []
+        views_enabled = not projection_rows or projection_rows[0]["value"] != "off"
         # GH-474: RELEASES-PREVIEW.html is an ADOPTED view — opt-in by presence.
         if views_enabled and os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
             steps.append(("export_timeline.py --preview", timeline_cmd))
