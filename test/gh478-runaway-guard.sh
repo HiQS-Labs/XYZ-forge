@@ -132,6 +132,7 @@ LEADERX
 chmod +x "$WORK/leader-exits.sh"
 require_fixture_file "$WORK/leader-exits.sh" "leader-exits script"
 (
+  trap - EXIT   # bash 5 shows the parent's trap text in a subshell though it will not fire here (#886)
   . "$ROOT/test/lib/runaway-guard.sh"
   runaway_guard_init true   # composed trap: green-but-reaped must exit 1
   if ! run_with_timeout 5 bash "$WORK/leader-exits.sh" "$WORK/grandchild2.pid"; then
@@ -198,6 +199,7 @@ done
 
 echo "== 7. composed EXIT trap: status-preserving, owner cleanup always runs =="
 (  # green suite whose reaper had to kill → exit 1, owner cleanup still ran
+  trap - EXIT   # bash 5 shows the parent's trap text in a subshell though it will not fire here (#886)
   . "$ROOT/test/lib/runaway-guard.sh"
   runaway_guard_init touch "$WORK/owner-ran-green"
   spawn_leader_stray 30
@@ -210,6 +212,7 @@ sleep 0.3
 [ -f "$WORK/owner-ran-green" ] && pass "owner cleanup ran on the reaped-green path" \
   || fail "owner cleanup skipped when the reaper killed"
 (  # failing suite keeps its own status; owner cleanup still ran
+  trap - EXIT   # bash 5 shows the parent's trap text in a subshell though it will not fire here (#886)
   . "$ROOT/test/lib/runaway-guard.sh"
   runaway_guard_init touch "$WORK/owner-ran-red"
   exit 3
@@ -231,6 +234,7 @@ echo "== 8. init refuses to steal a suite-owned EXIT trap, installs when free ==
 ) && pass "init refuses when the suite owns the EXIT trap" \
   || fail "init stole (or misreported) a suite-owned EXIT trap"
 (
+  trap - EXIT   # bash 5 shows the parent's trap text in a subshell though it will not fire here (#886)
   . "$ROOT/test/lib/runaway-guard.sh"
   runaway_guard_init || exit 1
   [ -n "$(trap -p EXIT)" ] || exit 2
@@ -438,7 +442,7 @@ echo "== 18. pgid publication fails CLOSED, never open =="
   || fail "proc_group left an untrackable child after a publication failure"
 (  # the bash seam refuses to run when its own scratch path cannot be created
   . "$ROOT/test/lib/runaway-guard.sh"
-  SAVED_TMPDIR="$TMPDIR"
+  SAVED_TMPDIR="${TMPDIR:-}"   # unset on Linux runners (#886)
   TMPDIR="/nonexistent-gh478-tmpdir"
   export TMPDIR
   run_with_timeout 1 true >/dev/null 2>&1

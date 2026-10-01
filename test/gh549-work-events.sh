@@ -470,6 +470,8 @@ XYZ_DEVICE_CONFIG_PATH=/dev/null python3 "$APP" --root "$FXE" check >/dev/null 2
   && ok "check is clean after work emit" || bad "check dirty after work emit"
 
 echo "15. work reconcile — replay, idempotence, reset"
+# Replay this fixture's own event; a live ledger past 500 events otherwise takes two batches.
+seed_cursor_tail "$FXE/releases.db"
 cat > "$WORK/stub_ok2.py" <<'PYSTUB'
 import json, sys
 b = json.load(sys.stdin)
@@ -584,6 +586,7 @@ grep -q "elif False:" "$GUARDED/work_connectors/__init__.py" \
   || bad "red control: the mutation did not land in the copy the app will import"
 sqlite3 "$FXE/releases.db" "DELETE FROM connector_cursors WHERE connector='github_board';"
 MAXID="$(sqlite3 "$FXE/releases.db" "SELECT max(id) FROM work_events;")"
+seed_cursor_tail "$FXE/releases.db" "$((MAXID - 1))"
 XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_OVER" \
   python3 "$GUARDED/releases_app.py" --root "$FXE" work reconcile >/dev/null 2>&1
 CUR2="$(sqlite3 "$FXE/releases.db" "SELECT last_event_id FROM connector_cursors WHERE connector='github_board';")"
@@ -814,7 +817,10 @@ RUNLOG="$WORK/conc_runs.log"
 # Two `work reconcile` processes fired together. Under the lock the second WAITS, then reads the
 # cursor the first advanced and finds nothing left -- so exactly ONE child ever runs.
 : > "$RUNLOG"
+# Leave one event pending so a second legitimate batch cannot look like a lock failure.
+LOCK_BATCH_TAIL="$(sqlite3 "$FXC/releases.db" "SELECT max(id)-1 FROM work_events;")"
 sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+seed_cursor_tail "$FXC/releases.db" "$LOCK_BATCH_TAIL"
 for i in 1 2; do
   GH549_RUNLOG="$RUNLOG" XYZ_CONNECTOR_LOCK_WAIT_S=15 XYZ_CONNECTOR_WINDOW_S=30 \
     XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG_SLOW" \
@@ -849,6 +855,7 @@ grep -q "lock removed by the red control" "$GUARD2/work_connectors/__init__.py" 
 : > "$RUNLOG"
 BARRIER="$WORK/conc_barrier"; : > "$BARRIER"
 sqlite3 "$FXC/releases.db" "DELETE FROM connector_cursors;"
+seed_cursor_tail "$FXC/releases.db" "$LOCK_BATCH_TAIL"
 for i in 1 2; do
   GH549_RUNLOG="$RUNLOG" GH549_BARRIER="$BARRIER" GH549_BARRIER_WAIT=8 \
     XYZ_CONNECTOR_LOCK_WAIT_S=15 XYZ_CONNECTOR_WINDOW_S=40 \

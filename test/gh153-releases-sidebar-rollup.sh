@@ -98,9 +98,12 @@ EXPORT_JSON="$(python3 "$EXPORTER" --db "$DB" --json)"
 rc=$?
 [ "$rc" -eq 0 ] && pass "exporter --json exits 0 with the cycle import in place" \
   || fail "exporter --json rc=$rc"
-if python3 - "$EXPORT_JSON" <<'PY'
+# The payload goes by file, not argv: it passed Linux's 128 KB single-argument cap (MAX_ARG_STRLEN)
+# at #753 and grows with every ledger row (#886).
+printf '%s' "$EXPORT_JSON" > "$WORK/export.json"
+if python3 - "$WORK/export.json" <<'PY'
 import json, sys
-d = json.loads(sys.argv[1])
+d = json.load(open(sys.argv[1]))
 assert "cycle" in d and "projects" in d, sorted(d)
 assert d["meta"]["repoUrl"] and d["meta"]["repoUrl"].startswith("https://github.com/")
 assert any(p["slug"] == "XYZ-forge" and p["active"] for p in d["projects"]), d["projects"]

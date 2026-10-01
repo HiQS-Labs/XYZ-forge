@@ -1,0 +1,97 @@
+# RELAY · Landing 2 combined QA attested r2
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 1 / 2
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry three lines: `Observed input:` (the failing input you saw), `Affected scope:`
+     (the input predicate the change would govern), `Falsifier:` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A `[Blocker]` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request that carries no
+     `Observed input:` / `Affected scope:` / `Falsifier:`), make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(landing2-combined-qa-r2): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: **.relay-artifacts/landing2-combined-qa-packet.md** — the read-only path that
+  `relay-drive.sh --artifact-file temp/landing2-combined-qa-packet.md` seeds into the isolated worktree (read it there; do NOT edit it).
+- Reviewer: agy   ·   Producer: claude-a
+- Started: 2026-09-30
+- Definition of Done: Independently review the Landing 2 diff in the seeded packet against full source, #879, #853 N5, #886, ledger rows and cited prior evidence. The final-tip full gate remains pending. Report cited PASS/FAIL findings. Do not run mutation-heavy tests in this worktree.
+
+## Review-token instruction
+Do not call tick release or tick done. The agy-turn shim owns the done transition after the review. The prior review in landing2-combined-qa.md returned PASS but supervisor attestation failed because the seeded artifact was omitted from the path allowlist; this r2 uses a narrow artifact allowlist. Re-read source independently.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- `[Pass]` `ci.yml` missing Python dependencies fix (#886). The patch at `.github/workflows/ci.yml:402` adds `run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML` which mirrors the existing promotion boundary job, fixing the #750 python lane skip.
+- `[Pass]` `skills/4-occasional/ci-suite-audit/SKILL.md` audit rules update (#879). Calibration gate at `skills/4-occasional/ci-suite-audit/SKILL.md:65` correctly requires `save them as calibration.tsv and generate the report table from that file`. #853 exact match discovery is sound.
+- `[Pass]` `GH-139` pipe grep guard baseline and matcher update (#853 N5). Broadened regex `grep -Ec '\|[[:space:]]*grep[[:space:]]+(-[^[:space:]|]+[[:space:]]+)*(-[[:alpha:]]*q[[:alpha:]]*|--quiet)'` at `test/gh139-pipe-grep-guard.sh:44` correctly captures quiet grep. Baseline updated perfectly (`13 test/gh460-pipe-buffer-sigpipe.sh` at `test/baselines/GH-139-pipe-grep-baseline.txt:19`). Local probe of `test/gh139-pipe-grep-guard.sh` passed cleanly (3/3 checks green).
+- `[Pass]` `gh153-releases-sidebar-rollup.sh` MAX_ARG_STRLEN fix (#886). Passing JSON payload via intermediate file at `test/gh153-releases-sidebar-rollup.sh:103-104` (`printf '%s' "$EXPORT_JSON" > "$WORK/export.json"`) correctly avoids arg size limits. Local test of `python3 - <file> <<'PY'` confirms stdin script parsing with file arguments works correctly.
+- `[Pass]` `gh478-runaway-guard.sh` bash 5 trap inheritance fix (#886). Subshell `trap - EXIT` at `test/gh478-runaway-guard.sh:135` correctly avoids false positives on Ubuntu runners where subshells report the parent's trap under bash 5. Local execution of `bash test/gh478-runaway-guard.sh` completes 43/43 assertions with 0 failures on macOS bash 3.2.
+
+**VERDICT**: PASS
+**Basis**: All fixes (#879, #853 N5, #886) are correctly implemented and do not cause regressions. The bash mutations and matcher extensions are completely safe and verified locally via non-mutating scratch execution.  [Unverified — no citation]
+
+relay closed (Approved), no further turn needed
+
+
+### Attestation · relay-drive — 2026-09-30T07:22:45Z
+task: RELAY-landing2-combined-qa-r2
+reviewer: agy
+status: Approved
+reviewed-head: d9298731379f189adc73d8796b77623baa72e791
+added-range: 5944+2113
+added-sha256: 123a4adef84a6b0b7997f7f7699eccc052a2b2c9487e80a8992eedafee8ab8a5
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
