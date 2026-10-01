@@ -8,9 +8,8 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - `GUIDING-PRINCIPLES.md` = the north star; what the repo's goals and design tradeoffs answer to
 - `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof
 - `README.md` = human-facing repo/product overview
-- `ROADMAP.md` = pointer ledger for this repo's own maintenance work
+- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file
 - `CHANGELOG.md` = the end-of-iteration running log (first-class PDDA artifact; governed by `PROJECT/PDDA.md`)
-- `RELEASES.md` = forward-looking release-planning ledger (first-class PDDA artifact; governed by `PROJECT/PDDA.md`)
 - `PROJECT/PDDA.md` = the canonical PDDA contract and automation rules
 - `utils/pdda/PDDA-INSTALL.md` = the extraction/install manifest PDDA was installed from
 - `utils/pdda/pdda.sh` = the unified runnable surface (dispatcher + every deterministic check + `run`)
@@ -23,17 +22,17 @@ This file is the first entry point for an AI agent working in this repo: it tell
 3. Read `AGENTS.md` before making recommendations or edits. -> expect explicit assumptions, a reversibility read on consequential changes, and verified claims only.
 4. Read `README.md` for the repo's purpose and baseline usage. -> expect a short explanation of what is canonical here.
 5. If the task is about the PDDA contract or enforcement model, read `PROJECT/PDDA.md`. -> expect the source of truth for lifecycle, roadmap, changelog, and enforcement rules.
-6. Read `ROADMAP.md` only for repo-local maintenance state. -> expect a pointer ledger, not a copied plan body from another repo.
+6. Run `python3 utils/py/releases_app.py roadmap list` (or `.xyz/utils/py/releases_app.py roadmap list`) to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)
 7. Before reporting success on repo changes, run `utils/pdda/pdda.sh run` or the relevant single check (`utils/pdda/pdda.sh <check>`). -> expect deterministic findings first, then any LLM review.
 8. If you are exploring an unknown system, proposing a new spike, or are blocked, search `PROJECT/3-COMPLETED/` and `CHANGELOG.md` for past context first. -> expect to recover memory of past struggles, gotchas, or decisions.
 
 ## Canonical rules
 
-- Do not put phase checklists, build steps, or deep execution notes in `ROADMAP.md`.
+- Write current roadmap pointers through the RELEASES DB CLI; `ROADMAP.md` is a frozen legacy file.
 - Propose shared runtime changes in [XYZ Forge](https://github.com/HiQS-Labs/XYZ-forge). PDDA is installed here; local adaptations require review when adopting upstream updates. Ordinary sync preserves changed files, while reinstall or explicit forced adoption can replace them.
 - `PROJECT/PDDA-ACTIVITY.jsonl` is runtime output, not source. It starts fresh in this repo and is gitignored.
-- Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer in `ROADMAP.md` — a one-line ledger entry that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` -> "ROADMAP.md contract".
-- Every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be parked in `ROADMAP.md` as a one-line queue entry immediately at intake, then promoted or removed later. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` -> "GitHub issue intake" + "ROADMAP.md contract".
+- Every active doc in `PROJECT/2-WORKING/` must be reflected by a `roadmap_items` row in `releases.db` pointing to it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` -> "ROADMAP.md contract".
+- Every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be parked in `releases.db` with `releases roadmap add` immediately at intake, then promoted or removed later. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` -> "GitHub issue intake" + "ROADMAP.md contract".
 - The long-term canonical deterministic surface is `utils/pdda/pdda.sh`; do not add wrapper commands unless a real external integration forces them.
 - Do not override deterministic PDDA findings with prose.
 - Do not report a win you did not verify with the relevant script or test.
@@ -55,13 +54,13 @@ utils/pdda/pdda.sh status-table
 utils/pdda/pdda.sh hardcoded-paths
 utils/pdda/pdda.sh roadmap
 utils/pdda/pdda.sh roadmap-coverage
+utils/pdda/pdda.sh releases        # optional legacy ledger; skips when absent
+utils/pdda/pdda.sh releases-current # optional legacy ledger; skips when absent
 utils/pdda/pdda.sh changelog
 utils/pdda/pdda.sh stale
 utils/pdda/pdda.sh quad-concepts    # opt-in: a "## Quad Concepts" section of 1-4 bullets (lever: .pdda-quad / PDDA_QUAD)
 utils/pdda/pdda.sh glance           # read-only roll-up: title + Quad Concepts for each PROJECT/2-WORKING doc
 utils/pdda/pdda.sh issue-doc-sync   # flag GH-*.md docs drifted from their GitHub issue state (warn-only; gh-degrades to cache)
-utils/pdda/pdda.sh releases    # validate RELEASES.md, the release-planning ledger (warn-only nudge)
-utils/pdda/pdda.sh releases-current  # read-only roll-up: RELEASES.md entries whose Status isn't "Shipped"
 utils/pdda/pdda.sh governance  # governance-doc cross-reference + doc/code drift (this file, AGENTS.md, CLAUDE.md, ...)
 utils/pdda/pdda.sh marathon-qa # validate marathon acceptance checklists and wave QA relay receipts (--strict/--pre-pr)
 utils/pdda/pdda.sh gh-refresh  # refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
@@ -73,7 +72,7 @@ utils/pdda/pdda.sh help        # list every command
 ## Routing hints
 
 - If the task is about document quality, active-doc lifecycle, roadmap sprawl, or automation policy, start in `PROJECT/PDDA.md`.
-- If the task is about repo-local maintenance state, start in `ROADMAP.md`.
+- If the task is about repo-local maintenance state, run the RELEASES DB roadmap list command.
 - If the task is about the changelog, provenance, or end-of-iteration logging, the governance is in `PROJECT/PDDA.md` (the "CHANGELOG.md — end-of-iteration record" contract).
 - To re-run this startup sequence mid-session, invoke the optional `/pdda` skill (`.claude/skills/pdda/SKILL.md`) if installed; otherwise read this sequence again.
 

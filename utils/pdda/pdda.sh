@@ -327,7 +327,7 @@ check_roadmap_coverage() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-roadmap-coverage" rc=0
   local PDDA_ROADMAP="${PDDA_ROADMAP:-$PDDA_REPO_ROOT/ROADMAP.md}"
-  local file rel
+  local file rel ledger_name="ROADMAP.md" ledger_hint="add a one-line ledger entry linking it" ledger_path
 
   # GH-243/GH-269: in a releases-mode repo the ledger lives in the DB — a doc parked via
   # `releases roadmap add` has a doc_path/raw_text row and no ROADMAP.md line (that file is retired).
@@ -335,23 +335,36 @@ check_roadmap_coverage() {
   # (db_doc_paths stays empty and only the ROADMAP.md grep decides).
   local db_doc_paths=""
   local db_raw_texts=""
-  if (grep -q "ROADMAP_SOURCE=releases" "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null || [ ! -f "$PDDA_ROADMAP" ]) \
-     && [ -f "$PDDA_REPO_ROOT/releases.db" ] && command -v sqlite3 >/dev/null 2>&1; then
-    db_doc_paths="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
-      "SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL" 2>/dev/null)" || db_doc_paths=""
-    db_raw_texts="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
-      "SELECT raw_text FROM roadmap_items WHERE raw_text IS NOT NULL" 2>/dev/null)" || db_raw_texts=""
+  local db_ledger_ready=0
+  local releases_mode=0
+  grep -Eq '^[[:space:]]*ROADMAP_SOURCE[[:space:]]*=[[:space:]]*releases([[:space:]]*(#.*)?)?$' \
+    "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null && releases_mode=1
+  ledger_path="$PDDA_ROADMAP"
+  if [ "$releases_mode" -eq 1 ] || [ ! -f "$PDDA_ROADMAP" ]; then
+    ledger_name="releases.db"
+    ledger_hint="park it with releases roadmap add"
+    ledger_path="$PDDA_REPO_ROOT/releases.db"
   fi
-  pdda_roadmap_covers() {  # <relpath> -> 0 iff parked in ROADMAP.md text or a DB doc_path/raw_text row
-    [ -f "$PDDA_ROADMAP" ] && grep -Fq "$1" "$PDDA_ROADMAP" && return 0
+  if ([ "$releases_mode" -eq 1 ] || [ ! -f "$PDDA_ROADMAP" ]) \
+     && [ -f "$PDDA_REPO_ROOT/releases.db" ] && command -v sqlite3 >/dev/null 2>&1; then
+    if sqlite3 "$PDDA_REPO_ROOT/releases.db" "SELECT 1 FROM roadmap_items LIMIT 0" >/dev/null 2>&1; then
+      db_ledger_ready=1
+      db_doc_paths="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
+        "SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL" 2>/dev/null)" || db_ledger_ready=0
+      db_raw_texts="$(sqlite3 "$PDDA_REPO_ROOT/releases.db" \
+        "SELECT raw_text FROM roadmap_items WHERE raw_text IS NOT NULL" 2>/dev/null)" || db_ledger_ready=0
+    fi
+  fi
+  pdda_roadmap_covers() {  # <relpath> -> 0 iff parked in the selected ledger
+    [ "$releases_mode" -eq 0 ] && [ -f "$PDDA_ROADMAP" ] && grep -Fq "$1" "$PDDA_ROADMAP" && return 0
     [ -n "$db_doc_paths" ] && grep -Fq "$1" <<<"$db_doc_paths" && return 0
     [ -n "$db_raw_texts" ] && grep -Fq "$1" <<<"$db_raw_texts" && return 0
     return 1
   }
 
-  if [ ! -f "$PDDA_ROADMAP" ] && [ -z "$db_doc_paths" ] && [ -z "$db_raw_texts" ]; then
-    pdda_record_finding error "$CHECK_NAME" "$PDDA_ROADMAP" 0 \
-      "ROADMAP.md not found and no releases.db ledger present; cannot verify working-doc coverage" "add-roadmap"
+  if { [ "$releases_mode" -eq 1 ] || [ ! -f "$PDDA_ROADMAP" ]; } && [ "$db_ledger_ready" -eq 0 ]; then
+    pdda_record_finding error "$CHECK_NAME" "$ledger_path" 0 \
+      "no readable releases.db ledger present; cannot verify working-doc coverage" "add-roadmap"
     pdda_emit_summary "$CHECK_NAME" 1
     return "$(pdda_gated_exit 1)"
   fi
@@ -369,7 +382,7 @@ check_roadmap_coverage() {
     fi
 
     pdda_record_finding error "$CHECK_NAME" "$file" 1 \
-      "active working doc has no pointer in ROADMAP.md ($rel) — add a one-line ledger entry linking it, or set roadmap_exempt: true" \
+      "active working doc has no pointer in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
       "add-roadmap-pointer"
     rc=1
   done < <(pdda_list_working_docs)
@@ -387,7 +400,7 @@ check_roadmap_coverage() {
     fi
 
     pdda_record_finding error "$CHECK_NAME" "$file" 1 \
-      "captured GH issue doc is not parked in ROADMAP.md ($rel) — add a one-line queue entry linking it, or set roadmap_exempt: true" \
+      "captured GH issue doc is not parked in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
       "add-roadmap-queue"
     rc=1
   done < <(pdda_list_inbox_issue_docs)
@@ -1274,7 +1287,15 @@ check_governance() {
   local ref_exempt="${PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS:-$PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS_DEFAULT}"
   local envvar_exempt="${PDDA_GOV_SHIPPED_DOC_ENVVAR_EXEMPTIONS:-$PDDA_GOV_SHIPPED_DOC_ENVVAR_EXEMPTIONS_DEFAULT}"
   local doc file abs_file from_dir line_no text ref resolved base var line
-  local present_docs="" index_abs is_shipped_doc ref_path
+  local present_docs="" index_abs is_shipped_doc ref_path db_only_governance=0
+
+  # The distributed contract also documents legacy installs. Those two ledger names
+  # are historical references, not missing files, in an explicit DB-only target.
+  if grep -Eq '^[[:space:]]*ROADMAP_SOURCE[[:space:]]*=[[:space:]]*releases([[:space:]]*(#.*)?)?$' \
+      "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null; then
+    ref_exempt="$ref_exempt ROADMAP.md RELEASES.md"
+    db_only_governance=1
+  fi
 
   for doc in $docs; do
     [ -f "$PDDA_REPO_ROOT/$doc" ] && present_docs="$present_docs $doc"
@@ -1319,6 +1340,10 @@ check_governance() {
         case " $shipped_docs " in *" $doc "*) is_shipped_doc=1 ;; esac
         while IFS=$'\t' read -r line_no ref; do
           [ -n "$line_no" ] || continue
+          ref_path="${ref%%#*}"
+          if [ "$db_only_governance" -eq 1 ]; then
+            case "$ref_path" in ROADMAP.md|RELEASES.md) continue ;; esac
+          fi
           if [ "$is_shipped_doc" -eq 1 ]; then
             ref_path="${ref%%#*}"
             while :; do
@@ -1384,6 +1409,10 @@ check_governance() {
     case " $shipped_docs " in *" $doc "*) is_shipped_doc=1 ;; esac
     while IFS=$'\t' read -r line_no ref; do
       [ -n "$line_no" ] || continue
+      ref_path="${ref%%#*}"
+      if [ "$db_only_governance" -eq 1 ]; then
+        case "$ref_path" in ROADMAP.md|RELEASES.md) continue ;; esac
+      fi
       if [ "$is_shipped_doc" -eq 1 ]; then
         # normalize away leading ./ or ../ so a relative mention (e.g. "../../PROJECT/3-COMPLETED/
         # PDDA-SYNC-TO-OTHER-REPOS.md") matches the same manifest entry as its repo-relative form

@@ -1807,12 +1807,14 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     plan_fp = compute_marathon_planner_fingerprint(repo_root)
 
     if not dry_run:
+        from releases_app import projections_enabled
+        views_enabled = projections_enabled(repo_root)
         # GH-474: RELEASES-PREVIEW.html is an ADOPTED view — opt-in by presence.
-        if os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
+        if views_enabled and os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
             steps.append(("export_timeline.py --preview", timeline_cmd))
         else:
             log("  (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)")
-        if os.path.exists(os.path.join(repo_root, "LEADERBOARD.md")):
+        if views_enabled and os.path.exists(os.path.join(repo_root, "LEADERBOARD.md")):
             if os.path.exists(harness_tool(repo_root, "utils/leaderboard.sh")):
                 steps.append(("leaderboard.sh", lb_cmd))
             else:
