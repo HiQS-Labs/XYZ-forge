@@ -1,0 +1,47 @@
+== test: xyz-completion ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//xyz-completion.fpzu3q
+  PASS: XYZ.json is valid JSON after two appends
+  PASS: two records present
+  PASS: newest record is prepended (index 0)
+  PASS: harness field carried
+  PASS: health field carried
+  PASS: older record slides to index 1
+  PASS: updatedAt stamped
+  PASS: valid JSON after 25 sequential appends
+  PASS: 25 sequential records all present
+  PASS: corrupt existing file does not fail the writer (exit 0)
+  PASS: corrupt file is replaced with a valid fresh array
+  PASS: recovered array holds the new record
+  PASS: non-array JSON self-heals to a fresh 1-record array
+  PASS: valid JSON after 16 concurrent appends
+  PASS: all 16 concurrent records survive (lock prevents lost update)
+  PASS: all 16 sessionIds distinct (no duplicate/overwrite)
+  PASS: no leftover temp files
+  PASS: stable sidecar unlocked after concurrent round
+  PASS: unknown harness rejected (exit 2)
+  PASS: unknown health rejected (exit 2)
+  PASS: missing arg rejected (exit 2)
+  PASS: heartbeat file is a single valid JSON object
+  PASS: heartbeat harness field carried
+  PASS: heartbeat sessionId field carried
+  PASS: heartbeat updatedAt stamped
+  PASS: heartbeat overwrite stays valid JSON
+  PASS: heartbeat overwrites instead of appending
+  PASS: mid-run heartbeat does not change prior completed XYZ.json
+  PASS: mid-run heartbeat marks the current in-flight session
+  PASS: matching completion clears heartbeat before final append
+  PASS: matching completion still appends the final XYZ.json record
+  PASS: non-matching clear leaves a stale/crashed heartbeat in place
+  PASS: heartbeat stays valid JSON under concurrent overwrites
+  PASS: concurrent heartbeat ends with one complete winning sessionId
+  PASS: heartbeat writer leaves no temp files behind
+  PASS: STATUS Approved → green
+  PASS: STATUS Closed → green
+  PASS: STATUS Escalated → orange
+  PASS: Changes requested → orange
+  PASS: In Progress + verdict → orange
+  PASS: In Progress + no log → red
+  PASS: no STATUS + no verdict → red
+  PASS: VERDICT FAIL under non-terminal → red
+  PASS: VERDICT FAIL under Approved stays green
+  xyz-completion: 44 pass, 0 fail
