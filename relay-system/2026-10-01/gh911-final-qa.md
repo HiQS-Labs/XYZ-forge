@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the implementation on this branch versus `origin/development`:
+- Artifact under review: the implementation on this branch versus the development branch:
   - `skills/2-daily/workhorse/SKILL.md` (whole file)
   - `skills/2-daily/workhorse/stop-hook.sh` (new)
   - the `CHANGELOG.md` top entry
