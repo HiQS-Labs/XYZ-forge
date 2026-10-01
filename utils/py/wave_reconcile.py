@@ -1807,8 +1807,14 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     plan_fp = compute_marathon_planner_fingerprint(repo_root)
 
     if not dry_run:
-        from releases_app import projections_enabled
-        views_enabled = projections_enabled(repo_root)
+        # Read the setting through the selected Releases CLI. Vendored and legacy
+        # fixtures may carry an older CLI without this setting; their established
+        # view-adoption behavior remains the default.
+        projection_setting = subprocess.run(
+            ["python3", releases_app, "--root", repo_root, "settings", "get", "projections"],
+            capture_output=True, text=True, check=False,
+        )
+        views_enabled = projection_setting.returncode != 0 or projection_setting.stdout.strip() != "off"
         # GH-474: RELEASES-PREVIEW.html is an ADOPTED view — opt-in by presence.
         if views_enabled and os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
             steps.append(("export_timeline.py --preview", timeline_cmd))
