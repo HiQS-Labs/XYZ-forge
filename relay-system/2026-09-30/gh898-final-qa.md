@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -78,5 +78,40 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+swept file: yes
+
+VERDICT: FAIL
+Basis: the small existing-resolver extension meets the ordinary opt-in and recovery contracts, but an accepted source integer escapes as OverflowError. One narrow correction requested; no new suite or gate.
+
+Scope: read the whole board_sync.py, complete github_board.py consumer and evidence script, plan and prior QA, changed documentation sections and stored logs/provenance. No additional independently established pre-existing defect found in the swept code. Verify-tier graph attempt: list_projects paginated through all 77 projects; this worktree is not indexed. XYZ-forge coverage generation 2026-09-01T15:54:30Z reports both code paths not_tracked; used exact local source instead. rebalanceOS graph located top_active_repos at src/rebalance/ingest/db/github.py:20-41 and its source was read. No graph completeness or git-diff verification claimed. No git commands, suites, pytest or executable fixtures ran; probes disabled bytecode and changed only in-memory seams.
+
+- [Should] **F1 — Bound or safely handle the SQLite LIMIT integer before binding.** board_sync.py:183-185 accepts any positive Python integer, :195 adds the pinned count, and :150 binds the result to SQLite. :153 does not catch OverflowError; the CLI branches do not handle it either. Smallest fix: reject an unbindable effective limit with ValueError before querying, or deliberately warn/fallback on this specific overflow. Account for top_n + len(pinned), not just top_n. No arbitrary product cap or new machinery requested.
+  Observed input: project_owner="o", project_number=4, repos=["o/pinned"], repos_source={"type":"rebalance_active","top_n":9223372036854775808}, all other POLICY_DEFAULTS unchanged, with the real local rebalance DB. Probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` using the following stdin (rc=0 because it prints the caught exception):
+  ```python
+  import sys, copy
+  sys.path.insert(0, "utils/py")
+  import board_sync as b
+  cfg = {**copy.deepcopy(b.POLICY_DEFAULTS), "project_owner": "o", "project_number": 4,
+         "repos": ["o/pinned"], "repos_source": {"type": "rebalance_active", "top_n": 9223372036854775808}}
+  b.resolve_device_block = lambda *a: (copy.deepcopy(cfg), None)
+  b.load_local_device_config = lambda: {}
+  try:
+      print(b._resolve_policy_and_label(True))
+  except Exception as e:
+      print(type(e).__name__ + ": " + str(e))
+  ```
+  Decisive output: `OverflowError: Python int too large to convert to SQLite INTEGER`.
+  Affected scope: enabled-source policies whose effective query limit exceeds SQLite's signed 64-bit range, including an in-range top_n made too large by pinned entries.
+  Falsifier: that input and top_n=9223372036854775807 with one pin must yield ValueError or a warned pinned fallback, never OverflowError; ordinary top_n=2 with one pin must retain documented merge behavior. If the existing resolver already does so on shipping Python, this request is unnecessary.
+
+- [Pass] **Requirements 1, 2, 5, 6 / identity.** POLICY_DEFAULTS declares the optional key (:87); :176 pops it before original repo-collapse and validation. Absent-source skips the new branches and retains the old validation order (:188-228). :193-200 keeps pinned order, dedupes additions case-insensitively, filters owner/name and caps additions. :186-187 implements singular-repo rejection rather than hidden identity rewriting. The public wrapper (:164-166) returns only policy. No correction requested beyond F1.
+- [Pass] **Requirements 3, 4 / ordinary failures.** :120-130 implements env/macOS/XDG lookup; :148 uses Path.resolve().as_uri(), mode=ro and timeout=2; :149-152 closes on execute/fetch failure. :153-160 distinguishes schema absence from zero activity and warns on caught SQLite/OSError failures. :199 preserves pins and :201-205 prevents a valid empty allow-list. Timeout=2 is SQLite's lock-wait timeout, not a total query deadline; the plan does not require the latter. No immutable flag or rebalance import.
+- [Pass] **Consumers/recovery.** plan_selection_policy uses allowed repos (:296); collect_github_state iterates the list; apply_policy_preview and restore_policy_result compare full policy before writes. github_board.py:126-134 consumes only board identity for replay exclusion. RELEASES-DB-FAQS.md:88-95 discloses live-list refusal and saved-list recovery; manual_matrix.py:151-163 checks real-resolver dictionary recovery and different-board refusal. No identity-guard change requested.
+- [Pass] **Stored red control is substantive evidence.** provenance.jsonl records mutation `cfg["repos"] = pinned + added -> cfg["repos"] = added`, rc=1, then restoration rc=0. redcontrol-mutated.log contains `FAIL fallback keeps pinned list: missing DB` and equivalent schema/zero-score failures; redcontrol-restored.log ends `RESULT: ALL PASS`. manual_matrix.py:87-91 checks non-None policy and pinned equality. This is a failing merge assertion, not merely an expected fallback example.
+- [Unverified — needs clone run] **Execution limits.** Stored suite logs report 34/19/125/52 passes with provenance at c56a0ff8; SUMMARY.md explicitly leaves the final full gate pending. I inspected receipts but did not independently rerun or establish clone identity/restoration. The matrix compares two valid absent-source policies, not None-return/error-order cases; those parity claims above are static review. URI spaces/unicode and OSError/locked-DB execution are not shown by this matrix. Keep these limits visible; any further measurements belong in the existing disposable-clone evidence mechanism, never a new suite.
+
+Handoff: Producer (claude-a) should disposition F1, make the minimal correction and reopen round 2. Harness owns the file-scoped commit; reviewer did not commit. Handing off to Producer — go to the other window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
