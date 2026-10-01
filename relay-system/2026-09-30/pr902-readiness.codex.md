@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -114,5 +114,30 @@ Handing off to Producer — fix/disposition the two Shoulds and retain final clo
 
 ### Producer · Round 1
 Both Shoulds implemented: unconditional summaries-schema validation before annotation apply, and readiness row now belongs to Status table. Observed r1 red input replayed: missing DB refuses, old annotation bytes preserved; healthy schema + explicit [] removes stale pin. Original four controls remain green. Request complete r2 review.
+
+### Reviewer (codex) — r2
+VERDICT: FAIL
+Basis: Both prior Shoulds are resolved, but the full-file sweep found one concrete unreadable-preview edge still violating question 1 and per-IDE error isolation. Final clone gate remains Producer-owned.
+swept file: yes
+
+- [Should] Invalid UTF-8 transcript bytes escape the preview-preservation path. `skills/3-weekly/task-sync/scripts/adapters/antigravity.py:387` reads UTF-8, but `:389` catches only OSError. UnicodeDecodeError therefore escapes before the preservation branch at `:242`; `task_sync.py:129` also does not catch it. Extend the existing transcript-read error handling to include UnicodeError and reuse the existing error sentinel/preservation branch; do not introduce a suite or broad catch.
+  Observed input: conversation `a`, title `Old title`, preview `valuable preview`, last_modified_time `2026-09-30 01:00:00+00:00`; its transcript read raises `UnicodeDecodeError('utf-8', bytes([255]), 0, 1, 'invalid start byte')`. A mocked apply sweep with IDEs zcode,agy raises instead of returning merged JSON; the successful ZCode section never gets its receipt.
+  Affected scope: Antigravity transcript decoding failures only; preserve the old preview while permitting valid title/other-row updates.
+  Falsifier: this byte sequence must yield a preserved preview and successful title update, with the merged report/receipt retained for successful IDEs; a valid UTF-8 transcript must still update its preview. Existing missing-file and OSError controls must remain green.
+  Command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` (exit 0; imports and mocked I/O only). Probe called `task_sync.run_sweep(args, True)` with the row above from mocked `_pinned_rows`, mocked Path.exists=True, builtins.open raising the exact decoding error, mocked ZCode success, and mocked connection/receipt entry points. Decisive output: `UnicodeDecodeError zcode completed: True agy write connection: False receipt: False`. Direct helper probe also emitted `UnicodeDecodeError 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte`.
+
+- [Pass] Empty-pin schema-before-write issue resolved at `adapters/antigravity.py:268`–277: connection and schema checks are unconditional before mirroring. Firsthand non-mutating mock probe with explicit [] and missing DB raised AdapterError and emitted `missing: missing DB writers: []`; healthy mocked schema emitted `healthy: ['schema', ('mirror', [])]`. Command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -`, exit 0. This verifies ordering; actual synthetic-file preservation/stripping is retained Producer evidence in `TESTS-RESULTS/2026-09-30+GH-901/review-controls.txt` (“Fixed replay refuses and preserves bytes; healthy empty schema + [] still removes stale pin”).
+
+- [Pass] Status-table issue resolved: `PROJECT/2-WORKING/GH-896-UNIFIED-TASK-SYNC.md:36` immediately follows the prior table row, with the blank now after it at :37.
+
+- [Pass] Remaining source contracts survive the integration: missing-file/OSError sentinel preservation at `antigravity.py:241`–253; all-workspace transaction at `zcode.py:168`–183; both local naive parser branches at `core.py:51,64`; native write refusal before dispatch at `task_sync.py:210`–218; receipt isolation at `:75,113`; exclusions and actual activity at `codex.py:90`–110. SHA256 probe against the final GH901 provenance row returned True for all five named production files (same inline Python command, exit 0). These are source/retained-control findings, not firsthand executable-fixture runs.
+
+- [Pass] Eight-thread bookkeeping is now source-cited: count wording is “28 recorded manual probes” in `TESTS-RESULTS/2026-09-30+GH-901/SUMMARY.md:3`; GH896 provenance row 2 explicitly corrects 23 to 24; the Status row and schema preflight are resolved above; preview/transaction/timestamp sites are cited above; Codex-only receipt caveat is explicit at `SKILL.md:86`–90; portable predecessor/seed inputs are mandatory at `TESTS-RESULTS/2026-09-30+GH-896/zcode_parity.py:6`–9 and `agy_battery.py:10`–12.
+
+- [Unverified — needs clone run] No gate or executable fixture run here. GH901 provenance's Small receipt names historical SHA `61065117364152bbbf5a63a8db7cd8b0945fcd4b`; current fixes still need the final disposable-full-clone gate after review. No merge/cleanup authorization is implied by this report.
+
+Graph: confirmed XYZ-forge project; coverage generation 2026-09-01T15:54:30Z reports missing freshness for all five source paths and no indexed task-sync scope files. Exact-source fallback swept all six script files, SKILL.md, the complete GH901 working doc, review-controls/provenance; inherited GH896 Status/parity/count evidence was read. Apart from the decoding failure above, no other material pre-existing defect identified in this bounded sweep. No source/artifact edits, git commands, live stores or heavy gates.
+
+Handing off to Producer — fix/disposition the decoding Should, retain its narrow red/green evidence and final clone gate, then request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
