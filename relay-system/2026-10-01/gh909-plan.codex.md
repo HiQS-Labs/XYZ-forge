@@ -143,4 +143,12 @@ swept file: yes
 
 Relay closed (Approved), no further plan-review turn needed. Producer (claude-a) may proceed to the plan's implementation and disposable-clone verification gates.
 
+
+### Attestation · relay-drive — 2026-10-01T19:11:57Z
+task: RELAY-gh909-plan
+reviewer: codex
+status: Approved
+reviewed-head: 4f9053c847bca1a1a5cdf37a3bb37fbb4e028974
+added-range: 12200+5457
+added-sha256: 7f4c4a04a3407708ca720c3001a77d341a00644f4fc483562f3828eb6a5038e2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
