@@ -145,7 +145,7 @@ def _rebalance_active_repos(source, limit):
            "FROM github_activity WHERE scan_date >= date('now', ?) "
            "GROUP BY repo_full_name HAVING score > 0 ORDER BY score DESC, repo_full_name LIMIT ?")
     try:
-        conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
+        conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)  # SQLITE-GATEWAY-OK: read-only rebalanceOS DB, not harness state (GH-898)
         try:
             rows = conn.execute(sql, ("-%d days" % source["since_days"], limit)).fetchall()
         finally:
