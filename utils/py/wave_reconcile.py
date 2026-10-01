@@ -1812,7 +1812,7 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
         # view-adoption behavior remains the default.
         projection_setting = subprocess.run(
             ["python3", releases_app, "--root", repo_root, "settings", "get", "projections"],
-            capture_output=True, text=True, check=False,
+            cwd=repo_root, capture_output=True, text=True, check=False,
         )
         views_enabled = projection_setting.returncode != 0 or projection_setting.stdout.strip() != "off"
         # GH-474: RELEASES-PREVIEW.html is an ADOPTED view — opt-in by presence.
