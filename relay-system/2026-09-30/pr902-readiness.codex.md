@@ -158,4 +158,12 @@ Graph: XYZ-forge generation 2026-09-01T15:54:30Z; check_index_coverage reports m
 
 Relay closed (Approved), no further review turn needed. Producer owns final clone gate and merge/cleanup handoff.
 
+
+### Attestation · relay-drive — 2026-10-01T04:42:12Z
+task: RELAY-pr902-readiness
+reviewer: codex
+status: Approved
+reviewed-head: a615e2dc90c25bd7f2e1a31982172dd5fc170413
+added-range: 17755+3945
+added-sha256: fabd68ba11c24b75d2b4b7a9e1c468fad5f16140026e2157e4776115baabfd8f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
