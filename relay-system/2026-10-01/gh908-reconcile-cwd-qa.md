@@ -89,4 +89,12 @@ Evidence limits: no Git command, ledger writer, exporter, reconciler, suite or e
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) should arrange the pending disposable-clone gate; the harness owns the file-scoped commit. Marking the token done under the explicit approval instruction.
 
+
+### Attestation · relay-drive — 2026-10-01T20:53:33Z
+task: RELAY-gh908-reconcile-cwd-qa
+reviewer: codex
+status: Approved
+reviewed-head: f6127f3f6c649c6b3f50fe7a43e2e70cc30cee9f
+added-range: 6126+5038
+added-sha256: 26a7526246b49583df58db507f29949d622e342c96f8b38970d91480a53f0733
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
