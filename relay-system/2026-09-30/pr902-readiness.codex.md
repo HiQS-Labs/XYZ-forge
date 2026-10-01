@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -139,5 +139,8 @@ swept file: yes
 Graph: confirmed XYZ-forge project; coverage generation 2026-09-01T15:54:30Z reports missing freshness for all five source paths and no indexed task-sync scope files. Exact-source fallback swept all six script files, SKILL.md, the complete GH901 working doc, review-controls/provenance; inherited GH896 Status/parity/count evidence was read. Apart from the decoding failure above, no other material pre-existing defect identified in this bounded sweep. No source/artifact edits, git commands, live stores or heavy gates.
 
 Handing off to Producer — fix/disposition the decoding Should, retain its narrow red/green evidence and final clone gate, then request the next review turn.
+
+### Producer · Round 2
+Implemented UnicodeError in existing transcript-read handler. Bytes ff red before (UnicodeDecodeError), green after (existing preserving sentinel). Narrow change; request final r3 whole-file sweep.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

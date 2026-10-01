@@ -386,7 +386,7 @@ class AntigravityAdapter:
         try:
             with open(tpath, "r", encoding="utf-8") as f:
                 lines = f.readlines()
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             return f"Error reading transcript: {exc}"
         if not lines:
             return "Empty transcript"

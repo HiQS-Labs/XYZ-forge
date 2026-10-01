@@ -38,3 +38,5 @@ print(json.dumps(out));assert all(out.values()),out
 ```
 
 Independent r1 control: missing DB + authoritative [] reached annotation writer without validation (reviewer observed). Fixed replay refuses and preserves bytes; healthy empty schema + [] still removes stale pin. exit 0.
+
+R2 Unicode control: transcript.jsonl bytes ff raised UnicodeDecodeError before change; same input now returns Error reading transcript sentinel for existing preview-preservation branch. exit 0.
