@@ -129,6 +129,8 @@ def main():
                               ("top_n bool", {"type": "rebalance_active", "top_n": True}),
                               ("since_days 0", {"type": "rebalance_active", "since_days": 0}),
                               ("unknown type", {"type": "other"}),
+                              ("top_n over SQLite int", {"type": "rebalance_active", "top_n": 2 ** 63}),
+                              ("top_n + pin over SQLite int", {"type": "rebalance_active", "top_n": 2 ** 63 - 1}),
                               ("non-object", "rebalance_active")):
                 err = raises(bs, tmp, {**OWNER, "repos": ["o/r"], "repos_source": src}, db)
                 check("ValueError: " + name, err is not None, err)

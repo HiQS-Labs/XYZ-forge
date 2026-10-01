@@ -191,6 +191,8 @@ def _resolve_policy_and_label(required=False):
         cfg["repos"] = [cfg["repo"]]
     if source is not None:
         pinned = [str(r).strip() for r in cfg["repos"]] if isinstance(cfg["repos"], list) else []
+        if source["top_n"] + len(pinned) > 2 ** 63 - 1:  # SQLite binds a signed 64-bit LIMIT
+            raise ValueError("repos_source.top_n is too large")
         seen, added = {r.lower() for r in pinned}, []
         for name in _rebalance_active_repos(source, source["top_n"] + len(pinned)):
             if len(added) < source["top_n"] and name.lower() not in seen and re.fullmatch(r"[^/\s]+/[^/\s]+", name):
