@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -142,5 +142,20 @@ Handing off to Producer — fix/disposition the decoding Should, retain its narr
 
 ### Producer · Round 2
 Implemented UnicodeError in existing transcript-read handler. Bytes ff red before (UnicodeDecodeError), green after (existing preserving sentinel). Narrow change; request final r3 whole-file sweep.
+
+### Reviewer (codex) — r3
+VERDICT: PASS
+Basis: All open findings are resolved; the whole-file sweep identified no further material pre-existing defect within the requested scope. Approval closes this source review; final disposable-full-clone verification remains Producer-owned.
+swept file: yes
+
+- [Pass] Decoding Should resolved at `skills/3-weekly/task-sync/scripts/adapters/antigravity.py:389`: `except (OSError, UnicodeError) as exc:` returns the existing sentinel, preserved at :242–243. Firsthand mocked apply sweep with row `('a','Old title','valuable preview','2026-09-30 01:00:00+00:00')`, Path.exists=True, empty mocked glob, mocked connection/schema/pin/mirror and open raising the exact ff decoding error emitted `invalid-utf8 preview= valuable preview SQL= call('UPDATE conversation_summaries SET title=?, preview=? WHERE conversation_id=?', ('09-29 Old title', 'valuable preview', 'a'))`. OSError('unreadable') emitted the same preserved preview and title SQL. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` (inline imports/unittest.mock only), exit 0; no real store writes.
+- [Pass] Firsthand red control compiled the same module in memory with only `except (OSError, UnicodeError) as exc:` replaced by `except OSError as exc:`; mocked ff input emitted `red UnicodeDecodeError`, current helper emitted `green Error reading transcript: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte`. Valid input `{"type":"USER_INPUT","content":"Successful update"}` emitted `valid [User] Successful update`. Same env-pinned inline `python3 -` command, exit 0. Source citations: antigravity.py:386–390 and :425–429. No source mutation or executable fixture.
+- [Pass] Earlier resolutions remain present: unconditional schema preflight before annotation mutation at antigravity.py:268–277; successful preview updates at :250–253; one all-workspace title transaction at zcode.py:168–183; both local naive timestamp branches at core.py:51,64; Codex mixed-write refusal at task_sync.py:210–218; native-only doctor receipt isolation at :75,113; preserved exclusions/manual pins and actual activity at codex.py:90–110. Retained red/green controls are in `TESTS-RESULTS/2026-09-30+GH-901/review-controls.txt` (“all-workspace rollback”: false on baseline / true fixed). Firsthand SHA256 comparison against the last GH901 provenance row: all five production paths True; inline `python3 -` reading bytes/json and hashlib only, exit 0. This establishes receipt/source identity, not a new gate result or historical merge ancestry.
+- [Pass] All eight review threads have cited dispositions: “28 recorded manual probes” at GH901 SUMMARY.md:3; GH896 provenance row 2 corrects count to 24; GH896 working-doc Status readiness row now directly follows the table at :36; schema/pin authority and preview/transaction/timestamp cited above; Codex-only receipt caveat at task-sync/SKILL.md:86–90; portable parity input requirements at GH896 zcode_parity.py:6–9 and agy_battery.py:10–12.
+- [Unverified — needs clone run] No heavy gate, pytest, executable fixture, live-store operation or git command was run. The historical Small receipt in GH901 provenance names 61065117364152bbbf5a63a8db7cd8b0945fcd4b; it does not attest the subsequent fixes. Producer must retain final-state gate evidence before merge/cleanup.
+
+Graph: XYZ-forge generation 2026-09-01T15:54:30Z; check_index_coverage reports missing freshness for all five source paths and zero indexed entries under the scripts scope. Exact-source fallback swept all six Python files in full, SKILL.md, the full GH901 working document, review-controls/provenance/SUMMARY, plus inherited GH896 Status/count/parity evidence. No additional material pre-existing defect identified in this bounded sweep.
+
+Relay closed (Approved), no further review turn needed. Producer owns final clone gate and merge/cleanup handoff.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
