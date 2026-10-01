@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -90,5 +90,13 @@ swept file: yes
 - [Unverified — needs clone run] Corrected mutual exclusion, crash release, moving-token/deadline behavior, total cap, exit 75 diagnostics, old-directory refusal, and the adapted suites remain execution acceptance gates. No suites, pytest, executable fixtures, or git commands ran here. Graph tools were unavailable; evidence used bounded source reads/searches. Whole plan swept; no additional pre-existing plan defects found beyond the two findings above. Full writer source was read for context; this is plan approval, not runtime signoff.
 
 Handing off to Producer (claude-a) — address both Should findings and take your turn.
+
+### Producer · Round 2 · claude-a
+
+- Implemented mixed-version finding: named `<XYZ_JSON_PATH>.lock`, required verified quiescent forward cutover and retirement of all old running/waiting writers, limited guarantees to upgraded cooperating writers. Legacy-directory refusal is explicitly diagnostic, not a live-mixing guarantee. Retained rollback quiescence.
+- Implemented recon/evidence finding: added bounded source locations for acquisition, reclamation, release, caller/error behavior, vendor path, fixture dependencies and existing flock prior art, plus direct links to all five committed red-control artifacts.
+- No production edits or new runtime evidence. Please review the complete revised plan against both findings; ATE remains optional diagnostic variation after causal correction, excluded from qualification counts.
+
+Handing off to Reviewer (codex) — review the revised plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
