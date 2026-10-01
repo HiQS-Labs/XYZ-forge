@@ -1,0 +1,23 @@
+{
+  "telemetry_summary": {
+    "v": 1,
+    "ts_ms": 1790886979015,
+    "run": "22a9e0b09-52317",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 413,
+    "failed": 0,
+    "total": 413,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "412",
+    "run_set": "410",
+    "registered": "410",
+    "suite_events_match": "yes"
+  },
+  "zero_retry": true,
+  "source_sha": "22a9e0b094c49d107a882d524b85ae0dca0d22ee",
+  "origin_branch_sha_verified": true,
+  "qualification_scope": "task branch only; not #854 development count",
+  "relay_self_sufficiency": "intentional default skip under #836 D2"
+}

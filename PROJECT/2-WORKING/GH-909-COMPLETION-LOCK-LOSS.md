@@ -17,7 +17,7 @@ phases: 1
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Controlled red replay and independent Codex plan QA Approved. | Implementation, three focused suites, causal replay, crash release, legacy refusal and bounded ATE matrix passed. Final Codex QA then one final full gate and ready PR remain. |
+| Implementation, independent plan/final QA and final full gate passed (413/413, zero retry, clean envelope). Branch published at 22a9e0b0. | Publish committed full-gate receipts and open ready PR to development; awaiting operator landing. #854 development count remains 1/3. |
 
 ## Problem and source of truth
 Tracking: https://github.com/HiQS-Labs/XYZ-forge/issues/909; parent #854/#853 remain open. Base development 57bd97af4a0e8d456927e20b49d64b232d95f36d. xyz-completion pooled failure observed16 exits0 but15 records. Controlled replay proves stale waiter deletes a live successor lock and loses one of three successful records; exact historical interleaving unknown. Recon below and committed manual receipt distinguish proof from inference.
@@ -71,3 +71,7 @@ Before publication, Small membership was checked directly against `utils/ci-rout
 ## Stable runtime sidecar ignore correction
 
 The full gate at bdc399f5 passed all 410 registered suites and Python/gamma checks, but failed its final tree envelope on `?? XYZ.json.lock`; the pre-existing `.gitignore` rule covered only a directory. Drop its trailing slash to preserve the existing intent for the now-stable runtime file. This is a one-line metadata correction, no runtime behavior change or extra review round beyond the binding3-round cap. Exact ignore predicate witnessed old file rc1/new file rc0. Existing GH205 passes and GH365 envelope suite passes25/0. Repeat final full gate with this verified one-line metadata correction. Peer approval still describes the unchanged runtime implementation; the final full gate remains outstanding, and this drifted run is excluded.
+
+## Ready-PR verification
+
+2026-10-01 20:36 UTC: final push gate at 22a9e0b094c49d107a882d524b85ae0dca0d22ee completed 413/413 (410 registered suites plus Python/gamma/identity), zero retry, clean envelope and intact repository identity in a separate full clone under caffeinate. Push succeeded and origin branch SHA was verified. Default live relay skip under #836 D2 is intentional. Committed receipts: `TESTS-RESULTS/2026-10-01+GH-909/full-gate/`. This is task-branch readiness, not a clean development qualification; #854 remains 1/3 local and 2/3 PR-closed hosted. Implementation is ready for PR, not landed.
