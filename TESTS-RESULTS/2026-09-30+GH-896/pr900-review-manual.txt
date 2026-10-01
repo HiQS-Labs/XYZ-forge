@@ -18,3 +18,92 @@ Existing ZCode parity: 12 PASS, 0 FAIL.
 Atomic receipt injected os.replace failure preserved old bytes and removed temporary file; successful control parsed as complete JSON.
 Historical issues: protobuf escaping and path traversal reproduced in predecessor 48ab5f62; cron unpin and redundant writes inherited from 337e3085.
 No live stores were written. No new registered test suite or gate was added.
+
+Exact manual control source (run from repo root; creates fixtures only under temp):
+```python
+import sys,json,sqlite3,tempfile
+from pathlib import Path
+from unittest.mock import patch
+from types import SimpleNamespace
+sys.path.insert(0,str(Path.cwd()/"skills/3-weekly/task-sync/scripts"))
+import core,task_sync
+from adapters.antigravity import AntigravityAdapter,_default_app_running
+
+def fixture(root,store):
+ root.mkdir();(root/"annotations").mkdir()
+ c=sqlite3.connect(root/"conversation_summaries.db")
+ c.execute("CREATE TABLE conversation_summaries(conversation_id TEXT PRIMARY KEY,title TEXT,preview TEXT,status TEXT,last_modified_time TEXT)")
+ c.execute("INSERT INTO conversation_summaries VALUES('a','Original','preview','active','2026-09-29 23:19:00+00:00')");c.commit();c.close()
+ (root/"app_storage.json").write_text(json.dumps(store));(root/"annotations/a.pbtxt").write_text('title:"Original" pinned:true\n')
+ return AntigravityAdapter(agy_root=str(root),apply=True,app_running_fn=lambda:False)
+
+def state(root):
+ c=sqlite3.connect(root/"conversation_summaries.db");r=c.execute("SELECT title FROM conversation_summaries").fetchall();c.close()
+ return r,(root/"annotations/a.pbtxt").read_bytes(),(root/"app_storage.json").read_bytes()
+
+with tempfile.TemporaryDirectory(dir="temp") as t:
+ root=Path(t)
+ a=fixture(root/"missing",{});before=state(a.agy_root)
+ try:a.sweep();refused=False
+ except core.AdapterError:refused=True
+ print("missing-field refusal/preservation",refused,state(a.agy_root)==before)
+ a=fixture(root/"invalid",{"pinned_conversations_order":"broken"});before=state(a.agy_root)
+ try:a.set_title("a","Changed",auto_pin=True)
+ except core.AdapterError:pass
+ print("invalid-auto-pin preservation",state(a.agy_root)==before)
+ a=fixture(root/"type",{"pinned_conversations_order":[]});a.set_title("a","Changed",auto_pin=True)
+ print("list-type preserved",isinstance(json.loads(a.electron_store.read_text())["pinned_conversations_order"],list))
+ class Good:
+  def sweep(self,**kw):return core.new_ide_report()
+ class Bad:
+  def sweep(self,**kw):raise core.AdapterError("gated")
+ args=SimpleNamespace(ide=["zcode","agy"],hours=24,all=False,pin=True,pin_hours=24,unpin_days=None,include_cron=False,group=None)
+ with patch.object(task_sync,"_build_adapter",side_effect=[Good(),Bad()]),patch.object(core,"write_receipt",return_value="receipt") as write:
+  report,red=task_sync.run_sweep(args,True)
+  print("partial-success receipt",write.called,red)
+ with patch("adapters.antigravity.subprocess.run",return_value=SimpleNamespace(returncode=2)):
+  print("pgrep-error fail-closed",_default_app_running())
+
+# Additional observed boundaries and failure controls.
+from adapters import zcode as zc
+from adapters import antigravity as agy
+with tempfile.TemporaryDirectory(dir="temp") as t:
+ root=Path(t)
+ a=fixture(root/"escape",{"pinned_conversations_order":[]})
+ try:a._update_annotation_file("../escape",pin=True,apply=True);raise AssertionError("path escaped")
+ except core.AdapterError:pass
+ assert not (a.agy_root/"escape.pbtxt").exists()
+ desired='Path C:\\new\\item says "hello"'
+ a.set_title("a",desired)
+ content=(a.annotations_dir/"a.pbtxt").read_text()
+ assert 'C:\\\\new\\\\item' in content,repr(content)
+ assert '\\"hello\\"' in content,repr(content)
+ before=state(a.agy_root)
+ r=a.set_title("a",desired);assert not r["renamed"] and state(a.agy_root)==before
+ receipt=root/"receipt.json";receipt.write_text("old")
+ with patch.object(core,"receipt_path",return_value=str(receipt)),patch("os.replace",side_effect=OSError("injected replacement failure")):
+  try:core.write_receipt("apply",{});raise AssertionError("write unexpectedly succeeded")
+  except OSError:pass
+ assert receipt.read_text()=="old" and list(root.glob("receipt.json.*"))==[]
+ with patch.object(core,"receipt_path",return_value=str(receipt)):
+  core.write_receipt("apply",{"agy":core.new_ide_report()})
+ assert json.loads(receipt.read_text())["mode"]=="apply"
+ a=fixture(root/"malformed",{"pinned_conversations_order":"broken"})
+ assert not a.doctor()["ok"]
+ db=root/"zcode.sqlite"
+ c=sqlite3.connect(db);c.execute("CREATE TABLE tasks(workspace_key TEXT, workspace_path TEXT, workspace_identity TEXT, task_id TEXT,title TEXT,title_overridden INTEGER,pinned INTEGER,updated_at INTEGER,deleted INTEGER,archived INTEGER,meta_json TEXT,cron_automation_id TEXT)")
+ c.execute("INSERT INTO tasks VALUES('ws','path','id','cron','Original',1,1,0,0,0,'{}','automation')");c.commit();c.close()
+ z=zc.ZcodeAdapter(db_path=str(db),apply=True);r=z.sweep(unpin_days=1)
+ assert not r["unpinned"]
+ c=sqlite3.connect(db);assert c.execute("SELECT pinned FROM tasks").fetchone()[0]==1;c.close()
+ z.sweep(unpin_days=1,include_cron=True)
+ c=sqlite3.connect(db);assert c.execute("SELECT pinned FROM tasks").fetchone()[0]==0;c.close()
+ z.set_title("cron","Reviewed");before=db.read_bytes();assert not z.set_title("cron","Reviewed")["renamed"] and db.read_bytes()==before
+ args=SimpleNamespace(ide=["agy","zcode"],hours=24,all=False,pin=True,pin_hours=24,unpin_days=None,include_cron=False,group=None)
+ class Broken:
+  def sweep(self,**kw):raise sqlite3.DatabaseError("corrupt fixture")
+ with patch.object(task_sync,"_build_adapter",side_effect=[Broken(),Good()]),patch.object(core,"write_receipt",return_value="receipt"):
+  report,red=task_sync.run_sweep(args,True)
+ assert red==1 and report["ides"]["agy"]["error"] and report["ides"]["zcode"]["error"] is None
+print("PASS additional controls: path containment, protobuf escaping, set-title idempotency, atomic receipt red/green, pin doctor, cron unpin opt-in, SQLite error isolation")
+```
