@@ -2,7 +2,7 @@
 gh_issue: 898
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/898
 title: "board_sync: source the repo allow-list from the rebalanceOS active-repos signal"
-status: Proposed (1-INBOX — plan QA closed at relay cap 3/3; F3 resolved by operator-directed decision 2026-09-30 (not Codex re-reviewed); Agy QA of the revised plan pending)
+status: Proposed (1-INBOX — plan QA closed at relay cap 3/3; F3 resolved by operator-directed decision 2026-09-30 (not Codex re-reviewed); Agy relay QA of the revised plan: Approved, round 1)
 created: 2026-09-30
 doc_type: feature
 effort: 2
