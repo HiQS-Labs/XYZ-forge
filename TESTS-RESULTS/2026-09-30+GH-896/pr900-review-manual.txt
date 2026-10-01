@@ -1,0 +1,20 @@
+Baseline da53dd95 (synthetic stores, confirmed failures):
+missing-field refusal/preservation False False
+invalid-auto-pin preservation False
+list-type preserved False
+partial-success receipt False 1
+pgrep-error fail-closed False
+
+Updated code (same synthetic controls plus assertions):
+missing-field refusal/preservation True True
+invalid-auto-pin preservation True
+list-type preserved True
+partial-success receipt True 1
+pgrep-error fail-closed True
+PASS additional controls: path containment, protobuf escaping, set-title idempotency, atomic receipt red/green, pin doctor, cron unpin opt-in, SQLite error isolation
+
+Existing Agy battery: 24 PASS, 0 FAIL.
+Existing ZCode parity: 12 PASS, 0 FAIL.
+Atomic receipt injected os.replace failure preserved old bytes and removed temporary file; successful control parsed as complete JSON.
+Historical issues: protobuf escaping and path traversal reproduced in predecessor 48ab5f62; cron unpin and redundant writes inherited from 337e3085.
+No live stores were written. No new registered test suite or gate was added.

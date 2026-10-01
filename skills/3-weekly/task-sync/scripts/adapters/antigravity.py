@@ -53,7 +53,7 @@ def _default_app_running() -> bool:
             capture_output=True,
             timeout=10,
         )
-        return result.returncode == 0
+        return result.returncode != 1
     except (OSError, subprocess.SubprocessError):
         # Cannot tell — treat as running so writes stay gated (fail closed).
         return True
@@ -132,7 +132,11 @@ class AntigravityAdapter:
                 f"agy: app_storage.json is {type(data).__name__}, not an object — "
                 "refusing to infer pin state; no writes performed"
             )
-        pinned = data.get("pinned_conversations_order", [])
+        if "pinned_conversations_order" not in data:
+            raise core.AdapterError(
+                "agy: missing pinned_conversations_order — refusing to infer pin state"
+            )
+        pinned = data["pinned_conversations_order"]
         if isinstance(pinned, str):
             try:
                 pinned = json.loads(pinned)
@@ -146,21 +150,25 @@ class AntigravityAdapter:
                 "agy: pinned_conversations_order is not a list — refusing to "
                 "infer pin state; no writes performed"
             )
-        return [str(cid) for cid in pinned]
+        if any(not isinstance(cid, str) or not cid.strip() for cid in pinned):
+            raise core.AdapterError("agy: pinned_conversations_order contains invalid IDs")
+        for cid in pinned:
+            self._check_conversation_id(cid)
+        return pinned
 
     def _write_pinned_ids(self, pinned_ids: list[str]) -> None:
         """Atomic, backed-up whole-file write of the electron store.
         Only reachable under --auto-pin and with the app closed."""
         data = json.loads(self.electron_store.read_text(encoding="utf-8"))
-        data["pinned_conversations_order"] = json.dumps(pinned_ids)
+        data["pinned_conversations_order"] = (
+            json.dumps(pinned_ids) if isinstance(data["pinned_conversations_order"], str)
+            else pinned_ids
+        )
         backup = self.electron_store.with_name(
-            self.electron_store.name + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S")
+            self.electron_store.name + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f")
         )
         shutil.copy2(self.electron_store, backup)
-        tmp = self.electron_store.with_suffix(".json.tmp")
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        os.replace(tmp, self.electron_store)
+        core.atomic_write_text(self.electron_store, json.dumps(data, indent=2) + "\n")
 
     # -- public contract ------------------------------------------------
 
@@ -189,6 +197,11 @@ class AntigravityAdapter:
                 out.update(ok=False, reds=[str(exc)])
         else:
             out.update(ok=False, reds=[f"agy: summaries DB not found at {self.db_path}"])
+        try:
+            self._read_pinned_ids()
+        except core.AdapterError as exc:
+            out["reds"].append(str(exc))
+            out["ok"] = False
         running = self.app_running()
         out["app_running"] = running
         if running:
@@ -246,6 +259,10 @@ class AntigravityAdapter:
             # Authoritative read happens here, after the gate, before any write.
             pinned_ids = self._read_pinned_ids()
             rep["pinned_source"] = "app_storage.json"
+            # Preflight all annotations before any DB or file mutation.
+            if self.annotations_dir.exists():
+                for pbtxt in self.annotations_dir.glob("*.pbtxt"):
+                    self._update_annotation_file(pbtxt.stem, pin=pbtxt.stem in pinned_ids)
             if writes:
                 conn = self._connect()
                 try:
@@ -287,17 +304,21 @@ class AntigravityAdapter:
                 raise core.AdapterError("agy: --set-title requires a non-empty description")
             stamp = self._stamp_for(last_mod)
             desired = f"{stamp} {base}" if stamp else base
-            out["renamed"].append({"old": title, "new": desired})
+            if desired != title:
+                out["renamed"].append({"old": title, "new": desired})
             if self.apply:
                 self._require_writes_allowed()
-                conn.execute(
-                    "UPDATE conversation_summaries SET title=? WHERE conversation_id=?",
-                    (desired, conversation_id),
-                )
-                conn.commit()
+                # Validate every dependent input before committing the title.
+                pinned_ids = self._read_pinned_ids() if auto_pin else None
+                self._update_annotation_file(conversation_id, new_title=desired, apply=False)
+                if desired != title:
+                    conn.execute(
+                        "UPDATE conversation_summaries SET title=? WHERE conversation_id=?",
+                        (desired, conversation_id),
+                    )
+                    conn.commit()
                 self._update_annotation_file(conversation_id, new_title=desired, apply=True)
                 if auto_pin:
-                    pinned_ids = self._read_pinned_ids()
                     self._auto_pin([conversation_id], pinned_ids, out)
         except sqlite3.Error as exc:
             raise core.AdapterError(f"agy: sqlite error: {exc}") from exc
@@ -306,6 +327,14 @@ class AntigravityAdapter:
         return out
 
     # -- internals --------------------------------------------------------
+
+    @staticmethod
+    def _check_conversation_id(conversation_id: str) -> None:
+        """Store IDs must stay within the per-conversation directories."""
+        if (not isinstance(conversation_id, str) or not conversation_id
+                or conversation_id in (".", "..")
+                or "/" in conversation_id or "\\" in conversation_id):
+            raise core.AdapterError("agy: invalid conversation ID for a store path")
 
     def _stamp_for(self, last_modified_text: str) -> str:
         """Local mm-dd from the row's own UTC last_modified_time text.
@@ -349,6 +378,7 @@ class AntigravityAdapter:
 
     def _last_action_from_transcript(self, conversation_id: str) -> str:
         """Ported verbatim-in-behavior from the QA'd original."""
+        self._check_conversation_id(conversation_id)
         tpath = self.brain_dir / conversation_id / ".system_generated" / "logs" / "transcript.jsonl"
         if not tpath.exists():
             return "No transcript recorded"
@@ -410,6 +440,7 @@ class AntigravityAdapter:
         """Ported from the original, minus its delete-empty-file branch
         (an annotation that becomes empty is written empty, never
         unlinked — deletions are the app's business, not ours)."""
+        self._check_conversation_id(conversation_id)
         pbtxt_path = self.annotations_dir / f"{conversation_id}.pbtxt"
         content = ""
         if pbtxt_path.exists():
@@ -423,9 +454,9 @@ class AntigravityAdapter:
         original = content
         if new_title is not None:
             escaped = new_title.replace("\\", "\\\\").replace('"', '\\"')
-            title_pattern = r'title:\s*"(?:\\.|[^"\\])*"'
+            title_pattern = r'\btitle:\s*"(?:\\.|[^"\\])*"'
             if re.search(title_pattern, content):
-                content = re.sub(title_pattern, f'title:"{escaped}"', content)
+                content = re.sub(title_pattern, lambda _: f'title:"{escaped}"', content)
             else:
                 content = f'title:"{escaped}" {content}'.strip()
 
@@ -441,7 +472,7 @@ class AntigravityAdapter:
 
         if apply and content != original:
             self.annotations_dir.mkdir(parents=True, exist_ok=True)
-            pbtxt_path.write_text(content + "\n", encoding="utf-8")
+            core.atomic_write_text(pbtxt_path, content + "\n")
         return True
 
     def _mirror_annotations(self, pinned_ids: list[str], rep: dict) -> None:
@@ -474,7 +505,9 @@ class AntigravityAdapter:
             if cid not in pinned_ids:
                 pinned_ids.append(cid)
                 changed = True
-                self._update_annotation_file(cid, pin=True, apply=True)
-                rep.setdefault("auto_pinned", []).append({"conversation_id": cid})
         if changed:
             self._write_pinned_ids(pinned_ids)
+        for cid in target_ids:
+            self._update_annotation_file(cid, pin=True, apply=True)
+            if changed:
+                rep.setdefault("auto_pinned", []).append({"conversation_id": cid})
