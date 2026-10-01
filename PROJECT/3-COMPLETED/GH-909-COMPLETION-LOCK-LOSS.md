@@ -1,5 +1,5 @@
 ---
-status: active
+status: Complete
 title: "GH-909: completion lock repair"
 created: 2026-10-01
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/909
