@@ -97,4 +97,12 @@ swept file: yes
 **VERDICT: PASS**
 **Basis:** All criteria from the review brief are met. #904 handles empty vs missing DBs correctly, #907 safely quotes remediation paths, #906 prevents optional skill failure from halting core install, and #905 safely gates projections while keeping legacy defaults. No testing constraints or architectural boundaries were violated.
 
+
+### Attestation · relay-drive — 2026-10-01T19:15:54Z
+task: RELAY-gh908-final-qa
+reviewer: agy
+status: Approved
+reviewed-head: 6ce4b3271172003d30eef61045af3c5cc89de449
+added-range: 7016+2093
+added-sha256: 08b18d68ccd96e499c8b600c2b8971a938d0f52a3bd1a3bef397c9a5324f907b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
