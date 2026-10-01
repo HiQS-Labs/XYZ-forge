@@ -1,0 +1,1 @@
+{  "writer_rcs": [    0,    0,    0  ],  "live_b_pid": 53131,  "lock_owner_before_w": "53131",  "lock_exists_while_b_paused_after_w": false,  "records": [    "B",    "A"  ],  "expected": [    "A",    "W",    "B"  ],  "lost_record": "W",  "source": "instrumented copy, production unchanged",  "tested_sha": "57bd97af4a0e8d456927e20b49d64b232d95f36d"}

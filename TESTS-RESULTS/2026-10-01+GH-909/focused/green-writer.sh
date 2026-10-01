@@ -47,7 +47,7 @@ lock_total_max_s="${XYZ_LOCK_TOTAL_MAX_S:-$(( lock_wait_s * 4 ))}"
 
 # The same Python process owns the lock throughout the atomic JSON transaction.
 python3 - "$XYZ_JSON" "$harness" "$session_id" "$health" "$title" "$description" "$updated_at" "$lock_wait_s" "$lock_total_max_s" <<'PYEOF'
-import sys, json, os, tempfile, fcntl, time, uuid
+import sys, json, os, tempfile, fcntl, time, uuid, pathlib
 
 xyz_path, harness, session_id, health, title, description, updated_at = sys.argv[1:8]
 wait_s, total_s = map(float, sys.argv[8:10])
@@ -65,6 +65,9 @@ while True:
         fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         break
     except BlockingIOError:
+        if os.environ.get("ROLE") == "W" and not (pathlib.Path(os.environ["BARRIER"])/"W-seen").exists():
+            q=pathlib.Path(os.environ["BARRIER"]); (q/"W-seen").touch()
+            while not (q/"W-go").exists(): time.sleep(.01)
         now = time.monotonic()
         holder = os.pread(lock_fd, 32, 0)
         if holder and holder != last_holder:
@@ -80,6 +83,10 @@ while True:
 # exit (including crashes); do not delete the inode or close it before os.replace.
 os.pwrite(lock_fd, uuid.uuid4().hex.encode(), 0)
 os.ftruncate(lock_fd, 32)
+import pathlib
+if os.environ.get("ROLE") == "A":
+    q=pathlib.Path(os.environ["BARRIER"]); (q/"A-held").touch()
+    while not (q/"A-go").exists(): time.sleep(.01)
 
 records = []
 if os.path.exists(xyz_path):
@@ -92,6 +99,9 @@ if os.path.exists(xyz_path):
         # Absent/corrupt/partial → start a fresh array rather than abort the session's telemetry.
         records = []
 
+if os.environ.get("ROLE") == "B":
+    q=pathlib.Path(os.environ["BARRIER"]); (q/"B-read").touch()
+    while not (q/"B-go").exists(): time.sleep(.01)
 records.insert(0, {
     "harness": harness,
     "sessionId": session_id,
