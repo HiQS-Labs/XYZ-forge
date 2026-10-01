@@ -1,0 +1,15 @@
+== test: gh358-lock-instrumentation ==
+  PASS: clobbered-record control fails as intended
+  PASS: clobber names the missing successful session
+  PASS: clobber reports both normal lock bounds
+  PASS: clobber remains distinct from starvation
+  clobber diagnostic (observed failure):
+      FAIL: concurrent mismatch: missing sessionId=conc-1; terminal state=lock acquired, record lost. test wait=60s; writer XYZ_LOCK_WAIT_S=30s (default=30s)
+  PASS: starved-appender control fails as intended
+  PASS: starvation identifies the terminal lock state
+  PASS: starvation identifies the exhausted writer bound
+  PASS: starvation reports both effective lock bounds
+  PASS: starvation remains distinct from a lost record
+  starvation diagnostic (observed failure):
+      FAIL: appender sessionId=conc-1; terminal state=lock never acquired; writer XYZ_LOCK_WAIT_S=1s exhausted. test wait=60s; writer XYZ_LOCK_WAIT_S=1s (default=30s)
+  gh358-lock-instrumentation: 9 pass, 0 fail

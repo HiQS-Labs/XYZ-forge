@@ -7,9 +7,9 @@ owner: "XYZ Forge maintainers"
 goal: "Preserve every successful concurrent completion append."
 gh_issue: 909
 updated: 2026-10-01
-effort: medium
-complexity: medium
-risk: high
+effort: 3
+complexity: 3
+risk: 4
 phases: 1
 ---
 # GH-909 — completion lock loses successful records
@@ -17,7 +17,7 @@ phases: 1
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Controlled red replay and independent Codex plan QA Approved. | Implement the reviewed lock and three existing fixture adaptations; verify in a disposable full clone. |
+| Controlled red replay and independent Codex plan QA Approved. | Implementation, three focused suites, causal replay, crash release, legacy refusal and bounded ATE matrix passed. Final Codex QA then one final full gate and ready PR remain. |
 
 ## Problem and source of truth
 Tracking: https://github.com/HiQS-Labs/XYZ-forge/issues/909; parent #854/#853 remain open. Base development 57bd97af4a0e8d456927e20b49d64b232d95f36d. xyz-completion pooled failure observed16 exits0 but15 records. Controlled replay proves stale waiter deletes a live successor lock and loses one of three successful records; exact historical interleaving unknown. Recon below and committed manual receipt distinguish proof from inference.
@@ -51,3 +51,7 @@ Shared relay_drive, marathon_drive and marathon.sh emit best-effort telemetry th
 
 ## Unknowns and non-goals
 Original conc-1 interleaving, external lock-path users and network-filesystem behavior unknown. No timeout bump, retry policy change, caller-error propagation, registry locking fix, unrelated relay fix, new Bash executable or new tests. Evidence publication from prior task remains separate and paused; do not merge fixes under evidence-only authorization.
+
+## Verification checkpoint
+
+At 266a954a in a disposable full clone, all three existing suites passed. Manual handoff kept W/B/A, all exits 0; crash released the lock; a legacy directory was refused and unchanged. ATE ran 77 successful variations (16/32/64 writers, 0/.01s launch delays), preserving all 2,848 records. Receipts and intact identity: `TESTS-RESULTS/2026-10-01+GH-909/focused/`. These are diagnostic/focused evidence, excluded from #854 clean development counts. The first scratch replay failed due to a missing instrumentation import and was corrected; production code was unaffected.
