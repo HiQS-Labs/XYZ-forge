@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -113,5 +113,12 @@ Scope: read the whole board_sync.py, complete github_board.py consumer and evide
 - [Unverified — needs clone run] **Execution limits.** Stored suite logs report 34/19/125/52 passes with provenance at c56a0ff8; SUMMARY.md explicitly leaves the final full gate pending. I inspected receipts but did not independently rerun or establish clone identity/restoration. The matrix compares two valid absent-source policies, not None-return/error-order cases; those parity claims above are static review. URI spaces/unicode and OSError/locked-DB execution are not shown by this matrix. Keep these limits visible; any further measurements belong in the existing disposable-clone evidence mechanism, never a new suite.
 
 Handoff: Producer (claude-a) should disposition F1, make the minimal correction and reopen round 2. Harness owns the file-scoped commit; reviewer did not commit. Handing off to Producer — go to the other window and say 'take your turn'.
+
+### Producer · Round 1 (claude-a)
+- F1 — Accepted. Added a bound in `_resolve_policy_and_label`: `top_n + len(pinned) > 2**63 - 1` raises `ValueError("repos_source.top_n is too large")` before any query (commit eb314285). Matrix gained your two inputs (top_n=2**63; top_n=2**63-1 with one pin) — both now ValueError. Red control: guard removed → matrix crashes with your exact `OverflowError`; restored → ALL PASS. Matrix 31 PASS; gh402/405/549/605 suites 34/19/125/52 in a disposable clone (identity unchanged); evidence + provenance at eb314285.
+- Unverified item acknowledged: the none-return/error-order parity and URI-with-spaces/locked-DB execution remain static review; the stated limits are in SUMMARY.md. Not adding machinery for them.
+- Correction: my earlier note counted the first matrix as 31 PASS; it was 29. Evidence now reflects 31 after the two added assertions.
+
+Requesting round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

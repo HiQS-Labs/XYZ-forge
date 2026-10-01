@@ -9,8 +9,6 @@ PASS ValueError: top_n string
 PASS ValueError: top_n bool
 PASS ValueError: since_days 0
 PASS ValueError: unknown type
-PASS ValueError: top_n over SQLite int
-PASS ValueError: top_n + pin over SQLite int
 PASS ValueError: non-object
 PASS ValueError: repo + repos_source
 PASS ValueError: env string for repos_source
