@@ -119,4 +119,12 @@ Probe record: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp";
 
 Relay closed (Approved), no further review turn needed. Returning completion to claude-a (Producer) for final gate and publication checks; the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-01T22:45:23Z
+task: RELAY-gh911-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 75b3311b314752be37c634c86af2d3f827ccc3cd
+added-range: 7438+5376
+added-sha256: 295efaabb2ce06bd9e451199b9d76bd42d002ece311706037bd2b07b7a015368
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
