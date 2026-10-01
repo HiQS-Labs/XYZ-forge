@@ -89,4 +89,12 @@ Evidence scope: graph lookup used nearest available project `XYZ-forge`, generat
 
 Relay closed (Approved), no further review turn needed. NEXT is Producer (claude-a) for harness closeout and the pending qualifying gate.
 
+
+### Attestation · relay-drive — 2026-10-01T19:53:35Z
+task: RELAY-gh908-gate-delta-codex
+reviewer: codex
+status: Approved
+reviewed-head: 38b6ed320d09e3358845907c12c1f440947d55bf
+added-range: 6097+4200
+added-sha256: 8e27dfc13159863e469834c0acdae65e859304fa0e9db9152497a3a13c6acb7f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
