@@ -1,5 +1,5 @@
 {
-  "title": "Skills Army HQ — One Pulse Collection per Device",
+  "title": "HISTORICAL (pre-2026-10-01) — Skills Army HQ: One Pulse Collection per Device",
   "generated": "2026-09-23",
   "sources": [
     "skills/3-weekly/skills-army-hq/SKILL.md — GH-672 one-collection-per-device SOP",
@@ -46,5 +46,5 @@
     {"source": "device-b-adopt", "target": "device-b-apps", "label": "reconcile owned links", "kind": "sync"},
     {"source": "device-b-collection", "target": "device-b-apps", "label": "direct symlink read-through", "kind": "data"}
   ],
-  "legend_note": "GH-672 supersedes the GH-508 separate-projection design: each Pulse-enabled device has exactly one deployed collection inside its own checkout. Portable skill payloads travel through Git; local deployment state never does. Publication is shown as an explicit external workflow because the current repository cannot attest this machine's installed scheduler configuration."
+  "legend_note": "HISTORICAL — superseded 2026-10-01 by the decision at https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2: Skills Army HQ is maintained in XYZ-skills-army-mini, any local folder may be a source, any device may publish, and drift warns by default (refusal is opt-in). The source-authoring, designated-publisher and drift-refusal labels below describe the 2026-09-23 design. Original note: GH-672 supersedes the GH-508 separate-projection design: each Pulse-enabled device has exactly one deployed collection inside its own checkout. Portable skill payloads travel through Git; local deployment state never does. Publication is shown as an explicit external workflow because the current repository cannot attest this machine's installed scheduler configuration."
 }

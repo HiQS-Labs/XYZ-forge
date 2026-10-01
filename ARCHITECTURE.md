@@ -98,10 +98,10 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [honest](skills/3-weekly/honest/SKILL.md) | Produce a defensible ground-truth assessment of repository maturity and claims. |
 | [marathon-cleanup](skills/3-weekly/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
 | [merge-cleanup-deep](skills/3-weekly/merge-cleanup-deep/SKILL.md) | Back up and triage the checkouts /merge-cleanup preserved with read-only sub-agents: PR-worthy, superseded, or scrap. |
-| [push-to-skills-army-mini](skills/3-weekly/push-to-skills-army-mini/SKILL.md) | Publish the parent-managed Skills Army HQ package into its generated child through the shared manifest publisher (GH-620). |
+| [push-to-skills-army-mini](skills/3-weekly/push-to-skills-army-mini/SKILL.md) | **Retired 2026-10-01; do not run.** Skills Army HQ upstream is XYZ-skills-army-mini ([decision: mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2)); removal follows the 2026-10-08 audit (GH-882). |
 | [push-to-xyz-mini](skills/3-weekly/push-to-xyz-mini/SKILL.md) | Publish the curated XYZ mini skill subset into the local XYZ-mini checkout and push it, via the deterministic embedded-manifest publisher `utils/py/xyz_mini_sync.py` (GH-589). |
 | [radar](skills/3-weekly/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
-| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. |
+| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. *Vendored, possibly stale copy* — upstream is XYZ-skills-army-mini; see [UPSTREAM.md](skills/3-weekly/skills-army-hq/UPSTREAM.md) and [mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2). |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |

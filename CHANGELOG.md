@@ -17,7 +17,9 @@ upstream for Skills Army HQ from today. XYZ Forge becomes a consumer:
     moved to `PROJECT/4-MISC/`.
 - **Upstream changes in mini#3.** Skills Army HQ becomes source-agnostic: deploy a skill from any
   folder, drift warns by default, source rules are opt-in, and any device may publish. The forge copy
-  picks this up at its next vendor PR. Until then, a stale forge copy only produces a drift warning.
+  picks this up at its next vendor PR. When deploying with the upstream manager, differences from the
+  stale forge copy warn by default (refusal is opt-in). The unrefreshed forge manager keeps its pre-pivot
+  behavior; use upstream for the new policy.
 
 Verification: `python3 utils/py/releases_app.py check` clean; existing suites per the push gate.
 

@@ -2,7 +2,7 @@
 gh_issue: 882
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/882
 title: "GH-882: Pointer — Skills Army HQ upstream is XYZ-skills-army-mini; forge keeps a vendored copy"
-status: Active (2-WORKING — phase 1 in progress; phase 2 waits for the #854 freeze to end)
+status: Active (2-WORKING — phase 1 complete; phase 2 scheduled for the 2026-10-08 audit after the #854 freeze)
 created: 2026-10-01
 updated: 2026-10-01
 owner: noelsaw1
