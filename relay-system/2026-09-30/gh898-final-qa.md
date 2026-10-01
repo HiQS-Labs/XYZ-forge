@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -145,5 +145,20 @@ Handoff: Producer (claude-a) should disposition F2, record the narrow restore pr
 - Left as stated limits (not adding machinery): live `policy-preview`, URI spaces/unicode, locked-DB execution, full absent-source error-order parity.
 
 Requesting round 3 (final within cap).
+
+### Reviewer · Round 3 · codex
+swept file: yes
+
+VERDICT: PASS
+Basis: F1 remains resolved and F2 now has actual restore execution evidence with a meaningful red control. No further correction requested. Approval closes this review; it does not attest the pending final harness gate.
+
+Scope: swept the whole current utils/py/board_sync.py, complete github_board.py consumer, complete manual_matrix.py, plan requirements/ordered steps, relevant documentation, summary, provenance and decisive logs. No additional independently established pre-existing defect found in the swept code. Verify-tier index_status points to a different XYZ-forge checkout; check_index_coverage generation 2026-09-01T15:54:30Z does not track these current source paths. Used exact local source fallback; no graph completeness or git-diff claim. No git, suites, pytest, executable fixtures, source edits or board calls ran.
+
+- [Pass] **F2 closed — execution, not just equality.** TESTS-RESULTS/2026-09-30+GH-898/manual_matrix.py:156 resolves the saved policy through the real resolver; :169-171 wraps that policy in a result; :177 invokes real restore_policy_result. :181-190 measures drift refusal before readback, recovered readback with restore_to=Ready, and different-board refusal before readback. This exercises board_sync.py:1318-1320 and :1342-1365 with preview mode and a read-only board seam. matrix-pass.log contains all three "PASS restore EXECUTION" lines and "RESULT: ALL PASS". No fix needed.
+- [Pass] **F2 red control detects the guard.** redcontrol-restore-guard-disabled.log contains "FAIL restore EXECUTION: drifted membership refused before any board readback :: (None, 1)" and the corresponding different-board failure; redcontrol-restore-guard-restored.log ends "RESULT: ALL PASS". provenance.jsonl records identity-guard disablement rc=1 and copy-based restoration rc=0 at d3e1b6319705dd6eec492f7b0e4657071c34c09d. These are inspected stored receipts, not an independent rerun.
+- [Pass] **Implementation still satisfies requirements 1-6 at source level.** board_sync.py:87 declares the key; :176-228 removes diagnostic metadata, validates opt-in fields, preserves absent-source paths, rejects singular repo plus source, bounds the effective SQLite LIMIT and merges pinned-first additions. :120-160 provides encoded read-only URI, timeout=2, connection closing and warned ordinary fallbacks. The config branch quotes 'if label: extra["selection_policy_repos"] = {"repos": policy["repos"], "repos_source": label}'. apply_policy_preview :1240-1242 and restore_policy_result :1318-1320 retain full-policy equality; github_board.py:126-134 consumes board identity. RELEASES-DB-FAQS.md:88-95 discloses live drift, recovery and wider mutation eligibility. No added subsystem or writer is required.
+- [Unverified — needs clone run] **Execution limits remain explicit.** SUMMARY.md says the full validate.sh gate and live policy-preview were not run; its live check measures repo resolution only. Stored suite logs report 34/19/125/52 passes, with provenance at d3e1b631, but were not rerun here. URI spaces/unicode, locked-DB execution and full absent-source error-order parity remain static review. The harness must run its final gate after this turn; this approval is not merge/promotion qualification.
+
+Handoff: relay closed (Approved), no further turn needed. Producer (claude-a)/harness owns the file-scoped commit and final disposable-clone gate; reviewer did not commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
