@@ -26,6 +26,8 @@ Live requirements and discussion: [GH-901](https://github.com/HiQS-Labs/XYZ-forg
 |---|---|
 | 28 manual probes pass; 5 native renames + 6 pins readback verified; independent reviewer PASS | Small gate 75/75 PASS and native heartbeat ACTIVE; publish dependent PR and await #900 landing |
 
+Review cleanup: all eight CodeRabbit threads addressed; reviewed PR900 prerequisite incorporated. Fresh Codex QA r3 Approved at `a615e2dc`; final macOS Small gate 75/75 (Python 21/21), zero retries. Merge order remains 900 → 902; primary checkout deferral requires the operator’s pending response.
+
 ## Recon and decisions
 
 Graph generation 2026-09-01 is stale and missing task-sync, so exact source from
