@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -71,5 +71,22 @@ Review commit 24432389 as a focused delta to the already approved GH-908 review 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+**VERDICT: PASS**
+**Basis:** The embedded delta brief was reviewed in full. Current source preserves queryable-empty versus unreadable-ledger behavior, explicit projection-off and legacy defaults, and the canonical connection contract. Reviewed the complete touched functions and their immediate callers, including pre-existing branches; no concrete counterexample or pre-existing defect found in that bounded scope. This approves the delta review, not merge readiness; the qualifying full gate remains pending.
+
+- [Pass] Empty is ready, unreadable is not: `utils/pdda/pdda.sh:350-355` assigns the existing doc-path query inside `if`, sets readiness on success even with no rows, and clears it if the raw-text query fails. `utils/pdda/pdda.sh:364-408` still reports unreadable ledgers, scans both working and inbox docs, and reports uncovered pointers. `utils/pdda/pdda.sh:358` excludes stale Markdown authority in releases mode. Read-only SQLite controls: command `sqlite3 :memory: "CREATE TABLE roadmap_items(doc_path TEXT, raw_text TEXT); SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL;"` exited 0 with zero output bytes; `sqlite3 :memory: "SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL"` exited 1, `no such table: roadmap_items`; `sqlite3 "file:README.md?mode=ro" "SELECT doc_path FROM roadmap_items WHERE doc_path IS NOT NULL"` exited 26, `file is not a database (26)`. These contrasting statuses exercise the readiness distinction without executing the dispatcher or a test fixture. No change requested.
+- [Pass] Canonical gateway retained: `utils/py/releases_app.py:1350` calls `connect(db)`; its full implementation at `utils/py/releases_app.py:432-444` retains explicit transaction mode, named rows, foreign-key enablement and refusal if enablement fails. Connection closure remains in `finally` at `utils/py/releases_app.py:1353-1354`. Command `PYTHONDONTWRITEBYTECODE=1 python3 utils/pdda/check_inventory_ratchet.py --check` exited 0: `inventory_ratchet: clean (matches baseline, 0 new scripts/connects)`. A narrow read-only call to canonical `connect` on the seeded DB reported `gateway foreign_keys=1 isolation_level=None` (inline Python probe, exit 0). No change requested.
+- [Pass] Projection semantics preserved by inspection of `utils/py/releases_app.py:1344-1357`: missing DB, absent setting and SQLite read errors retain the default; only the explicit value `off` suppresses refresh. The gate precedes all writer refresh work at `utils/py/releases_app.py:1370-1402` and both reconcile view selections at `utils/py/wave_reconcile.py:1809-1823`. Complete immediate callers read: `perform_write` (`utils/py/releases_app.py:1670-1784`), `perform_migration` (`utils/py/releases_app.py:1787-1899`), and `run_subprocesses` (`utils/py/wave_reconcile.py:1767-1870`). Both writer paths invoke refresh after durability. Narrow evaluation of the unchanged function AST with in-memory settings returned `None -> True; auto -> True; on -> True; off -> False` (inline Python probe, exit 0); this isolates predicate behavior and does not claim end-to-end exporter execution. No change requested.
+- [Unverified — needs clone run] The reported 11/11 focused suite and qualifying full suite were not run this turn. No `validate.sh`, `test/*.sh`, pytest, executable fixture, Git command, exporter or reconciler was executed. Harness must supply the qualifying gate for the final committed state.
+
+Evidence scope: graph lookup used nearest available project `XYZ-forge`, generation `2026-09-01T15:54:30Z`; it belongs to a different checkout and coverage marked all three source paths `metadata_changed`. Therefore structural claims above use current local source, not graph completeness or commit identity (Git is prohibited this turn). The sweep covers the entire embedded artifact and the named function/caller scope, not an exhaustive audit of unrelated functions in the large source files. Scratch environment: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`.
+
+Relay closed (Approved), no further review turn needed. NEXT is Producer (claude-a) for harness closeout and the pending qualifying gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
