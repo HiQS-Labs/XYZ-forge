@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -75,5 +75,49 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+VERDICT: FAIL
+Basis: the one-line exemption is correct and proportionate; one evidence-attribution correction remains. No source, scanner, baseline, module, suite or gate change requested. This review does not attest the pending full gate.
+
+- [Pass] **F1 — exact exemption scope.** `utils/py/board_sync.py:148` opens the foreign DB with `mode=ro`, runs only SELECT (:143-150), and closes it (:151-152). `utils/pdda/check_inventory_ratchet.py:78-82` skips only the physical line containing the substring. The other connect (:511) remains counted, matching the baseline's one board_sync occurrence (baseline line number 437; scanner :119-121 permits shifts). Probe below: marked -> [511], removed -> [148, 511], live/baseline totals 32/32. A second connect on the marked physical line is also shielded; an adjacent line is not. This is a deliberate existing line-scoped feature, not a semantic guarantee for future edits. Retain the single-connect line; no scanner redesign requested.
+- [Pass] **F2 — removal fails closed.** Scanner :79 explicitly implements the marker; :128-134 refuses baseline growth, :155-156 rejects increased count. Removing this marker alone therefore makes 32 become 33 and fails the ratchet. The plan's exception record (`PROJECT/2-WORKING/GH-898-BOARD-SYNC-ACTIVE-REPOS.md:98`) acknowledges loss of the exemption on a scanner rewrite and names option A as recovery. Existing opt-in/read-only behavior is unaffected by the comment.
+- [Should] **F3 — substantiate or qualify the 12-suite control claim.** `marker/gate-red-before-marker.log:1352-1367` records exactly 13 failures and the refused push; :428 specifically records the ratchet's 32 -> 33 regression. However, `TESTS-RESULTS/2026-09-30+GH-898/marker/provenance.jsonl:1` asserts those other 12 fail on base 57bd97af and pass with XYZ_HARNESS unset, while lines 2-7 record only the matrix and five focused suites on ea460d22. No control commands, exit statuses or raw base/unset results are supplied. The same first receipt labels the clone “XYZ_HARNESS unset for suites” despite attributing this gate's failures to inheritance. The override diagnostics in the red log (:483, :495, :678) support that hypothesis, but do not establish the claimed controls. **Fix:** add the already-run base/unset control logs and corresponding provenance (commit, commands, environment, exit statuses and clone identity), and distinguish the inherited environment on the failed push from the unset focused runs. If those receipts are unavailable, qualify the base/unset statements in the plan :98, SUMMARY.md:17 and provenance :1 as an unverified diagnosis, with clone verification pending. No new tests requested. [Unverified — needs clone run] for the claimed base/unset controls until receipts exist.
+- [Pass] **F4 — focused evidence and CHANGELOG scope.** `marker/suite-gh777-inventory-ratchet.log:1-4` reports clean live inventory and growth rejection; `marker/matrix-pass.log:36` says “RESULT: ALL PASS”; `marker/suite-gh605.log:12` reports 52 passed. Provenance :2-7 attributes focused checks to ea460d22. `CHANGELOG.md:5` claims the matrix/red control/existing suites, not a full green gate; `SUMMARY.md:17` explicitly leaves the full gate for the final commit. Preserve that distinction.
+- [Pass] **F5 — proportionality and sweep.** The marker uses existing scanner machinery (:79), needs no module or baseline expansion, and the exception record :98 weighs the alternatives. Read the complete 1,575-line board_sync.py and complete scanner, plus the complete 102-line plan and the seeded delta evidence. No additional observed pre-existing runtime defect found in this sweep. Scope comparison against 2a5cac92 is limited to the supplied delta description: git was forbidden and no git command was run. The nearest listed graph is the canonical XYZ-forge project (generation 2026-09-01T15:54:30Z), not this relay worktree; coverage returned both code paths “not_tracked”, so all material code conclusions use current direct source.
+
+Probe command (non-mutating to artifacts; text variants only under scratch), exit 0:
+```python
+# Invoked as: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'
+import importlib.util, pathlib, tempfile, json
+p=pathlib.Path('utils/pdda/check_inventory_ratchet.py')
+spec=importlib.util.spec_from_file_location('ratchet',p)
+m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+src=pathlib.Path('utils/py/board_sync.py').read_text()
+marker='  # SQLITE-GATEWAY-OK: read-only rebalanceOS DB, not harness state (GH-898)'
+with tempfile.TemporaryDirectory() as d:
+    root=pathlib.Path(d); f=root/'utils/py/board_sync.py'; f.parent.mkdir(parents=True)
+    for name,s in [('marked',src),('removed',src.replace(marker,'')),('same_line',src.replace(marker,'; sqlite3.connect("another.db")'+marker)),('next_line',src.replace(marker,marker+'\n        sqlite3.connect("another.db")'))]:
+        f.write_text(s)
+        print(name, m.scan_sqlite_bypasses(root))
+baseline=json.loads(pathlib.Path('utils/pdda/inventory_ratchet_baseline.json').read_text())
+print('baseline board entries', [s for s in baseline['sqlite_bypasses'] if s.startswith('utils/py/board_sync.py:')])
+print('live total',len(m.scan_sqlite_bypasses(pathlib.Path.cwd())), 'baseline total',len(baseline['sqlite_bypasses']))
+# PY
+```
+Decisive output:
+```text
+marked ['utils/py/board_sync.py:511']
+removed ['utils/py/board_sync.py:148', 'utils/py/board_sync.py:511']
+same_line ['utils/py/board_sync.py:511']
+next_line ['utils/py/board_sync.py:149', 'utils/py/board_sync.py:512']
+baseline board entries ['utils/py/board_sync.py:437']
+live total 32 baseline total 32
+```
+
+No validate.sh, test/*.sh, pytest, executable fixture, git or artifact mutation performed. Handing off to Producer (claude-a) — correct or qualify F3, then open round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
