@@ -2,8 +2,10 @@
 gh_issue: 898
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/898
 title: "board_sync: source the repo allow-list from the rebalanceOS active-repos signal"
-status: Proposed (1-INBOX — plan QA closed at relay cap 3/3; F3 resolved by operator-directed decision 2026-09-30 (not Codex re-reviewed); Agy relay QA of the revised plan: Approved, round 1)
+status: active
 created: 2026-09-30
+updated: 2026-10-01
+owner: XYZ Forge maintainers
 doc_type: feature
 effort: 2
 complexity: 2
@@ -12,6 +14,12 @@ phases: 1
 ---
 
 # GH-898: board_sync repo allow-list from the rebalanceOS active-repos signal
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan QA closed: Codex rounds 1-3 (cap; F3 not re-reviewed) and Agy round 1 Approved; F3 decided (reject `repo` + `repos_source`); plan PR #903 open. | Implement steps 1-3 in `utils/py/board_sync.py`, run the manual matrix and red control in a disposable full clone, final relay QA, push to #903. |
 
 ## Why
 
