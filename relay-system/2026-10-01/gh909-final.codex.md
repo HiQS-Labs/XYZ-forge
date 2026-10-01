@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -188,5 +188,50 @@ added-sha256: cc6410e4e8a6a76736b09efc7aa57b7788de1961bd4da731162db9aeffa99314
 - Please sweep final writer, fixture, validate registry and gh306 files; review standing rule compliance, retained unchanged gh268 and witnessed registry red/green. Review final canonical plan against this final scope, not abandoned diagnostic correction. This is final review3 of the binding3-round budget; no speculative expansion. Final full gate and hosted exacthead observation remain downstream requirements, no premature ready claim.
 
 Handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: Final scope complies with the standing non-Small flaky-suite policy. The registry delta is exactly unregister-and-exempt; gh268 is retained unchanged. The completion repair remains identical to focused-tested bytes. This is peer QA approval, with the final disposable-clone full gate, hosted exact-head observation and verified quiescent cutover still outstanding.
+swept file: yes
+
+- [Pass] **Standing policy is applied to a witnessed failure.** `utils/ci-route.sh:38` excludes gh268 from Small; `test/gh306-registry-bidirectional.sh:49` carries its exact basename and observed pipefail reason. `gh268-blocker/pool-red.log:4–5` records “printf: write error: Broken pipe” and the false missing-cue assertion. The nonempty lossless gzip input independently reproduces old present rc141, diagnostic present rc0 and diagnostic absent rc1. Fix: retain the final unregister-and-exempt disposition; the diagnostic consuming-grep edit is not shipped.
+- [Pass] **Final committed registry delta is minimal and truthfully covered.** Read-only object-store comparison against development `57bd97af` proves `validate.sh` differs by exactly removal of the gh268 TESTS line, and gh306 differs by exactly one reasoned EXEMPT line. gh268 itself equals development byte-for-byte. Registry extraction reports 410 unique entries. `gh268-blocker/registry-green.log` ends “10 pass, 0 fail”; `registry-red.log` names gh268 drift and ends “9 pass, 1 fail” after the exemption removal. `provenance.jsonl:3` attributes that control to b7b25b68; the probe resolves it to `b7b25b682db863cdbd1c13710fd5000a416cd33f` and proves both final registry files equal those tested bytes. Fix: keep this two-line policy change; no new suite, runner, registry entry or guard needed.
+- [Pass] **Stable ownership and completion contracts are preserved.** Entire writer and all three completion suites swept. `utils/telemetry/append-xyz-completion.sh:54–82` retains one nontruncating sidecar descriptor, nonblocking exclusive flock, monotonic deadlines, acquisition progress token and exhaustion exit75. It spans JSON read/prepend and atomic replacement at `84–116`; only temporary JSON cleanup unlinks. `test/gh123-lock-progress-bound.sh:31–88` uses actual held/inherited flock ownership; `test/gh358-lock-instrumentation.sh:60–77` uses an actual holder; `test/xyz-completion.sh:176–185` checks the retained sidecar is unlocked. All four files equal focused-tested `266a954a8c82aea5a8267e3ed4e66391f14d9f79` and current working bytes. Fix: retain the bounded repair.
+- [Pass] **Causal and focused receipts remain intact and committed.** `red-handoff/result.json` records three zero exits, deleted successor lock and missing W. `focused/manual-result.json` records W/B/A, preserved inode, blocked waiter, crash release and legacy refusal rc1. `focused/provenance.jsonl:1` attributes three suite successes and 77 ATE variations to 266a954a and explicitly says `not_full_gate: true`. The read-only probe checks nonempty hashes, identical identity snapshots, 77 zero-exit rows and 2,848 distinct records; every changed receipt equals its committed object. These are retained disposable-clone observations, not fresh executable fixture runs here. Fix: preserve this evidence and perform the planned final gate.
+- [Pass] **Governed final scope and deployment limits are explicit.** The seeded artifact equals its committed canonical plan. Artifact `37–47,50,57,61,69` limits guarantees to cooperating upgraded writers on local macOS/Linux filesystems, requires retiring running and waiting old writers before forward/rollback cutover, preserves ratings 85/85/50/65 and excludes failed/stopped gates. Line 69 explicitly supersedes the diagnostic suite correction described at line 65. `CHANGELOG.md:5` describes the final unregister-and-exempt scope. A read-only SQLite query returns the exact GH-909 working-doc pointer. Fix: keep these boundaries; final gate and hosted observation remain downstream prerequisites, with no ready or deployment claim here.
+- [Nit] `test/xyz-completion.sh:8` still says “no leftover temp file / lock dir”; `176–185` correctly retains an unlocked sidecar. Optional comment-only clarification when convenient.
+
+Probe command (read-only object decoding, receipt checks and literal pipelines; no git command or suite/fixture execution):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 .relay-scratch/review-r3.py
+```
+
+Final command exit **0**. Decisive output:
+
+```text
+HEAD c7b3e59ddc952013ef27e17cfa3665f234a98737
+completion bytes equal focused 266a954a; gh268 equals development and working bytes
+validate delta: exactly removed "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
+gh306 delta: exactly one reasoned exemption
+all changed receipt bytes committed and equal working files
+registry 410 unique; gh268 absent from Small and TESTS; retained suite exists
+focused hashes/identity intact; 77 rows; 2848 records
+gzip input 339968 bytes; SHA256 intact
+old_present rc=141 stderr=''
+diagnostic_present rc=0 stderr=''
+diagnostic_absent rc=1 stderr=''
+registry final bytes equal retained tested SHA b7b25b682db863cdbd1c13710fd5000a416cd33f
+seeded artifact equals committed canonical plan
+GH909 ledger [('Completion writer loses successful records', 'PROJECT/2-WORKING/GH-909-COMPLETION-LOCK-LOSS.md')]
+```
+
+The probe validates SHA-1 for every reconstructed loose/packed object; tree comparison finds exactly the writer, three completion suites, gh306 and validate as changed runtime/gate files, with docs, ledger and evidence comprising the remaining changes. Initial ledger query used `issue_num` and exited 1 (“no such column: issue_num”); schema inspection and correction to `gh_number` produced the final exit0 above. The literal pipelines use decompressed committed input with verified size339968 and SHA256 `6d306708a6cfe88eb084d122c5f771ff211e8df4b96f96279569c6ef9e4ae6b1`; no input artifact was executed.
+
+Whole artifact, writer, three completion suites, retained gh268, validate.sh and gh306 swept; no additional blocking pre-existing defects found within this bounded repair. Inherited unsafe mktemp/cleanup in the completion suites remains subject to disposable-full-clone execution. Graph inventory returned all77 projects with no matching review worktree; canonical XYZ-forge is another checkout at coverage generation `2026-09-01T15:54:30Z`. Coverage checked all eight candidate source/gate paths; it cannot attest this worktree, so current full source reads supply evidence. No git commands, validate.sh, test suites, pytest or executable fixtures ran. Total-cap stress, Linux execution, final full gate, hosted exact-head evidence and live rollout quiescence are unverified in this turn.
+
+Relay closed (Approved), no further review turn needed. Handing completion back to Producer (claude-a) for the required disposable-clone final gate and exact-head evidence before publication/deployment.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
