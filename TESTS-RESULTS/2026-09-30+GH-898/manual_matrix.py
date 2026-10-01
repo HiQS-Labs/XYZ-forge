@@ -161,6 +161,33 @@ def main():
                   (recovered["repos"], saved["repos"]))
             other, _, _ = resolve(bs, tmp, {**OWNER, "project_number": 5, "repos": saved["repos"]}, db)
             check("different board owner/number still differs", other != saved)
+            # 5b. the REAL restore entry point (preview mode, board read stubbed; no board writes)
+            calls = []
+            item = {"repo": "o/pinned", "kind": "issue", "number": 7, "item_id": "ITEM7", "status": "In progress"}
+            bs.fetch_board_items = lambda cfg, cache=False: calls.append(1) or [dict(item)]
+            result = Path(tmp) / "result.json"
+            result.write_text(json.dumps({"schema": "github-board-policy-result@1", "policy": saved, "operations": [
+                {"phase": "change", "identity": ["o/pinned", "issue", 7], "outcome": "success", "item_id": "ITEM7",
+                 "before": "Ready", "after": "In progress"}]}))
+
+            def restore_with(block, rdb):
+                write_cfg(tmp, block)
+                os.environ["REBALANCE_DB"] = str(rdb)
+                try:
+                    return bs.restore_policy_result(str(result)), None
+                except RuntimeError as exc:
+                    return None, str(exc)
+            drift_src = {**OWNER, "repos": ["o/pinned"], "repos_source": {"type": "rebalance_active", "top_n": 2}}
+            rep, err = restore_with(drift_src, dbb)
+            check("restore EXECUTION: drifted membership refused before any board readback",
+                  rep is None and "does not match" in (err or "") and not calls, (err, len(calls)))
+            rep, err = restore_with({**OWNER, "repos": saved["repos"]}, db)
+            check("restore EXECUTION: documented recovery reaches readback and proposes the restore",
+                  err is None and calls and rep["changes"] and rep["changes"][0]["restore_to"] == "Ready", (err, rep))
+            calls.clear()
+            rep, err = restore_with({**OWNER, "project_number": 5, "repos": saved["repos"]}, db)
+            check("restore EXECUTION: different board number refused before readback",
+                  rep is None and "does not match" in (err or "") and not calls, (err, len(calls)))
             # 6. live DB (skipped, and recorded as skipped, when absent)
             os.environ.pop("REBALANCE_DB", None)
             live = bs._rebalance_db_path()
