@@ -18,9 +18,9 @@ PASS config shows resolved list + label only when source set
 PASS membership drift makes restore refuse (policy != saved)
 PASS documented recovery reproduces the saved policy exactly
 PASS different board owner/number still differs
-PASS restore EXECUTION: drifted membership refused before any board readback
+FAIL restore EXECUTION: drifted membership refused before any board readback :: (None, 1)
 PASS restore EXECUTION: documented recovery reaches readback and proposes the restore
-PASS restore EXECUTION: different board number refused before readback
+FAIL restore EXECUTION: different board number refused before readback :: (None, 1)
 PASS live DB: pinned first, non-empty, owner/name shaped
 LIVE repos: ['o/pinned', 'Hypercart-Dev-Tools/rebalance-git-pulse', 'HiQS-Labs/XYZ-forge', 'HiQS-Labs/rebalanceOS', 'BinoidCBD/LTVera-Pandas', 'HiQS-Labs/XYZ-CLIO']
 PASS fallback keeps pinned list: missing DB
@@ -33,4 +33,4 @@ PASS fallback keeps pinned list: table present, zero in-window rows
 PASS fallback warns: table present, zero in-window rows
 PASS fallback label: table present, zero in-window rows
 PASS schema-absent vs zero-score warnings differ
-RESULT: ALL PASS
+RESULT: FAIL restore EXECUTION: drifted membership refused before any board readback, restore EXECUTION: different board number refused before readback

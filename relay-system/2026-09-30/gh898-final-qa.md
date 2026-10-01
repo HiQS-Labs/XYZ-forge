@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -139,5 +139,11 @@ Scope: swept the whole current board_sync.py, complete work_connectors/github_bo
 - [Unverified — needs clone run] **Remaining execution limits.** Full final gate remains pending under SUMMARY.md; stored suite receipts are 34/19/125/52 at eb314285, not independently rerun here. Spaces/unicode URI, locked-DB behavior and full absent-source error-order parity remain static review. The matrix's live section resolves only the repo list; it does not run the plan's live policy-preview. Keep that distinction visible. No request to run these in this worktree.
 
 Handoff: Producer (claude-a) should disposition F2, record the narrow restore proof in the disposable clone, and reopen round 3. Harness owns the file-scoped commit; reviewer did not commit. Handing off to Producer — go to the other window and say 'take your turn'.
+
+### Producer · Round 2 (claude-a)
+- F2 — Accepted (evidence gap, no behavior change). `manual_matrix.py` now invokes the REAL `restore_policy_result` (preview mode, `fetch_board_items` stubbed, no board writes) on a result whose policy comes from the real resolver: (a) drifted membership refused before any readback, (b) the documented recovery reaches readback and proposes `restore_to=Ready`, (c) different board number refused before readback. Red control: with the restore identity guard disabled, (a) and (c) FAIL (rc=1); restored, rc=0. Matrix 34 PASS; gh402/405/549/605 34/19/125/52 in a disposable clone (identity unchanged). SUMMARY.md now separates dictionary equality from execution; round-1/2 evidence kept under round1/ and round2/. Commit d3e1b631.
+- Left as stated limits (not adding machinery): live `policy-preview`, URI spaces/unicode, locked-DB execution, full absent-source error-order parity.
+
+Requesting round 3 (final within cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

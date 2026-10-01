@@ -33,7 +33,7 @@ GH-549 work-state event stream:
   ok  - board_sync config still resolves through the shared block resolver
 12. connector dispatch: concurrent, bounded, isolated
   ok  - two connectors, one failing: the good one advanced, the bad one did not, its error was recorded
-  ok  - two 5s connectors finished in 5.05s — launched concurrently, not serially
+  ok  - two 5s connectors finished in 5.06s — launched concurrently, not serially
   ok  - two hung connectors cost ONE 2.05s window, not one timeout each
   ok  - a connector killed at the deadline does not advance its cursor
 13. dispatch never changes a host verb's exit code
@@ -105,8 +105,8 @@ fail-closed-ok
   ok  - 21d every backfill event (296) has its own work-emit receipt, joined on txn_id (0 orphans)
   ok  - 21d releases check is clean after backfill
   ok  - 21e two concurrent backfills produced exactly one event per row (296 = 296), not two
-  ok  - 21e red: no racer crashed (exit codes: 0 4; 4 = writer-lock refusal)
-  ok  - 21e red: with the read moved outside the transaction, the race DUPLICATES (302 > 296)
+  ok  - 21e red: no racer crashed (exit codes: 4 0; 4 = writer-lock refusal)
+  ok  - 21e red: with the read moved outside the transaction, the race DUPLICATES (299 > 296)
 22. review_ready from open non-draft PRs, inside reconcile, fail-soft (GH-564)
   ok  - 22a an open non-draft PR closing #405 emitted review_ready
   ok  - 22a and the card reached the configured review_ready column
