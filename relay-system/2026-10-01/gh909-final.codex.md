@@ -234,4 +234,12 @@ Whole artifact, writer, three completion suites, retained gh268, validate.sh and
 
 Relay closed (Approved), no further review turn needed. Handing completion back to Producer (claude-a) for the required disposable-clone final gate and exact-head evidence before publication/deployment.
 
+
+### Attestation · relay-drive — 2026-10-01T20:00:31Z
+task: RELAY-gh909-final-r3
+reviewer: codex
+status: Approved
+reviewed-head: c7b3e59ddc952013ef27e17cfa3665f234a98737
+added-range: 22183+7086
+added-sha256: b9ec8ea05a67404cde5bec4341fe9409545b344b087ea11a0c4d4c5094bb05db
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
