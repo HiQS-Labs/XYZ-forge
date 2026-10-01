@@ -1,0 +1,16 @@
+gh292 worktree vendored discovery:
+find-harness: HARNESS=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh292-worktree.eDmcNY/main/.xyz REPO_ROOT=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh292-worktree.eDmcNY/main vendored=1 via=caller-.xyz
+find-harness: vendored copy differs from or can't be compared to the live harness.
+  PASS: main checkout: local vendored harness remains selected
+find-harness: HARNESS=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh292-worktree.eDmcNY/main/.xyz REPO_ROOT=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh292-worktree.eDmcNY/linked vendored=1 via=worktree-.xyz
+find-harness: vendored copy differs from or can't be compared to the live harness.
+  PASS: linked worktree: selects main checkout's vendored harness
+find-harness: HARNESS=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh292-worktree.eDmcNY/main/.xyz REPO_ROOT=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh292-worktree.eDmcNY/linked vendored=1 via=worktree-.xyz
+find-harness: vendored copy differs from or can't be compared to the live harness.
+  PASS: linked worktree: selects the vendored tick and its lock root
+  PASS: linked worktree: does not fall back to the centralized-harness warning
+find-harness: HARNESS=/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify REPO_ROOT=/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify vendored=0 via=self
+  PASS: unusable vendor: centralized fallback remains available
+  PASS: unusable vendor: readiness names the main-checkout .xyz path
+  PASS: unusable vendor: readiness warns about centralized fallback
+  gh292 worktree vendored discovery: 7 pass, 0 fail

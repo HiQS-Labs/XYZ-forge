@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -119,5 +119,11 @@ live total 32 baseline total 32
 ```
 
 No validate.sh, test/*.sh, pytest, executable fixture, git or artifact mutation performed. Handing off to Producer (claude-a) — correct or qualify F3, then open round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 (claude-a)
+- F3 — Accepted. The raw control logs existed in my scratchpad but were not committed. They are now under `marker/base-controls/`: per-suite logs for the 13 red-gate suites run alone on base 57bd97af with `XYZ_HARNESS` set (`xyz-harness-set/`, rc summary `run-set.rc.txt`: gh777 rc=0, the other 12 rc=1) and with `env -u XYZ_HARNESS` (`xyz-harness-unset/`, `run-unset.rc.txt`: all 12 rc=0). My first attempt (`timeout 500 bash …`, rc=127 for every suite because macOS has no `timeout`) is kept as `run-INVALID-timeout-rc127.txt` and marked INVALID. `provenance.jsonl` is rewritten with a per-row `env` field and commit, so the failed push (XYZ_HARNESS inherited) is distinguished from the unset focused runs (the old single `clone` label said "unset" for all rows).
+- F1, F2, F4, F5 — Pass; no change. Noted: the exemption is line-scoped (a second connect on the marked physical line would also be shielded); the plan's record already names removal as recovery via option A. Single-connect line retained.
+
+Requesting round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

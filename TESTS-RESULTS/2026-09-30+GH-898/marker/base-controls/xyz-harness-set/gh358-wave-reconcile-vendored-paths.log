@@ -1,0 +1,30 @@
+== test: gh358-wave-reconcile-vendored-paths ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh358-wave-reconcile-vendored-paths.XXXXXX.TLgUHInNN9
+== test: gh358-wave-reconcile-vendored-paths ==
+-- section 1: the four harness tools resolve under .xyz --
+  FAIL: vendored reconcile exited 6: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh358-reconcile.wABd9B/fixture-repo)
+wave-reconcile: Processing PR #4581...
+wave-reconcile:   PR #4581 closes [3581]; references []
+wave-reconcile:   Found active doc: GH-3581-VENDORED.md
+TRANSITION ["doc", "move", "GH-3581-VENDORED.md", "3-COMPLETED", "2026-09-01"]
+wave-reconcile:   Moved -> GH-3581-VENDORED.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-3581
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  PASS: no 'can't open file' — every harness tool was found
+  FAIL: releases_app did not run from .xyz
+  FAIL: export_timeline did not run from .xyz
+  FAIL: marathon-plan did not run from .xyz
+-- section 2: PDDA is a TARGET-repo tool and must NOT be redirected into .xyz --
+  FAIL: pdda gate did not run from the repo root
+  PASS: harness pdda decoy never ran
+-- section 3: a canonical (non-vendored) checkout still prefers its own tools --
+  PASS: repo-owned tool stays repo-relative (mock seam + canonical checkout preserved)
+
+  gh358: 3 passed, 5 failed
