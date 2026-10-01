@@ -84,7 +84,10 @@ report the limitation and perform no changes. `--ide codex` is explicit; the
 existing CLI default `zcode,agy` is unchanged. `--apply`, `--set-title`, `--group`
 and `--unpin-days` with Codex are refused before any selected IDE can write.
 The Codex doctor verifies snapshot readiness only; CLI apply receipts attest
-ZCode/Agy, not successful native Codex writes.
+ZCode/Agy, not successful native Codex writes. A Codex-only native heartbeat does
+not refresh that receipt; a later default-IDE doctor may report an existing receipt
+as stale. Use `--doctor --ide codex --codex-snapshot <snapshot> --exclude-thread
+<heartbeat-id>` for Codex snapshot health.
 
 A Codex snapshot is JSON `{ "captured_at": <Unix seconds>, "state": <complete
 list_threads response>, "activity_at": { "<id>": <latest turn seconds> } }`.

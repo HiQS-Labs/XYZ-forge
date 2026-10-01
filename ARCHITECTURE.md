@@ -85,7 +85,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 
-### `3-weekly` — Weekly (14)
+### `3-weekly` — Weekly (15)
 
 _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 

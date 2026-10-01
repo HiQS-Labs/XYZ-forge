@@ -13,7 +13,7 @@ their store's native timestamp to a local datetime and call stamp_of().
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 
 # A leading U.S. mm-dd (or legacy mm/dd) stamp followed by a description.
 STAMP_RE = re.compile(r"^(\d{2}-\d{2})\s+(\S.*)$", re.DOTALL)
@@ -61,8 +61,6 @@ def utc_text_to_local_dt(text: str) -> datetime | None:
             parsed = datetime.strptime(cleaned, fmt)
         except ValueError:
             continue
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
         return parsed.astimezone()
     return None
 

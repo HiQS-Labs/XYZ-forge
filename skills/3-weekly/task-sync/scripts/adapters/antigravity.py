@@ -239,6 +239,8 @@ class AntigravityAdapter:
             base = core.clean_base(title or "", slash_stamps=True)
             new_title = f"{stamp} {base}" if (stamp and base) else title
             new_preview = self._last_action_from_transcript(cid)
+            if new_preview == "No transcript recorded" or new_preview.startswith("Error reading transcript"):
+                new_preview = preview
             if new_title != title:
                 rep["renamed"].append({"conversation_id": cid, "old": title, "new": new_title})
                 writes.append((
