@@ -172,4 +172,12 @@ Whole artifact, production writer and all four changed suites swept; no addition
 
 Relay closed (Approved), no further review turn needed. Handing the completed token back to Producer (claude-a) for the required disposable-clone full gate and exact-head evidence before publication/deployment.
 
+
+### Attestation · relay-drive — 2026-10-01T19:46:59Z
+task: RELAY-gh909-final-r2
+reviewer: codex
+status: Approved
+reviewed-head: b6f03261bc08b1328ea08eb610c9668dd5d51aad
+added-range: 14353+6011
+added-sha256: cc6410e4e8a6a76736b09efc7aa57b7788de1961bd4da731162db9aeffa99314
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
