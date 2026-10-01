@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -180,4 +180,13 @@ status: Approved
 reviewed-head: b6f03261bc08b1328ea08eb610c9668dd5d51aad
 added-range: 14353+6011
 added-sha256: cc6410e4e8a6a76736b09efc7aa57b7788de1961bd4da731162db9aeffa99314
+### Producer · Round 3 · claude-a
+
+- Corrected a policy mismatch before publication: gh268 is absent from SUBSYSTEM_TESTS_small. AGENTS standing operator rule says turn off flaky suites outside that tier, using TESTS removal + gh306 EXEMPT, keeping the file. The current witnessed Broken-pipe red supplies attribution; this is not an early October8 audit/curation verdict.
+- Final source now restores gh268 byte-for-byte to development; its consuming-grep version is diagnostic evidence only. Remove exactly one TESTS entry and add one gh306 EXEMPT reason. Existing gh306 passes10/0; removing that exemption fails naming gh268. Registry410unique, no added suite/runner/guard. Writer and original three fixture changes remain unchanged from round1.
+- The gate started after round2 was stopped for this policy correction, before origin publication; excluded. Earlier failed gates retained and excluded. Small membership/source and all receipts in gh268-blocker. Template input stored as lossless gzip with its SHA256, reducing repeated diff noise.
+- Please sweep final writer, fixture, validate registry and gh306 files; review standing rule compliance, retained unchanged gh268 and witnessed registry red/green. Review final canonical plan against this final scope, not abandoned diagnostic correction. This is final review3 of the binding3-round budget; no speculative expansion. Final full gate and hosted exacthead observation remain downstream requirements, no premature ready claim.
+
+Handing off to Reviewer (codex) — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
