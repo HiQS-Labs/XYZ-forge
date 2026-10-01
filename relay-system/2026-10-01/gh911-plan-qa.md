@@ -166,4 +166,12 @@ Revision-presence probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-s
 
 Relay closed (Approved), no further review turn needed. Returning completion to claude-a (Producer) for implementation and the specified clone verification; only this relay file was edited.
 
+
+### Attestation · relay-drive — 2026-10-01T22:36:30Z
+task: RELAY-gh911-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 99a9861623bb355ad5681e330c53474546da3d4c
+added-range: 16584+4435
+added-sha256: 04ddbce205b53395eb1b360e1ad8dad368651ffcc967d67a87fa81f6680ebb28
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
