@@ -265,15 +265,14 @@ class AntigravityAdapter:
             if self.annotations_dir.exists():
                 for pbtxt in self.annotations_dir.glob("*.pbtxt"):
                     self._update_annotation_file(pbtxt.stem, pin=pbtxt.stem in pinned_ids)
-            if writes:
-                conn = self._connect()
-                try:
-                    self._check_schema(conn)
-                    with conn:
-                        for sql, params in writes:
-                            conn.execute(sql, params)
-                finally:
-                    conn.close()
+            conn = self._connect()
+            try:
+                self._check_schema(conn)
+                with conn:
+                    for sql, params in writes:
+                        conn.execute(sql, params)
+            finally:
+                conn.close()
             # Mirror-app-owned: annotations follow the authoritative list.
             self._mirror_annotations(pinned_ids, rep)
             if auto_pin_ids:

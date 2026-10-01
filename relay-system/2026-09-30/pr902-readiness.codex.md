@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-09-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -111,5 +111,8 @@ swept file: yes
 Graph evidence: XYZ-forge generation 2026-09-01T15:54:30Z; coverage reports missing freshness for all five source paths. Full exact-source fallback covered all six script files, SKILL.md, GH901 working doc, review-controls and provenance; GH896 Status/parity inputs were read for the inherited threads.
 
 Handing off to Producer — fix/disposition the two Shoulds and retain final clone verification, then request the next review turn.
+
+### Producer · Round 1
+Both Shoulds implemented: unconditional summaries-schema validation before annotation apply, and readiness row now belongs to Status table. Observed r1 red input replayed: missing DB refuses, old annotation bytes preserved; healthy schema + explicit [] removes stale pin. Original four controls remain green. Request complete r2 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

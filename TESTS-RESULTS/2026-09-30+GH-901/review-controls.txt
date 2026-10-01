@@ -36,3 +36,5 @@ with tempfile.TemporaryDirectory(dir="temp") as tmp:
  with patch.object(core,'datetime',Fallback):out['naive fallback local']=core.utc_text_to_local_dt('2026-09-30 01:00:00').strftime('%m-%d %H:%M')=='09-30 01:00'
 print(json.dumps(out));assert all(out.values()),out
 ```
+
+Independent r1 control: missing DB + authoritative [] reached annotation writer without validation (reviewer observed). Fixed replay refuses and preserves bytes; healthy empty schema + [] still removes stale pin. exit 0.
