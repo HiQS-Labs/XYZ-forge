@@ -117,4 +117,12 @@ Whole artifact, production writer, all three changed suites and red/green probe 
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) should proceed to the planned disposable-clone full gate, exact-head evidence and verified quiescent cutover before deployment.  [Unverified — no citation]
 
+
+### Attestation · relay-drive — 2026-10-01T19:22:53Z
+task: RELAY-gh909-final
+reviewer: codex
+status: Approved
+reviewed-head: c02f4ae62debd1f34f2b416ab9ce560efdbc3d34
+added-range: 6080+6809
+added-sha256: c98c60edebbc33fabab913a24fddc3b970265188436e993ef2d7501ee352c81e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
