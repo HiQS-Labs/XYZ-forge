@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -67,5 +67,28 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The core flock direction is surgical, but the mixed-version safety claim is incomplete and the promised recon/evidence pointers are absent from the plan. Resolve these before implementation.
+swept file: yes
+
+- [Should] **Specify the sidecar pathname and a safe forward cutover, not only rollback quiescence.** Artifact lines 27–30 say “Stable sidecar regular file” and “fail closed if old .lock directory exists.” That check alone does not cover old writers arriving after the check. At `utils/telemetry/append-xyz-completion.sh:45,72,85–101`, old writers mkdir the legacy path, read `<path>/pid`, and recursively delete it after 20 empty reads or a stale PID. If the regular file uses that same path, an old waiter treats it as empty and deletes the inode; if it uses another path, a later old writer can acquire the legacy directory independently. Cheapest fix: explicitly require quiescing and retiring every old writer sharing the JSON path before forward deployment (including already running/waiting shell invocations), name the sidecar, retain fail-closed handling of pre-existing legacy directories, and limit the guarantee to cooperating upgraded writers. Do not claim live mixed-version safety from a directory-existence check.
+  Observed input: Existing old-writer branch `if [[ "$empty_streak" -ge 20 ]]; then rm -rf "$lockdir" ...` at line 90, with a regular `<XYZ_JSON>.lock` file and no readable `<XYZ_JSON>.lock/pid`; alternatively a new sidecar plus the old writer's `mkdir "$lockdir"` at line 72.
+  Affected scope: Old and upgraded writer invocations targeting the same `XYZ_JSON_PATH` during deployment or rollback; local macOS/Linux only.
+  Falsifier: In a disposable clone, hold the upgraded transaction while starting an old writer and another upgraded waiter. A valid live-mixing protocol must keep one lock domain, preserve the held inode, and prevent overlapping JSON transactions. Otherwise require and verify quiescent cutover; ordinary upgraded-only writes must still succeed. This is source-derived; no mixed-version executable replay ran in this turn.
+
+- [Should] **Add the promised bounded Recon Map and direct receipt citations.** Artifact line 21 says “Recon below and committed manual receipt,” but the complete 43-line document contains neither source locations nor the receipt path. Add entry/caller locations, the sole JSON transaction, all legacy acquisition/reclamation/release branches, timeout/error paths, fixture dependencies, and exact evidence links. Useful anchors: `utils/py/relay_drive.py:491–504`, `utils/py/marathon_drive.py:1323–1335`, `relay-automation/marathon.sh:69–79`; writer lines 27–36, 45–102, 105–142. Name `TESTS-RESULTS/2026-10-01+GH-909/red-handoff/{replay.py,writer.sh,result.json,records.json,provenance.jsonl}`. This is a document-evidence correction, not a request to broaden runtime behavior. If the sidecar path changes, account for `relay-automation/xyz-vendor.sh:236` preserving the existing runtime path.
+
+- [Pass] **Retained red evidence supports the narrow root-cause claim.** `red-handoff/result.json` reports `"writer_rcs": [0,0,0]`, `"lock_exists_while_b_paused_after_w": false`, and `"lost_record": "W"`; records contain B/A. Read-only comparison also found the instrumented writer identical to current source after removing its three scheduling barriers. Receipt consistency probe (exit 0):
+  `python3 -c 'import json,pathlib; p=pathlib.Path("TESTS-RESULTS/2026-10-01+GH-909/red-handoff"); r=json.loads((p/"result.json").read_text()); assert r==json.loads((p/"provenance.jsonl").read_text()); assert r["writer_rcs"]==[0,0,0]; assert [x["sessionId"] for x in json.loads((p/"records.json").read_text())]==r["records"]==["B","A"]; print("rcs=0,0,0; records=B,A; missing=W; receipt consistent")'`
+  Decisive output: `rcs=0,0,0; records=B,A; missing=W; receipt consistent`. This checks retained evidence, not a fresh concurrency run or commit ancestry.
+
+- [Pass] **Scope and ratings are proportionate.** Artifact lines 27, 35, 40 preserve JSON contracts, bound per-holder and total wait, require corrected replay and existing suites, and rate silent telemetry loss without claiming actual agent-work loss. Stable-inode flock around the entire existing read/replace transaction removes PID reclamation for cooperating upgraded writers; stdlib-only is sufficient within the stated filesystem envelope. Exactly three fixture adaptations are justified by the cleanup assertion in `test/xyz-completion.sh` section 5, fabricated holders in `test/gh123-lock-progress-bound.sh` sections A/B, and starvation holder in `test/gh358-lock-instrumentation.sh` control 2. No new suite is needed. The real-holder handover fixture must avoid unlocked gaps that let a waiter acquire early.
+
+- [Unverified — needs clone run] Corrected mutual exclusion, crash release, moving-token/deadline behavior, total cap, exit 75 diagnostics, old-directory refusal, and the adapted suites remain execution acceptance gates. No suites, pytest, executable fixtures, or git commands ran here. Graph tools were unavailable; evidence used bounded source reads/searches. Whole plan swept; no additional pre-existing plan defects found beyond the two findings above. Full writer source was read for context; this is plan approval, not runtime signoff.
+
+Handing off to Producer (claude-a) — address both Should findings and take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
