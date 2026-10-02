@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -167,5 +167,35 @@ Both Codex and agy answered. Include a narrow AGENTS.md:413-414 correction to re
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: Approved for bounded implementation. Reviewed the entire embedded plan, source recon, consult disposition and deferred follow-ups against the Setup review criteria. No actionable omission or pre-existing defect found in the reviewed artifact. This approves the plan only; final implementation QA, clone-run evidence, push gate and operator landing decision remain separate.
+swept file: yes
+
+- [Pass] Minimality and preservation: “Keep both suite files and all runtime modules byte-for-byte” and “Do not add tests, guards, runners, lanes, telemetry stages or runtime fixes” bound the change to selection and truthful companion text. Existing completion regression coverage remains explicitly retained. No speculative historical root-cause fix is authorized.
+- [Pass] Exact selection contract: execution step 2 names both TESTS removals, explicit gh306 exemptions, the ATE removal and Ubuntu skip removal. Source reads support the companion edits: utils/ci-route.sh:28, validate.sh:647,680,820, .github/workflows/ci.yml:493-495, and test/ci-workflow.sh:429-432. The consult paragraph additionally identifies the AGENTS coverage claim and skip usage example.
+- [Pass] Static count probe: command below exited 0; decisive output was `current=410 planned=408 targets=['gh-gen4-phase1-domain-oracles.sh', 'registry-lock-concurrency.sh']` and `small_contains_targets=False`. This measures current selection text, not execution success.
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PYPROBE'
+  import pathlib, re
+  s=pathlib.Path('validate.sh').read_text()
+  m=re.search(r'^TESTS=\(\n(.*?)^\)',s,re.M|re.S)
+  assert m and m.group(1).strip()
+  names=re.findall(r'^\s*"([^"]+)"',m.group(1),re.M)
+  targets={'registry-lock-concurrency.sh','gh-gen4-phase1-domain-oracles.sh'}
+  assert targets.issubset(names)
+  print(f'current={len(names)} planned={len([n for n in names if n not in targets])} targets={sorted(targets)}')
+  print('small_contains_targets=' + str(any(t in re.search(r'^SUBSYSTEM_TESTS_small="([^"]+)"',pathlib.Path('utils/ci-route.sh').read_text(),re.M).group(1).split() for t in targets)))
+  PYPROBE
+  ```
+- [Unverified — no citation] Falsifiable acceptance: steps 3–5 require the existing focused suites, a witnessed missing-exemption red control, saved-byte restoration, committed provenance, intact clone identity, final independent QA and “zero retry activity in telemetry and transcript, not merely exit0”. They keep task-branch evidence separate from the two remaining development runs and require stopping on failure/drift.
+- [Pass] Coverage tradeoff, reversibility and deferral: “restore the two TESTS entries ... restore the ATE member and corresponding Ubuntu skip together” gives a complete Easy rollback. “Reduced automatic coverage for unrelated changes” is explicitly accepted without claiming harmlessness. Each embedded recon section retains unknown attribution; the linked local #916/#917/#918 docs state concrete user-impact resume triggers. The 70/50/50/85 rating has a bounded rationale and no override.
+- [Unverified — needs clone run] Focused-suite green, actual gh306 red control, final runtime byte preservation, zero-retry full gate and exact-head hosted result are future acceptance work, not results obtained in this turn. No validate, test suite, pytest or executable fixture was run.
+
+Evidence scope: graph Verify metadata for the canonical XYZ project reports generation 2026-09-30T07:57:23Z and no recorded coverage issue for the seven selection/companion paths checked; that does not attest this worktree. Material selection assertions above use direct local source reads. No broad runtime audit or external issue-state verification is claimed.
+
+Done — relay closed (Approved), no further review turn needed. Token handoff to Producer / claude-a for the harness and authorized implementation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
