@@ -14,7 +14,7 @@ doc_type: bugfix
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Dispositions implemented and focused checks passed; final review text PASS but harness attestation rejected. | Operator decision on one protocol-correct retry beyond exhausted review cap; then full push gate and ready PR. |
+| Authorized corrective review attested Approved at d04b5aa4; implementation unchanged. | Full push gate, committed proof, exact-head hosted CI and ready PR. |
 
 The [canonical ordered stabilization list](https://github.com/HiQS-Labs/XYZ-forge/issues/854#issuecomment-5915099783) owns overall progress. This bounded execution document owns only the approved registry change; it does not duplicate the full stabilization plan or October 8 audit.
 
@@ -61,3 +61,6 @@ Final round3 at02713f3a produced reviewer PASS in c8a66009, but driver exited4: 
 
 ## Authorized continuation
 Operator explicitly authorized one additional final review attempt to correct the transcript-placement error. Round4 of4 is the only exception; prior rejected review is preserved, marker moved to the actual end, implementation unchanged. Resume verification/publication only if the driver attests this review successfully. No merge authority is inferred.
+
+## Corrective review completed
+The one operator-authorized extra turn completed successfully: relay-drive exit0, attested Approved by codex at reviewed d04b5aa4cadb; review commit f76b860e. The marker placement correction resolved the protocol rejection. No code findings or implementation changes. Prior failed review remains recorded. Full gate and hosted verification remain outstanding.
