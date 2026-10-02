@@ -367,4 +367,12 @@ Terminal protocol follows the current user's explicit instructions over the conf
 
 relay closed (Approved), no further turn needed. Producer/supervisor next performs the outstanding qualification.
 
+
+### Attestation · relay-drive — 2026-10-02T05:26:54Z
+task: gh854-dispositions-final
+reviewer: codex
+status: Approved
+reviewed-head: f32061aac7510426a3e60ce7d87c95adb0be925a
+added-range: 29793+4635
+added-sha256: a01b4003df29149c73b4dc7501c38058737e9989371814529debf3398f579d71
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
