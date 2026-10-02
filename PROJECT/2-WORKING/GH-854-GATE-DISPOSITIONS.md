@@ -14,7 +14,7 @@ doc_type: bugfix
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Separate deferred issues, canonical dispositions, consult and attested independent plan QA completed. | Apply selection changes, run focused verification, final QA and full push gate; prepare ready PR. |
+| Approved selection changes implemented; four focused suites and missing-exemption red control passed with intact clone identity. | Independent final QA, full push gate, hosted exact-head check and ready PR. |
 
 The [canonical ordered stabilization list](https://github.com/HiQS-Labs/XYZ-forge/issues/854#issuecomment-5915099783) owns overall progress. This bounded execution document owns only the approved registry change; it does not duplicate the full stabilization plan or October 8 audit.
 
