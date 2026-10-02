@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -165,4 +165,20 @@ Preserve core worktree/allowlist safety, token ownership, attestation-to-commit 
 
 ## Log
 
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: Approved for bounded disposition implementation. Reviewed the entire embedded plan and recon, including pre-existing material; no actionable plan defect found. The ordered execution and acceptance section supplies the substantive DoD despite the scaffold placeholder.
+swept file: yes
+
+- [Pass] Minimality and preserved runtime: “Keep both suite files and all runtime modules byte-for-byte” and “Do not add tests, guards, runners, lanes, telemetry stages or runtime fixes” bound the change to existing selection surfaces. “#909 stays closed ... its existing regression coverage stays” preserves completion protection.
+- [Pass] Exact selection contract: step 2 names both TESTS removals, both gh306 exemptions, the ATE removal, Ubuntu skip removal and obsolete assertions/comments. Read-only probe command: "python3 -", parsing validate.sh's TESTS array with "re.findall(r'^\s*\"([^\"]+)\"', b, re.M)" and parsing SUBSYSTEM_TESTS_small/ate in utils/ci-route.sh; exit 0. Decisive output: "registry entries: 410 unique: 410"; both target names present; "after planned removals: 408"; "small targets: []"; "ate targets: ['gh-gen4-phase1-domain-oracles.sh']". Source anchors: validate.sh:647,680,820; utils/ci-route.sh:28,38; .github/workflows/ci.yml:494; test/ci-workflow.sh:429-432. The companion workflow edit prevents a stale skip from failing closed.
+- [Pass] Falsifiable acceptance and separated grading: step 3 requires “witness gh306 red by omitting exemptions, then restore saved bytes”; step 4 requires independent final QA, exact final-state evidence, intact identity and “zero retry activity ... not merely exit0.” Step 5 keeps task-branch evidence separate from the two clean development runs and retains the operator landing decision.
+- [Pass] Deferral, reversibility and ratings: “restore the two TESTS entries, remove their EXEMPT entries, restore the ATE member and corresponding Ubuntu skip together” supplies the rollback. “Deferral accepts reduced automatic coverage ... not proof of harmlessness or root-cause resolution” states the bet. Linked #916/#917/#918 intake docs contain explicit “Resume only when” triggers. “70/50/50/85 ... No override” rates this bounded implementation without claiming umbrella closure.
+- [Unverified — needs clone run] Focused suites, red control, full push gate, hosted exact-head result and post-landing runs were not executed in this reviewer turn. They remain required by steps 3–5; this approval attests plan readiness only. Graph project is the primary checkout, not this worktree; relevant selection paths had no recorded indexing gap, but local source was used for the selection claims. No exhaustive runtime audit is claimed.
+
+Relay closed (Approved), no further review turn needed; Producer proceeds with bounded implementation and outstanding verification.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-10-02T05:15:48Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
