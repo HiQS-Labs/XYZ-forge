@@ -581,7 +581,6 @@ TESTS=(
   "gh123-lock-progress-bound.sh" # GH-123 (XYZ_LOCK_WAIT_S bounds one holder, not the queue; progress re-arms)
   "gh14-atomic-append.sh"        # GH-14 (appendEvent publishes via a .tmp name + atomic rename; concurrent readers never see a torn .jsonl)
   "gh23-path-overlap-enforcement.sh" # GH-23 (enforce path overlap rejection on direct tick claim and tick scope under withClaimLock; --force bypass)
-  "gh4-ungated-clone-warning.sh" # GH-4 (validate.sh warns non-fatally when the push gate is not installed; silent when gated)
   "xyz-harness-hooks.sh"
   "preflight-docs.sh"
   "marathon-plan.sh"

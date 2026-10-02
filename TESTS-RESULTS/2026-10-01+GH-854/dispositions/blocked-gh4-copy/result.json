@@ -1,0 +1,10 @@
+{
+  "start_utc": "2026-10-02T05:41:45.272583+00:00",
+  "end_utc": "2026-10-02T05:51:32.989608+00:00",
+  "push_rc": -15,
+  "tested_sha": "dc0d533b8489e555ee33c8795c58e0ec98001caf",
+  "identity_intact": true,
+  "width": "pre-push default balanced capped4",
+  "relay_skip": "default policy1",
+  "clone": "/private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-publish3-oct1"
+}

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: codex
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -429,3 +429,6 @@ reviewed-head: e10d2d97d84b20fedd8f25596c9cee56480d1ebb
 added-range: 37562+6477
 added-sha256: 60d2d9aa4c6b7e19f11110c68528996856911db091c2516d3c3a6389615e8bd1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+## Producer round 3 — final permitted review
+Standing AGENTS/#853 non-Small disposition extends retirement to gh4-ungated-clone-warning.sh after a witnessed pooled fixture-copy failure (0 product assertions). Retained focused existing suite6/0; historical cp errno unknown, no runtime defect claimed. #920 records deferral and precise reopening triggers. Candidate registry407 vs base410, Small unchanged. Changed source since your round2: one TESTS removal and one EXEMPT addition only. GH914 isolated correction and all prior approved dispositions remain. Evidence in dispositions/blocked-gh4-copy/; gh306 red control9/1 missing exemption and restored10/0. The prior gh54422/7 was our XYZ_VALIDATE_MAX_JOBS export overriding the suite's own width probes; removing that override gives29/0 and normal automatic4wide. No source change for that. Review entire relevant current files plus this delta; do not start unrelated campaigns. Full push remains outstanding. **Do not call tick release or done; shim owns terminal closure. No git commands or suite execution in reviewer worktree. Edit only this relay. Set STATUS Approved or Escalated with grounded findings.**
