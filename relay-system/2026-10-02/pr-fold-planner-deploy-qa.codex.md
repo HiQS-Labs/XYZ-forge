@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -66,5 +66,29 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+
+Basis: the narrow PR #890 deployment correction follows the existing Skills Army HQ / Git Pulse Sync ownership contract, removes both new installers, and preserves the legacy installer matrix and shared planner payload. No concrete blocker remains for this correction. This approves source/package compatibility, not a live deployment or the consolidated branch's runtime qualification.
+
+swept file: yes
+
+Scope: complete reads of both planner SKILL.md files, skills/README.md, the GH-678 suite, and planner_core.py; targeted reads of the existing intake/sync implementation and its deployment contract; both earlier fold QA receipts. Whole retained files changed by this correction were reviewed, including pre-existing text. No additional deployment blocker was established in them. The unchanged engine's planning algorithms are not being certified by this deployment review. Graph tools were unavailable; direct source and SHA-1-validated commit/tree/blob reads supplied evidence without invoking Git. Only this relay file and scratch probes were written; no suites, executable fixtures, application writers, commits or deployment ran.
+
+- **[Pass] Exactly the requested removal and documentation correction.** Candidate `bebdde273e532975b19f10c849388524ad89feb7` names `f72e183488268b29b76e90104f2cfb13a7742db5` as its parent. Object comparison reports exactly four changed paths: deletion of `skills/2-daily/daily-planner/install.sh` and `skills/3-weekly/weekly-planner/install.sh`, removal of the install.sh layout entry from `skills/3-weekly/weekly-planner/SKILL.md:47`, and replacement of the direct-installer guidance at `skills/README.md:30`. Both complete planner instructions contain zero `install.sh` references. Probe: `PYTHONDONTWRITEBYTECODE=1 python3 .relay-scratch/ownership_probe.py`, exit **0**, decisive output `INSTALLERS_REMOVED ['skills/2-daily/daily-planner/install.sh', 'skills/3-weekly/weekly-planner/install.sh']`, `PLANNER_STALE_INSTALLER_REFERENCES 0`, `WORKTREE_REVIEWED_PATHS_MATCH True`, `ALL_STATIC_CHECKS_PASS`. Negative control: `PYTHONDONTWRITEBYTECODE=1 python3 -` loaded the same object reader and applied `assert not present` to these exact two paths in the parent tree; exit **1**, output `NEGATIVE_CONTROL parent_planner_installers_present` followed by both paths and `AssertionError: parent violates planner-installer absence predicate`. Initial loose-object-only probe attempts could not read packed trees; the completed probe handles packs and validates reconstructed object hashes. No fix requested.
+
+- **[Pass] Deployment ownership is consistent with the existing manager.** `skills/README.md:30` says app links are owned by Skills Army HQ in the Git Pulse Sync collection and directs source-receipt refresh plus sync preview/apply. This matches `skills/3-weekly/skills-army-hq/SKILL.md:42` (“Canonical owning repo → Git Pulse Sync `Deployed Skills/` → app directory symlinks”), its add/update procedure at `:49`, and its prohibition on running copied installers at `:136`. This change introduces no installer, test, gate, dependency or parallel deployment mechanism. No fix requested.
+
+- **[Pass] GH-678 still selects all 24 remaining legacy installers.** `test/gh678-installer-live-links.sh:12` loops over `skills/*/*/install.sh`, with foreign-live-link refusal assertions at `:24`, dangling-link replacement at `:33`, legacy-alias cases at `:42`, and a nonempty-discovery assertion at `:64`. The object comparison above reports `INSTALLER_COUNTS 26 24` and `LEGACY_24_SUITE_ENGINE_UNCHANGED True`; the current filesystem contains 24 matching installers, and each retained installer and the suite has the same blob as the parent. The comment at `:17` still says “22 installers”; that pre-existing count is not the discovery mechanism. This is coverage-selection/source evidence, not a new suite run. The separate 24-installer migration remains separate; no migration or safety-guard weakening is hidden in this correction. No fix requested.
+
+- **[Pass] Managed intake retains the payload needed by both skills.** The read-only `skill_info` and `snapshot` functions (`skills/3-weekly/skills-army-hq/scripts/intake.py:98`, `:147`) accept both actual folders. The probe above prints `MANAGED_PAYLOAD daily-planner ['', 'SKILL.md']` and `MANAGED_PAYLOAD weekly-planner ['', 'SKILL.md', 'scripts', 'scripts/planner_core.py']`. Whole-folder staging uses `copytree` at `:572`; sync constructs each app link to `root / name` (`scripts/sync.py:98`, `:105`, `:126`). Thus deploying both folders preserves the weekly-owned engine used by daily (`skills/2-daily/daily-planner/SKILL.md:14`). The engine accepts an explicit target `--repo-root` independently of its own location (`skills/3-weekly/weekly-planner/scripts/planner_core.py:772`). No custom installer is needed. No fix requested.
+
+- **[Nit] Existing invocation examples are environment-specific.** Daily's example at `skills/2-daily/daily-planner/SKILL.md:30` defaults to Claude's skills directory; weekly's examples at `skills/3-weekly/weekly-planner/SKILL.md:74` and `:101` use repository-relative paths. A device deploying only to another app must resolve the weekly engine from its managed collection and pass the intended repository root. Optional follow-up: document that physical-folder invocation and the requirement to intake both skills; do not restore a planner installer to solve it. This limitation predates the removal and does not prevent managed payload intake/sync. App discovery and runtime prerequisites remain separate checks under `skills/3-weekly/skills-army-hq/SKILL.md:65` and `:172`.
+
+- **[Unverified — needs clone run] Runtime qualification.** Setup reports a passing GH-678 run after removal, but this turn did not independently inspect a corresponding committed run receipt or execute the suite. The harness must retain the disposable-full-clone qualification evidence; this source approval does not attest live app discovery, authenticated GitHub ingestion, or planner output correctness.
+
+Relay closed (Approved), no further review turn needed. Producer / claude-a resumes the separate qualification/publication work; the harness owns the one-file commit. Reviewer closes the token with `done` as instructed for approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
