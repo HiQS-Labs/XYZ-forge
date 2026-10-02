@@ -41,7 +41,7 @@ and usage; this index exists so a task can be routed to the right skill without 
 Re-tiering a skill is a `git mv` plus its row here; nothing in the harness depends on which tier a
 skill sits in, only on the two-level depth (see `skills/README.md`).
 
-### `1-hourly` — Every hour (14)
+### `1-hourly` — Every hour (15)
 
 _the in-task loop: intake, recon, planning discipline, review relays, the ledger._
 
@@ -56,6 +56,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [relay](skills/1-hourly/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |
 | [relay-automation](skills/1-hourly/relay-automation/SKILL.md) | Tick-backed automation library behind the `/relay` review loop. |
 | [relay-xyz](skills/1-hourly/relay-xyz/SKILL.md) | Drive an automated relay review loop with the shipped harness. |
+| [sanity-check](skills/1-hourly/sanity-check/SKILL.md) | Assess whether a claimed problem or blocker is real, consequential, and worth fixing now. |
 | [standup](skills/1-hourly/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
 | [start-task](skills/1-hourly/start-task/SKILL.md) | Carry one or more issues through governed intake, grounded planning, relay QA, execution, and ready PRs. |
 | [swe](skills/1-hourly/swe/SKILL.md) | Software-engineering governance lens for build/spec/PRD docs. |

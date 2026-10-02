@@ -125,6 +125,8 @@ remote bridge needs explicit permission each time — running the tests is not p
 is working on the feature that provides it. `SOP.md` §3b has the incident and the teardown rule that
 goes with it.
 
+**Establish blocker necessity before investing in repair.** An in-flight failing test or unexpected error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
+
 ### 7. Record only consequential bets
 
 If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per

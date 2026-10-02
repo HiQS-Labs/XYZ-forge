@@ -21,6 +21,8 @@ Then begin work.
 
 ## 1. Reproduce reliably
 
+> **Pre-flight check:** Before sinking significant effort into reproducing an incidental failure or flaky check, run [sanity-check](../sanity-check/SKILL.md) to verify whether the failure actually blocks the user's goal or can be deferred. A real failure is not automatically an urgent blocker. In a flat installed collection, resolve `sanity-check` by name.
+
 Establish ground truth before anything else — a runnable repro for a failure, a direct look at the real artifact for an attribution question.
 
 **Reproduce = observe the primitive ground truth, not your impression of it.** For a crash that's a failing test; for an *attribution* question ("what posts this?", "where does X come from?") it's inspecting the actual artifact — the real message, record, or raw bytes — **before** theorising about its origin. A screenshot, a rendered view, or a remembered detail is an **observation to verify, not an axiom to build on**: name it as assumption-zero and check it first. The cheapest disproof is usually looking straight at the thing — one query against the real object beats a sweep of the code that *might* have produced it. Beware visual grouping and other rendering artifacts: what looks like "one consolidated thing" may be many separate ones (or vice versa) — confirm against the raw object before any hypothesis inherits the shape.

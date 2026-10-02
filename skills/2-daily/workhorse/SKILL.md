@@ -71,7 +71,7 @@ When `/workhorse` is invoked on a large or ambiguous problem, intake typically a
 
 ## Rung 1: Ground Truth & Diagnostics (`/debug-mantra`)
 
-Establish primitive ground truth before theorizing or proposing any changes. Load and follow `/debug-mantra` for detailed diagnostic mechanics.
+Establish primitive ground truth before theorizing or proposing any changes. Load and follow `/debug-mantra` for detailed diagnostic mechanics. Before dedicating diagnostic effort to an in-flight failure or unexpected error, run [`sanity-check`](../../1-hourly/sanity-check/SKILL.md) to confirm whether the obstacle truly blocks the milestone or can be deferred/simplified.
 
 1. **First is reproducibility / raw artifact inspection:**
    - For a failure/bug: capture a fast, deterministic runnable repro (failing test, curl, CLI run).

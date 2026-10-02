@@ -154,6 +154,9 @@ Recommend a sibling only when observed evidence supports its scope:
   multiple areas, repeatedly displaces planned delivery, or warrants a broader
   review of development health and roadmap alignment. Pass the relevant window,
   affected work, and existing reports. One red check alone is insufficient.
+- **[unstuck](../unstuck/SKILL.md):** when an in-flight session is stalled, trapped in
+  passive waiting, or debating prerequisites rather than changing goal state.
+  Pass the concrete blocker assessment to unfreeze execution and advance the milestone.
 
 Recommend by default, stating the evidence and decision the sibling would inform.
 Run a sibling when the operator requests it or existing authorization clearly
@@ -211,6 +214,7 @@ urgency multiplier. A rank is scheduling information, not permission to ignore
 immediate harm. Without GitHub access, preserve an issue-ready Markdown draft
 and report it as **not filed**. Keep credentials and sensitive incident details
 out of public issues; use the project's approved private reporting route.
+Upon selecting a `Defer` disposition, do not drift into ad-hoc polish: re-anchor immediately to the active task's acceptance criteria or today's prioritized queue via [`start-task`](../start-task/SKILL.md) or [`workhorse`](../../2-daily/workhorse/SKILL.md).
 
 ## Report
 
