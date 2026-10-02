@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -71,5 +71,21 @@ Review PROJECT/2-WORKING/GH-922-CODEX-SCOPE.md in full against skills/3-weekly/t
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approved for implementation. No concrete blockers in the bounded candidate-selection plan; runtime acceptance and PR readiness remain later gates.
+swept file: yes
+
+Read the entire GH-922 plan, `skills/3-weekly/task-sync/scripts/adapters/codex.py`, `scripts/task_sync.py`, `scripts/core.py`, and task-sync `SKILL.md`. No additional pre-existing defect found in these files against the stated native planner contract. Graph Verify used primary project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-09-30T07:57:23Z`; task-sync lookup returned no symbols and exact-path coverage reported missing freshness. Used full branch-source reads instead; no graph completeness claim.
+
+- [Pass] Root-cause placement: `skills/3-weekly/task-sync/scripts/adapters/codex.py:90` selects pinned/chats rows without checking project ownership; activity rejection follows at line 96. Native policy explicitly says “Preserve project-grouped chats” (`skills/3-weekly/task-sync/SKILL.md:106`). Adding `row.get("projectId") is not None` to this skip predicate excludes pinned project rows before activity lookup and leaves null/missing IDs on the existing eligible path. Retain this placement and the activity guard. Static probe command: `PYTHONDONTWRITEBYTECODE=1 python3 -` using `ast.parse(Path("skills/3-weekly/task-sync/scripts/adapters/codex.py").read_text())`, selecting sweep If nodes at lines 90/96 and counting projectId string constants. Exit 0; decisive output: `projectId references: 0`; line 96: `not self._seconds(at) or at > captured + 60`. This measures current source, not fixed runtime behavior.
+- [Pass] Blast radius and rollback are bounded: plan lines 31 and 48 restrict work to the existing predicate, preserve manual pins, add no writer/schema/helper, and specify commit revert. Snapshot shape/inventory checks remain before selection (`skills/3-weekly/task-sync/scripts/adapters/codex.py:19`); CLI refuses Codex writes before dispatch (`skills/3-weekly/task-sync/scripts/task_sync.py:210`). Keep these boundaries.
+- [Pass] Planned proof is falsifiable: plan lines 41-43 require the base mixed-inventory assertion to fail, fixed planner to succeed, missing eligible activity to retain CLI exit 3, and checks for exclusions, actual-old turns, invalid snapshots, full descriptions, manual pins and idempotence. These correspond to adapter lines 95-110, CLI lines 129-132/229, and `skills/3-weekly/task-sync/scripts/core.py:72`. Execute and commit the named manual receipts/provenance before final QA; do not count this plan review as their execution.
+- [Pass] Rating and dependency treatment are proportionate to the stated incident: plan lines 22/32/36 distinguish one incident repeated across ticks from independent incidents, leave prior rate unknown, justify 80/80/50/95, and require #900 then #902 before landing. Keep the dependency disclosure and retained-clone state in the eventual PR.
+- [Unverified — needs clone run] The private 06:38/06:53 snapshot replay (plan line 29), incident frequency, remote prerequisite state and runtime red/green results were not independently measured here. The manual matrix is a future acceptance requirement, not an existing passing receipt. No validate.sh, test/*.sh, pytest, executable fixtures, Git commands, deployment or source edits were performed.
+
+Relay closed (Approved), no further review turn needed. Handing the completed token to Producer (`codex-producer`) to implement the approved plan and obtain final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
