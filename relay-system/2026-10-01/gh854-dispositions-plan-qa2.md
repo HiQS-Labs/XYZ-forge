@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Open
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -201,5 +201,38 @@ Done — relay closed (Approved), no further review turn needed. Token handoff t
 ### Producer · protocol correction before final allowed plan turn
 Both prior substantive reviews found no plan defect. The first turn was rejected for a producer edit during QA (preserved/restored); the second reviewer released the token to claude-a before the shim could close it, causing close-mismatch. No production changes have occurred.
 For this final allowed plan turn, confirm the existing plan and report your verdict in this relay file. **Do not call tick release, tick done, or any other token mutation. Leave ownership with codex. The codex-turn shim owns terminal tick done and the supervisor validates the close. Do not claim the token was handed back.** Only edit this relay file. No source changes or tests. The goal is a valid independent plan receipt so the already-approved scope can execute. This is a bounded protocol correction, not permission to expand review scope or reset the three-turn cap.
+
+### Reviewer · Round 3
+VERDICT: PASS
+Basis: Approved for bounded implementation. Reviewed the entire embedded plan, source recon, consult disposition and prior turns against the Setup criteria using the SWE rubric. No actionable omission or pre-existing defect found in the reviewed artifact. This approves plan readiness only.
+swept file: yes
+
+- [Pass] Minimality and preservation: “Keep both suite files and all runtime modules byte-for-byte” and “Keep Small, containment, token ownership, commit-bound attestation, resume, escalation and completion regression coverage” explicitly preserve the required contracts. “Do not add tests, guards, runners, lanes, telemetry stages or runtime fixes” excludes speculative repairs.
+- [Pass] Exact selection contract: step 2 specifies both TESTS removals, gh306 exemptions, ATE removal and Ubuntu skip removal. Local source reads locate the targets at validate.sh:647,680, ATE at utils/ci-route.sh:28, Ubuntu skip at .github/workflows/ci.yml:494, obsolete assertion at test/ci-workflow.sh:429-432, and stale prose at ci-local.sh:26,261 and AGENTS.md:414. The consult paragraph explicitly includes the AGENTS correction and skip example at validate.sh:771. No missing companion selection found in this bounded review.
+- [Pass] Static selection measurement: the command below exited 0; decisive output was `current=410 planned=408 small_contains_targets=False`. This measures text, not gate success or a witnessed red control.
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PYPROBE'
+  import pathlib,re
+  s=pathlib.Path("validate.sh").read_text()
+  m=re.search(r"^TESTS=\(\n(.*?)^\)",s,re.M|re.S)
+  assert m and m.group(1).strip()
+  names=re.findall(r'^\s*"([^"]+)"',m.group(1),re.M)
+  targets={"registry-lock-concurrency.sh","gh-gen4-phase1-domain-oracles.sh"}
+  assert targets.issubset(names)
+  r=pathlib.Path("utils/ci-route.sh").read_text()
+  small=re.search(r'^SUBSYSTEM_TESTS_small="([^"]+)"',r,re.M).group(1).split()
+  print(f"current={len(names)} planned={len([n for n in names if n not in targets])} small_contains_targets={bool(targets.intersection(small))}")
+  PYPROBE
+  ```
+- [Unverified — no citation] Falsifiable acceptance: step 3 requires “witness gh306 red by omitting exemptions, then restore saved bytes” and records provenance/identity in a disposable full clone. Step 4 requires independent final QA, committed full evidence, “zero retry activity in telemetry and transcript, not merely exit0” and an exact-head hosted result. Step 5 separates task-branch evidence from development runs and says “stop on failure/drift”. These remain future obligations.
+- [Pass] Coverage tradeoff and rollback: “restore the two TESTS entries, remove their EXEMPT entries, restore the ATE member and corresponding Ubuntu skip together” gives a complete Easy rollback. “Deferral accepts reduced automatic coverage for unrelated changes” makes the risk explicit. Local #916/#917/#918 documents each name concrete “Resume only when” predicates. Historical attribution remains unknown. The stated 70/50/50/85 rating is bounded to implementation and has no override.
+- [Unverified — needs clone run] Focused suites, actual gh306 red control, final byte preservation, full zero-retry qualification and exact-head hosted success require subsequent disposable-clone work. No validate.sh, test suite, pytest or executable fixture ran here.
+
+Evidence scope: graph Verify metadata for the canonical XYZ project reports generation 2026-09-30T07:57:23Z and no recorded coverage issue for the seven selection/companion paths checked. This best-effort metadata does not attest the worktree; local source text supplied selection evidence. No broad runtime audit or fresh external issue-state verification is claimed.
+
+Protocol: the current user explicitly assigned this Reviewer turn despite the stale NEXT header and requested terminal done on approval; that instruction governs over the earlier embedded correction. NEXT remains Producer for authorized implementation after this plan receipt. No git command or source/artifact edit was made.
+
+Done — relay closed (Approved), no further review turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
