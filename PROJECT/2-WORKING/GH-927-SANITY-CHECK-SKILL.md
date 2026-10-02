@@ -31,3 +31,5 @@ PRS rationale (2026-10-02): rated 65/40/50/80 — current operator priority; inv
 Claude Code `claude-fable-5-1`, high effort, reviewed the full three skill files. Round 1 identified a priority conflict with whack-a-mole; the pointer now explicitly preserves a current sanity-check Defer/Dismiss assessment over recurrence-only top-tier assignment. Three clarifications were also applied. Round 2 Approved the content at `33cba144a005b293bfe1d616efb76416ae750020` (relay exit 0).
 
 Receipt: `relay-system/2026-10-02/gh927-sanity-check.fable.md`; structured provenance under `TESTS-RESULTS/2026-10-02+GH-927/`. Scenario walkthroughs are static QA, not runtime behavioral tests. New skill and whack-a-mole pass metadata validation; Radar's unchanged 1336-character description exceeds the validator's 1024-character limit.
+
+Harness verification and limitations: `TESTS-RESULTS/2026-10-02+GH-927/SUMMARY.md`. The initial Small-tier run is retained as failed; its three environment-sensitive failures passed targeted clean-environment reruns.
