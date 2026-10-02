@@ -2,7 +2,7 @@
 gh_issue: 911
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/911
 title: "GH-911: skills(workhorse): keep direct /workhorse runs going — end-of-run report, durable run checklist, Stop hook, proportional consult"
-status: Active (2-WORKING — plan approved by Codex relay r2 2026-10-01, execution started)
+status: Active (2-WORKING — plan and final QA approved by Codex relay 2026-10-01, PR open)
 created: 2026-10-01
 updated: 2026-10-01
 owner: noelsaw1
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan steps 1–8 implemented (`ace8d80c`). Disposable-clone verification: gh609 33/0, hook matrix 15/15 with red control (`TESTS-RESULTS/2026-10-01+GH-911/`) | Final Codex relay QA, then `ci-local.sh` once on the approved commit, then PR |
+| Plan steps 1–8 implemented (`ace8d80c`). Disposable-clone verification: gh609 33/0, hook matrix 15/15 with red control (`TESTS-RESULTS/2026-10-01+GH-911/`). Final Codex relay QA Approved (reviewed `75b3311b`). Branch synced with `development` (merge) and pre-PR polish applied | Qualifying gate on the PR head (pre-push `ci-local.sh` + hosted CI), then review and merge. First live Claude Code run confirms the hook fires |
 
 A directly invoked `/workhorse` (no parent orchestrator) stops after 2–3 turns while queue items remain.
 

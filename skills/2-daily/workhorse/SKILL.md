@@ -305,8 +305,9 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
   dependencies, material security/performance, Costly/One-way door):
   - Run Rungs 1, 2, 3, 5 and 6 in full.
   - Skip Rung 4 in one line: `[workhorse: focused Easy local-branch change; consult not required]`.
-  - Destructive, externally published, Costly, or One-way-door actions never fast-track, however
-    simple the command or small the diff.
+
+- **Neither shortcut applies** to destructive, externally published, Costly, or One-way-door actions,
+  however simple the command or small the diff.
 
 - **Handoff to Specialized Skills:**
   - **Stalled Loop / No Goal Movement:** If successive passes only polish supporting machinery,
