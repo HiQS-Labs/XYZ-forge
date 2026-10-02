@@ -138,4 +138,12 @@ PROBE PASS
 
 Relay closed (Approved), no further turn needed. Producer/harness proceeds with the separate-clone Small gate; token completed with done per operator instruction.
 
+
+### Attestation · relay-drive — 2026-10-02T07:11:57Z
+task: RELAY-gh922-final
+reviewer: codex
+status: Approved
+reviewed-head: 765fa5e169f2a107cad9ad3461c2084ecf253138
+added-range: 6275+5962
+added-sha256: f4b505a2e14fb3ca95a6865df09deb6af1032c87556b6367417d0ae007e0e04d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
