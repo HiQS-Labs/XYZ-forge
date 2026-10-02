@@ -14,7 +14,7 @@ doc_type: bugfix
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Authorized corrective review attested Approved at d04b5aa4; implementation unchanged. | Full push gate, committed proof, exact-head hosted CI and ready PR. |
+| Corrective review accepted; full push caught missed Ballast dependency. Companion correction verified with existing controls. | Targeted QA authority for this new ten-line companion change; then mandatory push gate and ready PR. |
 
 The [canonical ordered stabilization list](https://github.com/HiQS-Labs/XYZ-forge/issues/854#issuecomment-5915099783) owns overall progress. This bounded execution document owns only the approved registry change; it does not duplicate the full stabilization plan or October 8 audit.
 
@@ -64,3 +64,6 @@ Operator explicitly authorized one additional final review attempt to correct th
 
 ## Corrective review completed
 The one operator-authorized extra turn completed successfully: relay-drive exit0, attested Approved by codex at reviewed d04b5aa4cadb; review commit f76b860e. The marker placement correction resolved the protocol rejection. No code findings or implementation changes. Prior failed review remains recorded. Full gate and hosted verification remain outstanding.
+
+## Ballast companion dependency — active GH854 scope
+The fourth full push at741ed95e stopped after250s on ballast-release:4pass1fail because closed GH4 requires registration of the deliberately retired suite. Identity intact; no retries, remote publication or count. This is a producer/recon omission caused by our selection change, not another unexplained runtime failure. Ballast is Small and remains registered. Correct its existing manifest audit in place: explicit gh306 exemption with retained suite and negative control reports informational/remains incomplete; missing file/control or undeclared unregistration still fails. No release-completion credit; --release-gate still requires zero remaining and fresh executed stranger-path checks. Ten-line companion plus truthful comment; no new suite, runner or runtime behavior. Existing ballast4/0+1info and mutation8/0; manual missing exemption/file/control each red and restored green. Evidence dispositions/ballast-companion/. The one authorized extra QA turn succeeded before this new change; it cannot attest this delta. Further targeted final QA requires explicit budget authority. Do not rerun a full gate merely hoping or silently self-review this new change.
