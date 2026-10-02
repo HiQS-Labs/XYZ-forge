@@ -235,4 +235,12 @@ Protocol: the current user explicitly assigned this Reviewer turn despite the st
 
 Done — relay closed (Approved), no further review turn needed.
 
+
+### Attestation · relay-drive — 2026-10-02T05:21:32Z
+task: gh854-dispositions-plan2
+reviewer: codex
+status: Approved
+reviewed-head: ffe982b5739a6cadd8897006eab19f9579dba8fa
+added-range: 25285+4224
+added-sha256: 07b1173de864e25fa4814117abcae4acf763186632701edf22d036e5bcad6d5c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
