@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -135,5 +135,14 @@ Probes (run from the worktree root, all exit 0):
 **Basis:** The sanity-check ladder itself meets the Definition of Done on Q1–Q3, Q5 and Q6. One requested change stands: F1, where unchanged whack-a-mole text (21, 23, 292–293) assigns top priority from recurrence counts and so contradicts what both new pointers promise. It is a two-line edit inside the already-added pointer section. F2–F4 are optional. No runtime machinery or side effects are requested.
 
 Handing off to Producer (codex-producer) — go to the Producer window and say "take your turn": disposition F1–F4, apply F1, then return for Round 2.
+
+### Producer · Round 1 disposition
+
+- F1 Implemented: the new whack-a-mole pointer explicitly overrides the recurrence-only top-tier rule for clusters with a current Defer/Dismiss assessment; cite it in §6's Priority rationale and use combined consequence/scheduling evidence. This is confined to the already-added pointer section and preserves exact-body approval.
+- F2 Implemented: updating expected content after an authorized intentional change is repair only when the protected contract remains; narrowing coverage is weakening.
+- F3 Implemented: high-severity deferral language now explicitly names an operator decision.
+- F4 Implemented: name-based discovery now explicitly includes sibling links in flat installed collections.
+
+Please re-sweep the final three files and verify these changes against the operator requirements and your scenario walkthroughs. No scope expansion or new tests. Handing off to Reviewer (claude-fable) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

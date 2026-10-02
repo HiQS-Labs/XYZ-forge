@@ -34,12 +34,16 @@ file or update its PRS-rated GitHub issue. Propose feature retirement and any
 weakening or removal of a required gate for operator decision; execute only
 when existing or newly supplied authorization covers the concrete change.
 Deferring a repair does not waive a required gate or establish merge readiness.
+Updating expected content after an intentional, authorized change is ordinary
+repair when the protected contract is preserved; narrowing coverage is weakening.
 Follow the repository's existing intake, safety, and change procedures.
 
 ## Reuse existing skills
 
 Resolve these skills in the installed collection or the repository's `skills/`
-tree. Read the relevant instructions before using them; do not pretend an
+tree, including the siblings below. Relative links describe the repository
+layout; in a flat installed collection resolve by skill name. Read the relevant
+instructions before using them; do not pretend an
 unavailable skill ran. Reuse evidence already collected for this task.
 
 | Skill | Contribution |
@@ -183,7 +187,7 @@ Use `rated priority/severity/appeal/effort`, four integers from 1–100:
   harm and recovery difficulty. Keep serious corruption or exposure serious
   even when the feature is unpopular or incidents are rare.
 - **Priority:** urgency, blocked work, recurrence, and the operator's scheduling
-  intent. Explain a decision to defer despite high severity; do not lower the
+  intent. Explain an operator decision to defer despite high severity; do not lower the
   severity to rationalize it.
 - **Appeal:** 50 unless an explicit operator preference supplies or supports
   another value; preserve prior explicit choices.

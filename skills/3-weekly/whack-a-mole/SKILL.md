@@ -170,8 +170,12 @@ goal. Preserve the repository's evidence-based severity/priority rules.
 Recommend only; this pointer does not automatically invoke a sibling, authorize
 its writes, or change this skill's exact-body approval requirement. Reuse an
 existing sanity-check verdict unless new evidence contradicts it; never bounce
-between the two skills on unchanged evidence. Credible immediate harm still
-requires prompt attention within the operator's authority.
+between the two skills on unchanged evidence. For a cluster with a current
+sanity-check disposition, cite that assessment in §6's Priority `because` line.
+A `Defer` or `Dismiss` disposition overrides the recurrence-only top-tier rule
+below: rate at the highest value the combined consequence and scheduling evidence
+supports, without treating churn counts alone as urgency. Credible immediate
+harm still requires prompt attention within the operator's authority.
 
 ## 5. Understand the top cluster
 
