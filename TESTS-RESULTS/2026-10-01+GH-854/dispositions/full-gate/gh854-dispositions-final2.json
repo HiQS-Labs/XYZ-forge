@@ -1,0 +1,19 @@
+{
+  "added_len": 6477,
+  "added_sha256": "60d2d9aa4c6b7e19f11110c68528996856911db091c2516d3c3a6389615e8bd1",
+  "added_start": 37562,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-02T05:35:33Z",
+  "driver_pid": 10617,
+  "isolated": true,
+  "relay_file": "/private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-oct1/relay-system/2026-10-01/gh854-dispositions-final-qa.md",
+  "relay_file_rel": "relay-system/2026-10-01/gh854-dispositions-final-qa.md",
+  "reviewed_head": "e10d2d97d84b20fedd8f25596c9cee56480d1ebb",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-oct1",
+  "task": "gh854-dispositions-final2",
+  "trailer_sha256": "d987cf38207632546d14891d2a13ca2f53e4790a28dfc52ba65cebbe2c4b9982",
+  "transcript_repo": "/private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-oct1"
+}

@@ -14,7 +14,7 @@ doc_type: bugfix
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Authorized targeted Ballast review attested Approved at1a05d3dc; current development integrated. | Mandatory full push gate, committed proof, hosted CI and ready PR. |
+| Full push gate at0b4c82e6 passed410/410, zero retries, clean envelope and identity; branch published. | Publish proof, open PR and verify exact-head hosted CI; merge requires operator authority. |
 
 The [canonical ordered stabilization list](https://github.com/HiQS-Labs/XYZ-forge/issues/854#issuecomment-5915099783) owns overall progress. This bounded execution document owns only the approved registry change; it does not duplicate the full stabilization plan or October 8 audit.
 
@@ -70,3 +70,6 @@ The fourth full push at741ed95e stopped after250s on ballast-release:4pass1fail 
 
 ## Ballast targeted review accepted
 Operator authorized the targeted companion review and publication. Round5 completed with driver exit0 and attested Approved at1a05d3dcaa33. Integrated development75b75181 through merge6e08f4d5; official ledger resolution preserved both receipt histories and checked clean. Archive-test conflict uses development bytes (no archive-test PR diff). Runtime/Small membership unchanged. Full push gate on final integrated branch follows; no merge authorization inferred.
+
+## Completed full push gate
+2026-10-02: source0b4c82e668b64851d63a2c18bbb55480cf9110b9 passed mandatory normal4-wide macOS push gate in separate full clone gate-dispositions-publish5-oct2 under caffeinate. Gate862s (whole push866.47s),410/410,407registered,zero retry events,clean envelope,intact identity. Branch published through hook with no bypass. Full proof in dispositions/full-gate/ binds raw logs/telemetry/identity and accepted review attestations. Live relay intentionally default-skipped per836D2. This task-branch gate earns no development-run credit; local1/3 remains. Exact-head hosted CI follows PR creation.
