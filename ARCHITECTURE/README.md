@@ -19,7 +19,7 @@ anyone rebuilds.
 | `system-diagram-trust-clustered` | `trust-clustered` | Bands by **trust tier** rather than call direction, so the containment core reads as the hub it is |
 | `git-history-diagram` | `git-lanes` | Commits, branch cuts and merges as stacked branch lanes, generated from local refs |
 | `ledger-diagram` | `layered` | `releases.db`/`releases.sql`, current queries, work connectors, optional views, Pages generation, reconciliation, and routed gates |
-| `skills-git-pulse-projection-diagram` | `layered` | The GH-672 one-Pulse-collection-per-device path from canonical skill sources to direct app symlinks |
+| `skills-git-pulse-projection-diagram` | `layered` | **Historical (pre-2026-10-01).** The GH-672 one-Pulse-collection-per-device path, superseded by [XYZ-skills-army-mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2) |
 
 The four `system-diagram*` files are deliberately **the same graph under different layouts** — pick
 the one that makes the point you are making. `git-history-diagram` and `ledger-diagram` are

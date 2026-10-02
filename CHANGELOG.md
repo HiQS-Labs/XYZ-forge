@@ -26,6 +26,28 @@ follow once standalone runs have been observed.
 
 Verification: `test/gh609-sdlc-agent-gaps.sh` (existing) plus a manual hook matrix with a mutation red control,
 recorded in `TESTS-RESULTS/2026-10-01+GH-911/`.
+## 2026-10-01 — Skills Army HQ upstream moves to XYZ-skills-army-mini; forge keeps a vendored copy (GH-882)
+
+Operator decision (recorded on XYZ-skills-army-mini#2): `HiQS-Labs/XYZ-skills-army-mini` is the canonical
+upstream for Skills Army HQ from today. XYZ Forge becomes a consumer:
+
+- **Vendored copy kept.** `skills/3-weekly/skills-army-hq/` stays as a vendored copy with a forge-only
+  `UPSTREAM.md` pointer. Refreshes are ad-hoc vendor PRs from a tagged mini release, with no freshness
+  guarantee. This replaces the earlier plan to delete the forge copy.
+- **Republisher retired.** `push-to-skills-army-mini` is marked retired. Running it would overwrite
+  upstream; its own history check also refuses once mini has non-publisher commits. It and its `gh620`
+  suite are removed after the #854 freeze, through the 2026-10-08 suite audit.
+- **Issues moved.** #506, #676, #837 and #881 were transferred to mini as #4, #5, #6 and #7.
+  - #676 is narrowed to link-drift reporting.
+  - #506's forge ledger row moved to *Deferred · vision* with a transfer note, and its capture doc
+    moved to `PROJECT/4-MISC/`.
+- **Upstream changes in mini#3.** Skills Army HQ becomes source-agnostic: deploy a skill from any
+  folder, drift warns by default, source rules are opt-in, and any device may publish. The forge copy
+  picks this up at its next vendor PR. When deploying with the upstream manager, differences from the
+  stale forge copy warn by default (refusal is opt-in). The unrefreshed forge manager keeps its pre-pivot
+  behavior; use upstream for the new policy.
+
+Verification: `python3 utils/py/releases_app.py check` clean; existing suites per the push gate.
 
 ## 2026-10-01 — Successful completion appends retain mutual exclusion (GH-909)
 
