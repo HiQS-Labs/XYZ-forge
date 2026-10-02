@@ -46,3 +46,7 @@ UNKNOWNS: source snapshots are private and were not imported; public evidence us
 ## Risk / rollback / non-scope
 
 Easy rollback: revert this task commit. Unknown/missing projectId stays eligible for backward compatibility with native rows; a non-null ID is excluded. No blanket error suppression, no auto-unpin, no custom grouping changes, no app stores, no enabling Agy, no pilot edits. Qualifying suites only once in disposable clone; narrow manual checks during review. Private raw sidebar snapshots never committed.
+
+## Execution evidence
+
+Plan QA Approved, driver exit 0, receipt relay-system/2026-10-02/gh922-plan.codex.md. Accepted-start admitted by exact URL row before source edit. Implementation 65e60c9c adds exactly one predicate line. Recorded red/green matrix: base error for project-pin, fixed 11/11 assertions, existing Codex controls 28/28; TESTS-RESULTS/2026-10-02+GH-922/provenance.jsonl. No raw private snapshots copied. Final QA and Small gate pending.
