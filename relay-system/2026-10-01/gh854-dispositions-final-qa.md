@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -428,6 +428,26 @@ status: Approved
 reviewed-head: e10d2d97d84b20fedd8f25596c9cee56480d1ebb
 added-range: 37562+6477
 added-sha256: 60d2d9aa4c6b7e19f11110c68528996856911db091c2516d3c3a6389615e8bd1
+### Reviewer · Round 3
+VERDICT: PASS
+Basis: Approved for the final bounded GH920 registry/exemption disposition and preservation of the prior approved implementation. The recorded failure precedes product assertions; the historical copy errno remains unknown. No blocking correctness defect found in the relevant complete files swept. Full qualification and umbrella GH854 completion remain outstanding.
+
+swept file: yes
+
+- [Pass] Current selection uses the existing mechanism: test/gh306-registry-bidirectional.sh:48 exempts the retained gh4 file, and PROJECT/2-WORKING/GH-854-GATE-DISPOSITIONS.md:57 explicitly supplements the original two-entry scope with current registry407 and a one-entry reversal. Read-only standard-library probe command `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` parsed literal TESTS/EXEMPT arrays with multiline anchored regexes, all SUBSYSTEM_TESTS lists and workflow skip names; exit 0. Decisive output: “registry407 unique; retired3 exempt; all subsystem members registered; Ubuntu skips registered”. All registered files exist; none of the three retirements appears in any subsystem list, including Small (utils/ci-route.sh:38). No fix requested.
+- [Pass] Inspected separate-clone receipts under TESTS-RESULTS/2026-10-01+GH-854/dispositions/blocked-gh4-copy/: failed-suite.log:2-3 records “could not create a scratch copy” and 0/1; gh4-focused.log:2-8 exercises the warning/nonfatal/silent-gated paths and ends6/0. gh920-red.log:3-4 names the missing gh4 exemption and :13 ends9/1; gh920-green.log:12 ends10/0. provenance.jsonl:1 binds the stopped push to dc0d533b8489e555ee33c8795c58e0ec98001caf, qualifies=false and original_errno=unknown; :2 records the existing-suite red/green restore. The same JSON/Path probe exited0: “gh4 failed0/1; focused6/0; exemption red9/1 naming gh4; restored10/0; identity intact; original errno unknown”. cp-stderr is empty on the later focused run; it cannot explain the original failure. No root-cause resolution inferred.
+- [Pass] Scope stays deferred with concrete product triggers: PROJECT/1-INBOX/GH-920-UNGATED-FIXTURE-DEFERRED.md:14 distinguishes a disappearing-file hypothesis from observation, :16 states reduced warning coverage, and :18 reopens on missing warning, unexpected validation refusal or failed hook installation. Current warning runtime remains present at validate.sh:833-836; the retained gh4 suite still contains all six product assertions. No runtime fix or broad diagnostic campaign requested.
+- [Pass] Preservation probe used Path/json/hashlib against dispositions/selection-preservation.json's six preserved_sha256 entries; exit0: “preserved hashes6/6; prior receipt after408 is historical, not current407”. This independently compares current bytes to those receipts; base-byte comparison, unchanged Small bytes, restored gh4 bytes and the source-diff-only claim remain producer attestations, because git is forbidden here. No additional preservation claim inferred from the historical receipt.
+- [Pass] Invocation correction has paired evidence at dispositions/blocked-width-override/focused/provenance.jsonl:1-2: same tested source, override=true/rc1 then override=false/rc0. The JSON/log probe exited0: “width override red rc1; normal environment green29/0 rc0”. normal-mode.log:2 says “PARALLEL mode 4-wide”; validate.sh:947-951 gives MAX_JOBS precedence over the later PARALLEL branch. Removing that injected override needs no source change. No fix requested.
+- [Pass] Static syntax command `bash -n validate.sh test/gh306-registry-bidirectional.sh utils/ci-route.sh`; exit0, no output. No gates or executable fixtures ran. The first Python extraction probe failed with AssertionError because its anchored findall lacked re.M and extracted zero entries; the corrected multiline parser produced the explicit nonempty counts above. That probe error is not a candidate failure.
+- [Unverified — needs clone run] Full final push gate, zero retry activity and exact-head hosted result remain outstanding under PROJECT/2-WORKING/GH-854-GATE-DISPOSITIONS.md:33. The gh306 receipt names copied candidate files without a final candidate SHA/hash, so it supplies focused red/green evidence rather than final-head attestation. The harness/Producer must perform the planned final qualification. No development count added; :37 retains local1/3, hosted3/3 and paused automation.
+
+Sweep covered the entire relay packet/log, complete validate.sh (1601 lines), gh306, retained gh4, ci-route, GH920 intake, current GH854 execution doc and relevant new structured/log receipts. Prior rounds remain the basis for the unchanged earlier artifacts. No additional pre-existing correctness defect found within this bounded acceptance; prior optional comment cleanup remains deferred. Graph Verify inventory returned all77 projects with has_more=false and no current-worktree project. Canonical coverage generation2026-09-01T15:54:30Z reported changed/missing freshness; direct current-source reads supplied the evidence, not stale graph completeness. No git, tests, fixtures, source/artifact edits or external posting performed.
+
+The user's explicit terminal instructions override the embedded Producer request to leave ownership with the shim: STATUS becomes Approved, NEXT becomes claude-a, and the absolute env-pinned token is completed with done. The harness owns the one file-scoped commit. The Producer Round3 text is below the pre-existing marker; this review is inserted above that marker without moving or editing earlier text.
+
+relay closed (Approved), no further review turn needed. Producer/supervisor next performs the outstanding qualification.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 ## Producer round 3 — final permitted review
