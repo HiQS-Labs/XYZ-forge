@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -346,5 +346,25 @@ index ec4d00f3..15a6d0ff 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: Approved for the bounded disposition implementation and focused evidence in Setup. The generic Definition of Done remains a scaffold placeholder; the embedded packet and GH-854 execution document supply the concrete acceptance reviewed here. No blocking implementation defect found, including in the pre-existing selection/runner paths swept. This approval does not qualify a landing, promotion, or completion of umbrella GH-854.
+
+swept file: yes
+
+- [Pass] Selection changes use the existing mechanism: two explicit exemptions at test/gh306-registry-bidirectional.sh:48-49, oracle removed from ATE at utils/ci-route.sh:28, and only registered Ubuntu skips at .github/workflows/ci.yml:493-494. Completion regression remains registered at validate.sh:579 and utils/ci-route.sh:27. No fix requested.
+- [Pass] Read-only probe: command `python3 - <<'PY'` with standard-library Path/re/json/hashlib assertions over TESTS, EXEMPT, all SUBSYSTEM_TESTS values, workflow skips, selection-preservation.json, identity.json, provenance.jsonl and nonempty focused logs; exit 0. Decisive output: “registry=408 unique; retired=2 exempt; all subsystem members registered; Ubuntu skips=acorn-extract.sh,pdda-repo-contract.sh” and “preserved hashes=6/6; identity before=after; focused provenance=5 matching SHA/expected rc; red names both retirements; four green logs nonempty”. The six current file digests match TESTS-RESULTS/2026-10-01+GH-854/dispositions/selection-preservation.json's preserved_sha256 map; its base comparison and Small-byte preservation are producer receipts, not an independently rerun base comparison. No git invoked.
+- [Pass] Focused clone-run evidence, inspected rather than rerun here: gh306 10/0 (focused/gh306-registry-bidirectional.sh.log:12), gh35 72/0 (focused/gh35-test-tiers.sh.log:74), gh379 36/0 (focused/gh379-canary-uses-validate.sh.log:39), ci-workflow 57/0 (focused/ci-workflow.sh.log:62-63), all under TESTS-RESULTS/2026-10-01+GH-854/dispositions/. The red control names both retired suites at focused/gh306-red-missing-exemptions.log:3-5 and ends 9/1 at line 14; focused/provenance.jsonl records red rc=1 and four rc=0 runs at source 9c77b309f36bab29d6e486d203b2f7218f86dc86. focused/identity.json contains identical before/after identity. No further focused run requested.
+- [Pass] Static syntax command `bash -n validate.sh ci-local.sh utils/ci-route.sh test/ci-workflow.sh test/gh306-registry-bidirectional.sh`; exit 0, no output. This parsed the files without executing gates or fixtures.
+- [Pass] Deferrals retain actual blocker triggers: PROJECT/1-INBOX/GH-916-LIVE-RELAY-DEFERRED.md:18, GH-917-INSTALL-REGISTRY-DEFERRED.md:20 and GH-918-GEN4-ORACLE-DEFERRED.md:18. PROJECT/2-WORKING/GH-854-GATE-DISPOSITIONS.md:33 explicitly owes the full serial task gate with zero retries and exact-head hosted result; line 37 preserves local1/3, hosted3/3 and paused automation. No claim of historical root-cause resolution or increased counters. No fix requested.
+- [Nit] Pre-existing prose at ci-local.sh:249-250 still says the workflow parses TESTS “exactly the way” ci-local does, although .github/workflows/ci.yml:491 calls validate directly. Optional fix: describe ci-local's retained parser and the common authoritative registry. This does not affect selection or block this approval.
+- [Unverified — needs clone run] Full push gate and hosted final-head execution were not run in this reviewer worktree and remain outstanding by the packet's own acceptance ordering. Producer/supervisor should execute the already-planned qualification after QA; approval here is not merge readiness.
+
+Sweep covered the embedded packet and complete touched selection/runner/test files, the GH-854 working doc, adjacent governance/changelog context, deferred intake and available receipts. No additional pre-existing correctness defect found within this bounded acceptance. Graph inventory contained no project for this worktree; canonical graph generation 2026-09-30T07:57:23Z was not treated as current-worktree proof. Coverage checked for touched paths; the new working doc was missing there, so current source reads supplied the evidence. No artifact/source edits, test execution, or external posting.
+
+Terminal protocol follows the current user's explicit instructions over the conflicting embedded packet note: NEXT becomes Producer, STATUS becomes Approved, and the env-pinned token is completed with done. The harness owns the relay-only commit.
+
+relay closed (Approved), no further turn needed. Producer/supervisor next performs the outstanding qualification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
