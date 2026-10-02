@@ -2,7 +2,7 @@
 gh_issue: 506
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/506
 title: "skills-army-hq: replicate a collection to a second device, migrate-from name mismatch, and status exit-code semantics"
-status: Proposed (1-INBOX — not yet active)
+status: Superseded (transferred 2026-10-01 to https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/4; Skills Army HQ upstream moved, see #882)
 created: 2026-09-08
 owner: unassigned
 doc_type: feedback

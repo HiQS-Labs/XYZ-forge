@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 #
-# find-harness.sh — device-agnostic locator for the xyz-3-agents-swarm relay harness.
+# find-harness.sh — device-agnostic locator for the XYZ-forge relay harness.
 #
 # Prints the absolute path to the repo root that ships relay-automation/ (the relay
 # harness: relay-drive.sh, the turn shims, poll.sh, bin/tick). It resolves WITHOUT any
-# hardcoded machine path, so /relay-xyz works from any working directory — including a
-# clone of a *different* repo — because this script ships INSIDE the harness repo
-# (skills/1-hourly/relay-xyz/find-harness.sh) and resolves relative to its own real location,
-# following symlinks (the skill is usually symlinked into ~/.claude/skills/relay-xyz).
+# hardcoded machine path, so /relay-xyz works from any working directory — including
+# when Skills Army copies the skill outside the harness repo.
 #
 # Usage:
 #   find-harness.sh            # print the harness root, or error to stderr (exit 1)
@@ -21,6 +19,7 @@
 #   3. <main-checkout>/.xyz                   — vendored copy visible from a linked worktree
 #   4. the current git repo root              — you're already standing in a harness clone
 #   5. this script's own real location        — …/<repo>/skills/1-hourly/relay-xyz → <repo>
+#   6. per-device config, then bounded canonical-clone search
 #
 # bash 3.2-safe (macOS default): no `readlink -f`, no associative arrays.
 set -u
@@ -28,6 +27,16 @@ set -u
 _has_harness() { [ -n "${1:-}" ] && [ -x "$1/relay-automation/relay-drive.sh" ]; }
 _has_vendored_harness() { _has_harness "${1:-}" && [ -f "$1/bin/tick" ]; }
 _canon_dir() { [ -n "${1:-}" ] && (cd "$1" >/dev/null 2>&1 && pwd); }
+_canonical_clone() {
+  _has_harness "${1:-}" || return 1
+  [ "$(basename "$1")" = "XYZ-forge" ] || return 1
+  _origin="$(git -C "$1" remote get-url origin 2>/dev/null || true)"
+  case "$_origin" in
+    https://github.com/HiQS-Labs/XYZ-forge|https://github.com/HiQS-Labs/XYZ-forge.git|git@github.com:HiQS-Labs/XYZ-forge|git@github.com:HiQS-Labs/XYZ-forge.git|ssh://git@github.com/HiQS-Labs/XYZ-forge|ssh://git@github.com/HiQS-Labs/XYZ-forge.git) return 0 ;;
+  esac
+  return 1
+}
+_branch() { git -C "$1" symbolic-ref --quiet --short HEAD 2>/dev/null || true; }
 _short_sha() { printf '%.12s' "${1:-unknown}"; }
 _read_source_commit() {
   [ -f "${1:-}/VERSION" ] || return 1
@@ -100,13 +109,6 @@ while [ -h "$_src" ] || [ -L "$_src" ]; do
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 
-_hp_lib="$SELF_DIR/../../../relay-automation/harness-paths.sh"
-if [ -f "$_hp_lib" ]; then
-  # shellcheck source=relay-automation/harness-paths.sh
-  . "$_hp_lib"
-fi
-
-
 HARNESS=""
 VENDORED=0
 CALLER_ROOT=""
@@ -116,6 +118,53 @@ LIVE_HARNESS_HEAD=""
 VENDORED_STATUS=""
 MAIN_CHECKOUT_VENDORED=""
 VIA=""
+CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness"
+SEARCH_CANDIDATES=("")
+SEARCH_ROOTS=(
+  "$HOME/Documents/GH Repos/XYZ-forge"
+  "$HOME/Documents/GitHub/XYZ-forge"
+  "$HOME/Documents/GitHub Repos/XYZ-forge"
+  "$HOME/Documents/GitHub-Repos/XYZ-forge"
+  "$HOME/Documents/Github/XYZ-forge"
+  "$HOME/XYZ-forge"
+  "$HOME/Developer/XYZ-forge"
+)
+_read_config() {
+  [ -f "$CONFIG_FILE" ] || return 1
+  _configured=""
+  IFS= read -r _configured < "$CONFIG_FILE" || [ -n "${_configured:-}" ]
+  [ -n "${_configured:-}" ] || return 1
+  _canonical_clone "$_configured" || return 1
+  _canon_dir "$_configured"
+}
+_search_clone() {
+  SEARCH_CANDIDATES=("")
+  FOUND_CLONE=""
+  for _path in "${SEARCH_ROOTS[@]}"; do
+    if _canonical_clone "$_path"; then
+      _path="$(cd -P "$_path" >/dev/null 2>&1 && pwd)"
+      _duplicate=0
+      for _seen in "${SEARCH_CANDIDATES[@]:1}"; do
+        [ "$_path" -ef "$_seen" ] && _duplicate=1 && break
+      done
+      [ "$_duplicate" = 1 ] || SEARCH_CANDIDATES+=("$_path")
+    fi
+  done
+  [ "${#SEARCH_CANDIDATES[@]}" -gt 1 ] || return 1
+  if [ "${#SEARCH_CANDIDATES[@]}" -eq 2 ]; then
+    FOUND_CLONE="${SEARCH_CANDIDATES[1]}"
+    return 0
+  fi
+  _development=("")
+  for _path in "${SEARCH_CANDIDATES[@]:1}"; do
+    [ "$(_branch "$_path")" = development ] && _development+=("$_path")
+  done
+  if [ "${#_development[@]}" -eq 2 ]; then
+    FOUND_CLONE="${_development[1]}"
+    return 0
+  fi
+  return 2
+}
 
 _g="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 
@@ -175,11 +224,52 @@ if [ -z "$HARNESS" ]; then
     VIA="self"
   fi
 fi
+# 6. a per-device pointer, then the known clone locations. Both require a
+# canonical origin: a copied skill must not silently select a task clone.
+CONFIG_PATH=""
+if [ -z "$HARNESS" ]; then
+  CONFIG_PATH="$(_read_config || true)"
+  if [ -n "$CONFIG_PATH" ]; then
+    HARNESS="$CONFIG_PATH"
+    VIA="config"
+  elif [ -f "$CONFIG_FILE" ]; then
+    echo "find-harness: ignoring invalid config at $CONFIG_FILE" >&2
+  fi
+fi
+SEARCH_STATUS=0
+if [ -z "$HARNESS" ]; then
+  _search_clone || SEARCH_STATUS=$?
+  if [ "$SEARCH_STATUS" -eq 0 ]; then
+    HARNESS="$FOUND_CLONE"
+    VIA="search"
+  fi
+fi
 
 if [ -z "$HARNESS" ]; then
   echo "find-harness: relay-automation/ harness not found." >&2
-  echo "  Set XYZ_HARNESS=/path/to/your/xyz-3-agents-swarm clone and retry." >&2
+  echo "  attempted locations:" >&2
+  [ -z "${XYZ_HARNESS:-}" ] || echo "    XYZ_HARNESS=$XYZ_HARNESS" >&2
+  [ -z "${XYZ_REPO_ROOT:-}" ] || echo "    XYZ_REPO_ROOT=$XYZ_REPO_ROOT" >&2
+  echo "    ${_g:-${PWD:-$(pwd)}}/.xyz" >&2
+  [ -z "${_main_vendored:-}" ] || echo "    $_main_vendored" >&2
+  [ -z "$_g" ] || echo "    $_g" >&2
+  echo "    $SELF_DIR/../../.." >&2
+  echo "    $CONFIG_FILE" >&2
+  printf '    %s\n' "${SEARCH_ROOTS[@]}" >&2
+  if [ "$SEARCH_STATUS" -eq 2 ]; then
+    echo "  multiple canonical candidates:" >&2
+    printf '    %s\n' "${SEARCH_CANDIDATES[@]:1}" >&2
+  fi
+  printf "  remedy: export XYZ_HARNESS='/path/to/XYZ-forge'; bash %q --check\n" "$SELF_DIR/find-harness.sh" >&2
   exit 1
+fi
+
+# The copied skill has no sibling relay-automation/. Load shared helpers from
+# the chosen harness, including its driver lock resolver.
+_hp_lib="$HARNESS/relay-automation/harness-paths.sh"
+if [ -f "$_hp_lib" ]; then
+  # shellcheck source=relay-automation/harness-paths.sh
+  . "$_hp_lib"
 fi
 
 # TICK_REPO_ROOT is the repo root that bin/tick and tick-consuming shims expect.
@@ -208,6 +298,15 @@ if [ "$VENDORED" = 1 ]; then
     if _has_harness "$_cand" && [ "$_cand" != "$HARNESS" ]; then
       LIVE_HARNESS="$_cand"
     fi
+  fi
+  if [ -z "$LIVE_HARNESS" ]; then
+    _cand="$(_read_config || true)"
+    if [ -n "$_cand" ] && [ "$_cand" != "$HARNESS" ]; then
+      LIVE_HARNESS="$_cand"
+    fi
+  fi
+  if [ -z "$LIVE_HARNESS" ] && _search_clone && [ "$FOUND_CLONE" != "$HARNESS" ]; then
+    LIVE_HARNESS="$FOUND_CLONE"
   fi
 
   if [ -n "$LIVE_HARNESS" ]; then
@@ -300,6 +399,32 @@ case "$ACTION" in
     _caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"
     echo "relay harness readiness:"
     echo "  ok  harness  ($HARNESS)"
+    if [ "$VENDORED" = 0 ] && _canonical_clone "$HARNESS"; then
+      _configured_now="$(_read_config || true)"
+      if [ "$_configured_now" != "$HARNESS" ]; then
+        _config_dir="$(dirname "$CONFIG_FILE")"
+        printf '  save this harness on this Mac: mkdir -p %q && printf %q %q > %q\n' \
+          "$_config_dir" '%s\n' "$HARNESS" "$CONFIG_FILE"
+      fi
+    fi
+    if [ "$VENDORED" = 0 ] && git -C "$HARNESS" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      _h_branch="$(_branch "$HARNESS")"
+      if [ "$_h_branch" != development ]; then
+        echo "  !   harness clone is on ${_h_branch:-detached HEAD}, expected development"
+      fi
+      _upstream="$(git -C "$HARNESS" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+      if [ -n "$_upstream" ]; then
+        _behind="$(git -C "$HARNESS" rev-list --count "HEAD..$_upstream" 2>/dev/null || true)"
+        if [ -n "$_behind" ] && [ "$_behind" -gt 0 ]; then
+          _fetch_path="$(git -C "$HARNESS" rev-parse --path-format=absolute --git-path FETCH_HEAD 2>/dev/null || true)"
+          _last_fetch="unknown"
+          if [ -n "$_fetch_path" ] && [ -f "$_fetch_path" ]; then
+            _last_fetch="$(date -r "$_fetch_path" '+%Y-%m-%d %H:%M:%S %Z' 2>/dev/null || echo unknown)"
+          fi
+          echo "  !   harness clone is $_behind commits behind $_upstream (last fetch $_last_fetch)"
+        fi
+      fi
+    fi
     if [ "$VENDORED" = 1 ]; then
       echo "  ok  vendored resolution  ($HARNESS)"
       case "$VENDORED_STATUS" in
@@ -343,8 +468,24 @@ case "$ACTION" in
         # GH-448: resolve via the shared resolver, not a 2-candidate guess — when $HARNESS itself is a
         # linked worktree (.git is a FILE), the driver's real lock lives at the git common dir, which
         # neither hardcoded candidate above matched, so this warning silently never fired.
-        _lk="$(driver_lock_path_for_repo "$HARNESS")"
-        [ -d "$_lk" ] && echo "  !   a driver lock is currently HELD ($_lk) — a relay started here will BLOCK until it frees"
+        if type driver_lock_path_for_repo >/dev/null 2>&1; then
+          _lk="$(driver_lock_path_for_repo "$HARNESS")"
+          if [ -d "$_lk" ]; then
+            _holder=""
+            [ ! -f "$_lk/pid" ] || IFS= read -r _holder < "$_lk/pid" || true
+            case "$_holder" in
+              ''|*[!0-9]*) _lock_live=0 ;;
+              *) if [ "$_holder" -gt 0 ] && kill -0 "$_holder" 2>/dev/null; then _lock_live=1; else _lock_live=0; fi ;;
+            esac
+            if [ "$_lock_live" = 1 ]; then
+              echo "  !   a driver lock is currently HELD ($_lk, pid $_holder) — a relay started here will BLOCK until it frees"
+            else
+              echo "  !   stale driver lock ($_lk, pid ${_holder:-none}) — the driver will try to reclaim it"
+            fi
+          fi
+        else
+          echo "  !   driver lock state unavailable: selected harness has no shared lock resolver"
+        fi
       fi
     fi
     _collision="$(_find_case_collision_pair "${_caller:-}" || true)"

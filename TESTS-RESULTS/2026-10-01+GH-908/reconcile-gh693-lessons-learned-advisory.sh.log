@@ -1,0 +1,19 @@
+== test: gh693-lessons-learned-advisory ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh693-lessons-learned-advisory.XXXXXX.vYKdCJRGPx
+  PASS: A: explicit landing without the section exits 0
+  PASS: A: WARN names the doc and the missing section
+  PASS: A: WARN says the section is recommended, not required
+  PASS: A: doc promoted to 3-COMPLETED without the section
+  PASS: A: promoted doc's status is Complete
+  PASS: B: placeholder section exits 0
+  PASS: B: WARN cites the placeholder body
+  PASS: B: doc promoted
+  PASS: C: --pre-merge does not fail the doc contract over the section (exit 0, not 5)
+  PASS: C: --pre-merge prints the WARN
+  PASS: C: the word 'mandatory' is gone from the reconciler's output
+  PASS: D: no SKIPPED marker for a lessons-less doc
+  PASS: E: control — missing frontmatter 'goal' still fails the doc contract (exit 5)
+  PASS: E: control — the error names the missing field
+ok
+  PASS: F: detector distinguishes missing / placeholder / substantive; WARN_MARKER pinned
+  gh693-lessons-learned-advisory: 15 pass, 0 fail

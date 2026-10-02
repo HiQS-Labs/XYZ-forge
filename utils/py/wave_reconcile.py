@@ -1807,12 +1807,21 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     plan_fp = compute_marathon_planner_fingerprint(repo_root)
 
     if not dry_run:
+        # Read through the reconciler's existing read-only ledger path. Older
+        # adopters without this optional setting keep view adoption by presence.
+        try:
+            projection_rows = ledger_rows(
+                repo_root, "SELECT value FROM settings WHERE key = ?", ("projections",)
+            )
+        except ReconcileError:
+            projection_rows = []
+        views_enabled = not projection_rows or projection_rows[0]["value"] != "off"
         # GH-474: RELEASES-PREVIEW.html is an ADOPTED view — opt-in by presence.
-        if os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
+        if views_enabled and os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
             steps.append(("export_timeline.py --preview", timeline_cmd))
         else:
             log("  (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)")
-        if os.path.exists(os.path.join(repo_root, "LEADERBOARD.md")):
+        if views_enabled and os.path.exists(os.path.join(repo_root, "LEADERBOARD.md")):
             if os.path.exists(harness_tool(repo_root, "utils/leaderboard.sh")):
                 steps.append(("leaderboard.sh", lb_cmd))
             else:

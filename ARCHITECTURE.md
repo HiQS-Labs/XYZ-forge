@@ -41,7 +41,7 @@ and usage; this index exists so a task can be routed to the right skill without 
 Re-tiering a skill is a `git mv` plus its row here; nothing in the harness depends on which tier a
 skill sits in, only on the two-level depth (see `skills/README.md`).
 
-### `1-hourly` — Every hour (14)
+### `1-hourly` — Every hour (15)
 
 _the in-task loop: intake, recon, planning discipline, review relays, the ledger._
 
@@ -51,6 +51,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [consult](skills/1-hourly/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
 | [debug-mantra](skills/1-hourly/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
+| [handsfree](skills/1-hourly/handsfree/SKILL.md) | Wake the current agent every 10 minutes to advance an authorized task, with a 3-hour deadline and native scheduler cleanup. |
 | [ponytail](skills/1-hourly/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
 | [recon](skills/1-hourly/recon/SKILL.md) | Trace an existing system end to end before planning a change. |
 | [relay](skills/1-hourly/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |
@@ -81,7 +82,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [review-code](skills/2-daily/review-code/SKILL.md) | Meticulous ground-truth code and PR review using recon, debug-mantra, and workhorse/unstuck ladders. |
 | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [start-marathon](skills/2-daily/start-marathon/SKILL.md) | Review intake and plans, prepare collision-safe lanes, and dry-run the marathon. |
-| [status](skills/2-daily/status/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
+| [where-are-we-at](skills/2-daily/where-are-we-at/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 
@@ -98,10 +99,10 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [honest](skills/3-weekly/honest/SKILL.md) | Produce a defensible ground-truth assessment of repository maturity and claims. |
 | [marathon-cleanup](skills/3-weekly/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
 | [merge-cleanup-deep](skills/3-weekly/merge-cleanup-deep/SKILL.md) | Back up and triage the checkouts /merge-cleanup preserved with read-only sub-agents: PR-worthy, superseded, or scrap. |
-| [push-to-skills-army-mini](skills/3-weekly/push-to-skills-army-mini/SKILL.md) | Publish the parent-managed Skills Army HQ package into its generated child through the shared manifest publisher (GH-620). |
+| [push-to-skills-army-mini](skills/3-weekly/push-to-skills-army-mini/SKILL.md) | **Retired 2026-10-01; do not run.** Skills Army HQ upstream is XYZ-skills-army-mini ([decision: mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2)); removal follows the 2026-10-08 audit (GH-882). |
 | [push-to-xyz-mini](skills/3-weekly/push-to-xyz-mini/SKILL.md) | Publish the curated XYZ mini skill subset into the local XYZ-mini checkout and push it, via the deterministic embedded-manifest publisher `utils/py/xyz_mini_sync.py` (GH-589). |
 | [radar](skills/3-weekly/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
-| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. |
+| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. *Vendored, possibly stale copy* — upstream is XYZ-skills-army-mini; see [UPSTREAM.md](skills/3-weekly/skills-army-hq/UPSTREAM.md) and [mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2). |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |

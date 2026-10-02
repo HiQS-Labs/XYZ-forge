@@ -1,5 +1,54 @@
 # Changelog
 
+## 2026-10-01 — Direct /workhorse runs keep going until their queue is resolved (GH-911)
+
+A directly invoked `/workhorse` stopped after two or three turns with work still queued. Three things caused it:
+
+- Rung 6 ended every item with a completion report, a natural place to stop.
+- The "a repair is a checkpoint, not the end of the turn" rule from #626 applied only under a parent orchestrator.
+- The queue lived in the session scratchpad, where nothing outside the conversation could see it.
+
+Changes, all in `skills/2-daily/workhorse/`:
+
+- **Run checklist.** The active queue is now a run checklist at `<repo-root>/.workhorse/<session-id>.md`, excluded
+  via `.git/info/exclude`, with `- [ ]` open, `[x]` done, `[-]` parked and `[!]` blocked lines.
+- **Report once.** Rung 6 ticks each item and continues; the completion report fires once, when no open line remains.
+- **Direct re-entry.** Re-entry now covers direct invocations, with the checklist as the resume target.
+- **Stop hook.** A new Claude Code Stop hook (`stop-hook.sh`, wired from the skill's frontmatter) blocks the stop
+  while this session's checklist has an open line. It fails open on any error. Loop safety is the harness's
+  8-continuation cap plus the `[!]`/`[-]` escape.
+- **Proportional consult.** Rung 4 can be skipped for a focused, Easy-to-reverse change on a local task branch. It
+  stays mandatory for architecture, contracts, persistent state, dependencies and Costly/One-way-door work.
+- **Rung 5 example.** Rung 5 names local task-branch edits as an Easy example.
+
+Deliberately minimal: no governor role, progress fingerprints, budget counters or run schema. Further tuning may
+follow once standalone runs have been observed.
+
+Verification: `test/gh609-sdlc-agent-gaps.sh` (existing) plus a manual hook matrix with a mutation red control,
+recorded in `TESTS-RESULTS/2026-10-01+GH-911/`.
+## 2026-10-01 — Skills Army HQ upstream moves to XYZ-skills-army-mini; forge keeps a vendored copy (GH-882)
+
+Operator decision (recorded on XYZ-skills-army-mini#2): `HiQS-Labs/XYZ-skills-army-mini` is the canonical
+upstream for Skills Army HQ from today. XYZ Forge becomes a consumer:
+
+- **Vendored copy kept.** `skills/3-weekly/skills-army-hq/` stays as a vendored copy with a forge-only
+  `UPSTREAM.md` pointer. Refreshes are ad-hoc vendor PRs from a tagged mini release, with no freshness
+  guarantee. This replaces the earlier plan to delete the forge copy.
+- **Republisher retired.** `push-to-skills-army-mini` is marked retired. Running it would overwrite
+  upstream; its own history check also refuses once mini has non-publisher commits. It and its `gh620`
+  suite are removed after the #854 freeze, through the 2026-10-08 suite audit.
+- **Issues moved.** #506, #676, #837 and #881 were transferred to mini as #4, #5, #6 and #7.
+  - #676 is narrowed to link-drift reporting.
+  - #506's forge ledger row moved to *Deferred · vision* with a transfer note, and its capture doc
+    moved to `PROJECT/4-MISC/`.
+- **Upstream changes in mini#3.** Skills Army HQ becomes source-agnostic: deploy a skill from any
+  folder, drift warns by default, source rules are opt-in, and any device may publish. The forge copy
+  picks this up at its next vendor PR. When deploying with the upstream manager, differences from the
+  stale forge copy warn by default (refusal is opt-in). The unrefreshed forge manager keeps its pre-pivot
+  behavior; use upstream for the new policy.
+
+Verification: `python3 utils/py/releases_app.py check` clean; existing suites per the push gate.
+
 ## 2026-10-01 — Successful completion appends retain mutual exclusion (GH-909)
 
 A controlled handoff showed a stale waiter deleting a live successor’s PID-directory lock: all three writers returned success, but only two records survived. The existing completion writer now holds a stable-inode OS advisory lock through its atomic JSON transaction, preserving bounded per-holder wait and the absolute queue cap. The three covering fixtures use real OS locks. Upgrade and rollback require stopping and retiring old writers sharing the records path; mixed protocols are unsupported. Evidence is retained under `TESTS-RESULTS/2026-10-01+GH-909/`. The full-gate follow-up witnessed a quiet-grep SIGPIPE false-red in gh268 (#853). Because it is outside Small, standing policy turns it off through TESTS removal and gh306 EXEMPT; its file stays unchanged. A consuming-grep diagnostic demonstrated the cause but is not shipped. This fixes a proven loss mechanism; the exact historical CI interleaving and separate relay/registry flakes remain unproven.
@@ -22,6 +71,11 @@ Independent Codex final QA is driver-attested Approved; 28 recorded manual
 probes and the native title/pin smoke are retained under
 `TESTS-RESULTS/2026-09-30+GH-901/`. The dependent branch requires PR #900 to land
 first; the pilot clone is retained until its heartbeat can be repointed.
+## 2026-10-01 — PDDA adopter reliability Jog prepared (GH-904, GH-907, GH-906, GH-905; #908)
+
+A four-issue serial Jog now has capture contracts, rated RELEASES rows, and queue positions 1–4. PDDA roadmap coverage recognizes an empty but queryable releases ledger and still reports corrupt ledgers or uncovered docs. Vendored router-audit hints use the executing script path. The PDDA installer treats the optional Claude skill copy as best-effort, then completes core setup. A new releases-only install mode initializes the DB without retired Markdown ledgers, writes a mode-correct router, and can set `projections=off`; the Releases writer and hosted reconciler honor that setting. This cross-module setting is reversible with `releases settings set projections on`.
+
+The 2026-10-01 fixture matrix and focused existing suites passed. Independent Agy and Codex relay reviews approved the final correction; clean-environment macOS `ci-local.sh` passed all steps at `5af2ed25` and again at the post-merge `ba37601a` tip with clone identity unchanged. The first clean full run exposed reconcile fixture compatibility defects, which were corrected and retained with red/green evidence in `TESTS-RESULTS/2026-10-01+GH-908/`. A later development reconciliation merge required another final-tip gate. It exposed an existing UTC-day archive-test assertion failure on October 2; the assertion was corrected in place, with red/green evidence retained. Full macOS `ci-local.sh` then passed at `3882935e` with clone identity unchanged. Hosted PR CI and merge approval remain; no issue is marked shipped until landing.
 
 ## 2026-09-30 — GH-549 fixture replay bounded to its own event (#854)
 
@@ -32,6 +86,9 @@ Landing 2's first frozen-tip `ci-local.sh` exposed three false reds in the exist
 The `ci-suite-audit` skill now requires source-derived evidence for KEEP and removal verdicts, four separately reported failure/attribution sources, an independent registry count, and runtime computed from compatible receipts. Historical same-SHA flakes without a current red remain INVESTIGATE under #854's newer handoff. The full audit remains scheduled for October 8, after Landing 2.
 
 The existing GH-139 ratchet now recognizes `|grep`, combined quiet flags, and `--quiet`. On staging it found 81 pre-existing lines in 27 files, including 65 code lines, versus 11 in 5 files under the literal matcher. The regenerated per-file baseline records those sites; #853 retains the work of converting remaining unsafe pipelines. Five quiet-flag variants made the existing guard fail in a disposable full clone, while an `|| grep` control stayed green. Evidence: `TESTS-RESULTS/2026-09-28+GH-879/`.
+## 2026-09-29 — deployed relay-xyz skill locates its XYZ-forge harness (GH-856)
+
+A copied Skills Army `relay-xyz` skill could not locate the harness from a foreign repo, and an override left its shared driver-lock resolver unloaded. The locator now keeps existing override, vendored, current-repo, and self-relative precedence, then reads an optional per-Mac config and searches seven bounded XYZ-forge locations with canonical-origin validation and ambiguity refusal. It loads shared helpers from the selected harness, compares copied-skill vendored drift with that live harness, and makes `--check` report cached upstream lag, an unexpected branch, live versus stale lock state, and a command to save the selection. Search and readiness remain local and advisory. Existing registered suites cover the copied-skill and neighboring resolver contracts. The existing GH-549 connector fixture now starts stub dispatches at its fixture tail so added ledger events cannot push its control cases past the 500-event batch limit. Focused evidence is in `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`.
 
 ## 2026-09-28 — Skills Army fleet repair: 10days, codebase-memory and start-marathon reach every app; publisher role goes device-agnostic (GH-881)
 
@@ -206,6 +263,22 @@ with no new suite:
 Every trimmed check was broken on purpose and still failed, including the 21e race under deliberately staggered
 starts. `gh549` and `gh436` stay in Small, because both read files a docs-only landing can change. Rollback:
 revert; it is test files, the hook default and docs.
+
+## 2026-09-25 — Bounded handsfree agent wakeups (GH-825)
+
+Add a `handsfree` skill for checking CI and other asynchronous results and then continuing the
+authorized task every 10 minutes, for at most 3 hours. It uses the current harness's native
+same-conversation scheduler only when creation, readback, and cancellation are available, and keeps
+a collision-safe session note in ignored `temp/`. The note is a resume aid; live results and the
+existing task record remain authoritative. Rollback: cancel the native job and revert the skill and
+catalog entry.
+
+Follow-up: `start-task` now selects the final gate by changed-path scope, using the existing docs
+route for Markdown/text-only edits. Rename the deep topic assessment skill from `status` to
+`where-are-we-at` to avoid a name collision with agent-native status commands.
+Its installer removes a dangling `status` link only when it points to this skill's old path.
+If an old `status` link is still live, inspect its target and unlink it manually if it is the
+former skill; the installer leaves live links alone.
 
 ## 2026-09-25 — The gate qualifies each landing by tier: Small for docs, ledger and skill merges (GH-831, Phase 2)
 
