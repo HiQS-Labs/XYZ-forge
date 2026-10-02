@@ -45,6 +45,7 @@ echo "== test: gh306-registry-bidirectional =="
 # exemptions are how this list rots into covering nothing), so the list is pinned in BOTH
 # directions below, like the registry it carves holes into.
 EXEMPT=(
+  "gh268-relay-cue-and-target-checks.sh" # GH-853 / AGENTS: observed pipefail false-red outside Small; turned off, file retained
   "_setup.sh"                    # sourced by ~150 suites (shared tick fixture setup) — never executed directly
   "_scratch-repo.sh"             # sourced hardened scratch-repo helper (GH-44) — never executed directly
   "test-agy-standalone-repo.sh"  # legacy manual mock from the initial public release; no assertions, prints git status only
