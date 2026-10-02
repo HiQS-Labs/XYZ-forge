@@ -9,8 +9,19 @@ marathon, jog) without reading the existing CI. It runs the tick lifecycle in a 
 validator's refusals, every dual-runtime shim's `--help` in BOTH the Python default and the
 `XYZ_PYTHON=0` twin, `marathon.sh --dry-run` on a canary-owned one-phase plan, jog's queue
 simulation against a sandbox copy of the committed ledger, and a static floor (`bash -n`,
-`node --check`, `py_compile` + import), then proves it wrote nothing in-tree by diffing `git status`.
-21 checks, ~2.5 s on a 4-core host; deliberate breaks of `bin/tick` and `utils/py/jog_run.py` fail it.
+`node --check`, `py_compile` + import), then proves the working tree and the clone's `.git` state
+(config, remotes, HEAD) are unchanged. 21 checks, ~2.5 s on a 4-core host; deliberate breaks of
+`bin/tick` and `utils/py/jog_run.py` fail it.
+
+Review round 1 hardened the containment: every dangerous use of the sandbox re-proves it at the
+use boundary (GH-567) — a caller-supplied `XYZ_CANARY_SANDBOX` that resolves to `/`, the home
+directory, or inside the harness is refused, the teardown removes only a directory carrying this
+run's `logs/` marker (otherwise the sandbox is kept, never deleted), and each check's `cd` fails
+closed. The containment check additionally diffs the clone's full local git config and `HEAD`
+(the GH-564 class `git status` cannot see — its first draft keyed on four config telltales and
+was caught by its own red control), and the static floor compiles a sandbox
+copy with `PYTHONDONTWRITEBYTECODE=1` so "never writes in-tree" is literally true. Evidence:
+`TESTS-RESULTS/2026-10-02+GH-928/`.
 
 Decision: ship it additive and local-first; `.github/workflows/canary.yml` is `workflow_dispatch`-only
 until the tier is accepted, and arming it is a trigger edit. Bet: a two-second first rung gets run on

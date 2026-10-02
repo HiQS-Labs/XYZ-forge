@@ -17,7 +17,8 @@
 #
 # What it is NOT: a replacement for ./validate.sh (the gate) or ci-local.sh (the qualifying run).
 # It never calls a model, never touches the network, and never writes inside the repo tree — the
-# last check proves that by diffing `git status` before and after.
+# last check proves the working tree and the clone's .git state (config, remotes, HEAD) are
+# exactly as they were before the run.
 #
 # Usage:
 #   ./canary.sh                      # both runtimes (Python default + XYZ_PYTHON=0 Bash twin)
@@ -27,7 +28,10 @@
 #   ./canary.sh --keep               # keep the sandbox for inspection (path printed at the end)
 #
 # Environment:
-#   XYZ_CANARY_SANDBOX   — sandbox dir (default: mktemp under $TMPDIR; removed unless --keep)
+#   XYZ_CANARY_SANDBOX   — sandbox dir (default: mktemp under $TMPDIR; removed unless --keep).
+#                          Use-boundary guarded (GH-567): it must resolve outside the harness
+#                          tree, must not be / or the home directory, and only a directory
+#                          carrying this run's logs/ marker is ever removed at teardown.
 #   XYZ_CANARY_TIMEOUT_S — per-check wall-clock cap in seconds (default 60)
 #
 # Exit: 0 every check passed · 1 one or more checks failed · 2 usage.
@@ -45,7 +49,7 @@ LIST=0
 TIMEOUT_S="${XYZ_CANARY_TIMEOUT_S:-60}"
 
 usage() {
-  sed -n '2,37p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '2,42p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 while [ $# -gt 0 ]; do
@@ -85,6 +89,45 @@ now_ms() {
 
 rt_label() { [ "$1" = "1" ] && echo python || echo bash; }
 
+# sandbox_resolve <path> — print the resolved path, or fail. This is the use-boundary guard
+# (GH-567): a derivation-site check never covers a path passed in from elsewhere, so every
+# dangerous use of the sandbox re-proves it here instead of trusting the setup line. Refuses an
+# empty path, a path that does not resolve to a directory, and anything inside the harness tree.
+# The in-check `rm -rf`s at tick-repo/jog-target/marathon-target are descendants of a SANDBOX
+# that passed this guard and the setup refusals below (never /, never home), and SANDBOX is a
+# shell variable an external process cannot mutate mid-run — so one guard here plus the setup
+# refusals covers every delete target in this file.
+sandbox_resolve() {
+  local p="${1:-}" rp
+  [ -n "$p" ] || return 1
+  rp="$(cd -- "$p" 2>/dev/null && pwd -P)" || return 1
+  case "$rp" in "$ROOT"|"$ROOT"/*) return 1 ;; esac
+  printf '%s\n' "$rp"
+}
+
+# sandbox_deletable — the teardown guard. This run may only remove a directory that (a) still
+# passes sandbox_resolve, (b) is not the filesystem root or the resolved home, and (c) carries
+# this run's logs/ ownership marker. On any doubt the sandbox is KEPT, never deleted.
+sandbox_deletable() {
+  local rp hp
+  rp="$(sandbox_resolve "$SANDBOX")" || return 1
+  hp="$(sandbox_resolve "${HOME:-}" 2>/dev/null)" || hp=""
+  if [ "$rp" = "/" ]; then return 1; fi
+  if [ -n "$hp" ] && [ "$rp" = "$hp" ]; then return 1; fi
+  [ -d "$rp/logs" ] || return 1
+  printf '%s\n' "$rp"
+}
+
+# GH-564: `git status` cannot see .git/config or refs — the exact contamination class behind the
+# separate-full-clone rail (core.bare flipped, origin repointed, identity appended, HEAD reset).
+# The containment check snapshots the FULL local config plus HEAD before the run and diffs it
+# after, so ANY local config write fires, not just the four telltales. Hook FILES planted under
+# .git/hooks remain out of scope; a changed hooksPath (a config key) does not.
+git_state_fingerprint() {
+  printf 'head=%s\n' "$(git -C "$ROOT" rev-parse HEAD 2>/dev/null)"
+  git -C "$ROOT" config --local --list 2>/dev/null
+}
+
 # run_check <name> <command...>
 # The command runs in a subshell with the sandbox as CWD. Pass when it exits 0.
 run_check() {
@@ -93,8 +136,10 @@ run_check() {
   local log="$LOG_DIR/$name.log" t0 t1 rc
   t0="$(now_ms)"
   # Checks are shell functions, so `timeout(1)` cannot wrap them; a background watchdog does.
+  # The resolve before the cd is the per-check use boundary: `cd ""` is a silent no-op, so a
+  # sandbox that went missing or invalid mid-run must FAIL the check, not run it in-tree.
   local pid wd
-  ( cd "$SANDBOX" && "$@" ) >"$log" 2>&1 &
+  ( sandbox_resolve "$SANDBOX" >/dev/null && cd "$SANDBOX" && "$@" ) >"$log" 2>&1 &
   pid=$!
   # The watchdog owns no stdio and takes its sleep down with it, so a finished check never leaves
   # an orphan holding a caller's pipe open (`./canary.sh | tee` would otherwise block for TIMEOUT_S).
@@ -151,8 +196,13 @@ check_node_syntax() {
 }
 
 check_python_ports() {
-  python3 -m compileall -q "$ROOT/utils/py" || return 1
-  ( cd "$ROOT/utils/py" && python3 - <<'PY'
+  # compileall writes .pyc next to source, so it compiles a COPY in the sandbox, and the import
+  # probe sets PYTHONDONTWRITEBYTECODE=1 for the same reason — "never writes inside the repo
+  # tree" stays literally true instead of merely gitignored.
+  rm -rf "$SANDBOX/py-floor"
+  cp -R "$ROOT/utils/py" "$SANDBOX/py-floor" || return 1
+  python3 -m compileall -q "$SANDBOX/py-floor" || return 1
+  ( cd "$ROOT/utils/py" && PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
 import importlib, pathlib, sys
 bad = 0
 for p in sorted(pathlib.Path(".").glob("*.py")):
@@ -249,7 +299,9 @@ sys.exit(0 if ids == ["p1"] else (print(f"phases {ids}, expected [p1]") or 1))
 # marathon.sh --dry-run renders the relay file and prints the tick seed, then exits WITHOUT
 # driving a turn. The plan lives under this harness (GH-212 exempt); the brief is copied into the
 # sandbox target repo; the builder/reviewer binaries are inert stubs on PATH so the preflight
-# passes without any real model CLI installed.
+# passes without any real model CLI installed. The stubs shadow PATH-name lookups only — an
+# absolute-path builder invocation would bypass them, which is part of why this check asserts the
+# orchestrator's dry-run completion rather than any builder output.
 check_marathon_dry_run() {  # <XYZ_PYTHON value>
   local rt="$1" target="$SANDBOX/marathon-target-$rt" stub="$SANDBOX/stub-bin" out
   rm -rf "$target"; mkdir -p "$target/canary-briefs" "$stub"
@@ -272,12 +324,20 @@ check_marathon_dry_run() {  # <XYZ_PYTHON value>
 }
 
 check_tree_clean() {
-  local after
+  local after gafter
   after="$(git -C "$ROOT" status --porcelain --untracked-files=all 2>/dev/null)"
-  [ "$after" = "$TREE_BEFORE" ] && return 0
-  echo "the canary changed the repo tree — it must never write inside the harness:"
-  diff <(printf '%s\n' "$TREE_BEFORE") <(printf '%s\n' "$after") | sed -n '1,40p'
-  return 1
+  if [ "$after" != "$TREE_BEFORE" ]; then
+    echo "the canary changed the repo tree — it must never write inside the harness:"
+    diff <(printf '%s\n' "$TREE_BEFORE") <(printf '%s\n' "$after") | sed -n '1,40p'
+    return 1
+  fi
+  gafter="$(git_state_fingerprint)"
+  if [ "$gafter" != "$GITSTATE_BEFORE" ]; then
+    echo "the canary changed the clone's .git state (config/refs) — the GH-564 class git status cannot see:"
+    diff <(printf '%s\n' "$GITSTATE_BEFORE") <(printf '%s\n' "$gafter") | sed -n '1,40p'
+    return 1
+  fi
+  return 0
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -287,11 +347,21 @@ if [ "$LIST" = "0" ]; then
   for tool in bash git node python3; do
     command -v "$tool" >/dev/null 2>&1 || { echo "canary: missing required tool: $tool" >&2; exit 2; }
   done
-  SANDBOX="${XYZ_CANARY_SANDBOX:-$(mktemp -d "${TMPDIR:-/tmp}/xyz-canary.XXXXXX")}"
-  mkdir -p "$SANDBOX"
-  case "$SANDBOX" in "$ROOT"/*) echo "canary: sandbox must live outside the repo tree ($SANDBOX)" >&2; exit 2 ;; esac
-  LOG_DIR="$SANDBOX/logs"; mkdir -p "$LOG_DIR"
+  # Snapshot BEFORE anything else, so even a setup misconfiguration that wrote in-tree is caught
+  # by the closing containment check instead of being invisible inside the "before" state.
   TREE_BEFORE="$(git -C "$ROOT" status --porcelain --untracked-files=all 2>/dev/null)"
+  GITSTATE_BEFORE="$(git_state_fingerprint)"
+  SANDBOX="${XYZ_CANARY_SANDBOX:-$(mktemp -d "${TMPDIR:-/tmp}/xyz-canary.XXXXXX")}"
+  mkdir -p "$SANDBOX" 2>/dev/null || true
+  RP="$(sandbox_resolve "$SANDBOX")" || { echo "canary: sandbox unusable: $SANDBOX" >&2; exit 2; }
+  SANDBOX="$RP"
+  HP="$(sandbox_resolve "${HOME:-}" 2>/dev/null)" || HP=""
+  if [ "$RP" = "/" ] || { [ -n "$HP" ] && [ "$RP" = "$HP" ]; }; then
+    echo "canary: sandbox must not be / or the home directory ($RP)" >&2
+    exit 2
+  fi
+  SANDBOX="$RP"
+  LOG_DIR="$SANDBOX/logs"; mkdir -p "$LOG_DIR"  # also the ownership marker the teardown guard requires
   T_START="$(now_ms)"
   echo "canary: harness $ROOT"
   echo "canary: sandbox $SANDBOX"
@@ -352,7 +422,9 @@ if [ $FAIL -gt 0 ]; then
 fi
 if [ "$KEEP" = "1" ]; then
   echo "canary: sandbox kept at $SANDBOX"
+elif DEL_RP="$(sandbox_deletable)"; then
+  rm -rf "$DEL_RP"
 else
-  rm -rf "$SANDBOX"
+  echo "canary: sandbox NOT deleted — failed the ownership guard, kept at $SANDBOX"
 fi
 [ $FAIL -eq 0 ]

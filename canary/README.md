@@ -2,18 +2,19 @@
 
 `./canary.sh` is the first rung of the gate: a clean-room, network-free, model-free smoke tier that
 proves the core XYZ surfaces still start, parse, and coordinate. It runs in seconds and never writes
-inside the repo tree (the last check diffs `git status` before and after).
+inside the repo tree (the last check diffs the working tree and the clone's `.git` state — config,
+remotes, HEAD — before and after).
 
 | Surface | Check | Both runtimes? |
 |---|---|---|
-| static floor | `bash -n` every shell entry point, `node --check` `bin/`+`src/`, `py_compile`+import `utils/py` | n/a |
+| static floor | `bash -n` every shell entry point, `node --check` `bin/`+`src/`, `py_compile` (sandbox copy) + import `utils/py` | n/a |
 | tick kernel | init → claim → contended claim loses → release `--to` → take → done → project → analyze in a throwaway repo (`TICK_REPO_ROOT` pinned) | n/a (Node) |
 | tick kernel | `bin/validate-relay-block` deterministic refusals (exit 1 missing file, exit 8 missing `STATUS:`) | n/a |
 | relay | `relay-drive.sh --help`, `poll.sh --help`, `skills/relay-xyz/find-harness.sh --check` | yes |
 | consult | `consult.sh --help` | yes |
 | marathon | `bin/marathon-yaml` parses the canary plan; `marathon.sh --help`; `marathon-drive.sh --help`; `marathon.sh --dry-run` renders the relay file + tick seed with inert builder stubs | yes |
 | jog | `utils/py/jog_run.py --help`; `--dry-run` against a copy of the committed releases ledger, asserting no ledger mutation | n/a (Python) |
-| containment | repo tree unchanged after the run | n/a |
+| containment | repo tree and `.git` state unchanged after the run; the sandbox is deleted at teardown only if it passes the ownership guard (resolves outside the harness, not `/` or home, carries this run's `logs/` marker) | n/a |
 
 "Both runtimes" = the Python default and the `XYZ_PYTHON=0` Bash twin. Jog is the serial
 (lanes-off) supervisor over marathon; the canary exercises its queue simulation, never a drive.
