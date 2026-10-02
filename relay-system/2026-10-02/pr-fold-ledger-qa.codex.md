@@ -52,7 +52,7 @@ ROUND: 1 / 1
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: committed fold branch at `727c79aa`, especially `releases.sql` and `releases.db`, against pinned `origin/development` at `75b75181`. Read the prior independent review at `relay-system/2026-10-02/pr-fold-qa.codex.md` first; its B1 finding prompted the repair.
+- Artifact under review: committed fold branch at SHA 727c79aa, especially releases.sql and releases.db, against pinned development SHA 75b75181. Read the prior independent review in relay-system/2026-10-02/pr-fold-qa.codex.md first; its B1 finding prompted the repair.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-02
 - Definition of Done: independent read-only follow-up on B1, with PASS/FAIL/PARKED and citations. Confirm that all seven development work events for GH-896/GH-901 retain their original GIDs and payloads, and GH-896 retains its original `in-progress` status/accepted-start event and GID. Compare all nine added roadmap rows and GH-506/GH-896 updates by business fields to the pre-repair fold commit `612ba69c`, allowing a deliberate GH-896 status-label correction and fresh IDs/timestamps/positions. Confirm the four Jog additions and existing queue rows have intended state. Check `releases.sql` and `releases.db` agree using read-only probes. No new code changes were made. Do not run tests or mutating commands in the relay worktree; final `ci-local.sh` will run separately in a disposable full clone after this receipt is committed. Treat a concrete remaining data loss as a blocker. Explicitly state `swept file: yes` or `swept file: no` and explain scope.
