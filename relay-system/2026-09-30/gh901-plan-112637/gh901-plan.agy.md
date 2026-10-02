@@ -1,0 +1,12 @@
+**ANSWER**
+The proposed extension is a minimal, safe, and DRY application of the existing `task-sync` architecture. Offloading I/O to native agent tools via an offline snapshot elegantly sidesteps brittle database reverse-engineering while fully reusing the core stamping logic. However, explicitly rejecting `--apply` in the adapter will break the CLI's error handling and receipt generation, and the new CLI arguments must be wired into the main script.
+
+**FINDINGS**
+- **[Blocker] Adapter must not raise an error on `--apply`:** In `task_sync.py` (lines 118-121), catching `core.AdapterError` wipes the generated plan (`ides[name] = core.new_ide_report()`) and sets `red = 1`. If the Codex adapter rejects `--apply` by throwing an error, the calling agent will receive an empty plan alongside a non-zero exit code (3), and the global heartbeat receipt will be permanently suppressed (lines 123-124). The adapter must treat `--apply` as a successful no-op—returning the exact same report as a dry-run—and rely on the native agent to execute the I/O. 
+- **[Blocker] CLI parameter registration:** `task_sync.py` must be updated to include `"codex"` in the `ADAPTERS` tuple (line 35), otherwise `--ide codex` will trigger a hard `parser.error` (lines 187-189). Additionally, the `argparse` configuration must explicitly define `--codex-snapshot` and `--exclude-thread` so they can be passed to `_build_adapter`.
+- **[Should] Use the correct datetime parser for native activity:** Codex's `completedAt` and `startedAt` timestamps are typically ISO-8601 strings rather than millisecond integers. Ensure the adapter maps these using `core.utc_text_to_local_dt(activity_at)` (which safely handles strings) rather than `core.ms_to_local_dt()`.
+- **[Pass] Minimal DRY reuse:** Delegating the actual store mutation to native agent tools (`set_thread_title`, `move_thread_to_sidebar_section`) while strictly utilizing `core.clean_base` and `core.local_stamp` for string computation perfectly aligns with the skill's safety contract.
+- **[Pass] Safety and Idempotence:** Relying on `clean_base` safely guarantees stamp idempotence, and requiring an explicit `captured_at`/`activity_at` payload grounds the sweep in real activity rather than generic UI mutation times.
+
+**RECOMMENDATION**
+Implement `adapters/codex.py` as a pure function that returns the plan identically for both dry-run and `--apply`, update `task_sync.py` to register the new CLI args and `"codex"` adapter name, and proceed with the native agent driving the resulting I/O.

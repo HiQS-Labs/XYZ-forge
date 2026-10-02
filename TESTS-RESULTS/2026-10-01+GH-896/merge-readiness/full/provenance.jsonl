@@ -1,0 +1,1 @@
+{"command": "bash validate.sh", "exit_code": 0, "sha": "aa57bebeda16eef935e4fd580c336ba8b910f4f7", "identity_intact": true, "environment": "XYZ_HARNESS,XYZ_SKILLS_ROOT,XYZ_FORGE_ROOT,TICK_REPO_ROOT unset", "at": "2026-10-02T07:26:22.402880+00:00"}

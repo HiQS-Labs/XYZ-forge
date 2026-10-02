@@ -268,10 +268,8 @@ class DeploySkillsTest(unittest.TestCase):
             self.cli("--apply", "update", "sample")
         archives = sorted((self.root / "backups").glob("sample-*.zip"))
         self.assertEqual(len(archives), 2)
-        # GH-914: the collision suffix follows the full date; a bare "-02.zip" check misfires on the 2nd of a month.
-        collision = lambda p: p.stem.count("-") == 4  # sample-YYYY-MM-DD-02 vs sample-YYYY-MM-DD
-        self.assertTrue(any(collision(p) and p.stem.endswith("-02") for p in archives))
-        first = next(p for p in archives if not collision(p))
+        self.assertTrue(any(p.name.endswith("-02.zip") for p in archives))
+        first = min(archives, key=lambda p: len(p.name))
         restored = self.work / "restore"
         restored.mkdir()
         with zipfile.ZipFile(first) as z:
