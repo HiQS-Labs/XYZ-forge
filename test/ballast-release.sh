@@ -30,7 +30,7 @@
 #
 #   (default)         Suite mode, registered in validate.sh. GREEN while Ballast is in progress.
 #                     Fails ONLY on a false completion claim (a CLOSED manifest issue whose gate is
-#                     missing/unregistered/uncontrolled) or a ledger disagreement — an unfinished
+#                     missing/unregistered-without-exemption/uncontrolled) or a ledger disagreement — an unfinished
 #                     release does not paint the whole suite red (#460's failure mode).
 #
 #   --release-gate    THE GOALPOST. Exits non-zero until Half A and Half B both pass and every
@@ -130,6 +130,16 @@ audit_manifest() {  # [<validate.sh>] [<root>] — sets COMPLETE / REMAINING / F
     [ "$have_gate" -eq 0 ] && why="$why gate-missing($gate)"
     [ "$have_reg"  -eq 0 ] && why="$why not-registered-in-validate.sh"
     [ "$have_ctl"  -eq 0 ] && why="$why no-recorded-control($ctl)"
+
+    # GH-854/GH-920: explicit retirement is not a false closure, but earns no release credit.
+    if [ "$have_gate" -eq 1 ] && [ "$have_ctl" -eq 1 ] && [ "$have_reg" -eq 0 ] \
+       && [ -f "$root/test/gh306-registry-bidirectional.sh" ] \
+       && /usr/bin/sed -n '/^EXEMPT=(/,/^)/p' "$root/test/gh306-registry-bidirectional.sh" \
+          | /usr/bin/grep -F "\"${gate##*/}\"" >/dev/null; then
+      REMAINING=$((REMAINING+1))
+      info "#$n explicitly exempt from automatic gating — retained control, no release completion credit"
+      continue
+    fi
 
     if [ -n "$why" ]; then
       REMAINING=$((REMAINING+1))

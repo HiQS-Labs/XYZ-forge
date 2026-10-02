@@ -1,0 +1,3 @@
+== test: gh4-ungated-clone-warning ==
+  FAIL: could not create a scratch copy of this repo for isolation
+  gh4-ungated-clone-warning: 0 pass, 1 fail
