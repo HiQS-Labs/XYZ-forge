@@ -88,4 +88,12 @@ Read the entire GH-922 plan, `skills/3-weekly/task-sync/scripts/adapters/codex.p
 
 Relay closed (Approved), no further review turn needed. Handing the completed token to Producer (`codex-producer`) to implement the approved plan and obtain final QA.
 
+
+### Attestation · relay-drive — 2026-10-02T07:05:04Z
+task: RELAY-gh922-plan
+reviewer: codex
+status: Approved
+reviewed-head: 23b3239de9bb795344fb0e63f54e92d748439a80
+added-range: 6173+3532
+added-sha256: 90d8fa8e8718f1f1199a986f6e1c2a77c41474f5b3594663dd0d6bebf0ade9e6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
