@@ -268,8 +268,8 @@ class DeploySkillsTest(unittest.TestCase):
             self.cli("--apply", "update", "sample")
         archives = sorted((self.root / "backups").glob("sample-*.zip"))
         self.assertEqual(len(archives), 2)
-        self.assertTrue(any(p.name.endswith("-02.zip") for p in archives))
-        first = next(p for p in archives if not p.name.endswith("-02.zip"))
+        first = min(archives, key=lambda p: len(p.name))
+        self.assertEqual({p.name for p in archives}, {first.name, f"{first.stem}-02.zip"})
         restored = self.work / "restore"
         restored.mkdir()
         with zipfile.ZipFile(first) as z:
