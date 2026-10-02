@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -71,5 +71,60 @@ Narrow independent follow-up QA on one-line test correction at 7e088c84. Prior s
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: The day02 failure is reproduced in memory, and the corrected selection retains the original archive roundtrip assertion. No concrete blocker or additional pre-existing defect found in the swept test file within this fixture-followup scope; prior unrelated source/ledger approval is not reopened.
+swept file: yes
+
+- [Pass] Date-independent selection: `test/test_deploy_skills.py:272` uses `min(archives, key=lambda p: len(p.name))`. Archive naming at `skills/3-weekly/skills-army-hq/scripts/intake.py:331-339` gives the first archive no collision suffix and appends `-02` to the second. Exact observed names were `sample-2026-10-02.zip` and `sample-2026-10-02-02.zip`. The old predicate fails on both; the current expression selects the unsuffixed archive. Fix: none.
+  Probe command (in-memory only; no fixture imported or executed):
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 -B - <<'PYPROBE'
+import ast
+from pathlib import Path
+from datetime import date, timedelta
+tree = ast.parse(Path("test/test_deploy_skills.py").read_text())
+method = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == "test_a2_archives_round_trip_and_same_day_collisions")
+selection = next(n.value for n in method.body if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "first" for t in n.targets))
+code = compile(ast.Expression(selection), "<current-line-272>", "eval")
+archives = [Path("sample-2026-10-02.zip"), Path("sample-2026-10-02-02.zip")]
+print("names:", [p.name for p in archives])
+try:
+    next(p for p in archives if not p.name.endswith("-02.zip"))
+except StopIteration:
+    print("OLD: StopIteration (witnessed red control)")
+else:
+    raise AssertionError("red control did not fail")
+print("CURRENT:", eval(code, {"archives": archives}).name)
+count = 0
+for year in (2026, 2028):
+    day = date(year, 1, 1)
+    while day.year == year:
+        stem = f"sample-{day.isoformat()}"
+        pair = [Path(f"{stem}{'' if index == 1 else '-' + str(index).zfill(2)}.zip") for index in (1, 2)]
+        for order in (pair, pair[::-1]):
+            assert eval(code, {"archives": order}) == pair[0], pair
+        count += 1
+        day += timedelta(days=1)
+print(f"CURRENT: {count} valid dates, both input orders select unsuffixed first archive")
+PYPROBE
+  ```
+  Exit status: 0. Decisive output:
+  ```text
+names: ['sample-2026-10-02.zip', 'sample-2026-10-02-02.zip']
+OLD: StopIteration (witnessed red control)
+CURRENT: sample-2026-10-02.zip
+CURRENT: 731 valid dates, both input orders select unsuffixed first archive
+  ```
+  The general date claim follows from fixed-width ISO dates and a strictly longer collision suffix; the probe samples all valid dates in a common and leap year. It assumes the existing same-day fixture completes within one UTC day.
+- [Pass] Meaningful roundtrip retained: `test/test_deploy_skills.py:265` captures the original snapshot before updates; `:270` requires two archives; `:276-290` checks CRC, confines extraction, restores bytes/link targets/modes, and compares the restored snapshot to that original. The fixture at `:76-79` includes an executable file and a symlink. Selecting the second archive would restore version 2 instead of the original payload, so the final snapshot equality remains discriminating. Fix: none.
+- [Pass] The entire embedded artifact and all 625 lines of `test/test_deploy_skills.py` were read, including the complete method at `:262-293` and archive naming implementation at `intake.py:326-364`. No new tests or gates are proposed. Graph-first discovery was attempted: nearest available project `XYZ-forge` points to a different checkout, generation `2026-09-01T15:54:30Z`; both candidate paths returned freshness `not_tracked` and the symbol query returned zero results. All material conclusions therefore use current local source, not that stale graph. Fix: none.
+- [Unverified — needs clone run] The embedded artifact reports focused shell/Python passes and a Small rerun underway. Those executions were not independently reproduced here; no validate/test/pytest or executable fixture was run. Harness gate evidence remains separate from this narrow expression/source approval.
+
+NEXT: Producer (codex-producer). Relay closed (Approved), no further turn needed; harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
