@@ -1,0 +1,13 @@
+# Canary-owned one-phase marathon plan. Exercised ONLY via `marathon.sh --dry-run` by ./canary.sh:
+# it renders the relay file and prints the tick seed, then exits — no turn is ever driven.
+# Lives under the harness home so GH-212's PROJECT/2-WORKING placement rule exempts it.
+# reviewer=codex pairs with the canary's `--builder agy`; both are inert stubs on PATH at run time.
+name: xyz-canary
+phases:
+  - id: p1
+    name: Canary phase — render only
+    reviewer: codex
+    brief: canary-briefs/p1.md
+    artifact: canary-artifact.md
+    turn_timeout_s: 60
+    max_review_rounds: 1

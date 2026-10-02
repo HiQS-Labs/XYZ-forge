@@ -1,0 +1,34 @@
+# Canary tier (GH-928) — DORMANT by design until the tier is accepted.
+# This workflow fires only on manual dispatch. To arm it, add:
+#
+#   push:
+#     branches: [development, main]
+#   pull_request:
+#
+# under `on:` — nothing else changes. ./canary.sh is the whole job.
+name: Canary tier
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: canary-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: canary (both runtimes)
+        run: ./canary.sh --runtime both

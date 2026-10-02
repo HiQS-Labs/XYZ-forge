@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-02 — A canary tier sits in front of the gate (GH-928)
+
+`./canary.sh` is a clean-room, sub-minute smoke run over the surfaces that carry the repo's value,
+written from the core entry points only (tick, relay-drive/poll, the relay-xyz locator, consult,
+marathon, jog) without reading the existing CI. It runs the tick lifecycle in a throwaway repo
+(claim → contended claim loses → release `--to` → take → done → project → analyze), the relay-block
+validator's refusals, every dual-runtime shim's `--help` in BOTH the Python default and the
+`XYZ_PYTHON=0` twin, `marathon.sh --dry-run` on a canary-owned one-phase plan, jog's queue
+simulation against a sandbox copy of the committed ledger, and a static floor (`bash -n`,
+`node --check`, `py_compile` + import), then proves it wrote nothing in-tree by diffing `git status`.
+21 checks, ~2.5 s on a 4-core host; deliberate breaks of `bin/tick` and `utils/py/jog_run.py` fail it.
+
+Decision: ship it additive and local-first; `.github/workflows/canary.yml` is `workflow_dispatch`-only
+until the tier is accepted, and arming it is a trigger edit. Bet: a two-second first rung gets run on
+every push where a minutes-long gate gets skipped; it narrows the question, it does not replace
+`validate.sh`, the tiered selection, or `ci-local.sh`. Failure signal: the canary stays green while
+the gate goes red on a core surface — a check is asserting too little. Rollback: delete `canary.sh`,
+`canary/`, and the workflow; nothing else references them. Capture: `PROJECT/1-INBOX/GH-928-CANARY-GATE.md`.
+
 ## 2026-10-01 — Successful completion appends retain mutual exclusion (GH-909)
 
 A controlled handoff showed a stale waiter deleting a live successor’s PID-directory lock: all three writers returned success, but only two records survived. The existing completion writer now holds a stable-inode OS advisory lock through its atomic JSON transaction, preserving bounded per-holder wait and the absolute queue cap. The three covering fixtures use real OS locks. Upgrade and rollback require stopping and retiring old writers sharing the records path; mixed protocols are unsupported. Evidence is retained under `TESTS-RESULTS/2026-10-01+GH-909/`. The full-gate follow-up witnessed a quiet-grep SIGPIPE false-red in gh268 (#853). Because it is outside Small, standing policy turns it off through TESTS removal and gh306 EXEMPT; its file stays unchanged. A consuming-grep diagnostic demonstrated the cause but is not shipped. This fixes a proven loss mechanism; the exact historical CI interleaving and separate relay/registry flakes remain unproven.
