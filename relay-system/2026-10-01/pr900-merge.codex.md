@@ -91,4 +91,12 @@ Only this relay receipt was edited outside exempt scratch. No source/artifact fi
 
 Relay closed (Approved), no further reviewer turn needed. Handing completion to codex-producer for the disposable-clone gate and live publication checks.
 
+
+### Attestation · relay-drive — 2026-10-02T06:50:50Z
+task: RELAY-pr900-merge
+reviewer: codex
+status: Approved
+reviewed-head: f2cfb5a0e546797dfd5f734d70360c92616aca45
+added-range: 6281+5324
+added-sha256: 15908b1c4610de7dfaeccf035fa3f69691bfad23c70b11bcdacaca46da9cc144
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
