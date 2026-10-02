@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue #908 ordered this serial Jog; preflight passed on base 57bd97af and implementation is drafted on fix/gh908-pdda-adopter-jog. | Agy and final Codex relay QA approved; full macOS ci-local passed at final post-reconciliation tip 3882935e with clone identity intact. Publish the PR, check hosted CI, then await operator merge approval. |
+| Issue #908 ordered this serial Jog; preflight passed on base 57bd97af and implementation is drafted on fix/gh908-pdda-adopter-jog. | Agy and final Codex relay QA approved; full macOS ci-local passed at final post-reconciliation tip 3882935e with clone identity intact. PR #913 is open and its blocking hosted smoke gate passed at 9a32b247. Await operator merge approval. |
 
 ## Observed problem
 
