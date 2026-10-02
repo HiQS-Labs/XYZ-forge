@@ -41,7 +41,7 @@ UNKNOWNS: source snapshots are private and were not imported; public evidence us
 2. Add the project exclusion at the existing predicate -> synthetic pinned project chat without activity is skipped, unpinned project/custom/remote/cloud/non-Codex/heartbeat entries remain untouched.
 3. Record manual red/green controls under TESTS-RESULTS/2026-10-02+GH-922/ with provenance -> unmodified base fails mixed-inventory assertion; fixed planner succeeds; removing eligible activity still produces error and CLI exit 3. Check positive title/pin proposals, full description, existing manual pins, actual-old turns, freshness/malformed/empty refusal and idempotence. Do not create new test files or gate machinery.
 4. Run independent final Codex QA and existing Small qualifying gate in disposable full clone, check clone identities and PDDA/ledger -> Approved and green evidence at exact code SHA.
-5. Push through gate, open dependent PR against development with explicit #900/#902 sequence and verify hosted exact-head checks -> PR ready awaiting prerequisites; retain clone.
+5. Push through gate, open stacked PR against feat/codex-task-sync, retarget development after parent landing with explicit #900/#902 sequence and verify hosted exact-head checks -> PR ready awaiting prerequisites; retain clone.
 
 ## Risk / rollback / non-scope
 
@@ -49,4 +49,4 @@ Easy rollback: revert this task commit. Unknown/missing projectId stays eligible
 
 ## Execution evidence
 
-Plan QA Approved, driver exit 0, receipt relay-system/2026-10-02/gh922-plan.codex.md. Accepted-start admitted by exact URL row before source edit. Implementation 65e60c9c adds exactly one predicate line. Recorded red/green matrix: base error for project-pin, fixed 11/11 assertions, existing Codex controls 28/28; TESTS-RESULTS/2026-10-02+GH-922/provenance.jsonl. No raw private snapshots copied. Final QA and Small gate pending.
+Plan QA Approved, driver exit 0, receipt relay-system/2026-10-02/gh922-plan.codex.md. Accepted-start admitted by exact URL row before source edit. Implementation 65e60c9c adds exactly one predicate line. Recorded red/green matrix: base error for project-pin, fixed 11/11 assertions, existing Codex controls 28/28; TESTS-RESULTS/2026-10-02+GH-922/provenance.jsonl. No raw private snapshots copied. Final QA Approved with driver exit 0. Small gate failed 4/75 checks at 62593e14; three environment override failures, one inherited October 2 deploy-skills assertion tracked by #914/#915. PR remains blocked on qualifying gate and parent landing.
