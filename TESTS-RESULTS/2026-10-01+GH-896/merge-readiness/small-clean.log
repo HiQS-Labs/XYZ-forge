@@ -1,0 +1,730 @@
+githooks: NOT INSTALLED in this clone.
+  /Users/noelsaw/Documents/GH Repos/XYZ-forge-gate-900-902/.git/hooks/pre-push does not exist.
+  This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh
+validate.sh: continuing WITHOUT the push gate installed — this run is unaffected, but a future push from this clone will not be verified.
+validate.sh: tier 2 — subsystem small (GH-35)
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): gh308-frozen-twin-guard.sh gh777-inventory-ratchet.sh gh400-acceptance-fidelity.sh gh400-source-url.sh litmus-release.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh gh448-driver-lock-resolver.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh549-work-events.sh gh646-status-label.sh gh1-fixture-guard.sh gh1-adoption-guard.sh gh139-pipe-grep-guard.sh gh168-wave-reconcile-scope.sh gh184-no-tracked-scratch.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh releases-skill.sh gh103-timeline-exporter.sh gh75-dashboard.sh gh32-releases-app.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-releases-fuzz.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh351-manifest-unship.sh gh360-scoped-receipt-chain-rebuild.sh gh349-releases-roadmap-vendored.sh gh429-wave-reconcile-vendored-observe.sh gh358-wave-reconcile-vendored-paths.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh relay-target-root.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root-newfile.sh gh649-pdda-migration.sh pdda-changelog.sh pdda-install-startup-docs.sh pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh784-marathon-qa-gate.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh mktemp-trap-guard.sh gh567-roadmap-dashboard-retired.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh568-releases-md-retired.sh gh454-reconciler-defects.sh gh424-roadmap-status-marker.sh gh421-auto-wave-reconcile.sh gh491-roadmap-section-validation.sh gh492-roadmap-state-sweep.sh gh605-work-state.sh gh605-board-policy.sh gh645-merge-cleanup-xyz-tools.sh gh674-merge-cleanup-hosted-lookup.sh gh527-issue-url-repair.sh gh153-releases-sidebar-rollup.sh security-scan.sh sentinel-network-guard.sh gh107-timeline-json-seam.sh wave-reconcile.sh gh496-phase2-reconciliation-views.sh gh306-registry-bidirectional.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 docs gate (docs paths in the change set)
+===============================
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/README.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS/recon-deploy-skills.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L1-oracle.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L2-token-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L3-consult-cap.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L4-285-revalidate.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L5-gh237-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L6-muse-attribution.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L7-checkout-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L8-zero-output-handback.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L9-369-regression.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L2-measure-c1-d2.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L3-timing-claims-and-summary.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-22.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-30.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-agy-model-probe.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-closeout-evidence.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-end-of-week.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh796-integration.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-install-sh-link-steal.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=75
+
+== pdda-check-changelog ==
+WARN [pdda-check-changelog] CHANGELOG.md:1 CHANGELOG newest entry (2026-10-01) predates the latest commit (2026-10-02) by 1 day(s) — add an end-of-iteration entry
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md:1 issue #141 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-193-AGENTCHORUS-GEN2.md:1 issue #193 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md:1 issue #201 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-259-JOG-SERIAL-QUEUE.md:1 issue #259 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md:1 issue #275 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md:1 issue #299 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md:1 issue #325 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md:1 issue #355 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md:1 issue #384 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md:1 issue #396 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md:1 issue #399 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-402-BOARD-SYNC.md:1 issue #402 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-418-MARATHON-ADOPT-RELEASES-DB.md:1 issue #418 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md:1 issue #421 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md:1 issue #423 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md:1 issue #424 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md:1 issue #425 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md:1 issue #453 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md:1 issue #454 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md:1 issue #460 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md:1 issue #478 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md:1 issue #484 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md:1 issue #491 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md:1 issue #492 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md:1 issue #5 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-537-FIVE-SKILL.md:1 issue #537 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 issue #544 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-591-RECONCILER-LIFECYCLE.md:1 issue #591 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 issue #648 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-670-CLAUDE-REVIEWER.md:1 issue #670 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md:1 issue #722 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md:1 issue #732 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md:1 issue #749 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-75-RELEASES-ROADMAP-DASHBOARD.md:1 issue #75 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-760-AGENT-CHORUS-BRIDGE-READY-POLL.md:1 issue #760 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md:1 issue #796 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-800-CROSS-DEVICE-GATE-BENCHMARK.md:1 issue #800 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md:1 issue #807 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md:1 issue #836 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-879-CI-SUITE-AUDIT-FIXES.md:1 issue #879 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md:1 issue #886 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-896-UNIFIED-TASK-SYNC.md:1 issue #896 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 issue #494 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 issue #494 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 issue #494 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 issue #496 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-1-SUITE-CONTAINMENT-GATE.md:1 issue #1 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-10-REQUIRE-FIXTURE-ADOPTION.md:1 issue #10 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md:1 issue #101 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-102-UNIFIED-TELEMETRY-TOOLING.md:1 issue #102 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-103-TIMELINE-LEDGER-SPIKE.md:1 issue #103 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-105-VENDOR-RELEASES-ADDON.md:1 issue #105 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-107-RELEASES-DB-READ-SEAMS.md:1 issue #107 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-108-GH-111-EXECUTION-TODO.md:1 issue #111 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md:1 issue #108 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-111-DIALED-IN.md:1 issue #111 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md:1 issue #113 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-114-HEADLESS-TTY-IDLE-HANG.md:1 issue #114 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md:1 issue #115 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-123-LINUX-CANARY-REMAINDER.md:1 issue #123 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-124-CLOSEOUT-AUTOMATION.md:1 issue #124 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-132-REVIEW-XYZ-SKILL.md:1 issue #132 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-135-CONSULT-AGY-PREFLIGHT.md:1 issue #135 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-136-ATTEMPTS-GATE-ROOT.md:1 issue #136 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-137-SUITE-REGISTRATION.md:1 issue #137 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-138-TWIN-DIVERGENCE-RECORD.md:1 issue #138 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-139-SIGPIPE-SWEEP-GUARD.md:1 issue #139 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md:1 issue #14 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-140-UTCNOW-DEPRECATION.md:1 issue #140 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-144-AGENT2AGENT-3PLUS-UX.md:1 issue #144 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-148-DEEPSEEK-HARNESS.md:1 issue #148 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md:1 issue #15 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-153-RELEASES-SIDEBAR-ROLLUP.md:1 issue #153 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-155-3RD-GEN-ATE-METAMORPHIC-INVARIANTS.md:1 issue #155 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-165-POST-MERGE-WAVE-RECONCILER.md:1 issue #165 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-168-WAVE-RECONCILE-SCOPE.md:1 issue #168 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-170-AGENT2AGENT-GLITCHES.md:1 issue #170 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-174-HARNESS-MODELS-SQLITE-REGISTRY.md:1 issue #174 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md:1 issue #180 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-181-REPRO-ADAPTER-FIDELITY.md:1 issue #181 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-182-HEALER-FACADE-SAFETY.md:1 issue #182 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md:1 issue #183 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md:1 issue #184 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md:1 issue #195 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-197-VENDOR-TIER-SPLIT.md:1 issue #197 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-2-ORPHAN-BACKUP-RELOCATION.md:1 issue #2 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-202-WAVE-RECONCILER-STATE.md:1 issue #202 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-204-BSD-SED-IDIOM.md:1 issue #204 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-204-BSD-SED-PORTABILITY.md:1 issue #204 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-205-GATE-IDEMPOTENCY.md:1 issue #205 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-221-AGY-WHOAMI-PREFLIGHT.md:1 issue #221 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-222-RELEASES-TRACKING-REPOINT.md:1 issue #222 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-226-VENDOR-TRANSCRIPT-GATE.md:1 issue #226 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-228-ROADMAP-ORG-RENAME-REGEX.md:1 issue #228 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-23-KERNEL-OVERLAP-ENFORCEMENT.md:1 issue #23 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-232-WAVE-RECONCILER-MULTIPHASE.md:1 issue #232 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-233-AGENTCHORUS-GEN2-PHASE2.md:1 issue #233 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md:1 issue #243 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-246-RELAY-XYZ-QA-TEMPLATE.md:1 issue #246 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md:1 issue #249 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-251-VALIDATE-PYTEST-SKIP.md:1 issue #251 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-267-EXPRESS-HOTFIX-LANE.md:1 issue #267 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md:1 issue #269 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-271-WAVE-RECONCILE-LINKED-ISSUES.md:1 issue #271 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-272-MERGE-RESOLVE-VIEWS.md:1 issue #272 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-273-AUDIT-PYTHON-SPELLINGS.md:1 issue #273 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-280-JOG-MARATHON-RECALIBRATION.md:1 issue #280 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md:1 issue #3 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-314-ARCHIVE-TEMPLATE-MANGLE.md:1 issue #314 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-347-CANARY-PR-RELOCATION.md:1 issue #347 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-349-RELEASES-ROADMAP-VENDORED.md:1 issue #349 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-35-TEST-TIER-ROUTING.md:1 issue #35 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-351-MANIFEST-UNSHIP.md:1 issue #351 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md:1 issue #353 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md:1 issue #358 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md:1 issue #360 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-368-SAME-LANE-BUILDER-REVIEWER-ROUTING.md:1 issue #368 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-369-TURN-CAP-PROCESS-GROUP-KILL.md:1 issue #369 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-370-WORKTREE-PROGRESS-TELEMETRY.md:1 issue #370 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-371-INTERRUPT-SNAPSHOT-UNCOMMITTED-TREE.md:1 issue #371 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-372-ESCALATION-ROOT-CAUSE-TAIL.md:1 issue #372 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-373-PHANTOM-GEMINI-REVIEWER-LANE.md:1 issue #373 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-374-DRIFT-REGISTRY-CROSS-REPO-NOISE.md:1 issue #374 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-377-TEST-SUITE-RECALIBRATION.md:1 issue #377 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-39-RELEASES-PROJECT-SYNC.md:1 issue #39 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md:1 issue #4 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-405-MOCK-BOARD-HARNESS.md:1 issue #405 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md:1 issue #410 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-411-AGY-PROMPT.md:1 issue #411 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md:1 issue #411 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-412-TRANSIENT-CLAIM-EXIT-CODE.md:1 issue #412 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md:1 issue #413 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-414-COMMENT-REFERENCE-CHECK.md:1 issue #414 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md:1 issue #415 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-419-MARATHON-RULE-ENFORCEMENT.md:1 issue #419 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-42-COMMANDCODE-TURN.md:1 issue #42 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-436-MERGE-CLEANUP-SKILL.md:1 issue #436 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-439-START-TASK-SKILL.md:1 issue #439 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md:1 issue #447 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-45-WORKTREE-GATE-REFUSAL.md:1 issue #45 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-450-MODEL-CATALOG-CONSUME.md:1 issue #450 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-461-HOMEPAGE-QUALITY-COPY.md:1 issue #461 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-465-OTHER-APPS-TOOLS.md:1 issue #465 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-471-WORKHORSE-PRESERVATION-GATE.md:1 issue #471 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-473-UNSTUCK-SKILL.md:1 issue #473 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-474-DASHBOARD-DROPPED-ROW-SIGNAL.md:1 issue #474 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md:1 issue #487 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-494-FLIGHT-DASHBOARD.md:1 issue #494 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-494-SESSION-CONTEXT-PLAN.md:1 issue #494 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-496-SHARPEN-CICD.md:1 issue #496 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-50-SANDBOXED-GIT-HALF-APPLY.md:1 issue #50 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-505-RELAY-REVIEWER-INTEGRITY.md:1 issue #505 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-508-GIT-PULSE-SKILLS.md:1 issue #508 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-509-RELAY-TERMINAL-AUTHORIZATION.md:1 issue #509 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-510-JOG-MERGE-FALSE-SUCCESS.md:1 issue #510 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-515-AGENT-CHORUS-TELEMETRY-TIME-BOMB.md:1 issue #515 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md:1 issue #516 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-523-MERGE-CLEANUP-PRIMARY-FIRST.md:1 issue #523 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-524-AGENT-CHORUS-SEAT-IDENTITY.md:1 issue #524 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-528-UNSTUCK-QUEUED-TRIPWIRE.md:1 issue #528 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-529-RELAY-MARKER-ATTESTATION.md:1 issue #529 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-533-RELAY-VERDICT-VOCABULARY.md:1 issue #533 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-534-MERGE-CLEANUP-FAILURE-MODES.md:1 issue #534 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-536-DEPLOYED-SKILLS-RELOCATION.md:1 issue #536 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-549-WORK-STATE-EVENT-STREAM.md:1 issue #549 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-554-TICK-UNKNOWN-FLAGS.md:1 issue #554 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-555-MERGE-CLEANUP-B1-BAK.md:1 issue #555 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-556-SKILLS-POSTRELOC-HARDENING.md:1 issue #556 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-558-GH32-SECTION-J-FLAKE.md:1 issue #558 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-561-GATE-TICK-TELEMETRY-CLONES.md:1 issue #561 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-564-WORK-BACKFILL-REVIEW-READY.md:1 issue #564 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-565-FIX-RECONCILE-CORRELATE-SQUASHED-REBASED-PR-COMMIT-LINEAGE-I.md:1 issue #565 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-567-REMOVE-ROADMAP-DASHBOARD.md:1 issue #567 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-568-RETIRE-RELEASES-MD.md:1 issue #568 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-57-RELEASES-SQLITE-FUZZING.md:1 issue #57 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-570-HQ-KNOWN-REPOS-EMPTY-DB.md:1 issue #570 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-578-FEAT-SKILLS-ADD-CI-OPTIMIZE-TRANSFERABLE-CI-CD-AUDIT-OPTIMIZ.md:1 issue #578 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-586-SOP-WHACK-A-MOLE-SKILLS.md:1 issue #586 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-592-EXPRESS-PROVENANCE-RECEIPT.md:1 issue #592 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-593-RADAR-UMBRELLA-RESCORE.md:1 issue #593 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-594-EXPRESS-DOC-PATH-BOUNDS.md:1 issue #594 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-595-MERGE-CLEANUP-PRIMARY-DEFERRAL.md:1 issue #595 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-603-MERGE-CLEANUP-MANTRA.md:1 issue #603 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-605-WORK-STATE-PROJECTION.md:1 issue #605 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-606-END-OF-WEEK-SKILL.md:1 issue #606 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-608-FIX-RELAY-HONOR-QWEN-DEEPSEEK-REASONING-EFFORT-AND-CORRECT-F.md:1 issue #608 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-609-SDLC-AUTONOMOUS-GAPS-REMEDIATION.md:1 issue #609 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-610-CLAUDE-SUBSCRIPTION.md:1 issue #610 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-613-CLAUDE-REVIEW-FIXES.md:1 issue #613 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-615-FIX-SKILLS-REINFORCE-START-TASK-AGAINST-RELAY-INDUCED-OVERBU.md:1 issue #615 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-616-FIX-SKILLS-ENFORCE-COMMENSURATE-MACHINERY-AND-REVIEW-PACKET-.md:1 issue #616 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-617-FIX-SKILLS-SHARPEN-RELAY-XYZ-REVIEW-SCOPE-AGAINST-OVER-ENGIN.md:1 issue #617 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-620-SKILLS-ARMY-MINI.md:1 issue #620 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-623-MERGE-CLEANUP-RESILIENCE.md:1 issue #623 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md:1 issue #624 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-625-AGENT-CHORUS-BRIDGE-BIND-WITHOUT-GETFQDN.md:1 issue #625 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-626-WORKHORSE-UNSTUCK-AUTONOMOUS-LOOP.md:1 issue #626 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-629-MERGE-CLEANUP-WAIT-FOR-HOSTED-RECONCILE.md:1 issue #629 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-642-CONSUMER-FRUIT.md:1 issue #642 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-645-MERGE-CLEANUP-LEDGER-GATE-AND-RECONCILE-FAIL-IN-REPOS-THAT-V.md:1 issue #645 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-646-STATUS-LABEL.md:1 issue #646 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-649-PDDA-CANONICAL.md:1 issue #649 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-651-GH610-SPACED-PYTHON-SHEBANG.md:1 issue #651 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-653-FIXTURE-SAFETY.md:1 issue #653 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-654-MARATHON-CONTAINMENT-EXIT-6-DISCARDS-COMPLETED-BUILDER-WORK-.md:1 issue #654 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-656-CLOSEOUT-EVIDENCE.md:1 issue #656 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-657-RECEIPT-OUTCOMES.md:1 issue #657 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-658-CONTAINMENT-ALLOWLIST-STORES-THE-ABSOLUTE-RELAY-FILE-PATH-WO.md:1 issue #658 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md:1 issue #659 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-660-DEPLOYED-SKILLS-DRIFT-EXPRESS-SKILL-MD-HOT-FIXED-DIRECTLY-IN.md:1 issue #660 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-661-662-682-RELAY-CONTAINMENT.md:1 issue #661 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md:1 issue #663 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-665-FIXTURE-REFUSAL.md:1 issue #665 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-666-AGY-MODEL-PROBE.md:1 issue #666 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-672-SKILLS-SINGLE-ROOT.md:1 issue #672 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-673-FLIGHTDECK-STATUS.md:1 issue #673 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-674-MERGE-CLEANUP-HOSTED-LOOKUP.md:1 issue #674 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-678-INSTALLER-LINK-STEAL.md:1 issue #678 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-681-REVIEWER-PROBES.md:1 issue #681 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-684-HOSTED-RECONCILE-LANE.md:1 issue #684 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-686-GH53-FIXTURE-FLAKE.md:1 issue #686 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-693-LESSONS-LEARNED-ADVISORY.md:1 issue #693 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-694-EXPRESS-TICK-TELEMETRY-SCHEMA.md:1 issue #694 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-700-PAGES-SKILLS.md:1 issue #700 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-703-RAW-TEXT-ASTERISK.md:1 issue #703 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-707-RECONCILE-ROLLBACK-ENVELOPE.md:1 issue #707 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-708-VENDORED-SUITES-FORGE-ROOT.md:1 issue #708 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-710-PLANNER-NULL-GH-NUMBER.md:1 issue #710 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-711-LEDGER-MERGE-GID-REMINT.md:1 issue #711 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-712-JEV-ATE-TRIAGE.md:1 issue #712 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-720-REVIEW-ONCE-BLOCK-REGEX.md:1 issue #720 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-721-HOSTED-LANE-INBOX-ALLOWLIST.md:1 issue #721 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-724-MARATHON-TRIAGE-DRIVE-LOOP.md:1 issue #724 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-728-MERGE-CLEANUP-DEEP.md:1 issue #728 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-730-AGENT-CHORUS-LEGACY-FIXTURE.md:1 issue #730 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-PR-AND-UNKNOWN-POLL.md:1 issue #736 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-UNKNOWN-STACKED.md:1 issue #736 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-737-DEBUG-MANTRA-RCA-GATE.md:1 issue #737 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-740-HOSTED-LANE-PUSH-RACE.md:1 issue #740 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-741-HOSTED-LANE-REPORT-ATTRIBUTION.md:1 issue #741 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-742-VENDOR-PACKAGE-JSON-ESM.md:1 issue #742 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-744-SKILLS-FREQUENCY-TIERS.md:1 issue #744 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-745-WAVE-RECONCILE-ROLLBACKJOURNAL-WRITES.md:1 issue #745 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-754-NODE-20-DEPRECATION.md:1 issue #754 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-762-START-MARATHON-SKILL.md:1 issue #762 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-764-BASELINE-GATE-FAILURES.md:1 issue #764 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md:1 issue #77 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-773-MARATHON-DRIVE-GATE-MEMORY.md:1 issue #773 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-778-FEAT-REVIEW-CODE-AND-REVIEW-PR-GROUND-TRUTH-CODE-REVIEW-SKIL.md:1 issue #778 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-779-RADAR-TRUNK-CI-HEALTH-NEW-GUARD-RE-RUN-ON-OPEN-PRS-REGRESSED.md:1 issue #779 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-781-WHACK-A-MOLE-SEED-CANDIDATE-CLUSTERS-FROM-RECENT-RADAR-REPOR.md:1 issue #781 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-788-PYTHON-PATH-SPACE.md:1 issue #788 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-791-MERGE-REGRESSIONS.md:1 issue #791 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-793-IDLE-CONTROL-PARALLEL.md:1 issue #793 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-797-FLIGHTDECK-UNKNOWN-HELP.md:1 issue #797 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-798-FEAT-SKILLS-ADD-STATUS-SKILL-AND-DRY-CENTRALIZED-HELPER-AUDI.md:1 issue #798 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md:1 issue #8 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-801-FIX-GH-798-SKILL-TESTS-VIOLATE-PIPE-TO-GREP-RATCHET-AND-BLOC.md:1 issue #801 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-804-SIMPLIFY-SKILL-INSTRUCTION-TESTS-INTRODUCED-BY-GH-798.md:1 issue #804 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-808-GH251-GATE-COST.md:1 issue #808 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-813-SQLITE-WAL-INIT-RACE.md:1 issue #813 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-822-PROMOTION.md:1 issue #822 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-823-BOUNDARY-TIMEOUT.md:1 issue #823 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-830-TEST-GH620-IGNORES-FAILED.md:1 issue #830 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-831-THREE-TIER-GATE.md:1 issue #831 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-833-PRS-DEFINITION.md:1 issue #833 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-839-CLONE-BACKUP-LAYOUT.md:1 issue #839 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-842-RECONCILE-AD-HOC-DIRECT.md:1 issue #842 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-844-PRS-EVIDENCE-HYGIENE.md:1 issue #844 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-851-MERGE-CLEANUP-AFTER-B1.md:1 issue #851 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-852-MERGE-CLEANUP-STALLED-GIT.md:1 issue #852 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-857-SOP-CI-CHURN-RECOVERY.md:1 issue #857 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-858-GH69-ROADMAP-SHADOW-RA.md:1 issue #858 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-860-SKILLS-RADAR-WHACK-MOLE.md:1 issue #860 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-862-SKETCH-CI-SUITE-AUDIT.md:1 issue #862 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-909-COMPLETION-LOCK-LOSS.md:1 issue #909 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md:1 issue #91 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/GH-94-PROGRAMMATIC-TOOL-CALLING.md:1 issue #94 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] PROJECT/3-COMPLETED/recon-jog-marathon-recalibration.md:1 issue #280 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] releases.db issue #32 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #28 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #17 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #18 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #5 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #67 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #75 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #61 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #141 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #201 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #215 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #216 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #223 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #255 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #256 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #259 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #275 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #325 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #254 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #299 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #346 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #345 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #341 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #384 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #396 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #399 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #402 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #406 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #416 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #418 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #421 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #423 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #424 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #425 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #443 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #445 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #446 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #452 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #454 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #460 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #453 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #484 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #481 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #482 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #491 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #492 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #355 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #514 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #478 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #518 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #537 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #591 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #589 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #522 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #579 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #506 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #644 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #690 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #768 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #769 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #770 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #771 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #772 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #774 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #775 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #767 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #760 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #789 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #670 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #722 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #763 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #836 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #796 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #807 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #800 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #896 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #879 state unavailable — roadmap section sync NOT evaluated
+WARN [pdda-check-issue-doc-sync] releases.db issue #886 state unavailable — roadmap section sync NOT evaluated
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=357 info=0
+
+== pdda-check-releases ==
+INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] ROUTER.md:15 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:193 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:209 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:54 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:63 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] README.md:90 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:45 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:435 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:505 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:596 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:602 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:605 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:660 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:806 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:808 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:169 dead reference 'RELEASES.md' — no file at RELEASES.md
+INFO [pdda-check-governance] src/project.js:335 comment reference '.tick/STATE.md' in source tree cites generated/ignored state — exempt from existence check
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+SUMMARY [pdda-check-governance] errors=0 warns=18 info=1
+
+== pdda-check-marathon-qa ==
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:78 Wave 1 item pending verification: 'Wave 1 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 item pending verification: 'Wave 1 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:80 Wave 1 item pending verification: 'Wave 1 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:83 Wave 2 item pending verification: 'Wave 2 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 item pending verification: 'Wave 2 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:85 Wave 2 item pending verification: 'Wave 2 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 missing '## Acceptance & Quality Checklist' section
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+
+== pdda-doc-ready ==
+INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: no errors, 385 warning(s) to review — pdda-check-changelog pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.VeYjeR/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+  68 pooled suites + 4 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh777-inventory-ratchet.sh rc=0
+[parallel] gh400-acceptance-fidelity.sh rc=0
+[parallel] gh400-source-url.sh rc=0
+[parallel] litmus-release.sh rc=0
+[parallel] gh308-frozen-twin-guard.sh rc=0
+[parallel] gh422-backfill-source-url.sh rc=0
+[parallel] gh448-driver-lock-resolver.sh rc=0
+[parallel] nightwatch-release.sh rc=0
+[parallel] meter-release.sh rc=0
+[parallel] ballast-release.sh rc=0
+[parallel] gh425-source-url-slug.sh rc=0
+[parallel] relay-target-root.sh rc=0
+[parallel] relay-target-root-paths.sh rc=0
+[parallel] relay-target-root-relayfile.sh rc=0
+[parallel] gh646-status-label.sh rc=0
+[parallel] relay-target-root-newfile.sh rc=0
+[parallel] gh1-fixture-guard.sh rc=0
+[parallel] gh1-adoption-guard.sh rc=0
+[parallel] gh139-pipe-grep-guard.sh rc=0
+[parallel] gh168-wave-reconcile-scope.sh rc=0
+[parallel] gh184-no-tracked-scratch.sh rc=0
+[parallel] gh202-wave-reconcile-issue-state.sh rc=0
+[parallel] gh232-wave-reconcile-multiphase.sh rc=0
+[parallel] releases-skill.sh rc=0
+[parallel] gh103-timeline-exporter.sh rc=0
+[parallel] gh75-dashboard.sh rc=0
+[parallel] gh32-releases-app.sh rc=0
+[parallel] gh32-releases-artifacts.sh rc=0
+[parallel] gh53-releases-merge-resolve.sh rc=0
+[parallel] gh54-merged-dump-refusals.sh rc=0
+[parallel] gh57-releases-fuzz.sh rc=0
+[parallel] gh57-live-merge-resolve.sh rc=0
+[parallel] gh69-roadmap-shadow.sh rc=0
+[parallel] gh351-manifest-unship.sh rc=0
+[parallel] gh360-scoped-receipt-chain-rebuild.sh rc=0
+[parallel] gh349-releases-roadmap-vendored.sh rc=0
+[parallel] gh429-wave-reconcile-vendored-observe.sh rc=0
+[parallel] gh358-wave-reconcile-vendored-paths.sh rc=0
+[parallel] gh32-release-target-advisory.sh rc=0
+[parallel] gh39-releases-project-sync.sh rc=0
+[parallel] gh649-pdda-migration.sh rc=0
+[parallel] pdda-changelog.sh rc=0
+[parallel] gh549-work-events.sh rc=0
+[parallel] pdda-roadmap-coverage.sh rc=0
+[parallel] pdda-install-startup-docs.sh rc=0
+[parallel] pdda-local-checks.sh rc=0
+[parallel] gh784-marathon-qa-gate.sh rc=0
+[parallel] gh284-p3-release-milestone.sh rc=0
+[parallel] gh284-p4-release-lanes.sh rc=0
+[parallel] mktemp-trap-guard.sh rc=0
+[parallel] gh567-roadmap-dashboard-retired.sh rc=0
+[parallel] gh257-roadmap-ledger-fixes.sh rc=0
+[parallel] gh269-roadmap-retired.sh rc=0
+[parallel] gh568-releases-md-retired.sh rc=0
+[parallel] gh454-reconciler-defects.sh rc=0
+[parallel] gh424-roadmap-status-marker.sh rc=0
+[parallel] gh421-auto-wave-reconcile.sh rc=0
+[parallel] gh491-roadmap-section-validation.sh rc=0
+[parallel] gh492-roadmap-state-sweep.sh rc=0
+[parallel] pdda-repo-contract.sh rc=0
+[parallel] gh605-board-policy.sh rc=0
+[parallel] gh605-work-state.sh rc=0
+[parallel] gh645-merge-cleanup-xyz-tools.sh rc=0
+[parallel] gh674-merge-cleanup-hosted-lookup.sh rc=0
+[parallel] gh153-releases-sidebar-rollup.sh rc=0
+[parallel] gh527-issue-url-repair.sh rc=0
+[parallel] sentinel-network-guard.sh rc=0
+[parallel] gh107-timeline-json-seam.sh rc=0
+[parallel] wave-reconcile.sh rc=0
+[parallel] gh496-phase2-reconciliation-views.sh rc=0
+[parallel] gh306-registry-bidirectional.sh rc=0
+[parallel] security-scan.sh rc=0
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gate-900-902
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================= 21 passed in 26.62s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 72 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gate-900-902/.tick/telemetry/validate-parallel-1790924527409-71170.jsonl (74 suite events, 410 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh549-work-events.sh  180.073  0
+  pdda-repo-contract.sh  126.197  0
+  pdda-install-startup-docs.sh  77.960  0
+  security-scan.sh  26.137  0
+  gh32-releases-app.sh  22.581  0
+  gh649-pdda-migration.sh  20.616  0
+  mktemp-trap-guard.sh  19.577  0
+  gh269-roadmap-retired.sh  16.859  0
+  gh491-roadmap-section-validation.sh  13.882  0
+  gh496-phase2-reconciliation-views.sh  13.724  0
+re-run ladder: 0 suite(s), 0.000s total
+passed: 75 / 75
+  + tier2:pdda
+  + gh777-inventory-ratchet.sh
+  + gh400-acceptance-fidelity.sh
+  + gh400-source-url.sh
+  + litmus-release.sh
+  + gh308-frozen-twin-guard.sh
+  + gh422-backfill-source-url.sh
+  + gh448-driver-lock-resolver.sh
+  + nightwatch-release.sh
+  + meter-release.sh
+  + ballast-release.sh
+  + gh425-source-url-slug.sh
+  + relay-target-root.sh
+  + relay-target-root-paths.sh
+  + relay-target-root-relayfile.sh
+  + gh646-status-label.sh
+  + relay-target-root-newfile.sh
+  + gh1-fixture-guard.sh
+  + gh1-adoption-guard.sh
+  + gh139-pipe-grep-guard.sh
+  + gh168-wave-reconcile-scope.sh
+  + gh184-no-tracked-scratch.sh
+  + gh202-wave-reconcile-issue-state.sh
+  + gh232-wave-reconcile-multiphase.sh
+  + releases-skill.sh
+  + gh103-timeline-exporter.sh
+  + gh75-dashboard.sh
+  + gh32-releases-app.sh
+  + gh32-releases-artifacts.sh
+  + gh53-releases-merge-resolve.sh
+  + gh54-merged-dump-refusals.sh
+  + gh57-releases-fuzz.sh
+  + gh57-live-merge-resolve.sh
+  + gh69-roadmap-shadow.sh
+  + gh351-manifest-unship.sh
+  + gh360-scoped-receipt-chain-rebuild.sh
+  + gh349-releases-roadmap-vendored.sh
+  + gh429-wave-reconcile-vendored-observe.sh
+  + gh358-wave-reconcile-vendored-paths.sh
+  + gh32-release-target-advisory.sh
+  + gh39-releases-project-sync.sh
+  + gh649-pdda-migration.sh
+  + pdda-changelog.sh
+  + gh549-work-events.sh
+  + pdda-roadmap-coverage.sh
+  + pdda-install-startup-docs.sh
+  + pdda-local-checks.sh
+  + gh784-marathon-qa-gate.sh
+  + gh284-p3-release-milestone.sh
+  + gh284-p4-release-lanes.sh
+  + mktemp-trap-guard.sh
+  + gh567-roadmap-dashboard-retired.sh
+  + gh257-roadmap-ledger-fixes.sh
+  + gh269-roadmap-retired.sh
+  + gh568-releases-md-retired.sh
+  + gh454-reconciler-defects.sh
+  + gh424-roadmap-status-marker.sh
+  + gh421-auto-wave-reconcile.sh
+  + gh491-roadmap-section-validation.sh
+  + gh492-roadmap-state-sweep.sh
+  + pdda-repo-contract.sh
+  + gh605-board-policy.sh
+  + gh605-work-state.sh
+  + gh645-merge-cleanup-xyz-tools.sh
+  + gh674-merge-cleanup-hosted-lookup.sh
+  + gh153-releases-sidebar-rollup.sh
+  + gh527-issue-url-repair.sh
+  + sentinel-network-guard.sh
+  + gh107-timeline-json-seam.sh
+  + wave-reconcile.sh
+  + gh496-phase2-reconciliation-views.sh
+  + gh306-registry-bidirectional.sh
+  + security-scan.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
