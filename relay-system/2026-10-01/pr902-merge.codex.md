@@ -90,4 +90,12 @@ Graph limitation: enumerated all 77 projects; this worktree/merge clone is unind
 
 Only this relay file was edited outside exempt .relay-scratch. No self-commit. Relay closed (Approved), no further reviewer turn needed; codex-producer owns final clone verification and PR900 → PR902 landing checks.
 
+
+### Attestation · relay-drive — 2026-10-02T07:02:08Z
+task: RELAY-pr902-merge
+reviewer: codex
+status: Approved
+reviewed-head: 836ba6783fd00e0c02dd1feec4050a64e6bb5ad3
+added-range: 6473+6645
+added-sha256: f9c7c54eea321709faa33199ef71850772b1780c94fe38f9eeafec1dff9eef83
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
