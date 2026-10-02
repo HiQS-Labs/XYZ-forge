@@ -165,22 +165,22 @@ class ZcodeAdapter:
                         {"old": old, "new": f"{core.local_stamp(core.ms_to_local_dt(updated_at))} {base}"}
                     )
                 return out
-            for ws_key, _, old, meta_json, updated_at in rows:
-                desired = f"{core.local_stamp(core.ms_to_local_dt(updated_at))} {base}"
-                meta = _sync_meta(meta_json, desired)
-                current_override = conn.execute(
-                    "SELECT title_overridden FROM tasks WHERE workspace_key=? AND task_id=?",
-                    (ws_key, task_id),
-                ).fetchone()[0]
-                if desired == old and current_override and (meta is None or meta == meta_json):
-                    continue
-                with conn:
+            with conn:
+                for ws_key, _, old, meta_json, updated_at in rows:
+                    desired = f"{core.local_stamp(core.ms_to_local_dt(updated_at))} {base}"
+                    meta = _sync_meta(meta_json, desired)
+                    current_override = conn.execute(
+                        "SELECT title_overridden FROM tasks WHERE workspace_key=? AND task_id=?",
+                        (ws_key, task_id),
+                    ).fetchone()[0]
+                    if desired == old and current_override and (meta is None or meta == meta_json):
+                        continue
                     conn.execute(
                         "UPDATE tasks SET title=?, title_overridden=1, meta_json=?"
                         " WHERE workspace_key=? AND task_id=?",
                         (desired, meta if meta is not None else meta_json, ws_key, task_id),
                     )
-                out["renamed"].append({"old": old, "new": desired})
+                    out["renamed"].append({"old": old, "new": desired})
         except core.AdapterError:
             raise
         except sqlite3.Error as exc:

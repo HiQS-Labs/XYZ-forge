@@ -13,7 +13,7 @@ their store's native timestamp to a local datetime and call stamp_of().
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 
 # A leading U.S. mm-dd (or legacy mm/dd) stamp followed by a description.
 STAMP_RE = re.compile(r"^(\d{2}-\d{2})\s+(\S.*)$", re.DOTALL)
@@ -61,8 +61,6 @@ def utc_text_to_local_dt(text: str) -> datetime | None:
             parsed = datetime.strptime(cleaned, fmt)
         except ValueError:
             continue
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
         return parsed.astimezone()
     return None
 
@@ -71,11 +69,13 @@ def ms_to_local_dt(ms: int) -> datetime:
     return datetime.fromtimestamp(ms / 1000)
 
 
-def clean_base(raw: str, *, slash_stamps: bool = False) -> str:
+def clean_base(raw: str, *, slash_stamps: bool = False,
+               max_length: int | None = MAX_BASE) -> str:
     """Strip any existing stamp and collapse whitespace so re-stamping
     never stacks prefixes; cap length so long prompt-derived titles stay
     scannable. A bare date is not a description.
 
+    max_length=None preserves the full descriptive text (Codex native titles).
     slash_stamps=True also strips the legacy mm/dd form (Antigravity)."""
     base = raw.strip()
     if slash_stamps:
@@ -85,8 +85,8 @@ def clean_base(raw: str, *, slash_stamps: bool = False) -> str:
     base = re.sub(r"\s+", " ", base).strip()
     if BARE_DATE_RE.fullmatch(base):
         return ""
-    if len(base) > MAX_BASE:
-        base = base[: MAX_BASE - 1].rstrip() + "…"
+    if max_length is not None and len(base) > max_length:
+        base = base[: max_length - 1].rstrip() + "…"
     return base
 
 

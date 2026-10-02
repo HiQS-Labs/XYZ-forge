@@ -239,6 +239,8 @@ class AntigravityAdapter:
             base = core.clean_base(title or "", slash_stamps=True)
             new_title = f"{stamp} {base}" if (stamp and base) else title
             new_preview = self._last_action_from_transcript(cid)
+            if new_preview == "No transcript recorded" or new_preview.startswith("Error reading transcript"):
+                new_preview = preview
             if new_title != title:
                 rep["renamed"].append({"conversation_id": cid, "old": title, "new": new_title})
                 writes.append((
@@ -263,15 +265,14 @@ class AntigravityAdapter:
             if self.annotations_dir.exists():
                 for pbtxt in self.annotations_dir.glob("*.pbtxt"):
                     self._update_annotation_file(pbtxt.stem, pin=pbtxt.stem in pinned_ids)
-            if writes:
-                conn = self._connect()
-                try:
-                    self._check_schema(conn)
-                    with conn:
-                        for sql, params in writes:
-                            conn.execute(sql, params)
-                finally:
-                    conn.close()
+            conn = self._connect()
+            try:
+                self._check_schema(conn)
+                with conn:
+                    for sql, params in writes:
+                        conn.execute(sql, params)
+            finally:
+                conn.close()
             # Mirror-app-owned: annotations follow the authoritative list.
             self._mirror_annotations(pinned_ids, rep)
             if auto_pin_ids:
@@ -385,7 +386,7 @@ class AntigravityAdapter:
         try:
             with open(tpath, "r", encoding="utf-8") as f:
                 lines = f.readlines()
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             return f"Error reading transcript: {exc}"
         if not lines:
             return "Empty transcript"
