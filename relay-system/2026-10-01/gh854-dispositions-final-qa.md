@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: claude-a
-STATUS: Approved
-ROUND: 4 / 4
+NEXT: codex
+STATUS: Open
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -488,4 +488,46 @@ status: Approved
 reviewed-head: d04b5aa4cadb8bdf34197a447a812c8a40427955
 added-range: 52694+7622
 added-sha256: 0f4e13baa4e9b35b1f0e1ff423012211adebca706544dbf74d77d817b2ce0407
+## Producer round 5 — operator-authorized targeted Ballast review
+Human explicitly authorized: “run one targeted review of this ten-line correction, then finish publication”. Review only the new Ballast companion and integration coherence; prior successful attested round4 covers the earlier disposition. No new plan/consult or scope expansion.
+
+Failure: full push at741ed95e stopped on ballast-release4pass1fail because closed GH4 still demanded the retired suite be registered. Correct existing Small manifest audit in place: explicit gh306 exemption plus retained suite and control is informational/incomplete, not a false closure. No completion credit; --release-gate remains blocked with a remaining item. Missing exemption, suite or control stays red. Suite remains in Small. Existing focused4/0+1info; existing --mutate-evidence8/0; manual missing exemption/file/control each rc1, restored rc0. Receipts and exact source SHA256: TESTS-RESULTS/2026-10-01+GH-854/dispositions/ballast-companion/.
+
+Development advanced to75b75181299d605b5458dbf4fd367680a05cbb53. Merged into candidate6e08f4d5 before review: ledger conflict unioned all op_receipts and kept higher generation1330, official releases-merge-resolve rebuilt/checked clean; no generated view committed. Archive-test conflict accepts current development's already-landed fix, so test_deploy_skills.py now has ZERO diff from development. Earlier cherry-pick receipts remain historical. Ballast ten-line change and registered407 are unchanged. Full gate will verify final integrated source.
+
+Read relevant complete Ballast context and receipt evidence, reject only concrete acceptance defects. Only edit this relay: append new review immediately before FINAL marker; leave all previous body text unchanged. Update NEXT/STATUS. Follow harness token protocol. No git commands, suite execution, source changes or external posting in reviewer worktree. Full gate and hosted CI outstanding; no merge readiness claimed.
+
+```diff
+diff --git a/test/ballast-release.sh b/test/ballast-release.sh
+index 91b78d73..a8ba1ac8 100755
+--- a/test/ballast-release.sh
++++ b/test/ballast-release.sh
+@@ -30,7 +30,7 @@
+ #
+ #   (default)         Suite mode, registered in validate.sh. GREEN while Ballast is in progress.
+ #                     Fails ONLY on a false completion claim (a CLOSED manifest issue whose gate is
+-#                     missing/unregistered/uncontrolled) or a ledger disagreement — an unfinished
++#                     missing/unregistered-without-exemption/uncontrolled) or a ledger disagreement — an unfinished
+ #                     release does not paint the whole suite red (#460's failure mode).
+ #
+ #   --release-gate    THE GOALPOST. Exits non-zero until Half A and Half B both pass and every
+@@ -131,6 +131,16 @@ audit_manifest() {  # [<validate.sh>] [<root>] — sets COMPLETE / REMAINING / F
+     [ "$have_reg"  -eq 0 ] && why="$why not-registered-in-validate.sh"
+     [ "$have_ctl"  -eq 0 ] && why="$why no-recorded-control($ctl)"
+ 
++    # GH-854/GH-920: explicit retirement is not a false closure, but earns no release credit.
++    if [ "$have_gate" -eq 1 ] && [ "$have_ctl" -eq 1 ] && [ "$have_reg" -eq 0 ] \
++       && [ -f "$root/test/gh306-registry-bidirectional.sh" ] \
++       && /usr/bin/sed -n '/^EXEMPT=(/,/^)/p' "$root/test/gh306-registry-bidirectional.sh" \
++          | /usr/bin/grep -F "\"${gate##*/}\"" >/dev/null; then
++      REMAINING=$((REMAINING+1))
++      info "#$n explicitly exempt from automatic gating — retained control, no release completion credit"
++      continue
++    fi
++
+     if [ -n "$why" ]; then
+       REMAINING=$((REMAINING+1))
+       if [ "$state" = "CLOSED" ]; then
+```
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
