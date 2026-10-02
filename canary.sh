@@ -261,7 +261,10 @@ check_relay_block_validator() {
 
 check_relay_locator() {
   local f
-  for f in "$ROOT"/skills/relay-xyz/find-harness.sh "$ROOT"/skills/*/relay-xyz/find-harness.sh; do
+  # Skills are tier-organized (skills/1-hourly/...), so the locator is found through the tier
+  # glob; the missing first level is deliberately not spelled out (path-integrity fails a
+  # literal path that does not exist on disk).
+  for f in "$ROOT"/skills/*/relay-xyz/find-harness.sh; do
     [ -f "$f" ] && { expect_help 'ok  tick CLI' "$f" --check; return $?; }
   done
   echo "relay-xyz skill not found under skills/ (find-harness.sh)"; return 1

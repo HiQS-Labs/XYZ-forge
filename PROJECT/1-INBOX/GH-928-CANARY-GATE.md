@@ -90,6 +90,14 @@ Non-blocking, deferred: a canary-coverage drift assertion (a new Tier-A entry po
 static-floor coverage but no smoke coverage, silently — the GH-379 inline-runner lesson in
 miniature); a comment documenting the PATH-stub limitation shipped with this round.
 
+**Push-gate finding (2026-10-02, first gated push):** the pre-push gate's `path-integrity.sh`
+refused the branch — `canary.sh` carried the literal path `skills/relay-xyz/find-harness.sh`,
+which has never existed on disk (skills are tier-organized; the runtime check passed via the
+`skills/*/relay-xyz` tier glob, so the canary stayed green over a dead reference). Fixed by
+spelling only the tier glob. Worth naming plainly: the clean-room author *and* the reviewer both
+missed it, and the existing gate caught it in seconds — the clean-room artifact needed the old
+gate to be truthful about its own paths.
+
 ## Lessons for GH-884 (clean-room CI rebuild contingency)
 
 Recorded as evidence only — this claims no trigger and proposes no work (GH-884's header stands).

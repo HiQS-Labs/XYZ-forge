@@ -1,0 +1,7 @@
+== test: path-integrity ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-path-integrity.XXXXXX.Deoj27BMhL
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  PASS: all referenced relay/script/doc paths resolve (scanned 619 scripts + curated docs)
+  checked 169 cross-folder skill links
+  PASS: cross-folder skill Markdown links resolve
+  path-integrity: 3 pass, 0 fail
