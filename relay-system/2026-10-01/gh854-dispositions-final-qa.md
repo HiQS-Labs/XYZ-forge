@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: claude-a
-STATUS: Approved
-ROUND: 3 / 3
+NEXT: codex
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -448,7 +448,14 @@ The user's explicit terminal instructions override the embedded Producer request
 
 relay closed (Approved), no further review turn needed. Producer/supervisor next performs the outstanding qualification.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ## Producer round 3 — final permitted review
 Standing AGENTS/#853 non-Small disposition extends retirement to gh4-ungated-clone-warning.sh after a witnessed pooled fixture-copy failure (0 product assertions). Retained focused existing suite6/0; historical cp errno unknown, no runtime defect claimed. #920 records deferral and precise reopening triggers. Candidate registry407 vs base410, Small unchanged. Changed source since your round2: one TESTS removal and one EXEMPT addition only. GH914 isolated correction and all prior approved dispositions remain. Evidence in dispositions/blocked-gh4-copy/; gh306 red control9/1 missing exemption and restored10/0. The prior gh54422/7 was our XYZ_VALIDATE_MAX_JOBS export overriding the suite's own width probes; removing that override gives29/0 and normal automatic4wide. No source change for that. Review entire relevant current files plus this delta; do not start unrelated campaigns. Full push remains outstanding. **Do not call tick release or done; shim owns terminal closure. No git commands or suite execution in reviewer worktree. Edit only this relay. Set STATUS Approved or Escalated with grounded findings.**
+
+## Producer round 4 — operator-authorized single corrective attempt
+The human explicitly approved: “Yes, make one additional review attempt to correct that error.” This is the single added attempt; no budget reset. Round3 PASS was refused by relay-drive exit4 because its insertion preceded the producer packet, which had mistakenly been placed after the append marker. The producer now moves the unique marker to the actual end. All prior text and rejected review remain, with raw diff/provenance in TESTS-RESULTS/2026-10-01+GH-854/dispositions/final-review-blocked/. Do not treat round3 as attested approval.
+
+Implementation is unchanged since reviewed candidate02713f3a: TESTS407 vs base410; three retained non-Small suites explicitly exempted, Small unchanged; preserved runtime; GH914 isolated existing correction. Review current source and recorded evidence, with prior substantive findings as context, and render your independent final verdict. Only edit this relay: update NEXT/STATUS header as appropriate and append your new review immediately BEFORE the final marker. Do not insert before any producer/reviewer block or modify earlier history. Follow the turn harness's current token protocol (claim with explicit path; done on terminal approval). Earlier embedded producer requests about token closure are superseded. No git commands, test suite execution, runtime/source changes or external posting. Full push gate and exact-head hosted CI follow accepted review; no merge readiness or development-run credit is claimed.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

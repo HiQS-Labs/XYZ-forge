@@ -58,3 +58,6 @@ Third push at dc0d533b stopped on gh4-ungated-clone-warning fixture-copy failure
 
 ## Current stop — final review budget exhausted
 Final round3 at02713f3a produced reviewer PASS in c8a66009, but driver exited4: review-body-rewritten at byte44320. Producer placed its packet below the transcript append marker; reviewer inserted above it. This is our packaging error, not a code finding, and is not valid Approved evidence. All3 final rounds consumed; start-task binding cap prevents another automatic review or ready publication. Exact receipts: dispositions/final-review-blocked/. No gates active, no remote branch/PR, no new local qualification. Candidate407 and focused evidence retained; operator may authorize one additional protocol-correct review. Do not restart the entire ladder or fabricate attestation.
+
+## Authorized continuation
+Operator explicitly authorized one additional final review attempt to correct the transcript-placement error. Round4 of4 is the only exception; prior rejected review is preserved, marker moved to the actual end, implementation unchanged. Resume verification/publication only if the driver attests this review successfully. No merge authority is inferred.
