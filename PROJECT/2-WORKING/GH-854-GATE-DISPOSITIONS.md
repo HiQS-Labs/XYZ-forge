@@ -14,7 +14,7 @@ doc_type: bugfix
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Approved selection changes implemented; four focused suites and missing-exemption red control passed with intact clone identity. | Independent final QA, full push gate, hosted exact-head check and ready PR. |
+| Dispositions implemented and focused checks passed; final review text PASS but harness attestation rejected. | Operator decision on one protocol-correct retry beyond exhausted review cap; then full push gate and ready PR. |
 
 The [canonical ordered stabilization list](https://github.com/HiQS-Labs/XYZ-forge/issues/854#issuecomment-5915099783) owns overall progress. This bounded execution document owns only the approved registry change; it does not duplicate the full stabilization plan or October 8 audit.
 
@@ -55,3 +55,6 @@ The second full push stopped at011c3f41 after274s on gh544-parallel-default22/7,
 
 ## Standing-policy fixture disposition (GH-920)
 Third push at dc0d533b stopped on gh4-ungated-clone-warning fixture-copy failure, 0 product assertions; identity intact. Focused existing suite passed6/0 with retained cp stderr empty, then original source restored. Exact historical errno unknown. Apply the existing AGENTS/#853 non-Small flake policy: unregister/exempt gh4, keep its file and all hook/warning runtime unchanged. Candidate registry is now407 (410 minus the original two and gh4); Small unchanged. Reversal adds the single entry and removes exemption. #920 is deferred with concrete user-facing warning/hook failure triggers; no repair campaign. This narrow disposition supplements the original two-entry scope above. Review in final permitted QA round3, then verify full gate. Receipt: blocked-gh4-copy/.
+
+## Current stop — final review budget exhausted
+Final round3 at02713f3a produced reviewer PASS in c8a66009, but driver exited4: review-body-rewritten at byte44320. Producer placed its packet below the transcript append marker; reviewer inserted above it. This is our packaging error, not a code finding, and is not valid Approved evidence. All3 final rounds consumed; start-task binding cap prevents another automatic review or ready publication. Exact receipts: dispositions/final-review-blocked/. No gates active, no remote branch/PR, no new local qualification. Candidate407 and focused evidence retained; operator may authorize one additional protocol-correct review. Do not restart the entire ladder or fabricate attestation.
