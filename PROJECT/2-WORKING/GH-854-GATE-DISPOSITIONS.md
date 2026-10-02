@@ -2,7 +2,7 @@
 gh_issue: 854
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/854
 title: "GH-854: execute approved gate dispositions"
-status: "Proposed (1-INBOX — plan review)"
+status: Working
 created: 2026-10-01
 updated: 2026-10-01
 owner: "XYZ Forge maintainers"
@@ -10,6 +10,11 @@ goal: "Apply the operator-approved check dispositions without changing runtime b
 doc_type: bugfix
 ---
 # GH-854 — execute approved gate dispositions
+
+## Status
+| What was just completed | What's next |
+|---|---|
+| Separate deferred issues, canonical dispositions, consult and attested independent plan QA completed. | Apply selection changes, run focused verification, final QA and full push gate; prepare ready PR. |
 
 The [canonical ordered stabilization list](https://github.com/HiQS-Labs/XYZ-forge/issues/854#issuecomment-5915099783) owns overall progress. This bounded execution document owns only the approved registry change; it does not duplicate the full stabilization plan or October 8 audit.
 
@@ -36,3 +41,6 @@ Easy to reverse: restore the two TESTS entries, remove their EXEMPT entries, res
 
 ## Consult reconciliation
 Codex and agy both answered; source-only advice, no runtime verification claimed. Codex found no blocker and requested existing gh35 coverage, explicit zero-retry acceptance, and truthful adjacent workflow prose; all accepted. Agy found the stale AGENTS.md local-registry example in addition to workflow prose; accepted as a narrow documentation correction, with no policy expansion. No disagreement on the approved retirement or preserved runtime scope. Raw receipts: relay-system/2026-10-01/gh854-dispositions-plan-221120/.
+
+## Plan QA and unstuck receipt
+Independent plan QA attested Approved against ffe982b5739a in relay-system/2026-10-01/gh854-dispositions-plan-qa2.md. Initial attempts failed the harness protocol (producer concurrent plan edit; premature token release), not substantive plan review. Frozen inputs and terminal token closure corrected the failures in the final allowed plan turn. No production edits preceded valid approval; no review-cap extension or harness change.
