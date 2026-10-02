@@ -91,4 +91,12 @@ Scope: every statement/row of `releases.sql` and every table of `releases.db`, i
 
 Relay closed (Approved), no further review turn needed. Producer / claude-a resumes the separately required disposable-clone gate. The harness owns the one-file commit; this reviewer made none.
 
+
+### Attestation · relay-drive — 2026-10-02T16:44:09Z
+task: RELAY-pr-fold-ledger-qa-2026-10-02
+reviewer: codex
+status: Approved
+reviewed-head: 77ec0d5e6c95d2be4f93c475d4b898091bc95fe0
+added-range: 6299+6683
+added-sha256: 86b47115fb6151e6545b6146e2d4df29217c2ffb4a5134b77776e53d73f05770
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
