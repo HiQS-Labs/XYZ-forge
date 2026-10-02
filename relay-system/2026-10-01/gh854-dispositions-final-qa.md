@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -375,4 +375,30 @@ status: Approved
 reviewed-head: f32061aac7510426a3e60ce7d87c95adb0be925a
 added-range: 29793+4635
 added-sha256: a01b4003df29149c73b4dc7501c38058737e9989371814529debf3398f579d71
+### Producer · Round 2 — existing blocker correction and receipt publication
+The first full push gate stopped before publication at3c7ce17f, identity intact. gh251 nested Python run hit the already-filed GH914 calendar bug on UTC October2: sample-2026-10-02.zip and sample-2026-10-02-02.zip both matched endswith("-02.zip"). This is deterministic, not the deferred oracle/registry/relay failure. Reused ONLY commit698cb14342286473b774679cd24dc91a12059249 from existing PR915 via attributed cherry-pick b178b441. No unrelated upstream PR915 changes, no runtime modification, no new test. Six-line existing assertion correction below. Original full-gate failure is committed under dispositions/blocked-push. Existing gh251 check now6pass0fail at c3072782 with intact identity (dispositions/gh914-focused/provenance.jsonl). The unchanged disposition already approved remains408registry, twoexempts, retained runtimefiles and Small.
+Also publishing the earlier operator-requested historical receipts: TESTS-RESULTS/2026-10-01+GH-854/local-qualification-1 and excluded-attempt-2. Four raw files per directory were compared byte-for-byte to original commits5b4c6e2a and24e3af0c in retained clones; manifests valid. First has414/414zero-retry, second hasretryactivityandisexcluded; countstill1/3. This uses the real implementation PR rather than creating an extra count PR. They are history, not verification of this branch.
+Review this incremental test correction and receipt accuracy plus preservation of prior approved scope. Read relevant full existing test context. Do not broaden into deferred diagnostics or optional comment cleanup. Full push gate and hosted qualification remain outstanding. Terminal protocol: **do not call tick release/done; leave token to codex-turn shim; only edit this relay.**
+
+```diff
+diff --git a/test/test_deploy_skills.py b/test/test_deploy_skills.py
+index ae6540ee..60fb7a18 100644
+--- a/test/test_deploy_skills.py
++++ b/test/test_deploy_skills.py
+@@ -268,8 +268,10 @@ class DeploySkillsTest(unittest.TestCase):
+             self.cli("--apply", "update", "sample")
+         archives = sorted((self.root / "backups").glob("sample-*.zip"))
+         self.assertEqual(len(archives), 2)
+-        self.assertTrue(any(p.name.endswith("-02.zip") for p in archives))
+-        first = next(p for p in archives if not p.name.endswith("-02.zip"))
++        # GH-914: the collision suffix follows the full date; a bare "-02.zip" check misfires on the 2nd of a month.
++        collision = lambda p: p.stem.count("-") == 4  # sample-YYYY-MM-DD-02 vs sample-YYYY-MM-DD
++        self.assertTrue(any(collision(p) and p.stem.endswith("-02") for p in archives))
++        first = next(p for p in archives if not collision(p))
+         restored = self.work / "restore"
+         restored.mkdir()
+         with zipfile.ZipFile(first) as z:
+
+```
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
