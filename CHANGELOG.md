@@ -234,6 +234,22 @@ Every trimmed check was broken on purpose and still failed, including the 21e ra
 starts. `gh549` and `gh436` stay in Small, because both read files a docs-only landing can change. Rollback:
 revert; it is test files, the hook default and docs.
 
+## 2026-09-25 — Bounded handsfree agent wakeups (GH-825)
+
+Add a `handsfree` skill for checking CI and other asynchronous results and then continuing the
+authorized task every 10 minutes, for at most 3 hours. It uses the current harness's native
+same-conversation scheduler only when creation, readback, and cancellation are available, and keeps
+a collision-safe session note in ignored `temp/`. The note is a resume aid; live results and the
+existing task record remain authoritative. Rollback: cancel the native job and revert the skill and
+catalog entry.
+
+Follow-up: `start-task` now selects the final gate by changed-path scope, using the existing docs
+route for Markdown/text-only edits. Rename the deep topic assessment skill from `status` to
+`where-are-we-at` to avoid a name collision with agent-native status commands.
+Its installer removes a dangling `status` link only when it points to this skill's old path.
+If an old `status` link is still live, inspect its target and unlink it manually if it is the
+former skill; the installer leaves live links alone.
+
 ## 2026-09-25 — The gate qualifies each landing by tier: Small for docs, ledger and skill merges (GH-831, Phase 2)
 
 Phase 2 of #831 makes the tiers real. The push hook is unchanged. After a merge, the hosted reconcile classifies
