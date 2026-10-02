@@ -15,7 +15,7 @@ branch: fix/gh-922-codex-scope
 
 | What was just completed | What's next |
 |---|---|
-| Fresh full clone from PR #902; deterministic saved-snapshot reproduction | Independent plan QA, then surgical fix and PR |
+| Independent plan QA Approved (driver exit 0); accepted start admitted; one-line predicate fix | Manual red/green evidence, final QA and Small gate |
 
 ## Scope and dependencies
 
