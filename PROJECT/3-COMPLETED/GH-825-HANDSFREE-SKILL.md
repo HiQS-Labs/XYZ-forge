@@ -1,8 +1,8 @@
 ---
 title: "GH-825: handsfree wake and progress skill"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-25
-updated: 2026-09-25
+updated: 2026-10-02
 owner: unassigned
 goal: let the active agent resume authorized work every 10 minutes for at most 3 hours while asynchronous checks finish
 gh_issue: 825

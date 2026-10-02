@@ -52,3 +52,7 @@ forge side only.
 - **appeal 50:** neutral.
 - **effort 85:** docs and ledger only.
 - **Recurrence:** none; this is a one-off pivot.
+
+## Merge evidence
+
+- PR #936 merged 2026-10-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

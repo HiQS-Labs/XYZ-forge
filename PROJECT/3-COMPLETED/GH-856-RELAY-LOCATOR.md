@@ -2,9 +2,9 @@
 gh_issue: 856
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/856
 title: "Locate the relay harness from a deployed relay-xyz skill"
-status: Active (2-WORKING — implementation verified; final review refresh pending)
+status: Complete
 created: 2026-09-27
-updated: 2026-09-29
+updated: 2026-10-02
 owner: Codex
 doc_type: bugfix
 branch: fix/gh856-relay-locator

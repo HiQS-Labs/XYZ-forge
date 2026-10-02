@@ -77,3 +77,7 @@ PRS pri/sev/appeal/effort = 75/55/50/80; appeal neutral. Effort is cheapness. Th
   }
 }
 ```
+
+## Merge evidence
+
+- PR #936 merged 2026-10-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

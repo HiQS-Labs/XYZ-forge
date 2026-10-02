@@ -1,6 +1,6 @@
 ---
 title: "GH-922 · Preserve project chats in Codex task-sync"
-status: working
+status: Complete
 created: 2026-10-02
 updated: 2026-10-02
 owner: codex

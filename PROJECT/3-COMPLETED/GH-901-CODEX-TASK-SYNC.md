@@ -2,9 +2,9 @@
 gh_issue: 901
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/901
 title: Codex desktop native sidebar heartbeat
-status: Active
+status: Complete
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-02
 owner: Codex
 goal: Extend the central task-sync planner with native Codex sidebar grooming
 doc_type: feedback

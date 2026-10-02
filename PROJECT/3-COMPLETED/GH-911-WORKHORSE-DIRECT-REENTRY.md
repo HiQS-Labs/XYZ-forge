@@ -2,9 +2,9 @@
 gh_issue: 911
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/911
 title: "GH-911: skills(workhorse): keep direct /workhorse runs going — end-of-run report, durable run checklist, Stop hook, proportional consult"
-status: Active (2-WORKING — plan and final QA approved by Codex relay 2026-10-01, PR open)
+status: Complete
 created: 2026-10-01
-updated: 2026-10-01
+updated: 2026-10-02
 owner: noelsaw1
 goal: direct /workhorse runs continue until their queue is resolved, with one end-of-run report
 doc_type: feedback
