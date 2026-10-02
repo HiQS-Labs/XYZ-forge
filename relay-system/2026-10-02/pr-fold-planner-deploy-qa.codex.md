@@ -91,4 +91,12 @@ Scope: complete reads of both planner SKILL.md files, skills/README.md, the GH-6
 
 Relay closed (Approved), no further review turn needed. Producer / claude-a resumes the separate qualification/publication work; the harness owns the one-file commit. Reviewer closes the token with `done` as instructed for approval.
 
+
+### Attestation · relay-drive — 2026-10-02T19:33:43Z
+task: RELAY-pr-fold-planner-deploy-qa-2026-10-02
+reviewer: codex
+status: Approved
+reviewed-head: 8b5e42fdf8cc0f404712b7fa1bb5fb81894cb578
+added-range: 6166+6312
+added-sha256: ce50b687339245b5c11432514b1245827621bb036016cb82cd1acbfac55c8b93
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
