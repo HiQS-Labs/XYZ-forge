@@ -420,4 +420,12 @@ The current user explicitly assigns this Reviewer turn after the Producer Round 
 
 relay closed (Approved), no further turn needed. Producer/supervisor next performs the outstanding qualification.
 
+
+### Attestation · relay-drive — 2026-10-02T05:35:33Z
+task: gh854-dispositions-final2
+reviewer: codex
+status: Approved
+reviewed-head: e10d2d97d84b20fedd8f25596c9cee56480d1ebb
+added-range: 37562+6477
+added-sha256: 60d2d9aa4c6b7e19f11110c68528996856911db091c2516d3c3a6389615e8bd1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
