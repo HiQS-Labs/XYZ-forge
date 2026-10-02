@@ -141,7 +141,7 @@ Then begin work.
    a red control for new/changed gates. Where the repo forbids new tests
    (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), witness it on an existing suite or record it as a manual check. Scale the detail to the task and obey
    repo-specific arc planning when applicable.
-   - **The Preflight Bet Check (Solution-Fit):** Before committing to build, force the distinction between the requested feature and the underlying problem:
+   - **The Preflight Bet Check (Solution-Fit):** Before committing to build, force the distinction between the requested feature and the underlying problem (invoke [`sanity-check`](../sanity-check/SKILL.md) — or `sanity-check` if installed flat — if the problem's necessity or priority is unproven):
      - *Outcome sought:* the specific user or system outcome, not merely the requested implementation.
      - *Smallest viable bet:* what will be built and explicitly what will NOT be built (non-goals).
      - *Alternatives rejected:* at least one simpler or existing alternative considered and why it was insufficient.
