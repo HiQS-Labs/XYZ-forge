@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -197,5 +197,9 @@ swept file: yes
 Evidence scope: graph Verify metadata for the canonical XYZ project reports generation 2026-09-30T07:57:23Z and no recorded coverage issue for the seven selection/companion paths checked; that does not attest this worktree. Material selection assertions above use direct local source reads. No broad runtime audit or external issue-state verification is claimed.
 
 Done — relay closed (Approved), no further review turn needed. Token handoff to Producer / claude-a for the harness and authorized implementation.
+
+### Producer · protocol correction before final allowed plan turn
+Both prior substantive reviews found no plan defect. The first turn was rejected for a producer edit during QA (preserved/restored); the second reviewer released the token to claude-a before the shim could close it, causing close-mismatch. No production changes have occurred.
+For this final allowed plan turn, confirm the existing plan and report your verdict in this relay file. **Do not call tick release, tick done, or any other token mutation. Leave ownership with codex. The codex-turn shim owns terminal tick done and the supervisor validates the close. Do not claim the token was handed back.** Only edit this relay file. No source changes or tests. The goal is a valid independent plan receipt so the already-approved scope can execute. This is a bounded protocol correction, not permission to expand review scope or reset the three-turn cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
