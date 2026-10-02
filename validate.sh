@@ -644,7 +644,6 @@ TESTS=(
   "sentinel-overlay.sh"         # GH-281 (Tier-2 overlay: static egress guard + inert-by-default proof)
   "checkjs.sh"
   "acorn-extract.sh"             # GH-169
-  "registry-lock-concurrency.sh"
   "marathon-monitor.sh"          # GH-88 (cross-repo marathon monitor)
   "signal-triage.sh"             # GH-63 (signal triage stage)
   # GH-40 double-blind Reviewer canaries — each verify-fixture.sh drives the real kernel and exits
@@ -677,7 +676,6 @@ TESTS=(
   "gh693-lessons-learned-advisory.sh" # GH-693 (Lessons Learned is a WARN, never a promotion gate: explicit, --pre-merge, catch-up; frontmatter control)
   "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
   "gh298-ate-gen4-ci-smoke.sh"      # GH-298 (ATE Gen 4 CI smoke — fuzz/oracle wiring against the real runner)
-  "gh-gen4-phase1-domain-oracles.sh" # GH-299 Phase 1 (Gen 4 semantic domain oracles: zero-state, containment, idempotence, crash-recovery; +/- controls)
   "gh-gen4-phase2-adaptive-ate.sh"   # GH-299 Phase 2 (Gen 4 constraint-aware pairwise ATE + calibrated $0 Tier-1 triage; independent coverage walk)
   "gh-gen4-phase3-fuzz-engine.sh"    # GH-299 Phase 3 (Gen 4 seeded mutational fuzz engine: replay, novelty-capped corpus, cross-twin parity)
   "gh-gen4-phase4-repro-synth.sh"    # GH-299 Phase 4 (Gen 4 clustered reproducer synthesis: 1 suite per root cause, ddmin, falsification)
@@ -768,7 +766,7 @@ while [ $# -gt 0 ]; do
     --skip)
       # GH-379: the canary hand-rolled its own runner partly to get a skip list. A skip is a real
       # reduction in coverage, so it is spelled out loud rather than buried in a CI for-loop.
-      [ $# -ge 2 ] || _err2 "--skip requires a suite name (e.g. --skip registry-lock-concurrency.sh)"
+      [ $# -ge 2 ] || _err2 "--skip requires a suite name (e.g. --skip acorn-extract.sh)"
       SKIP_SUITES+=("$2")
       shift 2 ;;
     --parallel|--max-parallel)

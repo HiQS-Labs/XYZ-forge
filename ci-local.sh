@@ -22,10 +22,8 @@
 #   * A green run on hosted UBUNTU says little. That job is an advisory portability canary; its red
 #     means "would not work on a platform we do not support yet", not "broken".
 #
-# This script therefore runs MORE than the hosted job, on purpose. It does not skip
-# `registry-lock-concurrency.sh` — the workflow's own comment says that suite "passes locally" and
-# flakes only under contended Linux CI, so skipping it here discarded real macOS signal to imitate a
-# machine no user has.
+# This script runs the current registry with only the already-run npm suite skipped.
+# Operator-retired suites are recorded in gh306 EXEMPT (GH-854); local runs do not restore them.
 #
 # THE HONEST LIMIT IS NOW ELSEWHERE, and it is not about platform. This run is SELF-REPORTED: it
 # proves someone ran the suite, not that they ran it on the code they are shipping. That is what the
@@ -258,10 +256,8 @@ npm_and_acorn() {
 validate_suite() {
   # GH-509: THIS SKIP LIST IS DELIBERATELY SHORTER THAN THE WORKFLOW'S, and that is the point.
   #
-  # It used to mirror CI's, including `registry-lock-concurrency.sh`. That suite's own skip comment
-  # in the workflow reads "flaky under CI load … PASSES LOCALLY" — it fails on a contended shared
-  # Linux runner, a machine no XYZ user will ever have. Skipping it here threw away real signal about
-  # the platform we actually ship to, in order to stay faithful to a platform we do not.
+  # Registry membership comes from validate.sh; operator-retired manual suites stay out
+  # of both runners (GH-854/GH-917/GH-918). Ubuntu also skips its repo-contract check.
   #
   # Only ONE skip survives, and it is not a platform concession: acorn-extract.sh already ran in the
   # npm step above, so running it again would be duplicated work rather than dropped coverage.

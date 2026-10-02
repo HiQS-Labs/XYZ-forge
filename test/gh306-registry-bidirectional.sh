@@ -45,6 +45,8 @@ echo "== test: gh306-registry-bidirectional =="
 # exemptions are how this list rots into covering nothing), so the list is pinned in BOTH
 # directions below, like the registry it carves holes into.
 EXEMPT=(
+  "registry-lock-concurrency.sh" # GH-854 / GH-917: operator-deferred installer stress; retained for targeted manual use
+  "gh-gen4-phase1-domain-oracles.sh" # GH-854 / GH-918: operator-deferred shared-root oracle; retained for targeted manual use
   "gh268-relay-cue-and-target-checks.sh" # GH-853 / AGENTS: observed pipefail false-red outside Small; turned off, file retained
   "_setup.sh"                    # sourced by ~150 suites (shared tick fixture setup) — never executed directly
   "_scratch-repo.sh"             # sourced hardened scratch-repo helper (GH-44) — never executed directly
