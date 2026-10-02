@@ -23,7 +23,7 @@ Easy to reverse: restore the two TESTS entries, remove their EXEMPT entries, res
 
 ## Ordered execution and acceptance
 1. Cross-model consult and independent Codex plan QA -> disposition scope and companion selections reviewed; three-round QA cap.
-2. Admit the exact roadmap row; remove registry-lock-concurrency.sh and gh-gen4-phase1-domain-oracles.sh from TESTS; add explicit gh306 exemptions; remove oracle from ATE subset and registry from Ubuntu skip; correct obsolete ci-local/ci-workflow assertions/comments -> registry408, no runtime change.
+2. Admit the exact roadmap row; remove registry-lock-concurrency.sh and gh-gen4-phase1-domain-oracles.sh from TESTS; add explicit gh306 exemptions; remove oracle from ATE subset and registry from Ubuntu skip; correct obsolete ci-local/ci-workflow assertions/comments and AGENTS.md local-registry example -> registry408, no runtime change.
 3. In a separate disposable full clone, run existing gh306, gh35 tier coverage, gh379 and ci-workflow checks; witness gh306 red by omitting exemptions, then restore saved bytes -> red names missing entries, green with explicit exemptions; record provenance and identity.
 4. Independent final Codex QA of final diff and focused evidence -> Approved within three rounds; then one full task-branch push gate under caffeinate, serial on host, intact identity, zero retry activity in telemetry and transcript, not merely exit0 -> committed full evidence and exact-head hosted result.
 5. Ready PR to development and #854 update -> operator landing decision remains required by #854. After approved landing, two clean development4-wide runs in fresh clones; stop on failure/drift. Task-branch gate never increments development count.
@@ -33,3 +33,6 @@ Easy to reverse: restore the two TESTS entries, remove their EXEMPT entries, res
 
 ## Rating
 70/50/50/85: current operator-selected CI unblock, bounded coverage tradeoff, neutral appeal, small selection change. No override. This row covers disposition implementation, not closing all umbrella acceptance criteria.
+
+## Consult reconciliation
+Codex and agy both answered; source-only advice, no runtime verification claimed. Codex found no blocker and requested existing gh35 coverage, explicit zero-retry acceptance, and truthful adjacent workflow prose; all accepted. Agy found the stale AGENTS.md local-registry example in addition to workflow prose; accepted as a narrow documentation correction, with no policy expansion. No disagreement on the approved retirement or preserved runtime scope. Raw receipts: relay-system/2026-10-01/gh854-dispositions-plan-221120/.
