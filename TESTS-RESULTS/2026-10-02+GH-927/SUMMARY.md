@@ -19,3 +19,7 @@ No blockers or required changes. One optional wording nit remains: explicitly re
 The operator subsequently requested reciprocal ci-debug / ci-optimize pointers. `gpt-6.1-sol`, high effort, Approved only the 38 added linkage lines at `d2f9038d5e981de15e69e244a0aa2598e70792d0`, with no findings or nits. Receipt: `relay-system/2026-10-02/gh927-ci-linkages.sol.md`. Earlier Fable and GLM reviews cover the original full skill content; Sol covers this later delta, not a new full review.
 
 `linkage-validation.json` records final skill hashes: sanity-check, ci-debug, ci-optimize, and whack-a-mole pass metadata validation; Radar retains its baseline description-length failure. All nine relative skill links across the five files resolve. The push classifier selects the deterministic documentation gate (`route=docs`, `tier=1`); the earlier whole Small-tier run is not claimed green.
+
+## Publication gate
+
+Normal push at `8de77e5577c5133a9cd0e4ba9170d975097ca50a` passed the deterministic documentation gate in 60s, without bypass, in a separate full clone. PDDA: no errors, 47 warnings; local advisory completed-status check: 33 warnings. Log: `documentation-push.log.gz`. HEAD and remotes were unchanged; local configuration added only the expected branch upstream from `push -u`. No source edits followed this gate; remaining changes record the receipt.
