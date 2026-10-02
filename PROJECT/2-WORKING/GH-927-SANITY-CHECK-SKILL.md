@@ -33,3 +33,7 @@ Claude Code `claude-fable-5-1`, high effort, reviewed the full three skill files
 Receipt: `relay-system/2026-10-02/gh927-sanity-check.fable.md`; structured provenance under `TESTS-RESULTS/2026-10-02+GH-927/`. Scenario walkthroughs are static QA, not runtime behavioral tests. New skill and whack-a-mole pass metadata validation; Radar's unchanged 1336-character description exceeds the validator's 1024-character limit.
 
 Harness verification and limitations: `TESTS-RESULTS/2026-10-02+GH-927/SUMMARY.md`. The initial Small-tier run is retained as failed; its three environment-sensitive failures passed targeted clean-environment reruns.
+
+## Additional GLM QA
+
+Operator-requested Command Code / GLM 5.3 / max effort relay Approved in one round, exit 0. No required changes; optional cluster-scope wording nit retained for operator consideration. Full receipt: `relay-system/2026-10-02/gh927-sanity-check.glm.md`. Skill files remain unchanged from the approved Fable content.
