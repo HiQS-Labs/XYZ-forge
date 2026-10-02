@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -66,5 +66,29 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+
+Basis: B1 is repaired at `727c79aadf9f5a77d72f704c8c1bb24b78303158`. Development's original accepted state and history survive; the fold's intended business changes and queue state survive; the complete SQL dump agrees with the committed database. This approves the ledger-preservation follow-up, not publication or the outstanding disposable-clone gate.
+
+swept file: yes
+
+Scope: every statement/row of `releases.sql` and every table of `releases.db`, including pre-existing data, against development `75b75181299d605b5458dbf4fd367680a05cbb53` and pre-repair fold `612ba69c639bae5719e920c25e8b45d7c2e20558`. Whole-tree object comparison checked the no-code-change claim; this is not another whole-source audit of the seven PRs. SHA-1-validated object reads supplied pinned snapshots without invoking Git. SQLite opened with `mode=ro&immutable=1`; SQL literals were parsed independently, retaining NULLs and resolving DB foreign keys to GIDs. All probes used `PYTHONDONTWRITEBYTECODE=1` and scratch-only temporary paths. The nearest available graph is another checkout, generation `2026-10-02T14:56:13Z`; its coverage excludes the DB and lacks this relay. Direct pinned data, not that graph, supports this review. No suites, executable fixtures, application writers, commits or artifact edits ran.
+
+- **[Pass] B1: all seven original events and GH-896's authority are preserved.** The five GH-896 and two GH-901 development events match in every dumped field, including original GIDs, payload strings, transaction IDs and timestamps (`releases.sql:2846`–`:2852`). GH-896 retains row `rmi-01M3SBWHWGSWAFVKTW7ZAE1MMX` and `status_label='in-progress'` (`:773`). Accepted-start event `wev-01M3SDW9K2KKMCRCBAS3TMY2F7` still contains `"accepted_start": true` at `2026-09-30T15:10:40Z` (`:2849`). Its only additional event is a metadata `updated` with `"transition": false` (`:2895`), not a replacement start. Probe `python3 .relay-scratch/ledger.py`, exit **0**: `BASE_7_EVENTS_EXACT` listed all seven matches. `python3 .relay-scratch/final-check.py`, exit **0**: `GH896_label in-progress missing_original_events 0`, event counts `[('896', 6), ('901', 2)]`. Negative control `python3 .relay-scratch/final-check.py red`, exit **1** against the actual pre-repair snapshot: `GH896_label None missing_original_events 7`, `AssertionError: GH-896 accepted status missing`. No fix requested.
+
+- **[Pass] All nine additions and both intended updates retain business fields.** GH-825/856/882/904/905/906/907/911/922 (`releases.sql:778`–`:786`) match `612ba69c` after excluding only global ID, first-seen/write timestamps and position. GH-506 (`:685`) matches too: Deferred section, retired `PROJECT/4-MISC/` path, five NULL rating fields. GH-882 retains its working path, 🚧 and `in-progress` (`:786`). GH-896 (`:773`) differs from pre-repair business fields only by the deliberate NULL → `in-progress` correction; its normalized rating text is preserved. Probe `python3 .relay-scratch/ledger.py`, exit **0**: `ADDED_ROADMAP ['825', '856', '882', '904', '905', '906', '907', '911', '922']`; each `ROADMAP_BUSINESS_DIFF` was `{}`, except GH-896's `{'status_label': (None, 'in-progress')}`. No fix requested.
+
+- **[Pass] Jog additions and existing rows retain intended state.** GH-904/907/906/905 are pending at positions 1/2/3/4, with zero attempts and NULL lease/failure fields (`releases.sql:798`–`:801`). Their roadmap entries remain queued with their working-doc paths and ratings (`:781`–`:784`). Existing pending GH-554/555/307/313 remain at 5/5/6/7 (`:802`–`:805`), exactly +4 from development; all existing terminal rows are unchanged. The duplicate position 5 was already present in the pre-repair fold/source resolution, as the prior review recorded. Probes `python3 .relay-scratch/ledger.py` and `python3 .relay-scratch/final-check.py`, both exit **0**: `ALL_JOG_BUSINESS_MATCH 18`, `BASE_JOG_ALL_14_RETAINED pending shift +4 only; terminal rows exact`. No repair regression or additional queue fix requested.
+
+- **[Pass] Whole-ledger preservation and SQL/database agreement.** All 511 development work events and 1,510 operation receipts survive exactly; the repair adds 35 events and 37 receipts. All 295 other existing roadmap rows are exact, including both NULL-issue-number rows; their 293 NULL labels remain NULL. Ten other populated tables have no base-row differences. All **2,858 rows across 15 populated tables** match the immutable DB after integer-key-to-GID normalization; the sixteenth table, `connector_cursors`, is empty. This includes the quoted accepted-start and queue rows above, rather than only aggregate counts. Probe `python3 .relay-scratch/ledger.py`, exit **0**: every `DB_SQL_MATCH` passed, all reported base-table missing counts were `0`, and `ALL_CHECKS_PASS`. `python3 .relay-scratch/final-check.py`, exit **0**: `TOTAL_ROWS_DB_SQL_MATCH 2858`, `INTEGRITY ok; FOREIGN_KEYS 0 violations`, `WORKTREE_MATCHES_PINNED_SQL_DB True`. Whole-tree object comparison reported only `releases.sql`, `releases.db` and `LEADERBOARD.md` changed since `612ba69c`; no code changes were introduced by the repair. No fix requested.
+
+- **[Nit] Pre-existing evidence irregularity, unchanged by this repair.** Four GH-740/GH-741 events at `releases.sql:2642`–`:2645` have transaction IDs absent from `op_receipts`. For example, `wev-01M334NS5ZT896PYFZBPFAT5HV` names `7eb3ebcf18974f9ba5b1ee17a4d7276b`. An initial broader receipt assertion in `python3 .relay-scratch/final-check.py` exited **1**. A read-only comparison (`python3 -`, exit **0**) found the same four unmatched events, with identical full records, in development, pre-repair and repaired snapshots. The refined preservation probe exited **0** with `NEW_EVENTS_HAVE_RECEIPTS 35 BASE_UNMATCHED_UNCHANGED 4`. This establishes historical evidence incompleteness, not new fold loss or a demonstrated runtime failure. Follow-up: inspect those original transactions if receipt provenance is separately reconciled; do not fabricate replacement events or receipts in this repair. No other concrete pre-existing ledger defect was established by this bounded sweep.
+
+- **[Unverified — needs clone run] Final qualification remains outstanding.** Per Setup, the harness must run `ci-local.sh` separately in a disposable full clone after this receipt is committed. No claim is made about runtime suites, application receipt-chain validation, or live GitHub projection.
+
+Relay closed (Approved), no further review turn needed. Producer / claude-a resumes the separately required disposable-clone gate. The harness owns the one-file commit; this reviewer made none.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
