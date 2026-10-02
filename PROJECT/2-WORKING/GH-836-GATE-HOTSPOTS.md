@@ -366,3 +366,7 @@ changing D2's hook default.
 ## Merge evidence
 
 - PR #848 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #910 merged 2026-10-01 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

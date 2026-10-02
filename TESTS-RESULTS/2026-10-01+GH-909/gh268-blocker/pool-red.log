@@ -1,0 +1,5 @@
+== test: gh268-relay-cue-and-target-checks ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh268-relay-cue-and-target-checks.XXXXXX.PxfabPCIaY
+  PASS: new-relay template carries the hand-off cue
+/private/tmp/xyz-ci-stabilization-20260930/completion-lock-publish-clean-oct1/test/gh268-relay-cue-and-target-checks.sh: line 27: printf: write error: Broken pipe
+  FAIL: new-relay cue does not say it applies to every turn
