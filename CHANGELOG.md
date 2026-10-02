@@ -49,6 +49,11 @@ Independent Codex final QA is driver-attested Approved; 28 recorded manual
 probes and the native title/pin smoke are retained under
 `TESTS-RESULTS/2026-09-30+GH-901/`. The dependent branch requires PR #900 to land
 first; the pilot clone is retained until its heartbeat can be repointed.
+## 2026-10-01 — PDDA adopter reliability Jog prepared (GH-904, GH-907, GH-906, GH-905; #908)
+
+A four-issue serial Jog now has capture contracts, rated RELEASES rows, and queue positions 1–4. PDDA roadmap coverage recognizes an empty but queryable releases ledger and still reports corrupt ledgers or uncovered docs. Vendored router-audit hints use the executing script path. The PDDA installer treats the optional Claude skill copy as best-effort, then completes core setup. A new releases-only install mode initializes the DB without retired Markdown ledgers, writes a mode-correct router, and can set `projections=off`; the Releases writer and hosted reconciler honor that setting. This cross-module setting is reversible with `releases settings set projections on`.
+
+The 2026-10-01 fixture matrix and focused existing suites passed. Independent Agy and Codex relay reviews approved the final correction; clean-environment macOS `ci-local.sh` passed all steps at `5af2ed25` and again at the post-merge `ba37601a` tip with clone identity unchanged. The first clean full run exposed reconcile fixture compatibility defects, which were corrected and retained with red/green evidence in `TESTS-RESULTS/2026-10-01+GH-908/`. A later development reconciliation merge required another final-tip gate. It exposed an existing UTC-day archive-test assertion failure on October 2; the assertion was corrected in place, with red/green evidence retained. Full macOS `ci-local.sh` then passed at `3882935e` with clone identity unchanged. Hosted PR CI and merge approval remain; no issue is marked shipped until landing.
 
 ## 2026-09-30 — GH-549 fixture replay bounded to its own event (#854)
 

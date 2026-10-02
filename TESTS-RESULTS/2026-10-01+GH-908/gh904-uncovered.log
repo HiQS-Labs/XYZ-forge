@@ -1,0 +1,2 @@
+ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/ACTIVE.md:1 active working doc has no pointer in releases.db (PROJECT/2-WORKING/ACTIVE.md) — park it with releases roadmap add, or set roadmap_exempt: true
+SUMMARY [pdda-check-roadmap-coverage] errors=1 warns=0 info=0

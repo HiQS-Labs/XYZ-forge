@@ -1,0 +1,4 @@
+ROUTER DRIFT in /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-triage-20261001/temp/gh907-vendored/ROUTER.md (mode: releases):
+  • ROUTER.md missing '## Role split' section
+  • ROUTER.md missing '## Startup sequence' section
+Remediation available: run `python3 utils/py/router_audit.py --fix /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-triage-20261001/temp/gh907-vendored`

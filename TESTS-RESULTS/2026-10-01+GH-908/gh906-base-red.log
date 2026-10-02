@@ -1,0 +1,24 @@
+Installing PDDA into: /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-base-20261001/temp/gh906-base-target
+
+Runtime + contract:
+  runtime   PROJECT/PDDA.md
+  runtime   utils/pdda/LICENSE-APACHE-2.0
+  runtime   utils/pdda/NOTICE.md
+  runtime   utils/pdda/PDDA-INSTALL.md
+  runtime   utils/pdda/PDDA-SOURCE.md
+  runtime   utils/pdda/check_inventory_ratchet.py
+  runtime   utils/pdda/check_marathon_qa.py
+  runtime   utils/pdda/inventory_ratchet_baseline.json
+  runtime   utils/pdda/pdda-catchup.sh
+  runtime   utils/pdda/pdda-doc-ready.sh
+  runtime   utils/pdda/pdda-edit-doc-hook.sh
+  runtime   utils/pdda/pdda-gh-refresh.sh
+  runtime   utils/pdda/pdda-lib.sh
+  runtime   utils/pdda/pdda-stop-doc-health.sh
+  runtime   utils/pdda/pdda.sh
+  runtime   utils/py/pdda_comment_refs.py
+  runtime   utils/py/pdda_gov_scan.py
+  scaffold  ROUTER.md
+  scaffold  AGENTS.md
+  scaffold  GUIDING-PRINCIPLES.md
+mkdir: /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-base-20261001/temp/gh906-base-target/.claude/skills/pdda: Permission denied
