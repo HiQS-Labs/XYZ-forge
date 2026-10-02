@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -144,5 +144,42 @@ Handing off to Producer (codex-producer) — go to the Producer window and say "
 - F4 Implemented: name-based discovery now explicitly includes sibling links in flat installed collections.
 
 Please re-sweep the final three files and verify these changes against the operator requirements and your scenario walkthroughs. No scope expansion or new tests. Handing off to Reviewer (claude-fable) for Round 2.
+
+### Reviewer · Round 2
+
+swept file: yes — all three files re-read end to end at 33cba144 (sanity-check 1–222, whack-a-mole 1–330, radar 1–656), not just the Round 1 fix diff.
+Method: static reading plus two non-mutating probes. Nothing below is an executed behavioural test; the scenario re-walks are static readings of the Markdown. Line numbers are the current ones (sanity-check shifted +4 after line 36, whack-a-mole +4 after line 173).
+
+Probes (run from the worktree root, both exit 0):
+- `git show 33cba144 --stat` → `sanity-check/SKILL.md | 8 ++++++--`, `whack-a-mole/SKILL.md | 8 ++++++--`, radar untouched. The fix commit changed only sanity-check 37–38, 43–46, 190 and whack-a-mole 173–178.
+- `git diff --numstat origin/development -- <three files>` → `222 0 sanity-check`, `15 0 radar`, `19 0 whack-a-mole`. Zero deletions: the sibling changes remain pure additions inside the new pointer sections; the whack-a-mole description, recital and §6 are byte-unchanged, so the 1019-character description measured in Round 1 still stands.
+
+**Round 1 findings — verification**
+
+- **[Pass] F1 resolved.** whack-a-mole:173–177 now reads "For a cluster with a current sanity-check disposition, cite that assessment in §6's Priority `because` line. A `Defer` or `Dismiss` disposition overrides the recurrence-only top-tier rule below: rate at the highest value the combined consequence and scheduling evidence supports, without treating churn counts alone as urgency." The rule it names is still at whack-a-mole:297 ("an umbrella behind ≥2 reopens or ≥1 revert justifies the top tier") and the `because` line it names exists at whack-a-mole:222. Harm carve-out kept at 177–178 ("Credible immediate harm still requires prompt attention"); exact-body approval kept at 170–171. Clusters with no disposition keep the old behaviour, as scoped.
+- **[Pass] F2 resolved.** sanity-check:37–38: "Updating expected content after an intentional, authorized change is ordinary repair when the protected contract is preserved; narrowing coverage is weakening."
+- **[Pass] F3 resolved.** sanity-check:190: "Explain an operator decision to defer despite high severity; do not lower the severity to rationalize it." This now agrees with line 32 ("defer demonstrated low-risk, nonblocking work") and the `Defer` row (129).
+- **[Pass] F4 resolved.** sanity-check:43–45: "including the siblings below. Relative links describe the repository layout; in a flat installed collection resolve by skill name."
+
+**Re-sweep**
+
+- **[Pass] No regression in Q1–Q4, Q6.** The passages cited in Round 1 are intact at their shifted lines: dependency source test (sanity-check:66–72), harm before popularity (74–82), "A low-value feature can still contain a high-severity defect" (91), duplicate-coverage proof (104–107), "Do not translate uncertainty into low risk" (131), two-attempt trigger (162–166), anti-ritual clause (171–173), sibling authority split (151–152), "handoffs, not recursive calls" (155–157), PRS axes and `ovr` (184–200), not-filed draft and redaction (201–203). Radar pointer unchanged (radar:632–645).
+- **[Pass] Pre-existing text that still contradicts the pointer is now explicitly subordinated, not silently left.** The verbatim recital (whack-a-mole:21, 23), the "Push it to the head of the line" rule (296) and the template's "<top value on the repo's own scale>" (222) are unchanged by design; 175–176 names the rule it overrides ("the recurrence-only top-tier rule below"), so a reader who reaches §6 with a `Defer`/`Dismiss` disposition has an explicit instruction. Radar's pre-existing items from Round 1 (radar:241–242, 373; 1336-character description) are unchanged and still do not affect this change. No new pre-existing defect found in any of the three files.
+- **[Nit] N1 — disposition scope versus cluster scope (no change requested).** whack-a-mole:173–174 says "a cluster with a current sanity-check disposition", while a disposition normally covers one blocker; sanity-check:155–156 limits reuse to "the same scope and evidence". A disposition on one member could be read as covering the whole cluster. The "combined consequence and scheduling evidence" wording (176) and the "unless new evidence contradicts it" clause (172) keep this from forcing a wrong rating, so I am not asking for an edit.
+- **[Nit] N2 — line wrap only.** sanity-check:163 and 190 exceed the file's wrap width. Cosmetic.
+
+**Q5 re-walk — static, only the rows the fixes touch**
+
+| Scenario | Round 2 reading |
+|---|---|
+| Wording-only CI assertion after a prose edit | Now unambiguous: updating the pinned wording to follow the authorized prose edit is `Fix now` ordinary repair (sanity-check:37–38, 127), no operator question; shrinking what the assertion checks would be weakening and goes to the operator (33–35). |
+| Recurring fixes across distinct issues | Recommend whack-a-mole (sanity-check:138–142). If it runs on a cluster holding a `Defer`, §6 cites the disposition and does not rate top tier on counts alone (whack-a-mole:173–177); filing still needs exact-body approval (170–171, 322). |
+| Other four rows | Unchanged from Round 1; cited lines intact at their shifted positions. |
+
+**VERDICT:** PASS
+
+**Basis:** All four Round 1 findings are implemented as requested and verified by quoted text; the one behaviour-change request (F1) is confined to the already-added pointer section and leaves approval boundaries intact. The full re-sweep of the three files found no regression and no new blocker; N1 and N2 are optional and need no further round. The Definition of Done is met: Q1–Q6 are satisfied with no new runtime machinery and no unauthorized side effects. Not measured here: validator and suite results (graded [Unverified — needs clone run]; the harness gate runs after this turn).  [Unverified — no citation]
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
