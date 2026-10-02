@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -88,5 +88,52 @@ The new skill and whack-a-mole pass the existing skill metadata validator. A del
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes — all three files read end to end (sanity-check 1–218, whack-a-mole 1–326, radar 1–656), not just the diff.
+Method: static reading plus four non-mutating probes. Nothing below is an executed behavioural test; the six scenarios are static walkthroughs of the Markdown.
+
+Probes (run from the worktree root, all exit 0):
+- `git diff --stat origin/development -- skills/1-hourly/sanity-check skills/3-weekly/whack-a-mole skills/3-weekly/radar` → `sanity-check/SKILL.md | 218 +`, `radar/SKILL.md | 15 +`, `whack-a-mole/SKILL.md | 15 +`, `3 files changed, 248 insertions(+)`. Sibling changes are pure additions (radar 632–645, whack-a-mole 161–174); no pre-existing line was altered.
+- `ls -d skills/*/<name>` for recon, debug-mantra, ponytail, triangulate, ci-suite-audit, start-task, unstuck → every one resolves (`skills/1-hourly/...`, `skills/4-occasional/ci-suite-audit`).
+- Description lengths (python, whitespace-collapsed): sanity-check 445, whack-a-mole 1019, radar 1336.
+- `rg -n -i 'rated |ovr|appeal|...' skills/*/start-task/SKILL.md` → rating policy at start-task 242–280.
+
+**Findings**
+
+- **[Should] F1 — whack-a-mole's pre-existing "top tier" rule defeats the new pointers (Q4).** sanity-check:137–138 promises "repetition does not establish a shared cause or automatically make the work top priority", and the new whack-a-mole pointer says a high churn score "does not alone prove that ... the repair must block the goal" (166–168). But the unchanged whack-a-mole text sets priority from recurrence counts alone: "an umbrella behind ≥2 reopens or ≥1 revert justifies the top tier" (293), "Push it to the head of the line" (292), and the mandatory recital ends "file a top-priority, actionable umbrella remediation plan" (21, 23). The pointer's "Reuse an existing sanity-check verdict" (172) never says what the verdict is reused *for*, and "Preserve the repository's evidence-based severity/priority rules" (168) points back at line 293. Net: a cluster that sanity-check deferred as low-consequence is still drafted at P0.
+  - Observed input: scenario 5 — recurring fixes across distinct issues, e.g. a cluster with 2 reopens whose blocker already holds a sanity-check `Defer` (bounded, low residual risk). whack-a-mole:293 rates it top tier; nothing at 161–174 or in §6 lets the disposition change that.
+  - Affected scope: only clusters that carry a current sanity-check disposition when §6's Priority section is drafted. Clusters with no disposition keep today's behaviour.
+  - Falsifier: any line in whack-a-mole §6/§7 that already feeds an existing assessment into the Priority `because` line. I found none (292–297 and 302–306 read in full). If one exists, this finding is unnecessary.
+  - Fix (two lines in the new pointer section only; no recital, description, or §6 rewrite — the description has 5 characters of headroom under the 1024 limit): after line 173 add roughly "When a current sanity-check disposition covers the cluster, cite it in §6's Priority `because` line; a Defer or Dismiss disposition means recurrence counts alone do not support the top tier — rate at the highest value the combined evidence supports." Exact-body approval (§7) is untouched.
+
+- **[Nit] F2 — "weakening a gate" versus tracking an intended change (Q5 scenario 1, Q6).** sanity-check:33–35 sends "any weakening or removal of a required gate" to the operator, and `Fix now` (123) routes a required gate to repair, but neither says which side "update the pinned wording to match the authorized prose edit" falls on. Optional one-clause fix at 33–35: updating an expected value to follow an intentional, authorized change to the checked content is repair; narrowing what the check covers is weakening.
+- **[Nit] F3 — who may defer high severity (Q1/Q3).** `Defer` requires "bounded, low residual risk" (125) and line 32 limits self-authorized deferral to "demonstrated low-risk" work, yet the Priority bullet says "Explain a decision to defer despite high severity" (186) with no owner. Optional fix: "an operator decision to defer".
+- **[Nit] F4 — sibling links assume the repo tree.** `../../3-weekly/...` (134, 139; mirrored at whack-a-mole:164, radar:636) do not resolve in a flat installed collection. Line 41–43's name-based resolution covers the table skills only; extending that sentence to the siblings would close it. whack-a-mole:94 already uses a repo path, so this matches precedent — no change required.
+
+- **[Pass] Q1 — ladder separates failure, value, dependency and urgency without excusing controls.** Dependency source test at sanity-check:62–68 ("an enforced gate can still be a real delivery blocker"); harm before popularity at 70–78; "A low-value feature can still contain a high-severity defect" (87); duplicate-coverage proof at 100–109; "Deferring a repair does not waive a required gate or establish merge readiness" (36); "Do not translate uncertainty into low risk" (127).
+- **[Pass] Q2 — two-attempt trigger is defined and bounded.** "Count consecutive attempts; eliminating a plausible cause is new evidence. An attempt is a probe or experiment, not a commentary update" (159–160); "a review trigger, not a timeout that permits ignoring a necessary defect" (161–162); continuation requires a stated discriminating experiment (164–165); anti-ritual clause at 167–169 and 26. High-risk unknowns exit to `Unresolved` (127), not `Defer`.
+- **[Pass] Q3 — PRS coherent with start-task.** Axis order and 1–100 scale (sanity-check:180) match start-task:242–243; appeal 50 (188–189 vs start-task:251); effort as cheapness (190–191 vs start-task:252); `ovr`, supported writer and read-back (194–195 vs start-task:276–279); no formula change (195–196 vs start-task:279–280). Dedupe at 173; "not filed" draft fallback at 197–198; redaction and private route at 198–199.
+- **[Pass] Q4 (apart from F1) — recommendations are scoped, nonrecursive, and keep separate authority.** Evidence thresholds at sanity-check:134–142 ("One red check alone is insufficient"); "issue-filing authority does not authorize a whack-a-mole umbrella or radar report publication" (147–148); "handoffs, not recursive calls" (151–153). Reciprocal text: whack-a-mole:170–173 ("does not ... change this skill's exact-body approval requirement"), radar:641–645 ("does not automatically invoke sanity-check or inherit its issue-filing authority"). Radar reuse rule at sanity-check:148–149 agrees with whack-a-mole's freshness gate (78–79).
+- **[Pass] Pre-existing text checked and found not to affect this change.** radar:373 ("file one umbrella per root cause") versus whack-a-mole:318 (one issue per run) is an older mismatch inside an operator proposal; radar:241–242 ranks any 2-day red trunk "above every backlog cluster" without regard to an existing disposition, but radar only reports and recommends (46, 58), so the pointer survives. Radar's 1336-character description is unchanged by this diff (probe above) and stays out of scope. No pre-existing defects found in sanity-check (new file).
+- **[Pass] Q6 — length and scope.** 218 lines, no scripts or gates ("It does not need scripts, a new scoring system, a CI gate, or a full audit", sanity-check:18–19); "Keep the initial assessment small" (55); full audit stays "a separately invoked workflow" (51). No contradiction found beyond F1–F3.
+
+**Q5 — static scenario walkthroughs (not executed)**
+
+| Scenario | Disposition | Operator question | Allowed next action |
+|---|---|---|---|
+| Wording-only CI assertion after a prose edit | `Fix now` if the gate is required (123); `Propose retirement` if step 5 shows it protects nothing (99–104, 126) | None — not a core or user-facing capability (28) | Align assertion and prose through the normal repair path; the gate is not waived meanwhile (36). See F2. |
+| Sole transaction-integrity guard failing | `Fix now`; `Contain now` if live corruption is observed (122–123) | None — integrity consequence stands regardless of feature value (87) | Route to repair; no deferral or retirement, since no other verified check covers it (100–103, 108–109) |
+| Advisory unsupported-platform canary | `Dismiss the claim` as a blocker (128); any real defect it shows is `Defer` (125) | Only if platform support status is itself unclear (82–84) | Resume the original task now; dedupe then file or update a rated issue with a revisit trigger (173–177) |
+| Two inconclusive probes of a credible exposure | `Unresolved`, exposure recorded as unknown (78, 127) | The one exact missing decision or observation, if no discriminating experiment remains (166–167) | Reassess before a third probe (158–159); continue only with a stated discriminating experiment (164–165); never defer as low risk; keep details off public issues (198–199) |
+| Recurring fixes across distinct issues | Current blocker keeps its own disposition; recommend whack-a-mole (134–138) | None required | State the evidence and recommendation (144); run it only on request or existing authorization (145–146); unrelated work continues (153–154). F1 applies once it runs. |
+| Radar report sends an assessed blocker back | Reuse the existing disposition (151–153; radar:643–645) | None | Cite the prior receipt and continue; reopen only on new contradictory evidence or materially changed scope |
+
+**VERDICT:** FAIL
+
+**Basis:** The sanity-check ladder itself meets the Definition of Done on Q1–Q3, Q5 and Q6. One requested change stands: F1, where unchanged whack-a-mole text (21, 23, 292–293) assigns top priority from recurrence counts and so contradicts what both new pointers promise. It is a two-line edit inside the already-added pointer section. F2–F4 are optional. No runtime machinery or side effects are requested.
+
+Handing off to Producer (codex-producer) — go to the Producer window and say "take your turn": disposition F1–F4, apply F1, then return for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
