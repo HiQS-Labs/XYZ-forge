@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-01.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -529,5 +529,24 @@ index 91b78d73..a8ba1ac8 100755
        REMAINING=$((REMAINING+1))
        if [ "$state" = "CLOSED" ]; then
 ```
+
+### Reviewer · Round 5
+VERDICT: PASS
+Basis: Approved for the operator-authorized targeted Ballast companion correction and its integration coherence. No blocking defect found in the complete Ballast file, including its pre-existing context within this acceptance. Earlier dispositions remain covered by attested Round4. This is implementation QA, not final gate qualification, merge readiness or GH854 completion.
+
+swept file: yes
+
+- [Pass] test/ballast-release.sh:134-142 requires a retained gate, retained control and explicit gh306 exemption before treating unregistration as informational. It increments REMAINING and continues without incrementing COMPLETE. Missing prerequisites still reach the CLOSED false-claim branch at :144-148; --release-gate still requires REMAINING=0 at :429-437. The exemption lookup consumes the existing literal EXEMPT list (test/gh306-registry-bidirectional.sh:47-51), with no new runner or completion credit. No fix requested.
+- [Pass] Inspected separate-clone evidence under TESTS-RESULTS/2026-10-01+GH-854/dispositions/ballast-companion/: failed-suite.log quotes “#4 is CLOSED but its gate is not complete — not-registered-in-validate.sh”; ballast-focused.log and restored.log quote “3 complete, 1 remaining, 0 false completion claim(s)” and “4 passed, 0 failed, 1 informational”. manual-controls.jsonl:1-4 records missing-exemption, missing-suite and missing-control rc1, restored rc0; each corresponding nonempty log names its missing prerequisite and one false completion claim. ballast-mutate.log quotes “8 passed, 0 failed”. These executions were inspected, not repeated here. No fix requested.
+- [Pass] Read-only command `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` used standard-library Path/json/hashlib/re/sqlite3 assertions, with SQLite opened mode=ro&immutable=1. Exit0; decisive output: “hash match; identity intact; push excluded; controls rc1/1/1 restored0; focused4/0+1info 3complete1remaining; mutation8/0; registry407 unique; Ballast Small; GH4 exempt retained+control; DB integrity ok manifest14,15,4,3; prior attested review exact hash match offset+17”. Current Ballast SHA256 equals provenance.jsonl:1's bd0a6a459a2743c0483e7455887a85eab6e75d5a2e8be0d722ffa7d802da6920; before/after identity JSON agrees and qualification=false. utils/ci-route.sh:38 still selects Ballast in Small, while GH4 is exempt and its suite/control exist. The current immutable DB has one matching Ballast manifest row, agreeing with test/ballast-release.sh:72-77. No fix requested.
+- [Pass] Prior Round4 review bytes match prior-final4-attestation.json's exact added_sha256 after locating the unchanged span 17 bytes beyond its historical offset. The first Python probe exited1 on assuming the historical offset remained absolute after header edits; the bounded offset probe and final consolidated probe exited0. This was a probe bookkeeping error, not source failure or rewritten review history. Earlier approval covers earlier implementation; ancestry, all op_receipts union, generation choice and zero archive-test diff remain producer attestations because git is prohibited here.
+- [Pass] Static syntax command `bash -n test/ballast-release.sh`; exit0, no output. No suite, pytest or executable fixture ran.
+- [Unverified — needs clone run] Final integrated full push gate, intact identity, zero retry activity and exact-head hosted CI remain outstanding (PROJECT/2-WORKING/GH-854-GATE-DISPOSITIONS.md:33). Focused receipts predate the final integrated head and bind Ballast by content hash; they are not a final-head gate. Producer/supervisor must complete the planned qualification after driver attestation. No development-run credit or release completion inferred.
+
+Sweep covered all447 lines of current Ballast, its manifest, audit and release-gate consumers, the complete relay history, relevant registry/Small selections and companion receipts. No additional pre-existing correctness defect found within this targeted acceptance. Graph tools are unavailable in this turn; exact current source reads supplied evidence, with no graph freshness/completeness claim. No git commands, source/artifact edits, suite execution or external posting. Only this relay was edited.
+
+STATUS becomes Approved and NEXT becomes claude-a. The user's terminal protocol governs: complete the env-pinned token with done; the harness owns the file-scoped commit and attestation.
+
+relay closed (Approved), no further review turn needed. Producer/supervisor next finishes final qualification and publication after driver attestation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
