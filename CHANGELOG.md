@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-01 — Successful completion appends retain mutual exclusion (GH-909)
+
+A controlled handoff showed a stale waiter deleting a live successor’s PID-directory lock: all three writers returned success, but only two records survived. The existing completion writer now holds a stable-inode OS advisory lock through its atomic JSON transaction, preserving bounded per-holder wait and the absolute queue cap. The three covering fixtures use real OS locks. Upgrade and rollback require stopping and retiring old writers sharing the records path; mixed protocols are unsupported. Evidence is retained under `TESTS-RESULTS/2026-10-01+GH-909/`. The full-gate follow-up witnessed a quiet-grep SIGPIPE false-red in gh268 (#853). Because it is outside Small, standing policy turns it off through TESTS removal and gh306 EXEMPT; its file stays unchanged. A consuming-grep diagnostic demonstrated the cause but is not shipped. This fixes a proven loss mechanism; the exact historical CI interleaving and separate relay/registry flakes remain unproven.
+
+Decision: use one stable OS-owned lock in the existing writer. Bet: cooperating upgraded writers on local macOS/Linux preserve every successful record, provided old writers are retired before cutover. Expected signal by October 8: two additional development 4-wide runs with zero retries and clean envelopes, plus attributable hosted reconciliation. Reversibility: Costly; code rollback is straightforward after quiescing emitters, but lost records cannot be reconstructed. Revisit on any successful append lost, timeout regression, or mixed-version writer. Recommendation: graduate the verified repair after approved landing; iterate if the signal fails, and abandon this mechanism only if a controlled counterexample disproves its operating envelope.
+
 ## 2026-09-30 — Native Codex sidebar grooming shares task-sync (GH-901)
 
 Codex desktop now has a read-only snapshot adapter in the GH-896 task-sync CLI.
