@@ -1,0 +1,1 @@
+{"schema_version": "1.0", "date": "2026-10-02", "issue": 927, "kind": "manual-skill-validation", "revision": "1c9c2ab481e58a9835f295494372ec0023abdc33", "artifact": "manual-validation.json", "red_control_witnessed": true, "result": "new skill and whack-a-mole pass; pre-existing radar description limit failure"}

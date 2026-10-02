@@ -75,6 +75,10 @@ Questions:
 
 Cite file:line for findings. Give observed instruction/input, affected scope and falsifier for each behavior-change finding. Distinguish static scenario walkthroughs from executed tests. Report whether pre-existing contradictions affect this change, without expanding into an unrelated rewrite.
 
+## Verification context
+
+The new skill and whack-a-mole pass the existing skill metadata validator. A deliberately invalid skill-name copy is rejected (red control). Radar's pre-existing, unchanged description is 1336 characters and fails that validator's 1024-character limit; do not mistake this for a newly introduced failure. The Claude adapter suite passed 37/37 in a separate full clone. The driver-lock fixture initially failed because an inherited XYZ_HARNESS override resolved to the primary clone; removing the override yields 18/18. These are harness/format checks, not executed behavioral proof of the Markdown ladder.
+
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
 2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
