@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -71,5 +71,71 @@ Final review GH922 source diff from base 8c2e6cf3b18b2e3d58ff532f30d538a0dee3eb3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Implementation and focused evidence have no concrete blocker. Qualifying Small gate remains pending in a separate disposable full clone; this approval does not attest landing, deployment or hosted checks.
+swept file: yes
+
+- [Pass] Correct eligibility boundary: skills/3-weekly/task-sync/scripts/adapters/codex.py:91 adds 'or row.get("projectId") is not None' before activity lookup (:96). Non-null project chats skip even in Pinned; absent/null IDs remain eligible. Existing kind/local-host/heartbeat/section/updatedAt checks (:90-95), actual-turn validation and old-turn skip (:97-101) remain intact. Native policy at skills/3-weekly/task-sync/SKILL.md:104 says “Preserve project-grouped chats.” The in-memory probe below witnessed failure without the predicate and continued eligible-activity refusal with it. Fix: none.
+- [Pass] Minimal and DRY: codex.py:104-105 still uses shared core.clean_base(max_length=None) and core.local_stamp; :110 avoids reaffirming existing pins; :106-112 emits proposals only. skills/3-weekly/task-sync/scripts/task_sync.py:210 refuses Codex apply/title/unpin/group before dispatch; core.py:72 retains shared default normalization. Read all of codex.py, task_sync.py, core.py and SKILL.md, including pre-existing code; no concrete pre-existing defect found in that sweep. No new helper, suite, gate or writer is needed. Fix: none.
+- [Pass] Retained focused evidence is substantive: TESTS-RESULTS/2026-10-02+GH-922/manual-command.txt:11 seeds ten rows; :17 requires exactly two eligible renames and one new pin; :19 checks seven refusals; :32 checks idempotence; :33 requires CLI exit 3. base-red.log ends “Codex actual turn activity missing/invalid for project-pin”; fixed-green.log ends “TOTAL 11”; existing-probe.json lists 28 controls. Also read their original source in full, TESTS-RESULTS/2026-09-30+GH-901/manual_probe.py, including its nonempty assertion (:43) and red control (:87). All three artifact hashes match provenance.jsonl:1-3, which attributes base to 8c2e6cf3 and fixed to 65e60c9c. These are inspected recorded receipts, not suite reruns this turn. Fix: none.
+- [Pass] Ratings and dependencies are honest as documented judgments: PROJECT/2-WORKING/GH-922-CODEX-SCOPE.md:36 explains 80/80/50/95 as work-blocking, local, no observed data loss and cheap effort, with preceding incident rate unknown. :32 counts one incident repeated across five ticks; :22 explicitly requires #900 then #902 and forbids deployment/merge. This does not claim either prerequisite has landed. Fix: none.
+- [Unverified — needs clone run] Small qualifying gate, full acceptance replay and hosted exact-head checks were not run here as instructed. PROJECT/2-WORKING/GH-922-CODEX-SCOPE.md:43 and :52 keep them pending. Harness must complete the disposable-clone gate before merge readiness.
+
+Evidence method: Verify-tier graph attempted after complete project pagination. This worktree is not indexed; nearest XYZ-forge generation 2026-09-01T15:54:30Z returned zero task-sync symbols. Coverage for all four source paths reported freshness missing and scope total 0. Therefore material claims use current full source reads, not graph completeness. No git, suite, pytest, executable fixture, live native mutation or artifact edit was performed.
+
+Review-time command (exit 0; in-memory sweep query, no snapshot file or store writes):
+~~~sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import hashlib,json,sys,time
+from pathlib import Path
+p=Path("TESTS-RESULTS/2026-10-02+GH-922")
+records=[json.loads(s) for s in (p/"provenance.jsonl").read_text().splitlines()]
+assert len(records)==3
+for r in records:
+ data=(p/r["artifact"]).read_bytes();assert data and hashlib.sha256(data).hexdigest()==r["artifact_sha256"]
+ print("HASH OK",r["artifact"],"recorded exit",r["exit_code"])
+sys.path.insert(0,str(Path("skills/3-weekly/task-sync/scripts").resolve()))
+import core
+from adapters.codex import CodexAdapter
+now=time.time()
+rows=[dict(id=i,kind="codex",hostId="local",projectId=project,title="Review example",updatedAt=now) for i,project in [("project-pin","project"),("eligible",None)]]
+class Probe(CodexAdapter):
+ def _snapshot(self):return now,rows,{"project-pin"},{"codex:thread:local:project-pin":"pinned","codex:thread:local:eligible":"chats"},{"eligible":now-100}
+r=Probe("unused","heartbeat").sweep()
+assert r["swept"]==1 and r["skipped"]==1 and [x["task_id"] for x in r["renamed"]]==["eligible"]
+print("FIXED: project-pin skipped; eligible renamed and pinned")
+source=Path("skills/3-weekly/task-sync/scripts/adapters/codex.py").read_text();line='                    or row.get("projectId") is not None\n'
+assert source.count(line)==1
+namespace={};exec(compile(source.replace(line,""),"<in-memory omitted predicate>","exec"),namespace)
+class Red(namespace["CodexAdapter"]):
+ _snapshot=Probe._snapshot
+try:Red("unused","heartbeat").sweep()
+except core.AdapterError as e:assert "project-pin" in str(e);print("RED:",str(e))
+else:raise AssertionError("omitted predicate did not fail")
+class Missing(Probe):
+ def _snapshot(self):a,b,c,d,e=super()._snapshot();return a,b,c,d,{}
+try:Missing("unused","heartbeat").sweep()
+except core.AdapterError as e:assert "eligible" in str(e);print("ELIGIBLE REFUSAL:",str(e))
+else:raise AssertionError("eligible activity check weakened")
+print("PROBE PASS")
+PROBE
+~~~
+Decisive output:
+~~~text
+HASH OK base-red.log recorded exit 1
+HASH OK fixed-green.log recorded exit 0
+HASH OK existing-probe.json recorded exit 0
+FIXED: project-pin skipped; eligible renamed and pinned
+RED: Codex actual turn activity missing/invalid for project-pin
+ELIGIBLE REFUSAL: Codex actual turn activity missing/invalid for eligible
+PROBE PASS
+~~~
+
+Relay closed (Approved), no further turn needed. Producer/harness proceeds with the separate-clone Small gate; token completed with done per operator instruction.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
