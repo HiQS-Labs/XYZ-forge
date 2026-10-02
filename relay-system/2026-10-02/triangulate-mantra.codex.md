@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -73,5 +73,19 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The requested per-turn instruction is explicit and surgical; routing, evidence floors, and the conditional full debug mantra remain intact. Approval covers prompt guidance, not runtime enforcement or the separate harness gate.
+swept file: yes
+
+- [Pass] Visible, active-skill, once-per-turn scope is explicit at `.relay-artifacts/SKILL.md:22`: "At the start of every assistant turn while Triangulate is active" and "once in the first visible commentary message, before tools or task updates (not before each tool call)". Line 23 supplies the short mantra. Fix: none.
+- [Pass] No routing or recital conflict: `.relay-artifacts/SKILL.md:30` still says "Route to the single skill and stop"; the active-skill qualifier ends the recurring obligation when Triangulate routes away. The distinct full mantra remains conditional at line 135: "Recite the full mantra only if this is also an active debug session." Fix: none.
+- [Pass] Minimal textual change against the installed skill: command `diff -u /Users/noelsaw/.codex/skills/triangulate/SKILL.md .relay-artifacts/SKILL.md` exited 1 (differences found); its sole hunk was `@@ -19,6 +19,9 @@`, adding only the instruction, mantra, and blank line at candidate lines 22–24. This is a comparison to the installed copy, not a Git-baseline claim. No hook, deployment rule, or runtime guarantee is introduced. Fix: none.
+- [Pass] Whole-file sweep completed for `.relay-artifacts/SKILL.md:1–195`, including frontmatter, early exits, classification, floor table, all three lenses, card, neighbors, and provenance. No additional pre-existing defect identified. The floor remains explicit at lines 111–112: "Buy more evidence freely; never buy less"; Step 5 preserves it at lines 145–146. Fix: none.
+- [Unverified — needs clone run] The separate Small gate and reported quick_validate baseline rejection were not rerun or independently attested here. No prohibited suite, fixture, Git command, or artifact edit was performed; the harness owns post-turn validation.
+
+Relay closed (Approved), no further turn needed. Producer (`codex-author`) remains the NEXT role for the recorded handoff; the token is completed with `done`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
