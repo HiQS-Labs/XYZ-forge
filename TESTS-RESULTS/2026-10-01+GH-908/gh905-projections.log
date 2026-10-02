@@ -1,0 +1,4 @@
+off + existing view: unchanged
+projections = on
+on + existing view: refreshed
+projections = off

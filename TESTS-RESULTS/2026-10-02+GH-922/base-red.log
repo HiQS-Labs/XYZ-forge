@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/private/tmp/XYZ-forge-gh922-gate/temp/gh922-probe.py", line 17, in <module>
+    r=run(snap);assert r['swept']==2;assert {x['task_id'] for x in r['renamed']}=={'eligible','manual-pin'};assert [x['task_id'] for x in r['pinned']]==['eligible'];assert r['unpinned']==[];passed('mixed inventory skips pinned and default-section project rows before activity validation')
+  File "/private/tmp/XYZ-forge-gh922-gate/temp/gh922-probe.py", line 15, in run
+    def run(s):p.write_text(json.dumps(s));return CodexAdapter(str(p),'heartbeat').sweep()
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/private/tmp/XYZ-forge-gh922-gate/skills/3-weekly/task-sync/scripts/adapters/codex.py", line 97, in sweep
+    raise core.AdapterError(f"Codex actual turn activity missing/invalid for {task_id}")
+core.AdapterError: Codex actual turn activity missing/invalid for project-pin

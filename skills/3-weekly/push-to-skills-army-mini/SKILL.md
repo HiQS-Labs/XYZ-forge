@@ -1,12 +1,19 @@
 ---
 name: push-to-skills-army-mini
 description: >-
-  Publish the parent-managed Skills Army HQ package from landed XYZ Forge into the generated
-  HiQS-Labs/XYZ-skills-army-mini child repository. Trigger on "publish Skills Army mini",
-  "sync Skills Army mini", or "push Skills Army mini".
+  RETIRED 2026-10-01 — do not run. XYZ-skills-army-mini is now the upstream for Skills Army HQ, and
+  publishing from XYZ Forge would overwrite it. Formerly published the Skills Army HQ package from
+  XYZ Forge into HiQS-Labs/XYZ-skills-army-mini.
 ---
 
-# Push to XYZ Skills Army mini
+# Push to XYZ Skills Army mini — RETIRED
+
+> **Retired 2026-10-01 (#882; decision record: XYZ-skills-army-mini#2).** `HiQS-Labs/XYZ-skills-army-mini`
+> is the upstream for Skills Army HQ. XYZ Forge keeps only a vendored copy (see
+> `skills/3-weekly/skills-army-hq/UPSTREAM.md`). Do not run this publisher; it would overwrite upstream
+> changes. Its own history check already refuses once mini carries a commit the publisher did not make.
+> This skill and `test/gh620-skills-army-mini-sync.sh` are removed after the #854 freeze via the
+> 2026-10-08 suite audit. The text below is kept for history only.
 
 XYZ Forge is authoritative; the child is generated. Run from a clean landed `development` checkout
 with a clean `main` checkout of `HiQS-Labs/XYZ-skills-army-mini` at the sibling path or at

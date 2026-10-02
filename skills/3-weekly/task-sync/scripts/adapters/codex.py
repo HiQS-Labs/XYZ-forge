@@ -88,6 +88,7 @@ class CodexAdapter:
             task_id = row["id"]
             section = sections.get(f"codex:thread:local:{task_id}")
             if (row.get("kind") != "codex" or row.get("hostId") != "local"
+                    or row.get("projectId") is not None
                     or task_id == self.exclude_thread or section not in ("pinned", "chats")
                     or row.get("updatedAt", 0) < captured - hours * 3600):
                 report["skipped"] += 1

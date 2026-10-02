@@ -1,0 +1,34 @@
+import copy,json,sys,time,subprocess,hashlib
+from pathlib import Path
+root=Path.cwd();sys.path.insert(0,str(root/'skills/3-weekly/task-sync/scripts'))
+from adapters.codex import CodexAdapter
+import core
+now=time.time();rows=[]; sections={'pinned':[],'chats':[],'custom':[]}
+def row(i,project=None,section='chats',kind='codex',host='local',at=None,title='Descriptive conversation title'):
+ r={'id':i,'kind':kind,'hostId':host,'projectId':project,'title':title,'updatedAt':now};rows.append(r)
+ if section:sections[section].append(f'codex:thread:local:{i}')
+ return r
+row('eligible');row('manual-pin',section='pinned');row('project-pin','project',section='pinned');row('project-chat','project');row('custom',section='custom');row('remote',host='durable');row('cloud',kind='chatgpt');row('heartbeat',section='pinned');row('old-turn');row('old-updated')['updatedAt']=now-90000
+state={'pinnedThreads':[r for r in rows if f"codex:thread:local:{r['id']}" in sections['pinned']], 'threads':[r for r in rows if f"codex:thread:local:{r['id']}" not in sections['pinned']], 'sections':[{'sectionId':k,'itemKeys':v} for k,v in sections.items()]}
+snap={'captured_at':now,'state':state,'activity_at':{'eligible':now-100,'manual-pin':now-100,'old-turn':now-90000}}
+p=root/'temp/synthetic.json';checks=[]
+def run(s):p.write_text(json.dumps(s));return CodexAdapter(str(p),'heartbeat').sweep()
+def passed(n):checks.append(n);print('PASS',n)
+r=run(snap);assert r['swept']==2;assert {x['task_id'] for x in r['renamed']}=={'eligible','manual-pin'};assert [x['task_id'] for x in r['pinned']]==['eligible'];assert r['unpinned']==[];passed('mixed inventory skips pinned and default-section project rows before activity validation')
+assert r['renamed'][0]['new'].endswith('Descriptive conversation title');passed('preserves descriptive wording')
+for label,mutate in [('missing eligible activity',lambda s:s['activity_at'].pop('eligible')),('invalid activity',lambda s:s['activity_at'].update(eligible=True)),('future activity',lambda s:s['activity_at'].update(eligible=now+120)),('stale snapshot',lambda s:s.update(captured_at=now-301)),('empty inventory',lambda s:s['state'].update(threads=[],pinnedThreads=[])),('malformed sections',lambda s:s['state'].update(sections={})),('ambiguous membership',lambda s:s['state']['sections'][0]['itemKeys'].append('codex:thread:local:eligible'))]:
+ s=copy.deepcopy(snap);mutate(s)
+ try:run(s)
+ except core.AdapterError:passed(label+' refused')
+ else:raise AssertionError(label)
+s=copy.deepcopy(snap)
+for proposal in r['renamed']:
+ for x in s['state']['threads']+s['state']['pinnedThreads']:
+  if x['id']==proposal['task_id']:x['title']=proposal['new']
+x=next(x for x in s['state']['threads'] if x['id']=='eligible');s['state']['threads'].remove(x);s['state']['pinnedThreads'].append(x)
+for section in s['state']['sections']:
+ if section['sectionId']=='chats':section['itemKeys'].remove('codex:thread:local:eligible')
+ if section['sectionId']=='pinned':section['itemKeys'].append('codex:thread:local:eligible')
+r2=run(s);assert r2['renamed']==[] and r2['pinned']==[];passed('stable native readback is idempotent')
+s=copy.deepcopy(snap);s['activity_at'].pop('eligible');p.write_text(json.dumps(s));q=subprocess.run([sys.executable,'skills/3-weekly/task-sync/scripts/task_sync.py','--ide','codex','--codex-snapshot',str(p),'--exclude-thread','heartbeat'],capture_output=True,text=True);assert q.returncode==3 and json.loads(q.stdout)['ides']['codex']['error'];passed('CLI missing eligible activity exit 3')
+print('TOTAL',len(checks))

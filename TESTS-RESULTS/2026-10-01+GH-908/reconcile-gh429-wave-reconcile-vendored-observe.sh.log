@@ -1,0 +1,25 @@
+== test: gh429-wave-reconcile-vendored-observe ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh429-wave-reconcile-vendored-observe.XXXXXX.Jznlep3aNe
+== test: gh429-wave-reconcile-vendored-observe ==
+-- section 1+2: observe-mode pdda (findings, exit 0) no longer kills a live run; dashboard gets the repo root --
+  PASS: live reconcile exits 0 with an observe-mode backlog
+  PASS: the findings are surfaced as a warning with their count
+  PASS: gate did not die on stdout
+  PASS: doc promoted to 3-COMPLETED
+-- section 2 negative control: a FULL-mode pdda (exit 1) still blocks and rolls back --
+  PASS: non-zero pdda exit → reconciler exit 7
+  PASS: gate names the failure
+  PASS: doc move rolled back
+-- section 3: a closing keyword + the ORIGIN repo's issue URL is a closer --
+  PASS: URL-form reconcile exits 0
+  PASS: PR body URL form parsed as closes [4291]
+  PASS: doc promoted from the URL form
+-- section 3 negative control: a FOREIGN repo's issue URL stays a mention --
+  PASS: foreign URL is not a closer
+  PASS: doc stays active on a foreign URL
+-- unit: slug helper and the extractor --
+  PASS: github_slug_from_origin reads the origin slug
+  PASS: URL form (case-insensitive slug) and #N combine
+  PASS: without a slug the URL form is neither closer nor mention (unchanged contract)
+
+gh429-wave-reconcile-vendored-observe: 15 passed, 0 failed

@@ -2,9 +2,9 @@
 gh_issue: 896
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/896
 title: "feat(skills): unified task-sync — central core + per-IDE adapters (ZCode, Antigravity)"
-status: Active (2-WORKING — PR 900 merge-readiness review)
+status: Complete
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-02
 owner: noelsaw1
 doc_type: plan
 effort: 2

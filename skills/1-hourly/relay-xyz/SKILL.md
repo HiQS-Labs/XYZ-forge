@@ -6,11 +6,11 @@ description: >-
   poll.sh) rather than improvising the handoff by hand. Use when the operator
   wants to "run an automated relay", "have Codex or agy review this
   end-to-end", "drive a relay to completion headless", "run the relay harness",
-  or set up the all-Claude hands-free poll loop — and the working tree is a
-  clone of the xyz-3-agents-swarm repo (it ships relay-automation/). /relay
+  or set up the all-Claude hands-free poll loop. The skill can start from a
+  foreign repo because its locator selects a separate XYZ-forge harness. /relay
   scaffolds the thread and owns the turn protocol; relay-xyz is the repo-specific
   layer that runs the real scripts. NOT for scaffolding a thread from scratch
-  (that is /relay), NOT for repos without relay-automation/.
+  (that is /relay).
 ---
 
 # relay-xyz — automated relays on the shipped harness
@@ -56,11 +56,10 @@ Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`),
 - Running automated relays in **two different repos at the same time on one machine** — see
   [Concurrent relays across repos](#concurrent-relays-across-repos-same-machine) (each repo needs its own
   vendored `.xyz/`).
-- You have a relay thread (or are about to scaffold one with `/relay`) **and** the working tree is a
-  clone of this repo.
+- You have a relay thread (or are about to scaffold one with `/relay`); the current working tree may
+  be a foreign repo if the locator can reach a canonical XYZ-forge harness.
 
-**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), repos that don't ship
-`relay-automation/`, or work that needs a human checkpoint between every turn (use plain `/relay`
+**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), or work that needs a human checkpoint between every turn (use plain `/relay`
 manual mode).
 
 ## First-time setup on a new clone or machine (make the skill discoverable)
@@ -82,12 +81,11 @@ load the skill at all* — a layer the locator can't reach, since it runs only a
 ## Preconditions — locate the harness (bundled locator, never hardcode a path)
 
 `relay-xyz` ships its own device-agnostic locator, [`find-harness.sh`](find-harness.sh), beside this
-skill. It resolves the harness repo (the clone that ships `relay-automation/`) **relative to its own
-installed location**, following symlinks — so it works from *any* working directory, including a clone
-that has only `relay-system/` thread storage (from `/relay`) but **not** the harness scripts. `$HOME`
-and the skill's own symlink are the only anchors; **no machine path is ever hardcoded.** That's what
-keeps relay-xyz from "complaining the harness isn't in this repo" when you launch it from a clone
-without `relay-automation/` + `bin/tick`.
+skill. It checks an explicit override, a caller's vendored harness, the current repo, its own
+installed location, a per-Mac config at `${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`, and bounded
+canonical XYZ-forge clone locations. A copied Skills Army deployment therefore works from a foreign
+repo. `--check` shows a command to save the chosen canonical harness in that config and warns when
+its cached upstream is ahead. It never fetches while checking.
 
 Run this first. It finds the locator, exports the harness env, `cd`s into the clone that ships the
 harness, and prints a one-glance readiness line:
@@ -105,7 +103,7 @@ for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-harness.sh}
          "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
   [ -n "$L" ] && [ -x "$L" ] && break
 done
-[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your xyz-3-agents-swarm clone"; exit 1; }
+[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your XYZ-forge clone"; exit 1; }
 
 eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK}
 cd "$HARNESS"
@@ -185,7 +183,7 @@ is unrecoverable, with no reflog or stash behind it. A new runtime artifact unde
 to the preserve list in `xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
 
 So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
-`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative), and
+`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative → config → search), and
 `find-harness.sh --check` **warns** when you're in a foreign repo with no `.xyz/` (using the shared
 harness) and points you at the vendor command. Two vendored repos each run `relay-drive.sh` from their
 own `.xyz/relay-automation/`, holding independent locks — no contention. (Editing the central harness
@@ -421,7 +419,7 @@ the same repo/worktree state (observed: a stray `git worktree` plus a `tick` tok
   scaffolder only writes a thread; you still drive it with `relay-drive.sh` per the paths above.
 
 - **Drive a full relay/build that lands in a DIFFERENT repo (`--target-root`):** the *normal* case —
-  the harness lives in `xyz-3-agents-swarm`, the code you want built or reviewed-and-committed lives in
+  the harness lives in `XYZ-forge`, the code you want built or reviewed-and-committed lives in
   your own repo. Pass `--target-root <repo>` to `relay-drive.sh` (or `marathon-drive.sh`): the relay
   thread + `tick` token stay in the harness clone, while the worktree base, `ALLOW_PATHS` resolution,
   and the file-scoped commit all route to `<repo>` (the harness clone is never touched). `find-harness.sh`
