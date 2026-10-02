@@ -16,13 +16,13 @@ goal: "Assess blocker necessity before expensive repair; route recurring and sys
 
 | What was just completed | What's next |
 |---|---|
-| Three Markdown skills updated; Claude Code Fable high-effort relay Approved after two rounds. | Retain reviewed local branch for operator handoff; installation and publication are not performed. |
+| Five Markdown skills updated; Fable, GLM and targeted Sol QA Approved. | Publish ready PR against development; await review/merge. No installation. |
 
 Create one Markdown-only skill using the operator-reviewed draft. Activate at the first blocker, ask about unclear core/user-facing importance, permit low-risk deferral with PRS-rated intake, and propose removals rather than silently weakening requirements. Reassess after two investigation attempts yield no new evidence.
 
 Add recommendations for whack-a-mole and radar, with reciprocal pointers in those skills. Preserve their evidence and approval boundaries; prevent recursive automatic audits.
 
-Scope is three SKILL.md files, no runtime code, scripts, new tests, or installation. Use Claude Code Fable at high effort through relay-xyz for independent QA.
+Scope is five SKILL.md files, no runtime code, scripts, new tests, or installation. Independent QA uses Claude Code Fable high and Command Code GLM 5.3 max through relay-xyz, followed by Sol high on the later CI-linkage delta only.
 
 PRS rationale (2026-10-02): rated 65/40/50/80 — current operator priority; investigation waste without an observed security/integrity incident; neutral appeal; bounded Markdown work. Recurrence counts unmeasured. No override.
 
@@ -36,4 +36,10 @@ Harness verification and limitations: `TESTS-RESULTS/2026-10-02+GH-927/SUMMARY.m
 
 ## Additional GLM QA
 
-Operator-requested Command Code / GLM 5.3 / max effort relay Approved in one round, exit 0. No required changes; optional cluster-scope wording nit retained for operator consideration. Full receipt: `relay-system/2026-10-02/gh927-sanity-check.glm.md`. Skill files remain unchanged from the approved Fable content.
+Operator-requested Command Code / GLM 5.3 / max effort relay Approved in one round, exit 0. No required changes; optional cluster-scope wording nit retained for operator consideration. Full receipt: `relay-system/2026-10-02/gh927-sanity-check.glm.md`. At that review, skill files were unchanged from the approved Fable content.
+
+## CI linkage addition and publication
+
+Added reciprocal links between sanity-check and ci-debug / ci-optimize. Independent `gpt-6.1-sol` high-effort subagent Approved the 38-line linkage delta at `d2f9038d5e981de15e69e244a0aa2598e70792d0`, with no findings or nits. Review was limited to links, triggers, evidence reuse, recursion, and authority boundaries. Receipt: `relay-system/2026-10-02/gh927-ci-linkages.sol.md`.
+
+All nine relative skill links resolve; four changed skills pass metadata validation and Radar retains its documented baseline failure. The branch classifies as documentation-only. Publication is authorized; this remains in progress until landing is verified. Reversibility: Easy — Markdown instructions and pointers can be reverted without runtime or data migration.
