@@ -175,4 +175,12 @@ Basis: every operator requirement and review question is satisfied by exact-cita
 
 relay closed (Approved) — no further Producer turn needed; token closed with `tick done`.
 
+
+### Attestation · relay-drive — 2026-10-02T16:25:32Z
+task: RELAY-GH927-SANITY-GLM
+reviewer: commandcode
+status: Approved
+reviewed-head: cf4129bf95a8f77b31fba1525739774639353fe3
+added-range: 8872+16878
+added-sha256: 4cc49e92fef8455ae38384a34f4a5223bee4c7fa9d1adc37f61ed833f66248af
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
