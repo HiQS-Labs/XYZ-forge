@@ -88,4 +88,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer (`codex-author`) remains the NEXT role for the recorded handoff; the token is completed with `done`.
 
+
+### Attestation · relay-drive — 2026-10-02T20:09:41Z
+task: RELAY-triangulate-mantra-20261002
+reviewer: codex
+status: Approved
+reviewed-head: ee2190c0a318b34b9c9e1156b3d541bf6b8cde71
+added-range: 6487+2216
+added-sha256: 2cdcc3a5f10d498d19658597d9a98d9dcc3801dfdf48522c63a0f03251ac3995
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
