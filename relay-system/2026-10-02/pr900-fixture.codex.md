@@ -127,4 +127,12 @@ CURRENT: 731 valid dates, both input orders select unsuffixed first archive
 
 NEXT: Producer (codex-producer). Relay closed (Approved), no further turn needed; harness owns the file-scoped commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-10-02T07:04:28Z
+task: RELAY-pr900-fixture
+reviewer: codex
+status: Approved
+reviewed-head: 1bd4d88d7dfc6a0792e35e7e184eafa18ba6740c
+added-range: 6532+4420
+added-sha256: ff2a77a5ab5e58aaa2751cd9ec8bf84f79e5e423d7a0f5053e994d888fa41ad0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
