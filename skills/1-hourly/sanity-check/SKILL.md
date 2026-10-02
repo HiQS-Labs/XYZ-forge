@@ -135,6 +135,16 @@ defer a low-risk issue.
 
 Recommend a sibling only when observed evidence supports its scope:
 
+- **[ci-debug](../../2-daily/ci-debug/SKILL.md):** a validated CI failure needs
+  repair now. Pass the failure artifact, affected revision, known consequences,
+  and sanity-check disposition to its existing diagnosis/repair ladder. Resume
+  an already-authorized CI repair without asking again; do not restart diagnosis
+  or reassess the same blocker on unchanged evidence.
+- **[ci-optimize](../../4-occasional/ci-optimize/SKILL.md):** measured pipeline
+  cost, repeated orchestration failures, or test-selection problems warrant a
+  broader CI architecture review. State the evidence and scope before recommending
+  it; one red check alone does not justify a pipeline audit. Reuse an existing
+  review, and run a new one only within the operator's requested/authorized scope.
 - **[whack-a-mole](../../3-weekly/whack-a-mole/SKILL.md):** distinct incidents,
   reopens, or repeated fixes suggest a recurring defect class. Pass the concrete
   incidents, suspected shared mechanism, and any existing umbrella. It verifies

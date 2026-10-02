@@ -19,6 +19,20 @@ Nothing here requires a paid tier, a dedicated runner vendor, or speculative sub
 
 ---
 
+## Related skill: sanity-check necessity before expanding CI
+
+Recommend [sanity-check](../../1-hourly/sanity-check/SKILL.md) when an audit
+finding's user consequence, requirement value, or urgency is unclear before
+committing to pipeline changes. Pass the measured cost/failure evidence and the
+specific mechanism in question; an audit score alone does not make a new control
+necessary or an existing guard disposable.
+
+Reuse a current assessment for the same scope and evidence. Its recommendation
+to run this audit is not a reason to send the same question straight back; return
+only with materially new evidence or changed scope. Keep the operator's authorized
+audit scope and existing gates intact; removal or weakening remains a concrete
+operator decision. In a flat installed collection, resolve `sanity-check` by name.
+
 ## The 12 Foundational Principles
 
 > **Repos that forbid new tests** (XYZ-forge: `AGENTS.md` *No new tests*, GH-831): recommend nothing that adds a suite, a registry entry, or gate
