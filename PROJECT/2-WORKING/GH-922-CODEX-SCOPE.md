@@ -50,3 +50,5 @@ Easy rollback: revert this task commit. Unknown/missing projectId stays eligible
 ## Execution evidence
 
 Plan QA Approved, driver exit 0, receipt relay-system/2026-10-02/gh922-plan.codex.md. Accepted-start admitted by exact URL row before source edit. Implementation 65e60c9c adds exactly one predicate line. Recorded red/green matrix: base error for project-pin, fixed 11/11 assertions, existing Codex controls 28/28; TESTS-RESULTS/2026-10-02+GH-922/provenance.jsonl. No raw private snapshots copied. Final QA Approved with driver exit 0. Small gate failed 4/75 checks at 62593e14; three environment override failures, one inherited October 2 deploy-skills assertion tracked by #914/#915. PR remains blocked on qualifying gate and parent landing.
+
+PR #924 targets development after #900/#902 merged. Ledger conflict resolved with canonical resolver preserving both sides. Refreshed Small gate exit 0 at f16707c0; manual 11/11 and controls 28/28. Independent final QA covered unchanged one-line production fix before integration merge.
