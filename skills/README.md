@@ -27,8 +27,8 @@ The per-skill index with a one-line purpose for each is `ARCHITECTURE.md` → "S
   skill's source receipt with `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>`.
   Exception: Skills Army HQ itself is maintained upstream in XYZ-skills-army-mini; refresh it from
   there, not from the forge copy (see `skills/3-weekly/skills-army-hq/UPSTREAM.md`).
-  A direct `install.sh` link points at the source folder and becomes dangling when it moves:
-  re-run that skill's installer from its new location, using the same target options as before.
+  App links are owned by Skills Army HQ in the Git Pulse Sync `Deployed Skills` collection;
+  refresh the source receipt, then run its `sync.py` preview and apply flow.
   There is no need to install missing skills or configure IDEs you do not use.
 - Cross-skill and repo-document links use canonical repository URLs where needed so they also
   work in the flat deployed collection.

@@ -47,7 +47,6 @@ Orchestrate weekly sprint alignment and daily task execution across team members
 ```
 skills/3-weekly/weekly-planner/
 ├── SKILL.md                  # This specification and prompt guide
-├── install.sh                # Skills Army HQ symlink installer
 └── scripts/
     └── planner_core.py       # Shared engine for intake, sequencing, audit, and daily pivot
 ```
