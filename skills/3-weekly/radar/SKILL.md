@@ -629,6 +629,21 @@ Then offer — do not assume — to hand the targets to `start-marathon`.
 
 Always state which rows applied and what they cost the verdict.
 
+## Sibling: sanity-check for a disputed blocker
+
+When this report identifies a costly repair loop or a proposed blocker whose
+requirement value, user impact, or urgency is unclear, recommend
+[sanity-check](../../1-hourly/sanity-check/SKILL.md) to the operator. Name the
+specific target and evidence and the decision it would inform: fix now, simplify,
+defer, or propose retirement. Broad maintenance volume alone does not prove that
+any particular guard or feature is unnecessary.
+
+Radar recommends; it does not automatically invoke sanity-check or inherit its
+issue-filing authority. Preserve Radar's existing report approval boundary and
+reuse any current sanity-check disposition for the same evidence. Do not bounce
+back into Radar through a reciprocal pointer unless the scope or evidence has
+materially changed.
+
 ## Boundaries
 
 | Tool | Owns | Radar's difference |
