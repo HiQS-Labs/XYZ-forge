@@ -480,4 +480,12 @@ Terminal protocol follows the current user's explicit instructions and supersedi
 
 relay closed (Approved), no further review turn needed. Producer/supervisor next performs the outstanding qualification after driver attestation.
 
+
+### Attestation · relay-drive — 2026-10-02T06:44:15Z
+task: gh854-dispositions-final4
+reviewer: codex
+status: Approved
+reviewed-head: d04b5aa4cadb8bdf34197a447a812c8a40427955
+added-range: 52694+7622
+added-sha256: 0f4e13baa4e9b35b1f0e1ff423012211adebca706544dbf74d77d817b2ce0407
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
