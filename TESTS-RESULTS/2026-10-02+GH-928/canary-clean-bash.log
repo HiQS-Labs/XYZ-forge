@@ -1,0 +1,30 @@
+canary: harness /Users/noelsaw/marathon-clones/xyz-gh928-canary-fix
+canary: sandbox /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/xyz-canary.InJQG9
+canary: runtimes bash 
+
+-- static floor
+  ok    shell-syntax                         1000 ms
+  ok    node-syntax                             0 ms
+  ok    python-ports                         1000 ms
+-- tick kernel
+  ok    tick-lifecycle                          0 ms
+  ok    relay-block-validator                   0 ms
+-- relay
+  ok    relay-xyz-locator                       0 ms
+  ok    relay-drive-help[bash]                  0 ms
+  ok    poll-help[bash]                         0 ms
+-- consult
+  ok    consult-help[bash]                      0 ms
+-- marathon
+  ok    marathon-yaml                           0 ms
+  ok    marathon-help                           0 ms
+  ok    marathon-drive-help[bash]            1000 ms
+  ok    marathon-dry-run[bash]                  0 ms
+-- jog
+  ok    jog-help                                0 ms
+  ok    jog-dry-run                             0 ms
+-- containment
+  ok    tree-clean                              0 ms
+
+canary: 16 passed, 0 failed in 3000 ms
+rc=0

@@ -1,0 +1,4 @@
+restore-clean: yes
+detector fired on unrelated local config write: yes
+detector fired on remote repoint (GH-564 vector): yes
+remote restore-clean: yes

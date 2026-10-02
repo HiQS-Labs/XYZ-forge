@@ -1,0 +1,2 @@
+canary: sandbox must not be / or the home directory (/)
+rc=2

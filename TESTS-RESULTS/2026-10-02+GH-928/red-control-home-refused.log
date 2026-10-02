@@ -1,0 +1,2 @@
+canary: sandbox must not be / or the home directory (/private/tmp/gh928-evidence/fakehome)
+rc=2
