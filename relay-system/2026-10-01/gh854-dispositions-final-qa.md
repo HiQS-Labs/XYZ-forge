@@ -549,4 +549,12 @@ STATUS becomes Approved and NEXT becomes claude-a. The user's terminal protocol 
 
 relay closed (Approved), no further review turn needed. Producer/supervisor next finishes final qualification and publication after driver attestation.
 
+
+### Attestation · relay-drive — 2026-10-02T14:29:12Z
+task: gh854-dispositions-final5
+reviewer: codex
+status: Approved
+reviewed-head: 1a05d3dcaa3315cda6621eef9c14ded107d03908
+added-range: 64293+4578
+added-sha256: 8f2d09422ce4d8aedb2f6a3ab7e890745353442c6ce8a73fa9cc3a9c2e3cc379
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
