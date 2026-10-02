@@ -52,7 +52,7 @@ ROUND: 1 / 1
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: committed diff `origin/development...HEAD` in this fold clone, including merge commits for PRs #890, #924, #919, #827, #913, #891, #915. Focus files: `releases.sql`, `CHANGELOG.md`, `test/gh549-work-events.sh`, `test/test_deploy_skills.py`, `utils/py/releases_app.py`, and every source PR diff.
+- Artifact under review: committed seven-PR fold branch in this clone (diff against origin/development); focus on the files and source PRs named in Definition of Done.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-02
 - Definition of Done: independent, read-only QA of the seven-PR consolidation before publication. This is a local macOS developer toolkit; keep findings proportional. No new tests or gate machinery (AGENTS.md GH-831). Do not run `validate.sh`, `ci-local.sh`, `test/*.sh`, or mutating checks in the relay worktree. Review the committed source and ledger dump; cite file:line or exact rows. Specifically answer:
