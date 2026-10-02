@@ -182,4 +182,12 @@ Probes (run from the worktree root, both exit 0):
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-02T16:06:20Z
+task: RELAY-GH927-SANITY-FABLE
+reviewer: claude-fable
+status: Approved
+reviewed-head: 33cba144a005b293bfe1d616efb76416ae750020
+added-range: 19937+5953
+added-sha256: 5933226a440c59fdfa0f55bd10b9a9cff387081bb7bc1f7474f25865fdfd64df
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
