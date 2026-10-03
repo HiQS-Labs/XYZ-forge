@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -115,4 +115,26 @@ removed spacing above your block even if your verdict is positive.
 
 ## Log
 
+### Reviewer (agy) — Round 1
+
+swept file: yes. Swept complete implementation across `utils/py/profile_resolve.py`, `utils/py/claude_cli.py`, `utils/py/proc_group.py`, `utils/py/consult.py`, `utils/py/claude-turn.py`, and `skills/1-hourly/relay-xyz/SKILL.md`. Pre-existing defects in files touched were examined; no pre-existing code defects impede the implementation or violate repository contracts.
+
+- `[Pass]` **Explicit HiQS Profile Resolution & Precedence (`profile_resolve.py`):** Explicit HiQS profiles (`hiqs:NAME` or `source: "hiqs"`) are evaluated prior to Tier 1 manual environment overrides (`utils/py/profile_resolve.py:389-400`). Conflicting ambient manual settings trigger immediate refusal (`utils/py/profile_resolve.py:320-322`: `"explicit HiQS profile refuses ambient manual lane settings; use a clean shell"`), preventing accidental or silent manual overrides.
+- `[Pass]` **Zero Downgrade Fallback & Refusal (`profile_resolve.py`):** Unavailable, missing, or malformed HiQS configurations populate `result["problems"]` and emit an empty export block with exit code 1 (`utils/py/profile_resolve.py:370, 397, 473-478`), never falling through to literal defaults. Narrow probe confirmed exit 1: `python3 utils/py/profile_resolve.py hiqs:nonexistent --env` exited 1 emitting `"resolve-profile: profile 'nonexistent': explicit HiQS profile is unavailable; no fallback"`.
+- `[Pass]` **Strict Runner Validation & Bounded Nonsecret IO (`profile_resolve.py` & `proc_group.py`):** Runner execution requires absolute checkout and node paths, valid 40-hex git revision, git rev-parse HEAD match, and clean porcelain status (`utils/py/profile_resolve.py:323-337`). Invocations route through `proc_group.run_bounded` using stdin payload with size bounded to <= 1MiB and wall timeout 20s (`utils/py/profile_resolve.py:347-353`; `utils/py/proc_group.py:80-103`), with stdout suppressed on refusal.
+- `[Pass]` **Supported Advisory Preimage & Admission Verification (`claude_cli.py`):** Fixed schema `xyz.claude-advisory.v1` validates subscription authMode, tools `["Read", "Grep", "Glob"]`, model regex, effort enum, positive integer maxTurns, and positive maxBudgetUsd (`utils/py/claude_cli.py:28-45`). `validate_admission` verifies protocolVersion 2, enforcedRecipeRef, target mode hosted/claude-code-subscription, lack of adapterConfig or routing overrides, absence of provider/ambient flag overrides (`ANTHROPIC_*`, `CLAUDE_CODE_*`, `CLAUDE_CONFIG_*`, `CLAUDE_FLAGS`), build >= 2.1.248, darwin platform, and absence of managed preferences (`utils/py/claude_cli.py:56-116`).
+- `[Pass]` **Admission Expiry & Multi-turn Replay (`claude_cli.py` & `consult.py`):** `check_admission_expiry` enforces ISO UTC timestamps against current UTC (`utils/py/claude_cli.py:48-54`). `admission_preflight` checks expiry both before and after native account preflight (`utils/py/claude_cli.py:121-130`), catching expirations that occur during the authentication probe. Consult reuses the retained admission receipt without spawning a new resolver (`utils/py/consult.py:623-636`).
+- `[Pass]` **Model Usage Attestation & Result Integrity (`claude_cli.py` & `consult.py`):** `read_result` checks that `data["modelUsage"]` matches `expected_model` (`utils/py/claude_cli.py:194-196`). `consult.py` passes the admitted model when `XYZ_HIQS_ADMISSION` is set and fails the advisor (`breached = True`) if output metadata is missing or mismatched (`utils/py/consult.py:757-766`).
+- `[Pass]` **Role Containment & Actor Refusal (`claude-turn.py` & `profile_resolve.py`):** HiQS profiles explicitly unseat relay actor variables (`unset RELAY_AGENT_CMD RELAY_AGENT CLAUDE_FLAGS`) (`utils/py/profile_resolve.py:481`), emitting advisory exports only. `claude-turn.py` immediately exits with code 2 before claiming any tick relay token (`utils/py/claude-turn.py:56-58, 102`). Narrow probe confirmed exit 2: `XYZ_HIQS_ADMISSION=test python3 utils/py/claude-turn.py` output `"claude-turn: HiQS recipe admission supports consult advisory calls only; no relay token claimed"`.
+- `[Pass]` **Guard Preservation on Literal Profiles (`profile_resolve.py`):** Literal profiles emit `unset XYZ_HIQS_ADMISSION` (`utils/py/profile_resolve.py:489`), while Tier 4 floor leaves existing environment guards intact (`utils/py/profile_resolve.py:465-467`), ensuring an inactive profile resolution does not silently clear an active recipe guard.
+- `[Pass]` **Checked Skill Callers & Doc Alignment (`skills/1-hourly/relay-xyz/SKILL.md`):** Replaces unchecked `eval "$(resolve-profile ...)"` with checked `profile_env=... || exit "$?"` and `eval "$profile_env" || exit "$?"` (`skills/1-hourly/relay-xyz/SKILL.md:290-291`), and documents the optional HiQS recipe admission contract and envelope (`skills/1-hourly/relay-xyz/SKILL.md:703-742`).
+- `[Pass]` **Repository Rails & Evidence (`TESTS-RESULTS/2026-10-03+GH-947/provenance.jsonl`):** Adheres strictly to GH-831 with zero new test files or registry additions. Frozen twins remain untouched (`bash test/gh308-frozen-twin-guard.sh --base origin/development` passed 38/38, exit 0), and no new Bash was added (GH-551). Provenance entries 1-5 record focused suites (profile 51, claude subscription, runaway guard 43), synthetic controls covering foreign/vendored execution, and a witnessed red control on expiry mutation.
+- `[Nit]` **PDDA Doc Frontmatter & Status Table on Review Artifact (`PROJECT/2-WORKING/`):** A non-mutating `utils/pdda/pdda.sh run` probe reports that `PROJECT/2-WORKING/GH-947-FINAL-QA.md` lacks frontmatter keys `updated`, `owner`, `goal`, lacks `roadmap_exempt: true` (or roadmap pointer), and lacks a `## Status` table, while `PROJECT/2-WORKING/GH-947-HIQS-RECIPE-PROFILES.md` lacks `goal`. While these do not impact the runtime implementation and are not blocking for this review pass, the author must complete these doc fields prior to running the qualifying `ci-local.sh` gate in the disposable full clone.
+
+VERDICT: PASS
+Basis: The GH-947 optional HiQS recipe profile implementation adheres strictly to the canonical plan and issue #947 acceptance criteria. Negative controls, admission expiry boundaries, nonsecret receipt verification, process-group isolation, and role boundaries are verified with exact file citations and non-mutating probes. No repository rails (GH-831, GH-308, GH-551) are breached.  [Unverified — no citation]
+
+relay closed (Approved), no further turn needed.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
