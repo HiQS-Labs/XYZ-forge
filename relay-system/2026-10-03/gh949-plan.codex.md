@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -187,5 +187,25 @@ Disposition: Implemented the review packet nit. Definition of Done now points to
 Protocol recovery: round 1 driver exited 4 with review-body-rewritten because the producer placed the operational packet after the final marker. Its PASS is retained as advisory, not accepted approval. Moved that packet into Setup above Log; prior reviewer block is unchanged. Re-review the canonical plan and corrected protocol; this is round 2 of the original three-round budget. No production edits have begun.
 
 Handing off to Reviewer for corrected plan approval.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Approve the plan for implementation. Re-read the entire embedded plan, canonical plan and recon, including pre-existing content, and inspected the process, oracle, delegated repetition, ATE record, reader and environment seams. No blocking pre-existing defect in the plan was found. This is plan approval, not runtime acceptance or an attestation of the driver's eventual exit.
+
+- [Pass] The corrected Definition of Done explicitly names “Phase 2 steps 1–6” and independent Phase 3 QA. The canonical acceptance pointer is now concrete at PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:40. The operational packet precedes Log and the sole final marker follows the Producer block; this turn appends above that marker without changing earlier turns.
+- [Pass] F1/F7/F8 have bounded, compatible repair criteria at PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:60 and :61. Source inspection shows communicate-only timeout cleanup in utils/py/proc_group.py:98, timeout admission after startup in :185, and delegated raw subprocess execution in utils/py/metamorphic_oracle.py:182. The plan covers cancellation cleanup, CLI signal boundaries, threaded callers, later repetitions and genuine exit124 versus timeout without changing successful-background policy.
+- [Pass] F2/F3 address the actual identity gaps: filenames-only hashing in utils/py/domain_oracles.py:95 and literal .git/config in :238. PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:62 requires directory-link changes, shared/worktree config presence and contents, linked HEAD, and truthful metadata errors. The required positive control prevents an always-failing oracle from satisfying acceptance.
+- [Pass] F4/F5/F9 and cancellation records map to the existing ATE write path: utils/ate/scripts/run_variations.py:449 writes control, :483 executes before append, and :534 formats local time with Z. PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:63 requires pre-write empty-grid refusal, invocation-local no-work accounting, one failure record, prior-row preservation, bounded termination and UTC. Existing readers inspect top-level status and classification fields (utils/ate/scripts/checkin.py:67; utils/ate/scripts/compile_issue.py:49); reader acceptance remains an explicit implementation control.
+- [Pass] F6/K1 stay at the existing shared boundaries. Optional HOME expansions occur at skills/1-hourly/relay-xyz/find-harness.sh:121 and :348; both gates call runner_envelope_begin (validate.sh:1238; ci-local.sh:399). PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:64 preserves XDG, explicit assignments and XYZ_HARNESS_DB while removing the two inherited selectors.
+- [Pass] Scope, rollback and proof are explicit at PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:36, :58, :65 and :76: existing helpers, no new gate/schema/dependency, owned-commit rollback, witnessed base/repaired controls with committed provenance, independent final review and qualifying clone evidence. The exact-SHA requirement at :83 remains binding after reconciliation.
+- [Unverified — needs clone run] No runtime suite, executable fixture, Git command or model call was run. Signal timing, cleanup, no-write admission, reader compatibility and gate behavior still require the planned disposable-clone evidence. Historical incidents, live PR state and ledger ratings were treated as supplied context, not independently re-attested.
+
+Evidence boundary: Verify-tier intent, exact-source fallback only this turn. Tool discovery exposed no graph project/status/search/coverage tools, so no current graph generation or coverage is claimed. The recon's older generation is supplied provenance, not fresh index evidence. The sweep claim covers the complete plan artifact and recon; source inspection was bounded to the named implementation seams.
+
+Relay closed (Approved), no further review turn needed. Handing the approved plan back to Producer (codex-producer); implementation admission still requires the successful driver exit and nonempty receipt specified at PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:53.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
