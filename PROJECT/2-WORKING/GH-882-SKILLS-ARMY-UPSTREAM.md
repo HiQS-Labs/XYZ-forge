@@ -25,7 +25,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| **Reversed 2026-10-03 by [GH-955](https://github.com/HiQS-Labs/XYZ-forge/issues/955):** XYZ-forge is the Skills Army HQ upstream again. `UPSTREAM.md` deleted; the republisher is un-retired and folded into `push-downstream`; gh620 kept. Phase 2 below is **cancelled**. | Close #882 as reversed; transfer mini #4–#7 back to the forge (GH-955 closing actions) | |
+| **Reversed 2026-10-03 by [GH-955](https://github.com/HiQS-Labs/XYZ-forge/issues/955):** XYZ-forge is the Skills Army HQ upstream again. `UPSTREAM.md` deleted; the republisher is un-retired and folded into `push-downstream`; gh620 kept. Phase 2 below is **cancelled**. | Close #882 as reversed; transfer mini #4–#7 back to the forge (GH-955 closing actions) |
 
 The canonical plan and decision record live upstream on
 [XYZ-skills-army-mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2). This doc tracks the

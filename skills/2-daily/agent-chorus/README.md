@@ -111,7 +111,8 @@ bash test-standalone.sh
 XYZ Forge is canonical. The standalone repository (HiQS-Labs/AgentChorus-Skill) is published by the
 forge's one downstream publisher, `utils/py/xyz_mini_sync.py --target agent-chorus` (GH-955; the
 `push-downstream` skill is the operator flow). Its manifest there declares every shipped file:
-README, CI workflow, tests, metadata, and licenses. Preview by default, then publish:
+README, CI workflow, tests, metadata, and licenses. Run these from the XYZ-forge repository root.
+Preview by default, then publish:
 
 ```bash
 python3 utils/py/xyz_mini_sync.py --target agent-chorus           # preview
