@@ -16,7 +16,7 @@ base `5212dae44bf5e1873be4689d63ef792ec1b6d93e` (origin/development). Environmen
 | Red control: exact CWD-relative `--check` line | find-harness :43 pin FAIL (expected), restored 50/0 |
 | Wording grep `Deployed Skills` | head: line 73; base: no match |
 | Full `./validate.sh` (Large tier) | exit 1: 399/410 passed, 11 failed, 14m47s, 2026-10-02 19:54–20:09 PDT |
-| Base attribution of the 11 failures | all 11 fail identically on base `5212dae4` on this box |
+| Base attribution of the 11 failures | all 11 fail on base `5212dae4` with the same failing assertions — `failure-attribution.md` |
 
 The 11 full-gate failures are environment/pre-existing on this Linux box, not caused by this diff
 (a one-section markdown edit no failing suite reads): gh610-claude-subscription (real Claude probe),
