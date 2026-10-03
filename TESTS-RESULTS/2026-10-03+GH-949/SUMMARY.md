@@ -26,3 +26,5 @@ No claim of production loss. SIGKILL and deliberate process-session escape remai
 Additional contracts: eight checks passed for full failure-row consumer acceptance, threaded normal/timeout idempotence, missing host/config refusal and linked HEAD mutation detection (`manual-contracts`). A zero-minute invocation preserves prior rows and exits2 without a new row, but retains the existing initialization of control/baseline. The approved no-write rule applies to an empty grid, not to zero-minute initialization.
 
 Final QA round1 found one existing false-pass in the touched idempotence oracle: the first rc/stdout was never compared to later runs because the consumer read a nonexistent `results` key. The actual-process witness (`manual-idempotence`) shows first-only exit/output differences passing on c93adc3d and failing on984b7f64; stable output stays passing. The repair compares the first observation with the existing exit_codes/stdout_hashes fields, with no new API or executor.
+
+Final runtime QA: round2 attested Approved, driver exit0, reviewed59d666cd; reviewer receipt and attestation committed. Runtime revision984b7f64. Full push-boundary gate pending.

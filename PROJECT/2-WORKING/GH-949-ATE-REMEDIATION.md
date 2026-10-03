@@ -20,7 +20,7 @@ reversibility: Costly — shared process and gate environment consumers require 
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA attested Approved; runtime repair committed at 76ad7e4e; original manual controls green | Focused suites, independent final QA and qualifying gate |
+| Plan QA attested Approved; runtime repair committed at 76ad7e4e; original manual controls green | Full push-boundary gate and PR |
 
 ## Table of contents
 
@@ -73,7 +73,7 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 
 ## Phase 3 — Final QA and PR
 
-- [ ] Commit implementation/evidence; run final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
+- [x] Commit implementation/evidence; run final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
 - [ ] Run full qualifying local gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
 - [ ] Fetch/reconcile current development conflicts via supported RELEASES merge resolver if needed; any implementation change after approval gets fresh focused verification/review.
 - [ ] Push through the required hook from the disposable verification/push clone, open ready PR to development, verify emitted base/head/scope and hosted checks. Do not merge or prematurely close issues; retain task clone for merge handoff.
@@ -87,3 +87,5 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 Evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps all findings to retained before/after controls. The process helper API remains signal-handler-free; only the two CLI entry boundaries own handlers. Zero-minute admission remains nonzero without new rows but retains existing baseline/control initialization. All nine focused suites passed on runtime candidate76ad7e4e; final review/gate outstanding.
 
 Final QA R1 disposition: Implemented. The whole-file sweep exposed a pre-existing first-versus-later rc/stdout blind spot. `984b7f64` compares the first observation against existing metamorphic result fields. Actual-process red/green controls are retained under manual-idempotence; affected existing suites are rerun. This extends the already approved idempotence comparison, not the process architecture or risk scope.
+
+Final Codex relay round2 is attested Approved (exit0); source and focused evidence reviewed at59d666cd. No implementation changes after approval. Full qualifying push-boundary run is next.
