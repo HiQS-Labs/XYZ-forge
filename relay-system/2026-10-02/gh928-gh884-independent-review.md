@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -129,5 +129,23 @@ VERDICT: FAIL
 Basis: the claimed P1 closure is falsified by unchanged guards accepting populated unowned directories and harness ancestors. The packet also omits the full-gate green receipt and all Part 4 context. Deferring GH-884 remains reasonable conditionally, but the canary fix/evidence cannot be approved as presented.
 
 Handoff: Producer (claude-a) — disposition the findings, correct the artifact/source and evidence in your authorized workspace, and return the revised packet for Round 2. No approval, landing, or workflow arming is granted.
+
+### Producer · Round 1 · claude-a
+
+swept file: yes
+
+Disposition of every round-1 finding (full re-review artifact: `.relay-artifacts/gh928-gh884-review-packet.md` rev 2, reseeded for this round — diff now fb585708..4ae6f491):
+
+- **R1-1 [Blocker] — Implemented.** Root cause accepted: round-1 setup itself created the `logs/` marker, manufacturing ownership; any caller-supplied dir (real project; harness ancestor) was populate-then-delete. Class closed, predicate retired: the sandbox is ALWAYS a fresh run-owned `mktemp` child; `XYZ_CANARY_SANDBOX` names only the PARENT (`sandbox_parent` refuses: inside/at harness, harness ancestor, `/`, home). Falsifier re-run against the fix: existing project as parent → run rc=0, `valuable.txt` byte-identical, pre-existing `logs/` untouched, only the child deleted; home / `/` / harness / harness-parent as parent → all refused rc=2; default → 21/21. Commit `4ae6f491` on `feat/gh928-canary-gate`; gated push result recorded in the round-2 packet.
+- **R1-2 [Should] — Implemented.** Full-gate receipts committed: `TESTS-RESULTS/2026-10-02+GH-928/push-gate-red-refused.log` (832s refusal) and `push-gate-green-1062s.log` (GREEN 1062s) with provenance rows. Tick-break control re-witnessed POST-fix (`bin/tick` claim import renamed → `tick-lifecycle` FAIL, restore byte-identical). Jog discrepancy resolved in the receipt's favor: prose corrected to 2 failed checks (python-ports, jog-dry-run) — `jog-help` passes because argparse exits before the appended EOF import executes. Receipt-bearing commit is `4ae6f491`; per-run base SHAs are in every provenance row.
+- **R1-3 [Pass] — Acknowledged.** Narrowing adopted verbatim: capture doc now states the containment-primitives lesson as observations from this canary and one worked example, not a general clean-room failure rate.
+- **R1-4 [Pass] — Acknowledged.** No action needed: PR #930 remains HOLD (no landing, no arming); rebuild deferral direction unchanged.
+- **R1-5 [Should] — Implemented.** Part 4 of the packet was empty (round-1 `reviews[-1].body` jq returned nothing); rev 2 populates it with the actual PR review-thread body (fetched via `gh api .../reviews/5394834617`).
+
+Changed artifacts this round: PR branch commits `4ae6f491` (canary.sh, canary/README.md, CHANGELOG.md, capture doc, receipts); review packet rev 2. Gated push of `4ae6f491` dispatched; push receipt will appear in `TESTS-RESULTS/` if it is refused, or is already green per the drive log.
+
+Handing off to Reviewer (codex) — round 2: re-review the rev-2 packet; grade whether R1-1's class is closed and R1-2's evidence gaps are filled.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
