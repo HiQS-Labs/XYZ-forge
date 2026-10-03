@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -73,5 +73,55 @@ Review the complete changed runtime files against base3fbed72f781d1ad060e298b798
 Review-only: edit this transcript only, no production edits, no live model tests, no mutation-heavy suites or gates in this task clone or linked review worktree. The final full local gate will run once after approval in a separate full verification clone through the required push hook. Flag concrete failures with input/scope/falsifier; no speculative new machinery. Evidence wrapper caveats are explicitly retained in SUMMARY. Produce PASS/FAIL and grounded whole-file sweep. Signature requested by operator for this review: GPT 6 Astra Light. Three rounds maximum. Marker remains last.
 
 ## Log
+
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: One observed false-pass in the touched domain idempotence oracle prevents runtime approval. The retained F1–F9/K1 repair evidence otherwise supports the bounded changes; the final full gate remains pending.
+swept file: yes
+
+Reviewer: codex. Operator-requested signature label: GPT 6 Astra Light (runtime model identity not independently attested).
+
+- [Blocker] **R1 — compare the first observation with subsequent observations.** At `utils/py/domain_oracles.py:383`, the first-run comparison iterates `inner.get("results", [])`; `utils/py/metamorphic_oracle.py:210` actually returns `exit_codes` and `stdout_hashes`, never `results`. Consequently first-run rc/output divergence is ignored. The documented contract at `domain_oracles.py:363` includes rc/output idempotence, not merely stabilization after the first run. This is an existing defect exposed by the required whole-file sweep, not a claim that GH-949 introduced it.
+  Observed input: three completed BoundedResult observations with unchanged tree/receipts: `[(7,"same"),(0,"same"),(0,"same")]`, and separately `[(0,"first"),(0,"later"),(0,"later")]`. Both produce `passed=true, reasons=[]`.
+  Affected scope: domain `check_idempotence_oracle` calls where the first completed command's exit code or stdout differs from otherwise identical later repetitions.
+  Falsifier: `[(0,"same")]*3` must remain passing; `[(0,"same"),(7,"same"),(0,"same")]` must remain failing; first-only rc/output differences must fail. Preserve permitted first-run tree/receipt initialization and genuine nonzero-but-identical diagnostic results.
+  Root cause: consumer reads a nonexistent producer result key and never compares first stdout; Fix site: the existing domain oracle's first-versus-inner comparison; Why not upstream/downstream: the shared metamorphic result already supplies the required exit codes and stdout hashes.
+  Concrete fix: compare `first["rc"]` and the SHA-256 of `first["stdout"]` with the existing `inner["exit_codes"]` / `inner["stdout_hashes"]`, retaining incomplete-observation rejection. Record red/green manual evidence or use the existing suite; do not add a suite or framework.
+
+  Review probe command (in-memory boundary substitution, no child processes, Git commands, fixture execution, or source edits):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PROBE'
+  import sys,json
+  from unittest.mock import patch
+  sys.path.insert(0, 'utils/py')
+  import domain_oracles as d
+  import metamorphic_oracle as m
+  from proc_group import BoundedResult
+  for label, observations in [
+   ('stable',[(0,'same')]*3),
+   ('first_rc_differs',[(7,'same'),(0,'same'),(0,'same')]),
+   ('first_output_differs',[(0,'first'),(0,'later'),(0,'later')]),
+   ('later_rc_differs',[(0,'same'),(7,'same'),(0,'same')]),
+  ]:
+   rows=iter(BoundedResult(rc,out,'',False,1,0) for rc,out in observations)
+   def bounded(*a,**k): return next(rows)
+   with patch.object(d,'run_bounded',bounded),patch.object(m,'run_bounded',bounded),patch.object(d,'tree_digest',return_value=('unchanged',1)):
+    r=d.check_idempotence_oracle(['observed-command'],'.',repetitions=3)
+   print(json.dumps({'case':label,'input':observations,'passed':r['passed'],'first_rc':r['run']['rc'],'inner_exit_codes':r['inner']['exit_codes'],'reasons':r['reasons']}))
+  PROBE
+  ```
+  Exit status: **0** (probe completed; this is not a passing product assertion). Decisive output: stable → `passed:true`; first_rc_differs → `passed:true, first_rc:7, inner_exit_codes:[0,0], reasons:[]`; first_output_differs → `passed:true, reasons:[]`; later_rc_differs → `passed:false, reasons:["exit code / output digest diverged across repetitions"]`. This isolates the missing first comparison; actual process/fixture replay belongs in the verification clone.
+
+- [Pass] **Cancellation/timeout implementation and retained controls:** `proc_group.py:136` cleans the group on BaseException and re-raises; CLI cancellation handlers are outside the threaded library. `proc_group.py:178` admits timeout before spawn. `TESTS-RESULTS/2026-10-03+GH-949/manual-process/after/summary.json` and `manual-process/compat-after/summary.json` retain child-reaped, prior-row, ACK repeated-signal, SystemExit77 and true-exit124 controls. These are reviewed retained results, not suites rerun in this worktree.
+- [Pass] **State, ATE and environment repair evidence:** `domain_oracles.py:94` hashes directory symlinks; `domain_oracles.py:246` resolves common/worktree config; `run_variations.py:435` refuses empty grids before control/baseline writes, and `run_variations.py:487` funnels interruption/launch failure into the existing row path. `manual-state/base/results.json` contains 4/14 correct properties versus 14/14 in `manual-state/after/results.json`; `manual-contracts/results.json` retains failure-row consumer and threaded timeout controls. `find-harness.sh:131` guards HOME fallbacks; `test/lib/runner-envelope.sh:62` scrubs only the two inherited selectors. The environment provenance records both focused commands at rc0, while SUMMARY explicitly preserves the separate stale-SHA wrapper failure.
+- [Pass] **Ratings are proportionate judgments, not measured probabilities:** the canonical plan's “Ratings dated2026-10-03” paragraph supports 90/85/50/55 and 82/80/50/85 with potential continuing writes, one documented3373s false-red gate, neutral appeal, no override and unknown trend. No inflation from claimed production loss or an invented second incident is needed.
+
+Sweep covered all six complete runtime files, the canonical plan/recon, retained result/provenance records, and caller seams in fuzz_engine, claude_cli, wave_reconcile, runaway-guard, checkin, compile_issue and the two gate runners. No other concrete blocker was identified in that bounded sweep. Graph limitation: no project indexes this review worktree; nearest XYZ-forge graph is generation2026-09-01T15:54:30Z in another checkout. Search had no remaining page; coverage reports four paths not_tracked and the ATE subtree excluded. Even the metamorphic metadata match belongs to that other checkout, so all six files were read directly. No Git command or prohibited suite was run; base-to-candidate diff/commit membership was not independently established under the no-Git restriction. Full qualifying gate: [Unverified — needs clone run], deliberately scheduled after approval.
+
+Handing off to Producer (codex-producer): disposition R1, make the focused correction and retain its red/green evidence, then request round 2. No approval or merge-readiness attestation yet.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
