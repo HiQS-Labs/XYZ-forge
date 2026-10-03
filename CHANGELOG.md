@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026-10-03 — XYZ-mini publisher: adapted mode with per-entry ownership, exact origin rows, and the retired Skills Army target (GH-589, #951)
+
+The GH-889 planner skills ship to XYZ-mini as mini-side adaptations: flat paths, `/relay` instead of
+`/relay-xyz`, and child-only `install.sh` hardening. The byte-identity publisher could not express
+that. XYZ-mini's last two syncs came from unlanded work, so publishing from `development` would have
+deleted them (#951). `utils/py/xyz_mini_sync.py` now has three modes: `managed` (byte-identical),
+`seed` (copied once) and `adapted`.
+
+How adapted ownership works:
+
+- **Ownership is per entry.** A never-published entry is seeded once from forge bytes. After that,
+  nothing under it is replaced, added or pruned from the forge side.
+- **What the child tracks is carried forward.** Everything the child tracks under the entry is kept
+  and recorded, including mini-only `install.sh` files. A child deletion is recorded and never
+  re-created from forge bytes.
+- **Dropping is the only deletion.** Dropping the whole entry deletes the paths the child's
+  `MANIFEST.txt` records under it.
+- **Exact origin rows.** Every adapted entry needs an exact first-column row of kind `adapted` in
+  `mini/ORIGIN.md`, read from the committed source SHA. A Notes-column mention documents nothing.
+  A stale `adapted` row for a now-managed entry refuses, and so does an uncommitted registry edit
+  under `--allow-dirty`.
+- **Retired target.** `--target skills-army-mini` now refuses by default (#882). Only its suite opts
+  in, through `XYZ_ALLOW_RETIRED_TARGET=1`, until the 2026-10-08 audit removes both.
+
+Also included:
+
+- review-code resolves its GitHub target first. It posts only when the reviewed bytes are the PR's
+  pushed head, verifies issue targets with `gh issue view`, and keeps `temp/` out of git in other
+  repos.
+- The work was carried forward from `archive/primary-gh889-snapshot-2026-10-03`.
+
+Policy: `mini/ADAPTATIONS.md`.
+
+Verification:
+
+- `test/gh589-xyz-mini-sync.sh` 29/0, including carry-forward, no forge additions, exact row and
+  kind, stale row, uncommitted registry, child deletion and re-addition, and drop/re-add.
+- `test/gh620-skills-army-mini-sync.sh` 29/0, including the retired-by-default refusal.
+- Red controls: removing carry-forward and substring origin matching each fail the suite.
 
 ## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
 
