@@ -65,6 +65,9 @@ def validate_admission(receipt, env, cwd):
     if (response.get("protocolVersion") != "2" or response.get("status") != "resolved"
             or response.get("enforcedRecipeRef") != ref or recipe["refs"] != [ref]
             or response["input"].get("recipeRef") != ref
+            or response["input"].get("policy") != request["input"]["policy"]
+            or response["input"].get("asOf") != request["input"]["asOf"]
+            or response["input"].get("requiredCapabilities", []) != request["input"].get("requiredCapabilities", [])
             or response["lock"]["request"].get("recipeRef") != ref
             or response["descriptor"].get("trust") != "untrusted"
             or response["descriptor"]["executionConfig"] != config
