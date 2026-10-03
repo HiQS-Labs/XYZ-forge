@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Open
-ROUND: 1 / 3
+STATUS: Approved
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -70,7 +70,7 @@ Repo under discussion: BinoidCBD/LTVera-Pandas (NOT this harness repo). You have
 4. Part B: is the claim "nothing in #696 needs new System Settings / tenant / recipient UI" consistent with the excerpts (#202 items 136, 147–149 for the #533 Cancel design control; registry keys `nexmail.design_ready_recipients`, `copy_and_claims.designed_draft_explainer`; inventory 202-61/33/6/7/97 as GOAL_2)?
 5. Any owner or confidence that looks wrong given the excerpts?
 
-Output: graded findings ([Blocker]/[Should]/[Nit]/[Pass]) citing the excerpt (item number or inventory id) you rely on; per the protocol, a behaviour-change request needs Observed input / Affected scope / Falsifier. Do not propose new product decisions. Set STATUS Approved if the calls are consistent.
+Output: graded findings ([Blocker]/[Should]/[Nit]/[Unverified — no citation]) citing the excerpt (item number or inventory id) you rely on; per the protocol, a behaviour-change request needs Observed input / Affected scope / Falsifier. Do not propose new product decisions. Set STATUS Approved if the calls are consistent.
 
 ## Context (frame, verified on GitHub)
 - Handover frame: the target is **Bounce only**; Binoid/Bloomz-only work is post-handover. Remaining gates: the deploy, the #632 phase 5 Settings-page dry run, and open Critical/High Bounce rows in #255. Decisions are not a gate: every decision has a value in force on /admin/system-settings (#632) or is a labelled plan (#633).
@@ -384,7 +384,54 @@ swept file: yes
 
 relay closed (Approved), no further turn needed. All 13 Table A calls and Part B settings answers verified consistent with in-force values and settings inventory (`gh696-relay-artifact.md`).
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+### Producer · Round 2 (claude-a)
+
+Dispositions for Round 1 findings:
+- [Nit] 4.8 #424 nomenclature — **Implemented.** Row 4.8 is relabelled `Exception (deferred to #633)`; basis unchanged (#202 item 61 open; in force = whole percent permitted; inventory `202-61` GOAL_2, planned "decimal places"). This harmonizes it with 5.6 #203 and 7.5 #457. Only 6.8 #202 keeps `Done-by-#632`.
+- [Pass] Q1–Q5 — no change needed.
+
+Process note: the Round 1 `STATUS: Approved` was reverted by relay-drive because this run was started without `--reviewer agy` (GH-505 attestation), not because of the review content. Round 2 is driven with `--reviewer agy`.
+
+Updated Table A row (the only change):
+
+| Row | Proposed call | Reason (basis) | Owner | Confidence |
+|---|---|---|---|---|
+| 4.8 #424 | Exception (deferred to #633) | #202 item 61 open; in force = whole percent permitted; inventory 202-61 GOAL_2 (planned "decimal places"). Item 1: proof numbers withheld from prompt lowers risk | Sam (rule) / Elan (copy) | Med |
+
+Ask for Reviewer (Round 2): confirm the relabel is consistent with the excerpts and that no other row or Part B needs a change; set STATUS Approved if so.
+
+handing off to Reviewer (agy) — take your turn.
+
 
 ### System · relay-drive — 2026-10-03T01:29:05Z
 terminal STATUS Approved written by builder-role turn (agy) — reverted
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Producer in Round 2 implemented the requested nomenclature harmonization on Row 4.8 #424, updating its proposed call to `Exception (deferred to #633)`. This call is fully consistent with #202 item 61, inventory item `202-61` (`bucket=GOAL_2`), and aligns with 5.6 #203 and 7.5 #457. All 13 Table A calls, the five stakeholder judgment calls, and the Part B settings architecture claims remain verified and consistent with in-force values and settings inventory excerpts. No pre-existing defects were found during the whole-file sweep.
+swept file: yes
+
+- [Pass] Question 1 & 3 (Row 4.8 #424 relabel verification): In Table A row 4.8 #424 (`gh696-fix-exception-qa.md:399`), the call `Exception (deferred to #633)` is verified consistent with #202 item 61 (`gh696-fix-exception-qa.md:150-156`) where `permitted_numbers_for` permits nearest whole percent against its docstring, and with `settings_inventory.py` item `202-61` (`gh696-fix-exception-qa.md:215-224`, `bucket=GOAL_2`). Structural suppression under item 1 (`gh696-fix-exception-qa.md:127`) mitigates prompt exposure. The relabeling cleanly harmonizes nomenclature with row 5.6 #203 (`Exception (deferred to #633/#105)`, `gh696-fix-exception-qa.md:101`) and row 7.5 #457 (`Exception`, `gh696-fix-exception-qa.md:111`), leaving row 6.8 #202 (`gh696-fix-exception-qa.md:107`) as the sole `Done-by-#632` item.
+- [Pass] Question 1 (Table A consistency re-check): All 13 rows in Table A (`gh696-fix-exception-qa.md:100-112, 399`) remain verified consistent with in-force values and inventory excerpts:
+  - 4.8 #424: `Exception (deferred to #633)` per #202 item 61 (`gh696-fix-exception-qa.md:150-156`) and inventory `202-61` (`gh696-fix-exception-qa.md:215-224`).
+  - 5.6 #203: `Exception (deferred to #633/#105)` per #202 item 33 (`gh696-fix-exception-qa.md:139`), item 2 (`gh696-fix-exception-qa.md:130`), and inventory items `202-33`, `202-6`, `202-7` (`gh696-fix-exception-qa.md:226-255`, `bucket=GOAL_2`).
+  - 5.22 #528: `Fix this week (finding 1); finding 2 exception` per #255 finding 1 dev notes (`gh696-fix-exception-qa.md:84`) and item 60 copy in PR #689 (`gh696-fix-exception-qa.md:94, 300-319`).
+  - 5.23 #518: `Exception` per item 112 (`gh696-fix-exception-qa.md:180-182`) and inventory `202-112` (`gh696-fix-exception-qa.md:320-327`), with UTC fallback in item 111 (`gh696-fix-exception-qa.md:178`).
+  - 6.4 #393: `Exception` per manual deploy receipts on #677/#635 (`gh696-fix-exception-qa.md:104`).
+  - 6.6 #167: `Exception` per #167 ("wants its own plan", `gh696-fix-exception-qa.md:87`).
+  - 6.7 #234: `Exception` per #632 walkthrough scope (`gh696-fix-exception-qa.md:77`).
+  - 6.8 #202: `Done-by-#632` per #632 rule ("decisions are not a gate", `gh696-fix-exception-qa.md:76-77`).
+  - 6.9 #514: `Exception (conditional)` per admin membership failure mode (`gh696-fix-exception-qa.md:90`) and manual provisioning (#236, `gh696-fix-exception-qa.md:78`).
+  - 6.10 #620: `Exception (list Bounce-visible items)` per #613 fixes (`gh696-fix-exception-qa.md:91`), in-force items 111, 120–123 (`gh696-fix-exception-qa.md:177-198`), and the 5:00 PM PT date-roll behavior (`gh696-fix-exception-qa.md:91`).
+  - 6.11 #537: `Fix this week` per CSS fixes needed for /admin/system-settings walkthrough (`gh696-fix-exception-qa.md:92`).
+  - 7.5 #457: `Exception` per item 97 (`gh696-fix-exception-qa.md:173-175`) and inventory `202-97` (`gh696-fix-exception-qa.md:257-264`, `bucket=GOAL_2`).
+  - #630: `Exception for the call — Noel decides` per item 65 (`gh696-fix-exception-qa.md:158`), item 118 (`gh696-fix-exception-qa.md:184`), and Noel's direction (`gh696-fix-exception-qa.md:80`).
+- [Pass] Question 2 (Judgment calls set re-check): The five flagged rows (#630, #167, #203, #620, #514) remain the exact and exhaustive set of stakeholder judgment calls (`gh696-fix-exception-qa.md:101, 105, 108, 109, 112`), with no extraneous or missing judgment items.
+- [Pass] Question 4 (Part B settings consistency re-check): The claim that "nothing in #696 needs new System Settings / tenant / recipient UI" (`gh696-fix-exception-qa.md:115`) remains verified against all excerpts: registered keys `copy_and_claims.designed_draft_explainer` (`gh696-fix-exception-qa.md:300-319`) and `nexmail.design_ready_recipients` (`gh696-fix-exception-qa.md:287-297`), inline widget/row controls for #533 Cancel (`gh696-fix-exception-qa.md:200-212`), existing `/tenants → Timezone` field (`gh696-fix-exception-qa.md:325`), and GOAL_2 deferred inventory items (`gh696-fix-exception-qa.md:215-265`).
+- [Pass] Question 5 (Owner and confidence re-check): Owners and confidence ratings in Table A (`gh696-fix-exception-qa.md:100-112, 399`) align accurately with roles and inventory specifications: Sam (rule) / Elan (copy) for 4.8 (`gh696-fix-exception-qa.md:218`), Noel for 5.6 (`gh696-fix-exception-qa.md:83`), Elan / Noel for 7.5 (`gh696-fix-exception-qa.md:260`), and Jose / Noel for infra (6.4, 6.6).
+- [Pass] Whole-file sweep: Entire file `relay-system/2026-10-02/gh696-fix-exception-qa.md:1-408` swept for pre-existing defects, markdown issues, or inconsistencies. No pre-existing defects found.
+
+relay closed (Approved), no further turn needed.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
