@@ -338,7 +338,7 @@ def _resolve_hiqs_profile(body, result):
         request = {"protocolVersion": "2", "snapshot": read_json_bounded(body["snapshotPath"]),
                    "snapshotPolicy": body["snapshotPolicy"],
                    "input": {"recipeRef": body["recipeRef"], "asOf": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-                             "policy": read_json_bounded(body["policyPath"])},
+                             "policy": read_json_bounded(body["policyPath"]), "requiredCapabilities": ["chat"]},
                    "executionConfig": read_json_bounded(body["executionConfigPath"])}
         exports = validate_advisory_config(request["executionConfig"])
         if any(os.environ.get(k) and os.environ[k] != v for k, v in exports.items()):
