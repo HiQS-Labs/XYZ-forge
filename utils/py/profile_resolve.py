@@ -318,7 +318,7 @@ def _resolve_hiqs_profile(body, result):
                    for k in ("snapshotPath", "policyPath", "executionConfigPath")):
             raise ValueError("HiQS input paths must be explicit absolute device paths")
         for spec in result["lanes"].values():
-            if any(os.environ.get(spec.get(k, "")) for k in ("agent_var", "model_var", "effort_var", "flags_var", "gateway_var")):
+            if any(os.environ.get(spec.get(k) or "") for k in ("agent_var", "model_var", "effort_var", "flags_var", "gateway_var")):
                 raise ValueError("explicit HiQS profile refuses ambient manual lane settings; use a clean shell")
         runner = body["runner"]
         if (not isinstance(runner, dict) or set(runner) != {"checkout", "revision", "node"}
@@ -341,6 +341,8 @@ def _resolve_hiqs_profile(body, result):
                              "policy": read_json_bounded(body["policyPath"])},
                    "executionConfig": read_json_bounded(body["executionConfigPath"])}
         exports = validate_advisory_config(request["executionConfig"])
+        if any(os.environ.get(k) and os.environ[k] != v for k, v in exports.items()):
+            raise ValueError("HiQS profile conflicts with ambient auth or call limits")
         payload = json.dumps(request, allow_nan=False)
         if len(payload.encode()) > 1024 * 1024:
             raise ValueError("HiQS request exceeds admission limit")
@@ -545,6 +547,9 @@ def emit_list(xyz_root: str) -> int:
         return 0
     for key in sorted(profiles):
         body = profiles[key]
+        if isinstance(body, dict) and body.get("source") == "hiqs":
+            print(f"  {key}: HiQS exact recipe {body.get('recipeRef', '?')} (admission checked on selection)")
+            continue
         gw = body.get("gateway")
         route = f"{body.get('harness')} -> {body.get('model')}" if gw == SELF_ROUTED \
             else f"{body.get('harness')} -> {gw} -> {body.get('model')}"
