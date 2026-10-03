@@ -25,3 +25,10 @@ classification), gh505-relay-attest (N3), gh402-board-sync, gh544-pre-push-gate 
 swarm-preflight (T37c/T38 stale-lock), gh123-lock-progress-bound (timing), gh280-jog-marathon-adapter
 (H2 containment), gh436-merge-cleanup. Each also failed alone in the gate's serial re-run. Hosted CI on
 the PR is the cross-platform signal.
+
+Pre-push hook (`git push` at `c7519fc6`, 2026-10-02 ~20:16–20:31 PDT): full validation RED, push
+refused — the same 11 failures plus `clone-identity-invariant`, which was self-inflicted (an evidence
+commit was made in the clone while the hook was running). `prepush-hook-c7519fc6.log`.
+
+Final Codex QA: attested Approved in round 2 (`relay-attest-final-qa.json`,
+`relay-system/2026-10-02/gh938-final-qa.codex.md`).
