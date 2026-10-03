@@ -111,7 +111,7 @@ else:
   checks.append('old protocol coincidentally matching selected ref refused: PASS')
   # Provider-free actual consult argv with ephemeral test clock; no production clock knob.
   site=d/'sitecustomize.py'
-  site.write_text('from datetime import datetime,timezone\nimport claude_cli\nclass Clock(datetime):\n @classmethod\n def now(cls,tz=None): return datetime(2026,9,15,tzinfo=timezone.utc)\nclaude_cli.datetime=Clock\n')
+  site.write_text('from datetime import datetime,timezone\nimport claude_cli,profile_resolve\nclass Clock(datetime):\n @classmethod\n def now(cls,tz=None): return datetime(2026,9,15,tzinfo=timezone.utc)\nclaude_cli.datetime=Clock\nprofile_resolve.datetime=Clock\n')
   native['PYTHONPATH']=str(d)+os.pathsep+str(ROOT/'utils/py')
   run=subprocess.run([sys.executable,str(ROOT/'utils/py/consult.py'),'--models','claude','--prompt','Read README.md','--out',str(d/'consult')],cwd=repo,env=native,capture_output=True,text=True,timeout=30)
   assert run.returncode==0,run.stdout+run.stderr
@@ -132,7 +132,15 @@ else:
   vendor=d/'.xyz'; (vendor/'utils/py').mkdir(parents=True)
   import shutil
   for f in (ROOT/'utils/py').glob('*.py'): shutil.copyfile(f,vendor/'utils/py'/f.name)
-  vendored=p.resolve('hiqs:pilot',str(vendor)); assert not vendored['problems'],vendored
-  receipts.append(vendored['admission']); checks.append('copied vendored module context admission: PASS')
+  vendor_env=dict(env,PYTHONPATH=str(d)+os.pathsep+str(vendor/'utils/py'))
+  command="import os,json,profile_resolve as p; r=p.resolve('hiqs:pilot',"+repr(str(vendor))+"); assert not r['problems'],r; print(json.dumps({'module':p.__file__,'admission':r['admission']}))"
+  vr=subprocess.run([sys.executable,'-c',command],env=vendor_env,cwd=repo,capture_output=True,text=True,timeout=30)
+  assert vr.returncode==0,vr.stdout+vr.stderr
+  vendored=json.loads(vr.stdout); assert vendored['module'].startswith(str(vendor))
+  receipts.append(vendored['admission']); checks.append('actual copied vendored module import and foreign cwd admission: PASS')
+  # An unmatched legacy preference must not clear an active recipe guard implicitly.
+  floor=p.resolve(None,str(ROOT)); output,rc=p.emit_env(floor,str(ROOT))
+  assert rc==0 and 'unset XYZ_HIQS_ADMISSION' not in output
+  checks.append('legacy floor preserves an active recipe guard; explicit legacy selection can clear it: PASS')
  print(json.dumps({'synthetic':True,'runner_revision':revision,'cold_warm_admission_ms':timings,'positive_admission_resolver_subprocesses':2,'checks':checks},indent=2))
  for receipt in receipts: Path(receipt).unlink(missing_ok=True)
