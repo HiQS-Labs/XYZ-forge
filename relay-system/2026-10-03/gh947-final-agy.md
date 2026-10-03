@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -144,5 +144,28 @@ status: Approved
 reviewed-head: 624eb29ffcc570a603c9c24337a7059d96a3bca9
 added-range: 8174+6419
 added-sha256: 8cbd3e623682a05e9f3dfe589490361780b0b1842423ed9525327adaebccbc3d
+### Producer · Round 2
+
+New concrete input falsifier: protocol2 input.policy with all required fields PLUS
+unsupportedConstraint:{deny:[selectedRecipe]} resolves in HiQS, but its normalized
+response.input.policy omits that key (probe exit0, resolved). Previous XYZ guard did not
+compare normalized policy with submitted policy. Minimal fix 1dc04f05 adds policy/asOf/
+capabilities roundtrip equality in the existing validate_admission shape check, before
+any native dispatch. This is recipient contract validation, not Python policy evaluation.
+Mutation removing the policy equality produces a failing manual control; restored guard
+and updated controls pass. Logs/provenance and exact command committed in GH947 results.
+
+Round1 nit implemented: canonical plan goal added; review packet moved into TESTS-RESULTS,
+not competing PROJECT intake. Development f7029f8b merged without runtime changes through
+existing RELEASES rebuild command, keeping both disjoint task rows and highest generation;
+ledger check clean. Generated leaderboard remains upstream's until post-merge bake.
+
+Candidate qualifying gate 29a9d369 began after valid round1 approval but is now obsolete
+for runtime readiness due these three new guard lines. Do not treat it as final qualification.
+Final approved revision gets its required fresh full-clone gate; no source changes afterward.
+Review whole touched files against unchanged plan, focusing on new falsifier and scope.
+APPEND ONLY: preserve every existing byte/blank line, except header NEXT/STATUS/ROUND.
+This is round2 of cap3. Only relay thread writes. No suite execution in worktree.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 

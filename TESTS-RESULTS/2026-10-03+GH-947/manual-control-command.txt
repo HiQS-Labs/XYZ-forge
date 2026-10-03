@@ -91,6 +91,12 @@ else:
   bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
   (d/'policy.json').write_text(json.dumps(req['input']['policy']))
   checks.append('exact recipe policy denial refuses: PASS')
+  unknown_policy={**req['input']['policy'],'unsupportedConstraint':{'deny':[body['recipeRef']]}}
+  (d/'policy.json').write_text(json.dumps(unknown_policy))
+  bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+  (d/'policy.json').write_text(json.dumps(req['input']['policy']))
+  checks.append('unknown policy constraint cannot be stripped silently: PASS')
+
   config_path.write_text('{malformed')
   bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
   config_path.write_text(json.dumps({'profiles':{'pilot':body}}))

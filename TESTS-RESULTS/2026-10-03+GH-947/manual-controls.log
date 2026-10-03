@@ -10,6 +10,8 @@ resolve-profile: profile 'pilot': HiQS admission refused; check explicit source 
 resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
 resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
 resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
 resolve-profile: profile 'pilot': explicit HiQS profile is unavailable; no fallback
 resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
 resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
@@ -26,8 +28,8 @@ resolve-profile: refusing to emit a broken export block — fix the profile or p
   "synthetic": true,
   "runner_revision": "452f6e48d7fc76b4b21c00a6b325ea015aa7a372",
   "cold_warm_admission_ms": [
-    410.427,
-    225.379
+    429.535,
+    223.256
   ],
   "positive_admission_resolver_subprocesses": 2,
   "checks": [
@@ -41,6 +43,7 @@ resolve-profile: refusing to emit a broken export block — fix the profile or p
     "missing recipe refuses: PASS",
     "old runner pin refuses: PASS",
     "exact recipe policy denial refuses: PASS",
+    "unknown policy constraint cannot be stripped silently: PASS",
     "malformed device config refuses explicit HiQS selection: PASS",
     "build mismatch refuses: PASS",
     "provider mismatch refuses: PASS",

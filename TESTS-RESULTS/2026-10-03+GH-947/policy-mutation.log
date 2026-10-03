@@ -1,0 +1,16 @@
+resolve-profile: profile 'absent': explicit HiQS profile is unavailable; no fallback
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+Traceback (most recent call last):
+  File "/tmp/gh947-controls.py", line 96, in <module>
+    bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+AssertionError
