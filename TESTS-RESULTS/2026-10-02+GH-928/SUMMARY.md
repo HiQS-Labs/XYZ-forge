@@ -33,3 +33,5 @@ Fix commit `090be955` on `feat/gh928-canary-gate` (PR #930), run in a fresh disp
   the canary executes).
 - The pre-fix deliberate breaks of `bin/tick` (PR body, host Linux) were not repeated; the
   `jog_run.py` break was re-witnessed post-fix here.
+
+**SUPERSEDED (2026-10-02, relay rounds):** this summary describes the round-1 fix (090be955) whose marker-based ownership was falsified by the independent Codex QA relay; the current closure evidence is the fresh-child sandbox semantics (4ae6f491, 8fc86317) with receipts in the provenance.jsonl rows above (push-gate-green-843s, witness-*-final). Do not treat this summary as current closure evidence.

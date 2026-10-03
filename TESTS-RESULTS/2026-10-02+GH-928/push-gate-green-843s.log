@@ -1,0 +1,4 @@
+  + gamma-poison-staleness-probe
+pre-push: full gate GREEN in 843s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   4ae6f491..8fc86317  feat/gh928-canary-gate -> feat/gh928-canary-gate
