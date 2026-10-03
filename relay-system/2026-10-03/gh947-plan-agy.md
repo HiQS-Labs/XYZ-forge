@@ -228,4 +228,12 @@ Basis: The plan in GH-947-HIQS-RECIPE-PROFILES.md is thoroughly grounded in the 
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-03T07:12:08Z
+task: RELAY-GH947-PLAN-20261003
+reviewer: agy
+status: Approved
+reviewed-head: 99204bfc3a04ea9d523307da7e265bf8423f2503
+added-range: 14221+4404
+added-sha256: bd129dceb2af263f5aa43889475b13c482dde111287cac6f7b09977b1f80b8b3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
