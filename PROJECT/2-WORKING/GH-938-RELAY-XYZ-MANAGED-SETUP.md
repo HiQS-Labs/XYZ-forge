@@ -75,8 +75,8 @@ goal: >
     so this landing qualifies on the Large tier (full registry).
 - No twin/mirror of this section: the phrase appears only in this SKILL.md, CHANGELOG history and an
   old relay thread. Deployed copies are produced by Skills Army HQ after merge, not by this PR.
-- Observed, out of scope: `SKILL.md:207-209` says `install.sh` "writes only into `~/.claude/skills/`";
-  it writes five app roots. Recorded for the deferred install.sh follow-up, not edited here.
+- Observed: the concurrency section (now `SKILL.md` ~L250) said `install.sh` "writes only into
+  `~/.claude/skills/`"; it writes five app roots. Corrected in the PR #941 review fixes.
 
 ## Plan (one phase)
 
@@ -96,7 +96,7 @@ goal: >
 2. CHANGELOG entry (PDDA rules); update this doc's Status.
 3. Full gate once on the final approved commit, in a disposable full clone (relay-xyz is full-gate);
    receipt and `provenance.jsonl` under `TESTS-RESULTS/2026-10-02+GH-938/`.
-4. Final Codex relay QA on the diff; ready PR to `development` with `Closes #938` and the checklist.
+4. Final Codex relay QA on the diff; ready PR to `development` with `Refs #938` (not `Closes`: #938 closes only after post-merge checklist step 4 passes on the Mac Mini) and the checklist.
 
 ## Acceptance and falsifiers
 
@@ -123,7 +123,7 @@ goal: >
 ## Deferred
 
 - `install.sh` managed-collection detection (skip and exit 0 when a live app link resolves into a
-  collection with `.deploy-skills.json`) and the `SKILL.md:207-209` wording. Deferred: behaviour
+  collection with `.deploy-skills.json`). (The concurrency-section wording was corrected in the PR #941 review fixes.) Deferred: behaviour
   change to an installer that `test/gh678-installer-live-links.sh` pins for every skill, and the new
   path has no existing covering suite (GH-831 forbids adding one).
 

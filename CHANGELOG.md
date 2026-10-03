@@ -8,12 +8,24 @@ already links `relay-xyz` from its `Deployed Skills` collection, that step exits
 can add links in app roots the collection does not target, against Skills Army HQ's rule not to run
 copied `install.sh` files.
 
-The section now starts with a `readlink` check. A link into `Deployed Skills/relay-xyz` means skip
-`install.sh`, leave links to Skills Army HQ (`sync.py`), and go to the locator's `--check`; if no
-harness resolves, save the clone in `~/.config/xyz/harness` or prefix one command with `XYZ_HARNESS`.
-Machines without that link keep the existing `install.sh` step. Docs only: `install.sh` itself does
-not yet detect a managed collection (deferred). Deployment to the Macs follows the post-merge checklist
-in `PROJECT/2-WORKING/GH-938-RELAY-XYZ-MANAGED-SETUP.md`.
+The section now starts with a `readlink` check against the Skills Army collection root (`$XYZ_SKILLS_ROOT`,
+default `~/git-pulse-sync/Deployed Skills`), with three outcomes:
+
+- **Managed** (live or dangling): skip `install.sh` and repair links with Skills Army HQ (`sync.py`).
+- **Live link elsewhere**: `install.sh` refuses it; keep the link or remove it deliberately.
+- **No link**: keep the existing `install.sh` step.
+
+Managed machines run the locator's `--check` from outside any repo. When no harness resolves, they write
+`~/.config/xyz/harness` themselves, or prefix one command with `XYZ_HARNESS`. The locator loop now also probes
+the `~/.agents` and `~/.zcode` skills roots. The `install.sh` comment and the concurrency
+section now say that `install.sh` writes app-root symlinks, not only `~/.claude/skills/`.
+
+Docs only: `install.sh` itself does not yet detect a managed collection (deferred). Deployment to the
+Macs follows the post-merge checklist in `PROJECT/2-WORKING/GH-938-RELAY-XYZ-MANAGED-SETUP.md`.
+
+Verification: `test/find-harness.sh` (50/0), `test/path-integrity.sh`, `test/gh678-installer-live-links.sh`,
+and red controls on the new wording, all under `TESTS-RESULTS/2026-10-02+GH-938/`. The final head passed the
+full macOS pre-push gate with no bypass.
 
 ## 2026-10-01 — Scope CI blockers to approved priorities (GH-854)
 
