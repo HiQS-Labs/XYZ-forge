@@ -18,6 +18,8 @@ import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
+from proc_group import run_bounded
+
 
 class ContainmentViolationError(Exception):
     """Raised when a path escapes the designated sandbox root."""
@@ -178,17 +180,13 @@ def check_idempotence(
     if env:
         proc_env.update(env)
 
-    def _run_single(idx: int) -> Tuple[int, int, str, str, str]:
-        res = subprocess.run(
-            cmd,
-            cwd=repo_dir,
-            env=proc_env,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-        h_out = hashlib.sha256(res.stdout.encode()).hexdigest()
-        return idx, res.returncode, h_out, res.stdout, res.stderr
+    def _run_single(idx: int):
+        try:
+            res = run_bounded(cmd, cwd=repo_dir, env=proc_env, timeout=timeout)
+            h_out = hashlib.sha256(res.stdout.encode()).hexdigest()
+            return idx, res.rc, h_out, not res.timed_out
+        except (OSError, ValueError):
+            return idx, None, "", False
 
     results = []
     if concurrent:
@@ -206,13 +204,15 @@ def check_idempotence(
 
     exit_codes_identical = len(set(exit_codes)) <= 1
     stdout_identical = len(set(stdout_hashes)) <= 1
-    passed = exit_codes_identical and stdout_identical
+    completed = all(r[3] for r in results)
+    passed = completed and exit_codes_identical and stdout_identical
 
     return {
         "passed": passed,
         "repetitions": repetitions,
         "concurrent": concurrent,
         "exit_codes": exit_codes,
+        "completed": completed,
         "stdout_hashes": stdout_hashes,
         "divergences": [] if passed else [f"Exit codes: {exit_codes}", f"Stdout hashes: {stdout_hashes}"],
     }
