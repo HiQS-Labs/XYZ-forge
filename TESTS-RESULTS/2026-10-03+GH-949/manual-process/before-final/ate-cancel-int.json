@@ -1,0 +1,42 @@
+{
+  "child_pid": 15134,
+  "worker_pgid": 15113,
+  "child_live_before": true,
+  "returncode": -2,
+  "prior_bytes_preserved": true,
+  "rows": [
+    {
+      "run_id": "prior-control",
+      "status": "pass"
+    }
+  ],
+  "child_live_after": true,
+  "correct_properties": {
+    "nonzero_exit": true,
+    "prior_preserved": true,
+    "child_reaped": false,
+    "one_interrupted_row": false
+  },
+  "independent_cleanup_child_absent": true,
+  "case": "ate-cancel-int",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+    "--repo",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/before-final/int-scratch",
+    "--variations",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/before-final/int-grid.json",
+    "--log",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/before-final/int.jsonl",
+    "--control",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/before-final/int-control.json",
+    "--minutes",
+    "1",
+    "--per-variation-timeout",
+    "90",
+    "--mock-classifier"
+  ],
+  "source_sha": "3fbed72f781d1ad060e298b798a44c32edef393d",
+  "started_utc": "2026-10-03T07:09:07.827659+00:00",
+  "finished_utc": "2026-10-03T07:09:09.144706+00:00"
+}

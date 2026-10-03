@@ -1,0 +1,10 @@
+== test: gh155-phase1-metamorphic-invariants ==
+  PASS: utils/py/metamorphic_oracle.py exists and is executable
+  PASS: metamorphic_oracle.py --mode suite passes 29/29 assertions
+  PASS: Zero-mutation CLI mode passes on non-mutating command
+  PASS: Zero-mutation CLI mode correctly catches and flags stray file mutation (negative control)
+  PASS: Idempotence CLI mode passes on deterministic output
+  PASS: Idempotence CLI mode correctly flags non-deterministic output drift (negative control)
+  PASS: Containment CLI mode passes on valid descendant path
+  PASS: Containment CLI mode correctly catches and refuses path traversal escape (negative control)
+  gh155-phase1-metamorphic-invariants: 8 pass, 0 fail
