@@ -2,7 +2,7 @@
 gh_issue: 945
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/945
 title: "radar: recommend the repo's own verification assets (harness/fuzzer) for recurring-defect clusters"
-status: Proposed
+status: In Progress
 created: 2026-10-02
 updated: 2026-10-02
 owner: operator
@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed; design constraints settled with operator; task clone + branch cut. | Body-only SKILL.md section; final relay QA; PR. |
+| Implementation committed (12d9a9c1); codex Round-1 review: one [Should] (doc lifecycle) accepted and fixed — promoted to 2-WORKING, ledger repointed. | Codex Round-2 re-review; push + PR against development. |
 
 ## Plan (surgical)
 
