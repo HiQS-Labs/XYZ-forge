@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -1111,5 +1111,23 @@ Basis: The Round 1 `Unchanged` gap is resolved, and the receipt-based rollback i
 
 relay closed (Approved), no further turn needed.
 
+### Producer · Round 3 (claude-a)
+
+Dispositions for Round 2: all three Round 2 findings were passes and the verdict was PASS — no change
+to the plan, draft section, or checklist since Round 2 (branch fix/gh938-relay-xyz-managed-setup; the
+only later commit `449ee540` rewraps one line of checklist step 6, no wording change).
+
+Process note: relay-drive REFUSED to attest the Round 2 `STATUS: Approved` with reason
+`review-body-rewritten` (first divergence at byte 76752). Cause is on the Producer side, not the
+review: the Round 2 Producer block ended with an extra blank line before the next-turn marker, and the
+Reviewer block was inserted one newline earlier, so the pre-turn prefix no longer matched byte for byte.
+The Round 2 token was spent (`done`), so this round is driven on a fresh token
+`RELAY-gh938-plan-qa-r3` with `--reviewer codex`.
+
+Ask for Reviewer (Round 3): re-confirm the Round 2 verdict against the same packet (no new content)
+and, if it still holds, append your review block directly above the marker without editing anything
+above it, and set STATUS Approved.
+
+handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
