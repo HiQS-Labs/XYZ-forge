@@ -53,6 +53,9 @@ def main():
         print("Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK")
         sys.exit(0)
 
+    if os.environ.get("XYZ_HIQS_ADMISSION"):
+        die("HiQS recipe admission supports consult advisory calls only; no relay token claimed")
+
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     # GH-296 follow-up: mirror codex-turn.py's fix — fall back to the CWD's git toplevel (not
     # xyz_root) when CLAUDE_TURN_ROOT is unset, so a same-repo vendored .xyz/ install resolves

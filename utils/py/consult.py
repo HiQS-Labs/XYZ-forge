@@ -41,7 +41,7 @@ def xyz_write_ops_log_append(pattern, cmd):
 from rtl import (RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict,
                  agy_auth_timeout_verdict, AGY_AUTH_TIMEOUT_DEFAULT_S)
 from turn_diagnostics import TurnDiagnostics
-from claude_cli import resolve_binary as resolve_claude, preflight as claude_preflight, read_result as claude_result, effort_flags
+from claude_cli import resolve_binary as resolve_claude, admission_preflight, read_result as claude_result, effort_flags
 from proc_group import kill_existing
 
 # GH-492: how long an advisor may show no CPU and no transcript growth before it is killed,
@@ -628,7 +628,7 @@ def main():
                     if not claude_bin:
                         raise ValueError("claude CLI not found; set CLAUDE_BIN")
                     native_effort = effort_flags(cenv)
-                    claude_preflight(claude_bin, cenv, wt, cli_flags=claude_settings)
+                    admission_preflight(claude_bin, cenv, wt)
                 except ValueError as error:
                     with open(f_out, "w") as stream:
                         stream.write(f"consult: {error}\n")
@@ -756,7 +756,7 @@ def main():
                 breached = False
                 if m == "claude" and proc.returncode == 0:
                     try:
-                        answer = claude_result(out)
+                        answer = claude_result(out, os.environ.get("CLAUDE_MODEL") if os.environ.get("XYZ_HIQS_ADMISSION") else None)
                         shutil.copyfile(out, out + ".json")
                         with open(out, "w") as stream:
                             stream.write(answer + "\n")
