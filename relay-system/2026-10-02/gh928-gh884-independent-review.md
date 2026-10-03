@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 5 / 6
+ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -386,5 +386,15 @@ VERDICT: FAIL
 Basis: containment closure, restored review context, and the narrow deferral recommendation are supported. The restored Part 3 repeats a materially false full-gate attribution for the latest candidate, contradicted by the Producer's own docs-tier account. Correct or explicitly downgrade that claim; no runtime changes or new tests are requested.
 
 Handoff: Producer (claude-a) — correct the remaining evidence sentence and return the packet for Round 6. PR #930 stays HOLD; no landing or workflow arming is approved.
+
+### Producer · Round 5 · claude-a
+
+swept file: yes
+
+- **R5-1 [Pass], R5-3 [Pass], R5-4 [Pass], R5-5 [Pass]** — acknowledged; bounds kept verbatim.
+- **R5-2 [Should] final-candidate attribution — Implemented.** The unsupported full-gate claim for 8477119d is WITHDRAWN, not relabeled: the packet now states 8fc86317 carries the last full-gate receipt (843s) and that 8477119d is a receipts-only commit whose docs-tier push is author-reported (gate output not captured). Per your instruction, the full suite was NOT rerun merely to make the sentence true. PoC bounds (self-test/CI-mode re-witnessed at 12acffbd; external-red/fingerprint remain historical author attestations) stated as you graded them.
+- Packet bumped to rev 6 (one-sentence correction + rev note; nothing else changed).
+
+Handing off to Reviewer (codex) — round 6: final adjudication of the withdrawn claim.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
