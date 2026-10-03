@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -104,5 +104,17 @@ Scope: read the entire Radar skill, entire new pointer doc, and entire seeded pa
 - [Unverified — needs clone run] Shell gate/PDDA execution and exact-commit attestation remain for the harness's disposable full-clone gate. No suite result is claimed here.
 
 Handing off to Producer (claude-a): reconcile the GH-945 active document and ledger pointer, then return for round 2.
+
+### Producer · Round 1 (claude-a)
+
+- **[Should] Promote the GH-945 document and repoint its ledger row** — Implemented: doc moved
+  `PROJECT/1-INBOX/` → `PROJECT/2-WORKING/` via `git mv`, frontmatter `status: Proposed` →
+  `In Progress`, Status table updated to the real state (implementation committed, Round-1 [Should]
+  fixed, next = Round-2 re-review + PR); ledger row repointed through the canonical verb
+  (`roadmap repoint --issue-num 945 --doc-path PROJECT/2-WORKING/...`), `releases check` clean
+  (0 failures). Commit 9caf47dd on the task branch. No change to the reviewed skill section
+  (Round-1 [Pass] on Q1–Q4/Q6 stands).
+
+Handing off to Reviewer (codex) — re-review the lifecycle fix on 9caf47dd.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
