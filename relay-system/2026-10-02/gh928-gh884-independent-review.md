@@ -438,4 +438,12 @@ Basis: the final outstanding attribution finding is resolved without inventing a
 
 Handoff: relay closed (Approved), no further turn needed. Token completion uses done; Producer (claude-a) receives the adjudication for the existing HOLD/decision workflow.
 
+
+### Attestation · relay-drive — 2026-10-03T03:55:05Z
+task: RELAY-gh928-gh884-independent-review
+reviewer: codex
+status: Approved
+reviewed-head: 2ed4558dc3285af046c63ff90e1717cb74d4b763
+added-range: 54766+5705
+added-sha256: c0d330fe17d2334fbe1c02a5aa4c8221fed6d2d33cbfe0dc770da491f165b5c0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
