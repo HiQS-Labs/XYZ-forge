@@ -72,8 +72,28 @@ governed by `mini/ORIGIN.md` and `mini/ADAPTATIONS.md`. The contract tests are
 
 **Adding a new child repo** is a new entry in `TARGETS` (manifest, env var, sibling dir name, log
 prefix). A child that already has files but no `MANIFEST.txt` needs one reviewed setup commit in the
-child listing the paths the forge will own (GH-955 step 4 shows the recipe); the ownership guard
-refuses to overwrite anything else.
+child listing the paths the forge will own; the ownership guard refuses to overwrite anything else.
+
+**One-time setup for AgentChorus-Skill** (GH-955; run once, after the GH-955 PR has merged). Both
+checkouts must be clean and current: the forge at the commit you will publish, the child on `main`.
+
+```bash
+# in the XYZ-forge clone: write the child's MANIFEST.txt (its 13 payload paths, one per line, sorted)
+python3 utils/py/xyz_mini_sync.py --target agent-chorus --print-manifest \
+  | python3 -c 'import json,sys; print("\n".join(sorted(d for _, d, _m in json.load(sys.stdin))))' \
+  > ../AgentChorus-Skill/MANIFEST.txt
+# in the child: drop the retired publisher's two files, commit, push
+git -C ../AgentChorus-Skill rm -q .xyz-canonical-revision skills/agent-chorus/publish-manifest.tsv
+git -C ../AgentChorus-Skill add MANIFEST.txt
+git -C ../AgentChorus-Skill commit -m "chore: hand ownership to XYZ-forge's central publisher (GH-955)"
+git -C ../AgentChorus-Skill push origin main
+# back in the forge clone: the first central publication (preview first, as in Flow)
+python3 utils/py/xyz_mini_sync.py --target agent-chorus --push
+```
+
+The setup commit's own CI run fails by design: the old workflow still reads the removed
+`.xyz-canonical-revision`. The first publication replaces that workflow in the same commit. The
+migration is done only when the child CI is green at the first published SHA.
 
 ## What this skill never does
 

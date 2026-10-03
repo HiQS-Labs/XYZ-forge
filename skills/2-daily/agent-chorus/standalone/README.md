@@ -33,7 +33,7 @@ review, and session-to-session handoffs.
 ## Quick start
 
 ```bash
-bash skills/2-daily/agent-chorus/install.sh
+cd skills/agent-chorus && bash install.sh
 ```
 
 Then ask an installed agent:
@@ -42,15 +42,17 @@ Then ask an installed agent:
 Start an AgentChorus session with Codex to review the new authentication protocol.
 ```
 
-See the [skill README](skills/2-daily/agent-chorus/README.md) for requirements, installation details,
-usage, and verification.
+See the skill README in [`skills/agent-chorus/`](skills/agent-chorus/) for requirements, installation
+details, usage, and verification.
 
 ## Package
 
-- [`SKILL.md`](skills/2-daily/agent-chorus/SKILL.md) — agent instructions and operating contract
-- [`install.sh`](skills/2-daily/agent-chorus/install.sh) — idempotent skill installer
-- [`agent_chorus.py`](skills/2-daily/agent-chorus/scripts/agent_chorus.py) — local coordination helper
-- [`test-standalone.sh`](skills/2-daily/agent-chorus/test-standalone.sh) — dependency-free smoke suite
+Everything lives in [`skills/agent-chorus/`](skills/agent-chorus/):
+
+- `SKILL.md` — agent instructions and operating contract
+- `install.sh` — idempotent skill installer
+- `scripts/agent_chorus.py` — local coordination helper
+- `test-standalone.sh` — dependency-free smoke suite
 
 ## Source of truth
 

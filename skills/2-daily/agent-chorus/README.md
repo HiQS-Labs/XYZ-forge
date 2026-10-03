@@ -24,10 +24,11 @@ embeds the goal, scope, evidence, constraints, questions, and done condition as 
 
 ## Install
 
-From the repository root, run:
+Run the commands below from the skill folder: `skills/agent-chorus/` in AgentChorus-Skill, or
+`skills/2-daily/agent-chorus/` in XYZ Forge.
 
 ```bash
-bash skills/2-daily/agent-chorus/install.sh
+bash install.sh
 ```
 
 The idempotent installer symlinks this repo-backed skill into the standard skill directories for
@@ -39,7 +40,7 @@ version instead — or to install for one project only — copy the folder and r
 commit:
 
 ```bash
-cp -R skills/2-daily/agent-chorus ~/.claude/skills/agent-chorus        # or <project>/.claude/skills/
+cp -R "$PWD" ~/.claude/skills/agent-chorus        # from the skill folder; or <project>/.claude/skills/
 git rev-parse --short HEAD > ~/.claude/skills/agent-chorus/INSTALLED-FROM.txt
 ```
 
@@ -75,8 +76,8 @@ watch markers stay in the session's `runtime/` directory. Set `AGENT2AGENT_HOME`
 `--store` to select another private external location. Persist one user-level default with:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/2-daily/agent-chorus/scripts/agent_chorus.py" configure-store \
-  --path /private/path/to/Agent2Agent-Transcripts
+python3 scripts/agent_chorus.py configure-store \
+  --path /private/path/to/Agent2Agent-Transcripts        # from the skill folder
 ```
 
 Legacy `relay-system/` sessions remain readable and writable in place. To archive them, copy the
@@ -99,10 +100,10 @@ The helper also makes four common long-running-discussion transitions explicit:
 
 ## Verify
 
-Run the skill's dependency-free smoke suite from the repository root:
+Run the skill's dependency-free smoke suite from the skill folder:
 
 ```bash
-bash skills/2-daily/agent-chorus/test-standalone.sh
+bash test-standalone.sh
 ```
 
 ## Publish the standalone distribution
