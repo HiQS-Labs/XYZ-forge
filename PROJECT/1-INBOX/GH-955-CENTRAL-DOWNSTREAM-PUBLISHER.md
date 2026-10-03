@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex: FAIL, F1–F6 all adopted; F1 modified to a one-time setup commit instead of an `--adopt` flag) | Operator answers Q1–Q5, then QA round 2, then execution |
+| Plan QA round 1 adjudicated (F1–F6 adopted); operator answered Q1–Q5 | QA round 2, then execution |
 
 ## Problem (observed)
 
@@ -142,12 +142,12 @@ R5. Existing guarantees hold: XYZ-mini adapted ownership (#950), the ownership g
    - *Verify:* path-integrity passes, and no `sync-to-standalone` reference remains outside history.
 7. **Reverse #882 in docs and routing.**
    - Delete `skills/3-weekly/skills-army-hq/UPSTREAM.md`.
-   - Un-retire `push-to-skills-army-mini`, or fold it per Q2.
+   - Fold `push-to-xyz-mini` and `push-to-skills-army-mini` into `skills/3-weekly/push-downstream/SKILL.md` (Q2). Update every reference: `skills/README.md`, `ARCHITECTURE.md` skills index, `PAGES/skills.html` if it lists them, and `utils/ci-route.sh` path routing.
    - Revert the #882 wording in `skills/README.md`, `ROUTER.md:220`, `ARCHITECTURE.md`, and the `push-to-xyz-mini` / ADAPTATIONS text.
    - Land #934's two `SKILL.md` edits from `origin/feat/sharpen-skills-army-hq` (receipt: `recon/gh934-diff.txt`).
    - Update `PROJECT/2-WORKING/GH-882-SKILLS-ARMY-UPSTREAM.md` and the CHANGELOG.
    - `utils/ci-route.sh` keeps routing the skills-army paths to gh620.
-   - **Transferred backlog (Codex F6):** #506 / #676 / #837 / #881 moved to mini #4 / #5 / #6 / #7. Give each one canonical home per Q5. The forge rows and docs (for example `PROJECT/4-MISC/GH-506-…`, superseded "because upstream moved") are re-pointed through the releases writer. No feature work.
+   - **Transferred backlog (Codex F6, Q5):** the issue transfers happen after merge (closing actions). This PR only changes the wording that called the forge copy downstream.
    - *Verify:* path-integrity passes; `skills-army-hq.sh` passes; no duplicate active plan exists for a transferred item.
 8. **Gate and previews.**
    - Run the focused suites (gh589, gh620, path-integrity, skills-army-hq) during iteration.
@@ -157,6 +157,7 @@ R5. Existing guarantees hold: XYZ-mini adapted ownership (#950), the ownership g
 
 After merge, closing actions (not in this PR):
 
+- Transfer mini #4–#7 back to XYZ-forge; park the new numbers with `roadmap add`; re-point the old rows and docs through the writer (Q5).
 - Comment on and close #882 as reversed.
 - Comment on mini#2 and mini#3.
 - Reopen #933 as landed via #955.
@@ -178,13 +179,13 @@ After merge, closing actions (not in this PR):
 - **The setup commit claiming child-only content.** Mitigation: it lists only the 13 manifest-named payload paths, and the first publication's preview shows exactly what changes.
 - **Multi-target partial failure.** Mitigation: targets are independent, and each publication is its own child commit; a summary line is printed per target.
 
-## Open operator questions (asked after plan QA, before execution)
+## Operator questions: answered 2026-10-03 after QA round 1
 
-- **Q1.** The operator said "all 4" downstream repos, but the scan finds 3 active ones plus 2 empty repos. Is the fourth one of the empty repos, or something else?
-- **Q2.** One operator skill for all targets (fold `push-to-xyz-mini` and `push-to-skills-army-mini` into one), or keep one skill per target?
-- **Q3.** Should AgentChorus-Skill lose its strict-mirror behaviour (refusing destination-only files) and adopt the central "unrelated files survive" rule?
-- **Q4.** Keep the filename `utils/py/xyz_mini_sync.py` (less churn), or rename it to match its wider job?
-- **Q5.** The issues #882 transferred (#506 / #676 / #837 / #881, now mini #4 / #5 / #6 / #7): transfer them back to the forge, or keep them tracked in XYZ-skills-army-mini as that child's own backlog?
+- **Q1. Downstream set.** Answer: **only the 3 active repos.** The empty repos get a profile when they gain content.
+- **Q2. Operator skill.** Answer: **one skill.** `push-to-xyz-mini` and `push-to-skills-army-mini` fold into one skill, `skills/3-weekly/push-downstream/` (`--target X` / `--target all`). The two old skill folders are deleted, and their discovery links are retired through Skills Army HQ after merge.
+- **Q3. Mirror rule.** Answer: **the central rule.** Child-added files survive, and the ownership guard still blocks overwrites. No per-profile strict flag.
+- **Q4. Filename.** Decided by the agent, unopposed: **keep `utils/py/xyz_mini_sync.py`.** Renaming it would churn tests, docs and the child CI for no behaviour change.
+- **Q5. Moved issues.** Answer: **transfer them back to the forge.** After merge, run `gh issue transfer` on mini #4 / #5 / #6 / #7 to XYZ-forge (they get new forge numbers). Park each new number through `roadmap add`, and re-point the old #506 / #676 / #837 / #881 rows and docs to "returned as #N" through the writer. No feature work.
 
 ## Rating (2026-10-03)
 

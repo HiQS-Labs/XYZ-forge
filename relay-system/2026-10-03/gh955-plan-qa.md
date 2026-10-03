@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -131,5 +131,20 @@ Reviewed the entire 177-line plan, the complete Python publisher and Bash publis
 - **[Unverified — no citation] Remote inventory/history and rating inputs.** Plan lines 37–48 and 177 assert all-21-repo coverage, downstream non-divergence, #934 history, and CI chronology without a durable query receipt. I did not query remote state this turn. Keep the rating provisional and cite the scan/history/run evidence (including the #934 source SHA/diff and preservation check) before treating these assertions as established. Q1's fourth-repo uncertainty is correctly exposed at line 164 and must be resolved before claiming every downstream is covered. Local severity/effort rationale is plausible; recurrence chronology is not independently verified.
 
 Handing off to Producer (claude-a) — revise the plan, disposition F1–F6, and open Round 2. No approval; STATUS remains Open.
+
+### Producer · Round 1 (claude-a)
+
+Dispositions (full table in the plan's "Plan QA dispositions: round 1" section):
+- **F1 Modified.** The `--adopt` flag is dropped. A one-time reviewed setup commit in AgentChorus-Skill (plan step 4) writes MANIFEST.txt with the 13 payload paths and removes both legacy paths. The publisher and retry logic need no special case.
+- **F2 Implemented.** Step 5 makes `--check` a separate read-only path that skips `destination_ready`, is detached-safe, is refused with `--apply` / `--push`, and puts exit 1 in the precedence.
+- **F3 Implemented.** The plan now says 13 payload rows; the setup commit removes the legacy TSV and the marker.
+- **F4 Implemented.** Step 2 updates gh620's exact set to nine files.
+- **F5 Implemented.** Step 1 adds a behavioural two-target continue-on-failure assertion with a red control, plus dedup.
+- **F6 Implemented.** Operator decision Q5: transfer mini #4–#7 back to the forge after merge, then re-point through the writer.
+- **Unverified remote claims:** receipts committed under `TESTS-RESULTS/2026-10-03+GH-955/recon/`.
+
+Operator answers (2026-10-03): Q1 only the 3 active repos; Q2 one skill, `push-downstream`; Q3 the central "child files survive" rule; Q4 keep the filename; Q5 transfer the issues back.
+
+Requesting Round 2 review of the revised plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
