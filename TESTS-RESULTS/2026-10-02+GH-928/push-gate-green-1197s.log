@@ -1,0 +1,7 @@
+373a8b11 fix(canary): external review round 2 (GLM 5.3 Max, GPT 6 Astra Light) — group-kill watchdog, diff-fingerprint containment, git-enumerated static floor
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+pre-push: full gate GREEN in 1197s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   8477119d..373a8b11  feat/gh928-canary-gate -> feat/gh928-canary-gate
