@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -195,7 +195,7 @@ Fixed configuration keys: schema, model, effort, authMode, tools, allowedTools,
 restricted, strictMcpConfig, outputFormat, maxTurns, maxBudgetUsd. The full object is
 HiQS digest preimage. XYZ constructs existing native argv; no arbitrary settings passed.
 Actual response modelUsage must match expected wire model when admission is active;
-missing/different metadata is a failed result, never a verified execution receipt.
+missing/different metadata is a failed result, never a verified execution receipt.  [Unverified — no citation]
 Enterprise managed configuration cannot be established by CLI flags alone; restrict
 pilot to personal pro/max subscription and refuse known managed settings/policy files.
 The missing live recipe/pilot blocks claims of real executed-route equivalence.
@@ -211,5 +211,21 @@ The missing live recipe/pilot blocks claims of real executed-route equivalence.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer (agy) — Round 1
+
+swept file: yes. Swept existing implementations across `utils/py/profile_resolve.py`, `utils/py/proc_group.py`, `utils/py/claude_cli.py`, `utils/py/consult.py`, `utils/py/claude-turn.py`, and `skills/1-hourly/relay-xyz/SKILL.md`. No pre-existing defects found in the existing code that impede the plan; the plan correctly identifies and addresses the known command substitution exit masking at `skills/1-hourly/relay-xyz/SKILL.md:290`.
+
+- `[Pass]` **Quad Concepts & Scope Boundaries (GH-947 alignment):** The plan strictly bounds the implementation to one optional HiQS profile source and execution admission in XYZ (`Quad Concepts` 1-4, lines 81-84; `Scope / dependencies / ratings`, lines 108-116), restricting execution to the Claude consult/advisory lane (`lines 110-111, 149-152`). It explicitly defers broad workflow rollout (`GH579 broad workflow rollout is deferred`, `lines 115-116`), rejects persistent result caches and background daemons (`lines 115-116`), and forbids automatic installation or unpinned network calls during turns (`lines 84, 132`).
+- `[Pass]` **Resolver Seam & Precedence (`profile_resolve.py`):** The plan detects explicit HiQS profiles before the legacy Tier 1 manual environment return (`Extend profile_resolve.py existing source path before tier1 for explicitly selected HiQS profile`, `line 127`), preventing ambient manual variables from silently overriding an explicit HiQS profile selection (`lines 127-128, 142`). Literal tiers remain unchanged (`lines 129, 135`), while missing or malformed HiQS configurations populate problems and cleanly refuse without falling through to Tier 4 literal defaults (`lines 128-129, 135-136`). Reusing `emit_env`'s existing `problems` refusal (`utils/py/profile_resolve.py:389-394`) ensures clean refusal with zero runnable exports.
+- `[Pass]` **Bounded Subprocess & Nonsecret IO (`proc_group.py`):** Protocol2 invocation routes through `proc_group.run_bounded` extended with an optional `stdin` string parameter (`lines 132-133`; `utils/py/proc_group.py:80-97`), maintaining process-group cleanup and wall-clock timeout guarantees while avoiding shell intermediaries. IO is capped at <= 1MiB (`line 134`) and runner output is suppressed on refusal (`line 134`), preventing credential or prompt disclosure.
+- `[Pass]` **Admission Expiry & Multi-turn Guard (`claude_cli.py` & `consult.py`):** Centralizes supported configuration validation and admission checking in `claude_cli.py` (`lines 144-145`; `utils/py/claude_cli.py:27-58`), validating current UTC against `effectiveExpiresAt` before each dispatch (`lines 145-146`; `utils/py/consult.py:621-645`). Resolving once at run admission and replaying retained inputs satisfies Phase 2 performance requirements by guaranteeing zero resolver subprocess spawns on subsequent turns (`lines 146, 157-158`).
+- `[Pass]` **Role Containment & Caller Safety (`claude-turn.py` & `relay-xyz`):** Strictly enforces GH-221 by ensuring HiQS profiles export advisory config/receipts only and never `RELAY_AGENT_CMD` pretending Claude is a gate reviewer (`lines 150-151`). `claude-turn.py` explicitly rejects `XYZ_HIQS_ADMISSION` before token claim (`lines 149-150`; `utils/py/claude-turn.py:99`). In addition, the plan replaces unchecked `eval "$(resolve-profile ...)"` with checked assignment in skill callers (`lines 151-152`; `skills/1-hourly/relay-xyz/SKILL.md:290`), eliminating exit-code masking.
+- `[Pass]` **Verification & Repository Rails (GH-831, GH-308):** Step 4 strictly complies with GH-831 ("No new tests") by editing existing suites only when pinning changed behavior and avoiding new test files, registry entries, or runners (`lines 153-154`). Step 4 defines falsifiable manual check matrices with committed `TESTS-RESULTS/.../provenance.jsonl` receipts (`lines 154-158, 161-163`), and Step 5 mandates that mutation-heavy qualifying gates (`ci-local`) run exclusively in a disposable full clone (`lines 161-162`), honoring `AGENTS.md` and `WORKTREE-SAFETY.md`.
+
+VERDICT: PASS
+Basis: The plan in GH-947-HIQS-RECIPE-PROFILES.md is thoroughly grounded in the existing profile resolver, Claude CLI preflight, and consult seams. It satisfies all issue #947 acceptance criteria and repository rails, provides rigorous negative controls, and introduces zero unneeded machinery or prohibited test suites.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
