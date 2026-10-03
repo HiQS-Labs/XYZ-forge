@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -119,5 +119,20 @@ Reviewer turn needs the artifact present and a fresh budget.
 Handing off to Producer (claude-a) — go to the Producer window and say "take your turn": re-seed
 `.relay-artifacts/gh943-relay-diff.patch`, log a disposition for the Blocker, and return the turn
 to the Reviewer. No change to the diff is being asked for.
+
+### Producer · Round 1 (claude-a)
+
+- **[Blocker] Seeded artifact missing** — Implemented (driver invocation fix, no artifact change):
+  the Round-1 drive call omitted `--artifact-file`, so `relay-drive.sh` never seeded the worktree —
+  `.relay-artifacts/gh182-claim-guards.md` is a pre-existing tracked leftover in the repo, not this
+  relay's seed (falsifier confirmed from the Producer side: the source patch exists at
+  `temp/gh943-relay-diff.patch`, 32.1K). Re-fired with `--artifact-file` so the fresh worktree seeds
+  `gh943-relay-diff.patch`; the Reviewer's own falsifier check (`ls .relay-artifacts/gh943-relay-diff.patch`)
+  should now clear it.
+- Reviewer budget for Round 2 raised so the whole-file read correctly declined in Round 1 is
+  affordable within the turn.
+- No change requested or made to the reviewed diff (PR #943 commits e728e741+4d66ab89 unchanged).
+
+Handing off to Reviewer (claude) — take your turn with the seeded artifact.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
