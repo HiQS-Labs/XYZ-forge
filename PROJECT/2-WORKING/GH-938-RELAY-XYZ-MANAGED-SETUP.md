@@ -146,10 +146,17 @@ Not executed by this PR. Run in order; stop at the first failure. `C` = the devi
    does not qualify today (local relay commits, behind origin); use the Mac Studio's clone, or settle
    the Mini clone first.
 3. **Publish (on the publisher).**
+   - Record the prior receipt first (rollback anchor): `python3 "$C/intake.py" --root "$C" list` →
+     note relay-xyz's `digest`, `repository` and `commit` (on the Mini today: `rebalance-git-pulse`
+     @ `1636d8df`).
    - Preview: `python3 "$C/intake.py" --root "$C" update relay-xyz --source
      "<clone>/skills/1-hourly/relay-xyz"`. Expect `before`/`after` digests and `commit` = `<clone>`
-     HEAD. `Unchanged: relay-xyz` means it is already published; stop. `--source` is required: the
-     Mini's receipt records the collection itself as source, which `intake.py` refuses (overlap).
+     HEAD. `--source` is required: the Mini's receipt records the collection itself as source, which
+     `intake.py` refuses (overlap). If it prints `Unchanged: relay-xyz`, the payload is already
+     published: skip apply and commit, find the existing publish commit with
+     `git -C <pulse> log -1 --format=%H -- "Deployed Skills/relay-xyz"` (confirm its message names
+     `<sha>` or this PR; if it cannot be identified, record that on #938 instead of claiming a
+     publish), and continue at step 4.
    - Apply: the same command with `--apply` before `update`. It writes a verified backup ZIP under
      `$C/backups/`.
    - Verify: `python3 "$C/intake.py" --root "$C" list` shows the relay-xyz receipt digest equal to the
@@ -181,10 +188,14 @@ Not executed by this PR. Run in order; stop at the first failure. `C` = the devi
 5. **Mac Studio, when online.** The same step 4 with its Pulse checkout (`~/git-pulse-sync`) and
    `C="$HOME/git-pulse-sync/Deployed Skills"` (or `$XYZ_SKILLS_ROOT`). Other Macs the same when next
    online; record which were checked.
-6. **Rollback (if a check fails after publish).** On the publisher, re-publish the previous payload
-   from a clean checkout of the pre-merge commit: `git clone https://github.com/HiQS-Labs/XYZ-forge.git
-   <tmp> && git -C <tmp> checkout <pre-merge sha>`, then preview/apply `intake.py --root "$C" update
-   relay-xyz --source "<tmp>/skills/1-hourly/relay-xyz"`, commit and push as in step 3; devices pull.
+6. **Rollback (if a check fails after publish).** On the publisher, `intake.py` update back to the
+   prior receipt recorded in step 3. Check out that payload in a temporary Git clone outside `$C`
+   (`intake.py` requires the source to sit inside a local Git repository): if the prior receipt's
+   repository is the Pulse repo, `git clone <pulse> <tmp> && git -C <tmp> checkout <prior commit>`
+   and use `--source "<tmp>/Deployed Skills/relay-xyz"`; if it is XYZ-forge,
+   `git clone https://github.com/HiQS-Labs/XYZ-forge.git <tmp> && git -C <tmp> checkout <prior commit>` and use `--source "<tmp>/skills/1-hourly/relay-xyz"`. Preview, then
+   `--apply`; the resulting `after` digest must equal the recorded prior `digest`. Commit and push as
+   in step 3; devices pull and re-run step 4.
    (Alternatives in Skills Army HQ `references/recovery.md`: the verified backup ZIP or the staged
    prior folder.) If the doc itself is wrong, revert the PR on `development` through the normal lane.
 7. **Close #938** only after step 4 passes on the Mini. Comment on #938 with the merge sha, CI and
