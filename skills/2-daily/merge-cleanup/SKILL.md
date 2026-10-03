@@ -1,6 +1,6 @@
 ---
 name: merge-cleanup
-description: Consolidate multiple Git worktrees and clones of a repository into a single clean checkout, safely merge associated PRs in topological dependency order, reconcile post-merge governance state (PDDA and RELEASES DB), and safely remove leftover worktrees/clones without data loss or interrupting active sessions. Strictly complies with WORKTREE-SAFETY.md.
+description: Consolidate multiple Git worktrees and clones of a repository into a single clean checkout, safely merge associated PRs in topological dependency order, document landing batches of three or more PRs as a GitHub issue (merge sequence, problems, ad-hoc fixes, regression sweep, post-deployment carry-overs — also echoed in chat), reconcile post-merge governance state (PDDA and RELEASES DB), and safely remove leftover worktrees/clones without data loss or interrupting active sessions. Strictly complies with WORKTREE-SAFETY.md.
 ---
 
 # /merge-cleanup — Worktree Consolidation, PR Sequencing, and Safe Teardown
@@ -19,8 +19,9 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forg
 > 3. **Sequence PRs & pre-gate conflicts (Phases 4–5).** Fetch open PRs into a topological DAG to prevent file collisions; pre-simulate landings and resolve disjoint ledger/doc conflicts.
 > 4. **Merge & reconcile governance (Phase 5).** Remote squash-merge in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
 > 5. **Safe teardown & status confirmation (Phase 6).** Deregister worktrees via canonical git protocol, move clean disposable clones to Trash, prune dangling skill symlinks, and confirm all PRs are landed.
+> 6. **Document qualifying batches (GH-944).** When the sequenced queue holds **three or more PRs**, open a `merge-batch` GitHub issue **before the first merge** and keep it current as the run progresses — merge sequence, problems, ad-hoc fixes/pivots, findings. After the batch, run the `/debug-mantra` regression sweep (findings become issue checklist items) and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
 >
-> **Overall Goal:** All ready-to-merge PRs processed and local disk clones and git worktree folders safely torn down when appropriate.
+> **Overall Goal:** All ready-to-merge PRs processed, qualifying batches documented and swept for regressions, and local disk clones and git worktree folders safely torn down when appropriate.
 
 Then begin work.
 
@@ -178,7 +179,9 @@ never attempted:
    `--teardown-only` and still report completion (the incident's S1 false-Done). If a blocker
    cannot be resolved autonomously, report the blockers and stop — address them or report them;
    never silently truncate the task.
-3. **Execute:** add `--execute`.
+3. **Execute:** add `--execute`. If the sequenced queue holds **≥3 PRs**, open the batch issue first
+   — see [Batch issue protocol (GH-944)](#batch-issue-protocol-gh-944--caller-owned-for-queues-of-three-or-more) —
+   and keep it current through the run.
 4. **On exit 3** (handoff / park / defer): read the printed `export MERGE_CLEANUP_RECORD=...`
    paths, work the caller ladder below for handoffs, then **re-run with `--resume --execute`** to
    continue the queue. Repeat until exit 0 or a stop. Deferred PRs (network) are named in the
@@ -194,6 +197,67 @@ for `--teardown-only` / `--scan-only` / `--prs-only`.
 retry the identical command once before escalating to the operator — a block that succeeds on a
 verbatim retry was non-deterministic, and surrendering the run to it is how an operator ends up
 hand-driving the loop four times (the incident's S2).
+
+## Batch issue protocol (GH-944) — caller-owned, for queues of three or more
+
+This protocol is caller-owned: the driving agent executes it around the script's Phase 5; no
+script option governs it, and nothing in the landing sequence waits on GitHub issue state.
+
+- **Trigger & threshold.** Fires when the Phase 4 sequence for this run contains **three or more
+  PRs**. Deferred, parked, handed-off, and `--exclude`d PRs are *named* in the issue but never
+  counted toward the threshold. Queues below three behave exactly as before — no issue.
+- **Created before the first merge, kept current.** The issue is opened after sequencing and
+  before the first `gh pr merge` of the batch, so problems and pivots are appended as they happen
+  and the record survives a mid-batch stop (exit 2/3 included).
+- **Idempotent on `--resume`.** Before creating, search the repo's open issues labelled
+  `merge-batch` for this run's date and integration branch; a `--resume` continuation appends to
+  that issue — never mints a duplicate. One issue per batch run, not per PR.
+- **Non-blocking.** Issue creation or update failures (network, permissions) are disclosed in the
+  run summary and the governed landing proceeds — the issue is a record, not a gate.
+- **Named data sources — mine, do not freelance.** The merge sequence and per-PR outcomes come
+  from the end-of-run summary; ad-hoc fixes and pivots from the attempt records
+  (`<primary>/.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json`) and B1 ledger-resolution lines;
+  findings from the reconciliation gates (`wave-reconcile`, `releases_app check`,
+  `pdda.sh issue-doc-sync`) and teardown verdicts.
+- **Regression sweep (after the batch).** Apply `/debug-mantra` over the merged range (first
+  through last merge commit of the batch on the integration branch): cross-reference the merged
+  diffs for cross-PR interactions (shared files and semantic overlap — the Phase 4 soft-edge
+  lens), mine the attempt records for repaired conflict sites (a repaired conflict is a
+  regression suspect), and run the tier-appropriate suite **in a disposable full clone** — never
+  the primary (GH-564). Every regression or bug found becomes a `- [ ]` checklist item in the
+  issue with its evidence. A clean sweep is recorded as such, naming what ran: a sweep that
+  cannot name its evidence has not run.
+- **Post-deployment carry-overs (dual sink).** Scan each merged PR body and its closing-linked
+  originating issue for post-deployment/verification checklist items; transcribe them
+  **verbatim, attributed (`#PR` / `#issue`), unchecked** into the issue's checklist — **and echo
+  them at the end of the run's chat summary**, after the merge sequence, so the operator sees
+  them in-band rather than only on GitHub. Transcribe only: merge-cleanup never executes
+  production verification.
+- **Lifecycle.** The issue stays open; the operator works the checklists. merge-cleanup never
+  auto-closes it.
+
+**Issue template:**
+
+```markdown
+Title: Merge batch <YYYY-MM-DD> — <owner/repo> — <PR list>
+Labels: merge-batch
+
+## Merge sequence
+| # | PR | outcome | reconcile |
+|---|----|---------|-----------|
+
+## Problems
+
+## Ad-hoc fixes & pivots
+
+## Findings
+
+## Regression sweep (debug-mantra)
+- [ ] <!-- findings with evidence; a clean sweep records what ran instead -->
+
+## Post-deployment carry-overs
+- [ ] <!-- verbatim items, attributed to #PR / #issue -->
+```
 
 ## Caller decision ladder (Phase C) — what the script hands off
 
@@ -235,6 +299,10 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
 | mergeable-unknown-poll | 5 | script | TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands |
 | exclude-drops-pr | 4 | script | TestPhase5EndToEnd.test_exclude_pr_number_drops_it_from_the_queue |
+| batch-issue-threshold | 5 | caller | — |
+| batch-issue-resume-append | 5 | caller | — |
+| batch-regression-sweep | 5 | caller | — |
+| post-deploy-carryover-dual-sink | 5 | caller | — |
 
 CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`.
 
