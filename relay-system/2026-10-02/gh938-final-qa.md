@@ -1489,4 +1489,12 @@ Basis: The quoted final file meets the four binding requirements. The added comp
 
 Relay closed (Approved), no further review turn needed. Handing the token to Producer (claude-a) for the ready-PR step.
 
+
+### Attestation · relay-drive — 2026-10-03T03:26:37Z
+task: RELAY-gh938-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9bc3f4bb165b16f309a32481029cf309e971d8cf
+added-range: 119103+2232
+added-sha256: 912c4024de5db6b72615b8bbca9104f093470ec206174d13ced7ed47d543f7bc
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
