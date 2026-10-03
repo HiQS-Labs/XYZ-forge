@@ -30,7 +30,7 @@ prerequisites, explicitly authorized by operator. No merges or live pilot author
 
 | What was just completed | What's next |
 | --- | --- |
-| Full clone, recon, registered and rated intake; stacked PRs authorized | Agy plan QA, foundation implementation, then accepted-start and optional source |
+| Optional source implemented against HiQS 452f6e4; focused/manual controls pass | Final Agy review, full disposable-clone gate, draft PR |
 
 ## Recon / ownership
 
@@ -114,9 +114,9 @@ Review any unavoidable implementation pivot before production writes.
 
 ## QA gates
 
-- [ ] Agy approved plan before runtime edits / accepted-start.
-- [ ] Positive route/config/build argv and negative zero-dispatch controls recorded.
-- [ ] Current expiry blocks subsequent turn without resolving again; retained inputs replay.
+- [x] Agy approved plan before runtime edits / accepted-start.
+- [x] Positive route/config/build argv and negative zero-dispatch controls recorded.
+- [x] Current expiry blocks subsequent turn without resolving again; retained inputs replay.
 - [ ] Final Agy approved + required gates truthfully recorded; PR open, awaiting merge.
 - [ ] Maintained published recipe / real Claude subscription pilot (external prerequisite).
 
@@ -139,3 +139,20 @@ missing/different metadata is a failed result, never a verified execution receip
 Enterprise managed configuration cannot be established by CLI flags alone; restrict
 pilot to personal pro/max subscription and refuse known managed settings/policy files.
 The missing live recipe/pilot blocks claims of real executed-route equivalence.
+
+
+## Execution evidence
+
+Agy plan attested approval at 99204bfc. Owned row accepted-start qualified against full
+issue URL before feature writes. HiQS source 452f6e4 has 341 tests/build and final Agy
+attestation; existing [PR6](https://github.com/NeochromeTeam/hiqs-ai-resolve/pull/6) is now
+stacked draft over PR29, head a982f03. Source foundation exists; published milestone
+remains blocked. Root task clone and primary checkouts retained; runtime/skill vendoring
+into primary environments is a separate action.
+
+[Focused/manual logs and provenance](../../TESTS-RESULTS/2026-10-03+GH-947/provenance.jsonl).
+Config preimage generic in HiQS, fixed native schema in existing Claude helper. Node runner
+argv constructed from configured checkout/node instead of permitting generic commands.
+This further narrows the reviewed runner envelope. Fixture gate witnessed current-time
+expiry crossing during auth probe; final local expiry check now runs after preflight.
+No source or provider credentials are sent to resolver child (minimal environment).

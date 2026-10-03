@@ -1,0 +1,55 @@
+resolve-profile: profile 'absent': explicit HiQS profile is unavailable; no fallback
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': explicit HiQS profile is unavailable; no fallback
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+resolve-profile: profile 'pilot': HiQS admission refused; check explicit source pins, supported config, installed build and subscription
+resolve-profile: refusing to emit a broken export block — fix the profile or pass the path manually
+{
+  "synthetic": true,
+  "runner_revision": "452f6e48d7fc76b4b21c00a6b325ea015aa7a372",
+  "cold_warm_admission_ms": [
+    366.145,
+    228.712
+  ],
+  "positive_admission_resolver_subprocesses": 2,
+  "checks": [
+    "two real pinned HiQS subprocess admissions from foreign cwd: PASS",
+    "two guarded turns reuse admission without a new resolver: PASS",
+    "expiry crossed during auth preflight refuses before dispatch: PASS",
+    "expiry boundary refuses with zero worker dispatch and no resolver retry: PASS",
+    "missing profile refuses no exports: PASS",
+    "ambient manual refuses no exports: PASS",
+    "tampered digest refuses: PASS",
+    "missing recipe refuses: PASS",
+    "old runner pin refuses: PASS",
+    "exact recipe policy denial refuses: PASS",
+    "malformed device config refuses explicit HiQS selection: PASS",
+    "build mismatch refuses: PASS",
+    "provider mismatch refuses: PASS",
+    "managed account mismatch refuses: PASS",
+    "changed effort / unknown config field refuses: PASS",
+    "old protocol coincidentally matching selected ref refused: PASS",
+    "actual consult argv model/effort/tools/limits/restrictions and modelUsage result: PASS",
+    "different actual modelUsage fails result qualification: PASS",
+    "unsupported Claude relay path refuses before token claim: PASS",
+    "copied vendored module context admission: PASS"
+  ]
+}
