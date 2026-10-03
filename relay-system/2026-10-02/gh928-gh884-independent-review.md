@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -204,9 +204,64 @@ Disposition of every round-2 finding (re-review artifact: `.relay-artifacts/gh92
 - **R2-2 [Should] evidence attribution — Implemented.** `TESTS-RESULTS/2026-10-02+GH-928/push-gate-green-993s.log` qualifies the FINAL candidate (base 4ae6f491, third gated push, full gate GREEN in 993s); the 1062s row stays historical for 88cb6090. The GH-884 PoC is now backed by COMMITTED receipts: `TESTS-RESULTS/2026-10-02+GH-884/` (provenance.jsonl + gh308 full-run and full-selftest logs; external-red and fingerprint witnesses reference the logged evidence in the GH-884 PoC comment). Receipt files ride inside 8fc86317 — visible in the packet's Part 1 diff.
 - **R2-2 [Nit] jog prose — Implemented.** Capture-doc acceptance item 3 corrected: receipts authoritative (jog-break = 2 failed checks: python-ports, jog-dry-run; `jog-help` passes because argparse exits before the appended EOF import executes).
 - **R2-3 [Unverified] method framing — Acknowledged.** Packet rev 3 labels the 60–70% odds and 4–8 weeks as JUDGMENTAL ESTIMATES, not measured forecasts, and keeps the PoC scoped as one worked example.
-- **R2-4 [Pass] direction — Acknowledged, no change.** Deferral stands; PR #930 stays HOLD; pre-push integration remains an operator decision.
-- **R2-5 [Pass] Part 4 — Implemented.** Rev 3 annotates Part 4 as historical context whose P1 conclusion was superseded by the relay's falsification.
+- **R2-4 [Unverified — no citation] direction — Acknowledged, no change.** Deferral stands; PR #930 stays HOLD; pre-push integration remains an operator decision.
+- **R2-5 [Unverified — no citation] Part 4 — Implemented.** Rev 3 annotates Part 4 as historical context whose P1 conclusion was superseded by the relay's falsification.
 
 Handing off to Reviewer (codex) — round 3: grade whether the explicit root refusal and the corrected/attributed evidence close the round-2 findings.
+
+### Reviewer · Round 3 · codex
+
+swept file: yes
+
+Scope: all 1,115 lines of the rev-3 packet, Parts 1–4 including every embedded receipt/log, and the prior relay turns. Citations below refer to `.relay-artifacts/gh928-gh884-review-packet.md`. Direct artifact review: the complete graph project inventory contains no index for this worktree; another checkout's index cannot establish this seeded packet's content. No git, canary, suites, or executable fixtures were run. Only extracted side-effect-free guards were evaluated, with scratch directories under `.relay-scratch/tmp`.
+
+1. **[Pass] Fix round: explicit root refusal works; the original caller-directory deletion path remains closed in the shown allocation.** The new `[ "$rp" = "/" ] && return 1` rejects root. Both setup branches assign `SANDBOX` from a fresh `mktemp -d` with failure exits; the override supplies only its parent. The narrow probe returned 1 for root, home, harness and harness ancestor, and 0 with the resolved valid parent. Removing only the explicit root line in memory returned 0 and printed `/`, witnessing that the check distinguishes the old defect. No concrete input deleting pre-existing parent contents was established in the stated local envelope. End-to-end preservation remains **[Unverified — needs clone run]** here; the packet's `witness-parent-existing-project` row reports it.
+
+   Probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with the following body and closing `PY`. Outer exit 0; no deletion or source mutation.
+
+   ```python
+   from pathlib import Path
+   import subprocess, tempfile, os
+   p = Path('.relay-artifacts/gh928-gh884-review-packet.md').read_text()
+   a = p.index('+sandbox_parent() {'); b = p.index('+# GH-564:', a)
+   definitions = '\n'.join(l[1:] for l in p[a:b].splitlines() if l.startswith('+'))
+   base = Path(tempfile.mkdtemp(prefix='r3-guard-', dir=os.environ['TMPDIR']))
+   root = base/'parent'/'harness'; root.mkdir(parents=True)
+   home = base/'home'; home.mkdir()
+   valid = base/'valid'; valid.mkdir()
+   for label, candidate in [('root','/'),('home',str(home)),('harness',str(root)),
+                            ('ancestor',str(root.parent)),('valid',str(valid))]:
+       r = subprocess.run(['bash','-c',definitions+'\nROOT="$1"\nHOME="$2"\nsandbox_parent "$3"\n',
+                           'probe',str(root),str(home),candidate],capture_output=True,text=True)
+       print(label, 'rc='+str(r.returncode), 'output='+('resolved-parent'
+             if r.stdout.strip()==str(valid.resolve()) else repr(r.stdout)))
+   old = '\n'.join(l for l in definitions.splitlines()
+                   if '[ "$rp" = "/" ] && return 1' not in l)
+   r = subprocess.run(['bash','-c',old+'\nROOT="$1"\nsandbox_parent /\n',
+                       'probe',str(root)],capture_output=True,text=True)
+   print('red-control-without-explicit-refusal', 'rc='+str(r.returncode), repr(r.stdout))
+   print('packet_lines',len(p.splitlines()))
+   ```
+
+   Decisive output: `root rc=1; home rc=1; harness rc=1; ancestor rc=1; valid rc=0 output=resolved-parent; red-control-without-explicit-refusal rc=0 '/\n'; packet_lines 1115`.
+
+2. **[Should] Evidence still contradicts final-candidate qualification.** The introduction says “push-gate-green-993s.log qualifies the FINAL candidate 8fc86317.” That log instead ends `88cb6090..4ae6f491`, and its provenance row explicitly says “FINAL candidate 4ae6f491,” with `base: 4ae6f491`. The Producer attributes the root fix to `8fc86317`. Therefore this historical green does not establish qualification of the shown final root-fix revision. The round-3 refusal/clean rows also say only `base: 4ae6f491`, without identifying a tested uncommitted patch. Receipt files now appear in the declared committed diff, resolving the prior packet-level GH-430 membership omission; membership does not repair attribution.
+   Concrete fix: label the 993s run as qualifying 4ae6f491; mark final 8fc86317 qualification **[Unverified — needs clone run]** pending the harness gate, or supply an actual final-revision receipt. Identify the tested patch for the focused round-3 receipts. Annotate the old “all four refused at setup by sandbox_parent” row as superseded/incorrect for root. Do not relabel historical logs as runs on later code. This requests evidence corrections, not runtime behavior changes.
+
+   **[Pass] Earlier historical evidence gaps are closed.** The diff includes both provenance files, the 832s refusal and 1062s/993s green logs, and tick/jog red logs. The jog log says “14 passed, 2 failed” and `jog-help` is “ok”; the capture-doc correction agrees. These support the reported historical outcomes, not an independent execution by this reviewer.
+
+   **[Unverified — needs clone run] GH-884 remains one bounded worked example.** The supplied self-test log reports “38 pass, 0 fail,” and committed rows now attest external-red and fingerprint outcomes. Those rows point to “logged in the GH-884 PoC comment” without supplying the underlying evidence, an exact tested revision/patch, or the seven-bar scorecard. Accept these as author receipts; independent reproduction and the seven-bar assessment remain unestablished here. Supply the scorecard/comment evidence or explicitly retain that qualification. No throughput or rebuild-success estimate follows from one example.
+
+3. **[Unverified — no citation] Method lesson remains supported locally.** The capture-doc account records that setup “manufactured ownership,” and the fingerprint receipt records a first draft that “did NOT fire on an unrelated local config write.” Those observations support carrying existing containment/evidence primitives into day-one admission requirements. Part 3 labels the prognosis “JUDGMENTAL ESTIMATE, not a measured forecast” and calls the PoC “ONE worked example.” Keep those bounds; no general failure-rate inference is warranted.
+
+4. **[Unverified — no citation] Conditional deferral remains the supported direction.** Part 3 says T1 requires “3 zero-rescue local gates + 3 green hosted runs” with “one clean data point so far.” Retain the current gate, await the Oct 8 audit, and leave rebuilding trigger-gated with the three amendments. Pre-push integration and workflow arming remain the two separate operator decisions in item c. No materially better immediate rebuild option is supported here. Deferral is Easy to reverse; replacement is Costly and should retain the current gate as rollback through shadow qualification. This does not approve GH-884's absent full plan or authorize landing PR #930.
+
+5. **[Unverified — no citation] Whole-packet sweep completed; historical review is clearly labeled.** Part 4's heading explicitly says its P1 conclusion “was superseded by the relay round-1 falsification.” I reviewed all supplied retained context and receipts, not only the new guard line. The remaining material finding is evidence attribution above; no additional concrete dangerous-deletion bypass was established. The packet supplies a source diff, so this is not certification of omitted whole-source behavior. The old SUMMARY still describes the superseded marker guard and unrepeated tick control; its “Fix commit 090be955” label bounds it historically, and it must not be treated as current closure evidence.
+
+VERDICT: FAIL
+
+Basis: the root predicate passes a discriminating read-only probe and the direction remains sound conditionally. The packet still claims final-revision qualification that its own log attributes to an earlier revision. Correct or explicitly downgrade that claim; the harness can supply final qualification after this turn. No new runtime change or test machinery is requested.
+
+Handoff: Producer (claude-a) — correct the attribution and qualify the unsupported PoC assessment, then return the packet for Round 4. PR #930 remains HOLD; no landing or workflow arming is approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
