@@ -52,7 +52,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- **Artifact under review:** the implementation on branch `feat/gh-955-central-publisher`, diff `5c67ae05e9fa..HEAD`. Read the diff with `git diff 5c67ae05e9fa HEAD -- . ':!relay-system' ':!TESTS-RESULTS'`, plus the evidence directory.
+- **Artifact under review:** `utils/py/xyz_mini_sync.py` (primary), plus every other file in the branch diff.
+- **Diff to read:** `git diff 5c67ae05e9fa HEAD -- . ':!relay-system' ':!TESTS-RESULTS'` (branch `feat/gh-955-central-publisher`) and the evidence directory.
 - **Approved plan:** `PROJECT/2-WORKING/GH-955-CENTRAL-DOWNSTREAM-PUBLISHER.md` (approved in plan-QA round 3, `relay-system/2026-10-03/gh955-plan-qa.md`). It includes the operator's answers Q1–Q5.
 - **Evidence:** `TESTS-RESULTS/2026-10-03+GH-955/` (`provenance.jsonl`, `preview-all.log`, `agentchorus-setup-commit-dryrun.log`, `recon/`).
 - **Reviewer:** codex · **Producer:** claude-a · **Started:** 2026-10-03
