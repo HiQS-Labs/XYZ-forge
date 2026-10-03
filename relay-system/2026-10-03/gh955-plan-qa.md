@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -179,5 +179,23 @@ Handing off to Producer (claude-a) — resolve F7 and clarify the two bootstrap 
 - **Nit (CI gap) Implemented.** Step 4 labels the setup commit's expected CI failure. Migration is complete only when the child CI is green at the first published SHA.
 
 Requesting Round 3 review.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: F7 and the bootstrap clarifications are resolved at plan level. The ordered work covers the three agreed downstreams, extends the existing publisher, and defines falsifiable migration and preservation checks. The remaining nits are bookkeeping, not implementation blockers.
+swept file: yes
+
+Swept the entire 222-line plan, both publisher implementations, both named suites, TSV/child CI, routing/policy source excerpts and all current recon receipts. No additional substantive plan defects were identified, including in its pre-existing sections. Applied the SWE review rubric within the stated occasional-local-CLI envelope. Verify-tier intent: list_projects returned 77 projects (has_more=false), none matching this checkout; check_index_coverage returned “project not found or not indexed.” Exact-source fallback was used; no matching graph generation is claimed. No git command, suite, pytest or executable fixture was run, and no remote query was re-run by this reviewer.
+
+- **[Pass] F7 closed as a plan/evidence correction.** `TESTS-RESULTS/2026-10-03+GH-955/provenance.jsonl:1` through line 6 now attribute the six query outputs with commands, exit codes and timestamps; line 6 names the patch base and source SHAs. `recon/gh934-skill-hunks.patch:6` contains a real hunk, including both local-working-tree freshness wording and the immediate symlink read-through boundary. Plan `PROJECT/1-INBOX/GH-955-CENTRAL-DOWNSTREAM-PUBLISHER.md:148` applies that patch; lines 154–155 require an empty source comparison and downstream managed parity. These are measurable acceptance criteria, not executed preservation results.
+  Static probe (exit 0): `python3 -` with `import json; from pathlib import Path; r=Path("TESTS-RESULTS/2026-10-03+GH-955"); rows=[json.loads(l) for l in (r/"provenance.jsonl").read_text().splitlines()]`, then counted records, checked each output exists/nonempty, compared recorded byte sizes with `stat().st_size`, and counted patch lines by `@@ ` / `+` / `-` prefixes excluding headers. Decisive output: `provenance_rows 6 all_exit_zero True; missing_or_empty []; hunks 1 added 12 removed 2; org_rows 21 marker_rows 21`. Size discrepancies are disclosed below. This establishes receipt presence/content, not independent authentication of the producer's historical query execution.
+- **[Pass] Bootstrap notes closed.** Plan line 121 explicitly decodes manifest JSON into 13 destination paths, matching the ownership reader at `utils/py/xyz_mini_sync.py:309`; plan line 122 labels the expected intermediate CI failure and requires green child CI at the first publication SHA. Lines 125–127 retain payload, unrelated-file-survival and missing-bootstrap refusal criteria.
+- **[Pass] Earlier dispositions remain intact.** Plan lines 98–107 retain deterministic deduplication, continuation and its red control; lines 128–138 retain detached-safe read-only checking and conflict refusal; lines 144–168 cover upstream reversal, preservation and transferred backlog ownership. The existing implementation's per-target profiles (`utils/py/xyz_mini_sync.py:99`) remain the single publisher extension point. No new subsystem or permanent adoption flag is proposed.
+- **[Nit] Correct two receipt byte counts.** `TESTS-RESULTS/2026-10-03+GH-955/provenance.jsonl:5` records 583 bytes but its CI output is 587 bytes; line 6 records 2213 but the patch is 2215 bytes. Command `wc -c TESTS-RESULTS/2026-10-03+GH-955/recon/agentchorus-ci-runs.txt TESTS-RESULTS/2026-10-03+GH-955/recon/gh934-skill-hunks.patch` exited 0 and printed `587`, `2215`, total `2802`. Fix the metadata from the actual byte lengths; the nonempty patch and its two edits are present, so this does not reopen F7.
+- **[Nit] Refresh the status row when advancing to execution.** Plan line 23 still says “QA round 2, then execution”; update it to reflect this completed third-round plan review.
+- **[Unverified — needs clone run] Implementation and publication outcomes.** Plan lines 124–138 and 153–160 remain future checks. Approval here is permission to implement the reviewed plan, not a claim that any runtime gate, publication, preservation comparison or child CI has passed. The harness/implementation phase must supply those receipts.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) receives the approved plan for implementation and the two bookkeeping nits; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
