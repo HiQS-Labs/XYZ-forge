@@ -29,3 +29,7 @@ Tracking-ID: ci-disposition-registry-20261001
 
 ## Intake rating
 20/40/50/60 (priority/severity/appeal/effort cheapness). Priority reduced by the explicit operator deferral; severity reflects bounded potential effect, not a proven core workflow failure. Neutral appeal50; effort uncertain while original failure attribution is missing. No override.
+
+## Merge evidence
+
+- PR #925 merged 2026-10-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

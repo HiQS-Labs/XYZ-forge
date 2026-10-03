@@ -25,3 +25,7 @@ Tracking-ID: ci-disposition-gh4-copy-20261002
 
 ## Intake rating
 15/30/50/75; test setup failure, no product assertion failed; investigation deferred.
+
+## Merge evidence
+
+- PR #925 merged 2026-10-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

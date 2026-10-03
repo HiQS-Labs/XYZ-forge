@@ -73,3 +73,7 @@ Operator authorized the targeted companion review and publication. Round5 comple
 
 ## Completed full push gate
 2026-10-02: source0b4c82e668b64851d63a2c18bbb55480cf9110b9 passed mandatory normal4-wide macOS push gate in separate full clone gate-dispositions-publish5-oct2 under caffeinate. Gate862s (whole push866.47s),410/410,407registered,zero retry events,clean envelope,intact identity. Branch published through hook with no bypass. Full proof in dispositions/full-gate/ binds raw logs/telemetry/identity and accepted review attestations. Live relay intentionally default-skipped per836D2. This task-branch gate earns no development-run credit; local1/3 remains. Exact-head hosted CI follows PR creation.
+
+## Merge evidence
+
+- PR #925 merged 2026-10-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
