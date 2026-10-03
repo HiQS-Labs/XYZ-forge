@@ -25,8 +25,8 @@ The per-skill index with a one-line purpose for each is `ARCHITECTURE.md` → "S
 - **Refresh only your installed skills and configured app targets after a move.**
   Skills Army HQ app links point at its flat collection and remain valid; refresh each moved
   skill's source receipt with `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>`.
-  Exception: Skills Army HQ itself is maintained upstream in XYZ-skills-army-mini; refresh it from
-  there, not from the forge copy (see `skills/3-weekly/skills-army-hq/UPSTREAM.md`).
+  Skills Army HQ itself is canonical here too; XYZ-skills-army-mini is a published child (GH-955,
+  `push-downstream`).
   App links are owned by Skills Army HQ in the Git Pulse Sync `Deployed Skills` collection;
   refresh the source receipt, then run its `sync.py` preview and apply flow.
   There is no need to install missing skills or configure IDEs you do not use.

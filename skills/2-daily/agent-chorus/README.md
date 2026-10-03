@@ -107,19 +107,20 @@ bash skills/2-daily/agent-chorus/test-standalone.sh
 
 ## Publish the standalone distribution
 
-XYZ Forge is canonical. `publish-manifest.tsv` declares every file shipped to the standalone
-repository, including its README, CI workflow, tests, metadata, and licenses. Preview by default,
-then publish only from a clean committed canonical revision:
+XYZ Forge is canonical. The standalone repository (HiQS-Labs/AgentChorus-Skill) is published by the
+forge's one downstream publisher, `utils/py/xyz_mini_sync.py --target agent-chorus` (GH-955; the
+`push-downstream` skill is the operator flow). Its manifest there declares every shipped file:
+README, CI workflow, tests, metadata, and licenses. Preview by default, then publish:
 
 ```bash
-bash skills/2-daily/agent-chorus/sync-to-standalone.sh --preview
-bash skills/2-daily/agent-chorus/sync-to-standalone.sh --apply
-bash skills/2-daily/agent-chorus/sync-to-standalone.sh --check
+python3 utils/py/xyz_mini_sync.py --target agent-chorus           # preview
+python3 utils/py/xyz_mini_sync.py --target agent-chorus --push    # commit + push + read back
+python3 utils/py/xyz_mini_sync.py --target agent-chorus --check   # read-only parity (the child CI runs this)
 ```
 
-Set `AGENT2AGENT_STANDALONE_REPO` to select another checkout. The publisher refuses undeclared
-tracked destination files, preserves declared executable modes, verifies byte parity, and records
-the exact XYZ commit in `.xyz-canonical-revision`. Standalone changes never sync back automatically.
+Set `AGENT2AGENT_STANDALONE_REPO` to select another checkout. The publisher copies executable bits from
+the source, verifies the push, records the exact XYZ commit in `.xyz-forge-revision`, and never
+overwrites a child file it did not publish. Standalone changes never sync back automatically.
 
 ## License
 
