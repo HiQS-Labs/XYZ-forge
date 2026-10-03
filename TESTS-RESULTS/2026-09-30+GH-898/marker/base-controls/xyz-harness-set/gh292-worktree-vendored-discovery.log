@@ -1,0 +1,13 @@
+gh292 worktree vendored discovery:
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: main checkout: local vendored harness remains selected (got /Users/noelsaw/Documents/GH Repos/XYZ-forge)
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: linked worktree: selects main checkout's vendored harness (got /Users/noelsaw/Documents/GH Repos/XYZ-forge)
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: linked worktree: selects the vendored tick and its lock root
+  FAIL: linked worktree: does not fall back to the centralized-harness warning
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: unusable vendor: centralized fallback remains available (got /Users/noelsaw/Documents/GH Repos/XYZ-forge)
+  FAIL: unusable vendor: readiness names the main-checkout .xyz path
+  PASS: unusable vendor: readiness warns about centralized fallback
+  gh292 worktree vendored discovery: 1 pass, 6 fail
