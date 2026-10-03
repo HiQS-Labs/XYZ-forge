@@ -19,7 +19,7 @@ This is a Costly shared-contract bet: existing helpers suffice without another e
 registry entry or schema. Revert the focused repair commits on caller-shape or containment
 regression. Normal successful background-child policy is unchanged; forced SIGKILL and deliberate
 session escape are outside this cancellation contract. Before/after controls and final validation
-are retained under `TESTS-RESULTS/2026-10-03+GH-949/`; final QA/gate remain pending until recorded there.
+are retained under `TESTS-RESULTS/2026-10-03+GH-949/`; independent final QA is Approved and the full local push gate passed (870s, no bypass).
 
 ## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
 

@@ -1,6 +1,6 @@
 ---
 title: "GH-949 — ATE lifecycle, oracle and environment remediation"
-status: In Progress
+status: In Review
 created: 2026-10-03
 updated: 2026-10-03
 owner: Codex
@@ -20,7 +20,7 @@ reversibility: Costly — shared process and gate environment consumers require 
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA attested Approved; runtime repair committed at 76ad7e4e; original manual controls green | Full push-boundary gate and PR |
+| Plan QA attested Approved; runtime repair committed at 76ad7e4e; original manual controls green | PR #953 checks/review; awaiting merge |
 
 ## Table of contents
 
@@ -37,8 +37,8 @@ Bet: existing process-group and runner boundaries can carry all fixes without a 
 
 | Issue | Requirements | Dependencies | Plan / branch | Acceptance | Ledger rating | State / PR |
 |---|---|---|---|---|---|---|
-| #949 | F1–F9 | shared cleanup before oracle/ATE use | this plan; fix/gh949-ate-remediation | Phase 2 steps 1–6 + final QA/gate | rated90/85/50/55 | Implementation; none |
-| #912 | K1 ambient selector leak | existing runner envelope | same plan/branch, separate ledger row | inherited selector red → clean wrapped suites; intentional overrides still win | rated82/80/50/85 | Implementation; none |
+| #949 | F1–F9 | shared cleanup before oracle/ATE use | this plan; fix/gh949-ate-remediation | Phase 2 steps 1–6 + final QA/gate | rated90/85/50/55 | PR #953; awaiting merge |
+| #912 | K1 ambient selector leak | existing runner envelope | same plan/branch, separate ledger row | inherited selector red → clean wrapped suites; intentional overrides still win | rated82/80/50/85 | PR #953; awaiting merge |
 
 Ratings dated2026-10-03, read back from RELEASES: #949 priority90/severity85/neutral appeal50/cheapness55; #91282/80/50/85. Unsupervised continuing writes and false containment are high-impact potential consequences, not claimed production loss. #912 caused a documented3373s false-red gate on Oct1; the Oct3 campaign reproduces the same defect, not a second production incident. History windows Sep19–Oct3 versus Sep5–19: #478 documents a Sep3–6 runaway incident in the earlier window, but its generator cause differs; #918 Oct1 pooled oracle failure has unknown attribution and is not counted as the same root cause. Trend is unknown from this bounded sample, not increasing by assertion. No user override exists; appeal stays neutral. Cheapness reflects a focused multi-file repair versus simple envelope correction.
 
@@ -74,14 +74,14 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 ## Phase 3 — Final QA and PR
 
 - [x] Commit implementation/evidence; run final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
-- [ ] Run full qualifying local gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
-- [ ] Fetch/reconcile current development conflicts via supported RELEASES merge resolver if needed; any implementation change after approval gets fresh focused verification/review.
+- [x] Run full qualifying local gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
+- [x] Fetch/reconcile current development conflicts via supported RELEASES merge resolver if needed; any implementation change after approval gets fresh focused verification/review.
 - [ ] Push through the required hook from the disposable verification/push clone, open ready PR to development, verify emitted base/head/scope and hosted checks. Do not merge or prematurely close issues; retain task clone for merge handoff.
 
 ### Phase 3 — QA checklist
 
 - [ ] Final relay Approved plus successful nonempty receipt; required local and hosted results linked for exact tested SHA.
-- [ ] #949/#912 requirements all satisfied or explicitly unresolved; ready status only when all blocking checks pass.
+- [x] #949/#912 runtime requirements satisfied; ready status follows current PR blocking checks.
 - [ ] Plan/ledger say PR ready awaiting merge, not shipped; retained clone and cleanup handoff reported.
 
 Evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps all findings to retained before/after controls. The process helper API remains signal-handler-free; only the two CLI entry boundaries own handlers. Zero-minute admission remains nonzero without new rows but retains existing baseline/control initialization. All nine focused suites passed on runtime candidate76ad7e4e; final review/gate outstanding.
@@ -89,3 +89,5 @@ Evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps all findings to reta
 Final QA R1 disposition: Implemented. The whole-file sweep exposed a pre-existing first-versus-later rc/stdout blind spot. `984b7f64` compares the first observation against existing metamorphic result fields. Actual-process red/green controls are retained under manual-idempotence; affected existing suites are rerun. This extends the already approved idempotence comparison, not the process architecture or risk scope.
 
 Final Codex relay round2 is attested Approved (exit0); source and focused evidence reviewed at59d666cd. No implementation changes after approval. Full qualifying push-boundary run is next.
+
+PR [#953](https://github.com/HiQS-Labs/XYZ-forge/pull/953) targets development. Full local push gate passed870s at992914e6; immutable receipt under full-gate. Development docs/ledger merged through the canonical resolver without runtime changes. Hosted results are attached to the PR exact head; promotion qualification and merge remain future work. Retain task clone until merge handoff; this doc does not claim shipment.
