@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -1129,5 +1129,18 @@ and, if it still holds, append your review block directly above the marker witho
 above it, and set STATUS Approved.
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- [Pass] The Round 2 correction still routes an `Unchanged: relay-xyz` preview to the Mini checks instead of ending the checklist (Producer Round 2, revised step 3: “skip apply and commit” and “continue at step 4”). The quoted `intake.py:719-721` returns before preview digests on that input, so the separate branch is necessary.
+- [Pass] Rollback uses the prior receipt's repository, commit, and digest and a source inside a temporary Git clone (Producer Round 2, revised steps 3 and 6). The quoted `source_record()` at deployed `intake.py:200-207` requires a local Git repository; `intake.py:710-725` accepts the explicit source and records a changed digest.
+- [Pass] The full packet and draft still meet the stated scope: B sends a `Deployed Skills/relay-xyz` link past `install.sh`, C:93-110 and E:40-43 preserve the locator pin, H:342-343 supports the full gate, and A's checklist steps 1-7 cover landing, publication, device checks, rollback, and closing #938 after the Mini check. The Producer Round 3 block reports no wording change since Round 2. No further issue found in the pre-existing portions of the embedded plan or draft.
+
+VERDICT: PASS
+Basis: The Round 2 approval remains supported by the same packet and the quoted revisions. Implementation, gate results, and post-merge deployment remain later work.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
