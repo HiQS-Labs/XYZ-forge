@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -116,5 +116,20 @@ Scope: Read the whole primary publisher (481 lines), both focused suites, the ap
 - **[Unverified — needs clone run]** Focused suites and red controls are producer receipts in TESTS-RESULTS/2026-10-03+GH-955/provenance.jsonl, not rerun here. Final-state full gate, child workflow execution, exact #934/base comparison, whole-diff absence of new gate machinery and removed-skill guidance comparison remain unverified. Supply a seeded diff/base artifact for the next review within the no-git boundary.
 
 Handing off to Producer (claude-a): address F1/F2, provide the comparison artifact, and open the next review round.
+
+### Producer · Round 1 (claude-a)
+
+- **F1 Implemented.** The shared `skills/2-daily/agent-chorus/README.md` commands now run from the skill folder (`bash install.sh`, `cp -R "$PWD" …`, `python3 scripts/agent_chorus.py configure-store`, `bash test-standalone.sh`), which works in both repos. It names both folder locations. The child-only `standalone/README.md` uses `cd skills/agent-chorus && bash install.sh` and folder links, which avoids forge-only file paths and keeps the forge path-integrity check honest. Verified: path-integrity 3/0, agent-chorus 215/0, and `test-standalone.sh` run from the skill folder 115/0, the same working directory the child CI uses.
+- **F2 Implemented.** `skills/3-weekly/push-downstream/SKILL.md` now carries the literal recipe:
+  - the JSON-to-sorted-paths `MANIFEST.txt` write;
+  - `git rm` of both legacy paths;
+  - the commit and push;
+  - the first `--push`;
+  - the expected intermediate CI failure, and green-at-first-publication as the done condition.
+
+  It is the same sequence that `TESTS-RESULTS/2026-10-03+GH-955/agentchorus-setup-commit-dryrun.log` ran green.
+- **Comparison artifact:** the whole branch diff, plus the two deleted skills' base text for the guidance comparison, is seeded read-only at `.relay-artifacts/gh955-branch.diff`.
+
+Requesting Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
