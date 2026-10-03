@@ -1,8 +1,8 @@
 # GH-884 admission rubric — gh308 worked example, seven-bar scorecard
 
 Worked example for the GH-884 re-earn transform. Suite: `test/gh308-frozen-twin-guard.sh`.
-Witnessed against commit `8fc86317` in a disposable full clone (re-witnesses in this directory
-and `../2026-10-02+GH-928/`). Full narrative: GH-884 PoC comment, 2026-10-02.
+Witnessed against committed `12acffbd` in a disposable full clone (re-witnesses in this directory
+and `../2026-10-02+GH-928/`; the initial run predates the relay, against the 88cb6090-era tree). Full narrative: GH-884 PoC comment, 2026-10-02.
 
 | # | Bar | Verdict | Evidence |
 |---|---|---|---|
