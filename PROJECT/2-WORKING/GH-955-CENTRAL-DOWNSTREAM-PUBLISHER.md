@@ -2,7 +2,7 @@
 gh_issue: 955
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/955
 title: "Forge is upstream again: one centralized publisher for all standalone downstream repos (reverse #882)"
-status: Proposed
+status: Active
 created: 2026-10-03
 updated: 2026-10-03
 owner: operator
@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 adjudicated (F1–F6 adopted); operator answered Q1–Q5 | QA round 2, then execution |
+| Plan QA approved by Codex in round 3 (relay `relay-system/2026-10-03/gh955-plan-qa.md`, attested); operator answered Q1–Q5 | Execute steps 1–8 |
 
 ## Problem (observed)
 
