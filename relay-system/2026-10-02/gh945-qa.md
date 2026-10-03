@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,8 +113,47 @@ Handing off to Producer (claude-a): reconcile the GH-945 active document and led
   fixed, next = Round-2 re-review + PR); ledger row repointed through the canonical verb
   (`roadmap repoint --issue-num 945 --doc-path PROJECT/2-WORKING/...`), `releases check` clean
   (0 failures). Commit 9caf47dd on the task branch. No change to the reviewed skill section
-  (Round-1 [Pass] on Q1–Q4/Q6 stands).
+  (Round-1 [Unverified — no citation] on Q1–Q4/Q6 stands).
 
 Handing off to Reviewer (codex) — re-review the lifecycle fix on 9caf47dd.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: The current working-tree documents resolve Round 1's lifecycle finding; the recommendation still meets the settled design. Approval covers the supplied patch plus the inspected current lifecycle fix, not a claim that the stale patch contains that fix or that clone gates passed.
+swept file: yes
+
+Scope: reread the whole Radar skill, whole current GH-945 pointer document, and seeded patch; inspected the affected ledger row, generation and repoint receipt. No additional pre-existing blocking defect found. The Round-1 nonblocking execution-wording nit remains. Graph project enumeration has no index for this review worktree; this non-code review uses direct source text, not graph completeness claims.
+
+- [Pass] Q1–2: skills/3-weekly/radar/SKILL.md:649–661 requires a mechanically checkable Lens-2 target and an existing relevant asset, names concrete fuzzer/property-suite/script/gate families, and requires a detection citation. Lines 664–667 explicitly keep absent-target/absent-asset cases silent. No change requested.
+- [Pass] Q3–4: “Radar recommends and never executes” is immediately scoped to running the harness, extending corpora and gating adoption (skills/3-weekly/radar/SKILL.md:663–667). The section follows the sanity-check sibling and precedes Boundaries; it retains operator-facing recommendations, extension of adjacent coverage, and no reciprocal pointer. It adds no execution authority to the recitation or report guardrails.
+- [Pass] Q5 / Round-1 [Should] resolved: PROJECT/2-WORKING/GH-945-RADAR-VERIFY-ASSET-RECO.md:5 now says “status: In Progress”; its Status row at line 20 records implementation and the lifecycle fix, with re-review/PR next. releases.sql:796 points both doc_path and raw_text at 2-WORKING, preserving issue 945, in-progress status and 55/35/50/85 ratings. releases.sql:3 is generation 1400 and line 2407 adds the roadmap-repoint receipt chained from the prior final digest. The original inbox file is absent. No lifecycle change remains requested.
+- [Pass] Q6 / body-only: the seeded skill hunk is only a 22-line insertion at old line 644; it removes no existing bytes and leaves frontmatter outside the changed region. The current inserted text matches that hunk exactly. This is commensurate prose with no new suites or machinery; base-frontmatter preservation is supported by the supplied patch, not an independent Git comparison.
+- [Pass] Narrow text probe, exit 0: ran the following Python under `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"` (no shell suite execution):
+  ```python
+  from pathlib import Path
+  import shlex
+  s = Path('skills/3-weekly/radar/SKILL.md').read_text()
+  t = Path('test/gh779-radar-ci-health.sh').read_text()
+  pins = [shlex.split(x)[2] for x in t.splitlines() if x.startswith('pin "')]
+  assert pins
+  missing = [p for p in pins if p not in s]
+  print('pins=', len(pins), 'missing=', missing)
+  assert not missing
+  assert pins[0] not in s.replace(pins[0], '')
+  print('red_control_detected=True')
+  p = Path('.relay-artifacts/gh945-relay-diff.patch').read_text()
+  h = p.split('diff --git a/skills/3-weekly/radar/SKILL.md')[1]
+  addition = '\n'.join(x[1:] for x in h.splitlines()
+                       if x.startswith('+') and not x.startswith('+++')) + '\n'
+  assert addition in s
+  print('seeded_skill_addition_matches_current=True')
+  print('old_inbox_exists=', Path('PROJECT/1-INBOX/GH-945-RADAR-VERIFY-ASSET-RECO.md').exists())
+  ```
+  Decisive output: `pins= 17 missing= []`, `red_control_detected=True`, `seeded_skill_addition_matches_current=True`, `old_inbox_exists= False`.
+- [Nit] Review packaging: the immutable seeded patch still shows the original inbox/Proposed state and generation 1399. The current files cited above establish the fix independently; refresh the eventual PR review artifact to include the lifecycle commit.
+- [Unverified — needs clone run] PDDA/shell gates, ledger integrity execution and exact-commit attestation remain for the harness's disposable full-clone gate. No Git commands, suites, or executable fixtures ran in this turn.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the outer gate/publication workflow.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
