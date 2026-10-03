@@ -1,0 +1,20 @@
+[
+  {
+    "path": "skills/1-hourly/sanity-check/SKILL.md",
+    "sha256": "36d37bd307a2a58a46c7210cedca2267f77884175b92acade09dc6c38343c497",
+    "exit_code": 0,
+    "output": "Skill is valid!"
+  },
+  {
+    "path": "skills/3-weekly/whack-a-mole/SKILL.md",
+    "sha256": "d06f8ace212f10cb83db21792fb79d5dee857b208652fdefd4bd6f4e6e35fddd",
+    "exit_code": 0,
+    "output": "Skill is valid!"
+  },
+  {
+    "path": "skills/3-weekly/radar/SKILL.md",
+    "sha256": "124fc436787946049508d952c1f336d2f06c37360179936fdd2305c6813ffb38",
+    "exit_code": 1,
+    "output": "Description is too long (1336 characters). Maximum is 1024 characters."
+  }
+]
