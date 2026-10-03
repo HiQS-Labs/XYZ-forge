@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -195,6 +195,23 @@ blank lines including the restored round2 boundary. Only header values may chang
 Review the complete implementation and policy roundtrip control as before. Write only
 this relay thread; no suites or artifact edits. Valid driver attestation is required
 before final qualification. Earlier round1 candidate gate remains obsolete evidence.
+
+
+### Reviewer (agy) — Round 3
+
+swept file: yes. Swept complete implementation and pre-existing code across `utils/py/claude_cli.py`, `utils/py/profile_resolve.py`, `utils/py/proc_group.py`, `utils/py/consult.py`, `utils/py/claude-turn.py`, and `skills/1-hourly/relay-xyz/SKILL.md`. Pre-existing defects in files touched were examined; no pre-existing defects impede implementation or violate repository contracts.
+
+- `[Pass]` **Policy, AsOf, & Capabilities Roundtrip Equality (`claude_cli.py:68-70`):** `validate_admission` strictly enforces identity between request inputs and response inputs: `response["input"].get("policy") != request["input"]["policy"]`, `response["input"].get("asOf") != request["input"]["asOf"]`, and `response["input"].get("requiredCapabilities", []) != request["input"].get("requiredCapabilities", [])` (`utils/py/claude_cli.py:68-70`). An offline probe confirmed that simulated policy drift, asOf drift, and capabilities mismatch each raise `ValueError("HiQS admission differs from the supported native configuration")` (`utils/py/claude_cli.py:93`).
+- `[Pass]` **Witnessed Red Control for Policy Roundtrip (`policy-mutation.log:13-16`):** Falsification of policy roundtrip enforcement was witnessed and documented in `TESTS-RESULTS/2026-10-03+GH-947/policy-mutation.log:13-16`, demonstrating an `AssertionError` when policy equality was removed. Restored guard passes synthetic control suite (`TESTS-RESULTS/2026-10-03+GH-947/manual-controls.log:45-46`: `"unknown policy constraint cannot be stripped silently: PASS"`).
+- `[Pass]` **Doc Hygiene & Plan Resolution (`PROJECT/2-WORKING/` & `TESTS-RESULTS/`):** The competing review document was moved from `PROJECT/2-WORKING/` to `TESTS-RESULTS/2026-10-03+GH-947/final-review-packet.md` (`TESTS-RESULTS/2026-10-03+GH-947/final-review-packet.md:1-44`), and the canonical plan was updated with `goal: Admit one explicit HiQS recipe through the existing Claude advisory path or refuse before dispatch` (`PROJECT/2-WORKING/GH-947-HIQS-RECIPE-PROFILES.md:10`). A repository-wide `utils/pdda/pdda.sh run` completed with 0 errors (`SUMMARY [pdda-check-roadmap-coverage] errors=0`, `errors=0`).
+- `[Pass]` **Ledger Integrity & Development Rebase (`releases.db` & `releases.sql`):** Integration of `origin/development` (`f7029f8b`) via `releases rebuild` maintains consistent generation trio at 1405 (`python3 utils/py/releases_app.py check`: `OK: generation trio consistent at 1405 (DB <-> dump)`, 0 failures).
+- `[Pass]` **Frozen Twin Invariants (`gh308-frozen-twin-guard.sh`):** Frozen Bash twin guard passed cleanly against development (`bash test/gh308-frozen-twin-guard.sh --base origin/development`: `gh308-frozen-twin-guard: 38 pass, 0 fail`). No new Bash scripts were added (GH-551).
+- `[Pass]` **Syntax & Module Compilation Invariants:** All touched Python modules compile cleanly without syntax errors (`python3 -m py_compile utils/py/claude_cli.py utils/py/profile_resolve.py utils/py/proc_group.py utils/py/consult.py utils/py/claude-turn.py` exited 0).
+
+VERDICT: PASS
+Basis: The policy/asOf/capabilities roundtrip equality in `utils/py/claude_cli.py:68-70` prevents silent stripping of policy constraints, verified by the witnessed red control in `TESTS-RESULTS/2026-10-03+GH-947/policy-mutation.log:13-16`. Repository rails (GH-831, GH-308, GH-551) and PDDA gates remain fully satisfied with zero errors. All citations and spans are verified against HEAD.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
