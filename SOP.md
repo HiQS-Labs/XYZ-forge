@@ -187,6 +187,10 @@ Kill the child by its own PID, or start it with `exec` so the subshell *becomes*
 **verify** with `ps`/`lsof` rather than trusting the kill. A teardown that cannot fail is not a
 teardown — the same rule as `AGENTS.md` §6.
 
+### Never spend hours debugging a red check without establishing its necessity
+
+An in-flight failing test or runner error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
+
 ## 4. Opinionated SOPs (XYZ-maintainer defaults — optional downstream)
 
 > **Who these are for:** These conventions exist to help the **XYZ maintainers** with our own

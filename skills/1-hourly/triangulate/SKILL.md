@@ -19,6 +19,9 @@ argument-hint: "[subject]"
 
 Three lenses, one problem. Ground it, falsify it, then shrink it.
 
+At the start of every assistant turn while Triangulate is active, print the following mantra once in the first visible commentary message, before tools or task updates (not before each tool call):
+> **Triangulate: Ground it. Falsify it. Shrink it.**
+
 Every skill this one calls ships in `skills/` beside it — `recon`, `debug-mantra`, `ponytail`,
 `swe`. Nothing here depends on an external skill pack.
 

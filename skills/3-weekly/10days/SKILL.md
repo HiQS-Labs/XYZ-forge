@@ -222,6 +222,7 @@ means "verdict is current."
 For every issue that survives Step 2, spawn subagents (batch in groups of ~5-6 concurrent) to answer, with receipts:
 
 - `gh issue view <N> --json title,body,comments,state,labels,url` — read the actual ask, comments, and any operator-posted scores.
+- **Requirement & Blocker Validity Filter**: Apply [`sanity-check`](../../1-hourly/sanity-check/SKILL.md) criteria. An open issue reporting a failure is not automatically an INCLUDE: if the failure protects an obsolete requirement, was an unsupported-platform experiment, or is low-consequence noise with a clear deferral path, classify it as EXCLUDE (`reason: "sanity-check: obsolete or low-risk noise"`).
 - **Ledger & PRS cross-check**: query `releases.db` for roadmap items by GH number to extract existing PRS ratings and manual overrides.
 - **Deterministic PRS Scoring Rubric for Unscored or Incomplete Issues (GH-108)**:
   If a candidate has no stored rating, or if stored axis values are partial, non-integer, or out of range `[1, 100]` (or `ovr` is malformed/out of range `[4, 400]`), assign deterministic integer point values based on observable properties:

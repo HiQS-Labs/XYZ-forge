@@ -1,0 +1,81 @@
+{
+  "revision": "d2f9038d5e981de15e69e244a0aa2598e70792d0",
+  "checks": [
+    {
+      "path": "skills/1-hourly/sanity-check/SKILL.md",
+      "sha256": "c976f9b2542889f1c39ee4d41dcee825b8b707d33ecb381c3ee63c615857cd97",
+      "validator_exit": 0,
+      "validator_output": "Skill is valid!\n",
+      "skill_links": [
+        {
+          "target": "../../2-daily/ci-debug/SKILL.md",
+          "exists": true
+        },
+        {
+          "target": "../../4-occasional/ci-optimize/SKILL.md",
+          "exists": true
+        },
+        {
+          "target": "../../3-weekly/whack-a-mole/SKILL.md",
+          "exists": true
+        },
+        {
+          "target": "../../3-weekly/radar/SKILL.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "path": "skills/2-daily/ci-debug/SKILL.md",
+      "sha256": "c46bdc66d00407db8977dcdb6e811d749a481dc8495048aab2426db40f1b0580",
+      "validator_exit": 0,
+      "validator_output": "Skill is valid!\n",
+      "skill_links": [
+        {
+          "target": "../../1-hourly/sanity-check/SKILL.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "path": "skills/3-weekly/whack-a-mole/SKILL.md",
+      "sha256": "d06f8ace212f10cb83db21792fb79d5dee857b208652fdefd4bd6f4e6e35fddd",
+      "validator_exit": 0,
+      "validator_output": "Skill is valid!\n",
+      "skill_links": [
+        {
+          "target": "../../1-hourly/sanity-check/SKILL.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "path": "skills/3-weekly/radar/SKILL.md",
+      "sha256": "124fc436787946049508d952c1f336d2f06c37360179936fdd2305c6813ffb38",
+      "validator_exit": 1,
+      "validator_output": "Description is too long (1336 characters). Maximum is 1024 characters.\n",
+      "skill_links": [
+        {
+          "target": "../../1-hourly/sanity-check/SKILL.md",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "path": "skills/4-occasional/ci-optimize/SKILL.md",
+      "sha256": "e493481493caa6f6113c1dc0467d6220e8903db99420b6e15c0c9aa4e7941e6a",
+      "validator_exit": 0,
+      "validator_output": "Skill is valid!\n",
+      "skill_links": [
+        {
+          "target": "../../1-hourly/sanity-check/SKILL.md",
+          "exists": true
+        },
+        {
+          "target": "../ci-suite-audit/SKILL.md",
+          "exists": true
+        }
+      ]
+    }
+  ]
+}
