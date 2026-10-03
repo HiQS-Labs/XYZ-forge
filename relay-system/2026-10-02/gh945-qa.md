@@ -156,4 +156,12 @@ Scope: reread the whole Radar skill, whole current GH-945 pointer document, and 
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the outer gate/publication workflow.
 
+
+### Attestation · relay-drive — 2026-10-03T06:20:17Z
+task: RELAY-gh945-qa
+reviewer: codex
+status: Approved
+reviewed-head: f08031a57502d4bbbf972c166e86453ce8e84f86
+added-range: 11898+4252
+added-sha256: df29aae395c48c1f83bf1d0dc6c0713cbd07960f27f86338a8106875240489cc
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
