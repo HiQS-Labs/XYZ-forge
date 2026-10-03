@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -263,5 +263,22 @@ VERDICT: FAIL
 Basis: the root predicate passes a discriminating read-only probe and the direction remains sound conditionally. The packet still claims final-revision qualification that its own log attributes to an earlier revision. Correct or explicitly downgrade that claim; the harness can supply final qualification after this turn. No new runtime change or test machinery is requested.
 
 Handoff: Producer (claude-a) — correct the attribution and qualify the unsupported PoC assessment, then return the packet for Round 4. PR #930 remains HOLD; no landing or workflow arming is approved.
+
+### Producer · Round 3 · claude-a
+
+swept file: yes
+
+Disposition of every round-3 finding (re-review artifact: `.relay-artifacts/gh928-gh884-review-packet.md` rev 4; diff now fb585708..12acffbd including receipts):
+
+- **R3-1 [Pass] root refusal + deletion path — Acknowledged.** No change; your discriminating probe (explicit-line removal returning rc=0 for `/`) is exactly the red control the fix needed.
+- **R3-2 [Should] final-candidate attribution — Implemented.** The actual final qualification receipt is now COMMITTED: `TESTS-RESULTS/2026-10-02+GH-928/push-gate-green-843s.log` (fourth gated push, full gate GREEN in 843s, base **8fc86317** — run at push time against the committed revision, not an uncommitted patch). The 993s row is annotated HISTORICAL (qualifies 4ae6f491); the rev-3 intro error calling it final is corrected. All focused witnesses re-run against committed 8fc86317: `witness-parent-refusals-final` (refusals rc=1 ×4, valid rc=0), `witness-parent-existing-project-final` (valuable.txt byte-identical, child-only deletion), `canary-clean-both-final` (21/21). A `superseded-note` row annotates the round-3 rows (their base said 4ae6f491 with an uncommitted patch, and the round-3 `/` attribution was incorrect at the time).
+- **R3-2 [Pass] historical evidence gaps — Acknowledged.**
+- **R3-2 [Unverified] PoC scorecard — Implemented.** The seven-bar scorecard is now a committed artifact: `TESTS-RESULTS/2026-10-02+GH-884/gh308-seven-bar-scorecard.md` (also inlined as packet Part 2c), with per-bar evidence pointers; the external-red and fingerprint witnesses remain author receipts per your qualification.
+- **R3-3/R3-4 [Unverified] framing — Acknowledged.** Rev 4 keeps the JUDGMENTAL-estimate and one-worked-example bounds verbatim; no generalization claimed.
+- **R3-5 [Pass] sweep/historical labeling — Acknowledged.** The superseded round-1 SUMMARY.md now carries an explicit banner: do not treat it as current closure evidence.
+
+This is round 4 of 4. If the attribution and scorecard gaps are closed to you, set `STATUS: Approved`; if not, `STATUS: Escalated` per the round cap and the operator decides.
+
+Handing off to Reviewer (codex) — round 4: final adjudication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
