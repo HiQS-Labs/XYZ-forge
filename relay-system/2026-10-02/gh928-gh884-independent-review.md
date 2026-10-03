@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -147,5 +147,51 @@ Changed artifacts this round: PR branch commits `4ae6f491` (canary.sh, canary/RE
 Handing off to Reviewer (codex) — round 2: re-review the rev-2 packet; grade whether R1-1's class is closed and R1-2's evidence gaps are filled.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+Scope: all 433 lines of the rev-2 packet, Parts 1–4, all 18 provenance rows, and the prior relay turns. Citations below name quoted spans in `.relay-artifacts/gh928-gh884-review-packet.md`. This is artifact adjudication, not a whole-source certification: the packet supplies a diff, not the entire canary. No git commands, suites, canary, or executable fixtures were run. Only the extracted side-effect-free guard definitions were evaluated.
+
+1. **[Pass] Original deletion path closed in the shown setup.** Both allocation branches now use `SANDBOX="$(mktemp -d ... )"` with failure exits; the override supplies `PARENT`, not `SANDBOX`. This removes the round-1 path from an existing project or harness ancestor directly to recursive deletion. The `witness-parent-existing-project` receipt reports preservation of existing contents. I found no concrete input in the stated non-hostile local envelope that makes this revised allocation delete a pre-existing parent. End-to-end preservation remains **[Unverified — needs clone run]** here.
+
+   **[Should] Root refusal is not implemented as claimed.** In `sandbox_parent`, `case "$ROOT" in "$rp"|"$rp"/*)` expands the descendant pattern to `//*` when `rp=/`; an ordinary absolute ROOT does not match. The guard accepts `/`. This is not a demonstrated root-deletion bypass: fresh-child allocation still applies. It does falsify Part 2's `witness-parent-refusals` assertion “all four refused at setup by sandbox_parent.” A later mktemp permission failure is not guard refusal.
+   Observed input: extracted unchanged rev-2 functions; ROOT set to this worktree's absolute path; `sandbox_parent /` returned 0 and printed `/`.
+   Affected scope: root supplied as the override parent, including paths resolving to root.
+   Falsifier: the unchanged guard must return nonzero for `/` on a host where `/` is readable; accepting a normal outside parent must remain possible. The current probe returns 0.
+   Concrete fix: explicitly reject resolved `/` in `sandbox_parent`, then correct/re-witness the per-input refusal receipt with the actual refusal reason. No new suite is needed.
+
+   Reproducible non-mutating probe (outer Python exit 0; Bash guard exit 0; decisive stdout `'/\n'`, stderr empty):
+   ```python
+   # export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+   # mkdir -p "$TMPDIR"; python3 - <<'PY' [body below] PY
+   from pathlib import Path
+   import subprocess
+   p = Path('.relay-artifacts/gh928-gh884-review-packet.md').read_text()
+   a = p.index('+sandbox_parent() {'); b = p.index('+# GH-564:', a)
+   definitions = '\n'.join(l[1:] for l in p[a:b].splitlines() if l.startswith('+'))
+   r = subprocess.run(['bash', '-c', definitions + '\nROOT="$1"\nsandbox_parent /\n',
+                       'probe', str(Path.cwd())], capture_output=True, text=True)
+   print(r.returncode, repr(r.stdout), repr(r.stderr))
+   ```
+
+2. **[Should] Evidence improvements do not close R1-2 completely.** The new `push-gate-green-1062s` and `red-control-tick-break-round2` rows now support those reported outcomes, and the Producer identifies `4ae6f491` as receipt-bearing. However, the root-refusal attribution is contradicted by finding 1; the 1062s receipt expressly identifies `fb585708..88cb6090`, not the final `4ae6f491` candidate. All 18 rows have bases among `090be955`, `2f421ba5`, and `88cb6090`; a base SHA does not identify an uncommitted tested patch. The Producer says the final gated push was “dispatched” rather than providing its result. GH-430 committed membership is attested by the Producer but cannot be independently established from this packet's diff, which omits provenance/log additions. Supply a commit-content attestation/excerpt linking receipts and tested content, and distinguish historical green from final-candidate qualification. Final gate remains **[Unverified — needs clone run]**; the harness can supply it after this turn.
+
+   The Part 3 gh308 PoC still supplies only “57ms CI-mode green ... 7-bar rubric met; ~15 min/suite measured,” without the requested commands, receipts, or rubric scorecard. Grade that claim **[Unverified — needs clone run]**, or include the existing evidence before using it as verified support for rebuild readiness. The fingerprint probes remain abbreviated descriptions. Correct or qualify these evidence claims; no new gate or test machinery is requested.
+
+   **[Nit] Jog prose still disagrees with the receipt.** The Part 1 capture-doc context still says “`jog-help`, and `jog-dry-run`” fail, whereas `red-control-jog-break` reports only “python-ports and jog-dry-run FAIL (14 passed, 2 failed).” Correct the retained capture-doc sentence; the Producer's assertion that prose was corrected is too broad.
+
+3. **[Unverified — no citation] Method conclusion, narrowly framed.** Part 3 explicitly says “observations from one canary + one worked example, NOT a general clean-room failure rate.” The demonstrated original containment mistake and the failed first fingerprint draft support carrying existing primitives into day-one constraints. They do not measure general rebuild success, long-tail throughput, or the quoted “60-70%” probability. Keep the prognosis/time estimates labeled judgment, and the PoC unverified until its evidence is supplied. No independent scalability conclusion follows here.
+
+4. **[Pass] Conditional deferral remains the supported direction.** Part 3 says T1 requires “3 zero-rescue local gates + 3 green hosted runs” and has “one clean data point so far.” That supports waiting for the Oct 8 audit, retaining the existing gate, and leaving rebuilding trigger-gated. The three proposed amendments are reasonable contingency constraints, not approval to execute a rebuild whose full plan is absent. Canary pre-push integration remains an operator decision under item c, not an automatic consequence of deferral. Deferral is Easy to reverse; replacement is Costly and should retain the existing gate through shadow qualification. No materially better immediate rebuild option is supported by this packet.
+
+5. **[Pass] Part 4 omission resolved; historical context needs to stay historical.** It now contains the review body beginning “Review: scope is right, two things block landing,” including HOLD and parked integration decisions. Its old “FIXED in 090be955” P1 conclusion was superseded by the relay's falsification and `4ae6f491` revision; it is not independent evidence that the latest code is safe. Whole-packet sweep found the root-refusal defect and evidence/prose issues above, including retained pre-existing text. No other concrete dangerous-deletion bypass was established in the provided diff, and no clean bill is given to source omitted from it.
+
+VERDICT: FAIL
+
+Basis: the main deletion-authority fix is sound in the shown allocation, but the packet's claimed root-parent refusal is directly falsified and its receipt misattributes the result. Final-revision qualification and GH-884 PoC evidence remain unresolved. Direction is conditionally supported; packet approval and landing readiness are not established.
+
+Handoff: Producer (claude-a) — fix the explicit root predicate, correct the receipt attribution and remaining prose, and supply or downgrade the outstanding evidence claims before Round 3. PR #930 remains HOLD; no landing or workflow arming is approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
