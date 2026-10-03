@@ -31,7 +31,7 @@ prerequisites, explicitly authorized by operator. No merges or live pilot author
 
 | What was just completed | What's next |
 | --- | --- |
-| Optional source implemented against HiQS 452f6e4; focused/manual controls pass | Final Agy review, full disposable-clone gate, draft PR |
+| Optional advisory source implemented; Agy plan/final attested, focused/manual controls and full local gate pass | [Draft PR954](https://github.com/HiQS-Labs/XYZ-forge/pull/954); PR29/PR6 publication prerequisite, maintained recipe and authorized live pilot block milestone |
 
 ## Recon / ownership
 
@@ -161,7 +161,25 @@ No source or provider credentials are sent to resolver child (minimal environmen
 
 ### Final QA disposition
 
-Agy final review attested Approved at 2a689940 (reviewed 624eb29f), driver exit0.
-Nit implemented: goal added to canonical PDDA plan; review packet moved into committed
-TESTS-RESULTS artifacts, where it is not a competing active GH947 document. No runtime
-code changes. Full qualifying gate follows in fresh disposable full clone.
+Agy final round1 was attested Approved; the subsequently observed policy-stripping
+falsifier required the three equality guards in 1dc04f05. Round2 textual PASS was
+rejected for a removed blank line (driver exit4); it is not valid approval. Round3
+preserved the bytes and attested Approved at fc0c19ae (reviewed a9c7335d), driver exit0,
+within the cap3. No runtime changes followed this approval.
+
+Full ci-local gate ran once on the final approved fc0c19ae in the fresh canonical-remote
+full clone: all 10 steps passed, 409 verdict entries (408 pass, one duplicate acorn skip
+already executed in the npm stage), zero failures. Origin/HEAD/tree unchanged. The old
+29a9d369 candidate also passed but is obsolete after the policy fix and is not reused.
+[Full gate evidence and limits](../../TESTS-RESULTS/2026-10-03+GH-947/SUMMARY.md).
+Development 7f899059 adds only docs compared with the task integration base f7029f8b;
+the full gate used origin/development at 7f899059. PR954 remained mergeable. Reporting/docs/ledger changes after qualification receive
+narrow verification; no production changes or new suites.
+
+[Draft PR954](https://github.com/HiQS-Labs/XYZ-forge/pull/954) remains merge-blocked on
+HiQS PR6/PR29, actual published recipe and separately authorized live advisory proof.
+Published with the documented XYZ_SKIP_PREPUSH draft/previously-gated route; the hook
+was skipped, not passed. Hosted smoke passed; PR workflow skips macOS/Ubuntu full gates,
+so local evidence is not promotion qualification. Issues stay open/in progress.
+Retain the sibling task clone `../XYZ-forge-task-gh947-20261003` until verified
+landing; /merge-cleanup can then reconcile and retire it. Primary checkouts preserved.
