@@ -1,0 +1,4 @@
+source: origin/feat/sharpen-skills-army-hq @ a2af20b16df5fd7b61f5b02ef887e90d72d0cf11
+ skills/3-weekly/skills-army-hq/SKILL.md    | 14 ++++++++++++--
+ skills/3-weekly/skills-army-hq/UPSTREAM.md | 17 -----------------
+ 2 files changed, 12 insertions(+), 19 deletions(-)

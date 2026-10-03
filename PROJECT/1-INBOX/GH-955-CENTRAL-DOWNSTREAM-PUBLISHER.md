@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Intake, ground-truth recon, plan draft (2026-10-03) | Codex plan QA, then operator questions, then execution |
+| Plan QA round 1 (Codex: FAIL, F1–F6 all adopted; F1 modified to a one-time setup commit instead of an `--adopt` flag) | Operator answers Q1–Q5, then QA round 2, then execution |
 
 ## Problem (observed)
 
@@ -45,7 +45,9 @@ All 21 HiQS-Labs repos were scanned on 2026-10-03.
 |---|---|---|---|
 | XYZ-mini | `utils/py/xyz_mini_sync.py` (default `xyz-mini` target) | MANIFEST.txt + `.xyz-forge-revision` | 44 tracked, 41 manifest rows, `TODO.md` is seed |
 | XYZ-skills-army-mini | `xyz_mini_sync.py --target skills-army-mini` (retired by #882 / #950) | MANIFEST.txt + `.xyz-forge-revision` | 11 tracked, no divergence |
-| AgentChorus-Skill | a **second, separate** publisher: `skills/2-daily/agent-chorus/sync-to-standalone.sh` + `publish-manifest.tsv` (bash, 149 lines) | `.xyz-canonical-revision` only; **no MANIFEST.txt** | 15 tracked; last sync 2026-09-29 (`c7ea57fde`); **its CI has been red since 2026-08-24** |
+| AgentChorus-Skill | a **second, separate** publisher: `skills/2-daily/agent-chorus/sync-to-standalone.sh` + `publish-manifest.tsv` (bash, 149 lines) | `.xyz-canonical-revision` only; **no MANIFEST.txt** | 15 tracked = 14 TSV rows (13 payload files + the TSV itself) + the marker; last sync 2026-09-29 (`c7ea57fde`); **its CI has been red since 2026-08-24** |
+
+Receipts for the scan, history and CI claims: `TESTS-RESULTS/2026-10-03+GH-955/recon/` (org list, per-repo markers, XYZ-skills-army-mini commits since 10-01 and tag count, AgentChorus-Skill CI runs, the #934 diff and its source SHA).
 
 Out of scope, recorded:
 
@@ -58,7 +60,7 @@ Out of scope, recorded:
 |---|---|---|
 | Manifest | Python tuple per target; directory entries expand to tracked files | TSV of individual files with declared mode 644/755 |
 | Modes | managed / seed / adapted | managed only |
-| Destination-only files | survive (an operator `NOTES.local` is kept) | **refused** (strict mirror) |
+| Destination-only files | survive (an operator `NOTES.local` is kept) | destination-only **tracked** files refused (strict mirror) |
 | Ownership guard | refuses to overwrite a file the last publication did not write | none (strict mirror instead) |
 | Secret scan | yes (exit 4) | no |
 | Provenance | `.xyz-forge-revision` (repo / sha / branch / dirty) | `.xyz-canonical-revision` (sha) |
@@ -76,7 +78,7 @@ The AgentChorus-Skill CI (`skills/2-daily/agent-chorus/standalone/ci.yml`, publi
 ## Preflight bet check
 
 - **Outcome sought:** one upstream and one command to refresh one, several, or all downstream repos. No second publisher drifting (the agent-chorus script already lacks the secret scan, the ownership guard, and the #950 adapted rules).
-- **Smallest viable bet:** generalize the existing `xyz_mini_sync.py`, which already has target profiles. Add an `agent-chorus` profile, multi-target selection, a `--check` mode, and a one-time `--adopt` for a child that has no MANIFEST.txt. Retire the bash publisher. Reverse the #882 wording.
+- **Smallest viable bet:** generalize the existing `xyz_mini_sync.py`, which already has target profiles. Add an `agent-chorus` profile, multi-target selection, and a read-only `--check` mode. AgentChorus-Skill gets one reviewed setup commit (no permanent flag). Retire the bash publisher. Reverse the #882 wording.
 - **Alternatives rejected:**
   - *Keep two publishers.* That is the drift the operator wants gone.
   - *Make the bash script the shared one.* It lacks the safety logic, and porting that logic to bash is the larger job.
@@ -95,53 +97,70 @@ R5. Existing guarantees hold: XYZ-mini adapted ownership (#950), the ownership g
 
 1. **Multi-target CLI** (`utils/py/xyz_mini_sync.py`, `main`).
    - `--target` becomes repeatable and accepts `all`. The default stays `xyz-mini`.
-   - The current single-target body moves into `publish_one(target, args)`, unchanged. `main` loops over the selected targets in a fixed order, keeps going after one fails, prints one summary line per target, and exits with the worst code (4 > 3 > 2 > 0).
+   - The selection is deduplicated: a target named twice, or named alongside `all`, publishes once, in profile order.
+   - The current single-target body moves into `publish_one(target, args)`, unchanged. `main` loops over the selection, keeps going after a target fails, prints one summary line per target, and exits with the worst code (4 > 3 > 2 > 1 > 0).
    - `--dest` is refused when more than one target is selected (exit 2).
-   - *Verify:* `test/gh589-xyz-mini-sync.sh` keeps passing for a single target. Two new assertions go in the existing suite: `--target xyz-mini --target agent-chorus` plus `--dest` refuses; `--target all --print-manifest` lists every profile.
+   - *Verify (existing gh589, new assertions):*
+     - `--target A --target B --dest X` refuses.
+     - `--target all --print-manifest` lists every profile.
+     - Behavioural check: two targets via their env dests, the first refused (dirty destination) and the second clean. Expect exit 2, the second target published, and one summary line each.
+     - Red control: short-circuit the loop after the first failure; the assertion must fail.
 2. **Un-retire skills-army-mini.**
    - Delete `RETIRED_TARGETS` and its refusal (added by #950).
-   - Drop the `XYZ_ALLOW_RETIRED_TARGET` opt-in and the default-refusal assertion from `test/gh620-skills-army-mini-sync.sh`.
-   - *Verify:* gh620 passes with no opt-in. A red control re-adds the refusal and gh620 fails.
+   - In `test/gh620-skills-army-mini-sync.sh`, drop the `XYZ_ALLOW_RETIRED_TARGET` opt-in and the default-refusal assertion.
+   - Update the existing exact-set expectation (line ~69) to the nine-file payload without `UPSTREAM.md`, and refresh its retirement comments.
+   - *Verify:* gh620 passes with no opt-in and still fails if a required payload is omitted.
 3. **`agent-chorus` profile.**
-   - The 15 TSV rows become a Python manifest tuple, all `managed`. The TSV row that ships `publish-manifest.tsv` itself is dropped, and the TSV is deleted.
+   - The TSV's **13 payload rows** become a Python manifest tuple, all `managed`. The row that ships the TSV itself is dropped, and the forge TSV is deleted.
    - Profile: env `AGENT2AGENT_STANDALONE_REPO` (kept for compatibility), sibling `AgentChorus-Skill`, log `agent-chorus-sync`.
-   - *Verify:* a preview against a throwaway clone of the real AgentChorus-Skill lists exactly its 15 paths with no deletions.
-4. **`--adopt` (one-time; for a child without MANIFEST.txt).**
-   - Allowed only when the child has no MANIFEST.txt.
-   - It treats child files the manifest names as owned, so the ownership guard does not refuse to overwrite them.
-   - It removes the superseded `.xyz-canonical-revision` in the same commit.
-   - It refuses on any other existing MANIFEST.txt.
-   - Destination-only files survive, which matches the central publisher's semantics (the strict-mirror question is Q3).
-   - *Verify:* a gh589 assertion that `--adopt` on a seeded child with unmanifested identical paths succeeds and writes MANIFEST.txt; without `--adopt`, the same run refuses.
-5. **`--check` mode** (replaces the bash `--check` for downstream CI).
-   - Read-only: exit 0 when every managed path is byte-identical to the source at HEAD, with the same executable bit, and `.xyz-forge-revision`'s `source_sha` equals HEAD. Otherwise exit 1, naming each drifting path.
-   - Adapted and seed paths are not compared.
-   - *Verify:* gh589 asserts check passes right after a publication and fails after one managed byte is changed (red control).
+   - *Verify:* a preview against a throwaway clone of the real child, after the step-4 setup commit, plans 13 payload copies and 0 deletions.
+4. **AgentChorus-Skill one-time setup** (replaces the proposed `--adopt` flag; Codex F1/F3, cheaper option).
+   - After merge and before its first central publication, one reviewed commit in the child:
+     - writes `MANIFEST.txt` listing the 13 payload paths;
+     - deletes the legacy `.xyz-canonical-revision` and `skills/agent-chorus/publish-manifest.tsv`.
+   - The commit is generated by a documented one-liner (`--print-manifest`, then `git rm` both legacy paths) and pushed.
+   - From then on the ordinary publisher, guard and retry apply with no special case. No permanent adoption code exists to keep correct across retries.
+   - *Verify (in a disposable clone of the child):*
+     - The setup commit plus a normal `--push` yields exactly the 13 payload files, MANIFEST.txt and `.xyz-forge-revision`, with both legacy paths absent.
+     - An unrelated tracked note survives.
+     - Without the setup commit, the ownership guard refuses.
+5. **`--check` (read-only managed-parity check for the child CI)** (Codex F2).
+   - A separate path that **skips `destination_ready`**: no branch requirement, no origin query. It works on a detached PR checkout.
+   - It is refused together with `--apply` or `--push` (exit 2, nothing written).
+   - Exit 0 when every **managed** path is byte- and executable-bit-identical to the source at HEAD and `.xyz-forge-revision`'s `source_sha` equals HEAD. Otherwise exit 1, naming each drifting path.
+   - Seed and adapted paths are not compared. It is reported as "managed parity", not whole-child identity.
+   - Multi-target `--check` aggregates per the step-1 precedence.
+   - *Verify (gh589 assertions):*
+     - A detached, matching child passes.
+     - One changed managed byte or mode returns 1 and names the path (red control).
+     - A mixed matching and drifting multi-target run returns 1.
+     - `--check --apply` refuses and leaves bytes, index and HEAD untouched.
 6. **AgentChorus standalone CI and docs.**
-   - `standalone/ci.yml`: read `source_sha` from `.xyz-forge-revision`, then run `python3 utils/py/xyz_mini_sync.py --target agent-chorus --dest "$GITHUB_WORKSPACE" --check` in the forge clone. Fix the smoke step path to `skills/agent-chorus/test-standalone.sh`.
-   - Update `agent-chorus/README.md` and `standalone/README.md` to point at the central publisher.
+   - `standalone/ci.yml`: read `source_sha` from `.xyz-forge-revision`, check out the forge at that SHA, and run `python3 utils/py/xyz_mini_sync.py --target agent-chorus --dest "$GITHUB_WORKSPACE" --check`. Fix the smoke step to `skills/agent-chorus/test-standalone.sh`.
+   - Update `agent-chorus/README.md` and `standalone/README.md`.
    - Delete `sync-to-standalone.sh` and `publish-manifest.tsv`.
-   - *Verify:* path-integrity passes, and grep finds no remaining `sync-to-standalone` reference outside history.
-7. **Reverse #882 in docs.**
+   - *Verify:* path-integrity passes, and no `sync-to-standalone` reference remains outside history.
+7. **Reverse #882 in docs and routing.**
    - Delete `skills/3-weekly/skills-army-hq/UPSTREAM.md`.
-   - Un-retire `skills/3-weekly/push-to-skills-army-mini/SKILL.md`, or fold it per Q2.
+   - Un-retire `push-to-skills-army-mini`, or fold it per Q2.
    - Revert the #882 wording in `skills/README.md`, `ROUTER.md:220`, `ARCHITECTURE.md`, and the `push-to-xyz-mini` / ADAPTATIONS text.
-   - Land #934's two `SKILL.md` edits, taken from `origin/feat/sharpen-skills-army-hq`.
+   - Land #934's two `SKILL.md` edits from `origin/feat/sharpen-skills-army-hq` (receipt: `recon/gh934-diff.txt`).
    - Update `PROJECT/2-WORKING/GH-882-SKILLS-ARMY-UPSTREAM.md` and the CHANGELOG.
    - `utils/ci-route.sh` keeps routing the skills-army paths to gh620.
-   - *Verify:* `gh267`-style doc pins are unaffected; path-integrity passes; `skills-army-hq.sh` passes.
+   - **Transferred backlog (Codex F6):** #506 / #676 / #837 / #881 moved to mini #4 / #5 / #6 / #7. Give each one canonical home per Q5. The forge rows and docs (for example `PROJECT/4-MISC/GH-506-…`, superseded "because upstream moved") are re-pointed through the releases writer. No feature work.
+   - *Verify:* path-integrity passes; `skills-army-hq.sh` passes; no duplicate active plan exists for a transferred item.
 8. **Gate and previews.**
    - Run the focused suites (gh589, gh620, path-integrity, skills-army-hq) during iteration.
    - Run the full gate once on the final commit.
    - Run read-only previews (no `--apply`) against all three real children and record the plan lines in `TESTS-RESULTS/2026-10-03+GH-955/`.
-   - Expected: XYZ-mini "delete 0"; skills-army-mini "delete 0"; agent-chorus refuses without `--adopt` and plans 15 paths with it.
+   - Expected: XYZ-mini "delete 0"; skills-army-mini "delete 0"; agent-chorus refused by the ownership guard until the step-4 setup commit exists.
 
 After merge, closing actions (not in this PR):
 
 - Comment on and close #882 as reversed.
 - Comment on mini#2 and mini#3.
 - Reopen #933 as landed via #955.
-- The operator runs the first `--target all` publication: `--adopt` once for agent-chorus, then `--push`.
+- The operator runs the step-4 setup commit in AgentChorus-Skill, then the first `--target all --push` publication.
 
 ### Non-goals
 
@@ -156,7 +175,7 @@ After merge, closing actions (not in this PR):
 ### Risks
 
 - **Retiring the bash `--check` while the child CI still calls it.** Mitigation: `ci.yml` is a managed file of the profile, so the first central publication replaces it in the same commit.
-- **`--adopt` overwriting child-only content.** Mitigation: it only claims manifest-named paths, and it refuses when MANIFEST.txt exists.
+- **The setup commit claiming child-only content.** Mitigation: it lists only the 13 manifest-named payload paths, and the first publication's preview shows exactly what changes.
 - **Multi-target partial failure.** Mitigation: targets are independent, and each publication is its own child commit; a summary line is printed per target.
 
 ## Open operator questions (asked after plan QA, before execution)
@@ -165,6 +184,7 @@ After merge, closing actions (not in this PR):
 - **Q2.** One operator skill for all targets (fold `push-to-xyz-mini` and `push-to-skills-army-mini` into one), or keep one skill per target?
 - **Q3.** Should AgentChorus-Skill lose its strict-mirror behaviour (refusing destination-only files) and adopt the central "unrelated files survive" rule?
 - **Q4.** Keep the filename `utils/py/xyz_mini_sync.py` (less churn), or rename it to match its wider job?
+- **Q5.** The issues #882 transferred (#506 / #676 / #837 / #881, now mini #4 / #5 / #6 / #7): transfer them back to the forge, or keep them tracked in XYZ-skills-army-mini as that child's own backlog?
 
 ## Rating (2026-10-03)
 
@@ -175,3 +195,15 @@ After merge, closing actions (not in this PR):
 - **Appeal:** neutral 50; the operator gave no score.
 - **Effort 50:** generalizes an existing ~380-line module, plus docs.
 - **Recurrence:** publisher-drift class over the last 14 days: #951 (mini deletion hazard), #934 / #933 (upstream confusion), and the agent-chorus CI red since 08-24. These are distinct incidents with related causes, not one cross-posted incident.
+
+## Plan QA dispositions: round 1 (Codex, `relay-system/2026-10-03/gh955-plan-qa.md`)
+
+| Finding | Disposition |
+|---|---|
+| F1 adoption vs. retained-commit retry | **Modified:** dropped the `--adopt` flag. A one-time reviewed setup commit in AgentChorus-Skill (step 4) leaves the publisher and retry logic with no special case. |
+| F2 `--check` must bypass `destination_ready` | **Implemented:** step 5 adds a separate read-only path, detached-checkout safe, refused with `--apply` / `--push`, with exit 1 in the precedence. |
+| F3 13 payload rows; the legacy TSV stays in the child | **Implemented:** counts corrected; the setup commit removes both legacy paths. |
+| F4 gh620's exact set still lists UPSTREAM.md | **Implemented:** step 2 updates the expectation to nine files. |
+| F5 no behavioural multi-target check; dedup | **Implemented:** step 1 adds a two-target continue-on-failure assertion with a red control, plus dedup. |
+| F6 transferred backlog ownership | **Implemented as an operator decision:** step 7 plus Q5. |
+| Unverified remote claims | **Implemented:** receipts in `TESTS-RESULTS/2026-10-03+GH-955/recon/`. |
