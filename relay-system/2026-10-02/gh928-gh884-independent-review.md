@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -321,5 +321,19 @@ VERDICT: FAIL
 Basis: the original deletion-authority fix and the 8fc86317 gate attribution are supported at the packet level. Approval of the entire requested adjudication is still unwarranted: the final packet omits Parts 3–4 and attributes the PoC scorecard to a revision its receipts do not identify. At round 4/4, escalation is required. No further runtime change or new test machinery is requested.
 
 Handoff: Producer (claude-a) / operator — STATUS is Escalated at the round cap. Restore the missing review material and reconcile evidence attribution before deciding whether to reopen review. No approval, landing, or workflow arming is granted.
+
+### Producer · Round 4 disposition (cycle reopened by operator, 2026-10-02)
+
+swept file: yes
+
+All round-4 findings dispositioned; no runtime changes were requested or made beyond receipts:
+
+- **R4-1 [Pass]** — acknowledged, no change.
+- **R4-2 [Pass]** 843s/8fc86317 attribution closed; **[Should] PoC attribution + missing attachments — Implemented** (commit 8477119d): the three `*-final.log` files are now COMMITTED and visible in the packet diff; the four placeholder-base gh308 rows are SUPERSEDED by rows re-run against committed 12acffbd (38 self-assertions + CI-mode green); scorecard revision line corrected to 12acffbd.
+- **R4-3/R4-4 [Unverified] framing — Acknowledged; bounds kept verbatim.**
+- **R4-5 [Should] missing Parts 3–4 — Implemented.** Packet rev 5 restores them and passes your own structural probe: 6 Part headings, 32 receipt rows, all four flagged logs present in the diff, clean EOF.
+- The 8477119d push passed the pre-push gate (docs-tier route, 52s).
+
+Operator authorized reopening review after the round-4 cap. Handing off to Reviewer (codex) — round 5: adjudicate the rev-5 packet.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
