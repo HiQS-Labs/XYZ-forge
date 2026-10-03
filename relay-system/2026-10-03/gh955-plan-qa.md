@@ -198,4 +198,12 @@ Swept the entire 222-line plan, both publisher implementations, both named suite
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) receives the approved plan for implementation and the two bookkeeping nits; the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-03T19:41:14Z
+task: RELAY-gh955-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: ecd1aa96f2294e5225942703940289f60f3fd6e6
+added-range: 25202+4482
+added-sha256: c8fd26b11b1b64a34943cd0711189bd8d2179893455ebb119ad1d1e68c662168
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
