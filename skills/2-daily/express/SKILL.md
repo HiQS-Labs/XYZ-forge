@@ -1,19 +1,18 @@
 ---
 name: express
 description: >
-  Hotfix fast lane (GH-267/GH-516) for an explicit `/express`, "express this hotfix",
+  Hotfix fast lane (GH-267/GH-516) for an explicit /express, "express this hotfix",
   or "express GH-N" request. Carries a critical, risk-bounded fix, registered
   existing covering suite, releases-ledger updates, born-complete PDDA doc, CHANGELOG,
-  landing, and reconciliation in one operator-authorized motion. Requires a
-  task clone branched from origin/development (carrying <= 2 local commits) with the
-  canonical pre-push gate installed, authenticated gh, and the root releases ledger. The
-  driver commits and fast-forward pushes directly to development, verifies the
-  commit and issue closure, then reconciles with `wave_reconcile --commit`.
-  Supports --dry-run across commands, contextual subsystem tolerance (--allow-multi-subsystem
-  or <= 30 insertions across <= 2 files), an explicit `resume` subcommand to recover
-  interrupted runs, and central telemetry mirroring (~/.config/xyz/events/).
-  Refuses shared/stale clones, diverged branches, > 2 commits, unsafe Git/Bash/kernel surfaces,
-  oversized diffs, generated-artifact hand edits, missing/red suites, and closed or unresolved
+  landing, and reconciliation in one operator-authorized motion. Requires a task
+  clone branched from origin/development (carrying <= 2 local commits) with the
+  canonical pre-push gate installed, authenticated gh, and the root releases ledger.
+  The driver commits and fast-forward pushes directly to development, verifies the
+  commit and issue closure, then reconciles with wave_reconcile --commit. Supports
+  --dry-run, subsystem tolerance (--allow-multi-subsystem or <= 30 insertions across
+  <= 2 files), resume, and telemetry mirroring. Refuses shared/stale clones,
+  diverged branches, > 2 commits, unsafe Git/Bash/kernel surfaces, oversized diffs,
+  generated-artifact hand edits, missing/red suites, and closed or unresolved
   issues. Do not use for Costly or one-way-door changes.
 ---
 
