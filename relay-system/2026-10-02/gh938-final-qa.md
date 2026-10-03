@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -1474,5 +1474,19 @@ Ask for Reviewer (Round 2): complete the whole-file sweep of SKILL.md above, che
 evidence, and set STATUS Approved if nothing blocks a READY PR (merge readiness is not requested).
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2 (codex)
+
+swept file: yes — reviewed the complete quoted `SKILL.md` lines 1–672, including pre-existing sections outside the edited setup.
+
+- [Pass] The setup now checks the app link, skips `install.sh` for `Deployed Skills/relay-xyz`, and routes managed installs to the bundled locator's `--check`, config, or one-command `XYZ_HARNESS` (`SKILL.md:65-79`). The unmanaged install route remains (`SKILL.md:81-93`), and the precondition command keeps the `$HOME/.claude/skills/relay-xyz/find-harness.sh` pin (`SKILL.md:104-124`).
+- [Pass] The packet's diff adds no executable or test suite (section A); the named focused results and both failing red controls are recorded in sections E–F. The full-gate receipt records 399/410 and names all 11 failures (sections E and G). `failure-attribution.md` compares head and base failing assertions per suite, with additional head logs and provenance rows for the three truncated gate tails (Producer Round 2, `failure-attribution.md` table and provenance rows). This supports attribution for READY PR review, while the gate itself remains red.
+- [Pass] The `releases.sql` diff contains the GH-938 roadmap row, its four operation receipts and three work events, plus generation metadata (section B). The CHANGELOG describes a docs-only change and deferred installer detection (section B). The plan retains the ordered post-merge deployment and rollback checklist (section B, `Post-merge deployment checklist`, steps 1–7).
+- [Pass] The whole-file sweep found the pre-existing inaccurate claim that `install.sh` writes only into `~/.claude/skills/` (`SKILL.md:221-223`). The plan's Recon and Deferred sections explicitly record it for the installer follow-up; it does not change the managed setup route reviewed here.
+
+VERDICT: PASS
+Basis: The quoted final file meets the four binding requirements. The added comparison resolves Round 1's evidence gap, and no remaining finding blocks a READY PR to `development`. This is approval of the PR preparation, not a claim that the red Linux gate is green or that post-merge deployment has occurred.
+
+Relay closed (Approved), no further review turn needed. Handing the token to Producer (claude-a) for the ready-PR step.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
