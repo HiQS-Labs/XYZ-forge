@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 5 / 6
 
@@ -335,5 +335,56 @@ All round-4 findings dispositioned; no runtime changes were requested or made be
 - The 8477119d push passed the pre-push gate (docs-tier route, 52s).
 
 Operator authorized reopening review after the round-4 cap. Handing off to Reviewer (codex) — round 5: adjudicate the rev-5 packet.
+
+
+### Reviewer · Round 5 · codex
+
+swept file: yes
+
+Scope: all 1,336 lines of rev 5, Parts 1–4 including retained context, all 32 inlined provenance rows, and the entire relay history. Citations below refer to .relay-artifacts/gh928-gh884-review-packet.md. The complete graph project inventory has no index for this worktree; direct document review is the relevant evidence, not another checkout's graph. No git, canary, suites, pytest, or executable fixtures were run. This is packet adjudication, not certification of whole source omitted from its diff.
+
+1. **[Pass] Fix round soundness remains supported within the stated local envelope.** The explicit root refusal (packet:1033), fresh-child allocation in both branches (packet:1179–1181), and guarded teardown (packet:1193–1194) preserve the prior round's resolution. Caller-supplied existing parents no longer become deletion targets. The independent discriminating probe from Round 3 remains relevant; the author receipt at packet:1255 reports “valuable.txt byte-identical; pre-existing logs/ untouched; child-only deletion.” No new concrete dangerous-deletion bypass was established in the supplied material. End-to-end preservation is still **[Unverified — needs clone run]** by this reviewer; no rerun is claimed.
+
+2. **[Pass] Missing attachments and the bounded gh308 green-run attribution are resolved.** Part 1 now includes the three GH-928 final logs (packet:355, 867, 949) and gh308 final logs (packet:132, 148). The matching receipt at packet:1267 identifies committed 12acffbd for the self-test and CI-mode re-witness; the scorecard at packet:1277 agrees. Both provenance files appear in the declared committed diff. That meets the requested packet-level GH-430 membership evidence for the reported historical runs, subject to the earlier distinction between supplied receipts and independent git attestation.
+
+   **[Should] Final-candidate full-gate attribution is still wrong in the restored recommendation.** Packet:1300 says “Final candidate 8477119d pushed through the full local gate green.” The latest full-gate receipt, packet:1253, identifies 8fc86317 (843s), with the matching push log at packet:677–680. No provenance row identifies 8477119d. More decisively, the latest Producer disposition says “8477119d push passed the pre-push gate (docs-tier route, 52s).” A docs-tier push is not a full-registry run.
+   Concrete fix: replace the sentence with the two distinct facts: the runtime revision 8fc86317 has the 843s full-gate receipt; receipt-only 8477119d has the reported 52s docs-tier push, whose receipt must be supplied if cited as evidence, or explicitly mark that latest push as author-reported/unverified. Simply withdrawing the unsupported latest-gate claim is sufficient. Do not rerun the full suite merely to make this sentence true, and do not relabel the historical log. This is an evidence correction, not a behavior-change request.
+
+   **[Unverified — needs clone run] PoC limits remain.** The 12acffbd receipt explicitly re-witnesses the bare self-test and CI-mode only; it does not establish fresh external-red/fingerprint runs on that revision. Those remain historical author attestations (packet:1265–1266), not four newly reproduced cases. Read the scorecard accordingly; its “partial” determinism qualification (packet:1286) and one-example bound (packet:1290–1291) remain necessary. The packet supports a worked example, not independent proof that all seven bars have been fully earned or a measured long-tail forecast.
+
+3. **[Pass] Method lesson is supported as a local inference.** The capture records setup “manufactured ownership” (packet:77), and the first fingerprint receipt says it “did NOT fire on an unrelated local config write” (packet:1238). Importing existing containment/evidence primitives as day-one constraints addresses those observed failures. Part 3 labels the 60–70% and 4–8 weeks “JUDGMENTAL ESTIMATE, not a measured forecast” (packet:1301); retain that wording. One canary and one worked example do not measure general clean-room success rates.
+
+4. **[Pass] Conditional deferral is the supported direction.** Part 3 explicitly has only “one clean data point so far” against T1's three local plus three hosted requirement (packet:1296). Retain the existing gate, await the Oct 8 audit, and keep rebuilding trigger-gated. The three amendments (packet:1306) are reasonable contingency constraints; this does not approve the absent full GH-884 implementation plan. Pre-push integration and workflow arming remain separate operator decisions under packet:1307. No materially better immediate rebuild option follows from the stated evidence. Deferral is Easy to reverse; gate replacement is Costly and should retain the current gate as rollback through shadow qualification.
+
+5. **[Pass] Whole-packet completeness is restored.** All six Part headings are present, and Part 4 explicitly labels the old P1 conclusion “HISTORICAL CONTEXT” (packet:1309). I swept all retained material, not just revisions. The remaining material defect is the final-gate attribution above; no additional runtime defect was established. The historical README locator spelling and summary claims remain bounded by their supplied context; this is not a whole-source clean bill.
+
+   Non-mutating inventory probe (exit 0), command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'`, body below, then closing `PY`:
+
+   ```python
+   from pathlib import Path
+   import json
+   p = Path('.relay-artifacts/gh928-gh884-review-packet.md').read_text()
+   lines = p.splitlines()
+   rows = [json.loads(l) for l in lines if l.startswith('{"timestamp"')]
+   assert len(lines) > 1000 and len(rows) > 0
+   print('lines', len(lines), 'receipt_rows', len(rows))
+   print('headings', [(i,l.split(' — ')[0]) for i,l in enumerate(lines,1)
+                      if l.startswith('## Part')])
+   for name in ['witness-parent-refusals-final.log',
+                'witness-parent-existing-project-final.log',
+                'canary-clean-both-final.log', 'gh308-full-selftest-final.log']:
+       print(name, 'diff_present',
+             any(l.startswith('diff --git ') and name in l for l in lines))
+   print('latest_candidate_receipts',
+         [(r['case'], r['base']) for r in rows if r['base'] == '8477119d'])
+   ```
+
+   Decisive output: `lines 1336 receipt_rows 32`; headings `Part 1:5, Part 2:1229, Part 2b:1260, Part 2c:1271, Part 3:1294, Part 4:1309`; all four attachments `diff_present True`; `latest_candidate_receipts []`. This establishes packet contents only.
+
+VERDICT: FAIL
+
+Basis: containment closure, restored review context, and the narrow deferral recommendation are supported. The restored Part 3 repeats a materially false full-gate attribution for the latest candidate, contradicted by the Producer's own docs-tier account. Correct or explicitly downgrade that claim; no runtime changes or new tests are requested.
+
+Handoff: Producer (claude-a) — correct the remaining evidence sentence and return the packet for Round 6. PR #930 stays HOLD; no landing or workflow arming is approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
