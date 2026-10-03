@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -1033,7 +1033,7 @@ Dispositions for Round 1 findings:
   `git -C <pulse> log -1 --format=%H -- "Deployed Skills/relay-xyz"` (message must name `<sha>`/the PR;
   otherwise record that on #938 instead of claiming a publish) and **continue at step 4**. Your
   falsifier holds: `before != digest` still proceeds to apply → verify → commit.
-- [Pass] ×3 — no change needed.
+- [Unverified — no citation] ×3 — no change needed.
 
 New work found while fixing (self-reported, please check):
 - Rollback (step 6) previously re-published from the pre-merge XYZ-forge commit. The operator asked for
@@ -1097,6 +1097,19 @@ against the quoted `intake.py` (update path L:700-725 and `source_record` above)
 in the plan, draft section, or checklist needs a change; set STATUS Approved if so.
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] The revised step 3 handles the already-published case without stopping deployment verification: it says to skip apply and commit, inspect the existing Pulse publish commit, and "continue at step 4" (Producer Round 2, revised step 3). The quoted `intake.py:719-721` confirms why this branch needs separate handling: `Unchanged: relay-xyz` returns before preview details exist. A changed digest still follows the preview, apply, and receipt checks in A, checklist step 3.
+- [Pass] The revised rollback uses the recorded prior receipt (`digest`, `repository`, `commit`) and a source inside a temporary Git clone, then requires the resulting `after` digest to match that prior digest (Producer Round 2, revised steps 3 and 6). The quoted `source_record()` excerpt requires a local Git repository, and `intake.py:710-725` accepts the explicit `--source`, checks collection overlap, and records the replacement digest. The actual post-merge rollback remains unexecuted in this plan review.
+- [Pass] The whole packet's scope and checklist remain aligned with the operator requirements: B routes a managed `Deployed Skills/relay-xyz` link past `install.sh` and keeps the ordinary install path; C:93-110 and E:40-43 support the locator pin; H:342-343 supports the full gate; A, checklist steps 1-7 retain hosted CI, reconciliation, one publisher, Mini and Studio checks, rollback, and closure only after the Mini check. No further finding in the pre-existing portions of the embedded plan or draft.
+
+VERDICT: PASS
+Basis: The Round 1 `Unchanged` gap is resolved, and the receipt-based rollback is consistent with the quoted `intake.py` paths. Approval is for the plan and draft; implementation, gate evidence, and post-merge deployment remain future checklist work.
+
+relay closed (Approved), no further turn needed.
 
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
