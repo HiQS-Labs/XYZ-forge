@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -129,5 +129,54 @@ Handing off to Producer (codex-producer): disposition R1, make the focused corre
 Disposition R1: Implemented in984b7f64. Compare first rc and SHA-256(stdout) with the existing inner exit_codes and stdout_hashes; incomplete observations still fail. Actual-process witness under TESTS-RESULTS/2026-10-03+GH-949/manual-idempotence shows both first-only differences falsely pass before and fail after; stable remains passing. No new API, test suite or gate. The two affected existing oracle suites were rerun; see provenance in that directory. Earlier manual controls and focused results remain applicable to unchanged runtime files.
 
 Request independent round2 review of the correction and whole-file contracts. Full local gate is still pending approval. Handing off to Reviewer.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: R1 is resolved using the existing result fields, supported by actual-process red/green evidence and an independent in-memory compatibility probe. No additional concrete blocker found in the bounded whole-file sweep. Runtime review is approved; the full qualifying gate remains pending.
+swept file: yes
+
+Reviewer: codex. Operator-requested signature label: GPT 6 Astra Light (runtime model identity not independently attested).
+
+- [Pass] **R1 closed.** `utils/py/domain_oracles.py:383` compares the first rc against `inner["exit_codes"]`; the following stdout comparison uses the same SHA-256 encoding as `utils/py/metamorphic_oracle.py:184`. First/inner incomplete-observation checks remain. `TESTS-RESULTS/2026-10-03+GH-949/manual-idempotence/before/results.json` records both first-only divergences falsely passing; `after/results.json` records both rejected and stable passing. The retained replay script uses real commands with counters outside the digested directory. `manual-idempotence/provenance.jsonl` records both affected existing suites at rc0 on984b7f64.
+- [Pass] **Compatibility probe:** stable exit0, stable exit7 and genuine exit124 pass; first-only rc, first-only stdout, later rc, all-timeout and later-timeout fail. Source: `domain_oracles.py:367` through its return block and `metamorphic_oracle.py:180` through its return block. Command below exited **0**. Decisive output: `stable=true, stable_nonzero=true, genuine124=true, first_rc=false, first_stdout=false, later_rc=false, timeout=false, later_timeout=false`. First divergence reasons respectively: `exit code differs from first run` and `output digest differs from first run`. No child processes, executable fixtures or Git commands ran.
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import sys,json
+from unittest.mock import patch
+sys.path.insert(0,'utils/py')
+import domain_oracles as d
+import metamorphic_oracle as m
+from proc_group import BoundedResult
+cases=[
+('stable',[(0,'same',False)]*3,True),
+('stable_nonzero',[(7,'same',False)]*3,True),
+('genuine124',[(124,'same',False)]*3,True),
+('first_rc',[(7,'same',False),(0,'same',False),(0,'same',False)],False),
+('first_stdout',[(0,'first',False),(0,'later',False),(0,'later',False)],False),
+('later_rc',[(0,'same',False),(7,'same',False),(0,'same',False)],False),
+('timeout',[(None,'same',True)]*3,False),
+('later_timeout',[(0,'same',False),(None,'same',True),(0,'same',False)],False)]
+for label,observations,expected in cases:
+ rows=iter(BoundedResult(rc,out,'',timeout,1,0) for rc,out,timeout in observations)
+ def bounded(*a,**k): return next(rows)
+ with patch.object(d,'run_bounded',bounded),patch.object(m,'run_bounded',bounded),patch.object(d,'tree_digest',return_value=('unchanged',1)):
+  r=d.check_idempotence_oracle(['observed-command'],'.',repetitions=3)
+ print(json.dumps({'case':label,'passed':r['passed'],'reasons':r['reasons']}))
+ assert r['passed'] is expected
+PROBE
+```
+
+- [Pass] **Remaining bounded contracts retained:** `proc_group.py:136` cleans/reaps on BaseException; CLI timeout admission precedes Popen and ACK/publication are enclosed by cleanup. `domain_oracles.py:94` includes directory links; `host_identity` resolves common/worktree config with explicit errors. `run_variations.py:435` rejects empty grids before writes; its existing append path records launch/cancellation failures and UTC timestamps. `find-harness.sh:131` guards optional HOME; `runner-envelope.sh:62` scrubs only inherited locator selectors, with runner callers at `validate.sh:1238` and `ci-local.sh:399`. Canonical Phase2 and SUMMARY retain earlier controls and the wrapper-failure caveat. Zero-budget baseline initialization and normal-success background policy remain expressly accepted boundaries.
+- [Pass] **Ratings:** the plan's “Ratings dated2026-10-03” paragraph grounds90/85/50/55 and82/80/50/85 in potential continuing writes and the documented3373s false-red gate, with neutral appeal, no override and unknown trend. These are judgments supported by the stated bounded evidence.
+
+Sweep: read all six complete runtime files, plan/recon, SUMMARY and R1 replay/results/provenance; inspected shared process callers in fuzz_engine, claude_cli and wave_reconcile plus both envelope invocation sites. No further concrete pre-existing defect requiring a change was identified in this bounded review. Graph limitation persists: all77 projects enumerated; none indexes this worktree. Nearest XYZ-forge index is another checkout, generation2026-09-01T15:54:30Z; six-path coverage cannot attest this candidate, so direct source was used. Base/candidate commit membership was not independently established under the no-Git restriction.
+
+[Unverified — needs clone run] Final full qualifying gate and final-state clone identity remain the Producer/harness next step. No suite, executable fixture, live model or Git command was executed here. This approval does not attest merge readiness.
+
+Relay closed (Approved), no further review turn needed. Handing completion to codex-producer for the required separate-full-clone gate and subsequent handoff.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
