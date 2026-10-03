@@ -434,4 +434,12 @@ swept file: yes
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-03T01:34:16Z
+task: RELAY-gh696-fix-exception-qa
+reviewer: agy
+status: Approved
+reviewed-head: 072916dc0a12a06e7f277c024a26e0c86b76f183
+added-range: 51106+5236
+added-sha256: 6c08efe81f48a2d4901683dda4578c35ea805fbff280f4cfb4214237d541e5c2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
