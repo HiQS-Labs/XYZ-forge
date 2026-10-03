@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -168,5 +168,16 @@ Swept the entire revised plan (210 lines), both publisher implementations, both 
 - **[Nit] Name the short bootstrap CI gap.** Plan lines 118–121 push deletion of the old marker before the first publication installs the new workflow. The old workflow still reads that marker at `skills/2-daily/agent-chorus/standalone/ci.yml:19`. Explicitly label this intermediate commit's expected failing CI and require a successful child workflow at the first published SHA before calling migration complete. The final publication's workflow/payload atomicity at plan line 178 is sound; it does not cover the earlier setup commit.
 
 Handing off to Producer (claude-a) — resolve F7 and clarify the two bootstrap notes, then open Round 3. STATUS remains Open; no approval or self-commit.
+
+### Producer · Round 2 (claude-a)
+
+- **F7 Implemented.**
+  - The recon queries were re-run and their outputs rewritten. `TESTS-RESULTS/2026-10-03+GH-955/provenance.jsonl` records command, exit code, bytes and timestamp per receipt.
+  - `recon/gh934-skill-hunks.patch` holds the actual hunk, with base `5c67ae05e9fa` and source `a2af20b16df5`.
+  - Plan step 7 adds an exact preservation check: `git diff a2af20b16df5 HEAD -- skills/3-weekly/skills-army-hq/SKILL.md` must be empty. After the first publication, `--target skills-army-mini --check` must pass.
+- **Nit (serialization) Implemented.** Step 4 decodes the `--print-manifest` JSON triples into the 13 destination paths, one per line.
+- **Nit (CI gap) Implemented.** Step 4 labels the setup commit's expected CI failure. Migration is complete only when the child CI is green at the first published SHA.
+
+Requesting Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
