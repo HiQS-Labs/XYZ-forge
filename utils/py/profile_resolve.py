@@ -463,7 +463,7 @@ def _catalog_export_line(res: Dict[str, Any]) -> str:
 def emit_env(res: Dict[str, Any], xyz_root: str) -> Tuple[str, int]:
     """The export block a relay review turn needs, and nothing it does not."""
     if res["tier"] == 4:
-        return ("unset XYZ_HIQS_ADMISSION\n# resolve-profile: nothing to export — the shims' own defaults apply.\n"
+        return ("# resolve-profile: nothing to export — the shims' own defaults apply.\n"
                 + _catalog_export_line(res), 0)
 
     lane_map, harness = res["lanes"], res["harness"]
