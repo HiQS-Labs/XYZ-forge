@@ -1,0 +1,13 @@
+## setup-commit recipe (GH-955 step 4) on a disposable clone of AgentChorus-Skill@5635d70; forge source 9243f842
+# 1. without the setup commit:
+agent-chorus-sync: refused: LICENSE exists in the destination but was not published by this tool — refusing to overwrite
+# 2. setup commit (MANIFEST from --print-manifest; git rm both legacy paths):
+MANIFEST rows: 13
+# 3. first central publication (--push to the throwaway bare remote):
+agent-chorus-sync: plan: copy 13 files, delete 0
+agent-chorus-sync: committed b19708c: sync: XYZ-forge@9243f842e505 (feat/gh-955-central-publisher)
+agent-chorus-sync: pushed and verified origin/main == b19708c43530
+publish rc=0
+# 4. result:
+tracked files: 16 (13 payload + MANIFEST.txt + .xyz-forge-revision + NOTES.local); NOTES.local survives: 1; legacy marker: 0; legacy tsv: 0
+check rc=0 :: agent-chorus-sync: managed parity with XYZ-forge@9243f842e505

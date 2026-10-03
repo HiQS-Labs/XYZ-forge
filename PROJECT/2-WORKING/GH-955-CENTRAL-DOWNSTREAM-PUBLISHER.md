@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved by Codex in round 3 (relay `relay-system/2026-10-03/gh955-plan-qa.md`, attested); operator answered Q1–Q5 | Execute steps 1–8 |
+| Steps 1–3 and 5–8 implemented and verified (gh589 39/0, gh620 28/0, path-integrity, skills-army-hq; red controls fail; previews recorded; step-4 recipe dry-run green) | Final Codex relay QA, then the PR. After merge: the step-4 setup commit, the first `--target all --push`, issue transfers (Q5), close #882 |
 
 ## Problem (observed)
 
