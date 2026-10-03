@@ -85,3 +85,5 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 - [ ] Plan/ledger say PR ready awaiting merge, not shipped; retained clone and cleanup handoff reported.
 
 Evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps all findings to retained before/after controls. The process helper API remains signal-handler-free; only the two CLI entry boundaries own handlers. Zero-minute admission remains nonzero without new rows but retains existing baseline/control initialization. All nine focused suites passed on runtime candidate76ad7e4e; final review/gate outstanding.
+
+Final QA R1 disposition: Implemented. The whole-file sweep exposed a pre-existing first-versus-later rc/stdout blind spot. `984b7f64` compares the first observation against existing metamorphic result fields. Actual-process red/green controls are retained under manual-idempotence; affected existing suites are rerun. This extends the already approved idempotence comparison, not the process architecture or risk scope.

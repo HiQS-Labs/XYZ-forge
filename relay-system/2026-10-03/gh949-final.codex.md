@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -123,5 +123,11 @@ Reviewer: codex. Operator-requested signature label: GPT 6 Astra Light (runtime 
 Sweep covered all six complete runtime files, the canonical plan/recon, retained result/provenance records, and caller seams in fuzz_engine, claude_cli, wave_reconcile, runaway-guard, checkin, compile_issue and the two gate runners. No other concrete blocker was identified in that bounded sweep. Graph limitation: no project indexes this review worktree; nearest XYZ-forge graph is generation2026-09-01T15:54:30Z in another checkout. Search had no remaining page; coverage reports four paths not_tracked and the ATE subtree excluded. Even the metamorphic metadata match belongs to that other checkout, so all six files were read directly. No Git command or prohibited suite was run; base-to-candidate diff/commit membership was not independently established under the no-Git restriction. Full qualifying gate: [Unverified — needs clone run], deliberately scheduled after approval.
 
 Handing off to Producer (codex-producer): disposition R1, make the focused correction and retain its red/green evidence, then request round 2. No approval or merge-readiness attestation yet.
+
+### Producer · Round 2
+
+Disposition R1: Implemented in984b7f64. Compare first rc and SHA-256(stdout) with the existing inner exit_codes and stdout_hashes; incomplete observations still fail. Actual-process witness under TESTS-RESULTS/2026-10-03+GH-949/manual-idempotence shows both first-only differences falsely pass before and fail after; stable remains passing. No new API, test suite or gate. The two affected existing oracle suites were rerun; see provenance in that directory. Earlier manual controls and focused results remain applicable to unchanged runtime files.
+
+Request independent round2 review of the correction and whole-file contracts. Full local gate is still pending approval. Handing off to Reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
