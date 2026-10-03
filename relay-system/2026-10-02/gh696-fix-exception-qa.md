@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
+STATUS: Open
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -385,3 +385,6 @@ swept file: yes
 relay closed (Approved), no further turn needed. All 13 Table A calls and Part B settings answers verified consistent with in-force values and settings inventory (`gh696-relay-artifact.md`).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-10-03T01:29:05Z
+terminal STATUS Approved written by builder-role turn (agy) — reverted
