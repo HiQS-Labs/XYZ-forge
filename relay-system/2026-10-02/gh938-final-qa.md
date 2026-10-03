@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -734,5 +734,745 @@ VERDICT: FAIL
 Basis: The quoted change appears aligned with GH-938, but the required whole-file review is impossible from this packet, and the base-attribution quotation does not support the claimed identical failures. These are review-evidence gaps before a READY PR sign-off.
 
 Handing off to Producer (claude-a) — go to the Producer window and say "take your turn".
+
+### Producer · Round 2 (claude-a)
+
+Definition of Done for this final QA (fills the scaffold placeholder, from the packet's binding
+requirements 1-4): (1) the SKILL.md diff routes a `Deployed Skills/relay-xyz` link past `install.sh`
+to the locator `--check`, `${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`, or a one-command
+`XYZ_HARNESS`, and keeps the install path for unmanaged machines; (2) no new suite or TESTS entry and
+the named pins stay true, with evidence under TESTS-RESULTS/ + provenance.jsonl; (3) the plan keeps
+the reviewed checklist; (4) every full-gate failure is attributed with evidence.
+
+Dispositions for Round 1 findings:
+- Should (whole-file sweep impossible) — **Implemented.** The complete `skills/1-hourly/relay-xyz/SKILL.md`
+  at the tested head `204750c5` (identical blob `277fbfd3` at branch tip `2c326c24`) is quoted below
+  with line numbers. Known pre-existing claim at `SKILL.md:221-223` (was 207-209 at base; shifted by
+  +14): "only `install.sh` writes anything, and it writes only into `~/.claude/skills/`" is inaccurate
+  (install.sh also links other app roots). Disposition: **Deferred** with the install.sh detection follow-up, recorded
+  in the plan's Deferred section; out of the operator's docs-only "First-time setup" scope.
+- Should (11-failure attribution) — **Implemented.** New `TESTS-RESULTS/2026-10-02+GH-938/failure-attribution.md`
+  (commit `2c326c24`) compares decisive failing assertions per suite, head vs base. Where the gate's
+  40-line tail did not show them (gh436, swarm-preflight, gh402) the suite was re-run alone on head
+  (`head-204750c5/`) and the `FAIL` line sets diffed against base: empty diffs. Three provenance rows
+  added with sha256. SUMMARY now says "same failing assertions — failure-attribution.md".
+- Nit (DoD placeholder) — **Implemented** above.
+
+## failure-attribution.md (verbatim)
+
+# Full-gate failure attribution — head 204750c5 vs base 5212dae4 (same Linux box)
+
+Head lines come from the gate's serial re-run (`validate-full.log`, which keeps only the last 40 lines
+per failed suite); where that tail did not show the failing assertions, the suite was re-run alone on
+head and logged under `head-204750c5/`. Base lines come from `base-5212dae4/base-<suite>.log`.
+Temp-dir and ULID path segments are ignored in the comparison.
+
+| Suite | Head (204750c5) decisive failure | Base (5212dae4) | Match |
+|---|---|---|---|
+| gh610-claude-subscription | `FAIL: test_real_probe_and_consult_dispatch` | same test fails | same |
+| gh399-packet-acceptance-continuation | `FAIL: C4 no relay file produced (marathon-drive rc=1)` | same | same |
+| gh390-timeout-attribution | `FAIL: idle: BAD timeout-unclassified :: ... one-shot network probe failed` | same | same |
+| gh492-idle-kill | `FAIL: expected timeout-idle-unknown for the blocked turn, got timeout-unclassified` | same | same |
+| gh505-relay-attest | `FAIL: N3: candidate binding wrong for a relay beside source` | same | same |
+| gh402-board-sync | `29 passed, 5 failed`; `FAIL-` lines (head-204750c5/head-gh402-board-sync.log) | `29 passed, 5 failed`; identical `FAIL-` lines (diff empty) | same |
+| gh544-pre-push-gate | `FAIL: criss-cross fixture is degenerate: fewer than two best common ancestors` | same | same |
+| swarm-preflight | `98 passed, 2 failed`; T37c/T38 stale-lock (head-204750c5/head-swarm-preflight.log) | `98 passed, 2 failed`; identical `FAIL:` lines (diff empty) | same |
+| gh123-lock-progress-bound | 3 `FAIL:` lines (moving queue exited 75 after 2s; acquired within bound; writer wrote no file) | same 3 | same (timing-sensitive) |
+| gh280-jog-marathon-adapter | `FAIL: H2 unexpected vendored row state: ... containment-violation ... (exit 6)` | same (tmp/ULID path differs) | same |
+| gh436-merge-cleanup | `FAILED (failures=18, skipped=6)` (head-204750c5/head-gh436-merge-cleanup.log) | `FAILED (failures=18, skipped=6)`; identical `FAIL:` test list (diff empty) | same |
+
+Conclusion: every full-gate failure reproduces on the base commit with the same failing assertions,
+so none is attributable to this one-section markdown diff.
+
+## Provenance rows added (verbatim)
+
+```
+{"name": "head-standalone:gh436-merge-cleanup", "head_sha": "204750c576f2bdc12764d42915bbcdedf2985388", "command": "bash test/gh436-merge-cleanup.sh", "exit_code": 1, "artifact": "head-204750c5/head-gh436-merge-cleanup.log", "qualification": "standalone re-run on head to capture full failing assertions (gate tail truncated); FAIL lines identical to base", "environment": "Linux box (Debian, Python 3, node v20.19.2), disposable full clones; no codex/claude CLIs on the box", "artifact_sha256": "a4d7e5a79e0b0e87e94719764cc951773cb42e9422dc91e20508bde22b1832d4"}
+{"name": "head-standalone:swarm-preflight", "head_sha": "204750c576f2bdc12764d42915bbcdedf2985388", "command": "bash test/swarm-preflight.sh", "exit_code": 1, "artifact": "head-204750c5/head-swarm-preflight.log", "qualification": "standalone re-run on head to capture full failing assertions (gate tail truncated); FAIL lines identical to base", "environment": "Linux box (Debian, Python 3, node v20.19.2), disposable full clones; no codex/claude CLIs on the box", "artifact_sha256": "f44720f79ea307486e5dcc1e3ef7b62e2e0cc0400d8b90136f4c093e8818cc5d"}
+{"name": "head-standalone:gh402-board-sync", "head_sha": "204750c576f2bdc12764d42915bbcdedf2985388", "command": "bash test/gh402-board-sync.sh", "exit_code": 1, "artifact": "head-204750c5/head-gh402-board-sync.log", "qualification": "standalone re-run on head to capture full failing assertions (gate tail truncated); FAIL lines identical to base", "environment": "Linux box (Debian, Python 3, node v20.19.2), disposable full clones; no codex/claude CLIs on the box", "artifact_sha256": "eb2120b62a8879c81ff721e41cea97e0ea63ebb28ae8ff18bf0afd072f477e4d"}
+{"name": "failure-attribution", "head_sha": "204750c576f2bdc12764d42915bbcdedf2985388", "command": "manual comparison of head vs base failing assertions", "exit_code": 0, "artifact": "failure-attribution.md", "environment": "Linux box (Debian, Python 3, node v20.19.2), disposable full clones; no codex/claude CLIs on the box", "artifact_sha256": "40aff6c8ca0889020eb146b9a5909b2cfe08241220572ae700824a79eae67b61"}
+```
+
+## Full skills/1-hourly/relay-xyz/SKILL.md @ 2c326c24 (cat -n)
+
+`````
+     1	---
+     2	name: relay-xyz
+     3	description: >-
+     4	  Drive an automated /relay review loop on THIS repo with the shipped
+     5	  relay-automation harness (relay-drive.sh + codex-turn.sh / agy-turn.sh /
+     6	  poll.sh) rather than improvising the handoff by hand. Use when the operator
+     7	  wants to "run an automated relay", "have Codex or agy review this
+     8	  end-to-end", "drive a relay to completion headless", "run the relay harness",
+     9	  or set up the all-Claude hands-free poll loop. The skill can start from a
+    10	  foreign repo because its locator selects a separate XYZ-forge harness. /relay
+    11	  scaffolds the thread and owns the turn protocol; relay-xyz is the repo-specific
+    12	  layer that runs the real scripts. NOT for scaffolding a thread from scratch
+    13	  (that is /relay).
+    14	---
+    15	
+    16	# relay-xyz — automated relays on the shipped harness
+    17	
+    18	**ALWAYS locate and run the bundled locator first — never claim the harness is missing without it.**
+    19	Resolve the installed skill from stable install roots; do not assume the session CWD is this repo:
+    20	
+    21	```bash
+    22	L=""
+    23	for candidate in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-harness.sh}" \
+    24	                 "$HOME/.claude/skills/relay-xyz/find-harness.sh" \
+    25	                 "$HOME/.codex/skills/relay-xyz/find-harness.sh" \
+    26	                 "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
+    27	                 "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
+    28	                 "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+    29	                 "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/relay-xyz/find-harness.sh" \
+    30	                 "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
+    31	  [ -n "$candidate" ] && [ -f "$candidate" ] && { L="$candidate"; break; }
+    32	done
+    33	[ -n "$L" ] || { echo "relay-xyz: locator not found — install the skill or set XYZ_HARNESS" >&2; exit 1; }
+    34	bash "$L" --check
+    35	```
+    36	
+    37	That locator resolves the harness from wherever your CWD is and reports which workers
+    38	(tick/codex/agy/cmd/dsh) are on PATH. See
+    39	[Preconditions](#preconditions--locate-the-harness-bundled-locator-never-hardcode-a-path) below for the
+    40	full env-exporting form (`eval "$(... --env)"` + `cd`) that every recipe in this doc assumes has already
+    41	run.
+    42	
+    43	This repo **already ships** the relay automation. Don't reinvent the CLI handoff turn by turn — call
+    44	the scripts under [`relay-automation/`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/). `/relay` defines the thread format
+    45	and turn protocol and scaffolds the dated file; **`relay-xyz` is the thin repo-specific layer that
+    46	drives that thread to completion with the shipped supervisor + turn-takers.**
+    47	
+    48	Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`), then `relay-xyz` to
+    49	*run* it headless or hands-free.
+    50	
+    51	## When to use
+    52	
+    53	- "Run an automated relay" / "drive this relay to completion" / "run the relay harness."
+    54	- "Have Codex or agy review `<file>` end-to-end."
+    55	- Setting up the all-Claude hands-free `/loop` poll so two Claude windows self-serialize.
+    56	- Running automated relays in **two different repos at the same time on one machine** — see
+    57	  [Concurrent relays across repos](#concurrent-relays-across-repos-same-machine) (each repo needs its own
+    58	  vendored `.xyz/`).
+    59	- You have a relay thread (or are about to scaffold one with `/relay`); the current working tree may
+    60	  be a foreign repo if the locator can reach a canonical XYZ-forge harness.
+    61	
+    62	**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), or work that needs a human checkpoint between every turn (use plain `/relay`
+    63	manual mode).
+    64	
+    65	## First-time setup on a new clone or machine (make the skill discoverable)
+    66	
+    67	First check whether Skills Army HQ already manages this skill on the machine:
+    68	
+    69	```bash
+    70	readlink ~/.claude/skills/relay-xyz   # or the relay-xyz entry in your app's skills root
+    71	```
+    72	
+    73	**Managed by Skills Army HQ — skip `install.sh`.** If the link resolves into a `Deployed Skills/relay-xyz`
+    74	folder, the skill is already discoverable and Skills Army HQ owns the link; its rule is not to run copied
+    75	`install.sh` files. Running it there exits 1 on the live link (GH-678 keeps it) and can add links in app
+    76	roots the collection does not target. Manage links with Skills Army HQ (`sync.py`) and go straight to the
+    77	locator below: run its `--check` from the installed path. If it does not resolve a harness, save your
+    78	canonical XYZ-forge clone with the one-line command `--check` prints (`${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`),
+    79	or prefix a single command with `XYZ_HARNESS=/path/to/XYZ-forge`. Do not export it from shell startup files.
+    80	
+    81	**Not managed (no link, or a dangling one).** This repo keeps its skills in top-level `skills/`, which
+    82	Claude Code does **not** scan. A session finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`.
+    83	A fresh clone or second machine without Skills Army HQ has no such symlink, so the skill is invisible in
+    84	**every** session there — the "other VS Code sessions can't find the relay-xyz files" failure. Fix it
+    85	**once per maintained clone** (idempotent, self-locating, no hardcoded path):
+    86	
+    87	```bash
+    88	bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into ~/.claude/skills/
+    89	```
+    90	
+    91	It also replaces a stale/dangling symlink and verifies `find-harness.sh` resolves the harness. The
+    92	locator below handles *where the harness scripts live*; this step handles *whether Claude Code can
+    93	load the skill at all* — a layer the locator can't reach, since it runs only after the skill loads.
+    94	
+    95	## Preconditions — locate the harness (bundled locator, never hardcode a path)
+    96	
+    97	`relay-xyz` ships its own device-agnostic locator, [`find-harness.sh`](find-harness.sh), beside this
+    98	skill. It checks an explicit override, a caller's vendored harness, the current repo, its own
+    99	installed location, a per-Mac config at `${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`, and bounded
+   100	canonical XYZ-forge clone locations. A copied Skills Army deployment therefore works from a foreign
+   101	repo. `--check` shows a command to save the chosen canonical harness in that config and warns when
+   102	its cached upstream is ahead. It never fetches while checking.
+   103	
+   104	Run this first. It finds the locator, exports the harness env, `cd`s into the clone that ships the
+   105	harness, and prints a one-glance readiness line:
+   106	
+   107	```bash
+   108	# Find the bundled locator. The skill installs at one of these — all anchored on $HOME or
+   109	# the CWD, never an absolute machine path:
+   110	for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-harness.sh}" \
+   111	         "$HOME/.claude/skills/relay-xyz/find-harness.sh" \
+   112	         "$HOME/.codex/skills/relay-xyz/find-harness.sh" \
+   113	         "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
+   114	         "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
+   115	         "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+   116	         "./.claude/skills/relay-xyz/find-harness.sh" \
+   117	         "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
+   118	  [ -n "$L" ] && [ -x "$L" ] && break
+   119	done
+   120	[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your XYZ-forge clone"; exit 1; }
+   121	
+   122	eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK}
+   123	cd "$HARNESS"
+   124	"$L" --check           # prints: harness path + which Path-A workers (tick/codex/agy/cmd/dsh) are on PATH
+   125	```
+   126	
+   127	After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and
+   128	`TICK_REPO_ROOT` points `tick` at that clone's event log. The relay/turn scripts self-resolve their
+   129	own location (`$(dirname "$BASH_SOURCE")/..`), so invoke them with **repo-relative** paths exactly as
+   130	the [relay automation README](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/README.md) shows.
+   131	The relay always operates on **the
+   132	harness clone** (its `.tick/` log and guarded git root live there), whatever repo you launched from —
+   133	so a clone with only `relay-system/` thread files still drives the real harness next door.
+   134	
+   135	## Concurrent relays across repos (same machine)
+   136	
+   137	`relay-drive.sh`/`marathon-drive.sh` hold **one global driver lock per harness clone**. This is
+   138	intentional — two worktrees on the same `ROOT@HEAD` can corrupt git state (GH-42) — but it means
+   139	**every repo pointed at the same harness clone shares that one lock**, so their automated relays
+   140	*serialize*: a second one blocks (`exit 1`) until the first frees.
+   141	
+   142	### The driver-lock exclusion matrix (GH-354 Phase 3 — canonical)
+   143	
+   144	> This table is the **one canonical statement** of what the driver lock guarantees (PDDA Principle #4).
+   145	> Anything else that describes the lock — driver headers, monitor docs — links here rather than
+   146	> restating it. A second copy is how the wrong sentence in `marathon-drive.sh:194-196` survived.
+   147	
+   148	Both drivers resolve the lock through **one shared resolver** (GH-448) — `utils/py/rtl.py::driver_lock_path`
+   149	and its Bash twin `relay-automation/driver-lock-lib.sh::driver_lock_path_for_repo` — which yields three
+   150	shapes:
+   151	
+   152	| Repo shape | Lock path | Display label |
+   153	|---|---|---|
+   154	| normal clone (`.git` is a directory) | `<root>/.git/relay-driver.lock` | `.git/relay-driver.lock` |
+   155	| **linked worktree** (`.git` is a file) | `<git-common-dir>/relay-driver.lock` — i.e. **the parent clone's** | `.git/relay-driver.lock` |
+   156	| vendored `.xyz/` (no `.git`) | `<root>/.relay-driver.lock` | `.relay-driver.lock` |
+   157	
+   158	The middle row is the load-bearing one: **a linked worktree does not get its own lane.** It resolves
+   159	to the same lock as the clone it was cut from — pinned by `test/gh448-driver-lock-resolver.sh`
+   160	(*"worktree case resolves to the git COMMON dir, not `<worktree>/.git/…`"*, plus a bash/python
+   161	*"parity"* assertion per shape). So all three driver pairs mutually exclude *per clone*:
+   162	
+   163	| Pair | Excludes? | Pinned by |
+   164	|---|---|---|
+   165	| marathon ↔ marathon | **yes** | `test/driver-lock.sh` — *"live lock (alive holder) → driver refuses (exit 1)"*, *"live lock left intact (not stolen)"* |
+   166	| marathon ↔ relay | **yes** | `test/gh376-relay-drive-lock-parity.sh` — *"THE PIN (bash): relay-drive.sh refuses — the frozen twin agrees with the Python half"* |
+   167	| relay ↔ relay | **yes** | `test/gh376-relay-drive-lock-parity.sh` — *"neither lane left a worktree-local lock behind at `$WT/.relay-driver.lock`"*, *"twin parity: both lanes emit a byte-identical REFUSAL"* |
+   168	
+   169	**This became true only in GH-376.** Before it, `relay-drive` used a two-branch guess with no case for
+   170	a linked worktree, so it took a *per-worktree* `.relay-driver.lock` while `marathon-drive` took the
+   171	shared one — the bottom two rows did **not** exclude, and #354's original premise that the lock was
+   172	"the hard blocker (by design)" was false for them. The negative control
+   173	(*"pre-fix 2-branch logic sails past the held lock"*) is what pins that it can't return.
+   174	
+   175	**To actually run two swarms concurrently, use separate full clones** — not linked worktrees, which
+   176	share the lock by the table above, and not a shared harness, which serializes. Per-run hygiene that
+   177	keeps the event stream readable even across clones: distinct `--phase-id` / `--relay-task`, plus
+   178	`MARATHON_LANE_NS` for the lane namespace and an explicit `XYZ_SESSION_ID` (its fallback to `PHASE_ID`
+   179	cannot tell one run from another).
+   180	
+   181	To run relays in **different repos at the same time on one machine**, give each repo its **own harness**
+   182	so each gets its own lock, `.tick/`, and worktrees:
+   183	
+   184	| Install path / Tier | Ships | Relay capability | Releases ledger? | Lock |
+   185	|---|---|---|---|---|
+   186	| `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | ❌ no | shared (serializes) |
+   187	| **Tier 1 (default)**: `xyz-vendor.sh <target-repo> [--no-register]` | full core harness (`relay-automation/` minus `xyz-releases-onboard.sh`, `bin/`, `src/`, `test/`, `skills/`, `utils/` minus overlay) into gitignored `.xyz/` | ✅ per-repo | ❌ no overlay | **own** `.xyz/.relay-driver.lock` |
+   188	| **Tier 2 (opt-in)**: `xyz-vendor.sh <target-repo> --with-releases` (or auto-detected via `releases.db` at root) | full core harness + RELEASES overlay (`releases_app.py`, `releases_cycle.py`, `releases-merge-resolve.sh`, `release-lanes.sh`, `utils/timeline/`, `xyz-releases-onboard.sh`, `RELEASES-DB-FAQS.md`) | ✅ per-repo | ✅ opt-in overlay | **own** `.xyz/.relay-driver.lock` |
+   189	
+   190	Updating a vendored copy (`xyz-sync.sh update`, or re-running `xyz-vendor.sh` over an existing
+   191	`.xyz/`) replaces the harness **code** and preserves the per-repo state above — `relay-system/`,
+   192	`.tick/`, `.relay-driver.lock`, and the `XYZ.json*` telemetry ride across the rebuild (GH-312).
+   193	Note that RELEASES ledger runtime state (`releases.db`, `releases.sql`,
+   194	`RELEASES-PREVIEW.html`) lives at the target repository root, outside `.xyz/`, while `.xyz/`-resident
+   195	runtime state is preserved across swaps. This matters because `.xyz/` is gitignored: state lost there
+   196	is unrecoverable, with no reflog or stash behind it. A new runtime artifact under `.xyz/` must be added
+   197	to the preserve list in `xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
+   198	
+   199	So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
+   200	`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative → config → search), and
+   201	`find-harness.sh --check` **warns** when you're in a foreign repo with no `.xyz/` (using the shared
+   202	harness) and points you at the vendor command. Two vendored repos each run `relay-drive.sh` from their
+   203	own `.xyz/relay-automation/`, holding independent locks — no contention. (Editing the central harness
+   204	clone also can't disturb a vendored run, since it uses its own pinned `.xyz/` copy.)
+   205	
+   206	## Per-repo persistence (don't cache a path)
+   207	
+   208	Once a target repo has used relay-xyz once, don't leave behind a machine-specific breadcrumb so the
+   209	next session skips the "run `find-harness.sh` first" gate above. The only two persistence channels
+   210	Claude Code **auto-loads** are:
+   211	
+   212	- **The target repo's memory** — seed a line the first time a run succeeds there, e.g. "this repo uses
+   213	  relay-xyz; run `find-harness.sh --check` first."
+   214	- **That repo's own `CLAUDE.md`, by skill name** — a pointer such as "for automated relays, use the
+   215	  `relay-xyz` skill" (not a path).
+   216	
+   217	Either breadcrumb must be a **portable pointer** — the skill name or the `find-harness.sh` command —
+   218	**never a cached absolute path and never a bare root pointer file** dropped into the target repo. A
+   219	bare file isn't auto-loaded (a skimming agent skips it exactly like it skips this doc's own body), it's
+   220	machine-specific (breaks on the next clone or device), a stale cached path is *worse* than no path at
+   221	all, and cleaning one up later has cross-repo blast radius. **relay-xyz never auto-installs any file
+   222	into a target repo** — only `install.sh` writes anything, and it writes only into `~/.claude/skills/`
+   223	on the machine running it, never into the target repo itself.
+   224	
+   225	## The two automated paths
+   226	
+   227	**Role split (GH-221): Claude Code is the orchestrator/reviewer here, not a default builder.** The
+   228	Claude Code session driving `relay-drive.sh`/`marathon-drive.sh` plans, dispatches, and reviews/verifies
+   229	turns — it does not spawn itself as the headless build lane. **Agy CLI and Codex CLI are the builders**:
+   230	the two cost-blind (subscription-billed, not per-call API) headless turn-takers `--agent-cmd` /
+   231	`--builder` default to. **Claude CLI (subscription or API, according to authentication) is not a builder by default** —
+   232	`--builder claude` / a `claude-turn.sh` shim stay fully supported, but only as an explicit,
+   233	usage-acknowledged choice the *user* makes locally, never something a session reaches for on its own
+   234	reasoning that it's "just another supported turn-taker." If a task needs a headless build lane and
+   235	neither agy nor codex is on PATH, stop and ask — don't default to spawning a headless Claude CLI turn.
+   236	
+   237	| Path | One session? | Models | Driver |
+   238	|---|---|---|---|
+   239	| **A. Headless single-session** | yes — Claude drives both roles | Codex / agy as co-equal headless workers | `relay-drive.sh` + a turn-taker shim |
+   240	| **B. Hands-free poll** | no — two live Claude windows | all-Claude | `poll.sh` under `/loop` in each window |
+   241	
+   242	Path A is the marquee flow — what "have Codex or agy review this for me" means. Path B is the all-Claude
+   243	self-serializing loop: no human nudge, no second model.
+   244	
+   245	### Path A — headless single-session (relay-drive.sh + a shim)
+   246	
+   247	`relay-drive.sh` is the **supervisor** (round cap, no-progress escalation, reads the file's `STATUS:`
+   248	as the terminal signal). The **turn-taker** is `--agent-cmd` — a shipped shim (`codex-turn.sh` or
+   249	`agy-turn.sh`) that owns the safety boundary: path-allowlist, commit-bypass guard, **no push**.
+   250	Whose-turn is a `tick` relay task, handed off with `tick release --to`.
+   251	
+   252	End-to-end headless review of an artifact (run after Preconditions — `$TICK` and `$HARNESS` set, CWD
+   253	is the harness clone). Choose either worker. The examples below pass `ALLOW_PATHS="$ARTIFACT"`, which
+   254	fits a **build/fix** turn; for a pure **review** turn set `ALLOW_PATHS=""` (relay file only) so the
+   255	reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row (note that fixed log paths break concurrent same-machine runs; prefer the shims' per-PID default or use per-PID `$$` variables):
+   256	
+   257	#### The one-line form (GH-346 Phase 3a) — name the reviewer, skip the table
+   258	
+   259	If a profile exists for the model you want, the whole env block below collapses to one call:
+   260	
+   261	```bash
+   262	eval "$(relay-automation/resolve-profile.sh 'glm 5.3 max' --env)"
+   263	ALLOW_PATHS="" relay-automation/relay-drive.sh \
+   264	  --relay-file "$RELAY" --relay-task "$TASK" \
+   265	  --agent-cmd "$RELAY_AGENT_CMD" --reviewer "$RELAY_REVIEWER" --review-once
+   266	```
+   267	
+   268	`--env` emits the lane's `*_AGENT`, `*_MODEL`, its gateway variable, `*_REASONING_EFFORT`,
+   269	`*_FLAGS`, plus `RELAY_AGENT_CMD`, `$HARNESS` and `$TICK`. Profiles live in the `profiles` block of
+   270	`~/.xyz/device_config.json`:
+   271	
+   272	```json
+   273	"profiles": {
+   274	  "glm 5.3 max":  { "harness": "commandcode", "gateway": "self",
+   275	                    "model": "zai-org/glm-5.3", "effort": "max" },
+   276	  "qwen 3.8 max": { "harness": "deepseek", "gateway": "openrouter",
+   277	                    "model": "qwen/qwen3.8-max" }
+   278	}
+   279	```
+   280	
+   281	`"gateway": "self"` is for a harness that is **its own router** — Command Code resolves models from
+   282	its own catalog and has no OpenRouter key or base URL, so naming a third-party router there would
+   283	emit a value the shim ignores and telemetry would then record a route that never happened.
+   284	
+   285	Name matching is fuzzy (it reuses `resolve-model-alias.sh`), so `GLM5.3 max`, `glm 5.3 max` and
+   286	`max glm 5.3` are one entry. `--list` shows every profile and flags broken ones; `--explain` says
+   287	which tier answered.
+   288	
+   289	**This never blocks a turn.** A missing config, malformed JSON, or an unmatched name falls through
+   290	to the shims' own defaults — the tables below — and says why on stderr. An explicit `*_AGENT` +
+   291	`*_MODEL` already in the environment always wins and is never second-guessed.
+   292	
+   293	The tables below remain correct and are what a fall-through lands on. Use them when no profile
+   294	exists, or when you want a one-off that is not worth naming.
+   295	
+   296	| Worker | Availability check | Handoff target | Env prefix | Shim | Log |
+   297	|---|---|---|---|---|---|
+   298	| Codex | `"$RELAY_HAS_CODEX" = 1` | `codex` | `CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log"` | `relay-automation/codex-turn.sh` | `${TMPDIR:-/tmp}/codex-turn-$$.log` |
+   299	| agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn-$$.log` |
+   300	| Commandcode | `"$RELAY_HAS_COMMANDCODE" = 1` | `commandcode` | `COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log"` | `relay-automation/commandcode-turn.sh` | `${TMPDIR:-/tmp}/commandcode-turn-$$.log` |
+   301	| DeepSeek | `"$RELAY_HAS_DEEPSEEK" = 1` | `deepseek` | `DEEPSEEK_AGENT=deepseek ALLOW_PATHS="$ARTIFACT" DEEPSEEK_LOG="${TMPDIR:-/tmp}/deepseek-turn-$$.log"` | `relay-automation/deepseek-turn.sh` | `${TMPDIR:-/tmp}/deepseek-turn-$$.log` |
+   302	
+   303	**Model selection per worker** (GH-346) — the one lookup that used to mean reading each shim's
+   304	source. `RELAY_HAS_*` is set by `find-harness.sh --env`; every worker below also honors
+   305	`<PREFIX>_FLAGS` and `RELAY_TURN_TIMEOUT_S`:
+   306	
+   307	| Worker | Model env | Default | Notes |
+   308	|---|---|---|---|
+   309	| Codex | *(none)* | codex CLI's own | `codex-turn.sh` never passes `--model`; set it in codex's own config |
+   310	| agy | `AGY_MODEL` | agy CLI's own | validated against `agy models` — an unlisted id fails fast rather than falling back |
+   311	| Commandcode | `COMMANDCODE_MODEL` | `meta/muse-spark-1.2-contributor` | `cmd --list-models` for the live catalog (GLM, Qwen, DeepSeek all reachable here) |
+   312	| DeepSeek | `DEEPSEEK_MODEL` | `deepseek/deepseek-v4-pro` | accepts a colloquial alias (`"deepseek v4 pro"`); also `DEEPSEEK_PROVIDER` (`openrouter`\|`deepseek`\|`alibaba`) selecting the endpoint and its key variable. An unrecognised value REFUSES the turn (it used to fall through to DeepSeek silently). `alibaba` is the Alibaba Token Plan, which serves Qwen under bare ids (`qwen3.8-max`, not `qwen/...`) and reads its key from `ALIBABA_TOKEN_PLAN_API_KEY` or, failing that, the file named by `ALIBABA_TOKEN_PLAN_API_KEY_FILE`. |
+   313	| Aider | `AIDER_MODEL` | `openrouter/anthropic/claude-sonnet-5`, or `openai/agents-a1` when `AIDER_OPENAI_API_BASE` is set | force `AIDER_FLAGS=--edit-format diff` on GLM |
+   314	| Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | Explicit operator choice, never a session default; see [subscription setup](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/README.md#claude-subscription-mode) |
+   315	| Pi | `PI_MODEL` | **none — required** | refuses to guess (GH-295) |
+   316	
+   317	Codex example:
+   318	
+   319	```bash
+   320	# 0. The reviewer you want must be on PATH (set by the locator).
+   321	[ "$RELAY_HAS_CODEX" = 1 ] || { echo "codex not on PATH — use agy or Path B"; exit 1; }
+   322	
+   323	# 1. Have a relay thread with an embedded "▶ TAKE YOUR TURN" block.
+   324	#    Reuse one under relay-system/<date>/, or scaffold a fresh thread with /relay first.
+   325	RELAY=relay-system/<date>/<slug>.md
+   326	ARTIFACT=<repo-relative-path-the-turn-reviews>     # e.g. skills/1-hourly/relay-xyz/SKILL.md
+   327	TASK="RELAY-$(basename "$RELAY" .md)"              # use a per-relay id, not literal RELAY-TURN
+   328	
+   329	# 2. Seed the relay task and hand the first turn to the Codex agent.
+   330	"$TICK" log     task.created "$TASK" --agent claude-a
+   331	"$TICK" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+   332	"$TICK" release "$TASK" --agent claude-a --to codex
+   333	
+   334	# 3. Drive it. The shim dispatches ONLY when the token's actor == CODEX_AGENT.
+   335	CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log" \
+   336	relay-automation/relay-drive.sh \
+   337	  --relay-file "$RELAY" \
+   338	  --relay-task "$TASK" \
+   339	  --agent-cmd  relay-automation/codex-turn.sh \
+   340	  --reviewer   "$CODEX_AGENT" \
+   341	  --round-cap  4
+   342	```
+   343	
+   344	agy example:
+   345	
+   346	```bash
+   347	[ "$RELAY_HAS_AGY" = 1 ] || { echo "agy not on PATH — use codex or Path B"; exit 1; }
+   348	
+   349	RELAY=relay-system/<date>/<slug>.md
+   350	ARTIFACT=<repo-relative-path-the-turn-reviews>
+   351	TASK="RELAY-$(basename "$RELAY" .md)"
+   352	
+   353	"$TICK" log     task.created "$TASK" --agent claude-a
+   354	"$TICK" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+   355	"$TICK" release "$TASK" --agent claude-a --to agy
+   356	
+   357	AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log" \
+   358	relay-automation/relay-drive.sh \
+   359	  --relay-file "$RELAY" \
+   360	  --relay-task "$TASK" \
+   361	  --agent-cmd  relay-automation/agy-turn.sh \
+   362	  --reviewer   "$AGY_AGENT" \
+   363	  --round-cap  4
+   364	```
+   365	
+   366	Commandcode example:
+   367	
+   368	```bash
+   369	[ -x "$(command -v cmd 2>/dev/null)" ] || { echo "cmd not on PATH — use codex or agy"; exit 1; }
+   370	
+   371	RELAY=relay-system/<date>/<slug>.md
+   372	ARTIFACT=<repo-relative-path-the-turn-reviews>
+   373	TASK="RELAY-$(basename "$RELAY" .md)"
+   374	
+   375	"$TICK" log     task.created "$TASK" --agent claude-a
+   376	"$TICK" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+   377	"$TICK" release "$TASK" --agent claude-a --to commandcode
+   378	
+   379	COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log" \
+   380	relay-automation/relay-drive.sh \
+   381	  --relay-file "$RELAY" \
+   382	  --relay-task "$TASK" \
+   383	  --agent-cmd  relay-automation/commandcode-turn.sh \
+   384	  --reviewer   "$COMMANDCODE_AGENT" \
+   385	  --round-cap  4
+   386	```
+   387	
+   388	`$TICK` is absolute, so either worker path still works if CWD drifts.
+   389	
+   390	**Important — run the shim OUTSIDE the Bash sandbox.** When *you* (Claude Code) drive this, the
+   391	`codex` / `agy` subprocess needs the OS keychain + outbound network to authenticate. Claude Code's
+   392	Bash sandbox blocks both: `codex` errors (looks like a keychain/login fault, but it's the sandbox),
+   393	and `agy -p` **fails silently — exit 0, empty output** (the shim catches this and exits 5, but only
+   394	un-sandboxed). Run these Bash calls with `dangerouslyDisableSandbox: true`. (Memory:
+   395	`codex-cli-needs-sandbox-disabled`, `agy-antigravity-cli`.)
+   396	
+   397	**Important — never hand-roll backgrounding for a driven run (GH-183/187 dogfood, 2026-07-10).** A
+   398	multi-round `marathon-drive.sh`/`relay-drive.sh` run can easily exceed the calling tool's own
+   399	foreground timeout. Always use that tool's **native** background-execution mechanism (e.g. Claude
+   400	Code's `run_in_background`), never a manual `nohup ... & disown` — a disown can itself fail (exit
+   401	1) while the backgrounded job survives anyway, undetected, and races a subsequent re-fire against
+   402	the same repo/worktree state (observed: a stray `git worktree` plus a `tick` token stuck in
+   403	`claimed`, never handed off). If a driver call *does* get killed mid-turn: `git worktree remove
+   404	--force <path>` (see `git worktree list` for stragglers) then `tick reap <agent> --by <caller>
+   405	--task <task>` to clear the stuck claim — `reap` is the sanctioned recovery (logs an auditable
+   406	`task.released` event), not a hand-written `tick release`.
+   407	
+   408	#### Inspecting token state, and a one-shot review
+   409	
+   410	- **Inspect whose-turn mid-drive:** `"$TICK" info <task>` prints the token's `status` / `claimer` /
+   411	  `handoff-to` (this is what the driver reads internally). The verb is **`info`**, not `status` —
+   412	  `tick status` is not a verb and errors with `unknown verb: status`.
+   413	- **Single deliberate review turn:** pass `--review-once` to `relay-drive.sh` to drive exactly ONE
+   414	  turn and classify the outcome by exit code, so a correct "changes requested" review is not mistaken
+   415	  for a stall:
+   416	
+   417	  | Exit | Meaning |
+   418	  |---|---|
+   419	  | `0` | reviewer Approved/Closed |
+   420	  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall |
+   421	  | `3` | genuine stall — the reviewer did nothing (token + STATUS unchanged) |
+   422	  | `4` | escalated by design (`STATUS: Escalated`), round cap, or a close mismatch |
+   423	
+   424	  Without `--review-once` a non-approval handback advances the multi-round loop instead (the producer
+   425	  takes the next turn); use `--review-once` when you want exactly one review and a clean exit code.
+   426	
+   427	- **Review an external / cross-repo artifact (a PR or diff from another repo):** pass
+   428	  `--artifact-file <path>` to `relay-drive.sh` to seed it READ-ONLY into the isolated worktree at
+   429	  `.relay-artifacts/<basename>` — the reviewer reads it there without it being committed into the
+   430	  target repo (a reviewer edit fails the turn). To scaffold the thread for such a review, use
+   431	  `relay-automation/new-relay.sh --title T --reviewer <agent> --artifact-file <path>` (add `--embed`
+   432	  to inline the artifact in a fence-collision-safe block instead of referencing the seed path). The
+   433	  scaffolder only writes a thread; you still drive it with `relay-drive.sh` per the paths above.
+   434	
+   435	- **Drive a full relay/build that lands in a DIFFERENT repo (`--target-root`):** the *normal* case —
+   436	  the harness lives in `XYZ-forge`, the code you want built or reviewed-and-committed lives in
+   437	  your own repo. Pass `--target-root <repo>` to `relay-drive.sh` (or `marathon-drive.sh`): the relay
+   438	  thread + `tick` token stay in the harness clone, while the worktree base, `ALLOW_PATHS` resolution,
+   439	  and the file-scoped commit all route to `<repo>` (the harness clone is never touched). `find-harness.sh`
+   440	  (Preconditions) solves discovery of *the harness*; `--target-root` is the inverse — pointing the
+   441	  harness **at** your repo. **A same-repo lane must OMIT `--target-root`** — passing it for the harness's
+   442	  own repo trips a relay-file off-lane false-positive (exit 6; see [#51](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/51)).
+   443	
+   444	- **One-shot cross-repo review without a relay loop (`CONSULT_ROOT`):** to apply a lens to a file in a
+   445	  foreign repo with Codex/agy headless — no Producer↔Reviewer loop, advisory only — reach for
+   446	  `consult.sh` with `CONSULT_ROOT` set to that repo. Advisors run in a throwaway worktree of
+   447	  `CONSULT_ROOT`, so they read it but can never mutate it:
+   448	  ```bash
+   449	  CONSULT_ROOT=/path/to/your/repo \
+   450	  relay-automation/consult.sh --models codex \
+   451	    --prompt-file /abs/path/Q.md --out "$TMPDIR/consult"
+   452	  ```
+   453	  **`$TMPDIR` gotcha:** when a prompt/artifact is *authored* in a sandboxed step and *consumed*
+   454	  un-sandboxed (or vice-versa), `$TMPDIR` resolves to a different dir and the path 404s
+   455	  (`prompt file not found`). Pass prompts/artifacts by **absolute path**, never a bare `$TMPDIR`-relative one.
+   456	
+   457	### Path B — hands-free poll (all-Claude, two windows)
+   458	
+   459	In each Claude window, run a guarded `/loop` that uses `poll.sh` as the gate, then take the turn from
+   460	the relay file's embedded instructions. The token *is* the lock — a window acts only when the token is
+   461	claimable by its agent **and** the artifact scope is clean.
+   462	
+   463	Each window is its own shell, so run Preconditions in each one (or `cd` into the `find-harness.sh
+   464	--root` output) before the loop — the `relay-automation/` paths below are relative to `$HARNESS`.
+   465	
+   466	```
+   467	# In each window (set --agent to that window's id). --claude-agents lists EVERY Claude id in
+   468	# the relay so the poller knows whose turns can self-poll vs. which need a cross-model nudge:
+   469	/loop 60s run relay-automation/poll.sh --mode relay --agent <claude-a|claude-b> \
+   470	  --claude-agents "claude-a,claude-b" \
+   471	  --relay-file relay-system/<date>/<slug>.md --artifact <path> \
+   472	  --deadline "$(date -v+30M +%s)" --dry-run ;\
+   473	  if it prints "DECISION: run-runner", take your turn on that relay file per its embedded \
+   474	  instructions (review/produce, append your block, `tick release RELAY-TURN --to <other>` or \
+   475	  `tick done` on approve, commit); on "DECISION: stop" CronList+CronDelete this job; else do nothing.
+   476	```
+   477	
+   478	`--claude-agents` is load-bearing: a turn belonging to an agent **not** in this list yields
+   479	`DECISION: nudge-cross-model` (a one-line "take your turn" for the human to relay to a non-Claude
+   480	window), not `idle`. List both Claude ids and Path B stays fully hands-free; omit one and that
+   481	window's turns surface as a manual nudge. `60s` keeps the prompt cache warm; the lock/heartbeat is the
+   482	real correctness guard, not the timer. Always set a `--deadline` so the loop self-closes — cron jobs
+   483	are per-session, and you can't stop another window's loop from yours. `poll.sh` exits `10` on a closed
+   484	relay (`STATUS: Approved|Closed`); see `/relay` → "Self-closing loops". Optionally run **one** extra
+   485	window with `--watchdog-authority` (longer interval, e.g. `120s`) so a stalled turn escalates exactly
+   486	once.
+   487	
+   488	**Worked recipe — "Dueling Claudes":** for the full copy-paste two-window setup (Reporter↔Maintainer,
+   489	same machine, with the one human go-gate before commit), see
+   490	[relay-automation/DUELING-CLAUDES.md](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/DUELING-CLAUDES.md). It carries the exact
+   491	`/loop` strings, the fresh-token-per-run rule, and the foreign-CWD `tick` pitfalls for Path B.
+   492	
+   493	### Path B cadence — fixed interval (today) vs adaptive (GH-33)
+   494	
+   495	The `/loop 60s` above is a **fixed** cadence: it wakes every 60s and usually decides "do nothing,"
+   496	burning a re-invocation per idle minute. **Adaptive cadence** lets `poll.sh` suggest *when* to wake
+   497	next from its own `DECISION`:
+   498	
+   499	- `poll.sh --emit-delay` adds a `DELAY: <seconds> (<reason>)` line (act-now → 0, idle backoff → 300,
+   500	  dirty → 30, waiting-for-peer-commit → 90, cross-model → 120; clamped to `--deadline`). Additive —
+   501	  the `DECISION:` line is unchanged, so the fixed `/loop 60s` recipe above still works untouched.
+   502	- `relay-automation/relay-loop.sh` wraps it. **Default** = one tick that prints `NEXT-POLL: <seconds>`
+   503	  and exits `poll.sh`'s code (10 = stop) — the unit a `/loop` **dynamic-mode** tick reads to schedule
+   504	  its next wake (via `ScheduleWakeup`), so an idle relay backs off and a live one stays responsive.
+   505	- The cadence is **not** Claude-locked: `relay-loop.sh --sleep-loop` self-paces in pure bash
+   506	  (tick → sleep `DELAY` → repeat until stop), and the `NEXT-POLL`/`DELAY` output is plain text any
+   507	  scheduler (cron, systemd timer) can consume. `/loop` dynamic mode is one option, not a dependency.
+   508	
+   509	Dynamic-mode `/loop` (self-paced) replacement for the fixed recipe — read `NEXT-POLL`, sleep that long:
+   510	
+   511	```
+   512	/loop run relay-automation/relay-loop.sh --mode relay --agent <claude-a|claude-b> \
+   513	  --claude-agents "claude-a,claude-b" --relay-file relay-system/<date>/<slug>.md \
+   514	  --artifact <path> --deadline "$(date -v+30M +%s)" --dry-run ;\
+   515	  act on "DECISION: run-runner" as above; on "DECISION: stop" CronDelete this job; \
+   516	  otherwise ScheduleWakeup after the printed "NEXT-POLL:" seconds.
+   517	```
+   518	
+   519	## Turn-taker shims & their env
+   520	
+   521	Both shims are thin dispatchers over `relay-turn-lib.sh` (the model-agnostic containment core), so
+   522	they share the same env shape:
+   523	
+   524	| Env | `codex-turn.sh` | `agy-turn.sh` | Meaning |
+   525	|---|---|---|---|
+   526	| dispatch gate | `CODEX_AGENT` | `AGY_AGENT` | NO-OPS unless `RELAY_AGENT == this` |
+   527	| extra writable paths | `ALLOW_PATHS` | `ALLOW_PATHS` | comma-sep git paths the turn may change (the relay file is always allowed). **For a review turn, set `ALLOW_PATHS=""` — relay file only.** If the artifact is writable, the reviewer tends to start *editing and building* it instead of reviewing (it can read any path regardless), which over-runs the turn cap (exit 7) — observed 2026-06-26. A build/fix turn is the only case that needs the artifact in `ALLOW_PATHS`. **A whole DIRECTORY is a valid lane entry** (GH-90): an entry that names an existing directory, or any entry written with a **trailing slash** (`skills/1-hourly/standup/fixtures/` — the only form that works when the turn is about to *create* the directory), makes that directory and everything beneath it writable. Without either signal the entry is a FILE path, and a file entry is never a bare prefix — GH-59: `green` must not reach `greenfield/output.txt`. Before GH-90 a bare directory entry was unmatchable by construction and the turn failed as a *containment violation*, which reads as a misbehaving builder rather than a malformed lane spec; the off-lane report now names that mistake explicitly. |
+   528	| peer id | `RELAY_PEER` | `RELAY_PEER` | so the turn hands off `--to <peer>` (else "the other agent") |
+   529	| binary | `CODEX_BIN` | `AGY_BIN` | override the CLI path |
+   530	| autonomy | `CODEX_FLAGS` (default `-s workspace-write`) | `AGY_MODEL` / `AGY_FLAGS` | the codex sandbox/approval flags or the agy model |
+   531	| transcript | `CODEX_LOG` | `AGY_LOG` | where the CLI transcript lands (default a `$TMPDIR` file) |
+   532	| turn ceiling | `RELAY_TURN_TIMEOUT_S` | `RELAY_TURN_TIMEOUT_S` | per-turn wall-clock cap (Aider default: 900s in both runtime shims; hung CLI → exit 7) |
+   533	
+   534	If a fresh device's `codex` still blocks writes, escalate autonomy:
+   535	`CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` (or `-c approval_policy=never`).
+   536	For agy, the common failure is different: sandboxed runs can exit `0` with empty
+   537	output, so run the lane sandbox-OFF before concluding the worker is broken.
+   538	
+   539	## Exit codes
+   540	
+   541	- **`relay-drive.sh`**: `0` closed Approved/Closed · `3` no-progress (token actor didn't move) ·
+   542	  `4` round-cap / closed-not-approved · `2` usage.
+   543	- **shims** (`codex-turn.sh` / `agy-turn.sh`): `0` acted or deferred · `5` CLI failed (or agy empty
+   544	  output) · `6` off-allowlist edit reverted (or committed mid-turn → reset) · `7` timeout-killed · `2` usage.
+   545	- **`poll.sh`**: `10` relay closed (stop the loop); on stdout one of
+   546	  `DECISION: run-runner | run-watchdog | nudge-cross-model | stop | idle`
+   547	  (`nudge-cross-model` = turn belongs to an agent not in `--claude-agents`; relay it as a manual nudge).
+   548	
+   549	## Safety boundary (what the shim guarantees)
+   550	
+   551	The shim is the containment contract, so an unattended turn can't run away: **path-allowlist**
+   552	(anything off `RELAY_FILE` + `ALLOW_PATHS` is reverted, exit 6), **commit-bypass guard** (if the CLI
+   553	commits mid-turn, the shim resets and re-commits file-scoped), and **no push** (turns commit locally
+   554	only — `git push` yourself when ready). `.tick/` is gitignored and per-device, so this is single-clone
+   555	coordination, not cross-machine.
+   556	
+   557	**Never hand-edit a clone while a driven turn is in flight there (GH-141).** `rtl_before()` snapshots
+   558	the dirty set once, at turn start. A second session's edit landing *during* the turn window produces a
+   559	porcelain entry with no match in that snapshot — **byte-identical to the agent's own off-lane
+   560	self-escape** — so `rtl_check()` reverts it in the real tree. This is not a bug that can be fixed by
+   561	detection: preserving newly-dirty non-allowlisted paths would disable the documented GH-22
+   562	self-escape backstop. Observed live twice (2026-07-05, 2026-07-18); the second incident silently
+   563	deleted an untracked doc and reverted a tracked one mid-session. Since 2026-07-18 the pre-revert
+   564	content is copied to `.tick/orphan-backups/<utc>-<pid>/<path>` first, so a wrongly-caught edit is
+   565	**recoverable** — but the revert still happens. Wait for the turn, or work in a separate worktree.
+   566	
+   567	**Worktree isolation is ON by default for driven runs.** `relay-drive.sh` exports
+   568	`RELAY_WORKTREE_ISOLATION=1`, so each turn-taker runs in a throwaway `git worktree` of `ROOT@HEAD` —
+   569	an off-task model's stray *creations/renames* (not just tracked edits) can't reach the real tree,
+   570	closing the gap where the allowlist only reverted named tracked files. Opt out per run with
+   571	`RELAY_WORKTREE_ISOLATION=0`; direct/attended shim use keeps the leaf default OFF. Also: `--agent-cmd`
+   572	runs a bare executable path directly, so an **absolute path with spaces** (a clone under
+   573	`…/GH Repos/…`) is safe — no quoting needed.
+   574	
+   575	## Verify the harness is green before a real run
+   576	
+   577	These are anchored on `$HARNESS` (set by Preconditions) so they resolve whatever your CWD is — don't
+   578	drop the `$HARNESS/` prefix or they'll 404 from a foreign session:
+   579	
+   580	```bash
+   581	bash "$HARNESS/validate.sh"            # the tick/automation suite
+   582	bash "$HARNESS/test/codex-turn.sh"     # before a Codex run
+   583	bash "$HARNESS/test/agy-turn.sh"       # before an agy run
+   584	```
+   585	
+   586	**If your turn's `--artifact`/`ALLOW_PATHS` includes anything under `relay-automation/`, re-run
+   587	`bash "$HARNESS/skills/1-hourly/relay-automation/make-pkg.sh"` after the turn lands, before trusting a green
+   588	`validate.sh`.** `relay-pkg-freshness.sh` catches a stale vendored `relay-pkg.tar.gz`, but it reads
+   589	as one more red line in a 100+-test suite rather than a real, fix-needed gap — this has bitten two
+   590	separate passes on `relay-automation/agy-turn.sh`/`consult.sh` (GH-178's original B1/A4 pass on
+   591	2026-07-08, and the GH-183/187 fix on 2026-07-10). Don't wait to discover it after the fact.
+   592	
+   593	Run the shim test matching the worker you'll drive (both are first-class). Run these un-sandboxed —
+   594	`mktemp`/network under the Bash sandbox can fail them for reasons unrelated to the code.
+   595	
+   596	## Relationship to the other skills
+   597	
+   598	- **`/relay`** — portable, dependency-free. Owns the thread template, turn block formats, evidence
+   599	  contract, and guardrails. **Use it to scaffold the thread**; relay-xyz never redefines the protocol,
+   600	  only runs it.
+   601	- **`/xyz`** — concurrent, non-overlapping path-scoped lanes (parallel *builds*), also `tick`-backed.
+   602	  A relay is sequential review (one writer, turn-based); `xyz` is parallel construction. Different
+   603	  shapes.
+   604	- **`consult.sh`** — `relay-automation/consult.sh` asks one question of Codex *and* agy in parallel,
+   605	  captures both transcripts, leaves synthesis to you. Advisory-only, read-only, **not** a relay turn —
+   606	  reach for it when you want a second opinion without a review loop.
+   607	
+   608	## Framing
+   609	
+   610	Open with a human sentence ("Driving a headless Codex or agy review of `<artifact>` — round cap 4…") and
+   611	close with the result + exit code. The structured thread lives in the relay file; the operator gets a
+   612	sentence and a verdict, not a wall of transcript.
+   613	
+   614	## Review Scope & Commensurate Complexity Standard
+   615	
+   616	Reviewers (Codex, agy, Claude, etc.) and authors must adhere to a strict standard of **commensurate complexity**:
+   617	
+   618	1. **Surgical, DRY, Safe, Secure, and Stable within Reason:** Reviews must evaluate correctness, safety, and invariants against the stated requirements without encouraging speculative over-engineering.
+   619	2. **Commensurate Machinery & Tests:** Defensive handling, recovery mechanisms, and test footprints must remain strictly commensurate with the scale and role of the core code. An 80-line sync script or local tool must not become entangled with multi-layered enterprise fail-safes, distributed locks, journaled recovery, or bespoke fuzzing/scanning runtimes unless the operator explicitly specifies it.
+   620	3. **Operational Envelope Grounding:** Reviewers must grade against the explicitly declared operational envelope (e.g. local developer CLI, single-repo task) rather than unrequested enterprise multi-tenant threat models.
+   621	4. **Challenge Unwarranted Complexity:** Reviewers should actively challenge speculative abstractions, parallel subsystems, and overbuilding, acting as a filter *against* bloat rather than an engine of scope creep.
+   622	5. **Measure, read-only (GH-681):** a headless Reviewer MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim — output and temp files under `.relay-scratch/` or `$TMPDIR` only, with `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"` first, and the command, exit status and decisive output quoted in the finding (scratch is discarded after the turn). It may NOT run `validate.sh`, `test/*.sh`, pytest, or executable fixtures in the relay worktree — those belong in a disposable full clone (`AGENTS.md`); a claim only measurable that way is graded `[Unverified — needs clone run]`. Containment is unchanged. The canonical wording is the reviewer note in `relay-automation/relay-turn-lib.sh` (`rtl_turn_prompt`); the marathon reviewer brief (`utils/py/marathon_drive.py`, step 4b) already allows `$TMPDIR` probes.
+   623	6. **Generalizations carry a falsifier (GH-681):** a finding that asks for a behaviour change is a generalization unless the Reviewer can paste the concrete input — a row, a value, a `file:line` — that fails under the current code. Every `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`, `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Producer may disposition a request lacking these as `Declined — unproven generalization`. Protocol rule, not a mechanical check; canonical wording in `relay-automation/new-relay.sh` (Reviewer bullet), mirrored in `skills/1-hourly/relay/SKILL.md` and the marathon brief (step 4c). Origin: the gh673 final QA relay, where a Round-1 `[Blocker]` generalized one late-error observation into a rule that blanks every issue on real data, and the same seat `[Pass]`ed it next round.
+   624	7. **No new tests where the repo forbids them (XYZ-forge, GH-831):** there, a new `test/` suite, a new
+   625	   `validate.sh` TESTS entry or new gate machinery in the diff is itself a finding, and a reviewer does not
+   626	   ask for one. Verification uses the existing suite that covers the change, or a manual check recorded
+   627	   under `TESTS-RESULTS/` with its `provenance.jsonl`. Other repos keep their own test policy.
+   628	
+   629	## QA / Consult Template Formatting
+   630	
+   631	Since agents often scaffold relay threads manually (when the `/relay` slash command isn't used or available), it is critical to structure QA / consultation threads correctly. **Do not** write open-ended instructions like "QA this codebase against the requirements."
+   632	
+   633	Headless agents (Codex, agy, Aider) perform best when given **explicit questions and a defined operational envelope**. A proper QA thread must include:
+   634	1. The goal, operational envelope, and files to read.
+   635	2. Explicit statement of commensurate complexity and non-goals.
+   636	3. A numbered list of concrete, specific questions to answer.
+   637	4. Instructions on what the agent should output (e.g. file:line citations).
+   638	
+   639	**Example format:**
+   640	```markdown
+   641	---
+   642	Goal: QA Phase 3 Implementation (Semantic Layer)
+   643	Date: 2026-08-25
+   644	NEXT: Reviewer
+   645	STATUS: Open
+   646	---
+   647	
+   648	# Context
+   649	
+   650	Adjudicate the implementation of Phase 3 Semantic Layer against its plan in PROJECT/2-WORKING/GH-1-firebase-ai-reports-plan.md.
+   651	
+   652	Operational Envelope: Local CLI tool. Tests and machinery must be commensurate with scope; do not demand unrequested enterprise multi-tenant fail-safes.
+   653	
+   654	Read the plan doc in full, plus the code it references:
+   655	- api/src/indexer.ts
+   656	- api/src/semantic.ts
+   657	
+   658	Questions:
+   659	
+   660	1. Are the requirements for soft-failing met? Does it gracefully continue if the vector index is missing or empty?
+   661	2. Are limits capped properly? The plan says "findNearest capped at top-K <= 10". Is this enforced securely?
+   662	3. Is the Indexer idempotent? Review `processItem` in `indexer.ts` which uses a hash check. Does this prevent unnecessary re-embedding?
+   663	4. Is the implementation surgical and DRY? Flag any unnecessary layers of abstraction or unneeded machinery.
+   664	
+   665	Flag anything wrong, missing, incorrectly scoped, or over/under-engineered. Be concrete and cite file:line where you disagree with a specific claim.
+   666	
+   667	Write your verdict below and change the STATUS to Approved/Closed if it passes.
+   668	
+   669	<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+   670	▶ TAKE YOUR TURN (codex)
+   671	<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+   672	```
+`````
+
+Ask for Reviewer (Round 2): complete the whole-file sweep of SKILL.md above, check the attribution
+evidence, and set STATUS Approved if nothing blocks a READY PR (merge readiness is not requested).
+
+handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
