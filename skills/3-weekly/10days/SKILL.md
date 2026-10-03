@@ -1,6 +1,6 @@
 ---
 name: 10days
-description: >
+description: >-
   Sweep GitHub issues opened or updated in an age window (default: last 10 days;
   adjustable, e.g. an 11-14-day slice), evaluate PRS 4-axis ratings (priority,
   severity, appeal, effort cheapness; calc sum + ovr overrides) as the prioritization
@@ -26,6 +26,11 @@ marathon, unattended. This is `start-marathon`'s more automated sibling: where
 plan through PRS rating evaluation, preflight, branch-cut, and execution in one run — because that is
 literally what it was built for (a canned macOS text-replacement snippet that expects
 one shot, no back-and-forth).
+
+The canned request, verbatim (moved out of the description to fit the 1024-char loader limit,
+GH-942): "look through recent GH issues within the last 10 days and check if they are still valid,
+reproducible, not completed already... add each one to a marathon file, run preflight, cut a new
+branch and execute on the marathon."
 
 **Read this whole file before running anything.** The auto-fire behavior below is a
 named exception to house convention, not an oversight — know why before you invoke it.

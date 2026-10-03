@@ -23,6 +23,9 @@ A per-repo SDLC process coach and strategic compass: pairs a friendly, construct
 rigorous empirical lenses over one window, persisting to a reconcilable report.
 Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 
+Also triggers on (moved out of the description to fit the 1024-char loader limit, GH-942): "what have we
+actually been doing", "summarize radar reports", "what should we fix once to stop the bleeding".
+
 ---
 
 ## Recite this — verbatim, as the first thing in your first response

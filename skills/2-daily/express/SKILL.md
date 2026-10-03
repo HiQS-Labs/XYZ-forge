@@ -1,6 +1,6 @@
 ---
 name: express
-description: >
+description: >-
   Hotfix fast lane (GH-267/GH-516) for an explicit /express, "express this hotfix",
   or "express GH-N" request. Carries a critical, risk-bounded fix, registered
   existing covering suite, releases-ledger updates, born-complete PDDA doc, CHANGELOG,

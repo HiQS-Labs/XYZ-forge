@@ -193,7 +193,9 @@ never attempted:
 handoffs and deferrals were worked and re-driven to exit 0), **or** the operator explicitly asked
 for `--teardown-only` / `--scan-only` / `--prs-only`. For a qualifying batch, Done additionally
 requires the regression sweep to have run and been recorded in the batch issue — or its deferral
-to be recorded explicitly there and in the run summary; a silently skipped sweep is not Done.
+to be recorded explicitly there and in the run summary; a silently skipped sweep is not Done. When
+the batch issue could not be created or updated (see *Non-blocking*), record the sweep (or its
+deferral) in the run summary instead and name the issue failure there; that satisfies this rule.
 
 **Permission-classifier blocks:** if a harness permission layer blocks the `--execute` launch,
 retry the identical command once before escalating to the operator — a block that succeeds on a
@@ -206,19 +208,24 @@ This protocol is caller-owned: the driving agent executes it around the script's
 script option governs it, and nothing in the landing sequence waits on GitHub issue state.
 
 - **Trigger & threshold.** Fires when the Phase 4 sequence for this run contains **three or more
-  PRs**, counted after `--exclude` drops and hold-label skips — the only exclusions knowable before
-  the first merge. Deferred, parked, and handed-off PRs are Phase 5 outcomes: *named* in the issue,
+  PRs**, counted after `--exclude` drops and the hold labels visible at sequencing time. A hold
+  label added or removed later surfaces at the Phase 5 live refresh: record that PR's outcome in
+  the issue rather than re-counting, and never close or skip the issue because the landed count
+  fell below three. Deferred, parked, and handed-off PRs are Phase 5 outcomes: *named* in the issue,
   never counted toward the threshold, and a `--resume` continuation inherits the original batch's
   issue rather than re-counting the shrunken queue. Queues below three behave exactly as before —
   no issue.
 - **Created before the first merge, kept current.** The issue is opened after sequencing and
   before the first `gh pr merge` of the batch, so problems and pivots are appended as they happen
   and the record survives a mid-batch stop (exit 2/3 included).
-- **Idempotent on `--resume`.** Before creating, search the repo's open issues labelled
-  `merge-batch` for this integration branch whose PR list overlaps the run's queue; a `--resume`
+- **Idempotent on `--resume`.** On a `--resume` run only, search the repo's open issues labelled
+  `merge-batch` for this integration branch whose PR list overlaps the run's queue; that
   continuation — including one on a later calendar day — appends to that issue, never mints a
-  duplicate. The date in the title is a human label, never the match key. One issue per batch run,
+  duplicate. A fresh (non-`--resume`) run always opens its own issue, even when a PR it queues
+  also appears in an older, still-open batch issue; link the older issue from the new one. The date in the title is a human label, never the match key. One issue per batch run,
   not per PR.
+- **Label bootstrap.** Run `gh label create merge-batch --force` before the first create, so the
+  protocol works in repos that have never used the label (it is idempotent where the label exists).
 - **Non-blocking.** Issue creation or update failures (network, permissions) are disclosed in the
   run summary and the governed landing proceeds — the issue is a record, not a gate.
 - **Named data sources — mine, do not freelance.** The merge sequence and per-PR outcomes come
