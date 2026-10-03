@@ -40,3 +40,7 @@ Constraints: same existing note identity and personal header; preserve known ful
 Public evidence: [local deployment receipt](https://github.com/HiQS-Labs/rebalanceOS/blob/535bb7a/TESTS-RESULTS/2026-10-02%2BGH-282/deployment-recheck.json).
 
 Private operator sidecar: `temp/gh937-fleet-closeout-local.md` in the Forge checkout. It is local-only, ignored, not a GitHub attachment or portable execution prerequisite. It contains installation locations; never copy its contents into public issues. The checklist above remains usable without it.
+
+## Merge evidence
+
+- PR #952 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
