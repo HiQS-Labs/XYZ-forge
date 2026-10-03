@@ -1,0 +1,29 @@
+{
+  "candidate_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "command": [
+    "python3",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+    "--repo",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-contracts/zero-budget-uncommitted-20261003T072402Z-35151/repo",
+    "--variations",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-contracts/zero-budget-uncommitted-20261003T072402Z-35151/grid.yaml",
+    "--mock-classifier",
+    "--log",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-contracts/zero-budget-uncommitted-20261003T072402Z-35151/rows.jsonl",
+    "--control",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-contracts/zero-budget-uncommitted-20261003T072402Z-35151/control.json",
+    "--minutes",
+    "0"
+  ],
+  "rc": 2,
+  "stderr": "[run_variations] no variations attempted in this invocation\n",
+  "preexisting_log_preserved": true,
+  "control_preserved": false,
+  "head_before_had_commit": false,
+  "head_after_rc": 0,
+  "head_after": "0d0bf6f9153331e6b7366dfd967bf3a286bfbf4e",
+  "target_status_before": "?? seed.txt\n?? sentinel\n",
+  "target_status_after": "",
+  "new_baseline_commit_created": true,
+  "interpretation": "No variation row was emitted, but zero-minute admission still rewrote control.json and created a baseline commit in this 0-commit target."
+}

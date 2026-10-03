@@ -1,0 +1,181 @@
+{
+  "at_utc": "2026-10-03T07:15:16Z",
+  "suite": "find-harness.sh",
+  "mode": "clean",
+  "argv": [
+    "python3",
+    "utils/py/proc_group.py",
+    "--timeout",
+    "90",
+    "--",
+    "bash",
+    "test/find-harness.sh"
+  ],
+  "cwd": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+  "effective_selection_env": {
+    "XYZ_HARNESS": null,
+    "XYZ_REPO_ROOT": null
+  },
+  "verify_before": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+    "head": {
+      "rc": 0,
+      "stdout": "3fbed72f781d1ad060e298b798a44c32edef393d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/development",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## development...origin/development",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 3fbed72f781d1ad060e298b798a44c32edef393d\nbranch refs/heads/development",
+      "stderr": ""
+    },
+    "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "task_before": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+    "head": {
+      "rc": 0,
+      "stdout": "d44cac51ce861d53c0e034c243b0f6be5205073d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## fix/gh949-ate-remediation...origin/development [ahead 8]\n M releases.db\n M releases.sql",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD d44cac51ce861d53c0e034c243b0f6be5205073d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+  },
+  "outer_rc": 0,
+  "stdout": "find-harness (GH-70 Phase 2):\n  PASS: skill front door searches the user install root\n  PASS: skill front door does not prescribe the CWD-relative command\n  PASS: harness clone: --check exits 0\n  PASS: harness clone: no concurrency warning\n  PASS: foreign no-.xyz: --check still exits 0 (fail-open)\n  PASS: foreign no-.xyz: emits the concurrency warning\n  PASS: foreign no-.xyz: points at xyz-vendor.sh\n  PASS: foreign no-.xyz: hint omits the bogus vendor subcommand\n  PASS: vendored .xyz: --check exits 0\n  PASS: vendored .xyz: no concurrency warning\n  PASS: vendored .xyz: resolves to the local .xyz\n  PASS: case-collision: --check still exits 0 (fail-open)\n  PASS: case-collision: emits the advisory warning\n  PASS: case-collision: names both colliding paths\n  PASS: case-collision: explains the exit-6 risk + git mv remedy\n  PASS: vendored collision: --check exits 0\n  PASS: vendored collision: emits the case-collision warning\n  PASS: vendored collision: names both colliding paths\n  PASS: vendored collision: stays scoped to caller repo\n  PASS: no-collision: --check exits 0\n  PASS: no-collision: case-collision warning absent\n  PASS: ignorecase=false collision: --check exits 0\n  PASS: ignorecase=false collision: warning absent\n  PASS: copied skill gives an actionable no-candidate failure\n  PASS: similarly named task clone cannot win discovery\n  PASS: wrong-origin XYZ-forge cannot win discovery\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GH Repos/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GH Repos/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GitHub/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GitHub/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GitHub Repos/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GitHub Repos/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GitHub-Repos/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GitHub-Repos/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/Github/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/Github/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Developer/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Developer/XYZ-forge\n  PASS: equally qualified clones cause a named refusal\n  PASS: unique development clone wins\n  PASS: --check config hint writes the chosen path\n  PASS: copied skill resolves the saved config\n  PASS: copied skill --env exports usable harness, repo root, and tick\n  PASS: copied skill warns on a non-development branch\n  PASS: invalid config falls through to canonical search\n  PASS: copied skill reports held lock and cached-upstream lag\n  PASS: dead holder is reported as a stale lock\n  PASS: copied skill compares vendored drift with configured live harness\n  find-harness: 50 pass, 0 fail\n",
+  "stderr": "find-harness: HARNESS=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GH Repos/XYZ-forge REPO_ROOT=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.m4QxJV/gh856-home/Documents/GH Repos/XYZ-forge vendored=0 via=override\n",
+  "timed_out": false,
+  "verify_after": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+    "head": {
+      "rc": 0,
+      "stdout": "3fbed72f781d1ad060e298b798a44c32edef393d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/development",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## development...origin/development",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 3fbed72f781d1ad060e298b798a44c32edef393d\nbranch refs/heads/development",
+      "stderr": ""
+    },
+    "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "task_after": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+    "head": {
+      "rc": 0,
+      "stdout": "d44cac51ce861d53c0e034c243b0f6be5205073d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## fix/gh949-ate-remediation...origin/development [ahead 8]\n M releases.db\n M releases.sql",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD d44cac51ce861d53c0e034c243b0f6be5205073d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+  },
+  "verify_identity_unchanged": true,
+  "task_identity_unchanged": true
+}

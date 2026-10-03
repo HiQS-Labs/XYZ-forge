@@ -1,6 +1,26 @@
 # Changelog
 
 
+## 2026-10-03 — ATE cancellation, oracle observation and gate environment (GH-949, GH-912)
+
+The GH-435 campaign exposed continuing child processes after cancellation, timed-out oracle
+commands that could pass before a late write, invisible directory-link and linked Git configuration
+changes, and ATE admission/record errors. The shared process-group helper now cleans up on
+exceptional unwind; ATE and its CLI wrapper translate INT/TERM into bounded cleanup. Oracles use
+that helper for every idempotence repetition and refuse incomplete observations. Tree snapshots
+include directory links, and host identity resolves shared and per-worktree Git configuration.
+
+ATE rejects an empty grid before writes, reports no-work budgets, appends a failure row on launch
+failure or cancellation, and emits actual UTC timestamps. Discovery tolerates an unset HOME;
+the existing runner envelope removes inherited harness selectors while retaining the explicit
+harness database override and per-case fixture assignments.
+
+This is a Costly shared-contract bet: existing helpers suffice without another executor, suite,
+registry entry or schema. Revert the focused repair commits on caller-shape or containment
+regression. Normal successful background-child policy is unchanged; forced SIGKILL and deliberate
+session escape are outside this cancellation contract. Before/after controls and final validation
+are retained under `TESTS-RESULTS/2026-10-03+GH-949/`; final QA/gate remain pending until recorded there.
+
 ## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
 
 The relay-xyz "First-time setup" told every machine to run `install.sh`. On a Mac where Skills Army HQ
