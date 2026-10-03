@@ -1,6 +1,20 @@
 # Changelog
 
 
+## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
+
+The relay-xyz "First-time setup" told every machine to run `install.sh`. On a Mac where Skills Army HQ
+already links `relay-xyz` from its `Deployed Skills` collection, that step exits 1 on the live link and
+can add links in app roots the collection does not target, against Skills Army HQ's rule not to run
+copied `install.sh` files.
+
+The section now starts with a `readlink` check. A link into `Deployed Skills/relay-xyz` means skip
+`install.sh`, leave links to Skills Army HQ (`sync.py`), and go to the locator's `--check`; if no
+harness resolves, save the clone in `~/.config/xyz/harness` or prefix one command with `XYZ_HARNESS`.
+Machines without that link keep the existing `install.sh` step. Docs only: `install.sh` itself does
+not yet detect a managed collection (deferred). Deployment to the Macs follows the post-merge checklist
+in `PROJECT/2-WORKING/GH-938-RELAY-XYZ-MANAGED-SETUP.md`.
+
 ## 2026-10-01 — Scope CI blockers to approved priorities (GH-854)
 
 The operator deferred unexplained live relay (#916), installation-registry (#917), and Gen4 oracle (#918) follow-ups until their issue-specific blocker triggers. Registry concurrency and the shared-root domain-oracle suite no longer gate every change: the existing TESTS/EXEMPT mechanism retains their files for direct manual use. The ATE subset and Ubuntu skip list agree with the retirement. A subsequent pooled setup failure also retires the non-Small ungated-warning fixture suite under standing #853 policy (#920); its isolated six assertions passed, but the historical copy error remains unknown. Its file, warning and hook enforcement remain unchanged. The Small Ballast manifest audit recognizes explicit retirement as outstanding rather than a false closure; it still rejects missing files/controls and gives no release-completion credit. Completion regression coverage remains after #909/#910; live relay stays opt-in under #836 D2. This accepts reduced automatic coverage on unrelated changes and does not claim the historical failures fixed. Reverse the registry, exemptions, ATE member and canary skip together to undo the change. The October 8 audit and stabilization counters remain separate; verification receipts live under `TESTS-RESULTS/2026-10-01+GH-854/dispositions/`.

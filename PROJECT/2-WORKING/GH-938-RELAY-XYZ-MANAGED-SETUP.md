@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked (rated 40/35/50/85), recon at `5212dae4`, plan written. | Codex plan QA via relay-xyz; then the SKILL.md edit, focused suites, one full gate, final Codex QA, ready PR. |
+| Intake parked (rated 40/35/50/85), recon at `5212dae4`, plan written. Codex plan QA (relay-xyz, 3 rounds): R1 FAIL (`Unchanged` stopped the checklist; fixed), R2 and R3 PASS; harness attestation refused both PASSes on mechanics (`review-body-rewritten`, then `close-mismatch`), so the receipt is content-approved but unattested: `relay-system/2026-10-02/gh938-plan-qa.codex.md`. Admitted (`--accepted-start`, In progress 🚧). SKILL.md "First-time setup" rewritten. | Focused suites, one full gate with receipt, final Codex QA on the diff, ready PR. |
 
 ## Rating — 2026-10-02: `40/35/50/85` (priority/severity/appeal/effort)
 

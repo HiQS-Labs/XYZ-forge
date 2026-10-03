@@ -64,11 +64,25 @@ manual mode).
 
 ## First-time setup on a new clone or machine (make the skill discoverable)
 
-This repo keeps its skills in top-level `skills/`, which Claude Code does **not** scan. A session
-finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`. A fresh clone or second machine has
-no such symlink, so the skill is invisible in **every** session there — the "other VS Code sessions
-can't find the relay-xyz files" failure. Fix it **once per clone** (idempotent, self-locating, no
-hardcoded path):
+First check whether Skills Army HQ already manages this skill on the machine:
+
+```bash
+readlink ~/.claude/skills/relay-xyz   # or the relay-xyz entry in your app's skills root
+```
+
+**Managed by Skills Army HQ — skip `install.sh`.** If the link resolves into a `Deployed Skills/relay-xyz`
+folder, the skill is already discoverable and Skills Army HQ owns the link; its rule is not to run copied
+`install.sh` files. Running it there exits 1 on the live link (GH-678 keeps it) and can add links in app
+roots the collection does not target. Manage links with Skills Army HQ (`sync.py`) and go straight to the
+locator below: run its `--check` from the installed path. If it does not resolve a harness, save your
+canonical XYZ-forge clone with the one-line command `--check` prints (`${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`),
+or prefix a single command with `XYZ_HARNESS=/path/to/XYZ-forge`. Do not export it from shell startup files.
+
+**Not managed (no link, or a dangling one).** This repo keeps its skills in top-level `skills/`, which
+Claude Code does **not** scan. A session finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`.
+A fresh clone or second machine without Skills Army HQ has no such symlink, so the skill is invisible in
+**every** session there — the "other VS Code sessions can't find the relay-xyz files" failure. Fix it
+**once per maintained clone** (idempotent, self-locating, no hardcoded path):
 
 ```bash
 bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into ~/.claude/skills/
