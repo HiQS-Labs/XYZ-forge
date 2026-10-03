@@ -58,7 +58,7 @@ from model_alias import resolver_path  # noqa: E402
 from model_catalog import catalog_version  # noqa: E402
 from proc_group import run_bounded  # noqa: E402
 from claude_cli import (read_json_bounded, validate_advisory_config, validate_admission,
-                        resolve_binary, preflight)  # noqa: E402
+                        resolve_binary, preflight, check_admission_expiry)  # noqa: E402
 
 # The resolver is a local bash script over a small in-memory table. Anything near this bound means
 # it is wedged, not slow, and a turn is worth more than a name lookup.
@@ -359,6 +359,7 @@ def _resolve_hiqs_profile(body, result):
         native_env = dict(os.environ, **exports, XYZ_HIQS_ADMISSION="pending")
         validate_admission(receipt, native_env, os.getcwd())
         preflight(binary, native_env, os.getcwd(), cli_flags=["--restricted", "--strict-mcp-config"])
+        check_admission_expiry(response["result"]["route"]["recipe"])
         with tempfile.NamedTemporaryFile(mode="w", prefix="xyz-hiqs-admission-", suffix=".json", delete=False) as stream:
             json.dump(receipt, stream, allow_nan=False)
             receipt_path = stream.name  # tempfile creates mode 0600; retained until explicit cleanup.

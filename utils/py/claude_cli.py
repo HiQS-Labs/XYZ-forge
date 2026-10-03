@@ -45,6 +45,14 @@ def validate_advisory_config(config):
     return {env: config[key] for key, env in HIQS_CONFIG_ENV.items()}
 
 
+def check_admission_expiry(recipe):
+    expiry = recipe["effectiveExpiresAt"]
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", expiry):
+        raise ValueError("HiQS admission has no UTC expiry")
+    if datetime.now(timezone.utc) >= datetime.fromisoformat(expiry.replace("Z", "+00:00")):
+        raise ValueError("HiQS admission expired; resolve explicitly again")
+
+
 def validate_admission(receipt, env, cwd):
     """Recheck retained admission locally before EACH advisory call; no resolver retry."""
     request, response = receipt["request"], receipt["response"]
@@ -80,11 +88,7 @@ def validate_admission(receipt, env, cwd):
             or any(env.get(k) for k in env if k.startswith("ANTHROPIC_") or k in PROVIDER_OVERRIDES
                    or k.startswith("CLAUDE_CODE_") or k.startswith("CLAUDE_CONFIG_"))):
         raise ValueError("HiQS admission differs from the supported native configuration")
-    expiry = recipe["effectiveExpiresAt"]
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", expiry):
-        raise ValueError("HiQS admission has no UTC expiry")
-    if datetime.now(timezone.utc) >= datetime.fromisoformat(expiry.replace("Z", "+00:00")):
-        raise ValueError("HiQS admission expired; resolve explicitly again")
+    check_admission_expiry(recipe)
     for key, original in (("snapshotPath", request["snapshot"]), ("policyPath", request["input"]["policy"]),
                           ("executionConfigPath", config)):
         if read_json_bounded(receipt[key]) != original:
@@ -113,12 +117,16 @@ def validate_admission(receipt, env, cwd):
 
 
 def admission_preflight(binary, env, cwd):
+    receipt = None
     if env.get("XYZ_HIQS_ADMISSION"):
         try:
-            validate_admission(read_json_bounded(env["XYZ_HIQS_ADMISSION"], 3 * 1024 * 1024), env, cwd)
+            receipt = read_json_bounded(env["XYZ_HIQS_ADMISSION"], 3 * 1024 * 1024)
+            validate_admission(receipt, env, cwd)
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             raise ValueError("HiQS advisory admission refused; reselect the profile explicitly") from None
     preflight(binary, env, cwd, cli_flags=["--restricted", "--strict-mcp-config"])
+    if receipt:
+        check_admission_expiry(receipt["response"]["result"]["route"]["recipe"])
 
 
 def resolve_binary(env):
