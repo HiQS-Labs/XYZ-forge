@@ -193,8 +193,8 @@ Not executed by this PR. Run in order; stop at the first failure. `C` = the devi
    (`intake.py` requires the source to sit inside a local Git repository): if the prior receipt's
    repository is the Pulse repo, `git clone <pulse> <tmp> && git -C <tmp> checkout <prior commit>`
    and use `--source "<tmp>/Deployed Skills/relay-xyz"`; if it is XYZ-forge,
-   `git clone https://github.com/HiQS-Labs/XYZ-forge.git <tmp> && git -C <tmp> checkout <prior commit>` and use `--source "<tmp>/skills/1-hourly/relay-xyz"`. Preview, then
-   `--apply`; the resulting `after` digest must equal the recorded prior `digest`. Commit and push as
+   `git clone https://github.com/HiQS-Labs/XYZ-forge.git <tmp> && git -C <tmp> checkout <prior commit>`
+   and use `--source "<tmp>/skills/1-hourly/relay-xyz"`. Preview, then `--apply`; the resulting `after` digest must equal the recorded prior `digest`. Commit and push as
    in step 3; devices pull and re-run step 4.
    (Alternatives in Skills Army HQ `references/recovery.md`: the verified backup ZIP or the staged
    prior folder.) If the doc itself is wrong, revert the PR on `development` through the normal lane.
