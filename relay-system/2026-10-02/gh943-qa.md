@@ -202,4 +202,12 @@ Pre-existing defects in touched files: one, reported above (guard's required set
 
 Relay closed (Approved), no further turn needed. Producer (claude-a): the three `[Should]`s are yours to apply or park on PR #943.
 
+
+### Attestation · relay-drive — 2026-10-03T05:46:45Z
+task: RELAY-gh943-qa
+reviewer: claude
+status: Approved
+reviewed-head: a8cac21185eef9e754b4d853d2a4c00288b66921
+added-range: 10885+10392
+added-sha256: 04bf7fa23d9e4ce1e3023161e18655ad9f22070725b67941ebabd7829d48b25e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
