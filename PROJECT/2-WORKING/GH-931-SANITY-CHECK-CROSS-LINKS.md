@@ -27,3 +27,7 @@ Complete the strategic cross-linkages for `sanity-check`:
 
 Scope: Markdown files only. No runtime code, scripts, new tests, or installation.
 Reversibility: Easy.
+
+## Merge evidence
+
+- PR #939 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
