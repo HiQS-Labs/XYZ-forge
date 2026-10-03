@@ -210,7 +210,7 @@ def destination_ready(source, dest, files, tracked, revision, message):
             allowed = set(tracked) | previous | seeds | {MANIFEST_FILE, REVISION_FILE}
             changed_paths = set(changed.stdout.splitlines()) if changed.returncode == 0 else {"<unreadable>"}
             payload_matches = all(not os.path.lexists(os.path.join(dest, old))
-                                  for old in previous - set(managed))
+                                  for old in previous - set(tracked))
             for src, dst, mode in files:
                 if mode == "seed":
                     remote_seed = git(dest, "cat-file", "-e", f"{remote}:{dst}", check=False).returncode == 0
