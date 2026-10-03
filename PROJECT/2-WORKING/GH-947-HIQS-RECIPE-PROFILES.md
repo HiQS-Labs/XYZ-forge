@@ -7,6 +7,7 @@ created: 2026-10-03
 updated: 2026-10-03
 doc_type: feedback
 owner: Codex with Noel Saw
+goal: Admit one explicit HiQS recipe through the existing Claude advisory path or refuse before dispatch
 effort: 3
 complexity: 3
 risk: 3
@@ -156,3 +157,11 @@ argv constructed from configured checkout/node instead of permitting generic com
 This further narrows the reviewed runner envelope. Fixture gate witnessed current-time
 expiry crossing during auth probe; final local expiry check now runs after preflight.
 No source or provider credentials are sent to resolver child (minimal environment).
+
+
+### Final QA disposition
+
+Agy final review attested Approved at 2a689940 (reviewed 624eb29f), driver exit0.
+Nit implemented: goal added to canonical PDDA plan; review packet moved into committed
+TESTS-RESULTS artifacts, where it is not a competing active GH947 document. No runtime
+code changes. Full qualifying gate follows in fresh disposable full clone.
