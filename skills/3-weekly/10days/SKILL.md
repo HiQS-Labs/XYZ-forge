@@ -1,24 +1,19 @@
 ---
 name: 10days
-description: >
-  Sweep GitHub issues opened or updated in an age window (default: last 10 days; the
-  window is adjustable, e.g. an 11-14-day slice to avoid overlapping another sweep),
-  evaluate Product Release System (PRS) 4-axis ratings (priority, severity, appeal, effort cheapness, calc sum,
-  and manual ovr overrides) taking highest-scored issues and operator overrides as a strong
-  prioritization signal, verify each issue is still valid, reproducible, and not already
-  fixed (fan out subagents to check issue state, comments, and git/commit history for completion
-  evidence), build a marathon plan from the survivors, run swarm-preflight on it, then
-  cut a branch and execute the marathon end-to-end with no pause inside a dedicated
-  disposable full clone folder (using worktree isolation or throwaway sub-clones for
-  individual parallel lanes underneath). This skill is a deliberate, operator-authorized
-  exception to this repo's default "ask before cutting a branch / firing a marathon" rule
-  (GUIDING-PRINCIPLES.md §8) — it exists specifically to run unattended. Trigger on "/10days",
-  "run the 10 day sweep", or the operator's canned request: "look through recent GH issues within
-  the last 10 days and check if they are still valid, reproducible, not completed already... add
-  each one to a marathon file, run preflight, cut a new branch and execute on the marathon."
-  Requires swarm-preflight.sh + marathon-plan.sh resolved from the harness root (bare repo
-  root or a vendored `.xyz/` install — see Procedure Step 0), plus the swept repo's
-  PROJECT/** + releases.db + gh (authenticated) + jq.
+description: >-
+  Sweep GitHub issues opened or updated in an age window (default: last 10 days;
+  adjustable, e.g. an 11-14-day slice), evaluate PRS 4-axis ratings (priority,
+  severity, appeal, effort cheapness; calc sum + ovr overrides) as the prioritization
+  signal, verify each issue is still valid, reproducible, and not already fixed
+  (subagents check issue state, comments, and history), build a marathon plan from
+  the survivors, run swarm-preflight, then cut a branch and execute the marathon
+  end-to-end unattended in a dedicated disposable full clone (worktree isolation or
+  throwaway sub-clones for parallel lanes). Operator-authorized exception to the
+  default "ask before cutting a branch / firing a marathon" rule
+  (GUIDING-PRINCIPLES.md §8). Trigger on "/10days", "run the 10 day sweep", or the
+  operator's canned request to sweep recent GH issues, validate them, plan,
+  preflight, and execute the marathon. Requires swarm-preflight.sh + marathon-plan.sh
+  from the harness root, plus the repo's PROJECT/** + releases.db + gh + jq.
 ---
 
 # /10days — recent-issue sweep → PRS rating prioritization → marathon → fire
@@ -31,6 +26,11 @@ marathon, unattended. This is `start-marathon`'s more automated sibling: where
 plan through PRS rating evaluation, preflight, branch-cut, and execution in one run — because that is
 literally what it was built for (a canned macOS text-replacement snippet that expects
 one shot, no back-and-forth).
+
+The canned request, verbatim (moved out of the description to fit the 1024-char loader limit,
+GH-942): "look through recent GH issues within the last 10 days and check if they are still valid,
+reproducible, not completed already... add each one to a marathon file, run preflight, cut a new
+branch and execute on the marathon."
 
 **Read this whole file before running anything.** The auto-fire behavior below is a
 named exception to house convention, not an oversight — know why before you invoke it.

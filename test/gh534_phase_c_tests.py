@@ -537,6 +537,12 @@ REQUIRED_CAPABILITIES = {
     # not demand can be deleted from SKILL.md with the parity test still green.
     "soft-edge-nonblocking": "script", "network-retry-defer": "script",
     "resume-skips-parked": "script",
+    # GH-944: the batch-issue rows are REQUIRED for the same reason, and two pre-existing
+    # same-class gaps (both tests already run in this suite via gh534_phase_b_tests.py's
+    # TestPhase5EndToEnd) close in the same edit.
+    "batch-issue-threshold": "caller", "batch-issue-resume-append": "caller",
+    "batch-regression-sweep": "caller", "post-deploy-carryover-dual-sink": "caller",
+    "mergeable-unknown-poll": "script", "exclude-drops-pr": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
     "D": (SC_SRC, "inspect_checkout", "inspect_tick_claims"),

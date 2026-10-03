@@ -1,20 +1,19 @@
 ---
 name: radar
 description: >-
-  Per-repo SDLC process coach and strategic compass over the last 2-3 weeks of activity.
-  Delivers a user-friendly narrative that celebrates high-level wins, evaluates engineering momentum,
-  diagnoses process health, and identifies potential regressions alongside recurring defect clusters.
-  Under the hood, it rigorously analyzes Run/Grow/Transform flow distribution, checks open-PR collisions,
-  and flags release plan drift. Scans for historical reports across RADAR/, docs/radar/, or
-  PROJECT/1-INBOX/ to track multi-week trajectory arcs and offers long-horizon retrospectives.
-  Analysis is read-only; findings persist to two sinks (an immutable dated report doc + one live
-  radar-labeled issue checklist) so they survive across sittings. Use when the operator asks
-  "how is our development cycle going", "what have we actually been doing", "are we just fixing bugs",
-  "what keeps breaking", "did we introduce any regressions", "summarize radar history", "radar arc",
-  "summarize radar reports", "what should we fix once to stop the bleeding", "is the plan still right",
-  "strategic review", "impact review", "run the radar", "/radar", or "/radar --arc". Not for end-user
-  shipped recaps (weekly-shipped), not for ranking marathon candidates (start-marathon), not for
-  maturity assessment (/honest), and it never executes fixes (/10days does that).
+  Per-repo SDLC process coach and strategic compass over the last 2-3 weeks of activity:
+  celebrates high-level wins, evaluates engineering momentum, diagnoses process health,
+  and spots potential regressions alongside recurring defect clusters. Analyzes
+  Run/Grow/Transform flow distribution, checks open-PR collisions, and flags release
+  plan drift; scans RADAR/, docs/radar/, or PROJECT/1-INBOX/ for multi-week trajectory
+  arcs. Read-only analysis; findings persist to two sinks (an immutable dated report
+  + one live radar-labeled issue checklist). Trigger when the operator asks "how is our
+  development cycle going", "are we just fixing bugs", "what keeps breaking", "did we
+  introduce any regressions", "summarize radar history", "radar arc", "is the plan
+  still right", "strategic review", "impact review", "run the radar", "/radar", or
+  "/radar --arc". Not for shipped recaps (weekly-shipped), marathon ranking
+  (start-marathon), or maturity assessment (/honest); never executes fixes (/10days
+  does that).
 ---
 
 # radar
@@ -23,6 +22,9 @@ A per-repo SDLC process coach and strategic compass: pairs a friendly, construct
 (celebrating high-level wins, coaching process health, and spotting potential regressions) with three
 rigorous empirical lenses over one window, persisting to a reconcilable report.
 Every claim cites a commit, file, or issue. Tracking issue: GH-442.
+
+Also triggers on (moved out of the description to fit the 1024-char loader limit, GH-942): "what have we
+actually been doing", "summarize radar reports", "what should we fix once to stop the bleeding".
 
 ---
 
