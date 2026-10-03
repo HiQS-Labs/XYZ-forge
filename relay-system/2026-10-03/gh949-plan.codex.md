@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -127,7 +127,7 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 ### Phase 2 — QA checklist
 
 - [ ] All ten requirements mapped to observed base/repaired outcomes; expected refusals separated from product failures.
-- [ ] Process/fixture cleanup and clone identity before/after verified; no production writes.
+- [ ] Process/fixture cleanup and clone identity before/after verified; no production writes.  [Unverified — no citation]
 - [ ] Focused suite results and manual controls committed with provenance, including failures and dispositions.
 - [ ] Runtime scope stays in existing helpers; no new dependencies, schemas, suites or gate stages.
 
@@ -155,6 +155,26 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Approved as a pre-implementation plan, not as proof that the runtime is repaired. Read the entire embedded and canonical plan plus recon, and inspected the named source seams. The six ordered implementation steps cover F1–F9/K1 with bounded scope, existing shared helpers, explicit compatibility constraints, reversible commits and independent final QA. No blocking pre-existing defect in the plan was found.
+
+- [Pass] Process lifecycle sequencing is grounded: `utils/py/proc_group.py:95` spawns before its communicate-only exception boundary, and command-mode timeout admission is currently after publication/ack at `utils/py/proc_group.py:185`. Phase 2 step 1 explicitly moves admission before spawn, covers BaseException cleanup and CLI SIGTERM, protects cleanup from repeated interruption, and keeps signal registration out of threaded library calls. Preserve the stated success/background policy and 124/125/127 distinctions during implementation.
+- [Pass] Oracle repair reaches delegated repeats: `utils/py/domain_oracles.py:348` calls `check_idempotence`, whose `_run_single` uses raw subprocess execution at `utils/py/metamorphic_oracle.py:182`. Phase 2 step 2 names both paths and requires genuine exit124 to remain distinguishable from timeout. Steps 2–3 also address the digest's filenames-only iteration (`domain_oracles.py:98`) and literal `.git/config` identity (`domain_oracles.py:239`), with linked common/worktree config and error-path controls. These are concrete existing seams, not a proposed second oracle engine.
+- [Pass] ATE admission and records have measurable consumer-facing criteria: `utils/ate/scripts/run_variations.py:449` writes control before the empty loop can skip work, `:483` invokes the harness before classification/append, and `:534` labels local time as UTC. Phase 2 step 4 specifies pre-write empty-grid rejection, invocation-local no-work accounting, one append for spawn/cancellation failures, 130/143 cancellation, and UTC clocks. The existing readers accept category/cause strings and top-level fail (`utils/ate/scripts/checkin.py:67`, `utils/ate/scripts/compile_issue.py:49`); retain the full existing record shape as planned.
+- [Pass] Environment scope is appropriately narrow: optional HOME expansions precede override selection at `skills/1-hourly/relay-xyz/find-harness.sh:121` and recur in AGY discovery at `:348`. The single envelope entry at `test/lib/runner-envelope.sh:59` is used by `validate.sh:1238` and `ci-local.sh:399`. Step 5 preserves XDG, explicit fixture assignments and XYZ_HARNESS_DB while removing only the two named inherited selectors.
+- [Unverified — no citation] Proof and rollback are explicit: the plan says “shield is fresh full verification clone with identity snapshots” and requires “every F1–F9/K1 has a result and failure-witness reference.” The recon names existing focused suites; Phase 3 requires final independent QA, qualifying evidence and exact-SHA checks before ready publication. No new suite, gate, schema or dependency is proposed.
+- [Nit] The relay Setup still has the placeholder Definition of Done and the plan table says “matrix below” although the criteria are in the numbered steps. On future packet preparation, point these directly at Phase 2 steps 1–6 and Phase 3 QA. The operational envelope and explicit controls make this review's criteria unambiguous, so this is not a blocker.
+- [Unverified — needs clone run] No runtime suites, executable fixtures, model calls or Git commands were run in this review worktree. Cancellation, late-writer teardown, exact result compatibility, reader acceptance and gate behavior remain implementation acceptance work, not witnessed passes in this turn. Historical incident counts and live PR/ledger state were treated as supplied context rather than independently re-attested.
+
+Evidence boundary: Verify-tier discovery attempted against nearest indexed project `XYZ-forge` (different checkout), generation `2026-09-01T15:54:30Z`; project listing exhausted both pages. Symbol search returned only unrelated `rtl_run_bounded` (no further pages). Coverage reported proc_group/domain_oracles/locator/envelope not tracked and ATE scripts excluded; metamorphic metadata matched only that other checkout. Used local source reads for material claims, without treating graph silence as absence or reindexing outside this turn's allowed write scope.
+
+Relay closed (Approved), no further review turn needed. Producer may proceed with the approved implementation plan; runtime approval remains subject to the planned evidence and final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
