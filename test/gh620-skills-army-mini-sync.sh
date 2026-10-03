@@ -57,6 +57,10 @@ git(WORK, "clone", "-q", bare, dest); git(dest, "symbolic-ref", "HEAD", "refs/he
 def publish(*extra): return sh(sys.executable, sync, "--target", "skills-army-mini", "--dest", dest, *extra)
 
 r = publish("--push")
+ok("retired target refuses by default (GH-882)", r.returncode == 2 and "retired" in r.stderr and "XYZ-skills-army-mini" in r.stderr, r.stderr[-300:])
+# the suite keeps exercising the retired publisher until the 2026-10-08 audit removes both
+os.environ["XYZ_ALLOW_RETIRED_TARGET"] = "1"
+r = publish("--push")
 ok("first publication pushes and reads back", r.returncode == 0, r.stderr[-300:])
 # GH-882: the forge copy now carries UPSTREAM.md (it points at the new upstream). This publisher is
 # retired, and this suite is removed through the 2026-10-08 audit; the set is kept truthful until then.

@@ -366,26 +366,26 @@ Posting is not an alternative to the on-screen report, is not optional, and is n
 approval — a review comment is reversible (it can be edited or deleted), so it is pre-authorized
 here. Never pause to ask.
 
-1. **Write the report to a file first.** Emit the full Phase 4 report as clean GitHub-flavored
+1. **Resolve the target before writing the report.** PR mode (`--pr <PR#>`) posts to that PR.
+   Local-diff mode (`/review-code` without `--pr`): resolve the branch's open PR with
+   `gh pr view --json number,url -q .number`, or use an explicit `--issue <N>` if given. If neither
+   resolves, that is the only sanctioned skip — state `NO GH TARGET — report on-screen only` on
+   screen and stop there. Nothing else may skip the post.
+2. **Write the report to a file first.** Emit the full Phase 4 report as clean GitHub-flavored
    markdown to `temp/review-<PR#|issue#>-<YYYYMMDD-HHMM>.md` (create `temp/` if missing; never the
    repo root). The on-screen report and the posted comment must carry the same content.
-2. **Post it without asking, with `--body-file`** (never `--body` — shell quoting silently mangles
+3. **Post it without asking, with `--body-file`** (never `--body` — shell quoting silently mangles
    multi-line markdown):
    - PR target: `gh pr comment <PR#> --body-file <report.md>`
    - Issue target: `gh issue comment <N> --body-file <report.md>`
    Do not default to `gh pr review --request-changes` / `--approve`: branch protection may reject
    self-approval and a requested-changes gate blocks the merge; a plain comment always succeeds.
-3. **Verify the post landed.** `gh pr comment` prints the comment URL on success — capture it. If no
+4. **Verify the post landed.** `gh pr comment` prints the comment URL on success — capture it. If no
    URL was captured, re-check via `gh pr view <PR#> --json comments` and confirm the report's
    heading line is present. An uncaptured URL is an unverified post.
-4. **Render on-screen and close the loop.** Print the full report in the chat session, then the
+5. **Render on-screen and close the loop.** Print the full report in the chat session, then the
    verification line `Posted: <comment-url>`. If posting failed, print the full report, the exact
    `gh` error, and `NOT POSTED: <reason>` — a failed post is reported, never silently skipped.
-5. **Resolve the target before writing the report.** PR mode (`--pr <PR#>`) posts to that PR.
-   Local-diff mode (`/review-code` without `--pr`): resolve the branch's open PR with
-   `gh pr view --json number,url -q .number`, or use an explicit `--issue <N>` if given. If neither
-   resolves, that is the only sanctioned skip — state `NO GH TARGET — report on-screen only` on
-   screen and stop there. Nothing else may skip the post.
 
 - **Linked Issue Checklists:** If the PR closes issues (`Fixes #123`), verify that all requirements
   in the linked issue or PDDA tracking document (`PROJECT/1-INBOX/` or `PROJECT/2-WORKING/`) are

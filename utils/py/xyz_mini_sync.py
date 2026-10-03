@@ -13,17 +13,23 @@ the branch is not development; re-publish from development once the branch lands
 Modes:
   * managed — byte-identical contract: replaced every run, deleted from the child when dropped
   * seed    — copied only when absent; never replaced, never deleted (child-owned, e.g. TODO.md)
-  * adapted — the child owns the bytes: copied only when absent, never replaced, deleted only
-              when dropped; the forge source must stay tracked (upstream of record) and every
-              adapted destination must be documented in mini/ORIGIN.md or the run refuses
+  * adapted — the child owns the entry: the forge files seed it once (when the child has never
+              been published that entry), after which nothing under it is replaced, added, or
+              deleted from the forge side. Every path the child's MANIFEST.txt already lists under
+              the entry (including child-only files such as a mini install.sh) is carried forward.
+              Dropping the whole entry from this manifest deletes those paths deliberately. The
+              forge source must stay tracked (upstream of record), and every adapted entry needs an
+              exact row in the target's origin registry (mini/ORIGIN.md, read from the committed
+              source SHA), or the run refuses
 
 Guards (deliberately few):
   * every manifest source must exist and be tracked, or nothing is written (exit 2)
   * an existing destination file at an output path that the previous publication did not write is
     never overwritten (exit 2) — the one ownership guard
-  * an adapted destination deleted from the child is refused, never fabricated from forge bytes;
-    a fresh child (or a newly added adapted entry) materializes the path from forge bytes as the
-    re-adaptation starting point
+  * a path the child's MANIFEST.txt lists under an adapted entry but that is missing from the
+    child is refused, never fabricated from forge bytes; an entry the child has never been
+    published (fresh child, newly added or re-added entry) is seeded from forge bytes
+  * retired targets (skills-army-mini, #882) refuse unless XYZ_ALLOW_RETIRED_TARGET=1
   * the files about to ship are regex-scanned for secrets before anything is written (exit 4)
 
 Usage: utils/py/xyz_mini_sync.py [--dest PATH] [--apply] [--push] [--allow-dirty] [--print-manifest]
@@ -40,9 +46,10 @@ import sys
 # (source path in XYZ-forge, destination path in XYZ mini, mode)
 #   managed: replaced every run, deleted from mini when dropped from this list
 #   seed:    copied only when absent in mini; never replaced, never deleted
-#   adapted: mini owns the bytes — copied only when absent, never replaced, deleted only when
-#            dropped; the forge source stays tracked as the upstream of record and every adapted
-#            destination must be documented in mini/ORIGIN.md (see mini/ADAPTATIONS.md)
+#   adapted: mini owns the entry — seeded once from forge bytes, then never replaced, added to, or
+#            pruned from the forge side; deleted only when the whole entry is dropped. The forge
+#            source stays tracked as the upstream of record and the entry needs an exact row in
+#            mini/ORIGIN.md (see mini/ADAPTATIONS.md)
 # A directory entry ships every TRACKED file beneath it.
 MANIFEST = (
     ("skills/1-hourly/relay", "skills/relay", "managed"),
@@ -93,6 +100,7 @@ TARGETS = {
         "env": "XYZ_MINI_REPO",
         "sibling": "XYZ-mini",
         "log": "xyz-mini-sync",
+        "origin": "mini/ORIGIN.md",
     },
     "skills-army-mini": {
         "manifest": SKILLS_ARMY_MANIFEST,
@@ -100,6 +108,12 @@ TARGETS = {
         "sibling": "XYZ-skills-army-mini",
         "log": "skills-army-mini-sync",
     },
+}
+# GH-882: XYZ-skills-army-mini is the Skills Army HQ upstream; publishing into it from the forge would
+# overwrite it. The target stays only so its suite can run until the 2026-10-08 audit removes both.
+RETIRED_TARGETS = {
+    "skills-army-mini": "HiQS-Labs/XYZ-skills-army-mini is the Skills Army HQ upstream since 2026-10-01 "
+                        "(#882; decision XYZ-skills-army-mini#2) — make changes there, not from the forge",
 }
 MANIFEST_FILE = "MANIFEST.txt"        # managed paths of the last publication (drives deletions)
 REVISION_FILE = ".xyz-forge-revision"  # source SHA of the last publication
@@ -125,7 +139,7 @@ def log(msg, prefix="xyz-mini-sync"):
 
 
 def git(repo, *args, check=True):
-    cp = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True)
+    cp = subprocess.run(["git", "-C", repo, *args], capture_output=True, encoding="utf-8", errors="replace")
     if check and cp.returncode != 0:
         raise Refuse(f"git {' '.join(args)} failed in {repo}: {cp.stderr.strip()}")
     return cp
@@ -160,24 +174,17 @@ def expected_revision(sha, branch, dirty):
     return f"source_repo=XYZ-forge\nsource_sha={sha}\nsource_branch={branch}\nsource_dirty={int(dirty)}\n"
 
 
-DOC_TOKEN_RX = re.compile(r"[A-Za-z0-9_./-]+")
+ORIGIN_ROW_RX = re.compile(r"^\s*\|\s*`?([^`|]+?)`?\s*\|")
 
 
-def origin_documented(dest, doc):
-    """True when the origin doc names the destination file or one of its ancestor directories.
+def origin_rows(doc):
+    """Destination paths named in the first column of the origin registry's table (exact rows only:
+    a path mentioned in a Notes column, or a parent directory, documents nothing)."""
+    return {m.group(1).strip().rstrip("/") for m in map(ORIGIN_ROW_RX.match, doc.splitlines()) if m}
 
-    Matching is token-exact (maximal path-like runs), not substring: a bare "skills/" inside
-    "skills/daily-planner/" must not document everything under skills/.
-    """
-    tokens = set(DOC_TOKEN_RX.findall(doc))
-    if dest in tokens:
-        return True
-    parent = os.path.dirname(dest)
-    while parent:
-        if parent in tokens or parent + "/" in tokens:
-            return True
-        parent = os.path.dirname(parent)
-    return False
+
+def under(path, root):
+    return path == root or path.startswith(root + "/")
 
 
 def destination_ready(source, dest, files, tracked, revision, message):
@@ -256,6 +263,8 @@ def main(argv=None):
         return 0
     apply = a.apply or a.push
     try:
+        if a.target in RETIRED_TARGETS and os.environ.get("XYZ_ALLOW_RETIRED_TARGET") != "1":
+            raise Refuse(f"target {a.target!r} is retired: {RETIRED_TARGETS[a.target]}")
         source = git(os.path.dirname(os.path.abspath(__file__)), "rev-parse", "--show-toplevel").stdout.strip()
         profile = TARGETS[a.target]
         configured_dest = a.dest or os.environ.get(profile["env"])
@@ -272,49 +281,53 @@ def main(argv=None):
 
         files = expand(source, profile["manifest"])
         managed = sorted({d for _, d, m in files if m == "managed"})
-        adapted = sorted({d for _, d, m in files if m == "adapted"})
-        tracked = sorted(managed + adapted)
-        if adapted:
-            origin_doc_path = os.path.join(source, "mini", "ORIGIN.md")
-            if not os.path.isfile(origin_doc_path):
-                raise Refuse("adapted manifest entries require mini/ORIGIN.md in the source repo")
-            origin_doc = open(origin_doc_path).read()
-            # a dest counts as documented when the doc names the file or any ancestor directory
-            undocumented = [d for d in adapted if not origin_documented(d, origin_doc)]
+        adapted_roots = sorted({d.rstrip("/") for _, d, m in profile["manifest"] if m == "adapted"})
+        if adapted_roots:
+            origin_rel = profile.get("origin")
+            if not origin_rel:
+                raise Refuse(f"target {a.target!r} has adapted entries but no origin registry")
+            origin_cp = git(source, "show", f"{sha}:{origin_rel}", check=False)
+            if origin_cp.returncode != 0:
+                raise Refuse(f"adapted manifest entries require {origin_rel} committed at {sha[:12]}")
+            rows = origin_rows(origin_cp.stdout)
+            undocumented = [r for r in adapted_roots if r not in rows]
             if undocumented:
-                raise Refuse("adapted destinations not documented in mini/ORIGIN.md: "
+                raise Refuse(f"adapted entries without an exact row in {origin_rel} at {sha[:12]}: "
                              + " ".join(undocumented))
+        prev_path = os.path.join(dest, MANIFEST_FILE)
+        with open(prev_path, encoding="utf-8") if os.path.isfile(prev_path) else open(os.devnull) as fh:
+            prev = set(fh.read().split())
+        # ownership is per adapted entry: an entry the child was already published keeps exactly the
+        # paths its MANIFEST.txt lists (child-only files included); a never-published entry is seeded
+        established = {r for r in adapted_roots if any(under(p, r) for p in prev)}
+        carried = sorted(p for p in prev if any(under(p, r) for r in established))
+        seeded = sorted({d for _, d, m in files if m == "adapted" and not any(under(d, r) for r in established)})
+        tracked = sorted(set(managed) | set(carried) | set(seeded))
         revision = expected_revision(sha, branch, dirty)
         message = f"sync: XYZ-forge@{sha[:12]} ({branch}){' [dirty source]' if dirty else ''}"
         if branch != "development":
-            log(f"note: publishing from {branch!r}, not development — recorded in {REVISION_FILE} "
-                f"and the child's ORIGIN.md", profile["log"])
+            log(f"note: publishing from {branch!r}, not development — the branch is recorded in "
+                f"the child's {REVISION_FILE}", profile["log"])
         destination_ready(source, dest, files, tracked, revision, message)
-        prev_path = os.path.join(dest, MANIFEST_FILE)
-        prev = set(open(prev_path).read().split()) if os.path.isfile(prev_path) else set()
         owned = prev | {MANIFEST_FILE, REVISION_FILE}
 
         # the one ownership guard: never overwrite something the last publication did not write
         for _, d, m in files:
-            if m != "seed" and d not in owned and os.path.lexists(os.path.join(dest, d)):
+            writes = m == "managed" or (m == "adapted" and d in seeded)
+            if writes and d not in owned and os.path.lexists(os.path.join(dest, d)):
                 raise Refuse(f"{d} exists in the destination but was not published by this tool — refusing to overwrite")
-        missing_adapted = sorted(d for _, d, m in files
-                                 if m == "adapted" and not os.path.lexists(os.path.join(dest, d)))
-        if missing_adapted:
-            # lost (the child's history knows the path) vs fresh (it never had it)
-            lost, fresh = [], []
-            for d in missing_adapted:
-                known = git(dest, "rev-list", "HEAD", "--", d, check=False).stdout.strip()
-                (lost if known else fresh).append(d)
-            if lost:
-                raise Refuse("adapted destination deleted from the child — restore it from the "
-                             "child's git history or re-adapt; the tool will not fabricate it "
-                             "from forge bytes: " + " ".join(lost))
-            if fresh:
-                log("fresh child: adapted paths materialized from forge bytes — re-adapt per the "
-                    "child's ORIGIN.md: " + " ".join(fresh), profile["log"])
+        lost = sorted(p for p in carried if not os.path.lexists(os.path.join(dest, p)))
+        if lost:
+            raise Refuse("adapted path listed in the child's MANIFEST.txt but missing from the child — "
+                         "restore it from the child's git history or re-adapt; the tool will not "
+                         "fabricate it from forge bytes: " + " ".join(lost))
+        if seeded:
+            log("adapted entries seeded from forge bytes — re-adapt per the child's ORIGIN.md: "
+                + " ".join(sorted(r for r in adapted_roots if r not in established)), profile["log"])
         deletions = sorted(d for d in prev - set(tracked) if os.path.lexists(os.path.join(dest, d)))
-        copies = [(s, d) for s, d, m in files if m == "managed" or not os.path.exists(os.path.join(dest, d))]
+        copies = [(s, d) for s, d, m in files
+                  if m == "managed" or (m == "adapted" and d in seeded and not os.path.exists(os.path.join(dest, d)))
+                  or (m == "seed" and not os.path.exists(os.path.join(dest, d)))]
 
         scan(source, [s for s, _ in copies])
         log(f"source {sha[:12]} ({branch}{', dirty' if dirty else ''}) → {dest}", profile["log"])

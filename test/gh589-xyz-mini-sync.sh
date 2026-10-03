@@ -72,20 +72,31 @@ ok("agent-chorus standalone pipeline did not ship", not os.path.exists(os.path.j
 # criterion 1: idempotent
 c = count(); r = run("--push"); ok("1. second run: exit 0, no new commit, remote unchanged", r.returncode == 0 and count() == c and remote() == h, r.stderr[-200:])
 
-# adapted mode: the child owns the bytes; mini/ORIGIN.md must document every adapted path
-write(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md")), "mini-adapted\n")
-git(DEST, "add", "-A"); git(DEST, "commit", "-q", "-m", "adapt"); git(DEST, "push", "-q", "origin", "main")
-write(os.path.join(SRC, "skills/3-weekly/weekly-planner/SKILL.md"), "forge-never-ships\n"); commit_src("forge drift")
-r = run("--apply"); ok("adapted: child bytes kept, forge drift not shipped", r.returncode == 0 and read(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md"))) == "mini-adapted\n", r.stderr[-200:])
+# adapted mode: the child owns each adapted entry; mini/ORIGIN.md needs an exact row per entry
+def push_dest(msg): git(DEST, "add", "-A"); git(DEST, "commit", "-q", "-m", msg); git(DEST, "push", "-q", "origin", "main")
+WP = os.path.join("skills", "weekly-planner"); WPS = os.path.join(WP, "SKILL.md"); WPI = os.path.join(WP, "install.sh")
+def manifest_rows(): return read(os.path.join(DEST, "MANIFEST.txt")).split()
+write(os.path.join(DEST, WPS), "mini-adapted\n"); write(os.path.join(DEST, WPI), "#!/bin/sh\n# mini-only\n")
+write(os.path.join(DEST, "MANIFEST.txt"), read(os.path.join(DEST, "MANIFEST.txt")) + WPI + "\n")  # as an earlier publication left it
+push_dest("adapt + mini-only install.sh")
+write(os.path.join(SRC, "skills/3-weekly/weekly-planner/SKILL.md"), "forge-never-ships\n")
+write(os.path.join(SRC, "skills/3-weekly/weekly-planner", "NEW.md"), "forge addition\n"); commit_src("forge drift + addition")
+r = run("--push"); ok("adapted: child bytes kept, forge drift not shipped", r.returncode == 0 and read(os.path.join(DEST, WPS)) == "mini-adapted\n", r.stderr[-200:])
+ok("adapted: mini-only install.sh carried forward (file and MANIFEST.txt row)", os.path.exists(os.path.join(DEST, WPI)) and WPI in manifest_rows())
+ok("adapted: forge addition under an established entry is not shipped", not os.path.exists(os.path.join(DEST, WP, "NEW.md")))
 reset_src()
-write(os.path.join(SRC, "mini/ORIGIN.md"), "".join(l for l in read(os.path.join(SRC, "mini/ORIGIN.md")).splitlines(True) if os.path.join("skills", "weekly-planner", "") not in l)); commit_src("undocument weekly-planner")
-r = run("--apply"); ok("adapted: undocumented path → exit 2", r.returncode == 2, r.stderr[-200:])
+o = read(os.path.join(SRC, "mini/ORIGIN.md"))
+write(os.path.join(SRC, "mini/ORIGIN.md"), "".join(l for l in o.splitlines(True) if not l.lstrip().startswith("| `" + WP))
+      + "\nNotes only: " + WP + "/ and `skills/...` are mentioned here, not in a table row.\n"); commit_src("undocument weekly-planner")
+r = run("--apply"); ok("adapted: entry without an exact ORIGIN row → exit 2 (a Notes mention documents nothing)", r.returncode == 2 and "without an exact row" in r.stderr and WP in r.stderr, r.stderr[-200:])
 reset_src()
-git(DEST, "rm", "-q", "--", os.path.join("skills", "weekly-planner", "SKILL.md")); git(DEST, "commit", "-q", "-m", "drop adapted file"); git(DEST, "push", "-q", "origin", "main")
-r = run("--apply"); ok("adapted: deleted-from-child path → exit 2, not fabricated", r.returncode == 2 and not os.path.exists(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md"))), r.stderr[-200:])
+git(DEST, "rm", "-q", "--", WPS); git(DEST, "commit", "-q", "-m", "drop adapted file"); git(DEST, "push", "-q", "origin", "main")
+r = run("--apply"); ok("adapted: listed path deleted from the child → exit 2, not fabricated", r.returncode == 2 and "missing from the child" in r.stderr and not os.path.exists(os.path.join(DEST, WPS)), r.stderr[-200:])
+write(os.path.join(DEST, WPS), "mini-adapted\n"); push_dest("restore adapted")
+write(SYNC, read(SYNC).replace('    ("skills/3-weekly/weekly-planner", "skills/weekly-planner", "adapted"),\n', "")); commit_src("drop weekly-planner entry")
+r = run("--push"); ok("adapted: dropping the whole entry deletes it, child-only files included", r.returncode == 0 and not os.path.exists(os.path.join(DEST, WPS)) and not os.path.exists(os.path.join(DEST, WPI)), r.stderr[-200:])
 reset_src()
-write(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md")), "mini-adapted\n")
-git(DEST, "add", "-A"); git(DEST, "commit", "-q", "-m", "restore adapted"); git(DEST, "push", "-q", "origin", "main")
+r = run("--push"); ok("adapted: a re-added entry is seeded fresh from forge bytes", r.returncode == 0 and os.path.isfile(os.path.join(DEST, WPS)) and read(os.path.join(DEST, WPS)) == read(os.path.join(SRC, "skills/3-weekly/weekly-planner/SKILL.md")), r.stderr[-200:])
 
 # criterion 3: inclusion-only
 write(os.path.join(SRC, "skills", "zz-unlisted", "SKILL.md"), "---\nname: zz-unlisted\ndescription: x\n---\n"); commit_src("unlisted")

@@ -12,8 +12,9 @@ Two kinds of managed paths exist:
   revision. The sync tool replaces it on every publication. Everything listed in `MANIFEST.txt`
   is this kind unless named in the table below.
 - **Adapted:** the file started from the forge source named below but carries mini-local changes.
-  The sync tool never overwrites an adapted path and deletes it only if it is dropped from the
-  tool's manifest; the forge source path remains the upstream of record.
+  The sync tool seeds an adapted entry once, then never overwrites, adds to, or prunes anything
+  under it. Child-only files under it are kept. It deletes the entry only when the whole entry is
+  dropped from the tool's manifest. The forge source path remains the upstream of record.
 
 | Path in XYZ-mini | Kind | Upstream in XYZ-forge | Notes |
 |---|---|---|---|
@@ -24,7 +25,7 @@ Rules for a new adaptation:
 
 1. Add the path to the forge tool's MANIFEST with mode `adapted`; the forge source must keep
    existing and stay tracked — it is the upstream of record.
-2. Add a row to this table in the forge's `mini/ORIGIN.md` (this file). The sync tool refuses to
-   publish an adapted path that this file does not document.
+2. Add a row to this table in the forge's `mini/ORIGIN.md` (this file), with the entry's exact
+   destination in the first column. The sync tool refuses to publish an adapted entry without one.
 3. Park the upstream-sync debt (`PARKED/` in the forge) or file it, and either re-upstream the
    change to the forge or maintain the fork consciously.

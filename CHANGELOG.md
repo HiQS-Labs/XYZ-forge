@@ -1,23 +1,39 @@
 # Changelog
 
-## 2026-09-29 — XYZ-mini publisher gains the adaptation exception path: adapted mode with an enforced chain of origin (GH-589)
+## 2026-10-03 — XYZ-mini publisher: adapted mode with per-entry ownership, exact origin rows, and the retired Skills Army target (GH-589, #951)
 
-The GH-889 planner skills were vendored into XYZ-mini as deliberate mini-side adaptations (flat
-paths, `/relay` instead of `/relay-xyz`, child-only hardening), which the byte-identity publisher
-could not express: its next `--apply` would have deleted them along with the hand-published
-review-code (witnessed: the old tool planned `delete 7` against the live child). The publisher now
-has three modes — `managed` (byte-identical, replaced every run), `seed` (copied once), and the new
-`adapted` (the child owns the bytes; the forge source stays tracked as the upstream of record). An
-adapted destination deleted from the child is refused, never fabricated from forge bytes; a fresh
-child materializes adapted paths from forge bytes as the re-adaptation starting point. Publications
-may run from any forge branch — the tool records `source_repo`/`source_sha`/`source_branch` in the
-child's `.xyz-forge-revision` and warns when the branch is not `development`; re-publish from
-`development` after the branch lands to re-baseline. The chain of origin is enforced, not
-aspirational: every adapted path must be documented in `mini/ORIGIN.md`, which ships to the child
-as `ORIGIN.md`, or the run refuses (token-exact matching per file or ancestor directory — a bare
-`skills/` inside a longer path documents nothing). Policy: `mini/ADAPTATIONS.md`. The planner
-entries are now `adapted`; review-code is `managed`; `test/gh589-xyz-mini-sync.sh` pins all of it
-(21 assertions, run in a disposable full clone).
+The GH-889 planner skills ship to XYZ-mini as mini-side adaptations: flat paths, `/relay` instead of
+`/relay-xyz`, and child-only `install.sh` hardening. The byte-identity publisher could not express
+that. XYZ-mini's last two syncs came from unlanded work, so publishing from `development` would have
+deleted them (#951). `utils/py/xyz_mini_sync.py` now has three modes: `managed` (byte-identical),
+`seed` (copied once) and `adapted`.
+
+How adapted ownership works:
+
+- **Ownership is per entry.** A never-published entry is seeded once from forge bytes. After that,
+  nothing under it is replaced, added or pruned from the forge side.
+- **Child-listed paths are carried forward.** Every path the child's `MANIFEST.txt` lists under the
+  entry is kept, including mini-only `install.sh` files.
+- **Dropping is the only deletion.** Dropping the whole entry deletes it. A listed path missing from
+  the child is refused, never fabricated.
+- **Exact origin rows.** Every adapted entry needs an exact first-column row in `mini/ORIGIN.md`,
+  read from the committed source SHA. A Notes-column mention documents nothing.
+- **Retired target.** `--target skills-army-mini` now refuses by default (#882). Only its suite opts
+  in, through `XYZ_ALLOW_RETIRED_TARGET=1`, until the 2026-10-08 audit removes both.
+
+Also included:
+
+- review-code resolves its GitHub target before writing the report.
+- The work was carried forward from `archive/primary-gh889-snapshot-2026-10-03`.
+
+Policy: `mini/ADAPTATIONS.md`.
+
+Verification:
+
+- `test/gh589-xyz-mini-sync.sh` 25/0, including carry-forward, no forge additions, exact row,
+  missing-file refusal, and drop/re-add.
+- `test/gh620-skills-army-mini-sync.sh` 29/0, including the retired-by-default refusal.
+- Red controls: removing carry-forward and substring origin matching each fail the suite.
 
 ## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
 
