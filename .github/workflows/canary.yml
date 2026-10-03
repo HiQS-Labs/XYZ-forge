@@ -1,11 +1,17 @@
 # Canary tier (GH-928) — DORMANT by design until the tier is accepted.
-# This workflow fires only on manual dispatch. To arm it, add:
+# This workflow fires only on manual dispatch. Before arming, decide the PLATFORM question
+# first (GLM r2 S5): macOS is the shipping platform (GH-509) and hosted ubuntu is
+# advisory-only, so when arming EITHER switch runs-on to macos-latest, OR keep ubuntu-latest
+# and add `continue-on-error: true` to the job (advisory, never breakage), OR record an
+# explicit operator decision to deviate. Arming itself = adding the triggers under `on:`:
 #
 #   push:
 #     branches: [development, main]
 #   pull_request:
 #
-# under `on:` — nothing else changes. ./canary.sh is the whole job.
+# nothing else changes. ./canary.sh is the whole job. NOTE (GLM r2 S1): the workflow is not
+# dispatchable until this file exists on a default-branch ref — after the cherry-pick lands,
+# dispatch once and cite that run before any arming decision.
 name: Canary tier
 
 on:
@@ -32,3 +38,7 @@ jobs:
           python-version: '3.11'
       - name: canary (both runtimes)
         run: ./canary.sh --runtime both
+        env:
+          # 21 checks x the 60s default could exceed this job's 5-minute cap if several hang
+          # (GLM r2 nit); 10s per check keeps the failure summary reachable.
+          XYZ_CANARY_TIMEOUT_S: '10'

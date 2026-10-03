@@ -117,6 +117,37 @@ and a repopulated packet for round 2. The round-1 method/direction findings were
 with the noted narrowing: the containment-primitives lesson is stated as observations from this
 canary and one worked example, not a general clean-room failure rate.
 
+## Review round 2 (2026-10-03) — independent non-author reviews (GLM 5.3 Max, GPT 6 Astra Light)
+
+Both reviewers verified round-1's fixes and found what the six-round internal relay had not:
+
+- **[Astra, Blocker] Timeout watchdog killed only the check subshell.** A check that backgrounds
+  a child left that grandchild running past the deadline (witnessed: sentinel written after
+  rc=143). Fixed with `set -m` process groups: group TERM→KILL on timeout plus a completion
+  sweep; re-witnessed ORPHAN-PREVENTED on bash 5 and bash 3.2.
+- **[Astra, Blocker] Containment passed over content changes to an already-dirty tracked file**
+  (porcelain labels are content-blind). Fixed: `tree-clean` also fingerprints the full unstaged
+  and staged diffs; detector witnessed on the exact append-to-dirty vector. Residual recorded:
+  untracked-file content edits remain add/delete-visible only.
+- **[GLM, S2] The static floor's hand-listed globs missed the containment guard hooks themselves**
+  (plus `utils/pdda`, `utils/hq`, tools, top-level scripts) — the GH-195 one-shape trap reborn as
+  a coverage gap. Fixed: enumeration from `git ls-files '*.sh'` (158 files, fixtures excluded);
+  witnessed: garbage appended to `gh527-destructive-git-guard.sh` now fails `shell-syntax`.
+  Python import probe made recursive (subpackages, e.g. `work_connectors`).
+- **[GLM, S5] The baked-in arming instruction would create a BLOCKING ubuntu check,** against the
+  GH-509 advisory policy. Fixed: workflow header and README now require the platform decision
+  (macos-latest, or advisory `continue-on-error`, or an explicit operator deviation) before arming.
+- **[GLM, S1/S4 — landing guidance, not code:]** the workflow is undispatchable until it lands on
+  a default branch (after the cherry-pick: dispatch once, cite that run, before any arming
+  decision); drop the `LEADERBOARD.md` hunk at cherry-pick time (hosted reconcile owns views).
+- **[GLM, nits all fixed:]** `--list` output is bare check names (section headers gated),
+  `--help` range derived from content, workflow pins `XYZ_CANARY_TIMEOUT_S: '10'` inside the
+  5-minute job cap, redundant `SANDBOX` assignment dropped.
+
+Lesson recorded for GH-884: the internal relay approved this artifact one round before two
+external reviewers found two real Blockers against the same head. Different reviewers, different
+findings — a panel of one model is a threshold, not a guarantee.
+
 ## Lessons for GH-884 (clean-room CI rebuild contingency)
 
 Recorded as evidence only — this claims no trigger and proposes no work (GH-884's header stands).

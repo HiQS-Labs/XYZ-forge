@@ -12,8 +12,9 @@
 #                                     marathon-drive.sh --help; marathon-yaml parses the plan
 #   jog           utils/py/jog_run.py the serial (lanes-off) supervisor: --help, and --dry-run against
 #                                     a COPY of the committed releases ledger in the sandbox
-#   static floor  bash -n on every top-level shell entry point, node --check on bin/ + src/,
-#                 py_compile + import of every utils/py module
+#   static floor  bash -n on every tracked shell script (git ls-files, minus test/evidence
+#                 fixtures), node --check on bin/ + src/, py_compile + import of every utils/py
+#                 module including subpackages
 #
 # What it is NOT: a replacement for ./validate.sh (the gate) or ci-local.sh (the qualifying run).
 # It never calls a model, never touches the network, and never writes inside the repo tree — the
@@ -37,10 +38,15 @@
 # Exit: 0 every check passed · 1 one or more checks failed · 2 usage.
 #
 # Porting to hosted CI: .github/workflows/canary.yml already runs this file; it is
-# `workflow_dispatch`-only until the tier is accepted. Arm it by adding
-# `push:` / `pull_request:` triggers there — nothing in this file needs to change.
+# `workflow_dispatch`-only until the tier is accepted. Before arming, decide the platform
+# question (macos-latest vs advisory ubuntu — GH-509; see the workflow header); arming itself
+# is adding `push:` / `pull_request:` triggers there — nothing in this file needs to change.
 
 set -uo pipefail
+# Job control ON: each background job (every check subshell) becomes its own process-group
+# leader, so run_check's timeout path can kill the WHOLE group — a check that backgrounds a
+# child must not leave that grandchild running past the deadline (external review r2).
+set -m
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIMES="1 0"
@@ -49,7 +55,9 @@ LIST=0
 TIMEOUT_S="${XYZ_CANARY_TIMEOUT_S:-60}"
 
 usage() {
-  sed -n '2,41p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  # Derive the range from the content (a hardcoded line count silently truncates --help the
+  # moment one header line is added — external review r2 nit).
+  awk 'NR==1 {next} !/^#/ {exit} {print substr($0, 3)}' "${BASH_SOURCE[0]}"
 }
 
 while [ $# -gt 0 ]; do
@@ -146,6 +154,19 @@ git_state_fingerprint() {
   git -C "$ROOT" config --local --list 2>/dev/null
 }
 
+# Astra r2 Blocker: porcelain LABELS cannot see content changes to an already-dirty tracked
+# file — " M path" reads the same before and after an in-run edit — so tree-clean also
+# fingerprints the full unstaged and staged diffs, whose bytes DO change. Residual, recorded:
+# content edits to UNTRACKED files remain only add/delete-visible (porcelain); the canary
+# never targets them.
+unstaged_fingerprint() {
+  git -C "$ROOT" diff 2>/dev/null | git hash-object --stdin 2>/dev/null
+}
+
+staged_fingerprint() {
+  git -C "$ROOT" diff --cached 2>/dev/null | git hash-object --stdin 2>/dev/null
+}
+
 # run_check <name> <command...>
 # The command runs in a subshell with the sandbox as CWD. Pass when it exits 0.
 run_check() {
@@ -156,15 +177,22 @@ run_check() {
   # Checks are shell functions, so `timeout(1)` cannot wrap them; a background watchdog does.
   # The resolve before the cd is the per-check use boundary: `cd ""` is a silent no-op, so a
   # sandbox that went missing or invalid mid-run must FAIL the check, not run it in-tree.
+  # With `set -m` the check subshell is a process-group leader, so the timeout path kills the
+  # WHOLE group (TERM, then KILL escalation) — a check that backgrounded a child cannot leave
+  # it running past the deadline (Astra r2 Blocker, witnessed live before the fix).
   local pid wd
   ( sandbox_resolve "$SANDBOX" >/dev/null && cd "$SANDBOX" && "$@" ) >"$log" 2>&1 &
   pid=$!
   # The watchdog owns no stdio and takes its sleep down with it, so a finished check never leaves
   # an orphan holding a caller's pipe open (`./canary.sh | tee` would otherwise block for TIMEOUT_S).
-  ( trap 'kill $s 2>/dev/null; wait $s 2>/dev/null; exit 0' TERM; sleep "$TIMEOUT_S" & s=$!; wait $s; kill "$pid" 2>/dev/null ) </dev/null >/dev/null 2>&1 &
+  ( trap 'kill $s 2>/dev/null; wait $s 2>/dev/null; exit 0' TERM; sleep "$TIMEOUT_S" & s=$!; wait $s;
+    kill -TERM -- "-$pid" 2>/dev/null; sleep 0.5; kill -KILL -- "-$pid" 2>/dev/null ) </dev/null >/dev/null 2>&1 &
   wd=$!
   wait "$pid"; rc=$?
+  # Completion sweep — on time or not, nothing of this check's group outlives it.
+  kill -TERM -- "-$pid" 2>/dev/null
   kill "$wd" 2>/dev/null; wait "$wd" 2>/dev/null
+  kill -KILL -- "-$pid" 2>/dev/null
   t1="$(now_ms)"
   if [ $rc -eq 0 ]; then
     PASS=$((PASS + 1))
@@ -196,12 +224,17 @@ help_in_runtime() {
 # ---------------------------------------------------------------------------------------------
 check_shell_syntax() {
   local f bad=0
-  for f in "$ROOT"/relay-automation/*.sh "$ROOT"/utils/*.sh "$ROOT"/skills/*/*.sh "$ROOT"/skills/*/*/*.sh \
-           "$ROOT"/githooks/*.sh "$ROOT"/validate.sh "$ROOT"/ci-local.sh "$ROOT"/canary.sh \
-           "$ROOT"/bin/validate-relay-block; do
-    [ -f "$f" ] || continue
-    bash -n "$f" || { echo "syntax: $f"; bad=1; }
-  done
+  # Enumerate TRACKED shell scripts from git (GLM r2 S2): the old hand-listed globs missed
+  # whole entry-point classes — relay-automation/hooks (the containment guards themselves),
+  # utils/pdda, utils/hq, tools, sentinel-overlay, top-level scripts. A guard hook that fails
+  # to parse silently stops guarding. Drift-proof by construction: new tracked .sh files are
+  # covered automatically; exclusions are fixtures and evidence, not entry points.
+  while IFS= read -r f; do
+    case "$f" in
+      test/*|TESTS-RESULTS/*|canary/fixtures/*|evidence/*|temp/*) continue ;;
+    esac
+    bash -n "$ROOT/$f" || { echo "syntax: $f"; bad=1; }
+  done < <(git -C "$ROOT" ls-files '*.sh')
   return $bad
 }
 
@@ -223,13 +256,20 @@ check_python_ports() {
   ( cd "$ROOT/utils/py" && PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
 import importlib, pathlib, sys
 bad = 0
-for p in sorted(pathlib.Path(".").glob("*.py")):
-    if "-" in p.stem or p.stem.startswith("_"):
-        continue  # hyphenated shims are exec-only; private helpers are imported by their owners
+# rglob: subpackages too (GLM r2 S2 — work_connectors was never import-probed at top level).
+for p in sorted(pathlib.Path(".").rglob("*.py")):
+    if "__pycache__" in p.parts:
+        continue
+    rel = p.with_suffix("")
+    if any(part.startswith("_") for part in rel.parts):
+        continue  # private helpers are imported by their owners
+    mod = ".".join(rel.parts)
+    if "-" in mod:
+        continue  # hyphenated shims are exec-only
     try:
-        importlib.import_module(p.stem)
+        importlib.import_module(mod)
     except Exception as e:  # noqa: BLE001 — any import-time failure is the finding
-        print(f"import {p.stem}: {type(e).__name__}: {e}")
+        print(f"import {mod}: {type(e).__name__}: {e}")
         bad = 1
 sys.exit(bad)
 PY
@@ -345,13 +385,22 @@ check_marathon_dry_run() {  # <XYZ_PYTHON value>
 }
 
 check_tree_clean() {
-  local after gafter
+  local after uafter safter
   after="$(git -C "$ROOT" status --porcelain --untracked-files=all 2>/dev/null)"
+  uafter="$(unstaged_fingerprint)"
+  safter="$(staged_fingerprint)"
   if [ "$after" != "$TREE_BEFORE" ]; then
     echo "the canary changed the repo tree — it must never write inside the harness:"
     diff <(printf '%s\n' "$TREE_BEFORE") <(printf '%s\n' "$after") | sed -n '1,40p'
     return 1
   fi
+  if [ "$uafter" != "$UNSTAGED_BEFORE" ] || [ "$safter" != "$STAGED_BEFORE" ]; then
+    echo "the canary changed tracked-file content without changing status labels (Astra r2):"
+    [ "$uafter" != "$UNSTAGED_BEFORE" ] && echo "  unstaged diff fingerprint changed: $UNSTAGED_BEFORE -> $uafter"
+    [ "$safter" != "$STAGED_BEFORE" ] && echo "  staged diff fingerprint changed: $STAGED_BEFORE -> $safter"
+    return 1
+  fi
+  local gafter
   gafter="$(git_state_fingerprint)"
   if [ "$gafter" != "$GITSTATE_BEFORE" ]; then
     echo "the canary changed the clone's .git state (config/refs) — the GH-564 class git status cannot see:"
@@ -371,6 +420,8 @@ if [ "$LIST" = "0" ]; then
   # Snapshot BEFORE anything else, so even a setup misconfiguration that wrote in-tree is caught
   # by the closing containment check instead of being invisible inside the "before" state.
   TREE_BEFORE="$(git -C "$ROOT" status --porcelain --untracked-files=all 2>/dev/null)"
+  UNSTAGED_BEFORE="$(unstaged_fingerprint)"
+  STAGED_BEFORE="$(staged_fingerprint)"
   GITSTATE_BEFORE="$(git_state_fingerprint)"
   # Sandbox is ALWAYS a fresh, run-owned mktemp child (relay round-1 fix): a caller-supplied
   # XYZ_CANARY_SANDBOX names only the PARENT the child is created under — never the deletion
@@ -396,16 +447,21 @@ else
   SANDBOX="/dev/null"
 fi
 
-echo "-- static floor"
+section() {  # <name> — print a section header, unless --list wants bare check names
+  [ "$LIST" = "0" ] && printf -- "-- %s\n" "$1"
+  return 0
+}
+
+section "static floor"
 run_check shell-syntax          check_shell_syntax
 run_check node-syntax           check_node_syntax
 run_check python-ports          check_python_ports
 
-echo "-- tick kernel"
+section "tick kernel"
 run_check tick-lifecycle        check_tick_lifecycle
 run_check relay-block-validator check_relay_block_validator
 
-echo "-- relay"
+section "relay"
 run_check relay-xyz-locator     check_relay_locator
 for rt in $RUNTIMES; do
   l="$(rt_label "$rt")"
@@ -413,13 +469,13 @@ for rt in $RUNTIMES; do
   run_check "poll-help[$l]"           help_in_runtime "$rt" 'Usage:' "$ROOT/relay-automation/poll.sh" --help
 done
 
-echo "-- consult"
+section "consult"
 for rt in $RUNTIMES; do
   l="$(rt_label "$rt")"
   run_check "consult-help[$l]"        help_in_runtime "$rt" 'consult' "$ROOT/relay-automation/consult.sh" --help
 done
 
-echo "-- marathon"
+section "marathon"
 run_check marathon-yaml         check_marathon_yaml
 run_check marathon-help         expect_help 'Usage:' "$ROOT/relay-automation/marathon.sh" --help
 for rt in $RUNTIMES; do
@@ -428,11 +484,11 @@ for rt in $RUNTIMES; do
   run_check "marathon-dry-run[$l]"    check_marathon_dry_run "$rt"
 done
 
-echo "-- jog"
+section "jog"
 run_check jog-help              expect_help 'Jog serial execution runner' python3 "$ROOT/utils/py/jog_run.py" --help
 run_check jog-dry-run           check_jog_dry_run
 
-echo "-- containment"
+section "containment"
 run_check tree-clean            check_tree_clean
 
 [ "$LIST" = "1" ] && exit 0

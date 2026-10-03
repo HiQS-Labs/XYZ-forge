@@ -13,6 +13,21 @@ simulation against a sandbox copy of the committed ledger, and a static floor (`
 (config, remotes, HEAD) are unchanged. 21 checks, ~2.5 s on a 4-core host; deliberate breaks of
 `bin/tick` and `utils/py/jog_run.py` fail it.
 
+Review round 2 came from two INDEPENDENT non-author reviewers (GLM 5.3 Max and GPT 6 Astra
+Light, PR #930 comments 2026-10-03): Astra's two Blockers — the timeout watchdog killed only the
+check subshell (a backgrounded grandchild survived, witnessed live; fixed with `set -m`
+process-group semantics: group TERM→KILL escalation plus a completion sweep) and porcelain-label
+containment passing over content changes to an already-dirty tracked file (fixed: `tree-clean`
+additionally fingerprints the full unstaged and staged diffs; residual: untracked-file content
+edits stay add/delete-visible, recorded) — and GLM's static-floor gap (hand-listed globs missed
+the guard hooks themselves, `utils/pdda`, `utils/hq`, tools and top-level scripts; now enumerated
+from `git ls-files '*.sh'`, 158 files, witnessed: a broken guard hook fails the canary) plus the
+recursive Python import probe (subpackages now import-probed), the arming guidance (armed ubuntu
+must be advisory or the job must run on macOS, per GH-509), and the `--list`/usage/timeout nits.
+Landing guidance from the reviews, not code: the workflow is undispatchable until it lands on a
+default branch (dispatch once, cite the run, before any arming decision); drop the LEADERBOARD.md
+hunk at cherry-pick time (the hosted reconcile owns routine views).
+
 Review round 1 hardened the containment: every dangerous use of the sandbox re-proves it at the
 use boundary (GH-567), the containment check diffs the clone's full local git config and `HEAD`
 (the GH-564 class `git status` cannot see — its first draft keyed on four config telltales and
