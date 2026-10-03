@@ -28,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked (rated 40/35/50/85), recon at `5212dae4`, plan written. Codex plan QA (relay-xyz, 3 rounds): R1 FAIL (`Unchanged` stopped the checklist; fixed), R2 and R3 PASS; harness attestation refused both PASSes on mechanics (`review-body-rewritten`, then `close-mismatch`), so the receipt is content-approved but unattested: `relay-system/2026-10-02/gh938-plan-qa.codex.md`. Admitted (`--accepted-start`, In progress 🚧). SKILL.md "First-time setup" rewritten. | Focused suites, one full gate with receipt, final Codex QA on the diff, ready PR. |
+| Intake parked (rated 40/35/50/85), recon at `5212dae4`, plan written. Codex plan QA (relay-xyz, 3 rounds): R1 FAIL (`Unchanged` stopped the checklist; fixed), R2 and R3 PASS; harness attestation refused both PASSes on mechanics (`review-body-rewritten`, then `close-mismatch`), so the receipt is content-approved but unattested: `relay-system/2026-10-02/gh938-plan-qa.codex.md`. Admitted (`--accepted-start`, In progress 🚧). SKILL.md "First-time setup" rewritten. Focused suites green with red controls; full `./validate.sh` at `204750c5`: 399/410, the 11 failures reproduce on base `5212dae4` (environment) — `TESTS-RESULTS/2026-10-02+GH-938/`. | Final Codex QA on the diff, ready PR; after merge, the checklist below. |
 
 ## Rating — 2026-10-02: `40/35/50/85` (priority/severity/appeal/effort)
 
@@ -107,7 +107,8 @@ goal: >
   path scan (manual, recorded): temporarily add a bogus `skills/1-hourly/relay-xyz/nope.sh` token,
   see `path-integrity.sh` fail, revert.
 - **Behaviour unchanged:** no change to any `.sh`; `git diff --stat origin/development` lists only
-  SKILL.md, CHANGELOG.md, this doc, the ledger dump/DB and the TESTS-RESULTS receipt.
+  SKILL.md, CHANGELOG.md, this doc, the ledger dump/DB, the TESTS-RESULTS receipt and the
+  `relay-system/2026-10-02/gh938-*.codex.md` review receipts.
 - **Gate:** full `./validate.sh` on the final approved commit; failures attributable to this diff
   block the PR; pre-existing/environment failures are recorded as such with evidence.
 - **Deployment (after merge, not this PR):** the Mini checks in the checklist below pass; #938 closes
