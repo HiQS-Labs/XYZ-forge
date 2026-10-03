@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -87,5 +87,49 @@ Cite `file:line` for every finding. Behaviour-change requests carry `Observed in
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: Generalizing the existing publisher is the right scope, but the migration/retry contract and several acceptance criteria need correction before implementation.
+swept file: yes
+
+Reviewed the entire 177-line plan, the complete Python publisher and Bash publisher, both named publisher suites, the TSV/CI, and the cited policy surfaces. This is a static plan review, not implementation approval. The worktree has no matching graph project: `list_projects` returned 77 projects with no matching root; `check_index_coverage` for this root returned “project not found or not indexed.” Used exact-source fallback (Verify intent; no graph generation available). No git command, executable fixture, or suite was run. Runtime predictions below are **[Unverified — needs clone run]**. The whole-file sweep found the issues below; no additional plan defects are asserted.
+
+- **[Should] F1 — Adoption must compose with retained-commit retry.** Plan `PROJECT/1-INBOX/GH-955-CENTRAL-DOWNSTREAM-PUBLISHER.md:98` preserves the single-target body, while lines 110–113 reject adoption once MANIFEST.txt exists and remove the old revision marker. The existing retry verifier at `utils/py/xyz_mini_sync.py:218` has an empty previous set when the remote lacks MANIFEST.txt; line 236 rejects each previously existing managed file, and line 220 does not allow deletion of `.xyz-canonical-revision`. Thus an adoption `--apply` followed by `--push`, or a failed first push, needs a deliberately specified recovery path. Cheapest option: compare a one-time reviewed MANIFEST.txt bootstrap committed/pushed in the child against keeping a permanent `--adopt` flag. If retaining the flag, explicitly extend only the proven adoption retry and preserve the unrelated-change refusal.
+  Observed input: plan line 144 says “`--adopt` once for agent-chorus, then `--push`”; the existing retry code rejects remote-existing files absent from the remote manifest (line 236).
+  Affected scope: the first adoption commit while origin still has the legacy marker and no MANIFEST.txt; ordinary retries must remain strict.
+  Falsifier: in a disposable full clone, adopt with `--apply`, then retry with `--push`; expect the exact retained commit to push, while an amended unrelated file still refuses. Repeat with an induced first push failure. Runtime outcome not executed here.
+
+- **[Should] F2 — Define a separate read-only check path suitable for child PR CI.** Plan lines 117–121 promise parity checking, but the existing shared path calls `destination_ready` (`utils/py/xyz_mini_sync.py:322`), which requires destination branch `main` and reads origin/main (lines 195–205). The child workflow runs on `pull_request` (`skills/2-daily/agent-chorus/standalone/ci.yml:6`) and uses checkout without a branch override (line 15). Specify that `--check` bypasses publication branch/history/write preconditions, supports detached child checkouts, and rejects combinations with `--apply`/`--push` rather than permitting ambiguous writes. Add exit 1 to the multi-target precedence, which currently omits it (plan line 98). Skipping seed/adapted byte comparisons is appropriate to their ownership contract; label the result managed parity, not whole-child identity.
+  Observed input: child PR workflow at `standalone/ci.yml:6`, and `destination_ready`'s literal `destination must be on branch main` at `xyz_mini_sync.py:197`.
+  Affected scope: `--check`, including multi-target check aggregation and conflicting write flags.
+  Falsifier: a detached, byte-matching child passes without querying origin/main; a managed byte or mode change returns 1 naming the path; a mixed matching/drifting target run returns 1; conflicting write flags leave bytes/index/HEAD untouched. Run in a disposable clone.
+
+- **[Should] F3 — Correct the Agent Chorus payload accounting and explicitly disposition the legacy TSV in the child.** Plan lines 106–108 and 137 say 15 TSV/payload paths, but `skills/2-daily/agent-chorus/publish-manifest.tsv:2` through line 15 contain **14** rows, leaving **13** payload rows after dropping the TSV. The old 15-file total includes the old revision marker. Adoption removes that marker but currently preserves the old TSV as destination-only content (plan lines 112–114); deleting the forge TSV alone does not retire the child's stale manifest. Name that exact legacy path for deliberate migration removal (or explicitly document its retention), and distinguish payload copies, metadata writes, and deletions in the expected preview.
+  Observed input: TSV line 14 ships `skills/agent-chorus/publish-manifest.tsv`; this path is excluded from the new profile and the child has no old MANIFEST.txt to drive deletion.
+  Affected scope: first Agent Chorus adoption and its literal expected file set, not unrelated child files.
+  Falsifier: the adopted child contains the 13 intended payload files plus MANIFEST.txt and `.xyz-forge-revision`, with both legacy metadata paths absent if retirement is selected; an unrelated tracked note survives.
+  Probe (exit 0): `python3 -` with `rows=[l.split("\t") for l in Path("skills/2-daily/agent-chorus/publish-manifest.tsv").read_text().splitlines() if l and not l.startswith("#")]; print(len(rows)); print(sum(not r[2].endswith("publish-manifest.tsv") for r in rows))` (after `from pathlib import Path`). Decisive output: `14`, `13`. A same-run filesystem mode comparison, `[(s,m,oct(Path(s).stat().st_mode & 0o777)) for m,s,d in rows if int(m,8)!=(Path(s).stat().st_mode & 0o777)]`, printed `[]`; this verifies checkout modes, not Git index modes.
+
+- **[Should] F4 — Include the existing gh620 payload assertion in the un-retirement edit.** Plan lines 102–104 only drop the opt-in/default refusal; line 126 deletes UPSTREAM.md. `test/gh620-skills-army-mini-sync.sh:69` still requires UPSTREAM.md in the literal set, and line 75 calls the set ten managed payloads. Explicitly update this existing expectation to the nine-file payload, retaining the exact-set assertion.
+  Observed input: literal `"UPSTREAM.md"` in the existing `expected` set (line 69).
+  Affected scope: gh620's package set and its stale retirement comments; no new suite.
+  Falsifier: after the planned deletion, the existing suite passes with nine payloads and fails if a required payload is omitted. **[Unverified — needs clone run]**; static mismatch established, no suite executed.
+
+- **[Should] F5 — Give multi-target continuation a behavioral acceptance check.** Plan line 100 tests only argument refusal and manifest listing; neither exercises the loop/summary/worst-exit contract in line 98. Add a manual recorded check or an assertion in the existing suite with one refused target and a later successful target, checking both outcomes and the aggregate exit. Also state deduplication for repeated targets/`all` so one selection means one publication per target.
+  Observed input: the two proposed checks at plan line 100 never publish to multiple destinations.
+  Affected scope: target selection/iteration and failure aggregation only.
+  Falsifier: deliberately short-circuit the loop after the first refused target; the acceptance check must turn red because the later target was not processed. Include a secret refusal if claiming exit-4 precedence is verified.
+
+- **[Should] F6 — Disposition the transferred issue ownership when reversing #882.** Step 7 and closing actions omit the transferred backlog. `PROJECT/2-WORKING/GH-882-SKILLS-ARMY-UPSTREAM.md:35` names forge #506/#676/#837/#881 moved to mini #4/#5/#6/#7; `PROJECT/4-MISC/GH-506-SKILLS-ARMY-HQ-REPLICATE.md:5` remains superseded specifically because upstream moved. Add an explicit ownership decision/reconciliation step (or an explicit deferral with a canonical pointer), without implementing that backlog. Merely commenting on mini#2/#3 does not settle where future work should land.
+  Observed input: the four issue transfers in GH-882 line 35 and #506's superseded reason.
+  Affected scope: issue/doc/ledger routing for those transferred items, not their features.
+  Falsifier: each transferred item retains a single explicit canonical work location consistent with the restored forge upstream; no duplicate active execution plans.
+
+- **[Pass] Architecture and main CI diagnosis are grounded.** `xyz_mini_sync.py:99` already has per-target profiles, so extracting one target operation and looping is a proportional extension, with no need for another module. The old CI invokes the Bash checker at `standalone/ci.yml:24` and the wrong smoke path at line 26; the TSV maps that smoke script to `skills/agent-chorus/test-standalone.sh` at line 15. The comparison table broadly matches the publishers; “destination-only refused” should be qualified as **tracked** files (`sync-to-standalone.sh:83`).
+- **[Unverified — no citation] Remote inventory/history and rating inputs.** Plan lines 37–48 and 177 assert all-21-repo coverage, downstream non-divergence, #934 history, and CI chronology without a durable query receipt. I did not query remote state this turn. Keep the rating provisional and cite the scan/history/run evidence (including the #934 source SHA/diff and preservation check) before treating these assertions as established. Q1's fourth-repo uncertainty is correctly exposed at line 164 and must be resolved before claiming every downstream is covered. Local severity/effort rationale is plausible; recurrence chronology is not independently verified.
+
+Handing off to Producer (claude-a) — revise the plan, disposition F1–F6, and open Round 2. No approval; STATUS remains Open.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
