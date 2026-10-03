@@ -1,0 +1,8 @@
+/ -> rc=1
+/Users/noelsaw -> rc=1
+ -> rc=1
+/.. -> rc=1
+/Users/noelsaw/marathon-clones/xyz-gh928-canary-fix/../../XYZ-forge -> rc=1
+/Users/noelsaw/marathon-clones/xyz-gh928-canary-fix -> rc=1
+valid parent: /private/tmp/gh928-evidence/valid-parent
+rc=0

@@ -100,8 +100,10 @@ sandbox_parent() {
   [ -n "$p" ] || return 1
   [ -d "$p" ] || return 1
   rp="$(cd -- "$p" 2>/dev/null && pwd -P)" || return 1
+  [ "$rp" = "/" ] && return 1                          # explicit: the ancestor glob below is
+                                                       # "//*/"-shaped for rp=/ and matches nothing
   case "$rp" in "$ROOT"|"$ROOT"/*) return 1 ;; esac   # at or inside the harness
-  case "$ROOT" in "$rp"|"$rp"/*) return 1 ;; esac     # an ancestor of the harness (incl. /)
+  case "$ROOT" in "$rp"|"$rp"/*) return 1 ;; esac     # an ancestor of the harness
   hp="$(sandbox_resolve "${HOME:-}" 2>/dev/null)" || hp=""
   if [ -n "$hp" ] && [ "$rp" = "$hp" ]; then return 1; fi
   printf '%s\n' "$rp"

@@ -1,0 +1,8 @@
+  + gh280-jog-marathon-adapter.sh
+  + gh436-merge-cleanup.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+pre-push: full gate GREEN in 993s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   88cb6090..4ae6f491  feat/gh928-canary-gate -> feat/gh928-canary-gate

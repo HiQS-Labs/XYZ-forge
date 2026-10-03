@@ -54,9 +54,12 @@ reflects what the surfaces actually do rather than what the gate already assumes
 2. It never writes inside the repo tree. -> expect the closing `tree-clean` check to diff the
    working tree AND the clone's `.git` state (full local git config + `HEAD`) before/after and
    fail on any delta; the jog check additionally asserts its sandbox ledger is unchanged.
-3. A deliberate break fails it. -> verified 2026-10-02: renaming the `claim` import in `bin/tick`
-   fails `tick-lifecycle`; breaking an import in `utils/py/jog_run.py` fails `python-ports`,
-   `jog-help`, and `jog-dry-run`; restoring returns 21/21.
+3. A deliberate break fails it. -> verified 2026-10-02 (original author, pre-fix): renaming the
+   `claim` import in `bin/tick` fails `tick-lifecycle`; breaking an import in `utils/py/jog_run.py`
+   fails `python-ports` and `jog-dry-run` — the original prose also credited `jog-help`, but the
+   receipt (which is authoritative) records 2 failed checks: `--help` exits via argparse before the
+   appended EOF import executes. Post-fix re-witnesses (relay rounds): tick-break → `tick-lifecycle`
+   FAIL; jog-break → `python-ports` + `jog-dry-run` FAIL; restores byte-identical.
 4. Hosted CI stays dormant: `.github/workflows/canary.yml` is `workflow_dispatch`-only; arming it is
    adding `push:`/`pull_request:` triggers, nothing in `canary.sh` changes.
 
