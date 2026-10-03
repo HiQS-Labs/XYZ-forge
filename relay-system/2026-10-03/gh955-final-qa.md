@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -131,5 +131,25 @@ Handing off to Producer (claude-a): address F1/F2, provide the comparison artifa
 - **Comparison artifact:** the whole branch diff, plus the two deleted skills' base text for the guidance comparison, is seeded read-only at `.relay-artifacts/gh955-branch.diff`.
 
 Requesting Round 2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: F1/F2 are addressed; no blocking implementation defect found in the seeded branch diff and full runtime-file review. This is review approval, not final-gate or downstream-migration attestation.
+swept file: no
+
+Scope disclosure: Fully read the 481-line primary publisher, both changed publisher suites, the CI router, child workflow, both AgentChorus READMEs, both current skills, GH-882/GH-955 docs, and deleted publisher/skills. Reviewed all branch diff hunks, including ledger changes and discovery surfaces. The primary/runtime sweep included pre-existing code; no additional pre-existing runtime defect was established. Did not exhaustively sweep unrelated historical entries in CHANGELOG, the entire architecture/site documents, or all ledger rows; hence the conservative sweep declaration. Graph inventory pagination completed (77 projects): this worktree is not indexed. The nearest XYZ-forge graph is another checkout, generation 2026-09-01T15:54:30Z; coverage reported missing/not-tracked paths and changed CI-router metadata. Direct source and seeded-diff reads supply this review's evidence instead. No git command, suite, executable fixture, publication or source edit was run.
+
+- **[Pass] F1 closed.** `skills/2-daily/agent-chorus/standalone/README.md:36` now says `cd skills/agent-chorus && bash install.sh`; its package links point at the child folder. The shared README at lines 27–32 names both layouts and uses `bash install.sh`; copy/configure/smoke commands at lines 43, 79 and 106 are relative to that folder. These agree with `utils/py/xyz_mini_sync.py:105–120`.
+- **[Pass] F2 closed.** `skills/3-weekly/push-downstream/SKILL.md:77–96` supplies JSON decoding to sorted destination lines, both legacy deletions, setup commit/push, first publication, and the intermediate CI failure/green-at-publication completion condition. No runtime adoption flag was introduced.
+- **[Pass] Single-target extraction and multi-target contract.** The publisher hunk in `.relay-artifacts/gh955-branch.diff:1230` moves source/destination resolution to `resolve`, removes the intentional retirement guard, and otherwise retains the publication body. `utils/py/xyz_mini_sync.py:378` still calls `destination_ready` before writes; lines 381–441 retain ownership checks, secret scanning, commit/push handling and remote read-back. The existing prefixes and 2/3/4 outcomes remain. The new earlier missing-directory refusal changes diagnostic wording, not its refusal code. Lines 460–477 retain the default target, deduplicate in profile order, reject multi-target destination overrides, run every returned target result and choose the maximum code.
+- **[Pass] Read-only check and child CI.** `utils/py/xyz_mini_sync.py:287–323` compares only managed payload bytes/executable bits plus source SHA; missing child files and missing SHA become drift. Its source-side Git reads do not consult child branch/origin or call `destination_ready`. Lines 469–471 reject check/write combinations. `skills/2-daily/agent-chorus/standalone/ci.yml:19–27` reads the pin, checks out that forge revision, calls the checker against the workspace and uses the actual child smoke directory.
+- **[Pass] Manifest and patch integrity (static probe).** Ran `python3 - <<'PY'` with standard-library `ast`, `pathlib`, and `re`: literal-evaluated `AGENT_CHORUS_MANIFEST`, asserted 13 unique destinations and existing sources; parsed every seeded unified-diff new-side hunk and asserted equality with current file lines and absence of deleted files; compared the Skills Army hunk after `@@` with `recon/gh934-skill-hunks.patch`. Exit **0**; decisive output: `AgentChorus manifest: 13 unique destinations; all 13 source files exist`; `Seeded diff: 34 new-side hunks match current source; deleted files absent`; `GH-934: branch skill hunk equals recorded source patch`. The source references are `utils/py/xyz_mini_sync.py:105` and `skills/3-weekly/skills-army-hq/SKILL.md:162–179`. This checks the supplied patch, not the live remote ref.
+- **[Pass] Guidance and routing retained.** Compared deleted skills' complete base text in `.relay-artifacts/gh955-branch.diff:28–121` with `skills/3-weekly/push-downstream/SKILL.md:24–101`: clean source/child-main preconditions, preview/authorization, exit meanings, read-back and no-force-push remain. The obsolete adapted-file deletion refusal was appropriately not carried forward (publisher lines 386–389 preserve child deletions). `utils/ci-route.sh:33,50` retains gh620 and redirects the skill route. The seeded file list at lines 2–25 adds no suite or validate registry entry; the checker replaces the existing child's parity step. A literal search of ROUTER, ARCHITECTURE, PAGES/skills.html, skills, mini and ci-route found only the intentional old trigger alias at `push-downstream/SKILL.md:8`.
+- **[Nit] Publication CWD wording.** `skills/2-daily/agent-chorus/README.md:119–121` uses forge-root-relative commands after earlier instructions put readers in the skill folder. Add “Run these publication commands from the XYZ-forge repository root.” The section already identifies the forge publisher, so this does not reopen F1.
+- **[Nit] Extra table cell.** `PROJECT/2-WORKING/GH-882-SKILLS-ARMY-UPSTREAM.md:28` ends its two-column status row with `| |`. Remove the extra empty cell.
+- **[Unverified — needs clone run]** No suites, red controls or final gate were executed in this turn. `TESTS-RESULTS/2026-10-03+GH-955/provenance.jsonl` records producer focused-suite/red-control results and the earlier setup dry run; those are not a final-state full-gate receipt. The harness must run the final gate in its disposable full clone. Live child CI and first-publication parity remain post-merge completion checks, as the plan specifies. Binary DB equivalence and live remote #934 equality were not independently measured here.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) owns final clone-gate evidence and the already planned post-merge actions; the two nits are non-blocking.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
