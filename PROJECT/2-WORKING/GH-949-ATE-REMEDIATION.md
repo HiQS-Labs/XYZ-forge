@@ -91,3 +91,7 @@ Final QA R1 disposition: Implemented. The whole-file sweep exposed a pre-existin
 Final Codex relay round2 is attested Approved (exit0); source and focused evidence reviewed at59d666cd. No implementation changes after approval. Full qualifying push-boundary run is next.
 
 PR [#953](https://github.com/HiQS-Labs/XYZ-forge/pull/953) targets development. Full local push gate passed870s at992914e6; immutable receipt under full-gate. Development docs/ledger merged through the canonical resolver without runtime changes. Hosted results are attached to the PR exact head; promotion qualification and merge remain future work. Retain task clone until merge handoff; this doc does not claim shipment.
+
+## Independent Fable QA — 2026-10-03
+
+Operator-requested Claude Code Fable5.1 high review returned FAIL (valid relay exit5), one blocker B1: oracle CLI SIGTERM can orphan its session-isolated command. Full signed review: `relay-system/2026-10-03/gh949-fable-qa.md`; provenance: `TESTS-RESULTS/2026-10-03+GH-949/fable-qa/`. PR953 is draft pending disposition; earlier ready/Approved statements above describe the prior checkpoint. No runtime changes made during this QA turn. S1 (metamorphic linked-worktree config) is non-blocking; base-comparison and full Git-mutation controls remain unverified.
