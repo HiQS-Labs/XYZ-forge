@@ -1,0 +1,10 @@
+== test: hq-locator (GH-128 find-hq.sh) ==
+  FAIL: harness-cwd: rc=0 out=/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/hq/hq.sh
+  PASS: cross-repo: symlinked locator resolves REAL harness from a foreign CWD
+  PASS: $XYZ_HARNESS override resolves from any CWD
+  PASS: --root prints the harness root
+  PASS: --env exports HQ_SH/HQ_ROOT (evalable)
+  PASS: resolved hq.sh is executable/runs
+  PASS: unresolvable -> exit 1, no stdout
+  PASS: unknown flag -> exit 2 (usage)
+== hq-locator: 7 passed, 1 failed ==

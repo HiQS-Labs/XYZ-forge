@@ -1,0 +1,48 @@
+== test: gh448-driver-lock-resolver ==
+  workdir: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ
+  PASS: fixture: linked worktree's .git is a FILE (not a dir)
+-- A. resolver parity (bash vs python) --
+  PASS: parity (dir): bash and python agree (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ/dir-repo/.git/relay-driver.lock)
+  PASS: parity (absent): bash and python agree (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ/absent-repo/.relay-driver.lock)
+  PASS: parity (worktree): bash and python agree (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ/main-repo/.git/relay-driver.lock)
+  PASS: worktree case resolves to the git COMMON dir, not <worktree>/.git/…
+-- B. negative control: pre-fix 2-branch logic misses the worktree lock --
+  PASS: negative control: old marathon-ls.sh logic guesses '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ/wt/.relay-driver.lock' — misses the held lock
+  PASS: negative control: old marathon-live.sh logic (checks .git/… or .xyz/… under $WT) misses the held lock
+  PASS: negative control: old find-harness.sh 2-candidate loop misses the held lock
+-- C. end-to-end: fixed scripts observe LIVE from a linked worktree --
+  PASS: marathon-ls.sh: linked worktree with held common-dir lock -> LIVE
+  PASS: marathon-live.sh: claimed task + linked-worktree common-dir lock -> 🟢 live
+  FAIL: find-harness.sh --check: expected a held-lock warning, got: find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+relay harness readiness:
+  ok  harness  (/Users/noelsaw/Documents/GH Repos/XYZ-forge)
+  ok  tick CLI  (/Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick)
+  ok  codex CLI (Path A worker)  (/Users/noelsaw/.local/bin/codex)
+  ok  agy CLI   (Path A worker)  (/Users/noelsaw/.local/bin/agy)
+  ok  cmd CLI   (Path A worker, Command Code)  (/Users/noelsaw/.hermes/node/bin/cmd)
+  ok  dsh CLI   (Path A worker, DeepSeek)  (/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js)
+  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and
+      share ONE global driver lock (can't run concurrently with another repo's relay). For
+      per-repo isolation / concurrent relays, vendor this repo:
+        relay-automation/xyz-vendor.sh /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ/foreign
+  FAIL: find-harness.sh --check: warning did not name /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ/harness-main/.git/relay-driver.lock: find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+relay harness readiness:
+  ok  harness  (/Users/noelsaw/Documents/GH Repos/XYZ-forge)
+  ok  tick CLI  (/Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick)
+  ok  codex CLI (Path A worker)  (/Users/noelsaw/.local/bin/codex)
+  ok  agy CLI   (Path A worker)  (/Users/noelsaw/.local/bin/agy)
+  ok  cmd CLI   (Path A worker, Command Code)  (/Users/noelsaw/.hermes/node/bin/cmd)
+  ok  dsh CLI   (Path A worker, DeepSeek)  (/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js)
+  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and
+      share ONE global driver lock (can't run concurrently with another repo's relay). For
+      per-repo isolation / concurrent relays, vendor this repo:
+        relay-automation/xyz-vendor.sh /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.PzyENJ/foreign
+-- syntax check --
+  PASS: syntax OK: driver-lock-lib.sh
+  PASS: syntax OK: harness-paths.sh
+  PASS: syntax OK: marathon-ls.sh
+  PASS: syntax OK: marathon-live.sh
+  PASS: syntax OK: find-harness.sh
+  PASS: syntax OK: gh448-driver-lock-resolver.sh
+
+gh448-driver-lock-resolver: 16 pass, 2 fail

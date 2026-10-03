@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collected 52 items
+
+test/test_gh605_board_policy.py ........................................ [ 76%]
+............                                                             [100%]
+
+============================== 52 passed in 0.89s ==============================

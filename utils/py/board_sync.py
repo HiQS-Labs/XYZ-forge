@@ -85,6 +85,7 @@ POLICY_DEFAULTS = {
     "status_field": "Status", "ready": "Ready", "in_progress": "In progress",
     "in_review": "In review", "done": "Done", "backlog": "Backlog",
     "implementation_status": "pending",
+    "repos_source": None,  # GH-898: {"type": "rebalance_active", "top_n": 8, "since_days": 7}
 }
 
 STRONG_SOURCES = ("pdda_doc", "branch", "tick_event", "jog_running")
@@ -116,21 +117,94 @@ def resolve_settings():
     return cfg
 
 
+def _rebalance_db_path():
+    """GH-898: where rebalanceOS keeps its DB (REBALANCE_DB, then its macOS/XDG app-data default)."""
+    env = os.environ.get("REBALANCE_DB")
+    if env:
+        return Path(env).expanduser()
+    home = Path.home()
+    for path in (home / "Library/Application Support/rebalance-os/rebalance.db",
+                 Path(os.environ.get("XDG_DATA_HOME") or home / ".local/share") / "rebalance-os/rebalance.db"):
+        if path.is_file():
+            return path
+    return None
+
+
+def _rebalance_active_repos(source, limit):
+    """GH-898: top active repos from rebalanceOS, read-only. Any failure warns and returns [].
+
+    Mirrors rebalance.ingest.db.github.top_active_repos (7-day score over github_activity) with a
+    name tie-break; no `immutable` (the DB has a live writer) and no rebalance import.
+    """
+    path = _rebalance_db_path()
+    if path is None or not path.is_file():
+        _warn("repos_source: rebalanceOS DB not found (set REBALANCE_DB); using the pinned repos")
+        return []
+    sql = ("SELECT repo_full_name, SUM(commits) + SUM(prs_opened) + SUM(prs_merged) + "
+           "SUM(issues_opened) + SUM(issue_comments) + SUM(reviews) AS score "
+           "FROM github_activity WHERE scan_date >= date('now', ?) "
+           "GROUP BY repo_full_name HAVING score > 0 ORDER BY score DESC, repo_full_name LIMIT ?")
+    try:
+        conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)  # SQLITE-GATEWAY-OK: read-only rebalanceOS DB, not harness state (GH-898)
+        try:
+            rows = conn.execute(sql, ("-%d days" % source["since_days"], limit)).fetchall()
+        finally:
+            conn.close()
+    except (sqlite3.Error, OSError) as exc:
+        reason = ("has no github_activity table" if "no such table" in str(exc)
+                  else "is unreadable (%s)" % exc)
+        _warn("repos_source: rebalanceOS DB %s; using the pinned repos" % reason)
+        return []
+    if not rows:
+        _warn("repos_source: no repo has activity in the last %d days; using the pinned repos"
+              % source["since_days"])
+    return [r[0] for r in rows]
+
+
 def resolve_selection_policy(required=False):
     """Resolve and strictly validate the saved board policy; pending means consumable."""
+    return _resolve_policy_and_label(required)[0]
+
+
+def _resolve_policy_and_label(required=False):
+    """(policy, repos_source label). The label is None unless repos_source is configured (GH-898);
+    it stays out of the policy dict so apply/restore identity keeps today's keys."""
     cfg, error = resolve_device_block("github_board_selection_policy", POLICY_DEFAULTS,
                                       "XYZ_GITHUB_BOARD_POLICY")
     if error:
         raise ValueError(error)
+    source, label = cfg.pop("repos_source", None), None
+    if source is not None:
+        if not isinstance(source, dict):
+            raise ValueError("repos_source must be an object; set it in the device config")
+        if source.get("type") != "rebalance_active":
+            raise ValueError("repos_source.type must be 'rebalance_active'")
+        source = {"top_n": 8, "since_days": 7, **source}
+        for key in ("top_n", "since_days"):
+            if not isinstance(source[key], int) or isinstance(source[key], bool) or source[key] <= 0:
+                raise ValueError("repos_source.%s must be a positive integer" % key)
+        if cfg.get("repo"):
+            raise ValueError("use repos[] with repos_source, not repo")
     if cfg.get("repo"):
         if cfg.get("repos") and cfg["repos"] != [cfg["repo"]]:
             raise ValueError("policy repo and repos disagree")
         cfg["repos"] = [cfg["repo"]]
+    if source is not None:
+        pinned = [str(r).strip() for r in cfg["repos"]] if isinstance(cfg["repos"], list) else []
+        if source["top_n"] + len(pinned) > 2 ** 63 - 1:  # SQLite binds a signed 64-bit LIMIT
+            raise ValueError("repos_source.top_n is too large")
+        seen, added = {r.lower() for r in pinned}, []
+        for name in _rebalance_active_repos(source, source["top_n"] + len(pinned)):
+            if len(added) < source["top_n"] and name.lower() not in seen and re.fullmatch(r"[^/\s]+/[^/\s]+", name):
+                seen.add(name.lower())
+                added.append(name)
+        cfg["repos"] = pinned + added
+        label = "explicit+rebalance_active" if added else "explicit (rebalance_active fell back)"
     absent = [k for k in ("project_owner", "project_number", "repos") if not cfg.get(k)]
     if absent:
         if required:
             raise ValueError("selection policy missing %s" % ", ".join(absent))
-        return None
+        return None, None
     if not isinstance(cfg["project_owner"], str) or not cfg["project_owner"].strip():
         raise ValueError("project_owner must be a non-empty string")
     if not isinstance(cfg["project_number"], int) or isinstance(cfg["project_number"], bool) or cfg["project_number"] <= 0:
@@ -153,7 +227,7 @@ def resolve_selection_policy(required=False):
         c_owner, c_number = connector.get("project_owner"), connector.get("project_number")
         if c_owner and c_owner != cfg["project_owner"] or c_number and int(c_number) != cfg["project_number"]:
             raise ValueError("selection policy target disagrees with github_board connector")
-    return cfg
+    return cfg, label
 
 
 def _parse_utc(value):
@@ -1430,8 +1504,15 @@ def main(argv=None):
 
     if args.cmd == "config":
         safe = {k: v for k, v in cfg.items() if k != "token_file"}
+        extra = {}
+        try:  # GH-898: show the resolved allow-list only when repos_source is configured
+            policy, label = _resolve_policy_and_label()
+            if label:
+                extra["selection_policy_repos"] = {"repos": policy["repos"], "repos_source": label}
+        except ValueError:
+            pass  # policy-preview/apply surface a bad policy loudly; config stays a settings dump
         print(json.dumps({"state_path": str(STATE_PATH), "device_config": get_device_config_path(),
-                          "token_file": cfg["token_file"] + " (reserved, v1 uses gh)", **safe}, indent=2))
+                          "token_file": cfg["token_file"] + " (reserved, v1 uses gh)", **safe, **extra}, indent=2))
         return 0
 
     if args.cmd == "scan":
