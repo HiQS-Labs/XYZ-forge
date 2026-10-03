@@ -15,4 +15,4 @@ phases: 1
 
 # GH-912 — Gate environment isolation
 
-Implementation and acceptance are owned by the shared [GH-949 plan](GH-949-ATE-REMEDIATION.md). Existing issue: https://github.com/HiQS-Labs/XYZ-forge/issues/912. Preserve explicit fixture-level overrides while clearing ambient locator variables at the existing runner boundary. This separately rated issue shares one implementation PR with GH-949.
+Implementation and acceptance are owned by the shared [GH-949 plan](../2-WORKING/GH-949-ATE-REMEDIATION.md). Existing issue: https://github.com/HiQS-Labs/XYZ-forge/issues/912. Preserve explicit fixture-level overrides while clearing ambient locator variables at the existing runner boundary. This separately rated issue shares one implementation PR with GH-949.
