@@ -136,5 +136,13 @@ Basis: The GH-947 optional HiQS recipe profile implementation adheres strictly t
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-03T07:50:10Z
+task: RELAY-GH947-FINAL-20261003
+reviewer: agy
+status: Approved
+reviewed-head: 624eb29ffcc570a603c9c24337a7059d96a3bca9
+added-range: 8174+6419
+added-sha256: 8cbd3e623682a05e9f3dfe589490361780b0b1842423ed9525327adaebccbc3d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
