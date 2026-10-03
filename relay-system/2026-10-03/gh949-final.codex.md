@@ -179,4 +179,12 @@ Sweep: read all six complete runtime files, plan/recon, SUMMARY and R1 replay/re
 
 Relay closed (Approved), no further review turn needed. Handing completion to codex-producer for the required separate-full-clone gate and subsequent handoff.
 
+
+### Attestation · relay-drive — 2026-10-03T07:36:18Z
+task: RELAY-GH949-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 59d666cdcf0ce839a4050447c048c50117aea8cc
+added-range: 14718+5197
+added-sha256: 7dfa96894388f7ed80e52d721fa18f96a54410796b919515672b8b3d6adaea88
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
