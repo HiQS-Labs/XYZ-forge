@@ -73,18 +73,18 @@ ok("agent-chorus standalone pipeline did not ship", not os.path.exists(os.path.j
 c = count(); r = run("--push"); ok("1. second run: exit 0, no new commit, remote unchanged", r.returncode == 0 and count() == c and remote() == h, r.stderr[-200:])
 
 # adapted mode: the child owns the bytes; mini/ORIGIN.md must document every adapted path
-write(os.path.join(DEST, "skills/weekly-planner/SKILL.md"), "mini-adapted\n")
+write(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md")), "mini-adapted\n")
 git(DEST, "add", "-A"); git(DEST, "commit", "-q", "-m", "adapt"); git(DEST, "push", "-q", "origin", "main")
 write(os.path.join(SRC, "skills/3-weekly/weekly-planner/SKILL.md"), "forge-never-ships\n"); commit_src("forge drift")
-r = run("--apply"); ok("adapted: child bytes kept, forge drift not shipped", r.returncode == 0 and read(os.path.join(DEST, "skills/weekly-planner/SKILL.md")) == "mini-adapted\n", r.stderr[-200:])
+r = run("--apply"); ok("adapted: child bytes kept, forge drift not shipped", r.returncode == 0 and read(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md"))) == "mini-adapted\n", r.stderr[-200:])
 reset_src()
-write(os.path.join(SRC, "mini/ORIGIN.md"), "".join(l for l in read(os.path.join(SRC, "mini/ORIGIN.md")).splitlines(True) if "skills/weekly-planner/" not in l)); commit_src("undocument weekly-planner")
+write(os.path.join(SRC, "mini/ORIGIN.md"), "".join(l for l in read(os.path.join(SRC, "mini/ORIGIN.md")).splitlines(True) if os.path.join("skills", "weekly-planner", "") not in l)); commit_src("undocument weekly-planner")
 r = run("--apply"); ok("adapted: undocumented path → exit 2", r.returncode == 2, r.stderr[-200:])
 reset_src()
-git(DEST, "rm", "-q", "--", "skills/weekly-planner/SKILL.md"); git(DEST, "commit", "-q", "-m", "drop adapted file"); git(DEST, "push", "-q", "origin", "main")
-r = run("--apply"); ok("adapted: deleted-from-child path → exit 2, not fabricated", r.returncode == 2 and not os.path.exists(os.path.join(DEST, "skills/weekly-planner/SKILL.md")), r.stderr[-200:])
+git(DEST, "rm", "-q", "--", os.path.join("skills", "weekly-planner", "SKILL.md")); git(DEST, "commit", "-q", "-m", "drop adapted file"); git(DEST, "push", "-q", "origin", "main")
+r = run("--apply"); ok("adapted: deleted-from-child path → exit 2, not fabricated", r.returncode == 2 and not os.path.exists(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md"))), r.stderr[-200:])
 reset_src()
-write(os.path.join(DEST, "skills/weekly-planner/SKILL.md"), "mini-adapted\n")
+write(os.path.join(DEST, os.path.join("skills", "weekly-planner", "SKILL.md")), "mini-adapted\n")
 git(DEST, "add", "-A"); git(DEST, "commit", "-q", "-m", "restore adapted"); git(DEST, "push", "-q", "origin", "main")
 
 # criterion 3: inclusion-only
