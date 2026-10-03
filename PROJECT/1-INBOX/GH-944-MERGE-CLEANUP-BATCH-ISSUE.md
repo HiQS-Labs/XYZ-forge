@@ -29,3 +29,7 @@ phases: 1
 ## Implementation shape
 
 Caller-owned, `skills/2-daily/merge-cleanup/SKILL.md` only — no script changes (GH-831 no-new-tests rail; the parity guard pins script-owned rows to tests). Recite block item 6, drive-loop step 3 pointer, "Batch issue protocol (GH-944)" section with issue template, four caller-owned capability rows, description mention. Reuses the previously orphaned `merge-batch` label; idempotent on `--resume` (match open `merge-batch` issues on integration branch + overlapping PR set — the title date is a label, never the key); posting is non-blocking (record, not a gate); merge-cleanup never auto-closes the issue.
+
+## Merge evidence
+
+- PR #943 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

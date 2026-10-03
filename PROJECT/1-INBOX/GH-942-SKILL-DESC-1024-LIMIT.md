@@ -47,3 +47,7 @@ ZCode sessions despite a healthy skills-army-hq deployment (payload + symlinks v
    symlinks read through, no re-link needed. Restart the consumer session to re-discover.
 3. Optional guard rides an existing suite (GH-831 no-new-tests rail) — fail when a committed
    SKILL.md description folds over 1024.
+
+## Merge evidence
+
+- PR #943 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
