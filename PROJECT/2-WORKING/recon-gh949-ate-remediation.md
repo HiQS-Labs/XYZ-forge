@@ -1,3 +1,19 @@
+---
+title: "Recon — GH-949 ATE remediation"
+status: Reference
+created: 2026-10-03
+updated: 2026-10-03
+owner: Codex
+goal: Preserve the exact-source boundary map supporting the canonical GH-949 plan.
+roadmap_exempt: true
+---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Bounded source recon and caller map | Apply findings in canonical GH-949 plan |
+
 # Recon Map — GH-949 ATE remediation
 
 Base: `3fbed72f781d1ad060e298b798a44c32edef393d`. Mode: graph + exact-source fallback. Lanes: process/callers, ATE records/consumers, discovery/gate environment, supervisor state/oracle synthesis. Read-only recon; no production edits.

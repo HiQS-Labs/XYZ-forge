@@ -157,3 +157,8 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 ## Log
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+
+## Review packet — operational envelope
+
+Review the committed canonical plan and recon against GH-949 F1–F9 and GH-912. Inspect named source, not only embedded prose. Check cleanup/cancellation shapes, all delegated idempotence runs, no-work admission before mutation, append/filing semantics, Git config error paths, optional HOME fallbacks and the existing shared envelope. Ratings are stored in RELEASES for each issue with no overrides. Grade against this single-user developer-tool envelope and commensurate complexity; no enterprise multi-tenant threat model, new frameworks, gates or suites. Review-only: edit only this relay transcript. Do not run mutation-heavy suites from this task clone or linked review worktree. Do not install anything or create issues/PRs. Report concrete blockers with observed input, affected scope and falsifier. This is pre-implementation QA; runtime changes are intentionally absent. A successful review must set STATUS: Approved, record VERDICT: PASS, and hand the token back per the embedded protocol. Three rounds maximum; do not manufacture scope expansion.
