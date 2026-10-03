@@ -1,0 +1,62 @@
+== test: gh346-gateway-allowlists ==
+  workdir: /tmp/tick-gh346-gateway-allowlists.e15JYA
+== test: gh346-gateway-allowlists ==
+  derived lanes from route_agent(): claude codex agy aider pi smallcode commandcode deepseek
+  PASS: #3 dispatcher routes 'claude' -> claude-turn.sh
+  PASS: #3 dispatcher routes 'codex' -> codex-turn.sh
+  PASS: #3 dispatcher routes 'agy' -> agy-turn.sh
+  PASS: #3 dispatcher routes 'aider' -> aider-turn.sh
+  PASS: #3 dispatcher routes 'pi' -> pi-turn.sh
+  PASS: #3 dispatcher routes 'smallcode' -> smallcode-turn.sh
+  PASS: #3 dispatcher routes 'commandcode' -> commandcode-turn.sh
+  PASS: #3 dispatcher routes 'deepseek' -> deepseek-turn.sh
+  PASS: #3 dispatcher rejects an unknown id with exit 2 and names it
+  PASS: #3 dispatcher refuses a lane whose *_AGENT var is unset (exit 2)
+  PASS: #2 route_agent rejects an unknown builder id with exit 2
+  PASS: #2 rejection message names 'claude'
+  PASS: #2 rejection message names 'codex'
+  PASS: #2 rejection message names 'agy'
+  PASS: #2 rejection message names 'aider'
+  PASS: #2 rejection message names 'pi'
+  PASS: #2 rejection message names 'smallcode'
+  PASS: #2 rejection message names 'commandcode'
+  PASS: #2 rejection message names 'deepseek'
+  SKIP: 'commandcode' tooling not installed on this host (preflight fired, which is correct)
+  SKIP: 'deepseek' tooling not installed on this host (preflight fired, which is correct)
+  PASS: #4 _probe_bin_or_file accepts an off-PATH file entrypoint
+  PASS: #4 _probe_bin_or_file fails closed when nothing resolves
+  PASS: #4 DEEPSEEK_DEFAULT_BIN still matches deepseek-turn.py's own default
+  PASS: #4 SMALLCODE_DEFAULT_BIN matches smallcode-turn.sh's default in full
+  PASS: #5 'claude' has a CLAUDE_TURN_ROOT guard root
+  PASS: #5 'codex' has a CODEX_TURN_ROOT guard root
+  PASS: #5 'agy' has a AGY_TURN_ROOT guard root
+  PASS: #5 'aider' has a AIDER_TURN_ROOT guard root
+  PASS: #5 'pi' has a PI_TURN_ROOT guard root
+  PASS: #5 'smallcode' has a SMALLCODE_TURN_ROOT guard root
+  PASS: #5 'commandcode' has a COMMANDCODE_TURN_ROOT guard root
+  PASS: #5 'deepseek' has a DEEPSEEK_TURN_ROOT guard root
+  PASS: #8 gate_env.py classifies COMMANDCODE_AGENT
+  PASS: #9 COMMANDCODE_AGENT is reset before routing (a stale value cannot route a turn)
+  PASS: #8 gate_env.py classifies DEEPSEEK_AGENT
+  PASS: #9 DEEPSEEK_AGENT is reset before routing (a stale value cannot route a turn)
+  PASS: #10 GATE_SCRUBBED_ENV includes CLAUDE_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes CODEX_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes AGY_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes AIDER_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes PI_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes SMALLCODE_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes COMMANDCODE_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes DEEPSEEK_AGENT
+  PASS: #6 bin/marathon-yaml no longer admits the phantom 'gemini' reviewer
+  PASS: #6 src/marathon-yaml.js no longer admits the phantom 'gemini' reviewer
+  PASS: #6 no gemini shim exists, so removing it from the gates lost no capability
+  PASS: #6 python reviewer gate agrees with the JS gates (codex/agy)
+  PASS: #1 frozen bash twin still accepts only claude/codex/agy/aider (recorded GH-308 divergence)
+  PASS: 2.10 unrecognized id exits 2
+  PASS: 2.10 no tick event written before the refusal (0 events, unchanged)
+  PASS: 2.10 no worktree created before the refusal
+  PASS: 2.7 find-harness.sh reports RELAY_HAS_COMMANDCODE
+  PASS: 2.7 find-harness.sh reports RELAY_HAS_DEEPSEEK
+  PASS: 2.7 --env actually emits the new flags
+  PASS: 2.8 relay-xyz SKILL.md documents the deepseek worker
+  gh346-gateway-allowlists: 55 pass, 0 fail

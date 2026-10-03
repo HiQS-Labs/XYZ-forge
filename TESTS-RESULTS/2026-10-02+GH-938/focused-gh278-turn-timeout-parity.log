@@ -1,0 +1,15 @@
+== test: gh278-turn-timeout-parity ==
+  PASS: Python default is 900s
+  PASS: Bash default is 900s
+  PASS: relay-xyz documents the shared 900s Aider default
+== test: gh278-cleanup ==
+  workdir: /tmp/tick-gh278-cleanup.MGjIP1
+  PASS: bash-shim: shim exited 7
+  PASS: bash-shim: untracked.md was cleaned up
+  PASS: bash-shim: tracked.md was restored
+  PASS: bash-shim: no fixture leaked into the repo root
+  PASS: py-shim: shim exited 7
+  PASS: py-shim: untracked.md was cleaned up
+  PASS: py-shim: tracked.md was restored
+  PASS: py-shim: no fixture leaked into the repo root
+  gh278-turn-timeout-parity (total): 11 pass, 0 fail

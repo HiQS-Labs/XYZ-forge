@@ -26,6 +26,8 @@ for candidate in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-har
                  "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
                  "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
                  "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.agents/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.zcode/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
   [ -n "$candidate" ] && [ -f "$candidate" ] && { L="$candidate"; break; }
@@ -64,14 +66,51 @@ manual mode).
 
 ## First-time setup on a new clone or machine (make the skill discoverable)
 
-This repo keeps its skills in top-level `skills/`, which Claude Code does **not** scan. A session
-finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`. A fresh clone or second machine has
-no such symlink, so the skill is invisible in **every** session there — the "other VS Code sessions
-can't find the relay-xyz files" failure. Fix it **once per clone** (idempotent, self-locating, no
-hardcoded path):
+First check whether Skills Army HQ already manages this skill on the machine:
 
 ```bash
-bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into ~/.claude/skills/
+readlink ~/.claude/skills/relay-xyz   # or the relay-xyz entry in your app's skills root
+```
+
+Compare the printed target with your Skills Army collection root: `$XYZ_SKILLS_ROOT` when it is set,
+otherwise `~/git-pulse-sync/Deployed Skills`. Three outcomes:
+
+**Managed by Skills Army HQ: skip `install.sh`.** The link points into the collection root
+(`<collection root>/relay-xyz`). This counts even when the link is dangling, for example after the
+collection moved or mid-sync. Skills Army HQ owns the link, and its rule is not to run copied `install.sh`
+files. Running it there exits 1 on a live link (GH-678 keeps it). On a dangling one it replaces the link
+with this clone and adds links in app roots the collection does not target. Repair or refresh links with
+Skills Army HQ (`sync.py`), then go straight to the locator below.
+
+To check the harness, run `--check` from the installed path and from **outside any repo**:
+
+```bash
+cd "$HOME" && bash "$HOME/.claude/skills/relay-xyz/find-harness.sh" --check   # or your app root's relay-xyz
+```
+
+Inside a task clone, `--check` resolves that clone and would offer to save it. When it resolves your
+canonical clone, run the one-line `save this harness on this Mac` command it prints. When it finds no
+harness at all, it exits 1 without a save command. Write the per-Mac config yourself:
+
+```bash
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/xyz" && printf '%s\n' /path/to/XYZ-forge > "${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness"
+```
+
+The alternative is to prefix a single command with `XYZ_HARNESS=/path/to/XYZ-forge`. Do not export it from
+shell startup files.
+
+**A live link to somewhere else** (another XYZ-forge clone, or a vendored `.xyz/` copy). Another installer
+owns it, and `install.sh` refuses it with exit 1 (GH-678). If that target is the copy you want, keep it and
+go to the locator. To switch, remove the link yourself, then follow the next case.
+
+**Not managed (no link, or a dangling link outside the collection root).** This repo keeps its skills in top-level `skills/`, which
+Claude Code does **not** scan. A session finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`.
+A fresh clone or second machine without Skills Army HQ has no such symlink, so the skill is invisible in
+**every** session there — the "other VS Code sessions can't find the relay-xyz files" failure. Fix it
+**once per maintained clone** (idempotent, self-locating, no hardcoded path):
+
+```bash
+bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into the Claude Code, Codex, and Gemini/Antigravity skills roots
 ```
 
 It also replaces a stale/dangling symlink and verifies `find-harness.sh` resolves the harness. The
@@ -99,6 +138,8 @@ for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-harness.sh}
          "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
          "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
          "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.agents/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.zcode/skills/relay-xyz/find-harness.sh" \
          "./.claude/skills/relay-xyz/find-harness.sh" \
          "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
   [ -n "$L" ] && [ -x "$L" ] && break
@@ -205,8 +246,9 @@ Either breadcrumb must be a **portable pointer** — the skill name or the `find
 bare file isn't auto-loaded (a skimming agent skips it exactly like it skips this doc's own body), it's
 machine-specific (breaks on the next clone or device), a stale cached path is *worse* than no path at
 all, and cleaning one up later has cross-repo blast radius. **relay-xyz never auto-installs any file
-into a target repo** — only `install.sh` writes anything, and it writes only into `~/.claude/skills/`
-on the machine running it, never into the target repo itself.
+into a target repo**. Only `install.sh` writes anything, and it writes only skill symlinks into the
+machine's app skills roots (`~/.claude/skills/`, `~/.codex/skills/`, and the Gemini/Antigravity roots),
+never into the target repo itself.
 
 ## The two automated paths
 

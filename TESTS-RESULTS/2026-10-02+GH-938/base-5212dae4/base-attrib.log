@@ -1,0 +1,11 @@
+gh610-claude-subscription base_exit=1
+gh399-packet-acceptance-continuation base_exit=1
+gh390-timeout-attribution base_exit=1
+gh492-idle-kill base_exit=1
+gh505-relay-attest base_exit=1
+gh402-board-sync base_exit=1
+gh544-pre-push-gate base_exit=1
+swarm-preflight base_exit=1
+gh123-lock-progress-bound base_exit=1
+gh280-jog-marathon-adapter base_exit=1
+gh436-merge-cleanup base_exit=1
