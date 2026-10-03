@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -146,5 +146,27 @@ Dispositions (full table in the plan's "Plan QA dispositions: round 1" section):
 Operator answers (2026-10-03): Q1 only the 3 active repos; Q2 one skill, `push-downstream`; Q3 the central "child files survive" rule; Q4 keep the filename; Q5 transfer the issues back.
 
 Requesting Round 2 review of the revised plan.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: F1–F6 are addressed at plan level; one evidence/preservation gap remains before approval. The central publisher design is proportionate and needs no additional subsystem.
+swept file: yes
+
+Swept the entire revised plan (210 lines), both publisher implementations, both named publisher suites, the TSV/child CI, policy excerpts and all six new recon receipts. No additional plan defects beyond the findings below were identified in this sweep. Verify-tier intent: list_projects returned all 77 entries without this root; check_index_coverage returned “project not found or not indexed”, so exact-source fallback was used; no graph generation is claimed. No git command, suite or executable fixture was run. Implementation outcomes remain **[Unverified — needs clone run]**.
+
+- **[Pass] F1–F6 dispositions accepted as specifications.** Plan lines 117–126 replace permanent adoption machinery with a pushed ownership bootstrap; this supplies the prior manifest used by the existing retry verifier at `utils/py/xyz_mini_sync.py:218` and ownership guard at line 328. Plan lines 128–137 define detached-safe, read-only checking; lines 100–107 define deduplication and a falsifiable continuation check; lines 111–114 correct the payload counts; lines 160 and 188 explicitly return backlog ownership. These are approval of the stated contracts, not claims that the unbuilt implementation passes.
+
+- **[Should] F7 — Finish the evidence receipt and make #934 preservation measurable.** `PROJECT/1-INBOX/GH-955-CENTRAL-DOWNSTREAM-PUBLISHER.md:47` calls the new files receipts for the factual claims, but the seeded evidence directory has no `provenance.jsonl`. `TESTS-RESULTS/2026-10-03+GH-955/recon/gh934-diff.txt:1` names a source SHA, while lines 2–4 contain only a diffstat; neither edit is visible. Step 7 (plan line 147) promises both edits, but its verification at line 151 only names path-integrity, the skill suite and duplicate-plan checking. Cheapest correction: capture the actual two SKILL.md hunks against a named comparison revision, attach truthful command/exit/source provenance for the recon captures (re-run queries if original attribution is unavailable), and add an explicit acceptance check that those two hunks survive in forge and the first downstream publication. Do not invent retrospective provenance. The required provenance contract is AGENTS.md, “Verified beats plausible”.
+  Observed input: the six nonempty receipt files include zero provenance files, and gh934-diff.txt is a 269-byte diffstat with no patch hunks.
+  Affected scope: attribution of the plan's remote recon claims and preservation of the two already-identified #934 edits only; no new runtime feature or suite.
+  Falsifier: a receipt with the actual two hunks, named source/base SHAs and successful query provenance, plus a planned exact comparison that fails when either edit is omitted, resolves this finding.
+  Probe (exit 0): `python3 -` with `from pathlib import Path; root=Path("TESTS-RESULTS/2026-10-03+GH-955"); files=sorted(p for p in root.rglob("*") if p.is_file()); print("receipt_files:",len(files)); print("provenance_files:",len(list(root.rglob("provenance.jsonl")))); p=root/"recon/gh934-diff.txt"; s=p.read_text(); print("gh934_receipt_bytes:",p.stat().st_size); print("has_patch_hunk:",any(l.startswith("@@ ") for l in s.splitlines()))`. Decisive output: `receipt_files: 6; provenance_files: 0; gh934_receipt_bytes: 269; has_patch_hunk: False`. This is a static evidence check, not a remote re-query.
+
+- **[Nit] Make the bootstrap one-liner's serialization explicit.** Plan line 121 mentions `--print-manifest`; the existing implementation emits JSON triples at `utils/py/xyz_mini_sync.py:265`, whereas the ownership reader consumes whitespace-separated destination paths at line 309. The documented one-liner should select agent-chorus, decode JSON and emit exactly its 13 destination paths, one per line; raw redirection is not the bootstrap format. The planned disposable-clone adoption check should catch a mistake here; no new CLI flag is needed.
+
+- **[Nit] Name the short bootstrap CI gap.** Plan lines 118–121 push deletion of the old marker before the first publication installs the new workflow. The old workflow still reads that marker at `skills/2-daily/agent-chorus/standalone/ci.yml:19`. Explicitly label this intermediate commit's expected failing CI and require a successful child workflow at the first published SHA before calling migration complete. The final publication's workflow/payload atomicity at plan line 178 is sound; it does not cover the earlier setup commit.
+
+Handing off to Producer (claude-a) — resolve F7 and clarify the two bootstrap notes, then open Round 3. STATUS remains Open; no approval or self-commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
