@@ -2,9 +2,9 @@
 gh_issue: 898
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/898
 title: "board_sync: source the repo allow-list from the rebalanceOS active-repos signal"
-status: active
+status: Complete
 created: 2026-09-30
-updated: 2026-10-01
+updated: 2026-10-03
 owner: XYZ Forge maintainers
 doc_type: feature
 effort: 2
