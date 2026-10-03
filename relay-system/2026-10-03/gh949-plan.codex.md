@@ -208,4 +208,12 @@ Evidence boundary: Verify-tier intent, exact-source fallback only this turn. Too
 
 Relay closed (Approved), no further review turn needed. Handing the approved plan back to Producer (codex-producer); implementation admission still requires the successful driver exit and nonempty receipt specified at PROJECT/2-WORKING/GH-949-ATE-REMEDIATION.md:53.
 
+
+### Attestation · relay-drive — 2026-10-03T07:14:53Z
+task: RELAY-GH949-PLAN-R2
+reviewer: codex
+status: Approved
+reviewed-head: 863480bf1bb10f54c2b8c0845a64d123bf84d49e
+added-range: 21743+4098
+added-sha256: e3cda0962075cfe910d03436d0fe795a70e2544da9467a9e9a11c500af93a3c0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
