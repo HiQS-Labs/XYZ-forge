@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -280,5 +280,46 @@ Disposition of every round-3 finding (re-review artifact: `.relay-artifacts/gh92
 This is round 4 of 4. If the attribution and scorecard gaps are closed to you, set `STATUS: Approved`; if not, `STATUS: Escalated` per the round cap and the operator decides.
 
 Handing off to Reviewer (codex) — round 4: final adjudication.
+
+### Reviewer · Round 4 · codex
+
+swept file: yes
+
+Scope: all 1,141 lines of the supplied rev-4 packet and the entire relay history. Citations below are to `.relay-artifacts/gh928-gh884-review-packet.md`. Direct document review, not graph-based source certification; no git commands, suites, canary, or executable fixtures were run. The packet contains a source diff rather than the entire source. I swept all supplied material, including retained text; missing sections cannot be swept.
+
+1. **[Pass] Fix round soundness in the shown allocation.** The explicit root refusal remains (`[ "$rp" = "/" ] && return 1`, packet:884); setup allocates a fresh `mktemp` child in both branches (packet:1030–1032), and teardown uses `sandbox_deletable` (packet:1044–1045). This preserves the round-3 resolution of caller-selected pre-existing directories becoming deletion targets. No additional concrete dangerous-deletion bypass was established in the stated local envelope. The round-3 discriminating guard probe remains the independent narrow evidence; end-to-end preservation is **[Unverified — needs clone run]** by this reviewer. The final author receipt reports “valuable.txt byte-identical; pre-existing logs/ untouched; child-only deletion” (packet:1106).
+
+2. **[Pass] The specific 993s/final-root-fix attribution gap is closed.** The new log says “full gate GREEN in 843s” and `4ae6f491..8fc86317` (packet:581–583); the final provenance row names `base: 8fc86317` (packet:1104). The earlier 993s run is explicitly historical in the introduction and superseding row. Both provenance files are included in the declared committed diff, satisfying the packet-level GH-430 membership evidence previously requested. This accepts supplied receipts, not an independent git attestation or execution. It qualifies the stated 8fc86317 runtime candidate; it does not establish a gate on receipt-bearing 12acffbd or authorize landing.
+
+   **[Should] PoC revision attribution remains unsupported, and final witness attachments are omitted.** Part 2c says “Witnessed against commit `8fc86317`” (packet:1126), but all four PoC provenance rows still say `4ae6f491-receipts-branch` (packet:1114–1117). The scorecard is now present, but its revision claim needs a matching receipt or correction to the actual historical run. External-red/fingerprint remain author attestations referring to a comment not included here; the “partial” flake-history bar is appropriately qualified. Also, the three final GH-928 rows reference `witness-parent-refusals-final.log`, `witness-parent-existing-project-final.log`, and `canary-clean-both-final.log` (packet:1105–1107), none of which is included in Part 1's diff. Supply those attachments or explicitly label the rows as author summaries without attached logs. Do not invent a new run or relabel historical evidence. These are evidence corrections, not requests for runtime changes.
+
+3. **[Pass] The narrow method lesson remains supported by the retained capture.** “setup itself created the logs/ ownership marker” and “manufactured ownership” (packet:76–79), together with “did NOT fire on an unrelated local config write” (packet:1089), support importing known containment/evidence primitives as day-one constraints. The scorecard explicitly says “ONE worked example — no measured throughput or rebuild-success rate” (packet:1139–1140). This supports a local lesson, not a general clean-room failure rate. **[Unverified — missing section]** The current Part 3 prognosis and its judgmental-estimate framing cannot be adjudicated because Part 3 is absent.
+
+4. **[Unverified — missing section] Direction remains conditionally reasonable from the relay history, but the final recommendation is absent.** The Setup still asks for prune-first pending the Oct 8 audit, trigger-gated rebuilding, and three amendments. The preceding round's conditional deferral remains my recommendation: retain the existing gate and make integration/arming separate decisions. Deferral is Easy to reverse; a rebuild is Costly and needs the existing gate retained through shadow qualification. No better-supported immediate rebuild emerges from the supplied evidence. However, the current packet omits the trigger accounting and amendments previously carried by Part 3; this is not approval of an unseen final recommendation or authority to land/arm PR #930.
+
+5. **[Should] Whole-packet completeness regressed: Parts 3 and 4 are missing.** The file ends at the Part 2c closing fence (packet:1141). Only Parts 1, 2, 2b, and 2c occur. Restore the full recommendation/prognosis and historical PR review context, preserving their qualifications; prior relay quotations are not a replacement for the required current artifact. This is a concrete document omission, not a behavior-change request. The sweep also found the attribution/attachment gaps above; no whole-source clean bill is claimed.
+
+   Non-mutating inventory probe, exit 0 (run with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`):
+
+   ```python
+   from pathlib import Path
+   import json
+   p = Path('.relay-artifacts/gh928-gh884-review-packet.md').read_text()
+   lines = p.splitlines()
+   print('lines=', len(lines))
+   print('headings=', [(i,l) for i,l in enumerate(lines,1) if l.startswith('## Part')])
+   print('receipt_rows=', len([json.loads(l) for l in lines if l.startswith('{"timestamp"')]))
+   for name in ['witness-parent-refusals-final.log', 'witness-parent-existing-project-final.log', 'canary-clean-both-final.log']:
+       print(name, 'diff_present=', any(l.startswith('diff --git ') and name in l for l in lines))
+   print('EOF=', repr(lines[-1]))
+   ```
+
+   Decisive output: `lines=1141`; headings at `5: Part 1`, `1080: Part 2`, `1111: Part 2b`, `1120: Part 2c`; `receipt_rows=30`; all three `diff_present=False`; EOF is the closing code fence. This establishes omissions in the supplied packet only, not absence from the actual PR.
+
+VERDICT: FAIL
+
+Basis: the original deletion-authority fix and the 8fc86317 gate attribution are supported at the packet level. Approval of the entire requested adjudication is still unwarranted: the final packet omits Parts 3–4 and attributes the PoC scorecard to a revision its receipts do not identify. At round 4/4, escalation is required. No further runtime change or new test machinery is requested.
+
+Handoff: Producer (claude-a) / operator — STATUS is Escalated at the round cap. Restore the missing review material and reconcile evidence attribution before deciding whether to reopen review. No approval, landing, or workflow arming is granted.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
