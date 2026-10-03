@@ -15,8 +15,8 @@ Modes:
   * seed    — copied only when absent; never replaced, never deleted (child-owned, e.g. TODO.md)
   * adapted — the child owns the entry: the forge files seed it once (when the child has never
               been published that entry), after which nothing under it is replaced, added, or
-              deleted from the forge side. Every path the child's MANIFEST.txt already lists under
-              the entry (including child-only files such as a mini install.sh) is carried forward.
+              deleted from the forge side. Whatever the child tracks under the entry (including
+              child-only files such as a mini install.sh) is carried forward and recorded.
               Dropping the whole entry from this manifest deletes those paths deliberately. The
               forge source must stay tracked (upstream of record), and every adapted entry needs an
               exact row in the target's origin registry (mini/ORIGIN.md, read from the committed
@@ -26,9 +26,11 @@ Guards (deliberately few):
   * every manifest source must exist and be tracked, or nothing is written (exit 2)
   * an existing destination file at an output path that the previous publication did not write is
     never overwritten (exit 2) — the one ownership guard
-  * a path the child's MANIFEST.txt lists under an adapted entry but that is missing from the
-    child is refused, never fabricated from forge bytes; an entry the child has never been
-    published (fresh child, newly added or re-added entry) is seeded from forge bytes
+  * an adapted entry already published to the child is never written from the forge side again:
+    the child's own additions and deletions under it are recorded, never undone; an entry the
+    child has never been published (fresh child, newly added or re-added entry) is seeded once
+  * the origin registry must carry an exact row of kind `adapted` per adapted entry, must not
+    still mark a non-adapted entry adapted, and must be committed (no --allow-dirty edits to it)
   * retired targets (skills-army-mini, #882) refuse unless XYZ_ALLOW_RETIRED_TARGET=1
   * the files about to ship are regex-scanned for secrets before anything is written (exit 4)
 
@@ -174,13 +176,14 @@ def expected_revision(sha, branch, dirty):
     return f"source_repo=XYZ-forge\nsource_sha={sha}\nsource_branch={branch}\nsource_dirty={int(dirty)}\n"
 
 
-ORIGIN_ROW_RX = re.compile(r"^\s*\|\s*`?([^`|]+?)`?\s*\|")
+ORIGIN_ROW_RX = re.compile(r"^\s*\|\s*`?([^`|]+?)`?\s*\|\s*`?([^`|]*?)`?\s*\|")
 
 
 def origin_rows(doc):
-    """Destination paths named in the first column of the origin registry's table (exact rows only:
-    a path mentioned in a Notes column, or a parent directory, documents nothing)."""
-    return {m.group(1).strip().rstrip("/") for m in map(ORIGIN_ROW_RX.match, doc.splitlines()) if m}
+    """{destination: kind} from the origin registry's table rows: first column = the destination,
+    second = its kind. A path mentioned in a Notes column, or a parent directory, documents nothing."""
+    return {m.group(1).strip().rstrip("/"): m.group(2).strip().lower()
+            for m in map(ORIGIN_ROW_RX.match, doc.splitlines()) if m}
 
 
 def under(path, root):
@@ -289,18 +292,26 @@ def main(argv=None):
             origin_cp = git(source, "show", f"{sha}:{origin_rel}", check=False)
             if origin_cp.returncode != 0:
                 raise Refuse(f"adapted manifest entries require {origin_rel} committed at {sha[:12]}")
+            if dirty and git(source, "diff", "--quiet", "HEAD", "--", origin_rel, check=False).returncode != 0:
+                raise Refuse(f"{origin_rel} has uncommitted edits — the registry that ships must be the one checked")
             rows = origin_rows(origin_cp.stdout)
-            undocumented = [r for r in adapted_roots if r not in rows]
+            undocumented = [r for r in adapted_roots if rows.get(r) != "adapted"]
             if undocumented:
-                raise Refuse(f"adapted entries without an exact row in {origin_rel} at {sha[:12]}: "
+                raise Refuse(f"adapted entries without an exact row (kind adapted) in {origin_rel} at {sha[:12]}: "
                              + " ".join(undocumented))
+            stale = sorted(d.rstrip("/") for _, d, m in profile["manifest"]
+                           if m != "adapted" and rows.get(d.rstrip("/")) == "adapted")
+            if stale:
+                raise Refuse(f"{origin_rel} still marks these adapted, but the manifest no longer does "
+                             "(publishing would overwrite or prune mini-owned bytes): " + " ".join(stale))
         prev_path = os.path.join(dest, MANIFEST_FILE)
         with open(prev_path, encoding="utf-8") if os.path.isfile(prev_path) else open(os.devnull) as fh:
             prev = set(fh.read().split())
-        # ownership is per adapted entry: an entry the child was already published keeps exactly the
-        # paths its MANIFEST.txt lists (child-only files included); a never-published entry is seeded
-        established = {r for r in adapted_roots if any(under(p, r) for p in prev)}
-        carried = sorted(p for p in prev if any(under(p, r) for r in established))
+        # ownership is per adapted entry: an entry already published to the child keeps whatever the
+        # child tracks under it (its own additions and deletions included); a never-published entry
+        # is seeded from forge bytes once
+        established = sorted(r for r in adapted_roots if any(under(p, r) for p in prev))
+        carried = sorted(f for f in git(dest, "ls-files", "-z", "--", *established).stdout.split("\0") if f) if established else []
         seeded = sorted({d for _, d, m in files if m == "adapted" and not any(under(d, r) for r in established)})
         tracked = sorted(set(managed) | set(carried) | set(seeded))
         revision = expected_revision(sha, branch, dirty)
@@ -316,17 +327,16 @@ def main(argv=None):
             writes = m == "managed" or (m == "adapted" and d in seeded)
             if writes and d not in owned and os.path.lexists(os.path.join(dest, d)):
                 raise Refuse(f"{d} exists in the destination but was not published by this tool — refusing to overwrite")
-        lost = sorted(p for p in carried if not os.path.lexists(os.path.join(dest, p)))
-        if lost:
-            raise Refuse("adapted path listed in the child's MANIFEST.txt but missing from the child — "
-                         "restore it from the child's git history or re-adapt; the tool will not "
-                         "fabricate it from forge bytes: " + " ".join(lost))
+        removed = sorted(p for p in prev if any(under(p, r) for r in established) and p not in carried)
+        if removed:
+            log("child removed adapted paths (recorded, never re-created from forge bytes): "
+                + " ".join(removed), profile["log"])
         if seeded:
             log("adapted entries seeded from forge bytes — re-adapt per the child's ORIGIN.md: "
                 + " ".join(sorted(r for r in adapted_roots if r not in established)), profile["log"])
         deletions = sorted(d for d in prev - set(tracked) if os.path.lexists(os.path.join(dest, d)))
         copies = [(s, d) for s, d, m in files
-                  if m == "managed" or (m == "adapted" and d in seeded and not os.path.exists(os.path.join(dest, d)))
+                  if m == "managed" or (m == "adapted" and d in seeded)
                   or (m == "seed" and not os.path.exists(os.path.join(dest, d)))]
 
         scan(source, [s for s, _ in copies])

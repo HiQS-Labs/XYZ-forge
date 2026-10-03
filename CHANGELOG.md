@@ -12,26 +12,31 @@ How adapted ownership works:
 
 - **Ownership is per entry.** A never-published entry is seeded once from forge bytes. After that,
   nothing under it is replaced, added or pruned from the forge side.
-- **Child-listed paths are carried forward.** Every path the child's `MANIFEST.txt` lists under the
-  entry is kept, including mini-only `install.sh` files.
-- **Dropping is the only deletion.** Dropping the whole entry deletes it. A listed path missing from
-  the child is refused, never fabricated.
-- **Exact origin rows.** Every adapted entry needs an exact first-column row in `mini/ORIGIN.md`,
-  read from the committed source SHA. A Notes-column mention documents nothing.
+- **What the child tracks is carried forward.** Everything the child tracks under the entry is kept
+  and recorded, including mini-only `install.sh` files. A child deletion is recorded and never
+  re-created from forge bytes.
+- **Dropping is the only deletion.** Dropping the whole entry deletes the paths the child's
+  `MANIFEST.txt` records under it.
+- **Exact origin rows.** Every adapted entry needs an exact first-column row of kind `adapted` in
+  `mini/ORIGIN.md`, read from the committed source SHA. A Notes-column mention documents nothing.
+  A stale `adapted` row for a now-managed entry refuses, and so does an uncommitted registry edit
+  under `--allow-dirty`.
 - **Retired target.** `--target skills-army-mini` now refuses by default (#882). Only its suite opts
   in, through `XYZ_ALLOW_RETIRED_TARGET=1`, until the 2026-10-08 audit removes both.
 
 Also included:
 
-- review-code resolves its GitHub target before writing the report.
+- review-code resolves its GitHub target first. It posts only when the reviewed bytes are the PR's
+  pushed head, verifies issue targets with `gh issue view`, and keeps `temp/` out of git in other
+  repos.
 - The work was carried forward from `archive/primary-gh889-snapshot-2026-10-03`.
 
 Policy: `mini/ADAPTATIONS.md`.
 
 Verification:
 
-- `test/gh589-xyz-mini-sync.sh` 25/0, including carry-forward, no forge additions, exact row,
-  missing-file refusal, and drop/re-add.
+- `test/gh589-xyz-mini-sync.sh` 29/0, including carry-forward, no forge additions, exact row and
+  kind, stale row, uncommitted registry, child deletion and re-addition, and drop/re-add.
 - `test/gh620-skills-army-mini-sync.sh` 29/0, including the retired-by-default refusal.
 - Red controls: removing carry-forward and substring origin matching each fail the suite.
 
