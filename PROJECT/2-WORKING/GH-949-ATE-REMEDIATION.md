@@ -37,7 +37,7 @@ Bet: existing process-group and runner boundaries can carry all fixes without a 
 
 | Issue | Requirements | Dependencies | Plan / branch | Acceptance | Ledger rating | State / PR |
 |---|---|---|---|---|---|---|
-| #949 | F1–F9 | shared cleanup before oracle/ATE use | this plan; fix/gh949-ate-remediation | matrix below + final QA/gate | rated90/85/50/55 | Planning; none |
+| #949 | F1–F9 | shared cleanup before oracle/ATE use | this plan; fix/gh949-ate-remediation | Phase 2 steps 1–6 + final QA/gate | rated90/85/50/55 | Planning; none |
 | #912 | K1 ambient selector leak | existing runner envelope | same plan/branch, separate ledger row | inherited selector red → clean wrapped suites; intentional overrides still win | rated82/80/50/85 | Planning; none |
 
 Ratings dated2026-10-03, read back from RELEASES: #949 priority90/severity85/neutral appeal50/cheapness55; #91282/80/50/85. Unsupervised continuing writes and false containment are high-impact potential consequences, not claimed production loss. #912 caused a documented3373s false-red gate on Oct1; the Oct3 campaign reproduces the same defect, not a second production incident. History windows Sep19–Oct3 versus Sep5–19: #478 documents a Sep3–6 runaway incident in the earlier window, but its generator cause differs; #918 Oct1 pooled oracle failure has unknown attribution and is not counted as the same root cause. Trend is unknown from this bounded sample, not increasing by assertion. No user override exists; appeal stays neutral. Cheapness reflects a focused multi-file repair versus simple envelope correction.

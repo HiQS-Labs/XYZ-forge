@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -144,7 +144,7 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 - [ ] #949/#912 requirements all satisfied or explicitly unresolved; ready status only when all blocking checks pass.
 - [ ] Plan/ledger say PR ready awaiting merge, not shipped; retained clone and cleanup handoff reported.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Canonical plan Phase 2 steps 1–6 cover F1–F9/K1 with falsifiable controls, bounded existing helpers, compatibility and rollback; Phase 3 requires independent final QA and qualifying evidence.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -153,6 +153,10 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 4. Stay tight — findings are bullets, not essays. Grade every finding.
 5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Review packet — operational envelope
+
+Review the committed canonical plan and recon against GH-949 F1–F9 and GH-912. Inspect named source, not only embedded prose. Check cleanup/cancellation shapes, all delegated idempotence runs, no-work admission before mutation, append/filing semantics, Git config error paths, optional HOME fallbacks and the existing shared envelope. Ratings are stored in RELEASES for each issue with no overrides. Grade against this single-user developer-tool envelope and commensurate complexity; no enterprise multi-tenant threat model, new frameworks, gates or suites. Review-only: edit only this relay transcript. Do not run mutation-heavy suites from this task clone or linked review worktree. Do not install anything or create issues/PRs. Report concrete blockers with observed input, affected scope and falsifier. This is pre-implementation QA; runtime changes are intentionally absent. A successful review must set STATUS: Approved, record VERDICT: PASS, and hand the token back per the embedded protocol. Three rounds maximum; do not manufacture scope expansion.
 
 ## Log
 
@@ -176,9 +180,12 @@ Evidence boundary: Verify-tier discovery attempted against nearest indexed proje
 
 Relay closed (Approved), no further review turn needed. Producer may proceed with the approved implementation plan; runtime approval remains subject to the planned evidence and final QA.
 
+### Producer · Round 2
+
+Disposition: Implemented the review packet nit. Definition of Done now points to the explicit phase criteria. The canonical plan table now points to numbered acceptance steps.
+
+Protocol recovery: round 1 driver exited 4 with review-body-rewritten because the producer placed the operational packet after the final marker. Its PASS is retained as advisory, not accepted approval. Moved that packet into Setup above Log; prior reviewer block is unchanged. Re-review the canonical plan and corrected protocol; this is round 2 of the original three-round budget. No production edits have begun.
+
+Handing off to Reviewer for corrected plan approval.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
-
-
-## Review packet — operational envelope
-
-Review the committed canonical plan and recon against GH-949 F1–F9 and GH-912. Inspect named source, not only embedded prose. Check cleanup/cancellation shapes, all delegated idempotence runs, no-work admission before mutation, append/filing semantics, Git config error paths, optional HOME fallbacks and the existing shared envelope. Ratings are stored in RELEASES for each issue with no overrides. Grade against this single-user developer-tool envelope and commensurate complexity; no enterprise multi-tenant threat model, new frameworks, gates or suites. Review-only: edit only this relay transcript. Do not run mutation-heavy suites from this task clone or linked review worktree. Do not install anything or create issues/PRs. Report concrete blockers with observed input, affected scope and falsifier. This is pre-implementation QA; runtime changes are intentionally absent. A successful review must set STATUS: Approved, record VERDICT: PASS, and hand the token back per the embedded protocol. Three rounds maximum; do not manufacture scope expansion.
