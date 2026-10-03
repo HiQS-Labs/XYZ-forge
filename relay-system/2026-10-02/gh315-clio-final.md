@@ -82,4 +82,12 @@ swept file: yes
 
 relay closed (Approved), no further turn needed. Producer receives the approved review for remaining validation and PR work.
 
+
+### Attestation · relay-drive — 2026-10-03T06:40:18Z
+task: RELAY-gh315-clio-final
+reviewer: codex
+status: Approved
+reviewed-head: 4f69865bd04302d160467064f5852d2f8f743af5
+added-range: 5389+2732
+added-sha256: ba15e8037fa321ec8daa6b2a794e771d771620545f67bde8472d720fbede6216
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
