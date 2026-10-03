@@ -203,3 +203,7 @@ Not executed by this PR. Run in order; stop at the first failure. `C` = the devi
 7. **Close #938** only after step 4 passes on the Mini. Comment on #938 with the merge sha, CI and
    reconcile run URLs, the publish commit, and the step-4 outputs (sync status, readlink, diff,
    `--check` line).
+
+## Merge evidence
+
+- PR #941 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
