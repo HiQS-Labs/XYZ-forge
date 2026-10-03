@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/tmp/gh947-controls.py", line 66, in <module>
+    try: c.admission_preflight(str(cli),native,str(repo)); raise AssertionError('probe crossed expiry allowed')
+AssertionError: probe crossed expiry allowed

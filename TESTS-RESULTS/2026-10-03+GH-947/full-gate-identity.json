@@ -1,0 +1,23 @@
+{
+  "before": {
+    "startedAt": "2026-10-03T08:14:32.106016+00:00",
+    "clone": "/tmp/xyz-gh947-final-qualify-20261003",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "head": "fc0c19ae2bf824eed118de2f114c30a2d7805eb2",
+    "status": "",
+    "command": "PATH=/tmp/xyz-gh947-tools-20261003/shellcheck-v0.11.0:/tmp/xyz-gh947-venv-20261003/bin:$PATH bash ci-local.sh --base origin/development",
+    "base": "7f899059616143c38c1a59a0e7037bb30f3b1e1f",
+    "reviewAttestationCommit": "fc0c19ae2bf824eed118de2f114c30a2d7805eb2"
+  },
+  "after": {
+    "finishedAt": "2026-10-03T08:51:32.424040+00:00",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "head": "fc0c19ae2bf824eed118de2f114c30a2d7805eb2",
+    "status": ""
+  },
+  "identity_valid": true,
+  "exit_code": 0,
+  "verdict_entries": 409,
+  "pass": 408,
+  "skip_duplicate": 1
+}

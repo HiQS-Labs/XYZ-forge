@@ -13,7 +13,8 @@ Getting there took three separate lookups that do not read each other: the harne
 every shell), the gateway (documented nowhere but each shim's source), and the model (one of two
 tables depending on which gateway you already picked). After this module:
 
-    eval "$(resolve-profile.sh 'glm 5.3 max' --env)"
+    profile_env="$(resolve-profile.sh 'glm 5.3 max' --env)" || exit "$?"
+    eval "$profile_env" || exit "$?"
 
 RESOLUTION ORDER — explicit beats preferred beats shipped:
 
@@ -25,7 +26,8 @@ RESOLUTION ORDER — explicit beats preferred beats shipped:
   3. (Phase 3b, not built) harnesses.db `models` table, for fields a profile omitted.
   4. The shim's own literal default. The floor, unchanged, always.
 
-EVERY TIER IS SKIPPABLE, INCLUDING ON A PARSE ERROR. A missing config, malformed JSON, an unknown
+LEGACY LITERAL TIERS ARE SKIPPABLE, INCLUDING ON A PARSE ERROR.
+Explicit HiQS sources are constraints and refuse instead of falling through. A missing config, malformed JSON, an unknown
 key, an unmatched name — each is caught, reported on stderr, and falls through. A turn that could
 not run because a *preference* was unreadable would be strictly worse than no preferences at all.
 Nothing here can block a turn, and no fallback is silent: that is GH-346 Phase 0's "log the
@@ -45,13 +47,18 @@ import shutil
 import re
 import subprocess
 import sys
+import tempfile
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from device_config import load_local_device_config, get_device_config_path  # noqa: E402
+from device_config import load_local_device_config, get_device_config_path, load_device_config_diagnostic  # noqa: E402
 from model_alias import resolver_path  # noqa: E402
 from model_catalog import catalog_version  # noqa: E402
+from proc_group import run_bounded  # noqa: E402
+from claude_cli import (read_json_bounded, validate_advisory_config, validate_admission,
+                        resolve_binary, preflight, check_admission_expiry)  # noqa: E402
 
 # The resolver is a local bash script over a small in-memory table. Anything near this bound means
 # it is wedged, not slow, and a turn is worth more than a name lookup.
@@ -300,6 +307,70 @@ def validate_profile(key: str, body: Dict[str, Any], lane_map: Dict[str, Dict[st
     return problems
 
 
+def _resolve_hiqs_profile(body, result):
+    """Consume one pinned offline decision. HiQS owns selection and canonical hashing."""
+    try:
+        required = {"source", "recipeRef", "runner", "snapshotPath", "snapshotPolicy",
+                    "policyPath", "executionConfigPath"}
+        if not isinstance(body, dict) or set(body) != required or body["source"] != "hiqs":
+            raise ValueError("HiQS source requires only explicit recipe, runner, snapshot, policy and config references")
+        if not all(isinstance(body[k], str) and os.path.isabs(body[k])
+                   for k in ("snapshotPath", "policyPath", "executionConfigPath")):
+            raise ValueError("HiQS input paths must be explicit absolute device paths")
+        for spec in result["lanes"].values():
+            if any(os.environ.get(spec.get(k) or "") for k in ("agent_var", "model_var", "effort_var", "flags_var", "gateway_var")):
+                raise ValueError("explicit HiQS profile refuses ambient manual lane settings; use a clean shell")
+        runner = body["runner"]
+        if (not isinstance(runner, dict) or set(runner) != {"checkout", "revision", "node"}
+                or not re.fullmatch(r"[a-f0-9]{40}", runner["revision"])
+                or not os.path.isabs(runner["checkout"]) or not os.path.isabs(runner["node"])):
+            raise ValueError("HiQS runner requires absolute installed checkout/node and immutable commit")
+        root = runner["checkout"]
+        for args, expected in ((["rev-parse", "HEAD"], runner["revision"]),
+                               (["status", "--porcelain", "--untracked-files=no"], "")):
+            check = run_bounded(["git", "-C", root, *args], timeout=5)
+            if check.timed_out or check.rc != 0 or check.stdout.strip() != expected:
+                raise ValueError("HiQS checkout revision differs or tracked files are dirty")
+        argv = [runner["node"], os.path.join(root, "node_modules/tsx/dist/cli.mjs"),
+                "--tsconfig", os.path.join(root, "tsconfig.json"), os.path.join(root, "cli/index.ts"), "resolve-request"]
+        if not all(os.path.isfile(p) for p in (argv[0], argv[1], argv[3], argv[4])):
+            raise ValueError("HiQS runner/dependencies are not installed; complete explicit setup")
+        request = {"protocolVersion": "2", "snapshot": read_json_bounded(body["snapshotPath"]),
+                   "snapshotPolicy": body["snapshotPolicy"],
+                   "input": {"recipeRef": body["recipeRef"], "asOf": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                             "policy": read_json_bounded(body["policyPath"]), "requiredCapabilities": ["chat"]},
+                   "executionConfig": read_json_bounded(body["executionConfigPath"])}
+        exports = validate_advisory_config(request["executionConfig"])
+        if any(os.environ.get(k) and os.environ[k] != v for k, v in exports.items()):
+            raise ValueError("HiQS profile conflicts with ambient auth or call limits")
+        payload = json.dumps(request, allow_nan=False)
+        if len(payload.encode()) > 1024 * 1024:
+            raise ValueError("HiQS request exceeds admission limit")
+        # No source text, provider credentials, installer, shell, or implicit fetch.
+        child = run_bounded(argv, cwd=os.getcwd(), env={"PATH": os.environ.get("PATH", ""), "TZ": "UTC"},
+                            timeout=20, input=payload)
+        if child.timed_out or child.rc != 0 or len(child.stdout.encode()) > 1024 * 1024:
+            raise ValueError("HiQS resolver refused or returned oversized/failed output")
+        response = json.loads(child.stdout)
+        binary = resolve_binary(os.environ)
+        receipt = {"request": request, "response": response, "runner": runner,
+                   "binary": os.path.realpath(binary) if binary else "",
+                   **{key: body[key] for key in ("snapshotPath", "policyPath", "executionConfigPath")}}
+        native_env = dict(os.environ, **exports, XYZ_HIQS_ADMISSION="pending")
+        validate_admission(receipt, native_env, os.getcwd())
+        preflight(binary, native_env, os.getcwd(), cli_flags=["--restricted", "--strict-mcp-config"])
+        check_admission_expiry(response["result"]["route"]["recipe"])
+        with tempfile.NamedTemporaryFile(mode="w", prefix="xyz-hiqs-admission-", suffix=".json", delete=False) as stream:
+            json.dump(receipt, stream, allow_nan=False)
+            receipt_path = stream.name  # tempfile creates mode 0600; retained until explicit cleanup.
+        result.update(harness="claude", model=exports["CLAUDE_MODEL"], effort=exports["CLAUDE_REASONING_EFFORT"],
+                      gateway=None, source="hiqs", admission=receipt_path, exports=exports,
+                      why="exact HiQS recipe admitted for Claude consult advisory only")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError):
+        result["problems"] = ["HiQS admission refused; check explicit source pins, supported config, installed build and subscription"]
+    return result
+
+
 def resolve(name: Optional[str], xyz_root: str) -> Dict[str, Any]:
     """Resolve a profile name to a complete dispatch path. Always returns; never raises."""
     lane_map = lanes(xyz_root)
@@ -313,6 +384,19 @@ def resolve(name: Optional[str], xyz_root: str) -> Dict[str, Any]:
         # a data file can never block a turn.
         "catalog_version": catalog_version(xyz_root),
     }
+
+    # Exact HiQS selection is a constraint, before legacy manual/default preferences.
+    if name:
+        config, error = load_device_config_diagnostic()
+        configured = config.get("profiles", {})
+        key = name[5:] if name.startswith("hiqs:") else name
+        body = configured.get(key) if isinstance(configured, dict) else None
+        if name.startswith("hiqs:") or isinstance(body, dict) and body.get("source") == "hiqs":
+            result.update(tier=2, profile=key, source="hiqs", harness="claude")
+            if error or not isinstance(body, dict) or body.get("source") != "hiqs":
+                result["problems"] = ["explicit HiQS profile is unavailable; no fallback"]
+                return result
+            return _resolve_hiqs_profile(body, result)
 
     # ---- Tier 1: an explicit manual path already in the environment. Always wins. ----
     for lane, spec in lane_map.items():
@@ -392,8 +476,16 @@ def emit_env(res: Dict[str, Any], xyz_root: str) -> Tuple[str, int]:
         _warn("refusing to emit a broken export block — fix the profile or pass the path manually")
         return ("", 1)
 
+    if res.get("source") == "hiqs":
+        lines = ["# HiQS admission: consult --models claude only; retained nonsecret receipt",
+                 "unset RELAY_AGENT_CMD RELAY_AGENT CLAUDE_FLAGS",
+                 *[f"export {key}={_sh_quote(value)}" for key, value in res["exports"].items()],
+                 f"export XYZ_HIQS_ADMISSION={_sh_quote(res['admission'])}"]
+        return ("\n".join(lines) + "\n", 0)
+
     spec = lane_map[harness]
     lines = [
+        "unset XYZ_HIQS_ADMISSION",
         f"# resolve-profile: {res['query']!r} -> tier {res['tier']}"
         + (f" (profile {res['profile']!r})" if res["profile"] else ""),
         f"export {spec['agent_var']}={_sh_quote(harness)}",
@@ -456,6 +548,9 @@ def emit_list(xyz_root: str) -> int:
         return 0
     for key in sorted(profiles):
         body = profiles[key]
+        if isinstance(body, dict) and body.get("source") == "hiqs":
+            print(f"  {key}: HiQS exact recipe {body.get('recipeRef', '?')} (admission checked on selection)")
+            continue
         gw = body.get("gateway")
         route = f"{body.get('harness')} -> {body.get('model')}" if gw == SELF_ROUTED \
             else f"{body.get('harness')} -> {gw} -> {body.get('model')}"
