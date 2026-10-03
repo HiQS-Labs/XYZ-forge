@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-03.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -167,6 +167,7 @@ Review whole touched files against unchanged plan, focusing on new falsifier and
 APPEND ONLY: preserve every existing byte/blank line, except header NEXT/STATUS/ROUND.
 This is round2 of cap3. Only relay thread writes. No suite execution in worktree.
 
+
 ### Reviewer (agy) — Round 2
 
 swept file: yes. Swept complete implementation and pre-existing code across `utils/py/claude_cli.py`, `utils/py/profile_resolve.py`, `utils/py/proc_group.py`, `utils/py/consult.py`, `utils/py/claude-turn.py`, and `skills/1-hourly/relay-xyz/SKILL.md`. Pre-existing defects in files touched were examined; no pre-existing defects impede implementation or violate repository contracts.
@@ -181,6 +182,19 @@ VERDICT: PASS
 Basis: Producer implemented the concrete policy/asOf/capabilities roundtrip equality in `utils/py/claude_cli.py:68-70`, backed by a witnessed red control in `TESTS-RESULTS/2026-10-03+GH-947/policy-mutation.log:13-16`. The Round 1 doc hygiene nit was cleanly resolved in `PROJECT/2-WORKING/GH-947-HIQS-RECIPE-PROFILES.md:10`. All touched surfaces comply with repository rails (GH-831, GH-308, GH-551) and PDDA gates.
 
 relay closed (Approved), no further turn needed.
+
+### Producer · Round 3
+
+Round2 PASS was rejected by the driver (exit4): one blank line was removed immediately
+before the reviewer block. Its approval is invalid. Original spacing is now restored;
+no runtime changes since 1dc04f05. Round3 is the remaining final review, not a cap reset.
+Append the reviewer block immediately before the marker, without trimming ANY preceding
+newline. Use a byte-preserving insertion (read, replace marker with newblock+marker).
+Do not use rstrip(), strip(), or reconstruct the prior body. Preserve all preceding
+blank lines including the restored round2 boundary. Only header values may change.
+Review the complete implementation and policy roundtrip control as before. Write only
+this relay thread; no suites or artifact edits. Valid driver attestation is required
+before final qualification. Earlier round1 candidate gate remains obsolete evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
