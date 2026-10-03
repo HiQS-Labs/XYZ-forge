@@ -72,11 +72,15 @@ The PR review (HiQS-Labs/XYZ-forge#930) found two must-fix items; both are fixed
 
 - **[P1] Teardown `rm -rf` ran on an unproven caller-supplied path.** `XYZ_CANARY_SANDBOX` was
   validated only at derivation, then deleted unconditionally — `XYZ_CANARY_SANDBOX=~ ./canary.sh`
-  would have removed the home directory. Fixed with `sandbox_resolve` / `sandbox_deletable`
-  (GH-567 use-boundary discipline): every dangerous use re-proves the sandbox, setup refuses `/`
-  and the resolved home, the teardown removes only a directory carrying this run's `logs/` marker
-  (otherwise the sandbox is kept, never deleted), and each check's `cd` fails closed (`cd ""` is
-  a silent no-op — the exact GH-567 trap).
+  would have removed the home directory. Round-1 fix added `sandbox_resolve` / `sandbox_deletable`
+  boundary guards (GH-567) — which an independent Codex QA relay then **falsified**: setup itself
+  created the `logs/` ownership marker, so the guard "manufactured ownership" — any caller-supplied
+  directory (a real project; the harness's own ancestor) would have been populated and then deleted
+  wholesale at teardown. Round-2 fix closes the class, not the predicate: the sandbox is ALWAYS a
+  fresh, run-owned `mktemp` child; `XYZ_CANARY_SANDBOX` names only the PARENT it is created under
+  (`sandbox_parent` refuses: inside/at the harness, its ancestor, `/`, home, missing/non-directory),
+  so caller input never becomes the deletion target. Each check's `cd` still fails closed (`cd ""`
+  is a silent no-op — the exact GH-567 trap).
 - **[P2] Containment was `git status`-only, and the "never writes in-tree" claim was technically
   false.** `git status` cannot see `.git/config`, refs, or hooks — the GH-564 contamination class.
   `tree-clean` now also diffs the clone's full local git config plus `HEAD`; the first draft of
@@ -97,6 +101,18 @@ which has never existed on disk (skills are tier-organized; the runtime check pa
 spelling only the tier glob. Worth naming plainly: the clean-room author *and* the reviewer both
 missed it, and the existing gate caught it in seconds — the clean-room artifact needed the old
 gate to be truthful about its own paths.
+
+**Independent QA relay round 1 (2026-10-02, GH-784 receipt):** a Codex reviewer (relay thread
+`relay-system/2026-10-02/gh928-gh884-independent-review.md`) returned **FAIL** on the round-1
+fixes — the [Blocker] above (marker ownership manufactured by setup; falsified with a read-only
+guard probe against populated scratch dirs and a harness ancestor), plus evidence gaps (no
+committed receipt for the full-gate green; the tick-break control unproven post-fix; a jog prose
+discrepancy where the receipt was authoritative) and an empty Part 4 in the review packet. All
+dispositions are Implemented in this branch: fresh-child sandbox semantics (above), the two push
+logs + a post-fix tick-break re-witness + corrected prose in `TESTS-RESULTS/2026-10-02+GH-928/`,
+and a repopulated packet for round 2. The round-1 method/direction findings were graded [Pass]
+with the noted narrowing: the containment-primitives lesson is stated as observations from this
+canary and one worked example, not a general clean-room failure rate.
 
 ## Lessons for GH-884 (clean-room CI rebuild contingency)
 

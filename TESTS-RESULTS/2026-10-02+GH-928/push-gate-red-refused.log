@@ -1,0 +1,25 @@
+  + gh396-find-harness-roots.sh
+  + gh393-deepseek-readiness.sh
+  + gh591-prepush-commit-boundary.sh
+  + gh-gen4-phase5-campaign.sh
+  + gh589-xyz-mini-sync.sh
+  + gh589-skill-viewer.sh
+  + gh589-consult-no-tick.sh
+  + gh280-jog-marathon-adapter.sh
+  + gh436-merge-cleanup.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+failed:
+  - path-integrity.sh
+
+pre-push: full validation RED (exit 1) after 832s — push REFUSED.
+
+  The failing checks are named in the output above.
+
+  Hosted CI may run after the push, but this local boundary is the earliest full signal and the
+  Ubuntu pull-request lane is advisory. Do not use downstream CI as a reason to ignore this red.
+
+  To push anyway (and you may have a good reason — a WIP branch, a known-red baseline):
+    git push --no-verify
+error: failed to push some refs to 'https://github.com/HiQS-Labs/XYZ-forge.git'

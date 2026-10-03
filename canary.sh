@@ -28,10 +28,10 @@
 #   ./canary.sh --keep               # keep the sandbox for inspection (path printed at the end)
 #
 # Environment:
-#   XYZ_CANARY_SANDBOX   — sandbox dir (default: mktemp under $TMPDIR; removed unless --keep).
-#                          Use-boundary guarded (GH-567): it must resolve outside the harness
-#                          tree, must not be / or the home directory, and only a directory
-#                          carrying this run's logs/ marker is ever removed at teardown.
+#   XYZ_CANARY_SANDBOX   — PARENT directory for a fresh, run-owned sandbox child (default: mktemp
+#                          under $TMPDIR; the CHILD is removed unless --keep). Guarded: the parent
+#                          must exist, lie outside the harness and not be its ancestor, and not be
+#                          / or the home directory — caller input never becomes the deletion target.
 #   XYZ_CANARY_TIMEOUT_S — per-check wall-clock cap in seconds (default 60)
 #
 # Exit: 0 every check passed · 1 one or more checks failed · 2 usage.
@@ -49,7 +49,7 @@ LIST=0
 TIMEOUT_S="${XYZ_CANARY_TIMEOUT_S:-60}"
 
 usage() {
-  sed -n '2,42p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '2,41p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 while [ $# -gt 0 ]; do
@@ -89,14 +89,32 @@ now_ms() {
 
 rt_label() { [ "$1" = "1" ] && echo python || echo bash; }
 
+# sandbox_parent <dir> — validate a caller-supplied XYZ_CANARY_SANDBOX as a PARENT for a fresh
+# run-owned child, and print the resolved parent. The override never becomes the deletion target
+# itself (relay round-1 review, PR #930): caller input promoted to recursive deletion authority
+# could name a real project or the harness's ancestor, and a marker directory this run created
+# cannot manufacture ownership of pre-existing contents. Refuses: missing, non-directory, anything
+# inside or at the harness, any ancestor of the harness, the filesystem root, and the resolved home.
+sandbox_parent() {
+  local p="${1:-}" rp hp
+  [ -n "$p" ] || return 1
+  [ -d "$p" ] || return 1
+  rp="$(cd -- "$p" 2>/dev/null && pwd -P)" || return 1
+  case "$rp" in "$ROOT"|"$ROOT"/*) return 1 ;; esac   # at or inside the harness
+  case "$ROOT" in "$rp"|"$rp"/*) return 1 ;; esac     # an ancestor of the harness (incl. /)
+  hp="$(sandbox_resolve "${HOME:-}" 2>/dev/null)" || hp=""
+  if [ -n "$hp" ] && [ "$rp" = "$hp" ]; then return 1; fi
+  printf '%s\n' "$rp"
+}
+
 # sandbox_resolve <path> — print the resolved path, or fail. This is the use-boundary guard
 # (GH-567): a derivation-site check never covers a path passed in from elsewhere, so every
 # dangerous use of the sandbox re-proves it here instead of trusting the setup line. Refuses an
 # empty path, a path that does not resolve to a directory, and anything inside the harness tree.
-# The in-check `rm -rf`s at tick-repo/jog-target/marathon-target are descendants of a SANDBOX
-# that passed this guard and the setup refusals below (never /, never home), and SANDBOX is a
-# shell variable an external process cannot mutate mid-run — so one guard here plus the setup
-# refusals covers every delete target in this file.
+# The in-check `rm -rf`s at tick-repo/jog-target/marathon-target are descendants of a SANDBOX that
+# was created fresh by THIS run (mktemp child under a validated parent), and SANDBOX is a shell
+# variable an external process cannot mutate mid-run — so setup ownership plus this guard covers
+# every delete target in this file.
 sandbox_resolve() {
   local p="${1:-}" rp
   [ -n "$p" ] || return 1
@@ -106,14 +124,12 @@ sandbox_resolve() {
 }
 
 # sandbox_deletable — the teardown guard. This run may only remove a directory that (a) still
-# passes sandbox_resolve, (b) is not the filesystem root or the resolved home, and (c) carries
-# this run's logs/ ownership marker. On any doubt the sandbox is KEPT, never deleted.
+# passes sandbox_resolve and (b) carries this run's logs/ ownership marker. With fresh-child
+# semantics the target is always a directory THIS run created via mktemp, so these checks are
+# belt-and-braces; on any doubt the sandbox is KEPT, never deleted.
 sandbox_deletable() {
-  local rp hp
+  local rp
   rp="$(sandbox_resolve "$SANDBOX")" || return 1
-  hp="$(sandbox_resolve "${HOME:-}" 2>/dev/null)" || hp=""
-  if [ "$rp" = "/" ]; then return 1; fi
-  if [ -n "$hp" ] && [ "$rp" = "$hp" ]; then return 1; fi
   [ -d "$rp/logs" ] || return 1
   printf '%s\n' "$rp"
 }
@@ -354,17 +370,21 @@ if [ "$LIST" = "0" ]; then
   # by the closing containment check instead of being invisible inside the "before" state.
   TREE_BEFORE="$(git -C "$ROOT" status --porcelain --untracked-files=all 2>/dev/null)"
   GITSTATE_BEFORE="$(git_state_fingerprint)"
-  SANDBOX="${XYZ_CANARY_SANDBOX:-$(mktemp -d "${TMPDIR:-/tmp}/xyz-canary.XXXXXX")}"
-  mkdir -p "$SANDBOX" 2>/dev/null || true
+  # Sandbox is ALWAYS a fresh, run-owned mktemp child (relay round-1 fix): a caller-supplied
+  # XYZ_CANARY_SANDBOX names only the PARENT the child is created under — never the deletion
+  # target — so no caller input is ever promoted to recursive deletion authority.
+  if [ -n "${XYZ_CANARY_SANDBOX:-}" ]; then
+    PARENT="$(sandbox_parent "$XYZ_CANARY_SANDBOX")" || {
+      echo "canary: sandbox parent unusable (must be an existing directory, outside the harness, not its ancestor, not / or home): $XYZ_CANARY_SANDBOX" >&2
+      exit 2
+    }
+    SANDBOX="$(mktemp -d "$PARENT/xyz-canary.XXXXXX")" || { echo "canary: cannot create sandbox under $PARENT" >&2; exit 2; }
+  else
+    SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/xyz-canary.XXXXXX")" || { echo "canary: cannot create sandbox" >&2; exit 2; }
+  fi
   RP="$(sandbox_resolve "$SANDBOX")" || { echo "canary: sandbox unusable: $SANDBOX" >&2; exit 2; }
   SANDBOX="$RP"
-  HP="$(sandbox_resolve "${HOME:-}" 2>/dev/null)" || HP=""
-  if [ "$RP" = "/" ] || { [ -n "$HP" ] && [ "$RP" = "$HP" ]; }; then
-    echo "canary: sandbox must not be / or the home directory ($RP)" >&2
-    exit 2
-  fi
-  SANDBOX="$RP"
-  LOG_DIR="$SANDBOX/logs"; mkdir -p "$LOG_DIR"  # also the ownership marker the teardown guard requires
+  LOG_DIR="$SANDBOX/logs"; mkdir -p "$LOG_DIR"  # the ownership marker the teardown guard requires
   T_START="$(now_ms)"
   echo "canary: harness $ROOT"
   echo "canary: sandbox $SANDBOX"

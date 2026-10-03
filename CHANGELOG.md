@@ -14,14 +14,17 @@ simulation against a sandbox copy of the committed ledger, and a static floor (`
 `bin/tick` and `utils/py/jog_run.py` fail it.
 
 Review round 1 hardened the containment: every dangerous use of the sandbox re-proves it at the
-use boundary (GH-567) — a caller-supplied `XYZ_CANARY_SANDBOX` that resolves to `/`, the home
-directory, or inside the harness is refused, the teardown removes only a directory carrying this
-run's `logs/` marker (otherwise the sandbox is kept, never deleted), and each check's `cd` fails
-closed. The containment check additionally diffs the clone's full local git config and `HEAD`
+use boundary (GH-567), the containment check diffs the clone's full local git config and `HEAD`
 (the GH-564 class `git status` cannot see — its first draft keyed on four config telltales and
-was caught by its own red control), and the static floor compiles a sandbox
-copy with `PYTHONDONTWRITEBYTECODE=1` so "never writes in-tree" is literally true. Evidence:
-`TESTS-RESULTS/2026-10-02+GH-928/`.
+was caught by its own red control), and the static floor compiles a sandbox copy with
+`PYTHONDONTWRITEBYTECODE=1` so "never writes in-tree" is literally true. An independent Codex QA
+relay (GH-784 receipt) then FALSIFIED the round-1 teardown guard: setup itself created the
+`logs/` ownership marker, so any caller-supplied directory — a real project, the harness's
+ancestor — would have been populated and then deleted wholesale. Round 2 fixes the class, not
+the predicate: `XYZ_CANARY_SANDBOX` now names only the PARENT under which a fresh, run-owned
+`mktemp` child is created (parent refused if inside/at the harness, its ancestor, `/`, or home),
+so no caller input is ever the deletion target; the pre-existing contents of the parent are
+untouched and only the run-owned child is removed. Evidence: `TESTS-RESULTS/2026-10-02+GH-928/`.
 
 Decision: ship it additive and local-first; `.github/workflows/canary.yml` is `workflow_dispatch`-only
 until the tier is accepted, and arming it is a trigger edit. Bet: a two-second first rung gets run on

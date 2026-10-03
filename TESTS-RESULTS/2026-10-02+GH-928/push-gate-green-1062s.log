@@ -1,0 +1,12 @@
+  + gh-gen4-phase5-campaign.sh
+  + gh589-xyz-mini-sync.sh
+  + gh589-skill-viewer.sh
+  + gh589-consult-no-tick.sh
+  + gh280-jog-marathon-adapter.sh
+  + gh436-merge-cleanup.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+pre-push: full gate GREEN in 1062s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   fb585708..88cb6090  feat/gh928-canary-gate -> feat/gh928-canary-gate

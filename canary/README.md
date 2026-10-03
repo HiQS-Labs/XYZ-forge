@@ -14,7 +14,7 @@ remotes, HEAD — before and after).
 | consult | `consult.sh --help` | yes |
 | marathon | `bin/marathon-yaml` parses the canary plan; `marathon.sh --help`; `marathon-drive.sh --help`; `marathon.sh --dry-run` renders the relay file + tick seed with inert builder stubs | yes |
 | jog | `utils/py/jog_run.py --help`; `--dry-run` against a copy of the committed releases ledger, asserting no ledger mutation | n/a (Python) |
-| containment | repo tree and `.git` state unchanged after the run; the sandbox is deleted at teardown only if it passes the ownership guard (resolves outside the harness, not `/` or home, carries this run's `logs/` marker) | n/a |
+| containment | repo tree and `.git` state unchanged after the run; the sandbox is ALWAYS a fresh, run-owned `mktemp` child — a caller-supplied `XYZ_CANARY_SANDBOX` names only the parent it is created under (validated: existing dir, outside the harness, not its ancestor, not `/` or home) — so caller input never becomes the deletion target | n/a |
 
 "Both runtimes" = the Python default and the `XYZ_PYTHON=0` Bash twin. Jog is the serial
 (lanes-off) supervisor over marathon; the canary exercises its queue simulation, never a drive.
