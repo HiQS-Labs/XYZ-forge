@@ -213,5 +213,13 @@ Basis: The policy/asOf/capabilities roundtrip equality in `utils/py/claude_cli.p
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-03T08:13:59Z
+task: RELAY-GH947-FINAL-R3-20261003
+reviewer: agy
+status: Approved
+reviewed-head: a9c7335d9d549e354ffc45ce2d197b9a55ec4faf
+added-range: 20609+3490
+added-sha256: b8fd9d7802371a600aa9745e410b48e8b8b6771dcacacd9c74204167c51dfa09
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
