@@ -82,4 +82,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer may incorporate the wording nit during normal closeout; no artifact was edited in this turn.
 
+
+### Attestation · relay-drive — 2026-10-03T06:42:34Z
+task: RELAY-gh315-clio-final-r2
+reviewer: codex
+status: Approved
+reviewed-head: ffb2371be9c0b4e703d37d9e0602cf149bf9b503
+added-range: 5600+2740
+added-sha256: a9627d777bb08e29d951ffbd5cfb18c1d0e897070a42340914483032bd24b171
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
