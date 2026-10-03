@@ -19,6 +19,20 @@ description: >-
 
 ---
 
+## Related skill: sanity-check the claimed blocker
+
+Recommend [sanity-check](../../1-hourly/sanity-check/SKILL.md) when a CI failure's
+requirement value, user consequence, or need to block the current goal is unclear,
+or investigation stops producing evidence. Pass the actual failure and existing
+findings; use its disposition to choose repair now, deferral, or a concrete
+retirement proposal before sinking more effort into the machinery.
+
+Reuse a current assessment for the same scope and evidence. A `Fix now` handoff
+returns here at the relevant phase, without another sanity-check cycle or repeated
+permission for an already-authorized repair. Deferral does not waive a required
+gate, and this pointer does not authorize retirement or weaken safety controls.
+In a flat installed collection, resolve `sanity-check` by skill name.
+
 ## The 4-Phase Resolution Ladder
 
 ```text

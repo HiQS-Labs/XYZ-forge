@@ -158,6 +158,25 @@ scores ≥ 40.
 
 If no cluster scores above **5**, say there is no clear whack-a-mole pattern in this window and stop. Do not manufacture one.
 
+## Sibling: sanity-check before committing to repair
+
+When a recurring cluster's requirement value, user impact, or urgency is unclear,
+recommend [sanity-check](../../1-hourly/sanity-check/SKILL.md) to the operator before
+turning churn into a remediation commitment. Pass the cluster evidence, current
+goal, and any existing assessment. A high churn score shows repeated cost; it does
+not alone prove that the machinery remains necessary or the repair must block the
+goal. Preserve the repository's evidence-based severity/priority rules.
+
+Recommend only; this pointer does not automatically invoke a sibling, authorize
+its writes, or change this skill's exact-body approval requirement. Reuse an
+existing sanity-check verdict unless new evidence contradicts it; never bounce
+between the two skills on unchanged evidence. For a cluster with a current
+sanity-check disposition, cite that assessment in §6's Priority `because` line.
+A `Defer` or `Dismiss` disposition overrides the recurrence-only top-tier rule
+below: rate at the highest value the combined consequence and scheduling evidence
+supports, without treating churn counts alone as urgency. Credible immediate
+harm still requires prompt attention within the operator's authority.
+
 ## 5. Understand the top cluster
 
 Goal: name the foundational defect, not the symptom list.

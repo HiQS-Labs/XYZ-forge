@@ -117,6 +117,8 @@ A review finding is not automatically blocking because a reviewer found it. Tie 
 criterion, observable failure, safety invariant, or required gate. Conversely, do not relabel a real
 failure as polish merely to create motion.
 
+When a blocker's requirement value or necessity is non-obvious or contested, invoke [sanity-check](../sanity-check/SKILL.md) to obtain a formal `Fix now`, `Defer`, `Simplify`, or `Dismiss` disposition rather than debating necessity in prose. In a flat installed collection, resolve `sanity-check` by name.
+
 **Reviewed-plan check.** Treat a sound plan reviewed at least once as the execution baseline.
 Before spending more work on each reopened topic, the agent must identify, in the existing thread:
 
