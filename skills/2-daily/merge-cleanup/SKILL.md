@@ -191,7 +191,9 @@ never attempted:
 
 **Done rule:** do not report Done unless Phase 5 ran to completion (exit 0; or exit 3 whose
 handoffs and deferrals were worked and re-driven to exit 0), **or** the operator explicitly asked
-for `--teardown-only` / `--scan-only` / `--prs-only`.
+for `--teardown-only` / `--scan-only` / `--prs-only`. For a qualifying batch, Done additionally
+requires the regression sweep to have run and been recorded in the batch issue — or its deferral
+to be recorded explicitly there and in the run summary; a silently skipped sweep is not Done.
 
 **Permission-classifier blocks:** if a harness permission layer blocks the `--execute` launch,
 retry the identical command once before escalating to the operator — a block that succeeds on a
@@ -204,14 +206,19 @@ This protocol is caller-owned: the driving agent executes it around the script's
 script option governs it, and nothing in the landing sequence waits on GitHub issue state.
 
 - **Trigger & threshold.** Fires when the Phase 4 sequence for this run contains **three or more
-  PRs**. Deferred, parked, handed-off, and `--exclude`d PRs are *named* in the issue but never
-  counted toward the threshold. Queues below three behave exactly as before — no issue.
+  PRs**, counted after `--exclude` drops and hold-label skips — the only exclusions knowable before
+  the first merge. Deferred, parked, and handed-off PRs are Phase 5 outcomes: *named* in the issue,
+  never counted toward the threshold, and a `--resume` continuation inherits the original batch's
+  issue rather than re-counting the shrunken queue. Queues below three behave exactly as before —
+  no issue.
 - **Created before the first merge, kept current.** The issue is opened after sequencing and
   before the first `gh pr merge` of the batch, so problems and pivots are appended as they happen
   and the record survives a mid-batch stop (exit 2/3 included).
 - **Idempotent on `--resume`.** Before creating, search the repo's open issues labelled
-  `merge-batch` for this run's date and integration branch; a `--resume` continuation appends to
-  that issue — never mints a duplicate. One issue per batch run, not per PR.
+  `merge-batch` for this integration branch whose PR list overlaps the run's queue; a `--resume`
+  continuation — including one on a later calendar day — appends to that issue, never mints a
+  duplicate. The date in the title is a human label, never the match key. One issue per batch run,
+  not per PR.
 - **Non-blocking.** Issue creation or update failures (network, permissions) are disclosed in the
   run summary and the governed landing proceeds — the issue is a record, not a gate.
 - **Named data sources — mine, do not freelance.** The merge sequence and per-PR outcomes come
@@ -241,6 +248,7 @@ script option governs it, and nothing in the landing sequence waits on GitHub is
 ```markdown
 Title: Merge batch <YYYY-MM-DD> — <owner/repo> — <PR list>
 Labels: merge-batch
+Integration branch: <development>
 
 ## Merge sequence
 | # | PR | outcome | reconcile |

@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue #942 filed with per-skill char counts; radar trimmed + re-vendored on the current branch as the first instance. | Trim the remaining 8 (10days, express, five, feynman, front-door, readme-audit, spike-360, timbre); re-vendor the deployed ones via skills-army-hq. |
+| Issue #942 filed; all three deployed skills (radar, 10days, express) trimmed on PR #943 and re-vendored from its commits; independent relay QA Approved (`relay-system/2026-10-02/gh943-qa.md`). | Trim the remaining 6 (five, feynman, front-door, readme-audit, spike-360, timbre); re-vendor any that becomes deployed. |
 
 ## Problem
 
@@ -28,14 +28,14 @@ ZCode sessions despite a healthy skills-army-hq deployment (payload + symlinks v
 
 ## Affected (canonical `skills/<tier>/<name>/SKILL.md`, folded desc chars)
 
-- 1570 — 3-weekly/10days (deployed; vendored copy 1545, also over)
-- 1336 — 3-weekly/radar (deployed; fixed in this branch's working tree)
+- ~~1570~~ → 1015 — 3-weekly/10days (deployed; **fixed on PR #943**)
+- ~~1336~~ → 1001 — 3-weekly/radar (deployed; **fixed on PR #943**)
 - 1241 — 4-occasional/feynman
 - 1193 — 4-occasional/front-door
 - 1183 — 4-occasional/readme-audit
 - 1151 — 4-occasional/spike-360
 - 1136 — 4-occasional/timbre
-- 1131 — 2-daily/express (deployed)
+- ~~1131~~ → 1015 — 2-daily/express (deployed; **fixed on PR #943**)
 - 1061 — 1-hourly/five
 
 ## Fix recipe
