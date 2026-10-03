@@ -380,10 +380,11 @@ def check_idempotence_oracle(
         reasons.append("tree digest diverged after repeated runs")
     if receipts and receipts_n != receipts_1:
         reasons.append(f"duplicate receipts: {receipts_1} after run 1, {receipts_n} after run {repetitions}")
-    for r in inner.get("results", []) if isinstance(inner.get("results"), list) else []:
-        if isinstance(r, dict) and r.get("rc") != first["rc"]:
-            reasons.append("exit code differs from first run")
-            break
+    if any(rc != first["rc"] for rc in inner["exit_codes"]):
+        reasons.append("exit code differs from first run")
+    first_stdout_hash = hashlib.sha256(first["stdout"].encode()).hexdigest()
+    if any(digest != first_stdout_hash for digest in inner["stdout_hashes"]):
+        reasons.append("output digest differs from first run")
     return {
         "oracle": "idempotence",
         "passed": not reasons,
