@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -1023,5 +1023,80 @@ swept file: yes
 
 VERDICT: FAIL
 Basis: The plan and draft satisfy the main scope, but the `Unchanged` path can terminate the deployment checklist before its required Mini evidence and issue closure.
+
+### Producer · Round 2 (claude-a)
+
+Dispositions for Round 1 findings:
+- [Should] `Unchanged: relay-xyz` stops the checklist — **Implemented** (plan commit `e3561387`, rewrap
+  `4768d983` + local rewrap, branch fix/gh938-relay-xyz-managed-setup). Step 3 now: record the prior
+  receipt first; on `Unchanged` skip apply/commit, identify the existing Pulse publish commit with
+  `git -C <pulse> log -1 --format=%H -- "Deployed Skills/relay-xyz"` (message must name `<sha>`/the PR;
+  otherwise record that on #938 instead of claiming a publish) and **continue at step 4**. Your
+  falsifier holds: `before != digest` still proceeds to apply → verify → commit.
+- [Pass] ×3 — no change needed.
+
+New work found while fixing (self-reported, please check):
+- Rollback (step 6) previously re-published from the pre-merge XYZ-forge commit. The operator asked for
+  "intake update back to prior receipt commit". It now uses the prior receipt recorded in step 3.
+  Grounding: deployed `intake.py` `source_record()` (lines 200-207 of the Mini copy) does
+  `git rev-parse --show-toplevel` on the source and refuses with "Source must be in a local Git
+  repository", so an exported/archived folder would be refused. The rollback therefore checks the prior
+  payload out in a temporary **Git clone** (`git clone <pulse> <tmp> && git -C <tmp> checkout <prior commit>`,
+  source `"<tmp>/Deployed Skills/relay-xyz"`; or an XYZ-forge clone at the prior commit), and requires
+  the apply's `after` digest to equal the recorded prior `digest`.
+
+Revised step 3 (through the Apply bullet) and step 6, verbatim from the branch:
+
+```text
+3. **Publish (on the publisher).**
+   - Record the prior receipt first (rollback anchor): `python3 "$C/intake.py" --root "$C" list` →
+     note relay-xyz's `digest`, `repository` and `commit` (on the Mini today: `rebalance-git-pulse`
+     @ `1636d8df`).
+   - Preview: `python3 "$C/intake.py" --root "$C" update relay-xyz --source
+     "<clone>/skills/1-hourly/relay-xyz"`. Expect `before`/`after` digests and `commit` = `<clone>`
+     HEAD. `--source` is required: the Mini's receipt records the collection itself as source, which
+     `intake.py` refuses (overlap). If it prints `Unchanged: relay-xyz`, the payload is already
+     published: skip apply and commit, find the existing publish commit with
+     `git -C <pulse> log -1 --format=%H -- "Deployed Skills/relay-xyz"` (confirm its message names
+     `<sha>` or this PR; if it cannot be identified, record that on #938 instead of claiming a
+     publish), and continue at step 4.
+   - Apply: the same command with `--apply` before `update`. It writes a verified backup ZIP under
+
+6. **Rollback (if a check fails after publish).** On the publisher, `intake.py` update back to the
+   prior receipt recorded in step 3. Check out that payload in a temporary Git clone outside `$C`
+   (`intake.py` requires the source to sit inside a local Git repository): if the prior receipt's
+   repository is the Pulse repo, `git clone <pulse> <tmp> && git -C <tmp> checkout <prior commit>`
+   and use `--source "<tmp>/Deployed Skills/relay-xyz"`; if it is XYZ-forge,
+   `git clone https://github.com/HiQS-Labs/XYZ-forge.git <tmp> && git -C <tmp> checkout <prior commit>`
+   and use `--source "<tmp>/skills/1-hourly/relay-xyz"`. Preview, then `--apply`; the resulting
+   `after` digest must equal the recorded prior `digest`. Commit and push as in step 3; devices pull
+   and re-run step 4.
+   (Alternatives in Skills Army HQ `references/recovery.md`: the verified backup ZIP or the staged
+   prior folder.) If the doc itself is wrong, revert the PR on `development` through the normal lane.
+```
+
+Excerpt: deployed intake.py (Mac Mini copy) lines 196-207:
+
+```python
+def digest(folder, ignored=()):
+    return hashlib.sha256(json.dumps(snapshot(folder, ignored), sort_keys=True).encode()).hexdigest()
+
+
+def source_record(raw):
+    source = Path(raw).expanduser().resolve(strict=True)
+    info, ignored = package_info(source)
+    result = subprocess.run(["git", "--no-optional-locks", "-C", str(source), "rev-parse", "--show-toplevel"],
+                            text=True, capture_output=True)
+    require(result.returncode == 0, f"Source must be in a local Git repository: {source}")
+    repo = Path(result.stdout.strip()).resolve()
+    require(within(source, repo) or source == repo and ignored,
+```
+
+Ask for Reviewer (Round 2): confirm the step-3 `Unchanged` branch and the step-6 rollback are correct
+against the quoted `intake.py` (update path L:700-725 and `source_record` above) and that nothing else
+in the plan, draft section, or checklist needs a change; set STATUS Approved if so.
+
+handing off to Reviewer (codex) — take your turn.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
