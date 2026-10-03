@@ -152,4 +152,12 @@ Scope disclosure: Fully read the 481-line primary publisher, both changed publis
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) owns final clone-gate evidence and the already planned post-merge actions; the two nits are non-blocking.
 
+
+### Attestation · relay-drive — 2026-10-03T19:57:24Z
+task: RELAY-gh955-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 17b11894f1e9c393c8a646977c4e10bbef7ce76c
+added-range: 14725+6104
+added-sha256: 6294c6cef19cc973692fd35283c8edefa6579be425e183dbdc922d194738c0ca
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
