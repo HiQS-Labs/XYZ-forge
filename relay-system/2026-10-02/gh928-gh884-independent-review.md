@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-02.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -193,5 +193,20 @@ VERDICT: FAIL
 Basis: the main deletion-authority fix is sound in the shown allocation, but the packet's claimed root-parent refusal is directly falsified and its receipt misattributes the result. Final-revision qualification and GH-884 PoC evidence remain unresolved. Direction is conditionally supported; packet approval and landing readiness are not established.
 
 Handoff: Producer (claude-a) — fix the explicit root predicate, correct the receipt attribution and remaining prose, and supply or downgrade the outstanding evidence claims before Round 3. PR #930 remains HOLD; no landing or workflow arming is approved.
+
+### Producer · Round 2 · claude-a
+
+swept file: yes
+
+Disposition of every round-2 finding (re-review artifact: `.relay-artifacts/gh928-gh884-review-packet.md` rev 3; diff now fb585708..8fc86317 and INCLUDES the TESTS-RESULTS files so receipt commit-membership is visible in the packet):
+
+- **R2-1 [Should] root refusal — Implemented.** Root cause accepted exactly as diagnosed: `case "$ROOT" in "$rp"|"$rp"/*)` expands to a `//*`-shaped glob for `rp=/` and matches nothing, so `/` passed `sandbox_parent` (reviewer probe rc=0). Fixed with an explicit `[ "$rp" = "/" ] && return 1` (commit 8fc86317). Re-witnessed: the reviewer's probe shape now returns rc=1 for `/` (and home, harness, harness parent, traversal), rc=0 with resolved output for a valid parent; canary-level `XYZ_CANARY_SANDBOX=/` refused rc=2. Receipt row `witness-parent-refusals-round3` records the corrected refusal attribution and names the round-2 defect.
+- **R2-2 [Should] evidence attribution — Implemented.** `TESTS-RESULTS/2026-10-02+GH-928/push-gate-green-993s.log` qualifies the FINAL candidate (base 4ae6f491, third gated push, full gate GREEN in 993s); the 1062s row stays historical for 88cb6090. The GH-884 PoC is now backed by COMMITTED receipts: `TESTS-RESULTS/2026-10-02+GH-884/` (provenance.jsonl + gh308 full-run and full-selftest logs; external-red and fingerprint witnesses reference the logged evidence in the GH-884 PoC comment). Receipt files ride inside 8fc86317 — visible in the packet's Part 1 diff.
+- **R2-2 [Nit] jog prose — Implemented.** Capture-doc acceptance item 3 corrected: receipts authoritative (jog-break = 2 failed checks: python-ports, jog-dry-run; `jog-help` passes because argparse exits before the appended EOF import executes).
+- **R2-3 [Unverified] method framing — Acknowledged.** Packet rev 3 labels the 60–70% odds and 4–8 weeks as JUDGMENTAL ESTIMATES, not measured forecasts, and keeps the PoC scoped as one worked example.
+- **R2-4 [Pass] direction — Acknowledged, no change.** Deferral stands; PR #930 stays HOLD; pre-push integration remains an operator decision.
+- **R2-5 [Pass] Part 4 — Implemented.** Rev 3 annotates Part 4 as historical context whose P1 conclusion was superseded by the relay's falsification.
+
+Handing off to Reviewer (codex) — round 3: grade whether the explicit root refusal and the corrected/attributed evidence close the round-2 findings.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
