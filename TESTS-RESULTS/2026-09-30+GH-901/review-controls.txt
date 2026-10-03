@@ -1,0 +1,42 @@
+PR 902 review controls; synthetic stores only.
+Root causes: failed transcript reads produced replacement previews; per-row commits broke multi-workspace atomicity; fallback assumed UTC contrary to local naive contract. Fix sites: existing adapter loop/transaction and core parser.
+Baseline 308680f1: exit 1, {"No transcript recorded": false, "Error reading transcript: unreadable": false, "all-workspace rollback": false, "naive fallback local": false}
+
+Fixed: exit 0, {"No transcript recorded": true, "Error reading transcript: unreadable": true, "all-workspace rollback": true, "naive fallback local": true}
+
+Exact scratch source:
+```python
+import sys,sqlite3,tempfile,json,os
+from pathlib import Path
+from datetime import datetime as DT
+from unittest.mock import patch
+sys.path.insert(0,sys.argv[1])
+import core
+from adapters.antigravity import AntigravityAdapter
+from adapters.zcode import ZcodeAdapter
+out={}
+with tempfile.TemporaryDirectory(dir="temp") as tmp:
+ r=Path(tmp);(r/"annotations").mkdir();(r/"brain").mkdir()
+ c=sqlite3.connect(r/"conversation_summaries.db");c.execute("create table conversation_summaries(conversation_id text primary key,title text,preview text,status text,last_modified_time text)");c.execute("insert into conversation_summaries values('a','Old title','valuable preview','active','2026-09-30 01:00:00+00:00')");c.commit();c.close()
+ (r/"app_storage.json").write_text(json.dumps({"pinned_conversations_order":["a"]}));(r/"annotations/a.pbtxt").write_text('title:"Old title" pinned:true')
+ a=AntigravityAdapter(agy_root=str(r),apply=True,app_running_fn=lambda:False)
+ for fail in ['No transcript recorded','Error reading transcript: unreadable']:
+  with patch.object(a,'_last_action_from_transcript',return_value=fail):a.sweep()
+  c=sqlite3.connect(r/"conversation_summaries.db");out[fail]=c.execute('select preview from conversation_summaries').fetchone()[0]=='valuable preview';c.execute("update conversation_summaries set preview='valuable preview'");c.commit();c.close()
+ db=r/"z.sqlite";c=sqlite3.connect(db)
+ c.execute("create table tasks(workspace_key text,workspace_path text,workspace_identity text,task_id text,title text,title_overridden int,pinned int,updated_at int,deleted int,archived int,meta_json text,cron_automation_id text)")
+ for ws in ['a','b']:c.execute("insert into tasks values(?,'x',null,'same','Original',0,0,1790780000000,0,0,'{}',null)",(ws,))
+ c.execute("create trigger fail_second before update on tasks when NEW.workspace_key='b' begin select raise(ABORT,'injected second row failure');end");c.commit();c.close()
+ try:ZcodeAdapter(str(db),apply=True).set_title('same','New title')
+ except core.AdapterError:pass
+ c=sqlite3.connect(db);out['all-workspace rollback']=c.execute('select title from tasks').fetchall()==[('Original',),('Original',)];c.close()
+ class Fallback:
+  fromisoformat=staticmethod(lambda s: (_ for _ in ()).throw(ValueError()))
+  strptime=staticmethod(DT.strptime)
+ with patch.object(core,'datetime',Fallback):out['naive fallback local']=core.utc_text_to_local_dt('2026-09-30 01:00:00').strftime('%m-%d %H:%M')=='09-30 01:00'
+print(json.dumps(out));assert all(out.values()),out
+```
+
+Independent r1 control: missing DB + authoritative [] reached annotation writer without validation (reviewer observed). Fixed replay refuses and preserves bytes; healthy empty schema + [] still removes stale pin. exit 0.
+
+R2 Unicode control: transcript.jsonl bytes ff raised UnicodeDecodeError before change; same input now returns Error reading transcript sentinel for existing preview-preservation branch. exit 0.

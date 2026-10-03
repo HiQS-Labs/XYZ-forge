@@ -1,0 +1,100 @@
+Installing PDDA into: /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-triage-20261001/temp/gh905-install-clean
+
+Runtime + contract:
+  runtime   PROJECT/PDDA.md
+  runtime   utils/pdda/LICENSE-APACHE-2.0
+  runtime   utils/pdda/NOTICE.md
+  runtime   utils/pdda/PDDA-INSTALL.md
+  runtime   utils/pdda/PDDA-SOURCE.md
+  runtime   utils/pdda/check_inventory_ratchet.py
+  runtime   utils/pdda/check_marathon_qa.py
+  runtime   utils/pdda/inventory_ratchet_baseline.json
+  runtime   utils/pdda/pdda-catchup.sh
+  runtime   utils/pdda/pdda-doc-ready.sh
+  runtime   utils/pdda/pdda-edit-doc-hook.sh
+  runtime   utils/pdda/pdda-gh-refresh.sh
+  runtime   utils/pdda/pdda-lib.sh
+  runtime   utils/pdda/pdda-stop-doc-health.sh
+  runtime   utils/pdda/pdda.sh
+  runtime   utils/py/pdda_comment_refs.py
+  runtime   utils/py/pdda_gov_scan.py
+  scaffold  ROUTER.md
+  scaffold  AGENTS.md
+  scaffold  GUIDING-PRINCIPLES.md
+  installed optional .claude/skills/pdda/SKILL.md
+  self-check  every *.sh named in the written ROUTER.md exists in the target
+  self-check  ok
+  self-check  every *.sh named in the written AGENTS.md exists in the target
+  self-check  ok
+  self-check  every *.sh named in the written GUIDING-PRINCIPLES.md exists in the target
+  self-check  ok
+
+Lifecycle buckets:
+  seed      PROJECT/1-INBOX/blank.md
+  seed      PROJECT/2-WORKING/blank.md
+  seed      PROJECT/3-COMPLETED/blank.md
+  seed      PROJECT/4-MISC/blank.md
+
+Zero-state seeds:
+  seed      CHANGELOG.md
+  seed      PROJECT/PDDA-ACTIVITY.jsonl
+  ignore    .gitignore += PROJECT/PDDA-ACTIVITY.jsonl
+  ignore    .gitignore += .pdda-gh-state.tsv
+  seed      .pdda-mode
+initialized /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-triage-20261001/temp/gh905-install-clean/releases.db (slug 'gh905-install-clean', enforcement=lenient, generation 1); canonical dump at /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-triage-20261001/temp/gh905-install-clean/releases.sql
+projections = off
+  seed      .pdda-quad
+
+Registry:
+
+Verifying install (utils/pdda/pdda.sh run):
+
+PDDA run starting — mode: observe (report-only; never blocks)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=0
+
+== pdda-check-changelog ==
+INFO [pdda-check-changelog] CHANGELOG.md no git history to compare against; freshness not evaluated (newest entry 2026-10-01)
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=1
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=0 info=0
+
+== pdda-check-releases ==
+INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] ROUTER.md:10 dead reference 'README.md' — no file at README.md
+WARN [pdda-check-governance] ROUTER.md:23 dead reference 'README.md' — no file at README.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:361 governance doc references env var 'PDDA_SYNC_TMP' which no shipped script in this install reads or sets
+SUMMARY [pdda-check-governance] errors=0 warns=3 info=0
+
+== pdda-check-marathon-qa ==
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=0 info=0
+
+== pdda-doc-ready ==
+INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: no errors, 3 warning(s) to review — pdda-check-governance
+
+PDDA installed. Mode: observe (report-only; graduate to light → full as you clear doc debt).
+Next: read PROJECT/PDDA.md, then use the Releases CLI to park a PROJECT/2-WORKING doc.

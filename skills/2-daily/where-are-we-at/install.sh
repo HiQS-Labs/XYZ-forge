@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+#
+# install.sh — make where-are-we-at discoverable to Claude Code, Codex, and Gemini / Antigravity from THIS clone.
+set -euo pipefail
+
+_src="${BASH_SOURCE[0]}"
+while [ -h "$_src" ]; do
+  _dir="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
+  _src="$(readlink "$_src")"
+  case "$_src" in
+    /*) ;;
+    *) _src="$_dir/$_src" ;;
+  esac
+done
+SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
+SKILL_NAME="where-are-we-at"
+
+remove_stale_status_link() {
+  local old="$1/status" target
+  [ -L "$old" ] && [ ! -e "$old" ] || return 0
+  target="$(readlink "$old")" || return 1
+  case "$target" in
+    */skills/2-daily/status)
+      rm -f "$old" || return 1
+      echo "$SKILL_NAME: removed dangling legacy link $old"
+      ;;
+  esac
+}
+
+install_one() {
+  _label="$1"
+  _dest="$2"
+  _link="$_dest/$SKILL_NAME"
+
+  if [ -e "$_dest" ] && [ ! -d "$_dest" ]; then
+    echo "$SKILL_NAME: $_dest exists and is not a directory — skipping $_label." >&2
+    return 1
+  fi
+  mkdir -p "$_dest" || return 1
+
+  if [ -L "$_link" ]; then
+    if [ -e "$_link" ] && [ "$(cd -P "$_link" >/dev/null 2>&1 && pwd)" = "$SELF_DIR" ]; then
+      remove_stale_status_link "$_dest" || return 1
+      echo "$SKILL_NAME: already installed for $_label → $_link -> $SELF_DIR"
+      return 0
+    fi
+    if [ -L "$_link" ] && [ -e "$_link" ]; then
+      # GH-678: a live link that is not ours belongs to another installer or to a managed
+      # Skills Army collection. Only a dangling link is stale enough to replace.
+      echo "$SKILL_NAME: $_link already points at $(readlink "$_link") — not replacing a live link." >&2
+      echo "  Remove it yourself if that is intended." >&2
+      return 1
+    fi
+    rm -f "$_link" || return 1
+  elif [ -e "$_link" ]; then
+    _backup="${_link}.bak-$(date +%Y%m%d%H%M%S)"
+    echo "$SKILL_NAME: $_link exists as a real directory/file — backing up to $_backup before linking."
+    mv "$_link" "$_backup" || return 1
+  fi
+
+  ln -s "$SELF_DIR" "$_link" || return 1
+  remove_stale_status_link "$_dest" || return 1
+  echo "$SKILL_NAME: installed for $_label → $_link -> $SELF_DIR"
+}
+
+rc=0
+install_one "Claude Code" "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" || rc=1
+install_one "Codex" "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}" || rc=1
+install_one "Gemini (Config)" "${GEMINI_CONFIG_SKILLS_DIR:-$HOME/.gemini/config/skills}" || rc=1
+install_one "Gemini (Antigravity)" "${ANTIGRAVITY_SKILLS_DIR:-$HOME/.gemini/antigravity/skills}" || rc=1
+install_one "Universal / Agents" "${AGENTS_SKILLS_DIR:-$HOME/.agents/skills}" || rc=1
+exit "$rc"
