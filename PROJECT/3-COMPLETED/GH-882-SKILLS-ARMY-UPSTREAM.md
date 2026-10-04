@@ -2,9 +2,9 @@
 gh_issue: 882
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/882
 title: "GH-882: Pointer — Skills Army HQ upstream is XYZ-skills-army-mini; forge keeps a vendored copy"
-status: Reversed by GH-955 (2026-10-03) — closes when #882 is closed as reversed after GH-955 merges
+status: Complete
 created: 2026-10-01
-updated: 2026-10-03
+updated: 2026-10-04
 owner: noelsaw1
 goal: XYZ Forge consumes Skills Army HQ from XYZ-skills-army-mini, with a clear pointer and no republisher
 doc_type: feedback

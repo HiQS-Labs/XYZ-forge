@@ -2,9 +2,9 @@
 gh_issue: 955
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/955
 title: "Forge is upstream again: one centralized publisher for all standalone downstream repos (reverse #882)"
-status: Active
+status: Complete
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-04
 owner: operator
 goal: "XYZ-forge is the single upstream. One publisher refreshes any or all standalone downstream repos on demand."
 doc_type: project
