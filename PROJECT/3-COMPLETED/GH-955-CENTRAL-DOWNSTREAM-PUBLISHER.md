@@ -20,7 +20,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Steps 1–3 and 5–8 implemented and verified (gh589 39/0, gh620 28/0, path-integrity, skills-army-hq; red controls fail; previews recorded; step-4 recipe dry-run green) | Final Codex relay QA, then the PR. After merge: the step-4 setup commit, the first `--target all --push`, issue transfers (Q5), close #882 |
+| Landed in #956 (`a66b7ffe`). Closing actions done 2026-10-03 (batch issue #957): AgentChorus-Skill setup commit `c9a27b1`; first `--target all --push` from `development@578499c7` → XYZ-mini `32945ad`, XYZ-skills-army-mini `6a5e126`, AgentChorus-Skill `bf4f3ed` (child CI green), `--target all --check` parity on all three; mini #4–#7 returned as #958–#961 and parked; old #506 row retired; #882 commented as reversed; mini#2/#3 and #933 commented | None for GH-955. Returned backlog #958–#961 is ordinary intake; #959/#961 carry an open question about XYZ-skills-army-mini#3 |
 
 ## Problem (observed)
 
