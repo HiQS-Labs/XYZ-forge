@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
+
+The operator reversed GH-882's 2026-10-01 decision that made XYZ-skills-army-mini the Skills Army HQ
+upstream. XYZ-forge now publishes all three standalone children through one publisher,
+`utils/py/xyz_mini_sync.py`:
+
+- **Children:** XYZ-mini, XYZ-skills-army-mini and AgentChorus-Skill. These are all the downstream
+  repos found by a scan of the 21 HiQS-Labs repos; two empty placeholder repos get a profile when
+  they have content.
+- **Targets:** `--target` repeats or takes `all`. A multi-target run keeps going past a failed
+  target, prints one summary line per target, and exits with the worst code. `--dest` needs exactly
+  one target.
+- **`--check`:** a new read-only managed-parity check that skips branch and origin checks. The
+  AgentChorus-Skill CI now calls it; its smoke step pointed at a non-existent path, which has also
+  been fixed.
+- **AgentChorus moves onto the central publisher.** `sync-to-standalone.sh` and
+  `publish-manifest.tsv` are retired, and its 13 payload files are an `agent-chorus` profile. One
+  reviewed setup commit in that repo hands ownership over. It is dry-run verified: the guard refuses
+  before the commit; after it, copy 13 / delete 0 and `--check` passes.
+- **Skills Army reversal.**
+  - The `skills-army-mini` target is un-retired, and `UPSTREAM.md` is deleted.
+  - #934's two `SKILL.md` edits, which had only reached the child, are landed here byte-identically.
+  - `push-to-xyz-mini` and `push-to-skills-army-mini` fold into one `push-downstream` skill.
+
+Read-only previews against the real children: XYZ-mini copy 36 / delete 0; XYZ-skills-army-mini copy
+9 / delete 0; AgentChorus-Skill refused until its setup commit. The plan passed Codex relay QA in
+round 3.
+
+Verification: gh589 39/0, with new multi-target and `--check` assertions; gh620 28/0; path-integrity;
+skills-army-hq. Red controls (a short-circuiting loop, a re-added retirement) each fail. Evidence:
+`TESTS-RESULTS/2026-10-03+GH-955/`.
+
 ## 2026-10-03 — XYZ-mini publisher: adapted mode with per-entry ownership, exact origin rows, and the retired Skills Army target (GH-589, #951)
 
 The GH-889 planner skills ship to XYZ-mini as mini-side adaptations: flat paths, `/relay` instead of

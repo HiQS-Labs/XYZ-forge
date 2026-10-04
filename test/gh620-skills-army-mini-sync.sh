@@ -57,22 +57,18 @@ git(WORK, "clone", "-q", bare, dest); git(dest, "symbolic-ref", "HEAD", "refs/he
 def publish(*extra): return sh(sys.executable, sync, "--target", "skills-army-mini", "--dest", dest, *extra)
 
 r = publish("--push")
-ok("retired target refuses by default (GH-882)", r.returncode == 2 and "retired" in r.stderr and "XYZ-skills-army-mini" in r.stderr, r.stderr[-300:])
-# the suite keeps exercising the retired publisher until the 2026-10-08 audit removes both
-os.environ["XYZ_ALLOW_RETIRED_TARGET"] = "1"
-r = publish("--push")
 ok("first publication pushes and reads back", r.returncode == 0, r.stderr[-300:])
-# GH-882: the forge copy now carries UPSTREAM.md (it points at the new upstream). This publisher is
-# retired, and this suite is removed through the 2026-10-08 audit; the set is kept truthful until then.
+# GH-955: XYZ-forge is the Skills Army HQ upstream again (reverses GH-882); the child is a published
+# projection of skills/3-weekly/skills-army-hq/.
 expected = {
     ".gitignore", ".xyz-forge-revision", "LICENSE", "LICENSE-COMMERCIAL.md", "MANIFEST.txt", "README.md",
-    "SKILL.md", "UPSTREAM.md", "references/recovery.md", "references/targets.md", "scripts/intake.py",
+    "SKILL.md", "references/recovery.md", "references/targets.md", "scripts/intake.py",
     "scripts/sync.py",
 }
 actual = set(filter(None, git(dest, "ls-files").stdout.splitlines()))
 ok("literal inclusion-only payload set", actual == expected, f"missing={sorted(expected-actual)} extra={sorted(actual-expected)}")
 manifest = set(pathlib.Path(dest, "MANIFEST.txt").read_text().splitlines())
-ok("manifest names exactly the ten managed payloads",manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
+ok("manifest names exactly the nine managed payloads",manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
 canonical_readme = pathlib.Path(src, "skills/3-weekly/skills-army-hq/README.md").read_bytes()
 ok("root README matches its canonical package source",
    pathlib.Path(dest, "README.md").read_bytes() == canonical_readme)

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-"""xyz_mini_sync.py — copy the embedded manifest of XYZ-forge files into a local checkout of
-HiQS-Labs/XYZ-mini, commit with the source SHA, optionally push. (GH-589)
+"""xyz_mini_sync.py — the forge's one downstream publisher (GH-589, GH-955). XYZ-forge is the upstream
+for every standalone child repo; each child is a target profile below (XYZ-mini, XYZ-skills-army-mini,
+AgentChorus-Skill). A run copies a target's embedded manifest into a local checkout of that child,
+commits with the source SHA, and optionally pushes. --target repeats (or takes `all`) to refresh several
+children in one run; --check verifies a child's managed bytes read-only (the child CI uses it).
 
 The manifest lives in this file so a publication is a function of (source revision, this file).
 Preview by default; --apply writes and commits; --push also pushes and reads origin/main back.
@@ -31,11 +34,14 @@ Guards (deliberately few):
     child has never been published (fresh child, newly added or re-added entry) is seeded once
   * the origin registry must carry an exact row of kind `adapted` per adapted entry, must not
     still mark a non-adapted entry adapted, and must be committed (no --allow-dirty edits to it)
-  * retired targets (skills-army-mini, #882) refuse unless XYZ_ALLOW_RETIRED_TARGET=1
   * the files about to ship are regex-scanned for secrets before anything is written (exit 4)
 
-Usage: utils/py/xyz_mini_sync.py [--dest PATH] [--apply] [--push] [--allow-dirty] [--print-manifest]
-Exit:  0 ok · 2 refused · 3 commit/push failed · 4 secret found
+Usage: utils/py/xyz_mini_sync.py [--target NAME|all ...] [--dest PATH] [--apply] [--push] [--allow-dirty]
+                                 [--check] [--print-manifest]
+  --target repeats; selection is deduplicated and runs in profile order. A multi-target run keeps going
+  after a target fails, prints one summary line per target, and exits with the worst code. --dest needs
+  exactly one target.
+Exit:  0 ok · 1 check drift · 2 refused · 3 commit/push failed · 4 secret found
 """
 import argparse
 import json
@@ -96,6 +102,22 @@ SKILLS_ARMY_MANIFEST = (
     ("LICENSE", "LICENSE", "managed"),
     ("LICENSE-COMMERCIAL.md", "LICENSE-COMMERCIAL.md", "managed"),
 )
+AGENT_CHORUS_MANIFEST = (
+    # GH-955: was skills/2-daily/agent-chorus/publish-manifest.tsv + sync-to-standalone.sh (retired)
+    ("LICENSE", "LICENSE", "managed"),
+    ("LICENSE-COMMERCIAL.md", "LICENSE-COMMERCIAL.md", "managed"),
+    ("skills/2-daily/agent-chorus/standalone/README.md", "README.md", "managed"),
+    ("skills/2-daily/agent-chorus/standalone/gitignore", ".gitignore", "managed"),
+    ("skills/2-daily/agent-chorus/standalone/ci.yml", ".github/workflows/ci.yml", "managed"),
+    ("skills/2-daily/agent-chorus/README.md", "skills/agent-chorus/README.md", "managed"),
+    ("skills/2-daily/agent-chorus/SKILL.md", "skills/agent-chorus/SKILL.md", "managed"),
+    ("skills/2-daily/agent-chorus/TELEMETRY.md", "skills/agent-chorus/TELEMETRY.md", "managed"),
+    ("skills/2-daily/agent-chorus/EXPERIMENTS.md", "skills/agent-chorus/EXPERIMENTS.md", "managed"),
+    ("skills/2-daily/agent-chorus/agents/openai.yaml", "skills/agent-chorus/agents/openai.yaml", "managed"),
+    ("skills/2-daily/agent-chorus/scripts/agent_chorus.py", "skills/agent-chorus/scripts/agent_chorus.py", "managed"),
+    ("skills/2-daily/agent-chorus/install.sh", "skills/agent-chorus/install.sh", "managed"),
+    ("skills/2-daily/agent-chorus/test-standalone.sh", "skills/agent-chorus/test-standalone.sh", "managed"),
+)
 TARGETS = {
     "xyz-mini": {
         "manifest": MANIFEST,
@@ -110,12 +132,12 @@ TARGETS = {
         "sibling": "XYZ-skills-army-mini",
         "log": "skills-army-mini-sync",
     },
-}
-# GH-882: XYZ-skills-army-mini is the Skills Army HQ upstream; publishing into it from the forge would
-# overwrite it. The target stays only so its suite can run until the 2026-10-08 audit removes both.
-RETIRED_TARGETS = {
-    "skills-army-mini": "HiQS-Labs/XYZ-skills-army-mini is the Skills Army HQ upstream since 2026-10-01 "
-                        "(#882; decision XYZ-skills-army-mini#2) — make changes there, not from the forge",
+    "agent-chorus": {
+        "manifest": AGENT_CHORUS_MANIFEST,
+        "env": "AGENT2AGENT_STANDALONE_REPO",
+        "sibling": "AgentChorus-Skill",
+        "log": "agent-chorus-sync",
+    },
 }
 MANIFEST_FILE = "MANIFEST.txt"        # managed paths of the last publication (drives deletions)
 REVISION_FILE = ".xyz-forge-revision"  # source SHA of the last publication
@@ -252,26 +274,60 @@ def destination_ready(source, dest, files, tracked, revision, message):
     raise Refuse("destination main is ahead, behind, or divergent from origin/main")
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--dest")
-    ap.add_argument("--target", choices=sorted(TARGETS), default="xyz-mini")
-    ap.add_argument("--apply", action="store_true")
-    ap.add_argument("--push", action="store_true")
-    ap.add_argument("--allow-dirty", action="store_true")
-    ap.add_argument("--print-manifest", action="store_true")
-    a = ap.parse_args(argv)
-    if a.print_manifest:
-        print(json.dumps([list(e) for e in TARGETS[a.target]["manifest"]]))
+def resolve(profile, dest_arg):
+    """(forge source root, child checkout) for one target profile."""
+    source = git(os.path.dirname(os.path.abspath(__file__)), "rev-parse", "--show-toplevel").stdout.strip()
+    configured_dest = dest_arg or os.environ.get(profile["env"])
+    dest = os.path.realpath(configured_dest or os.path.join(source, os.pardir, profile["sibling"]))
+    if not os.path.isdir(dest):
+        raise Refuse(f"destination is not a directory: {dest}")
+    return source, dest
+
+
+def check_one(target, a):
+    """Read-only managed-parity check (GH-955): every managed path byte- and exec-bit-identical to the
+    source, and the child's recorded source_sha == source HEAD. Never touches the child's branch,
+    history, or origin, so a detached PR checkout in the child's CI works. Seed/adapted paths are the
+    child's bytes and are not compared."""
+    try:
+        profile = TARGETS[target]
+        source, dest = resolve(profile, a.dest)
+        sha = git(source, "rev-parse", "HEAD").stdout.strip()
+        drift = []
+        for src, dst, mode in expand(source, profile["manifest"]):
+            if mode != "managed":
+                continue
+            sp, dp = os.path.join(source, src), os.path.join(dest, dst)
+            if os.path.islink(dp) or not os.path.isfile(dp):
+                drift.append(f"{dst} (missing)")
+                continue
+            with open(sp, "rb") as fs, open(dp, "rb") as fd:
+                same = fs.read() == fd.read()
+            if not same or bool(os.stat(sp).st_mode & 0o111) != bool(os.stat(dp).st_mode & 0o111):
+                drift.append(dst)
+        rev_path = os.path.join(dest, REVISION_FILE)
+        recorded = ""
+        if os.path.isfile(rev_path):
+            with open(rev_path, encoding="utf-8") as fh:
+                recorded = next((l.split("=", 1)[1].strip() for l in fh if l.startswith("source_sha=")), "")
+        if recorded != sha:
+            drift.append(f"{REVISION_FILE} (source_sha {recorded or 'missing'} != {sha[:12]})")
+        for d in drift:
+            log(f"DRIFT {d}", profile["log"])
+        if drift:
+            return 1
+        log(f"managed parity with XYZ-forge@{sha[:12]}", profile["log"])
         return 0
+    except Refuse as e:
+        log(f"refused: {e}", TARGETS[target]["log"])
+        return e.code
+
+
+def publish_one(target, a):
     apply = a.apply or a.push
     try:
-        if a.target in RETIRED_TARGETS and os.environ.get("XYZ_ALLOW_RETIRED_TARGET") != "1":
-            raise Refuse(f"target {a.target!r} is retired: {RETIRED_TARGETS[a.target]}")
-        source = git(os.path.dirname(os.path.abspath(__file__)), "rev-parse", "--show-toplevel").stdout.strip()
-        profile = TARGETS[a.target]
-        configured_dest = a.dest or os.environ.get(profile["env"])
-        dest = os.path.realpath(configured_dest or os.path.join(source, os.pardir, profile["sibling"]))
+        profile = TARGETS[target]
+        source, dest = resolve(profile, a.dest)
         if not os.path.isdir(os.path.join(dest, ".git")):
             raise Refuse(f"destination is not a git checkout: {dest}")
         sha = git(source, "rev-parse", "HEAD").stdout.strip()
@@ -288,7 +344,7 @@ def main(argv=None):
         if adapted_roots:
             origin_rel = profile.get("origin")
             if not origin_rel:
-                raise Refuse(f"target {a.target!r} has adapted entries but no origin registry")
+                raise Refuse(f"target {target!r} has adapted entries but no origin registry")
             origin_cp = git(source, "show", f"{sha}:{origin_rel}", check=False)
             if origin_cp.returncode != 0:
                 raise Refuse(f"adapted manifest entries require {origin_rel} committed at {sha[:12]}")
@@ -385,9 +441,40 @@ def main(argv=None):
             log(f"pushed and verified origin/main == {head[:12]}", profile["log"])
         return 0
     except Refuse as e:
-        prefix = TARGETS.get(getattr(a, "target", "xyz-mini"), TARGETS["xyz-mini"])["log"]
-        log(f"refused: {e}", prefix)
+        log(f"refused: {e}", TARGETS[target]["log"])
         return e.code
+
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dest")
+    ap.add_argument("--target", action="append", choices=sorted(TARGETS) + ["all"],
+                    help="repeatable; `all` selects every profile (default: xyz-mini)")
+    ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--push", action="store_true")
+    ap.add_argument("--allow-dirty", action="store_true")
+    ap.add_argument("--check", action="store_true", help="read-only managed-parity check (exit 1 on drift)")
+    ap.add_argument("--print-manifest", action="store_true")
+    a = ap.parse_args(argv)
+    chosen = a.target or ["xyz-mini"]
+    targets = [t for t in TARGETS if "all" in chosen or t in chosen]  # deduplicated, profile order
+    if a.print_manifest:
+        manifests = {t: [list(e) for e in TARGETS[t]["manifest"]] for t in targets}
+        print(json.dumps(manifests[targets[0]] if len(targets) == 1 else manifests))
+        return 0
+    if a.dest and len(targets) > 1:
+        log("refused: --dest names one checkout; select exactly one --target with it")
+        return 2
+    if a.check and (a.apply or a.push):
+        log("refused: --check is read-only; it cannot be combined with --apply or --push")
+        return 2
+    run = check_one if a.check else publish_one
+    codes = {t: run(t, a) for t in targets}
+    if len(targets) > 1:
+        for t, c in codes.items():
+            log(f"{t}: exit {c}", "downstream")
+    return max(codes.values())
 
 
 if __name__ == "__main__":

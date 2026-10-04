@@ -47,7 +47,7 @@ subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
     utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh|utils/py/wave_reconcile.py) printf '%s\n' pdda ;;
     skills/*/agent-chorus/*)                                                                 printf '%s\n' agent-chorus ;;
     skills/*/standup/*)                                                                      printf '%s\n' standup ;;
-    skills/*/skills-army-hq/*|skills/*/push-to-skills-army-mini/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
+    skills/*/skills-army-hq/*|skills/*/push-downstream/*|mini/skills-army-*|docs/SPIN-OFF-REPOSITORY-PLAYBOOK.md|utils/py/xyz_mini_sync.py|test/test_deploy_skills.py|test/skills-army-hq.sh|test/gh620-skills-army-mini-sync.sh) printf '%s\n' skills-army-hq ;;
   esac
 }
 
