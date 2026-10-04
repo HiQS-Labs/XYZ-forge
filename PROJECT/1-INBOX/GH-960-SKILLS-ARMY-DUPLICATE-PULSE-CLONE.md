@@ -24,3 +24,7 @@ the Pulse remote.
 A read-only check in the normal `sync.py` run (preview and `--status`), reported as a named warning
 the way drift reports `DRIFTED`: resolve the git-pulse write clone and flag when the collection root
 the links read is a different clone, or is behind its remote. Full detail is in the issue.
+
+## Merge evidence
+
+- PR #962 merged 2026-10-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

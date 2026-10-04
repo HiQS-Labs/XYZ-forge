@@ -25,3 +25,7 @@ link-drift reporting only; that scope is unchanged by the return.
 
 The issue's amendment sequences it after XYZ-skills-army-mini#3 (source-agnostic intake), which
 stayed in that repo. Decide whether that dependency still holds now that the forge is upstream.
+
+## Merge evidence
+
+- PR #962 merged 2026-10-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

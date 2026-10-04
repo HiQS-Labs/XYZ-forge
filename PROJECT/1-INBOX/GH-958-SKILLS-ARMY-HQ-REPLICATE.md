@@ -29,3 +29,7 @@ HQ upstream. The retired #506 capture stays at
 
 Replicating a collection is `init --from <share>`, review the resolved-sources report,
 `sync --apply`, and a `--status` that exits 0 with foreign links listed as warnings.
+
+## Merge evidence
+
+- PR #962 merged 2026-10-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
