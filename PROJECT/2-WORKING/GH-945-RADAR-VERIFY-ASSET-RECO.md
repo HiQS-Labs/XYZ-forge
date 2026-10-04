@@ -54,3 +54,7 @@ relay QA (Step 8) still applies before the PR.
 Do NOT re-vendor radar from this clone while PR #943 is unmerged — this base still carries the
 pre-trim 1336-char description. Deployed copy catches up after #943 lands (then re-vendor from
 a tree containing both).
+
+## Merge evidence
+
+- PR #946 merged 2026-10-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
