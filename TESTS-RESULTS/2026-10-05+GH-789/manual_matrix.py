@@ -399,7 +399,7 @@ class ChangelogMergeCases(LedgerFixture):
              mock.patch.object(merge_cleanup, "prepare_landing_clone", wraps=merge_cleanup.prepare_landing_clone) as prep, \
              contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
             rc = self.run_main()
-        text = out.getvalue()
+        text = out.getvalue() + self.err  # run_main keeps stderr (log_err) in self.err
         st = self.load()
         self.assertEqual(st["prs"]["2"]["state"], "OPEN")
         self.assertFalse(any(c[:3] == ["pr", "merge", "2"] for c in st["calls"]))
@@ -424,7 +424,7 @@ class ChangelogMergeCases(LedgerFixture):
         self.assertEqual(st["prs"]["4"]["state"], "OPEN")
         self.assertNotIn(4, [c.args[0]["number"] for c in prep.call_args_list])
         self.assertFalse(any(c[:3] == ["pr", "merge", "4"] for c in st["calls"]))
-        self.assertIn("blocked by #2", text)
+        self.assertIn("PR #4: NOT attempted — depends on #2 (draft)", text)
 
     def test_draft_after_repaired_push_is_skipped(self):
         self.conflict()
