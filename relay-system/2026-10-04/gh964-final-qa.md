@@ -131,4 +131,12 @@ Verify-tier graph limitation: both `list_projects` pages covered all 77 projects
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the post-turn gate and PR preparation while keeping operator acceptance explicitly pending.
 
+
+### Attestation · relay-drive — 2026-10-05T05:18:48Z
+task: RELAY-gh964-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: bcac25797cab4446a5a428a4bdb480081bd2a6d3
+added-range: 7837+7569
+added-sha256: 4a14f9abb7006fc4b745146704e4c97ed4a0c1b2954ce87f37103e044dedc1e1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
