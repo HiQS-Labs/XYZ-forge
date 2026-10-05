@@ -185,7 +185,7 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry
 def refresh_pr(pr_num: int, repo_path: Path) -> Dict[str, Any]:
     """Live PR state, re-fetched before every decision (E). Any failure -> {"error": ...}."""
     res = _gh(["pr", "view", str(pr_num), "--json",
-               "number,state,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
+               "number,state,isDraft,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
     if res.returncode != 0:
         return {"error": f"gh pr view #{pr_num} failed: {res.stderr.strip() or 'no diagnostic'}"}
     try:
@@ -346,11 +346,20 @@ def validate_head_in_second_clone(primary_repo: Path, source_clone: Path, sha: s
     return True, "clean in a second clone"
 
 
+DRAFT_REFUSAL = "draft"  # push_resolved_head's reason when the live PR is a draft
+
+
 def push_resolved_head(pr: Dict[str, Any], clone: Path, sha: str, primary_repo: Path) -> Tuple[bool, str]:
     """Push the B1 result to the PR branch only if the remote head is still the SHA we resolved."""
     live = refresh_pr(pr["number"], primary_repo)
     if live.get("error"):
         return False, live["error"]
+    if live.get("state") != "OPEN":
+        return False, "PR is no longer open — not pushing repaired head"
+    if live.get("isDraft"):
+        # A positively observed draft is an expected skip, not a failed landing (GH-789 F2):
+        # the caller names it and moves on; every other refusal here still stops the run.
+        return False, DRAFT_REFUSAL
     if live.get("headRefOid") != pr["headRefOid"]:
         return False, f"remote head moved from {pr['headRefOid'][:10]} to {str(live.get('headRefOid'))[:10]} during resolution — not pushing"
     r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"])
@@ -832,7 +841,7 @@ def _await_mergeable(p_num: int, info: Dict[str, Any], primary_repo: Path) -> Di
     GH-623 defer/stop rules. Still undecided after the last poll is returned as-is: the caller's
     fail-closed stop (a PR whose state is unknown is never merged) is unchanged."""
     polls = 0
-    while (not info.get("error") and info.get("mergeable") not in ("MERGEABLE", "CONFLICTING")
+    while (not info.get("error") and not info.get("isDraft") and info.get("mergeable") not in ("MERGEABLE", "CONFLICTING")
            and polls < MERGEABLE_POLL_ATTEMPTS):
         polls += 1
         log(f"PR #{p_num}: mergeable is {info.get('mergeable')!r} — waiting {MERGEABLE_POLL_S}s for GitHub "
@@ -860,6 +869,7 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     # C: runtime map of predecessor outcomes. toposort only ORDERS; a dependent of a parked or
     # handed-off PR must not be attempted at all.
     failed: Dict[int, str] = {}
+    pending = {pr["number"] for pr in ordered_prs}
     try:
         for pr in ordered_prs:
             p_num = pr["number"]
@@ -867,14 +877,15 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             # failed predecessor. Collision edges (`_soft_deps`) decide sequence only — a
             # dependent is attempted anyway and the landing simulation decides; a genuinely
             # conflicting successor hands off on its own merits instead of never being tried.
-            blocked_by = [d for d in pr.get("_hard_deps", []) if d in failed]
+            blocked_by = [d for d in pr.get("_hard_deps", []) if d in failed or d in pending]
+            pending.discard(p_num)
             soft_blocked_by = [d for d in pr.get("_soft_deps", []) if d in failed]
             if soft_blocked_by and not blocked_by:
                 why_soft = ", ".join(f"#{d} ({failed[d]})" for d in soft_blocked_by)
                 log_err(f"PR #{p_num}: soft predecessor(s) {why_soft} did not land — "
                         f"attempting anyway; the landing simulation decides")
             if blocked_by:
-                why = ", ".join(f"#{d} ({failed[d]})" for d in blocked_by)
+                why = ", ".join(f"#{d} ({failed.get(d, 'not yet processed')})" for d in blocked_by)
                 log_err(f"PR #{p_num}: NOT attempted — depends on {why}")
                 failed[p_num] = f"blocked by {', '.join('#%d' % d for d in blocked_by)}"
                 continue
@@ -891,6 +902,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     continue
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
                 return 2
+            if info.get("isDraft"):
+                log(f"PR #{p_num}: SKIPPED (draft)")
+                failed[p_num] = "draft"
+                continue
             label = hold_label(info)
             if label:
                 log(f"PR #{p_num}: carries hold label '{label}' — skipped (#444)")
@@ -910,6 +925,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     continue
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
                 return 2
+            if info.get("isDraft"):
+                log(f"PR #{p_num}: SKIPPED (draft)")
+                failed[p_num] = "draft"
+                continue
             mergeable = info.get("mergeable")
             if mergeable not in ("MERGEABLE", "CONFLICTING"):
                 log_err(f"PR #{p_num}: mergeable is {mergeable!r} — GitHub has not decided; stopping rather than guessing")
@@ -1002,6 +1021,11 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     keep_workdir = True
                     return 2
                 ok, why = push_resolved_head(info, clone, b1["commit"], primary_repo)
+                if not ok and why == DRAFT_REFUSAL:
+                    log(f"PR #{p_num}: SKIPPED (draft before repaired-head push; B1 result kept at {clone})")
+                    failed[p_num] = "draft"
+                    keep_workdir = True
+                    continue
                 if not ok:
                     log_err(f"PR #{p_num}: {why}")
                     keep_workdir = True
@@ -1027,6 +1051,11 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     log_err(f"PR #{p_num}: head moved to {str(info.get('headRefOid'))[:10]} after the pushed "
                             f"{b1['commit'][:10]} — stopping")
                     return 2
+                if info.get("isDraft"):
+                    log(f"PR #{p_num}: SKIPPED (draft after repair)")
+                    failed[p_num] = "draft"
+                    keep_workdir = True
+                    continue
                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                     return 2
@@ -1052,6 +1081,17 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             if dry_run:
                 log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{args.strategy} --delete-branch`")
                 continue
+            live = refresh_pr_with_retry(p_num, primary_repo)
+            if live.get("error"):
+                log_err(f"PR #{p_num}: final eligibility refresh failed — {live['error']}")
+                return 2
+            if live.get("isDraft"):
+                log(f"PR #{p_num}: SKIPPED (draft before merge)")
+                failed[p_num] = "draft"
+                continue
+            if live.get("headRefOid") != info.get("headRefOid"):
+                log_err(f"PR #{p_num}: head changed after validation — not merging")
+                return 2
             _WITHHOLD_BRANCH_DELETE.discard(p_num)
             open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
@@ -1085,6 +1125,12 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
         # GH-623: deferrals count as non-landed outcomes too — a deferred PR blocks only its
         # HARD dependents; soft dependents were attempted above. Exit 3 keeps the shape
         # "the queue completed but not everything landed"; 2 remains a hard stop.
+        # Drafts are expected skips, not a failed run. Keep them in the dependency map
+        # through the loop, then report only actual handoffs/deferred/blocked successors.
+        drafts = [n for n, reason in failed.items() if reason == "draft"]
+        if drafts:
+            log("Skipped draft PR(s): " + ", ".join(f"#{n}" for n in drafts))
+        failed = {n: reason for n, reason in failed.items() if reason != "draft"}
         if failed:
             deferred = [n for n, w in failed.items() if w.startswith("deferred:")]
             resumed_parked = [n for n, w in failed.items() if w == "previously parked (resume)"]
@@ -1100,6 +1146,21 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             log(f"Landing clones kept for inspection under {workdir}")
         else:
             shutil.rmtree(workdir, ignore_errors=True)
+
+
+def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:
+    info = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    can_prune = (args.execute and not (args.scan_only or args.prs_only or args.teardown_only)
+                 and info.get("ready_except_stale_rebase") and info.get("stale_rebase_head"))
+    if can_prune:
+        oid = info["stale_rebase_head"]
+        result = run_git(primary_repo, ["update-ref", "-d", "REBASE_HEAD", oid])
+        if result.returncode != 0:
+            log_err(f"could not prune orphaned REBASE_HEAD {oid}: {result.stderr.strip()}")
+            return info
+        log_warn(f"pruned orphaned REBASE_HEAD {oid}; rechecking primary readiness")
+        return inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    return info
 
 
 def main():
@@ -1151,7 +1212,7 @@ def main():
     # detail discovered at merge time. This must stay above --reconcile-pr: that mode launches
     # governance writers straight into this tree, and used to do so with no verdict computed at
     # all (R1-F2).
-    primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    primary_landing = prepare_primary_landing(primary_repo, args)
     print("\n" + "=" * 80)
     print("PHASE 0: PRIMARY ON-DISK CHECKOUT")
     print("=" * 80 + "\n")
@@ -1282,7 +1343,7 @@ def main():
             log_err("Phase 0's verdict is based on cached refs that may no longer match the remote.")
             log_err("Fix the remote access, or pass --allow-unready-primary to proceed on stale evidence.")
             return 2
-        primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+        primary_landing = prepare_primary_landing(primary_repo, args)
         print(format_primary_landing(primary_landing) + "\n")
         # R2-2: the branch Phase 0 checked must be the branch these PRs actually land on. A PR
         # based elsewhere would merge into a tree whose readiness was never established.
