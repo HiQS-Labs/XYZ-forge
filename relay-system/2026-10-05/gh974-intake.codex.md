@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -67,5 +67,22 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+swept file: yes
+VERDICT: FAIL
+Basis: The complete seeded artifact and intake document satisfy the deferred advisory scope; one requested ledger-delta criterion remains unverified. No observed substantive or pre-existing defect in those files. This verdict requests evidence, not implementation.
+
+- [Pass] Deferred scope and live-evidence prerequisite are explicit: PROJECT/1-INBOX/GH-974-REVISIT-ADVISORY-JEV-SCREENING.md:47 says “No classifier implementation is authorized”; :55 says the instruction chains “are not verified HiQS catalog recipes”; :59 and :74-82 require recorded recurring reviewer burden after real chain evidence. No change requested.
+- [Pass] The first comparison requires static rules, existing agent-assisted review and human-labelled held-out HiQS data (:61, :75-77). The same :61 rejects Needle work-purpose scores as domain evidence. Deterministic resolver/policy, traces/digests, attestations and publication are protected at :63. No change requested.
+- [Pass] releases.sql:805 contains the native #974 row, paused in “Deferred · vision”, exact issue/doc/Needle-fork links and 20/10/50/55 ratings; provisional status and rationale are explicit in the intake document :14 and :88. Narrow probe command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with an in-memory SQLite table derived from the dump's roadmap_items column list, executing only its INSERT lines, selecting `gh_number='974'`, and asserting count=1, links, marker/section and four ratings. Exit 0; decisive output: “dump rows #974=1; native links, paused deferred section, ratings 20/10/50/55: OK”. This checks the current dump, not its delta.
+- [Pass] Retained receipts support the scoped claims in CHANGELOG.md:5 and TESTS-RESULTS/2026-10-05+GH-974/SUMMARY.md:3. provenance.jsonl:1 records complexity 9, exit 1 and “must be an integer 1-5”; :2 records the restored passing frontmatter check; :3-7 record the remaining checks/readback. The same Python probe parsed all seven JSONL records and asserted the red status/message and subsequent zero statuses: exit 0, “retained JSONL receipts=7; invalid complexity 9 exits 1; six subsequent records exit 0”. These are retained producer receipts, not fresh suite execution. An initial attempt to execute the entire data-only dump in empty in-memory SQLite exited 1 (“no such table: schema_migrations”); the corrected roadmap-only probe above avoids requiring a schema migration and makes no RELEASES consistency claim.
+- [Should] Supply retained base-to-candidate ledger-delta evidence before approval. .relay-artifacts/gh974-review.md:11 explicitly requires “without unrelated row edits”, but provenance.jsonl:6 supplies only current-row readback. Neither a base dump nor a diff is retained in the supplied evidence. This turn prohibits Git commands, so the requested diff at artifact :5 was not run. Concrete fix: producer/harness should retain the exact-base comparison with command, base/candidate identifiers, exit status and decisive output, showing unrelated roadmap rows unchanged and explaining any expected receipt/generation additions.
+  Observed input: artifact :11's no-unrelated-row-edit criterion paired with provenance.jsonl:6's single-row readback; probe output: “LIMIT: no base dump comparison available; unrelated-row delta not measured”.
+  Affected scope: evidence for this #974 intake delta only; no runtime behavior change.
+  Falsifier: a retained comparison against the stated origin/development base showing exactly the #974 roadmap addition, no unrelated roadmap modifications/removals, and only attributable ledger metadata/receipts would close this finding.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest or executable fixtures were run. The harness gate remains separate. Graph project listing had no index for this worktree; the nearest XYZ-forge graph generation was 2026-09-01 and coverage marked these paths missing/excluded/changed, so claims above use direct local document/dump reads, not graph completeness.
+
+Handing off to Producer (codex-producer) — retain the ledger-delta evidence, disposition the finding, then reopen review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
