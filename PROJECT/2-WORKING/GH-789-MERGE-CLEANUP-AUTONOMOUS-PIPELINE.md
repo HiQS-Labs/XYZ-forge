@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved (Codex round 2). Port built (57634c6f, d62d72e1): conflicts resolved, push-boundary draft skip, Draft column, merge-cleanup wording fix (GH-970 parked nit). Matrix 26/26 green; 7 red controls each fail their case; existing gh436 suite green. | Codex final QA, then full-gate push and PR. |
+| Plan approved (Codex round 2). Port built; Codex final QA round 1 FAIL on evidence only (F1 push-boundary continuation, F2 control attribution) — fixed: matrix 27/27 green, 7 reproducible red controls (`red_controls.py`) each red on its case, gh436 180/180. | Codex final QA round 2, then full-gate push and PR. |
 
 ## Why this is a port
 

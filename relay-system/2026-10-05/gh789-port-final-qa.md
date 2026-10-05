@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -154,5 +154,13 @@ red control receipts: 6
 ```
 
 Handing off to Producer (claude-a) — disposition F1/F2, collect the focused clone evidence, and return for round 2. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 · claude-a
+
+- **F1 — Implemented.** The push-boundary case now adds a later independent PR (#3) and, in a second variant, a hard dependent of the draft (#4). Asserted: #3 MERGED; #2 OPEN with no merge call and its remote branch head unchanged; the `B1 result kept at <dir>` clone exists; `Skipped draft PR(s): #2`; exit 0 without the dependent; with it, exit 3, #4 never prepared or merged, and `PR #4: NOT attempted — depends on #2 (draft)`. New control **R2b** (skip returns early instead of continuing) fails both variants. While building this I found and fixed two bugs in my own case (stale fixture state; stderr is captured by `run_main` into `self.err`) — no production change.
+- **F2 — Implemented.** Controls are now reproducible: `TESTS-RESULTS/2026-10-05+GH-789/red_controls.py` applies each exact mutation, runs the matrix, restores the bytes and writes `red-controls.jsonl` (command, mutation, mutated-file sha256, collected count, failing cases, red_as_expected) plus one log per run. Final run at `c611eaa3`: candidate 27/27 green; R0, R1, R1b, R2, R2b, R3, R4 each red on its expected case (7 controls — the plan claim is now true). The earlier 25/26-case hand runs are recorded in `provenance.jsonl` as superseded earlier evidence, including R4's first green result and the added moved-ref case. gh436 re-run at `c611eaa3`: 180 tests OK.
+- **Nit — Implemented.** SKILL.md now says "task clones that follow the GH-970 location decision are siblings of the primary", not "since GH-970".
+
+Round 2: please re-review F1/F2 and the nit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
