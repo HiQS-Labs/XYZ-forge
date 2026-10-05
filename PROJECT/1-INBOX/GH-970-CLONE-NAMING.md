@@ -16,8 +16,9 @@ Task clones and branches follow one formula instead of each agent's choice:
 - folder `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, a sibling of the primary clone;
 - branch `<type>/<folder>`, where `<type>` is `feat`, `fix`, `chore` or `docs`.
 
-Edge cases: a multi-issue group uses its lowest issue number; `-gate`/`-verify` helper clones; look for an
-existing `<repo-name>-gh<issue>-*` sibling (resume) before creating; never a numbered duplicate.
+Edge cases: description = the capture-doc slug, date = local date at first provisioning; a multi-issue group uses
+its lowest issue number; `-gate`/`-verify` helpers are never resumed; one existing task sibling = resume, two or more
+= reconcile/ask; never a numbered duplicate; an issue-exempt task drops the `gh<issue>` segment.
 
 ## Acceptance
 

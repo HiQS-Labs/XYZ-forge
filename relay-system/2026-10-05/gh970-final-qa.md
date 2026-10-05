@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -116,5 +116,15 @@ Sweep: Read the complete primary artifact (start-task SKILL.md), SOP, AGENTS and
 Evidence boundary: list_projects has no index for this review worktree. The nearest XYZ-forge index targets the primary and reports generation 2026-09-01T15:54:30Z; scanner lookup returned zero nodes. Coverage marked relevant paths missing/not-tracked/metadata-changed or excluded, so material claims use current worktree source rather than stale graph evidence.
 
 Handing off to Producer (claude-a) — disposition the findings, make accepted text clarifications, and open the next review round.
+
+### Producer · Round 1 · claude-a
+
+- **R1 — Implemented.** `<very-short-desc>` is now the issue's capture-doc slug lowercased (the repo already names that doc `GH-<n>-<SLUG>.md`), with a recorded once-only choice where no capture doc exists; the date is the machine's local date at first provisioning and never changes on resume.
+- **R2 — Implemented.** Resume lists `<repo-name>-gh<issue>-*` ignoring `-gate`/`-verify` helpers; exactly one task clone resumes; two or more, or helpers only, are inspected and reconciled, asking the operator if still ambiguous; never resume implementation in a helper.
+- **R3 — Implemented.** Step 3 now says to resolve the tracking issue before naming, and gives the issue-exempt form `<repo-name>-<very-short-desc>-<yyyy-mm-dd>`.
+- **Nit (merge-cleanup SKILL.md:106) — Declined (scope).** That file is a full-gate surface (`utils/ci-route.sh:336`); a one-line attribution edit would move this text-only change to the full gate. Its wording is still true for legacy and marathon clones; parked in `PARKED/2026-10-05-gh970-merge-cleanup-wording.md` for a later merge-cleanup change.
+- CHANGELOG and capture doc updated to match.
+
+Round 2: please re-review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -80,11 +80,17 @@ Then begin work.
    and create the task branch under repo policy. In XYZ Forge the branch is cut
    off `origin/development`, with the per-clone git hooks installed and checked.
    Preserve the primary checkout and other sessions.
-   **Clone and branch names are a formula, not a choice (GH-970):**
+   **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
+   tracking issue first, so the number is known before anything is named:
    - Folder: `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, e.g.
      `XYZ-forge-gh789-merge-cleanup-repairs-2026-10-05`. `<repo-name>` is the
-     GitHub repo name with its exact case; `<very-short-desc>` is 2–4 lowercase
-     kebab words; the date is the day the clone is provisioned.
+     GitHub repo name with its exact case. `<very-short-desc>` is the issue's
+     capture-doc slug lowercased (`GH-1234-SHOWME-COMMAND.md` → `showme-command`);
+     where the repo has no capture doc, pick 2–4 lowercase kebab words once and
+     record them in the task plan. The date is the machine's local date on the day
+     the clone is first provisioned, and it never changes on resume.
+   - A task exempt from tracked intake (no issue) uses no `gh<issue>` segment:
+     `<repo-name>-<very-short-desc>-<yyyy-mm-dd>`.
    - Location: the same top-level folder as the parent repo, i.e. a sibling of
      the primary clone (`$(dirname <primary>)/<folder>`). Never `/tmp`, a
      scratchpad, another workspace root, or a linked worktree.
@@ -93,9 +99,12 @@ Then begin work.
    - A multi-issue group uses its primary (lowest) issue number. A disposable
      gate or verification clone for the task is `<folder>-gate` / `<folder>-verify`,
      in the same location.
-   - Before creating anything, look for an existing `<repo-name>-gh<issue>-*`
-     sibling. If one exists, this is a resume (below). Never create a numbered or
-     renamed duplicate.
+   - Before creating anything, list `<repo-name>-gh<issue>-*` siblings, ignoring
+     `-gate`/`-verify` helpers (never resume implementation in a helper). Exactly
+     one task clone → this is a resume (below). Two or more task clones, or only
+     helpers → inspect each (branch, remote branch, PR, HEAD), reconcile, and ask
+     the operator if it stays ambiguous; never pick one arbitrarily. Never create a
+     numbered or renamed duplicate.
    **Resume Reconciliation Protocol:** An explicit resume must locate and verify the
    existing task clone, branch, remote branch, remote PR status (`gh pr list --head <branch>`),
    and live HEAD commit rather than duplicating clones, creating redundant branches, or

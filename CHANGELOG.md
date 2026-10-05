@@ -8,8 +8,9 @@ across three folders under mixed names. `/start-task` step 3 now sets the rule, 
 - **Folder:** `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, placed beside the primary clone.
 - **Branch:** the same string with a `feat/`, `fix/`, `chore/` or `docs/` prefix. `AGENTS.md`'s branch
   carve-out now lists all four types.
-- **Edge cases:** a multi-issue group uses its lowest issue number; helper clones end in `-gate` or `-verify`;
-  an existing `<repo-name>-gh<issue>-*` folder is resumed, never duplicated.
+- **Edge cases:** the description is the issue's capture-doc slug, and the date is the local date of first
+  provisioning; a multi-issue group uses its lowest issue number; helper clones end in `-gate` or `-verify` and are
+  never resumed; an existing task folder is resumed, never duplicated, and two candidates go to the operator.
 
 ## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
 
