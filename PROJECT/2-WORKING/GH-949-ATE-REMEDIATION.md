@@ -20,7 +20,7 @@ reversibility: Costly — shared process and gate environment consumers require 
 
 | What was just completed | What's next |
 |---|---|
-| Fable B1 repaired; renewed Codex QA attested Approved; development integrated | Final full macOS push gate and hosted exact-SHA check for PR #953 |
+| Fable B1 repaired; renewed QA Approved; full macOS gate and hosted smoke green | PR #953 ready; awaiting merge |
 
 ## Table of contents
 
@@ -74,15 +74,15 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 ## Phase 3 — Final QA and PR
 
 - [x] Commit resumed implementation/evidence; obtain renewed final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
-- [ ] Run renewed required full local push gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
+- [x] Run renewed required full local push gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
 - [x] Fetch/reconcile current development conflicts via supported RELEASES merge resolver if needed; any implementation change after approval gets fresh focused verification/review.
-- [ ] Push through the required hook from the disposable verification/push clone, open ready PR to development, verify emitted base/head/scope and hosted checks. Do not merge or prematurely close issues; retain task clone for merge handoff.
+- [x] Push through the required hook from the disposable verification/push clone, open ready PR to development, verify emitted base/head/scope and hosted checks. Do not merge or prematurely close issues; retain task clone for merge handoff.
 
 ### Phase 3 — QA checklist
 
-- [ ] Final relay Approved plus successful nonempty receipt; required local and hosted results linked for exact tested SHA.
+- [x] Final relay Approved plus successful nonempty receipt; required local and hosted results linked for exact tested SHA.
 - [x] #949/#912 runtime requirements satisfied; ready status follows current PR blocking checks.
-- [ ] Plan/ledger say PR ready awaiting merge, not shipped; retained clone and cleanup handoff reported.
+- [x] Plan/ledger say PR ready awaiting merge, not shipped; retained clone and cleanup handoff reported.
 
 Historical evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps original findings to retained controls. The shared runner remains signal-handler-free; handlers now belong to four CLI boundaries (ATE, proc_group and both oracles). Zero-minute admission keeps its initialization contract. Original QA/gates below are earlier checkpoints; current readiness is recorded in the resumed disposition.
 
@@ -120,4 +120,10 @@ Renewed final Codex relay: attested Approved round1 on `157bf05a`; receipt
 `TESTS-RESULTS/2026-10-04+GH-949/final-qa/provenance.jsonl`.
 Development reconciliation `442ea913` was integrated after approval; it adds only
 upstream docs/receipts. All six reviewed runtime files remain byte-identical.
-Required full push gate is pending; this does not claim promotion qualification.
+Full macOS push gate GREEN in808s on `9e7eaddc` (407 shell suites,21 Python
+tests; identity unchanged; no bypass). Hosted smoke success on that SHA:
+https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37268691818.
+Raw log, clone snapshots and provenance: `TESTS-RESULTS/2026-10-04+GH-949/full-gate/`.
+The final receipt/doc/ledger commit preserves all six reviewed runtime files.
+This is PR push-gate evidence, not promotion evidence. PR953 is ready awaiting
+merge; issues and task clone remain open for merge handoff.

@@ -49,5 +49,10 @@ Fable B1 is Implemented. Nonblocking S1 is retained in
 Fresh independent Codex QA is attested Approved on round1, reviewed head
 `157bf05a`; complete thread `relay-system/2026-10-04/gh949-resumed-final.codex.md`.
 Raw reviewer/driver/preflight receipts and provenance are retained in `final-qa/`.
-The final required full macOS push gate remains pending. This is local PR
-verification, not promotion evidence.
+Full required macOS push gate passed on `9e7eaddc` in808s, with407 successful
+shell suites and21 Python tests. The normal hook permitted the push without
+bypass; identity and tracked state are unchanged. Raw transcript, snapshots,
+source continuity and UTC provenance are retained in `full-gate/`. Hosted smoke
+succeeded on the same SHA (run37268691818). This is local PR verification,
+not promotion evidence. Final receipt/doc/ledger updates preserve the reviewed
+and gated runtime bytes.
