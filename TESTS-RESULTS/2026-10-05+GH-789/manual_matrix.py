@@ -375,10 +375,10 @@ class ChangelogMergeCases(LedgerFixture):
         """Shared body for Codex F2 / final-QA F1: #2 turns draft exactly at the repaired-head push
         (after B1 resolved it); #3 is an independent later PR; optionally #4 hard-depends on #2."""
         self.conflict()
+        self.st = self.load()  # conflict() merged #1 through the fake gh; never save a stale copy over it
         self.branch("feat/c", 3, lambda r: (r / "note3").write_text("x"))
         if dependent:
             self.branch("feat/d", 4, lambda r: (r / "note4").write_text("x"))
-            self.st = self.load()
             self.st["prs"]["4"]["body"] = "Depends on #2"
             self.save()
         head_before = _git(self.primary, "ls-remote", "origin", "refs/heads/feat/b").stdout.split()[0]
