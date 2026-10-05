@@ -174,4 +174,12 @@ Evidence boundary: Verify tier. list_projects returned all 77 projects (has_more
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a)/harness owns the file-scoped commit and final gate verification.
 
+
+### Attestation · relay-drive — 2026-10-05T16:31:47Z
+task: RELAY-gh970-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: e5c85653c6fad864ac845921eb96fda3f5abaa89
+added-range: 19995+2858
+added-sha256: c380656ab86741bff83e2c9d50739595e1ba5b54564387ed5890cadb02a7e582
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
