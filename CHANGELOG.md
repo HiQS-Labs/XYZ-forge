@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-05 — Defer HiQS advisory-intake classifier revisit (GH-974)
+
+Captured Needle-fork #71 as a deferred RELEASES roadmap item, with real chain evidence and measured reviewer burden required before an advisory contribution-screening experiment. Resolver, attestation and publishing boundaries remain deterministic. Verification: targeted PDDA checks and RELEASES consistency/readback; invalid triage rating fails the frontmatter red control. Receipts: `TESTS-RESULTS/2026-10-05+GH-974/`.
+
 ## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
 
 The operator reversed GH-882's 2026-10-01 decision that made XYZ-skills-army-mini the Skills Army HQ
