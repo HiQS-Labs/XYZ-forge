@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,39 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The requested naming shape is present, but the explicitly requested edge-case review found two ambiguities. Resolve them with text, without new machinery.
+swept file: yes
+
+Sweep: Read the complete primary artifact (start-task SKILL.md), SOP, AGENTS and GH-970 capture; checked the GH-970 CHANGELOG entry and searched naming references in other docs/skills. Historical CHANGELOG entries were searched for naming conflicts, not individually revalidated. No additional pre-existing defect found in the primary artifact beyond the issue-number ordering note below. No git commands, suites, executable fixtures, source edits or artifact edits were performed.
+
+- [Should] **R1 — Define how variable name components are chosen.** skills/1-hourly/start-task/SKILL.md:86 permits any 2–4 lowercase kebab words; :87 says only “the day the clone is provisioned.” The same GH-970 task admits both XYZ-forge-gh970-clone-naming-2026-10-05 and XYZ-forge-gh970-task-clone-names-2026-10-05. Provisioning at 2026-10-06T00:30:00+00:00 yields Oct 5 locally or Oct 6 in UTC. The packet explicitly asks whether two agents produce the same name. **Fix:** identify one recorded task slug to reuse (or explicitly state description choice is discretionary), and specify the date timezone. Keep this a short instruction; no slug generator needed.
+  Observed input: GH-970 title “start-task + SOP: deterministic task-clone folder and branch names” and the two valid descriptions above; :86–87 supply no selection or timezone rule.
+  Affected scope: First provisioning of ordinary task clones; existing names stay unchanged on resume.
+  Falsifier: The same recorded GH-970 slug and provisioning instant produce an identical folder/date for two agents; an existing older folder retains its original date.
+  Probe command: Python stdin using datetime.fromisoformat("2026-10-06T00:30:00+00:00").astimezone(ZoneInfo(zone)).date() for UTC and America/Los_Angeles. Exit 0; decisive output: “UTC: 2026-10-06”, “America/Los_Angeles: 2026-10-05”. This measures an instruction ambiguity, not a runtime failure.
+
+- [Should] **R2 — Distinguish task clones from helper matches during resume.** skills/1-hourly/start-task/SKILL.md:94 names helpers ending in -gate / -verify; :96–98 then says any matching sibling means resume. Both helpers match the wildcard. A task clone plus its gate clone supplies multiple matches with no selection rule; a helper alone is also described as a task resume. **Fix:** distinguish disposable helpers, locate the actual task clone by remote/branch/PR identity, and say to inspect/reconcile helper-only or ambiguous listings rather than arbitrarily choosing a folder or overwriting it.
+  Observed input: XYZ-forge-gh970-clone-naming-2026-10-05 and the documented helper names XYZ-forge-gh970-clone-naming-2026-10-05-gate and XYZ-forge-gh970-clone-naming-2026-10-05-verify, all matched by XYZ-forge-gh970-*.
+  Affected scope: Resume discovery with helper clones or multiple task candidates for the same issue.
+  Falsifier: Task-plus-gate resolves to the task; gate-only does not resume implementation in the helper; two task candidates are reconciled rather than arbitrarily selected.
+  Probe command: Python stdin with fnmatchcase(name, "XYZ-forge-gh970-*") for those three names. Exit 0; decisive output: all three report “resume-pattern=True”. No directories or executable fixtures were created for this probe.
+
+- [Nit] **R3 — Resolve the issue before constructing the name.** Step 3 provisions/names the clone at skills/1-hourly/start-task/SKILL.md:78–98, but “Create any missing issue first” appears at :104; :110 preserves trivial intake exemption. **Fix:** clarify before provisioning that the issue number must already be known, and define the naming fallback for an issue-exempt task or state that this rule requires a tracking issue. This is an instruction-order clarification, not a request for mandatory new intake machinery.
+
+- [Pass] **Requested format and ordinary scope agree.** skills/1-hourly/start-task/SKILL.md:84–95 states exact-case repo name, sibling placement, full folder branch suffix, four types, lowest issue number and helper suffixes. SOP.md:216–230 mirrors the formula and points to step 3; AGENTS.md:63 authorizes the same four types. CHANGELOG.md:8–12 and PROJECT/1-INBOX/GH-970-CLONE-NAMING.md (“folder `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`”) agree. Propagate accepted clarifications where needed.
+
+- [Pass] **Scanner supports sibling names when the parent is scanned.** skills/2-daily/merge-cleanup/scripts/scan_clones.py:1053–1065 walks immediate children and filters case-insensitively by substring, so these repo-prefixed names qualify. Its :1299 / :1308 accepts an explicit root; skills/3-weekly/merge-cleanup-deep/SKILL.md:75–79 already supplies `--root "$(dirname "$PRIMARY")"`. Default roots are only the four locations at scanner :26–31; arbitrary primary parents need an explicit root. This is source inspection, not an end-to-end scanner run. No scanner code change requested.
+
+- [Nit] **Cleanup documentation still describes old placement.** skills/2-daily/merge-cleanup/SKILL.md:106 attributes creation in the listed safe roots to /start-task; this now depends on the primary location. **Fix:** replace that attribution with legacy/marathon discovery wording and mention the explicit sibling-root option already used by merge-cleanup-deep. SOP.md:87 is explicitly a campaign clone at :92–95; 10days/start-marathon locations are excluded by GH-970’s marathon non-goal, so those are not task-clone contradictions.
+
+- [Unverified — needs clone run] Docs gate and final changed-path scope are not attested by this turn. The user prohibits git commands and gate/suite execution here; the harness/Producer must supply the final docs-gate receipt and confirm text-only scope. Requirement query `gh api repos/HiQS-Labs/XYZ-forge/issues/970 --jq '{title: .title, body: .body}'` exited 0 and returned the operator formula, edge cases and marathon/enforcement non-goals.
+
+Evidence boundary: list_projects has no index for this review worktree. The nearest XYZ-forge index targets the primary and reports generation 2026-09-01T15:54:30Z; scanner lookup returned zero nodes. Coverage marked relevant paths missing/not-tracked/metadata-changed or excluded, so material claims use current worktree source rather than stale graph evidence.
+
+Handing off to Producer (claude-a) — disposition the findings, make accepted text clarifications, and open the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
