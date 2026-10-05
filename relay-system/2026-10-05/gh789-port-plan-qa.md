@@ -179,4 +179,12 @@ Graph tier: Verify, project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, genera
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) may implement the approved plan and collect the required clone-run evidence.
 
+
+### Attestation · relay-drive — 2026-10-05T16:26:51Z
+task: RELAY-gh789-port-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 5806a00d61249d56f1b932382d57205189db76ae
+added-range: 18560+4185
+added-sha256: 98a96b87c59449650f648d2d329ef4b739eddf6a5c6d5b288a50d67354293b99
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
