@@ -158,4 +158,12 @@ Sweep: the embedded packet, complete canonical GH949 plan/recon, complete Fable 
 
 Relay closed (Approved), no further review turn needed. Producer (codex-author) should run the planned final qualifying gate once in the separate full clone, retain exact-source receipts and identity, then assess PR readiness; approval does not authorize merge or promotion. Token closed with `done`; harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-05T05:23:30Z
+task: RELAY-GH949-RESUME-20261004
+reviewer: codex
+status: Approved
+reviewed-head: 157bf05afaff4884fd4053938823065c0a74f6dd
+added-range: 9621+10418
+added-sha256: 17ac3440935509ba29285f00c6d23a4893344d6a1a606d51712e9890b361789f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
