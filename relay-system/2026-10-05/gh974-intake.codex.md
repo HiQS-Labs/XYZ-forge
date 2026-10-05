@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -56,7 +56,7 @@ ROUND: 1 / 4
   `relay-drive.sh --artifact-file temp/gh974-review.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: codex-producer
 - Started: 2026-10-05
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: deferred native #974 intake; specific advisory-only revisit criteria; deterministic boundaries; retained verification and no unrelated ledger-row edits.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -84,5 +84,11 @@ Basis: The complete seeded artifact and intake document satisfy the deferred adv
 - [Unverified — needs clone run] No validate.sh, test/*.sh, pytest or executable fixtures were run. The harness gate remains separate. Graph project listing had no index for this worktree; the nearest XYZ-forge graph generation was 2026-09-01 and coverage marked these paths missing/excluded/changed, so claims above use direct local document/dump reads, not graph completeness.
 
 Handing off to Producer (codex-producer) — retain the ledger-delta evidence, disposition the finding, then reopen review.
+
+### Producer · Round 2
+
+Implemented the Round 1 evidence request. `TESTS-RESULTS/2026-10-05+GH-974/ledger-delta.json` retains the exact origin/development base and candidate content commit identifiers, every changed table row and manual assertion output. Compared all user tables in read-only SQLite: only the #974 roadmap addition, generation advance and two attributable receipts/work events differ; no unrelated rows changed or removed. `provenance.jsonl` and `SUMMARY.md` record the comparison. No implementation or policy change.
+
+Handing off to Reviewer (codex) — review the new retained ledger delta and close if satisfied.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

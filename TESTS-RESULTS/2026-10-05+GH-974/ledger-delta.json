@@ -1,0 +1,103 @@
+{
+  "base_sha": "442ea913ee5e2fb3d6e050a63c6d90ff07865eb6",
+  "candidate_content_commit": "bbbd5a5c9a7bbf4b580beffef2ac88a2b40bef09",
+  "tables_compared": 16,
+  "deltas": {
+    "settings": {
+      "removed": [
+        {
+          "key": "generation",
+          "value": "1414",
+          "updated_at": "2026-10-04T03:54:30Z"
+        }
+      ],
+      "added": [
+        {
+          "key": "generation",
+          "value": "1416",
+          "updated_at": "2026-10-05T21:24:57Z"
+        }
+      ]
+    },
+    "op_receipts": {
+      "removed": [],
+      "added": [
+        {
+          "id": 1606,
+          "op": "roadmap-add",
+          "target_gid": "rmi-01M46Z7RNBE40ZJXJP33HZGRNV",
+          "at": "2026-10-05T21:24:09Z",
+          "txn_id": "6a36f2d545ff43afa8d74c5389d79d58",
+          "session_id": "default",
+          "state_digest_before": "5bc5b736a316f94119bbdf4dd0e9480887f13b734af7a4a6797ee95efa81341e",
+          "state_digest_after": "0c64aeda5ebdfe77c8478013c3ea77da4cd6b667449db441c12dd5d864b4e225"
+        },
+        {
+          "id": 1607,
+          "op": "roadmap-update",
+          "target_gid": "rmi-01M46Z7RNBE40ZJXJP33HZGRNV",
+          "at": "2026-10-05T21:24:57Z",
+          "txn_id": "381a25fc873c4270b452cfa9b0d47797",
+          "session_id": "default",
+          "state_digest_before": "0c64aeda5ebdfe77c8478013c3ea77da4cd6b667449db441c12dd5d864b4e225",
+          "state_digest_after": "492cdc780c7d9f090b3c895f33c7cc6434c6f5850f83a1dfb403eeb3b87ff2e2"
+        }
+      ]
+    },
+    "roadmap_items": {
+      "removed": [],
+      "added": [
+        {
+          "id": 325,
+          "global_id": "rmi-01M46Z7RNBE40ZJXJP33HZGRNV",
+          "repo_id": 1,
+          "gh_number": 974,
+          "title": "Revisit advisory Jev screening for HiQS recipe intake after live chain validation (Needle-fork #71)",
+          "section": "Deferred · vision",
+          "position": 123,
+          "status_marker": "⏸️",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/1-INBOX/GH-974-REVISIT-ADVISORY-JEV-SCREENING.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/974",
+          "raw_text": "- **GH-974 · Revisit advisory Jev screening for HiQS recipe intake** ⏸️ **deferred 2026-10-05** — revisit after live chain evidence and recurring measured reviewer burden; advisory contribution screening only. rated 20/10/50/55. → [GH-974-REVISIT-ADVISORY-JEV-SCREENING.md](PROJECT/1-INBOX/GH-974-REVISIT-ADVISORY-JEV-SCREENING.md) · [#974](https://github.com/HiQS-Labs/XYZ-forge/issues/974) · [Needle-fork #71](https://github.com/HiQS-Labs/Needle-fork/issues/71)",
+          "first_seen": "2026-10-05T21:24:09Z",
+          "updated_at": "2026-10-05T21:24:57Z",
+          "rating_pri": 20,
+          "rating_sev": 10,
+          "rating_appeal": 50,
+          "rating_effort": 55,
+          "rating_ovr": null,
+          "status_label": null
+        }
+      ]
+    },
+    "work_events": {
+      "removed": [],
+      "added": [
+        {
+          "id": 591,
+          "global_id": "wev-01M46Z97GZTBD8CZWTQGME95ZB",
+          "repo_id": 1,
+          "gh_number": 974,
+          "txn_id": "381a25fc873c4270b452cfa9b0d47797",
+          "event": "deferred",
+          "payload": "{\"marker\": \"\\u23f8\\ufe0f\", \"section\": \"Deferred \\u00b7 vision\", \"source\": \"roadmap-update\", \"transition\": true}",
+          "at": "2026-10-05T21:24:57Z"
+        },
+        {
+          "id": 590,
+          "global_id": "wev-01M46Z7RP306WGVSRDTCBVFM9M",
+          "repo_id": 1,
+          "gh_number": 974,
+          "txn_id": "6a36f2d545ff43afa8d74c5389d79d58",
+          "event": "parked",
+          "payload": "{\"section\": \"Queue / parked intake\"}",
+          "at": "2026-10-05T21:24:09Z"
+        }
+      ]
+    }
+  },
+  "assertions": "Exactly one #974 roadmap addition; no unrelated roadmap row changed or removed. Only generation advance and two attributable operation receipts/work events differ; all other table rows unchanged."
+}
