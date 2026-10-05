@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved (Codex round 2). Port built; Codex final QA round 1 FAIL on evidence only (F1 push-boundary continuation, F2 control attribution) — fixed: matrix 27/27 green, 7 reproducible red controls (`red_controls.py`) each red on its case, gh436 180/180. | Codex final QA round 2, then full-gate push and PR. |
+| Codex final QA **Approved** round 2 (attested, reviewed ca7eca39c73d). Matrix 27/27, 7 reproducible red controls, gh436 180/180. | Full-gate push, PR against development; operator merges via /merge-cleanup. |
 
 ## Why this is a port
 
