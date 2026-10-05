@@ -46,4 +46,8 @@ policy is introduced. This is local macOS CLI verification, not promotion eviden
 
 Fable B1 is Implemented. Nonblocking S1 is retained in
 `PARKED/2026-10-04-metamorphic-worktree-config.md`; it is not claimed repaired.
-Fresh independent QA and the final required gate remain pending.
+Fresh independent Codex QA is attested Approved on round1, reviewed head
+`157bf05a`; complete thread `relay-system/2026-10-04/gh949-resumed-final.codex.md`.
+Raw reviewer/driver/preflight receipts and provenance are retained in `final-qa/`.
+The final required full macOS push gate remains pending. This is local PR
+verification, not promotion evidence.

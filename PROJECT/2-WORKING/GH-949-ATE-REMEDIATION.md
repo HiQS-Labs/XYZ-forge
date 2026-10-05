@@ -20,7 +20,7 @@ reversibility: Costly — shared process and gate environment consumers require 
 
 | What was just completed | What's next |
 |---|---|
-| Fable B1 repaired; eight cancellation controls and focused suites green; development integrated | Renewed independent Codex QA and final gate for PR #953 |
+| Fable B1 repaired; renewed Codex QA attested Approved; development integrated | Final full macOS push gate and hosted exact-SHA check for PR #953 |
 
 ## Table of contents
 
@@ -73,8 +73,8 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 
 ## Phase 3 — Final QA and PR
 
-- [ ] Commit resumed implementation/evidence; obtain renewed final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
-- [ ] Run renewed full qualifying local gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
+- [x] Commit resumed implementation/evidence; obtain renewed final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
+- [ ] Run renewed required full local push gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
 - [x] Fetch/reconcile current development conflicts via supported RELEASES merge resolver if needed; any implementation change after approval gets fresh focused verification/review.
 - [ ] Push through the required hook from the disposable verification/push clone, open ready PR to development, verify emitted base/head/scope and hosted checks. Do not merge or prematurely close issues; retain task clone for merge handoff.
 
@@ -114,3 +114,10 @@ direction. Final independent QA still applies. PR953 remains draft until renewed
 approval and the required gate pass. Development was integrated using the existing
 disjoint-ledger resolver; both issue registrations/ratings survived, with replayed
 row IDs explicitly re-admitted through accepted-start.
+
+Renewed final Codex relay: attested Approved round1 on `157bf05a`; receipt
+`relay-system/2026-10-04/gh949-resumed-final.codex.md` and
+`TESTS-RESULTS/2026-10-04+GH-949/final-qa/provenance.jsonl`.
+Development reconciliation `442ea913` was integrated after approval; it adds only
+upstream docs/receipts. All six reviewed runtime files remain byte-identical.
+Required full push gate is pending; this does not claim promotion qualification.
