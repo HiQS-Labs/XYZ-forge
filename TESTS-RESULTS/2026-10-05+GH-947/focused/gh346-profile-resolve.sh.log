@@ -1,0 +1,54 @@
+== test: gh346-profile-resolve ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh346-profile-resolve.XXXXXX.UCiD39pVoe
+  PASS: resolve-profile.sh is present and executable
+  PASS: qwen 3.8 max -> DEEPSEEK_AGENT
+  PASS: qwen 3.8 max -> the requested model
+  PASS: qwen 3.8 max -> OpenRouter via DEEPSEEK_PROVIDER (not _GATEWAY)
+  PASS: qwen 3.8 max -> the deepseek shim
+  PASS: glm 5.3 max -> COMMANDCODE_AGENT
+  PASS: glm 5.3 max -> the requested model
+  PASS: glm 5.3 max -> effort max
+  PASS: self-routed harness exports NO gateway variable
+  PASS: the omission is explained in the output, not just absent
+  PASS: fuzzy match: 'GLM5.3 Max'
+  PASS: fuzzy match: 'glm 5.3 MAX'
+  PASS: fuzzy match: 'max glm 5.3'
+  PASS: tier 1: explicit env beats a named profile
+  PASS: tier 1: the operator's model survives untouched
+  PASS: malformed config: exits 0 (never blocks a turn)
+  PASS: malformed config: degrades to tier 4 (today's behavior)
+  PASS: wrongtype config: exits 0 (never blocks a turn)
+  PASS: wrongtype config: degrades to tier 4 (today's behavior)
+  PASS: wrongprofile config: exits 0 (never blocks a turn)
+  PASS: wrongprofile config: degrades to tier 4 (today's behavior)
+  PASS: empty config: exits 0 (never blocks a turn)
+  PASS: empty config: degrades to tier 4 (today's behavior)
+  PASS: missing config: exits 0 (never blocks a turn)
+  PASS: missing config: degrades to tier 4 (today's behavior)
+  PASS: unmatched name: falls through to tier 4, exit 0
+  PASS: malformed config names the PARSE error, not just 'no profiles'
+  PASS: an unmatched name says so, and lists what exists
+  PASS: a wrong-typed profiles key says so
+  PASS: route_agent() exposes a lane set to compare against
+  PASS: resolver lane set == route_agent's, derived not copied (agy aider claude codex commandcode deepseek pi smallcode)
+  PASS: every routable lane has a turn shim on disk
+  PASS: deepseek's gateway var derived as DEEPSEEK_PROVIDER (not the assumed _GATEWAY)
+  PASS: a profile naming a dead lane is flagged by --list
+  PASS: a profile with no gateway is flagged
+  PASS: gateway echoing the harness name is flagged (use 'self')
+  PASS: a broken profile refuses --env rather than emitting a half-correct block
+  PASS: --list renders a self-routed path with two elements
+  PASS: --list renders a routed path with three
+  PASS: --explain names the tier that answered
+  PASS: --explain calls out self-routing rather than printing a bare 'self'
+  PASS: --list on an empty config shows a usable example block
+  PASS: --list names the harnesses a profile may reference
+  PASS: injection (sq): hostile model value survives as literal data
+  PASS: injection (dq): hostile model value survives as literal data
+  PASS: injection (sub): hostile model value survives as literal data
+  PASS: injection (bt): hostile model value survives as literal data
+  PASS: injection: eval of --env output executed nothing (no EVIL_* artifacts)
+  PASS: R1: --env emits RELAY_AGENT (the shims refuse to act without it)
+  PASS: R2: RELAY_AGENT matches the harness agent var (commandcode) — the shim acts instead of deferring
+  PASS: R3: a profile whose harness CLI is missing warns at resolution time
+  gh346-profile-resolve: 51 pass, 0 fail

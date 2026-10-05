@@ -1,0 +1,6 @@
+{
+  "head": "c49cc353572765889ec7b3eba573d5d0caddfb88\n",
+  "origin": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\n",
+  "local_config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/feat/gh947-hiqs-recipe-profiles:refs/remotes/origin/feat/gh947-hiqs-recipe-profiles\nbranch.feat/gh947-hiqs-recipe-profiles.remote=origin\nbranch.feat/gh947-hiqs-recipe-profiles.merge=refs/heads/feat/gh947-hiqs-recipe-profiles\n",
+  "status": ""
+}
