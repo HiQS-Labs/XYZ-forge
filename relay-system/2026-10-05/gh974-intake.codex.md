@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,5 +90,19 @@ Handing off to Producer (codex-producer) — retain the ledger-delta evidence, d
 Implemented the Round 1 evidence request. `TESTS-RESULTS/2026-10-05+GH-974/ledger-delta.json` retains the exact origin/development base and candidate content commit identifiers, every changed table row and manual assertion output. Compared all user tables in read-only SQLite: only the #974 roadmap addition, generation advance and two attributable receipts/work events differ; no unrelated rows changed or removed. `provenance.jsonl` and `SUMMARY.md` record the comparison. No implementation or policy change.
 
 Handing off to Reviewer (codex) — review the new retained ledger delta and close if satisfied.
+
+### Reviewer · Round 2
+swept file: yes
+VERDICT: PASS
+Basis: Reviewed the whole seeded artifact, complete intake document, scoped changelog entry and all retained GH-974 evidence. Round 1's evidence request is satisfied by the retained exact-base comparison. No substantive or pre-existing defect found in the reviewed scope. Approval covers deferred intake; the harness gate remains separate.
+
+- [Pass] Deferred authority and live-evidence prerequisite remain explicit: PROJECT/1-INBOX/GH-974-REVISIT-ADVISORY-JEV-SCREENING.md:47 says “No classifier implementation is authorized”; :55 says the instruction chains “are not verified HiQS catalog recipes”; :59 and :74-84 require recurring measured burden, baselines and held-out human labels before promotion. No change requested.
+- [Pass] Advisory contribution screening is bounded at intake :61; the same span rejects Needle work-purpose scores as evidence for HiQS. Intake :63 protects resolve/lookup/explain, policy, traces/digests, attestations and publication. No change requested.
+- [Pass] Close Round 1's ledger-delta finding. TESTS-RESULTS/2026-10-05+GH-974/ledger-delta.json:2 names base 442ea913ee5e2fb3d6e050a63c6d90ff07865eb6; :3 names candidate content commit bbbd5a5c9a7bbf4b580beffef2ac88a2b40bef09; :4 records 16 tables. Its complete delta contains only generation 1414→1416 (:6), one native #974 addition (:47), two #974-targeted operation receipts (:22) and two corresponding #974 work events (:76). The assertion at :102 states “no unrelated roadmap row changed or removed”; provenance.jsonl:8 retains command, identifiers, exit 0 and decisive output. This is retained producer exact-base evidence, not a freshly rerun base comparison. No change requested.
+- [Pass] Narrow read-only corroboration: command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` parsed ledger-delta.json and all provenance records, opened `sqlite3.connect('file:releases.db?mode=ro', uri=True)`, checked table count, compared every retained added row by key/id with the current database, and asserted native-row uniqueness, scope, ratings and receipt/event transaction attribution. Exit 0; decisive output: “16 user tables; all 6 retained candidate rows match read-only DB; exactly one deferred native #974 row; two #974 receipts/events attributable.” Evidence spans: ledger-delta.json:14, :24, :49 and :78. No base DB is seeded here; the exact-base assertion is accepted as the retained receipt above.
+- [Pass] Verification remains scoped and supported: CHANGELOG.md:5 and SUMMARY.md:3 match provenance.jsonl:1-7; :1 records invalid complexity 9 exiting 1, :2 records the restored passing check. The same probe exits 0 with “8 retained receipts: red control exit 1; seven subsequent exit 0; base/candidate identifiers agree.” SUMMARY.md:5 accurately points to the new delta evidence. No change requested.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest or executable fixtures were run. No Git commands were run. Graph tools are unavailable in this turn; findings use direct local document/evidence reads and the read-only SQLite probe. External PR status claims at intake :55 were not independently refreshed in this bounded local review.
+
+Relay closed (Approved), no further turn needed. Token completion returns control to the producer/harness for its file-scoped commit and separate gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
