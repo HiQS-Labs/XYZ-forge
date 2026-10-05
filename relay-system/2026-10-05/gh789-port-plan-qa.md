@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -93,5 +93,61 @@ stated scope. Do not ask for new test suites, new capability rows, retries, tele
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: the bounded port is appropriate, but case (f) contradicts the source's exit contract, a repaired-head draft refusal still stops the queue, and the proposed matrix cannot falsify several promised behaviours.
+swept file: yes
+
+Read the entire plan, seeded patch, four current scripts and SKILL.md; read the parity guard and deep-scan intake. Review is source-level, not execution approval. Graph tier: Verify; nearest indexed project is the canonical XYZ-forge checkout, generation 2026-10-05T16:15:58Z, not this worktree. Discovery returned all 8 narrowed symbols (no further page); coverage reported no recorded gaps for the six requested source paths. Inbound trace calls were unavailable ("MCP tool call requires approval, but approval policy is never"), so current worktree source is the authority for call paths below. No git, suites or executable fixtures run.
+
+- **[Should] F1 — Split case (f)'s incompatible exit expectations.** Plan lines 81–82 combine a skipped draft, an independent landing and a blocked hard dependent with "exit 0"; patch lines 220–225 retain the hard dependent as a non-draft failed outcome, and lines 294–298 remove only the draft itself. Current `merge_cleanup.py:1088–1097` then returns 3. "Zero merge calls" also needs to mean zero calls **for the draft and its dependent**, since the independent must merge. Fix the plan to require (f1) draft + independent → exit 0, one independent merge, named draft summary; (f2) add hard dependent → independent still lands, dependent never attempted, exit 3 with named dependency. Do not weaken the non-landed-dependent contract merely to make this matrix green.
+  Observed input: plan case (f), concretely queue #1 draft, #2 with `_hard_deps=[1]`, #3 independent; patch stores #2 as `"blocked by #1"` and only filters `"draft"`.
+  Affected scope: verification expectations for drafts with and without blocked hard successors.
+  Falsifier: disposable-clone runs of those two queues; f1 must return 0, f2 must return 3, and both must land #3 only.
+
+- **[Should] F2 — Specify the skip at the repaired-head push boundary, not just refusal to push.** Plan lines 44–48 promise a live draft skip before repair/merge. Patch `.relay-artifacts/gh789-code.patch:186–187` adds a draft refusal to **merge_cleanup.push_resolved_head**, not `ledger_merge` as plan line 45 says. Its unchanged caller `merge_cleanup.py:1004–1008` stops with exit 2 on any false result; the later draft skip never runs. Cheapest fix: correct the owner in the plan and explicitly distinguish a positively observed draft refusal as a named skip, retain repair evidence, mark it as a hard predecessor that did not land, and continue independent PRs. Preserve fail-closed handling for unknown state, moved heads and other push failures.
+  Observed input: the seeded guard's `live.get("isDraft")` branch returns `(False, "PR is draft or no longer open — not pushing repaired head")` (patch:186–187); the actual caller's `if not ok` returns 2 (current source:1005–1008). Concrete transition to measure: initially OPEN/non-draft at head A, B1 creates B, push-time refresh is OPEN/draft at A.
+  Affected scope: a draft positively observed at the pre-push refresh after B1; not every false push result.
+  Falsifier: clone-run fixture with that transition must make zero pushes/merges for this PR, name it in the draft summary and land an independent successor; a non-draft moved head or failed refresh must retain refusal. **[Unverified — needs clone run]** for runtime reproduction; this finding is the observed source path, not a claim that a fixture ran.
+
+- **[Should] F3 — Make the manual evidence cover the actual acceptance predicates.** Plan `Verification:78–86` has no required assertion for the Phase 4 Draft column, the named summary or soft successors; the optional live table check cannot catch a missing column automatically. The initial-draft queue cannot catch removal of post-poll, post-B1 or pre-merge draft checks (patch:251–266, 274–284). Case (g) does not exercise the audit-mode exclusions or compare-and-delete refusal (patch:305–316). Extend the same unregistered manual evidence, not a new suite: assert Draft cells for true/false, exact skipped PR identities and per-PR mutation calls; cover each promised draft refresh boundary including F2; assert changelog output bytes/entries/history and duplicate retention/deduplication, plus the promised fenced/HTML rejection; cover scan/prs/teardown audit non-pruning, dirty-primary non-pruning, active rebase-apply/sequencer and a changed observed OID refusing deletion. Record red controls that remove the relevant draft/marker guards and make these cases fail; the two existing controls only exercise initial draft/additive support and a permissive changelog classifier. Require committed `provenance.jsonl`, command/exit/output receipts for candidate and controls. These are proof changes to the plan; no additional runtime mechanism requested.
+
+- **[Nit] F4 — Correct the parity explanation and bound the missing source evidence.** Omitting both new rows is consistent with the explicit GH-831/no-capability-row scope. However, `test/gh534_phase_c_tests.py:585–596` checks named tests only while iterating **REQUIRED_CAPABILITIES**, not every table row. Neither new row is currently required (`:527–546`); merely adding them would be silently unchecked, not a missing-test failure. Correct plan line 65. The supplied patch contains no test-file diff, so the referenced old `gh534_phase_c_tests.py +3` is **[Unverified — needs source hunk]**. No extra imports/required rows are needed for the chosen omission; preserve today's required set rather than importing historical test changes without their hunk.
+
+- **[Pass] Current-code grounding and bounded scope.** `merge_cleanup.py:185–188` and `toposort_prs.py:30–36` omit isDraft; hold-label skip is at `merge_cleanup.py:894–897`; GH-851 pushed-head wait and head checks are at `:1010–1029`; PUSH_GATE_TIMEOUT_S is at `:89` and used at `:639`; a lone REBASE_HEAD is treated as a rebase at `scan_clones.py:1165–1189`. Preserve those dev behaviours by surgical porting, together with GH-852 MERGED re-query (`merge_cleanup.py:165–181`), bounded push (`:356`), retry clone cleanup (`:298–302`), resume/attempt records (`:933–998`), hosted reconciliation and post-merge durability (`:1073–1084`), and the current SKILL batch/backup prose. Replacing whole historical files would revert these; the saved patch is a delta, not authority to replace them. The patch also carries soft-cycle prevention and pending-hard-prerequisite protection (`patch:200–225, 414–444`): name these small supporting transforms in scope and include a dependency-order assertion; they are not GH-786 batch records.
+
+- **[Pass] Deep intake does not traverse the changed readiness function.** `scan_clones.py:1311–1314` emits `scan_directories` checkout records; `scan_directories` calls `inspect_checkout` (`:1033–1092`), not `inspect_primary_landing`. The latter is the function the marker patch changes. Deep skill Phase 0 selects dispositions from that JSON. Thus the intake remains safe by call-path separation, not because the scanner's JSON "only adds fields" (plan:93–94). Keep inspection read-only. The pre-existing hold-label dependency gap is explicitly excluded as #785 (plan:70–71); no additional independent defect requiring expansion of this port was identified in the full-file sweep.
+
+Static probe receipt (non-mutating; AST only, no module imports or fixtures): command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with this body, exit **0**:
+```python
+import ast
+from pathlib import Path
+p = Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py")
+s = p.read_text()
+tree = ast.parse(s)
+f = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "land_prs")
+for n in ast.walk(f):
+    if isinstance(n, ast.If) and n.lineno == 1005:
+        print("push failure branch:", ast.get_source_segment(s, n.test),
+              "returns:", [ast.literal_eval(x.value) for x in n.body if isinstance(x, ast.Return)])
+t = ast.parse(Path("test/gh534_phase_c_tests.py").read_text())
+a = next(n for n in t.body if isinstance(n, ast.Assign) and any(isinstance(x, ast.Name) and x.id == "REQUIRED_CAPABILITIES" for x in n.targets))
+caps = ast.literal_eval(a.value)
+for c in ("draft-skips-dependent", "changelog-additive-resolution"):
+    print(c, "required by current parity guard:", c in caps)
+patch = Path(".relay-artifacts/gh789-code.patch").read_text()
+print("seeded patch has test-file diff:", "diff --git a/test/" in patch)
+```
+Decisive output:
+```text
+push failure branch: not ok returns: [2]
+draft-skips-dependent required by current parity guard: False
+changelog-additive-resolution required by current parity guard: False
+seeded patch has test-file diff: False
+```
+
+Handing off to Producer (claude-a) — revise the plan and disposition F1–F4, then return for round 2. No approval of implementation or clone-run verification is implied.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
