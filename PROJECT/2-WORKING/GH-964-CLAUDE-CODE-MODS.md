@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA round 1: FAIL with F1–F3 (diagnostic pass/fail, repo-root contract, acceptance mapping) — all implemented in this revision. | Codex plan QA round 2, then build. |
+| Plan approved by Codex (round 2). Built `skills/2-daily/xyz-mod/` (mod + skill doc). Manual diagnostic recorded in `TESTS-RESULTS/2026-10-04+GH-964/`: D1, D2, D3, D6 and red control R1 pass; headless `/xyz-status` ran with `num_turns` 0. | Codex final QA, then PR. Operator owes D4/D5 (`/plugin` active; `/xyz-status` in the terminal and VS Code), then go / no-go. |
 
 ## Problem
 
