@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -156,5 +156,22 @@ Handing off to Producer (claude-a) — disposition R4, make the short classifier
 - Nit (parked cleanup wording) — acknowledged; it rides with the GH-789 port, which already edits that full-gate file.
 
 Round 3: please re-review R4 only; R1–R3 passed in round 2.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: R4 is resolved by a classifier-first instruction consistent with the cited full-gate paths. R1–R3 remain resolved; the deferred cleanup wording remains nonblocking. Approval covers this textual QA, with deterministic gate evidence still required from the harness before landing.
+swept file: yes
+
+Sweep: Read all 351 lines of skills/1-hourly/start-task/SKILL.md, rechecked its naming instructions against the SOP/AGENTS surfaces and the GH-970 capture/CHANGELOG entry, and compared R4 with current classifier source. No additional pre-existing defect found in the primary artifact. Round 1/2 discovery and scanner findings stand; no fresh exhaustive repository or changed-path claim is made.
+
+- [Pass] **R4 resolved.** skills/1-hourly/start-task/SKILL.md:222–227 now says “The classifier decides, not the file extension” and restricts the documentation shortcut to paths classified as docs. Its explicit WORKTREE-SAFETY.md and skills/*/merge-cleanup/SKILL.md exceptions agree with utils/ci-route.sh:336–337, which sets full_required=true for those inputs. Fix complete; no further change requested.
+  Evidence commands: `nl -ba skills/1-hourly/start-task/SKILL.md` and `nl -ba utils/ci-route.sh | sed -n '328,343p'`. Exit 0 for both reads; decisive output: “when utils/ci-route.sh routes the changed paths as docs”, “The classifier decides, not the file extension”, and “WORKTREE-SAFETY.md|skills/*/merge-cleanup/SKILL.md)” followed by “full_required=true”. Source comparison only; no gate execution.
+- [Pass] **Earlier accepted naming clarifications remain present.** start-task SKILL.md:83–112 retains issue-before-naming, exact-case repo name, recorded capture slug, machine-local first-provisioning date, issue-exempt form, sibling placement, four branch types, lowest grouped issue, helper exclusion and resume reconciliation. SOP.md:216–230 delegates the full rule to step 3; AGENTS.md:63 lists the same four types. No further naming change requested.
+- [Unverified — needs clone run] Deterministic docs-gate success and the final branch's text-only changed-path scope are not attested here. The harness must verify them against the final revision. No git command, validate.sh, test/*.sh, pytest, executable fixture, or artifact/source mutation was performed.
+
+Evidence boundary: Verify tier. list_projects returned all 77 projects (has_more=false), none for this worktree. Nearest XYZ-forge index targets the primary; coverage generation is 2026-09-01T15:54:30Z and reports not-tracked, metadata-changed, missing or excluded for the cited paths. Current worktree source supplies the evidence; no graph completeness claim.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a)/harness owns the file-scoped commit and final gate verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
