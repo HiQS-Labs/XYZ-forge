@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-04 — Close oracle CLI cancellation gap from PR953 QA (GH-949)
+
+Both oracle CLI entry points now use the existing cancellation handler, allowing the
+shared runner to clean up session-isolated commands on TERM/INT and retain143/130.
+Base comparison separates an inherited direct-signal gap from the outer-cap regression.
+All eight repaired manual controls and three existing focused suites pass; exact-source
+red controls and owned-process cleanup are retained under `TESTS-RESULTS/2026-10-04+GH-949/`.
+The repair is Easy to reverse at the two entry points. The bet is that existing cleanup
+works under catchable cancellation; any surviving owned process is the revisit trigger.
+Renewed independent QA and final gate remain pending. Nonblocking config S1 is parked.
+
 ## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
 
 The operator reversed GH-882's 2026-10-01 decision that made XYZ-skills-army-mini the Skills Army HQ

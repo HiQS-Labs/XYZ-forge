@@ -18,7 +18,7 @@ import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
-from proc_group import run_bounded
+from proc_group import Cancelled, cancellation_signals, run_bounded
 
 
 class ContainmentViolationError(Exception):
@@ -398,4 +398,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        with cancellation_signals():
+            sys.exit(main())
+    except Cancelled as exc:
+        sys.exit(128 + exc.signum)

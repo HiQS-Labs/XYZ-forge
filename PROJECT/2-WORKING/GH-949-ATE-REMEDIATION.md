@@ -2,7 +2,7 @@
 title: "GH-949 — ATE lifecycle, oracle and environment remediation"
 status: In Review
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-04
 owner: Codex
 goal: Repair nine campaign findings and GH-912 with existing shared implementations and witnessed before/after controls.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/949
@@ -20,7 +20,7 @@ reversibility: Costly — shared process and gate environment consumers require 
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA attested Approved; runtime repair committed at 76ad7e4e; original manual controls green | PR #953 checks/review; awaiting merge |
+| Fable B1 repaired; eight cancellation controls and focused suites green; development integrated | Renewed independent Codex QA and final gate for PR #953 |
 
 ## Table of contents
 
@@ -73,8 +73,8 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 
 ## Phase 3 — Final QA and PR
 
-- [x] Commit implementation/evidence; run final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
-- [x] Run full qualifying local gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
+- [ ] Commit resumed implementation/evidence; obtain renewed final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
+- [ ] Run renewed full qualifying local gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
 - [x] Fetch/reconcile current development conflicts via supported RELEASES merge resolver if needed; any implementation change after approval gets fresh focused verification/review.
 - [ ] Push through the required hook from the disposable verification/push clone, open ready PR to development, verify emitted base/head/scope and hosted checks. Do not merge or prematurely close issues; retain task clone for merge handoff.
 
@@ -84,7 +84,7 @@ Execute this one ordered list after plan approval. Shared changes are Costly; sh
 - [x] #949/#912 runtime requirements satisfied; ready status follows current PR blocking checks.
 - [ ] Plan/ledger say PR ready awaiting merge, not shipped; retained clone and cleanup handoff reported.
 
-Evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps all findings to retained before/after controls. The process helper API remains signal-handler-free; only the two CLI entry boundaries own handlers. Zero-minute admission remains nonzero without new rows but retains existing baseline/control initialization. All nine focused suites passed on runtime candidate76ad7e4e; final review/gate outstanding.
+Historical evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps original findings to retained controls. The shared runner remains signal-handler-free; handlers now belong to four CLI boundaries (ATE, proc_group and both oracles). Zero-minute admission keeps its initialization contract. Original QA/gates below are earlier checkpoints; current readiness is recorded in the resumed disposition.
 
 Final QA R1 disposition: Implemented. The whole-file sweep exposed a pre-existing first-versus-later rc/stdout blind spot. `984b7f64` compares the first observation against existing metamorphic result fields. Actual-process red/green controls are retained under manual-idempotence; affected existing suites are rerun. This extends the already approved idempotence comparison, not the process architecture or risk scope.
 
@@ -95,3 +95,22 @@ PR [#953](https://github.com/HiQS-Labs/XYZ-forge/pull/953) targets development. 
 ## Independent Fable QA — 2026-10-03
 
 Operator-requested Claude Code Fable5.1 high review returned FAIL (valid relay exit5), one blocker B1: oracle CLI SIGTERM can orphan its session-isolated command. Full signed review: `relay-system/2026-10-03/gh949-fable-qa.md`; provenance: `TESTS-RESULTS/2026-10-03+GH-949/fable-qa/`. PR953 is draft pending disposition; earlier ready/Approved statements above describe the prior checkpoint. No runtime changes made during this QA turn. S1 (metamorphic linked-worktree config) is non-blocking; base-comparison and full Git-mutation controls remain unverified.
+
+## Resumed disposition — 2026-10-04
+
+B1 Implemented: both oracle `__main__` blocks reuse the existing cancellation
+context and preserve130/143. Original-base comparison now proves outer-cap
+orphaning is introduced by session isolation; direct SIGTERM orphaning predates it.
+All eight repaired direct TERM/INT, outer-cap and TERM-resistant direct controls
+pass with nonempty startup evidence and verified cleanup. Three focused suites
+pass (17/0,8/0,43/0); clone identity and tracked diff stay unchanged. Receipts:
+`TESTS-RESULTS/2026-10-04+GH-949/SUMMARY.md`.
+
+S1 Deferred as the review permits; observation retained in
+`PARKED/2026-10-04-metamorphic-worktree-config.md`. It is not claimed repaired.
+These two CLI-boundary changes are obvious, local and reversible, so no new plan
+design or plan QA is needed beyond approved Phase2 step1 and Fable's concrete fix
+direction. Final independent QA still applies. PR953 remains draft until renewed
+approval and the required gate pass. Development was integrated using the existing
+disjoint-ledger resolver; both issue registrations/ratings survived, with replayed
+row IDs explicitly re-admitted through accepted-start.

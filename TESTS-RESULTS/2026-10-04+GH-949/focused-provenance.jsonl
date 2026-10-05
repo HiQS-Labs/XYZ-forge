@@ -1,0 +1,3 @@
+{"suite": "gh-gen4-phase1-domain-oracles.sh", "command": ["bash", "test/gh-gen4-phase1-domain-oracles.sh"], "utc": "2026-10-05T05:06:42.994483+00:00", "rc": 0, "sha256": "2364a6ea22cc2d12dbbf943667e887212ef87fd894c31cd2e5c6a4c35068d1f6"}
+{"suite": "gh155-phase1-metamorphic-invariants.sh", "command": ["bash", "test/gh155-phase1-metamorphic-invariants.sh"], "utc": "2026-10-05T05:06:48.399305+00:00", "rc": 0, "sha256": "c34ce4810a4079f825349fdaa71d44b5cb1f73766afd814058f87dcca68e2980"}
+{"suite": "gh478-runaway-guard.sh", "command": ["bash", "test/gh478-runaway-guard.sh"], "utc": "2026-10-05T05:06:53.101097+00:00", "rc": 0, "sha256": "83d9024c444dab62a0eefcc94ae2a2382023624224b14303571164824f3d069d"}

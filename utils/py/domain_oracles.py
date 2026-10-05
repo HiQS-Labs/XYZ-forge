@@ -49,7 +49,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-from proc_group import run_bounded
+from proc_group import Cancelled, cancellation_signals, run_bounded
 from metamorphic_oracle import check_idempotence, check_realpath_containment, check_zero_mutation  # noqa: E402
 from telemetry_schema import (  # noqa: E402
     TelemetryEvent,
@@ -644,4 +644,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        with cancellation_signals():
+            sys.exit(main())
+    except Cancelled as exc:
+        sys.exit(128 + exc.signum)
