@@ -86,3 +86,7 @@ Record a specific later revisit without adding a model dependency to the recipes
 ## PRS rating rationale
 
 Initial priority/severity/appeal/effort-cheapness: **20/10/50/55** (provisional). Low priority and severity reflect no current recipe-runtime need or established harm. Appeal is neutral. Effort cheapness reflects a bounded experiment, with labelling cost still uncertain. Re-rate when actual review burden is available.
+
+## Merge evidence
+
+- PR #975 merged 2026-10-05 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
