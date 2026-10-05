@@ -222,4 +222,12 @@ gh436: 180 tests OK; static audit OK
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the pending full-clone harness gate and publication workflow outside this relay.
 
+
+### Attestation · relay-drive — 2026-10-05T17:34:45Z
+task: RELAY-gh789-port-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: ca7eca39c73dc7655b696568efee3d5d2706e696
+added-range: 19546+6419
+added-sha256: 58610d92599d4ab58439f5130804b846b0be4e03ac2a372b172a04e2465eb3e5
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
