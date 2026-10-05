@@ -4,7 +4,7 @@
 
 Claude Code 2.1.287 added **mods**: plugins whose TypeScript hooks run inside Claude Code. The new
 `xyz-mod` skill ships one, under `skills/2-daily/xyz-mod/mod/`, loaded with `claude --plugin-dir`.
-It adds `/xyz-status`, which answers instantly, even mid-turn, and costs no model turn:
+It adds `/xyz-status`, which runs at once, even mid-turn, costs no model turn, and replies when its readers finish (15 s cap each):
 
 - **What it prints:** the repo root it read, then the recent hosted runs on `development`
   (`gh run list`), `tick` claims and marathon/relay driver state (`marathon-ls.sh`). It runs those

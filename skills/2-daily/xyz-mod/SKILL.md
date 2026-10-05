@@ -11,7 +11,7 @@ description: >-
 # xyz-mod — `/xyz-status` without a model turn (GH-964)
 
 A Claude Code **mod** is a plugin whose TypeScript hooks run inside Claude Code. This one adds a
-single slash command, `/xyz-status`, that answers instantly (even mid-turn) and costs no model turn.
+single slash command, `/xyz-status`, that runs at once (even mid-turn), costs no model turn, and replies when its readers finish (15 s cap each).
 It prints, under one `root:` line naming the repo it read:
 
 1. **Hosted runs on development (recent 8)** — `gh run list --branch development --limit 8`
