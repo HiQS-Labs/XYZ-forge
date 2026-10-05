@@ -12,6 +12,7 @@ Exit 0 only if every case passes; any failure, error or zero collected cases exi
 import contextlib
 import importlib.util
 import io
+import re
 import subprocess
 import sys
 import unittest
@@ -370,10 +371,17 @@ class ChangelogMergeCases(LedgerFixture):
         self.assertIn(ChangelogUnitCases.a, text)
         self.assertIn(ChangelogUnitCases.b, text)
 
-    def test_draft_at_repaired_push_is_skipped_and_independent_lands(self):
-        """Codex F2 (integration): draft observed at the push boundary after B1 → zero push and merge
-        for that PR, named skip, run continues and exits 0 (no other non-landing)."""
+    def draft_at_push(self, dependent):
+        """Shared body for Codex F2 / final-QA F1: #2 turns draft exactly at the repaired-head push
+        (after B1 resolved it); #3 is an independent later PR; optionally #4 hard-depends on #2."""
         self.conflict()
+        self.branch("feat/c", 3, lambda r: (r / "note3").write_text("x"))
+        if dependent:
+            self.branch("feat/d", 4, lambda r: (r / "note4").write_text("x"))
+            self.st = self.load()
+            self.st["prs"]["4"]["body"] = "Depends on #2"
+            self.save()
+        head_before = _git(self.primary, "ls-remote", "origin", "refs/heads/feat/b").stdout.split()[0]
         real_refresh = merge_cleanup.refresh_pr
 
         def refresh(n, *args, **kwargs):
@@ -388,13 +396,35 @@ class ChangelogMergeCases(LedgerFixture):
         out = io.StringIO()
         with mock.patch.object(merge_cleanup, "refresh_pr", side_effect=refresh), \
              mock.patch.object(merge_cleanup, "push_resolved_head", side_effect=push), \
+             mock.patch.object(merge_cleanup, "prepare_landing_clone", wraps=merge_cleanup.prepare_landing_clone) as prep, \
              contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
             rc = self.run_main()
+        text = out.getvalue()
         st = self.load()
-        self.assertEqual(rc, 0, out.getvalue()[-2000:])
         self.assertEqual(st["prs"]["2"]["state"], "OPEN")
         self.assertFalse(any(c[:3] == ["pr", "merge", "2"] for c in st["calls"]))
-        self.assertIn("SKIPPED (draft before repaired-head push", out.getvalue())
+        self.assertEqual(st["prs"]["3"]["state"], "MERGED", "the queue must continue past the skipped draft")
+        self.assertEqual(_git(self.primary, "ls-remote", "origin", "refs/heads/feat/b").stdout.split()[0], head_before,
+                         "a draft's branch must not receive the repaired head")
+        kept = re.search(r"SKIPPED \(draft before repaired-head push; B1 result kept at (\S+)\)", text)
+        self.assertIsNotNone(kept, text[-2000:])
+        self.assertTrue(Path(kept.group(1)).is_dir(), "B1 evidence clone must be retained")
+        self.assertIn("Skipped draft PR(s): #2", text)
+        return rc, st, prep, text
+
+    def test_draft_at_repaired_push_is_skipped_and_independent_lands(self):
+        """Final-QA F1 (exit 0 variant): draft at push + independent → independent lands, exit 0."""
+        rc, _, _, text = self.draft_at_push(dependent=False)
+        self.assertEqual(rc, 0, text[-2000:])
+
+    def test_draft_at_repaired_push_blocks_its_hard_dependent(self):
+        """Final-QA F1 (exit 3 variant): hard dependent of the draft is never attempted; independent lands."""
+        rc, st, prep, text = self.draft_at_push(dependent=True)
+        self.assertEqual(rc, 3, text[-2000:])
+        self.assertEqual(st["prs"]["4"]["state"], "OPEN")
+        self.assertNotIn(4, [c.args[0]["number"] for c in prep.call_args_list])
+        self.assertFalse(any(c[:3] == ["pr", "merge", "4"] for c in st["calls"]))
+        self.assertIn("blocked by #2", text)
 
     def test_draft_after_repaired_push_is_skipped(self):
         self.conflict()

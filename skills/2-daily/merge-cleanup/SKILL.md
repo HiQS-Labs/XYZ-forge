@@ -103,7 +103,7 @@ Phase 0 runs in every mode of the orchestrator. The standalone helpers below
 the answer will inform a landing.
 
 ### Phase 1: Discover & Inventory
-- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and pre-GH-970 `/start-task` runs create task clones; since GH-970 `/start-task` clones are siblings of the primary, found with `--root "$(dirname <primary>)"`). The list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
+- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones; task clones that follow the GH-970 location decision are siblings of the primary, found with `--root "$(dirname <primary>)"`). The list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
 - Evaluates component-aware containment (`_within(child, parent)`) and refuses `NEVER_DELETE` protected roots (`$HOME`, `~/Documents`, `~/Desktop`, `/`).
 - Distinguishes **Linked Worktrees** (`.git` is a file with pointer `gitdir: ...`) from **Standalone Clones** (`.git` is a directory).
 - Uses `git worktree list --porcelain` to determine parent-child relationships.
