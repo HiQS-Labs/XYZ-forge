@@ -105,4 +105,12 @@ Basis: Reviewed the whole seeded artifact, complete intake document, scoped chan
 
 Relay closed (Approved), no further turn needed. Token completion returns control to the producer/harness for its file-scoped commit and separate gate.
 
+
+### Attestation · relay-drive — 2026-10-05T21:31:52Z
+task: RELAY-GH974-INTAKE
+reviewer: codex
+status: Approved
+reviewed-head: ba20f6802710383e48514276bc9a8f38e429f57e
+added-range: 10280+3419
+added-sha256: aef8d63f0cd52e79b643d2df2980dccbec9b7cbd3507954be8ffa682b8d6cc83
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
