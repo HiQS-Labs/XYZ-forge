@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -99,5 +99,36 @@ the terminal and VS Code. Only a headless `claude -p` run is recorded for D5.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: The implementation meets the approved step-1 contract in the stated optional, read-only envelope. Retained manual receipts support D1–D3, D6 and R1; the raw headless result supports zero model turns without pretending to establish interactive terminal/VS Code acceptance. No Blocker or Should finding. Approval closes this implementation review, not the outstanding operator acceptance or post-turn gate.
+swept file: yes
+
+Swept the entire 46-line `register.ts`, all three JSON configuration files, the entire skill and parked note, all eight provenance records and both logs, the approved plan, and the entire `ARCHITECTURE.md`. For CHANGELOG the artifact named in Setup is the GH-964 entry (`CHANGELOG.md:3`–17); reviewed that complete entry, not the unrelated historical archive. No additional pre-existing defects found in the scoped implementation. The existing missing daily-planner index row is already captured in the seeded parked note; no unrelated repair requested.
+
+Verify-tier graph limitation: both `list_projects` pages covered all 77 projects (`has_more=false`), with none for this checkout. Nearest `XYZ-forge` graph belongs to another checkout. `search_graph` for register symbols under the new mod returned zero rows; coverage across all artifact paths plus `bin/tick` and `marathon-ls.sh` reports generation `2026-09-01T15:54:30Z`, missing new files, changed architecture metadata, and excluded CHANGELOG/bin. Used current full source reads for those paths; no negative claim rests on the old graph. Supplied Claude Code process semantics and engine origin of tsconfig are accepted inputs, not independently re-measured here.
+
+- **[Pass] Step 1 and the read-only boundary match.** `skills/2-daily/xyz-mod/mod/hooks/register.ts:9`–15 registers the command at session start with `immediate: true`; :18 scopes the only other hook to `xyz-status`. Lines 19–22 resolve the session's git root with a 15 s bound and stop with an explicit message when resolution fails. Lines 27–29 use exactly the planned argv: bounded recent hosted runs with `gh` from PATH, absolute repo-local tick and marathon readers. Line 34 sets cwd=root, overrides `TICK_REPO_ROOT`, and applies the 15 s timeout; :44 emits root first. No tool, prompt or transcript hook is registered. This reuses the existing readers rather than recreating their state logic; `bin/tick:403`–455 is the read-only claims branch and `relay-automation/marathon-ls.sh:178`–199 enumerates its hub plus registry.
+
+- **[Pass] Failed sections cannot become healthy through these checks.** `register.ts:32`–42 isolates each process in its own try/catch before joining results. At :35–38, concrete inputs `{exitCode:0, stdout:'   ', stderr:''}` and `{exitCode:1, stdout:'(no claimed tasks)', stderr:'failure'}` both take the ERROR branch: success requires exit 0 **and** trimmed non-empty stdout. A rejected process takes :39–40 while the other promises keep their sections. Those are source-traced cases, not executed fixtures. The observed missing-path case in `TESTS-RESULTS/2026-10-04+GH-964/provenance.jsonl:6` records `ERROR (... ENOENT ... bin/tick-missing)`, healthy other sections, then restored health. No concrete failed-reader input was found that this mod would relabel healthy under the supplied process contract; upstream reader semantic correctness is not established by an exit-code check.
+
+- **[Pass] Receipts support the requested diagnostic subset without over-claiming D5.** `provenance.jsonl:1` records Claude 2.1.289; :2 is corroborated by `d2-validate.txt:9`–12 (only the two intended hooks and two calls, validation passed with an author warning). Lines 3, 5 and 6 retain D3's individual rc=0/non-empty byte counts, D6's subdirectory-root result and R1's mutant/restored outcome. D6 and R1 are retained manual summaries, not independently reproduced runs or separate raw logs. `d5-headless.json:4`–7 contains `is_error:false`, `num_turns:0`, the root and all three healthy sections. The nonzero `total_cost_usd` is preserved; zero model turns is not a claim of zero recorded cost. `provenance.jsonl:4` explicitly limits this to headless, and plan :20 leaves D4/D5 plus go/no-go with the operator.
+
+  Non-mutating evidence probe (no source executed):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -c 'import json,pathlib; p=pathlib.Path("TESTS-RESULTS/2026-10-04+GH-964"); rows=[json.loads(s) for s in (p/"provenance.jsonl").read_text().splitlines()]; d=json.loads((p/"d5-headless.json").read_text()); sections=d["result"].split("\n\n## ")[1:]; print("receipts",len(rows),"ids",[r["id"] for r in rows if "id" in r]); print("num_turns",d["num_turns"],"is_error",d["is_error"],"sections",len(sections),"nonempty",all("\n" in s and s.split("\n",1)[1].strip() for s in sections),"ERROR","ERROR" in d["result"]); print("logs_exist",all((p/r["log"]).is_file() for r in rows if "log" in r))'
+  ```
+  Exit 0; decisive output: `receipts 8 ids ['D1', 'D2', 'D3', 'D5-headless', 'D6', 'R1']`; `num_turns 0 is_error False sections 3 nonempty True ERROR False`; `logs_exist True`. This validates the retained evidence structure, not a fresh runtime execution.
+
+- **[Pass] Packaging, scope and ratings remain proportionate.** `mod/hooks/hooks.json:1` names the single module; `mod/.claude-plugin/plugin.json:2`–4 matches the skill name/version. `mod/tsconfig.json:2` is only the engine-written `extends` pointer; retaining it is acceptable for this host-loaded experiment and adds no custom build or gate machinery. A standalone fresh-checkout type-check is not established by that pointer; the scratch type-check is recorded separately at `provenance.jsonl:8`, with an exitCod red control. `SKILL.md:17`–23 accurately bounds recent hosted runs and defers undriven threads; :45–68 matches hooks, error behavior and diagnostic ownership. `ARCHITECTURE.md:89` links the correct skill. `PARKED/2026-10-04-gh964-skills-index.md:3`–7 accurately captures the pre-existing index omission (source has 17 listed rows and 18 daily folders). The scoped artifacts add no suite, registry entry, runner or installer. Plan :135–138's 35/15/50/70 remains appropriate: optional time-saver, no blocked workflow, small implementation, API/interactive acceptance still experimental. Keep the rating; no expansion requested.
+
+- **[Nit] “Answers instantly” overstates latency.** `SKILL.md:14` and `CHANGELOG.md:7` say “instantly”, but `register.ts:19` awaits root resolution and :32–44 waits for the slowest reader, each bounded by 15 s. Optional wording fix: “runs immediately, even mid-turn, without a model turn; replies when the readers finish.” This is a documentation precision nit, not a requested behavioral change. The changelog's verification bullet at :16 could also link the retained receipts and name the pending interactive checks when next recording an iteration.
+
+- **[Unverified — needs clone run]** No `validate.sh`, `test/*.sh`, pytest, executable fixture, live plugin invocation, or git command was run in this turn. D4/D5 on both interactive surfaces and the keep/extend/drop decision remain operator work; post-turn harness/doc gates and exact committed-state qualification remain outside this review. The only tracked edit is this relay file; the harness owns its commit.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the post-turn gate and PR preparation while keeping operator acceptance explicitly pending.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
