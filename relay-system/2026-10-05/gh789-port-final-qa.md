@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -162,5 +162,64 @@ Handing off to Producer (claude-a) — disposition F1/F2, collect the focused cl
 - **Nit — Implemented.** SKILL.md now says "task clones that follow the GH-970 location decision are siblings of the primary", not "since GH-970".
 
 Round 2: please re-review F1/F2 and the nit.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1 and F2 are resolved by the strengthened matrix and consistent, reproducible clone receipts; the GH-970 nit is corrected. The bounded implementation matches the approved plan. This approves final QA of the seeded artifact and supplied evidence; the full harness/push gate remains pending.
+swept file: yes
+
+Re-swept the whole merge_cleanup.py and the other three runtime scripts, SKILL.md, the full matrix and new red-control script, plan, receipts and decisive log outcomes. Rechecked the two fixture sites; retain Round 1's development comparison and fixture-scope findings. No additional pre-existing source defect requiring expansion of this port was identified. No git, test suites, pytest or executable fixtures ran. Graph tier Verify: canonical project Users-noelsaw-Documents-GH-Repos-XYZ-forge, generation 2026-10-05T16:15:58Z; targeted search returned one older push_resolved_head symbol, no further page. Coverage has no recorded gaps for runtime paths but indexes the canonical checkout rather than this candidate; matrix/control-script paths are missing there. Direct candidate source reads are authoritative.
+
+- **[Pass] F1 closed — repaired-head draft skip now measures queue continuation.** The shared case creates independent #3 and optional hard dependent #4 (manual_matrix.py:379–383), observes draft #2 inside the real push boundary (:387–395), asserts #3 MERGED, #2 OPEN/no merge/unchanged remote head, retained B1 clone and named summary (:404–412), then checks exit 0 or exit 3 and no preparation/merge of #4 (:415–427). R2b witnesses the continuation assertion fail in both variants: red-controls-R2b.log:497 and :513 name the cases, with decisive output "AssertionError: 'OPEN' != 'MERGED'". Production retains the resolved attempt record (merge_cleanup.py:1017) and B1 directory while continuing (:1023–1027). No runtime fix requested.
+
+- **[Pass] F2 closed — counts and attribution agree.** red-controls.jsonl:1–8 records matrix hash ecd67904527c18fc and source SHA c611eaa3, candidate 27/27 and seven controls R0/R1/R1b/R2/R2b/R3/R4, each with run command and mutation. red_controls.py's CONTROLS block supplies the exact mutations; its main function supplies mutation/run/restore commands, including R0's four files from development 442ea913. The static probe below matches every collected count and failure set to a nonempty log. Independently recomputed R1/R2/R2b/R3/R4 mutation hashes also matched their receipts. Superseded hand runs and R4's earlier green are disclosed in provenance.jsonl:3. red-controls-candidate.log:491/:497/:499 reports 27/OK; suite-gh436.log:2046/:2048 reports 180/OK, matching provenance.jsonl:2. The plan's seven-control claim now has seven receipts.
+
+- **[Pass] Source contracts remain intact.** push_resolved_head's error/OPEN/draft/moved-head checks remain at merge_cleanup.py:354–367; only DRAFT_REFUSAL continues in its caller (:1023–1032). Draft checks remain at :905, :928, :1054 and :1088; hard dependencies stay blocked until final draft-only success accounting and summary (:880, :1130–1143). GH-851 head wait (:1034–1053), GH-852 MERGED re-query (:165–181), resume/attempt records (:957–1017), PUSH_GATE_TIMEOUT_S (:89/:648), hold-label handling (:909–912), reconciliation/durability (:1113–1124) and soft-edge cycle prevention (toposort_prs.py:135–146) remain present. CHANGELOG classification precedes writes (ledger_merge.py:500–527), preserves history (:419–460), and requires a unique base (:463–474). Stale REBASE_HEAD pruning requires affirmative readiness, an observed OID and re-inspection (scan_clones.py:1165–1247; merge_cleanup.py:1151–1163).
+
+- **[Pass] Nit closed; fixture sites and ratings remain appropriate.** SKILL.md:106 now says "task clones that follow the GH-970 location decision are siblings of the primary", accurately qualifying location guidance. The supplied fixture sites remain isDraft in test/gh534_phase_b_tests.py:78 and one extra final mocked refresh in test/gh436-merge-cleanup.py:557–558. Ratings remain reasonable under the plan's Rating rationale: 75/70/50/50 (#789, releases.sql:730) and 60/50/50/85 (#965, :805).
+
+- **[Unverified — needs clone run]** The full harness/push gate remains pending as the plan Status table states. Supplied narrow clone runs were audited, not independently executed here. A whole-branch changed-path inventory, including absence of other test additions, remains unverified in this no-git envelope as disclosed in Round 1. The supplied scripts are unregistered manual evidence.
+
+Non-mutating receipt probe, exit **0**; exact command:
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast, hashlib, json, re
+from pathlib import Path
+p=Path("TESTS-RESULTS/2026-10-05+GH-789")
+h=hashlib.sha256((p/"manual_matrix.py").read_bytes()).hexdigest()[:16]
+n=sum(isinstance(x,ast.FunctionDef) and x.name.startswith("test_") for x in ast.walk(ast.parse((p/"manual_matrix.py").read_text())))
+rows=[json.loads(x) for x in (p/"red-controls.jsonl").read_text().splitlines()]
+assert n==27 and len(rows)==8
+print("matrix:",h,"cases:",n)
+for r in rows:
+ s=(p/r["log"]).read_text()
+ f=sorted(set(re.findall(r"^(?:FAIL|ERROR): (test_\w+)",s,re.M)))
+ assert s.strip() and r["matrix_sha256"]==h
+ assert re.findall(r"Ran (\d+) tests?",s)==["27"] and f==r["failing"]
+ assert (r["exit_code"]==0 and not f) if r["id"]=="candidate" else (r["exit_code"]!=0 and f and r["red_as_expected"])
+ assert not r.get("expected_failing") or set(r["expected_failing"])<=set(f)
+ print(r["id"],"rc",r["exit_code"],"failures",len(f),"receipt/log match")
+assert re.search(r"Ran 180 tests[^\n]*\n\nOK",(p/"suite-gh436.log").read_text())
+print("gh436: 180 tests OK; static audit OK")
+PY
+```
+Decisive output:
+```text
+matrix: ecd67904527c18fc cases: 27
+candidate rc 0 failures 0 receipt/log match
+R0 rc 1 failures 26 receipt/log match
+R1 rc 1 failures 1 receipt/log match
+R1b rc 1 failures 1 receipt/log match
+R2 rc 1 failures 2 receipt/log match
+R2b rc 1 failures 2 receipt/log match
+R3 rc 1 failures 1 receipt/log match
+R4 rc 1 failures 1 receipt/log match
+gh436: 180 tests OK; static audit OK
+```
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the pending full-clone harness gate and publication workflow outside this relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
