@@ -2,9 +2,9 @@
 gh_issue: 882
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/882
 title: "GH-882: Pointer — Skills Army HQ upstream is XYZ-skills-army-mini; forge keeps a vendored copy"
-status: Active (2-WORKING — phase 1 complete; phase 2 scheduled for the 2026-10-08 audit after the #854 freeze)
+status: Complete
 created: 2026-10-01
-updated: 2026-10-01
+updated: 2026-10-04
 owner: noelsaw1
 goal: XYZ Forge consumes Skills Army HQ from XYZ-skills-army-mini, with a clear pointer and no republisher
 doc_type: feedback
@@ -16,11 +16,16 @@ phases: 2
 
 # GH-882 — Skills Army HQ upstream is XYZ-skills-army-mini
 
+> **Reversed (2026-10-03, operator, [GH-955](https://github.com/HiQS-Labs/XYZ-forge/issues/955)).** XYZ-forge is the
+> upstream for every standalone child repo again, published by one central publisher
+> (`utils/py/xyz_mini_sync.py`, skill `push-downstream`). XYZ-skills-army-mini never diverged after this
+> decision: its only commit since was a forge sync. The record below is kept as history.
+
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1: `UPSTREAM.md` added, `push-to-skills-army-mini` marked retired, #506 ledger row and doc retired | Phase 2 after 2026-10-07: remove the republisher and its suite through the 2026-10-08 audit |
+| **Reversed 2026-10-03 by [GH-955](https://github.com/HiQS-Labs/XYZ-forge/issues/955):** XYZ-forge is the Skills Army HQ upstream again. `UPSTREAM.md` deleted; the republisher is un-retired and folded into `push-downstream`; gh620 kept. Phase 2 below is **cancelled**. | Close #882 as reversed; transfer mini #4–#7 back to the forge (GH-955 closing actions) |
 
 The canonical plan and decision record live upstream on
 [XYZ-skills-army-mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2). This doc tracks the
@@ -60,3 +65,7 @@ forge side only.
 ## Merge evidence
 
 - PR #939 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #950 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
