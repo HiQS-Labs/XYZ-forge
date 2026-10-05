@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -100,5 +100,29 @@ the terminal and VS Code. Only a headless `claude -p` run is recorded for D5.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · fable
+
+VERDICT: PASS
+Basis: `register.ts` implements plan step 1 line for line inside the stated envelope (46 lines, two hooks, two calls); no input was found under the stated `$.process.run` contract where a failed reader prints as healthy or hides a sibling; the retained receipts support D1–D3, D6 and R1 and explicitly scope D5 to headless; skill, ARCHITECTURE row and CHANGELOG entry match the code; the Codex round-1 approval holds. No Blocker or Should. Approval closes this second-opinion implementation review, not the operator-owed D4/D5 or the go/no-go.
+swept file: yes
+
+Swept all 46 lines of `register.ts`, the three JSON files, all of `SKILL.md`, the parked note, all 8 `provenance.jsonl` rows, both logs, the plan, the Codex thread, `bin/tick:403`–455 and `relay-automation/marathon-ls.sh:21`. No pre-existing defects found in scope (every mod file is new on this branch; `bin/tick` / `marathon-ls.sh` are read, not touched). Read-only probes only; no `validate.sh`, `test/*`, `claude` or the mod run. Branch base confirmed: `git merge-base HEAD origin/development` → `8853cd6a…`; `git diff --stat 8853cd6a..HEAD` → 17 files, +749/−3, all GH-964.
+
+- **[Pass] Q1 — step 1 matched exactly.** Root: `register.ts:19`–22 (`git rev-parse --show-toplevel`, 15 s, `.catch(() => undefined)`, non-zero/empty → explicit "not inside a git repository" stop). Root line first: `:44` (`root: ${root}` is element 0 of the join). Repo-local readers by absolute path: `:28` (`${root}/bin/tick`), `:29` (`bash ${root}/relay-automation/marathon-ls.sh`); `gh` from PATH: `:27`. `cwd: root`, `env: { TICK_REPO_ROOT: root }`, `timeoutMs: TIMEOUT_MS` (= 15_000, `:6`): `:34`. Independent sections: `:32`–42. Nonzero / thrown / empty → `ERROR`: `:36`–40. Hooks: only `session.start` (`:9`) and `command.run{command:'xyz-status'}` (`:18`); confirmed by `d2-validate.txt:9`–10. Nothing beyond the plan.
+
+- **[Pass] Q2 — no healthy-looking failure, no cross-section masking.** Healthy requires `exitCode === 0 && out` (trimmed) at `:36`; concrete inputs `{exitCode:0, stdout:'\n'}` → `ERROR (exit 0): empty output` (`:37` fallback), `{exitCode:3, stdout:'', stderr:'tick claims: tick-dir-missing: …'}` (the real `bin/tick:412`–413 path) → `ERROR (exit 3): tick claims: tick-dir-missing: …`. Each reader's `await` sits inside its own `try` (`:33`–41), so a rejection (ENOENT, timeout) becomes that section's text and `Promise.all` at `:32` never rejects — a sibling cannot be lost. Observed: `provenance.jsonl:6` (R1 mutant: tick section `ERROR (... ENOENT ...)`, other two healthy). Note for the operator, not a change request: `bin/tick:427`–431 returns 0 with `(no claimed tasks — uninitialized coordination root: no .tick/events)` on a clone where the kernel never ran; it prints as healthy but the text self-labels, which is tick's own GH-561 contract.
+
+- **[Nit] Q2 edge — a legitimately empty `gh run list` reads as ERROR.** `gh` prints "no runs found" to stderr with exit 0 on an empty result → `:36` fails the `&& out` test → `ERROR (exit 0): no runs found` (`:37`). That is exactly what plan step 1 asks ("empty stdout → ERROR … never an empty 'nothing in flight'"), so this is conservative by design. No change requested; mention only so the operator does not read it as a mod bug on a quiet branch.
+
+- **[Pass] Q3 — receipts support D1–D3, D6, R1; D5 is not over-claimed.** `provenance.jsonl:1` D1 `2.1.289 (>= 2.1.287)`; `:2` D2 with log `d2-validate.txt:9`–12 (two hooks, two calls, "Validation passed with warnings" — the warning is the missing `author`); `:3` D3 all three rc=0 with byte counts 1107/18/3416; `:5` D6 run from `src/`, root names the clone root; `:6` R1 mutant red / restored green with `qualification: "mutation applied to a scratch copy, not the committed file"` (consistent with `SKILL.md:68` "do not commit"); `:8` type-check clean with a `exitCod` mutant caught (TS2551). D5: `provenance.jsonl:4` is labelled `D5-headless` with `qualification: "headless only; … D4, D5 … still owed"`, and `d5-headless.json:5`–6 shows `num_turns: 0`, `is_error: false`, `result` with the root line and three non-empty sections (verified: "Hosted runs" 8 rows, "tick claims" `(no claimed tasks)`, "Marathon / relay drivers" table). Plan `GH-964-CLAUDE-CODE-MODS.md:20` keeps D4/D5 and go/no-go with the operator. Minor: D3, D6 and R1 are summary rows without raw logs (Codex noted the same); acceptable for a manual checklist under GH-831.
+
+- **[Pass] Q4 — docs accurate against the code.** `SKILL.md:14` "replies when its readers finish (15 s cap each)" ↔ `register.ts:6`,`:34`; `:17`–20 reader list ↔ `:27`–29 argv verbatim (`--branch development --limit 8`, `TICK_REPO_ROOT` pinned, `marathon-ls.sh`); `:36`–38 "any subfolder works … says so if that folder is not a git repo" ↔ `:19`–22; `:45`–48 hook/call boundary ↔ `:9`,`:18`,`:10`,`:34`; `:50`–52 error shape ↔ `:36`–41. `ARCHITECTURE.md:89` row text matches `plugin.json:4`. `CHANGELOG.md:3`–17 matches (root line, three readers, read-only, failures visible, no suite). The Codex "instantly" nit is already applied: commit `34532495`, and `rg instantly skills/2-daily/xyz-mod CHANGELOG.md` → 0 matches.
+
+- **[Pass] Q5 — tsconfig.json is acceptable; Codex thread stands.** `mod/tsconfig.json:2` is a 1-line `extends` pointer to `./.claude-plugin/types/tsconfig.json`. Probe: `git check-ignore -v …/types/tsconfig.json` → `types/.gitignore:1:*` (rc=0), and `git ls-files skills/2-daily/xyz-mod` lists only the 5 intended files — so `types/` is engine-written and self-ignored, and the committed pointer dangles in a fresh clone until Claude Code loads the mod and regenerates `types/`. That is harmless (editor-only; no build or gate reads it) and keeping it avoids a dirty-tree diff after every load, so keep. Codex's thread (`gh964-final-qa.md:103`–132): every cited line re-checked and correct; its one Nit is applied; the only thing it did not mention is the dangling-pointer detail above, which changes nothing.
+
+- **[Pass] Q6 — proportionate to the envelope.** 46 lines (`register.ts:1`–46), no retries, caching, telemetry, installer, suite or registry entry anywhere in the 17 changed files (diff stat above). Nothing under-built: every plan-step-1 clause has a line. Rating 35/15/50/70 (`plan:135`–138) still matches: optional time-saver, nothing blocked, small change.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a): proceed with the post-turn gate and PR #966; D4/D5 interactive and the go/no-go remain operator work.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
