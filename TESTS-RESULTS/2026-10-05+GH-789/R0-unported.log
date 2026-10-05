@@ -1,0 +1,870 @@
+FEEEEFFFEFFFEFFEEEEEEEEEEEEEEEE.FFFFF
+======================================================================
+ERROR: test_active_rebase_or_dirty_tree_never_prunes (__main__.RebaseHeadCases.test_active_rebase_or_dirty_tree_never_prunes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 73, in test_active_rebase_or_dirty_tree_never_prunes
+    self.assertFalse(self.prepare()["landing_ready"])
+                     ~~~~~~~~~~~~^^
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 54, in prepare
+    return merge_cleanup.prepare_primary_landing(self.repo, Namespace(**args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'merge_cleanup' has no attribute 'prepare_primary_landing'. Did you mean: 'format_primary_landing'?
+
+======================================================================
+ERROR: test_compare_delete_failure_preserves_block (__main__.RebaseHeadCases.test_compare_delete_failure_preserves_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 106, in test_compare_delete_failure_preserves_block
+    self.assertFalse(self.prepare()["landing_ready"])
+                     ~~~~~~~~~~~~^^
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 54, in prepare
+    return merge_cleanup.prepare_primary_landing(self.repo, Namespace(**args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'merge_cleanup' has no attribute 'prepare_primary_landing'. Did you mean: 'format_primary_landing'?
+
+======================================================================
+ERROR: test_linked_worktree_marker_is_resolved_by_git (__main__.RebaseHeadCases.test_linked_worktree_marker_is_resolved_by_git)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 91, in test_linked_worktree_marker_is_resolved_by_git
+    self.assertEqual(info["stale_rebase_head"], head)
+                     ~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'stale_rebase_head'
+
+======================================================================
+ERROR: test_orphan_rebase_ref_is_pruned_only_for_execute_landing (__main__.RebaseHeadCases.test_orphan_rebase_ref_is_pruned_only_for_execute_landing)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 59, in test_orphan_rebase_ref_is_pruned_only_for_execute_landing
+    self.assertEqual(info["stale_rebase_head"], head)
+                     ~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'stale_rebase_head'
+
+======================================================================
+ERROR: test_draft_appearing_during_poll_never_reaches_repair (__main__.DraftCases.test_draft_appearing_during_poll_never_reaches_repair)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 155, in test_draft_appearing_during_poll_never_reaches_repair
+    self.assertEqual(self.run_main(), 0)
+                     ~~~~~~~~~~~~~^^
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/test/gh534_phase_b_tests.py", line 220, in run_main
+    rc = merge_cleanup.main()
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 1311, in main
+    rc = land_prs(ordered_prs, primary_repo, args, dry_run)
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 904, in land_prs
+    info = _await_mergeable(p_num, info, primary_repo)
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 841, in _await_mergeable
+    info = refresh_pr_with_retry(p_num, primary_repo)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/mock.py", line 1243, in _execute_mock_call
+    result = next(effect)
+StopIteration
+
+======================================================================
+ERROR: test_push_boundary_draft_is_the_named_refusal_and_never_pushes (__main__.DraftCases.test_push_boundary_draft_is_the_named_refusal_and_never_pushes)
+Codex F2 (unit): an OPEN draft at the push boundary returns DRAFT_REFUSAL, no git push.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 228, in test_push_boundary_draft_is_the_named_refusal_and_never_pushes
+    self.assertEqual((ok, why), (False, merge_cleanup.DRAFT_REFUSAL))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'merge_cleanup' has no attribute 'DRAFT_REFUSAL'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changelog\n\n## 2026-09-24 — Alpha\n\nAlpha addition.\n\n## 2026-09-24 — Alpha\n\nAlpha addition.\n\n## 2026-09-01 — base\n\nKeep these exact bytes.\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changed\n\n## 2026-09-24 — Alpha\n\nAlpha addition.\n\n## 2026-09-01 — base\n\nKeep these exact bytes.\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changelog\n\n## 2026-09-24 — Alpha\n\nAlpha addition.\n\n## 2026-09-01 — base\n\nKeep these changed bytes.\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changelog\n\n## 2026-09-24 — Alpha\n\nAlpha addition.\n\n## 2026-09-01 — base\n\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changelog\n\n## 2026-99-99 — Alpha\n\nAlpha addition.\n\n## 2026-09-01 — base\n\nKeep these exact bytes.\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changelog\n\n## not a date\nbody\n## 2026-09-01 — base\n\nKeep these exact bytes.\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changelog\n\n## 2026-09-24 — Empty\n\n## 2026-09-01 — base\n\nKeep these exact bytes.\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='# Changelog\n\n## 2026-09-24 — Alpha\n\n<<<<<<< ours\n\n## 2026-09-01 — base\n\nKeep these exact bytes.\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected) (text='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 274, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.b), text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_ambiguous_or_modified_history_is_rejected (__main__.ChangelogUnitCases.test_ambiguous_or_modified_history_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 276, in test_ambiguous_or_modified_history_is_rejected
+    ledger_merge.union_changelog(self.base, self.prepend(self.a), self.prepend(self.a.replace("Alpha addition.", "Other body.")))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_fenced_or_html_heading_is_not_sorted_as_an_entry (__main__.ChangelogUnitCases.test_fenced_or_html_heading_is_not_sorted_as_an_entry) (opening='```markdown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 282, in test_fenced_or_html_heading_is_not_sorted_as_an_entry
+    ledger_merge.union_changelog(self.base, self.prepend(addition), self.prepend(self.b))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_fenced_or_html_heading_is_not_sorted_as_an_entry (__main__.ChangelogUnitCases.test_fenced_or_html_heading_is_not_sorted_as_an_entry) (opening='~~~markdown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 282, in test_fenced_or_html_heading_is_not_sorted_as_an_entry
+    ledger_merge.union_changelog(self.base, self.prepend(addition), self.prepend(self.b))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_fenced_or_html_heading_is_not_sorted_as_an_entry (__main__.ChangelogUnitCases.test_fenced_or_html_heading_is_not_sorted_as_an_entry) (opening='<!--')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 282, in test_fenced_or_html_heading_is_not_sorted_as_an_entry
+    ledger_merge.union_changelog(self.base, self.prepend(addition), self.prepend(self.b))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_fenced_or_html_heading_is_not_sorted_as_an_entry (__main__.ChangelogUnitCases.test_fenced_or_html_heading_is_not_sorted_as_an_entry) (opening='Example <!--')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 282, in test_fenced_or_html_heading_is_not_sorted_as_an_entry
+    ledger_merge.union_changelog(self.base, self.prepend(addition), self.prepend(self.b))
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_reordered_base_sections_are_rejected (__main__.ChangelogUnitCases.test_reordered_base_sections_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 290, in test_reordered_base_sections_are_rejected
+    ledger_merge.union_changelog(base, ours, theirs)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+ERROR: test_same_date_additions_preserve_history_and_deduplicate (__main__.ChangelogUnitCases.test_same_date_additions_preserve_history_and_deduplicate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 259, in test_same_date_additions_preserve_history_and_deduplicate
+    result = ledger_merge.union_changelog(self.base, self.prepend(self.a), self.prepend(self.b + self.a))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'ledger_merge' has no attribute 'union_changelog'
+
+======================================================================
+FAIL: test_active_rebase_directory_without_head_is_blocked (__main__.RebaseHeadCases.test_active_rebase_directory_without_head_is_blocked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 82, in test_active_rebase_directory_without_head_is_blocked
+    self.assertFalse(inspect_primary_landing(self.repo)["landing_ready"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_changed_head_after_gate_is_not_merged (__main__.DraftCases.test_changed_head_after_gate_is_not_merged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 184, in test_changed_head_after_gate_is_not_merged
+    self.assertEqual(self.run_main(), 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 2
+
+======================================================================
+FAIL: test_collision_cycle_never_bypasses_draft_prerequisite (__main__.DraftCases.test_collision_cycle_never_bypasses_draft_prerequisite)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 201, in test_collision_cycle_never_bypasses_draft_prerequisite
+    self.assertLess(order.index(3), order.index(1), "soft edges defeated hard dependency order")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 not less than 0 : soft edges defeated hard dependency order
+
+======================================================================
+FAIL: test_draft_appearing_after_gate_never_reaches_merge_api (__main__.DraftCases.test_draft_appearing_after_gate_never_reaches_merge_api)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 169, in test_draft_appearing_after_gate_never_reaches_merge_api
+    self.assertFalse(any(c[:2] == ["pr", "merge"] for c in self.load()["calls"]))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_draft_blocks_hard_dependent_but_independent_lands (__main__.DraftCases.test_draft_blocks_hard_dependent_but_independent_lands)
+Codex F1 (f2): hard dependent of a draft is never attempted; independent lands; exit 3.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 138, in test_draft_blocks_hard_dependent_but_independent_lands
+    self.assertEqual(self.run_main(), 3)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 3
+
+======================================================================
+FAIL: test_f1_draft_and_independent_exit_zero_one_merge_draft_named (__main__.DraftCases.test_f1_draft_and_independent_exit_zero_one_merge_draft_named)
+Codex F1 (f1): draft + independent → exit 0, exactly one merge, draft named in summary.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 127, in test_f1_draft_and_independent_exit_zero_one_merge_draft_named
+    self.assertEqual([c[2] for c in st["calls"] if c[:2] == ["pr", "merge"]], ["3"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['1', '3'] != ['3']
+
+First differing element 0:
+'1'
+'3'
+
+First list contains 1 additional elements.
+First extra element 1:
+'3'
+
+- ['1', '3']
++ ['3']
+
+======================================================================
+FAIL: test_phase4_table_shows_draft_cells (__main__.DraftCases.test_phase4_table_shows_draft_cells)
+GH-965: the Phase 4 table has a Draft column, yes/no per PR.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 244, in test_phase4_table_shows_draft_cells
+    self.assertIn("| Draft |", rows[0])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '| Draft |' not found in '| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |'
+
+======================================================================
+FAIL: test_soft_collisions_without_hard_dependency_do_not_block (__main__.DraftCases.test_soft_collisions_without_hard_dependency_do_not_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 210, in test_soft_collisions_without_hard_dependency_do_not_block
+    self.assertEqual([self.load()["prs"][str(n)]["state"] for n in (1, 2, 3)], ["MERGED", "MERGED", "OPEN"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['MERGED', 'MERGED', 'MERGED'] != ['MERGED', 'MERGED', 'OPEN']
+
+First differing element 2:
+'MERGED'
+'OPEN'
+
+- ['MERGED', 'MERGED', 'MERGED']
+?                       ^ ^^^^
+
++ ['MERGED', 'MERGED', 'OPEN']
+?                       ^^ ^
+
+
+======================================================================
+FAIL: test_true_hard_cycle_never_merges_numerical_fallback (__main__.DraftCases.test_true_hard_cycle_never_merges_numerical_fallback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 219, in test_true_hard_cycle_never_merges_numerical_fallback
+    self.assertEqual(self.run_main(), 3)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 3
+
+======================================================================
+FAIL: test_changelog_only_conflict_and_dry_run (__main__.ChangelogMergeCases.test_changelog_only_conflict_and_dry_run)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 333, in test_changelog_only_conflict_and_dry_run
+    self.assertIn("DRY RUN", result["reason"])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'DRY RUN' not found in 'code/doc conflict outside the ledger set: CHANGELOG.md'
+
+======================================================================
+FAIL: test_draft_after_repaired_push_is_skipped (__main__.ChangelogMergeCases.test_draft_after_repaired_push_is_skipped)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 392, in test_draft_after_repaired_push_is_skipped
+    self.assertEqual(self.run_main(), 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3 != 0
+
+======================================================================
+FAIL: test_draft_at_repaired_push_is_skipped_and_independent_lands (__main__.ChangelogMergeCases.test_draft_at_repaired_push_is_skipped_and_independent_lands)
+Codex F2 (integration): draft observed at the push boundary after B1 → zero push and merge
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 376, in test_draft_at_repaired_push_is_skipped_and_independent_lands
+    self.assertEqual(rc, 0, out.getvalue()[-2000:])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3 != 0 :  CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ofwoikpj/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | PASS | CONFLICTING | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ofwoikpj/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ofwoikpj/primary/.tick/merge-cleanup/gh534b.ofwoikpj-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head c59d9a6694)
+merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-thlyl1q7
+
+
+======================================================================
+FAIL: test_ledger_plus_changelog_resolves_without_loss (__main__.ChangelogMergeCases.test_ledger_plus_changelog_resolves_without_loss)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 319, in test_ledger_plus_changelog_resolves_without_loss
+    self.assertTrue(result["resolved"], result)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : {'resolved': False, 'handoff': True, 'reason': 'code/doc conflict outside the ledger set: CHANGELOG.md', 'log': [], 'commit': None, 'conflict_set': ['CHANGELOG.md', 'releases.db', 'releases.sql']}
+
+======================================================================
+FAIL: test_repaired_changelog_reaches_landed_outcome (__main__.ChangelogMergeCases.test_repaired_changelog_reaches_landed_outcome)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~/Documents/GH Repos/XYZ-forge-gh789-port-gate/TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py", line 348, in test_repaired_changelog_reaches_landed_outcome
+    self.assertEqual(self.run_main(), 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3 != 0
+
+----------------------------------------------------------------------
+Ran 25 tests in 64.199s
+
+FAILED (failures=14, errors=22)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.hxhs2waw/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.hxhs2waw/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.hxhs2waw/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on 5c6f6fb230 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as bc9369286d
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.hxhs2waw/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h5ox42cl/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h5ox42cl/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h5ox42cl/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on 1341d95982 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as fc3eaa1eee
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h5ox42cl/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.3cfg4bvt/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.3cfg4bvt/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.3cfg4bvt/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (1/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (2/6)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.meljwrfq/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.meljwrfq/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (3 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/1` | `development` | PASS | MERGEABLE | 0 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/2` | `development` | PASS | MERGEABLE | 0 |
+| 3 | [#3](https://example.invalid/pr/3) | PR 3 | `feat/3` | `development` | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.meljwrfq/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on 88aea45511 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as 15ec0b9d72
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.meljwrfq/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #2: pre-merge ledger gate green on df98664d62 + origin/development
+merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
+merge-cleanup: ✅ PR #2 is MERGED as 6505526635
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.meljwrfq/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #3: pre-merge ledger gate green on 63a5ad0db4 + origin/development
+merge-cleanup: Merging PR #3 via `gh pr merge 3 --squash --delete-branch`...
+merge-cleanup: ✅ PR #3 is MERGED as 6f4ab54c0f
+merge-cleanup: Running post-merge reconciliation for PR #3 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.meljwrfq/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #3 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.imi8_aou/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.imi8_aou/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (3 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/1` | `development` | PASS | MERGEABLE | 1 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/2` | `development` | PASS | MERGEABLE | 2 |
+| 3 | [#3](https://example.invalid/pr/3) | PR 3 | `feat/3` | `development` | PASS | MERGEABLE | 1 |
+
+Ordering Notes:
+  - File collision on 1 file(s) between PR #1 and PR #2 — ordering #1 before #2
+  - File collision on 1 file(s) between PR #2 and PR #3 — ordering #2 before #3
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.imi8_aou/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on 5df0295b7c + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as d752c4fe53
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.imi8_aou/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #2: pre-merge ledger gate green on 1b58a957b7 + origin/development
+merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
+merge-cleanup: ✅ PR #2 is MERGED as 1b410cb0ab
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.imi8_aou/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #3: pre-merge ledger gate green on af5291b474 + origin/development
+merge-cleanup: Merging PR #3 via `gh pr merge 3 --squash --delete-branch`...
+merge-cleanup: ✅ PR #3 is MERGED as 29be6dfeea
+merge-cleanup: Running post-merge reconciliation for PR #3 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.imi8_aou/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #3 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.zzif8423/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.zzif8423/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (3 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/1` | `development` | PASS | MERGEABLE | 1 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/2` | `development` | PASS | MERGEABLE | 2 |
+| 3 | [#3](https://example.invalid/pr/3) | PR 3 | `feat/3` | `development` | PASS | MERGEABLE | 1 |
+
+Ordering Notes:
+  - File collision on 1 file(s) between PR #2 and PR #3 — ordering #2 before #3
+  - Cycle or unresolved dependency detected among PRs: [1, 2, 3]. Appending in numerical order.
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.zzif8423/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on 50c5612864 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as 275e824578
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.zzif8423/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #2: pre-merge ledger gate green on c66bd9e719 + origin/development
+merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
+merge-cleanup: ✅ PR #2 is MERGED as 6770386913
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.zzif8423/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup: PR #3: pre-merge ledger gate green on 78e0ffbb69 + origin/development
+merge-cleanup: Merging PR #3 via `gh pr merge 3 --squash --delete-branch`...
+merge-cleanup: ✅ PR #3 is MERGED as 83abf2a7c5
+merge-cleanup: Running post-merge reconciliation for PR #3 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.zzif8423/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #3 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.7096z86j/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.7096z86j/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | PASS | CONFLICTING | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.7096z86j/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.7096z86j/primary/.tick/merge-cleanup/gh534b.7096z86j-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head 6d3f609a96)
+merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-_j28_yhn
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.dr70shcc/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.dr70shcc/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|
+| 1 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | PASS | CONFLICTING | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.dr70shcc/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.dr70shcc/primary/.tick/merge-cleanup/gh534b.dr70shcc-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head d48b301b9e)
+merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-a83ukhme
+RESULT: FAIL (25 cases)

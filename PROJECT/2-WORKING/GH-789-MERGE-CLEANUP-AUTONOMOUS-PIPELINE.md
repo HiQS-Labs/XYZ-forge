@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA round 1: FAIL with F1–F3 + nit F4 (exit-code split, draft at push boundary, evidence coverage) — all implemented below. | Codex plan QA round 2, then port. |
+| Plan approved (Codex round 2). Port built (57634c6f, d62d72e1): conflicts resolved, push-boundary draft skip, Draft column, merge-cleanup wording fix (GH-970 parked nit). Matrix 26/26 green; 7 red controls each fail their case; existing gh436 suite green. | Codex final QA, then full-gate push and PR. |
 
 ## Why this is a port
 
