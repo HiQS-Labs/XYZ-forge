@@ -1,0 +1,74 @@
+== test: gh478-runaway-guard ==
+== 1. fast command: rc and stdout pass through untouched (red control) ==
+  PASS: run_with_timeout returns 0 on a fast command
+  PASS: stdout passes through
+  PASS: child's own exit code propagates (7)
+== 2. hung child: capped at the group, rc 124, wall clock bounded ==
+  PASS: hung child capped with rc 124
+  PASS: wall clock bounded (1s for a 1s cap)
+  PASS: timeout message names the cap override
+== 3. TERM-resistant grandchild cannot outlive the group kill (gh369 shape) ==
+  PASS: leader capped with rc 124
+  PASS: TERM-resistant grandchild (23550) is dead — the group kill reached it
+== 4. LEADER-LESS group: leader exits normally, TERM-resistant descendant remains ==
+runaway-guard: reaping surviving child group 25579
+  PASS: green suite with a leader-less surviving group exits 1
+  PASS: TERM-resistant descendant of the exited leader is dead — the EXIT reaper reached it
+== 5. reaper kills a tracked survivor and announces it ==
+  PASS: reap reports that it had to kill
+  PASS: kill announced with the group id
+  PASS: tracked survivor is dead after reap
+== 6. clean-exit child: reap is a no-op, no failure signal ==
+  PASS: cleanly-exited group sets no failure signal
+  PASS: no reap noise for a clean child
+  PASS: no tracked group survives its own completion (dead entries forgotten)
+== 7. composed EXIT trap: status-preserving, owner cleanup always runs ==
+runaway-guard: reaping surviving child group 28443
+  PASS: green-but-reaped exits 1 (reaped child is a failure, loudly)
+  PASS: owner cleanup ran on the reaped-green path
+  PASS: the suite's own failure status is preserved (3)
+  PASS: owner cleanup ran on the failing path
+== 8. init refuses to steal a suite-owned EXIT trap, installs when free ==
+  PASS: init refuses when the suite owns the EXIT trap
+  PASS: init installs the composed trap when no EXIT trap exists
+== 9. env override: ATE_WATCHDOG_TIMEOUT carries the cap ==
+  PASS: 1s override cap stops a hung child (env contract)
+== 10. witnessed mutation: timeout disabled → the cap case goes red ==
+  PASS: mutant (timeout disabled) went red or was emergency-capped — never silently green (rc=0)
+  PASS: the red control leaked no child group (unique sleeper gone)
+== 11. static assertion: the bash lib owns NO kill implementation ==
+  PASS: bash lib only probes (kill -0); killing stays in proc_group.py --kill-pgid
+== 11. sweep: token-aware match, dry run signals nothing ==
+  PASS: ate_runaway_sweep.py exists and is executable
+  PASS: dry run lists the real ATE shape (age 0)
+  PASS: spaced python -c import shape (the incident shape) is listed
+  PASS: near-match and bare-substring processes are never listed
+  PASS: dry run left the candidate alive
+== 12. non-python interpreter before -c is refused (shape B interpreter gate) ==
+  PASS: shape B requires a python-ish interpreter before -c
+== 13. sweep --kill: TERM stops a cooperative target (--limit-pids containment) ==
+test/gh478-runaway-guard.sh: line 358: 37760 Terminated: 15          python3 "$WORK/ok/adaptive_ate.py"
+  PASS: cooperative candidate stopped by --kill
+== 13. sweep --kill escalates to SIGKILL on a TERM-resistant target ==
+test/gh478-runaway-guard.sh: line 368: 37763 Terminated: 15          python3 "$WORK/near/my_adaptive_ate.py"
+test/gh478-runaway-guard.sh: line 378: 39623 Killed: 9               python3 "$WORK/resist/adaptive_ate.py"
+  PASS: TERM-resistant candidate killed after the grace window
+  PASS: escalation waited out the configured grace
+  PASS: escalation logged
+== 14. age gate: a young candidate above --max-age-minutes is not touched ==
+  PASS: age gate holds (etime < 1m excluded)
+  PASS: young candidate untouched
+== 15. sweep never lists itself or its ancestors ==
+test/gh478-runaway-guard.sh: line 403: 41997 Terminated: 15          python3 "$WORK/ok/adaptive_ate.py"
+  PASS: self/ancestor exclusion holds
+== 16. witnessed matcher mutations → red (baseline: GH-478-negative-control.md) ==
+  PASS: broadened matcher caught by the near-match control (red witnessed)
+test/gh478-runaway-guard.sh: line 421: 42605 Terminated: 15          python3 "$WORK/near/my_adaptive_ate.py"
+  PASS: narrowed matcher caught by the signature control (red witnessed)
+== 18. pgid publication fails CLOSED, never open ==
+test/gh478-runaway-guard.sh: line 442: 43049 Terminated: 15          python3 "$WORK/ok/adaptive_ate.py"
+  PASS: proc_group kills the just-started group when pgid publication fails (rc 125)
+  PASS: run_with_timeout refuses (rc 2) when the pgid scratch file cannot be created
+== 17. identity recheck: lstart is load-bearing, containment alone never suffices ==
+  PASS: identity = uid+lstart exact; command containment alone never signals
+gh478-runaway-guard: 43 passed, 0 failed

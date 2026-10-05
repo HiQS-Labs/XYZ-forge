@@ -1,0 +1,152 @@
+import os,sys,json,tempfile,subprocess,time,copy,shlex
+from pathlib import Path
+from datetime import datetime,timezone
+from unittest.mock import patch
+ROOT=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge-task-gh947-20261003')
+PIN=Path('/tmp/hiqs-gh4-consumer-pin-20261003')
+sys.path.insert(0,str(ROOT/'utils/py'))
+import profile_resolve as p, claude_cli as c
+from proc_group import run_bounded
+vector=json.loads((PIN/'fixtures/synthetic/consumer-v2.json').read_text())
+class Clock(datetime):
+    instant=datetime(2026,9,15,tzinfo=timezone.utc)
+    @classmethod
+    def now(cls,tz=None): return cls.instant
+
+with tempfile.TemporaryDirectory(prefix='gh947-controls-') as td:
+ d=Path(td); repo=d/'foreign'; repo.mkdir()
+ for args in (['init','-q'],['config','user.name','Fixture'],['config','user.email','fixture@example.invalid']):
+  subprocess.run(['git',*args],cwd=repo,check=True,capture_output=True)
+ (repo/'README.md').write_text('Synthetic offline fixture\n')
+ subprocess.run(['git','add','README.md'],cwd=repo,check=True)
+ subprocess.run(['git','commit','-qm','fixture'],cwd=repo,check=True)
+ req=vector['request']
+ for name,val in [('snapshot',req['snapshot']),('policy',req['input']['policy']),('config',req['executionConfig'])]:
+  (d/(name+'.json')).write_text(json.dumps(val))
+ cli=d/'claude'
+ cli.write_text('#!/bin/sh\nexec '+shlex.quote(sys.executable)+' '+shlex.quote(str(cli)+'.py')+' "$@"\n')
+ cli.chmod(0o755)
+ Path(str(cli)+'.py').write_text('''import sys,json,os
+if sys.argv[1:]==['--version']: print(os.getenv('STUB_VERSION','2.1.248')+' (Claude Code)')
+elif sys.argv[-2:]==['auth','status']: print(json.dumps(dict(loggedIn=True,authMethod='claude.ai',apiProvider='firstParty',subscriptionType=os.getenv('STUB_PLAN','max'))))
+else:
+ with open(os.environ['STUB_CALLS'],'a') as f: f.write(json.dumps(sys.argv[1:])+'\\n')
+ model=os.getenv('STUB_MODEL',os.environ['CLAUDE_MODEL'])
+ print(json.dumps(dict(type='result',is_error=False,subtype='success',result='README.md:1 synthetic fixture',modelUsage={model:{}})))
+''')
+ revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=PIN,text=True).strip()
+ body={'source':'hiqs','recipeRef':req['input']['recipeRef'], 'runner':{'checkout':str(PIN),'revision':revision,'node':'/Users/noelsaw/.local/bin/node'},
+       'snapshotPath':str(d/'snapshot.json'),'snapshotPolicy':req['snapshotPolicy'],'policyPath':str(d/'policy.json'),'executionConfigPath':str(d/'config.json')}
+ config_path=d/'device.json'; config_path.write_text(json.dumps({'profiles':{'pilot':body}}))
+ env={'PATH':os.environ['PATH'],'CLAUDE_BIN':str(cli),'XYZ_DEVICE_CONFIG_PATH':str(config_path),
+      'XYZ_HARNESS_LOGGING':'0','XYZ_WRITE_OPS_LOG':'0','CONSULT_ROOT':str(repo),'CONSULT_TIMEOUT':'20','CONSULT_IDLE_S':'0','STUB_CALLS':str(d/'calls.jsonl')}
+ os.chdir(repo)
+ checks=[]; counts=[]; receipts=[]
+ original=p.run_bounded
+ def tracked(argv,**kwargs):
+  if argv[-1]=='resolve-request': counts.append(1)
+  return original(argv,**kwargs)
+ with patch.dict(os.environ,env,clear=True), patch.object(p,'datetime',Clock), patch.object(c,'datetime',Clock), patch.object(p,'run_bounded',tracked):
+  timings=[]
+  for _ in range(2):
+   start=time.monotonic(); res=p.resolve('hiqs:pilot',str(ROOT)); timings.append(round((time.monotonic()-start)*1000,3))
+   assert not res['problems'],res
+   text,rc=p.emit_env(res,str(ROOT)); assert rc==0 and 'RELAY_AGENT_CMD=' not in text
+   receipts.append(res['admission'])
+  checks.append('two real pinned HiQS subprocess admissions from foreign cwd: PASS')
+  assert len(counts)==2
+  admitted=json.load(open(res['admission'])); native=dict(env,**res['exports'],XYZ_HIQS_ADMISSION=res['admission'])
+  c.admission_preflight(str(cli),native,str(repo)); c.admission_preflight(str(cli),native,str(repo))
+  assert len(counts)==2
+  checks.append('two guarded turns reuse admission without a new resolver: PASS')
+  real_preflight=c.preflight
+  def crosses_expiry(*args,**kwargs):
+   real_preflight(*args,**kwargs); Clock.instant=datetime(2026,10,1,tzinfo=timezone.utc)
+  with patch.object(c,'preflight',crosses_expiry):
+   try: c.admission_preflight(str(cli),native,str(repo)); raise AssertionError('probe crossed expiry allowed')
+   except ValueError: pass
+  assert not (d/'calls.jsonl').exists()
+  checks.append('expiry crossed during auth preflight refuses before dispatch: PASS')
+  Clock.instant=datetime(2026,9,15,tzinfo=timezone.utc)
+
+  Clock.instant=datetime(2026,10,1,tzinfo=timezone.utc)
+  try: c.admission_preflight(str(cli),native,str(repo)); raise AssertionError('expiry allowed')
+  except ValueError: pass
+  assert len(counts)==2 and not (d/'calls.jsonl').exists()
+  checks.append('expiry boundary refuses with zero worker dispatch and no resolver retry: PASS')
+  Clock.instant=datetime(2026,9,15,tzinfo=timezone.utc)
+  mutations=[('missing profile',lambda: p.resolve('hiqs:absent',str(ROOT))),
+             ('ambient manual',lambda: p.resolve('hiqs:pilot',str(ROOT)))]
+  for label,fn in mutations:
+   with patch.dict(os.environ,{'CLAUDE_MODEL':'other','CLAUDE_AGENT':'claude'} if label=='ambient manual' else {}):
+    bad=fn(); output,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and output==''
+   checks.append(label+' refuses no exports: PASS')
+  for label,key,value in [('tampered digest','snapshotPolicy',{**body['snapshotPolicy'],'digest':'0'*64}),('missing recipe','recipeRef','recipe:fixture/missing@r1'),('old runner pin','runner',{**body['runner'],'revision':'0'*40})]:
+   changed={**body,key:value}; config_path.write_text(json.dumps({'profiles':{'pilot':changed}}))
+   bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+   checks.append(label+' refuses: PASS')
+  config_path.write_text(json.dumps({'profiles':{'pilot':body}}))
+  denied_policy=copy.deepcopy(req['input']['policy']); denied_policy['deny']=[body['recipeRef']]
+  (d/'policy.json').write_text(json.dumps(denied_policy))
+  bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+  (d/'policy.json').write_text(json.dumps(req['input']['policy']))
+  checks.append('exact recipe policy denial refuses: PASS')
+  unknown_policy={**req['input']['policy'],'unsupportedConstraint':{'deny':[body['recipeRef']]}}
+  (d/'policy.json').write_text(json.dumps(unknown_policy))
+  bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+  (d/'policy.json').write_text(json.dumps(req['input']['policy']))
+  checks.append('unknown policy constraint cannot be stripped silently: PASS')
+
+  config_path.write_text('{malformed')
+  bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+  config_path.write_text(json.dumps({'profiles':{'pilot':body}}))
+  checks.append('malformed device config refuses explicit HiQS selection: PASS')
+  for label,overrides in [('build',{'STUB_VERSION':'2.1.247'}),('provider',{'ANTHROPIC_BASE_URL':'https://invalid.example'}),('managed account',{'STUB_PLAN':'team'})]:
+   with patch.dict(os.environ,overrides):
+    bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+   checks.append(label+' mismatch refuses: PASS')
+  for key,value in [('effort','max'),('unexpectedFlags',['--dangerously-skip-permissions'])]:
+   (d/'config.json').write_text(json.dumps({**req['executionConfig'],key:value}))
+   bad=p.resolve('hiqs:pilot',str(ROOT)); out,rc=p.emit_env(bad,str(ROOT)); assert rc!=0 and out==''
+  (d/'config.json').write_text(json.dumps(req['executionConfig']))
+  checks.append('changed effort / unknown config field refuses: PASS')
+  # A pinned old protocol cannot acknowledge exact selection, even if its recipe matches.
+  malformed=copy.deepcopy(admitted); malformed['response']['protocolVersion']='1'
+  try: c.validate_admission(malformed,native,str(repo)); raise AssertionError('old protocol accepted')
+  except ValueError: pass
+  checks.append('old protocol coincidentally matching selected ref refused: PASS')
+  # Provider-free actual consult argv with ephemeral test clock; no production clock knob.
+  site=d/'sitecustomize.py'
+  site.write_text('from datetime import datetime,timezone\nimport claude_cli,profile_resolve\nclass Clock(datetime):\n @classmethod\n def now(cls,tz=None): return datetime(2026,9,15,tzinfo=timezone.utc)\nclaude_cli.datetime=Clock\nprofile_resolve.datetime=Clock\n')
+  native['PYTHONPATH']=str(d)+os.pathsep+str(ROOT/'utils/py')
+  run=subprocess.run([sys.executable,str(ROOT/'utils/py/consult.py'),'--models','claude','--prompt','Read README.md','--out',str(d/'consult')],cwd=repo,env=native,capture_output=True,text=True,timeout=30)
+  assert run.returncode==0,run.stdout+run.stderr
+  argv=json.loads((d/'calls.jsonl').read_text().splitlines()[0])
+  expected={'--model':req['executionConfig']['model'],'--effort':'high','--output-format':'json','--max-turns':'12','--max-budget-usd':'0.50','--tools':'Read,Grep,Glob','--allowedTools':'Read,Grep,Glob'}
+  assert all(argv[argv.index(k)+1]==v for k,v in expected.items()),argv
+  assert '--restricted' in argv and '--strict-mcp-config' in argv
+  checks.append('actual consult argv model/effort/tools/limits/restrictions and modelUsage result: PASS')
+  native['STUB_MODEL']='claude-other'
+  wrong=subprocess.run([sys.executable,str(ROOT/'utils/py/consult.py'),'--models','claude','--prompt','Read README.md','--out',str(d/'wrong')],cwd=repo,env=native,capture_output=True,text=True,timeout=30)
+  assert wrong.returncode==5,wrong.stdout+wrong.stderr
+  checks.append('different actual modelUsage fails result qualification: PASS')
+  denied=subprocess.run([sys.executable,str(ROOT/'utils/py/claude-turn.py')],cwd=repo,env=native,capture_output=True,text=True,timeout=5)
+  assert denied.returncode==2 and 'no relay token claimed' in denied.stderr
+  assert not (repo/'.tick').exists()
+  checks.append('unsupported Claude relay path refuses before token claim: PASS')
+  # Copy only the existing portable modules + source lane discovery as a vendored context.
+  vendor=d/'.xyz'; (vendor/'utils/py').mkdir(parents=True)
+  import shutil
+  for f in (ROOT/'utils/py').glob('*.py'): shutil.copyfile(f,vendor/'utils/py'/f.name)
+  vendor_env=dict(env,PYTHONPATH=str(d)+os.pathsep+str(vendor/'utils/py'))
+  command="import os,json,profile_resolve as p; r=p.resolve('hiqs:pilot',"+repr(str(vendor))+"); assert not r['problems'],r; print(json.dumps({'module':p.__file__,'admission':r['admission']}))"
+  vr=subprocess.run([sys.executable,'-c',command],env=vendor_env,cwd=repo,capture_output=True,text=True,timeout=30)
+  assert vr.returncode==0,vr.stdout+vr.stderr
+  vendored=json.loads(vr.stdout); assert vendored['module'].startswith(str(vendor))
+  receipts.append(vendored['admission']); checks.append('actual copied vendored module import and foreign cwd admission: PASS')
+  # An unmatched legacy preference must not clear an active recipe guard implicitly.
+  floor=p.resolve(None,str(ROOT)); output,rc=p.emit_env(floor,str(ROOT))
+  assert rc==0 and 'unset XYZ_HIQS_ADMISSION' not in output
+  checks.append('legacy floor preserves an active recipe guard; explicit legacy selection can clear it: PASS')
+ print(json.dumps({'synthetic':True,'runner_revision':revision,'cold_warm_admission_ms':timings,'positive_admission_resolver_subprocesses':2,'checks':checks},indent=2))
+ for receipt in receipts: Path(receipt).unlink(missing_ok=True)

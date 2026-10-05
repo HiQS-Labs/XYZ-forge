@@ -287,7 +287,8 @@ reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row (n
 If a profile exists for the model you want, the whole env block below collapses to one call:
 
 ```bash
-eval "$(relay-automation/resolve-profile.sh 'glm 5.3 max' --env)"
+profile_env="$(relay-automation/resolve-profile.sh 'glm 5.3 max' --env)" || exit "$?"
+eval "$profile_env" || exit "$?"
 ALLOW_PATHS="" relay-automation/relay-drive.sh \
   --relay-file "$RELAY" --relay-task "$TASK" \
   --agent-cmd "$RELAY_AGENT_CMD" --reviewer "$RELAY_REVIEWER" --review-once
@@ -314,7 +315,7 @@ Name matching is fuzzy (it reuses `resolve-model-alias.sh`), so `GLM5.3 max`, `g
 `max glm 5.3` are one entry. `--list` shows every profile and flags broken ones; `--explain` says
 which tier answered.
 
-**This never blocks a turn.** A missing config, malformed JSON, or an unmatched name falls through
+**Literal profiles never block a turn.** A missing config, malformed JSON, or an unmatched name falls through
 to the shims' own defaults — the tables below — and says why on stderr. An explicit `*_AGENT` +
 `*_MODEL` already in the environment always wins and is never second-guessed.
 
@@ -698,3 +699,43 @@ Write your verdict below and change the STATUS to Approved/Closed if it passes.
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 ```
+
+
+## Optional HiQS exact recipe admission (GH-947)
+
+Literal profiles remain independent. A profile with `source: hiqs` is an explicit
+constraint: use its exact name or `hiqs:NAME`; refusal returns nonzero with no exports.
+It supports only `consult.sh --models claude` advisory calls, not relay gate reviewer or
+builder admission. For example:
+
+```bash
+profile_env="$(relay-automation/resolve-profile.sh 'hiqs:my-recipe' --env)" || exit "$?"
+eval "$profile_env" || exit "$?"
+relay-automation/consult.sh --models claude --prompt-file /absolute/review-prompt.md
+```
+
+In the device `profiles` block, that entry contains only `source`, `recipeRef`, `runner`
+(`checkout`, immutable 40-hex `revision`, absolute installed `node`), `snapshotPath`,
+`snapshotPolicy` (`digest`, `registryId`, `allowedTrustStatuses`, `maxAgeMs`), `policyPath`,
+and `executionConfigPath`. All file references are absolute per-device paths. The config
+file is the complete `xyz.claude-advisory.v1` preimage documented in the GH947 plan and
+HiQS consumer protocol. No generic flags, API keys, endpoints or device paths go into
+public recipes. Setup installs frozen dependencies once in a trusted immutable HiQS
+checkout; admission uses its installed tsx directly without installation or network.
+
+Snapshot/policy/config sources are explicitly maintained and pinned. Validate a candidate
+before atomic activation; preserve the active file if setup validation fails. No automatic
+refresh occurs. HiQS makes one decision per admission; every advisory call locally checks
+retained inputs, current expiry, exact installed Claude build and personal first-party
+subscription auth. Unsupported provider, managed settings, build, config, or response
+model metadata refuses; output model metadata is required for a qualified result.
+
+`XYZ_HIQS_ADMISSION` names a private nonsecret retained request/response/lock receipt.
+Keep it for replay, remove that file explicitly after the run, and unset the variable.
+A receipt is not an execution grant or proof of availability. The initial implementation
+is dependency-blocked: PR29 publication defects, maintained full-combination recipe and
+live subscription pilot remain required before claiming real Fable support.
+
+Native restrictions and managed precedence: [Claude CLI reference](https://code.claude.com/docs/en/cli-reference)
+and [managed settings](https://code.claude.com/docs/en/managed-settings). The pilot requires
+Claude Code 2.1.248 or later and refuses managed policy rather than assuming flags bypass it.

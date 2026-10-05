@@ -1,0 +1,17 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/agent-workspaces/xyz-forge-pr954-qa-20261005) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.z0pkuZ)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.z0pkuZ) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.z0pkuZ) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/agent-workspaces/xyz-forge-pr954-qa-20261005/relay-system/2026-10-05/gh947-refreshed-agy.md
+agy-turn: relay block structural validation failed (exit 8):
+VERDICT: line is missing
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 2m 36s
+per done-task: n/a (0 tasks done)
+  turn peak RSS: agy: 163MB peak RSS
+

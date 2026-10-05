@@ -1,0 +1,13 @@
+{
+  "kind": "obsolete candidate gate; not final qualification",
+  "exit_code": 0,
+  "recorded_at": "2026-10-03T08:31:08.505097+00:00",
+  "clone": "/private/tmp/xyz-gh947-qualify-20261003",
+  "source_sha": "29a9d369db05a00f2511dea0bd3ebfaac1408480",
+  "origin_after": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "head_after": "29a9d369db05a00f2511dea0bd3ebfaac1408480",
+  "status_after": "",
+  "log_sha256": "f3ff73d16676e1dd00138bcec77d9b4d69139b97b7388a61c5f5804eaf42d7da",
+  "reason": "Superseded by 1dc04f05 policy/asOf/capabilities equality guard; final approval fc0c19ae has its own full gate.",
+  "identity_valid": true
+}

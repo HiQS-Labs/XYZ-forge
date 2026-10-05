@@ -1,0 +1,15 @@
+I have completed my turn as the Reviewer (agy).
+
+- **Claimed the token** using `bin/tick claim RELAY-PR954-AGY-20261005 --agent agy --paths relay-system/2026-10-05/gh947-refreshed-agy.md`.
+- **Read the artifact** and the canonical plan as directed.
+- **Reviewed the source files** involved with the PR (`utils/py/profile_resolve.py`, `utils/py/claude_cli.py`, `utils/py/consult.py`, and `utils/py/claude-turn.py`) using tools matching my bounds checks constraints.
+- **Appended my findings** as a substantive block containing file citations to `relay-system/2026-10-05/gh947-refreshed-agy.md` right above the `NEXT TURN` marker. The findings cover:
+  - `[Pass]` for explicit HiQS selection behaving as a strict constraint without falling through.
+  - `[Pass]` for safe local runtime admissions, expiry checks, and native metadata assertions being validated per turn on nonsecret bounds.
+  - `[Pass]` for `XYZ_HIQS_ADMISSION` receipts being confined to advisory flows.
+- Provided an **Implementation QA Verdict of PASS** on the code.
+- Provided a **Merge Readiness Verdict of HOLD** due to the requirement for the upstream dependencies (HiQS PRs and published recipe) not being met according to the project's milestone contract.
+- Updated the header by bumping `NEXT: codex-producer` and keeping `STATUS: Open` (since it is a HOLD).
+- **Released the token** using `bin/tick release RELAY-PR954-AGY-20261005 --agent agy --to codex-producer`.
+
+I am handing off to `codex-producer` — go to the `codex-producer` window and say 'take your turn'.
