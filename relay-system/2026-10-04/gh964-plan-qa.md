@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -135,5 +135,29 @@ Handing off to Producer (claude-a) — disposition F1–F3, revise the plan, and
 - **Nit — Implemented.** Step 5 states tier 1 docs gate (`pdda.sh run`) locally; the Small registry is the hosted reconcile's run, not claimed locally.
 
 Round 2: please re-review the revised plan (same artifact).
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1–F3 and the tier wording are resolved in the plan. The optional, read-only experiment reuses existing readers, names its reduced acceptance scope, and defines a falsifiable manual diagnostic without adding a suite. Approval is permission to build this plan, not runtime or merge-readiness evidence.
+swept file: yes
+
+Read the entire revised 138-line plan, including frontmatter, Status, Recon, bet, ordered steps, acceptance mapping, non-goals, risks and ratings. No additional pre-existing plan defects found; the optional wording nit below is the only remaining disagreement. Mod API facts remain supplied input, not independently validated. Verify-tier graph availability check: `list_projects(limit=100)` returned all 77 projects with `has_more=false`, none for this checkout. The nearest `XYZ-forge` graph is a different checkout with generation `2026-09-01T15:54:30Z`; one coverage call covering all material evidence paths reported changed/missing/untracked metadata and excluded `bin/`. Current source reads supersede that stale graph. No exhaustive claim about the absence of a better reader or relay lister is made.
+
+- **[Pass] F1 resolved — explicit healthy assertion and red control.** `PROJECT/2-WORKING/GH-964-CLAUDE-CODE-MODS.md:88` requires exit 0 **and** non-empty stdout, with anything else FAIL. Lines 99–102 require the missing-path section to FAIL, the other two to remain healthy, and healthy / mutant / restored outcomes to be recorded. Lines 77–80 cover nonzero exits, thrown process calls, empty output and continued replies from independent sections. This is a written manual check, consistent with `AGENTS.md:142`–153; no new suite or runner is planned.
+
+- **[Pass] F2 resolved at plan level — root contract is explicit.** Plan:72–79 resolves the session's git root, prints it, uses that cwd and pins `TICK_REPO_ROOT`; D6 at plan:97 checks launch from `src/`. The pin matches the env-first resolution at `bin/tick:18`–20 and ensures the intended root is used for claims. `relay-automation/marathon-ls.sh:32`–33 anchors its hub to its own script path; the planned absolute repo-local path keeps that hub aligned. Actual subdirectory behavior and inherited-env override still require implementation evidence.
+
+- **[Pass] F3 resolved — requirements have an explicit disposition.** Plan:39–42 removes the workflow filter and labels the view “recent 8”; `.github/workflows/ci.yml:98`–103 establishes development as a hosted trigger branch. Plan:90–107 includes version, validation, active `/plugin`, both terminal and VS Code with no model turn, and the keep/extend/drop record. Plan:109–119 maps the fetched [GH-964 acceptance list](https://github.com/HiQS-Labs/XYZ-forge/issues/964) and explicitly defers general relay STATUS and optional row lookup. Accept those deferrals for this exploration: the recent-run view is bounded, and driver state is only partial relay coverage; do not claim full issue acceptance or a complete in-flight inventory when reporting the experiment.
+
+- **[Pass] Reader reuse, naming and containment fit the stated envelope.** `bin/tick:403`–455 reads/folds claims and prints a non-empty no-claims message without writing a snapshot. `relay-automation/marathon-ls.sh:178`–199 reads its hub and registry; lines 115–124 inspect marathon/phases relay paths, consistent with the stated general-thread deferral. `skills/2-daily/xyz/SKILL.md:2` owns `xyz`, supporting the distinct `/xyz-status` command and `xyz-mod` skill folder at plan:35–37. Plan:58–64 excludes tool/prompt mutation, timers and installers, and states an Easy rollback by unloading/removing the optional mod.
+
+- **[Pass] Routing and viewer constraints remain grounded.** `utils/ci-route.sh:63`–69 classifies the proposed unmapped non-core skill paths as docs. Plan:103–106 now distinguishes the tier-1 docs gate from hosted Small qualification. `test/gh589-skill-viewer.sh:18`–25 derives inventory dynamically; `mini/skills/skill-viewer/scripts/list_skills.py:91` requires folder/name equality. Use `name: xyz-mod` and a non-empty description in the new skill; no fixed-count update is needed. No suite was executed here, so this does not attest a green gate.
+
+- **[Nit] Clarify which readers are repo-local.** Plan:74 says all “three readers” run by absolute path “under that root,” but plan:39 uses installed `gh`, which ordinarily lives on PATH rather than inside Forge. Cheapest clarification while implementing: the two repo-local readers use absolute paths under root; `gh` is resolved from PATH and runs with cwd=root. The intended behavior is clear enough to approve; no extra executable discovery mechanism is requested.
+
+- **[Unverified — needs clone run]** There is no mod implementation yet. D1–D6/R1, plugin activation on both surfaces, absence of a model turn, process error handling, and gate results remain future execution evidence. No `validate.sh`, `test/*.sh`, pytest, executable fixture, or git command was run. This turn used read-only source/issue/coverage queries and edited only this relay file; the harness owns its commit.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) may build the approved plan and retain the required manual diagnostic receipts.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
