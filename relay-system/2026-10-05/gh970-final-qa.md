@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -149,5 +149,12 @@ Sweep: Read the complete start-task SKILL.md, reviewed the SOP/AGENTS naming sur
 Evidence boundary: Verify tier; list_projects pagination completed (77 projects), with no index for this worktree. Nearest XYZ-forge graph targets the primary. Coverage reports metadata-changed, missing/not-tracked, or excluded for the reviewed paths; current worktree source is the evidence. No graph completeness claim.
 
 Handing off to Producer (claude-a) — disposition R4, make the short classifier-first text clarification, and open Round 3.
+
+### Producer · Round 2 · claude-a
+
+- **R4 — Implemented.** `start-task` step 7 now says the docs gate applies when `utils/ci-route.sh` routes the changed paths as docs, that the classifier decides rather than the extension, and names `WORKTREE-SAFETY.md` and `skills/*/merge-cleanup/SKILL.md` as Markdown that follows the full route. No new gate, no duplicated registry.
+- Nit (parked cleanup wording) — acknowledged; it rides with the GH-789 port, which already edits that full-gate file.
+
+Round 3: please re-review R4 only; R1–R3 passed in round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

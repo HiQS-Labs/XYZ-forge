@@ -219,9 +219,12 @@ Then begin work.
    or `./validate.sh --auto`). Do NOT re-run full qualifying test gates between
    review rounds when tweaking text or minor points. Select the final gate from
    the actual changed paths against the integration base, using the repo's existing
-   classifier and push-hook route. In XYZ Forge, a Markdown/text-only change
-   (`*.md`/`*.txt`, including skill instructions) uses the deterministic documentation
-   gate (`utils/pdda/pdda.sh run`), not `ci-local.sh` or the full `validate.sh` suite.
+   classifier and push-hook route. In XYZ Forge, when `utils/ci-route.sh` routes the
+   changed paths as docs (most `*.md`/`*.txt`, including most skill instructions), use
+   the deterministic documentation gate (`utils/pdda/pdda.sh run`), not `ci-local.sh` or
+   the full `validate.sh` suite. The classifier decides, not the file extension: some
+   Markdown is a full-gate surface (for example `WORKTREE-SAFETY.md` and
+   `skills/*/merge-cleanup/SKILL.md`) and follows the full route.
    Include both sides of renames and deletions; a changed script, test, DB, or other
    non-doc path must follow its classified tier rather than being called docs-only.
    Run the full qualifying gate (`ci-local.sh` or full `./validate.sh`) EXACTLY ONCE on the final approved commit only when the route requires it.
