@@ -106,6 +106,24 @@ class RebaseHeadCases(unittest.TestCase):
             self.assertFalse(self.prepare()["landing_ready"])
         self.assertTrue((self.repo / ".git/REBASE_HEAD").exists())
 
+    def test_rebase_head_moved_after_inspection_is_not_deleted(self):
+        """Codex F3: compare-and-delete uses the OBSERVED oid, so a REBASE_HEAD that moved between
+        inspection and deletion survives (real git, no mocked failure)."""
+        observed = self.orphan()
+        tree = subprocess.run(["git", "rev-parse", "HEAD^{tree}"], cwd=self.repo, capture_output=True, text=True, check=True).stdout.strip()
+        moved = subprocess.run(["git", "commit-tree", tree, "-m", "other"], cwd=self.repo, capture_output=True, text=True, check=True).stdout.strip()
+        self.assertNotEqual(moved, observed)
+        real = merge_cleanup.run_git
+
+        def move_then_delete(cwd, args):
+            if args[:3] == ["update-ref", "-d", "REBASE_HEAD"]:
+                subprocess.run(["git", "update-ref", "REBASE_HEAD", moved], cwd=self.repo, check=True)
+            return real(cwd, args)
+        with mock.patch.object(merge_cleanup, "run_git", side_effect=move_then_delete):
+            self.assertFalse(self.prepare()["landing_ready"])
+        now = subprocess.run(["git", "rev-parse", "REBASE_HEAD"], cwd=self.repo, capture_output=True, text=True, check=True).stdout.strip()
+        self.assertEqual(now, moved, "a REBASE_HEAD that changed after inspection must not be deleted")
+
 
 # ── Drafts (GH-789 item 2, GH-965) ───────────────────────────────────────────────────────────────
 class DraftCases(LedgerFixture):
