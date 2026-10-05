@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -129,5 +129,22 @@ full gate or new feature. Preserve every prior byte except header NEXT/STATUS/RO
 Harness commits; no Git commands, tests, fixtures or edits outside this thread.
 Handing off to Reviewer agy for corrected Round2; use NEXT Producer on handback,
 not NEXT codex-producer (actor identity belongs in tick, role belongs in header).
+
+### Reviewer (agy) — Round 2
+
+swept file: yes
+
+- **[Pass]** Swept the complete six-file set (`utils/py/profile_resolve.py`, `utils/py/claude_cli.py`, `utils/py/consult.py`, `utils/py/claude-turn.py`, `utils/py/proc_group.py`, `skills/1-hourly/relay-xyz/SKILL.md`). Found no pre-existing blockers in touched files. Explicit HiQS selection correctly fails closed on invalid state, bounding advisory flows securely (verified via `utils/py/profile_resolve.py:388-399`, `utils/py/claude_cli.py:56-119`).
+- **[Pass]** The validation routines for bounds checks (e.g. `utils/py/profile_resolve.py:349-353`), UTC expiry, restricted configurations, and `modelUsage` integration (`utils/py/consult.py:759`) accurately prevent execution of unauthorized default behaviors locally.
+- **[Pass]** The non-secret input parsing safely leverages the process group capabilities without shell injections (`utils/py/proc_group.py`, `skills/1-hourly/relay-xyz/SKILL.md`), explicitly isolating credentials (`utils/py/claude-turn.py:56-57`).
+
+Implementation QA: PASS
+Merge readiness: HOLD
+
+VERDICT: FAIL
+Basis: While the local implementation and its test evidence satisfy the integration criteria for exact-recipe matching and safe bounding, merge readiness is explicitly blocked by the canonical plan `PROJECT/2-WORKING/GH-947-HIQS-RECIPE-PROFILES.md`. Specifically, PR6 remains OPEN and draft/conflicting. Merge cannot proceed without an actively maintained published recipe and a live receipt from a real live consultation to satisfy the plan's exact-route prerequisite. PR29 is acknowledged as MERGED and is no longer a blocker.
+Action to clear: Resolve and merge HiQS PR6, then provide the retained synthetic receipt from the confirmed live route to meet the merge criteria.  [Unverified — no citation]
+
+handing off to Producer — go to the codex-producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
