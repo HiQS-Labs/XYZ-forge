@@ -87,7 +87,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 
-### `3-weekly` — Weekly (15)
+### `3-weekly` — Weekly (14)
 
 _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 
@@ -100,10 +100,9 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [honest](skills/3-weekly/honest/SKILL.md) | Produce a defensible ground-truth assessment of repository maturity and claims. |
 | [marathon-cleanup](skills/3-weekly/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
 | [merge-cleanup-deep](skills/3-weekly/merge-cleanup-deep/SKILL.md) | Back up and triage the checkouts /merge-cleanup preserved with read-only sub-agents: PR-worthy, superseded, or scrap. |
-| [push-to-skills-army-mini](skills/3-weekly/push-to-skills-army-mini/SKILL.md) | **Retired 2026-10-01; do not run.** Skills Army HQ upstream is XYZ-skills-army-mini ([decision: mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2)); removal follows the 2026-10-08 audit (GH-882). |
-| [push-to-xyz-mini](skills/3-weekly/push-to-xyz-mini/SKILL.md) | Publish the curated XYZ mini skill subset into the local XYZ-mini checkout and push it, via the deterministic embedded-manifest publisher `utils/py/xyz_mini_sync.py` (GH-589). |
+| [push-downstream](skills/3-weekly/push-downstream/SKILL.md) | Publish XYZ-forge into its standalone child repos (XYZ-mini, XYZ-skills-army-mini, AgentChorus-Skill) with the one embedded-manifest publisher `utils/py/xyz_mini_sync.py`: one, several or `--target all` per run, preview first, read-only `--check` for child CI (GH-589, GH-955). XYZ-forge is the upstream for all of them. |
 | [radar](skills/3-weekly/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
-| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. *Vendored, possibly stale copy* — upstream is XYZ-skills-army-mini; see [UPSTREAM.md](skills/3-weekly/skills-army-hq/UPSTREAM.md) and [mini#2](https://github.com/HiQS-Labs/XYZ-skills-army-mini/issues/2). |
+| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. Canonical here; published to XYZ-skills-army-mini via `push-downstream` (GH-955). |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |

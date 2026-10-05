@@ -646,6 +646,28 @@ reuse any current sanity-check disposition for the same evidence. Do not bounce
 back into Radar through a reciprocal pointer unless the scope or evidence has
 materially changed.
 
+## Sibling: recommend the repo's own verification assets
+
+When Lens 2 surfaces a recurring-defect cluster or a regression target whose surface
+is mechanically checkable — parsers, codecs, validators, CLI input handling,
+serialization boundaries — check whether the repo already owns an automated
+verification asset that could exercise it: a fuzzer (`cargo-fuzz`, libFuzzer, AFL++,
+oss-fuzz configs, go-fuzz builds), a property-based suite (hypothesis, fast-check,
+QuickCheck), a dedicated `fuzz`/`soak` script target, or the repo's own registered
+gate entry points (in XYZ-forge, the `validate.sh` tiers). If one exists and covers
+the cluster's surface, add a **Verify with** line to that target's row recommending
+the operator run it against the cluster signature; if it covers only an adjacent
+surface, the more valuable recommendation is usually to **extend** it — corpus,
+dictionary, or input class — toward the signature. Cite the detection the same way
+any claim is cited: the file, config, or entry point that proves the asset exists
+(`Cite or drop`).
+
+Radar recommends and never executes: it does not run the harness, extend corpora,
+or gate the report on the recommendation's adoption. This stays silent when there
+is no qualifying target or no detected asset — a clean run manufactures no
+paperwork — and never bounces a reciprocal pointer back into Radar from the asset's
+own docs.
+
 ## Boundaries
 
 | Tool | Owns | Radar's difference |

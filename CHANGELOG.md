@@ -1,5 +1,76 @@
 # Changelog
 
+## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
+
+The operator reversed GH-882's 2026-10-01 decision that made XYZ-skills-army-mini the Skills Army HQ
+upstream. XYZ-forge now publishes all three standalone children through one publisher,
+`utils/py/xyz_mini_sync.py`:
+
+- **Children:** XYZ-mini, XYZ-skills-army-mini and AgentChorus-Skill. These are all the downstream
+  repos found by a scan of the 21 HiQS-Labs repos; two empty placeholder repos get a profile when
+  they have content.
+- **Targets:** `--target` repeats or takes `all`. A multi-target run keeps going past a failed
+  target, prints one summary line per target, and exits with the worst code. `--dest` needs exactly
+  one target.
+- **`--check`:** a new read-only managed-parity check that skips branch and origin checks. The
+  AgentChorus-Skill CI now calls it; its smoke step pointed at a non-existent path, which has also
+  been fixed.
+- **AgentChorus moves onto the central publisher.** `sync-to-standalone.sh` and
+  `publish-manifest.tsv` are retired, and its 13 payload files are an `agent-chorus` profile. One
+  reviewed setup commit in that repo hands ownership over. It is dry-run verified: the guard refuses
+  before the commit; after it, copy 13 / delete 0 and `--check` passes.
+- **Skills Army reversal.**
+  - The `skills-army-mini` target is un-retired, and `UPSTREAM.md` is deleted.
+  - #934's two `SKILL.md` edits, which had only reached the child, are landed here byte-identically.
+  - `push-to-xyz-mini` and `push-to-skills-army-mini` fold into one `push-downstream` skill.
+
+Read-only previews against the real children: XYZ-mini copy 36 / delete 0; XYZ-skills-army-mini copy
+9 / delete 0; AgentChorus-Skill refused until its setup commit. The plan passed Codex relay QA in
+round 3.
+
+Verification: gh589 39/0, with new multi-target and `--check` assertions; gh620 28/0; path-integrity;
+skills-army-hq. Red controls (a short-circuiting loop, a re-added retirement) each fail. Evidence:
+`TESTS-RESULTS/2026-10-03+GH-955/`.
+
+## 2026-10-03 — XYZ-mini publisher: adapted mode with per-entry ownership, exact origin rows, and the retired Skills Army target (GH-589, #951)
+
+The GH-889 planner skills ship to XYZ-mini as mini-side adaptations: flat paths, `/relay` instead of
+`/relay-xyz`, and child-only `install.sh` hardening. The byte-identity publisher could not express
+that. XYZ-mini's last two syncs came from unlanded work, so publishing from `development` would have
+deleted them (#951). `utils/py/xyz_mini_sync.py` now has three modes: `managed` (byte-identical),
+`seed` (copied once) and `adapted`.
+
+How adapted ownership works:
+
+- **Ownership is per entry.** A never-published entry is seeded once from forge bytes. After that,
+  nothing under it is replaced, added or pruned from the forge side.
+- **What the child tracks is carried forward.** Everything the child tracks under the entry is kept
+  and recorded, including mini-only `install.sh` files. A child deletion is recorded and never
+  re-created from forge bytes.
+- **Dropping is the only deletion.** Dropping the whole entry deletes the paths the child's
+  `MANIFEST.txt` records under it.
+- **Exact origin rows.** Every adapted entry needs an exact first-column row of kind `adapted` in
+  `mini/ORIGIN.md`, read from the committed source SHA. A Notes-column mention documents nothing.
+  A stale `adapted` row for a now-managed entry refuses, and so does an uncommitted registry edit
+  under `--allow-dirty`.
+- **Retired target.** `--target skills-army-mini` now refuses by default (#882). Only its suite opts
+  in, through `XYZ_ALLOW_RETIRED_TARGET=1`, until the 2026-10-08 audit removes both.
+
+Also included:
+
+- review-code resolves its GitHub target first. It posts only when the reviewed bytes are the PR's
+  pushed head, verifies issue targets with `gh issue view`, and keeps `temp/` out of git in other
+  repos.
+- The work was carried forward from `archive/primary-gh889-snapshot-2026-10-03`.
+
+Policy: `mini/ADAPTATIONS.md`.
+
+Verification:
+
+- `test/gh589-xyz-mini-sync.sh` 29/0, including carry-forward, no forge additions, exact row and
+  kind, stale row, uncommitted registry, child deletion and re-addition, and drop/re-add.
+- `test/gh620-skills-army-mini-sync.sh` 29/0, including the retired-by-default refusal.
+- Red controls: removing carry-forward and substring origin matching each fail the suite.
 
 ## 2026-10-03 — ATE cancellation, oracle observation and gate environment (GH-949, GH-912)
 
