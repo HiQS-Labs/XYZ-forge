@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Port planned onto `development` `442ea913`; trial three-way apply sized the conflicts (2 files). | Codex plan QA, then port, verify, final QA, PR. |
+| Codex plan QA round 1: FAIL with F1–F3 + nit F4 (exit-code split, draft at push boundary, evidence coverage) — all implemented below. | Codex plan QA round 2, then port. |
 
 ## Why this is a port
 
@@ -42,11 +42,17 @@ Port the three approved behaviours from `08bb0655` (diff `f1321d6d..08bb0655 -- 
 
 1. **Drafts (GH-789 item 2 + #965).** `toposort_prs.fetch_open_prs` and `merge_cleanup.refresh_pr` request
    `isDraft`. A live draft is `SKIPPED (draft)` before repair or merge, rechecked after UNKNOWN polling, after a
-   B1 refresh and before a repaired-head push (`ledger_merge` refuses to push a repaired head for a draft or
-   closed PR). A draft is a non-landed **hard** predecessor (explicit dependents wait; soft/independent PRs
+   B1 refresh, before a repaired-head push and before the merge call. At the repaired-head push boundary
+   (`merge_cleanup.push_resolved_head`, called at `merge_cleanup.py:1004–1008`), a **positively observed** draft is a
+   named skip, not a stop: zero push and zero merge for that PR, B1 evidence kept, recorded as a non-landed hard
+   predecessor, independent PRs continue. Every other push failure (unknown state, moved head, refresh error,
+   closed PR) keeps today's fail-closed `return 2`. A draft is a non-landed **hard** predecessor (explicit dependents wait; soft/independent PRs
    continue). A run whose only non-landings are drafts is a success; drafts are named in one
    `Skipped draft PR(s): …` summary line. Never marks a PR ready.
    **Added for #965:** the Phase 4 sequence table gets a `Draft` column (`toposort_prs.py` table render).
+   The port also carries the source's two supporting ordering transforms (soft collision edges are admitted only
+   when they do not create a cycle; a PR with an unvisited hard prerequisite is never merged, including a true
+   hard cycle) — they are what keeps a draft prerequisite from being bypassed. They are not GH-786.
 2. **CHANGELOG in B1 (GH-789 item 3).** `ledger_merge.union_changelog` / `read_changelog_union` accept only
    newly prepended complete `## YYYY-MM-DD …` blocks on both sides of a unique merge base, with identical preamble
    and unchanged base history; exact duplicate blocks deduplicate; divergent same-heading bodies, fenced/HTML
@@ -62,7 +68,13 @@ Port the three approved behaviours from `08bb0655` (diff `f1321d6d..08bb0655 -- 
 - `merge_cleanup.py`: keep dev's `PUSH_GATE_TIMEOUT_S` constant; keep dev's GH-851 post-push head wait **and**
   add the port's post-repair draft recheck after it; add the port's pre-repair draft skip next to dev's hold-label skip.
 - `SKILL.md`: keep dev's capability rows; add the port's draft and CHANGELOG prose but **not** its two new
-  capability rows (they name tests that GH-831 forbids adding; the parity guard requires a named test per row).
+  capability rows. GH-831 forbids the tests they would name, and adding the rows anyway would leave them unchecked:
+  the parity guard (`test/gh534_phase_c_tests.py:585–596`) checks named tests only for `REQUIRED_CAPABILITIES`
+  (`:527–546`), which stays as it is today. The source's `gh534_phase_c_tests.py` hunk (+1 import, +1 required row
+  pair) is therefore not ported.
+- Port as a delta onto today's files, never by replacing whole historical files: GH-852 MERGED re-query
+  (`merge_cleanup.py:165–181`), bounded push (`:356`), retry clone cleanup (`:298–302`), resume and attempt records
+  (`:933–998`), hosted reconcile and durability (`:1073–1084`) and the current SKILL prose all stay.
 
 ## Non-goals
 
@@ -73,16 +85,31 @@ dependency gap) stays separate. No change to repair budgets, the attempt record 
 ## Verification (no new suites — GH-831)
 
 - **Existing suites, in a disposable full clone** with pre/post identity checks: `test/gh436-merge-cleanup.sh`
-  (includes `gh534_phase_b/c` and the parity guard) must stay green; the push route will run the full gate
-  (merge-cleanup is a core skill).
-- **Manual matrix** `TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py` (evidence script, not registered, same
-  pattern as GH-898): real-git fixtures for (a) changelog-only additive → resolved, (b) ledger + changelog →
-  resolved, (c) base-history edit → handoff, (d) divergent same heading → handoff, (e) empty/marker input →
-  handoff; (f) draft PR in a mocked queue → skipped, zero merge calls, independent PR lands, hard dependent waits,
-  exit 0; (g) lone REBASE_HEAD → cleaned in execute mode, untouched in dry run; real `rebase-merge` dir → refused.
-  Each case asserts on non-empty extracted data.
-- **Red controls:** run the matrix against unported `development` (drafts and changelog cases must fail), and
-  with `union_changelog` forced to accept a base edit (case c must fail).
+  (includes `gh534_phase_b/c` and the parity guard) stays green; the push route runs the full gate (core skill).
+- **Manual matrix, reusing the source's cases instead of writing new ones.** The approved source carried 22 cases in
+  `test/gh534_phase_b_tests.py` at `08bb0655` (`TestGh789Drafts`, `TestGh789Changelog`, `TestGh789ChangelogMerge`, the
+  five REBASE_HEAD primary cases). They move unchanged, except as listed, into one unregistered evidence script
+  `TESTS-RESULTS/2026-10-05+GH-789/manual_matrix.py` that imports the existing `LedgerFixture`/helpers from
+  `test/gh534_phase_b_tests.py` (same pattern as GH-898's matrix). Nothing is added to `validate.sh` or the registry.
+  Coverage this gives, per Codex F3:
+  - drafts: initial skip; draft appearing during UNKNOWN polling; after the gate (zero merge-API calls); at the
+    repaired-head push (F2: now a named skip — `test_draft_before_repaired_push_is_refused` is adapted to expect skip,
+    not stop); after a repaired push; changed head after the gate not merged; soft collisions do not block; a collision
+    cycle never bypasses a draft prerequisite; a true hard cycle never merges;
+  - exit codes (F1): **f1** draft + independent → exit 0, exactly one merge (the independent), summary names the
+    draft; **f2** adds a hard dependent → independent lands, dependent never attempted, exit 3 naming `blocked by #<draft>`;
+  - Phase 4: `Draft` cell true/false for a mixed queue (new assertion for #965);
+  - changelog: changelog-only and ledger+changelog resolve with exact output bytes, history preserved, same-date
+    additions kept, exact duplicates deduplicated; base edit, reorder, ambiguous history, fenced/HTML heading → handoff
+    before any write; dry run writes nothing; a repaired changelog reaches the landed outcome;
+  - REBASE_HEAD: pruned only in execute landing; scan/prs/teardown-only and dry run never prune; dirty primary or
+    active `rebase-merge`/`rebase-apply`/sequencer never prunes; linked-worktree git-path resolution; a changed
+    observed OID makes compare-and-delete fail and the block stays.
+- **Red controls**, each recorded with command, exit and output: run the matrix against unported `development`
+  (draft, changelog and marker cases fail); remove the post-poll / post-gate / push-boundary draft checks one at a time
+  (their cases fail); make the changelog classifier accept a base edit (its case fails); drop the compare-and-delete OID
+  (its case fails).
+- Receipts: `TESTS-RESULTS/2026-10-05+GH-789/provenance.jsonl` with candidate and control runs, committed.
 - Live check (operator, optional): `merge_cleanup.py --prs-only` shows the Draft column on today's queue.
 
 ## Risk
@@ -90,8 +117,9 @@ dependency gap) stays separate. No change to repair budgets, the attempt record 
 **Costly** (merge automation writes PR heads; a wrong changelog classification could drop release notes).
 Shield: classification before mutation, hand off on anything ambiguous, existing second-clone validation and
 guarded push. Rollback: revert the PR commit. Blast radius: merge-cleanup only (`scan_clones`, `toposort_prs`,
-`merge_cleanup`, `ledger_merge`); `merge-cleanup-deep` consumes `scan_clones --json` — the REBASE_HEAD change
-only adds fields, so its intake is unaffected (checked in final QA).
+`merge_cleanup`, `ledger_merge`). `merge-cleanup-deep` is unaffected by call-path separation: its intake
+(`scan_clones --json`, `scan_clones.py:1311–1314`) goes through `scan_directories` → `inspect_checkout`, not the
+changed `inspect_primary_landing`.
 
 ## Rating (2026-10-05)
 

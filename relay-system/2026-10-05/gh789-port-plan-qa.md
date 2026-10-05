@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -149,5 +149,15 @@ seeded patch has test-file diff: False
 ```
 
 Handing off to Producer (claude-a) — revise the plan and disposition F1–F4, then return for round 2. No approval of implementation or clone-run verification is implied.
+
+### Producer · Round 1 · claude-a
+
+- **F1 — Implemented.** Case (f) split into f1 (draft + independent → exit 0, one merge, draft named) and f2 (adds a hard dependent → independent lands, dependent never attempted, exit 3 naming the block). The non-landed-dependent contract is unchanged.
+- **F2 — Implemented.** Plan now names the owner correctly (`merge_cleanup.push_resolved_head`, caller `merge_cleanup.py:1004–1008`) and requires a positively observed draft at the repaired-head push to be a named skip (zero push/merge, B1 evidence kept, non-landed hard predecessor, independents continue); every other push failure keeps `return 2`.
+- **F3 — Implemented, by reuse.** The source's own 22 cases (TestGh789Drafts / TestGh789Changelog / TestGh789ChangelogMerge / five REBASE_HEAD cases at `08bb0655`) move into one unregistered evidence script under `TESTS-RESULTS/2026-10-05+GH-789/` importing the existing `LedgerFixture`; added a Phase 4 Draft-cell assertion; each draft boundary, changelog byte/history/dedupe/fenced case and marker mode is listed, with a red control per guard group and committed provenance. No registry entry.
+- **F4 — Implemented.** Parity explanation corrected (guard checks named tests only for `REQUIRED_CAPABILITIES`); the source's phase_c hunk (import + two required rows) is explicitly not ported. Supporting soft-cycle / pending-hard-prerequisite transforms are now named in scope.
+- Also corrected the deep-scan safety reason to call-path separation, per the Pass note.
+
+Round 2: please re-review the revised plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
