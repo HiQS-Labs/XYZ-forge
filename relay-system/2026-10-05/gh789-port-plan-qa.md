@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -159,5 +159,24 @@ Handing off to Producer (claude-a) — revise the plan and disposition F1–F4, 
 - Also corrected the deep-scan safety reason to call-path separation, per the Pass note.
 
 Round 2: please re-review the revised plan.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1–F4 are resolved in the revised plan. The bounded delta preserves today's landing contracts and now names falsifiable acceptance cases. This approves the plan, not implementation or runtime results.
+swept file: yes
+
+Swept the entire revised plan, seeded patch, four current scripts and SKILL.md; re-read the parity guard. Applied the SWE planning rubric. No additional pre-existing defect requiring expansion of this bounded port was identified; the already-excluded hold-label dependency gap remains #785.
+
+Graph tier: Verify, project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-10-05T16:15:58Z`, canonical checkout rather than this worktree. Symbol query returned six results with no further page. Exact-path coverage reported no recorded gaps and metadata matches for the four scripts, SKILL.md and parity source; scope coverage excludes only `__pycache__`. The similarly named `XYZ-forge` index was stale (2026-09-01, paths not tracked), so its empty results were discarded. Worktree source reads are the authority. No git, executable fixtures or suites run.
+
+- **[Pass] F1 and F2 closed.** Plan lines 99–100 split draft-only success from blocked-hard-dependent exit 3, with per-PR merge expectations and named summaries. Lines 45–49 correctly name `merge_cleanup.push_resolved_head` and require a positively observed pre-push draft to skip while retaining B1 evidence and continuing independents; other push refusals stay exit 2. This explicitly fixes the seeded patch's combined refusal at patch lines 186–187 and current caller's stop at `merge_cleanup.py:1004–1008`. Implement the specified distinction rather than copying that historical branch unchanged.
+- **[Pass] F3 closed as a proof contract.** Plan lines 95–111 require draft transitions at polling, gate and repaired-push boundaries, hard/soft dependency outcomes, true/false Draft cells, byte/history/deduplication checks, audit/dirty/active-operation non-pruning and compare-and-delete refusal. Candidate and deliberately broken controls must emit committed receipts (lines 108–112). These expected outcomes can reject missing guards; no claim is made that the matrix has run.
+- **[Pass] F4 and dev preservation closed.** Plan lines 70–77 preserve the current required capabilities and omit historical additions while keeping GH-851, GH-852, bounded push, resume/attempt records, hosted reconcile and durability. Current `parity_failures` iterates `REQUIRED_CAPABILITIES` (`test/gh534_phase_c_tests.py:585–596`); omission creates no required missing test. Supporting pending-hard-prerequisite and soft-cycle transforms are explicitly scoped at plan lines 53–55, matching patch lines 200–225 and 414–444.
+- **[Pass] Read-only deep intake and containment.** Plan lines 120–122 correctly identify `scan_directories → inspect_checkout`, separate from `inspect_primary_landing`; current scanner JSON dispatch is at `scan_clones.py:1311–1314`. Plan lines 61–65 and 105–107 constrain marker deletion to ready execute landing/reconcile and require the observed OID; scan/prs/teardown and dry runs remain non-pruning.
+- **[Nit] Historical test evidence remains unavailable in this envelope.** Plan lines 89–93 and 73–74 describe 22 old cases and a phase-C import/required-row hunk, but the seeded patch contains only SKILL.md and four scripts. **[Unverified — needs source hunk]** for that historical count/content. During implementation, read the source hunks before transplanting; if unavailable, implement the explicitly listed manual checks using existing helpers and record that provenance honestly. This does not change scope or authorize a registered suite.
+- **[Unverified — needs clone run]** The completed manual matrix, red-control failures, existing suite and full gate. Plan lines 87–112 already require these in a disposable full clone with identity checks and committed provenance. They remain prerequisites to implementation approval.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) may implement the approved plan and collect the required clone-run evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
