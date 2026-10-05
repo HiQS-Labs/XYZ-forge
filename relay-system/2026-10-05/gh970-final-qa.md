@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -126,5 +126,28 @@ Handing off to Producer (claude-a) — disposition the findings, make accepted t
 - CHANGELOG and capture doc updated to match.
 
 Round 2: please re-review.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: The GH-970 naming changes satisfy the requested clarification. One pre-existing instruction conflict in the primary artifact needs a short text correction; no new machinery or tests.
+swept file: yes
+
+Sweep: Read the complete start-task SKILL.md, reviewed the SOP/AGENTS naming surfaces, capture and CHANGELOG entry, and searched the other skills for naming/placement contradictions. Rechecked scanner discovery source. No additional pre-existing finding beyond R4 below was identified in the primary artifact. Historical CHANGELOG entries were searched for naming references, not revalidated as individual changes.
+
+- [Pass] **R1/R3 resolved.** skills/1-hourly/start-task/SKILL.md:83–93 defines the issue-before-naming rule, exact-case repo name, lowercase capture-doc slug (or a once-recorded 2–4-word choice), machine-local first-provisioning date, immutable resume date, and issue-exempt form. The recorded slug removes repeated discretionary naming; identical machine/date/task inputs produce the same folder. SOP.md:216–230 and AGENTS.md:63 agree with the folder/branch types. No further naming edit requested.
+- [Pass] **R2 resolved.** start-task SKILL.md:102–112 explicitly excludes helpers, verifies clone/branch/remote/PR/HEAD, and reconciles multiple or helper-only matches rather than selecting arbitrarily. The quoted instruction “never resume implementation in a helper” addresses the failing helper-only input from Round 1. No further helper edit requested.
+- [Pass] **Sibling discovery remains supported.** skills/2-daily/merge-cleanup/scripts/scan_clones.py:1053–1065 scans immediate children and filters case-insensitively by substring; :1299–1308 supports explicit roots. skills/3-weekly/merge-cleanup-deep/SKILL.md:75–79 supplies the primary's parent as a root. Arbitrary parents still require that explicit root. Source review only; no scanner execution.
+- [Nit] **Accept the deferred cleanup wording disposition.** PARKED/2026-10-05-gh970-merge-cleanup-wording.md:3–8 records the old attribution and concrete sibling-root follow-up. This is nonblocking legacy discovery wording, not a request to expand GH-970 into scanner changes. No further action in this turn.
+- [Should] **R4 — Make the docs-gate shortcut conditional on the classifier (pre-existing).** start-task SKILL.md:221–224 first says to select the actual route, then says every Markdown/text-only change, “including skill instructions,” uses the documentation gate instead of the full suite. That contradicts the concrete full-gate Markdown inputs at utils/ci-route.sh:333–343, and explains the Producer's otherwise correct gate-cost disposition above. Fix only :222–226: say the docs gate applies when the classifier routes the changed paths as docs; text extensions do not override classified full-gate surfaces. Keep the existing classifier authoritative, with no new gate or duplicated registry.
+  Observed input: A diff changing only skills/2-daily/merge-cleanup/SKILL.md (the precise file considered in the Producer's nit disposition). It satisfies the blanket Markdown shortcut at start-task :222–224, while utils/ci-route.sh:336–337 sets full_required=true for that path. WORKTREE-SAFETY.md is another explicit counterexample.
+  Affected scope: Verification instructions for Markdown/text changes that the existing classifier marks full-required; ordinary docs retain their current route.
+  Falsifier: If the existing classifier did not mark those exact Markdown paths full-required, the exception would be unnecessary. Expected result after clarification: merge-cleanup SKILL.md follows the full route; ordinary start-task SKILL.md follows its docs route. This is an observed source-level instruction conflict, not an executed gate failure.
+  Evidence command: "sed -n '318,346p' utils/ci-route.sh" and "nl -ba skills/1-hourly/start-task/SKILL.md | sed -n '78,235p'". Exit 0 for both reads; decisive output: "WORKTREE-SAFETY.md|skills/*/merge-cleanup/SKILL.md)" followed by "full_required=true", versus “a Markdown/text-only change ... uses the deterministic documentation gate ... not ... the full validate.sh suite.”
+- [Unverified — needs clone run] The docs gate and final changed-path scope remain harness responsibilities. No git command, gate, suite, pytest or executable fixture was run; no artifact/source file was changed.
+
+Evidence boundary: Verify tier; list_projects pagination completed (77 projects), with no index for this worktree. Nearest XYZ-forge graph targets the primary. Coverage reports metadata-changed, missing/not-tracked, or excluded for the reviewed paths; current worktree source is the evidence. No graph completeness claim.
+
+Handing off to Producer (claude-a) — disposition R4, make the short classifier-first text clarification, and open Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
