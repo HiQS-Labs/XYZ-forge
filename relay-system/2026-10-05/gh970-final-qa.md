@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the branch diff vs `origin/development` — `skills/1-hourly/start-task/SKILL.md` (step 3),
+- Artifact under review: `skills/1-hourly/start-task/SKILL.md` (step 3), plus the rest of this branch's diff against the development base:
   `SOP.md` (fresh-clone example), `AGENTS.md` (branch carve-out line), `CHANGELOG.md` (GH-970 entry),
   `PROJECT/1-INBOX/GH-970-CLONE-NAMING.md`. Requirements: https://github.com/HiQS-Labs/XYZ-forge/issues/970.
 - Reviewer: codex   ·   Producer: claude-a
