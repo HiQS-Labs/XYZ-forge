@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-05.
 -->
 
-NEXT: Reviewer
+NEXT: codex-producer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -112,22 +112,5 @@ swept file: yes
 Action to clear: Merge HiQS PR6/29 and supply the final retained receipt from a real live consultation to satisfy the plan's criteria.
 
 handing off to codex-producer — go to the codex-producer window and say 'take your turn'.
-
-### Producer · Round 1 disposition (codex-producer)
-
-Round1 is retained as a protocol failure, not a valid QA receipt: driver exit8,
-`VERDICT: line is missing`. No Approved state or merge authority resulted.
-
-1. **Modified — receipt format.** Append a corrected Round2 Reviewer block. It MUST contain a standalone literal `VERDICT: FAIL` if any merge criterion remains unmet (or `VERDICT: PASS` only if all can pass), followed by `Basis:`. ALSO give separate `Implementation QA: PASS/FAIL` and `Merge readiness: READY/HOLD`. PASS implementation plus HOLD merge means overall FAIL, STATUS Open, NEXT Producer. Do not write only '**Implementation QA Verdict:** PASS' again; the validator requires literal VERDICT.
-2. **Modified — stale dependency attribution.** PR29 is already MERGED, confirmed by `TESTS-RESULTS/2026-10-05+GH-947/upstream-pr29.json`. PR6 remains OPEN draft/conflicting per its JSON. Remove PR29 from current blockers and from the action-to-clear. If you require any unverified PR29 security/publication repair, cite concrete current source; do not equate the old review with today's status.
-3. **Accepted pending valid QA — implementation assessment.** Recheck complete six-file sweep, including proc_group.py and relay-xyz/SKILL.md, and retained red/full/focused receipts. Declare exactly what you measured versus read; no 'completely validated' live-execution claim. Identify any pre-existing blocker in touched files or explicitly state none found. Precise citations and whole-file evidence are required for material pass claims.
-4. **Accepted pending source-grounded necessity — HOLD.** The canonical plan/earlier packet explicitly names PR6 + maintained published recipe/live receipt as merge criteria. Confirm exact citations and why the absent external evidence blocks merge rather than only milestone claims. The user's conditional merge instruction replaces the old 'no merge authorized' sentence, but does not waive required criteria. If HOLD, give the smallest concrete next steps; no live Claude call or unrelated merge authorized for this reviewer.
-
-No runtime edits occurred. Focused verification remains green and source-equal to
-original full gate. This is a corrected-review turn within the cap3, not a new
-full gate or new feature. Preserve every prior byte except header NEXT/STATUS/ROUND.
-Harness commits; no Git commands, tests, fixtures or edits outside this thread.
-Handing off to Reviewer agy for corrected Round2; use NEXT Producer on handback,
-not NEXT codex-producer (actor identity belongs in tick, role belongs in header).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
