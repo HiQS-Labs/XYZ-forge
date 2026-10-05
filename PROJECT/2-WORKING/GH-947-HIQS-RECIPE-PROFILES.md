@@ -2,9 +2,9 @@
 gh_issue: 947
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/947
 title: Optional HiQS recipe-backed profiles
-status: In progress (2-WORKING — plan QA)
+status: In progress (renewed QA; merge HOLD)
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-05
 doc_type: feedback
 owner: Codex with Noel Saw
 goal: Admit one explicit HiQS recipe through the existing Claude advisory path or refuse before dispatch
@@ -24,14 +24,15 @@ branch: feat/gh947-hiqs-recipe-profiles
 3. Refusal emits no runnable exports; native config and current expiry gate every call.
 4. Pinned inputs and truthful draft dependencies; no implicit refresh or installation.
 
-Implement the narrow profile primitive from GH-947. HiQS GH-4 and PR29 are stacked
-prerequisites, explicitly authorized by operator. No merges or live pilot authorized.
+Implement the narrow profile primitive from GH-947. HiQS GH-4/PR6 supplies the exact-consumer prerequisite; PR29 merged2026-10-04.
+The operator now authorizes XYZ954 merge after satisfactory QA/checks. Upstream
+PR merges and a live Claude pilot are separate actions, not authorized here.
 
 ## Status
 
 | What was just completed | What's next |
 | --- | --- |
-| Optional advisory source implemented; Agy plan/final attested, focused/manual controls and full local gate pass | [Draft PR954](https://github.com/HiQS-Labs/XYZ-forge/pull/954); PR29/PR6 publication prerequisite, maintained recipe and authorized live pilot block milestone |
+| Refreshed Agy implementation PASS / merge HOLD; focused checks green; development integrated | [Draft PR954](https://github.com/HiQS-Labs/XYZ-forge/pull/954); HiQS PR6, maintained published recipe and real authorized pilot receipt required |
 
 ## Recon / ownership
 
@@ -50,9 +51,11 @@ digest; Python neither hashes canonical data nor filters/ranks recipes.
 
 [GH-947](https://github.com/HiQS-Labs/XYZ-forge/issues/947) optional source, existing
 resolver/Claude advisory only. [HiQS GH-4](https://github.com/NeochromeTeam/hiqs-ai-resolve/issues/4)
-PR6 stacks over PR29; explicit operator approval permits implementation against pinned
-unmerged foundation. Both remain merge-blocked drafts pending recipe publication defects
-and maintained full-combination evidence/live pilot. No merge, deployment or live call.
+PR29 is merged; PR6 remains draft/conflicting and still targets its old stack base.
+Original approval permitted implementation against its pinned unmerged consumer.
+Current XYZ merge permission is conditional on satisfactory QA/checks; PR6 landing,
+maintained full-combination published recipe and actual pilot proof remain unmet.
+No deployment or live Claude call is authorized by this review request.
 GH579 broad workflow rollout is deferred. No all-lane promises, new databases, dispatcher,
 service, persistent cache, automatic installs, source uploads or generic config language.
 
@@ -183,3 +186,30 @@ was skipped, not passed. Hosted smoke passed; PR workflow skips macOS/Ubuntu ful
 so local evidence is not promotion qualification. Issues stay open/in progress.
 Retain the sibling task clone `../XYZ-forge-task-gh947-20261003` until verified
 landing; /merge-cleanup can then reconcile and retire it. Primary checkouts preserved.
+
+
+## Refreshed Agy QA — 2026-10-05
+
+Valid Round2 receipt: `relay-system/2026-10-05/gh947-refreshed-agy.md`;
+review commit `e57df226`, reviewed `e4fecec0`. Implementation QA PASS, merge
+readiness HOLD, overall FAIL; driver exit5 (successful non-approval handback).
+Round1 exit8 missing VERDICT is retained as invalid; its stale PR29 assertion was
+corrected. Neither response is a fresh Approved attestation.
+
+PR29 is MERGED; remaining prerequisites are PR6 exact-consumer landing, maintained
+published recipe and real authorized advisory execution receipt. Synthetic controls
+cannot substitute for the latter. No acceptance criterion or external action was
+silently authorized. Current upstream JSON, raw logs and provenance are retained in
+`TESTS-RESULTS/2026-10-05+GH-947/`.
+
+Development442ea913 integration conflicts were ledger-only. Existing disjoint helper
+replayed only947, reminting gid `rmi-01M46A43SG76QH5RQG62SWMYW9`; supported writer
+explicitly readmitted it and preserved80/70/50/45. Six runtime/skill files remain
+byte-identical to original approved/gated fc0c19ae. Refreshed profile51/0, Claude
+subscription/turn controls, process-group43/0 and Agy shim65/0 pass in a disposable
+full clone; focused identity unchanged. A renewed full integration gate is pending,
+not claimed; avoid rerunning it while merge acceptance remains externally blocked.
+
+Draft-review receipt publication uses the documented XYZ_SKIP_PREPUSH=1 bypass with
+current focused evidence. The full push hook is skipped and confers no readiness.
+PR954 remains draft; task clone retained for resumption and merge handoff.

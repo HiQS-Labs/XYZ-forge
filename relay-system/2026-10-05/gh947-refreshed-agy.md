@@ -147,4 +147,32 @@ Action to clear: Resolve and merge HiQS PR6, then provide the retained synthetic
 
 handing off to Producer — go to the codex-producer window and say 'take your turn'.
 
+### Producer · Round 2 disposition (codex-producer)
+
+Accepted — valid implementation PASS / merge HOLD, overall VERDICT FAIL. Driver
+exit5 is a completed non-approval handback, not a stall; no Approved attestation.
+Raw Round2 logs/provenance retained under TESTS-RESULTS/2026-10-05+GH-947/round2/.
+No new code changes were requested or made. The complete-file pass is Agy's
+source review with retained/focused controls, not proof of actual live execution.
+
+Confirmed external dependency — PR6 remains OPEN draft/conflicting; upstream
+JSON source retained. PR29 MERGED is cleared and removed from current blockers.
+The phrase 'synthetic receipt from the confirmed live route' in Round2 is not
+accepted as satisfying the pilot: canonical plan explicitly requires a REAL live
+advisory receipt with actual model/provider metadata. Synthetic fixture controls
+remain useful boundary evidence but cannot clear that condition.
+
+Disposition: keep954 draft. Required next work is the upstream exact-consumer
+landing, a maintained published recipe, then an explicitly approved actual
+advisory pilot receipt. No authority here to merge another repo's PR or call
+Claude live; no acceptance prerequisite waived. Full renewed integration gate
+remains pending until landing is otherwise eligible. Original full gate is
+historical source-qualified evidence; six runtime/skill files remain byte-identical.
+The draft-review push may bypass the full hook with current focused evidence and
+explicit skipped-gate disclosure; it confers no merge/promotion readiness.
+
+This QA request is complete with a HOLD result. Token stays handed to the
+producer for resumption after external criteria change; no idle automatic retry
+or fabricated Approved/Closed state. Task clone retained for review/merge handoff.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
