@@ -60,7 +60,7 @@ to override); `pdda.sh issue-doc-sync` is the deterministic drift detector when 
 Maintainer-only workflow defaults (branch discipline, express-to-development, fresh-clone-per-task)
 live in `SOP.md` → "Opinionated SOPs" — optional for downstream users, binding for us. That section
 is a standing carve-out from the "do not create new git branches automatically" rail: it
-pre-authorizes one `feat/`/`fix/` branch per fresh task clone, nothing more.
+pre-authorizes one `feat/`/`fix/`/`chore/`/`docs/` branch per fresh task clone, nothing more.
 
 ## Operating principles
 

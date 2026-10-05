@@ -76,10 +76,26 @@ Then begin work.
    a prerequisite just to keep going. Continue other unblocked requested groups.
 
 3. **Provision isolated work and register intake before implementation.** Create
-   a clearly named fresh **full clone from the canonical remote**, verify origin
-   and base SHA, and create the task branch under repo policy. In XYZ Forge this
-   is one `feat/` or `fix/` branch off `origin/development`, with the per-clone git
-   hooks installed and checked. Preserve the primary checkout and other sessions.
+   a fresh **full clone from the canonical remote**, verify origin and base SHA,
+   and create the task branch under repo policy. In XYZ Forge the branch is cut
+   off `origin/development`, with the per-clone git hooks installed and checked.
+   Preserve the primary checkout and other sessions.
+   **Clone and branch names are a formula, not a choice (GH-970):**
+   - Folder: `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, e.g.
+     `XYZ-forge-gh789-merge-cleanup-repairs-2026-10-05`. `<repo-name>` is the
+     GitHub repo name with its exact case; `<very-short-desc>` is 2–4 lowercase
+     kebab words; the date is the day the clone is provisioned.
+   - Location: the same top-level folder as the parent repo, i.e. a sibling of
+     the primary clone (`$(dirname <primary>)/<folder>`). Never `/tmp`, a
+     scratchpad, another workspace root, or a linked worktree.
+   - Branch: the same string with a type prefix, `<type>/<folder>`, where
+     `<type>` is `feat`, `fix`, `chore` or `docs`.
+   - A multi-issue group uses its primary (lowest) issue number. A disposable
+     gate or verification clone for the task is `<folder>-gate` / `<folder>-verify`,
+     in the same location.
+   - Before creating anything, look for an existing `<repo-name>-gh<issue>-*`
+     sibling. If one exists, this is a resume (below). Never create a numbered or
+     renamed duplicate.
    **Resume Reconciliation Protocol:** An explicit resume must locate and verify the
    existing task clone, branch, remote branch, remote PR status (`gh pr list --head <branch>`),
    and live HEAD commit rather than duplicating clones, creating redundant branches, or
