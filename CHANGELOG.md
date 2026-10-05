@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-04 — `/xyz-status`: a read-only Claude Code mod for in-flight status (GH-964)
+
+Claude Code 2.1.287 added **mods**: plugins whose TypeScript hooks run inside Claude Code. The new
+`xyz-mod` skill ships one, under `skills/2-daily/xyz-mod/mod/`, loaded with `claude --plugin-dir`.
+It adds `/xyz-status`, which answers instantly, even mid-turn, and costs no model turn:
+
+- **What it prints:** the repo root it read, then the recent hosted runs on `development`
+  (`gh run list`), `tick` claims and marathon/relay driver state (`marathon-ls.sh`). It runs those
+  existing readers and has no logic of its own.
+- **Read-only:** it registers no tool-call, prompt or transcript hook, so it cannot approve, block or
+  rewrite anything. Rollback is deleting the folder (Easy).
+- **Failures stay visible:** a reader that fails, times out or prints nothing shows its error in its
+  own section; the other sections still answer.
+- **Verification:** a manual checklist in the skill (no new suite, GH-831). Not covered: relay
+  threads no driver runs, and the issue's optional `/xyz row N`.
+
 ## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
 
 The operator reversed GH-882's 2026-10-01 decision that made XYZ-skills-army-mini the Skills Army HQ
