@@ -160,4 +160,12 @@ Read the entire revised 138-line plan, including frontmatter, Status, Recon, bet
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) may build the approved plan and retain the required manual diagnostic receipts.
 
+
+### Attestation · relay-drive — 2026-10-05T05:10:23Z
+task: RELAY-gh964-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 6afe2c5f6c304966a974cb97643359337eeebfec
+added-range: 17128+5337
+added-sha256: 11a1a5dbc13d1dc5453b5af1ae20aa6c6c89e3a68e8f1b56b7dd12266ded7b62
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
