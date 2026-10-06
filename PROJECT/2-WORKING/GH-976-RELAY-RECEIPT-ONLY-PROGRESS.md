@@ -24,7 +24,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| plan QA round 1 (Codex): 2 Must on verification recipe, accepted; plan revised; pre-fix red control witnessed (extension to cap 4 on receipt-only commits) | Codex plan QA round 2; on Approved implement step 1 and record the four manual controls under TESTS-RESULTS |
+| plan QA Approved (Codex round 2); fix implemented; controls A–E green on candidate, A/B red on base; gh115 suite 7/7; receipts in TESTS-RESULTS/2026-10-05+GH-976 | final gate (validate.sh --auto in a disposable clone), final Codex QA relay, PR to development |
 
 ## Observed problem
 

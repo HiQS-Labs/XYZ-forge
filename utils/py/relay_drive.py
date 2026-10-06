@@ -589,6 +589,35 @@ def main():
         except Exception:
             return ""
 
+    # GH-976: receipt-only commits are not convergence. A relay turn commits its own transcript in the
+    # same repo get_head_commit() samples (relay-turn-lib.sh commits `relay(<task>): <agent> turn`),
+    # so HEAD moves on a handoff that repaired nothing and the GH-115 extension was granted round
+    # after round up to the hard ceiling (user-sage-backend#75: cap 10 on transcript commits alone).
+    # Progress on the HEAD arm now means at least one changed path outside the receipt paths.
+    RECEIPT_DIRS = ("relay-system/", "marathon-system/", ".tick/", ".relay-scratch/", "TESTS-RESULTS/")
+
+    def commits_touch_non_receipt(before, after):
+        if not before or not after or before == after:
+            return False
+        repo = target_repo()
+        try:
+            out = subprocess.check_output(["git", "-C", repo, "diff", "--name-only", f"{before}..{after}"],
+                                          stderr=subprocess.DEVNULL).decode("utf-8", "replace")
+        except Exception:
+            return False   # unverifiable evidence earns no extension; the resolved-items arm still applies
+        relay_rel = ""
+        try:
+            relay_rel = os.path.relpath(os.path.abspath(relay_file), os.path.abspath(repo))
+            if relay_rel.startswith(".."):
+                relay_rel = ""   # transcript lives outside this repo: no exact-file exclusion
+        except ValueError:
+            relay_rel = ""
+        for path in out.splitlines():
+            path = path.strip()
+            if path and not path.startswith(RECEIPT_DIRS) and not (relay_rel and path == relay_rel):
+                return True
+        return False
+
     def count_resolved_items():
         try:
             with open(relay_file, 'r') as f:
@@ -1094,7 +1123,7 @@ def main():
         resolved_after = count_resolved_items()
         
         made_progress = False
-        if head_after and head_before and head_after != head_before:
+        if commits_touch_non_receipt(head_before, head_after):   # GH-976: not a receipt-only move
             made_progress = True
         elif resolved_after > resolved_before:
             made_progress = True
