@@ -4,7 +4,7 @@
 # Blocks the stop while this session's run checklist (<repo-root>/.workhorse/<session_id>.md) still has an
 # open `- [ ]` line, so a direct /workhorse run keeps going until its queue is resolved. Everything else
 # (no checklist, other session, bad input, missing python3/git) fails OPEN: exit 0, no output, stop allowed.
-# Loop safety is the harness's 8-consecutive-continuation cap plus the `[!]`/`[-]` escape in the checklist.
+# The runtime documents an eight-consecutive-continuation cap, reset by tool calls; optional/deferred markers are not permission to abandon required scope. Do not change runtime controls.
 
 command -v python3 >/dev/null 2>&1 || exit 0
 
@@ -44,8 +44,9 @@ for root in roots:
         shown = "\n".join(open_items[:5]) + ("\n…" if len(open_items) > 5 else "")
         print(json.dumps({"decision": "block", "reason":
             "/workhorse run checklist %s still has %d open item(s):\n%s\n"
-            "Continue with the next open item. To hand back to the operator instead, mark it "
-            "[!] (with the exact blocker) or [-] (parked, with its pointer)." % (path, len(open_items), shown)}))
+            "Continue with the next open item. Stop only for verified completion, explicit user pause/cancellation, "
+            "or a concrete external blocker recorded as [!] with the exact blocker. "
+            "[-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope." % (path, len(open_items), shown)}))
     sys.exit(0)
 PY
 exit 0

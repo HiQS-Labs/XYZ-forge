@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Agy
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -69,5 +69,17 @@ BUILD OWNERSHIP: Agy owns only skills/2-daily/workhorse/SKILL.md and stop-hook.s
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer · Round 1
+
+- Implemented text changes in `skills/2-daily/workhorse/stop-hook.sh`:
+  - Updated comment at line 7 to document the 8-consecutive-continuation cap and tool-call reset, clarifying that optional/deferred markers do not abandon required scope.
+  - Rewrote the block reason text (lines 45-48) to match the shared contract, stating that `[-]` is for optional/deferred work only.
+- Implemented text changes in `skills/2-daily/workhorse/SKILL.md`:
+  - Added a new paragraph after line 133 to specify Claude runtime limits, noting the hook is syntactic, Stop is not invoked for user interrupts, StopFailure handles API errors, and `/goal` is optional.
+- All Python logic outside of the reason string constant, the Bash wrapper, and fail-open paths were preserved unchanged.
+- Manual bounds checking passed (bash syntax check and python extraction compiled successfully).
+
+handing off to Producer — go to the parent orchestrator window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
