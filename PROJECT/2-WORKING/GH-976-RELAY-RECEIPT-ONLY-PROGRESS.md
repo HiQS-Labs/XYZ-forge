@@ -24,7 +24,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| plan QA Approved (Codex round 2); fix implemented; controls A–E green on candidate, A/B red on base; gh115 suite 7/7; receipts in TESTS-RESULTS/2026-10-05+GH-976 | final gate (validate.sh --auto in a disposable clone), final Codex QA relay, PR to development |
+| fix landed on branch (e7559676); controls A–G green on candidate, A/B/F/G red on base; gh115 7/7; final Codex QA attested Approved (round 3, reviewed d9099687); qualifying ci-local.sh run recorded | PR to development open; merge + reconcile via /merge-cleanup; link PR from #976 and user-sage-backend#75 |
 
 ## Observed problem
 

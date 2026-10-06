@@ -18,3 +18,7 @@ disposable base clone at `6d81df9f` and the candidate tree. Each case builds a f
 Existing suite `test/gh115-round-cap.sh`: 7 pass, 0 fail on the candidate (recorded last in
 `provenance.jsonl`). Provenance records name the committed candidate revision. Fixture note: the stub retries its commit briefly because the driver refreshes
 the git index concurrently (`index.lock`); without the retry case D dropped a turn on both sides.
+
+Qualifying gate: `bash ci-local.sh` on commit `7afa8e49` (the attested final-QA head) in a disposable
+clone with `XYZ_HARNESS` unset — all steps passed, record copied to `gate-evidence-7afa8e49.txt`
+(self-reported local evidence, not promotion evidence, GH-509).
