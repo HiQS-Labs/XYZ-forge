@@ -1,0 +1,18 @@
+{
+  "before": {
+    "head": "aa59ea0350842b2e08692bfce2f1f58b3842944a",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.feat/gh762-start-marathon.remote=origin\nbranch.feat/gh762-start-marathon.merge=refs/heads/feat/gh762-start-marathon"
+  },
+  "after": {
+    "head": "aa59ea0350842b2e08692bfce2f1f58b3842944a",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.feat/gh762-start-marathon.remote=origin\nbranch.feat/gh762-start-marathon.merge=refs/heads/feat/gh762-start-marathon"
+  },
+  "same": true,
+  "push_exit": 0
+}

@@ -1,0 +1,3 @@
+{"artifact": "gh796-pr765-admission-ledger.json", "sha256": "68fa823e3b42fe21f20459dd1cfc15941527f383f791e09b42359689334f01ef", "head": "aa59ea0350842b2e08692bfce2f1f58b3842944a", "merge_commit": "6f956294ff05b66eaf0c79ea886a6ce5c64724c3"}
+{"artifact": "gh796-pr765-admission.json", "sha256": "042a4ec19b9f3aeb9cac47ca7f8f4ec9df14e3122d5447977578b98684cbd693", "head": "aa59ea0350842b2e08692bfce2f1f58b3842944a", "merge_commit": "6f956294ff05b66eaf0c79ea886a6ce5c64724c3"}
+{"artifact": "gh796-pr765-merged.json", "sha256": "229eafaa9443c68b96f09d76508abdbc3a618017a1d8124c0e5d22cbb6393306", "head": "aa59ea0350842b2e08692bfce2f1f58b3842944a", "merge_commit": "6f956294ff05b66eaf0c79ea886a6ce5c64724c3"}

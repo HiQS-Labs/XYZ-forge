@@ -1164,7 +1164,9 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
     # still open, and the next merge will refuse. Fail closed; never abort it for the operator.
     for marker, label in (
         ("MERGE_HEAD", "merge"),
-        ("REBASE_HEAD", "rebase"),
+        ("rebase-merge", "rebase"),
+        ("rebase-apply", "rebase"),
+        ("sequencer", "sequencer"),
         ("CHERRY_PICK_HEAD", "cherry-pick"),
         ("REVERT_HEAD", "revert"),
         ("BISECT_LOG", "bisect"),
@@ -1188,6 +1190,26 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
                 "the landing merge will refuse while it is open"
             )
             break
+
+    # REBASE_HEAD can outlive a rebase. Inspection stays read-only; only the orchestrator
+    # may remove a valid orphan after every other readiness condition is affirmative.
+    res["stale_rebase_head"] = ""
+    probe = run_git(path, ["rev-parse", "--git-path", "REBASE_HEAD"])
+    if probe.returncode != 0 or not probe.stdout.strip():
+        res["operation_evidence_ok"] = False
+        res["blockers"].append("cannot locate REBASE_HEAD — readiness is unknown")
+    else:
+        marker = Path(probe.stdout.strip())
+        if not marker.is_absolute():
+            marker = path / marker
+        if marker.exists() and not res["operation_in_progress"]:
+            oid = run_git(path, ["rev-parse", "--verify", "REBASE_HEAD^{commit}"])
+            if oid.returncode == 0 and oid.stdout.strip():
+                res["stale_rebase_head"] = oid.stdout.strip()
+                res["blockers"].append("orphaned REBASE_HEAD remains; execute landing can prune it")
+            else:
+                res["operation_evidence_ok"] = False
+                res["blockers"].append("invalid REBASE_HEAD — readiness is unknown")
 
     # Local commits the remote does not have would be silently skipped by a squash-merge landing.
     # A FAILED count is unknown state, not zero.
@@ -1215,13 +1237,14 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
         )
 
     res["evidence_complete"] = bool(ref_evidence and res["can_ff"] and res["operation_evidence_ok"])
-    res["landing_ready"] = bool(
+    res["ready_except_stale_rebase"] = bool(
         res["on_integration_branch"]
         and res["is_clean"]
         and not res["unpushed_on_integration"]
         and not res["operation_in_progress"]
         and res["evidence_complete"]
     )
+    res["landing_ready"] = res["ready_except_stale_rebase"] and not res["stale_rebase_head"]
     return res
 
 

@@ -190,7 +190,9 @@ def _resolve_policy_and_label(required=False):
             raise ValueError("policy repo and repos disagree")
         cfg["repos"] = [cfg["repo"]]
     if source is not None:
-        pinned = [str(r).strip() for r in cfg["repos"]] if isinstance(cfg["repos"], list) else []
+        if not isinstance(cfg["repos"], list):
+            raise ValueError("repos must be a list")
+        pinned = [str(r).strip() for r in cfg["repos"]]
         if source["top_n"] + len(pinned) > 2 ** 63 - 1:  # SQLite binds a signed 64-bit LIMIT
             raise ValueError("repos_source.top_n is too large")
         seen, added = {r.lower() for r in pinned}, []
