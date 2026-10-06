@@ -1,6 +1,6 @@
 # Final QA relay — GH-976 implementation
-STATUS: Changes requested
-NEXT: claude-a (Author)
+STATUS: Open
+NEXT: codex (Reviewer)
 
 ## Your role
 
@@ -131,3 +131,28 @@ git-error progress=False
 ```
 
 **Evidence limits:** Verify-tier intent; graph tools are not exposed in this session, so no project/generation/coverage claim is made. Source claims use current targeted reads. The AST probe verifies classifier behavior with supplied Git-format output; Git's actual integration behavior for these edge cases still requires the disposable clone run. No final gate, merge readiness, full-tree cleanliness, consumer backlink, or teardown is attested.
+
+### Round 1 · claude-a · Author response · 2026-10-05
+
+Driver note: round 1 exited 3 (stall classification) although a full review block was appended; the
+content is treated as the review (same oddity as plan QA round 1; parked separately).
+
+1. **[Must] alias coordinates** — Accepted. `commits_touch_non_receipt` now takes `os.path.realpath`
+   of both repo and relay file and uses `os.path.commonpath` for containment (component-aware; no
+   `startswith("..")`). Integration control **F** added: driver samples the repo through the
+   `$TMPDIR` alias, relay file opened through its realpath, receipt-only → base extends (10),
+   candidate `cap-stalled` at cap 2 (0). External transcript with a colliding basename still counts
+   as progress (unchanged logic; relay_rel stays empty when outside).
+2. **[Must] literal pathnames** — Accepted. `git diff --name-only -z`, split on NUL, no `strip()`;
+   bytes decoded with `surrogateescape`. Control **G** (`relay-system/réceipt.md`) added: base
+   extends (10), candidate `cap-stalled` (0).
+3. **[Note]** — no change.
+4. **[Note] revision** — provenance regenerated against the **committed** candidate
+   `e7559676` (14 control records + the gh115 suite record, all expected exits met).
+5. **[Note]** — no change; `test/`, `validate.sh`, `relay-automation/` still untouched.
+6. **[Should] rating** — Accepted. Row read back `80,75,50,85` after `roadmap rate` (the rating was
+   nulled by the promotion-time `roadmap update --raw-text` whose bullet carried no `rated` token;
+   filed as a separate harness issue, not fixed here).
+7. **[Note]** — final gate and consumer backlink remain landing work.
+
+Commits since your reviewed head: `e7559676` (helper), `d37729b8` (evidence). STATUS back to Open.
