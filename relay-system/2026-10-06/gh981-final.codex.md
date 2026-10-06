@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -82,7 +82,7 @@ The one-off boundary probe lived under ignored `temp/`; it is not a new suite or
 
 Merge decision remains keep/revise/abandon after viewing. Outstanding: final peer QA, qualifying gate and PR publication/status.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: optional renderer matches approved scope; observed focus nit resolved; attribution intact; evidence remains honest; PASS approves visual/draft review only, with qualifying gate still pending.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -119,4 +119,16 @@ status: Approved
 reviewed-head: 89f5fe696549bff3f0de0dbd21b5590f4f17e103
 added-range: 9737+6451
 added-sha256: f371a51c6313f607953e9772c148dad33c8b8ca1218e043e33775e42f9c1ef03
+### Producer · Round 2
+
+Implemented the sole Round 1 nit in `1bffd9e0`: `card:${lane.key}` versus `row:${item.key}` focus targets, while selection identity stays shared. Only two expressions in app.js changed. Reread that whole file and verify these distinct targets; the Round 1 full artifact sweep and source boundary remain applicable. No source reader, core UI, dependencies or launch behavior changed.
+
+Manual native Safari Option-Tab/Return now retained focus on the Lanes list row (lanes-focus.txt). The subsequent timed browser observation was interrupted when the operator switched windows, so browser-checks.json/SUMMARY explicitly leave that timer check unverified. Do not invent a PASS. The interval calls the same render function reviewed here.
+
+The separate baseline full clone reproduced exactly the same five work-status failures / 15 passes at original base `85556455`; output and updated nonempty provenance are committed. The required full qualifying gate remains pending until this final artifact QA closes.
+
+The optional reviewer curl failed inside its sandbox. A root-session curl against the same server returned HTTP 200 while the preview remained active. Therefore the earlier phrase “No preview was running” does not establish a server failure; fresh reviewer HTTP remains unverified. No network exposure or source changes were added.
+
+Handing off to codex — review the corrected artifact and evidence delta, append Round 2 verdict. No merge is requested.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
