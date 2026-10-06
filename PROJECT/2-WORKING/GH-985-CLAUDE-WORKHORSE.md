@@ -15,7 +15,7 @@ goal: Align the Claude Stop-hook guidance with the shared verified-outcome contr
 
 | What was just completed | What's next |
 |---|---|
-| Fable plan QA attested Approved Round 2; runtime and routing facts grounded | Agy implementation and bounded checks complete; final Fable QA and PR publication next |
+| Fable plan/final QA Approved; Agy source verified; PR #986 published | Final publication checks; then await authorized landing of #984 followed by #986 and deployment |
 
 ## Dependency
 
