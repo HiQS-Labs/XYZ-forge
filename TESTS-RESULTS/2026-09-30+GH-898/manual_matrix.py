@@ -134,6 +134,9 @@ def main():
                               ("non-object", "rebalance_active")):
                 err = raises(bs, tmp, {**OWNER, "repos": ["o/r"], "repos_source": src}, db)
                 check("ValueError: " + name, err is not None, err)
+            for name, bad in (("repos object", {"primary": "o/pinned"}), ("repos number", 5)):
+                err = raises(bs, tmp, {**OWNER, "repos": bad, "repos_source": {"type": "rebalance_active"}}, db)
+                check("ValueError: non-list repos with repos_source (" + name + ")", "repos must be a list" in (err or ""), err)
             check("ValueError: repo + repos_source",
                   "use repos[] with repos_source" in (raises(bs, tmp, {**OWNER, "repo": "o/r", "repos_source": {"type": "rebalance_active"}}, db) or ""))
             os.environ["XYZ_GITHUB_BOARD_POLICY_REPOS_SOURCE"] = "rebalance_active"
