@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -70,7 +70,7 @@ status: active
 created: 2026-10-06
 updated: 2026-10-06
 owner: Codex
-goal: Continue authorized work until its requested outcome is verified or externally blocked
+goal: Continue authorized work until its requested outcome is verified or externally blocked  [Unverified — no citation]
 ---
 
 # Workhorse Codex outcome continuation
@@ -94,7 +94,7 @@ Ratings: pri 80 (explicit operator request and recurring interruption), sev 75 (
 ## Ordered execution and acceptance
 
 1. Commit this plan and run shipped Codex plan relay QA (three-round cap); adjudicate findings before implementation. -> Approved receipt.
-2. Admit exact GH-983 ledger row, then update Rung 0 and Rung 6 plus a short Codex continuation/enforcement section. -> Required findings remain active; each done item carries evidence; reconcile original request, steering and acceptance before ending. Subtask completion, status answers, restored auth and handoffs trigger the next authorized action in the same turn. Stop only for verified completion, user pause/cancellation, or concrete external blocker after independent work; preserve permissions and deployment windows. Runtime/system limits leave truthful unfinished state.
+2. Admit exact GH-983 ledger row, then update Rung 0 and Rung 6 plus a short Codex continuation/enforcement section. -> Required findings remain active; each done item carries evidence; reconcile original request, steering and acceptance before ending. Subtask completion, status answers, restored auth and handoffs trigger the next authorized action in the same turn. Stop only for verified completion, user pause/cancellation, or concrete external blocker after independent work; preserve permissions and deployment windows. Runtime/system limits leave truthful unfinished state.  [Unverified — no citation]
 3. Use quick_validate and bounded read-only Codex decision fixtures recorded under TESTS-RESULTS/2026-10-06+GH-983/ with provenance. -> Seven scenarios: subtask advances, status resumes, authentication retry, checked boxes with unmet acceptance stay unfinished, handoff cannot replace execution, real blocker accurate, future window holds deploy. Operational regression requires active-job inventory and service baseline; running sync/analysis/worker findings prevent the gate from passing. Compare old and new instructions on an unmet-acceptance red control. No new test suites, runners or registry changes; fixtures measure model decisions, not guaranteed multi-turn behavior.
 4. Commit evidence and run deterministic PDDA/ledger checks in a disposable full clone with repository identity bracket; final Codex relay QA on committed scope/evidence. -> Approved; inspect warnings and record dispositions, no blanket exit-zero claim.
 5. Push via classified pre-push gate from disposable full clone, open development PR, inspect base/head/scope and actual hosted checks. -> Reviewed PR awaiting merge, truthful active doc. Do not merge without authorization.
@@ -115,5 +115,23 @@ Bounded model decision fixtures and review can show instruction interpretation, 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the bounded instruction-correction plan, not implementation, runtime enforcement, deployment or merge readiness. The review envelope and ordered acceptance steps supply the criteria despite the scaffold's empty Definition of Done field.
+swept file: yes
+
+- [Pass] Same-turn continuation, semantic completion and scope preservation are explicit in the complete plan: `PROJECT/2-WORKING/GH-983-CODEX-CONTINUATION.md:33` requires “each done item carries evidence,” reconciliation of “original request, steering and acceptance,” and next authorized action after subtasks/status/auth/handoffs. It retains concrete external blockers, independent work, user pause/cancellation and permission/window boundaries. Preserve these clauses in implementation.
+- [Pass] Minimal scope and enforcement limits are truthful: plan line 26 says “no scripts, hook configuration, new tests, gates, dependencies, global configuration or new deployment targets”; line 41 limits fixtures to instruction interpretation. Official [hooks documentation](https://learn.chatgpt.com/docs/hooks) describes definition-specific trust and Stop continuation (sections “Review and trust hooks” and “Stop”); official [Goals documentation](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) describes idle, active, budgeted continuation and evidence-based completion. The session's create_goal contract independently requires an explicit request. Keep Goals/hook activation separate from this text edit; the installed CLI version is not independently measured in this turn.
+- [Pass] Plan line 34 enumerates all seven required scenarios, active-job/service-baseline operational regression, an old/new unmet-acceptance red control, committed provenance and the model-decision limitation. This is adequate planned evidence for the limited claim. At execution, retain exact fixture inputs, expected decisions, full outputs, instruction revision/model identity and an actually observed base failure; if the base passes, report that rather than claiming a demonstrated fix. No new suite or gate is needed.
+- [Pass] Review and publication boundaries remain explicit: plan lines 35–37 require committed evidence, final independent QA, a development PR with actual hosted checks, no unauthorized merge, and deployment from an exact reviewed task revision “awaiting development landing.” Keep deployment status distinct from landed development.
+- [Pass] Full supporting-file sweep matches the recon: SKILL.md Rung 0 says “Stop only when no `- [ ]` line remains”; Rung 6 permits “all remaining items are parked/held.” stop-hook.sh selects only lines starting `- [ ]` and otherwise fails open; install.sh refuses replacement of an existing live foreign/managed link. These pre-existing limitations are addressed or deliberately preserved by the plan. No additional actionable pre-existing defect was identified in these four reviewed files within this instruction-only scope.
+- [Nit] The relay scaffold still says `Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_`. On future scaffolds, populate it or point to the review envelope/ordered acceptance; it does not prevent grading this plan.
+- [Unverified — needs clone run] No scenario fixture, quick_validate, PDDA/ledger gate, pre-push gate or operational regression was executed here. They remain execution acceptance requirements, not passing results. No git command, executable fixture or artifact edit was performed.
+
+Evidence scope: Verify-tier graph project XYZ-forge is a different checkout; generation `2026-09-01T15:54:30Z`. Coverage reports the plan missing and all three skill files not_tracked. Exact current source reads of all four complete files supplied the review evidence; no fresh graph completeness claim is made.
+
+Relay closed (Approved), no further review turn needed. Producer may proceed to implementation and the required evidence/final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
