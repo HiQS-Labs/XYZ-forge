@@ -186,3 +186,11 @@ resolved-only base_made_progress=True
 ```
 
 **Evidence limits.** Verify tier. `list_projects(limit=100)` returned all 77 projects with no current task index. Nearest Forge index `XYZ-forge` was ready; coverage generation `2026-09-01T15:54:30Z`. Narrow graph search for the exact two helper names in `utils/py/relay_drive.py` returned no nodes. Coverage for the three cited code/suite paths reported `metadata_changed`; the plan was `missing`. Current direct source reads therefore supply the material evidence. No exhaustive or graph-completeness claim is made. Only this relay file was edited; no git commands or prohibited gates were run. Implementation verification remains for the disposable clone and harness gate.
+
+### Attestation · relay-drive — 2026-10-06T04:40:19Z
+task: RELAY-gh976-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: ec07d17d807fa6905837bb2721d38d56a9201e70
+added-range: 13087+7319
+added-sha256: 615373f540ce2c3341d8d5910dfd75ceaab2b90fa74dd8e1a30ddb229e591a4f
