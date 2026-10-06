@@ -85,11 +85,11 @@ When `/workhorse` is invoked on a large or ambiguous problem, intake typically a
      This file, not the conversation, is the record of unfinished work. On resume or after compaction,
      re-read it before acting. In Claude Code, the skill's Stop hook refuses to end the turn while it has
      a `- [ ]` line. That hook is Claude-only and checks checklist syntax, not acceptance evidence;
-     checked boxes alone can let it stop prematurely. Codex follows the continuation contract below.
+     checked boxes alone can let it stop prematurely. Claude and Codex follow the contract below.
    - **Incidental Findings (`PARKED/` first):** For a finding outside the current task, check for an existing record, then write a short sourced item under `<repo-root>/PARKED/` when that folder is part of the repository's governance. Do not invent the folder in another repo or open an issue merely to park the finding; follow that repo's intake policy. During triage here, promote selected work through structured intake (`PROJECT/1-INBOX/GH-<NUM>-<topic>.md` plus RELEASES roadmap); mark the PARKED item with the promoted issue/doc link. Preserve one execution record and do not duplicate a canonical plan. Work required to finish the current task stays in the active queue.
 4. **Serial Execution Loop:** Select the highest-priority feasible required item and advance it through Rungs 1–6. Mark `[x]` only with acceptance evidence; mark `[!]` for a concrete external blocker, then finish independent authorized items. Required findings stay active regardless of being called housekeeping or incidental. Parking must not silently reduce authorized scope. Reconcile the outcome before stopping under the contract below.
 
-### Codex continuation and completion contract
+### Shared continuation and completion contract (Claude and Codex)
 
 - **Continue in the same turn:** After completing a subtask, briefly answering a status question,
   receiving restored credentials, or producing a plan/handoff, resume the next authorized action.
@@ -120,7 +120,7 @@ When `/workhorse` is invoked on a large or ambiguous problem, intake typically a
   deployment windows; a future window means finish independent work now and hold deployment until
   the authorized time. Do not keep a busy loop running while awaiting an external dependency.
 
-**Instructions versus runtime enforcement.** These rules guide Codex; this skill does not install a
+**Instructions versus runtime enforcement.** These rules guide Claude and Codex; this skill does not install a
 Codex runtime gate. Its `hooks: Stop` frontmatter and `stop-hook.sh` are for Claude Code, not automatic
 Codex enforcement. Where available and explicitly requested, use Codex's native Goal mechanism with
 the same outcome, evidence, scope, constraints and blocker conditions; respect its budget and lifecycle

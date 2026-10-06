@@ -55,3 +55,7 @@ Approved Round 2 in relay-system/2026-10-06/gh983-final.codex.md (reviewed 5b699
 ## Publication and peer finding
 
 PR https://github.com/HiQS-Labs/XYZ-forge/pull/984 targets development. Exact-head local documentation gate and hosted CI passed at 934f07ee; promotion/canary jobs were skipped by workflow routing. CodeRabbit completed with one minor stale roadmap-summary finding at releases.sql:808. Implemented through roadmap update on owned row rmi-01M49ESM41BDPE9WR6754AFJMZ; raw_text now states QA approved, PR open and authorized landing/deployment pending. No instruction-source change. Requalify the updated ledger via the push documentation gate and hosted CI.
+
+## Shared Claude wording follow-up
+
+Operator requested finishing the small shared-harness correction in PR #984. Three instruction lines now explicitly apply the same completion contract to Claude and Codex. Existing Claude frontmatter, Stop hook and installer bytes are preserved. `claude-compatibility.json` records a bounded hook protocol probe: unchecked item blocks, checked item allows; this does not prove semantic evidence enforcement or a full Claude session. The shared-heading assertion rejects the prior Codex-only heading as its red control. Earlier ten-case model fixtures apply to their recorded source hash; this wording clarification does not claim those fixtures ran on the newer bytes. Fresh final peer QA and exact-head push gate qualify this change. Separate Claude optimization is a stacked follow-up; merge/deployment remain pending authorization.
