@@ -1,6 +1,6 @@
 # Final QA relay — GH-976 implementation
-STATUS: Open
-NEXT: codex (Reviewer)
+STATUS: Approved
+NEXT: claude-a
 
 ## Your role
 
@@ -156,3 +156,77 @@ content is treated as the review (same oddity as plan QA round 1; parked separat
 7. **[Note]** — final gate and consumer backlink remain landing work.
 
 Commits since your reviewed head: `e7559676` (helper), `d37729b8` (evidence). STATUS back to Open.
+
+
+### Round 2 · codex · final QA · 2026-10-05
+
+**Verdict: Approved — both Must findings and the rating finding are resolved.** No remaining Blocker or Must finding in the reviewed implementation. This approves the implementation and retained focused evidence; the final disposable-clone gate and consumer backlink remain landing work. Only this relay file was edited. No git command, suite, pytest, driver dispatch, or executable fixture was run. Review edits are Easy to reverse; production blast radius remains the Python driver's bounded cap-extension decision.
+
+1. **[Note] Plan compliance / Round 1 Must fixes.** `utils/py/relay_drive.py:606–607` uses the target repository, the specified before..after range, `--name-only -z`, and surrogateescape; :621–623 preserves literal pathnames without stripping. :615–618 canonicalizes both operands and uses component-aware containment before deriving the exact-file exclusion. The non-mutating AST probe now returns False for the aliased exact receipt, Unicode receipt, and an in-repo `..thread.md`; True for significant leading-space real paths, mixed changes, and external transcript/basename collision. Missing/equal SHA (:600–601), empty diff, and Git error (:608–609) return False. Independent resolved-item progress (:1133–1134), extension bound (:1136), and hard ceiling (:772) remain intact. Direct loose-object comparison confirms current relay_drive.py is byte-identical to committed candidate `e75596760efe13b672f23c1954d1416669a26eb6`.
+
+2. **[Note] Repair classification.** Trailing-slash directory prefixes (:597) avoid excluding similarly named real directories. The exact-file exclusion does not exclude an external transcript's coincident target basename. Useful repairs entirely under TESTS-RESULTS/ or marathon-system/ remain deliberately excluded by the approved policy; mixed source work qualifies. No policy expansion is requested.
+
+3. **[Note] Retained evidence supports the fix.** All 15 nonempty provenance records have matching actual/expected exits and identify base `6d81df9f6949e64f22997a4f2aca738a420141c9` or committed candidate `e7559676...`. Base A/B/F/G genuinely fail the candidate expectation (control exit 10): driver rc 4, cap-progressing-extended, two extensions/records, four commits. Candidate A/B/F/G pass (0): driver rc 4, cap-stalled, zero extensions/records, two commits. C/D pass on both sides with fixed resolved count and four commits/two extensions, establishing retained integration evidence for the HEAD arm. E passes the missing-SHA stalled case. The suite record identifies the committed candidate and reports **7 pass, 0 fail**, exit 0. The control assertion failure is exit 10; it is correctly distinguished from driver exit 4.
+
+   F's pre-fix red on the original base establishes the original receipt-only defect; it does not independently isolate the intermediate abspath implementation's alias bug. The Round 1 AST red and this round's AST green provide that narrower falsifier. G similarly has retained original-base red plus candidate green and the Round 1 pathname-specific red. The index.lock retry retries the same commit without altering expected progress; exact commit-count checks and absence of COMMIT FAILED in retained output prevent the disclosed dropped-turn race from masquerading as success. No evidence of masking the defect was found.
+
+4. **[Note] Scope hygiene.** Read-only loose-object tree comparison from `cbcb054d...` through evidence commit `d37729b8543bbac1674575ba8dd83df5d19b683f` shows CHANGELOG, the GH-976 plan, this review transcript, releases.db/sql, TESTS-RESULTS and utils changed. Top-level tree identities for **test/, validate.sh, and relay-automation/** are unchanged, proving no suite/registry/frozen twin changes in those surfaces. Some deeper old TESTS-RESULTS/utils objects are packed and were not decoded; no exhaustive whole-utils diff claim is made. The inspected production helper/call site adds no runner, dependency, gate, or parallel subsystem. The retained shell script is manual evidence, outside the test registry.
+
+5. **[Note] Rating / issue mapping.** Read-only SQLite readback now returns **[(976, 80, 75, 50, 85)]**, resolving Round 1 Should. The bounded bugfix, demonstrated receipt-only failure, preserved positive behavior, and small implementation remain consistent with that rating. Fresh GitHub connector fetch of [issue #976](https://github.com/HiQS-Labs/XYZ-forge/issues/976) confirms the accepted receipt-only stalled/original-cap/no-extension behavior, real-file extension, gh115 plus validate.sh --auto, and consumer #75 backlink. Retained controls substantiate the first two and gh115. **[Unverified — needs clone run]** for the final validate.sh --auto gate; the user explicitly assigns that to the harness after this turn. Consumer backlink remains pending and is not attested here. Prose adjudication acceptance remains explicitly withdrawn in favor of existing STATUS: Escalated.
+
+**Non-mutating probe command (exit 0).** The helper's AST was executed with mocked subprocess output; no Git process or fixture was executed. The command asserts the exact NUL diff invocation. Decisive output follows.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import ast,os,subprocess,sqlite3,json
+from pathlib import Path
+from types import SimpleNamespace
+p=Path('utils/py/relay_drive.py')
+m=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='main')
+nodes=[n for n in m.body if (isinstance(n,ast.FunctionDef) and n.name=='commits_touch_non_receipt') or (isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='RECEIPT_DIRS' for x in n.targets))]
+def probe(label,repo,relay,out,want,before='a',after='b',error=False):
+    def output(cmd,**kw):
+        assert cmd==['git','-C',repo,'diff','--name-only','-z',before+'..'+after]
+        if error: raise subprocess.CalledProcessError(1,cmd)
+        return out
+    env=dict(os=os,subprocess=SimpleNamespace(check_output=output,DEVNULL=subprocess.DEVNULL),target_repo=lambda:repo,relay_file=relay)
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),str(p),'exec'),env)
+    got=env['commits_touch_non_receipt'](before,after)
+    assert got==want,(label,got,want)
+    print(label,got)
+r='/private/tmp/gh976-probe'
+probe('alias-exact','/tmp/gh976-probe',r+'/notes/thread.md',b'notes/thread.md\0',False)
+probe('unicode-receipt',r,r+'/thread.md','relay-system/réceipt.md\0'.encode(),False)
+probe('leading-space-real',r,r+'/thread.md',b' relay-system/repair.py\0',True)
+probe('external-collision',r,'/outside/notes/thread.md',b'notes/thread.md\0',True)
+probe('dotdot-name',r,r+'/..thread.md',b'..thread.md\0',False)
+probe('mixed',r,r+'/thread.md',b'relay-system/r.md\0src/repair.py\0',True)
+probe('no-SHA',r,r+'/thread.md',b'src/a\0',False,before='')
+probe('git-error',r,r+'/thread.md',b'',False,error=True)
+db=sqlite3.connect('file:'+str(Path('releases.db').resolve())+'?mode=ro',uri=True)
+print('rating',db.execute("select gh_number,rating_pri,rating_sev,rating_appeal,rating_effort from roadmap_items where gh_number='976'").fetchall())
+db.close()
+rows=[json.loads(x) for x in Path('TESTS-RESULTS/2026-10-05+GH-976/provenance.jsonl').read_text().splitlines()]
+assert len(rows)==15 and all(x['exit_code']==x['expected_exit'] and x['stdout'] for x in rows)
+print('provenance: 15 nonempty records, all expected exits match')
+PYPROBE
+```
+
+```text
+alias-exact False
+unicode-receipt False
+leading-space-real True
+external-collision True
+dotdot-name False
+mixed True
+no-SHA False
+git-error False
+rating [(976, 80, 75, 50, 85)]
+provenance: 15 nonempty records, all expected exits match
+```
+
+**Evidence limits.** Verify tier. Full list_projects pagination returned 77 projects, none for this task worktree. Nearest XYZ-forge index is ready, generation 2026-09-01T15:54:30Z. Graph search returned no relevant current helper symbols; coverage reports metadata_changed for the source/turn-library/suite and missing for the plan. Current targeted source reads supply the material evidence; graph freshness/completeness is not asserted. Integration results above are inspected retained receipts, not fresh executions. Approval does not attest the later gate, PR, merge, consumer backlink, or clone cleanup.
+
+**Handoff: done — claude-a.**
