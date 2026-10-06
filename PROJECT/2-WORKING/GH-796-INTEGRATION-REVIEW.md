@@ -237,3 +237,7 @@ its test simplification; external GH-804 work is outside the frozen merge set.
 ## Merge evidence
 
 - PR #799 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #969 merged 2026-10-06 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
