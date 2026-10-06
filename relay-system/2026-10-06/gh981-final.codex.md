@@ -148,4 +148,12 @@ Reread all eight add-on files, the complete embedded and retained SUMMARY, appro
 
 Relay closed (Approved), no further review turn needed. Handing completion to codex-author for the planned disposable-clone qualification and operator visual/draft review. The approval-specific token handoff is `done`; the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-06T16:43:27Z
+task: RELAY-gh981-final-r2
+reviewer: codex
+status: Approved
+reviewed-head: 6b0d583a7f260b04008ef6062124e07affe3c059
+added-range: 18078+5965
+added-sha256: 823d432cf12df8daa4da1835cdfb3667e5be7e60ca2d2ae24217482ffa9961a6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
