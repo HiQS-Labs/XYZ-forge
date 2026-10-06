@@ -134,4 +134,12 @@ Evidence scope: Verify-tier graph project XYZ-forge is a different checkout; gen
 
 Relay closed (Approved), no further review turn needed. Producer may proceed to implementation and the required evidence/final QA.
 
+
+### Attestation · relay-drive — 2026-10-06T20:36:59Z
+task: RELAY-gh983-plan
+reviewer: codex
+status: Approved
+reviewed-head: da9ca8b2cca2e5f93e31217754d8d577a07bce41
+added-range: 11467+4014
+added-sha256: 3619e6271824cda9a50262256dac671e18c64b32df32f75bdd00b3b6b9c0cfbd
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
