@@ -2,7 +2,7 @@
 gh_issue: 981
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/981
 title: Optional Paperclip dashboard — technical spike
-status: Awaiting visual review — draft publication
+status: Awaiting operator visual review
 created: 2026-10-06
 updated: 2026-10-06
 owner: Codex
@@ -22,7 +22,7 @@ branch: feat/gh981-paperclip-dashboard
 
 | What was just completed | What's next |
 |---|---|
-| Renderer, attribution, visual/manual evidence and final peer QA complete. | Publish draft for operator visual review; full suite at merge. |
+| Draft [PR #982](https://github.com/HiQS-Labs/XYZ-forge/pull/982) published and inspected; final peer QA Approved. | Operator visual review and keep/revise/abandon decision; full suite at merge. |
 
 ## Quad Concepts
 - Evaluate a denser operator UI → isolated, optional Paperclip-inspired presentation.
@@ -131,7 +131,7 @@ left to the operator after visual review.
 - [x] Focused checks have committed provenance; interrupted full run is retained and qualification deferred to merge by operator.
 - [x] Final Codex reviewer Approved in two rounds for the artifact revision; no new suite/registry/gate.
 - [x] Findings written back here, with keep/revise/abandon choices for operator review.
-- [ ] PR inspected, clone retained, no merge or promotion; status remains awaiting review.
+- [x] [PR #982](https://github.com/HiQS-Labs/XYZ-forge/pull/982) inspected against development; clone retained, no merge or promotion; status remains awaiting review.
 
 ## Verification scope and non-scope
 

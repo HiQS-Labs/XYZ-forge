@@ -13,3 +13,5 @@ The synthetic dashboard is usable for operator visual review. Optional demo/live
 The one-off boundary probe lived under ignored `temp/`; it is not a new suite or gate. Its output is retained, including the deliberate failure trace. Public evidence contains no live prompt/task records. Machine-specific checkout prefixes in command logs are replaced with `$GATE_CLONE`.
 
 Merge decision remains keep/revise/abandon after viewing. Final peer QA is Approved. Full-suite qualification is deferred to merge by operator instruction; current publication is a draft for visual review. See gate-disposition.md for the interrupted run and unchanged clone identity.
+
+Draft [PR #982](https://github.com/HiQS-Labs/XYZ-forge/pull/982) was inspected: development base, draft status, matching published head and expected additive scope. Hosted smoke run [37500774863](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37500774863) passed at `cea997371b9c692e4ec57f2bafdba01f1b4794fc`; macOS promotion and Ubuntu advisory jobs were skipped. This observation predates the publication-documentation commit; it is not full-suite qualification. See [publication receipt](pr-publication.json).
