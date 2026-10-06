@@ -86,19 +86,19 @@ and final approver. Reviewer writes only the relay receipt. Independent review i
    `relay-system/2026-10-06/gh985-plan.*.md`. Do not start step 2 without it.
 2. Agy edits `skills/2-daily/workhorse/stop-hook.sh:7` (comment) and `:45-48` (reason string) and adds the Claude
    runtime sentences to `skills/2-daily/workhorse/SKILL.md` after line 133. -> `git diff --stat` shows exactly two
-   files; `diff` of `stop-hook.sh` lines 9-44 and 49-51 is empty (predicate and fail-open untouched);
+   files; Python AST comparison after normalizing only the emitted reason is equal to the stack base (comments ignored; predicate and fail-open untouched);
    `bash -n stop-hook.sh` and `python3 -c` compile of the heredoc both exit 0.
 3. Record bounded manual checks under `TESTS-RESULTS/2026-10-06+GH-985/` with `provenance.jsonl` committed:
    (a) pipe `{"session_id":"gh985","cwd":"<clone>"}` into the hook with a `.workhorse/gh985.md` containing one `- [ ]`
    line -> stdout is `decision: block` and the reason contains the contract wording and no "parked" escape;
    (b) same with `- [x]` only -> no stdout, exit 0; (c) no checklist, malformed JSON, bad session id -> no stdout,
    exit 0 each; (d) red control: temporarily restore the old reason text from the base commit and rerun (a) ->
-   the wording assertion fails; restore the new text and rerun -> passes. Also assert the output files are non-empty
+   the wording assertion fails on absence of the fixed `required`/`optional`/`blocker`/`authorized` guidance terms; candidate also rejects the literal `or [-] (parked` escape. Candidate rerun -> passes. Also assert the output files are non-empty
    before grading them.
 4. Classify the final changed paths with existing `utils/ci-route.sh`; use its required gate from a separate disposable full clone with identity bracket (`core.bare`, remotes, local identity, HEAD) before/after. Current non-core workhorse skill/ledger/evidence paths route tier 1 documentation. Run PDDA and RELEASES checks; inspect warnings in SUMMARY.md. No full runtime suite or Small qualification is claimed unless classification requires it.
 5. Fable final QA on the committed diff and evidence. -> Approved receipt under `relay-system/2026-10-06/gh985-final.*.md`.
 6. Push through the pre-push gate from the disposable clone; open a PR based on PR #984's branch, targeting it, with
-   the stack dependency and incremental diff stated in the body. -> dispatch existing `ci.yml` on the stacked head if automatic base filters omit it; verify the actual run and routing for that exact SHA;
+   the stack dependency and incremental diff stated in the body. -> dispatch existing `ci.yml` on the stacked head if automatic base filters omit it; verify the actual run and routing for that exact SHA; existing workflow_dispatch intentionally routes full/tier 3, so disclose it separately from local tier 1;
    update the Status table. Stop here; merge and deployment await operator authorization.
 
 ## Acceptance mapping
@@ -108,7 +108,7 @@ and final approver. Reviewer writes only the relay receipt. Independent review i
 | Hook reason no longer advertises parking as an escape | step 3a output and 3d red control |
 | Documented cap and tool-call reset correctly described, controls unchanged | `stop-hook.sh:7` diff and reviewer read |
 | Decision predicate and fail-open unchanged | step 2 line-range diff, steps 3b-3c |
-| Skill names the Claude hook's limit in one place | `SKILL.md` diff, reviewer read |
+| Runtime paragraph names Claude hook behavior, limits and aligned guidance; earlier disclosure retained | `SKILL.md` diff, reviewer read |
 | No new tests/gates/mods/config | `git diff --stat` shows two files only |
 | Stacked PR exposes dependency | PR base is PR #984's branch; body names it |
 
@@ -128,3 +128,7 @@ commit.
 
 Fable authored the plan at low effort (canonical model claude-fable-5-1). Before QA, Codex corrected three factual/routing gaps against fresh evidence: the official Stop documentation now confirms the eight-continuation cap and tool-call reset; frontmatter declares activation rather than proving a live hook ran; the existing classifier routes this non-core skill surface to documentation, so an unrequired Small suite was removed. Added documented StopFailure/user-interrupt limits and explicitly requested native /goal guidance; no activation or new enforcement. Stacked-base CI may need the existing manual dispatch, because automatic pull_request targets are development/main. All dispositions require independent plan QA before production changes.
 
+
+## Plan QA dispositions
+
+Round 1 Fable: PASS, no Blocker/Should, three Nits. The relay driver rejected closeout (`close-mismatch`) because the reviewer released rather than completed its token; this is not an attested Approved gate. Applied all three Nits: runtime paragraph rather than exclusive “one place”; explicit full/tier-3 manual-dispatch disclosure; mechanical literal guidance red control. Replaced positional line ranges with equivalent Python AST comparison normalizing only the emitted reason, so added comments cannot invalidate unchanged-line numbering. A corrective independent Round 2 must close the token and be attested before accepted-start/build.

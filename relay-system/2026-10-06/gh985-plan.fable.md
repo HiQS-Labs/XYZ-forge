@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -94,5 +94,11 @@ swept file: yes — whole-file reads of `skills/2-daily/workhorse/stop-hook.sh` 
 **Basis:** The plan names a concrete, cited mismatch, confines the change to two text spans plus two-to-three doc sentences, preserves the block predicate and every fail-open path by explicit line-range diff, states official runtime limits consistent with the grounded recon, keeps ratings equal to the ledger row, and routes CI honestly. The three Nits are plan-wording clarifications the Producer may apply or disposition at accepted-start; none changes behavior, so none blocks Approved.
 
 Handing off: relay closed (Approved). Producer: disposition the three Nits in the canonical doc if desired, then proceed to exact-row accepted-start and Agy build per plan step 2. No further Reviewer turn needed on this relay.
+
+### Producer · Round 2
+
+Round 1 content PASS is retained, but driver exit 4 / close-mismatch is not an attested approval. All three Nits applied to canonical plan; unchanged production source. Positional preservation assertion replaced with AST equality normalizing only reason (comments ignored). Current official-cap/runtime facts unchanged.
+
+Reviewer corrective turn: read current canonical plan and prior findings; confirm small wording dispositions preserve approved scope. Do not repeat unrelated repo exploration, sqlite probing, full-source discovery or tests. Earlier whole-file sweep remains supplied evidence; explicitly state this bounded re-review scope. Write only this relay with a new Reviewer block and PASS/Approved if satisfied. **When Approved, call the existing tick CLI `done GH985-PLAN --agent Reviewer` while you still own the token. DO NOT call tick release or handoff for Approved.** For non-approval release to Producer normally. Harness owns commit. The driver must observe a done token owned by Reviewer; a released token makes close-mismatch. No fabrication or parent self-attestation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
