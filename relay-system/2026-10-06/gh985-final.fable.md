@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -73,5 +73,33 @@ TOKEN CLOSEOUT: For Approved, while still owning GH985-FINAL, call existing tick
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (Fable, claude-fable-5-1, low effort — independent final QA)
+
+**VERDICT: PASS**
+
+swept file: yes — full `skills/2-daily/workhorse/SKILL.md` (1–382), full `stop-hook.sh` (1–53), full `install.sh` (1–58), plan doc, SUMMARY.md, comparison-final.json, manual-hook-checks-final.json, runtime-recon.md, runtime-capabilities.txt, governance identity/route/releases, validator outputs, CHANGELOG head, provenance.jsonl.
+
+Probes (read-only, under `.relay-scratch/tmp`, discarded after this turn):
+- `shasum -a 256` on SKILL.md / stop-hook.sh / install.sh → `5b05f30a…faef`, `4fbfb305…8de1`, `42a2401f…94f7`; identical to `comparison-final.json.source_hashes` and to `manual-hook-checks-final.json.skill_sha256`/`hook_sha256`. Final manual result and current source match.
+- Independent AST probe: extracted the `<<'PY' … PY` heredoc from the parent-base hook (`aedc0726`, sha `b0463b25…9f79`, byte-identical at stack base `3c9bfa8c`) and the current hook, replaced only the string constant containing `open item(s)` with a placeholder, `ast.dump` compared → `ast_equal_except_reason: True`, rc=0. `bash -n stop-hook.sh` → ok. Confirms `python_ast_equal_except_reason: true` in the final manual JSON.
+- Read-only diff vs `aedc0726` under `skills/2-daily/workhorse/`: 2 files, +11/−3 (SKILL.md +6; stop-hook.sh +5/−3). install.sh and frontmatter (`SKILL.md:1–29`, `hooks: Stop` block) untouched. Matches the declared scope.
+
+Findings (whole file; current change first, then pre-existing):
+- `[Pass]` Shared evidence/outcome audit, authorized-feasible queue, optional/deferred split, independent-work-first blocker, pause/window boundaries preserved — `SKILL.md:90` ("Select the highest-priority feasible required item… Mark `[x]` only with acceptance evidence; mark `[!]`… then finish independent authorized items"), `:99–107` (Evidence before ticking / Audit before ending), `:113–121` (Stop-only clause, "Finish independent authorized work first", deployment-window hold). Hook reason text mirrors it: `stop-hook.sh:45–48` ("Continue the next authorized feasible required item… Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. [-] … does not reduce required scope").
+- `[Pass]` Python decision/session/fail-open logic unchanged except the reason constant — probe above; `stop-hook.sh:14–21` (bad JSON / bad session id → `sys.exit(0)`), `:36–43` (missing checklist → `continue`), `:52` (`exit 0`).
+- `[Pass]` Completed checks are current, non-empty, and able to fail: ten cases in `manual-hook-checks-final.json` at the matching hashes; `red_control.wording_assertion_exit: 1` with `"assertion": "required guidance absent: optional"` against the old reason, then `green_after_red` emits the new reason. Both intermediate findings (missing authorized-work wording; stop-only clause omitting external blockers) are present in the final text quoted above, so they are actually fixed, not just dispositioned.
+- `[Pass]` Claude runtime claims are bounded and truthful: `SKILL.md:134–138` says the hook "cannot verify acceptance evidence", `/goal` is "when available and explicitly requested… still relies on model judgment and does not expand authorization"; `stop-hook.sh:7` "Do not change runtime controls". No semantic or live multi-turn guarantee is claimed — `manual-hook-checks-final.json.limits` and plan doc "Validation limits" (`GH-985-CLAUDE-WORKHORSE.md:121–124`) say so explicitly. StopFailure ignoring decision output is confirmed on the official hooks page ("StopFailure | No | Exit code and stderr are ignored"). The eight-continuation cap and `/goal` command are witnessed in local CLI 2.1.289 strings (`runtime-capabilities.txt`: `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP??8`, `name:"goal"`). No mod, new gate, trust change or implicit activation anywhere in the diff.
+- `[Nit]` Doc-citation drift, not a defect: three read-only fetches of `code.claude.com/docs/en/hooks` through the sandbox's summariser did not surface the phrases "user interrupt", "stop_hook_active" or "consecutive" that `runtime-recon.md` attributes to the official page (direct `curl` was network-denied, so this could be summariser truncation). The behaviour itself is witnessed in the CLI binary and the `hook-continuation` case (`stop_hook_active: true` input still blocks). No change requested; if the Producer wants belt-and-braces, cite the CLI string alongside the doc link in `runtime-recon.md`. Not a `[Should]`: no observed failure.
+- `[Pass]` Publication: plan doc `GH-985-CLAUDE-WORKHORSE.md:22–23` targets `development`, names #984 as landing dependency, supplies incremental comparison (`comparison-final.json` base `aedc0726` → head `868399fe`), "No merge or deployment authorization is granted here." `governance-route.txt`: `route=docs`, `tier=1`; `governance-identity.json` before/after equal at `08014160`; releases `check: clean (0 failures, 9 warning(s))` all pre-existing `mig-ref-stale`/`release-target-passed`.
+- `[Pass]` Ratings 65/45/50/85 (`GH-985-CLAUDE-WORKHORSE.md:116–119`) are commensurate: two-file wording change on an advisory Claude-only path, no evidenced loss. Scope matches +11/−3.
+- `[Pass]` Raw `quick_validate` exit 1 is the pre-existing `hooks` frontmatter key only ("Unexpected key(s) in SKILL.md frontmatter: hooks"); metadata projection "Skill is valid!". Deliberately preserved per plan; not introduced by this change.
+- Pre-existing sweep of the untouched 370 lines: no defects found. Relative links at `SKILL.md:144` (`../../1-hourly/sanity-check/SKILL.md`), `:220` (`skills/1-hourly/consult/SKILL.md`), `:289` (`../ci-debug/SKILL.md`) all resolve on disk. `SKILL.md:178` names foreign-repo paths (`src/rebalance/lib/`) as examples — pre-existing, cosmetic, out of this issue's scope; not graded.
+
+Not run here (by rule): validate.sh, test suites, pytest, live Claude session. The exact-head pre-push gate and hosted CI remain the Producer/harness's step before PR readiness, as the plan already states.
+
+**Basis:** Definition of Done met — full source sweep done and cited; no Blocker or Should; runtime limits stated truthfully in SKILL.md, hook comment, plan doc and evidence JSON; final evidence hashes match current source; decision logic provably unchanged; publication routing and dependency declared without merge/deploy authorization.
+
+Token closeout: `tick done GH985-FINAL --agent Reviewer` (Approved — not released). Relay closed (Approved), no further turn needed; the harness commits this file and runs its gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
