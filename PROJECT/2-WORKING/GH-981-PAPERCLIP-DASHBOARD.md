@@ -2,7 +2,7 @@
 gh_issue: 981
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/981
 title: Optional Paperclip dashboard — technical spike
-status: In progress — plan QA pending
+status: In progress — visual verification
 created: 2026-10-06
 updated: 2026-10-06
 owner: Codex
@@ -22,7 +22,7 @@ branch: feat/gh981-paperclip-dashboard
 
 | What was just completed | What's next |
 |---|---|
-| Fresh full clone, issue registration, PRS rating and bounded Recon Map. | Independent Codex plan QA, then implement the approved add-on. |
+| Independent plan QA Approved; accepted start recorded; optional renderer implemented. | Browser/manual verification, independent final QA and required gate. |
 
 ## Quad Concepts
 - Evaluate a denser operator UI → isolated, optional Paperclip-inspired presentation.
@@ -108,7 +108,7 @@ and an explicit demo/live launch.
 5. Launch synthetic demo and opt-in local preview → expect loopback-only binding, labelled data mode and no producer writes.
 
 ### Phase 1 — QA checklist
-- [ ] Plan reviewer Approved with dated receipt; accepted start recorded afterwards.
+- [x] Plan reviewer Approved with [dated receipt](../../relay-system/2026-10-06/gh981-plan.codex.md); accepted start recorded afterwards.
 - [ ] Optional module and all presentation files stay in the standalone add-on folder.
 - [ ] Demo launch performs no live reads; live mode uses the existing projection.
 - [ ] Source attribution and MIT notice present; core/startup/dependencies unchanged.
