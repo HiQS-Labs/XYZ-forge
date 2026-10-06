@@ -257,4 +257,12 @@ Read the entire embedded artifact, canonical plan and Recon Map; read all of src
 
 Relay closed (Approved), no further review turn needed. Producer codex-author may proceed with the approved sequence; merge remains an operator decision after visual review.
 
+
+### Attestation · relay-drive — 2026-10-06T16:11:43Z
+task: RELAY-gh981-plan
+reviewer: codex
+status: Approved
+reviewed-head: 0f56b50fdc440e79ea8a0ac9768943a02719cb8d
+added-range: 15264+4167
+added-sha256: ec67a3e6b04cea1be80d5f5dec404d608c0efa36908d3238568a0aaa4774a140
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
