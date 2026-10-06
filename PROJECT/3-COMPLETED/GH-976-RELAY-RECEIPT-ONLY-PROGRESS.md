@@ -2,9 +2,9 @@
 gh_issue: 976
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/976
 title: "relay-drive: receipt-only commits count as convergence and extend the round cap"
-status: active
+status: Complete
 created: 2026-10-05
-updated: 2026-10-05
+updated: 2026-10-06
 owner: orchestrator (Claude Code)
 goal: relay-drive stops counting relay-transcript commits as convergence when deciding a round-cap extension
 doc_type: bugfix
