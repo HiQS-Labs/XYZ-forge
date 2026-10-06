@@ -24,7 +24,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| intake captured, parked, rated 80/75/50/85; recon done; plan drafted | Codex plan QA relay, then implement step 1, witness red control on existing suite |
+| plan QA round 1 (Codex): 2 Must on verification recipe, accepted; plan revised; pre-fix red control witnessed (extension to cap 4 on receipt-only commits) | Codex plan QA round 2; on Approved implement step 1 and record the four manual controls under TESTS-RESULTS |
 
 ## Observed problem
 
@@ -32,17 +32,24 @@ related:
 (`get_head_commit()` before vs after the turn) or the `[x]` count in the relay file rose. Every
 relay turn commits its own transcript: `relay-automation/relay-turn-lib.sh:1498` commits
 `relay(<task>): <agent> turn`, and the driver's attestation path `relay_drive.py:643` commits
-`relay-drive: attest ...`. So HEAD moves on a handoff that changed nothing but the relay file, and
-the GH-115 extension is granted round after round until the hard ceiling (`hard_cap = 2 * cap`,
-line 738). Consumer evidence: user-sage-backend#75, relay extended to cap 10 with no repair
+`relay-drive: attest ...` (approval publication only). So on a turn whose only tracked change is the
+transcript committed in the same repository `get_head_commit()` samples, HEAD moves inside the
+before/after window and the GH-115 extension is granted round after round until the hard ceiling
+(`hard_cap = 2 * cap`, line 738). A turn that commits nothing (`relay-turn-lib.sh:1480-1495`) or
+whose transcript lives in the archive repo (`:1502-1523`) does not trigger it; the defect is the
+same-repo tracked-receipt case, which is the marathon layout. Consumer evidence: user-sage-backend#75, relay extended to cap 10 with no repair
 commits, halted exit 4 `cap-progressing-extended`.
 
 ## Requirement
 
 HEAD movement counts as progress only when at least one changed path between `head_before` and
 `head_after` lies outside receipt paths. Receipt paths: `relay-system/`, `marathon-system/`,
-`.tick/`, `.relay-scratch/`, `TESTS-RESULTS/`, and the relay file itself (it may live elsewhere,
-e.g. `relay.md` at the target root in the existing suite). The `[x]` resolved-items signal is unchanged.
+`.tick/`, `.relay-scratch/`, `TESTS-RESULTS/` (directory prefixes, trailing slash kept), plus the
+relay file's own path **relative to the same repository the diff is taken in**, resolved through the
+existing `target_repo()` (`relay_drive.py:616-623`, the same root `get_head_commit()` uses). When the
+transcript is outside that repo the exact-file exclusion is omitted; an archive basename never
+excludes an unrelated target file. Evidence-only edits under `TESTS-RESULTS/` and brief-only edits
+under `marathon-system/` are deliberately not progress. The `[x]` resolved-items arm is unchanged.
 
 ## Non-goals
 
@@ -58,25 +65,39 @@ e.g. `relay.md` at the target root in the existing suite). The `[x]` resolved-it
 One helper in `relay_drive.py`, `commits_touch_non_receipt(head_before, head_after)`, that runs
 `git diff --name-only <before>..<after>` in the same repo `get_head_commit()` resolves and returns
 True when any path survives the receipt filter. Replace the `head_after != head_before` arm with it.
-On git failure (no before SHA, diff error) return False: no extension on unverifiable evidence,
-matching the stalled default. Rejected alternative: filtering on commit *message* prefix
+On git failure (empty before/after SHA, diff error) return False: no extension on unverifiable
+evidence, matching the stalled default; the independent resolved-items arm still applies. Rejected alternative: filtering on commit *message* prefix
 (`relay(`/`relay-drive:`) — a builder commit of real files can carry any message, and a receipt
 commit could be renamed; paths are the ground truth.
 
 ## Implementation (ordered, verification inline)
 
-1. `utils/py/relay_drive.py`: add the helper next to `get_head_commit()`; use it at line ~1097.
-   Verify: `bash test/gh115-round-cap.sh` stays green (its progressing stub appends `[x]` to the
-   relay file, so it exercises the untouched arm; Test 1 stalled still `cap-stalled`).
-2. Red control, witnessed on the existing suite without adding a registry entry: run Test 2's stub
-   variant where the only change per round is a commit to `relay.md` (receipt path) with
-   `STUB_PROGRESS=no`. Before the fix the attest commit already moves HEAD and the old code never
-   extended on it in the suite — so the red control is a manual check recorded under
-   `TESTS-RESULTS/2026-10-05+GH-976/`: a scripted round that commits only `relay-system/x.md`
-   between turns must extend on the pre-fix code and must not on the post-fix code, with
-   `provenance.jsonl`.
-3. `test/gh115-round-cap.sh` is edited only if its pinned behaviour changes (it does not); leave it.
-4. CHANGELOG entry; link PR from #976 and user-sage-backend#75.
+1. `utils/py/relay_drive.py`: add `commits_touch_non_receipt(before, after)` beside
+   `get_head_commit()`, reusing `target_repo()`; replace the `head_after != head_before` arm at
+   line ~1097. Verify: `bash test/gh115-round-cap.sh` stays green. Note what it pins: Tests 2/3
+   signal progress through `[x]` lines (`test/gh115-round-cap.sh:23-24`), so the suite does **not**
+   pin the HEAD arm either way; the controls below do.
+2. Manual controls, run in a disposable full clone against base `6d81df9f` (must fail) and the
+   candidate commit (must pass), one standalone script under `$TMPDIR` that builds a fixture repo,
+   seeds a tick token, dispatches a stub agent that **commits inside the dispatched turn** and keeps
+   handing the token off, never approves, `--round-cap 2`, `STUB_PROGRESS=no`. Assertions: captured
+   output non-empty, exit 4, reason, original turn count, and presence/absence of
+   `bounded extension granted` and `Extension · System`.
+   - A. receipt-only directory: only `relay-system/receipt.md` changes per turn → expect exit 4
+     `cap-stalled`, no extension (base extends → control fails on base).
+   - B. receipt-only exact file: the relay file at an arbitrary tracked location (`notes/thread.md`)
+     is the only change → same expectation as A.
+   - C. real-file positive: only `src/repair.py` changes per turn → expect `bounded extension
+     granted` and `Extension · System` on the candidate (GH-115 HEAD arm preserved).
+   - D. mixed: `relay-system/receipt.md` plus `src/repair.py` → same as C.
+   - E. no-SHA: `RELAY_TARGET_ROOT` pointing at a non-git dir → helper returns False, exit 4
+     `cap-stalled` (resolved-items arm untouched).
+   Record commands, revisions, output and `provenance.jsonl` under
+   `TESTS-RESULTS/2026-10-05+GH-976/`. No new suite, no `validate.sh` entry.
+3. `test/gh115-round-cap.sh` unchanged (its pinned behaviour does not change).
+4. CHANGELOG entry; link PR from #976 and user-sage-backend#75. Issue #976's
+   `adjudication-requested` acceptance item is withdrawn in favour of the existing
+   `STATUS: Escalated` handoff (`relay_drive.py:399`, `:756`, `:1044`), which either role may set.
 
 ## Rollback
 

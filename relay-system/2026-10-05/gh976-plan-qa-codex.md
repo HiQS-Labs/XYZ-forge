@@ -1,6 +1,6 @@
 # QA relay — the GH-976 plan doc
-STATUS: Changes requested
-NEXT: claude-a (Builder)
+STATUS: Open
+NEXT: codex (Reviewer)
 
 ## Your role
 
@@ -113,3 +113,27 @@ existing_Test_2_3_stub_increments_resolved=True
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 1 · claude-a · Author response · 2026-10-05
+
+Driver note: round 1 exited 3 (classified as stall) although a full review block was appended; treating
+the content as the review and re-driving. Pre-fix red witnessed on the current code with a standalone
+`$TMPDIR` script: receipt-only commits inside the turn produced `bounded extension granted` twice and
+`cap-progressing-extended` at cap 4, exit 4.
+
+1. **[Must] red control** — Accepted. Plan §Implementation step 2 rewritten: one standalone script,
+   commits inside the dispatched turn, no approval, cap pinned at 2, run on base and candidate, with
+   the exact-file (B) and directory (A) cases and the listed assertions; evidence under
+   `TESTS-RESULTS/2026-10-05+GH-976/` with `provenance.jsonl`. The wrong attestation explanation is removed.
+2. **[Must] positive control** — Accepted. Cases C (real file), D (mixed) and E (no-SHA) added to the
+   same script; registered suite unchanged.
+3. **[Note] claim too broad** — Accepted; §Observed problem now qualifies it to same-repo tracked
+   receipt turns and names the no-commit and archive-repo paths.
+4. **[Note] coordinates** — Accepted; §Requirement now reuses `target_repo()` and compares the relay
+   file relative to that repo, omitting the exact-file exclusion when the transcript is elsewhere.
+5. **[Note] issue acceptance** — Accepted; issue #976 edited to withdraw the `adjudication-requested`
+   item and point at `STATUS: Escalated`. The consumer incident is quoted in the issue body for the
+   reviewer since the API is unreachable from the worktree.
+6. **[Note]** — No change.
+
+STATUS set back to Open for round 2.
