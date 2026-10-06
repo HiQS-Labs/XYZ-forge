@@ -44,8 +44,9 @@ for root in roots:
         shown = "\n".join(open_items[:5]) + ("\n…" if len(open_items) > 5 else "")
         print(json.dumps({"decision": "block", "reason":
             "/workhorse run checklist %s still has %d open item(s):\n%s\n"
-            "Continue with the next open item. Stop only for verified completion, explicit user pause/cancellation, "
-            "or a concrete external blocker recorded as [!] with the exact blocker. "
+            "Continue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. "
+            "For a concrete external blocker record [!] and finish independent authorized work first. "
+            "Stop only for verified completion or explicit user pause/cancellation. "
             "[-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope." % (path, len(open_items), shown)}))
     sys.exit(0)
 PY

@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Agy
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -89,5 +89,21 @@ First bounded check at 66612ba4: extracted Python AST matches base except reason
 Agy repair ownership remains the same two source files only. Make the reason explicitly continue the next **authorized feasible required item**; mark [x] only with acceptance evidence and audit the requested outcome before completion; for a concrete external blocker record [!] and finish independent authorized work first. Keep optional/explicit-user-deferral wording and pause/cancellation limits. Preserve Python AST except reason, Bash wrapper and session/fail-open logic.
 
 In the Claude runtime paragraph, replace `do not activate it or install a mod here` with `do not activate it implicitly`. Explicit operator /goal requests must remain supported. Link the official Claude hooks docs, describe StopFailure as ignoring continuation decisions (rather than API errors themselves forcing retry), and wrap prose to existing style. No added mod/config/gate or implicit activation. Read earlier context and make only these fixes; no new broad recon or tests; parent will run the probe. Write only allowed source and this relay. Set NEXT Producer / STATUS Open and release to Producer, do not mark final QA Approved.
+
+### Producer · Round 2 (Repair)
+
+- Modified `skills/2-daily/workhorse/stop-hook.sh`:
+  - Rewrote the reason string to explicitly continue the next authorized feasible required item.
+  - Specified to mark [x] only with acceptance evidence and audit the requested outcome before completion.
+  - Specified to record [!] for a concrete external blocker and finish independent authorized work first.
+  - Retained the wording for [-] and verified completion/explicit user pause/cancellation.
+- Modified `skills/2-daily/workhorse/SKILL.md`:
+  - Updated the Claude runtime paragraph to replace `do not activate it or install a mod here` with `do not activate it implicitly`.
+  - Added that explicit operator `/goal` requests must remain supported.
+  - Linked the official Claude hooks docs (`https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/hooks`).
+  - Described StopFailure as ignoring continuation decisions `(rather than API errors themselves forcing retry)`.
+- Re-verified Python AST and Bash structure preservation; no other paths edited.
+
+handing off to Producer — go to the parent orchestrator window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
