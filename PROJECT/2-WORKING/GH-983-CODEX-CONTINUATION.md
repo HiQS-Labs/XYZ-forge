@@ -15,7 +15,7 @@ goal: Continue authorized work until its requested outcome is verified or extern
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan and final QA Approved; bounded fixtures and governance evidence retained | Publish reviewed PR through exact-head push gate; canonical landing and Skills Army deployment await authorization |
+| Independent plan and final QA Approved; bounded fixtures and governance evidence retained | PR #984 open; exact-head local documentation gate and hosted CI passed; canonical landing and Skills Army deployment await authorization |
 
 ## Recon and bet
 
@@ -51,3 +51,7 @@ TESTS-RESULTS/2026-10-06+GH-983/ contains non-empty base/candidate decision outp
 ## Final QA disposition
 
 Approved Round 2 in relay-system/2026-10-06/gh983-final.codex.md (reviewed 5b6994aa). Round 1 review-input blocker resolved by correcting the declared artifact path and furnishing comparison.json; no source change was needed. Final reviewer confirmed contract, source diff, byte preservation and evidence limits. Skills Army named update preview changes workhorse only; installed payload and both app links remain unchanged. Merge/deployment remain required unfinished work pending authorization, not incidental parked work.
+
+## Publication and peer finding
+
+PR https://github.com/HiQS-Labs/XYZ-forge/pull/984 targets development. Exact-head local documentation gate and hosted CI passed at 934f07ee; promotion/canary jobs were skipped by workflow routing. CodeRabbit completed with one minor stale roadmap-summary finding at releases.sql:808. Implemented through roadmap update on owned row rmi-01M49ESM41BDPE9WR6754AFJMZ; raw_text now states QA approved, PR open and authorized landing/deployment pending. No instruction-source change. Requalify the updated ledger via the push documentation gate and hosted CI.

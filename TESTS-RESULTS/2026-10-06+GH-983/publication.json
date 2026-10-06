@@ -1,0 +1,33 @@
+{
+  "head": "934f07eec3fdc4f088c17d30ea60cae6e65e9e31",
+  "prepush": {
+    "command": [
+      "git",
+      "push",
+      "-u",
+      "origin",
+      "fix/workhorse-codex-continuation"
+    ],
+    "exit_code": 0,
+    "decisive_output": "pre-push: documentation gate GREEN in 58s \u2014 pushing.",
+    "identity_before": {
+      "head": "934f07eec3fdc4f088c17d30ea60cae6e65e9e31",
+      "bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "local_email": ""
+    },
+    "identity_after": {
+      "head": "934f07eec3fdc4f088c17d30ea60cae6e65e9e31",
+      "bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "local_email": ""
+    }
+  },
+  "hosted_ci": {
+    "run": 37529150896,
+    "conclusion": "success",
+    "sha": "934f07eec3fdc4f088c17d30ea60cae6e65e9e31",
+    "promotion_canary": "skipped by routing"
+  },
+  "peer_finding": "CodeRabbit minor stale GH-983 roadmap raw_text; implemented via canonical writer; updated ledger awaits requalification"
+}
