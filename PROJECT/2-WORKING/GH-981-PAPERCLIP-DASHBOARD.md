@@ -2,7 +2,7 @@
 gh_issue: 981
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/981
 title: Optional Paperclip dashboard — technical spike
-status: In progress — final QA pending
+status: Awaiting visual review — draft publication
 created: 2026-10-06
 updated: 2026-10-06
 owner: Codex
@@ -22,7 +22,7 @@ branch: feat/gh981-paperclip-dashboard
 
 | What was just completed | What's next |
 |---|---|
-| Standalone renderer and attribution complete; browser/manual checks recorded. | Independent final QA, required gate and a review-only PR. |
+| Renderer, attribution, visual/manual evidence and final peer QA complete. | Publish draft for operator visual review; full suite at merge. |
 
 ## Quad Concepts
 - Evaluate a denser operator UI → isolated, optional Paperclip-inspired presentation.
@@ -122,15 +122,15 @@ left to the operator after visual review.
 6. Record manual checks under `TESTS-RESULTS/2026-10-06+GH-981/` with nonempty artifacts and `provenance.jsonl` → expect desktop/mobile screenshots and browser interaction evidence.
 7. Verify empty/stale/failure/partial states, literal hostile text, keyboard navigation, filters and demo/live data mode; witness a deliberate broken assertion/input as a red control → expect the check to fail for the reason it guards.
 8. Run existing relevant Flightdeck manual checks and PDDA checks in a disposable full clone; compare source fixture bytes and Git identity before/after → expect no write/drift.
-9. Commit implementation/evidence, run independent final Codex QA; choose required gate with existing classifier and run full qualifying gate once on the approved revision only if required → expect Approved and required gate green.
-10. Push from the disposable gate clone through its installed pre-push boundary, open PR against development, inspect emitted base/head/scope/checks → expect reviewable spike awaiting operator decision, no merge.
+9. Commit implementation/evidence, run independent final Codex QA; record classifier and operator qualification direction → expect Approved for visual/draft review. The operator explicitly deferred the full suite to merge on 2026-10-06; the already-started run was stopped and retained as interrupted, not green.
+10. Publish from the disposable clone with the full pre-push gate explicitly skipped under operator direction; open draft PR against development and inspect base/head/scope/checks → expect reviewable spike awaiting operator decision, no merge or development catch-up.
 
 ### Phase 2 — QA checklist
 - [x] Desktop and 430px compact synthetic screenshots retained; no private live content committed.
 - [x] Manual pass/fail evidence includes source immutability, snapshot failure/staleness and red control.
-- [ ] Existing focused checks and appropriate final gate have committed provenance.
-- [ ] Final Codex reviewer Approved for the artifact revision; no new suite/registry/gate.
-- [ ] Findings written back here, with keep/revise/abandon questions for operator review.
+- [x] Focused checks have committed provenance; interrupted full run is retained and qualification deferred to merge by operator.
+- [x] Final Codex reviewer Approved in two rounds for the artifact revision; no new suite/registry/gate.
+- [x] Findings written back here, with keep/revise/abandon choices for operator review.
 - [ ] PR inspected, clone retained, no merge or promotion; status remains awaiting review.
 
 ## Verification scope and non-scope
@@ -152,3 +152,11 @@ Existing focused checks report 34 pass / 5 fail at a pre-existing Darwin `waitid
 incompatibility; manual fixture boundary checks passed. No merge readiness claim.
 Operator decision after viewing: keep this optional renderer, revise its density/
 layout, or abandon it. No merge has been authorized.
+
+## Operator steering — 2026-10-06
+
+Preserve this branch and prepare the PR; do not catch up with development. This
+additive spike defers full-suite qualification until merge. The full run already
+in progress was stopped (143), not qualified; its transcript and unchanged Git
+identity are retained in the [gate disposition](../../TESTS-RESULTS/2026-10-06+GH-981/gate-disposition.md).
+Runtime bytes remain those independently reviewed. No merge is authorized.
