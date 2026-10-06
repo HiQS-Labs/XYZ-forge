@@ -136,8 +136,7 @@ grep -q '^debug_mantra_prior_attempts()' "$DRIVER" && pass "debug_mantra_prior_a
 grep -q '^debug_mantra_note()' "$DRIVER" && pass "debug_mantra_note defined" || fail "debug_mantra_note missing"
 # GH-45 byte-identical mirror contract (test/lane-attempt-cap.sh) must stay untouched: the new GH-162
 # functions must sit OUTSIDE the _lane_key..lane_attempt_reset extraction range.
-awk '/^_lane_key\(\)/{p=1} p{print} p&&/^lane_attempt_reset\(\)/{r=1} r&&/^\}/{exit}' "$DRIVER" \
-  | grep -q 'debug_mantra' \
+grep -q 'debug_mantra' <<<"$(awk '/^_lane_key\(\)/{p=1} p{print} p&&/^lane_attempt_reset\(\)/{r=1} r&&/^\}/{exit}' "$DRIVER")" \
   && fail "GH-162 helpers leaked into the GH-45 byte-identical mirror block" \
   || pass "GH-162 helpers stay outside the GH-45 byte-identical mirror block"
 

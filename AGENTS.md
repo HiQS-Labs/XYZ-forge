@@ -111,6 +111,10 @@ of which passed cleanly before they were mutated — an `awk` range that termina
 line, `not matches -- "$pat"` where the helper already supplied `--` so the check searched for the
 literal string `--`, and a telemetry `rc` assertion that no *passing* run could ever exercise.
 
+**A flaky suite is fixed in place if it is in a tier, and turned off if it is not.** Tier membership comes from
+`utils/ci-route.sh` (`SUBSYSTEM_TESTS_small`). Turning off means removing it from `validate.sh` `TESTS` and adding it to the
+gh306 `EXEMPT` list, keeping the file (#802 operator decision, comment 5841529958; #853).
+
 **An empty input passes every check.** Before asserting anything about extracted data, assert that
 you extracted some: a failed command substitution yields an empty string, a shell redirect creates
 the file regardless, and a scanner then reports CLEAN against zero bytes. Size-check the artifact,
@@ -120,6 +124,8 @@ or guard the extraction with its own assertion, before trusting a verdict comput
 remote bridge needs explicit permission each time — running the tests is not permission, and neither
 is working on the feature that provides it. `SOP.md` §3b has the incident and the teardown rule that
 goes with it.
+
+**Establish blocker necessity before investing in repair.** An in-flight failing test or unexpected error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
 
 ### 7. Record only consequential bets
 
@@ -406,8 +412,8 @@ local change.
 - **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
   for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
   `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping
-  platform with the real toolchain — and it runs a **superset** of the hosted job, including
-  `registry-lock-concurrency.sh`, which CI skips for a contended-Linux flake. The hosted `canary-ubuntu`
+  platform with the real toolchain. Operator-retired suites stay out of both runners;
+  their retained manual files are listed in gh306 EXEMPT (GH-854). The hosted `canary-ubuntu`
   job is `continue-on-error: true`: its red means *portability drift*, not breakage, and must not be
   reported as a broken commit. Two consequences that bite: **never defer a test run to CI** — CI is
   advisory and tests the wrong OS; and **a green local run is self-reported**, so it does not qualify a

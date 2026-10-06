@@ -72,7 +72,7 @@ fi
 
 # 5b. Non-mutation assertion: TASK-103 paths must NOT have changed
 TASK_103_PATHS=$(tick_b info TASK-103 2>/dev/null | awk -F': *' '$1=="paths"{print $2}')
-if echo "$TASK_103_PATHS" | grep -q "src/billing/\*\*" && ! echo "$TASK_103_PATHS" | grep -q "src/auth"; then
+if grep -q "src/billing/\*\*" <<<"$TASK_103_PATHS" && ! grep -q "src/auth" <<<"$TASK_103_PATHS"; then
   pass "rejected scope expansion was non-mutating: TASK-103 paths unchanged ($TASK_103_PATHS)"
 else
   fail "rejected scope expansion mutated paths! paths=$TASK_103_PATHS"

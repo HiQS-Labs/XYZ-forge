@@ -1,0 +1,2 @@
+changed_tests=gh492-idle-kill.sh
+tier=3

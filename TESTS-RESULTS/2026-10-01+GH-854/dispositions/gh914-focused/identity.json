@@ -1,0 +1,14 @@
+{
+  "before": {
+    "head": "c3072782a2c274bb0c3378162d90be8051b7a86a",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/gh854-gate-dispositions.remote=origin\nbranch.fix/gh854-gate-dispositions.merge=refs/heads/fix/gh854-gate-dispositions",
+    "refs": "c3072782a2c274bb0c3378162d90be8051b7a86a refs/heads/fix/gh854-gate-dispositions\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/HEAD\n1b40d57c36c70eb045341ec95403de93ba056b92 refs/remotes/origin/development\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/fix/gh854-gate-dispositions\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "after": {
+    "head": "c3072782a2c274bb0c3378162d90be8051b7a86a",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/gh854-gate-dispositions.remote=origin\nbranch.fix/gh854-gate-dispositions.merge=refs/heads/fix/gh854-gate-dispositions",
+    "refs": "c3072782a2c274bb0c3378162d90be8051b7a86a refs/heads/fix/gh854-gate-dispositions\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/HEAD\n1b40d57c36c70eb045341ec95403de93ba056b92 refs/remotes/origin/development\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/fix/gh854-gate-dispositions\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  }
+}

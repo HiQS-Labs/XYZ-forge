@@ -1,0 +1,42 @@
+== test: gh284-p4-release-lanes ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh284-p4-release-lanes.XXXXXX.TzSjccO0FN
+  PASS: rollup runs with an explicit --milestone
+  PASS: --release resolves via Codename:
+  PASS: --release resolves via Release:
+  PASS: auto-resolve picks the single in-progress release, excluding Shipped history
+  PASS: a release with no Milestone: fails loudly rather than seeding nothing
+  PASS: an unknown --release exits 3
+  PASS: two in-progress releases with join keys is an error that names both
+  PASS: red control: missing releases.db exits 3
+  PASS: a conventional scope fix(GH-101) counts as landed
+  PASS: a leading bare GH-102 scope counts as landed
+  PASS: a scope with a phase suffix feat(GH-103 P3) counts as landed
+  PASS: a subject that only MENTIONS GH-104 is not landed (fix(RELEASES): … GH-104 …)
+  PASS: GH-105 inside another issue's scoped commit is not landed (fix(GH-101): … GH-105 …)
+  PASS: a fix inside a marathon commit that claims no issue reads as MENTIONED, not landed
+  PASS: a bare #107 in a subject is a PR number and never lands issue 107
+  PASS: an issue with no trunk reference is ABSENT
+  PASS: a commit claiming an OPEN issue is IN FLIGHT, not landed (#308's real shape)
+  PASS: closed+claimed lands, open+claimed does not — the discriminator is the issue state
+  PASS: GH-10 is not matched by GH-101 (no prefix bleed)
+  PASS: headline reports the correct landed/total against the named trunk
+  PASS: the IN FLIGHT bucket is surfaced explicitly in the summary
+  PASS: the MENTIONED bucket is surfaced explicitly, not folded into a not-landed tally
+  PASS: the rollup states which trunk it measured against
+  PASS: each landed row cites the commit that claimed it
+  PASS: --json carries the same counts, trunk and total as the text report
+  PASS: the buckets sum to the total (no issue is dropped from the tally)
+  PASS: seed emits the same keys as skills/3-weekly/10days/scan-issues.sh
+  PASS: seed emits one JSON object per open issue
+  PASS: an empty milestone seeds exit 4, never 0
+  PASS: an empty milestone rollup exits 4, never 0
+  PASS: an empty rollup prints no report at all before exiting
+  PASS: an unauthenticated gh exits 3 with a named reason
+  PASS: an unauthenticated run emits no partial list that could look complete
+  PASS: the gh-absent fixture really resolves no gh (the case is not vacuous)
+  PASS: a missing gh exits 3 with a named reason
+  PASS: an unknown verb exits 2
+  PASS: an unknown flag exits 2
+  PASS: --milestone and --release together exit 2
+  PASS: --help exits 0
+  gh284-p4-release-lanes: 39 pass, 0 fail

@@ -1,0 +1,6 @@
+== test: gh372-escalation-log-tail ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.8vT9kFi8dS
+  PASS: the escalation contains a collapsed failing-turn tail
+  PASS: the record keeps the last 40 lines, not an unbounded transcript
+  PASS: a failure before transcript creation is explicitly diagnosed
+gh372-escalation-log-tail: 3 pass, 0 fail

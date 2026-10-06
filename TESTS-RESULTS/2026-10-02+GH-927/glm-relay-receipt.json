@@ -1,0 +1,30 @@
+{
+  "reviewer": "commandcode",
+  "configured_model": "zai-org/glm-5.3",
+  "configured_effort": "max",
+  "profile": "glm 5.3 max",
+  "gateway": "self",
+  "exit_code": 0,
+  "result": "Approved",
+  "rounds": 1,
+  "attestation": {
+    "added_len": 16878,
+    "added_sha256": "4cc49e92fef8455ae38384a34f4a5223bee4c7fa9d1adc37f61ed833f66248af",
+    "added_start": 8872,
+    "artifact_sha256": null,
+    "attested_at": "2026-10-02T16:25:32Z",
+    "driver_pid": 56628,
+    "isolated": true,
+    "relay_file": "/Users/noelsaw/marathon-clones/xyz-sanity-check-20261002/relay-system/2026-10-02/gh927-sanity-check.glm.md",
+    "relay_file_rel": "relay-system/2026-10-02/gh927-sanity-check.glm.md",
+    "reviewed_head": "cf4129bf95a8f77b31fba1525739774639353fe3",
+    "reviewer": "commandcode",
+    "schema": "relay-drive/attest@1",
+    "status": "Approved",
+    "target_repo": "/Users/noelsaw/marathon-clones/xyz-sanity-check-20261002",
+    "task": "RELAY-GH927-SANITY-GLM",
+    "trailer_sha256": "6b8d05c291192f206afb6f1a6eb624305ecc841ac173f7f5024f7876572f1e26",
+    "transcript_repo": "/Users/noelsaw/marathon-clones/xyz-sanity-check-20261002"
+  },
+  "limitations": "Static skill QA; provider token usage was not reported by this run."
+}

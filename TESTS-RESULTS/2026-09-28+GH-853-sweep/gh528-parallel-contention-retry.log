@@ -1,0 +1,12 @@
+== test: gh528-parallel-contention-retry ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh528-parallel-contention-retry.XXXXXX.fmAlBVso70
+  PASS: a parallel failure is re-run serially before it is believed
+  PASS: a suite that passes alone is counted as passed, matching the sequential verdict
+  PASS: the contended suite is named in a warning (an incomplete lane list cannot fail silently)
+  PASS: the lock lane is derived from TESTS, so both paths run the same set of suites
+  PASS: a failure recorded after a stdin-reading re-run is still re-run and reported (GH-15)
+  PASS: a surviving failure still fails the run (the retry cannot launder a real failure)
+  PASS: the stdin-reading suite is counted by its alone verdict and named in the contention warning
+  PASS: every pooled suite is classified exactly once — the verdict rests on complete evidence
+  PASS: a suite with no result line is re-run alone and classified — never silently uncounted
+  gh528-parallel-contention-retry: 9 pass, 0 fail

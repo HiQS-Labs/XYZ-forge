@@ -6,11 +6,11 @@ description: >-
   poll.sh) rather than improvising the handoff by hand. Use when the operator
   wants to "run an automated relay", "have Codex or agy review this
   end-to-end", "drive a relay to completion headless", "run the relay harness",
-  or set up the all-Claude hands-free poll loop — and the working tree is a
-  clone of the xyz-3-agents-swarm repo (it ships relay-automation/). /relay
+  or set up the all-Claude hands-free poll loop. The skill can start from a
+  foreign repo because its locator selects a separate XYZ-forge harness. /relay
   scaffolds the thread and owns the turn protocol; relay-xyz is the repo-specific
   layer that runs the real scripts. NOT for scaffolding a thread from scratch
-  (that is /relay), NOT for repos without relay-automation/.
+  (that is /relay).
 ---
 
 # relay-xyz — automated relays on the shipped harness
@@ -26,6 +26,8 @@ for candidate in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-har
                  "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
                  "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
                  "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.agents/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.zcode/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
   [ -n "$candidate" ] && [ -f "$candidate" ] && { L="$candidate"; break; }
@@ -56,23 +58,59 @@ Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`),
 - Running automated relays in **two different repos at the same time on one machine** — see
   [Concurrent relays across repos](#concurrent-relays-across-repos-same-machine) (each repo needs its own
   vendored `.xyz/`).
-- You have a relay thread (or are about to scaffold one with `/relay`) **and** the working tree is a
-  clone of this repo.
+- You have a relay thread (or are about to scaffold one with `/relay`); the current working tree may
+  be a foreign repo if the locator can reach a canonical XYZ-forge harness.
 
-**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), repos that don't ship
-`relay-automation/`, or work that needs a human checkpoint between every turn (use plain `/relay`
+**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), or work that needs a human checkpoint between every turn (use plain `/relay`
 manual mode).
 
 ## First-time setup on a new clone or machine (make the skill discoverable)
 
-This repo keeps its skills in top-level `skills/`, which Claude Code does **not** scan. A session
-finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`. A fresh clone or second machine has
-no such symlink, so the skill is invisible in **every** session there — the "other VS Code sessions
-can't find the relay-xyz files" failure. Fix it **once per clone** (idempotent, self-locating, no
-hardcoded path):
+First check whether Skills Army HQ already manages this skill on the machine:
 
 ```bash
-bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into ~/.claude/skills/
+readlink ~/.claude/skills/relay-xyz   # or the relay-xyz entry in your app's skills root
+```
+
+Compare the printed target with your Skills Army collection root: `$XYZ_SKILLS_ROOT` when it is set,
+otherwise `~/git-pulse-sync/Deployed Skills`. Three outcomes:
+
+**Managed by Skills Army HQ: skip `install.sh`.** The link points into the collection root
+(`<collection root>/relay-xyz`). This counts even when the link is dangling, for example after the
+collection moved or mid-sync. Skills Army HQ owns the link, and its rule is not to run copied `install.sh`
+files. Running it there exits 1 on a live link (GH-678 keeps it). On a dangling one it replaces the link
+with this clone and adds links in app roots the collection does not target. Repair or refresh links with
+Skills Army HQ (`sync.py`), then go straight to the locator below.
+
+To check the harness, run `--check` from the installed path and from **outside any repo**:
+
+```bash
+cd "$HOME" && bash "$HOME/.claude/skills/relay-xyz/find-harness.sh" --check   # or your app root's relay-xyz
+```
+
+Inside a task clone, `--check` resolves that clone and would offer to save it. When it resolves your
+canonical clone, run the one-line `save this harness on this Mac` command it prints. When it finds no
+harness at all, it exits 1 without a save command. Write the per-Mac config yourself:
+
+```bash
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/xyz" && printf '%s\n' /path/to/XYZ-forge > "${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness"
+```
+
+The alternative is to prefix a single command with `XYZ_HARNESS=/path/to/XYZ-forge`. Do not export it from
+shell startup files.
+
+**A live link to somewhere else** (another XYZ-forge clone, or a vendored `.xyz/` copy). Another installer
+owns it, and `install.sh` refuses it with exit 1 (GH-678). If that target is the copy you want, keep it and
+go to the locator. To switch, remove the link yourself, then follow the next case.
+
+**Not managed (no link, or a dangling link outside the collection root).** This repo keeps its skills in top-level `skills/`, which
+Claude Code does **not** scan. A session finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`.
+A fresh clone or second machine without Skills Army HQ has no such symlink, so the skill is invisible in
+**every** session there — the "other VS Code sessions can't find the relay-xyz files" failure. Fix it
+**once per maintained clone** (idempotent, self-locating, no hardcoded path):
+
+```bash
+bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into the Claude Code, Codex, and Gemini/Antigravity skills roots
 ```
 
 It also replaces a stale/dangling symlink and verifies `find-harness.sh` resolves the harness. The
@@ -82,12 +120,11 @@ load the skill at all* — a layer the locator can't reach, since it runs only a
 ## Preconditions — locate the harness (bundled locator, never hardcode a path)
 
 `relay-xyz` ships its own device-agnostic locator, [`find-harness.sh`](find-harness.sh), beside this
-skill. It resolves the harness repo (the clone that ships `relay-automation/`) **relative to its own
-installed location**, following symlinks — so it works from *any* working directory, including a clone
-that has only `relay-system/` thread storage (from `/relay`) but **not** the harness scripts. `$HOME`
-and the skill's own symlink are the only anchors; **no machine path is ever hardcoded.** That's what
-keeps relay-xyz from "complaining the harness isn't in this repo" when you launch it from a clone
-without `relay-automation/` + `bin/tick`.
+skill. It checks an explicit override, a caller's vendored harness, the current repo, its own
+installed location, a per-Mac config at `${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`, and bounded
+canonical XYZ-forge clone locations. A copied Skills Army deployment therefore works from a foreign
+repo. `--check` shows a command to save the chosen canonical harness in that config and warns when
+its cached upstream is ahead. It never fetches while checking.
 
 Run this first. It finds the locator, exports the harness env, `cd`s into the clone that ships the
 harness, and prints a one-glance readiness line:
@@ -101,11 +138,13 @@ for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-harness.sh}
          "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
          "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
          "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.agents/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.zcode/skills/relay-xyz/find-harness.sh" \
          "./.claude/skills/relay-xyz/find-harness.sh" \
          "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
   [ -n "$L" ] && [ -x "$L" ] && break
 done
-[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your xyz-3-agents-swarm clone"; exit 1; }
+[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your XYZ-forge clone"; exit 1; }
 
 eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK}
 cd "$HARNESS"
@@ -185,7 +224,7 @@ is unrecoverable, with no reflog or stash behind it. A new runtime artifact unde
 to the preserve list in `xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
 
 So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
-`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative), and
+`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative → config → search), and
 `find-harness.sh --check` **warns** when you're in a foreign repo with no `.xyz/` (using the shared
 harness) and points you at the vendor command. Two vendored repos each run `relay-drive.sh` from their
 own `.xyz/relay-automation/`, holding independent locks — no contention. (Editing the central harness
@@ -207,8 +246,9 @@ Either breadcrumb must be a **portable pointer** — the skill name or the `find
 bare file isn't auto-loaded (a skimming agent skips it exactly like it skips this doc's own body), it's
 machine-specific (breaks on the next clone or device), a stale cached path is *worse* than no path at
 all, and cleaning one up later has cross-repo blast radius. **relay-xyz never auto-installs any file
-into a target repo** — only `install.sh` writes anything, and it writes only into `~/.claude/skills/`
-on the machine running it, never into the target repo itself.
+into a target repo**. Only `install.sh` writes anything, and it writes only skill symlinks into the
+machine's app skills roots (`~/.claude/skills/`, `~/.codex/skills/`, and the Gemini/Antigravity roots),
+never into the target repo itself.
 
 ## The two automated paths
 
@@ -421,7 +461,7 @@ the same repo/worktree state (observed: a stray `git worktree` plus a `tick` tok
   scaffolder only writes a thread; you still drive it with `relay-drive.sh` per the paths above.
 
 - **Drive a full relay/build that lands in a DIFFERENT repo (`--target-root`):** the *normal* case —
-  the harness lives in `xyz-3-agents-swarm`, the code you want built or reviewed-and-committed lives in
+  the harness lives in `XYZ-forge`, the code you want built or reviewed-and-committed lives in
   your own repo. Pass `--target-root <repo>` to `relay-drive.sh` (or `marathon-drive.sh`): the relay
   thread + `tick` token stay in the harness clone, while the worktree base, `ALLOW_PATHS` resolution,
   and the file-scoped commit all route to `<repo>` (the harness clone is never touched). `find-harness.sh`

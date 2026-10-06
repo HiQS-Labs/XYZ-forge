@@ -22,7 +22,15 @@ def ok(name, cond, detail=""):
     if cond: P += 1; print(f"  PASS: {name}")
     else: F += 1; print(f"  FAIL: {name} {detail}".rstrip())
 def sh(*cmd, env=None): return subprocess.run(list(cmd), capture_output=True, text=True, env=env)
-def git(repo, *args): return sh("git", "-C", repo, *args)
+def git(repo, *args):
+    # GH-830: every git call here builds or reads a fixture and must succeed. A failure stops the
+    # suite and names the command and git's own stderr, instead of surfacing lines later as an
+    # unrelated crash (2026-09-25: a failed seed-owner clone read as FileNotFoundError on TODO.md).
+    r = sh("git", "-C", repo, *args)
+    if r.returncode != 0:
+        print(f"  FAIL: fixture setup failed: git -C {repo} {' '.join(args)} (exit {r.returncode}): {r.stderr.strip()}")
+        sys.exit(1)
+    return r
 def tree(root):
     root = pathlib.Path(root)
     if not root.exists(): return None
@@ -50,14 +58,17 @@ def publish(*extra): return sh(sys.executable, sync, "--target", "skills-army-mi
 
 r = publish("--push")
 ok("first publication pushes and reads back", r.returncode == 0, r.stderr[-300:])
+# GH-955: XYZ-forge is the Skills Army HQ upstream again (reverses GH-882); the child is a published
+# projection of skills/3-weekly/skills-army-hq/.
 expected = {
     ".gitignore", ".xyz-forge-revision", "LICENSE", "LICENSE-COMMERCIAL.md", "MANIFEST.txt", "README.md",
-    "SKILL.md", "references/recovery.md", "references/targets.md", "scripts/intake.py", "scripts/sync.py",
+    "SKILL.md", "references/recovery.md", "references/targets.md", "scripts/intake.py",
+    "scripts/sync.py",
 }
 actual = set(filter(None, git(dest, "ls-files").stdout.splitlines()))
 ok("literal inclusion-only payload set", actual == expected, f"missing={sorted(expected-actual)} extra={sorted(actual-expected)}")
 manifest = set(pathlib.Path(dest, "MANIFEST.txt").read_text().splitlines())
-ok("manifest names exactly the nine managed payloads", manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
+ok("manifest names exactly the nine managed payloads",manifest == expected - {"MANIFEST.txt", ".xyz-forge-revision"})
 canonical_readme = pathlib.Path(src, "skills/3-weekly/skills-army-hq/README.md").read_bytes()
 ok("root README matches its canonical package source",
    pathlib.Path(dest, "README.md").read_bytes() == canonical_readme)

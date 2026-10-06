@@ -1,0 +1,21 @@
+# GH-745 witness: two rollbacks at the SAME instant into one repo's .tick/events, then `tick claims`.
+# usage: python3 collision-witness.py.txt <checkout> ; prints files, records per file, tick claims rc/stderr
+import json, os, subprocess, sys, tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+co = Path(sys.argv[1]); sys.path.insert(0, str(co / "utils/py"))
+import wave_reconcile as wave
+fixed = datetime(2026, 9, 27, 12, 0, 0, 123000, tzinfo=timezone.utc)
+class Frozen(datetime):
+    @classmethod
+    def now(cls, tz=None): return fixed
+wave.datetime = Frozen
+with tempfile.TemporaryDirectory() as d:
+    (Path(d) / ".tick/events").mkdir(parents=True)
+    wave.log = lambda *a, **k: None
+    for _ in range(2): wave.RollbackJournal(d).rollback()
+    files = sorted((Path(d) / ".tick/events").glob("*"))
+    print("files:", len(files), [f.name for f in files])
+    print("records per file:", [len(f.read_text().splitlines()) for f in files])
+    r = subprocess.run([str(co / "bin/tick"), "claims", "--json"], env=dict(os.environ, TICK_REPO_ROOT=d), capture_output=True, text=True)
+    print("tick claims rc:", r.returncode, "|", (r.stderr.strip() or r.stdout.strip())[:160])

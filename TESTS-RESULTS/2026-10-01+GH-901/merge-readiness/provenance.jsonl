@@ -1,0 +1,2 @@
+{"command": "bash validate.sh --subsystem small", "exit_code": 1, "sha": "836ba6783fd00e0c02dd1feec4050a64e6bb5ad3", "identity_intact": true, "at": "2026-10-02T07:03:28.030025+00:00"}
+{"command": "bash validate.sh --subsystem small", "exit_code": 0, "sha": "1a47590a304293b648df1faee3abbb998cd171cd", "identity_intact": true, "environment": "XYZ_HARNESS,XYZ_SKILLS_ROOT,XYZ_FORGE_ROOT,TICK_REPO_ROOT unset", "at": "2026-10-02T07:12:46.582532+00:00"}

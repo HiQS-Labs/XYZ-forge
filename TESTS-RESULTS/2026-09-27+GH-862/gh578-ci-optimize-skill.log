@@ -1,0 +1,40 @@
+== test: gh578-ci-optimize-skill ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh578-ci-optimize-skill.XXXXXX.IX3SZCIFQC
+== test: gh578-ci-optimize-skill ==
+  PASS: skills/4-occasional/ci-optimize/SKILL.md exists
+  PASS: frontmatter has name: ci-optimize
+  PASS: frontmatter has description
+  PASS: Principle 1 exists
+  PASS: Principle 2 exists
+  PASS: Principle 3 exists
+  PASS: Principle 4 exists
+  PASS: Principle 5 exists
+  PASS: Principle 6 exists
+  PASS: Principle 7 exists
+  PASS: Principle 8 exists
+  PASS: Principle 9 exists
+  PASS: Principle 10 exists
+  PASS: Principle 11 exists
+  PASS: Principle 12 exists
+  PASS: Principle 1 title match
+  PASS: Principle 2 title match
+  PASS: Principle 3 title match
+  PASS: Principle 4 title match
+  PASS: Principle 5 title match
+  PASS: Principle 6 title match
+  PASS: Principle 7 title match
+  PASS: Principle 8 title match
+  PASS: Principle 9 title match
+  PASS: Principle 10 title match
+  PASS: Principle 11 title match
+  PASS: Principle 12 title match
+  PASS: Principle 5 includes git show-ref comparison
+  PASS: Principle 4 includes matched sample batches
+  PASS: Anti-patterns section exists
+  PASS: Phased Adoption Roadmap section exists
+  PASS: Wave 1 present
+  PASS: Wave 4 present
+  PASS: Scorecard section exists
+  PASS: Scorecard assessment tiers exist
+  PASS: negative control: mutation successfully detected missing Principle 5
+  gh578-ci-optimize-skill: 36 pass, 0 fail

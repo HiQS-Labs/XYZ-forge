@@ -1,0 +1,11 @@
+== test: tick-foreign-cwd ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-tick-foreign-cwd.XXXXXX.KeHPokaxiC
+  PASS: foreign-CWD release exits non-zero (no silent success)
+  PASS: error names the missing .tick/events (actionable, not a bare 'task not found')
+  PASS: real lock untouched — TASK-1 still claimed by claude-a
+  PASS: foreign-CWD claim refused (non-zero)
+  PASS: no stray .tick/ auto-created in the foreign repo
+  PASS: env-pinned release still works (TICK_REPO_ROOT honored)
+  PASS: inferred root WITH .tick/ still claims (guard not over-eager)
+  PASS: resolved root echoed to stderr when inferred (visibility)
+  tick-foreign-cwd: 8 pass, 0 fail

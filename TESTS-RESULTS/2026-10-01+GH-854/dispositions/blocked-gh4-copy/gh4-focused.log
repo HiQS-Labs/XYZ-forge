@@ -1,0 +1,8 @@
+== test: gh4-ungated-clone-warning ==
+  PASS: ungated clone: --print-mode still exits 0 (non-fatal)
+  PASS: ungated clone: warning names the missing gate
+  PASS: ungated clone: warning names the one-command fix
+  PASS: ungated clone: validate.sh states it is continuing anyway (non-fatal, in-band)
+  PASS: gated clone: --print-mode exits 0
+  PASS: gated clone: no ungated-clone warning — silent when properly wired
+  gh4-ungated-clone-warning: 6 pass, 0 fail

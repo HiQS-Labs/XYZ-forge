@@ -1,20 +1,19 @@
 ---
 name: radar
 description: >-
-  Per-repo SDLC process coach and strategic compass over the last 2-3 weeks of activity.
-  Delivers a user-friendly narrative that celebrates high-level wins, evaluates engineering momentum,
-  diagnoses process health, and identifies potential regressions alongside recurring defect clusters.
-  Under the hood, it rigorously analyzes Run/Grow/Transform flow distribution, checks open-PR collisions,
-  and flags release plan drift. Scans for historical reports across RADAR/, docs/radar/, or
-  PROJECT/1-INBOX/ to track multi-week trajectory arcs and offers long-horizon retrospectives.
-  Analysis is read-only; findings persist to two sinks (an immutable dated report doc + one live
-  radar-labeled issue checklist) so they survive across sittings. Use when the operator asks
-  "how is our development cycle going", "what have we actually been doing", "are we just fixing bugs",
-  "what keeps breaking", "did we introduce any regressions", "summarize radar history", "radar arc",
-  "summarize radar reports", "what should we fix once to stop the bleeding", "is the plan still right",
-  "strategic review", "impact review", "run the radar", "/radar", or "/radar --arc". Not for end-user
-  shipped recaps (weekly-shipped), not for ranking marathon candidates (start-marathon), not for
-  maturity assessment (/honest), and it never executes fixes (/10days does that).
+  Per-repo SDLC process coach and strategic compass over the last 2-3 weeks of activity:
+  celebrates high-level wins, evaluates engineering momentum, diagnoses process health,
+  and spots potential regressions alongside recurring defect clusters. Analyzes
+  Run/Grow/Transform flow distribution, checks open-PR collisions, and flags release
+  plan drift; scans RADAR/, docs/radar/, or PROJECT/1-INBOX/ for multi-week trajectory
+  arcs. Read-only analysis; findings persist to two sinks (an immutable dated report
+  + one live radar-labeled issue checklist). Trigger when the operator asks "how is our
+  development cycle going", "are we just fixing bugs", "what keeps breaking", "did we
+  introduce any regressions", "summarize radar history", "radar arc", "is the plan
+  still right", "strategic review", "impact review", "run the radar", "/radar", or
+  "/radar --arc". Not for shipped recaps (weekly-shipped), marathon ranking
+  (start-marathon), or maturity assessment (/honest); never executes fixes (/10days
+  does that).
 ---
 
 # radar
@@ -24,6 +23,9 @@ A per-repo SDLC process coach and strategic compass: pairs a friendly, construct
 rigorous empirical lenses over one window, persisting to a reconcilable report.
 Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 
+Also triggers on (moved out of the description to fit the 1024-char loader limit, GH-942): "what have we
+actually been doing", "summarize radar reports", "what should we fix once to stop the bleeding".
+
 ---
 
 ## Recite this — verbatim, as the first thing in your first response
@@ -31,7 +33,7 @@ Every claim cites a commit, file, or issue. Tracking issue: GH-442.
 > **Radar Discipline:**
 > 1. **Frame window & discover historical arc (Step 0).** Default to 21 days on trunk (`main`/`development`); discover prior reports in `RADAR/`, `docs/radar/`, or `PROJECT/1-INBOX/` to extract historical baseline RGT metrics and multi-week trajectory.
 > 2. **Prove flow distribution & RGT mix (Step 1 — Lens 1).** Pipe trunk commit subjects to a verified tally file, prove counts sum to `wc -l`, isolate Harness machinery from the denominator, classify Run/Grow/Transform (Transform strictly declared via `rgt: transform`), and report Unclassified drift.
-> 3. **Cluster defects, detect regressions & check PR collisions (Steps 2–2b — Lens 2).** Mine 9 evidence signals to isolate chronic debt and short-cycle regressions (applying $\ge 2$ days / $\ge 2$ PRs recurrence discriminator); score targets, and cross-check open PRs to prevent duplicate scheduling.
+> 3. **Cluster defects, detect regressions & check PR collisions (Steps 2–2b — Lens 2).** Mine 9 evidence signals to isolate chronic debt and short-cycle regressions (applying $\ge 2$ days / $\ge 2$ PRs recurrence discriminator); score targets, cross-check open PRs to prevent duplicate scheduling, and check CI churn against the repo's SOP (Step 2c).
 > 4. **Audit release alignment & orphan backlog (Step 3 — Lens 3).** Read `releases.db` and open milestones read-only; measure orphan issue share and surface roadmap plan-vs-execution drift without modifying database state.
 > 5. **Deliver coaching memo & persist dual sinks on confirmation (Steps 4–5).** Present the SDLC Process Coach narrative (celebrate wins, coach process friction, highlight regressions, offer multi-week arc); upon single operator confirmation, write immutable Sink A (`RADAR-REPORT-*.md`) and sync live Sink B (`radar` issue checklist).
 >
@@ -55,6 +57,8 @@ Then begin work.
   in-session and stop. A clean run that manufactures paperwork trains the operator to ignore
   the artifacts. An umbrella observation (Lens 2 signal 8) is a finding in its own right: a run
   with zero ordinary targets and one tracked umbrella still writes both sinks.
+- **Radar proposes a pause; it never declares, pauses, labels or blocks.** CI churn (Step 2c) ends in
+  a proposal line for the operator, nothing else.
 - **Degrade loudly.** Missing `gh`, no `PROJECT/**`, no conventional commits → run the lenses you
   can and state plainly which signal was unavailable and what that costs the verdict (table below).
 
@@ -76,6 +80,9 @@ When prior reports exist:
 - Extract historical RGT percentages, identified target IDs, and retirement states.
 - If ≥2 prior reports exist spanning multiple weeks, use them to compute the multi-week macro-arc
   for Lens 1 and the SDLC Process Coach narrative (Step 4).
+
+**Detect the repo's CI churn SOP** (the detection order is in Step 2c) and record the result in the
+report header: `SOP: <path> (landed)`, `SOP: #<n> (draft, not landed)`, or `SOP: none`.
 
 ## Step 1 — Lens 1: flow distribution
 
@@ -320,6 +327,62 @@ guard's own command). A PR that fails a guard it predates is a **collision** —
 "Draft, failing, conflicted, or stale" above and name the guard, the failing line, and the fix
 owner. A guard that cannot be run locally is reported as unavailable, never as a pass.
 
+## Step 2c — CI churn check (SOP-aware)
+
+Is the repo in a CI churn state, and does it have a playbook for one? Measure from existing sources
+only — no new suite, guard or telemetry (the SOP's own rule). Check the repo under review, not
+XYZ-forge specifically; XYZ-forge paths below are examples.
+
+**SOP detection** (shared with `whack-a-mole` §2):
+1. **A landed doc wins.** On trunk, check `docs/CI-CHURN-RECOVERY-SOP.md`, then any `docs/**` or root
+   `*.md` whose frontmatter has `doc_type: sop` and whose title or `context_tags` name CI churn, then a
+   pointer line in `SOP.md` §4. Found → `SOP: <path> (landed)`; use its trigger and exit-gate tables
+   verbatim.
+2. **Otherwise, an SOP issue.** `gh issue list --state all --search 'in:title "CI churn" SOP'` for a
+   title containing both `SOP` and `CI churn` (case-insensitive), or an issue labelled `sop`.
+   Open → `SOP: #<n> (draft, not landed)`, with every threshold labelled `draft`. Closed as completed
+   without a doc → apply it and say the doc is missing. Closed as not planned → no SOP; name the issue.
+3. **Otherwise** `SOP: none`: use the defaults below.
+
+If a doc and an issue disagree, the doc wins; note the issue.
+
+**Triggers (defaults; a landed SOP's table wins — cite by ID, so a changed threshold needs no skill edit):**
+
+| Trigger | Signal | Default threshold | Source (radar input) |
+|---|---|---|---|
+| E1 | Recurring CI failures | ≥ 30% of the last 20 runs of the qualifying lane fail, or ≥ 5 consecutive failures | signal 9's `gh run list --workflow <qualifying lane>` |
+| E2 | Long or blocked merge queue | median ready→merged > 2 days, or ≥ 5 ready PRs waiting on serial qualification | PR list (one extra read) |
+| E3 | Merge-queue conflicts | ≥ 50% of open PRs touch one shared or generated file, or ≥ 2 PRs parked at a repair cap in one batch | Step 2b's open-PR file lists |
+| E4 | Runaway suite growth | any net registry growth while a freeze is in force; otherwise > 1 suite/day over 14 days | registry count at two SHAs (one extra read) |
+| E5 | Repeated fix/revert cycles | one class with ≥ 5 repeat fixes in 14 days, or a whack-a-mole churn score ≥ 40 | signal 8; the newest whack-a-mole umbrella |
+| E6 | Flaky or fragile gate suites | ≥ 2 red runs on a clean trunk in 7 days, or ≥ 2 re-run-alone rescues across the last 5 full gates; list suites that fail then pass on re-run | run logs, gate records, issues (one extra read) |
+| E7 | Timeouts | any tooling wait or job cap < 1.25 × the longest of the last 20 runs it covers | workflow/tool config vs run durations (one extra read) |
+| E8 | Churn crowding out work | Run share ≥ 80% in two consecutive radar runs, or the active release slips on CI work | Lens 1 (this run and the prior report); Lens 3 |
+
+Print one table: trigger, value, threshold, source, fired `yes` / `no` / `unavailable`. A trigger with no
+readable source is `unavailable` — never counted as fired, never as not fired.
+
+**Declaration rule (default):** any two triggers, or any one for 7 consecutive days. E7 alone is a Day 0
+fix, not a window.
+
+**Recovery window open** (an open issue titled `CI churn recovery:`): report the SOP's exit gates
+(X1–X10) instead of the triggers.
+
+**Wording (print exactly):**
+
+- *No SOP, rule met:*
+  > **Recommended next step (proposal — you decide):** This repo shows recurring CI churn: <E-ids fired, each with value, threshold and source>. It has no CI churn SOP on file. I recommend pausing new non-CI work (features and non-urgent refactors) for one short, time-boxed cycle, and spending it on root-cause analysis of the recurring CI failures: <top 1–3 classes, with issue links>.
+  > 1. Run `/whack-a-mole` over the CI failures, and file one umbrella per root cause.
+  > 2. Freeze whatever is growing (new suites, guards, workflows) for the cycle.
+  > 3. Before starting, set a hard end date and an exit condition. For example: the qualifying CI lane green on 10 consecutive runs, and no new member of the class for 14 days.
+  > 4. Afterwards, write down what worked as this repo's CI churn SOP.
+  >
+  > Nothing is paused unless you decide it. If you'd rather keep going, say so, and I'll record the proposal as declined.
+- *SOP on file, rule met:*
+  > **Recommended next step (proposal — you decide):** Per <SOP path or #issue (draft)>, triggers <E-ids> fired (<values>). That meets its declaration rule. I recommend declaring a CI churn recovery and starting its Day 0 checklist (§2.3). Nothing changes until you declare.
+- *SOP on file, rule not met:* `CI churn: <n>/8 triggers fired, below <SOP>'s declaration rule.` One line; no action item.
+- *Recovery window open:* `CI churn recovery <#tracking>: exit gates <met>/<10>; hard stop <date>.` Name any gate trending to miss (SOP §4.7).
+
 ## Step 3 — Lens 3: release recalibration
 
 Read the DB using `releases check`, `releases list`, and the `python3 utils/timeline/export_timeline.py --json` payload. Cite the DB generation numbers in the report.
@@ -382,11 +445,15 @@ Follow the coach's narrative with 2–3 clear, high-leverage recommendations fra
 
     Recommended next step: <specific, high-leverage action, owner/decision when known, and completion condition>
 
+When Step 2c's declaration rule is met, paragraph 2 names CI churn, and the Step 2c wording is the
+first action item.
+
 *Example*: "Recommended next step: Pause new feature branches in the vendoring area for one work cycle to implement a unified path resolver, retiring the cluster of 12 recurring resolution issues once and for all."
 
 ### 3. Structured Evidence & Technical Highlights
 
 Translate the underlying analytical lenses into clean, easily digested human takeaways:
+- **CI churn (Step 2c)**: the SOP line and the trigger table.
 - **Flow Balance & RGT Arc**: Summarize the Run/Grow/Transform effort mix alongside the trend across prior runs or windows (e.g. "Run/Maintenance: 76.9% [vs 76.7% in Run 2] · Grow/Features: 14.2% [vs 14.4%] · Transform: 0% (rgt: adoption: 0 docs) · Denominator: 607 commits"), clearly illustrating whether the development arc is trending toward feature momentum or stuck in KTLO.
 - **Top Recurring Targets & Regressions**: List the top 2–4 defect clusters in a simple bulleted format, clearly distinguishing **Recent Regressions** (bounceback on recently touched code) from **Chronic Tech Debt** (long-standing multi-week issues). Include why each recurs and what a single clean fix accomplishes.
 - **Regressed After Declared Fixed**: one row per class that was declared fixed and came back
@@ -498,6 +565,10 @@ The checklist only, plus a link to the newest report doc. Search first:
   causally linked, say so under both.
 - **more than one** → stop and ask the operator which is canonical.
 
+Sink A always carries the Step 2c table and wording. Sink B gets a `## CI churn — <date>` section only
+when the declaration rule is met, holding one unchecked item:
+`Operator: declare a CI churn recovery, or decline (radar proposes; it never declares)`.
+
 Checklist items are grouped under their target heading and each names a file, a function, and an
 acceptance condition, so a different agent in a later session can execute one cold:
 
@@ -554,9 +625,48 @@ Then offer — do not assume — to hand the targets to `start-marathon`.
 | Conventional commits | Lens 1 inference | Report the Unclassified share as the finding it is |
 | `releases.db` absent, or seed-only | Lens 3 | Everything else; PLAN reads "no release plan" — a valid state, not a gap |
 | Closed issues (zero) | Lens 2 signal 4 entirely | Everything else; say "nothing has had time to recur" rather than implying a clean sweep |
+| `gh` / auth (Step 2c) | E1, E2, E3, E6 | The rest of the trigger table; those four read `unavailable`, never "not fired" |
+| No CI churn SOP | The SOP's own thresholds | Step 2c on its defaults, with the no-SOP pause-and-RCA wording when the rule is met |
 | History < ~2 windows | The trend line, and most of Lens 2 | Lens 1 for the current window only; state that recurrence is structurally unobservable this young |
 
 Always state which rows applied and what they cost the verdict.
+
+## Sibling: sanity-check for a disputed blocker
+
+When this report identifies a costly repair loop or a proposed blocker whose
+requirement value, user impact, or urgency is unclear, recommend
+[sanity-check](../../1-hourly/sanity-check/SKILL.md) to the operator. Name the
+specific target and evidence and the decision it would inform: fix now, simplify,
+defer, or propose retirement. Broad maintenance volume alone does not prove that
+any particular guard or feature is unnecessary.
+
+Radar recommends; it does not automatically invoke sanity-check or inherit its
+issue-filing authority. Preserve Radar's existing report approval boundary and
+reuse any current sanity-check disposition for the same evidence. Do not bounce
+back into Radar through a reciprocal pointer unless the scope or evidence has
+materially changed.
+
+## Sibling: recommend the repo's own verification assets
+
+When Lens 2 surfaces a recurring-defect cluster or a regression target whose surface
+is mechanically checkable — parsers, codecs, validators, CLI input handling,
+serialization boundaries — check whether the repo already owns an automated
+verification asset that could exercise it: a fuzzer (`cargo-fuzz`, libFuzzer, AFL++,
+oss-fuzz configs, go-fuzz builds), a property-based suite (hypothesis, fast-check,
+QuickCheck), a dedicated `fuzz`/`soak` script target, or the repo's own registered
+gate entry points (in XYZ-forge, the `validate.sh` tiers). If one exists and covers
+the cluster's surface, add a **Verify with** line to that target's row recommending
+the operator run it against the cluster signature; if it covers only an adjacent
+surface, the more valuable recommendation is usually to **extend** it — corpus,
+dictionary, or input class — toward the signature. Cite the detection the same way
+any claim is cited: the file, config, or entry point that proves the asset exists
+(`Cite or drop`).
+
+Radar recommends and never executes: it does not run the harness, extend corpora,
+or gate the report on the recommendation's adoption. This stays silent when there
+is no qualifying target or no detected asset — a clean run manufactures no
+paperwork — and never bounces a reciprocal pointer back into Radar from the asset's
+own docs.
 
 ## Boundaries
 

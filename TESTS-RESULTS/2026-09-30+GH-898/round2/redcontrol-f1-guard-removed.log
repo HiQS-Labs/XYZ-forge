@@ -1,0 +1,30 @@
+PASS absent source identical to base: repo-only
+PASS absent source identical to base: repos-only
+PASS pinned first, case-insensitive dedupe, capped, tie-break by name
+PASS order stable across runs
+PASS label on success
+PASS repos_source not in policy dict
+PASS ValueError: top_n 0
+PASS ValueError: top_n string
+PASS ValueError: top_n bool
+PASS ValueError: since_days 0
+PASS ValueError: unknown type
+Traceback (most recent call last):
+  File "/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify/TESTS-RESULTS/2026-09-30+GH-898/manual_matrix.py", line 180, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify/TESTS-RESULTS/2026-09-30+GH-898/manual_matrix.py", line 135, in main
+    err = raises(bs, tmp, {**OWNER, "repos": ["o/r"], "repos_source": src}, db)
+  File "/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify/TESTS-RESULTS/2026-09-30+GH-898/manual_matrix.py", line 69, in raises
+    resolve(bs, tmp, block, db)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify/TESTS-RESULTS/2026-09-30+GH-898/manual_matrix.py", line 63, in resolve
+    policy, label = bs._resolve_policy_and_label(required=False)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify/utils/py/board_sync.py", line 195, in _resolve_policy_and_label
+    for name in _rebalance_active_repos(source, source["top_n"] + len(pinned)):
+                ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify/utils/py/board_sync.py", line 150, in _rebalance_active_repos
+    rows = conn.execute(sql, ("-%d days" % source["since_days"], limit)).fetchall()
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OverflowError: Python int too large to convert to SQLite INTEGER

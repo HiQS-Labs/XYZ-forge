@@ -187,6 +187,10 @@ Kill the child by its own PID, or start it with `exec` so the subshell *becomes*
 **verify** with `ps`/`lsof` rather than trusting the kill. A teardown that cannot fail is not a
 teardown — the same rule as `AGENTS.md` §6.
 
+### Never spend hours debugging a red check without establishing its necessity
+
+An in-flight failing test or runner error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
+
 ## 4. Opinionated SOPs (XYZ-maintainer defaults — optional downstream)
 
 > **Who these are for:** These conventions exist to help the **XYZ maintainers** with our own
@@ -195,6 +199,7 @@ teardown — the same rule as `AGENTS.md` §6.
 > maintainers to ignore them, or write a script that strips this section on pull from upstream.
 > Nothing in the codebase enforces them.
 
+- **CI churn recovery.** When CI churn is suspected, follow [`docs/CI-CHURN-RECOVERY-SOP.md`](docs/CI-CHURN-RECOVERY-SOP.md) (#857). It covers the entry gate for declaring an episode, the phased strategy checklist, and the exit gates for closing it. It grants no standing exception to `AGENTS.md`.
 - **The primary clone stays on `development`.** Each device has exactly one
   **operator-designated primary clone** — the long-lived checkout the operator opens by default
   and keeps mapped to GitHub. That clone is always kept on the `development` branch. This rule

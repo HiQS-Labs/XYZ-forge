@@ -1,0 +1,16 @@
+== test: gh23-path-overlap-enforcement ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh23-path-overlap-enforcement.XXXXXX.K6eQ4ElmAE
+  PASS: alice successfully claimed TASK-101
+  PASS: direct claim on overlapping task TASK-102 rejected (exit 1): lost: TASK-102 paths overlap active claim (TASK-101) held by alice — use --force to override
+  PASS: rejected claim was non-mutating: TASK-102 remains open
+  PASS: direct claim with --force succeeded: won: TASK-102 claimed by bob
+  PASS: force provenance recorded in event log for forced claim
+  PASS: bob claimed non-overlapping TASK-103
+  PASS: scope expansion into overlapping paths rejected (exit 1): tick scope: scope rejected: paths overlap active claim (TASK-101) held by alice (use --force to override)
+  PASS: rejected scope expansion was non-mutating: TASK-103 paths unchanged (src/billing/**)
+  PASS: scope expansion with --force succeeded: scoped: TASK-103
+  PASS: force provenance recorded in event log for forced scope change
+  PASS: release unblocking verified: charlie claimed TASK-104 after alice completed TASK-101
+  PASS: third-party claim rejected against Bob's forced active scope: lost: TASK-106 paths overlap active claim (TASK-103) held by bob — use --force to override
+  PASS: idempotent re-claim by current holder succeeded without self-overlap rejection
+  gh23-path-overlap-enforcement: 13 pass, 0 fail

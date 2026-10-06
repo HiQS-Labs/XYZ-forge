@@ -1,0 +1,21 @@
+== test: analyze ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-analyze.XXXXXX.zttF91wZZn
+  PASS: event count: 3 created
+  PASS: event count: 3 claimed
+  PASS: event count: 2 done
+  PASS: event count: 1 circuit_break
+  PASS: alice: 2 claims, 1 done
+  PASS: bob: 1 claim, 1 done
+  PASS: concurrent-claim time is non-zero (overlapping claim windows detected)
+  PASS: verdict: 0 collisions on disjoint lanes
+  PASS: verdict: FAIL — a claimed lane (TASK-003) did not reach done
+  PASS: tick analyze --write appended the auto-analyzed section
+  PASS: second --write replaces, doesn't duplicate
+  PASS: GH-93: whole-log window still reported (wide, ~1 year, informational)
+  PASS: GH-93: work-bounded window is the narrow claimed->done span, not the whole log
+  PASS: GH-93: concurrent-claim percentage reflects the narrow work-bounded window (~85%), not the wide whole-log span
+  PASS: GH-93: genuinely concurrent run now PASSES (was misreporting FAIL/0% before the fix)
+  PASS: GH-93: JSON report includes work_bound_start
+  PASS: GH-93: JSON report includes work_bound_end
+  PASS: GH-93: JSON report still includes the whole-log earliest_event (unchanged, informational)
+  analyze: 18 pass, 0 fail

@@ -1,0 +1,8 @@
+== test: gh123-lock-progress-bound ==
+  PASS: stuck holder still exits 75 (lock starvation stays loud), after 2s
+  PASS: stuck holder failed promptly (2s), it did not wait out the total cap
+  FAIL: a MOVING queue exited 75 after 2s — progress did not re-arm the bound (this is the GH-123 regression)
+  FAIL: acquired in 2s, within the 2s bound — the probe did not exercise re-arm
+  FAIL: writer returned 0 but wrote no file
+  PASS: defaults unchanged — gh358's verbatim bound assertions still hold
+  gh123-lock-progress-bound: 3 pass, 3 fail

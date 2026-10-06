@@ -25,8 +25,10 @@ The per-skill index with a one-line purpose for each is `ARCHITECTURE.md` → "S
 - **Refresh only your installed skills and configured app targets after a move.**
   Skills Army HQ app links point at its flat collection and remain valid; refresh each moved
   skill's source receipt with `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>`.
-  A direct `install.sh` link points at the source folder and becomes dangling when it moves:
-  re-run that skill's installer from its new location, using the same target options as before.
+  Skills Army HQ itself is canonical here too; XYZ-skills-army-mini is a published child (GH-955,
+  `push-downstream`).
+  App links are owned by Skills Army HQ in the Git Pulse Sync `Deployed Skills` collection;
+  refresh the source receipt, then run its `sync.py` preview and apply flow.
   There is no need to install missing skills or configure IDEs you do not use.
 - Cross-skill and repo-document links use canonical repository URLs where needed so they also
   work in the flat deployed collection.

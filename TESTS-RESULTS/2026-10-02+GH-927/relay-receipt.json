@@ -1,0 +1,45 @@
+[
+  {
+    "round": 1,
+    "model": [
+      "claude-fable-5-1"
+    ],
+    "requested_effort": "high",
+    "subtype": "success",
+    "is_error": false,
+    "num_turns": 10,
+    "relay_exit_code": 5
+  },
+  {
+    "round": 2,
+    "model": [
+      "claude-fable-5-1"
+    ],
+    "requested_effort": "high",
+    "subtype": "success",
+    "is_error": false,
+    "num_turns": 11,
+    "relay_exit_code": 0
+  },
+  {
+    "attestation": {
+      "added_len": 5953,
+      "added_sha256": "5933226a440c59fdfa0f55bd10b9a9cff387081bb7bc1f7474f25865fdfd64df",
+      "added_start": 19937,
+      "artifact_sha256": null,
+      "attested_at": "2026-10-02T16:06:20Z",
+      "driver_pid": 35357,
+      "isolated": true,
+      "relay_file": "/Users/noelsaw/marathon-clones/xyz-sanity-check-20261002/relay-system/2026-10-02/gh927-sanity-check.fable.md",
+      "relay_file_rel": "relay-system/2026-10-02/gh927-sanity-check.fable.md",
+      "reviewed_head": "33cba144a005b293bfe1d616efb76416ae750020",
+      "reviewer": "claude-fable",
+      "schema": "relay-drive/attest@1",
+      "status": "Approved",
+      "target_repo": "/Users/noelsaw/marathon-clones/xyz-sanity-check-20261002",
+      "task": "RELAY-GH927-SANITY-FABLE",
+      "trailer_sha256": "0a9e9802eb5654f98df65ff348b67cb7588c05529944e3f9496433df5b4f6aa5",
+      "transcript_repo": "/Users/noelsaw/marathon-clones/xyz-sanity-check-20261002"
+    }
+  }
+]

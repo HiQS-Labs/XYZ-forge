@@ -1,0 +1,6 @@
+2026-09-29T21:41:50Z failure 5635d700 sync: publish AgentChorus from XYZ-forge@c7ea57fde (development)
+2026-08-24T21:14:59Z failure 2b1353d1 rename: Agent2Agent → AgentChorus (trademark conflict with Linux Foun…
+2026-08-23T03:53:37Z success 9aed07c1 docs: publish repo-agnostic skill README from canonical 437f540
+2026-08-23T03:36:52Z failure fd3617b0 docs: make README marketing-centric, add How it works section
+2026-08-23T02:36:16Z success ec10543c chore: record portable publisher revision
+2026-08-23T02:34:52Z failure d128221f feat: publish Agent2Agent Gen 2 protocol hardening

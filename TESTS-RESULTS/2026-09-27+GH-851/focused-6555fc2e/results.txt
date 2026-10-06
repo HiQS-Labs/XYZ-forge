@@ -1,0 +1,6 @@
+gh436-merge-cleanup rc=0 243s merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (4/6) merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub 
+gh674-merge-cleanup-hosted-lookup rc=0 0s merge-cleanup: ✅ Hosted wave-reconcile run #67401 succeeded for mmmmmmmmmm merge-cleanup: Hosted wave-reconcile run #62901 is in_progress; waiting merge-clean
+gh645-merge-cleanup-xyz-tools rc=0 0s Ran 8 tests in 0.067s  OK 
+red-control rc=1
+restored clean
+restore-control rc=0

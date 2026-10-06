@@ -85,6 +85,15 @@ backfill`; finally reconcile a connector only after its target is explicitly con
 Historical replay is not a complete current-state repair: the stock event connector cannot enforce
 top-N Ready selection, the Done window, reopen handling, or preservation of unknown evidence.
 
+`github_board_selection_policy.repos_source` (GH-898) is optional and opt-in: `{"type": "rebalance_active",
+"top_n": 8, "since_days": 7}` appends the top-N repos from rebalanceOS's activity signal (read-only,
+`REBALANCE_DB` or its app-data default) after the pinned `repos`, and falls back to the pinned list with a
+stderr warning if the database is missing, unreadable or has no activity. Pin with `repos`, not the singular
+`repo` (the combination is refused). The list is computed live, so `policy-apply` and `policy-restore` refuse
+when it changes after the preview/result: re-preview, or restore by setting `repos` to the saved list and
+removing `repos_source`. Adding repos also widens GitHub-authoritative moves (PRs, closing links, closed
+issues) to them; ledger-dependent Ready/start decisions still read only the `--root` ledger.
+
 An explicit `github_board_selection_policy` uses `utils/py/board_sync.py policy-preview --out
 <preview.json>`, followed within 15 minutes by `policy-apply --preview <preview.json> --result-out
 <result.json>`. Both the preview creation time and its evidence `as_of` clock must be within that

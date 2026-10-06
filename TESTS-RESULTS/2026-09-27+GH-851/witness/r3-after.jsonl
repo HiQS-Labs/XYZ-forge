@@ -1,0 +1,1 @@
+{"label": "r3-after", "sha": "6555fc2e898706100a1229ff201a397fb81adb71", "case": "r3_clone_retry_after_stall", "outcome": "returned", "elapsed_s": 2.71, "result": {"error": "fetch of PR #820 head failed: fatal: couldn't find remote ref feat/x", "clone_retry_failed_on_leftover_dir": false, "clone_succeeded_on_retry": true}}

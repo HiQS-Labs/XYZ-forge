@@ -1,0 +1,21 @@
+ skills/2-daily/merge-cleanup/scripts/merge_cleanup.py | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+diff --git a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+index e596b787..2a86313a 100644
+--- a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
++++ b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+@@ -1156,11 +1156,12 @@ def main():
+         if info.get("state") != "MERGED" or not merge_oid:
+             log_err(f"PR #{args.reconcile_pr} is {info.get('state')}, not merged — nothing to reconcile")
+             return 2
+-        return 0 if run_post_merge_reconcile(
++        run_post_merge_reconcile(
+             args.reconcile_pr, primary_repo,
+             integration_branch=args.integration_branch, dry_run=dry_run,
+             pr_head=info.get("headRefOid"), merged_head=merge_oid,
+-        ) else 2
++        )
++        return 0
+ 
+     # Phase 1..3: Scan & Audit checkouts
+     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)

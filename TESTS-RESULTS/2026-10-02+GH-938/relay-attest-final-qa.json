@@ -1,0 +1,19 @@
+{
+  "added_len": 2232,
+  "added_sha256": "912c4024de5db6b72615b8bbca9104f093470ec206174d13ced7ed47d543f7bc",
+  "added_start": 119103,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-03T03:26:37Z",
+  "driver_pid": 85622,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GitHub/XYZ-forge/relay-system/2026-10-02/gh938-final-qa.md",
+  "relay_file_rel": "relay-system/2026-10-02/gh938-final-qa.md",
+  "reviewed_head": "9bc3f4bb165b16f309a32481029cf309e971d8cf",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge",
+  "task": "RELAY-gh938-final-qa",
+  "trailer_sha256": "e0d72f7518ac72b4157b9471874f0d83c4e56d3c804bf14387e65c9da418f866",
+  "transcript_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge"
+}

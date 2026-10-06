@@ -41,7 +41,7 @@ and usage; this index exists so a task can be routed to the right skill without 
 Re-tiering a skill is a `git mv` plus its row here; nothing in the harness depends on which tier a
 skill sits in, only on the two-level depth (see `skills/README.md`).
 
-### `1-hourly` — Every hour (14)
+### `1-hourly` — Every hour (15)
 
 _the in-task loop: intake, recon, planning discipline, review relays, the ledger._
 
@@ -51,11 +51,13 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [consult](skills/1-hourly/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
 | [debug-mantra](skills/1-hourly/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
+| [handsfree](skills/1-hourly/handsfree/SKILL.md) | Wake the current agent every 10 minutes to advance an authorized task, with a 3-hour deadline and native scheduler cleanup. |
 | [ponytail](skills/1-hourly/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
 | [recon](skills/1-hourly/recon/SKILL.md) | Trace an existing system end to end before planning a change. |
 | [relay](skills/1-hourly/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |
 | [relay-automation](skills/1-hourly/relay-automation/SKILL.md) | Tick-backed automation library behind the `/relay` review loop. |
 | [relay-xyz](skills/1-hourly/relay-xyz/SKILL.md) | Drive an automated relay review loop with the shipped harness. |
+| [sanity-check](skills/1-hourly/sanity-check/SKILL.md) | Assess whether a claimed problem or blocker is real, consequential, and worth fixing now. |
 | [standup](skills/1-hourly/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
 | [start-task](skills/1-hourly/start-task/SKILL.md) | Carry one or more issues through governed intake, grounded planning, relay QA, execution, and ready PRs. |
 | [swe](skills/1-hourly/swe/SKILL.md) | Software-engineering governance lens for build/spec/PRD docs. |
@@ -81,7 +83,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [review-code](skills/2-daily/review-code/SKILL.md) | Meticulous ground-truth code and PR review using recon, debug-mantra, and workhorse/unstuck ladders. |
 | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [start-marathon](skills/2-daily/start-marathon/SKILL.md) | Review intake and plans, prepare collision-safe lanes, and dry-run the marathon. |
-| [status](skills/2-daily/status/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
+| [where-are-we-at](skills/2-daily/where-are-we-at/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 
@@ -98,15 +100,15 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [honest](skills/3-weekly/honest/SKILL.md) | Produce a defensible ground-truth assessment of repository maturity and claims. |
 | [marathon-cleanup](skills/3-weekly/marathon-cleanup/SKILL.md) | Audit and archive completed PDDA marathon plans/bundles. |
 | [merge-cleanup-deep](skills/3-weekly/merge-cleanup-deep/SKILL.md) | Back up and triage the checkouts /merge-cleanup preserved with read-only sub-agents: PR-worthy, superseded, or scrap. |
-| [push-to-skills-army-mini](skills/3-weekly/push-to-skills-army-mini/SKILL.md) | Publish the parent-managed Skills Army HQ package into its generated child through the shared manifest publisher (GH-620). |
-| [push-to-xyz-mini](skills/3-weekly/push-to-xyz-mini/SKILL.md) | Publish the curated XYZ mini skill subset into the local XYZ-mini checkout and push it, via the deterministic embedded-manifest publisher `utils/py/xyz_mini_sync.py` (GH-589). |
+| [push-downstream](skills/3-weekly/push-downstream/SKILL.md) | Publish XYZ-forge into its standalone child repos (XYZ-mini, XYZ-skills-army-mini, AgentChorus-Skill) with the one embedded-manifest publisher `utils/py/xyz_mini_sync.py`: one, several or `--target all` per run, preview first, read-only `--check` for child CI (GH-589, GH-955). XYZ-forge is the upstream for all of them. |
 | [radar](skills/3-weekly/radar/SKILL.md) | Per-repo strategic compass — Run/Grow/Transform flow, defect clustering. |
-| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. |
+| [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. Canonical here; published to XYZ-skills-army-mini via `push-downstream` (GH-955). |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
+| [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 
-### `4-occasional` — Least frequently (18)
+### `4-occasional` — Least frequently (19)
 
 _setup, audits, one-off tooling and specialist lenses._
 
@@ -116,6 +118,7 @@ _setup, audits, one-off tooling and specialist lenses._
 | [browserbase](skills/4-occasional/browserbase/SKILL.md) | Give an agent a real cloud browser (Browserbase) for research, scraping, form-driving and site monitoring. |
 | [ci-doctor](skills/4-occasional/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [ci-optimize](skills/4-occasional/ci-optimize/SKILL.md) | Audit, harden and optimize CI/CD pipelines using zero-cost, production-tested principles. |
+| [ci-suite-audit](skills/4-occasional/ci-suite-audit/SKILL.md) | Audit registered CI test suites and recommend retention, split, nightly, quarantine or turn-off verdicts. |
 | [feynman](skills/4-occasional/feynman/SKILL.md) | Translate dense technical material into accurate, layered plain language. |
 | [front-door](skills/4-occasional/front-door/SKILL.md) | Audit whether a newcomer can actually go from clone to working install. |
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |

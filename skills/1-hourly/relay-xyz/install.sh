@@ -76,7 +76,7 @@ if [ -x "$SELF_DIR/find-harness.sh" ]; then
     echo "relay-xyz: harness resolves → $H"
   else
     echo "relay-xyz: WARNING — find-harness.sh could not resolve the harness root." >&2
-    echo "  Set XYZ_HARNESS=/path/to/your/xyz-3-agents-swarm clone." >&2
+    echo "  Set XYZ_HARNESS=/path/to/your/XYZ-forge clone." >&2
   fi
 fi
 exit "$rc"

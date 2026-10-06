@@ -1,5 +1,205 @@
 # Changelog
 
+## 2026-10-05 — Defer HiQS advisory-intake classifier revisit (GH-974)
+
+Captured Needle-fork #71 as a deferred RELEASES roadmap item, with real chain evidence and measured reviewer burden required before an advisory contribution-screening experiment. Resolver, attestation and publishing boundaries remain deterministic. Verification: targeted PDDA checks and RELEASES consistency/readback; invalid triage rating fails the frontmatter red control. Receipts: `TESTS-RESULTS/2026-10-05+GH-974/`.
+
+## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
+
+The operator reversed GH-882's 2026-10-01 decision that made XYZ-skills-army-mini the Skills Army HQ
+upstream. XYZ-forge now publishes all three standalone children through one publisher,
+`utils/py/xyz_mini_sync.py`:
+
+- **Children:** XYZ-mini, XYZ-skills-army-mini and AgentChorus-Skill. These are all the downstream
+  repos found by a scan of the 21 HiQS-Labs repos; two empty placeholder repos get a profile when
+  they have content.
+- **Targets:** `--target` repeats or takes `all`. A multi-target run keeps going past a failed
+  target, prints one summary line per target, and exits with the worst code. `--dest` needs exactly
+  one target.
+- **`--check`:** a new read-only managed-parity check that skips branch and origin checks. The
+  AgentChorus-Skill CI now calls it; its smoke step pointed at a non-existent path, which has also
+  been fixed.
+- **AgentChorus moves onto the central publisher.** `sync-to-standalone.sh` and
+  `publish-manifest.tsv` are retired, and its 13 payload files are an `agent-chorus` profile. One
+  reviewed setup commit in that repo hands ownership over. It is dry-run verified: the guard refuses
+  before the commit; after it, copy 13 / delete 0 and `--check` passes.
+- **Skills Army reversal.**
+  - The `skills-army-mini` target is un-retired, and `UPSTREAM.md` is deleted.
+  - #934's two `SKILL.md` edits, which had only reached the child, are landed here byte-identically.
+  - `push-to-xyz-mini` and `push-to-skills-army-mini` fold into one `push-downstream` skill.
+
+Read-only previews against the real children: XYZ-mini copy 36 / delete 0; XYZ-skills-army-mini copy
+9 / delete 0; AgentChorus-Skill refused until its setup commit. The plan passed Codex relay QA in
+round 3.
+
+Verification: gh589 39/0, with new multi-target and `--check` assertions; gh620 28/0; path-integrity;
+skills-army-hq. Red controls (a short-circuiting loop, a re-added retirement) each fail. Evidence:
+`TESTS-RESULTS/2026-10-03+GH-955/`.
+
+## 2026-10-03 — XYZ-mini publisher: adapted mode with per-entry ownership, exact origin rows, and the retired Skills Army target (GH-589, #951)
+
+The GH-889 planner skills ship to XYZ-mini as mini-side adaptations: flat paths, `/relay` instead of
+`/relay-xyz`, and child-only `install.sh` hardening. The byte-identity publisher could not express
+that. XYZ-mini's last two syncs came from unlanded work, so publishing from `development` would have
+deleted them (#951). `utils/py/xyz_mini_sync.py` now has three modes: `managed` (byte-identical),
+`seed` (copied once) and `adapted`.
+
+How adapted ownership works:
+
+- **Ownership is per entry.** A never-published entry is seeded once from forge bytes. After that,
+  nothing under it is replaced, added or pruned from the forge side.
+- **What the child tracks is carried forward.** Everything the child tracks under the entry is kept
+  and recorded, including mini-only `install.sh` files. A child deletion is recorded and never
+  re-created from forge bytes.
+- **Dropping is the only deletion.** Dropping the whole entry deletes the paths the child's
+  `MANIFEST.txt` records under it.
+- **Exact origin rows.** Every adapted entry needs an exact first-column row of kind `adapted` in
+  `mini/ORIGIN.md`, read from the committed source SHA. A Notes-column mention documents nothing.
+  A stale `adapted` row for a now-managed entry refuses, and so does an uncommitted registry edit
+  under `--allow-dirty`.
+- **Retired target.** `--target skills-army-mini` now refuses by default (#882). Only its suite opts
+  in, through `XYZ_ALLOW_RETIRED_TARGET=1`, until the 2026-10-08 audit removes both.
+
+Also included:
+
+- review-code resolves its GitHub target first. It posts only when the reviewed bytes are the PR's
+  pushed head, verifies issue targets with `gh issue view`, and keeps `temp/` out of git in other
+  repos.
+- The work was carried forward from `archive/primary-gh889-snapshot-2026-10-03`.
+
+Policy: `mini/ADAPTATIONS.md`.
+
+Verification:
+
+- `test/gh589-xyz-mini-sync.sh` 29/0, including carry-forward, no forge additions, exact row and
+  kind, stale row, uncommitted registry, child deletion and re-addition, and drop/re-add.
+- `test/gh620-skills-army-mini-sync.sh` 29/0, including the retired-by-default refusal.
+- Red controls: removing carry-forward and substring origin matching each fail the suite.
+
+## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
+
+The relay-xyz "First-time setup" told every machine to run `install.sh`. On a Mac where Skills Army HQ
+already links `relay-xyz` from its `Deployed Skills` collection, that step exits 1 on the live link and
+can add links in app roots the collection does not target, against Skills Army HQ's rule not to run
+copied `install.sh` files.
+
+The section now starts with a `readlink` check against the Skills Army collection root (`$XYZ_SKILLS_ROOT`,
+default `~/git-pulse-sync/Deployed Skills`), with three outcomes:
+
+- **Managed** (live or dangling): skip `install.sh` and repair links with Skills Army HQ (`sync.py`).
+- **Live link elsewhere**: `install.sh` refuses it; keep the link or remove it deliberately.
+- **No link**: keep the existing `install.sh` step.
+
+Managed machines run the locator's `--check` from outside any repo. When no harness resolves, they write
+`~/.config/xyz/harness` themselves, or prefix one command with `XYZ_HARNESS`. The locator loop now also probes
+the `~/.agents` and `~/.zcode` skills roots. The `install.sh` comment and the concurrency
+section now say that `install.sh` writes app-root symlinks, not only `~/.claude/skills/`.
+
+Docs only: `install.sh` itself does not yet detect a managed collection (deferred). Deployment to the
+Macs follows the post-merge checklist in `PROJECT/2-WORKING/GH-938-RELAY-XYZ-MANAGED-SETUP.md`.
+
+Verification: `test/find-harness.sh` (50/0), `test/path-integrity.sh`, `test/gh678-installer-live-links.sh`,
+and red controls on the new wording, all under `TESTS-RESULTS/2026-10-02+GH-938/`. The final head passed the
+full macOS pre-push gate with no bypass.
+
+## 2026-10-01 — Scope CI blockers to approved priorities (GH-854)
+
+The operator deferred unexplained live relay (#916), installation-registry (#917), and Gen4 oracle (#918) follow-ups until their issue-specific blocker triggers. Registry concurrency and the shared-root domain-oracle suite no longer gate every change: the existing TESTS/EXEMPT mechanism retains their files for direct manual use. The ATE subset and Ubuntu skip list agree with the retirement. A subsequent pooled setup failure also retires the non-Small ungated-warning fixture suite under standing #853 policy (#920); its isolated six assertions passed, but the historical copy error remains unknown. Its file, warning and hook enforcement remain unchanged. The Small Ballast manifest audit recognizes explicit retirement as outstanding rather than a false closure; it still rejects missing files/controls and gives no release-completion credit. Completion regression coverage remains after #909/#910; live relay stays opt-in under #836 D2. This accepts reduced automatic coverage on unrelated changes and does not claim the historical failures fixed. Reverse the registry, exemptions, ATE member and canary skip together to undo the change. The October 8 audit and stabilization counters remain separate; verification receipts live under `TESTS-RESULTS/2026-10-01+GH-854/dispositions/`.
+
+## 2026-10-01 — Direct /workhorse runs keep going until their queue is resolved (GH-911)
+
+A directly invoked `/workhorse` stopped after two or three turns with work still queued. Three things caused it:
+
+- Rung 6 ended every item with a completion report, a natural place to stop.
+- The "a repair is a checkpoint, not the end of the turn" rule from #626 applied only under a parent orchestrator.
+- The queue lived in the session scratchpad, where nothing outside the conversation could see it.
+
+Changes, all in `skills/2-daily/workhorse/`:
+
+- **Run checklist.** The active queue is now a run checklist at `<repo-root>/.workhorse/<session-id>.md`, excluded
+  via `.git/info/exclude`, with `- [ ]` open, `[x]` done, `[-]` parked and `[!]` blocked lines.
+- **Report once.** Rung 6 ticks each item and continues; the completion report fires once, when no open line remains.
+- **Direct re-entry.** Re-entry now covers direct invocations, with the checklist as the resume target.
+- **Stop hook.** A new Claude Code Stop hook (`stop-hook.sh`, wired from the skill's frontmatter) blocks the stop
+  while this session's checklist has an open line. It fails open on any error. Loop safety is the harness's
+  8-continuation cap plus the `[!]`/`[-]` escape.
+- **Proportional consult.** Rung 4 can be skipped for a focused, Easy-to-reverse change on a local task branch. It
+  stays mandatory for architecture, contracts, persistent state, dependencies and Costly/One-way-door work.
+- **Rung 5 example.** Rung 5 names local task-branch edits as an Easy example.
+
+Deliberately minimal: no governor role, progress fingerprints, budget counters or run schema. Further tuning may
+follow once standalone runs have been observed.
+
+Verification: `test/gh609-sdlc-agent-gaps.sh` (existing) plus a manual hook matrix with a mutation red control,
+recorded in `TESTS-RESULTS/2026-10-01+GH-911/`.
+## 2026-10-01 — Skills Army HQ upstream moves to XYZ-skills-army-mini; forge keeps a vendored copy (GH-882)
+
+Operator decision (recorded on XYZ-skills-army-mini#2): `HiQS-Labs/XYZ-skills-army-mini` is the canonical
+upstream for Skills Army HQ from today. XYZ Forge becomes a consumer:
+
+- **Vendored copy kept.** `skills/3-weekly/skills-army-hq/` stays as a vendored copy with a forge-only
+  `UPSTREAM.md` pointer. Refreshes are ad-hoc vendor PRs from a tagged mini release, with no freshness
+  guarantee. This replaces the earlier plan to delete the forge copy.
+- **Republisher retired.** `push-to-skills-army-mini` is marked retired. Running it would overwrite
+  upstream; its own history check also refuses once mini has non-publisher commits. It and its `gh620`
+  suite are removed after the #854 freeze, through the 2026-10-08 suite audit.
+- **Issues moved.** #506, #676, #837 and #881 were transferred to mini as #4, #5, #6 and #7.
+  - #676 is narrowed to link-drift reporting.
+  - #506's forge ledger row moved to *Deferred · vision* with a transfer note, and its capture doc
+    moved to `PROJECT/4-MISC/`.
+- **Upstream changes in mini#3.** Skills Army HQ becomes source-agnostic: deploy a skill from any
+  folder, drift warns by default, source rules are opt-in, and any device may publish. The forge copy
+  picks this up at its next vendor PR. When deploying with the upstream manager, differences from the
+  stale forge copy warn by default (refusal is opt-in). The unrefreshed forge manager keeps its pre-pivot
+  behavior; use upstream for the new policy.
+
+Verification: `python3 utils/py/releases_app.py check` clean; existing suites per the push gate.
+
+## 2026-10-01 — Successful completion appends retain mutual exclusion (GH-909)
+
+A controlled handoff showed a stale waiter deleting a live successor’s PID-directory lock: all three writers returned success, but only two records survived. The existing completion writer now holds a stable-inode OS advisory lock through its atomic JSON transaction, preserving bounded per-holder wait and the absolute queue cap. The three covering fixtures use real OS locks. Upgrade and rollback require stopping and retiring old writers sharing the records path; mixed protocols are unsupported. Evidence is retained under `TESTS-RESULTS/2026-10-01+GH-909/`. The full-gate follow-up witnessed a quiet-grep SIGPIPE false-red in gh268 (#853). Because it is outside Small, standing policy turns it off through TESTS removal and gh306 EXEMPT; its file stays unchanged. A consuming-grep diagnostic demonstrated the cause but is not shipped. This fixes a proven loss mechanism; the exact historical CI interleaving and separate relay/registry flakes remain unproven.
+
+Decision: use one stable OS-owned lock in the existing writer. Bet: cooperating upgraded writers on local macOS/Linux preserve every successful record, provided old writers are retired before cutover. Expected signal by October 8: two additional development 4-wide runs with zero retries and clean envelopes, plus attributable hosted reconciliation. Reversibility: Costly; code rollback is straightforward after quiescing emitters, but lost records cannot be reconstructed. Revisit on any successful append lost, timeout regression, or mixed-version writer. Recommendation: graduate the verified repair after approved landing; iterate if the signal fails, and abandon this mechanism only if a controlled counterexample disproves its operating envelope.
+
+## 2026-09-30 — Native Codex sidebar grooming shares task-sync (GH-901)
+
+Codex desktop now has a read-only snapshot adapter in the GH-896 task-sync CLI.
+It reuses shared stamp/report semantics; native app tools own title and pin
+writes. Actual latest turn activity supplies the date, so grooming metadata does
+not renew an old conversation. Defaults preserve full title wording, existing
+pins, project/custom grouping and sorting, with a bounded recent inventory and
+24-hour pin window. Missing/stale/empty snapshots fail closed. The installer
+moves the existing ZCode grooming into one native 15-minute heartbeat rather
+than adding a competing writer; no direct Codex store writes or Antigravity
+activation. Native prechecks cannot eliminate concurrent manual-edit races.
+
+Independent Codex final QA is driver-attested Approved; 28 recorded manual
+probes and the native title/pin smoke are retained under
+`TESTS-RESULTS/2026-09-30+GH-901/`. The dependent branch requires PR #900 to land
+first; the pilot clone is retained until its heartbeat can be repointed.
+## 2026-10-01 — PDDA adopter reliability Jog prepared (GH-904, GH-907, GH-906, GH-905; #908)
+
+A four-issue serial Jog now has capture contracts, rated RELEASES rows, and queue positions 1–4. PDDA roadmap coverage recognizes an empty but queryable releases ledger and still reports corrupt ledgers or uncovered docs. Vendored router-audit hints use the executing script path. The PDDA installer treats the optional Claude skill copy as best-effort, then completes core setup. A new releases-only install mode initializes the DB without retired Markdown ledgers, writes a mode-correct router, and can set `projections=off`; the Releases writer and hosted reconciler honor that setting. This cross-module setting is reversible with `releases settings set projections on`.
+
+The 2026-10-01 fixture matrix and focused existing suites passed. Independent Agy and Codex relay reviews approved the final correction; clean-environment macOS `ci-local.sh` passed all steps at `5af2ed25` and again at the post-merge `ba37601a` tip with clone identity unchanged. The first clean full run exposed reconcile fixture compatibility defects, which were corrected and retained with red/green evidence in `TESTS-RESULTS/2026-10-01+GH-908/`. A later development reconciliation merge required another final-tip gate. It exposed an existing UTC-day archive-test assertion failure on October 2; the assertion was corrected in place, with red/green evidence retained. Full macOS `ci-local.sh` then passed at `3882935e` with clone identity unchanged. Hosted PR CI and merge approval remain; no issue is marked shipped until landing.
+
+## 2026-09-30 — board_sync repo allow-list can follow the rebalanceOS active-repos signal (GH-898)
+
+`github_board_selection_policy` gains an opt-in `repos_source` so the board policy's repo allow-list no longer has to be hand-maintained: it reads rebalanceOS's top active repos read-only (`mode=ro`, no import of rebalanceOS) and appends them after the pinned `repos`, falling back to the pinned list with a warning when the database is missing, unreadable or empty. Combining it with the singular `repo` is refused so a saved policy stays restorable. Absent-source behavior is byte-identical to the base resolver. The one new direct SQLite read carries the inventory ratchet's own `SQLITE-GATEWAY-OK:` exemption marker (operator-approved; no ratchet or baseline change). Verified by a manual matrix, a witnessed red control, and the existing GH-402/405/549/605 suites in a disposable clone; evidence under `TESTS-RESULTS/2026-09-30+GH-898/`. Plan, relay QA and limits: `PROJECT/2-WORKING/GH-898-BOARD-SYNC-ACTIVE-REPOS.md`.
+
+## 2026-09-30 — GH-549 fixture replay bounded to its own event (#854)
+
+Landing 2's first frozen-tip `ci-local.sh` exposed three false reds in the existing GH-549 work-event suite after the staging ledger crossed the connector's 500-event batch limit. The suite now seeds its fixture cursors at the event under test, so idempotence, overshoot, and lock assertions do not mistake a second valid batch for a defect. The unchanged production connector keeps its 500-event limit. Focused evidence: 122/3 red before and 125/0 green after. A clean-environment `ci-local.sh` rerun at `2dba66a2` passed all nine stages, with 412 suite passes and one intentional skip recorded in `TESTS-RESULTS/2026-09-30+GH-854/`.
+
+## 2026-09-28 — CI audit method corrected and GH-139 quiet-grep inventory widened (GH-879, GH-853)
+
+The `ci-suite-audit` skill now requires source-derived evidence for KEEP and removal verdicts, four separately reported failure/attribution sources, an independent registry count, and runtime computed from compatible receipts. Historical same-SHA flakes without a current red remain INVESTIGATE under #854's newer handoff. The full audit remains scheduled for October 8, after Landing 2.
+
+The existing GH-139 ratchet now recognizes `|grep`, combined quiet flags, and `--quiet`. On staging it found 81 pre-existing lines in 27 files, including 65 code lines, versus 11 in 5 files under the literal matcher. The regenerated per-file baseline records those sites; #853 retains the work of converting remaining unsafe pipelines. Five quiet-flag variants made the existing guard fail in a disposable full clone, while an `|| grep` control stayed green. Evidence: `TESTS-RESULTS/2026-09-28+GH-879/`.
+## 2026-09-29 — deployed relay-xyz skill locates its XYZ-forge harness (GH-856)
+
+A copied Skills Army `relay-xyz` skill could not locate the harness from a foreign repo, and an override left its shared driver-lock resolver unloaded. The locator now keeps existing override, vendored, current-repo, and self-relative precedence, then reads an optional per-Mac config and searches seven bounded XYZ-forge locations with canonical-origin validation and ambiguity refusal. It loads shared helpers from the selected harness, compares copied-skill vendored drift with that live harness, and makes `--check` report cached upstream lag, an unexpected branch, live versus stale lock state, and a command to save the selection. Search and readiness remain local and advisory. Existing registered suites cover the copied-skill and neighboring resolver contracts. The existing GH-549 connector fixture now starts stub dispatches at its fixture tail so added ledger events cannot push its control cases past the 500-event batch limit. Focused evidence is in `PROJECT/2-WORKING/GH-856-RELAY-LOCATOR.md`.
+
 ## 2026-09-28 — Skills Army fleet repair: 10days, codebase-memory and start-marathon reach every app; publisher role goes device-agnostic (GH-881)
 
 `/10days` had never been added to the Skills Army collection, so no app on this device could see it. The
@@ -26,6 +226,68 @@ any device may publish, and GH-881 tracks that rewording along with an amendment
 codebase-memory skill is vendored from the unmerged `feat/committed-skill-file` branch of
 `codebase-memory-mcp`, which should land upstream. The gap that stranded codebase-memory (added
 locally, never committed to the transport) is the check GH-881 proposes.
+
+## 2026-09-27 — unstuck checks before reopening reviewed plans (GH-854)
+
+`unstuck` now interrupts re-litigation immediately and requires each reopened topic to identify the settled decision, changed evidence or user requirement, and an actual gap. Already-covered concerns return to execution. Debug-mantra and bounded recon are conditional routes for genuine blockers; the existing outer-workflow resumption remains intact. Verification is recorded in `TESTS-RESULTS/2026-09-27+GH-854-unstuck/`.
+
+## 2026-09-27 — gh492's idle checks no longer depend on how fast `ps` answers (GH-793)
+
+`test/gh492-idle-kill.sh` failed only under the parallel gate. Its sampler shells out to `ps`, `pgrep` and `lsof`, which slow down under gate load. The test's fixed 4 s window, a fixed 1.0 s bound, and an idle reading taken after the sampler threads were joined made that slowdown read as "a progressing turn looks idle" and "the blocked turn is unclassified". Delaying just those tools reproduces both at base. The windows now run until enough samples exist (capped at 30 s), idle is read when the window closes, and the two "not idle" bounds are `max(1.0 s, 2 × the largest observed sample gap)`. The product code is unchanged, and mutations that break file-progress or pid scoping still fail the suite. Evidence is in `TESTS-RESULTS/2026-09-27+GH-793/`.
+
+## 2026-09-27 — rollback events no longer poison `.tick/events`, and tests keep them out of the real clone (GH-745)
+
+`wave_reconcile`'s rollback event was appended to a timestamp-named file. Two rollbacks in the same instant wrote two records into one file, and `tick claims` then failed `events-unreadable` for the whole clone, which made merge-cleanup preserve it forever. Each event is now its own file: the name carries the pid and 8 random hex characters, and the file is created exclusively. Three suites (`gh424`, `gh425`, `gh421`) built the journal with no root and wrote events into the real clone. They now use their fixture root.
+
+Evidence is in `TESTS-RESULTS/2026-09-27+GH-745/`:
+- **Leak witness:** 3 events leaked into the real clone at base, 0 at head (5 of 5 runs).
+- **Same-instant witness:** `tick claims` exits 3 at base and 0 at head.
+- **`wave-reconcile.sh`:** 23 of 23, 5 of 5 runs.
+
+## 2026-09-27 — gh620 names a failed fixture git call instead of crashing later (GH-830)
+
+`test/gh620-skills-army-mini-sync.sh` ignored the exit code of about 30 fixture git calls and dropped their stderr. So a failed `seed-owner` clone on the hosted gate (run 36194249895) surfaced as an unrelated `FileNotFoundError`, and cost one full hosted qualification. `git()` now stops the suite with the failing command and git's stderr. There are no retries, and no assertion changed. The red control, with the fixture clone pointed at a missing repo, now names the clone. The normal run passes 5 of 5 (28/28). Evidence is in `TESTS-RESULTS/2026-09-27+GH-830/`.
+
+## 2026-09-27 — gh69-roadmap-shadow no longer goes red under PYTHONUNBUFFERED=1 (GH-858)
+
+`test/gh69-roadmap-shadow.sh` had three `cmd | grep -q` checks that could fail whenever Python output was unbuffered: `grep -q` exits on the match, the writer gets EPIPE, and `pipefail` reports a failure. The receipt check is the one that failed. They now capture first, then match, and keep the producer's exit status (`_gh858="$(cmd)" && grep -q …`), so a failing command still fails its check. The suite's GH-139 baseline entry drops from 3 to 0. The red control at base fails, and the head passes 5 of 5 both with and without the variable. Evidence is in `TESTS-RESULTS/2026-09-27+GH-858/`.
+
+## 2026-09-27 — ci-suite-audit: test suite curation, runtime profiling, and retention/quarantine triage skill (GH-862)
+
+Adds the `ci-suite-audit` occasional skill (`skills/4-occasional/ci-suite-audit/`), item 5 of the #854 CI stabilization umbrella and the canonical method for the 2026-10-08 full-suite audit.
+
+- **Unit & data access:** Evaluates individual entries in `validate.sh` `TESTS` (411 suites) across in-checkout (preferred) and connector-only (fallback) modes with stated data limits.
+- **Nine detectors (D1–D9):** Combines runtime metrics (median seconds, heavy suites ≥ 1% or rank ≤ 10), failure history taxonomy (regression-caught, coupling, flake, host, fixed-flake, unattributed), touch-set overlap (scripts/binaries executed, files sourced/grepped/written), sibling coverage, prose-assertion ratio (≥ 0.6 prose, 0.2–0.6 mixed), junk patterns (mblode exact strings, duplicate contracts, stubs, private shapes, vacuous negative controls), can-it-fail verification, fixed-at-HEAD checks, and OpenClaw 4-question gate.
+- **Decision rules & retention bar:** Classifies suites into KEEP, KEEP-FIX, NIGHTLY candidate (requires fast PR-time sibling with superset coverage, no new gate machinery under #831 freeze), QUARANTINE (gh306 `EXEMPT` with `quarantine:` reason, no separate array), SPLIT, MERGE, TURN-OFF (obsolete, pure prose, or covered with no unique assertions), or INVESTIGATE. Pinned suites and regression-caught suites remain protected on PR gates.
+- **Deduplicated reporting:** Scaffolds issue reporting and per-turn decision comments with SHA/date deduplication marker, 64k character boundary splitting, secret/path redaction, and diagnostic/remediation reminders for sibling skills (`radar` and `whack-a-mole`).
+- **Attribution & compliance:** MIT upstream attribution (`petrkindlmann/qa-skills`, `mblode/agent-skills`, `openclaw/openclaw`) in `NOTICE`. Cross-linked from `ci-optimize` and registered in `ARCHITECTURE.md` Skills Index. Zero new CI tests added; verified via existing test suites (`test/gh578-ci-optimize-skill.sh`, `test/gh589-skill-viewer.sh`, `test/gh400-source-url.sh`) and `pdda.sh run`.
+
+## 2026-09-27 — merge-cleanup: no hang on a dead network call, no stop on a stale answer (GH-851, GH-852)
+
+Found in the #849 merge batch. Five fixes to `skills/2-daily/merge-cleanup/scripts/`:
+
+- **Bounded network git (GH-852).** Five git calls had no time limit: the second-clone `clone`, the
+  B1 `push`, and the post-merge `fetch`, `push` and `fetch`. One of these clones sat for 36 minutes on
+  a dead socket. They now go through `_net_git`: 180 s each, or 3600 s for the push to the integration
+  branch, because the pre-push hook can run a gate. The Phase-3 `fetch` in `scan_clones.py` gets 180 s.
+  Both `main()`s default `GIT_HTTP_LOW_SPEED_LIMIT=1000` / `GIT_HTTP_LOW_SPEED_TIME=120`, so a
+  stalled transfer aborts; an operator's own values win. `Operation too slow` and `Connection reset`
+  now count as transient, so GH-623's retries apply.
+- **Merge-call recovery (GH-852).** When `gh pr merge` fails or is killed after GitHub has merged,
+  the PR is re-read. If it shows `MERGED` with a merge commit, the post-merge steps run, where before
+  they were skipped (#810).
+- **`--reconcile-pr` (GH-852).** It now refuses (exit 2) a PR that is not merged, or whose state
+  it cannot read. It waits on the hosted run for that PR's own head and merge commit, not the
+  primary's `HEAD`.
+- **Re-gate after a B1 push (GH-851).** The run now waits, within the 6 × 15 s mergeable-poll
+  budget, until GitHub reports the pushed head before reading mergeability. Before, it read the old
+  head's `CONFLICTING` and stopped, which happened on every B1 repair in #849.
+- **Hosted-wait default** 1800 → 5400 s (#854 D5). Full-registry reconciles take 53–66 min.
+
+No new tests. Existing stubs got signature-only edits, and the two `--reconcile-pr` fixtures now
+inject a merged PR. Base-versus-head witnesses and a red control are in
+`TESTS-RESULTS/2026-09-27+GH-851/`. A Python timeout still counts only awake time on macOS; the
+wall-clock rule is #854's host rule (`caffeinate -i`, or an always-on host). Rollback: revert the squash.
 
 ## 2026-09-26 — Standardized clone backup layout and integrity verification for merge-cleanup-deep and merge-cleanup (GH-839)
 
@@ -111,6 +373,22 @@ with no new suite:
 Every trimmed check was broken on purpose and still failed, including the 21e race under deliberately staggered
 starts. `gh549` and `gh436` stay in Small, because both read files a docs-only landing can change. Rollback:
 revert; it is test files, the hook default and docs.
+
+## 2026-09-25 — Bounded handsfree agent wakeups (GH-825)
+
+Add a `handsfree` skill for checking CI and other asynchronous results and then continuing the
+authorized task every 10 minutes, for at most 3 hours. It uses the current harness's native
+same-conversation scheduler only when creation, readback, and cancellation are available, and keeps
+a collision-safe session note in ignored `temp/`. The note is a resume aid; live results and the
+existing task record remain authoritative. Rollback: cancel the native job and revert the skill and
+catalog entry.
+
+Follow-up: `start-task` now selects the final gate by changed-path scope, using the existing docs
+route for Markdown/text-only edits. Rename the deep topic assessment skill from `status` to
+`where-are-we-at` to avoid a name collision with agent-native status commands.
+Its installer removes a dangling `status` link only when it points to this skill's old path.
+If an old `status` link is still live, inspect its target and unlink it manually if it is the
+former skill; the installer leaves live links alone.
 
 ## 2026-09-25 — The gate qualifies each landing by tier: Small for docs, ledger and skill merges (GH-831, Phase 2)
 

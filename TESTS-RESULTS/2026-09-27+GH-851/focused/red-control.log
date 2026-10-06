@@ -1,0 +1,25 @@
+F
+======================================================================
+FAIL: test_reconcile_pr_failure_propagates (gh534_phase_b_tests.TestPhase5EndToEnd.test_reconcile_pr_failure_propagates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/xyzforge-gh851-focused.EnFs/repo/test/gh534_phase_b_tests.py", line 529, in test_reconcile_pr_failure_propagates
+    self.assertEqual(rc, 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 0 != 2
+
+----------------------------------------------------------------------
+Ran 1 test in 1.009s
+
+FAILED (failures=1)
+merge-cleanup: Operating on primary repo: /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh534b.4bol46dv/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh534b.4bol46dv/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+

@@ -1,0 +1,43 @@
+gh396 find-harness two-roots contract:
+  PASS: plain .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: plain .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: plain .xyz: override still selects the harness it names
+  PASS: plain .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.EJstl5/a-plain/.xyz') is True
+  PASS: plain .xyz (python): is_vendored() with override is True
+  PASS: plain .xyz (python): repo_root() with override matches consumer repo
+  PASS: linked worktree, override=main .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: linked worktree, override=main .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: linked worktree, override=main .xyz: override still selects the harness it names
+  PASS: linked worktree, override=main .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.EJstl5/b-main/.xyz') is True
+  PASS: linked worktree, override=main .xyz (python): is_vendored() with override is True
+  PASS: linked worktree, override=main .xyz (python): repo_root() with override matches consumer repo
+  PASS: symlink inside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: symlink inside repo: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: symlink inside repo: override still selects the harness it names
+  PASS: symlink inside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.EJstl5/c-inside/.xyz') is True
+  PASS: symlink inside repo (python): is_vendored() with override is True
+  PASS: symlink inside repo (python): repo_root() with override matches consumer repo
+  PASS: symlink outside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: symlink outside repo: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: symlink outside repo: override still selects the harness it names
+  PASS: symlink outside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.EJstl5/d-outside/.xyz') is True
+  PASS: symlink outside repo (python): is_vendored() with override is True
+  PASS: symlink outside repo (python): repo_root() with override matches consumer repo
+  PASS: symlink outside repo: control — git cannot resolve the link target, so the fallback is load-bearing
+  PASS: precedence step 1: valid XYZ_HARNESS override wins over local .xyz
+  PASS: precedence step 1: invalid override falls through to local .xyz
+  PASS: precedence step 2: local .xyz selected with no override
+  PASS: precedence step 3: delegated to gh292-worktree-vendored-discovery.sh (linked worktree, no override)
+  PASS: precedence step 4: harness clone resolves to itself
+  PASS: precedence step 5: foreign repo falls back to the script's own harness
+  PASS: #394: auto-discovery warns that the vendored copy is behind
+  PASS: #394: the warning still fires when XYZ_HARNESS points at the stale .xyz
+  PASS: #394: the printed remedy is runnable as printed (bash /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.EJstl5/live-harness/relay-automation/xyz-sync.sh update /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.EJstl5/f-stale)
+  PASS: --quiet: accepted (exit 0)
+  PASS: --quiet: no find-harness: announcement on stderr
+  PASS: --quiet: exported names and values are identical to the loud form
+  PASS: file-symlinked locator: resolves root correctly via file symlink
+  PASS: harness-paths.sh: xyz_harness_home matches harness directory
+  PASS: harness-paths.sh: xyz_harness_tool resolves tool
+  PASS: harness-paths.sh: xyz_emit_env_exports emits correct format
+  gh396-find-harness-roots: 41 pass, 0 fail

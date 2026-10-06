@@ -20,8 +20,8 @@ B_OUT=$(cat "$WORK/b.out")
 echo "  alice: $A_OUT"
 echo "  bob:   $B_OUT"
 
-is_winner() { echo "$1" | grep -q "^won:"; }
-is_loser()  { echo "$1" | grep -qE "^lost:|another tick claim is in progress"; }
+is_winner() { grep -q "^won:" <<<"$1"; }
+is_loser()  { grep -qE "^lost:|another tick claim is in progress" <<<"$1"; }
 
 WINS=0
 is_winner "$A_OUT" && WINS=$((WINS+1)) || true

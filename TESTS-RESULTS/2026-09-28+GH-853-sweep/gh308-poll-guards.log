@@ -1,0 +1,10 @@
+== test: gh308-poll-guards ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh308-poll-guards.XXXXXX.vTBoOsl9BB
+  PASS: poll [--help exits 0 with usage]: both lanes rc=0, identical output
+  PASS: poll [invalid --mode rejected]: both lanes rc=2, identical output
+  PASS: poll [invalid --turn-source rejected]: both lanes rc=2, identical output
+  PASS: poll [turn-source file requires relay mode]: both lanes rc=2, identical output
+  PASS: poll [stray positional rejected]: both lanes rc=2, identical output
+  PASS: poll [GH-92 residue]: default lane warns, byte-identical to Bash
+  PASS: poll [watchdog default]: run-watchdog dispatches the default watchdog.sh on the live lane
+  gh308-poll-guards: 7 pass, 0 fail

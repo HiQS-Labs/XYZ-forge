@@ -80,7 +80,7 @@ fi
 # ---- 2. project card is Tier A and counts active docs correctly (blank.md excluded) ----
 CARD="$(bash "$HQ" status acme-app)"; rc=$?
 [ "$rc" = 0 ] && pass "status acme-app rc=0" || fail "status rc=$rc"
-printf '%s\n' "$CARD" | grep -q "Tier A" && pass "card shows Tier A" || fail "card tier: $(printf '%s\n' "$CARD" | grep -i capability)"
+grep -q "Tier A" <<<"$CARD" && pass "card shows Tier A" || fail "card tier: $(printf '%s\n' "$CARD" | grep -i capability)"
 grep -q "active docs:  2 " <<<"$(printf '%s\n' "$CARD")" && pass "active docs = 2 (blank.md excluded, marathon counted)" \
   || fail "active-doc count: $(printf '%s\n' "$CARD" | grep -i 'active docs')"
 grep -q "MARATHON-PLAN-2026-07-04.md" <<<"$(printf '%s\n' "$CARD")" && pass "marathon plan surfaced" \
@@ -120,7 +120,7 @@ R="$(bash "$HQ" resolve AcmeApp)"; rc=$?
 bash "$HQ" resolve acme >/dev/null 2>&1; rc=$?
 [ "$rc" = 2 ] && pass "ambiguous 'acme' rc=2" || fail "ambiguous rc=$rc"
 CANDS="$(bash "$HQ" resolve acme | field CANDIDATES)"
-{ printf '%s' "$CANDS" | grep -q "acme-app" && printf '%s' "$CANDS" | grep -q "acme-api"; } \
+{ grep -q "acme-app" <<<"$CANDS" && grep -q "acme-api" <<<"$CANDS"; } \
   && pass "ambiguous lists both candidates" || fail "candidates: $CANDS"
 bash "$HQ" park acme "do a thing" >/dev/null 2>&1; rc=$?
 [ "$rc" = 2 ] && pass "park refuses ambiguous rc=2" || fail "park ambiguous rc=$rc"

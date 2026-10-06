@@ -40,14 +40,14 @@ out="$( cd "$FOREIGN" && env -u TICK_REPO_ROOT "$TICK" claim TASK-2 --agent clau
 
 # (3) env-pinned (TICK_REPO_ROOT set) still works — no regression for the recipe form.
 out="$(tick_a release TASK-1 --agent claude-a 2>&1)"; rc=$?
-{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "released: TASK-1"; } \
+{ [ "$rc" -eq 0 ] && grep -q "released: TASK-1" <<<"$out"; } \
   && pass "env-pinned release still works (TICK_REPO_ROOT honored)" \
   || fail "env-pinned release regressed (rc=$rc): $out"
 
 # (4) inferred root that DOES have .tick/ still works, and echoes the resolved
 #     root to stderr (direction c — a wrong-repo target stays visible).
 out="$( cd "$A" && env -u TICK_REPO_ROOT "$TICK" claim TASK-3 --agent claude-a --paths "y/**" 2>&1 )"; rc=$?
-{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "won:"; } \
+{ [ "$rc" -eq 0 ] && grep -q "won:" <<<"$out"; } \
   && pass "inferred root WITH .tick/ still claims (guard not over-eager)" \
   || fail "guard broke a legit inferred-root claim (rc=$rc): $out"
 grep -q "resolved repo root" <<<"$(echo "$out")" \

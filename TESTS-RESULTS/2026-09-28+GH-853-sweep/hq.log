@@ -1,0 +1,26 @@
+== test: hq (GH-128 resolver + project card) ==
+  PASS: resolve acme-app rc=0
+  PASS: REPO=acme-app
+  PASS: REPO_PATH via xyz
+  PASS: path source = xyz-registry
+  PASS: PDDA_MODE=observe (git-pulse)
+  PASS: PDDA_DEVICE=testdev
+  PASS: REBAL_TIER=2 (rebalance)
+  PASS: status acme-app rc=0
+  PASS: card shows Tier A
+  PASS: active docs = 2 (blank.md excluded, marathon counted)
+  PASS: marathon plan surfaced
+  PASS: resolve fsonly-app rc=0 (fs fallback)
+  PASS: path source = filesystem
+  PASS: fsonly is Tier C
+  PASS: orphan-pdda unresolved rc=1 (known to PDDA, no path)
+  PASS: unknown name rc=1
+  PASS: unresolved card shown
+  PASS: fuzzy 'AcmeApp' resolves rc=0
+  PASS: fuzzy -> REPO=acme-app
+  PASS: RESOLVED_VIA=fuzzy
+  PASS: exact match stays RESOLVED_VIA=exact
+  PASS: ambiguous 'acme' rc=2
+  PASS: ambiguous lists both candidates
+  PASS: park refuses ambiguous rc=2
+== hq: 24 passed, 0 failed ==
