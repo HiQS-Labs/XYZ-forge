@@ -1,5 +1,5 @@
 # Final QA relay — GH-976 implementation
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 ## Your role
@@ -238,3 +238,7 @@ instead of closed (`close-mismatch`, exit 4). No code changed since your reviewe
 only this: re-read the same revision; if your verdict stands, write a one-paragraph confirmation
 below, set `STATUS: Approved`, and **close the token with `tick done`** (do not `release`). If it
 does not stand, say why and set `STATUS: Changes requested`.
+
+### Round 3 · codex · final QA confirmation · 2026-10-05
+
+**Verdict: Approved — Round 2 approval stands.** Re-read the current helper, oracle call site and evidence summary; a read-only loose-object comparison (Python/zlib, no git process; exit 0) returned `relay_drive.py byte-identical to committed candidate e7559676`. Re-ran the exact Round 2 embedded AST/read-only SQLite/provenance probe with `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3` (Python extracts the last embedded `PYPROBE` body and executes it): exit **0**; decisive output `alias-exact False`, `unicode-receipt False`, `leading-space-real True`, `external-collision True`, `dotdot-name False`, `mixed True`, `no-SHA False`, `git-error False`, `rating [(976, 80, 75, 50, 85)]`, and `provenance: 15 nonempty records, all expected exits match`. No new Blocker or Must finding. Graph inventory still has no index for this worktree; nearest XYZ-forge generation is 2026-09-01T15:54:30Z and helper coverage says metadata_changed, so this confirmation relies on current source and the narrow probe. Only this relay file was edited; no git command, suite, pytest or executable fixture ran. The final disposable-clone gate remains **[Unverified — needs clone run]** and the consumer backlink remains landing work. Closing the claimed token with the absolute env-pinned `tick done RELAY-gh976-final-qa --agent codex`, as explicitly requested by Round 3, to resolve the prior close-mismatch.
