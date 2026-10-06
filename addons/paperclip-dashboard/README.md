@@ -2,6 +2,12 @@
 
 A standalone, read-only visual spike for XYZ Forge. It does not start automatically and adds no build dependencies. See [ATTRIBUTION.md](ATTRIBUTION.md) for the pinned source and borrowing record.
 
+## Implementation provenance
+
+This is a Paperclip-inspired, independently authored implementation: visual review and upstream source inspection informed the layout, navigation, metric cards, filtering and activity patterns. No Paperclip implementation code was copied or imported. The add-on code was authored for XYZ Forge and reuses existing XYZ Flightdeck data/status modules; the upstream MIT license notice is retained verbatim.
+
+“Partial clean-room” can describe the intent informally—borrow presentation ideas and write custom code—but this spike did not use a formal clean-room process: the implementer inspected upstream source, and there was no separation between source reviewers and implementers. We therefore describe it as independently authored, pattern-inspired code rather than claim clean-room provenance. The pinned references and attribution remain documented in [ATTRIBUTION.md](ATTRIBUTION.md).
+
 From the repository root:
 
 ```sh
