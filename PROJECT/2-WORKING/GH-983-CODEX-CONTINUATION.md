@@ -15,7 +15,7 @@ goal: Continue authorized work until its requested outcome is verified or extern
 
 | What was just completed | What's next |
 |---|---|
-| Implemented and recorded ten decision fixtures plus red control; PDDA/ledger checks pass with disclosed unrelated warnings | Final independent QA, reviewed PR, then Skills Army deployment subject to canonical landing authorization |
+| Independent plan and final QA Approved; bounded fixtures and governance evidence retained | Publish reviewed PR through exact-head push gate; canonical landing and Skills Army deployment await authorization |
 
 ## Recon and bet
 
@@ -47,3 +47,7 @@ Approved in relay-system/2026-10-06/gh983-plan.codex.md (reviewed da9ca8b2). Nit
 ## Execution evidence
 
 TESTS-RESULTS/2026-10-06+GH-983/ contains non-empty base/candidate decision outputs, source hashes, commands, provenance, validator compatibility result, PDDA/ledger output and identity bracket. Base also passes: no causal reliability claim. Complete/incomplete evidence mutation changes completion true to false. Raw quick_validate rejects pre-existing Claude hooks; projection passes. Deterministic checks: zero errors/failures, PDDA 31 and ledger 9 warnings on unrelated unchanged state. Final readiness is subject to independent QA and the exact-head push gate. Required merge/deployment work is pending, not parked or completed.
+
+## Final QA disposition
+
+Approved Round 2 in relay-system/2026-10-06/gh983-final.codex.md (reviewed 5b6994aa). Round 1 review-input blocker resolved by correcting the declared artifact path and furnishing comparison.json; no source change was needed. Final reviewer confirmed contract, source diff, byte preservation and evidence limits. Skills Army named update preview changes workhorse only; installed payload and both app links remain unchanged. Merge/deployment remain required unfinished work pending authorization, not incidental parked work.
