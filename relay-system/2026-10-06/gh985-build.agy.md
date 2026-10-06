@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Producer
+NEXT: Agy
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -105,5 +105,21 @@ In the Claude runtime paragraph, replace `do not activate it or install a mod he
 - Re-verified Python AST and Bash structure preservation; no other paths edited.
 
 handing off to Producer — go to the parent orchestrator window and say 'take your turn'
+
+### Producer · Round 3
+
+Initial 10 protocol cases pass and AST unchanged apart from reason, but the stop-only clause contradicts the contract: `Stop only for verified completion or explicit user pause/cancellation.` omits concrete external blockers. Manual-blocker-clause-failure.txt records a failing literal clause assertion. Item remains unfinished.
+
+Agy owns only the same two source files. Make this surgical correction, no other behavior or paths:
+1. Replace the stop-only sentence with `Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished.` Keep all other reason clauses intact.
+2. Replace the single long Claude runtime paragraph with the following short wrapped text (prose is desired content, not a new activation):
+
+**Claude runtime.** The existing Stop hook checks open checklist lines and cannot verify acceptance
+evidence. Claude does not call Stop on user interrupts; API failures use StopFailure, which ignores
+continuation decisions, so retry the authorized action when access is restored. When available and
+explicitly requested, Claude's `/goal` shortcut adds a session-scoped prompt-based Stop check; it
+still relies on model judgment and does not expand authorization. See [Claude hooks](https://code.claude.com/docs/en/hooks#stop).
+
+Preserve reason-only Python AST delta, Bash wrapper, session scoping, fail-open and installer. No new files/gates/mods/config/tests or git commands. Read only needed current source and this block; don't repeat broad recon or tests. Write source and relay only; NEXT Producer, STATUS Open, release build token to Producer. Final Fable QA is separate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
