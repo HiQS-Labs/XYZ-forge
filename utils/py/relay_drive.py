@@ -601,19 +601,24 @@ def main():
             return False
         repo = target_repo()
         try:
-            out = subprocess.check_output(["git", "-C", repo, "diff", "--name-only", f"{before}..{after}"],
-                                          stderr=subprocess.DEVNULL).decode("utf-8", "replace")
+            # -z: literal NUL-terminated pathnames — without it git quotes unusual names
+            # ("relay-system/r\303\251ceipt.md") and the leading quote defeats every prefix.
+            out = subprocess.check_output(["git", "-C", repo, "diff", "--name-only", "-z", f"{before}..{after}"],
+                                          stderr=subprocess.DEVNULL).decode("utf-8", "surrogateescape")
         except Exception:
             return False   # unverifiable evidence earns no extension; the resolved-items arm still applies
+        # Exact-file exclusion only when the transcript resolves INSIDE this repo. realpath on both
+        # operands: on macOS /tmp and /var are aliases of /private/..., and abspath alone makes the
+        # same file look external. commonpath is component-aware ("..thread.md" is not "..").
         relay_rel = ""
         try:
-            relay_rel = os.path.relpath(os.path.abspath(relay_file), os.path.abspath(repo))
-            if relay_rel.startswith(".."):
-                relay_rel = ""   # transcript lives outside this repo: no exact-file exclusion
+            repo_real = os.path.realpath(repo)
+            relay_real = os.path.realpath(relay_file)
+            if os.path.commonpath([repo_real, relay_real]) == repo_real:
+                relay_rel = os.path.relpath(relay_real, repo_real)
         except ValueError:
             relay_rel = ""
-        for path in out.splitlines():
-            path = path.strip()
+        for path in out.split("\0"):
             if path and not path.startswith(RECEIPT_DIRS) and not (relay_rel and path == relay_rel):
                 return True
         return False

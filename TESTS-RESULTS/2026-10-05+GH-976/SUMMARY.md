@@ -12,7 +12,9 @@ disposable base clone at `6d81df9f` and the candidate tree. Each case builds a f
 | C | `src/repair.py` | extends → passes | extends → passes (GH-115 HEAD arm preserved) |
 | D | `relay-system/receipt.md` + `src/repair.py` | extends → passes | extends → passes |
 | E | `src/repair.py`, driver sampling a non-git dir (empty SHAs) | `cap-stalled` → passes | `cap-stalled` → passes |
+| F | the relay file opened through its realpath while the driver samples the repo through the `$TMPDIR` alias (`/var/…` vs `/private/var/…`) | extends → **fails (10)** | `cap-stalled` at cap 2 → passes (final QA round 1, finding 1) |
+| G | `relay-system/réceipt.md` (git quotes it without `-z`) | extends → **fails (10)** | `cap-stalled` at cap 2 → passes (final QA round 1, finding 2) |
 
 Existing suite `test/gh115-round-cap.sh`: 7 pass, 0 fail on the candidate (recorded last in
-`provenance.jsonl`). Fixture note: the stub retries its commit briefly because the driver refreshes
+`provenance.jsonl`). Provenance records name the committed candidate revision. Fixture note: the stub retries its commit briefly because the driver refreshes
 the git index concurrently (`index.lock`); without the retry case D dropped a turn on both sides.

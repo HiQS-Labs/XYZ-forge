@@ -4,15 +4,19 @@
 # commits INSIDE the turn and keeps handing the token off; never approves; --round-cap 2.
 # Prints EXPECT/GOT lines and exits 0 when the candidate-side expectation holds, 10 when not.
 set -u
-ROOT="${1:?harness root}"; CASE="${2:?case A|B|C|D|E}"
+ROOT="${1:?harness root}"; CASE="${2:?case A|B|C|D|E|F|G}"
 W="$(mktemp -d "${TMPDIR:-/tmp}/gh976-$CASE.XXXXXX")"; trap 'rm -rf "$W"' EXIT
 A="$W/repo"; mkdir -p "$A/relay-system" "$A/notes" "$A/src"; git -C "$A" init -q -b main
 git -C "$A" config user.email t@t; git -C "$A" config user.name t
 RELAY="$A/relay.md"; [ "$CASE" = B ] && RELAY="$A/notes/thread.md"
+# F: alias coordinates — the driver samples the repo through the unresolved $TMPDIR path while the
+# relay file is opened through its realpath (macOS: /var/... vs /private/var/...).
+[ "$CASE" = F ] && RELAY="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$A")/notes/thread.md"
+RECEIPT="relay-system/receipt.md"; [ "$CASE" = G ] && RECEIPT="relay-system/réceipt.md"
 printf 'STATUS: Open\nNEXT: test (Builder)\n# relay body\n' >"$RELAY"
-printf '.tick/\n' >"$A/.gitignore"; echo seed >"$A/relay-system/receipt.md"; echo seed >"$A/src/repair.py"
+printf '.tick/\n' >"$A/.gitignore"; echo seed >"$A/$RECEIPT"; echo seed >"$A/src/repair.py"
 git -C "$A" add -A && git -C "$A" commit -q -m seed
-export TICK="$ROOT/bin/tick" TICK_BIN="$ROOT/bin/tick" TICK_REPO_ROOT="$A" RELAY_TARGET_ROOT="$A" FIXTURE_REPO="$A" CASE
+export TICK="$ROOT/bin/tick" TICK_BIN="$ROOT/bin/tick" TICK_REPO_ROOT="$A" RELAY_TARGET_ROOT="$A" FIXTURE_REPO="$A" CASE RECEIPT
 export XYZ_HARNESS_LOGGING=0 XYZ_DEVICE_CONFIG_PATH=/dev/null
 STUB="$W/agent"; cat >"$STUB" <<'S'
 #!/usr/bin/env bash
@@ -20,8 +24,8 @@ STUB="$W/agent"; cat >"$STUB" <<'S'
 R="${FIXTURE_REPO:-$RELAY_TARGET_ROOT}"
 n=1; [ -f "$R/.stub_count" ] && n=$(cat "$R/.stub_count"); echo $((n+1)) >"$R/.stub_count"
 case "$CASE" in
-  A) echo "turn $n" >> "$R/relay-system/receipt.md"; paths="relay-system/receipt.md" ;;
-  B) echo "turn $n" >> "$RELAY_FILE"; paths="$RELAY_FILE" ;;
+  A|G) echo "turn $n" >> "$R/$RECEIPT"; paths="$RECEIPT" ;;
+  B|F) echo "turn $n" >> "$RELAY_FILE"; paths="$RELAY_FILE" ;;
   C|E) echo "turn $n" >> "$R/src/repair.py"; paths="src/repair.py" ;;
   D) echo "turn $n" >> "$R/relay-system/receipt.md"; echo "turn $n" >> "$R/src/repair.py"; paths="relay-system/receipt.md src/repair.py" ;;
 esac
@@ -47,7 +51,7 @@ turns=$(git -C "$A" rev-list --count HEAD 2>/dev/null); turns=$((turns-1))
 grep -q "COMMIT FAILED" "$A/.stub.log" 2>/dev/null && { echo "STUB LOG:"; cat "$A/.stub.log"; }
 echo "GOT: rc=$rc reason=${reason:-none} extensions=$ext extension_records=$rec stub_turns=$turns"
 case "$CASE" in
-  A|B|E) echo "EXPECT: rc=4 reason=cap-stalled extensions=0 extension_records=0 stub_turns=2"
+  A|B|E|F|G) echo "EXPECT: rc=4 reason=cap-stalled extensions=0 extension_records=0 stub_turns=2"
          [ "$rc" = 4 ] && [ "$reason" = cap-stalled ] && [ "$ext" = 0 ] && [ "$rec" = 0 ] && [ "$turns" = 2 ] && exit 0; exit 10 ;;
   C|D)   echo "EXPECT: rc=4 reason=cap-progressing-extended extensions>=1 extension_records>=1 stub_turns=4"
          [ "$rc" = 4 ] && [ "$reason" = cap-progressing-extended ] && [ "$ext" -ge 1 ] && [ "$rec" -ge 1 ] && [ "$turns" = 4 ] && exit 0; exit 10 ;;
