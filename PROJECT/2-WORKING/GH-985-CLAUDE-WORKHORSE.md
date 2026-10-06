@@ -15,13 +15,12 @@ goal: Align the Claude Stop-hook guidance with the shared verified-outcome contr
 
 | What was just completed | What's next |
 |---|---|
-| Fable low-effort plan written from direct source reads on the PR #984 stack | Independent plan QA (Fable reviewer); on Approved, exact-row accepted-start, then Agy builds |
+| Fable plan QA attested Approved Round 2; runtime and routing facts grounded | Exact-row accepted-start, Agy build, bounded verification and final Fable QA |
 
 ## Dependency
 
 Stacked on PR #984 (`fix/workhorse-codex-continuation`), stack base `3c9bfa8ca452bfddd8ec19d4ac243e02372531bb`; development
-integration base `8ec99b6066c997a00c40761c9efb9f9caaff8b8f` (re-verify before publication). The stacked PR must
-declare PR #984 as its base and show only this incremental diff. No merge or deployment authorization is granted here.
+integration base `8ec99b6066c997a00c40761c9efb9f9caaff8b8f` (re-verify before publication). The branch is stacked on PR #984; its PR targets `development` under repository base-branch governance. Declare #984 as a landing dependency and supply an incremental comparison against its current head. No merge or deployment authorization is granted here.
 
 ## Observed input (direct reads, graph not_tracked for workhorse paths, generation 2026-09-01)
 
@@ -86,7 +85,7 @@ and final approver. Reviewer writes only the relay receipt. Independent review i
    `relay-system/2026-10-06/gh985-plan.*.md`. Do not start step 2 without it.
 2. Agy edits `skills/2-daily/workhorse/stop-hook.sh:7` (comment) and `:45-48` (reason string) and adds the Claude
    runtime sentences to `skills/2-daily/workhorse/SKILL.md` after line 133. -> `git diff --stat` shows exactly two
-   files; Python AST comparison after normalizing only the emitted reason is equal to the stack base (comments ignored; predicate and fail-open untouched);
+   files; Python AST comparison of extracted heredoc bodies after normalizing only the emitted reason is equal to the stack base (comments ignored; predicate and fail-open untouched);
    `bash -n stop-hook.sh` and `python3 -c` compile of the heredoc both exit 0.
 3. Record bounded manual checks under `TESTS-RESULTS/2026-10-06+GH-985/` with `provenance.jsonl` committed:
    (a) pipe `{"session_id":"gh985","cwd":"<clone>"}` into the hook with a `.workhorse/gh985.md` containing one `- [ ]`
@@ -97,8 +96,8 @@ and final approver. Reviewer writes only the relay receipt. Independent review i
    before grading them.
 4. Classify the final changed paths with existing `utils/ci-route.sh`; use its required gate from a separate disposable full clone with identity bracket (`core.bare`, remotes, local identity, HEAD) before/after. Current non-core workhorse skill/ledger/evidence paths route tier 1 documentation. Run PDDA and RELEASES checks; inspect warnings in SUMMARY.md. No full runtime suite or Small qualification is claimed unless classification requires it.
 5. Fable final QA on the committed diff and evidence. -> Approved receipt under `relay-system/2026-10-06/gh985-final.*.md`.
-6. Push through the pre-push gate from the disposable clone; open a PR based on PR #984's branch, targeting it, with
-   the stack dependency and incremental diff stated in the body. -> dispatch existing `ci.yml` on the stacked head if automatic base filters omit it; verify the actual run and routing for that exact SHA; existing workflow_dispatch intentionally routes full/tier 3, so disclose it separately from local tier 1;
+6. Push through the pre-push gate from the disposable clone; open a PR from this stacked branch targeting `development`, with
+   the stack dependency and incremental diff stated in the body. -> verify the automatic hosted run and routing for the exact head SHA; no manual full-suite dispatch needed for the development target;
    update the Status table. Stop here; merge and deployment await operator authorization.
 
 ## Acceptance mapping
@@ -110,7 +109,7 @@ and final approver. Reviewer writes only the relay receipt. Independent review i
 | Decision predicate and fail-open unchanged | step 2 line-range diff, steps 3b-3c |
 | Runtime paragraph names Claude hook behavior, limits and aligned guidance; earlier disclosure retained | `SKILL.md` diff, reviewer read |
 | No new tests/gates/mods/config | `git diff --stat` shows two files only |
-| Stacked PR exposes dependency | PR base is PR #984's branch; body names it |
+| Stacked PR exposes dependency | PR base is development; body names #984 dependency and incremental comparison |
 
 ## Ratings
 
@@ -132,3 +131,7 @@ Fable authored the plan at low effort (canonical model claude-fable-5-1). Before
 ## Plan QA dispositions
 
 Round 1 Fable: PASS, no Blocker/Should, three Nits. The relay driver rejected closeout (`close-mismatch`) because the reviewer released rather than completed its token; this is not an attested Approved gate. Applied all three Nits: runtime paragraph rather than exclusive “one place”; explicit full/tier-3 manual-dispatch disclosure; mechanical literal guidance red control. Replaced positional line ranges with equivalent Python AST comparison normalizing only the emitted reason, so added comments cannot invalidate unchanged-line numbering. A corrective independent Round 2 must close the token and be attested before accepted-start/build.
+
+## Approved plan handoff
+
+Independent plan QA is attested Approved at 70bac0fd in gh985-plan.fable.md. Round 2 extraction Nit applied: compare extracted Python heredoc bodies, normalize only reason. Orchestrator publication routing disposition: retain the authorized stack source, target development per AGENTS base sanity, name #984 dependency and show incremental comparison. This changes publication routing only, leaves approved implementation scope and acceptance intact, and enables automatic normal hosted CI; no speculative full dispatch. Final Fable QA will verify emitted PR routing expectations. Parent receipt-only revision aedc0726 inherited; shared skill source hash is unchanged.
