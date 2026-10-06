@@ -15,7 +15,7 @@ goal: Continue authorized work until its requested outcome is verified or extern
 
 | What was just completed | What's next |
 |---|---|
-| Refreshed development, inspected skill consumers and local Codex capabilities, registered and rated GH-983 | Plan relay QA, focused instructions, bounded scenario validation, final QA and reviewed PR, authorized Skills Army update |
+| Plan QA Approved; GH-983 admitted; focused continuation contract implemented | Bounded scenario evidence, deterministic checks, final QA and reviewed PR, authorized deployment |
 
 ## Recon and bet
 
@@ -39,3 +39,7 @@ Ratings: pri 80 (explicit operator request and recurring interruption), sev 75 (
 ## Validation limits
 
 Bounded model decision fixtures and review can show instruction interpretation, not ensure future agent compliance. Goals/hooks are supported separate runtime mechanisms, not enabled by this edit. No deployment-window override, permission expansion, trust bypass or gate bypass.
+
+## Plan QA disposition
+
+Approved in relay-system/2026-10-06/gh983-plan.codex.md (reviewed da9ca8b2). Nit: final relay will fill Definition of Done. Fixtures will disclose any base pass rather than claiming causal proof. Raw quick_validate rejects existing Claude hooks frontmatter; retain it and validate a scratch projection without that field separately.
