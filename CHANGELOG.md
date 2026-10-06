@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-06 — Workhorse: Claude Stop guidance preserves required scope (GH-985)
+
+The existing Claude Stop-hook message now resumes authorized feasible required work, demands evidence
+and an outcome audit, retains required findings, and permits a genuine external blocker after independent
+work. Optional/deferred markers no longer advertise a parking escape. The decision logic is unchanged;
+Claude runtime notes explain the documented cap, interrupt/API-error limits and explicitly requested
+`/goal`. No mod, new gate or implicit activation. Bounded ten-case protocol checks and old-message red
+control are retained under `TESTS-RESULTS/2026-10-06+GH-985/`; these do not guarantee live multi-turn behavior.
+
 ## 2026-10-06 — Workhorse: Codex completion follows the requested outcome (GH-983)
 
 Workhorse now resumes authorized work after subtasks, status answers, restored access and handoffs,

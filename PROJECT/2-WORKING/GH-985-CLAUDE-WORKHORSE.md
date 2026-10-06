@@ -15,7 +15,7 @@ goal: Align the Claude Stop-hook guidance with the shared verified-outcome contr
 
 | What was just completed | What's next |
 |---|---|
-| Fable plan QA attested Approved Round 2; runtime and routing facts grounded | Exact-row accepted-start, Agy build, bounded verification and final Fable QA |
+| Fable plan QA attested Approved Round 2; runtime and routing facts grounded | Agy implementation and bounded checks complete; final Fable QA and PR publication next |
 
 ## Dependency
 
@@ -135,3 +135,7 @@ Round 1 Fable: PASS, no Blocker/Should, three Nits. The relay driver rejected cl
 ## Approved plan handoff
 
 Independent plan QA is attested Approved at 70bac0fd in gh985-plan.fable.md. Round 2 extraction Nit applied: compare extracted Python heredoc bodies, normalize only reason. Orchestrator publication routing disposition: retain the authorized stack source, target development per AGENTS base sanity, name #984 dependency and show incremental comparison. This changes publication routing only, leaves approved implementation scope and acceptance intact, and enables automatic normal hosted CI; no speculative full dispatch. Final Fable QA will verify emitted PR routing expectations. Parent receipt-only revision aedc0726 inherited; shared skill source hash is unchanged.
+
+## Implementation and bounded verification
+
+Agy built only SKILL.md and the existing stop-hook.sh. Initial protocol inspection found missing authorized-work wording, and later source inspection found the stop-only clause excluding external blockers even though ten protocol cases passed. Both remained required unfinished findings until Agy repaired them. Final ten-case protocol/wording checks pass at the source/hash in manual-hook-checks-final.json; old-reason red control fails, final candidate passes again. Extracted Python AST equals stack base after normalizing only reason; Bash syntax and Python compile pass. Frontmatter/installer unchanged. Raw quick_validate still rejects the pre-existing Claude hooks key, while scratch metadata projection passes. Earlier result files are intermediate receipts, not final acceptance. No new suite or gate, implicit Goal/mod activation, trust/config edits, merge or deploy.

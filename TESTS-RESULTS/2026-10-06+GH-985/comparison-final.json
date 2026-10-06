@@ -1,0 +1,32 @@
+{
+  "base": "aedc0726c140a06a422116db09c9f99eb969314b",
+  "head": "b42ad688d598748c371b93fdb36606a57046c2b1",
+  "paths": [
+    "PROJECT/2-WORKING/GH-985-CLAUDE-WORKHORSE.md",
+    "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r2-result.txt",
+    "TESTS-RESULTS/2026-10-06+GH-985/agy-build-result.txt",
+    "TESTS-RESULTS/2026-10-06+GH-985/comparison.json",
+    "TESTS-RESULTS/2026-10-06+GH-985/fable-plan.md",
+    "TESTS-RESULTS/2026-10-06+GH-985/manual-blocker-clause-failure.txt",
+    "TESTS-RESULTS/2026-10-06+GH-985/manual-first-failure.txt",
+    "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks.json",
+    "TESTS-RESULTS/2026-10-06+GH-985/metadata-projection-validate.txt",
+    "TESTS-RESULTS/2026-10-06+GH-985/provenance.jsonl",
+    "TESTS-RESULTS/2026-10-06+GH-985/raw-validate.txt",
+    "TESTS-RESULTS/2026-10-06+GH-985/runtime-capabilities.txt",
+    "TESTS-RESULTS/2026-10-06+GH-985/runtime-recon.md",
+    "relay-system/2026-10-06/gh985-build.agy.md",
+    "relay-system/2026-10-06/gh985-plan.fable.md",
+    "releases.db",
+    "releases.sql",
+    "skills/2-daily/workhorse/SKILL.md",
+    "skills/2-daily/workhorse/stop-hook.sh"
+  ],
+  "skill_diff": "diff --git a/skills/2-daily/workhorse/SKILL.md b/skills/2-daily/workhorse/SKILL.md\nindex 65a6eb5d..38104daa 100644\n--- a/skills/2-daily/workhorse/SKILL.md\n+++ b/skills/2-daily/workhorse/SKILL.md\n@@ -131,6 +131,12 @@ require hook configuration and trust; do not invent a hook, bypass trust, or ins\n See official [Goals](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) and\n [hooks](https://learn.chatgpt.com/docs/hooks) documentation before configuring those mechanisms.\n \n+**Claude runtime.** The existing Stop hook checks open checklist lines and cannot verify acceptance\n+evidence. Claude does not call Stop on user interrupts; API failures use StopFailure, which ignores\n+continuation decisions, so retry the authorized action when access is restored. When available and\n+explicitly requested, Claude's `/goal` shortcut adds a session-scoped prompt-based Stop check; it\n+still relies on model judgment and does not expand authorization. See [Claude hooks](https://code.claude.com/docs/en/hooks#stop).\n+\n ---\n \n ## Rung 1: Ground Truth & Diagnostics (`/debug-mantra`)\ndiff --git a/skills/2-daily/workhorse/stop-hook.sh b/skills/2-daily/workhorse/stop-hook.sh\nindex 67c8cf6b..fd92e7ab 100755\n--- a/skills/2-daily/workhorse/stop-hook.sh\n+++ b/skills/2-daily/workhorse/stop-hook.sh\n@@ -4,7 +4,7 @@\n # Blocks the stop while this session's run checklist (<repo-root>/.workhorse/<session_id>.md) still has an\n # open `- [ ]` line, so a direct /workhorse run keeps going until its queue is resolved. Everything else\n # (no checklist, other session, bad input, missing python3/git) fails OPEN: exit 0, no output, stop allowed.\n-# Loop safety is the harness's 8-consecutive-continuation cap plus the `[!]`/`[-]` escape in the checklist.\n+# The runtime documents an eight-consecutive-continuation cap, reset by tool calls; optional/deferred markers are not permission to abandon required scope. Do not change runtime controls.\n \n command -v python3 >/dev/null 2>&1 || exit 0\n \n@@ -44,8 +44,10 @@ for root in roots:\n         shown = \"\\n\".join(open_items[:5]) + (\"\\n\u2026\" if len(open_items) > 5 else \"\")\n         print(json.dumps({\"decision\": \"block\", \"reason\":\n             \"/workhorse run checklist %s still has %d open item(s):\\n%s\\n\"\n-            \"Continue with the next open item. To hand back to the operator instead, mark it \"\n-            \"[!] (with the exact blocker) or [-] (parked, with its pointer).\" % (path, len(open_items), shown)}))\n+            \"Continue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. \"\n+            \"For a concrete external blocker record [!] and finish independent authorized work first. \"\n+            \"Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. \"\n+            \"[-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope.\" % (path, len(open_items), shown)}))\n     sys.exit(0)\n PY\n exit 0\n",
+  "source_hashes": {
+    "stop-hook.sh": "4fbfb305ffed9eba8d91848fb12ff9a8c490bfca9e4a08e2e53c040190668de1",
+    "install.sh": "42a2401f6b2801371b19448f8541cb996a9fb1116dfc7b34edc2b1e30fc994f7",
+    "SKILL.md": "5b05f30a8e0c509540f8f6dff9c53660abc815291ceab3bc0e5a0a7fec50faef"
+  },
+  "install_preserved": true
+}
