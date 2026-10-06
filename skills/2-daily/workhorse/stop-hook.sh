@@ -46,7 +46,7 @@ for root in roots:
             "/workhorse run checklist %s still has %d open item(s):\n%s\n"
             "Continue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. "
             "For a concrete external blocker record [!] and finish independent authorized work first. "
-            "Stop only for verified completion or explicit user pause/cancellation. "
+            "Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. "
             "[-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope." % (path, len(open_items), shown)}))
     sys.exit(0)
 PY

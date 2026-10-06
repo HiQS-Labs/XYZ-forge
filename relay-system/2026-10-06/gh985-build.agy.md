@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Agy
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 3
 
@@ -121,5 +121,15 @@ explicitly requested, Claude's `/goal` shortcut adds a session-scoped prompt-bas
 still relies on model judgment and does not expand authorization. See [Claude hooks](https://code.claude.com/docs/en/hooks#stop).
 
 Preserve reason-only Python AST delta, Bash wrapper, session scoping, fail-open and installer. No new files/gates/mods/config/tests or git commands. Read only needed current source and this block; don't repeat broad recon or tests. Write source and relay only; NEXT Producer, STATUS Open, release build token to Producer. Final Fable QA is separate.
+
+### Producer · Round 3 (Repair)
+
+- Modified `skills/2-daily/workhorse/stop-hook.sh`:
+  - Replaced the stop-only sentence with `Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished.`
+- Modified `skills/2-daily/workhorse/SKILL.md`:
+  - Replaced the single long Claude runtime paragraph with the provided short wrapped text.
+- Verified reason-only Python AST delta, Bash wrapper, session scoping, fail-open and installer are preserved. No new files/gates/mods/config/tests added.
+
+handing off to Producer — go to the parent orchestrator window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

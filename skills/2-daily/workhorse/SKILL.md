@@ -131,7 +131,11 @@ require hook configuration and trust; do not invent a hook, bypass trust, or ins
 See official [Goals](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) and
 [hooks](https://learn.chatgpt.com/docs/hooks) documentation before configuring those mechanisms.
 
-The Claude hook enforces syntactic checklist completion but cannot judge semantic acceptance, and its reason text now mirrors the contract. Stop is not invoked for user interrupts; API errors trigger StopFailure, which ignores continuation decisions (rather than API errors themselves forcing retry), so restored access requires retrying the authorized action. Native `/goal` is an optional session-scoped prompt-based shortcut used only when explicitly requested; do not activate it implicitly. Explicit operator `/goal` requests must remain supported. See the [official Claude hooks docs](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/hooks).
+**Claude runtime.** The existing Stop hook checks open checklist lines and cannot verify acceptance
+evidence. Claude does not call Stop on user interrupts; API failures use StopFailure, which ignores
+continuation decisions, so retry the authorized action when access is restored. When available and
+explicitly requested, Claude's `/goal` shortcut adds a session-scoped prompt-based Stop check; it
+still relies on model judgment and does not expand authorization. See [Claude hooks](https://code.claude.com/docs/en/hooks#stop).
 
 ---
 
