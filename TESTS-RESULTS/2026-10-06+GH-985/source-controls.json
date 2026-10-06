@@ -1,0 +1,21 @@
+{
+  "source_sha": "5c078ec4c9df0c5a9ac85c618cacb08fea5c4590",
+  "hook_sha256": "4fbfb305ffed9eba8d91848fb12ff9a8c490bfca9e4a08e2e53c040190668de1",
+  "mutations": "scratch copies only; canonical bytes unchanged",
+  "ast_red": {
+    "assertion_exit": 1,
+    "mutation": "copied predicate - [ ] -> - [x]",
+    "result": "AST equality fails"
+  },
+  "bash_syntax_red": {
+    "exit_code": 2,
+    "stderr": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/syntax-red.sh: line 55: syntax error near unexpected token `then'\n/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/syntax-red.sh: line 55: `if then'\n",
+    "mutation": "copied wrapper invalid if then"
+  },
+  "python_compile_red": {
+    "exit_code": 1,
+    "error": "SyntaxError",
+    "mutation": "copied heredoc missing colon"
+  },
+  "candidate_rerun": "AST equal except reason; Bash syntax and Python compile pass"
+}

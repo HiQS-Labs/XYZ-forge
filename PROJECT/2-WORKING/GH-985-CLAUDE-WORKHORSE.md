@@ -143,3 +143,7 @@ Agy built only SKILL.md and the existing stop-hook.sh. Initial protocol inspecti
 ## Governance evidence
 
 Disposable clone at 08014160: required imports, RELEASES and PDDA passed; identity intact. Actual classifier tier 1 documentation. PDDA 31 unrelated warnings and RELEASES 9 existing debt warnings are inspected/dispositioned in TESTS-RESULTS/2026-10-06+GH-985/SUMMARY.md with full outputs and provenance. No blanket clean-repository or full-runtime-suite claim. Final Fable QA and exact-head publication checks remain required.
+
+## Final source approval
+
+Fable final QA is attested Approved at af59f1a4, with no Blocker or Should. Codex independently inspected the source and accepts it for PR publication; supplemental scratch red controls fail and candidate reruns pass. Runtime citation Nit requires no change: parent direct official-page retrieval and local CLI evidence support the claims. Exact-head push and hosted checks remain; merge/deployment await authorization.
