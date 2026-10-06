@@ -102,4 +102,12 @@ Not run here (by rule): validate.sh, test suites, pytest, live Claude session. T
 
 Token closeout: `tick done GH985-FINAL --agent Reviewer` (Approved — not released). Relay closed (Approved), no further turn needed; the harness commits this file and runs its gate.
 
+
+### Attestation · relay-drive — 2026-10-06T23:21:42Z
+task: GH985-FINAL
+reviewer: Reviewer
+status: Approved
+reviewed-head: af59f1a4d716c71869d3d7f8d9e32e79080e2809
+added-range: 7496+6645
+added-sha256: 55eef3fbce2d9a50dd80e6e89000e1ca3bc5305854ba223772efc1e19eee33e9
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
