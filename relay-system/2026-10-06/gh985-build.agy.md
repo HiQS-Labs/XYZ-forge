@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Producer
+NEXT: Agy
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -81,5 +81,13 @@ BUILD OWNERSHIP: Agy owns only skills/2-daily/workhorse/SKILL.md and stop-hook.s
 - Manual bounds checking passed (bash syntax check and python extraction compiled successfully).
 
 handing off to Producer — go to the parent orchestrator window and say 'take your turn'
+
+### Producer · Round 2
+
+First bounded check at 66612ba4: extracted Python AST matches base except reason, syntax/compile pass; guidance assertion fails `required guidance absent: authorized` (manual-first-failure.txt). Required literal terms are in the approved plan; no completed execution claim.
+
+Agy repair ownership remains the same two source files only. Make the reason explicitly continue the next **authorized feasible required item**; mark [x] only with acceptance evidence and audit the requested outcome before completion; for a concrete external blocker record [!] and finish independent authorized work first. Keep optional/explicit-user-deferral wording and pause/cancellation limits. Preserve Python AST except reason, Bash wrapper and session/fail-open logic.
+
+In the Claude runtime paragraph, replace `do not activate it or install a mod here` with `do not activate it implicitly`. Explicit operator /goal requests must remain supported. Link the official Claude hooks docs, describe StopFailure as ignoring continuation decisions (rather than API errors themselves forcing retry), and wrap prose to existing style. No added mod/config/gate or implicit activation. Read earlier context and make only these fixes; no new broad recon or tests; parent will run the probe. Write only allowed source and this relay. Set NEXT Producer / STATUS Open and release to Producer, do not mark final QA Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
