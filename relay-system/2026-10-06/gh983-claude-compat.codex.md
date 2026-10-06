@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -69,5 +69,21 @@ Review scope: the three-line follow-up from parent 21859373 explicitly shares th
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The small wording correction explicitly shares the completion contract with Claude and Codex, preserves the existing runtime boundaries, and reports protocol evidence with accurate limits. No unresolved Blocker or Should remains.
+swept file: yes
+
+- [Pass] Shared scope is explicit at `skills/2-daily/workhorse/SKILL.md:86–92`: “That hook is Claude-only and checks checklist syntax, not acceptance evidence” and “Claude and Codex follow the contract below.” The heading is “Shared continuation and completion contract (Claude and Codex).” Lines 94–121 retain same-turn continuation, acceptance evidence, ending audit, independent work, permissions and truthful blocker/runtime-limit reporting. Preserve these clauses; no further wording change needed.
+- [Pass] Runtime boundaries remain truthful at `SKILL.md:17–26,123–132`: Claude Stop frontmatter remains; no Codex runtime gate is installed; Goals require an explicit request and Codex hooks require separate configuration/trust. The full existing `stop-hook.sh:36–49` reads checkbox syntax and emits a block only for open items; checked boxes do not prove acceptance. `install.sh:29–48,53–58` preserves live foreign links and existing discovery destinations. Current hook/installer SHA256 values match the recorded base hashes in `TESTS-RESULTS/2026-10-06+GH-983/provenance.jsonl` (comparison receipt). Preserve both files; no new gate, suite, configuration or source mechanism is needed.
+- [Pass] Bounded evidence is accurately labeled at `TESTS-RESULTS/2026-10-06+GH-983/claude-compatibility.json:3–24` and `SUMMARY.md:5–13`: current source hash, open→block and checked→allow, old-heading red control, preserved hook/installer, and “not end-to-end Claude session or semantic evidence enforcement.” The earlier base also passed the ten decision states; no causal improvement or reliability guarantee is claimed. Preserve these qualifications.
+- [Pass] Read-only receipt probe: command `python3 -c 'import hashlib,json,pathlib; p=pathlib.Path; c=json.loads(p("TESTS-RESULTS/2026-10-06+GH-983/claude-compatibility.json").read_text()); print("skill_hash_matches="+str(hashlib.sha256(p("skills/2-daily/workhorse/SKILL.md").read_bytes()).hexdigest()==c["skill_sha256"])); print("recorded_hook_cases="+str([(r["case"],r["exit_code"],r["blocks"]) for r in c["hook_checks"]]))'`, with `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`, exited 0: `skill_hash_matches=True`; `recorded_hook_cases=[('open', 0, True), ('checked', 0, False)]`. The matched current hash is `a6054d9fd3c99ac0caf92adef14d9acfd137637e86734c9664d2404983cb0931` (`claude-compatibility.json:3`). A separate in-memory inspection matched the hook/installer base hashes, parsed both recorded decisions, and observed the shared-heading predicate false after substituting the old Codex-only heading. Its first attempt exited 1 because the reviewer used `r['check']` on a provenance row without that key; correcting the probe to `r.get('check')` exited 0. This was a probe error, not an artifact defect.
+- [Unverified — needs clone run] No suite, pytest, executable fixture, hook, installer or mutation-heavy gate was executed here. The hook results are inspected receipts from the supplied disposable-clone probe, not firsthand end-to-end Claude behavior. Final committed-state qualification belongs to the harness after this turn; review approval does not authorize merge, deployment or runtime configuration.
+
+Whole-file sweep: read all 376 current SKILL.md lines, all 51 hook lines, all 58 installer lines, the complete compatibility JSON and SUMMARY, provenance receipts and prior gh983-final.codex.md QA. No additional actionable pre-existing defect was identified. Verify-tier graph inventory (both pages) contains no project for this worktree; nearest named XYZ-forge points to a different checkout, generation `2026-09-01T15:54:30Z`. Coverage reports skill/hook/installer freshness `not_tracked` and the new evidence/prior relay `missing`; full current direct reads supplied evidence, with no graph-completeness claim. Editing this relay is Easy and reversible. Only this relay file was edited; no git command was run.
+
+Relay closed (Approved), no further review turn needed. NEXT returns to Producer for the harness-owned commit and final qualification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
