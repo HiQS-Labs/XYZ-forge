@@ -1,0 +1,16 @@
+{
+  "surface": "Safari native via cua_repl",
+  "data": "synthetic only",
+  "desktop": "PASS visible and retained",
+  "compact": "PASS 430 CSS-pixel container; not device emulation",
+  "repository_filter": "PASS Rebalance showed one repo and its work only",
+  "search": "PASS no-match view, Escape clears",
+  "keyboard": "PASS Safari Option-Tab + Return selects row and focus survives render; repaired after observed red focus loss",
+  "handoff": "PASS selectable synthetic context; no auto-copy or transmission",
+  "appearance": "PASS light, dark and collapsed rail",
+  "empty": "PASS empty work/lanes",
+  "stale": "PASS expired notice; Read unavailable work status",
+  "partial": "PASS xyz_work partial source",
+  "hostile": "PASS literal img/onerror string displayed; no alert",
+  "failure": "PASS no snapshot, unknown counts, pause after third failure, manual retry remains"
+}

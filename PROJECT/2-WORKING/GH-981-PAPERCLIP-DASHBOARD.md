@@ -2,7 +2,7 @@
 gh_issue: 981
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/981
 title: Optional Paperclip dashboard — technical spike
-status: In progress — visual verification
+status: In progress — final QA pending
 created: 2026-10-06
 updated: 2026-10-06
 owner: Codex
@@ -22,7 +22,7 @@ branch: feat/gh981-paperclip-dashboard
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA Approved; accepted start recorded; optional renderer implemented. | Browser/manual verification, independent final QA and required gate. |
+| Standalone renderer and attribution complete; browser/manual checks recorded. | Independent final QA, required gate and a review-only PR. |
 
 ## Quad Concepts
 - Evaluate a denser operator UI → isolated, optional Paperclip-inspired presentation.
@@ -109,10 +109,10 @@ and an explicit demo/live launch.
 
 ### Phase 1 — QA checklist
 - [x] Plan reviewer Approved with [dated receipt](../../relay-system/2026-10-06/gh981-plan.codex.md); accepted start recorded afterwards.
-- [ ] Optional module and all presentation files stay in the standalone add-on folder.
-- [ ] Demo launch performs no live reads; live mode uses the existing projection.
-- [ ] Source attribution and MIT notice present; core/startup/dependencies unchanged.
-- [ ] Status table refreshed after observed outputs.
+- [x] Optional module and all presentation files stay in the standalone add-on folder.
+- [x] Demo launch performs no live reads; live mode uses the existing projection.
+- [x] Source attribution and MIT notice present; core/startup/dependencies unchanged.
+- [x] Status table refreshed after observed outputs.
 
 ## Phase 2: verify and prepare operator review
 
@@ -126,8 +126,8 @@ left to the operator after visual review.
 10. Push from the disposable gate clone through its installed pre-push boundary, open PR against development, inspect emitted base/head/scope/checks → expect reviewable spike awaiting operator decision, no merge.
 
 ### Phase 2 — QA checklist
-- [ ] Desktop and mobile synthetic screenshots retained; no private live content committed.
-- [ ] Manual pass/fail evidence includes source immutability, snapshot failure/staleness and red control.
+- [x] Desktop and 430px compact synthetic screenshots retained; no private live content committed.
+- [x] Manual pass/fail evidence includes source immutability, snapshot failure/staleness and red control.
 - [ ] Existing focused checks and appropriate final gate have committed provenance.
 - [ ] Final Codex reviewer Approved for the artifact revision; no new suite/registry/gate.
 - [ ] Findings written back here, with keep/revise/abandon questions for operator review.
@@ -144,5 +144,11 @@ is evidence only when an actual run appears for the exact PR SHA.
 
 ## Spike findings
 
-Pending implementation/visual verification; do not infer adoption from a green
-review. Operator must still decide whether to merge the optional add-on.
+The standalone UI borrows navigation/card/filter/activity presentation patterns;
+it reuses existing Flightdeck data and status rules without importing Paperclip's
+React build, control APIs or domain model. Browser review caught and fixed row
+focus loss. Evidence: [verification](../../TESTS-RESULTS/2026-10-06+GH-981/SUMMARY.md).
+Existing focused checks report 34 pass / 5 fail at a pre-existing Darwin `waitid`
+incompatibility; manual fixture boundary checks passed. No merge readiness claim.
+Operator decision after viewing: keep this optional renderer, revise its density/
+layout, or abandon it. No merge has been authorized.

@@ -162,7 +162,8 @@ body.collapsed .nav-item { justify-content: center; padding-inline: 7px; }
   .shell { --sidebar-width: 54px; }
   .sidebar { padding: 18px 5px; gap: 25px; }
   .brand { padding: 0; justify-content: center; }
-  .brand-copy, .nav-label, .nav-count, #collapse, .sidebar-bottom { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #collapse, .sidebar-bottom { display: none; }
+  .brand-copy, .nav-label, .nav-count { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .nav-item { justify-content: center; padding-inline: 4px; }
   .nav-group { margin-top: 4px; }
   .nav-group h2 { padding: 0; }

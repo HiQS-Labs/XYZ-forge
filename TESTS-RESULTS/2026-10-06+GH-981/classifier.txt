@@ -1,0 +1,9 @@
+docs_only=false
+pdda_needed=true
+full_required=false
+changed_tests=
+route=fast
+tier=3
+tier2_subsystems=
+tier2_tests=
+tier_reason=unmapped path: addons/paperclip-dashboard/preview.py

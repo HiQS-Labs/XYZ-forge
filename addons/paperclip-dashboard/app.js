@@ -6,7 +6,7 @@ const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const demo = document.body.dataset.mode !== 'live' || params.get('mode') === 'demo';
 const scenario = demo ? params.get('scenario') || '' : '';
-const state = {snapshot: null, repo: '', section: 'work', search: '', selected: '', failures: 0, error: '', busy: false};
+const state = {snapshot: null, repo: '', section: 'work', search: '', selected: '', failures: 0, error: '', busy: false, handoff: ''};
 const titles = {work: 'Overview', lanes: 'Agent lanes', prs: 'Pull requests'};
 const paths = {grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
   lanes: 'M4 6h16 M4 12h16 M4 18h16', branch: 'M7 3v13a4 4 0 0 0 8 0V8 M15 8l-3-3 M15 8l3-3',
@@ -41,6 +41,7 @@ function items(section = state.section) {
 }
 function select(item) {state.selected = item.key; render();}
 function render() {
+  const focusKey = document.activeElement?.dataset.focus;
   const repos = state.snapshot?.repos || [], visible = scope();
   $('title').textContent = titles[state.section]; $('crumb').textContent = state.repo ? repos.find(repo => repo.id === state.repo)?.name || 'Repository' : titles[state.section];
   $('mode').textContent = demo ? 'Synthetic demo' : 'Local reads';
@@ -53,21 +54,21 @@ function render() {
   $('repoNav').replaceChildren();
   for (const repo of [{id: '', name: 'All repositories'}, ...repos]) {
     const button = el('button', `nav-item repo-item${state.repo === repo.id ? ' active' : ''}`);
-    button.append(el('span', 'repo-mark', repo.id ? repo.name.slice(0, 1) : '•'), el('span', 'nav-label', repo.name)); button.setAttribute('aria-label', repo.name); button.setAttribute('aria-pressed', String(state.repo === repo.id));
+    button.append(el('span', 'repo-mark', repo.id ? repo.name.slice(0, 1) : '•'), el('span', 'nav-label', repo.name)); button.dataset.focus = `repo:${repo.id}`; button.setAttribute('aria-label', repo.name); button.setAttribute('aria-pressed', String(state.repo === repo.id));
     button.onclick = () => {state.repo = repo.id; state.selected = ''; render();}; $('repoNav').append(button);
   }
   $('laneCount').textContent = String(items('lanes').length); $('prCount').textContent = String(items('prs').length);
   $('metrics').replaceChildren();
   const counts = [['Repositories shown', visible.length, 'Within configured coverage'], ['Established work', healthy() ? items('work').filter(item => item.workflow.kind === 'in-progress').length : '—', 'Recorded status · execution unverified'], ['Lane observations', items('lanes').length, 'Recorded intent · liveness unknown'], ['Cached pull requests', items('prs').length, 'Current-head verification required']];
-  counts.forEach(([label, count, help]) => {const card = el('div', 'metric'); card.append(el('p', 'metric-label', label), el('strong', 'metric-value', String(count)), el('p', 'metric-help', help)); $('metrics').append(card);});
+  counts.forEach(([label, count, help]) => {const card = el('div', 'metric'); card.append(el('p', 'metric-label', label), el('strong', 'metric-value', String(state.snapshot ? count : '—')), el('p', 'metric-help', help)); $('metrics').append(card);});
   $('coverage').textContent = `Displayed observations only · Coverage: ${state.snapshot?.coverage || 'unavailable'}${state.snapshot?.truncated ? ' · Capped' : ''}${healthy() ? '' : ' · Read unavailable or expired'}`;
   $('laneCards').replaceChildren();
-  items('lanes').slice(0, 4).forEach((lane, index) => {const card = el('button', 'lane-card'); card.onclick = () => {state.section = 'lanes'; select(lane);};
+  items('lanes').slice(0, 4).forEach((lane, index) => {const card = el('button', 'lane-card'); card.dataset.focus = lane.key; card.onclick = () => {state.section = 'lanes'; select(lane);};
     const head = el('div', 'lane-top'); head.append(el('span', 'agent-avatar', (lane.agent || '?').slice(0, 1)), el('strong', '', lane.agent || 'Agent unspecified'), chip('Observed')); card.append(head, el('p', 'lane-task', lane.task || 'Intent unavailable'), el('p', 'lane-meta', `${lane.repo.name} · ${ago(lane.last_prompt_at)}`), el('p', 'lane-progress', 'Progress unmeasured')); $('laneCards').append(card);});
   if (!items('lanes').length) $('laneCards').append(empty('No lane observations in this scope.'));
   const rows = items().filter(item => `${item.title || item.task || ''} ${item.number || ''} ${item.repo.name} ${item.agent || ''}`.toLowerCase().includes(state.search.toLowerCase()));
   $('workList').replaceChildren();
-  for (const item of rows) {const row = el('button', 'work-row'); row.setAttribute('aria-pressed', String(state.selected === item.key)); row.onclick = () => select(item);
+  for (const item of rows) {const row = el('button', 'work-row'); row.dataset.focus = item.key; row.setAttribute('aria-pressed', String(state.selected === item.key)); row.onclick = () => select(item);
     const copy = el('span', 'row-copy'); copy.append(el('strong', '', item.title || item.task || 'Untitled observation'), el('small', '', `${item.repo.name} · ${item.section === 'lanes' ? item.agent || 'Agent' : `#${item.number}`}`));
     row.append(el('span', 'work-symbol', item.section === 'lanes' ? '↳' : '#'), copy,
       chip(item.section === 'work' ? item.workflow.label : item.section === 'prs' ? 'Verify current head' : 'Observed', item.section === 'work' ? item.workflow.kind : 'unknown'), el('span', 'row-time', ago(item.context_at || item.last_prompt_at || item.updated_at))); $('workList').append(row);}
@@ -78,8 +79,9 @@ function render() {
   events.slice(0, 6).forEach(event => {const row = el('div', 'activity-row'); const copy = el('div'); copy.append(el('strong', '', event.summary || event.kind || 'Observation'), el('small', '', event.repo.name)); row.append(el('span', 'activity-dot'), copy, el('time', '', ago(event.occurred_at))); $('activity').append(row);});
   if (!events.length) $('activity').append(empty('No recent activity observations.'));
   $('sources').replaceChildren();
-  for (const source of state.snapshot?.sources || []) {const status = sourceStatus(source, healthy()); const node = chip(`${source.id} · ${status.label}`, status.tone); node.title = status.help; $('sources').append(node);}
+  for (const source of state.snapshot?.sources || []) {const status = state.error ? {tone: 'failed', label: 'read unavailable', help: 'Snapshot read failed; these source observations are retained context.'} : sourceStatus(source, snapshotFresh(state.snapshot)); const node = chip(`${source.id} · ${status.label}`, status.tone); node.title = status.help; $('sources').append(node);}
   $('updated').textContent = state.snapshot ? `Snapshot ${ago(state.snapshot.generated_at)}` : 'No snapshot';
+  if (focusKey) [...document.querySelectorAll('[data-focus]')].find(node => node.dataset.focus === focusKey)?.focus({preventScroll: true});
 }
 function renderDetail(item) {
   $('detail').replaceChildren();
@@ -92,7 +94,8 @@ function renderDetail(item) {
   const dl = el('dl', 'detail-facts'); fields.forEach(([label, value]) => dl.append(el('dt', '', label), el('dd', '', value))); $('detail').append(dl);
   const help = el('p', 'detail-help', PROGRESS_HELP); help.dataset.tone = progressTone(); $('detail').append(help);
   const button = el('button', 'button handoff-button', 'Prepare handoff');
-  button.onclick = () => {const text = el('textarea', 'handoff-text'); text.readOnly = true; text.setAttribute('aria-label', 'Copyable handoff context'); text.value = `${demo ? 'SYNTHETIC DEMO\n' : ''}${item.repo.name}: ${item.title || item.task}\n${status}\nObserved: ${fields[0][1]}\nProgress unmeasured; verify current state and PR head before acting.`; button.replaceWith(text); text.focus(); text.select();}; $('detail').append(button);
+  function handoff() {const text = el('textarea', 'handoff-text'); text.readOnly = true; text.dataset.focus = `handoff:${item.key}`; text.setAttribute('aria-label', 'Copyable handoff context'); text.value = `${demo ? 'SYNTHETIC DEMO\n' : ''}${item.repo.name}: ${item.title || item.task}\n${status}\nObserved: ${fields[0][1]}\nProgress unmeasured; verify current state and PR head before acting.`; return text;}
+  button.onclick = () => {state.handoff = item.key; const text = handoff(); button.replaceWith(text); text.focus(); text.select();}; $('detail').append(state.handoff === item.key ? handoff() : button);
 }
 async function read() {
   if (state.busy) return;

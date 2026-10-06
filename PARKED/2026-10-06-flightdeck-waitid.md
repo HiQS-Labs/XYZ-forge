@@ -1,0 +1,5 @@
+# Flightdeck work-status helper fails on Darwin Python without waitid
+
+During GH-981 focused verification, 34 tests passed and five existing work-status tests failed at unchanged `utils/py/releases_cycle.py:85/104`: `AttributeError: module os has no attribute waitid`. The current Darwin Python3.9.6 lacks that API. Helper, consumer and failing tests are byte-unchanged from the spike base. See [retained focused output](../TESTS-RESULTS/2026-10-06+GH-981/flightdeck-pytest.txt) and [provenance](../TESTS-RESULTS/2026-10-06+GH-981/provenance.jsonl). Prior-art search found the original closed GH-673, not a currently open repair.
+
+Sanity-check disposition: preserve the failure; defer the core helper repair from this visual renderer. It does not prevent synthetic evaluation, but the red focused suite and required gate cannot establish merge readiness. No source, gate or expectation was changed. Triage should reproduce on the supported Mac Python and decide the portability repair under its own issue/PRS rails.
