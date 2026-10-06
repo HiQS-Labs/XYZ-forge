@@ -111,4 +111,12 @@ Swept all eight add-on files, complete SUMMARY, plan/recon, relay receipts, reta
 
 Relay closed (Approved), no further review turn needed. Handing the completed token to codex-author for the planned disposable-clone qualification and operator visual/draft review; keep/revise/abandon and merge remain the operator decision.
 
+
+### Attestation · relay-drive — 2026-10-06T16:35:27Z
+task: RELAY-gh981-final
+reviewer: codex
+status: Approved
+reviewed-head: 89f5fe696549bff3f0de0dbd21b5590f4f17e103
+added-range: 9737+6451
+added-sha256: f371a51c6313f607953e9772c148dad33c8b8ca1218e043e33775e42f9c1ef03
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
