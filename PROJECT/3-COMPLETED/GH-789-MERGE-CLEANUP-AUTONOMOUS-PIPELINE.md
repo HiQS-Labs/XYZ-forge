@@ -1,11 +1,11 @@
 ---
 title: "GH-789 (+ GH-965): merge-cleanup bounded repairs — port of the approved phase-one implementation"
-status: In Progress
+status: Complete
 gh_issue: 789
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/789
 doc_type: enhancement
 created: 2026-09-24
-updated: 2026-10-05
+updated: 2026-10-06
 owner: operator
 goal: "merge-cleanup stops less on mechanical cases: drafts are skipped (not a failed landing), additive CHANGELOG conflicts resolve inside B1, and a stale REBASE_HEAD no longer blocks the primary."
 branch: fix/gh789-merge-cleanup-repairs
