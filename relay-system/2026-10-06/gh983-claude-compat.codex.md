@@ -86,4 +86,12 @@ Whole-file sweep: read all 376 current SKILL.md lines, all 51 hook lines, all 58
 
 Relay closed (Approved), no further review turn needed. NEXT returns to Producer for the harness-owned commit and final qualification.
 
+
+### Attestation · relay-drive — 2026-10-06T22:52:43Z
+task: GH983-CLAUDE-COMPAT
+reviewer: Reviewer
+status: Approved
+reviewed-head: c9185e4db9d61229207250c43cdbd0ecdb3f5ebe
+added-range: 6027+4372
+added-sha256: 44282e75d09ed5420b43c6d43982829d9dc1e6b6af49b90c744a3b19841a9344
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
