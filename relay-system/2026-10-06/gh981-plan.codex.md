@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -235,5 +235,26 @@ in the review worktree. Use the embedded protocol to approve and close the token
 or hand back findings.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: The complete plan and Recon Map support a bounded optional presentation spike over the existing read seam. Scope, uncertainty, rollback, independent QA and operator review before merge are explicit. No blocking omissions or pre-existing defects found in the plan. This approves implementation sequencing, not runtime correctness or adoption.
+swept file: yes
+
+Read the entire embedded artifact, canonical plan and Recon Map; read all of src/flightdeck/server.py, aggregate.py, contract.py, connectors.py, web/flightdeck/issue-context.mjs and presentation.mjs. Also inspected referenced local Paperclip components/license and classifier.
+
+- [Pass] **Adapter fit and DRY boundary.** The handler subclass can reuse snapshot GET (src/flightdeck/server.py:44) and response helpers (:27, :65), while its finite asset map replaces static routing. The aggregator already emits schema, sources, coverage and truncation (src/flightdeck/aggregate.py:172); configuration belongs to ConnectorConfig.from_environment (src/flightdeck/contract.py:81). The Recon Map's seam table and plan lines 62–69 correctly keep core files unchanged. No parallel projection or writer is proposed.
+- [Pass] **Observation honesty.** Plan lines 71–79 retain synthetic labels, coverage, verification-needed PRs, unmeasured progress, failure pause and independent expiry. These match conservative PR classification (src/flightdeck/aggregate.py:40), issue status selection (web/flightdeck/issue-context.mjs:14, :46) and five-minute snapshot expiry/unknown progress (web/flightdeck/presentation.mjs:2, :6). Final browser checks must measure selector wiring with current time and read health.
+- [Pass] **Optionality, attribution and undo.** Plan lines 47–69 prescribe native modules, explicit Python launch, demo without live configuration, opt-in live reads and only 127.0.0.1:8769; lines 81–87 name Easy rollback and source-write/exposure/readiness tripwires. Lines 39–41 and 107 pin the Paperclip revision and require per-file adaptation plus the upstream MIT notice. The local reference paperclip-fork/LICENSE contains “MIT License” and “Copyright (c) 2025 Paperclip AI”. Checking pinned borrowed content and shipping the notice remain implementation obligations.
+- [Pass] **Checkable, ordered completion.** Plan lines 104–108 place independent plan approval before accepted start/build. Lines 122–143 require nonempty screenshots, committed provenance, hostile/empty/stale/failure/partial inputs, a witnessed red control, disposable-clone checks, independent final QA and a development PR awaiting operator choice. No new tests, gates or registry entries are proposed. The add-on Python/JS/CSS paths are outside subsystem_of (utils/ci-route.sh:40) and docs routing (:62); unmapped paths remain tier 3 (:469, :480). Thus the implemented add-on requires the full qualifying gate under step 9.
+- [Pass] **Persisted PRS rating and start ordering.** Read-only probe command (exit 0):
+
+      python3 -c 'import sqlite3; c=sqlite3.connect("file:releases.db?mode=ro&immutable=1",uri=True); print(c.execute("SELECT rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,doc_path,status_label FROM roadmap_items WHERE gh_number=981").fetchall())'
+
+  Decisive output: [(55, 20, 50, 65, None, 'PROJECT/2-WORKING/GH-981-PAPERCLIP-DASHBOARD.md', None)]. This matches plan lines 91–97: neutral appeal, no override and no established status before approval.
+- [Unverified — needs clone run] **Runtime and visual acceptance remain pending.** No add-on implementation is supplied by this plan. Demo isolation, asset/security handling, live source immutability, browser behavior, screenshots and qualifying gate results cannot yet be credited. Run the existing checks and planned manual evidence in the disposable full clone; this plan approval is not an execution receipt. No suites, executable fixtures or Git commands were run in this reviewer worktree.
+
+Relay closed (Approved), no further review turn needed. Producer codex-author may proceed with the approved sequence; merge remains an operator decision after visual review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
