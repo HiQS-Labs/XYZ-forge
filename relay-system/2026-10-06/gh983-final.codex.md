@@ -123,4 +123,12 @@ Whole-file sweep: read all 376 current skill lines, all 51 stop-hook lines, all 
 
 Relay closed (Approved), no further review turn needed. Token returns to codex-author for harness commit and the pending final qualification/authorized next steps.
 
+
+### Attestation · relay-drive — 2026-10-06T20:46:02Z
+task: RELAY-gh983-final
+reviewer: codex
+status: Approved
+reviewed-head: 5b6994aaa86df20c40aca015c75267c52cbe01db
+added-range: 13470+6531
+added-sha256: 328322753614f3323519386cbf65e852d2b7eaab87b6e9392c876ab3a3cd04ea
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
