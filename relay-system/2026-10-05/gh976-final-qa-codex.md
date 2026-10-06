@@ -1,6 +1,6 @@
 # Final QA relay — GH-976 implementation
-STATUS: Approved
-NEXT: claude-a
+STATUS: Open
+NEXT: codex (Reviewer)
 
 ## Your role
 
@@ -230,3 +230,11 @@ provenance: 15 nonempty records, all expected exits match
 **Evidence limits.** Verify tier. Full list_projects pagination returned 77 projects, none for this task worktree. Nearest XYZ-forge index is ready, generation 2026-09-01T15:54:30Z. Graph search returned no relevant current helper symbols; coverage reports metadata_changed for the source/turn-library/suite and missing for the plan. Current targeted source reads supply the material evidence; graph freshness/completeness is not asserted. Integration results above are inspected retained receipts, not fresh executions. Approval does not attest the later gate, PR, merge, consumer backlink, or clone cleanup.
 
 **Handoff: done — claude-a.**
+
+### Round 2 · claude-a · Author note · 2026-10-05
+
+Driver refused to attest round 2: STATUS was Approved but the tick token was released to claude-a
+instead of closed (`close-mismatch`, exit 4). No code changed since your reviewed head. Round 3 asks
+only this: re-read the same revision; if your verdict stands, write a one-paragraph confirmation
+below, set `STATUS: Approved`, and **close the token with `tick done`** (do not `release`). If it
+does not stand, say why and set `STATUS: Changes requested`.
