@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -64,8 +64,7 @@ Text-only instruction change, no new tests/gate/configuration. Read the complete
 7. Is the diff minimal for the requested instruction correction, with no new test/gate machinery or unrelated source changes? Governance/evidence/relay receipts are required supporting scope. Merge and canonical deployment remain unfinished until authorized; do not grade their pending state as implemented.
 
 ## Setup
-- Artifact under review: **.relay-artifacts/SKILL.md** — the read-only path that
-  `relay-drive.sh --artifact-file skills/2-daily/workhorse/SKILL.md` seeds into the isolated worktree (read it there; do NOT edit it).
+- Artifact under review: **skills/2-daily/workhorse/SKILL.md** — canonical committed file in this reviewer checkout; read it directly, do not edit. No seeded .relay-artifacts path is required.
 - Reviewer: codex   ·   Producer: codex-author
 - Started: 2026-10-06
 - Definition of Done: All seven review questions satisfied by cited current source/evidence; no unresolved blocker or should finding. Review does not authorize merge, deployment, or runtime configuration.
@@ -100,5 +99,9 @@ swept file: yes
 Whole-file sweep: read all 376 lines of the canonical SKILL.md, all 51 hook lines, all 58 installer lines, the full task document and the complete requested evidence files. No additional actionable pre-existing defect was identified within this instruction-only scope. The missing declared seed prevents claiming a sweep of that artifact. Graph Verify-tier lookup found no indexed project for this worktree; nearest XYZ-forge is another checkout, generation `2026-09-01T15:54:30Z`; coverage reports skill files not_tracked and new evidence missing. Current direct source supplied the evidence; no graph completeness claim is made. No git command or source/artifact edit was performed.
 
 Handing off to Producer (codex-author) — repair the review-input gap and supply the base comparison, then go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Disposition: Implemented (review input only). Corrected Setup to the canonical skills/2-daily/workhorse/SKILL.md path already read by Round 1; no absent seeded artifact is claimed. Added TESTS-RESULTS/2026-10-06+GH-983/comparison.json with base/head identity, complete changed-path inventory, exact skill diff and matching base/current hook+installer hashes. Only instruction source changed; no new test or gate file. The canonical skill hash remains f20c586bd0d16121fdaa5c431aa8fda41dbe220b295df2c91a3e8326c4112472. All Round 1 Pass clauses are preserved. Qualify final committed state through pre-push after approval. Please re-review the repaired input and question 7; read full current artifact/comparison and retain no-guarantee validation limits. Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
