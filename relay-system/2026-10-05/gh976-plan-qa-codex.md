@@ -1,6 +1,6 @@
 # QA relay — the GH-976 plan doc
-STATUS: Open
-NEXT: codex (Reviewer)
+STATUS: Approved
+NEXT: claude-a (Author)
 
 ## Your role
 
@@ -137,3 +137,52 @@ the content as the review and re-driving. Pre-fix red witnessed on the current c
 6. **[Note]** — No change.
 
 STATUS set back to Open for round 2.
+
+
+### Round 2 · codex · plan QA · 2026-10-05
+
+**Verdict: Approved — the revised plan is buildable as written.** Both Round 1 Must findings are resolved. The specified helper and oracle replacement fix same-repository receipt-only extension while preserving real-file and resolved-item progress. Approval is of the plan, not of an implementation or passing gate. Review edits are Easy to reverse. Production blast radius is the Python relay driver's cap-extension decision for all consumers; a wrong filter would withhold or grant an extra turn, bounded by the unchanged hard ceiling. The plan provides a direct oracle rollback.
+
+1. **[Note] DoD 1 — defect confirmed, qualified claim sufficient.** `relay_drive.py:794` samples HEAD before dispatch and :1093 samples it after. The current :1097–1098 accepts any nonempty unequal pair, so a same-repo transcript-only commit at `relay-turn-lib.sh:1498` satisfies it. :1102–1107 grants the extension, bounded by :737–738. The plan now names the no-commit (:1480–1495) and separate archive (:1502–1523) cases. Its remaining sentence “Every relay turn commits its own transcript” is still literally too broad, but the adjacent qualification makes the operative requirement unambiguous; it is not a build blocker. Driver :643 is an approval-attestation commit, not a second commit on every open turn (`judge_terminal`, :671–672).
+
+2. **[Note] DoD 2 — receipt filter and coordinates are adequate for this bounded scope.** The inspected turn commit selects staged allowlisted paths (:1474–1498), the archive commit selects the relay path (:1516–1518), and attestation selects the relay file (`relay_drive.py:642–643`). No additional fixed receipt path is demonstrated by these sites. The exact relay-file exclusion covers an arbitrary location; using `target_repo()` (:616–623) keeps it in the same coordinates as `get_head_commit()` (:579–590), and omitting it for an external transcript avoids an unrelated basename exclusion. Directory prefixes retain trailing slashes. Real evidence repairs under `TESTS-RESULTS/` and brief edits under `marathon-system/` are intentionally excluded by the written progress policy; a mixed commit containing a real source change still qualifies. This is not an exhaustive inventory of every possible consumer receipt.
+
+3. **[Note] DoD 3 — GH-115 preservation now has an appropriate proof recipe.** Tests 2/3 append resolved lines (`test/gh115-round-cap.sh:23–24`, enabled :68/:89), so retaining :1099–1100 should preserve them. They cannot prove committed-file progress. Revised cases C/D hold that count fixed and commit a real file inside the dispatched turn, so an always-False helper would fail those controls. Keep the suite unchanged. Positive runs should reach the existing hard ceiling (cap 4 for initial cap 2), exit 4 with `cap-progressing-extended`, and contain the extension output/block; this follows the already-specified bounded behavior, not a new requirement.
+
+4. **[Note] DoD 4 — red control is now credible and falsifiable.** Revised step 2 pins a disposable full clone, base/candidate revisions, initial cap 2, commits inside dispatch, continued token handoffs, no approval, and fixed resolved count. Receipt-only A/B should fail their candidate expectation on base: the old oracle grants extensions instead of stopping after two turns with `cap-stalled`. Nonempty output, exit/reason, turn count, and extension text/block checks avoid a vacuous pass. C/D prevent a false negative oracle from masquerading as a fix. E covers missing SHA; an invalid SHA/diff-error helper call can settle the separately specified git-error branch without new machinery. **[Unverified — needs clone run]**: no manual fixture or suite was executed here. The author's pre-fix run is reported evidence until its commands/output and `provenance.jsonl` are retained as specified; it is not my observed integration result.
+
+5. **[Note] DoD 5 — adjudication non-goal is justified and issue scope reconciled.** `escalated_status` (:399–400) accepts `Escalated`; :756–759 and :1044–1047 exit 4 with `human-escalation` before the extension decision. Both roles may edit the relay file; the approval-role restriction covers Approved/Closed (:396–397, :671–674), not Escalated. GitHub connector `github_fetch_issue(repository_full_name="HiQS-Labs/XYZ-forge", issue_number=976)` succeeded: the current [issue #976](https://github.com/HiQS-Labs/XYZ-forge/issues/976) body explicitly withdraws the earlier prose/NEXT acceptance in favor of this marker. The same fetch for [consumer #75](https://github.com/david-nguyen-chaoticdomain/user-sage-backend/issues/75) returned API 404; web opens of both URLs returned cache misses. The consumer incident is therefore available here only through #976's quoted report, not independently verified.
+
+6. **[Note] DoD 6 — right-sized.** One nested helper, existing repository resolver, one oracle replacement, no new dependency/runner/suite/gate, and no frozen Bash edit. Returning False on missing SHA or diff failure must still allow the independent resolved-count arm. The revised manual controls supply the missing proof without expanding production scope. A cold builder has the filter, repository-coordinate rule, call site, failure policy, controls, evidence destination, and rollback needed to implement this plan.
+
+**Non-mutating probe (exit 0).** Only the current oracle's AST statements were executed with synthetic values; no git command, fixture, dispatch, pytest or suite was invoked:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import ast
+from pathlib import Path
+p=Path("utils/py/relay_drive.py")
+tree=ast.parse(p.read_text())
+main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=="main")
+loop=next(n for n in main.body if isinstance(n,ast.While) and n.lineno==740)
+i=next(i for i,n in enumerate(loop.body) if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=="made_progress" for t in n.targets))
+fragment=ast.Module(body=loop.body[i:i+2],type_ignores=[])
+for label,b,a,rb,ra in [("receipt-only","a","b",0,0),("real-file","a","b",0,0),("no-SHA","","",0,0),("resolved-only","","",0,1)]:
+    env=dict(head_before=b,head_after=a,resolved_before=rb,resolved_after=ra)
+    exec(compile(fragment,str(p),"exec"),env)
+    print(label,"base_made_progress="+str(env["made_progress"]))
+PYPROBE
+```
+
+Decisive output:
+
+```text
+receipt-only base_made_progress=True
+real-file base_made_progress=True
+no-SHA base_made_progress=False
+resolved-only base_made_progress=True
+```
+
+**Evidence limits.** Verify tier. `list_projects(limit=100)` returned all 77 projects with no current task index. Nearest Forge index `XYZ-forge` was ready; coverage generation `2026-09-01T15:54:30Z`. Narrow graph search for the exact two helper names in `utils/py/relay_drive.py` returned no nodes. Coverage for the three cited code/suite paths reported `metadata_changed`; the plan was `missing`. Current direct source reads therefore supply the material evidence. No exhaustive or graph-completeness claim is made. Only this relay file was edited; no git commands or prohibited gates were run. Implementation verification remains for the disposable clone and harness gate.
