@@ -139,3 +139,7 @@ Independent plan QA is attested Approved at 70bac0fd in gh985-plan.fable.md. Rou
 ## Implementation and bounded verification
 
 Agy built only SKILL.md and the existing stop-hook.sh. Initial protocol inspection found missing authorized-work wording, and later source inspection found the stop-only clause excluding external blockers even though ten protocol cases passed. Both remained required unfinished findings until Agy repaired them. Final ten-case protocol/wording checks pass at the source/hash in manual-hook-checks-final.json; old-reason red control fails, final candidate passes again. Extracted Python AST equals stack base after normalizing only reason; Bash syntax and Python compile pass. Frontmatter/installer unchanged. Raw quick_validate still rejects the pre-existing Claude hooks key, while scratch metadata projection passes. Earlier result files are intermediate receipts, not final acceptance. No new suite or gate, implicit Goal/mod activation, trust/config edits, merge or deploy.
+
+## Governance evidence
+
+Disposable clone at 08014160: required imports, RELEASES and PDDA passed; identity intact. Actual classifier tier 1 documentation. PDDA 31 unrelated warnings and RELEASES 9 existing debt warnings are inspected/dispositioned in TESTS-RESULTS/2026-10-06+GH-985/SUMMARY.md with full outputs and provenance. No blanket clean-repository or full-runtime-suite claim. Final Fable QA and exact-head publication checks remain required.
