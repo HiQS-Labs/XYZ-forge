@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -79,5 +79,26 @@ Text-only instruction change, no new tests/gate/configuration. Read the complete
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The canonical instruction text and bounded evidence are coherent, but the declared seeded artifact is absent and the required base-to-branch scope/preservation comparison could not be established without git (prohibited this turn). This is a review-input gap, not an observed failure of the continuation instructions. Approval, merge and deployment remain unfinished.
+swept file: yes
+
+- [Blocker] Repair the review input before closing final QA. Setup declares `.relay-artifacts/SKILL.md`, but that file does not exist; `.relay-artifacts/` contains only `gh182-claim-guards.md`. Seed the correct workhorse artifact or explicitly correct the envelope to the canonical path, and furnish a read-only base-to-head comparison for `8ec99b6066c997a00c40761c9efb9f9caaff8b8f` including changed-path inventory and preserved hook/installer bytes. Do not change runtime behavior to address this finding.
+  Observed input: declared path `.relay-artifacts/SKILL.md`; probe `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -c 'from pathlib import Path; p=Path(".relay-artifacts/SKILL.md"); print("declared_seed_exists=" + str(p.exists())); assert p.is_file(), "declared review artifact missing"'` exited 1: `declared_seed_exists=False`, `AssertionError: declared review artifact missing`.
+  Affected scope: this final QA's artifact identity and question 7's base-relative scope/preservation evidence only.
+  Falsifier: the declared seeded file exists and equals the candidate hash `f20c586bd0d16121fdaa5c431aa8fda41dbe220b295df2c91a3e8326c4112472`, or an explicitly corrected canonical target plus an inspectable base comparison supplies equivalent identity/scope proof; expect the existence/identity check to pass and no unrelated source/new gate changes.
+- [Pass] Questions 1–2: `skills/2-daily/workhorse/SKILL.md:94–107` resumes subtask/status/restored-auth/plan/handoff work, ties evidence to acceptance and revision, and audits original outcome, steering and unresolved findings. Lines 89–90 and 313–328 retain required work despite parking, checklist exhaustion, held queues and exit zero. Preserve these clauses.
+- [Pass] Questions 3–4: `skills/2-daily/workhorse/SKILL.md:108–121` requires active-work inventory and service baseline, rejects required quiescence at 1/1/1, denies implied cancellation, finishes independent work before a concrete external blocker, honors windows/permissions/retry limits, and reports runtime exhaustion as unfinished. Preserve these boundaries.
+- [Pass] Question 5's instruction/enforcement distinction is explicit at `skills/2-daily/workhorse/SKILL.md:123–132`: “this skill does not install a Codex runtime gate,” Goals require an explicit request, and configured hooks require trust. The retained Claude hook reads only open checkbox syntax (`skills/2-daily/workhorse/stop-hook.sh`, quoted predicate `l.lstrip().startswith("- [ ]")`); it cannot attest acceptance. This is textual review, not firsthand activation or verification of Codex runtime hooks.
+- [Pass] Question 6: `TESTS-RESULTS/2026-10-06+GH-983/SUMMARY.md:3–9` truthfully reports both base and candidate passing ten bounded decisions, missing-evidence control, raw validator incompatibility and projection pass, 31 PDDA and 9 ledger warnings, intact clone identity, and no causal/reliability guarantee. `cases.json` supplies concrete states; both decision outputs reject all completion except `control_complete`, including `control_incomplete`. A read-only `python3 -` JSON/hash probe (exit 0) found `cases=10`, `candidate_provenance_hash_matches=True`, both raw event messages equal their respective decision JSON, and `identity_bracket_equal=True`. The canonical skill SHA256 equals the candidate provenance hash above. `raw-validate.txt` says “Unexpected key(s) in SKILL.md frontmatter: hooks”; projection output says “Skill is valid!” These are inspected recorded results, not rerun gates or an executed operational regression.
+- [Pass] Pending state is truthful at `PROJECT/2-WORKING/GH-983-CODEX-CONTINUATION.md:18,36–37,49`: PR review, merge and canonical deployment remain unfinished and subject to authorization. The review does not authorize them.
+- [Unverified — needs clone run] No validation suite, executable fixture, pytest, validator or gate was executed here. Recorded receipts name earlier candidate/gate revisions in `provenance.jsonl`; the harness must qualify the final committed state after this turn. Base-relative minimality and hook/installer byte preservation remain unverified pending the comparison requested above.
+
+Whole-file sweep: read all 376 lines of the canonical SKILL.md, all 51 hook lines, all 58 installer lines, the full task document and the complete requested evidence files. No additional actionable pre-existing defect was identified within this instruction-only scope. The missing declared seed prevents claiming a sweep of that artifact. Graph Verify-tier lookup found no indexed project for this worktree; nearest XYZ-forge is another checkout, generation `2026-09-01T15:54:30Z`; coverage reports skill files not_tracked and new evidence missing. Current direct source supplied the evidence; no graph completeness claim is made. No git command or source/artifact edit was performed.
+
+Handing off to Producer (codex-author) — repair the review-input gap and supply the base comparison, then go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
