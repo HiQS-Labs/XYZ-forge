@@ -78,14 +78,15 @@ When `/workhorse` is invoked on a large or ambiguous problem, intake typically a
      (repo-local; never committed). If the session id was not substituted (non-Claude harnesses), use a
      UTC timestamp slug instead. One line per item, highest priority first:
      - `- [ ] W1 P0 <atomic item> — <acceptance check>` open
-     - `- [x]` verified done, with the acceptance result and evidence pointer
+     - `- [x] <item> — <acceptance check> — evidence: <path, commit, URL, or quoted output>` verified done
      - `- [-]` optional/out-of-scope or explicitly user-deferred, with its reason and pointer
      - `- [!]` blocked, with the exact blocker or decision the operator must supply
 
      This file, not the conversation, is the record of unfinished work. On resume or after compaction,
      re-read it before acting. In Claude Code, the skill's Stop hook refuses to end the turn while it has
-     a `- [ ]` line. That hook is Claude-only and checks checklist syntax, not acceptance evidence;
-     checked boxes alone can let it stop prematurely. Claude and Codex follow the contract below.
+     a `- [ ]` line or a `- [x]` line without an `evidence:` pointer. That hook is Claude-only and checks
+     that evidence was recorded, not that it is true; a fabricated pointer still passes it. Claude and
+     Codex follow the contract below.
    - **Incidental Findings (`PARKED/` first):** For a finding outside the current task, check for an existing record, then write a short sourced item under `<repo-root>/PARKED/` when that folder is part of the repository's governance. Do not invent the folder in another repo or open an issue merely to park the finding; follow that repo's intake policy. During triage here, promote selected work through structured intake (`PROJECT/1-INBOX/GH-<NUM>-<topic>.md` plus RELEASES roadmap); mark the PARKED item with the promoted issue/doc link. Preserve one execution record and do not duplicate a canonical plan. Work required to finish the current task stays in the active queue.
 4. **Serial Execution Loop:** Select the highest-priority feasible required item and advance it through Rungs 1–6. Mark `[x]` only with acceptance evidence; mark `[!]` for a concrete external blocker (an operator decision, an unknown target, a Costly or One-way-door confirmation, or missing input/access/window), then finish independent authorized items. Required findings stay active regardless of being called housekeeping or incidental. Parking must not silently reduce authorized scope. Reconcile the outcome before stopping under the contract below.
 

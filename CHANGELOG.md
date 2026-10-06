@@ -6,8 +6,10 @@ Workhorse now resumes authorized work after subtasks, status answers, restored a
 and reconciles evidence, acceptance criteria and required findings before ending. Checked boxes and
 parked required work cannot replace completion; operational preflight needs job/worker inventory and
 a service baseline. Authorization and deployment windows remain binding. The text distinguishes
-instructions from explicitly activated native Goals and configured, trusted hooks; Claude hook and
-installer bytes are preserved. Bounded decision fixtures cover the seven scenarios and operational
+instructions from explicitly activated native Goals and configured, trusted hooks. The Claude Stop hook
+now also blocks a stop while a ticked `- [x]` line has no `evidence:` pointer, and its hand-back message
+names `[!]` only (`[-]` is optional/user-deferred work, not an escape); installer bytes are preserved.
+Bounded decision fixtures cover the seven scenarios and operational
 regression, with a missing-evidence red control; base also passes, so no measured reliability gain is
 claimed. Raw quick_validate retains its existing Claude-hooks rejection; metadata projection passes.
 Evidence: `TESTS-RESULTS/2026-10-06+GH-983/`.

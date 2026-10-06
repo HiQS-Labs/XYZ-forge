@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# stop-hook.sh — Claude Code Stop hook for /workhorse (GH-911). Wired from SKILL.md frontmatter.
+# stop-hook.sh — Claude Code Stop hook for /workhorse (GH-911, GH-983). Wired from SKILL.md frontmatter.
 #
 # Blocks the stop while this session's run checklist (<repo-root>/.workhorse/<session_id>.md) still has an
-# open `- [ ]` line, so a direct /workhorse run keeps going until its queue is resolved. Everything else
-# (no checklist, other session, bad input, missing python3/git) fails OPEN: exit 0, no output, stop allowed.
-# Loop safety is the harness's 8-consecutive-continuation cap plus the `[!]`/`[-]` escape in the checklist.
+# open `- [ ]` line, or a ticked `- [x]` line that carries no `evidence:` pointer, so a direct /workhorse
+# run keeps going until its queue is resolved WITH evidence. Everything else (no checklist, other session,
+# bad input, missing python3/git) fails OPEN: exit 0, no output, stop allowed.
+# Loop safety is the harness's 8-consecutive-continuation cap plus the `[!]` hand-back in the checklist.
+# `[-]` is for optional/user-deferred items only (SKILL.md Rung 0) and is never offered as an escape here.
+# This is a syntax gate: it checks that evidence was RECORDED, not that it is TRUE (SKILL.md owns that).
 
 command -v python3 >/dev/null 2>&1 || exit 0
 
@@ -33,19 +36,36 @@ if isinstance(cwd, str) and cwd:
 if os.environ.get("CLAUDE_PROJECT_DIR"):
     roots.append(os.environ["CLAUDE_PROJECT_DIR"])
 
+TICKED = re.compile(r"-\s\[[xX]\]")
+EVIDENCE = re.compile(r"evidence:\s*\S", re.IGNORECASE)
+
+def preview(items):
+    return "\n".join(items[:5]) + ("\n…" if len(items) > 5 else "")
+
 for root in roots:
     path = os.path.join(root, ".workhorse", sid + ".md")
     try:
         with open(path, encoding="utf-8") as fh:
-            open_items = [l.strip() for l in fh if l.lstrip().startswith("- [ ]")]
+            lines = [l.strip() for l in fh]
     except Exception:
         continue
+    open_items = [l for l in lines if l.startswith("- [ ]")]
+    unevidenced = [l for l in lines if TICKED.match(l) and not EVIDENCE.search(l)]
+    reasons = []
     if open_items:
-        shown = "\n".join(open_items[:5]) + ("\n…" if len(open_items) > 5 else "")
+        reasons.append("still has %d open item(s):\n%s\nContinue with the next open item."
+                       % (len(open_items), preview(open_items)))
+    if unevidenced:
+        reasons.append("has %d ticked item(s) with no evidence pointer:\n%s\n"
+                       "Append ` — evidence: <path, commit, URL, or quoted output>` to each after verifying it, "
+                       "or reopen it as `- [ ]` if it is not actually done."
+                       % (len(unevidenced), preview(unevidenced)))
+    if reasons:
         print(json.dumps({"decision": "block", "reason":
-            "/workhorse run checklist %s still has %d open item(s):\n%s\n"
-            "Continue with the next open item. To hand back to the operator instead, mark it "
-            "[!] (with the exact blocker) or [-] (parked, with its pointer)." % (path, len(open_items), shown)}))
+            "/workhorse run checklist %s %s\n"
+            "To hand back to the operator instead, mark the item [!] with the exact blocker or decision "
+            "needed. [-] is only for optional or explicitly user-deferred items, never required scope."
+            % (path, "\n".join(reasons))}))
     sys.exit(0)
 PY
 exit 0
