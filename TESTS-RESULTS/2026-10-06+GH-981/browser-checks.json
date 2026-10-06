@@ -12,5 +12,6 @@
   "stale": "PASS expired notice; Read unavailable work status",
   "partial": "PASS xyz_work partial source",
   "hostile": "PASS literal img/onerror string displayed; no alert",
-  "failure": "PASS no snapshot, unknown counts, pause after third failure, manual retry remains"
+  "failure": "PASS no snapshot, unknown counts, pause after third failure, manual retry remains",
+  "lanes_focus": "PASS Option-Tab/Return keeps focus on list row after card/row key prefixes; later timer browser check interrupted by user switching windows and remains unverified"
 }

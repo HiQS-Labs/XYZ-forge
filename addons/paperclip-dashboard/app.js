@@ -63,12 +63,12 @@ function render() {
   counts.forEach(([label, count, help]) => {const card = el('div', 'metric'); card.append(el('p', 'metric-label', label), el('strong', 'metric-value', String(state.snapshot ? count : '—')), el('p', 'metric-help', help)); $('metrics').append(card);});
   $('coverage').textContent = `Displayed observations only · Coverage: ${state.snapshot?.coverage || 'unavailable'}${state.snapshot?.truncated ? ' · Capped' : ''}${healthy() ? '' : ' · Read unavailable or expired'}`;
   $('laneCards').replaceChildren();
-  items('lanes').slice(0, 4).forEach((lane, index) => {const card = el('button', 'lane-card'); card.dataset.focus = lane.key; card.onclick = () => {state.section = 'lanes'; select(lane);};
+  items('lanes').slice(0, 4).forEach((lane, index) => {const card = el('button', 'lane-card'); card.dataset.focus = `card:${lane.key}`; card.onclick = () => {state.section = 'lanes'; select(lane);};
     const head = el('div', 'lane-top'); head.append(el('span', 'agent-avatar', (lane.agent || '?').slice(0, 1)), el('strong', '', lane.agent || 'Agent unspecified'), chip('Observed')); card.append(head, el('p', 'lane-task', lane.task || 'Intent unavailable'), el('p', 'lane-meta', `${lane.repo.name} · ${ago(lane.last_prompt_at)}`), el('p', 'lane-progress', 'Progress unmeasured')); $('laneCards').append(card);});
   if (!items('lanes').length) $('laneCards').append(empty('No lane observations in this scope.'));
   const rows = items().filter(item => `${item.title || item.task || ''} ${item.number || ''} ${item.repo.name} ${item.agent || ''}`.toLowerCase().includes(state.search.toLowerCase()));
   $('workList').replaceChildren();
-  for (const item of rows) {const row = el('button', 'work-row'); row.dataset.focus = item.key; row.setAttribute('aria-pressed', String(state.selected === item.key)); row.onclick = () => select(item);
+  for (const item of rows) {const row = el('button', 'work-row'); row.dataset.focus = `row:${item.key}`; row.setAttribute('aria-pressed', String(state.selected === item.key)); row.onclick = () => select(item);
     const copy = el('span', 'row-copy'); copy.append(el('strong', '', item.title || item.task || 'Untitled observation'), el('small', '', `${item.repo.name} · ${item.section === 'lanes' ? item.agent || 'Agent' : `#${item.number}`}`));
     row.append(el('span', 'work-symbol', item.section === 'lanes' ? '↳' : '#'), copy,
       chip(item.section === 'work' ? item.workflow.label : item.section === 'prs' ? 'Verify current head' : 'Observed', item.section === 'work' ? item.workflow.kind : 'unknown'), el('span', 'row-time', ago(item.context_at || item.last_prompt_at || item.updated_at))); $('workList').append(row);}
