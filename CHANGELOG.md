@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-05 — relay-drive: receipt-only commits no longer count as convergence (GH-976)
+
+The GH-115 round-cap extension treated any HEAD movement as progress, and every relay turn commits
+its own transcript in the sampled repo, so a lane that repaired nothing kept being extended to the
+hard ceiling (user-sage-backend#75: cap 10 on transcript commits alone). `utils/py/relay_drive.py`
+now counts the HEAD arm only when a changed path lies outside `relay-system/`, `marathon-system/`,
+`.tick/`, `.relay-scratch/`, `TESTS-RESULTS/` or the relay file itself; the `[x]` resolved-items arm
+and the hard ceiling are unchanged. Verification: five manual controls on base and candidate plus
+the existing GH-115 suite. Receipts: `TESTS-RESULTS/2026-10-05+GH-976/`.
+
 ## 2026-10-05 — Defer HiQS advisory-intake classifier revisit (GH-974)
 
 Captured Needle-fork #71 as a deferred RELEASES roadmap item, with real chain evidence and measured reviewer burden required before an advisory contribution-screening experiment. Resolver, attestation and publishing boundaries remain deterministic. Verification: targeted PDDA checks and RELEASES consistency/readback; invalid triage rating fails the frontmatter red control. Receipts: `TESTS-RESULTS/2026-10-05+GH-974/`.
