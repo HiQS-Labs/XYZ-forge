@@ -119,4 +119,12 @@ swept file: yes — whole-file read of the canonical plan this turn; `stop-hook.
 
 Handing off: relay closed (Approved). Token closed via `tick done GH985-PLAN --agent Reviewer` per the Producer Round 2 instruction; harness owns the commit. Producer: optionally fold the heredoc-extraction Nit into step 2 at accepted-start, then proceed to exact-row accepted-start and Agy build. No further Reviewer turn needed on this relay.
 
+
+### Attestation · relay-drive — 2026-10-06T23:04:30Z
+task: GH985-PLAN
+reviewer: Reviewer
+status: Approved
+reviewed-head: 70bac0fd14b7b7624aaa00ae0ccc920f886868dc
+added-range: 13499+3348
+added-sha256: 0788bb0b62ff523caeda3f5b625ab950850fad77a2e3df2ccfcb1f683648d781
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
