@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -100,5 +100,23 @@ Handing off: relay closed (Approved). Producer: disposition the three Nits in th
 Round 1 content PASS is retained, but driver exit 4 / close-mismatch is not an attested approval. All three Nits applied to canonical plan; unchanged production source. Positional preservation assertion replaced with AST equality normalizing only reason (comments ignored). Current official-cap/runtime facts unchanged.
 
 Reviewer corrective turn: read current canonical plan and prior findings; confirm small wording dispositions preserve approved scope. Do not repeat unrelated repo exploration, sqlite probing, full-source discovery or tests. Earlier whole-file sweep remains supplied evidence; explicitly state this bounded re-review scope. Write only this relay with a new Reviewer block and PASS/Approved if satisfied. **When Approved, call the existing tick CLI `done GH985-PLAN --agent Reviewer` while you still own the token. DO NOT call tick release or handoff for Approved.** For non-approval release to Producer normally. Harness owns commit. The driver must observe a done token owned by Reviewer; a released token makes close-mismatch. No fabrication or parent self-attestation.
+
+### Reviewer · Round 2 (Fable)
+
+Bounded corrective re-review, as the Producer Round 2 block requested: re-read the current canonical `PROJECT/2-WORKING/GH-985-CLAUDE-WORKHORSE.md` (135 lines) in full and graded the three Nit dispositions plus the one new assertion (AST equality) against the Round 1 findings. No sqlite, ledger, CI-routing, or full-source rediscovery repeated; Round 1 citations stand as supplied evidence. One narrow read-only probe: `sed -n '1,12p;24,51p' skills/2-daily/workhorse/stop-hook.sh` (rc=0) to check the new AST claim against the hook's structure. No git, no validate/test runs.
+
+swept file: yes — whole-file read of the canonical plan this turn; `stop-hook.sh` structure re-read for the AST claim only. No new pre-existing defect found.
+
+- `[Pass]` Nit 1 (acceptance row) applied. Plan `:111` now reads "Runtime paragraph names Claude hook behavior, limits and aligned guidance; earlier disclosure retained" — no longer asserts an exclusive "one place", consistent with `SKILL.md:86-88` staying as-is.
+- `[Pass]` Nit 2 (dispatch tier) applied. Plan `:101`: "existing workflow_dispatch intentionally routes full/tier 3, so disclose it separately from local tier 1" — matches the Round 1 citation of `utils/ci-route.sh:101-116`.
+- `[Pass]` Nit 3 (mechanical red control) applied. Plan `:96`: red control "fails on absence of the fixed `required`/`optional`/`blocker`/`authorized` guidance terms; candidate also rejects the literal `or [-] (parked` escape" — a literal-string assertion, not a judgment call, and `or [-] (parked` is present in the current bytes (`stop-hook.sh:48`, probe output "[!] (with the exact blocker) or [-] (parked, with its pointer)").
+- `[Pass]` New step 2 assertion (AST equality normalizing only the reason) is sound for this change. The reason string is a Python string constant inside the `<<'PY'` heredoc (`stop-hook.sh:45-48`); the predicate `startswith("- [ ]")` and `except Exception: continue` fail-open are in the same heredoc (`:40-43`). The `:7` cap comment is a bash comment outside the heredoc, so it cannot perturb the Python AST. `bash -n` plus the two-file `git diff --stat` cover the bash wrapper. Scope, Non-goals (`:70-74`), Bet (`:49-54`), and ratings prose (`:117-120`) are unchanged from Round 1.
+- `[Nit]` Step 2 should say the AST comparison is of the extracted heredoc body (text between the `<<'PY'` and `PY` lines) for both revisions, since the file as a whole is bash and will not parse as Python. Executor-clarity only; does not change behaviour or block.
+- `[Unverified — needs clone run]` Steps 2-3 against the new bytes remain deferred to build/final QA, as in Round 1.
+
+**VERDICT: PASS**
+**Basis:** All three Round 1 Nits are dispositioned as Implemented with wording that matches the cited sources; the one new assertion is structurally correct for the hook; no Blocker or Should is open. Approved scope is unchanged: two text spans plus two-to-three doc sentences, predicate and fail-open preserved.
+
+Handing off: relay closed (Approved). Token closed via `tick done GH985-PLAN --agent Reviewer` per the Producer Round 2 instruction; harness owns the commit. Producer: optionally fold the heredoc-extraction Nit into step 2 at accepted-start, then proceed to exact-row accepted-start and Agy build. No further Reviewer turn needed on this relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
