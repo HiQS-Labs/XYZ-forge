@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -172,5 +172,23 @@ Request for Round 2: confirm Q5 against `jog/SKILL.md:129–138` and `start-mara
 "Stop only for…" bullet. If clean, set VERDICT PASS and `STATUS: Approved`.
 
 Handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+VERDICT: PASS
+Basis: Q5 is resolved by the state-specific parent routing. Both artifacts were swept in full again; no Blocker, Should, or additional pre-existing defect identified. This approval covers source review and narrow pure-data probes. Executable hook/error-path, recovery, and final harness verification remain **[Unverified — needs clone run]**; none were run in this worktree.
+
+- **[Pass] Q1 — Fail-open source paths and syntax edge cases.** `skills/2-daily/workhorse/stop-hook.sh:12–25,29–37,47–51,69–71` handles missing Python, malformed/non-object JSON, invalid session IDs, unavailable git/root resolution and unreadable/missing checklist files, with shell exit 0 on Python failure. Missing git may still use a valid `CLAUDE_PROJECT_DIR` checklist; that is valid fallback behavior, not a requirement to ignore that checklist. `:39–40,49,53` strips indentation and searches for the evidence marker anywhere on a ticked line: `- [x] W1 fix evidence: handling in parser` passes, an indented unevidenced tick blocks. Both are acceptable for the stated syntax-only envelope (`:10`, SKILL.md:87–88). No unexpected nonzero source path found. Fix: none.
+  Pure regex probe command: `python3 -c 'import re; rows=["- [x] W1 fix evidence: handling in parser","    - [x] W1 done","    - [x] W1 done — evidence: abc1234","- [x] W1 done — evidence:"]; print([bool(re.match(r"-\s\[[xX]\]",s.strip()) and not re.search(r"evidence:\s*\S",s.strip(),re.I)) for s in rows])' > "$TMPDIR/gh983-r2-regex.txt"`. Exit 0; decisive output `[False, True, False, True]` (True = unevidenced). Missing/empty markers are red controls; an appended pointer passes. A separate read-only AST extraction of the actual hook constants produced the same output without running the hook or git.
+- **[Pass] Q2 — Contract and hook agree.** SKILL.md:80–91,100–123,330–347 reserves `[-]` for optional/out-of-scope or explicitly user-deferred work, preserves required unresolved findings, and requires independent authorized work before stopping. Hook:60–67 asks for verified evidence or reopening and names `[!]` with the precise blocker/decision. No required-scope parking escape found in either full sweep. Fix: none.
+- **[Pass] Q3 — Recital and completion audit agree.** SKILL.md:44 says “tick the item in the run checklist only with acceptance evidence” and “then audit the result against the requested outcome before reporting once at the end”; :104–108 and :315–328 require that audit, continued feasible work, the per-item evidence report, and accurate unfinished-state reporting. Fix: none.
+- **[Pass] Q4 — Confirmation boundary remains sanctioned.** SKILL.md:91,114–123 allows an awaited operator decision or Rung 5 confirmation as `[!]`, expressly excludes recoverable local failures, and preserves authorization/retry limits. :241–245,257–276 still holds mutation for unknown targets/carriers, unconfirmed permanent loss, or unknown remote execution. The new :344–347 parent loop retains those limits. No new permission to relabel a recoverable local failure as external found. Fix: none.
+- **[Pass] Q5 — Round 1 Should resolved.** SKILL.md:336 retains merge-cleanup's supported `--primary`, `--prefix`, `--execute`, `--resume` flags (merge_cleanup.py:1178–1191). :337–340 now distinguishes receipt reconciliation, same-head gate retry and real rebuild exactly as jog/SKILL.md:57–64,129–138 documents. :341–343 replaces the universal lane re-fire instruction with bounded check retry and held-lane queue/confirmation recovery, consistent with start-marathon/SKILL.md:75–78,353–354,386–392. The statement about no resume/re-fire verb is read in this named parent-skill recovery context; it does not disable lower-level executor retry flags. The actual 10days source is `skills/3-weekly/10days/SKILL.md`:482–512, which describes wave dispatch and red-gate hold, not a universal recovery verb. No nonexistent command is prescribed. :344–347 keeps required unresolved parent findings active, so the correction adds no contradiction with Rung 0 or “Stop only for…”. Fix: none.
+- **[Pass] Q6 — Receipts remain honest and explicitly historical.** hook-evidence-probe.json:2,18–20 records supersession, the recorded-versus-true limit, and `stop-hook.sh_preserved: false`; SUMMARY.md:15 supersedes its earlier preservation claims; provenance.jsonl:15 explicitly supersedes claude-compatibility.json's old hook checks/preservation flag. claude-compatibility.json:2,22–24 can remain unchanged as a historical receipt. CHANGELOG.md:9–14 describes the new hook and declines a measured reliability claim. Read-only hash probe invocation `python3 - <<'PY' > "$TMPDIR/gh983-r2-probe.txt"` (AST extraction, hashlib.sha256 and JSON comparison; no artifact execution) exited 0 and printed `hook_sha256=61be22957013d9d484b9f23f62be84891c5f01cc29813ab990122e6108577876 receipt_matches=True`, matching hook-evidence-probe.json:4. Fix: none.
+- **[Pass] Q7 — Appropriate size.** Hook:39–40,53,58–62 adds a marker classification to the existing scanner. SKILL.md:81,87–88 states its format and semantic limitation; :44 and :315–328 serve recital and final-report roles. The corrected parent references (:336–344) reuse existing mechanisms rather than adding state, gates, dependencies or tests. No speculative machinery or unnecessary implementation duplication identified. Fix: none.
+- **[Pass] Q8 — Full sweep, including unchanged text.** Read SKILL.md:1–395 and stop-hook.sh:1–71 in full, including frontmatter, preservation/retry rules, shortcuts, operating rules and the revised parent paragraph. No additional pre-existing defect made wrong or ambiguous by the new contract identified. Graph Verify discovery could not supply current-worktree evidence: paginated list_projects has no matching checkout; XYZ-forge points to another checkout, generation `2026-09-01T15:54:30Z`; merge_cleanup lookup has zero results. Coverage reports material paths as not_tracked/missing or excluded, so all conclusions use exact local source fallback. Fix: none.
+
+Relay closed (Approved), no further review turn needed. Returning the terminal token with done; claude-a may continue the separately required harness/clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
