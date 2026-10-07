@@ -1,6 +1,6 @@
 ---
 title: "GH-989: skills-army-hq: rename bot-monitor-prompt.md to BOT-DAILY-HEALTH-CHECK.md"
-status: Active
+status: Complete
 created: 2026-10-07
 updated: 2026-10-07
 owner: operator (via /express)
