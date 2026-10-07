@@ -1,0 +1,15 @@
+{
+  "before": {
+    "head": "516722a15317ed4e76a638ca1767ecec368588b9",
+    "bare": "false",
+    "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+    "local_email": ""
+  },
+  "after": {
+    "head": "516722a15317ed4e76a638ca1767ecec368588b9",
+    "bare": "false",
+    "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+    "local_email": ""
+  },
+  "intact": true
+}
