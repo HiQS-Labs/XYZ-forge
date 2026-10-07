@@ -1,6 +1,6 @@
 ---
 title: "GH-988: skills-army-hq: ship bot-monitor-prompt.md, a paste-able daily QA prompt for always-on agents (foreign skill folders + broken symlinks)"
-status: Active
+status: Complete
 created: 2026-10-07
 updated: 2026-10-07
 owner: operator (via /express)
