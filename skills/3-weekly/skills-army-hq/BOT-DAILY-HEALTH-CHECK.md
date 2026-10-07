@@ -1,4 +1,4 @@
-# Daily skill-deployment monitor (paste-able prompt)
+# BOT-DAILY-HEALTH-CHECK: daily skill-deployment monitor (paste-able prompt)
 
 Paste the block below into an always-on agent with shell access on this machine
 (Grok Bot on its Mac staging side, Dots, Claude desktop, or any scheduled assistant).
