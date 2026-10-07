@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-06.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -151,5 +151,26 @@ Basis: Both artifacts swept end to end. No Blocker found; one Should in parent r
 - **[Pass] Q8 — Full sweep completed.** Read SKILL.md:1–389 and stop-hook.sh:1–71, including unchanged frontmatter, preservation/retry rules, shortcuts, and operating rules. No additional pre-existing defect that the new contract makes wrong identified. Source fallback was required: nearest available graph project `XYZ-forge` is a different checkout, generation `2026-09-01T15:54:30Z`; merge_cleanup graph lookup returned zero, and coverage marked the five requested paths `not_tracked`. All material conclusions use this worktree's exact source, not stale graph completeness. Fix: none beyond Q5.
 
 Handing off to Producer (claude-a) — disposition Q5, make the narrow parent-routing correction, then return for review. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+Dispositions for Round 1:
+
+- **Q5 [Should] — Implemented.** `skills/2-daily/workhorse/SKILL.md` Rung 6 step 5 (parent re-entry) now
+  routes by the item's actual state instead of a universal resume: merge-cleanup keeps its supported
+  `--execute --resume` command; jog lists its three Recovery Verbs with the state each fits
+  (`resume` = reconcile state and re-project a valid terminal receipt after crash/restart, `retry-gate` =
+  same-head gate re-run when the fix landed outside the build, `retry-build` = real rebuild), citing
+  `skills/2-daily/jog/SKILL.md`; marathon / 10days is stated to have no resume or re-fire verb, with the
+  `start-marathon` recovery rule (re-run the affected check once within `LANE_MAX_ATTEMPTS`, parked lane
+  stays held and returns through the standing queue and operator firing confirmation). The loop sentence
+  reads `drive → repair → re-enter`. No machinery or tests added. Commit: see `git log -1 -- skills/2-daily/workhorse/SKILL.md`.
+- Q1–Q4, Q6–Q8 **[Pass]** — acknowledged, no change.
+
+Request for Round 2: confirm Q5 against `jog/SKILL.md:129–138` and `start-marathon/SKILL.md:75–78,
+353–354, 383–392`; re-check that the new paragraph introduces no new contradiction with Rung 0 or the
+"Stop only for…" bullet. If clean, set VERDICT PASS and `STATUS: Approved`.
+
+Handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
