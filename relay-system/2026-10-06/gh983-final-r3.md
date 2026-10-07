@@ -191,4 +191,12 @@ Basis: Q5 is resolved by the state-specific parent routing. Both artifacts were 
 
 Relay closed (Approved), no further review turn needed. Returning the terminal token with done; claude-a may continue the separately required harness/clone verification.
 
+
+### Attestation · relay-drive — 2026-10-07T00:05:04Z
+task: RELAY-gh983-final-r3
+reviewer: codex
+status: Approved
+reviewed-head: 0a92f8db6c992bd6c66e0d6594e3ab51dd231bc2
+added-range: 19898+6339
+added-sha256: 72cce39c0884af517d91b02d3f38f84889760ea11ed1784be6fd686d904963cf
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
