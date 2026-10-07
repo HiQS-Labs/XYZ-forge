@@ -1168,6 +1168,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased] - 2026-10-07
 
 ### Fixed
+- **GH-989: skills-army-hq: rename bot-monitor-prompt.md to BOT-DAILY-HEALTH-CHECK.md.** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
 - **GH-988: skills-army-hq: ship bot-monitor-prompt.md, a paste-able daily QA prompt for always-on agents (foreign skill folders + broken symlinks).** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
 
 ## [Unreleased] - 2026-09-24
