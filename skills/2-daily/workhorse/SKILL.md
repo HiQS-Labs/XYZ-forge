@@ -331,11 +331,17 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      continue feasible required work. `[!]` records a blocker; `[-]` is not an escape from required scope.
    - **Parent orchestrator or batch queue** (`merge-cleanup`, `jog`, `marathon`, `/10days`): record the
      evidenced item outcome in the parent's attempt record (e.g. `attempt_record.py finish --outcome
-     resolved|parked` for merge-cleanup), then immediately re-enter the parent by its own mechanism:
+     resolved|parked` for merge-cleanup), then immediately re-enter the parent by the mechanism that
+     matches the item's actual state, never a universal resume:
      - `merge-cleanup`: `python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --execute --resume`
-     - `jog`: `releases jog resume <GH-NUM>`
-     - `marathon` / `/10days`: the lane re-fire described in that skill's SKILL.md (no `--resume` flag exists)
-     Respect parent safety/retry limits. Repeat `drive → repair → resume` until the requested batch
+     - `jog`: pick the Recovery Verb from `skills/2-daily/jog/SKILL.md` that fits what must be redone:
+       `releases jog resume <GH-NUM>` only reconciles state and re-projects a valid terminal receipt after
+       a crash/restart; `releases jog retry-gate <GH-NUM>` re-runs the gate on the same head when the fix
+       landed outside the build; `releases jog retry-build <GH-NUM>` is the real rebuild.
+     - `marathon` / `/10days`: there is no resume or re-fire verb. After a material correction, re-run
+       the affected check once within `LANE_MAX_ATTEMPTS`; a parked lane stays held and returns through
+       the standing queue and the operator's firing confirmation (`start-marathon` recovery rules).
+     Respect parent safety/retry limits. Repeat `drive → repair → re-enter` until the requested batch
      outcome passes the completion audit, the user pauses/cancels, or a concrete external blocker
      prevents the remaining work after independent items finish. A held/parked queue alone does not
      prove completion. Keep required unresolved findings active in the parent record.
