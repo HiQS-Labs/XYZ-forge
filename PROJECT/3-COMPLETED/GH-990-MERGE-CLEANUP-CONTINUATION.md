@@ -2,9 +2,9 @@
 gh_issue: 990
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/990
 title: Merge-cleanup continuation contract
-status: active
+status: Complete
 created: 2026-10-07
-updated: 2026-10-07
+updated: 2026-10-08
 owner: Claude
 goal: Stop merge-cleanup agents from handing reversible, already-authorized steps back to the operator
 ---

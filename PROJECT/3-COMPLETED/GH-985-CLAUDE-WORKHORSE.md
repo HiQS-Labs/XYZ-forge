@@ -2,9 +2,9 @@
 gh_issue: 985
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/985
 title: Claude workhorse continuation optimization
-status: active
+status: Complete
 created: 2026-10-06
-updated: 2026-10-07
+updated: 2026-10-08
 owner: Codex
 goal: Align the Claude Stop-hook guidance with the shared verified-outcome contract
 ---
