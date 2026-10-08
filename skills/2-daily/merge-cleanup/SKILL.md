@@ -180,8 +180,8 @@ never attempted:
 2. **Fix the primary** so Phase 0 reports landing-ready (commit or park the dirty intake files per
    the Phase 0 rules). A dirty primary is a blocker to FIX, not a reason to silently switch to
    `--teardown-only` and still report completion (the incident's S1 false-Done). If a blocker
-   cannot be resolved autonomously, report the blockers and stop — address them or report them;
-   never silently truncate the task.
+   cannot be resolved autonomously, finish every independent step first, then report the blockers
+   and stop — address them or report them; never silently truncate the task.
 3. **Execute:** add `--execute`. If the sequenced queue holds **≥3 PRs**, open the batch issue first
    — see [Batch issue protocol (GH-944)](#batch-issue-protocol-gh-944--caller-owned-for-queues-of-three-or-more) —
    and keep it current through the run.
@@ -191,6 +191,37 @@ never attempted:
    summary; they are not PR failures — re-run once the network is healthy.
 5. **On exit 2**: diagnose before anything else; the diagnostic names the gate. A re-run is only
    valid once the cause is fixed.
+
+### Continuation contract — do not hand back reversible steps (GH-985 pattern)
+
+A merge-cleanup run fails the operator as surely by stopping to ask about a reversible step as by
+skipping one. The same contract as `/workhorse` applies, specialised here:
+
+- **What the request already authorizes.** "Run merge-cleanup", "merge the open PRs", "land these",
+  or any request naming PRs authorizes the whole drive loop for that queue: dry run, fixing the
+  primary, `--execute`, the batch issue, caller repair rungs within the two-repair budget,
+  `--resume --execute` re-runs, reconciliation commits and pushes to the integration branch, and
+  Phase 6 teardown of `SAFE_REMOVE_*` checkouts to Trash. An explicit audit, scan, or dry-run
+  request stays read-only. Discovery never adds PRs outside the request.
+- **Proceed without asking on reversible steps.** Do not pause to ask "should I execute?", "should I
+  re-run with `--resume`?", "should I commit the intake doc?", "should I open the batch issue?", or
+  "should I tear down the clean clones?". Each is in scope, gated by the script, and recoverable:
+  merges are squash commits on a remote branch, ledger writes are reconciled and pushed, teardown
+  goes to Trash, and the attempt record bounds repairs. After each step, take the next one in the
+  same turn. A status question from the operator is answered briefly and the loop resumes.
+- **Ask only at a real decision.** Stop and ask for exactly one of: a PR outside the requested
+  queue; `--allow-unready-primary` or any other override flag; a `PRESERVE_*` checkout the operator
+  might want removed; a semantic code conflict after the repair budget is exhausted (rung 5);
+  a Costly or One-way-door action under `AGENTS.md` (force push, deleting a branch or clone that
+  holds unlanded work, rewriting integration history); or a permission-classifier block that
+  survives its one verbatim retry. Before asking, finish every independent authorized step — land
+  the PRs that do not depend on the blocked one, reconcile them, tear down what is safe — and then
+  ask once, naming the blocked PR or checkout, why it cannot proceed, and the decision needed.
+- **Evidence before Done.** "Landed" means the PR reads `MERGED` with a merge commit and the primary
+  equals `origin/<integration>` after reconciliation; "torn down" means the fresh Phase 6 verdict
+  acted on it. A dry-run table, a planned sequence, or an attempted command is not a landing.
+- **Continuation never widens authorization.** It grants no override flags, no force pushes, no
+  deletion of preserved checkouts, and no PRs the operator did not name or imply.
 
 **Done rule:** do not report Done unless Phase 5 ran to completion (exit 0; or exit 3 whose
 handoffs and deferrals were worked and re-driven to exit 0), **or** the operator explicitly asked

@@ -5,7 +5,8 @@
 # open `- [ ]` line, or a ticked `- [x]` line that carries no `evidence:` pointer, so a direct /workhorse
 # run keeps going until its queue is resolved WITH evidence. Everything else (no checklist, other session,
 # bad input, missing python3/git) fails OPEN: exit 0, no output, stop allowed.
-# Loop safety is the harness's 8-consecutive-continuation cap plus the `[!]` hand-back in the checklist.
+# Loop safety is the runtime's documented eight-consecutive-continuation cap (reset by tool calls) plus the
+# `[!]` hand-back in the checklist. Do not change runtime controls.
 # `[-]` is for optional/user-deferred items only (SKILL.md Rung 0) and is never offered as an escape here.
 # This is a syntax gate: it checks that evidence was RECORDED, not that it is TRUE (SKILL.md owns that).
 
@@ -53,7 +54,7 @@ for root in roots:
     unevidenced = [l for l in lines if TICKED.match(l) and not EVIDENCE.search(l)]
     reasons = []
     if open_items:
-        reasons.append("still has %d open item(s):\n%s\nContinue with the next open item."
+        reasons.append("still has %d open item(s):\n%s"
                        % (len(open_items), preview(open_items)))
     if unevidenced:
         reasons.append("has %d ticked item(s) with no evidence pointer:\n%s\n"
@@ -63,8 +64,11 @@ for root in roots:
     if reasons:
         print(json.dumps({"decision": "block", "reason":
             "/workhorse run checklist %s %s\n"
-            "To hand back to the operator instead, mark the item [!] with the exact blocker or decision "
-            "needed. [-] is only for optional or explicitly user-deferred items, never required scope."
+            "Continue the next authorized feasible required item; mark [x] only with acceptance evidence "
+            "and audit the requested outcome before completion. For a concrete external blocker, record [!] "
+            "with the exact blocker or decision needed, and finish independent authorized work first. "
+            "Stop only for verified completion, explicit user pause/cancellation, or that blocker. "
+            "[-] is only for optional or explicitly user-deferred items, never required scope."
             % (path, "\n".join(reasons))}))
     sys.exit(0)
 PY
