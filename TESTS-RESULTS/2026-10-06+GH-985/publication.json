@@ -1,0 +1,27 @@
+{
+  "pr": "https://github.com/HiQS-Labs/XYZ-forge/pull/986",
+  "base": "development",
+  "dependency": 984,
+  "published_sha": "7c1859bf46a21d4f5bc826078c697c8ba77bc284",
+  "independent_qa_reviewed_head": "af59f1a4d716c71869d3d7f8d9e32e79080e2809",
+  "source_since_qa": "unchanged; subsequent receipt/status/ledger only",
+  "push_gate": {
+    "exit_code": 0,
+    "result": "documentation gate GREEN in 57s",
+    "identity": {
+      "head": "7c1859bf46a21d4f5bc826078c697c8ba77bc284",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "bare": "false",
+      "local_user_email": ""
+    }
+  },
+  "hosted_ci": {
+    "conclusion": "success",
+    "headSha": "7c1859bf46a21d4f5bc826078c697c8ba77bc284",
+    "status": "completed",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37546534529"
+  },
+  "installed": "unchanged baseline; three symlinks preserved",
+  "incremental_source_diff": "+11/-3 in two existing workhorse files",
+  "coderabbit": "status SUCCESS but no review performed: OSS review capacity exhausted; Fable independent review is the accepted peer gate"
+}

@@ -1,0 +1,1 @@
+Unexpected key(s) in SKILL.md frontmatter: hooks. Allowed properties are: allowed-tools, description, license, metadata, name

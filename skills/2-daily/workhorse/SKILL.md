@@ -133,6 +133,12 @@ require hook configuration and trust; do not invent a hook, bypass trust, or ins
 See official [Goals](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) and
 [hooks](https://learn.chatgpt.com/docs/hooks) documentation before configuring those mechanisms.
 
+**Claude runtime.** The existing Stop hook blocks on open checklist lines and on ticked lines with no
+`evidence:` pointer; it checks that evidence was recorded, not that it is true. Claude does not call Stop on user interrupts; API failures use StopFailure, which ignores
+continuation decisions, so retry the authorized action when access is restored. When available and
+explicitly requested, Claude's `/goal` shortcut adds a session-scoped prompt-based Stop check; it
+still relies on model judgment and does not expand authorization. See [Claude hooks](https://code.claude.com/docs/en/hooks#stop).
+
 ---
 
 ## Rung 1: Ground Truth & Diagnostics (`/debug-mantra`)

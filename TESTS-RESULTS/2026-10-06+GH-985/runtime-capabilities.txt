@@ -1,0 +1,7 @@
+tive in the input and return success while it's true. Set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP to raise this limit.
+CLAUDE_CODE_STOP_HOOK_BLOCK_CAP
+TESTING:()=>uc,CLAUDE_CODE_STARTUP_FAILURE_RESULTS:()=>zL,CLAUDE_CODE_STOP_HOOK_BLOCK_CAP:()=>US,CLAUDE_CODE_SUBPROCESS_ENV_SCRUB:()=>iR,CLAUDE_CODE_SUPERVISED:()=>UR,CLAUDE_CODE_SYNC_PLUGI
+ookActive:To}),{reason:"max_turns",turnCount:se};let ye=a.CLAUDE_CODE_STOP_HOOK_BLOCK_CAP??8;if(ye>0&&Z>ye){i("tengu_stop_hook_block_count",{count:Z,is_subagent:WK(f.agentContext),hit_max_t
+tive in the input and return success while it's true. Set CLAUDE_CODE_STOP_HOOK_BLOCK_CAP to raise this limit.";if(yield $t(Ae,"warning"),f.agentContext.agentType!=="teammate"&&!WK(f.agentC
+8m.js";import"/$bunfs/root/chunk-7zh3rgxp.js";var e={type:"local-jsx",name:"goal",description:"Set a goal Claude checks before stopping",argumentHint:"[<condition> | clear]",immedia
+te:!0},o={type:"local",name:"goal",supportsNonInteractive:!0,thinClientDispatch:"post-text",description:"Set a goal \u2014 keep workin

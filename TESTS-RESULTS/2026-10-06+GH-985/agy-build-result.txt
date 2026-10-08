@@ -1,0 +1,13 @@
+I have successfully taken my turn as Agy and finished the requested build steps:
+
+1. **Claimed Token**: Used the `tick` tool to acquire the `GH985-BUILD` token.
+2. **Updated `stop-hook.sh`**:
+   - Replaced the comment on line 7 to properly document the 8-consecutive-continuation cap limit and that optional/deferred markers do not grant permission to abandon required scope.
+   - Updated the Python heredoc's `reason` string to reflect the shared contract (parking escapes `[-]` are for optional/deferred work only and do not reduce required scope). 
+3. **Updated `SKILL.md`**: 
+   - Appended a paragraph detailing Claude runtime limits and characteristics (it's syntactic, not semantic, Stop is not for user interrupts, StopFailure handles API errors, and native `/goal` is strictly for explicit prompts).
+4. **Verified**: Extracted the Python heredoc to `.relay-scratch/test.py` to compile check the AST. Also ran `bash -n` on the outer shell script. Both checks passed without errors.
+5. **Relay Log**: Updated `relay-system/2026-10-06/gh985-build.agy.md` appending my findings block for Round 1 and flipping `NEXT` to `Producer` as instructed by the build plan.
+6. **Released Token**: Handed off the `GH985-BUILD` token to `Producer`.
+
+The relay turn has concluded successfully.
