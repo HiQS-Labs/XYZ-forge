@@ -93,4 +93,12 @@ Read the complete SUMMARY, working plan, all twelve provenance records and all r
 
 Relay closed (Approved), no further review turn needed. Handing execution back to Producer for the harness-owned commit and pending publication/qualification.
 
+
+### Attestation · relay-drive — 2026-10-08T06:42:36Z
+task: RELAY-GH998-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: c3794ffb68d71e255afd8c83b89300042241b06d
+added-range: 7755+5919
+added-sha256: ad057ca4aa2f7e2cdb8a60a5b226dbb0c7b475df2cf47711cbd3f7094a9793ed
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
