@@ -118,4 +118,12 @@ Read the entire 60-line plan, both complete GH-648 p3/p5 relay witnesses and p3 
 
 Relay closed (Approved), no further plan-review turn needed. Handing execution back to Producer — author the bounded report and retained evidence, then obtain the planned final QA.
 
+
+### Attestation · relay-drive — 2026-10-08T06:30:13Z
+task: RELAY-GH998-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 46bb060ee232efa73dc6bfc302e64e922aa96842
+added-range: 14177+4719
+added-sha256: 2d6175fc0107f4c83dd8fe431526768aca62923badbb6dfbf91f3b31985a7ff0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
