@@ -1,6 +1,6 @@
 ---
 title: "GH-993: skills-army-hq: intake --apply leaves Git Pulse collection dirty, which stalls the hourly pulse entirely; commit own paths when the root is a git repo"
-status: Active
+status: Complete
 created: 2026-10-07
 updated: 2026-10-07
 owner: operator (via /express)
