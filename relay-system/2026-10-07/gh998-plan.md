@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -102,5 +102,20 @@ Handing off to Producer — correct B1 and S1, log dispositions, then reopen pla
 **Verification:** live comment readback confirms selection; source already-rated refusal and reviewer probe support S1. No new report/runtime code or suites yet. Prior plan PDDA returned zero errors, 411 warnings including offline sync; no gate rerun for these wording edits.
 **Re-review this:** inspect the corrected plan and exact checklist comment if required; grade only corrected B1/S1 plus coherence, not issue-body items. Do NOT run tests/gates or git. Edit only relay file. Use `### Round 2 · Reviewer · codex`, explicit Basis and Verdict; on approval STATUS Approved and tick done RELAY-GH998-PLAN --agent codex, otherwise release to producer. Keep fresh base SHA and honest historical limitations.
 **Commit:** corrected plan inputs committed at current HEAD.
+
+### Round 2 · Reviewer · codex
+
+**VERDICT:** PASS
+**Basis:** B1 and S1 are resolved. The pinned consolidated checklist supports exactly this bounded command/retained-evidence batch, and the corrected rating preview succeeds without changing the persisted scores. Plan approval authorizes report authoring; execution acceptance remains pending.
+
+swept file: yes
+Read the entire 60-line plan, both complete GH-648 p3/p5 relay witnesses and p3 escalation; reviewed the current rating branch and retained ledger row. No additional pre-existing plan defects found. Applied the SWE rubric commensurately to documentation/evidence work: runtime redesign and migration requirements are inapplicable. Graph project XYZ-forge points to another checkout at generation 2026-09-01T15:54:30Z; coverage reports changed/missing/excluded paths and the returned function snippet does not match the current function. Used direct local source for material claims; no completeness claim rests on that graph. No Git, gates, suites, pytest or executable fixtures were run.
+
+- **[Pass] B1 resolved — exact comment scope is now grounded.** PROJECT/2-WORKING/GH-998-ADK-EVIDENCE.md:27 pins [comment 6053498474](https://github.com/HiQS-Labs/XYZ-forge/issues/996#issuecomment-6053498474) and distinguishes issue-body numbering. Read-only `github_fetch_issue_comments(issue_number=996, repo_full_name="HiQS-Labs/XYZ-forge")` succeeded and returned the matching ID: item 1 is “Verify a small, selected set of skill-document commands”; item 2 is “Assess one retained real marathon's action sequence”. Its items 3–4 concern hosted failure reporting and effective execution limits, matching the plan's exclusions at line 29. `github_fetch_issue(issue_number=998, repository_full_name="HiQS-Labs/XYZ-forge")` also succeeded; its opening pins this same comment and its deliverables retain both bounded assessments. Shell `gh` queries exited 1 (“error connecting to api.github.com”) and web fetches failed; the connector supplied the independent live readback. The previous issue-body objection is closed, with no CI/governance scope expansion required.
+- **[Pass] S1 resolved — preview and red control are reproducible.** Plan line 44 explicitly requires deliberate `--force --dry-run`; utils/py/releases_app.py:3728 rejects an already-rated row without force, while lines 3745–3750 return before the writer at line 3758. Narrow probe `python3 utils/py/releases_app.py --root "$PWD" roadmap rate --gid rmi-01M4D2PN45SNCRZBHASABK3WEC --rated 60/20/50/85 --force --dry-run` returned **exit 0**, “rating: 60/20/50/85”. Removing only `--force` returned **exit 3**, “refused: rule=already-rated”. Before/after SHA-256 checks of releases.db and releases.sql printed “ledger_artifacts_unchanged: True” and “ledger_artifacts_unchanged_after_control: True”. Read-only SQLite SELECT returned the owned working-doc pointer and `(60, 20, 50, 85, None)`, consistent with releases.sql:827 and existing writer receipts at lines 2520–2523. An initial reviewer SELECT used an incorrect column name and exited 1 before any CLI invocation; correcting it to the actual rating_appeal/rating_effort columns produced this result. Probe environment: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`; these quoted outputs are ephemeral review observations, not final committed report provenance.
+- **[Pass] Historical limits and bounded proof remain appropriate.** Plan lines 44–47 cap examples, require source/command/outcome/provenance, separate current checks from historical observations and put mutation-heavy checks in a disposable full clone. GH-648 p5 RELAY.md:94 limits the real-advisor probe; lines 108 and 111–117 retain reviewer approval and driver attestation. GH-648 p3 ESCALATION.md:5–10 retains exit 0 alongside pre-advance failure, red gate and unavailable turn log. These justify the proposed evidence matrix and explicit unknowns, without asserting tool-call reconstruction or whole-marathon success. Preserve those distinctions in the report.
+- **[Unverified — needs clone run] Final acceptance is still future work.** Plan lines 33 and 55–58 retain the supplied integration base and pending gates. This turn does not independently attest Git ancestry/base freshness, actual diff routing, deterministic PDDA results, final provenance, push/hosted checks or the uncreated report. The producer/harness must perform the planned checks against the final state and retain their evidence before final QA/PR readiness.
+
+Relay closed (Approved), no further plan-review turn needed. Handing execution back to Producer — author the bounded report and retained evidence, then obtain the planned final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
