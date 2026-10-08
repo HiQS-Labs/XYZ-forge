@@ -68,6 +68,26 @@ def warn(warnings, message):
     print(f"skills-army-hq sync: WARN {message}", file=sys.stderr)
 
 
+def repo_health(root, warnings):
+    """GH-993: a dirty, diverged or detached collection repo silently stalls the hourly pulse."""
+    top = shared.collection_repo(root)
+    if top is None:
+        return None
+    dirty = shared.dirty_paths(top)
+    head = shared.git_at(top, "symbolic-ref", "-q", "--short", "HEAD")
+    branch = head.stdout.strip() if head.returncode == 0 else "HEAD"
+    counts = shared.git_at(top, "rev-list", "--left-right", "--count", "HEAD...@{upstream}").stdout.split()
+    ahead, behind = (int(counts[0]), int(counts[1])) if len(counts) == 2 else (None, None)
+    if dirty:
+        warn(warnings, f"collection repo {top} has {len(dirty)} uncommitted path(s) (git-pulse refuses to sync "
+                       f"over them): {', '.join(dirty[:5])}{' …' if len(dirty) > 5 else ''}")
+    if branch == "HEAD":
+        warn(warnings, f"collection repo {top} is on a detached HEAD (stuck rebase?)")
+    if behind:
+        warn(warnings, f"collection repo {top} is {behind} commit(s) behind its upstream (as of the last fetch)")
+    return {"path": str(top), "dirty": dirty, "branch": branch, "ahead": ahead, "behind": behind}
+
+
 def drift_gate(root, state, config, found, explicit, apply, allow_drift, warnings):
     """WARN on every drifted forge-owned skill; REFUSE an apply that would deploy one."""
     canonical, origin = canonical_root(explicit, config, state)
@@ -227,8 +247,9 @@ def main(argv=None):
                 shared.require(not args.archive_legacy, "--archive-legacy requires --retire-trinity")
                 drift = drift_gate(root, state, config, found, args.canonical, apply, args.allow_drift, warnings)
                 actions, errors, changes = reconcile(root, state, config, found, args.adopt, args.migrate, migrate_from)
+            repo = repo_health(root, warnings)
             result = {"apply": apply, "skills": sorted(found), "actions": actions, "changes": changes,
-                      "errors": errors, "warnings": warnings, "drift": drift,
+                      "errors": errors, "warnings": warnings, "drift": drift, "repo": repo,
                       "prerequisites": {n: r.get("prerequisites", []) for n, r in state["skills"].items()}}
             print(json.dumps(result, indent=2))
             if apply and (actions or changes or errors):
