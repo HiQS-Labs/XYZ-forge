@@ -1,0 +1,7 @@
+$ python3 utils/py/releases_app.py roadmap rate --gid rmi-01M4D2PN45SNCRZBHASABK3WEC --rated 60/20/50/85 --force --dry-run
+exit: 0
+stdout:
+ROADMAP line: - **GH-998 · ADK evidence quick wins** — · [plan](PROJECT/2-WORKING/GH-998-ADK-EVIDENCE.md) (rated 60/20/50/85)
+rating: 60/20/50/85
+
+stderr:

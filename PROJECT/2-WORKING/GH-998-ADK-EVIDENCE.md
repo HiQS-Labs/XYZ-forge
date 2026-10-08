@@ -1,6 +1,6 @@
 ---
 title: "GH-998 — ADK quick wins: command and retained trajectory evidence"
-status: "Planning"
+status: "Active — report implemented, final QA pending"
 created: 2026-10-07
 updated: 2026-10-07
 owner: Noel Saw
@@ -20,7 +20,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Dedicated issue filed; fresh full remote clone and hooks provisioned | Register, rate, promote, then obtain Codex plan QA before report authoring |
+| Codex plan QA approved; accepted-start recorded; bounded probes and retained-evidence assessment completed | Verify PDDA/diff route, obtain final Codex QA and open PR |
 
 ## Scope and bet
 
@@ -52,8 +52,8 @@ Round 1 B1: modified clarification. The reviewer inspected #996’s issue body; 
 
 ## QA gates
 
-- Plan Codex relay: pending.
-- Current probe/provenance and historical assessment: pending.
+- Plan Codex relay: Approved on round 2, attested review head `46bb060ee232efa73dc6bfc302e64e922aa96842`; [thread](../../relay-system/2026-10-07/gh998-plan.md).
+- Current probe/provenance and historical assessment: recorded in [SUMMARY](../../TESTS-RESULTS/2026-10-07+GH-998/SUMMARY.md). Readback admission is In progress / 🚧, scores preserved.
 - Deterministic PDDA and classified push checks: pending.
 - Final Codex relay and PR: pending.
 

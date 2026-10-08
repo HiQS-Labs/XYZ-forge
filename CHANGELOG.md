@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-07 — ADK lessons: bounded command and retained trajectory assessment (GH-998)
+
+Recorded five selected harmless command examples and their refusal controls, plus a retained real
+marathon review/attestation path and a separate red advance-gate witness. The report preserves
+different attempt IDs and missing token/gate evidence as unknown. Existing canonicalization digests
+match; an in-memory altered-text control fails. No runtime, SDK or test-suite change. Evidence and
+source revisions: `TESTS-RESULTS/2026-10-07+GH-998/`.
+
 ## 2026-10-07 — Merge-cleanup: continuation contract for reversible steps (GH-990)
 
 The merge-cleanup drive loop now names what a merge-cleanup request authorizes and which reversible
