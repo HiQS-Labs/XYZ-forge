@@ -13,7 +13,7 @@ Scope: [#998](https://github.com/HiQS-Labs/XYZ-forge/issues/998), adopting items
 
 ## Selected command audit
 
-Run from the owned Forge task clone, with Python 3 and Node available, the existing ledger/schema present, and `PYTHONDONTWRITEBYTECODE=1`. These are five safe examples plus one classified external-action example; controls are variants of the same examples. The retained outputs replace only the task-root and user-home paths with placeholders. Every current probe compared existing `releases.db`, `releases.sql`, and preview bytes before/after: unchanged.
+Run from the owned Forge task clone, with Python 3 and Node available, the existing ledger/schema present, and `PYTHONDONTWRITEBYTECODE=1`. These are five safe examples plus one classified external-action example; controls are variants of the same examples. The retained outputs replace task-root and user-home paths with placeholders; the roadmap output retains only the owned #998 row, omitting unrelated rows. Every current probe compared existing `releases.db`, `releases.sql`, and preview bytes before/after: unchanged.
 
 | Example / source at integration baseline | Category and exact substitution | Expected / observed | Retained output and limit |
 |---|---|---|---|
@@ -74,6 +74,6 @@ GH-862's [practice README](../2026-09-27+GH-862/practice/README.md) and JSON rec
 
 ## Verification and limits
 
-Current positive probes and expected refusals passed as recorded. No new registered test, fixture, eval schema or runtime behavior was added. Matching Codex-shim prerequisites passed 43/43 in a disposable full clone; its full raw console log was not captured, so this is a supporting session observation, not an independent retained suite receipt.
+Current positive probes and expected refusals passed as recorded. No new registered test, fixture, eval schema or runtime behavior was added. Matching Codex-shim prerequisites passed 43/43 in a disposable full clone; its full raw console log was not captured. The [retained session observation](prerequisite-observation.txt) and provenance entry preserve that limited support, not an independent raw suite receipt.
 
-Plan QA passed on its second bounded Codex relay round; see [plan relay](../../relay-system/2026-10-07/gh998-plan.md). Deterministic PDDA, diff classification, RELEASES check and final QA results are recorded alongside this report as they complete. Offline issue-sync warnings mean global issue-state reconciliation was not verified by an offline run. A docs-route local gate is not hosted qualification or merge approval.
+Plan QA passed on its second bounded Codex relay round; see [plan relay](../../relay-system/2026-10-07/gh998-plan.md). The deterministic [PDDA summary](pdda-summary.txt) records exit 0, zero errors and 411 warnings (397 unavailable issue-sync states, five governance warnings, nine other marathon QA items); [RELEASES check](releases-check.txt) records zero failures/nine warnings; [actual diff classification](diff-route.txt) is docs, tier 1, no full gate required. Final QA is recorded in its relay thread as it completes. Offline issue-sync warnings mean global issue-state reconciliation was not verified by an offline run. A docs-route local gate is not hosted qualification or merge approval.

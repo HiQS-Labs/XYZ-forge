@@ -54,7 +54,7 @@ Round 1 B1: modified clarification. The reviewer inspected #996’s issue body; 
 
 - Plan Codex relay: Approved on round 2, attested review head `46bb060ee232efa73dc6bfc302e64e922aa96842`; [thread](../../relay-system/2026-10-07/gh998-plan.md).
 - Current probe/provenance and historical assessment: recorded in [SUMMARY](../../TESTS-RESULTS/2026-10-07+GH-998/SUMMARY.md). Readback admission is In progress / 🚧, scores preserved.
-- Deterministic PDDA and classified push checks: pending.
+- Deterministic PDDA: zero errors, 411 warnings (offline global issue sync not evaluated); RELEASES check: zero failures/nine warnings; actual diff: docs/tier 1. Retained [verification](../../TESTS-RESULTS/2026-10-07+GH-998/pdda-summary.txt). Classified push check remains pending until publication.
 - Final Codex relay and PR: pending.
 
 Review envelope: grade this single-operator, local, documentation/evidence batch against the explicit scope and commensurate complexity. Reviewer edits only its relay file; no tests/gates in its isolated worktree. Missing historical evidence should constrain conclusions rather than trigger a new schema, execution framework or enterprise threat model.
