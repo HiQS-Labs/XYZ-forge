@@ -1,6 +1,6 @@
 ---
 title: "GH-995: test(gh620): skills-army-mini payload pin is red since GH-988 added BOT-DAILY-HEALTH-CHECK.md"
-status: Active
+status: Complete
 created: 2026-10-07
 updated: 2026-10-07
 owner: operator (via /express)
