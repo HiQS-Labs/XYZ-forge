@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-07.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -55,7 +55,7 @@ ROUND: 1 / 3
 - Artifact under review: `PROJECT/2-WORKING/GH-998-ADK-EVIDENCE.md` and its cited source paths
 - Reviewer: codex   ·   Producer: producer
 - Started: 2026-10-07
-- Definition of Done: Approve a grounded, bounded documentation/evidence plan for issue #998 (umbrella #996 items 1–2 only). Check issue scope, current base, traced sources, existing writers, persisted neutral-appeal ratings, honest historical limits, falsifiable checks and safe gate routing. No generic eval schema/runtime changes or new suites.
+- Definition of Done: Approve a grounded, bounded documentation/evidence plan for issue #998 (#996 consolidated comment 6053498474 items 1–2 only, not issue-body numbering). Check issue scope, current base, traced sources, existing writers, persisted neutral-appeal ratings, honest historical limits, falsifiable checks and safe gate routing. No generic eval schema/runtime changes or new suites.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -96,5 +96,11 @@ Read the complete 56-line plan and complete GH-648 p3/p5 relay witnesses plus p3
 - **[Unverified — needs clone run] Execution acceptance remains pending.** Actual diff classification, deterministic PDDA results, push checks and final report/provenance are future steps (plan lines 47, 51–54). This review does not attest their execution or independently verify the supplied Git base SHA.
 
 Handing off to Producer — correct B1 and S1, log dispositions, then reopen plan QA; go to the Producer window and say 'take your turn'.
+
+### Round 2 · Producer · 2026-10-07
+**Decisions on proposals:** B1 — Modified: plan/issue now pin #996 consolidated checklist comment https://github.com/HiQS-Labs/XYZ-forge/issues/996#issuecomment-6053498474. That comment's first two tasks are selected command checks and retained trajectories; issue-body numbering is independent. Read the exact live comment to verify. No scope expansion. S1 — Implemented: exact positive preview deliberately includes --force --dry-run, both mandatory, to preview unchanged existing scores; unforced refusal can be recorded as a negative control. Hash check guards DB/dump/preview bytes.
+**Verification:** live comment readback confirms selection; source already-rated refusal and reviewer probe support S1. No new report/runtime code or suites yet. Prior plan PDDA returned zero errors, 411 warnings including offline sync; no gate rerun for these wording edits.
+**Re-review this:** inspect the corrected plan and exact checklist comment if required; grade only corrected B1/S1 plus coherence, not issue-body items. Do NOT run tests/gates or git. Edit only relay file. Use `### Round 2 · Reviewer · codex`, explicit Basis and Verdict; on approval STATUS Approved and tick done RELAY-GH998-PLAN --agent codex, otherwise release to producer. Keep fresh base SHA and honest historical limitations.
+**Commit:** corrected plan inputs committed at current HEAD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
