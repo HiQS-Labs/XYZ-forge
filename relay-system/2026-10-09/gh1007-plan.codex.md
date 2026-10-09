@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -126,5 +126,27 @@ manual scenarios now include the irreversible-action versus Easy-rename distinct
 Also fulfilled the planned Pillar 0/Blast anchors and made clear an explicitly requested
 measurement skill may reuse SWE governance (GH-1008), without authorizing new machinery.
 Re-review the updated seeded proposal and plan. Production SWE remains unchanged.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: S1 is repaired in the seeded proposal and its manual acceptance scenario. The full plan and current/proposed SWE comparison supports implementation of this bounded instruction change. No additional pre-existing defect requiring a separate fix was found in the reviewed files. This approves the plan, not implementation, deployment, or merge.
+swept file: yes
+
+- [Pass] **S1 closed.** `.relay-artifacts/SKILL.md:100` now says “For Costly and One-way changes, name the stop/rollback signal and the last safe intervention point” and requires a pre-action checkpoint and explicit authorization where rollback is impossible. `PROJECT/2-WORKING/GH-1007-SWE-GOVERNANCE.md:119` tests an authorized irreversible action missing that checkpoint and exempts an Easy rename. This restores the deadline and both affected classes from `skills/1-hourly/swe/SKILL.md:58`; no added machinery is needed.
+
+- [Pass] **Scope, reuse, and earned verification satisfy the requested direction.** `.relay-artifacts/SKILL.md:12` defines three modes; `:24` separates safety/security/maintainability/performance; `:31` prevents trading away safety or security. Its `:41` requires owner/consumer evidence, `:46` permits justified separation, and `:57` through `:71` separately price new tests and CI admission while preserving consequential coverage and governed retirement. `:18` leaves repository prohibitions and permissions authoritative. `PROJECT/2-WORKING/GH-1007-SWE-GOVERNANCE.md:69` rejects parallel policy/runtime/performance machinery.
+
+- [Pass] **Consumer and workflow contracts remain intact.** The Pillar 0/Blast names and current-state/proposed-impact distinction at `.relay-artifacts/SKILL.md:35`, `:37`, and `:94` satisfy the references in `skills/1-hourly/recon/SKILL.md:122` and `:128`. The plan's `:45` updates `ARCHITECTURE.md:63`; its `:49` preserves source-first delivery without running the legacy installer. Plan `:30`, `:82`, `:86`, `:94`, and `:98` retain dependency ordering, bounded independent plan/final QA, accepted-start, actual classification, isolated gates and a development PR. These align with `skills/1-hourly/start-task/SKILL.md:73`, `:175`, `:200`, `:237`, and `:265`. GH-1008 remains dependent on landing, not merely this approval.
+
+- [Pass] **Dedicated omission-diff pass: remaining removals are deliberate simplifications.** `skills/1-hourly/swe/SKILL.md:33`–`:35` impose a sourcing order, use-count and raw-diff bias; proposal `.relay-artifacts/SKILL.md:43`–`:49` substitute fit-based reuse and present responsibilities. Current `skills/1-hourly/swe/SKILL.md:78`–`:84` and `:123`–`:174` impose an FSM threshold, literal single writer, UTC-only convention, SOLID wording, fixed scaffold/checklist syntax and correlation IDs; proposal `.relay-artifacts/SKILL.md:96`, `:102`, and `:108` preserve proportionate observability, consistency, interruption/time semantics and repository-owned formats. Current `skills/1-hourly/swe/SKILL.md:88`–`:99` mandate six migration stages, automated parity, fallback and bidirectional sync; proposal `.relay-artifacts/SKILL.md:104` retains compatibility, bounded backfill, ordering, convergence, cutover, rollback and legacy-consumer retirement while making the mechanism conditional. Current `skills/1-hourly/swe/SKILL.md:18`, `:20`, `:47`, `:57`, `:60`, and `:103`–`:121` lose exact unknown-resolution commands, categorical recon exemptions, mandatory named sibling routing and an explicit shield-or-none field; proposal `.relay-artifacts/SKILL.md:18`, `:37`, `:41`, `:98`, and `:100` retain evidence, proportionality, debugging, risk and stop/rollback obligations. Current `skills/1-hourly/swe/SKILL.md:176` onward loses the exact review table, quick-win layout and repeated example; proposal `.relay-artifacts/SKILL.md:108`–`:114` retains observable completion, consumer delivery, independent review, honest evidence and actionable findings. No remaining accidental safety, migration, rollback or named-consumer loss found.
+
+- [Pass] **Performance and planned manual review stay honest.** `.relay-artifacts/SKILL.md:75`–`:90` distinguish pipeline from product, require relevant baselines and comparable samples, label noisy evidence inconclusive, default new measurements to advisory and reuse existing records. The explicit measurement-skill allowance at `:90` adds no authority for new infrastructure. `PROJECT/2-WORKING/GH-1007-SWE-GOVERNANCE.md:109`–`:123` exercise meaningful instruction decisions rather than keyword matches. Its `:92` and `:125` correctly limit the validator red control to format sensitivity; they do not claim agent behavior is proven. This applies phase-qa's calibrated acceptance/DRY/observability lens without imposing phases or SOLID ceremony.
+
+- [Pass] **Persisted rating read back unchanged.** Read-only probe, exit 0: after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"` and `mkdir -p "$TMPDIR"`, ran `python3` with `sqlite3.connect(Path("releases.db").resolve().as_uri()+"?mode=ro", uri=True)` and `SELECT gh_number,doc_path,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr FROM roadmap_items WHERE gh_number=1007`, asserting exactly one row. Decisive output: `{"doc_path": "PROJECT/2-WORKING/GH-1007-SWE-GOVERNANCE.md", "gh_number": 1007, "rating_appeal": 50, "rating_effort": 85, "rating_ovr": null, "rating_pri": 75, "rating_sev": 55}`. The 75/55/50/85 rating sums to 265, matching plan `:131`.
+
+- [Unverified — needs clone run] No validator, test suite, executable fixture or runtime gate ran in this turn. Implementation digests, committed provenance, classifier results, required gates and final independent QA remain due under `PROJECT/2-WORKING/GH-1007-SWE-GOVERNANCE.md:90`–`:102`. Graph Verify context: both project-list pages examined; no index for this relay worktree. Nearest canonical project `XYZ-forge`, generation `2026-09-01T15:54:30Z`; coverage reports skill freshness untracked, architecture metadata changed, and plan/proposal missing. Direct current-source reads support this review; no graph completeness claim.
+
+Relay closed (Approved), no further plan-review turn needed. Handing completion to Producer (codex-author) for the approved implementation sequence and subsequent final QA. The harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
