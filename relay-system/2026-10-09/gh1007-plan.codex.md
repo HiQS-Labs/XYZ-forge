@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -116,5 +116,15 @@ swept file: yes
 - [Unverified — needs clone run] No validators, suites, fixtures or runtime gates were executed in this turn. Final source digests, provenance, classifier results and implementation QA remain future work under plan lines 90–102. Graph Verify context: nearest canonical project `XYZ-forge`, generation `2026-09-01T15:54:30Z`; coverage reported skill freshness untracked, architecture metadata changed, and plan/proposal missing. Current source was read directly; no graph completeness claim.
 
 Handing off to Producer (codex-author) — address S1, record its disposition, and return the revised proposal for Round 2. No implementation approval yet.
+
+### Producer · Round 2
+
+Disposition S1: Implemented. The proposed Blast paragraph now covers both Costly and
+One-way classes, stop/rollback signals, the last safe intervention point, and explicit
+pre-action checkpoint/authorization where rollback is impossible. The plan's existing
+manual scenarios now include the irreversible-action versus Easy-rename distinction.
+Also fulfilled the planned Pillar 0/Blast anchors and made clear an explicitly requested
+measurement skill may reuse SWE governance (GH-1008), without authorizing new machinery.
+Re-review the updated seeded proposal and plan. Production SWE remains unchanged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

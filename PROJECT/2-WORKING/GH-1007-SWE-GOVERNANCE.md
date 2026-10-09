@@ -116,6 +116,8 @@ citations, not brittle text-matching assertions:
   that product latency improved. A noisy product sample is inconclusive.
 - Slow hot path: record comparable base/candidate workload and environment, summarize
   advisory evidence in existing task records; no new blocking gate or issue per measurement.
+- Authorized irreversible action with no stop checkpoint: flag the missing last safe
+  intervention point despite authorization. An Easy rename needs no such ceremony.
 - Rolling migration: retain mixed-version compatibility, concurrent-write correctness,
   bounded backfill, convergence, rollback window and retirement checks without assuming
   bidirectional sync or safe fallback. Offline migrations may use simpler mechanisms.
@@ -134,5 +136,12 @@ PDDA planning metadata is not a second PRS score. Rating persisted via the canon
 
 ## QA receipts and dispositions
 
-Plan: pending. Final: pending. Any findings and their accepted/rejected dispositions will
-be recorded here with relay links. No approval inferred from format checks alone.
+Plan Round 1: changes requested (S1); Final: pending. Any findings and their accepted/rejected dispositions will
+be recorded here with relay links.
+
+S1 disposition: Implemented in the proposed draft before plan Round 2. Restore stop/rollback
+signals and last safe intervention points for Costly and One-way changes, including a pre-action
+checkpoint and explicit authorization when rollback is impossible. Add the distinction to the
+existing manual review scenarios. No machinery or suite added. Proposal now also restores the
+Pillar 0/Blast headings and clarifies that the explicitly requested GH-1008 skill is allowed
+while reusing SWE governance. Receipt: `relay-system/2026-10-09/gh1007-plan.codex.md`. No approval inferred from format checks alone.
