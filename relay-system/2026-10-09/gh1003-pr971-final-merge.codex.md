@@ -113,4 +113,12 @@ AssertionError: red: dropped integration heading fails whole-parent preservation
 Required fixes: none. Relay closed (Approved), no further review turn needed. Handing completion to Producer (merge-cleanup) for final exact-head second-full-clone release check and hosted smoke; operator checks and deployed refresh remain pending. The Approved turn closes the token with `done`; the harness owns the one-file commit.
 
 
+
+### Attestation · relay-drive — 2026-10-09T10:00:02Z
+task: GH1003-PR971-FINAL-MERGE-QA
+reviewer: codex
+status: Approved
+reviewed-head: 81cfc97facca2dea99a882941ab185feb2eb909b
+added-range: 8627+8839
+added-sha256: efddc9222fe8c29a03ca25599127aeacfe7e7c5689315e14950124e9b2c6b03e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
