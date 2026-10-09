@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-10-07 — Merge-cleanup: continuation contract for reversible steps (GH-990)
+
+The merge-cleanup drive loop now names what a merge-cleanup request authorizes and which reversible
+steps proceed without asking: `--execute` after the dry run, `--resume --execute` after exit 3, fixing
+the primary, the batch issue, bounded repair rungs and Trash teardown of verified-clean checkouts. Real
+decisions are a closed list: out-of-queue PRs, override flags, preserved checkouts, an exhausted repair
+budget, Costly or One-way-door actions, and a classifier block that survives its retry. Independent
+work finishes before any ask. Documentation only; the parity guard suite stays green.
+
+## 2026-10-06 — Workhorse: Claude Stop guidance preserves required scope (GH-985)
+
+The existing Claude Stop-hook message now resumes authorized feasible required work, demands evidence
+and an outcome audit, retains required findings, and permits a genuine external blocker after independent
+work. Optional/deferred markers no longer advertise a parking escape. The decision logic is unchanged;
+Claude runtime notes explain the documented cap, interrupt/API-error limits and explicitly requested
+`/goal`. No mod, new gate or implicit activation. Bounded ten-case protocol checks and old-message red
+control are retained under `TESTS-RESULTS/2026-10-06+GH-985/`; these do not guarantee live multi-turn behavior.
+
+## 2026-10-06 — Workhorse: Codex completion follows the requested outcome (GH-983)
+
+Workhorse now resumes authorized work after subtasks, status answers, restored access and handoffs,
+and reconciles evidence, acceptance criteria and required findings before ending. Checked boxes and
+parked required work cannot replace completion; operational preflight needs job/worker inventory and
+a service baseline. Authorization and deployment windows remain binding. The text distinguishes
+instructions from explicitly activated native Goals and configured, trusted hooks. The Claude Stop hook
+now also blocks a stop while a ticked `- [x]` line has no `evidence:` pointer, and its hand-back message
+names `[!]` only (`[-]` is optional/user-deferred work, not an escape); installer bytes are preserved.
+Bounded decision fixtures cover the seven scenarios and operational
+regression, with a missing-evidence red control; base also passes, so no measured reliability gain is
+claimed. Raw quick_validate retains its existing Claude-hooks rejection; metadata projection passes.
+Evidence: `TESTS-RESULTS/2026-10-06+GH-983/`.
+
+## 2026-10-05 — relay-drive: receipt-only commits no longer count as convergence (GH-976)
+
+The GH-115 round-cap extension treated any HEAD movement as progress, and every relay turn commits
+its own transcript in the sampled repo, so a lane that repaired nothing kept being extended to the
+hard ceiling (user-sage-backend#75: cap 10 on transcript commits alone). `utils/py/relay_drive.py`
+now counts the HEAD arm only when a changed path lies outside `relay-system/`, `marathon-system/`,
+`.tick/`, `.relay-scratch/`, `TESTS-RESULTS/` or the relay file itself; the `[x]` resolved-items arm
+and the hard ceiling are unchanged. Verification: five manual controls on base and candidate plus
+the existing GH-115 suite. Receipts: `TESTS-RESULTS/2026-10-05+GH-976/`.
+
+## 2026-10-05 — Defer HiQS advisory-intake classifier revisit (GH-974)
+
+Captured Needle-fork #71 as a deferred RELEASES roadmap item, with real chain evidence and measured reviewer burden required before an advisory contribution-screening experiment. Resolver, attestation and publishing boundaries remain deterministic. Verification: targeted PDDA checks and RELEASES consistency/readback; invalid triage rating fails the frontmatter red control. Receipts: `TESTS-RESULTS/2026-10-05+GH-974/`.
+
 ## 2026-10-05 — Task clones get one naming formula (GH-970)
 
 Each agent used to name and place task clones its own way, so a cleanup on 2026-10-05 found 50 kept clones
@@ -1148,6 +1194,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
+
+## [Unreleased] - 2026-10-07
+
+### Fixed
+- **GH-995: test(gh620): skills-army-mini payload pin is red since GH-988 added BOT-DAILY-HEALTH-CHECK.md.** (express hotfix, GH-267 lane; existing suite test/gh620-skills-army-mini-sync.sh as the landing gate.)
+- **GH-993: skills-army-hq: intake --apply leaves Git Pulse collection dirty, which stalls the hourly pulse entirely; commit own paths when the root is a git repo.** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
+- **GH-989: skills-army-hq: rename bot-monitor-prompt.md to BOT-DAILY-HEALTH-CHECK.md.** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
+- **GH-988: skills-army-hq: ship bot-monitor-prompt.md, a paste-able daily QA prompt for always-on agents (foreign skill folders + broken symlinks).** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
 
 ## [Unreleased] - 2026-09-24
 

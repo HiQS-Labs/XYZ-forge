@@ -413,6 +413,51 @@ def history(root, event):
     atomic_bytes(path, (old + block).encode())
 
 
+def git_at(top, *args):
+    return subprocess.run(["git", "--no-optional-locks", "-C", str(top), *args], text=True, capture_output=True)
+
+
+def collection_repo(root):
+    """GH-993: the git work tree holding the collection (e.g. Git Pulse Sync), or None."""
+    run = git_at(root, "rev-parse", "--show-toplevel")
+    return Path(run.stdout.strip()).resolve() if run.returncode == 0 and run.stdout.strip() else None
+
+
+def dirty_paths(top):
+    run = git_at(top, "status", "--porcelain=v1", "-z", "--untracked-files=all")
+    require(run.returncode == 0, f"git status failed in {top}: {run.stderr.strip()}")
+    entries, paths = run.stdout.split("\0"), []
+    while entries:
+        entry = entries.pop(0)
+        if len(entry) > 3:
+            paths.append(entry[3:])
+            if entry[0] in "RC" and entries:
+                entries.pop(0)
+    return paths
+
+
+def commit_skill(root, name, message):
+    """GH-993: commit only this skill's folder so the hourly pulse (which refuses foreign dirt) keeps
+    syncing. Never pushes — the pulse is the single network writer. Refuses over unrelated changes."""
+    top = collection_repo(root)
+    if top is None:
+        return None
+    rel = Path(os.path.relpath(root.resolve() / name, top)).as_posix()
+    paths = dirty_paths(top)
+    mine = [p for p in paths if p == rel or p.startswith(rel + "/")]
+    other = [p for p in paths if p not in mine]
+    if other:
+        return {"committed": False, "repo": str(top),
+                "reason": "unrelated uncommitted changes: " + ", ".join(other[:5]) + (" …" if len(other) > 5 else "")}
+    if not mine:
+        return {"committed": False, "repo": str(top), "reason": "nothing to commit"}
+    for step in (("add", "-A", "--", rel), ("commit", "--quiet", "--only", "-m", message, "--", rel)):
+        run = git_at(top, *step)
+        if run.returncode:
+            return {"committed": False, "repo": str(top), "reason": f"git {step[0]} failed: {run.stderr.strip()}"}
+    return {"committed": True, "repo": str(top), "commit": git_at(top, "rev-parse", "--short", "HEAD").stdout.strip()}
+
+
 def action_apply(root, action):
     kind = action["kind"]
     if kind == "payload":
@@ -763,6 +808,15 @@ def main(argv=None):
             print(json.dumps({"operation": args.command, "apply": apply, **details}, indent=2))
             if apply:
                 transact(root, state, config, actions, args.command, details)
+                if args.command in ("add", "update", "remove"):
+                    origin = f" from {Path(details['source']).name}@{details['commit'][:12]}" if details.get("commit") else ""
+                    result = commit_skill(root, details["name"], f"vendor: {args.command} {details['name']}{origin}")
+                    if result and result["committed"]:
+                        print(f"skills-army-hq: committed {details['name']} in {result['repo']} ({result['commit']}); "
+                              "git-pulse pushes it on its next run", file=sys.stderr)
+                    elif result:
+                        print(f"skills-army-hq: WARN not committed in {result['repo']}: {result['reason']} — "
+                              "commit by hand or the hourly pulse stays blocked", file=sys.stderr)
         return 0
     except (DeployError, OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
         print(f"skills-army-hq: {exc}", file=sys.stderr)
