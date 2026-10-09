@@ -1,0 +1,43 @@
+{
+  "pr": 971,
+  "earlier_parent": "dceed0520872e153a4999bb8702410a6d29832cf",
+  "integration_parent": "1e83bfb9d792d9c2dd4650d2956d9ac182566c12",
+  "merge_base": "bf107dd01d221c522ec1fa8186f45c9070e20fe4",
+  "classification": {
+    "disjoint": false,
+    "reasons": [
+      "roadmap_items[rmi-01M4FPVF3WYP1SBGVCXPPG0FKN]: column(s) status_label changed \u2014 not expressible through a verb",
+      "roadmap_items[rmi-01M4FPVFKVDN2SX3XY98VZ3BQ5]: column(s) status_label changed \u2014 not expressible through a verb"
+    ],
+    "ours": {
+      "roadmap_items": {
+        "rmi-01M4FVBPTR7CPNZT7VFF2DK8H1": "added"
+      }
+    },
+    "theirs": {
+      "roadmap_items": {
+        "rmi-01M4FPVF3WYP1SBGVCXPPG0FKN": "updated",
+        "rmi-01M4FPVFKVDN2SX3XY98VZ3BQ5": "updated"
+      }
+    },
+    "keep": "ours",
+    "replay": [],
+    "gen": [
+      1502,
+      1501
+    ]
+  },
+  "manual_terminal_replay": true,
+  "manual_basis": "keep exact integration dump/receipt chain; replay only own disjoint additions through existing writer; native completed label transitions intentionally retained",
+  "material_roadmap_differences": {},
+  "business_row_count": 336,
+  "runtime_paths_equal_to_integration": [
+    "test/lib/runner-envelope.sh",
+    "utils/ate/scripts/run_variations.py",
+    "utils/py/domain_oracles.py",
+    "utils/py/metamorphic_oracle.py",
+    "utils/py/proc_group.py"
+  ],
+  "tested_own_candidate": "9ce8e5b28ac4ba150548c97db8ab9c093f879f4c",
+  "limitations": "final independent QA, exact-head second-clone release check and hosted smoke remain pending"
+}
