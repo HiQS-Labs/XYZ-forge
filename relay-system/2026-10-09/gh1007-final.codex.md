@@ -202,4 +202,12 @@ Scope: the complete 1,525-line review packet, full current 114-line SWE, full ta
 
 Relay closed (Approved), no further reviewer turn needed. Handing completion to Producer (codex-author) for remaining gate/publication work. Only this relay file was edited; the harness owns its commit. The approval-specific token instruction uses `done`; it closes the claim rather than leaving a new review turn open.
 
+
+### Attestation · relay-drive — 2026-10-09T15:49:24Z
+task: RELAY-gh1007-final
+reviewer: codex
+status: Approved
+reviewed-head: 6ebced4250b0e5161730a3035ba6788c29f80401
+added-range: 19109+8718
+added-sha256: bc20df98a2b12ccd1710e5836b1b6aa804d25874317b76b46401603920ea05c2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
