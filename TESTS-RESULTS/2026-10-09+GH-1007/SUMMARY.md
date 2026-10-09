@@ -42,9 +42,14 @@ Format validation and manual scenarios do not prove future agent compliance. Ind
 plan and final relay reviews supply a separate bounded assessment.
 
 Plan receipt: `relay-system/2026-10-09/gh1007-plan.codex.md` (Approved, Round 2).
-Final receipt: `relay-system/2026-10-09/gh1007-final.codex.md` (pending at initial capture).
+Final receipt: `relay-system/2026-10-09/gh1007-final.codex.md` (Approved, Round 2; driver exit 0).
 The path classifier, documentation gate, pre-push gate and hosted results are recorded
 separately as they run; none is inferred from an unexecuted configuration.
 
 Classifier: docs/tier 1. Documentation gate: exit 0, no errors, 28 repository
 warnings (issue/doc, governance, marathon QA); full output in `pdda.txt`.
+
+Final QA independently applied the seven scenarios, matched all 15 text-file hunks
+in the review packet to current files, confirmed the source digest and ledger admission,
+and accepted the scope disposition for the parked architecture mismatch. This is bounded
+instruction review. Bookkeeping after approval changes only status and receipt records.

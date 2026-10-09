@@ -2,7 +2,7 @@
 title: Sharpen SWE governance
 gh_issue: 1007
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1007
-status: In progress
+status: Reviewed — awaiting merge
 created: 2026-10-09
 updated: 2026-10-09
 owner: Codex
@@ -18,13 +18,13 @@ reversibility: Easy — revert the instruction and catalog edits before deployme
 
 | What was just completed | What's next |
 |---|---|
-| Source revision, focused evidence and docs gate complete | Independent post-build QA, then gated PR publication |
+| Plan and final QA Approved; source/evidence complete | Publish through push gate; await merge before GH-1008 |
 
 ## Requirements and serial handoff
 
 | Issue | Scope and acceptance | Dependency and state |
 |---|---|---|
-| [GH-1007](https://github.com/HiQS-Labs/XYZ-forge/issues/1007) | Revise SWE in its owning source; planning, implementation, review; four axes; reuse; earned tests; advisory performance; plan and final relay QA | Current branch; plan Approved; implementation in progress; PR not opened |
+| [GH-1007](https://github.com/HiQS-Labs/XYZ-forge/issues/1007) | Revise SWE in its owning source; planning, implementation, review; four axes; reuse; earned tests; advisory performance; plan and final relay QA | Current branch; plan and final QA Approved; awaiting gated PR publication and merge |
 | [GH-1008](https://github.com/HiQS-Labs/XYZ-forge/issues/1008) | Ponytail-first performance measurement skill using existing evidence and task docs | GitHub issue only by explicit request. Start after SWE finishes; no performance implementation here |
 
 /start-task ends at a ready PR. It does not authorize merge or deployment. If SWE is
@@ -136,7 +136,7 @@ PDDA planning metadata is not a second PRS score. Rating persisted via the canon
 
 ## QA receipts and dispositions
 
-Plan Round 1: changes requested (S1); Round 2: Approved, driver exit 0. Final: pending. Format green/red, seven manual scenarios and docs gate complete;
+Plan Round 1: changes requested (S1); Round 2: Approved, driver exit 0. Final: Approved in Round 2, driver exit 0; receipt `relay-system/2026-10-09/gh1007-final.codex.md`. Format green/red, seven manual scenarios and docs gate complete;
 classifier docs/tier 1; gate exit 0 with 28 repository warnings. Evidence: `TESTS-RESULTS/2026-10-09+GH-1007/`. Any findings and their accepted/rejected dispositions will
 be recorded here with relay links.
 
@@ -155,3 +155,11 @@ introduce it. No runtime owner changes are required by this task. Missing review
 Implemented — seed the complete base-to-head textual diff and changed-path manifest;
 review binary ledger via the SQL diff and current read-only row. Scope historical
 append-only CHANGELOG to the new GH-1007 entry and verify no historic text changed.
+
+## Handoff
+
+Implementation and both independent audits are complete. Source digest is unchanged since
+focused verification. Any bookkeeping after final approval records receipts/status only;
+publication still requires the installed push gate and live PR/check inspection. GH-1008
+remains issue-only pending authorized landing of GH-1007. Retain the task clone until
+verified origin landing and safe cleanup. No deployed payload was changed.
