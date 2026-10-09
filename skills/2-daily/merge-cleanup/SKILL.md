@@ -17,7 +17,7 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forg
 > 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
 > 2. **Inventory checkouts & protect active sessions (Phases 1–3).** Scan worktrees and task clones across safe roots; preserve any checkout with active file handles, driver locks, `.tick` claims, or recent edits (10m/60m recency ladder).
 > 3. **Sequence PRs & pre-gate conflicts (Phases 4–5).** Fetch open PRs into a topological DAG to prevent file collisions; pre-simulate landings and resolve disjoint ledger/doc conflicts.
-> 4. **Merge & reconcile governance (Phase 5).** Remote squash-merge in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
+> 4. **Merge & reconcile governance (Phase 5).** Merge using the project policy in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
 > 5. **Safe teardown & status confirmation (Phase 6).** Deregister worktrees via canonical git protocol, move clean disposable clones to Trash, prune dangling skill symlinks, and confirm all PRs are landed.
 > 6. **Document qualifying batches (GH-944).** When the sequenced queue holds **three or more PRs**, open a `merge-batch` GitHub issue **before the first merge** and keep it current as the run progresses — merge sequence, problems, ad-hoc fixes/pivots, findings. After the batch, run the `/debug-mantra` regression sweep (findings become issue checklist items) and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
 >
@@ -32,10 +32,45 @@ Then begin work.
 When the operator speaks naturally:
 - `"Run merge-cleanup on this repo"`: Reviews the primary on-disk checkout first (Phase 0), then audits the other checkouts, reports the sequence, and proceeds within the session's authorized PR and cleanup scope. Discovery does not add unrelated PRs to that scope; an explicit audit/dry-run request remains read-only.
 - `"Scan all clones and worktrees"`: Runs Phase 1–3 discovery and outputs the status matrix of all worktrees and clones.
-- `"Sequence and merge open PRs"`: Reports Phase 0 for the primary checkout first — a PR sequence is not actionable until the tree it lands in can receive it — then determines topological order of open PRs, detects file collisions, and executes remote squash merges followed by wave reconciliation.
+- `"Sequence and merge open PRs"`: Reports Phase 0 for the primary checkout first — a PR sequence is not actionable until the tree it lands in can receive it — then determines topological order of open PRs, detects file collisions, and executes policy-selected remote merges followed by wave reconciliation.
 - `"Tear down clean task clones"`: Safely removes verified clean, non-active clones and worktrees.
 
 ---
+
+## Project merge policy
+
+Before any caller-owned doc parking or executing cleanup, read the target project's policy:
+
+```bash
+python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --show-merge-policy
+```
+
+Use the installed script path when running outside Forge. `--primary` selects the policy root;
+never read the policy from the harness source or `.xyz/`. This JSON-only mode performs no scan,
+GitHub query, or mutation. A nonzero exit stops the run; do not interpret an empty report as disabled.
+
+Maintainers opt in by committing `.merge-cleanup.json` at their project root:
+
+```json
+{"preserve_commit_history": true}
+```
+
+With preservation enabled, omitted `--strategy` selects `merge`; explicit `squash` or `rebase`
+is refused. Merge commits preserve the PR's original commit IDs and ancestry as they exist at
+landing; this does not recover commits already rewritten during development. Cleanup verifies
+GitHub permits merge commits and refuses when unavailable or unknown, without changing repository
+settings or falling back. GitHub branch rules can still refuse a merge.
+
+Missing file/key or `false` keeps the legacy default (`squash`) and permits explicit
+`--strategy merge|squash|rebase`. This does not infer conventions from GitHub's allowed methods;
+maintainers retain their existing explicit strategy choice. Invalid/unreadable policy, unknown keys,
+or a non-boolean value fails closed. No global preference overrides a project's opt-in.
+
+Both cleanup skills use this one resolver. Vendoring alone never enables preservation; recommend
+it to maintainers starting a new project and retain existing choices on updates. GitHub's settings
+remain an independent control for humans and other tools. Forge opts in through its root file.
+Historical squash provenance and all dirty/stash/session/teardown checks remain unchanged. To
+change future behavior, review and commit the project setting; never rewrite old history.
 
 ## 7-Phase Ladder Logic
 
@@ -392,7 +427,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | batch-regression-sweep | 5 | caller | — |
 | post-deploy-carryover-dual-sink | 5 | caller | — |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`.
 
 ## CLI Usage
 

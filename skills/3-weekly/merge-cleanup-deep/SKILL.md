@@ -70,6 +70,19 @@ consumes the scanner's JSON, and Phase 4 hands the disposable list back to the s
 
 ## Phase 0 — Intake from the scanner
 
+Read the target primary's policy through the same cleanup resolver before briefing agents:
+
+```bash
+python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py \
+  --primary "$PRIMARY" --show-merge-policy > "$SCRATCH/merge-policy.json"
+```
+
+Use the installed cleanup script path outside Forge. Require exit 0 and a nonempty JSON report;
+otherwise stop and name the policy error. Pass its `preserve_commit_history`, `strategy`, and
+`source` to every agent and retain the report with the audit. Do not parse another config or
+infer policy from a stale clone or the vendored harness. The maintainer contract is in
+[merge-cleanup](../../2-daily/merge-cleanup/SKILL.md#project-merge-policy).
+
 ```bash
 python3 skills/2-daily/merge-cleanup/scripts/scan_clones.py --json \
   --primary "$PRIMARY" --root "$(dirname "$PRIMARY")" --prefix <repo-name> > "$SCRATCH/scan.json"
@@ -84,7 +97,7 @@ python3 skills/2-daily/merge-cleanup/scripts/scan_clones.py --json \
   The same applies to any clone whose directory name matches an open PR's branch that another
   session is still pushing to.
 - Record the shared facts every agent needs: `origin/<integration>` head, merged PR heads and
-  squash SHAs for the branches involved, open PR heads (`gh pr list --state all --head <branch>`).
+  merge-result SHAs (including historical squash commits) for the branches involved, open PR heads (`gh pr list --state all --head <branch>`).
 
 ## Phase 1 — Backup before analysis
 
@@ -165,10 +178,21 @@ The caller does not forward verdicts; it checks them.
 - Evidence standards (workhorse Rung 5): ancestry proves graph reachability; per-path blob/diff
   identity proves content; an attestation proves review, not landing. A commit not being an ancestor
   is **not** evidence its content is missing; a clean diff is **not** provenance.
-- Produce one disposition table: clone · verdict · deciding evidence · next step. Copy the agent
+- Report **original commits preserved** separately from **content landed**. Test each relevant
+  local ref against `origin/<integration>` with `merge-base --is-ancestor`; ancestry to a PR head
+  alone does not prove those commits survived its merge. Use yes/no/not established with cited SHAs.
+  Missing ancestry is not proof of missing content or a retroactive policy violation: old squash
+  landings still use the existing provenance checks. Never let an enabled policy bypass them.
+- Produce one disposition table: clone · verdict · original commits preserved · content landed · deciding evidence · next step. Copy the agent
   reports into the backup folder (`<DEST>/reports/`) so the analysis outlives the session.
 
 ## Phase 4 — Handoff (no mutation here)
+
+Include the effective policy/source and both ancestry/content findings in every handoff.
+PR-WORTHY work carries the requirement for its eventual merge method; cherry-picking recovery
+work creates new IDs, so name the source commits and backup rather than claiming original IDs
+were preserved. Cleanup re-reads the primary's policy and fresh safety evidence before acting.
+Historical content equivalence never becomes a blanket authorization to remove a checkout.
 
 | Verdict | Handoff |
 |---|---|

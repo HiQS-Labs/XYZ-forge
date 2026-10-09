@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Fresh clone, intake/rating, current-code recon | Codex plan QA before implementation |
+| Codex plan QA Approved (relay exit 0) | Implement policy and consumer changes |
 
 ## Table of contents
 
@@ -49,7 +49,7 @@ promise to preserve commits that builders already rebased before the merge.
   explicit merge works; opted-out projects retain all three explicit choices.
 - Keep one reader/resolver in `merge_cleanup.py`. A `--show-merge-policy` read-only JSON mode
   exposes source, boolean, and effective method to deep audit without scanning, fetching or writing.
-- Resolve/report before Phase 0's possible doc parking; re-resolve at `land_prs` entry and
+- Resolve/report before Phase 0 (and instruct callers to check before doc parking); re-resolve at `land_prs` entry and
   `execute_pr_merge`, so direct callers and policy changes after a landing cannot bypass it.
   Preflight GitHub's `mergeCommitAllowed` when enabled before landing work, and recheck at the
   merge writer. Failure/unavailable method stops; never mutate hosting settings or choose fallback.
@@ -97,7 +97,7 @@ comments; trend unknown, not a claimed increasing incident rate.
 
 ### Phase 1 QA
 
-- [ ] Codex plan review Approved before production edits.
+- [x] Codex plan review Approved before production edits; `relay-system/2026-10-09/gh1010-plan.codex.md` (exit 0).
 - [ ] Manual policy matrix and negative-control evidence retained in TESTS-RESULTS.
 - [ ] Original provenance and teardown safety unchanged; docs describe legacy default honestly.
 

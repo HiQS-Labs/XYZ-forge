@@ -26,9 +26,14 @@ HARD RULES (a violation is worse than an incomplete report):
 - Write your report ONLY to {{REPORT_PATH}} (mkdir -p its directory).
 
 SHARED FACTS ({{DATE}}): origin/{{INTEGRATION_BRANCH}} on GitHub is at {{DEV_HEAD}}. Merged PRs:
-{{MERGED_PRS — #N (branch, head sha, squash sha)}}. Open PRs: {{OPEN_PRS — #N (branch, head sha,
+{{MERGED_PRS — #N (branch, head sha, merge-result sha)}}. Open PRs: {{OPEN_PRS — #N (branch, head sha,
 draft?, mergeable?)}}. `gh pr list --repo {{OWNER}}/{{REPO}} --state all --head <branch>` and
 `gh issue view <N> --repo {{OWNER}}/{{REPO}} --json state,title,closedAt` are read-only and allowed.
+
+PROJECT MERGE POLICY (from cleanup's --show-merge-policy, not a clone-local guess):
+{{MERGE_POLICY — preserve_commit_history, strategy, source}}.
+Carry this policy into your verdict and handoff; do not change it. Historical squash merges
+remain valid evidence under the existing checks, not retroactive policy violations.
 
 FOR EACH CLONE gather, with commands and their actual output as evidence:
 a. `git remote -v`, branch, HEAD sha, `git status --porcelain --untracked-files=all` (name every
@@ -40,6 +45,9 @@ b. Unlanded commits for EVERY local ref (`git for-each-ref refs/heads`, plus a d
    `backup/*`): `git log --format='%h %ad %an %s' --date=short <dev>..<ref>` and
    `git diff --stat $(git merge-base <dev> <ref>)..<ref>`. Count them and list files touched.
 c. Landed-elsewhere test — the key question:
+   - original commits preserved: for each relevant local ref, run
+     `git merge-base --is-ancestor <ref> <dev>` and report yes/no/not established with SHAs.
+     This is separate from content equivalence; ancestry to a PR head is not integration ancestry;
    - by ancestry: `git merge-base --is-ancestor <ref> refs/deepscan/pr<N>` against each merged PR
      head that could have absorbed the work;
    - by content: for each non-generated source/test file touched, `git diff <dev> <ref> -- <path>`
@@ -64,7 +72,7 @@ g. Verdict, exactly one of: PR-WORTHY (unique, coherent, attested or near-attest
    next step.
 
 REPORT FORMAT (markdown): a summary table at the top (clone | branch@HEAD | unlanded commits (all
-refs) | dirty/ignored of note | verdict | next step), then one section per clone with the evidence,
+refs) | dirty/ignored of note | original commits preserved | content landed | verdict | next step), then one section per clone with the evidence,
 then a short family/pair view. Be concrete: shas, counts, file paths, quoted lines. Do not
 speculate beyond the evidence; write "not established" when you could not establish something. If
 a briefed sha or file does not match what you find, say so and proceed from what is there. Keep

@@ -15,8 +15,8 @@ Commit: ecec5561 · Mode: graph attempted + file reads (graph has no cleanup sym
 Per-project merge strategy constraint in the existing cleanup orchestrator; local configuration contract.
 
 ## Seams and call paths
-- `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1182` CLI defaults strategy to squash; `main:1198` resolves explicit primary. `land_prs:1098` forwards method to `execute_pr_merge:150`, the single GitHub merge writer. This is the enforcement seam. `_gh` already bounds subprocess failures.
-- `merge_cleanup.py:1081` dry-run preview formats method independently; it must use the same resolver. `main` invokes Phase 0 preparation, which can park docs, so invalid policy must fail before that operation.
+- `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1182` CLI defaults strategy to squash; `main:1198` resolves explicit primary. `land_prs:854` calls the writer at :1098 and forwards method to `execute_pr_merge:150`, the single GitHub merge writer. This is the enforcement seam. `_gh` already bounds subprocess failures.
+- `merge_cleanup.py:1081` dry-run preview formats method independently; it must use the same resolver. The skill caller can park docs before executing Phase 0, so its instructions must check policy first. The Python command should also resolve policy before Phase 0.
 - `scan_clones.py` existing ancestry and merged-PR/content checks authorize disposal; no policy change should weaken them. Deep skill consumes scanner JSON and its agent template, assesses content versus ancestry, then hands teardown back to cleanup.
 - `skills/4-occasional/vendor-stack/SKILL.md:30` owns interactive adoption choices. `relay-automation/xyz-vendor.sh:59` requires an existing directory, mirrors harness into `.xyz/`; it never creates a repository. Runtime allowlist at :236 survives upgrades; target-root files are outside that mirror.
 - `utils/py/device_config.py:29` uses a machine/user config, not shared project policy. PRS settings only exist with Tier 2. Neither is a universal project policy mechanism to reuse.
