@@ -1,0 +1,6 @@
+$ python3 utils/py/releases_app.py roadmap rate --gid rmi-01M4D2PN45SNCRZBHASABK3WEC --rated 60/20/50/85 --dry-run
+exit: 3
+stdout:
+
+stderr:
+refused: rule=already-rated: rmi-01M4D2PN45SNCRZBHASABK3WEC is already rated. Re-scoring is a deliberate act, not a retry: pass --force if you mean to replace the existing scores.

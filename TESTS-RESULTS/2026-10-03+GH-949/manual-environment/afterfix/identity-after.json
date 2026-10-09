@@ -1,0 +1,24 @@
+{
+  "verify": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+    "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "branch": "development",
+    "status": "",
+    "core_bare": "false",
+    "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+    "user_email": "",
+    "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/development",
+    "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "task": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+    "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "branch": "fix/gh949-ate-remediation",
+    "status": "?? TESTS-RESULTS/2026-10-03+GH-949/",
+    "core_bare": "false",
+    "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+    "user_email": "",
+    "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/fix/gh949-ate-remediation",
+    "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+  }
+}

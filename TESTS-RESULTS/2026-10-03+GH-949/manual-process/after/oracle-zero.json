@@ -1,0 +1,65 @@
+{
+  "positive": {
+    "oracle": "zero-state",
+    "passed": true,
+    "reasons": [],
+    "digest_before": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+    "digest_after": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+    "files": 1,
+    "lsof": {
+      "ok": true,
+      "holders": [],
+      "targets_checked": 1
+    },
+    "git_status_clean": null,
+    "run": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "completed": true,
+      "duration_ms": 22.328457969706506
+    }
+  },
+  "result": {
+    "oracle": "zero-state",
+    "passed": false,
+    "reasons": [
+      "command observation incomplete (timeout or launch failure)"
+    ],
+    "digest_before": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+    "digest_after": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+    "files": 1,
+    "lsof": {
+      "ok": true,
+      "holders": [],
+      "targets_checked": 1
+    },
+    "git_status_clean": null,
+    "run": {
+      "rc": 124,
+      "stdout": "",
+      "stderr": "\n[timeout after 1s]",
+      "timed_out": true,
+      "completed": false,
+      "duration_ms": 1005.1322500221431
+    }
+  },
+  "returncode": 0,
+  "late_write": false,
+  "correct_properties": {
+    "positive_pass": true,
+    "no_late_write": true,
+    "incomplete_not_pass": true,
+    "structured_result": true
+  },
+  "independent_cleanup_child_absent": true,
+  "case": "oracle-zero",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/oracle-zero-observer.py"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:18:43.876241+00:00",
+  "finished_utc": "2026-10-03T07:18:49.081280+00:00"
+}

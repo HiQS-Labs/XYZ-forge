@@ -1,0 +1,8 @@
+{
+  "head": "9e7eaddc63e58d16cdceddb7477f3e4a421ac786\n",
+  "bare": "false\n",
+  "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\n",
+  "local_config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/fix/gh949-ate-remediation:refs/remotes/origin/fix/gh949-ate-remediation\nbranch.fix/gh949-ate-remediation.remote=origin\nbranch.fix/gh949-ate-remediation.merge=refs/heads/fix/gh949-ate-remediation\n",
+  "status": "",
+  "worktrees": "worktree /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004\nHEAD 9e7eaddc63e58d16cdceddb7477f3e4a421ac786\nbranch refs/heads/fix/gh949-ate-remediation\n\n"
+}

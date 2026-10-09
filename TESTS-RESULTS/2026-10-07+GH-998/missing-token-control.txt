@@ -1,0 +1,6 @@
+$ bin/tick info GH998-NO-SUCH-TOKEN
+exit: 1
+stdout:
+(task GH998-NO-SUCH-TOKEN not found)
+
+stderr:

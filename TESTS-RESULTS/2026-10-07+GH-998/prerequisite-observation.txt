@@ -1,0 +1,5 @@
+Session observation, not a full raw suite transcript.
+Command: bash test/codex-turn.sh
+Disposable full-clone revision before and after: 38ac9ee43bdedbd25be0cfec2029b0a27abd70a1; working tree clean.
+Observed tool completion: exit 0; codex-turn: 43 pass, 0 fail.
+Full console output was not captured to a file. Stubbed checks; no real Codex API turn in this suite.

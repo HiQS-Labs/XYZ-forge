@@ -1,0 +1,39 @@
+{
+  "normal": {
+    "rc": 0,
+    "stdout": "123\n",
+    "stderr": "",
+    "timed_out": false,
+    "pgid": 73014,
+    "wall_seconds": 0.02343320898944512
+  },
+  "own124": {
+    "rc": 124,
+    "stdout": "",
+    "stderr": "",
+    "timed_out": false,
+    "pgid": 73015,
+    "wall_seconds": 0.02151837496785447
+  },
+  "timeout": {
+    "rc": null,
+    "stdout": "",
+    "stderr": "",
+    "timed_out": true,
+    "pgid": 73016,
+    "wall_seconds": 0.3111038329661824
+  },
+  "correct_properties": {
+    "normal": true,
+    "own124_not_timeout": true,
+    "real_timeout": true
+  },
+  "case": "bounded-positive",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/bounded-positive.py"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:18:55.277975+00:00",
+  "finished_utc": "2026-10-03T07:18:55.701002+00:00"
+}

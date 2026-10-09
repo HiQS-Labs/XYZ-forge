@@ -1,0 +1,70 @@
+{
+  "suite": "test/gh396-find-harness-roots.sh",
+  "argv": [
+    "python3",
+    "utils/py/proc_group.py",
+    "--timeout",
+    "150",
+    "--",
+    "bash",
+    "-c",
+    "source test/lib/runner-envelope.sh\nrunner_envelope_begin \"$PWD\" \"afterfix-gh396-find-harness-roots\" || exit 80\n[ \"${XYZ_HARNESS+x}\" != x ] || { echo \"ASSERT_FAIL XYZ_HARNESS not scrubbed\"; exit 81; }\n[ \"${XYZ_REPO_ROOT+x}\" != x ] || { echo \"ASSERT_FAIL XYZ_REPO_ROOT not scrubbed\"; exit 82; }\n[ -n \"${XYZ_HARNESS_DB:-}\" ] && [ -f \"$XYZ_HARNESS_DB\" ] || { echo \"ASSERT_FAIL XYZ_HARNESS_DB missing\"; exit 83; }\ncase \"$XYZ_HARNESS_DB\" in \"${TMPDIR:-/tmp}\"/runner-envelope.*/harnesses.db) echo \"ASSERT_PASS selector overrides unset; XYZ_HARNESS_DB preserved in envelope scratch: $XYZ_HARNESS_DB\";; *) echo \"ASSERT_FAIL unexpected XYZ_HARNESS_DB=$XYZ_HARNESS_DB\"; exit 84;; esac\nbash \"test/gh396-find-harness-roots.sh\"\nsuite_rc=$?\nrunner_envelope_assert \"$PWD\" \"afterfix-gh396-find-harness-roots\"\nassert_rc=$?\npre_scrub_scratch=${RUNNER_ENVELOPE_SCRATCH:-}\npre_scrub_state=${RUNNER_ENVELOPE_STATE:-}\nrunner_envelope_scrub\n[ ! -d \"$pre_scrub_scratch\" ] && [ ! -d \"$pre_scrub_state\" ] || { echo \"ASSERT_FAIL envelope scratch not scrubbed\"; exit 85; }\necho \"ASSERT_PASS envelope scratch/state removed\"\n[ \"$suite_rc\" -eq 0 ] && [ \"$assert_rc\" -eq 0 ]\n"
+  ],
+  "cwd": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+  "ambient_injected": {
+    "XYZ_HARNESS": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+    "XYZ_REPO_ROOT": "/Users/noelsaw/task-clones/ate-remediation-20261003/task"
+  },
+  "started_utc": "2026-10-03T07:20:51+00:00",
+  "ended_utc": "2026-10-03T07:20:54+00:00",
+  "returncode": 0,
+  "output": "runner-envelope: afterfix-gh396-find-harness-roots \u2014 harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.Qav6jo/harnesses.db), envelope state captured\nASSERT_PASS selector overrides unset; XYZ_HARNESS_DB preserved in envelope scratch: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.Qav6jo/harnesses.db\ngh396 find-harness two-roots contract:\n  PASS: plain .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: plain .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: plain .xyz: override still selects the harness it names\n  PASS: plain .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.9RkN9U/a-plain/.xyz') is True\n  PASS: plain .xyz (python): is_vendored() with override is True\n  PASS: plain .xyz (python): repo_root() with override matches consumer repo\n  PASS: linked worktree, override=main .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: linked worktree, override=main .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: linked worktree, override=main .xyz: override still selects the harness it names\n  PASS: linked worktree, override=main .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.9RkN9U/b-main/.xyz') is True\n  PASS: linked worktree, override=main .xyz (python): is_vendored() with override is True\n  PASS: linked worktree, override=main .xyz (python): repo_root() with override matches consumer repo\n  PASS: symlink inside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: symlink inside repo: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: symlink inside repo: override still selects the harness it names\n  PASS: symlink inside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.9RkN9U/c-inside/.xyz') is True\n  PASS: symlink inside repo (python): is_vendored() with override is True\n  PASS: symlink inside repo (python): repo_root() with override matches consumer repo\n  PASS: symlink outside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: symlink outside repo: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: symlink outside repo: override still selects the harness it names\n  PASS: symlink outside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.9RkN9U/d-outside/.xyz') is True\n  PASS: symlink outside repo (python): is_vendored() with override is True\n  PASS: symlink outside repo (python): repo_root() with override matches consumer repo\n  PASS: symlink outside repo: control \u2014 git cannot resolve the link target, so the fallback is load-bearing\n  PASS: precedence step 1: valid XYZ_HARNESS override wins over local .xyz\n  PASS: precedence step 1: invalid override falls through to local .xyz\n  PASS: precedence step 2: local .xyz selected with no override\n  PASS: precedence step 3: delegated to gh292-worktree-vendored-discovery.sh (linked worktree, no override)\n  PASS: precedence step 4: harness clone resolves to itself\n  PASS: precedence step 5: foreign repo falls back to the script's own harness\n  PASS: #394: auto-discovery warns that the vendored copy is behind\n  PASS: #394: the warning still fires when XYZ_HARNESS points at the stale .xyz\n  PASS: #394: the printed remedy is runnable as printed (bash /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.9RkN9U/live-harness/relay-automation/xyz-sync.sh update /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.9RkN9U/f-stale)\n  PASS: --quiet: accepted (exit 0)\n  PASS: --quiet: no find-harness: announcement on stderr\n  PASS: --quiet: exported names and values are identical to the loud form\n  PASS: file-symlinked locator: resolves root correctly via file symlink\n  PASS: harness-paths.sh: xyz_harness_home matches harness directory\n  PASS: harness-paths.sh: xyz_harness_tool resolves tool\n  PASS: harness-paths.sh: xyz_emit_env_exports emits correct format\n  gh396-find-harness-roots: 41 pass, 0 fail\nrunner-envelope: clean \u2014 identity, tracked tree, worktrees, and driver lock unchanged under afterfix-gh396-find-harness-roots\nASSERT_PASS envelope scratch/state removed\n",
+  "identity_before": {
+    "verify": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "development",
+      "status": "",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/development",
+      "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+    },
+    "task": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "fix/gh949-ate-remediation",
+      "status": "",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+    }
+  },
+  "identity_after": {
+    "verify": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "development",
+      "status": "",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/development",
+      "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+    },
+    "task": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "fix/gh949-ate-remediation",
+      "status": "?? TESTS-RESULTS/2026-10-03+GH-949/",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+    }
+  }
+}

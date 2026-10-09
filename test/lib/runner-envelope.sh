@@ -58,6 +58,8 @@ _re_locks() {  # <repo> — driver-lock state (the GH-42 per-clone lock; GH-448 
 
 runner_envelope_begin() {
   local here="$1" label="$2"
+  # Suite fixtures select their own harness; inherited locator overrides leak across cases.
+  unset XYZ_HARNESS XYZ_REPO_ROOT
   RUNNER_ENVELOPE_SCRATCH=""
   RUNNER_ENVELOPE_STATE=""
   if [ -z "${XYZ_HARNESS_DB:-}" ]; then
