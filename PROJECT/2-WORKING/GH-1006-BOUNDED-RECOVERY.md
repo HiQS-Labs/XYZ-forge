@@ -2,7 +2,7 @@
 gh_issue: 1006
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1006
 title: "Marathon: bounded progress and safe repair handoff"
-status: "Working — gate corrections verified; final QA round 3 pending"
+status: "Working — independent final code QA Approved round 3; full gate pending"
 created: 2026-10-09
 updated: 2026-10-09
 owner: Codex
@@ -19,7 +19,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved round 3; historical code QA Approved round 2; full gate refused GH-777. Existing-entrypoint correction and non-Small flaky-suite retirement verified. | Final code QA round 3, passing classified macOS gate, then PR into development. |
+| Plan and final code QA Approved round 3; current embedded observation and required non-Small flake retirement verified. | Passing classified macOS gate, retained provenance, then PR into development. |
 
 ## Table of contents
 
@@ -301,3 +301,5 @@ as guaranteed unattended recovery; the PR must describe this delivery boundary.
 | Bash/Python compatibility honest | Default unchanged; opt-in legacy refusal tested; no frozen twin edit |
 | Three-seat repair decision, PR and handoff | Existing skill procedure; separate QA/gates; automatic continuation held |
 | Several-hour operation | Explicit longer window; separate absolute recovery deadline; no outcome guarantee |
+
+Final code QA round 3 independently Approved the current artifact at `c0abced3`; the shipped relay exited 0 and attested the review. Receipt: `relay-system/2026-10-09/gh1006-final-qa-r3.codex.md`. The three-round budget is exhausted. Required classified full gate and PR checks remain separate obligations.

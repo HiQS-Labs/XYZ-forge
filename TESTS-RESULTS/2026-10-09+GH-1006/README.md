@@ -26,5 +26,6 @@ identity), GH-777 rejection, GH-492 parallel timing failure and its successful s
 now passes strict live-tree and existing negative controls; launcher 35/35 and registry checks pass.
 The unchanged non-Small GH-492 passes focused 16/16 and is removed from the full registry under
 the standing AGENTS #802/#853 rule, with a gh306 exemption. Its source/runtime is unchanged.
-Historical final code QA Approved round 2 is reopened for the remaining third round. A passing
+Final code QA Approved round 3 supersedes the historical round 2 approval; the isolated shipped
+relay exited 0 and its attestation/provenance are in `final-qa-r3/`. A passing
 classified full macOS gate is still required before PR readiness.
