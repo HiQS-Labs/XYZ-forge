@@ -136,3 +136,7 @@ desktop only); notifiers; any tool-approval or rewrite hook; marketplace; instal
 for it; it removes polling turns seen in #957, nothing is blocked. Appeal 50: neutral (no operator
 score given). Effort 70: three small files plus a skill doc. Recurrence: not a defect class; the
 polling cost was observed once (merge batch #957).
+
+## Merge evidence
+
+- PR #966 merged 2026-10-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
