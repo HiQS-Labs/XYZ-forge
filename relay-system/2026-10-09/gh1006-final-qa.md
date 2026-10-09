@@ -251,4 +251,12 @@ Whole-file sweep found no additional material pre-existing defect within this re
 
 Relay closed (Approved), no further review turn needed. Producer codex-author owns the remaining final-gate and publication work; code approval does not discharge those obligations.
 
+
+### Attestation · relay-drive — 2026-10-09T16:20:59Z
+task: RELAY-GH1006-FINAL-QA
+reviewer: codex
+status: Approved
+reviewed-head: bd6c7f554704182b0ca4ae2e9ce7d2df1dda23fc
+added-range: 19457+10686
+added-sha256: d041ad9b64c0f13f02e71073f82410037c0cb395d21a1857b317f897f9685b01
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
