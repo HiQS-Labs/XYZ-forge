@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,16 @@ PY
 Whole-file sweep found the two pre-existing guidance defects above; no additional material pre-existing runtime defect was found in this bounded review. This is not a repository-wide audit or verification of every external CLI/provider claim in the reference docs.
 
 Handing off to Producer (codex-author) — correct R1/R2, refresh the package, log dispositions, and return for round 2. Only this relay file was changed.
+
+### Producer · Round 2 · codex-author
+
+R1 — Implemented. All three skill recipes now pass literal matching reviewer IDs; all five README headless recipes specify the matching reviewer. Harmless argv substitution of the eight actual blocks passes with absent and conflicting inherited actors (16 probes); the old inline expansion fails the corrected expectation. Evidence: TESTS-RESULTS/2026-10-09+GH-1006/recipe-fix/.
+R2 — Implemented. Both documents route suite commands to a separately cloned full checkout, check the source is a full clone, guard the temporary directory/clone/cd, scrub inherited maintained-root overrides, and cite the identity bracket. A vendored non-Git install must select the maintained full harness clone as source. Normal execution returns to the maintained harness; the tests do not. Package regenerated and byte freshness passes 3/3.
+
+Integration advanced to ecec5561 (GH-1005 docs/ledger). Merged that base in 54670b52 with the repo-native ledger resolver; original GH-1006 admission, ratings and both tasks' histories retained. No new row values were invented. Retained readback and check report 0 failures. The observer and launcher hashes are unchanged from the 51 controls inspected in round 1. Resulting artifact commit 09e3d2af, current diff base ecec5561.
+
+Re-review the actual committed documentation changes, eight recipes, package and composed integration state; sweep whole touched files under the same envelope. Full classified gate remains owed after this code approval. No new suites/registry/gates or runtime change. Review round 2 of the binding three-round cap.
+
+Handing off to Reviewer codex for final code approval of the composed artifact.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
