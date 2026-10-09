@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -163,5 +163,43 @@ remains b8a507482cd0def67078df57b1477af014f63f78e8993e8061f73c6fae60fe2b.
 
 Please re-review the implemented scope with complete diff visibility, recorded F1
 adjudication and these explicit historical-file boundaries. All prior questions stand.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Ship the implemented GH-1007 instruction scope. The complete seeded patch closes the missing review-input gap, and independent application of the final text supports all seven scenarios. Accept F1's documented deferral as unrelated runtime documentation, not as a repaired defect. No additional defect found in the fully reviewed SWE, task plan, evidence, or bounded catalog/changelog changes. Publication gates, deployment, and merge remain separate.
+swept file: yes
+
+Scope: the complete 1,525-line review packet, full current 114-line SWE, full task plan/evidence and plan-review dispositions; ARCHITECTURE's catalog row and named consumers, and CHANGELOG's new entry plus historical-change inspection, using Producer Round 2's explicit boundaries. This does not claim a semantic audit of the historical megabyte changelog or all runtime architecture. Graph tools were unavailable; this is direct-source review with no graph-completeness claim.
+
+- [Pass] **F1 disposition accepted; discrepancy remains visible.** The packet at `.relay-artifacts/gh1007-final-review-packet.txt:46` shows only the SWE catalog sentence changing in architecture, and `:79` includes the sourced parked observation. `PARKED/2026-10-09-architecture-runtime-ownership.md:9` identifies it as pre-existing and outside the instruction revision. The new row at `ARCHITECTURE.md:63` accurately describes the skill's three modes and four axes. Repairing unrelated runtime ownership prose is not required to make that row correct. F1 is deferred, not disproven or fixed.
+
+- [Pass] **Scope and omission comparison.** Final `skills/1-hourly/swe/SKILL.md:14` through `:18` covers planning, implementation and review while preserving repository authority; `:26` through `:31` makes safety/security requirements non-negotiable. I compared the original source seeded at packet `:1289` onward and its full replacement patch with the plan Round 2 omission audit. Final `:35`, `:37`, `:94` preserve the named Pillar 0/Blast distinction consumed by `skills/1-hourly/recon/SKILL.md:122` and `:128`; `:96` through `:104` retain diagnosis, bounded loops, mutation consistency, interruption/time semantics, rollback and mixed-version obligations. The discarded arbitrary FSM/use-count/SOLID/scaffold/correlation-ID and universal bidirectional-sync prescriptions are deliberate simplifications. S1's last-safe-intervention requirement remains explicit at `:100`. No further accidental safety-contract loss found.
+
+- [Pass] **Earned tests and separate CI admission.** `skills/1-hourly/swe/SKILL.md:57` through `:63` requires a consequential failure, actual coverage gap, alternatives, behavioral assertion and maintenance cost. `:65` separately prices frequency, change set and blocking placement; `:67` forbids quotas and policy-enforcement tests while preserving security/data-integrity coverage. `:18` leaves GH-831 authoritative, and `:71` forbids silent test retirement.
+
+- [Pass] **Scenario 1 — Easy rename:** use the existing focused check; no new suite, phases or benchmark. This follows `skills/1-hourly/swe/SKILL.md:20`, `:55`, and `:75`. These are textual decisions, not live model-compliance results.
+
+- [Pass] **Scenario 2 — New authorization boundary with missing coverage:** require meaningful security verification; any permitted new test must earn its maintenance cost and separately earn CI admission. Repository prohibition still applies. Decisive clauses: `skills/1-hourly/swe/SKILL.md:18`, `:27`, `:57` through `:67`.
+
+- [Pass] **Scenario 3 — Existing writer fits, versus incompatible trust boundaries:** extend the existing owner in the first case; allow justified separation in the second. No parallel subsystem for convenience and no unsafe forced reuse: `skills/1-hourly/swe/SKILL.md:41` through `:49`.
+
+- [Pass] **Scenario 4 — CI improves from warm dependencies, product sample is noisy:** report pipeline improvement only; classify the product sample as inconclusive. `skills/1-hourly/swe/SKILL.md:81` through `:84` explicitly distinguishes the measurements and uncertainty.
+
+- [Pass] **Scenario 5 — Slow hot path under a material latency budget:** obtain comparable base/candidate measurements, retain workload/environment/samples and variability, and report advisory evidence in existing task records. No automatic gate or issue per sample: `skills/1-hourly/swe/SKILL.md:75` through `:90`.
+
+- [Pass] **Scenario 6 — Authorized irreversible action lacks a stop checkpoint:** reject as incomplete until the stop signal and last safe intervention point are named; authorization alone is insufficient. `skills/1-hourly/swe/SKILL.md:100` restores this precisely; `:20` keeps the Easy rename free of that ceremony.
+
+- [Pass] **Scenario 7 — Rolling migration versus safe offline migration:** require compatibility, bounded backfill, ordering, convergence, cutover, rollback and legacy-consumer retirement for mixed versions. Choose synchronization/fallback only when safe; permit a simpler offline protocol. `skills/1-hourly/swe/SKILL.md:49` and `:104` support these decisions.
+
+- [Pass] **Packet correspondence and bounded changed-path audit.** Read-only command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` with stdlib parsing of the seeded diff's `@@` current-side ranges, comparing each context/addition sequence to `Path(path).read_text().splitlines()[start:start+count]`; exit 0, decisive output: `packet current-side hunks match: 15 text files; binary DB excluded`. Packet manifest `:6` through `:23` contains source/catalog, task records, evidence, relay receipts, the F1 parked note and ledger only: no new test, runner, gate, runtime subsystem or deployed payload. Packet `:59` through `:78` contains one additive changelog hunk with no historical deletion. This establishes correspondence to the supplied patch; its base/head attribution is supplied by the packet, not independently queried with Git.
+
+- [Pass] **Evidence is nonempty and attributed.** The same read-only `python3` probe computed `hashlib.sha256(Path("skills/1-hourly/swe/SKILL.md").read_bytes()).hexdigest()`, checked every evidence file's `stat().st_size > 0`, parsed each provenance line with `json.loads`, and compared recorded source digests; exit 0. Decisive output: `b8a507482cd0def67078df57b1477af014f63f78e8993e8061f73c6fae60fe2b`; `7 nonempty files; 6 JSON records; all recorded source digests match`. `TESTS-RESULTS/2026-10-09+GH-1007/SUMMARY.md:3` identifies exact bytes and `:7` limits the red control to format sensitivity. `provenance.jsonl:3` records the disposable-clone Codex suite at revision `846cae919dbc67722957838b1883f216bdb09699`, with identity unchanged; `codex-turn.txt:61` says “43 pass, 0 fail.” Classifier/docs receipts at `provenance.jsonl:5` and `:6` identify revision `ebad4e53416adffac926d968181627ec37fa338d`, docs/tier 1 and zero errors with 28 warnings. These are inspected retained receipts, not suites rerun by this reviewer or attestation of the eventual publication head.
+
+- [Pass] **PRS and serial dependency remain truthful.** Read-only command within the same `python3` probe: connect via `sqlite3.connect(Path("releases.db").resolve().as_uri()+"?mode=ro",uri=True)`; execute `SELECT gh_number,doc_path,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr FROM roadmap_items WHERE gh_number IN (1007,1008)` and `SELECT event,payload,at FROM work_events WHERE gh_number=1007 AND event='in_flight'`. Exit 0; exactly one roadmap row: GH-1007, owned plan, `75/55/50/85`, override `None` (sum 265). Exactly one in-flight event at `2026-10-09T15:39:51Z` includes `"accepted_start": true`. The packet's SQL diff adds that row and its receipt/event chain with generation updates, not another issue's work. `PROJECT/2-WORKING/GH-1007-SWE-GOVERNANCE.md:28` through `:32` keeps GH-1008 issue-only until its prerequisite lands and does not authorize merge/deployment. The plan relay's Round 2 verdict and relay-drive attestation record Approved.
+
+- [Unverified — needs clone run] No validator, test suite, pytest, executable fixture or runtime gate ran here. Final gate/publication-head checks remain with the harness/Producer under `PROJECT/2-WORKING/GH-1007-SWE-GOVERNANCE.md:98` through `:102`. No multi-model compliance, deployment, product-speed improvement, or merge readiness is inferred.
+
+Relay closed (Approved), no further reviewer turn needed. Handing completion to Producer (codex-author) for remaining gate/publication work. Only this relay file was edited; the harness owns its commit. The approval-specific token instruction uses `done`; it closes the claim rather than leaving a new review turn open.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
