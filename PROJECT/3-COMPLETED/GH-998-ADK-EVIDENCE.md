@@ -1,8 +1,8 @@
 ---
 title: "GH-998 — ADK quick wins: command and retained trajectory evidence"
-status: "Active — report implemented, final QA pending"
+status: Complete
 created: 2026-10-07
-updated: 2026-10-07
+updated: 2026-10-09
 owner: Noel Saw
 goal: "Ground the first two ADK lessons in a bounded command audit and retained execution witnesses."
 effort: 2
