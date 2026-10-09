@@ -1,0 +1,1 @@
+PR #966: insertion-only three-way merge; both complete parent changelogs survive as ordered subsequences. Red control deleting the PR heading is rejected. Ledger classification disjoint; keep=theirs, generations=(1423, 1481); replay 2 roadmap additions through the existing writer. No code resolution.

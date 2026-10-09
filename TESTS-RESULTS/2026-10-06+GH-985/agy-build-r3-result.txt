@@ -1,0 +1,5 @@
+I have completed my turn as Agy. 
+
+I successfully claimed the `GH985-BUILD` token, updated the `skills/2-daily/workhorse/stop-hook.sh` and `skills/2-daily/workhorse/SKILL.md` files as requested, appended the disposition block and updated the header (`NEXT: Producer`, `STATUS: Open`) in `relay-system/2026-10-06/gh985-build.agy.md`, and released the token back to Producer. All temporary files were kept in `.relay-scratch/`. 
+
+Handing off to Producer — go to the parent orchestrator window and say 'take your turn'.

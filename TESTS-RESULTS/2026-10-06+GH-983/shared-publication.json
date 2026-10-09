@@ -1,0 +1,22 @@
+{
+  "source_sha": "3c9bfa8ca452bfddd8ec19d4ac243e02372531bb",
+  "prepush": {
+    "exit_code": 0,
+    "decisive_output": "pre-push: documentation gate GREEN in 58s \u2014 pushing.",
+    "identity_after": {
+      "head": "3c9bfa8ca452bfddd8ec19d4ac243e02372531bb",
+      "bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "local_email": ""
+    },
+    "identity_before": "command captured same SHA, core.bare false, official origin, empty local identity; see parent session command receipt"
+  },
+  "hosted_ci": {
+    "conclusion": "success",
+    "headSha": "3c9bfa8ca452bfddd8ec19d4ac243e02372531bb",
+    "status": "completed",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37543443209"
+  },
+  "source_hash": "a6054d9fd3c99ac0caf92adef14d9acfd137637e86734c9664d2404983cb0931",
+  "review": "gh983-claude-compat.codex.md; Approved and attested at c9185e4d"
+}
