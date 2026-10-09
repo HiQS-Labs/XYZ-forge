@@ -1140,7 +1140,10 @@ def main():
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
-    def lane_attempt_gate(root_dir, raw, force):
+    def lane_attempt_gate(root_dir, raw, force, check_only=False):
+        # GH-1002: check_only=True parks an at-cap lane exactly as below but never writes — it runs
+        # before the relay-file commit so a parked fire leaves no commit; the single append stays in
+        # the later full call.
         if get_env("LANE_ATTEMPT_COUNTED"): return 0
         if not raw: return 0
         max_attempts = get_env("LANE_MAX_ATTEMPTS", "2")
@@ -1149,19 +1152,15 @@ def main():
 
         key = _lane_key(raw)
         attempts_dir = os.path.join(root_dir, ".tick", "attempts")
-        os.makedirs(attempts_dir, exist_ok=True)
+        if not check_only:
+            os.makedirs(attempts_dir, exist_ok=True)
         attempts_file = os.path.join(attempts_dir, key)
 
-        count = 0
-        if os.path.isfile(attempts_file):
-            try:
-                with open(attempts_file, "r") as f:
-                    count = len(f.readlines())
-            except Exception:
-                pass
-        
+        # One read-only reader for the attempts file (shared with the GH-162 debug-mantra note).
+        count = debug_mantra_prior_attempts(root_dir, raw)
+
         if force:
-            eprint(f"lane-attempt-cap: --force override — lane {key} at {count} attempt(s) (cap {max_attempts}), proceeding.")
+            if not check_only: eprint(f"lane-attempt-cap: --force override — lane {key} at {count} attempt(s) (cap {max_attempts}), proceeding.")
         elif count >= max_attempts:
             eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
             eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
@@ -1180,6 +1179,8 @@ def main():
                 target_root=args.target_root, phase_id=args.phase_id,
                 relay_task=relay_task)
             sys.exit(8)
+        if check_only:
+            return 0
 
         # append fire
         ts = "fire"
@@ -3028,7 +3029,25 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         print(relay_content, end="")
         print("--- END RENDERED RELAY ---")
         print(f"tick seed: log task.created {relay_task} + claim --agent marathon + release --to {args.builder}")
+        # GH-1002: show how close this lane is to its attempt cap (read-only; the counter is
+        # .tick/attempts/<lane>, the same file the live gate reads).
+        if lane_state_key:
+            _n = debug_mantra_prior_attempts(get_env("TICK_REPO_ROOT", root), lane_state_key)
+            try: _cap = int(get_env("LANE_MAX_ATTEMPTS", "2"))
+            except ValueError: _cap = 2
+            _tail = ""
+            if _n >= _cap:
+                _tail = (" — --force set: next live fire proceeds" if args.force
+                         else " — next live fire would PARK")
+            log(f"dry-run: lane {_lane_key(lane_state_key)} attempts {_n}/{_cap}{_tail}")
         sys.exit(0)
+
+    # GH-1002: park an at-cap lane BEFORE anything is rendered, branched or committed — the full
+    # gate below used to run after the relay-file commit, so every capped fire still added a
+    # commit. Read-only here; the single attempt append stays in the full call. The inherited
+    # LANE_ATTEMPT_COUNTED flag is cleared first for the same reason it is cleared below.
+    os.environ.pop("LANE_ATTEMPT_COUNTED", None)
+    lane_attempt_gate(get_env("TICK_REPO_ROOT", root), lane_state_key, args.force, check_only=True)
 
     # GH-514: prove the repo can TRACK this run's write-set before anything is dispatched.
     #

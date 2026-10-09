@@ -36,6 +36,7 @@ git -C "$R" config user.email t@example.com
 git -C "$R" config user.name t
 printf 'lane v1\n' >"$R/lane.md"
 printf 'tracked v1\n' >"$R/tracked.md"
+mkdir -p "$R/tools/spike" && printf 'keep\n' >"$R/tools/spike/keep.md"   # GH-1002: a tracked dir
 git -C "$R" add -A
 git -C "$R" commit -qm init
 
@@ -140,6 +141,35 @@ if [ -n "$WT2" ] && [ -d "$WT2" ]; then
 else
   fail "rtl_worktree_begin did not produce a second worktree"
 fi
+
+# ── (5) GH-1002: the GH-1 Phase 2 shapes, worktree only ──────────────────────────────────────────
+# wt_case <label> <expect-offlane 0|1> <files...> — write the files into a fresh worktree, end it.
+wt_case() {
+  local label="$1" want="$2" w f; shift 2
+  w="$(rtl_worktree_begin 2>/dev/null)"
+  [ -n "$w" ] && [ -d "$w" ] || { fail "$label: rtl_worktree_begin produced no worktree"; return; }
+  for f in "$@"; do mkdir -p "$w/$(dirname "$f")"; printf 'probe\n' >"$w/$f"; done
+  rtl_worktree_end "$w"
+  [ "${RTL_WT_OFFLANE:-1}" -eq "$want" ] && pass "$label: RTL_WT_OFFLANE=$want" \
+    || fail "$label: expected RTL_WT_OFFLANE=$want, got ${RTL_WT_OFFLANE:-unset}"
+}
+wt_case "GH-1002 hyphenated root probe test-satori.mjs" 0 test-satori.mjs
+[ -n "$(scratch_dir_of test-satori.mjs)" ] && pass "GH-1002: test-satori.mjs relocated into ROOT .tick/scratch" \
+  || fail "GH-1002: test-satori.mjs not relocated"
+wt_case "GH-1002 nested probe in a tracked dir tools/spike/test_satori.mjs" 0 tools/spike/test_satori.mjs
+[ -n "$(scratch_dir_of test_satori.mjs)" ] && pass "GH-1002: tools/spike/test_satori.mjs relocated" \
+  || fail "GH-1002: tools/spike/test_satori.mjs not relocated"
+wt_case "GH-1002 scratch-only new dir probes/probe_x.mjs" 0 probes/probe_x.mjs
+[ -n "$(scratch_dir_of probe_x.mjs)" ] && pass "GH-1002: new-dir probe_x.mjs relocated" \
+  || fail "GH-1002: new-dir probe_x.mjs not relocated"
+# CONTROL: a new dir mixing scratch with real content stays off-lane and nothing is moved.
+wt_case "CONTROL GH-1002 mixed new dir mixed/probe_y.mjs + mixed/notes.md" 1 mixed/probe_y.mjs mixed/notes.md
+[ -z "$(scratch_dir_of probe_y.mjs)" ] && pass "CONTROL GH-1002: mixed dir relocated nothing" \
+  || fail "CONTROL GH-1002: mixed dir partially relocated"
+[ ! -e "$R/mixed" ] && pass "CONTROL GH-1002: mixed dir not copied back into ROOT" \
+  || fail "CONTROL GH-1002: mixed dir reached ROOT"
+# CONTROL: a nested non-scratch file in a tracked dir is still off-lane.
+wt_case "CONTROL GH-1002 nested non-scratch tools/spike/notes.md" 1 tools/spike/notes.md
 
 echo
 echo "gh113-headless-scratch: $PASS passed, $FAIL failed"
