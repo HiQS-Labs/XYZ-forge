@@ -78,7 +78,8 @@ about everyone else's work and nothing about their own.
 - The branch that is checked is the branch that is landed. `--integration-branch` threads through
   Phase 0 and the fast-forward alike.
 - **Unpushed commits on the integration branch are a blocker, not a note.** A squash-merge landing
-  skips them silently, which is how local work is lost.
+  skips them silently, which is how local work is lost. The caller may first park eligible
+  documentation commits under the policy below, then re-establish readiness; the CLI never skips this gate.
 - Not ready is a **refusal**, reported before the PR matrix and enforced before the first mutation.
   It covers zero-PR cleanup, teardown-only cleanup, and `--reconcile-pr`; none may silently defer
   the primary checkout to the operator after reporting success.
@@ -101,6 +102,44 @@ python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary . --scan
 Phase 0 runs in every mode of the orchestrator. The standalone helpers below
 (`scan_clones.py`, `toposort_prs.py`) do **not** perform it — reach for `merge_cleanup.py` when
 the answer will inform a landing.
+
+### Committed documentation parking — caller-owned before executing Phase 0
+
+For an executing merge-cleanup request, handle documentation-only unpushed commits before
+invoking the strict CLI readiness gate. Audit/dry-run requests only report this option.
+Parking preserves work for later review; it never qualifies it for integration or teardown.
+
+1. Inspect the primary first and refresh `origin/<integration>` successfully. Enumerate the
+   complete local-only commit range, not just its final net diff. Require a non-empty result
+   and successful inspection of every changed path in every commit, including both rename
+   sides and deleted blobs. Require documentation/session-transcript purpose; only `.md`,
+   `.markdown`, `.txt`, and `.rst` ordinary, non-executable UTF-8 text files with no NUL bytes
+   qualify. Inspect both old and new blobs where present; a text suffix alone is insufficient.
+   Code/config/ledger files, binary data, symlinks/submodules, mixed or unknown history retain
+   the existing preserve/handoff rules; a code edit followed by a revert never qualifies.
+2. Preserve the exact tip under a unique local `temp-merge-cleanup-<date>-<short-sha>` branch
+   and publish it to the same `origin` under that name. An existing name is reusable only at
+   the identical SHA; otherwise choose a new unused name. Use a creation-only remote-ref
+   lease for a new branch (expected remote ref absent), never force-replace an existing ref.
+   Verify the origin branch SHA equals the saved tip. Publication failure blocks continuation
+   without changing the source branch or working tree. Retain existing preserve refs/stashes.
+3. Before continuing, save an unchecked item in session memory/checklist, durably backed by
+   `<primary>/.tick/merge-cleanup/<owner>-<repo>/temp-docs.md` (append on resume). Include the
+   source checkout/branch, exact tip and integration baseline, remote branch URL, commit/file
+   summary, publication verification and pending disposition. This is a remote branch backup,
+   not `git stash`; no PR is opened or merged for it automatically.
+4. If the blocked integration branch itself carried these commits, only after verified
+   publication and the durable record, apply existing working-tree/session/claim/worktree
+   safeguards: preserve its local branch by renaming it and recreate a clean tracking
+   integration branch from live origin with the sandbox guard. Never reset, discard files,
+   clear another session's claims, or bypass readiness. Dirty/active/dependent state stays
+   protected. Re-run Phase 0; proceed with the already-authorized PR sequence only when ready.
+5. After the merge sequence, revisit every unchecked temp item, including resumed runs.
+   Report branch links, commit/file summaries and overlap with current integration; record
+   whether it is still pending or already covered. Offer keep, selectively recover via a
+   reviewed PR, or discard for the operator to decide. Never auto-merge, auto-delete branches,
+   mark disposal complete, or tear down source checkouts merely because the backup is pushed.
+   Include the overview in the final chat and qualifying batch issue even on a stopped run.
 
 ### Phase 1: Discover & Inventory
 - Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones; task clones that follow the GH-970 location decision are siblings of the primary, found with `--root "$(dirname <primary>)"`). The list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
