@@ -1,0 +1,14 @@
+$ bash <USER_HOME>/.codex/skills/relay-xyz/find-harness.sh --check
+exit: 0
+stdout:
+relay harness readiness:
+  ok  harness  (<TASK_CLONE>)
+  !   harness clone is on feat/gh998-adk-evidence-quickwins, expected development
+  ok  tick CLI  (<TASK_CLONE>/bin/tick)
+  ok  codex CLI (Path A worker)  (<USER_HOME>/.local/bin/codex)
+  ok  agy CLI   (Path A worker)  (<USER_HOME>/.local/bin/agy)
+  ok  cmd CLI   (Path A worker, Command Code)  (<USER_HOME>/.hermes/node/bin/cmd)
+  ok  dsh CLI   (Path A worker, DeepSeek)  (<USER_HOME>/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js)
+
+stderr:
+find-harness: HARNESS=<TASK_CLONE> REPO_ROOT=<TASK_CLONE> vendored=0 via=override
