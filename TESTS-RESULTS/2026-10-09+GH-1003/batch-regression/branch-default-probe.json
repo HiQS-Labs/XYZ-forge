@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-09T10:26:27.970566+00:00",
+  "fixture_config": "[user]\n name = Qualification Fixture\n email = fixture@example.test\n",
+  "probes": [
+    {
+      "mode": "default",
+      "command": [
+        "git",
+        "init",
+        "--quiet",
+        "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1003-regression-2026-10-09/temp/branch-default-default-_oa7vgds"
+      ],
+      "branch": "master",
+      "main_exists": false
+    },
+    {
+      "mode": "main-control",
+      "command": [
+        "git",
+        "-c",
+        "init.defaultBranch=main",
+        "init",
+        "--quiet",
+        "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1003-regression-2026-10-09/temp/branch-default-main-control-5r9wj0f9"
+      ],
+      "branch": "main",
+      "main_exists": true
+    }
+  ]
+}
