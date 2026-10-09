@@ -18,13 +18,13 @@ reversibility: Easy — revert the instruction and catalog edits before deployme
 
 | What was just completed | What's next |
 |---|---|
-| Plan and final QA Approved; source/evidence complete | Publish through push gate; await merge before GH-1008 |
+| Both QA relays Approved; PR #1009 published through normal gate | Verify hosted checks; await authorized merge before GH-1008 |
 
 ## Requirements and serial handoff
 
 | Issue | Scope and acceptance | Dependency and state |
 |---|---|---|
-| [GH-1007](https://github.com/HiQS-Labs/XYZ-forge/issues/1007) | Revise SWE in its owning source; planning, implementation, review; four axes; reuse; earned tests; advisory performance; plan and final relay QA | Current branch; plan and final QA Approved; awaiting gated PR publication and merge |
+| [GH-1007](https://github.com/HiQS-Labs/XYZ-forge/issues/1007) | Revise SWE in its owning source; planning, implementation, review; four axes; reuse; earned tests; advisory performance; plan and final relay QA | [PR #1009](https://github.com/HiQS-Labs/XYZ-forge/pull/1009); both QA Approved; awaiting checks/merge |
 | [GH-1008](https://github.com/HiQS-Labs/XYZ-forge/issues/1008) | Ponytail-first performance measurement skill using existing evidence and task docs | GitHub issue only by explicit request. Start after SWE finishes; no performance implementation here |
 
 /start-task ends at a ready PR. It does not authorize merge or deployment. If SWE is
@@ -163,3 +163,8 @@ focused verification. Any bookkeeping after final approval records receipts/stat
 publication still requires the installed push gate and live PR/check inspection. GH-1008
 remains issue-only pending authorized landing of GH-1007. Retain the task clone until
 verified origin landing and safe cleanup. No deployed payload was changed.
+
+Initial publication: normal documentation pre-push gate passed in 68 seconds at
+`7dbdb7e8122424d60f9c32e6106e18d358afee16`, no bypass. PR #1009 targets development;
+source digest unchanged. Hosted checks must be inspected on the final PR head.
+This receipt/status commit does not change the reviewed skill or catalog.
