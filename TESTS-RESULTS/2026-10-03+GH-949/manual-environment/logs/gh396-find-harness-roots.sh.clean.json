@@ -1,0 +1,181 @@
+{
+  "at_utc": "2026-10-03T07:15:31Z",
+  "suite": "gh396-find-harness-roots.sh",
+  "mode": "clean",
+  "argv": [
+    "python3",
+    "utils/py/proc_group.py",
+    "--timeout",
+    "90",
+    "--",
+    "bash",
+    "test/gh396-find-harness-roots.sh"
+  ],
+  "cwd": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+  "effective_selection_env": {
+    "XYZ_HARNESS": null,
+    "XYZ_REPO_ROOT": null
+  },
+  "verify_before": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+    "head": {
+      "rc": 0,
+      "stdout": "3fbed72f781d1ad060e298b798a44c32edef393d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/development",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## development...origin/development",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 3fbed72f781d1ad060e298b798a44c32edef393d\nbranch refs/heads/development",
+      "stderr": ""
+    },
+    "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "task_before": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+    "head": {
+      "rc": 0,
+      "stdout": "d44cac51ce861d53c0e034c243b0f6be5205073d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## fix/gh949-ate-remediation...origin/development [ahead 8]\n M releases.db\n M releases.sql",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD d44cac51ce861d53c0e034c243b0f6be5205073d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+  },
+  "outer_rc": 0,
+  "stdout": "gh396 find-harness two-roots contract:\n  PASS: plain .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: plain .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: plain .xyz: override still selects the harness it names\n  PASS: plain .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.k9CZgg/a-plain/.xyz') is True\n  PASS: plain .xyz (python): is_vendored() with override is True\n  PASS: plain .xyz (python): repo_root() with override matches consumer repo\n  PASS: linked worktree, override=main .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: linked worktree, override=main .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: linked worktree, override=main .xyz: override still selects the harness it names\n  PASS: linked worktree, override=main .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.k9CZgg/b-main/.xyz') is True\n  PASS: linked worktree, override=main .xyz (python): is_vendored() with override is True\n  PASS: linked worktree, override=main .xyz (python): repo_root() with override matches consumer repo\n  PASS: symlink inside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: symlink inside repo: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: symlink inside repo: override still selects the harness it names\n  PASS: symlink inside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.k9CZgg/c-inside/.xyz') is True\n  PASS: symlink inside repo (python): is_vendored() with override is True\n  PASS: symlink inside repo (python): repo_root() with override matches consumer repo\n  PASS: symlink outside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo\n  PASS: symlink outside repo: XYZ_HARNESS override agrees with auto-discovery (#395)\n  PASS: symlink outside repo: override still selects the harness it names\n  PASS: symlink outside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.k9CZgg/d-outside/.xyz') is True\n  PASS: symlink outside repo (python): is_vendored() with override is True\n  PASS: symlink outside repo (python): repo_root() with override matches consumer repo\n  PASS: symlink outside repo: control \u2014 git cannot resolve the link target, so the fallback is load-bearing\n  PASS: precedence step 1: valid XYZ_HARNESS override wins over local .xyz\n  PASS: precedence step 1: invalid override falls through to local .xyz\n  PASS: precedence step 2: local .xyz selected with no override\n  PASS: precedence step 3: delegated to gh292-worktree-vendored-discovery.sh (linked worktree, no override)\n  PASS: precedence step 4: harness clone resolves to itself\n  PASS: precedence step 5: foreign repo falls back to the script's own harness\n  PASS: #394: auto-discovery warns that the vendored copy is behind\n  PASS: #394: the warning still fires when XYZ_HARNESS points at the stale .xyz\n  PASS: #394: the printed remedy is runnable as printed (bash /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.k9CZgg/live-harness/relay-automation/xyz-sync.sh update /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.k9CZgg/f-stale)\n  PASS: --quiet: accepted (exit 0)\n  PASS: --quiet: no find-harness: announcement on stderr\n  PASS: --quiet: exported names and values are identical to the loud form\n  PASS: file-symlinked locator: resolves root correctly via file symlink\n  PASS: harness-paths.sh: xyz_harness_home matches harness directory\n  PASS: harness-paths.sh: xyz_harness_tool resolves tool\n  PASS: harness-paths.sh: xyz_emit_env_exports emits correct format\n  gh396-find-harness-roots: 41 pass, 0 fail\n",
+  "stderr": "",
+  "timed_out": false,
+  "verify_after": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+    "head": {
+      "rc": 0,
+      "stdout": "3fbed72f781d1ad060e298b798a44c32edef393d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/development",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## development...origin/development",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 3fbed72f781d1ad060e298b798a44c32edef393d\nbranch refs/heads/development",
+      "stderr": ""
+    },
+    "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "task_after": {
+    "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+    "head": {
+      "rc": 0,
+      "stdout": "d44cac51ce861d53c0e034c243b0f6be5205073d",
+      "stderr": ""
+    },
+    "branch": {
+      "rc": 0,
+      "stdout": "refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "status": {
+      "rc": 0,
+      "stdout": "## fix/gh949-ate-remediation...origin/development [ahead 8]\n M releases.db\n M releases.sql",
+      "stderr": ""
+    },
+    "core_bare": {
+      "rc": 0,
+      "stdout": "false",
+      "stderr": ""
+    },
+    "remotes": {
+      "rc": 0,
+      "stdout": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "stderr": ""
+    },
+    "local_email": {
+      "rc": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    "worktrees": {
+      "rc": 0,
+      "stdout": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD d44cac51ce861d53c0e034c243b0f6be5205073d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "stderr": ""
+    },
+    "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+  },
+  "verify_identity_unchanged": true,
+  "task_identity_unchanged": true
+}

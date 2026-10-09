@@ -34,10 +34,38 @@ import signal
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Optional
 
 TIMEOUT_RC = 124
+
+
+class Cancelled(KeyboardInterrupt):
+    """CLI cancellation retaining the conventional signal exit status."""
+    def __init__(self, signum: int):
+        self.signum = signum
+        super().__init__(f"interrupted by signal {signum}")
+
+
+@contextmanager
+def cancellation_signals():
+    """CLI/main-thread boundary only; repeated signals cannot interrupt cleanup."""
+    signals = (signal.SIGINT, signal.SIGTERM)
+    previous = {sig: signal.getsignal(sig) for sig in signals}
+
+    def cancel(signum, _frame):
+        for sig in signals:
+            signal.signal(sig, signal.SIG_IGN)
+        raise Cancelled(signum)
+
+    try:
+        for sig in signals:
+            signal.signal(sig, cancel)
+        yield
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 @dataclass
@@ -96,17 +124,26 @@ def run_bounded(
         stdin=subprocess.DEVNULL, text=True, errors="replace", start_new_session=True,
     )
     try:
-        out, err = proc.communicate(timeout=timeout)
-        return BoundedResult(proc.returncode, out or "", err or "", False, proc.pid,
-                             time.monotonic() - t0)
-    except subprocess.TimeoutExpired:
+        try:
+            out, err = proc.communicate(timeout=timeout)
+            return BoundedResult(proc.returncode, out or "", err or "", False, proc.pid,
+                                 time.monotonic() - t0)
+        except subprocess.TimeoutExpired:
+            kill_existing(proc.pid, grace=grace)
+            try:
+                out, err = proc.communicate(timeout=grace + 5)
+            except subprocess.TimeoutExpired:
+                out, err = "", ""
+            return BoundedResult(None, out or "", err or "", True, proc.pid,
+                                 time.monotonic() - t0)
+    except BaseException:
         kill_existing(proc.pid, grace=grace)
         try:
-            out, err = proc.communicate(timeout=grace + 5)
-        except subprocess.TimeoutExpired:
-            out, err = "", ""
-        return BoundedResult(None, out or "", err or "", True, proc.pid,
-                             time.monotonic() - t0)
+            proc.wait(timeout=grace + 5)
+        finally:
+            proc.stdout.close()
+            proc.stderr.close()
+        raise
 
 
 def main() -> int:
@@ -133,72 +170,82 @@ def main() -> int:
         return 0
     if not cmd:
         parser.error("no command after '--' (or use --kill-pgid N)")
+    if args.timeout is None:
+        parser.error("--timeout is required unless --kill-pgid is used")
     try:
         proc = subprocess.Popen(cmd, start_new_session=True)
     except (FileNotFoundError, OSError, ValueError) as exc:
         print(f"proc_group: spawn failed: {exc}", file=sys.stderr)
         return 127
-    if args.pgid_file:
-        # Fail closed (GH-478 round 3): the bash caller tracks the group through this
-        # file. If it cannot be published, kill the just-started group rather than
-        # leave an untrackable child behind, and say so.
-        try:
-            with open(args.pgid_file, "w") as fh:
-                fh.write(str(proc.pid))
-        except OSError as exc:
-            print(f"proc_group: pgid publication FAILED ({exc}) — killing the "
-                  f"just-started group {proc.pid}", file=sys.stderr)
-            kill_existing(proc.pid, grace=args.grace)
-            try:
-                proc.wait(timeout=args.grace + 5)
-            except subprocess.TimeoutExpired:
-                pass
-            return 125
-    if args.ack_file:
-        # Two-phase startup (GH-478 round 4): the child stays killable-by-handshake —
-        # if the caller never acknowledges a validated pgid, kill the group instead of
-        # leaving it untracked. The child is already in its own session, so this works
-        # no matter what the caller's shell did with the wrapper.
-        ack_deadline = time.monotonic() + args.ack_wait
-        acknowledged = False
-        while time.monotonic() < ack_deadline:
-            if os.path.exists(args.ack_file):
-                acknowledged = True
-                try:
-                    os.remove(args.ack_file)  # consume it — the caller must not race a re-create
-                except OSError:
-                    pass
-                break
-            try:
-                os.killpg(proc.pid, 0)
-            except (ProcessLookupError, PermissionError, OSError):
-                acknowledged = True  # child already exited on its own; nothing to guard
-                break
-            time.sleep(0.1)
-        if not acknowledged:
-            print(f"proc_group: pgid NEVER ACKNOWLEDGED — killing the just-started "
-                  f"group {proc.pid}", file=sys.stderr)
-            kill_existing(proc.pid, grace=args.grace)
-            try:
-                proc.wait(timeout=args.grace + 5)
-            except subprocess.TimeoutExpired:
-                pass
-            return 125
-    if args.timeout is None:
-        parser.error("--timeout is required unless --kill-pgid is used")
     try:
-        proc.wait(timeout=args.timeout)
-    except subprocess.TimeoutExpired:
-        print(f"proc_group: TIMEOUT after {args.timeout}s — killing process group of "
-              f"pid {proc.pid}: {' '.join(cmd)}", file=sys.stderr)
-        kill_existing(proc.pid, grace=args.grace)
+        if args.pgid_file:
+            # Fail closed (GH-478 round 3): the bash caller tracks the group through this
+            # file. If it cannot be published, kill the just-started group rather than
+            # leave an untrackable child behind, and say so.
+            try:
+                with open(args.pgid_file, "w") as fh:
+                    fh.write(str(proc.pid))
+            except OSError as exc:
+                print(f"proc_group: pgid publication FAILED ({exc}) — killing the "
+                      f"just-started group {proc.pid}", file=sys.stderr)
+                kill_existing(proc.pid, grace=args.grace)
+                try:
+                    proc.wait(timeout=args.grace + 5)
+                except subprocess.TimeoutExpired:
+                    pass
+                return 125
+        if args.ack_file:
+            # Two-phase startup (GH-478 round 4): the child stays killable-by-handshake —
+            # if the caller never acknowledges a validated pgid, kill the group instead of
+            # leaving it untracked. The child is already in its own session, so this works
+            # no matter what the caller's shell did with the wrapper.
+            ack_deadline = time.monotonic() + args.ack_wait
+            acknowledged = False
+            while time.monotonic() < ack_deadline:
+                if os.path.exists(args.ack_file):
+                    acknowledged = True
+                    try:
+                        os.remove(args.ack_file)  # consume it — the caller must not race a re-create
+                    except OSError:
+                        pass
+                    break
+                try:
+                    os.killpg(proc.pid, 0)
+                except (ProcessLookupError, PermissionError, OSError):
+                    acknowledged = True  # child already exited on its own; nothing to guard
+                    break
+                time.sleep(0.1)
+            if not acknowledged:
+                print(f"proc_group: pgid NEVER ACKNOWLEDGED — killing the just-started "
+                      f"group {proc.pid}", file=sys.stderr)
+                kill_existing(proc.pid, grace=args.grace)
+                try:
+                    proc.wait(timeout=args.grace + 5)
+                except subprocess.TimeoutExpired:
+                    pass
+                return 125
         try:
-            proc.wait(timeout=args.grace + 5)
+            proc.wait(timeout=args.timeout)
         except subprocess.TimeoutExpired:
-            pass
-        return TIMEOUT_RC
-    return proc.returncode
+            print(f"proc_group: TIMEOUT after {args.timeout}s — killing process group of "
+                  f"pid {proc.pid}: {' '.join(cmd)}", file=sys.stderr)
+            kill_existing(proc.pid, grace=args.grace)
+            try:
+                proc.wait(timeout=args.grace + 5)
+            except subprocess.TimeoutExpired:
+                pass
+            return TIMEOUT_RC
+        return proc.returncode
+    except BaseException:
+        kill_existing(proc.pid, grace=args.grace)
+        proc.wait(timeout=args.grace + 5)
+        raise
+
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        with cancellation_signals():
+            sys.exit(main())
+    except Cancelled as exc:
+        sys.exit(128 + exc.signum)

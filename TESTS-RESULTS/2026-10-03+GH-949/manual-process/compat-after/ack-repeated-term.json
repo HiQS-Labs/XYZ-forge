@@ -1,0 +1,36 @@
+{
+  "child_live_before": true,
+  "ack_absent": true,
+  "live_during_cleanup": true,
+  "returncode": 143,
+  "child_live_after": false,
+  "correct_properties": {
+    "ack_wait_exercised": true,
+    "repeated_signals_exercised": true,
+    "first_signal_status": true,
+    "child_reaped": true
+  },
+  "independent_cleanup_child_absent": true,
+  "case": "ack-repeated-term",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/py/proc_group.py",
+    "--timeout",
+    "60",
+    "--grace",
+    "1",
+    "--pgid-file",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/compat-after/term.pgid",
+    "--ack-file",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/compat-after/term.ack",
+    "--ack-wait",
+    "30",
+    "--",
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/compat-after/worker.py",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/compat-after/term.pid"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:20:57.491177+00:00",
+  "finished_utc": "2026-10-03T07:20:59.069195+00:00"
+}
