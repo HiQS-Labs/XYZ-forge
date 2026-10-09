@@ -89,4 +89,12 @@ swept file: yes
 - Graph: Verify tier, canonical project Users-noelsaw-Documents-GH-Repos-XYZ-forge, ready generation 2026-10-09T10:38:13Z; coverage records no gap for skill/merge_cleanup/express/gh436. Different checkout/current policy verified from exact local objects, not stale graph text.
 Relay closed (Approved), no further review turn needed; Producer express owns the subsequent clone gate and landing.
 
+
+### Attestation · relay-drive — 2026-10-09T15:17:49Z
+task: GH1005-TEMP-DOCS-QA
+reviewer: codex
+status: Approved
+reviewed-head: f2bc1a9084a63e5c862d824ff5cf1e8faf8e3a8b
+added-range: 7323+3733
+added-sha256: a60ba88059d3ef925fbc3796c766c66582717ae5bd0451c2b71640c0a1ae9c5a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
