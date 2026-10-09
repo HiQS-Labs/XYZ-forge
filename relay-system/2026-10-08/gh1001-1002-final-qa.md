@@ -100,4 +100,12 @@ Evidence limits: no graph tools are callable here, so current source was read di
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) owns PR preparation and the nonblocking status update; the harness owns this file-scoped commit and the post-turn gate.
 
+
+### Attestation · relay-drive — 2026-10-09T08:22:00Z
+task: RELAY-gh1001-1002-final-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: 8a01ae2e13db367002367732bebfaec2e3a9c17e
+added-range: 8743+8071
+added-sha256: 6b12b81d842ff4b16896fd32c5704d803ba66d75b1da39afe0f847f3b5d03e43
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
