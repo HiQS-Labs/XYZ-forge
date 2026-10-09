@@ -109,4 +109,12 @@ PY
 
 Relay closed (Approved), no further review turn needed. Handing completion to Producer (merge-cleanup) for the final-head release check and relevant existing gate in a separate full clone; the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-09T07:08:45Z
+task: GH1003-PR953-MERGE-QA-R2
+reviewer: codex
+status: Approved
+reviewed-head: 0db45866d2984aee6bd7d9d39fecc491172c95d2
+added-range: 6966+4273
+added-sha256: d4baae029b77590bf621b54d1f3ffee0939b5c2300f0ef4f3addd74c8c9a0ef3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
