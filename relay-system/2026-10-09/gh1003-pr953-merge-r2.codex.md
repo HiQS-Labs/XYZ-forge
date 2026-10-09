@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,33 @@ Questions:
 The final-head release check and relevant existing gate run belong in a separate full clone. Do not run suite/pytest/fixtures or change artifacts. Edit only this transcript.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Approved for the bounded generated-view correction at `a57884ad3208d2923d59d4e9914ad06939ec8990`. The prior Should finding is resolved; authoritative artifacts and source retain the previously reviewed resolution. Final-head clone qualification remains pending.
+swept file: yes
+
+Scope: read all 309 lines of `LEADERBOARD.md`, the entire previous receipt, and compared complete stored trees with SHA-1 verification without invoking git. No additional pre-existing defect was found within this view-preservation review. The graph registry has no project rooted at this seeded checkout; these non-code/object-identity claims use direct stored-object and file reads. No full-ledger sweep was repeated.
+
+- [Pass] The corrected view and integration parent `38ac9ee43bdedbd25be0cfec2029b0a27abd70a1` share blob `86a63289f4def9c436de2419377ed8379cfabe17`; the working file equals those 66,283 bytes. `LEADERBOARD.md:1` now reads `<!-- releases-app generation: 1481 -->`; `LEADERBOARD.md:2` identifies it as generated, and `AGENTS.md:54`–56 assigns routine views to hosted reconciliation. This satisfies the exact falsifier in `relay-system/2026-10-08/gh1003-pr953-merge.codex.md:96`; the retained older view generation is deliberate pending reconciliation. Probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 .relay-scratch/tmp/object_probe.py`, exit 0; decisive output: `integration view equals correction True`, `working view equals correction True bytes 66283 lines 309`.
+- [Pass] Correction versus its immediate parent `77b3a477f250ce38403b25e557b8c8bb66ce3391` changes exactly `['LEADERBOARD.md']`. Versus previously reviewed `a5abfacb2e80bfe65ee7dbc68666eb676343ad6f`, the only changes are that view and the previous review transcript. Every remaining path retains its mode/object identity, including all source and committed merge evidence. Exact unchanged blobs: CHANGELOG `2efcb720002acc116fe43609ae9ae7233feefa2e`, SQL `58f211e366134448a385b6c5642ada8f828dab6b`, DB `e8f2f18b3b83f06e97695ec9cec6a6e435047c1a`. Citations: previous receipt `relay-system/2026-10-08/gh1003-pr953-merge.codex.md:98`–101 records their passing preservation/consistency review. Same object probe, exit 0, prints these exact deltas and `equals prior True` for all three authoritative artifacts.
+- [Pass] Seed HEAD `0db45866d2984aee6bd7d9d39fecc491172c95d2` contains the correction and adds only this renewed relay scaffold. The working changelog/SQL/DB hash to the correction's blobs. Full-view inspection includes the explanation at `LEADERBOARD.md:6`, all 292 rows at `LEADERBOARD.md:14` through `LEADERBOARD.md:305`, and source footer at `LEADERBOARD.md:309`. Probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 .relay-scratch/tmp/seed_check.py`, exit 0; decisive output: `seed delta versus correction ['relay-system/2026-10-09/gh1003-pr953-merge-r2.codex.md']`, three `working bytes equal correction ... True`, and `whole view rows 292 first rank 1 last rank 292`.
+- [Unverified — needs clone run] The final-head release check and existing gate were not run here, as required by this review request at line 80 and the previous receipt at `relay-system/2026-10-08/gh1003-pr953-merge.codex.md:102`. Approval covers this correction; merge qualification remains the Producer/harness's separate full-clone step.
+
+Manual red control of the same integration-parent identity predicate (original candidate substituted for correction), exit **1**, decisive output: `AssertionError: red control: old view fails integration-parent identity`. Command:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY'
+import sys
+sys.path.insert(0,'.relay-scratch/tmp')
+from object_probe import commit
+old,_=commit('a5abfacb2e80bfe65ee7dbc68666eb676343ad6f')
+integration,_=commit('38ac9ee43bdedbd25be0cfec2029b0a27abd70a1')
+assert old['LEADERBOARD.md']==integration['LEADERBOARD.md'], 'red control: old view fails integration-parent identity'
+PY
+```
+
+Relay closed (Approved), no further review turn needed. Handing completion to Producer (merge-cleanup) for the final-head release check and relevant existing gate in a separate full clone; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
