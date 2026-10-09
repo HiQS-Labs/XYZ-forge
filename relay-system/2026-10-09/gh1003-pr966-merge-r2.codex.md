@@ -99,4 +99,12 @@ Scope: all 309 lines of `LEADERBOARD.md`, full mode/blob maps for the correction
 
 Relay closed (Approved), no further review turn needed. Producer (merge-cleanup) continues with final-head release/gate checks in a disposable full clone; the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-09T07:09:05Z
+task: GH1003-PR966-MERGE-QA-R2
+reviewer: codex
+status: Approved
+reviewed-head: 48664ea247fbea53dceba3442ebb98f781bbb42e
+added-range: 6966+4029
+added-sha256: 29e261dd016ce4277cfa2e313ae26d8e60efb29dea7bc1db4d7f6c6978f8c5a6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
