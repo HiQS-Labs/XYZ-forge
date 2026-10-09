@@ -1,0 +1,27 @@
+{
+  "pr": 966,
+  "tested_commit": "4a965bff58c50b9bada89ad78c6230dec5112058",
+  "command": [
+    "bash",
+    "validate.sh",
+    "--sequential",
+    "--subsystem",
+    "small"
+  ],
+  "timestamp": "2026-10-09T07:18:07.076736+00:00",
+  "rc": 1,
+  "identity_intact": true,
+  "elapsed_s": 905.8,
+  "before": {
+    "HEAD": "4a965bff58c50b9bada89ad78c6230dec5112058\n",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git\n",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\n",
+    "status": ""
+  },
+  "after": {
+    "HEAD": "4a965bff58c50b9bada89ad78c6230dec5112058\n",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git\n",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\n",
+    "status": ""
+  }
+}
