@@ -1,0 +1,10 @@
+{
+  "pr": 971,
+  "tested_commit": "df2aa3687dcb193b5a0aa7b4f8747bccd055e9c7",
+  "command": "validate_head_in_second_clone: releases_app.py --root <second-full-clone> check",
+  "result": "pass",
+  "reason": "clean in a second clone",
+  "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "head": "df2aa3687dcb193b5a0aa7b4f8747bccd055e9c7",
+  "limitations": "release check only; hosted smoke at pushed head and landing qualification remain required"
+}

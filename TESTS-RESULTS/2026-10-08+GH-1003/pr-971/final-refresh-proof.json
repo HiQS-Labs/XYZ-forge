@@ -66,5 +66,6 @@
     "utils/py/proc_group.py"
   ],
   "tested_own_candidate": "9ce8e5b28ac4ba150548c97db8ab9c093f879f4c",
-  "limitations": "final independent QA, exact-head second-clone release check and hosted smoke remain pending"
+  "limitations": "final independent QA, exact-head second-clone release check and hosted smoke remain pending",
+  "row_count_scope": "Producer readback selected qualified issue rows; independent final peer review compared the complete expected table, including unqualified rows."
 }
