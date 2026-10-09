@@ -146,3 +146,12 @@ checkpoint and explicit authorization when rollback is impossible. Add the disti
 existing manual review scenarios. No machinery or suite added. Proposal now also restores the
 Pillar 0/Blast headings and clarifies that the explicitly requested GH-1008 skill is allowed
 while reusing SWE governance. Receipt: `relay-system/2026-10-09/gh1007-plan.codex.md`. No approval inferred from format checks alone.
+
+Final QA Round 1: SWE passed all seven textual scenarios; review requested runtime-doc
+cleanup and a complete diff packet. F1 disposition: Rejected (Out of Scope / Ponytail).
+It is a real pre-existing architecture mismatch, parked at
+`PARKED/2026-10-09-architecture-runtime-ownership.md`; the SWE catalog sentence does not
+introduce it. No runtime owner changes are required by this task. Missing review input:
+Implemented — seed the complete base-to-head textual diff and changed-path manifest;
+review binary ledger via the SQL diff and current read-only row. Scope historical
+append-only CHANGELOG to the new GH-1007 entry and verify no historic text changed.

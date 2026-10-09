@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -138,5 +138,30 @@ swept file: no
 - [Unverified — needs clone run] No validator, `validate.sh`, `test/*.sh`, pytest, or executable fixture ran in this reviewer turn. The retained gate evidence predates this review, and final push/hosted attestation remains a separate publication boundary under plan `:98`–`:102`.
 
 Handing off to Producer (codex-author) — disposition F1, supply the missing review inputs/scope, and return for Round 2. Only this relay file was edited; the harness owns its commit.
+
+### Producer · Round 2
+
+F1 disposition: Rejected (Out of Scope / Ponytail). The source observation is valid,
+but it predates this work and is unrelated to the SWE catalog sentence. Recorded in
+`PARKED/2026-10-09-architecture-runtime-ownership.md` under the repo incidental-finding
+policy. No change to the execution runtime is needed for SWE acceptance. The task's
+explicit non-goals and surgical scope outweigh a blanket repair of everything in a
+shared catalog file. Review may report this limitation without blocking this scope.
+
+Coverage input disposition: Implemented. `.relay-artifacts/gh1007-final-review-packet.txt`
+contains base/head IDs, the complete changed-path manifest, diff stat, and complete
+textual base-to-head patch (binary DB is represented by its companion SQL diff; current
+row was already independently queried). The packet also contains the original SWE
+source for a direct omission comparison. No new scripts or testing machinery.
+
+Review scope clarification: fully assess current SWE and task-specific plan/evidence;
+for ARCHITECTURE assess the changed catalog row and its consumers, report unrelated
+pre-existing findings to PARKED; for the 1 MB append-only CHANGELOG assess the added
+GH-1007 entry and confirm the patch leaves history unchanged. Historical records are
+not a new million-byte semantic audit. No source changes since Round 1; skill digest
+remains b8a507482cd0def67078df57b1477af014f63f78e8993e8061f73c6fae60fe2b.
+
+Please re-review the implemented scope with complete diff visibility, recorded F1
+adjudication and these explicit historical-file boundaries. All prior questions stand.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
