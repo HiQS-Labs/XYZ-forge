@@ -149,4 +149,12 @@ swept file: yes
 
 Relay closed (Approved), no further plan-review turn needed. Handing completion to Producer (codex-author) for the approved implementation sequence and subsequent final QA. The harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-09T15:39:35Z
+task: RELAY-gh1007-plan
+reviewer: codex
+status: Approved
+reviewed-head: 925248ecbba108e389516336db4853dcf159b60b
+added-range: 14942+6338
+added-sha256: b4b5ac2ef1463d7872de6ee9618e4be5ab7727d56fced3981b201d9c673db062
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
