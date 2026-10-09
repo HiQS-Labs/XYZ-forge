@@ -207,3 +207,7 @@ Not executed by this PR. Run in order; stop at the first failure. `C` = the devi
 ## Merge evidence
 
 - PR #941 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #979 merged 2026-10-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

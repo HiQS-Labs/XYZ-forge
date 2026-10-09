@@ -1,0 +1,19 @@
+$ python3 utils/py/releases_app.py roadmap list --json
+exit: 0
+stdout (projection: owned GH-998 row only; other rows omitted):
+[
+  {
+    "global_id": "rmi-01M4D2PN45SNCRZBHASABK3WEC",
+    "gh_number": 998,
+    "title": "ADK evidence quick wins",
+    "section": "In progress",
+    "position": 123,
+    "status_marker": "\ud83d\udea7",
+    "doc_path": "PROJECT/2-WORKING/GH-998-ADK-EVIDENCE.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/998",
+    "raw_text": "- **GH-998 \u00b7 ADK evidence quick wins** \u2014 rated 60/20/50/85 \u00b7 [plan](PROJECT/2-WORKING/GH-998-ADK-EVIDENCE.md)",
+    "status_label_supported": true,
+    "status_label": "in-progress"
+  }
+]
+stderr:
