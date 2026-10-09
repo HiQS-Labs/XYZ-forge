@@ -100,4 +100,12 @@ The complete plan and linked recon were reviewed, along with the referenced merg
 
 Relay closed (Approved), no further turn needed. Producer may proceed with implementation and the specified clone-run verification.
 
+
+### Attestation · relay-drive — 2026-10-09T19:07:16Z
+task: RELAY-gh1010-plan
+reviewer: codex
+status: Approved
+reviewed-head: eb8a32455ef3ef20544dec962c1f78b782edd49e
+added-range: 6270+3088
+added-sha256: 4e846b5975c38f7303ba7c5936d97443a0dd6e7d7bae0e70b9e51f63a6e5b352
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
