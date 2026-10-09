@@ -20,7 +20,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA round 1: FAIL with S1–S5, N1–N2; all accepted (S1 modified); plan revised. | Codex plan QA round 2. |
+| Codex plan QA round 2: FAIL on S6 only (red-control wording); corrected. | Codex plan QA round 3. |
 
 ## Issue map (one branch, one PR)
 
@@ -132,8 +132,13 @@ Branch `fix/gh-1001-1002-vendored-marathon` off `origin/development` 38ac9ee4, c
    worktree block with the two observed shapes (`test-satori.mjs` at root, `tools/spike/test_satori.mjs`
    nested inside an **already tracked** directory) → not off-lane and relocated; a wholly **new**
    directory containing only `probe_x.mjs` → relocated, OFFLANE=0; the same new directory with
-   `notes.md` beside the probe → OFFLANE=1, nothing relocated and nothing copied back. Red controls:
-   each new assertion fails on the base revision (recorded in the evidence dir). Suites run in a
+   `notes.md` beside the probe → OFFLANE=1, nothing relocated and nothing copied back. Red controls (plan QA S6):
+   the **positive** relocation assertions (hyphenated root probe, nested probe in a tracked directory,
+   scratch-only new directory) must fail on the base revision; the **mixed-directory refusal**
+   assertion already holds on base, so its red witness is a temporary mutation in the disposable
+   candidate clone that makes the all-files-scratch decision accept a mixed directory — the OFFLANE=1
+   assertion must go red, then green again once restored. Both receipts with provenance go to
+   `TESTS-RESULTS/2026-10-08+GH-1002/`. Suites run in a
    disposable full clone for candidate and base.
 5. **B2 — cap check before the relay commit** (`marathon_drive.py`): reuse the existing read-only
    reader `debug_mantra_prior_attempts` (`:1206-1216`, plan QA N1 — renamed to a neutral
