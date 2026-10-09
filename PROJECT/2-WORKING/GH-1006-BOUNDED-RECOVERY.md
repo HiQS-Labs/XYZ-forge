@@ -2,12 +2,12 @@
 gh_issue: 1006
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1006
 title: "Marathon: bounded progress and safe repair handoff"
-status: "Working — observation implemented; verification and final QA"
+status: "Working — independent final code QA Approved; full gate pending"
 created: 2026-10-09
 updated: 2026-10-09
 owner: Codex
 goal: "Bound unattended observation and leave a verified milestone or actionable repair handoff"
-branch: feat/gh1006-bounded-recovery
+branch: feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09
 doc_type: feature
 effort: 3
 complexity: 3
@@ -19,7 +19,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA Approved round 3; observation and bounded repair procedure implemented; focused checks pass. | Finish retained manual evidence, independent final QA, then classified macOS gate and PR. |
+| Independent plan QA Approved round 3 and final code QA Approved round 2; observation/procedure and focused controls verified. | Classified full macOS push gate, retained provenance, then PR into development. |
 
 ## Table of contents
 
@@ -260,7 +260,7 @@ disposable-full-clone verification now resolve those findings; 16 clean/conflict
 argv probes, the old-command red control and package freshness are retained in `recipe-fix/`.
 Integration merged `ecec5561` through the repository RELEASES conflict resolver: both GH-1005
 and GH-1006 histories, original admission timestamp and rating survived; no observer code changed.
-Round 2 reviews the resulting committed artifact before the one full gate.
+Round 2 independently approved the resulting artifact at `bd6c7f55`. Receipt: `relay-system/2026-10-09/gh1006-final-qa.codex.md`. Branch renamed to the SOP folder-based naming formula before publication; runtime/package hashes are unchanged. The one classified full macOS gate remains owed.
 No accepted product milestone is claimed from these fixtures. Conditional continuation is held.
 
 ## Conditional continuation

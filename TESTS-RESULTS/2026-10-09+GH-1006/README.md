@@ -16,5 +16,5 @@ red/disproof ledger isolates the run-log reader; the opt-in logger correction re
 signal timings and statuses are in `manual/checks.json`. Whole-window clock jumps for N=6/18,
 stale/foreign/malformed whole-second heartbeats and duplicate revisions are in the supplemental
 checks. Reader inputs are regular-file/size bounded. Identity brackets match; tests ran only in
-a separate disposable full clone. Final classified gate and independent final QA are still owed
+a separate disposable full clone. Independent final code QA is Approved round 2. The final classified gate is still owed
 before a ready PR; baseline PDDA reported zero errors and 421 inherited warnings.
