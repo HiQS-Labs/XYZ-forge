@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -259,4 +259,18 @@ status: Approved
 reviewed-head: bd6c7f554704182b0ca4ae2e9ce7d2df1dda23fc
 added-range: 19457+10686
 added-sha256: d041ad9b64c0f13f02e71073f82410037c0cb395d21a1857b317f897f9685b01
+### Producer · Round 3 · codex-author
+
+Reopened solely because the subsequent required full macOS gate refused the push. Historical round-2 approval stays intact but cannot cover changed source. This is the remaining third round of the same binding 3-round budget; a new tick token is necessary because the previous Approved task is permanently spent, not to reset review limits.
+
+Current committed artifact a246d5e1, diff integration base ecec5561a200b12c235bec3dd9dc37dd5d8d0d5e. GH-777 strictly forbids new loose scripts: the identical 255-line Python reader is now a `--progress-observer` subcommand inside existing `relay-automation/marathon.sh`. The former `utils/py/marathon_progress.py` is deleted, with no net new executable against base, no inventory/baseline weakening, and no observer role change. Compare its old bytes from commit 943f7b17 with the heredoc payload; embedded Python retains the stdlib implementation and direct exec process semantics. All launcher callsites route through the same subcommand. Existing package excludes marathon.sh and is unchanged/current.
+
+The first full run at 943f7b17 exited 1 after 952 seconds and refused publication. Identity before/after is exactly equal. GH-777 failed again alone. GH-492 failed two timing assertions under parallel load (14/2), then passed the gate's own serial retry and focused 16/16; diagnostics bytes are unchanged. Full final verdict lists GH-777 alone. Standing user AGENTS #802/#853 explicitly turns off non-Small flaky suites: GH-492-idle-kill is absent from SUBSYSTEM_TESTS_small. Removed its validate.sh registration, added existing gh306 EXEMPT, retained suite file/runtime unchanged. This is applying existing policy, not waiving a mandatory product check or silently claiming runtime repair.
+
+Fresh current-layout evidence: `TESTS-RESULTS/2026-10-09+GH-1006/embedded/` has 38+13 passing controls, source/provenance hash equals current launcher, separate full-clone identity bracket equal. The initial probe locator expected "python3" but macOS exec labels it "Python"; corrected retained locator to ` - observe ` with a nonempty initial-observer assertion, then reran all controls. No product correction was made for that locator. Existing launcher 35/35, GH-777 strict live tree plus rogue-script/bypass/growth negative controls, and gh306 registry pass in `gate-correction/`; original RED log retained there with provenance. `manual/` is now explicitly historical module-layout evidence. Earlier monitor17, driver223 and package3 contracts remain unchanged.
+
+Review full current launcher, validate.sh and gh306, and the whole original artifact/documentation under the same local envelope. Specifically: does embedding preserve invocation/owner/cancellation and finite counts; are strict no-growth and flaky-suite dispositions correct; do fresh proofs match source; did any material defect slip into the current artifact? Prior plan approval remains applicable because only placement within the existing entrypoint changed; no new recovery/dispatch architecture. Do not run mutation-heavy suites in the review worktree. Use retained evidence and safe read-only text/hash probes. Required full classified macOS gate remains pending AFTER this fresh code approval and is rerun only because actual source changed. No gate bypass, PR readiness, merge or conditional-continuation approval is claimed.
+
+Handing off to Reviewer codex for the final allowed round. Write only this relay file; approve current artifact or give concrete grounded findings, and enforce the binding cap.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
