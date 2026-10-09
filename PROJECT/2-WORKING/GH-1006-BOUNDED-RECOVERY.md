@@ -2,7 +2,7 @@
 gh_issue: 1006
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1006
 title: "Marathon: bounded progress and safe repair handoff"
-status: "Working — independent final code QA Approved; full gate pending"
+status: "Working — gate corrections verified; final QA round 3 pending"
 created: 2026-10-09
 updated: 2026-10-09
 owner: Codex
@@ -19,7 +19,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA Approved round 3 and final code QA Approved round 2; observation/procedure and focused controls verified. | Classified full macOS push gate, retained provenance, then PR into development. |
+| Plan QA Approved round 3; historical code QA Approved round 2; full gate refused GH-777. Existing-entrypoint correction and non-Small flaky-suite retirement verified. | Final code QA round 3, passing classified macOS gate, then PR into development. |
 
 ## Table of contents
 
@@ -161,7 +161,8 @@ One ordered implementation list, verification inline:
    settings, and refuse the feature with `XYZ_PYTHON=0` because that frozen driver lacks result
    receipts. Existing Bash fallback invocations without these flags remain supported -> bad/zero/
    overflow flags fail before a phase; ordinary dry-run stays compatible.
-2. Add a stdlib-only read/report helper in `utils/py/marathon_progress.py` (~300 lines ceiling). It
+2. Expose a stdlib-only read/report helper (~300 lines ceiling) through the existing
+   `marathon.sh --progress-observer` internal subcommand; GH-777 forbids a new loose script. It
    never dispatches, signals workers, mutates coordination state, changes caps, or grades a run.
    `marathon.sh` is the sole writer of a run-log-adjacent observation context, atomically through
    this helper. The context is an ephemeral projection, not operational state; the run log is the
@@ -260,7 +261,15 @@ disposable-full-clone verification now resolve those findings; 16 clean/conflict
 argv probes, the old-command red control and package freshness are retained in `recipe-fix/`.
 Integration merged `ecec5561` through the repository RELEASES conflict resolver: both GH-1005
 and GH-1006 histories, original admission timestamp and rating survived; no observer code changed.
-Round 2 independently approved the resulting artifact at `bd6c7f55`. Receipt: `relay-system/2026-10-09/gh1006-final-qa.codex.md`. Branch renamed to the SOP folder-based naming formula before publication; runtime/package hashes are unchanged. The one classified full macOS gate remains owed.
+Round 2 independently approved the resulting artifact at `bd6c7f55`. Receipt: `relay-system/2026-10-09/gh1006-final-qa.codex.md`. Branch renamed to the SOP folder-based naming formula before publication; runtime/package hashes are unchanged. The first full gate exposed GH-777
+inventory rejection of the new loose helper. The helper payload now routes through an existing
+launcher subcommand; no guard/baseline is weakened, and reader roles remain unchanged. The
+remaining third final QA round covers this placement correction and retained fresh probes.
+The unchanged GH-492 suite also failed 2 parallel timing assertions (14/2) and passed focused
+16/0 on identical diagnostics bytes. It is outside Small. The standing AGENTS #802/#853 rule
+requires removing its full-gate registration and adding the gh306 exemption; manual use remains.
+No idle-diagnostics runtime repair or claim of harmlessness is made here. The
+failed full run is retained in `gate-correction/`; clone identity stayed intact. Its serial retry passed GH-492 and final red was GH-777 alone. Current embedded reader has fresh 38+13 passing controls and launcher 35/35; inventory and registry existing controls pass. Evidence is in `embedded/` and `gate-correction/`; the earlier `manual/` module-layout hashes are historical. A passing classified gate remains owed.
 No accepted product milestone is claimed from these fixtures. Conditional continuation is held.
 
 ## Conditional continuation

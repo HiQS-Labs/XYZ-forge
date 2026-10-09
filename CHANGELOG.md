@@ -12,6 +12,10 @@ independent plan/final QA, required gates and publish-and-park. Automatic contin
 unmerged repair PR remains held behind #752/#1004, ownership, revision and original-budget proof.
 The bet is that attributable reports and a reviewed repair handoff make unattended time useful;
 they cannot guarantee a deliverable. Omit observation flags to roll back the runtime feature.
+The reader is embedded behind an existing launcher subcommand to preserve GH-777’s no-growth
+ratchet. The unchanged non-Small GH-492 idle suite failed parallel timing assertions but passed
+focused; per the standing AGENTS #802/#853 decision, it is removed from the full registry and
+retained for manual use. Its diagnostics runtime is unchanged.
 Existing suite and manual red/green evidence: `TESTS-RESULTS/2026-10-09+GH-1006/`.
 
 ## 2026-10-07 — ADK lessons: bounded command and retained trajectory assessment (GH-998)
