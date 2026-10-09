@@ -118,7 +118,7 @@ Agy and Claude require unanimity. Choose three explicit affirmative recommendati
 repair, and park on a missing/abstaining seat. This is a conservative decision rule, not a safety
 proof; independent post-change QA and deterministic constraints still decide readiness.
 Codex places observation at marathon.sh; Agy proposes Jog; Claude proposes a detached observer.
-Choose a finite read-only child owned by marathon.sh, retaining its synchronous phase calls. This
+Choose a finite read-only child owned by marathon.sh, retaining serial phase execution. This
 extends the current chain supervisor and avoids a second executor or a second runtime state machine.
 
 Agree: no guaranteed completion; heartbeat is activity; genuine cap exhaustion is not inherently a
@@ -148,6 +148,10 @@ QA gate:
 
 ## Phase 2 — Bounded observation and repair handoff
 
+Signal-design probe (macOS, disposable clone): foreground sleep deferred launcher TERM for 0.954s;
+background child + Bash wait delivered it in 0.001s (same exit 143). This proves the wait choice, not
+the full observer lifecycle. Receipt: `TESTS-RESULTS/2026-10-09+GH-1006/baseline/signal-design-probe.json`.
+
 One ordered implementation list, verification inline:
 
 1. Extend `marathon.sh` with opt-in `--progress-interval-s` and `--progress-check-count`. Supplying
@@ -162,13 +166,20 @@ One ordered implementation list, verification inline:
    this helper. The context is an ephemeral projection, not operational state; the run log is the
    durable report. Bind run ID, owner, plan, harness/product roots, initial SHA/origin, phase index/
    lane, and unique execution/result path at launch -> stale/foreign receipts cannot count.
-3. Start one finite reader child after validated plan parsing and before the phase loop; use six
-   absolute monotonic deadlines from reader start, carried across phases. Catchable exit/signals
-   notify and reap that observer; parent loss self-terminates it. Each read is bounded; schedule
-   catches up after host suspension by marking missed deadlines, never synthesizing past snapshots
-   -> phase changes do not reset the count, normal/catchable terminal exit cancels checks, and no
-   seventh report appears. Window expiry prints next observation action and stops only observation.
-4. Before each synchronous phase call, publish exact phase context and forward a unique
+3. Start one finite reader child after validated plan parsing and before the phase loop; use N
+   absolute monotonic deadlines (N = effective count), carried across phases. Only when observation
+   is enabled, launch each phase as one background child and synchronously `wait` for it before
+   starting any successor; Bash's interruptible wait lets launcher-only INT/TERM reach cleanup
+   promptly. Normal/catchable exit notifies/reaps the observer within one second on a responsive
+   host; parent loss self-terminates it within one second. Forward INT/TERM to the directly owned
+   phase process, retain interruption status (130/143), and report descendant ownership as unknown;
+   no descendant-stop or safe-refire guarantee is implied. Without observation, foreground calls
+   stay unchanged. Each snapshot read is bounded. After suspension, emit missed-slot records for
+   earlier due slots and one current snapshot for the latest due slot; all consume N. If the whole
+   window elapsed, mark 1..N-1 missed, snapshot N now, end observation immediately without extending
+   it -> phase changes do not reset N; no N+1 report appears. Default N=6 has no check 7; explicit
+   N=18 allows 7 and ends at 18. Window expiry prints next action and stops only observation.
+4. Before each serial phase call, publish exact phase context and forward a unique
    `--execution-id`/`--result-file` to the existing Python driver. After exit, record status and
    consume only a matching approved receipt with green gate and bound reviewer candidate. Mark
    `already-satisfied` as verification activity, not a new milestone. Read exact relay/heartbeat
@@ -208,8 +219,12 @@ Use existing `test/marathon.sh`, `test/marathon-monitor.sh`, `test/gh280-jog-mar
 receipt coverage and applicable package/frozen-twin checks. Do not add new suites, registry entries,
 gates, runners or telemetry stages. Record manual clock-controlled checks under
 `TESTS-RESULTS/2026-10-09+GH-1006/` with committed provenance and nonempty outputs. Show red controls
-for reset-per-phase, seventh check, stale/foreign/empty receipt, heartbeat-only acceptance, duplicate
-re-verification, terminal cancellation, parent loss, bad bounds and missing data. Narrow deterministic
+for reset-per-phase, N+1 check, stale/foreign/empty receipt, heartbeat-only acceptance, duplicate
+re-verification, terminal cancellation, parent loss, bad bounds and missing data. Check default N=6
+versus explicit N=18, and clock jumps over several slots and beyond the whole window, proving missed
+slots consume N without historical snapshots or deadline extension. On macOS measure child exit,
+launcher-only TERM/INT, process-group TERM, and actual owner disappearance separately; the
+one-second observer-cancellation claim needs a full launcher probe, not just a shell-semantics read. Narrow deterministic
 manual probes are evidence artifacts, not a new registered test suite.
 
 Run mutation-heavy checks only in a separate disposable full clone, bracketed by identity checks.
@@ -247,8 +262,8 @@ as guaranteed unattended recovery; the PR must describe this delivery boundary.
 | Validated opt-in 600×6 and effective dry-run | Launcher; bad bounds and default output probes |
 | Run-bound rich reports, no heartbeat-as-progress | Context reader; matching receipt and heartbeat-only red controls |
 | Supported caller delivery | stdout + durable chain log; README states chat limitations |
-| Immediate terminal + cancellation | Launcher EXIT lifecycle; failure/catchable signal/owner-loss probes |
-| Explicit window end without killing work | Finite reader; sixth report/end observed while executor survives |
+| Immediate terminal + cancellation | Interruptible wait + EXIT lifecycle; four signal/exit probes with measured latency |
+| Explicit window end without killing work | Finite reader; N=6/18, missed slots and end observed while executor survives |
 | Read-only observer, unchanged caps/locks | Diff review + manual state before/after |
 | Bash/Python compatibility honest | Default unchanged; opt-in legacy refusal tested; no frozen twin edit |
 | Three-seat repair decision, PR and handoff | Existing skill procedure; separate QA/gates; automatic continuation held |
