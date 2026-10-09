@@ -213,18 +213,22 @@ An in-flight failing test or runner error is not automatically an urgent blocker
   `origin/development`:
 
   ```bash
-  git clone git@github.com:HiQS-Labs/XYZ-forge.git ../XYZ-forge-<topic>
-  cd ../XYZ-forge-<topic>
+  # Name = <repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>, a sibling of the primary clone (GH-970)
+  N=XYZ-forge-gh1234-showme-command-2026-10-05
+  git clone git@github.com:HiQS-Labs/XYZ-forge.git ../$N
+  cd ../$N
   bash githooks/install.sh                       # per-clone; the gate does not travel (GH-549)
-  git checkout -b feat/<topic> origin/development   # or fix/<topic>
+  git checkout -b feat/$N origin/development     # or fix/ chore/ docs/
   ```
 
-  Work lands by pushing that task branch and opening a PR into `development`. **This policy is
+  The full naming rule (multi-issue groups, `-gate`/`-verify` helper clones, resume before
+  re-create) lives in `skills/1-hourly/start-task/SKILL.md` step 3. Work lands by pushing that
+  task branch and opening a PR into `development`. **This policy is
   the standing explicit authorization** for that fresh-clone task branch under `AGENTS.md`'s
   "do not create new git branches automatically" rail — the same carve-out shape as the
-  marathon per-lane branch. It authorizes exactly one `feat/`/`fix/` branch per fresh task
-  clone, and it is *not* a licence to commit directly onto `development` (the express path
-  above remains user-request-only).
+  marathon per-lane branch. It authorizes exactly one `feat/`/`fix/`/`chore/`/`docs/` branch per
+  fresh task clone, and it is *not* a licence to commit directly onto `development` (the express
+  path above remains user-request-only).
 
 ### Arc planning — schedule the follow-up lanes, don't discover them
 
