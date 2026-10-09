@@ -1,0 +1,47 @@
+{
+  "pr": 966,
+  "earlier_parent": "1f663b5345793389e83e5b64a4663d563bfedba9",
+  "integration_parent": "1e83bfb9d792d9c2dd4650d2956d9ac182566c12",
+  "merge_base": "bf107dd01d221c522ec1fa8186f45c9070e20fe4",
+  "classification": {
+    "disjoint": false,
+    "reasons": [
+      "roadmap_items[rmi-01M4FPVF3WYP1SBGVCXPPG0FKN]: column(s) status_label changed \u2014 not expressible through a verb",
+      "roadmap_items[rmi-01M4FPVFKVDN2SX3XY98VZ3BQ5]: column(s) status_label changed \u2014 not expressible through a verb"
+    ],
+    "ours": {
+      "roadmap_items": {
+        "rmi-01M4FV7DZFV2FHPAFHFB7AF5B5": "added",
+        "rmi-01M4FV7ECX8CY0Y8M4P5ANZ374": "added"
+      }
+    },
+    "theirs": {
+      "roadmap_items": {
+        "rmi-01M4FPVF3WYP1SBGVCXPPG0FKN": "updated",
+        "rmi-01M4FPVFKVDN2SX3XY98VZ3BQ5": "updated"
+      }
+    },
+    "keep": "ours",
+    "replay": [],
+    "gen": [
+      1506,
+      1501
+    ]
+  },
+  "manual_terminal_replay": true,
+  "manual_basis": "keep exact integration dump/receipt chain; replay only own disjoint additions through existing writer; native completed label transitions intentionally retained",
+  "material_roadmap_differences": {},
+  "runtime_paths_equal_to_integration": [
+    "test/lib/runner-envelope.sh",
+    "utils/ate/scripts/run_variations.py",
+    "utils/py/domain_oracles.py",
+    "utils/py/metamorphic_oracle.py",
+    "utils/py/proc_group.py"
+  ],
+  "tested_own_candidate": "4a965bff58c50b9bada89ad78c6230dec5112058",
+  "limitations": "final independent QA, exact-head second-clone release check and hosted smoke remain pending",
+  "qualified_issue_row_count": 337,
+  "candidate_roadmap_row_count": 339,
+  "integration_roadmap_row_count": 337,
+  "row_count_scope": "Producer readback selected qualified issue rows; independent final peer review compared the complete expected table, including unqualified rows."
+}
