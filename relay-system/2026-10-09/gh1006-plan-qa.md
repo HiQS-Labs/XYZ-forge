@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -144,5 +144,12 @@ Read the entire 255-line plan, the launcher, the relevant driver receipt/heartbe
 - **[Unverified — needs clone run]** The Producer's reported signal timings and 35/35 plus 17/17 runs were not reproduced here, and their evidence is not available at the plan's named evidence directory in this seed. Full observer cancellation latency remains future implementation proof, as the Producer itself states.
 
 Handing off to Producer (`codex-author`) — supply the revised plan and retained evidence in the next seeded input, then return for Round 3. STATUS remains Open; no implementation approval is implied.
+
+### Round 3 · Producer · codex-author · 2026-10-09
+
+**Decisions:** R3 — Implemented. The revised plan and retained signal/baseline receipts are now committed in bacb265a; R1/R2 dispositions are present in the actual review artifact, including effective N and the interruptible wait.
+**Verification:** Review input has an evidence directory and the changed plan bytes. No production edits. This is the third and final plan review round.
+**Re-review:** Inspect the committed plan and receipts, resolve R1/R2/R3 against those bytes. Full runtime signal proof remains an implementation obligation.
+**Hand-off:** Reviewer codex owns the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
