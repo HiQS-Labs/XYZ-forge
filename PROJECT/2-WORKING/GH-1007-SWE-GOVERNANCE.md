@@ -18,7 +18,7 @@ reversibility: Easy — revert the instruction and catalog edits before deployme
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved in Round 2; source revision applied | Focused evidence and independent post-build QA |
+| Source revision, focused evidence and docs gate complete | Independent post-build QA, then gated PR publication |
 
 ## Requirements and serial handoff
 
@@ -136,7 +136,8 @@ PDDA planning metadata is not a second PRS score. Rating persisted via the canon
 
 ## QA receipts and dispositions
 
-Plan Round 1: changes requested (S1); Round 2: Approved, driver exit 0. Final: pending. Any findings and their accepted/rejected dispositions will
+Plan Round 1: changes requested (S1); Round 2: Approved, driver exit 0. Final: pending. Format green/red, seven manual scenarios and docs gate complete;
+classifier docs/tier 1; gate exit 0 with 28 repository warnings. Evidence: `TESTS-RESULTS/2026-10-09+GH-1007/`. Any findings and their accepted/rejected dispositions will
 be recorded here with relay links.
 
 S1 disposition: Implemented in the proposed draft before plan Round 2. Restore stop/rollback

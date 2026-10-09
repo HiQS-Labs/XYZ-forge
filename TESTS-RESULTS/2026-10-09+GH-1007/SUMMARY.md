@@ -5,7 +5,7 @@ The provenance revision is the parent before applying the reviewed source; the d
 identifies the exact checked bytes. This evidence is committed with that source.
 
 Existing format validator: PASS; isolated copy with missing frontmatter `name`:
-FAIL as expected (`Missing required fields in frontmatter: name`). This red control
+FAIL as expected (`Missing 'name' in frontmatter`). This red control
 establishes format-check sensitivity only. No new validator or test suite was added.
 
 Existing Codex shim suite: 43 pass / 0 fail in a separate disposable full clone.
@@ -45,3 +45,6 @@ Plan receipt: `relay-system/2026-10-09/gh1007-plan.codex.md` (Approved, Round 2)
 Final receipt: `relay-system/2026-10-09/gh1007-final.codex.md` (pending at initial capture).
 The path classifier, documentation gate, pre-push gate and hosted results are recorded
 separately as they run; none is inferred from an unexecuted configuration.
+
+Classifier: docs/tier 1. Documentation gate: exit 0, no errors, 28 repository
+warnings (issue/doc, governance, marathon QA); full output in `pdda.txt`.
