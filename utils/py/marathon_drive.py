@@ -1890,29 +1890,33 @@ def main():
         mock_state = os.environ.get("MOCK_GH_ISSUE_STATE")
         if mock_state:
             state = mock_state.upper()
+            repo_display = "(mocked state)"
         else:
             issue = lane_issue_number()
             if not issue:
                 return
             if not shutil.which("gh"):
                 return
-            url = _cmd_out(["git", "-C", root, "remote", "get-url", "origin"])
+            # GH-1001: query the repo the lane targets (_gate_root), not the harness root — a
+            # --target-root lane's issue number belongs to the target repo.
+            url = _cmd_out(["git", "-C", _gate_root, "remote", "get-url", "origin"])
             repo = re.sub(r'\.git$', '', re.sub(r'^https?://[^/]+/', '', re.sub(r'^git@[^:]+:', '', url)))
             if not re.fullmatch(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+', repo):
-                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=root)
+                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=_gate_root)
             if not repo:
                 return
             state = _cmd_out(["gh", "issue", "view", issue, "--repo", repo, "--json", "state", "--jq", ".state"])
-        
+            repo_display = repo
+
         if state and state.upper() == "CLOSED":
             issue_display = lane_issue_number() or "unknown"
             xyz_debug_log_append(
                 root, "warn", "marathon.issue-closed",
-                f"lane {lane_state_key} parked — issue {issue_display} is already closed",
+                f"lane {lane_state_key} parked — issue {issue_display} in {repo_display} is already closed",
                 action="none (lane halted)",
                 target_root=args.target_root, phase_id=args.phase_id,
                 relay_task=relay_task)
-            eprint(f"marathon-drive: lane parked — issue {issue_display} is already closed")
+            eprint(f"marathon-drive: lane parked — issue {issue_display} in {repo_display} is already closed")
             _RESULT["reason"] = "issue-closed"
             sys.exit(4)
 

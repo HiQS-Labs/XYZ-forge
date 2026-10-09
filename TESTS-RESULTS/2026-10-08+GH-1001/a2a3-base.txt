@@ -1,0 +1,4 @@
+FAIL: harness CLOSED, consumer OPEN -> continue — rc=4 first_call=(('git', '-C', '/harness', 'remote', 'get-url', 'origin'), None)
+FAIL: harness OPEN, consumer CLOSED -> exit 4 naming consumer — rc=0 stderr=[] log=[]
+FAIL: forced gh repo view fallback runs with cwd=consumer — rc=0 fallback=[(('gh', 'repo', 'view', '--json', 'nameWithOwner', '--jq', '.nameWithOwner'), '/harness')]
+FAIL: mocked-state branch keeps working — rc=4 stderr=['marathon-drive: lane parked — issue 1 is already closed']

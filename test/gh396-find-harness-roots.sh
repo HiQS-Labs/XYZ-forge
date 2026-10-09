@@ -274,5 +274,22 @@ if [ -f "$HARNESS_DIR/relay-automation/harness-paths.sh" ]; then
   fi
 fi
 
+# ── GH-1001: a script RUNNING from a vendored .xyz/ beats a foreign exported XYZ_HARNESS ───────
+# The locator above chooses a harness before launch; harness_paths.harness_home() must then name
+# the copy that was actually launched. Before GH-1001 the env check came first and a vendored
+# marathon-drive resolved its repo root to the foreign (global) harness clone.
+_v1001="$WORK/h-gh1001-consumer"; _o1001="$WORK/h-gh1001-foreign"
+mkdir -p "$_v1001/.xyz/utils/py" "$_o1001"
+cp "$HARNESS_DIR/utils/py/harness_paths.py" "$_v1001/.xyz/utils/py/"
+printf '%s\n' 'import sys, os' 'sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))' \
+  'import harness_paths as h' 'print("HOME=" + h.harness_home())' 'print("VENDORED=" + str(h.is_vendored()))' \
+  'print("ROOT=" + h.repo_root())' > "$_v1001/.xyz/utils/py/gh1001_probe.py"
+_o="$(cd "$WORK" && env -u XYZ_CALLER_ROOT -u XYZ_VENDORED XYZ_HARNESS="$_o1001" python3 "$_v1001/.xyz/utils/py/gh1001_probe.py" 2>&1 || true)"
+if grep -qx "HOME=$_v1001/.xyz" <<<"$_o" && grep -qx 'VENDORED=True' <<<"$_o" && grep -qx "ROOT=$_v1001" <<<"$_o"; then
+  ok "GH-1001: running vendored script resolves its own .xyz and consumer root despite a foreign XYZ_HARNESS"
+else
+  bad "GH-1001: running vendored script resolves its own .xyz and consumer root despite a foreign XYZ_HARNESS (got: $(tr '\n' ' ' <<<"$_o"))"
+fi
+
 echo "  gh396-find-harness-roots: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
