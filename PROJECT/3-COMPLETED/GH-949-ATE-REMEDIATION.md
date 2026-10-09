@@ -1,8 +1,8 @@
 ---
 title: "GH-949 — ATE lifecycle, oracle and environment remediation"
-status: In Review
+status: Complete
 created: 2026-10-03
-updated: 2026-10-04
+updated: 2026-10-09
 owner: Codex
 goal: Repair nine campaign findings and GH-912 with existing shared implementations and witnessed before/after controls.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/949
