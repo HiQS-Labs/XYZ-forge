@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,23 @@ Questions:
 The final-head release check and relevant existing gate run belong in a separate full clone. Do not run suite/pytest/fixtures or change artifacts. Edit only this transcript.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Approve the bounded generated-view correction at `9ce8e5b28ac4ba150548c97db8ab9c093f879f4c`, seeded at `cfd57d7d08c4830713cbd5c99bdf3263d3548e45`. The entire view equals the integration parent; authoritative data and source remain identical to the previously approved candidate. Final-head release check and existing gate remain pending in a separate disposable full clone.
+swept file: yes
+
+Scope: read all 309 lines of `LEADERBOARD.md`, the complete prior receipt, and SHA-verified commit/tree objects. No new or additional pre-existing defect affecting this bounded correction found. Nearest indexed XYZ project is a different checkout, generation `2026-10-09T06:48:49Z`; coverage marks both relay paths missing and DB excluded. Direct local bytes and objects supply this review's evidence; no structural graph completeness claim is made.
+
+- [Pass] **Routine view delta removed exactly.** `AGENTS.md:54-58` assigns routine views to hosted reconciliation; `LEADERBOARD.md:1-2` retains the integration parent's generation **1481** and generated-file notice. Correction and integration `38ac9ee43bdedbd25be0cfec2029b0a27abd70a1` both reference blob `86a63289f4def9c436de2419377ed8379cfabe17`, including file mode; working bytes match. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 "$TMPDIR/view_object_probe.py"` (read-only standard-library loose/packed object reader, verifying SHA-1 for every accessed object). Exit **0**; decisive output: `"correction_changed_paths ['LEADERBOARD.md']"`, `"leaderboard_blob 86a63289f4def9c436de2419377ed8379cfabe17 integration_blob 86a63289f4def9c436de2419377ed8379cfabe17 working_bytes 66283 lines 309"`. Red controls: `"red_control_byte_mutation_equal False"` and `"red_control_prior_view_equal False"`; changing one byte and substituting the old candidate view both fail equality. Fix: none.
+
+- [Pass] **Previously approved ledger, changelog and source preserved.** Prior approval is `relay-system/2026-10-08/gh1003-pr971-merge.codex.md:87-101`, candidate `bf746fb42ecdd38810d8b6b652a20724181f9df0`; its attested head is at line **110**. Same object-probe command, exit **0**: `"correction_vs_previously_reviewed_candidate ['LEADERBOARD.md', 'relay-system/2026-10-08/gh1003-pr971-merge.codex.md']"`, `"nonview_nonrelay_differences []"`, `"identical_nonview_nonrelay_leaf_entries 4869"`. Identical blob IDs across prior candidate, correction and seed: `releases.db = 7530c4a30767f9d4a84a474c55a0e1060f2f23d7`; `releases.sql = a40097e61c85376fa75bd737d6007a2521264828`; `CHANGELOG.md = 37f422ccab59ea5f4a7947c6a9905d41fe8fac0f`. Their working bytes also match. Seed differs from correction only by this renewed relay file. No ledger sweep was repeated because no unexpected artifact difference exists. Fix: none.
+
+- [Pass] **Complete restored view is internally consistent; shared routine-view concern resolved.** `LEADERBOARD.md:6-13` defines sum/override ranking and the table; lines **14-305** contain 292 rows, and line **307** correctly names GH-474 at score 360. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` with a read-only parser splitting on unescaped pipes and asserting nonempty input, 11 columns, ranks 1–292, axis bounds/sums, override ranking, descending scores and unique GH identities. Exit **0**; decisive output: `"292 nonempty rows: 11 columns, contiguous ranks, axis sums, override scores, descending order, unique GH identities PASS"`, `"top (1, 360, '474') last (292, 4, '413')"`. In-memory first-rank mutation produced `"red_control_rank_mutation_valid False"`. The PR #971 prior receipt itself was PASS with no requested fixes (line **101**); it accepted the generated projection (line **99**). This renewed approval addresses the shared policy concern described above, without inventing a prior Should in that receipt. Generation 1481 intentionally awaits hosted refresh; it does not claim parity with ledger generation 1486. Fix: none.
+
+Required fixes: none. [Unverified — needs clone run] Final-head release check and relevant existing gate must be supplied by the harness before landing, as already required by the prior receipt at line **101**. No git process, suite, pytest or executable fixture was run; only this transcript changed outside permitted scratch. Probe outputs are quoted here because scratch is discarded.
+
+Relay closed (Approved), no further review turn needed. Handing the completed result to Producer **merge-cleanup** for the separate final-head checks and landing decision.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
