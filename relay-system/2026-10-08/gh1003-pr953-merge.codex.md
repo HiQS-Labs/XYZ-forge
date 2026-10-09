@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-08.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,26 @@ Questions:
 Return a concrete Approved / Changes requested verdict with file:line evidence and observed input/falsifier for findings. Edit only this relay transcript. Do not fix the artifacts.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Changes requested for one incidental generated-view change outside the bounded resolution. Changelog preservation and semantic ledger replay pass; final-head validation remains the separate clone gate.
+swept file: yes
+
+Scope: complete candidate CHANGELOG bytes, complete SQL dump, all derived DB tables, both parent snapshots and merge ancestry, and all three committed merge-evidence files were inspected. Historical feature behavior remains covered by its earlier receipts. Graph tools were unavailable; stored objects were read directly with SHA-1 verification, without invoking git. No other pre-existing defect was found within these merge-preservation and ledger-consistency checks.
+
+- [Should] Exclude the incidental generated `LEADERBOARD.md` change from this resolution; retain the integration parent's view and let hosted reconciliation regenerate it. `LEADERBOARD.md:1` says `<!-- releases-app generation: 1489 -->`, whereas `releases.sql:3` and `releases.sql:16` say 1491. This view differs from the integration parent and is already present in initial merge `8e185b47`; it is not an original PR feature change or an unambiguous three-way result. The binding policy at `AGENTS.md:54` says hosted reconciliation owns views and “Task branches do not commit routine views.” This is a scope/governance finding, not a runtime-code defect.
+  Observed input: candidate `a5abfacb` carries the generation-1489 generated view alongside generation-1491 ledger artifacts; integration `38ac9ee4` carried generation 1481. The whole-tree object comparison reports `LEADERBOARD.md` as the only departure from an unambiguous three-way result outside the three committed evidence files.
+  Affected scope: the routine generated view bundled into this PR's documentation/ledger conflict resolution only.
+  Falsifier: after excluding this incidental view delta, the candidate view should equal the integration parent's bytes until hosted reconciliation writes a new version; the ledger and both restored PR rows should remain unchanged. Explicit task authorization for committing this generated view would also invalidate the governance objection; none appears in the bounded request.
+  Probe: `python3 .relay-scratch/tmp/review_probe.py`, exit 0, reports `departures from unambiguous three-way ['LEADERBOARD.md', ...three merge-evidence paths...]`. The narrow read-only SQLite/header probe, exit 0, reports `view header: <!-- releases-app generation: 1489 -->` and `ledger generation: 1491`.
+- [Pass] Both entire parent changelogs survive byte-for-byte in relative order: PR 3619 -> 3673 lines, integration 3639 -> 3673, with `noninsert []` for each. Removing the PR's ATE heading makes PR preservation false while leaving integration preservation true, an appropriate independent red control. Citations: `CHANGELOG.md:53`, `CHANGELOG.md:138`, `TESTS-RESULTS/2026-10-08+GH-1003/pr-953/merge-proof.txt:1`. Probe: `python3 .relay-scratch/tmp/review_probe.py`, exit 0; decisive output `added 54` against PR and `added 34` against integration; `deleted PR heading red control pr preserved False`.
+- [Pass] PR semantic delta is exactly two added roadmap rows, with no changed or removed base rows. All 334 integration rows remain identical; candidate has 336, with no duplicate `(repo_id, gh_number)` identities. Required issue/title/doc/section/marker/rating/status fields for GH-949 and GH-912 have `differences {}`. All other integration tables remain unchanged except the generation setting, ten added receipts and eight added work events. Citations: `releases.sql:827`, `releases.sql:828`, `TESTS-RESULTS/2026-10-08+GH-1003/pr-953/ledger-readback.txt:7`. Probe: `python3 .relay-scratch/tmp/review_probe.py`, exit 0; `PR row delta 2 changed [] removed []`, `integration missing or changed []`, `duplicates []`; full-table read-only comparison exits 0 with zero removals outside the generation setting.
+- [Pass] Supported-writer replay is consistent with the recorded receipts and current-time start admissions. Generation progresses from integration 1481 to candidate 1491; integration receipt/event history survives. The canonical writer's read-only `dump_text` output exactly equals the entire SQL file, SQLite integrity is `ok`, foreign-key violations are empty, and the latest business digest matches. Chain count is 1678 excluding ship-evidence receipts, with 170 breaks and 170 reanchored, matching the readback; there are 1682 total receipts. Citations: `releases.sql:2521`, `releases.sql:2529`, `releases.sql:3171`, `releases.sql:3172`, `TESTS-RESULTS/2026-10-08+GH-1003/pr-953/ledger-readback.txt:9`. Probe: `python3 .relay-scratch/tmp/detail_probe.py`, exit 0; `canonical writer dump equals SQL 1491 latest digest matches True`, `chain receipts 1678 breaks 170 reanchored 170`. This establishes consistency, not an audit of every shell command used during repair.
+- [Pass] No additional runtime code resolution was found in the complete tree comparison. Relative to the initial merge, candidate changes only `releases.db`, `releases.sql` and two merge-evidence files; the normal merge preserves the parent code changes. All three reviewed evidence files match their candidate committed blobs. Citations: `TESTS-RESULTS/2026-10-08+GH-1003/pr-953/merge-proof.txt:1`, `TESTS-RESULTS/2026-10-08+GH-1003/pr-953/provenance.jsonl:1`. Probe: `python3 .relay-scratch/tmp/review_probe.py`, exit 0; `repair delta versus initial merge` contains only those four paths and `committed evidence matches` is printed for all three receipts.
+- [Unverified — needs clone run] Final-head validation was deliberately not run here. `TESTS-RESULTS/2026-10-08+GH-1003/pr-953/provenance.jsonl:1` accurately limits its claims to merge proof and leaves that gate pending. Approval of feature behavior, promotion or teardown is not established by this review.
+
+Handing off to Producer (merge-cleanup) — address the generated-view scope finding, then obtain renewed independent QA and the final-head clone gate. The one-round relay is Escalated; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
