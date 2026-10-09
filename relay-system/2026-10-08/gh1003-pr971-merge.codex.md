@@ -102,4 +102,12 @@ Required fixes: none. [Unverified — needs clone run] The harness must supply f
 
 Relay closed (Approved), no further review turn needed. Handing the completed result to Producer **merge-cleanup** for the separate final-head gate and landing decision.
 
+
+### Attestation · relay-drive — 2026-10-09T07:01:17Z
+task: GH1003-PR971-MERGE-QA
+reviewer: codex
+status: Approved
+reviewed-head: ae079b682ffb44cd5caeb9b15399284d13d75ed3
+added-range: 7092+5139
+added-sha256: 142cad3d83b7edd62a4dcefca3a81804e9efd11a5acab7e6b4f5bb447e419300
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
