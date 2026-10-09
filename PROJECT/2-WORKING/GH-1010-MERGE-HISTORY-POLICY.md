@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA Approved (relay exit 0) | Implement policy and consumer changes |
+| Implementation, 180 existing tests, policy probes and red control passed | Final Codex QA and gated PR publication |
 
 ## Table of contents
 
@@ -98,8 +98,8 @@ comments; trend unknown, not a claimed increasing incident rate.
 ### Phase 1 QA
 
 - [x] Codex plan review Approved before production edits; `relay-system/2026-10-09/gh1010-plan.codex.md` (exit 0).
-- [ ] Manual policy matrix and negative-control evidence retained in TESTS-RESULTS.
-- [ ] Original provenance and teardown safety unchanged; docs describe legacy default honestly.
+- [x] Manual policy matrix and negative-control evidence retained in `TESTS-RESULTS/2026-10-09+GH-1010/`.
+- [x] Original provenance and teardown safety unchanged; docs describe legacy default honestly.
 
 ## Phase 2: Verification and ready PR
 
@@ -117,6 +117,6 @@ comments; trend unknown, not a claimed increasing incident rate.
 
 ### Phase 2 QA
 
-- [ ] Focused suite, manual probes and red control have committed provenance.
+- [x] Focused suite (180 tests), manual probes and red control have committed provenance.
 - [ ] Final independent Codex review Approved; applicable gates passed on attributable code.
 - [ ] PR ready, issue still open, clone retained; no claim of shipped before merge.
