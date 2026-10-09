@@ -441,7 +441,7 @@ proving Codex can write the relay file. `codex-turn.sh` defaults to
 fix that before running the shim; override the binary with
 `CODEX_BIN=/path/to/codex` if needed.
 
-The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. The agy shim uses the same 900-second default `RELAY_TURN_TIMEOUT_S`, and passes that value through to `--print-timeout`. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it works before adding it to your PATH or passing `AGY_BIN` to every drive command.
+The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. The agy shim uses the same 900-second default `RELAY_TURN_TIMEOUT_S`, and passes that value through to `--print-timeout`. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); from the disposable full clone prepared in step 3, `AGY_BIN=~/.local/bin/agy bash ./test/agy-turn.sh` confirms the shim before a drive. Never run this suite in the maintained harness.
 
 The Pi check needs `PI_MODEL` set explicitly — `pi-turn.sh`/`pi-turn.py` **never
 default `PI_MODEL`**. This is a deliberate GH-295 safety choice: GH-280
@@ -465,25 +465,35 @@ built-in sandbox of its own — see the Pi worker subsection below).
 ### 2. Clone or refresh the harness
 
 ```bash
-git clone https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm.git
-cd xyz-3-agents-swarm
-# or, in an existing clone: git pull origin main
+git clone --branch development https://github.com/HiQS-Labs/XYZ-forge.git
+cd XYZ-forge
+# or refresh your existing maintained clone using its branch policy
 export TICK_REPO_ROOT="$PWD"
 ```
 
 ### 3. Smoke test the local machine
 
-Run the repo gate, then the shim test for the worker you plan to drive:
+Run the applicable gate and worker checks in a **separate disposable full clone**. A linked
+worktree shares Git state and does not isolate these suites. Commit the inputs before cloning.
 
 ```bash
-bash validate.sh
-bash test/codex-turn.sh   # before Codex runs
-bash test/agy-turn.sh     # before agy runs
-bash test/pi-turn.sh      # before Pi runs (GH-295)
+VERIFY_SOURCE="$PWD"  # the maintained full harness clone from step 2
+[ -d "$VERIFY_SOURCE/.git" ] || { echo "VERIFY_SOURCE must be a full clone"; exit 1; }
+VERIFY_CLONE="$(mktemp -d "${TMPDIR:-/tmp}/xyz-verify.XXXXXX")" || exit 1
+[ -n "$VERIFY_CLONE" ] && [ -d "$VERIFY_CLONE" ] || exit 1
+git clone --no-local "$VERIFY_SOURCE" "$VERIFY_CLONE" || exit 1
+cd "$VERIFY_CLONE" || exit 1
+unset XYZ_HARNESS TICK_REPO_ROOT
+# Record HEAD, origin, core.bare and local user identity before/after the applicable checks.
+bash ./validate.sh          # when the task's classified gate requires it
+bash ./test/codex-turn.sh   # before Codex runs
+bash ./test/agy-turn.sh     # before agy runs
+bash ./test/pi-turn.sh      # before Pi runs (GH-295)
 ```
 
-If `validate.sh` cannot make tempdirs, that is usually a sandbox blocking
-`mktemp`; rerun it in a normal shell.
+Follow [WORKTREE-SAFETY.md](../WORKTREE-SAFETY.md) for the identity bracket; drift invalidates the
+results. Run suites outside the AI shell sandbox as well. After checks, return to the maintained
+harness for normal execution; unsetting sandbox restrictions alone does not provide isolation.
 
 #### Stale `.git/index.lock` preflight warning
 
@@ -533,6 +543,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd relay-automation/codex-turn.sh \
+  --reviewer codex \
   --round-cap 4
 ```
 
@@ -561,6 +572,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd relay-automation/agy-turn.sh \
+  --reviewer agy \
   --round-cap 4
 ```
 
@@ -588,6 +600,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd relay-automation/pi-turn.sh \
+  --reviewer pi \
   --round-cap 4
 ```
 
@@ -656,6 +669,7 @@ CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log" \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd "$HARNESS/relay-automation/codex-turn.sh" \
+  --reviewer codex \
   --round-cap 4
 ```
 
@@ -672,6 +686,7 @@ AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log" \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd "$HARNESS/relay-automation/agy-turn.sh" \
+  --reviewer agy \
   --round-cap 4
 ```
 

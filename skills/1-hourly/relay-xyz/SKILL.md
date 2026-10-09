@@ -404,7 +404,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/codex-turn.sh \
-  --reviewer   "$CODEX_AGENT" \
+  --reviewer   codex \
   --round-cap  4
 ```
 
@@ -426,7 +426,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/agy-turn.sh \
-  --reviewer   "$AGY_AGENT" \
+  --reviewer   agy \
   --round-cap  4
 ```
 
@@ -448,7 +448,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/commandcode-turn.sh \
-  --reviewer   "$COMMANDCODE_AGENT" \
+  --reviewer   commandcode \
   --round-cap  4
 ```
 
@@ -641,14 +641,28 @@ runs a bare executable path directly, so an **absolute path with spaces** (a clo
 
 ## Verify the harness is green before a real run
 
-These are anchored on `$HARNESS` (set by Preconditions) so they resolve whatever your CWD is — don't
-drop the `$HARNESS/` prefix or they'll 404 from a foreign session:
+Run mutation-heavy suites only in a **separate disposable full clone**, never in the maintained
+`$HARNESS` or a linked worktree. Commit the inputs first: cloning does not copy uncommitted edits.
+For a vendored install without its own Git checkout, select the maintained XYZ-forge full clone
+containing that harness revision as `VERIFY_SOURCE`.
 
 ```bash
-bash "$HARNESS/validate.sh"            # the tick/automation suite
-bash "$HARNESS/test/codex-turn.sh"     # before a Codex run
-bash "$HARNESS/test/agy-turn.sh"       # before an agy run
+VERIFY_SOURCE="$HARNESS"   # must be a full XYZ-forge clone with committed test inputs
+[ -d "$VERIFY_SOURCE/.git" ] || { echo "select a full harness clone as VERIFY_SOURCE"; exit 1; }
+VERIFY_CLONE="$(mktemp -d "${TMPDIR:-/tmp}/xyz-verify.XXXXXX")" || exit 1
+[ -n "$VERIFY_CLONE" ] && [ -d "$VERIFY_CLONE" ] || exit 1
+git clone --no-local "$VERIFY_SOURCE" "$VERIFY_CLONE" || exit 1
+cd "$VERIFY_CLONE" || exit 1
+unset XYZ_HARNESS TICK_REPO_ROOT  # test fixtures must not inherit the maintained clone
+# Bracket identity as described in WORKTREE-SAFETY.md (HEAD, origin, bare flag, local identity).
+bash ./validate.sh             # when the task's classified gate requires it
+bash ./test/codex-turn.sh      # focused check before a Codex run
+bash ./test/agy-turn.sh        # focused check before an agy run
+# Compare the identity bracket before trusting results; drift invalidates them.
 ```
+
+See [WORKTREE-SAFETY.md](https://github.com/HiQS-Labs/XYZ-forge/blob/development/WORKTREE-SAFETY.md)
+for the existing identity and recovery procedure. Run only the checks applicable to the task.
 
 **If your turn's `--artifact`/`ALLOW_PATHS` includes anything under `relay-automation/`, re-run
 `bash "$HARNESS/skills/1-hourly/relay-automation/make-pkg.sh"` after the turn lands, before trusting a green

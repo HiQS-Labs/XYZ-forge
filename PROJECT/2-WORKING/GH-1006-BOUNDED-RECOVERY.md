@@ -29,6 +29,7 @@ phases: 3
 - [Phase 1 — Plan QA](#phase-1--plan-qa)
 - [Phase 2 — Bounded observation and repair handoff](#phase-2--bounded-observation-and-repair-handoff)
 - [Phase 3 — Verification and PR](#phase-3--verification-and-pr)
+- [Implementation evidence](#implementation-evidence)
 - [Conditional continuation](#conditional-continuation)
 - [Acceptance map](#acceptance-map)
 
@@ -252,6 +253,14 @@ inheritance; downstream broken-pipe handling would lose the durable terminal rec
 Focused proof: existing launcher 35/35, monitor 17/17, receipt adapter 223/223, and bounded manual
 schedule/receipt/signal/read-only controls. Retained evidence and exact source hashes live under
 `TESTS-RESULTS/2026-10-09+GH-1006/`; final QA and classified gate remain separate obligations.
+
+Final QA round 1 found no material observer-runtime defect; its two Should findings concern
+pre-existing reviewer expansion and maintained-clone test recipes. Literal reviewer IDs and
+disposable-full-clone verification now resolve those findings; 16 clean/conflicting environment
+argv probes, the old-command red control and package freshness are retained in `recipe-fix/`.
+Integration merged `ecec5561` through the repository RELEASES conflict resolver: both GH-1005
+and GH-1006 histories, original admission timestamp and rating survived; no observer code changed.
+Round 2 reviews the resulting committed artifact before the one full gate.
 No accepted product milestone is claimed from these fixtures. Conditional continuation is held.
 
 ## Conditional continuation
