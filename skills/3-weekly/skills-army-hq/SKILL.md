@@ -10,8 +10,11 @@ description: >-
 # Skills Army HQ
 
 Keep actual skill folders in the user's `~/git-pulse-sync/Deployed Skills` (GH-536:
-the collection lives inside the live Git Pulse Sync checkout — the hourly pulse writer
-stages it, and machine-local state is excluded by the collection's own `.gitignore`). Apps discover
+the collection lives inside the live Git Pulse Sync checkout, and machine-local state is excluded by
+the collection's own `.gitignore`). The hourly pulse stages only its own files and refuses to sync
+while anything else is uncommitted, so `intake.py --apply add|update|remove` commits just that skill's
+folder itself (GH-993; never pushes — the pulse pushes it), refuses over unrelated changes, and
+`sync.py --status` warns when the collection repo is dirty, detached or behind. Apps discover
 directory symlinks to these stable copies, not disposable task clones. **The collection is a
 projection, not a source:** every skill's canonical source is the repository it was vendored
 from — XYZ-forge `skills/<tier>/<name>/` for forge-owned skills, another repo for the rest — and the
