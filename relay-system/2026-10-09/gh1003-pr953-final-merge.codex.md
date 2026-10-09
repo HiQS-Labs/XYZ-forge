@@ -113,4 +113,12 @@ AssertionError: red: altered receipt digest fails current business digest
 
 Relay closed (Approved), no further review turn needed. Handing completion to Producer for final-head hosted smoke and the release check in a second disposable full clone; the harness owns the one-file commit.
 
+
+### Attestation · relay-drive — 2026-10-09T07:58:25Z
+task: GH1003-PR953-FINAL-MERGE-QA
+reviewer: codex
+status: Approved
+reviewed-head: ae094cc57eda469d65be6f9fa6bd731a552835b7
+added-range: 7973+9287
+added-sha256: b50792b964913c4e41ee6f4f6f620c7cbe2b5176893423f66828a5c7cfdf3507
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
