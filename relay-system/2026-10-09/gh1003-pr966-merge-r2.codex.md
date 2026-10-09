@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,23 @@ Questions:
 The final-head release check and relevant existing gate run belong in a separate full clone. Do not run suite/pytest/fixtures or change artifacts. Edit only this transcript.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Approved for the bounded generated-view correction at `4a965bff58c50b9bada89ad78c6230dec5112058`. The prior Should is resolved; authoritative artifacts and source retain the earlier passing resolution. Final-head gate/release checks remain the Producer's separate disposable-clone work.
+swept file: yes
+
+Scope: all 309 lines of `LEADERBOARD.md`, full mode/blob maps for the correction, its direct parent, previously reviewed candidate and integration parent, and the complete previous receipt. No new or pre-existing defect affecting this correction was found. Graph coverage belongs to the original checkout at generation `2026-09-01T15:54:30Z`, with changed/unknown metadata, so this review uses direct file reads and SHA-1-checked stored loose/packed objects without invoking Git. No full-ledger audit was repeated.
+
+- [Pass] **Integration-parent view restored exactly; prior Should resolved.** `LEADERBOARD.md:1` is `<!-- releases-app generation: 1481 -->`; `AGENTS.md:54` and `:56` assign routine views to hosted reconciliation. Correction `4a965bff58c50b9bada89ad78c6230dec5112058` and integration parent `38ac9ee43bdedbd25be0cfec2029b0a27abd70a1` both reference leaderboard blob `86a63289f4def9c436de2419377ed8379cfabe17`. The worktree matches all its bytes. This meets the falsifier in `relay-system/2026-10-08/gh1003-pr966-merge.codex.md:96` for the Should at `:93`. Probe `python3 "$TMPDIR/object_compare.py"` exited 0: `leaderboard_exact_parent_and_worktree True bytes 66283 lines 309`; `correction_vs_direct_parent ['LEADERBOARD.md']` against direct parent `f74d7ea7498df68ae86c86ca05db818833428572`. No fix requested.
+
+- [Pass] **Ledger, changelog, evidence and source retain the reviewed resolution.** Earlier passing findings at `relay-system/2026-10-08/gh1003-pr966-merge.codex.md:98`, `:100`, `:102` and `:104` cover candidate `3283b42d1ca138bfc1d5e3cc43bccb7eec6489f0`. The same object probe (exit 0) printed `correction_vs_previous_review ['LEADERBOARD.md', 'relay-system/2026-10-08/gh1003-pr966-merge.codex.md']`: the second path is the review receipt itself. All 5,753 remaining tracked modes/blobs match, including runtime/source and committed merge evidence. Unchanged blobs: `releases.sql` = `2094c6d7321bc81e9a22b13b9a582cb91b20b4da`; `releases.db` = `5ac4effc53bbd2f1863f21d1fe2015b938027e5e`; `CHANGELOG.md` = `c5694e764046dc61fe5dd6c38a05e5f82fce2b5a`. Their working files also match. Seeded head `48664ea247fbea53dceba3442ebb98f781bbb42e` differs from the correction only by this renewed transcript. No fix requested.
+
+- [Pass] **Whole-view structure and scoring are sound.** `LEADERBOARD.md:6` describes the axes, `:12` names 11 columns, and `:306` names the leading score. Manual probe `python3 "$TMPDIR/view_probe.py"` exited 0: `whole_view_rows 292 column_count 11 ordinals_axes_calc_override_sort True`. Every row has the declared columns, contiguous ordinal, bounded axes, correct sum/override and descending score. The equality assertion rejected the old candidate blob `6704bb66d5843965d28118c44d9591de0c07a321`, printing `prior_candidate_parent_equality_red_control: AssertionError (expected)`; current bytes printed `corrected_worktree_parent_equality_green True`. An initial inline table probe exited 1 because it incorrectly expected 12 columns; the corrected probe follows the 11-column header. No artifact failure or fix requested.
+
+- [Unverified — needs clone run] **Final-head release check and existing gate remain pending.** `relay-system/2026-10-08/gh1003-pr966-merge.codex.md:106` and `TESTS-RESULTS/2026-10-08+GH-1003/pr-966/provenance.jsonl:1` leave final-head validation pending. No suite, pytest, executable fixture or Git command was run here. This approval closes correction QA and does not attest the final-head gate.
+
+Relay closed (Approved), no further review turn needed. Producer (merge-cleanup) continues with final-head release/gate checks in a disposable full clone; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
