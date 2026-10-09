@@ -178,4 +178,12 @@ Read the entire 270-line plan and launcher, the relevant driver receipt/heartbea
 
 Relay closed (Approved), no further review turn needed. Producer (`codex-author`) may proceed with the approved implementation boundary and its required clone verification; PR-based continuation remains held.
 
+
+### Attestation · relay-drive — 2026-10-09T15:46:19Z
+task: RELAY-GH1006-PLAN-QA
+reviewer: codex
+status: Approved
+reviewed-head: 3b5a9a12c3a8201e453967632e27692a029937e6
+added-range: 20714+5830
+added-sha256: 4c5b506d0ebbb10a056b0091770abfaa70480fddfee3ffe1000956d701b8ee31
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
