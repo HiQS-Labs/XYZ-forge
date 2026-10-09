@@ -52,10 +52,10 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: PROJECT/2-WORKING/GH-1010-MERGE-HISTORY-POLICY.md
 - Reviewer: codex   ·   Producer: codex-producer
 - Started: 2026-10-09
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Grounded, minimal plan satisfying the GH-1010 requirements and current AGENTS verification policy.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
