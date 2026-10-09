@@ -257,6 +257,39 @@ cd /path/to/target-repo
 
 Override them independently only when you genuinely need a non-default harness or repo root. The lower-level binary overrides (`TICK_BIN`, `MARATHON_YAML_BIN`, `XYZ_APPEND_BIN`) still win if set.
 
+## Bounded marathon observation and repair handoff
+
+Opt in with `--progress-interval-s 600 --progress-check-count 6`. Supplying either flag selects
+the other default. Positive integer bounds are 86400 seconds per interval, 144 checks, and a
+86400-second total window. Dry-run prints the effective settings. Python driver receipts are
+required; `XYZ_PYTHON=0` refuses these flags while ordinary legacy calls remain supported.
+
+One read-only child reports across the whole chain on absolute monotonic deadlines. Phase changes
+do not reset the count. After suspension, earlier due checks are marked missed and the latest
+check is a current snapshot; missed checks consume the allowance. The default has six checks and
+no seventh. A three-hour window requires explicit `600×18` settings. Window end prints a next
+action and stops only observation; the authorized phase execution continues.
+
+`marathon-progress:` JSON lines go to stdout and the existing durable chain run log. They show
+run/clone identity, current phase/role, heartbeat age, returned-success and receipt-verified phase
+counts, last new reviewed revision, gate/review evidence and exact file pointers. The initial
+SHA/origin describe launch identity. A heartbeat proves only liveness. Missing, malformed or
+foreign evidence stays unknown; an `already-satisfied` receipt or repeated candidate adds no
+product milestone. Driver receipts, rather than these reports, remain the outcome authority.
+
+Catchable launcher INT/TERM forwards to its directly owned phase child and preserves exit 130/143.
+The terminal report cancels/reaps observation within one second on a responsive host; owner loss
+self-terminates the reader within that bound. Descendant ownership remains unknown. Establish
+stopped descendants before considering a re-fire. Normal calls without these flags keep their
+foreground behavior. Terminal reports also appear after the finite observation window has ended.
+
+An active caller can consume this output and relay updates; the script cannot guarantee a chat
+message when no caller is listening. For authorized machinery repair, use the existing
+[relay-xyz supervising-agent procedure](../skills/1-hourly/relay-xyz/SKILL.md#bounded-marathon-repair-to-pr).
+It publishes a reviewed repair PR and parks by default. Automatic unmerged-PR continuation is
+held behind safe re-entry (#752), harness adoption (#1004), revision and ownership proof, and
+preserved authorization/state/budgets. Publication or a three-seat vote cannot waive those facts.
+
 ## `marathon-plan.sh` zone config
 
 `utils/marathon-plan.sh` can now load a repo-specific zone model instead of hardcoding xyz's own

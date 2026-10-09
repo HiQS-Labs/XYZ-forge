@@ -2,7 +2,7 @@
 gh_issue: 1006
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1006
 title: "Marathon: bounded progress and safe repair handoff"
-status: "Planning — independent plan QA next"
+status: "Working — observation implemented; verification and final QA"
 created: 2026-10-09
 updated: 2026-10-09
 owner: Codex
@@ -19,7 +19,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Remote intake captured and rated; current launcher/driver traced; three advisory seats answered. | Independent Codex plan QA, then implement observation and the bounded repair-to-PR procedure. |
+| Independent plan QA Approved round 3; observation and bounded repair procedure implemented; focused checks pass. | Finish retained manual evidence, independent final QA, then classified macOS gate and PR. |
 
 ## Table of contents
 
@@ -142,9 +142,9 @@ roadmap row via `--accepted-start` (registration/rating/QA are not execution sta
 
 QA gate:
 
-- [ ] Plan relay returns exit 0, Approved, and a current independent receipt.
-- [ ] The owned roadmap row reads back 80/65/80/45 and the active doc pointer.
-- [ ] Observations, disagreements, dependencies and unknowns are captured above.
+- [x] Plan relay Approved round 3; current independent receipt: `relay-system/2026-10-09/gh1006-plan-qa.codex.md`.
+- [x] Owned roadmap row reads back 80/65/80/45 and the active doc pointer; accepted-start after plan approval.
+- [x] Observations, disagreements, dependencies and unknowns captured above.
 
 ## Phase 2 — Bounded observation and repair handoff
 
@@ -238,6 +238,21 @@ QA gate:
 - [ ] Existing suites and manual red/green controls have retained provenance.
 - [ ] Classified final gate and PDDA report truthful results; identity is intact.
 - [ ] Final relay is Approved; emitted PR base/head/diff match the reviewed artifact.
+
+## Implementation evidence
+
+Plan QA is independently attested Approved at producer head `3b5a9a12c3a8201e453967632e27692a029937e6`.
+The launcher remains the only executor and context writer. Terminal cancellation sets a context
+stop marker and waits for the reader, avoiding a stale observer-PID signal after window expiry.
+A process-group TERM probe exposed a dead run-log reader and exit -13; the opt-in tee now ignores
+INT/TERM until the stream closes. Red/green minimal probes isolate the logger as the origin.
+Root cause: group TERM killed tee before the terminal write; fix site: opt-in logger signal
+inheritance; downstream broken-pipe handling would lose the durable terminal record.
+
+Focused proof: existing launcher 35/35, monitor 17/17, receipt adapter 223/223, and bounded manual
+schedule/receipt/signal/read-only controls. Retained evidence and exact source hashes live under
+`TESTS-RESULTS/2026-10-09+GH-1006/`; final QA and classified gate remain separate obligations.
+No accepted product milestone is claimed from these fixtures. Conditional continuation is held.
 
 ## Conditional continuation
 

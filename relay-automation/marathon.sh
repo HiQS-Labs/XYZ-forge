@@ -118,11 +118,16 @@ Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-ad
                           needs to change.
   --closeout-pr           Open (but never merge) a PR after a successful marathon. Closeout failure is logged
                           and does not change the successful marathon exit code.
+  --progress-interval-s N Opt in to finite stdout/run-log observations (default: 600 seconds).
+  --progress-check-count N Number of checks across the entire chain (default: 6).
+                          Interval <=86400, count <=144, window <=86400s. Window end stops only
+                          observation; it never retries or stops work. Requires Python driver.
 EOF
 }
 
 PLAN=""; BUILDER="codex"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0; RETRY_PHASE=""; CLOSEOUT_PR=0
 TARGET_ROOT=""   # GH-11 passthrough: foreign repo the BUILD lands in; relay/transcripts stay in ROOT
+PROGRESS_ENABLED=0; PROGRESS_INTERVAL=600; PROGRESS_COUNT=6
 while (($# > 0)); do
   case "$1" in
     --plan)            PLAN="${2:-}"; shift 2 ;;
@@ -134,12 +139,23 @@ while (($# > 0)); do
     --force)           FORCE=1; shift ;;   # GH-45: forward to each phase so a parked lane can be re-fired
     --retry)           RETRY_PHASE="${2:-}"; shift 2 ;;   # GH-116: retry one phase with a fresh relay-task suffix
     --closeout-pr)     CLOSEOUT_PR=1; shift ;;
+    --progress-interval-s) [[ $# -ge 2 ]] || die "$1 requires a positive integer"; PROGRESS_ENABLED=1; PROGRESS_INTERVAL="$2"; shift 2 ;;
+    --progress-check-count) [[ $# -ge 2 ]] || die "$1 requires a positive integer"; PROGRESS_ENABLED=1; PROGRESS_COUNT="$2"; shift 2 ;;
     --help)            usage; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
   esac
 done
 [[ -n "$PLAN" ]] || { die "--plan MARATHON.yaml required"; }
 [[ -f "$PLAN" ]] || die "plan not found: $PLAN"
+if ((PROGRESS_ENABLED)); then
+  [[ "$PROGRESS_INTERVAL" =~ ^[1-9][0-9]*$ && ${#PROGRESS_INTERVAL} -le 5 ]] || die "progress interval must be a positive integer <=86400"
+  [[ "$PROGRESS_COUNT" =~ ^[1-9][0-9]*$ && ${#PROGRESS_COUNT} -le 3 ]] || die "progress count must be a positive integer <=144"
+  PROGRESS_INTERVAL=$((10#$PROGRESS_INTERVAL)); PROGRESS_COUNT=$((10#$PROGRESS_COUNT))
+  ((PROGRESS_INTERVAL <= 86400 && PROGRESS_COUNT <= 144 && PROGRESS_INTERVAL * PROGRESS_COUNT <= 86400)) || die "progress interval/count/window exceeds bounds (86400s/144/86400s)"
+  [[ "${XYZ_PYTHON-1}" == 1 ]] || die "progress observation requires the Python driver's terminal receipts; omit progress flags for XYZ_PYTHON=0"
+  PROGRESS_BIN="$MARATHON_HOME/utils/py/marathon_progress.py"
+  [[ -f "$PROGRESS_BIN" ]] || die "progress helper not installed: $PROGRESS_BIN"
+fi
 
 # GH-212: plan-location guard. A marathon's plan artifacts (this YAML + its phase briefs) belong
 # under PROJECT/2-WORKING/<capture-doc>/, not a standalone top-level folder (e.g. marathon-plans/)
@@ -245,7 +261,9 @@ if ((DRY_RUN == 0)); then
   # to the end — the whole point is that the record survives a run that never reaches its end.
   # stderr is folded in: an escalation reason arriving on stderr and a phase heading on stdout,
   # interleaved in one file, is the narrative an operator actually needs to read afterwards.
-  exec > >(tee -a "$MARATHON_RUN_LOG") 2>&1
+  # Opt-in cancellation must keep its run-log reader alive through a group INT/TERM; otherwise
+  # the terminal write hits SIGPIPE and substitutes that status for the original interruption.
+  exec > >(if ((PROGRESS_ENABLED)); then trap '' INT TERM; fi; tee -a "$MARATHON_RUN_LOG") 2>&1
   # Printed at chain start, per acceptance: an operator has to know where to look afterwards, and
   # afterwards is exactly when the terminal is gone.
   log "run log: $MARATHON_RUN_LOG"
@@ -257,6 +275,44 @@ PLAN_TSV="$("$YAML_BIN" "$PLAN")" || die "plan parse failed (see above)"
 PLAN_NAME="$(sed -n 's/^name:[[:space:]]*//p' "$PLAN" | head -n1 | sed 's/[[:space:]]*$//')"
 phase_count="$(printf '%s\n' "$PLAN_TSV" | grep -c .)"
 log "plan: $PLAN — $phase_count phase(s) in execution order"
+
+# GH-1006: one finite reader, one launcher-written projection, no second executor.
+PROGRESS_PID=""; PROGRESS_PHASE_PID=""; PROGRESS_CONTEXT=""
+progress_exit() {
+  local run_exit=$?
+  trap - EXIT INT TERM
+  # Context cancellation avoids signalling a cached PID after the finite observer has exited.
+  if python3 "$PROGRESS_BIN" terminal "$PROGRESS_CONTEXT" --exit-code "$run_exit"; then
+    wait "$PROGRESS_PID" 2>/dev/null || true
+  else
+    log "terminal observation unavailable (run exit $run_exit); reader exits on owner loss"
+  fi
+  exit "$run_exit"
+}
+progress_signal() {
+  local sig="$1" status="$2"
+  trap '' INT TERM
+  [[ -z "$PROGRESS_PHASE_PID" ]] || kill -s "$sig" "$PROGRESS_PHASE_PID" 2>/dev/null || true
+  log "interrupted by $sig; direct phase signalled, descendant ownership unknown"
+  exit "$status"
+}
+if ((PROGRESS_ENABLED)); then
+  log "progress observation: interval=${PROGRESS_INTERVAL}s count=$PROGRESS_COUNT window=$((PROGRESS_INTERVAL * PROGRESS_COUNT))s; stdout/run-log only"
+  if ((DRY_RUN == 0)); then
+    PROGRESS_CONTEXT="${MARATHON_RUN_LOG}.progress.json"
+    PROGRESS_RUN_ID="$(python3 "$PROGRESS_BIN" init "$PROGRESS_CONTEXT" --owner "$$" \
+      --root "$ROOT" --product-root "${TARGET_ROOT:-$ROOT}" --harness-root "$MARATHON_HOME" \
+      --plan "$PLAN" --run-log "$MARATHON_RUN_LOG" --total "$phase_count" \
+      --phases-dir "${PHASES_DIR:-$ROOT/marathon-system}" \
+      --heartbeat-file "${RTL_DRIVER_HEARTBEAT_FILE:-$ROOT/.tick/driver-heartbeat.json}" \
+      --interval "$PROGRESS_INTERVAL" --count "$PROGRESS_COUNT")" || die "could not initialize progress observation"
+    python3 "$PROGRESS_BIN" observe "$PROGRESS_CONTEXT" &
+    PROGRESS_PID=$!
+    trap progress_exit EXIT
+    trap 'progress_signal INT 130' INT
+    trap 'progress_signal TERM 143' TERM
+  fi
+fi
 
 idx=0
 # Read TSV with a NON-whitespace field separator (US / \037): `IFS=$'\t' read` coalesces consecutive
@@ -303,11 +359,37 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact turn_time
   fi
   if ((DRY_RUN)); then drive_args+=( --dry-run ); fi
 
+  if ((PROGRESS_ENABLED && DRY_RUN == 0)); then
+    progress_execution="${PROGRESS_RUN_ID}-${idx}"
+    progress_result="${MARATHON_RUN_LOG}.phase-${idx}.result.json"
+    progress_family="MARATHON-$(printf '%s' "$id" | tr '[:lower:]' '[:upper:]')-TURN"
+    [[ -z "$RETRY_PHASE" || "$id" != "$RETRY_PHASE" ]] || progress_family="$retry_task"
+    python3 "$PROGRESS_BIN" phase "$PROGRESS_CONTEXT" --phase-id "$id" --index "$idx" \
+      --lane "${lane_ns:-$id}" --token-family "$progress_family" \
+      --execution-id "$progress_execution" --result-file "$progress_result" || log "phase observation unavailable: $id"
+    drive_args+=( --execution-id "$progress_execution" --result-file "$progress_result" )
+  fi
+
   phase_exit=0
   # GH-75: mark each per-phase marathon-drive call so its (and its nested relay-drive's) XYZ.json hook
   # stays silent — this orchestrator emits a SINGLE harness:"marathon" whole-run record below, never
   # one per phase.
-  if [[ -n "$turn_timeout_s" ]]; then
+  if ((PROGRESS_ENABLED && DRY_RUN == 0)); then
+    # Bash waits on a foreground command before handling trapped signals. Background + wait is
+    # interruptible, yet still serial: no successor starts before this exact child returns.
+    if [[ -n "$turn_timeout_s" ]]; then
+      MARATHON_ROOT="$ROOT" MARATHON_LANE_NS="$lane_ns" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
+        RELAY_TURN_TIMEOUT_S="$turn_timeout_s" bash "$DRIVE_BIN" "${drive_args[@]}" &
+    else
+      MARATHON_ROOT="$ROOT" MARATHON_LANE_NS="$lane_ns" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
+        bash "$DRIVE_BIN" "${drive_args[@]}" &
+    fi
+    PROGRESS_PHASE_PID=$!
+    python3 "$PROGRESS_BIN" driver "$PROGRESS_CONTEXT" --driver-pid "$PROGRESS_PHASE_PID" || log "driver heartbeat attribution unavailable: $id"
+    wait "$PROGRESS_PHASE_PID" || phase_exit=$?
+    PROGRESS_PHASE_PID=""
+    python3 "$PROGRESS_BIN" finish "$PROGRESS_CONTEXT" --exit-code "$phase_exit" || log "phase result observation unavailable: $id"
+  elif [[ -n "$turn_timeout_s" ]]; then
     MARATHON_ROOT="$ROOT" MARATHON_LANE_NS="$lane_ns" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
       RELAY_TURN_TIMEOUT_S="$turn_timeout_s" \
       bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?

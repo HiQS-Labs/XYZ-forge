@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-09 — Marathon: bounded observation and repair-to-PR handoff (GH-1006)
+
+Opt-in chain observations now use one finite reader across phase transitions, report exact driver
+receipt evidence, and distinguish liveness/re-verification from new accepted revisions. Defaults
+are 600 seconds × 6 checks; explicit longer windows stay bounded. Catchable cancellation preserves
+the run status and stops observation without asserting that descendants are stopped. The opt-in
+run-log reader survives group INT/TERM so cancellation does not become a broken-pipe failure.
+Existing relay-xyz guidance adds a single authorized repair episode, unanimous advisory consult,
+independent plan/final QA, required gates and publish-and-park. Automatic continuation from an
+unmerged repair PR remains held behind #752/#1004, ownership, revision and original-budget proof.
+The bet is that attributable reports and a reviewed repair handoff make unattended time useful;
+they cannot guarantee a deliverable. Omit observation flags to roll back the runtime feature.
+Existing suite and manual red/green evidence: `TESTS-RESULTS/2026-10-09+GH-1006/`.
+
 ## 2026-10-07 — ADK lessons: bounded command and retained trajectory assessment (GH-998)
 
 Recorded five selected harmless command examples and their refusal controls, plus a retained real
