@@ -20,14 +20,14 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA round 2: FAIL on S6 only (red-control wording); corrected. | Codex plan QA round 3. |
+| Implemented A1–A3/B1–B4; focused suites + ci-local green (4b2aa888); red controls recorded; Codex final QA Approved r1 (attested). | PR open against development; awaiting merge. |
 
 ## Issue map (one branch, one PR)
 
 | Issue | Scope | Rating (pri/sev/appeal/effort) | Acceptance | State |
 |---|---|---|---|---|
-| [#1001](https://github.com/HiQS-Labs/XYZ-forge/issues/1001) | `harness_home()` precedence; issue-closed check repo; park message | 80/75/50/70 | A1–A3 | Plan |
-| [#1002](https://github.com/HiQS-Labs/XYZ-forge/issues/1002) | GH-113 scratch relocation; cap gate order; dry-run cap line; builder preamble truth | 65/65/50/55 | B1–B4 | Plan |
+| [#1001](https://github.com/HiQS-Labs/XYZ-forge/issues/1001) | `harness_home()` precedence; issue-closed check repo; park message | 80/75/50/70 | A1–A3 | PR ready; awaiting merge |
+| [#1002](https://github.com/HiQS-Labs/XYZ-forge/issues/1002) | GH-113 scratch relocation; cap gate order; dry-run cap line; builder preamble truth | 65/65/50/55 | B1–B4 | PR ready; awaiting merge |
 
 Branch `fix/gh-1001-1002-vendored-marathon` off `origin/development` 38ac9ee4, clone
 `~/marathon-clones/xyz-gh1001-1002-vendored-marathon`. Grouped because both change `utils/py/marathon_drive.py`.

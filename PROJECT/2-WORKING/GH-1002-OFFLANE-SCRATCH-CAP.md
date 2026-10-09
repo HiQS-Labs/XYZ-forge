@@ -22,7 +22,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Recon verified; intake rated 65/65/50/55; shared plan written (B1–B4). | Codex plan QA. |
+| B1–B4 implemented and verified (see shared plan); Codex final QA Approved r1. | PR open against development; awaiting merge. |
 
 Shared plan lives in [`GH-1001-VENDORED-HARNESS-ROOT.md`](GH-1001-VENDORED-HARNESS-ROOT.md) (one branch/PR, both touch
 `utils/py/marathon_drive.py`).
