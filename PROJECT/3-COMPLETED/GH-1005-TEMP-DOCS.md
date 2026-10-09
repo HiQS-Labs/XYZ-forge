@@ -1,6 +1,6 @@
 ---
 title: "GH-1005: merge-cleanup: park documentation-only local commits on temp branches"
-status: Active
+status: Complete
 created: 2026-10-09
 updated: 2026-10-09
 owner: operator (via /express)
