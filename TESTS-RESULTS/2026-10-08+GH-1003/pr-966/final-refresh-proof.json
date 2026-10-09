@@ -31,7 +31,6 @@
   "manual_terminal_replay": true,
   "manual_basis": "keep exact integration dump/receipt chain; replay only own disjoint additions through existing writer; native completed label transitions intentionally retained",
   "material_roadmap_differences": {},
-  "business_row_count": 337,
   "runtime_paths_equal_to_integration": [
     "test/lib/runner-envelope.sh",
     "utils/ate/scripts/run_variations.py",
@@ -40,5 +39,9 @@
     "utils/py/proc_group.py"
   ],
   "tested_own_candidate": "4a965bff58c50b9bada89ad78c6230dec5112058",
-  "limitations": "final independent QA, exact-head second-clone release check and hosted smoke remain pending"
+  "limitations": "final independent QA, exact-head second-clone release check and hosted smoke remain pending",
+  "qualified_issue_row_count": 337,
+  "candidate_roadmap_row_count": 339,
+  "integration_roadmap_row_count": 337,
+  "row_count_scope": "Producer readback selected qualified issue rows; independent final peer review compared the complete expected table, including unqualified rows."
 }
