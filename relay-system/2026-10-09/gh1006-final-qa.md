@@ -370,4 +370,12 @@ Whole-file sweep found no additional material pre-existing defect within the dec
 
 Relay closed (Approved), no further review turn needed. Producer codex-author owns the remaining final classified gate and publication checks; this approval does not discharge them. The binding three-round review budget is exhausted.
 
+
+### Attestation · relay-drive — 2026-10-09T16:49:43Z
+task: RELAY-GH1006-FINAL-QA-GATE-CORRECTION
+reviewer: codex
+status: Approved
+reviewed-head: c0abced3ae47fc9e0e4345f55eb7fc8cdf049e6d
+added-range: 33985+11640
+added-sha256: c0ddd16587c999b74bbdce969febcf4593125214a1ee6978ad7b3f478be86688
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
