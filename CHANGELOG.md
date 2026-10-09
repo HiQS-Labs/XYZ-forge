@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-09 — Surgical SWE governance (GH-1007)
+
+Extended SWE from planning to implementation and review, with explicit safety, security,
+maintainability and performance tradeoffs. New tests and blocking CI placement require
+separate justification; performance baselines remain advisory and reuse existing task
+evidence. Replaced rigid scaffolding with risk-scaled guidance while retaining mutation,
+migration and intervention-deadline safeguards. Source format passes, missing-name red
+control fails, seven manual instruction scenarios are recorded, and plan QA is Approved.
+Evidence: `TESTS-RESULTS/2026-10-09+GH-1007/`; final QA precedes PR readiness.
+
 ## 2026-10-07 — ADK lessons: bounded command and retained trajectory assessment (GH-998)
 
 Recorded five selected harmless command examples and their refusal controls, plus a retained real

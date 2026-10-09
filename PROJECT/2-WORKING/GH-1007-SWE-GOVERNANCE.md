@@ -2,7 +2,7 @@
 title: Sharpen SWE governance
 gh_issue: 1007
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1007
-status: Plan QA
+status: In progress
 created: 2026-10-09
 updated: 2026-10-09
 owner: Codex
@@ -18,13 +18,13 @@ reversibility: Easy — revert the instruction and catalog edits before deployme
 
 | What was just completed | What's next |
 |---|---|
-| Intake, source recon, and rating read-back | Independent Codex plan QA before implementation |
+| Plan QA Approved in Round 2; source revision applied | Focused evidence and independent post-build QA |
 
 ## Requirements and serial handoff
 
 | Issue | Scope and acceptance | Dependency and state |
 |---|---|---|
-| [GH-1007](https://github.com/HiQS-Labs/XYZ-forge/issues/1007) | Revise SWE in its owning source; planning, implementation, review; four axes; reuse; earned tests; advisory performance; plan and final relay QA | Current branch; plan awaiting QA; PR not opened |
+| [GH-1007](https://github.com/HiQS-Labs/XYZ-forge/issues/1007) | Revise SWE in its owning source; planning, implementation, review; four axes; reuse; earned tests; advisory performance; plan and final relay QA | Current branch; plan Approved; implementation in progress; PR not opened |
 | [GH-1008](https://github.com/HiQS-Labs/XYZ-forge/issues/1008) | Ponytail-first performance measurement skill using existing evidence and task docs | GitHub issue only by explicit request. Start after SWE finishes; no performance implementation here |
 
 /start-task ends at a ready PR. It does not authorize merge or deployment. If SWE is
@@ -136,7 +136,7 @@ PDDA planning metadata is not a second PRS score. Rating persisted via the canon
 
 ## QA receipts and dispositions
 
-Plan Round 1: changes requested (S1); Final: pending. Any findings and their accepted/rejected dispositions will
+Plan Round 1: changes requested (S1); Round 2: Approved, driver exit 0. Final: pending. Any findings and their accepted/rejected dispositions will
 be recorded here with relay links.
 
 S1 disposition: Implemented in the proposed draft before plan Round 2. Restore stop/rollback
