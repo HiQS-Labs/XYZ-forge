@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -74,4 +74,27 @@ Review only; never run suites/pytest/fixtures or mutating DB/Git commands in the
 
 ## Log
 
+### Reviewer · Round 1 · codex
+VERDICT: PASS
+Basis: Approve the caller-owned documentation policy; no material defect or scope creep found in the full skill, including pre-existing sections. Reversibility: Easy (policy revert); publication grants no landing/deletion authority.
+swept file: yes
+- [Pass] skills/2-daily/merge-cleanup/SKILL.md:112 requires non-empty, history-wide inspection of both rename sides and old/new blobs, ordinary UTF-8 non-executable documents, semantic purpose, and rejection of reverted code/mixed history.
+- [Pass] TESTS-RESULTS/2026-10-09+GH-1005/manual-controls.json:1 and provenance.jsonl:1: receipt/policy SHA256 values match current bytes; independent read-only object inspection admitted valid-doc and rejected binary-md, reverted-code, symlink-md, renamed-code and deleted-binary (command "python3 -B $TMPDIR/object_probe.py", exit 0; inspected blob IDs independently SHA1-checked).
+- [Pass] Old-blob falsifier for SKILL.md:117: command "python3 -B -c 'from pathlib import Path; import zlib; p=Path(\"/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1005-temp-docs-2026-10-09/temp/documentation-controls/deleted-binary/.git/objects/85/371f28269e95b7ebc156df3ceb24b3285f3ead\"); d=zlib.decompress(p.read_bytes()).split(b\"\\0\",1)[1]; safe=lambda blobs: all(b\"\\0\" not in b for b in blobs); print(\"old+new admits:\",safe([d]),\"new-only mutant admits:\",safe([]),\"old bytes:\",len(d)); assert not safe([d]) and safe([])'"; exit 0; decisive output "old+new admits: False new-only mutant admits: True old bytes: 10".
+- [Pass] Original commits 062ae45f01faf73bf78bcc10fcba86cd7d5c2ad7 and 8b310626e2d4d7095390dfb12ca7375990bbc720 independently change only marathon-system/p1/RELAY.md, mode 100644, cf6bcd55… → 4572ee56…; inspected blobs are relay text. GitHub fetch_commit on each named temp ref returned its exact respective SHA and that sole path (receipt: manual-controls.json:1).
+- [Pass] SKILL.md:120 specifies creation-only absent-ref lease, identical-SHA reuse, publication verification and fail-closed continuation; SKILL.md:131 retains dirty/active/claim/dependent safeguards and reruns strict Phase 0 without reset or override.
+- [Pass] SKILL.md:126 makes the unchecked checklist durable and resumable; inspected /Users/noelsaw/Documents/GH Repos/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/temp-docs.md:5 and :6 retain both exact tips, links and pending operator disposition. SKILL.md:137 requires overlap reporting and keep/reviewed-recovery/discard choices, including stopped runs, without automatic merge/deletion/teardown.
+- [Pass] Object-tree comparison of seeded f2bc1a90… against 7435a38c… limits changes to skill, GH-1005 capture, CHANGELOG, ledger pair, two receipts and relay; working runtime/gate files match baseline blobs (merge_cleanup.py bd7cbb63…, express.py 197aa591…, gh436 shell 313d3b79…). releases.sql:835 points GH-1005 to its capture; CHANGELOG.md:1259 names the existing landing gate.
+- [Unverified — needs clone run] No suite, pytest, executable fixture, Git command or production check ran here; express gate/landing, live lease-race behavior and branch-recreation execution remain outstanding. Approval covers policy and inspected evidence, not those outcomes. Shell GitHub access failed; connector reads independently resolved publications.
+- Graph: Verify tier, canonical project Users-noelsaw-Documents-GH-Repos-XYZ-forge, ready generation 2026-10-09T10:38:13Z; coverage records no gap for skill/merge_cleanup/express/gh436. Different checkout/current policy verified from exact local objects, not stale graph text.
+Relay closed (Approved), no further review turn needed; Producer express owns the subsequent clone gate and landing.
+
+
+### Attestation · relay-drive — 2026-10-09T15:17:49Z
+task: GH1005-TEMP-DOCS-QA
+reviewer: codex
+status: Approved
+reviewed-head: f2bc1a9084a63e5c862d824ff5cf1e8faf8e3a8b
+added-range: 7323+3733
+added-sha256: a60ba88059d3ef925fbc3796c766c66582717ae5bd0451c2b71640c0a1ae9c5a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
