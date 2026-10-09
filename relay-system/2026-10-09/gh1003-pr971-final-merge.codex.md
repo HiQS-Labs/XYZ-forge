@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -79,5 +79,38 @@ Graph context: Verify tier current canonical project Users-noelsaw-Documents-GH-
 Safety: pure read review only. No suite, pytest, fixtures or mutating DB verbs in this linked review worktree. Only edit this relay. In-memory parsing/comparison and red controls are fine. Return Approved or an observed blocker/Should with concrete input, citations and falsifier. Witness at least one preservation/digest red control; retain truthful limits. No promotion or production verification claim.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Approved for bounded final integration/preservation QA at `092b92e601540a07af781a13f745d0b256cc3caa`, seeded at `81cfc97facca2dea99a882941ab185feb2eb909b`. Both complete parent changelogs, the full expected business union, integration runtime/view bytes and current ledger consistency pass. Final exact-head second-full-clone release check and hosted smoke remain outstanding; approval does not attest promotion, deployed refresh or operator checks.
+swept file: yes
+
+Scope: complete candidate/parent object trees and changelog blobs; every row of all 16 SQLite tables; complete canonical SQL, receipt chain, view and committed PR971 merge/gate evidence. Prior approved feature/runtime/history reviews were reused as instructed. No additional pre-existing defect affecting this bounded preservation sweep was found; the older nine ledger advisories remain recorded in `TESTS-RESULTS/2026-10-08+GH-1003/pr-971/ledger-readback.txt:5` onward. No git command, suite, pytest, executable fixture or artifact writer was run.
+
+Graph: Verify tier, canonical project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, different root `/Users/noelsaw/Documents/GH Repos/XYZ-forge`; current coverage generation is `2026-10-09T09:49:52Z`. Coverage reports serializer/SQL/changelog/view metadata_match, DB excluded and this relay/evidence directory missing. The graph trace call was unavailable under the approval policy; exact local serializer/chain source and SHA-1-checked loose/packed objects supplied current evidence instead. SQLite blobs were deserialized in memory with query_only enabled. An extra attempt to compare against historical PR966 candidate `e2e3f8a88ec646f57d607672e8d3b369b52b7c2e` failed object lookup (exit 1, `KeyError` naming that SHA); the successful incoming-artifact comparison below is against the actual integration parent. Historical feature QA is reused from its supplied Approved receipt, not claimed freshly repeated.
+
+All probe commands below used `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`; scripts/output stayed under that directory. Scratch is discarded, so decisive outputs are retained here.
+
+- [Pass] **Both entire parent changelogs survive in byte-line order.** Actual merge `23a32305834a320b7c6288dd9ce3d55ecf3c3b6b` has parents `c42aa067b4be7a2d7f222e43fa34fdb029c82124` and `643aa0d0510c0ce0f52d649f749e6a88d3eb09d6`; candidate descends through `79393b0535e2722d057aa9181c51c329a58395b1`. `CHANGELOG.md:71` retains incoming GH964 and `:87` retains own GH970. Command `python3 "$TMPDIR/review_probe.py"`, exit **0**: `CHANGELOG earlier 3693 3709 complete ordered byte-lines PASS`, `CHANGELOG integration 3697 3709 complete ordered byte-lines PASS`. No correction needed.
+- [Pass] **Complete expected roadmap business union survives, including exact raw_text and labels.** Same command, exit **0**: `ROADMAP all expected business fields exact 340 earlier 338 integration 339 qualified 338`, `qualified issue duplicates []`, `all integration admissions and writer metadata exact`. Comparison includes title, section/marker, doc, issue URL, all rating/complexity/risk/effort fields and status_label, excluding only writer-owned ID/GID/position/timestamps for replayed rows. Both unqualified rows also survive. Integration wins only its actual completion changes: GH949/GH912 retain Completed/✅/NULL label (`releases.sql:827`, `:828`); GH964 retains `in-progress` and pending operator D4/D5 text (`:830`); GH967 remains queued (`:831`); own GH970 retains NULL label and exact 55/40/50/85 text (`:832`). All twelve remaining complete tables and nongeneration settings equal both parents. No business correction needed.
+- [Pass] **DB/dump/digest/receipt chain agree, without backdated admission.** `releases.sql:3` records generation **1520**; `:2558` carries `reanchor:174` and current after-digest. Same command, exit **0**: `CANONICAL exact dump generation 1520 integrity ok foreign violations zero`, `CHAIN counted 1702 all 1706 breaks 174 tolerated 174 digest c0457b9417d98225b8a19196cf35d1ac9885329d040367f0fa33337eafa81e29`. Pure canonical serialization/digest helpers are at `utils/py/releases_app.py:1094` and `:1303`; chain rules at `:5740` onward. Every integration receipt/event survives, with five/three additions. Earlier own replay history is replaced: five receipts/three events removed, fourteen/ten added relative to that earlier candidate; original history remains in its parent objects. GH970 first_seen/updated_at are current `2026-10-09T09:50:05Z`/`09:50:06Z` (`releases.sql:832`), consistent with final-refresh provenance line **7**, not the historical capture date. This proves writer-shaped consistency, not independent observation of the producer's exact writer argv. No correction needed.
+- [Pass] **Runtime, incoming artifacts and routine view retain integration bytes.** Same main command, exit **0**: `all 5998 candidate working paths match; seed only relay scaffold 81cfc97facca2dea99a882941ab185feb2eb909b`, `TESTED TO CANDIDATE 267 all other paths exact integration`. The exceptions are only authoritative changelog/ledger union and own committed evidence/PR971 review receipt. All five runtime paths listed in `final-refresh-proof.json:62` onward have exact integration mode/blob identities. The final refresh against the earlier parent comprises 36 paths: authoritative union, incoming #966 feature/docs/receipts, hosted qualification evidence, routine view, and own proof/provenance; no manually resolved runtime/test/registry bytes appear. `LEADERBOARD.md:1` deliberately retains integration generation **1515**, blob `c7837d3f65594278627c6178e2a4932096596393`, awaiting hosted refresh. Command `python3 "$TMPDIR/supplemental_probe.py"`, exit **0**: `whole view 314 lines 297 ranked rows: ordinals axes sums overrides order and identity uniqueness PASS`, plus exact integration matches for all fourteen inspected #966 feature/doc/original-receipt artifacts. Prior incoming approval: `relay-system/2026-10-09/gh1003-pr966-final-merge.codex.md`, quoted `VERDICT: PASS` and `STATUS: Approved`. No correction needed.
+- [Pass] **Gate evidence retains the failed run and successful neutral control separately.** `gate-result.json:3` and `gate-neutral-result.json:3` both name earlier tested commit `9ce8e5b28ac4ba150548c97db8ab9c093f879f4c`, not refreshed head. Raw `gate.log:2804` says **71 / 75** and `:2877`–2880 names four failures: gh448-driver-lock-resolver, gh103-timeline-exporter, gh429-wave-reconcile-vendored-observe and gh358-wave-reconcile-vendored-paths. `gate.log:350` resolves `via=override` to the primary harness. `gate-neutral.log:2700` says **75 / 75**, matching rc **0** at `gate-neutral-result.json:12`; provenance lines **3**–4 distinguish ambient XYZ_HARNESS from its absence. Supplemental command above, exit **0**: `both runs selected exact same 72 suites`, `FAILED gate-neutral []`. Complete before/after identity snapshots match in both JSONs. Logs label the run NOT promotion evidence (`gate.log:2789`, `gate-neutral.log:2685`). Incoming PR966 hosted telemetry hash also matches its committed receipt, with 72 suite results/zero failures, explicitly scoped to `1864b5cd370013fbe431f949db2a31468cd21507` in `TESTS-RESULTS/2026-10-09+GH-591/wave-1864b5cd370013fbe431f949db2a31468cd21507/provenance.jsonl:1`. None of these receipts qualifies the refreshed PR971 head.
+- [Unverified — needs clone run] **Final-head qualification remains pending.** `final-refresh-proof.json:69` and `provenance.jsonl:7` explicitly leave second-full-clone release check and hosted smoke outstanding. Producer/harness must obtain those final-head results before claiming their completion. GH964 operator D4/D5 and keep/extend/drop remain pending (`PROJECT/2-WORKING/GH-964-CLAUDE-CODE-MODS.md:20`); GH970's deployed Skills Army refresh remains post-merge acceptance (`PROJECT/1-INBOX/GH-970-CLONE-NAMING.md:26`). Neither was executed here.
+
+Manual red controls changed only in-memory comparison inputs. Each command below exited **1** with the quoted decisive output:
+
+```text
+python3 "$TMPDIR/review_probe.py" red-row
+AssertionError: red: dropped GH970 fails complete expected business union
+python3 "$TMPDIR/review_probe.py" red-digest
+AssertionError: red: altered latest receipt after-digest fails current business digest
+python3 "$TMPDIR/review_probe.py" red-changelog
+AssertionError: red: dropped integration heading fails whole-parent preservation
+```
+
+Required fixes: none. Relay closed (Approved), no further review turn needed. Handing completion to Producer (merge-cleanup) for final exact-head second-full-clone release check and hosted smoke; operator checks and deployed refresh remain pending. The Approved turn closes the token with `done`; the harness owns the one-file commit.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
