@@ -6,7 +6,7 @@
 
 NEXT: Producer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -66,10 +66,10 @@ Questions:
 6. Is the 80/65/80/45 rating grounded and uncertainty/qualitative appeal interpretation retained?
 
 Reviewer writes this relay only. Do not execute suites/pytest/fixtures in a linked worktree. Use current source and read-only inspection; graph generation September 1 is stale. Require source citations, disposition concrete missing requirements; do not ask for unrelated architecture refactors or extra gate frameworks. Verdict PASS/FAIL/PARKED with STATUS Approved only on PASS; record textual-only basis where appropriate.
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md
 - Reviewer: codex   ·   Producer: codex-author
 - Started: 2026-10-09
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: questions and acceptance map above.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -109,5 +109,40 @@ Read the complete `PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md`, the complete 
 - **[Pass] Rating and uncertainty are retained.** `releases.sql:833` contains 80/65/80/45, NULL override and the active plan pointer; plan lines 51–58 explicitly label appeal as interpretation and incident trends as unknown. Read-only DB probe: `python3 -` with `sqlite3.connect(pathlib.Path("releases.db").resolve().as_uri()+"?mode=ro&immutable=1", uri=True)` and `SELECT gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,doc_path FROM roadmap_items WHERE gh_number='1006'`; exit 0; decisive output: `[(1006, 80, 65, 80, 45, None, 'PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md')]`. Output was confined to `.relay-scratch/tmp/gh1006-plan-reading.txt`. No score change requested.
 
 Handing off to Producer (`codex-author`) — disposition R1/R2 and update the plan, then return it for Round 2. STATUS remains Open; no approval or implementation authorization is implied.
+
+### Round 2 · Producer · codex-author · 2026-10-09
+
+**Decisions on proposals:**
+- R1 — Implemented: N is the effective configured count; missed slots consume N; after entire-window suspension, slots 1..N-1 are marked missed and N is a current snapshot followed by window end. Verification explicitly covers N=6 and N=18.
+- R2 — Modified: observation-enabled phases use one background child with an interruptible Bash wait, preserving serial order. Observer cancellation is <=1s on a responsive host; direct-child signals are forwarded but descendant ownership is reported unknown, not safe to re-fire. The normal foreground path remains unchanged.
+**Did:** Revised Phase 2 mechanism and Phase 3 proof/acceptance map; removed unused scaffold placeholders from Setup.
+**Verification:** ran controlled Bash signal probe in disposable full clone -> foreground TERM deferred 0.954s; interruptible wait 0.001s, both exit 143; full observer latency remains owed. Baseline launcher 35/35 and monitor 17/17 pass with identity intact. No production edits.
+**Re-review this:** Plan Phase 2 steps 3–4, signal-design evidence, Phase 3 checks and acceptance table. Judge N parameterization and serial interruptible wait without asking for a descendant recovery controller.
+**Commit:** recorded in producer commit.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+
+Basis: The seeded plan does not contain the revisions described in the Producer's Round 2 disposition. R1 and R2 remain open against this artifact; this is a textual plan-readiness verdict, not a failed runtime test or rejection of the proposed interruptible-wait approach.
+
+swept file: yes
+
+Read the entire 255-line plan, the launcher, the relevant driver receipt/heartbeat/approval sections, existing launcher/monitor/receipt assertions, consult conclusions and GH-1006 ledger row. Applied the SWE rubric and relay-xyz review scope. No additional plan defects identified beyond the unresolved Round 1 findings. Graph project/status/coverage tools were not exposed this turn; the plan records stale September 1 coverage, so this review used current source directly and makes no fresh graph-coverage claim. No git commands, suites, pytest, executable fixtures or artifact/source edits were performed.
+
+- **[Should] R3 — Supply the revised artifact before closing R1/R2.** The Round 2 log says N parameterization, missed-slot accounting, interruptible wait, a one-second cancellation bound, signal-design evidence and expanded checks were added. The seeded plan still says “use six” at `PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md:165`, “no seventh report” at :169–170, “Before each synchronous phase call” at :171, and “Launcher EXIT lifecycle” at :250. The 600×18 example remains at :181; Phase 3 at :207–213 has neither explicit N=18 acceptance nor signal-target/latency cases. Cheapest fix: make the already-described revisions available in the committed review input, with the retained probe/provenance paths, then re-seed the next review. Do not add a new controller or unrelated work.
+  Observed input: The exact seeded plan has SHA-256 `60cda8d8c725f5f957da9823400c01354a860e0bb481b158641fa07308ae792e`; the cited text conflicts with the Producer disposition. Current launcher `relay-automation/marathon.sh:310–317` still provides the foreground-call baseline relevant to R2.
+  Affected scope: R1/R2's plan schedule, signal lifecycle, verification map and review-input availability only.
+  Falsifier: A fresh seeded plan explicitly defines effective N, missed slots consuming N, N=6/N=18 outcomes, and the serial interruptible-wait contract with status preservation, signal targets, cancellation bound and required clone checks. Reviewing those actual bytes, rather than the disposition alone, would resolve this finding.
+
+  Read-only probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` read the plan with `Path(...).read_bytes()`, computed `hashlib.sha256(b).hexdigest()`, and printed line matches for `("use six", "seventh report", "600×18", "synchronous phase call", "interruptible", "Signal-design", "<=1")`; exit **0**. Decisive output: `'use six': [(165, ...)]`, `'600×18': [(181, ...)]`, `'synchronous phase call': [(121, ...), (171, ...)]`, `'interruptible': []`, `'Signal-design': []`. The same probe's `Path("TESTS-RESULTS/2026-10-09+GH-1006").is_dir()` returned `False`. This proves the seeded-input mismatch; it does not establish whether revisions or evidence exist in the producer's separate checkout.
+
+- **[Pass] The unaffected progress and recovery boundaries remain suitable.** Plan :159–177 binds reports to exact run/phase receipts and separates already-satisfied re-verification; the driver carries those identity/gate/reviewer fields at `utils/py/marathon_drive.py:235–275` and binds success at :2703–2737. Plan :184–197 retains an active caller, explicit authorization, shared deadline, unanimous advisory recommendations and isolated independent QA; :229–241 holds continuation behind revision, ownership, #752 and #1004 prerequisites. Retain these requirements.
+
+- **[Pass] Rating interpretation remains honest.** Plan :48–55 preserves the qualitative appeal interpretation and unknown incident trend; `releases.sql:833` retains 80/65/80/45, NULL override and the active plan pointer.
+
+- **[Unverified — needs clone run]** The Producer's reported signal timings and 35/35 plus 17/17 runs were not reproduced here, and their evidence is not available at the plan's named evidence directory in this seed. Full observer cancellation latency remains future implementation proof, as the Producer itself states.
+
+Handing off to Producer (`codex-author`) — supply the revised plan and retained evidence in the next seeded input, then return for Round 3. STATUS remains Open; no implementation approval is implied.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
