@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -82,5 +82,22 @@ under current AGENTS, speculative frameworks, or unrelated pre-existing repairs.
 
 Append your review, set STATUS Approved on PASS or return findings. Tests are not authorized in
 this worktree. Reviewer edits only this relay file; do not commit/push (the shim owns commits).
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The plan is sufficiently grounded and bounded for implementation: one existing merge writer, one policy reader shared by both consumers, explicit adoption, backward-compatible default, and clone-isolated verification. This approves the plan, not runtime behavior.
+swept file: yes
+
+- [Pass] Opt-in and compatibility are explicit at `PROJECT/2-WORKING/GH-1010-MERGE-HISTORY-POLICY.md:44–63`: strict boolean, omitted versus explicit strategy, no hosting mutation/fallback, maintainer-selected adoption, and no automatic propagation to existing projects. Current seams are `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:150` (writer), `:854` (landing loop), and `:1182` (CLI default).
+- [Pass] The shared read-only reporter and target-primary selection (`plan:50–51,95–96`) avoid a second parser. Historical squash stays valid and ancestry stays distinct from content (`plan:57–60`), matching the deep skill's Phase 3 evidence distinction. Disabling policy affects future merges only (`plan:67–71`).
+- [Pass] Verification is commensurate with current AGENTS: existing focused suite, manual policy matrix, nonempty output, identity checks, enforcement-removal red control restored from a copy, committed provenance, bounded independent QA and disposable-clone gates (`plan:89–122`). No new test suite or gate machinery is proposed.
+- [Pass] Ratings are neutral about appeal and recurrence (`plan:77–83`). Read-only command `rg -n 'GH-1010|rated 65/55/50/75' releases.sql` exited 0; decisive output at `releases.sql:837` contains ratings `65,55,50,75` and `rating_ovr=NULL`. The issue-search completeness claim remains the producer's bounded observation, not independent recurrence evidence.
+- [Nit] Correct the recon's location for `land_prs`: it is `merge_cleanup.py:854`, not 1098 (1098 is its writer call). Also distinguish caller-owned documentation parking (cleanup SKILL, “Committed documentation parking — caller-owned before executing Phase 0”) from Python Phase 0 preparation. The proposed ordering is sound, but the prose currently blurs the two. Cheapest fix: citation/prose correction during implementation; no new mechanism.
+- [Unverified — needs clone run] No suites, executable fixtures or live merges ran this turn. Implementation behavior and negative controls remain Phase 2 obligations. `gh issue view 1010 --repo HiQS-Labs/XYZ-forge --json title,body` exited 1 with `error connecting to api.github.com`; review therefore uses the seeded requirements packet, not a independently refreshed issue body. Graph indexing was denied by tool approval policy; cited source was read directly.
+
+The complete plan and linked recon were reviewed, along with the referenced merge strategy/landing paths, both consumer skills, deep agent template and adoption guidance. No other in-scope pre-existing plan defects found; unrelated consumer repairs are outside this plan review.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and the specified clone-run verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
