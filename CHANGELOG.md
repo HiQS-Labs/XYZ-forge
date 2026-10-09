@@ -54,6 +54,20 @@ the existing GH-115 suite. Receipts: `TESTS-RESULTS/2026-10-05+GH-976/`.
 
 Captured Needle-fork #71 as a deferred RELEASES roadmap item, with real chain evidence and measured reviewer burden required before an advisory contribution-screening experiment. Resolver, attestation and publishing boundaries remain deterministic. Verification: targeted PDDA checks and RELEASES consistency/readback; invalid triage rating fails the frontmatter red control. Receipts: `TESTS-RESULTS/2026-10-05+GH-974/`.
 
+## 2026-10-04 — Close oracle CLI cancellation gap from PR953 QA (GH-949)
+
+Both oracle CLI entry points now use the existing cancellation handler, allowing the
+shared runner to clean up session-isolated commands on TERM/INT and retain143/130.
+Base comparison separates an inherited direct-signal gap from the outer-cap regression.
+All eight repaired manual controls and three existing focused suites pass; exact-source
+red controls and owned-process cleanup are retained under `TESTS-RESULTS/2026-10-04+GH-949/`.
+The repair is Easy to reverse at the two entry points. The bet is that existing cleanup
+works under catchable cancellation; any surviving owned process is the revisit trigger.
+Renewed Codex QA is attested Approved round1. Full macOS push gate GREEN in808s
+on `9e7eaddc`;407 shell suites and21 Python tests pass with unchanged clone identity.
+Hosted smoke succeeds on that SHA; raw receipts and provenance are retained.
+PR953 is ready awaiting merge. Nonblocking config S1 is parked.
+
 ## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
 
 The operator reversed GH-882's 2026-10-01 decision that made XYZ-skills-army-mini the Skills Army HQ
@@ -125,6 +139,26 @@ Verification:
   kind, stale row, uncommitted registry, child deletion and re-addition, and drop/re-add.
 - `test/gh620-skills-army-mini-sync.sh` 29/0, including the retired-by-default refusal.
 - Red controls: removing carry-forward and substring origin matching each fail the suite.
+
+## 2026-10-03 — ATE cancellation, oracle observation and gate environment (GH-949, GH-912)
+
+The GH-435 campaign exposed continuing child processes after cancellation, timed-out oracle
+commands that could pass before a late write, invisible directory-link and linked Git configuration
+changes, and ATE admission/record errors. The shared process-group helper now cleans up on
+exceptional unwind; ATE and its CLI wrapper translate INT/TERM into bounded cleanup. Oracles use
+that helper for every idempotence repetition and refuse incomplete observations. Tree snapshots
+include directory links, and host identity resolves shared and per-worktree Git configuration.
+
+ATE rejects an empty grid before writes, reports no-work budgets, appends a failure row on launch
+failure or cancellation, and emits actual UTC timestamps. Discovery tolerates an unset HOME;
+the existing runner envelope removes inherited harness selectors while retaining the explicit
+harness database override and per-case fixture assignments.
+
+This is a Costly shared-contract bet: existing helpers suffice without another executor, suite,
+registry entry or schema. Revert the focused repair commits on caller-shape or containment
+regression. Normal successful background-child policy is unchanged; forced SIGKILL and deliberate
+session escape are outside this cancellation contract. Before/after controls and final validation
+are retained under `TESTS-RESULTS/2026-10-03+GH-949/`; independent final QA is Approved and the full local push gate passed (870s, no bypass).
 
 ## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
 

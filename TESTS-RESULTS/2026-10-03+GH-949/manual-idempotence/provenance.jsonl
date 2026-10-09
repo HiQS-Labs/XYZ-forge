@@ -1,0 +1,2 @@
+{"source_sha": "984b7f644d11dc2dde3f6a551f76f7da292c1af9", "command": ["bash", "test/gh-gen4-phase1-domain-oracles.sh"], "started_utc": "2026-10-03T07:31:06.302414+00:00", "finished_utc": "2026-10-03T07:31:12.541476+00:00", "rc": 0, "status_unchanged": true}
+{"source_sha": "984b7f644d11dc2dde3f6a551f76f7da292c1af9", "command": ["bash", "test/gh155-phase1-metamorphic-invariants.sh"], "started_utc": "2026-10-03T07:31:12.541615+00:00", "finished_utc": "2026-10-03T07:31:17.591872+00:00", "rc": 0, "status_unchanged": true}

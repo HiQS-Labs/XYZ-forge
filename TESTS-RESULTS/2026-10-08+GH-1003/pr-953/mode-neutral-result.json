@@ -1,0 +1,8 @@
+{
+  "command": "env -u XYZ_VALIDATE_MAX_JOBS -u XYZ_HARNESS bash test/gh544-parallel-default.sh",
+  "rc": 0,
+  "tested_commit": "a57884ad3208d2923d59d4e9914ad06939ec8990",
+  "identity_intact": true,
+  "timestamp": "2026-10-09T07:36:13.300662+00:00",
+  "result": "29 pass, 0 fail; prior full registry had this sole failed suite under caller MAX_JOBS=2; no implementation changes"
+}

@@ -1,0 +1,80 @@
+{
+  "child_pid": 65222,
+  "worker_pgid": 65221,
+  "child_live_before": true,
+  "returncode": 130,
+  "prior_bytes_preserved": true,
+  "rows": [
+    {
+      "run_id": "prior-control",
+      "status": "pass"
+    },
+    {
+      "schema_version": "1.0",
+      "run_id": "run-20261003071837-65183",
+      "iteration": 0,
+      "engine": "ate_variations",
+      "timestamp": "2026-10-03T07:18:43Z",
+      "variation": {
+        "case_id": "cancel-probe"
+      },
+      "status": "fail",
+      "duration_ms": 5500,
+      "turn_count": 1,
+      "prompt_tokens": null,
+      "completion_tokens": null,
+      "total_tokens": null,
+      "tokens_source": "unsupported",
+      "tool_count": null,
+      "tool_schema_bytes": null,
+      "tool_mode": null,
+      "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/cancel_worker.py /Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int.pid",
+      "cmd": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/cancel_worker.py",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int.pid"
+      ],
+      "exit_code": null,
+      "stdout": "",
+      "stderr": "interrupted by signal 2",
+      "wall_seconds": 5.5,
+      "timed_out": false,
+      "edited": false,
+      "classification": {
+        "status": "fail",
+        "severity": "high",
+        "category": "interrupted",
+        "likely_cause": "interrupted by signal 2"
+      }
+    }
+  ],
+  "child_live_after": false,
+  "correct_properties": {
+    "nonzero_exit": true,
+    "prior_preserved": true,
+    "child_reaped": true,
+    "one_interrupted_row": true
+  },
+  "independent_cleanup_child_absent": true,
+  "case": "ate-cancel-int",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+    "--repo",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int-scratch",
+    "--variations",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int-grid.json",
+    "--log",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int.jsonl",
+    "--control",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int-control.json",
+    "--minutes",
+    "1",
+    "--per-variation-timeout",
+    "90",
+    "--mock-classifier"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:18:37.380970+00:00",
+  "finished_utc": "2026-10-03T07:18:43.544072+00:00"
+}

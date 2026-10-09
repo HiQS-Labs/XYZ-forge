@@ -1,0 +1,19 @@
+{
+  "added_len": 10418,
+  "added_sha256": "17ac3440935509ba29285f00c6d23a4893344d6a1a606d51712e9890b361789f",
+  "added_start": 9621,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-05T05:23:30Z",
+  "driver_pid": 21044,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-resume-20261004/relay-system/2026-10-04/gh949-resumed-final.codex.md",
+  "relay_file_rel": "relay-system/2026-10-04/gh949-resumed-final.codex.md",
+  "reviewed_head": "157bf05afaff4884fd4053938823065c0a74f6dd",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-resume-20261004",
+  "task": "RELAY-GH949-RESUME-20261004",
+  "trailer_sha256": "af094faf1de402f0d6d918c7f198afd9461513615e4d58d87fc77ccc63f6d4f4",
+  "transcript_repo": "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-resume-20261004"
+}
