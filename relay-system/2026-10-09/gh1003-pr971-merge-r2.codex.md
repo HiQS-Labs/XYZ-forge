@@ -99,4 +99,12 @@ Required fixes: none. [Unverified — needs clone run] Final-head release check 
 
 Relay closed (Approved), no further review turn needed. Handing the completed result to Producer **merge-cleanup** for the separate final-head checks and landing decision.
 
+
+### Attestation · relay-drive — 2026-10-09T07:08:51Z
+task: GH1003-PR971-MERGE-QA-R2
+reviewer: codex
+status: Approved
+reviewed-head: cfd57d7d08c4830713cbd5c99bdf3263d3548e45
+added-range: 6966+4609
+added-sha256: 300262e3800159dbadd2685d5761c2c1fad70812da375a4718e750c97d255a95
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
