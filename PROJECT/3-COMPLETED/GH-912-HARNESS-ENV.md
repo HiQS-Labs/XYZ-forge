@@ -1,8 +1,8 @@
 ---
 title: "GH-912 — Isolate ambient harness discovery overrides in gates"
-status: Captured
+status: Complete
 created: 2026-10-03
-updated: 2026-10-03
+updated: 2026-10-09
 owner: Codex
 goal: Prevent operator harness-location overrides from selecting another checkout in gate fixtures.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/912
