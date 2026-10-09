@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -80,5 +80,34 @@ Reviewer writes this relay only. Do not execute suites/pytest/fixtures in a link
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+
+Basis: The observation/repair-to-PR boundary is appropriately narrow, but two observation contracts need resolution before implementation: configurable scheduling versus the fixed six-check instructions, and signal cancellation while preserving foreground driver calls. This is plan QA, not a runtime failure verdict.
+
+swept file: yes
+
+Read the complete `PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md`, the complete launcher, the driver's terminal-result/heartbeat/approval paths, relevant existing suite sections, and the three consult conclusions. No additional defects identified in the plan outside the findings below; this is not an exhaustive audit of the entire driver. Applied SWE review rubric. Graph tools initially were not exposed, then became available: `XYZ-forge` coverage generation `2026-09-01T15:54:30Z` is stale for the driver/consult/tests; launcher coverage is partial at line 351. Current source, including reported relevant missed ranges, was read directly. No source/artifact edits, git commands, suites, pytest, or executable fixtures were run.
+
+- **[Should] R1 — Make the finite schedule consistently parameterized and add the missing timing proofs.** Plan lines 153–155 permit count 1–144 and line 181 explicitly offers 600×18, but lines 165–170 mandate “six absolute monotonic deadlines” and “no seventh report”; lines 211 and 251 repeat the fixed-six criterion. An implementer cannot satisfy both literally. Use `N = effective check count`, retain six/seventh only as the default example, and explicitly map configurable count and missed-deadline behavior into Phase 3 and the acceptance table. Specify whether missed slots consume N and the expected output when resuming past the entire window; “clock-controlled checks” alone does not state that result.
+  Observed input: `PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md:181` supplies `600×18`, conflicting with the unconditional instruction at `:165` and prohibition at `:170`.
+  Affected scope: Opt-in observation scheduling and its manual acceptance checks only; phase execution and caps stay unchanged.
+  Falsifier: In a disposable clone, default 600×6 ends at slot 6 with no slot 7; explicit 600×18 permits slot 7 and ends at 18 with no slot 19; phase transitions retain the same schedule; a clock jump beyond the window reports missed slots without fabricated snapshots or extending the window. A plan explicitly requiring these outcomes resolves the ambiguity.
+
+- **[Should] R2 — Resolve the foreground-wait signal contract before promising immediate cancellation.** Plan lines 165–172 retain synchronous phase calls and promise catchable-signal cleanup; line 250 assigns immediate terminal/cancellation to the launcher EXIT lifecycle. Current `relay-automation/marathon.sh:310`–`:317` waits on foreground `bash "$DRIVE_BIN"`. Bash defers a trapped signal until that foreground command completes ([GNU Bash signal semantics](https://www.gnu.org/s/bash/manual/html_node/Signals.html)). Therefore adding launcher traps alone does not establish prompt cancellation when TERM targets only the launcher during a long phase. Parent-loss detection also cannot help while that launcher is still alive waiting. This consequence is inferred from current source and documented shell semantics, not a locally executed signal test. Add a concrete signal-target/latency contract and a mandatory disposable-macOS-clone check before choosing the cleanup mechanism; distinguish child exit, launcher-only signal, process-group signal, and actual parent disappearance. Preserve single-executor ordering and original status; do not quietly expand this into descendant repair/termination machinery.
+  Observed input: Foreground driver invocation at `relay-automation/marathon.sh:313`/`:317`, together with the plan's `:166` catchable-signal promise and `:250` immediate EXIT-lifecycle acceptance row; the concrete counterexample to measure is TERM to the launcher PID while its driver remains running.
+  Affected scope: Opt-in observer notification/reaping and the advertised cancellation latency, not continuation eligibility or driver containment.
+  Falsifier: A disposable-clone run with a deliberately long phase shows the chosen design produces the terminal/cancellation report and reaps the observer within its stated bound after launcher-only TERM, without awaiting phase completion, starting another phase, or substituting observer status for the run status. If that cannot be shown while retaining the chosen boundary, explicitly disposition the limitation and revise the plan before claiming this guarantee.
+  **[Unverified — needs clone run]** Signal delivery and teardown were not exercised in this reviewer worktree.
+
+- **[Pass] Existing evidence supports the progress boundary.** Driver receipts expose execution/phase/lane/root, gate and reviewed-candidate fields (`utils/py/marathon_drive.py:235`–`:275`); success runs acceptance/gate checks, binds reviewer attestation, and labels `already-satisfied` (`:2663`–`:2737`). Plan lines 171–177 require those bindings and separate re-verification from new milestones. Existing receipt assertions are present at `test/gh280-jog-marathon-adapter.sh:274`–`:284`; their execution remains unverified here. Keep the reader non-authoritative and retain the proposed stale/foreign/heartbeat-only red controls.
+
+- **[Pass] Repair and continuation scope remain honest.** Plan lines 184–197 require an active caller, launch authorization, one episode, shared UTC deadline, unanimous advisory recommendations, isolated repair, independent QA and publish-and-park. Lines 229–241 hold exact-revision continuation behind stopped descendants, preserved state/attempts, #752 and #1004; publication cannot enable it. This preserves the useful first delivery without claiming unattended recovery is complete. Keep these predicates in the implementation skill.
+
+- **[Pass] Rating and uncertainty are retained.** `releases.sql:833` contains 80/65/80/45, NULL override and the active plan pointer; plan lines 51–58 explicitly label appeal as interpretation and incident trends as unknown. Read-only DB probe: `python3 -` with `sqlite3.connect(pathlib.Path("releases.db").resolve().as_uri()+"?mode=ro&immutable=1", uri=True)` and `SELECT gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,doc_path FROM roadmap_items WHERE gh_number='1006'`; exit 0; decisive output: `[(1006, 80, 65, 80, 45, None, 'PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md')]`. Output was confined to `.relay-scratch/tmp/gh1006-plan-reading.txt`. No score change requested.
+
+Handing off to Producer (`codex-author`) — disposition R1/R2 and update the plan, then return it for Round 2. STATUS remains Open; no approval or implementation authorization is implied.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
