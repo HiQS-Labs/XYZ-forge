@@ -1,0 +1,365 @@
+[
+  {
+    "child_pid": 64481,
+    "worker_pgid": 64479,
+    "child_live_before": true,
+    "returncode": 143,
+    "prior_bytes_preserved": true,
+    "rows": [
+      {
+        "run_id": "prior-control",
+        "status": "pass"
+      },
+      {
+        "schema_version": "1.0",
+        "run_id": "run-20261003071831-64400",
+        "iteration": 0,
+        "engine": "ate_variations",
+        "timestamp": "2026-10-03T07:18:37Z",
+        "variation": {
+          "case_id": "cancel-probe"
+        },
+        "status": "fail",
+        "duration_ms": 5500,
+        "turn_count": 1,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "tokens_source": "unsupported",
+        "tool_count": null,
+        "tool_schema_bytes": null,
+        "tool_mode": null,
+        "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/cancel_worker.py /Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/term.pid",
+        "cmd": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/cancel_worker.py",
+          "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/term.pid"
+        ],
+        "exit_code": null,
+        "stdout": "",
+        "stderr": "interrupted by signal 15",
+        "wall_seconds": 5.5,
+        "timed_out": false,
+        "edited": false,
+        "classification": {
+          "status": "fail",
+          "severity": "high",
+          "category": "interrupted",
+          "likely_cause": "interrupted by signal 15"
+        }
+      }
+    ],
+    "child_live_after": false,
+    "correct_properties": {
+      "nonzero_exit": true,
+      "prior_preserved": true,
+      "child_reaped": true,
+      "one_interrupted_row": true
+    },
+    "independent_cleanup_child_absent": true,
+    "case": "ate-cancel-term",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+      "--repo",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/term-scratch",
+      "--variations",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/term-grid.json",
+      "--log",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/term.jsonl",
+      "--control",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/term-control.json",
+      "--minutes",
+      "1",
+      "--per-variation-timeout",
+      "90",
+      "--mock-classifier"
+    ],
+    "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "started_utc": "2026-10-03T07:18:31.018091+00:00",
+    "finished_utc": "2026-10-03T07:18:37.380511+00:00"
+  },
+  {
+    "child_pid": 65222,
+    "worker_pgid": 65221,
+    "child_live_before": true,
+    "returncode": 130,
+    "prior_bytes_preserved": true,
+    "rows": [
+      {
+        "run_id": "prior-control",
+        "status": "pass"
+      },
+      {
+        "schema_version": "1.0",
+        "run_id": "run-20261003071837-65183",
+        "iteration": 0,
+        "engine": "ate_variations",
+        "timestamp": "2026-10-03T07:18:43Z",
+        "variation": {
+          "case_id": "cancel-probe"
+        },
+        "status": "fail",
+        "duration_ms": 5500,
+        "turn_count": 1,
+        "prompt_tokens": null,
+        "completion_tokens": null,
+        "total_tokens": null,
+        "tokens_source": "unsupported",
+        "tool_count": null,
+        "tool_schema_bytes": null,
+        "tool_mode": null,
+        "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/cancel_worker.py /Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int.pid",
+        "cmd": [
+          "/opt/homebrew/opt/python@3.14/bin/python3.14",
+          "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/cancel_worker.py",
+          "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int.pid"
+        ],
+        "exit_code": null,
+        "stdout": "",
+        "stderr": "interrupted by signal 2",
+        "wall_seconds": 5.5,
+        "timed_out": false,
+        "edited": false,
+        "classification": {
+          "status": "fail",
+          "severity": "high",
+          "category": "interrupted",
+          "likely_cause": "interrupted by signal 2"
+        }
+      }
+    ],
+    "child_live_after": false,
+    "correct_properties": {
+      "nonzero_exit": true,
+      "prior_preserved": true,
+      "child_reaped": true,
+      "one_interrupted_row": true
+    },
+    "independent_cleanup_child_absent": true,
+    "case": "ate-cancel-int",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+      "--repo",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int-scratch",
+      "--variations",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int-grid.json",
+      "--log",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int.jsonl",
+      "--control",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int-control.json",
+      "--minutes",
+      "1",
+      "--per-variation-timeout",
+      "90",
+      "--mock-classifier"
+    ],
+    "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "started_utc": "2026-10-03T07:18:37.380970+00:00",
+    "finished_utc": "2026-10-03T07:18:43.544072+00:00"
+  },
+  {
+    "returncode": 2,
+    "sentinel_exists": false,
+    "correct_properties": {
+      "refused": true,
+      "no_spawn": true
+    },
+    "case": "missing-timeout",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/py/proc_group.py",
+      "--pgid-file",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/missing-timeout.pgid",
+      "--",
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "-c",
+      "import pathlib,time; pathlib.Path('/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/missing-timeout-sentinel').write_text('spawned'); time.sleep(120)"
+    ],
+    "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "started_utc": "2026-10-03T07:18:43.548584+00:00",
+    "finished_utc": "2026-10-03T07:18:43.875811+00:00"
+  },
+  {
+    "positive": {
+      "oracle": "zero-state",
+      "passed": true,
+      "reasons": [],
+      "digest_before": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+      "digest_after": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+      "files": 1,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 22.328457969706506
+      }
+    },
+    "result": {
+      "oracle": "zero-state",
+      "passed": false,
+      "reasons": [
+        "command observation incomplete (timeout or launch failure)"
+      ],
+      "digest_before": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+      "digest_after": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+      "files": 1,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 124,
+        "stdout": "",
+        "stderr": "\n[timeout after 1s]",
+        "timed_out": true,
+        "completed": false,
+        "duration_ms": 1005.1322500221431
+      }
+    },
+    "returncode": 0,
+    "late_write": false,
+    "correct_properties": {
+      "positive_pass": true,
+      "no_late_write": true,
+      "incomplete_not_pass": true,
+      "structured_result": true
+    },
+    "independent_cleanup_child_absent": true,
+    "case": "oracle-zero",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/oracle-zero-observer.py"
+    ],
+    "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "started_utc": "2026-10-03T07:18:43.876241+00:00",
+    "finished_utc": "2026-10-03T07:18:49.081280+00:00"
+  },
+  {
+    "positive": {
+      "oracle": "zero-state",
+      "passed": true,
+      "reasons": [],
+      "digest_before": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+      "digest_after": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+      "files": 1,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 23.069625021889806
+      }
+    },
+    "result": {
+      "oracle": "idempotence",
+      "passed": false,
+      "reasons": [
+        "exit code / output digest diverged across repetitions"
+      ],
+      "repetitions": 3,
+      "receipts_after_1": 0,
+      "receipts_after_n": 0,
+      "inner": {
+        "passed": false,
+        "repetitions": 2,
+        "concurrent": false,
+        "exit_codes": [
+          null,
+          null
+        ],
+        "completed": false,
+        "stdout_hashes": [
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        "divergences": [
+          "Exit codes: [None, None]",
+          "Stdout hashes: ['e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855']"
+        ]
+      },
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 31.677624967414886
+      }
+    },
+    "returncode": 0,
+    "late_write": false,
+    "correct_properties": {
+      "positive_pass": true,
+      "no_late_write": true,
+      "incomplete_not_pass": true,
+      "structured_result": true
+    },
+    "independent_cleanup_child_absent": true,
+    "case": "oracle-idempotence",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/oracle-idempotence-observer.py"
+    ],
+    "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "started_utc": "2026-10-03T07:18:49.081770+00:00",
+    "finished_utc": "2026-10-03T07:18:55.277187+00:00"
+  },
+  {
+    "normal": {
+      "rc": 0,
+      "stdout": "123\n",
+      "stderr": "",
+      "timed_out": false,
+      "pgid": 73014,
+      "wall_seconds": 0.02343320898944512
+    },
+    "own124": {
+      "rc": 124,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "pgid": 73015,
+      "wall_seconds": 0.02151837496785447
+    },
+    "timeout": {
+      "rc": null,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": true,
+      "pgid": 73016,
+      "wall_seconds": 0.3111038329661824
+    },
+    "correct_properties": {
+      "normal": true,
+      "own124_not_timeout": true,
+      "real_timeout": true
+    },
+    "case": "bounded-positive",
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/bounded-positive.py"
+    ],
+    "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+    "started_utc": "2026-10-03T07:18:55.277975+00:00",
+    "finished_utc": "2026-10-03T07:18:55.701002+00:00"
+  }
+]

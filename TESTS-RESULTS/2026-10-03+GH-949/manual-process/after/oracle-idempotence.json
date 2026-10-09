@@ -1,0 +1,77 @@
+{
+  "positive": {
+    "oracle": "zero-state",
+    "passed": true,
+    "reasons": [],
+    "digest_before": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+    "digest_after": "90a1264df4a8ed70408abad49f0edc9c1bfd67d34fb3ee62575cdd16aef1ba49",
+    "files": 1,
+    "lsof": {
+      "ok": true,
+      "holders": [],
+      "targets_checked": 1
+    },
+    "git_status_clean": null,
+    "run": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "completed": true,
+      "duration_ms": 23.069625021889806
+    }
+  },
+  "result": {
+    "oracle": "idempotence",
+    "passed": false,
+    "reasons": [
+      "exit code / output digest diverged across repetitions"
+    ],
+    "repetitions": 3,
+    "receipts_after_1": 0,
+    "receipts_after_n": 0,
+    "inner": {
+      "passed": false,
+      "repetitions": 2,
+      "concurrent": false,
+      "exit_codes": [
+        null,
+        null
+      ],
+      "completed": false,
+      "stdout_hashes": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      ],
+      "divergences": [
+        "Exit codes: [None, None]",
+        "Stdout hashes: ['e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855']"
+      ]
+    },
+    "run": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "timed_out": false,
+      "completed": true,
+      "duration_ms": 31.677624967414886
+    }
+  },
+  "returncode": 0,
+  "late_write": false,
+  "correct_properties": {
+    "positive_pass": true,
+    "no_late_write": true,
+    "incomplete_not_pass": true,
+    "structured_result": true
+  },
+  "independent_cleanup_child_absent": true,
+  "case": "oracle-idempotence",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/oracle-idempotence-observer.py"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:18:49.081770+00:00",
+  "finished_utc": "2026-10-03T07:18:55.277187+00:00"
+}

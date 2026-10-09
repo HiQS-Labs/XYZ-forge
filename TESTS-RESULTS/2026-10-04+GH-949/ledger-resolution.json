@@ -1,0 +1,22 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit 854cb2ae37",
+  "log": [
+    "classification: keep=theirs generation ours/theirs=(1411, 1414) replay=2 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-949: rc=0 ",
+    "roadmap rate GH-949 90/85/50/55: rc=0 ",
+    "roadmap update GH-949 (section/marker): rc=0 ",
+    "roadmap add GH-912: rc=0 ",
+    "roadmap rate GH-912 82/80/50/85: rc=0 ",
+    "roadmap update GH-912 (section/marker): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "854cb2ae3764fddd2557c14eda03e7a559a46fbe",
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}

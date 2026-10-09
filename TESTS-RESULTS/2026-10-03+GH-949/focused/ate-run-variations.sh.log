@@ -1,0 +1,20 @@
+== test: ate-run-variations ==
+  PASS: ensure_base_commit: 0-commit repo auto-commits a base (no crash)
+  PASS: ensure_base_commit: returned sha == HEAD
+  PASS: ensure_base_commit: keep file excluded from base commit
+  PASS: ensure_base_commit: existing HEAD returned as-is
+  PASS: assert_disposable_repo: refuses the harness repo (even with override)
+  PASS: assert_disposable_repo: refuses a remote-having repo without --allow-destructive
+  PASS: assert_disposable_repo: remote repo allowed WITH --allow-destructive
+  PASS: assert_disposable_repo: plain scratch repo allowed with no override
+  PASS: reset_repo: dirty tracked edit rewound to base
+  PASS: reset_repo: stray untracked file cleaned
+  PASS: reset_repo: keep log file preserved
+  PASS: reset_repo: keep log contents intact (not truncated)
+  PASS: detect_edit: clean tree -> False
+  PASS: detect_edit: dirty working tree -> True
+  PASS: detect_edit: moved HEAD (auto-commit) -> True
+  PASS: detect_edit: only keep file changed -> False (not counted as an edit)
+  PASS: _clear_stale_index_lock: removes stale lock
+  PASS: _clear_stale_index_lock: no-op (no raise) when lock absent
+  ate-run-variations: all checks passed
