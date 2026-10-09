@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-08.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,25 @@ Questions:
 Return Approved / Changes requested with file:line evidence and concrete observed inputs/falsifiers. Edit only this transcript; do not fix artifacts.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Approved for bounded merge-resolution QA at `bf746fb42ecdd38810d8b6b652a20724181f9df0`: parent preservation, ledger integrity and resolution scope pass. Final-head validation remains pending in a disposable full clone; this approval does not attest that gate.
+swept file: yes
+
+Scope: swept complete parent/candidate changelog bytes, every row of all 16 ledger tables, the complete committed merge-evidence directory and commit-tree identities; reviewed material merged spans and the dump/receipt implementation. Historical runtime claims were not rerun. No additional pre-existing defect affecting this bounded merge found; nine inherited ledger advisories remain visible at `TESTS-RESULTS/2026-10-08+GH-1003/pr-971/ledger-readback.txt:5-15`. Nearest graph: another XYZ-forge checkout, generation `2026-09-01T15:54:30Z`; coverage reported excluded/stale/missing artifacts, so direct candidate bytes supply the evidence. No git process, suite, pytest or executable fixture was run; only this transcript changed outside scratch.
+
+- [Pass] **Both complete changelog parents survive byte-for-byte in relative order.** `CHANGELOG.md:3-47` retains integration entries, `CHANGELOG.md:49-59` retains GH-970, and `CHANGELOG.md:1198-1205` retains the integration hotfix section at its original relative location. Probe command: `python3 - <<'PY'` using `all(any(x == y for y in it) for x in old)` over an iterator of candidate byte lines including line endings. Exit **0**; decisive output: `"pr lines 3597 candidate 3651 ordered-byte-line-preservation True"`, `"integration lines 3639 candidate 3651 ordered-byte-line-preservation True"`. Deleting the exact GH-970 heading in memory produced `"red control heading deletion False"`. Parent objects were read directly with complete object SHA-1 verification.
+
+- [Pass] **Integration history is retained and the sole PR-added row keeps its business fields.** `releases.sql:827` preserves issue **970**, title, URL, doc, section, marker, raw text, ratings **55/40/50/85** and the original NULL `status_label`. This PR has no added in-progress admission needing accepted-start replay. Probe command: `python3 - <<'PY'`, opening the base, both parents and candidate DBs with `sqlite3.connect('file:'+path+'?mode=ro&immutable=1', uri=True)`; full-table comparison plus GH-970 comparison excluding only ID/GID/position/timestamps. Exit **0**; output: `"integration full-table row preservation 3109 unchanged rows; only generation setting replaced"`, `"replayed issue 970 semantic fields equal; status_label None"`, `"duplicate issue identities []"`. Fresh replay timestamps are `2026-10-09T06:51:04Z`; add/rate/update receipts appear at `releases.sql:2521-2523`, matching work events at `releases.sql:3159-3161`. A 55-to-56 in-memory rating mutation yielded `"red control rating mutation rejected True"`. Receipts are consistent with existing writer verbs; summary provenance alone does not independently record exact writer argv.
+
+- [Pass] **Canonical SQL, DB generation and receipt evidence agree.** `releases.sql:3` and `releases.sql:16` name generation **1486**, matching `TESTS-RESULTS/2026-10-08+GH-1003/pr-971/ledger-readback.txt:3-4`. Probe command: `python3 - <<'PY'`, AST-extracting only pure dump/digest functions; checking `dump_text(conn, 1486) == Path('releases.sql').read_text()` and folding `SELECT * FROM op_receipts WHERE op != 'ship-evidence' ORDER BY id`. Exit **0**; output: `"canonical dump exact-byte parity True generation 1486"`, `"foreign_key_check []"`, `"integrity_check ok"`, `"receipts counted by checker 1673 all receipt rows 1677 breaks 170 tolerated 170 digest matches True"`. Four excluded ship-evidence rows explain the count under `utils/py/releases_app.py:5744-5747`; no divergence was observed.
+
+- [Pass] **No runtime code resolution is introduced; the additional view is a faithful ledger projection.** SHA-verified commit/tree probe command: `python3 - <<'PY'`, comparing every candidate leaf against ordinary unchanged-parent/changed-parent selection from common ancestor `442ea913ee5e2fb3d6e050a63c6d90ff07865eb6`. Exit **0**; output: `"both-parent changed paths ['CHANGELOG.md', 'releases.db', 'releases.sql']"`. Other deviations are the three committed merge-evidence files and generated `LEADERBOARD.md` (generation **1486** at `LEADERBOARD.md:1`, added GH-970 at `LEADERBOARD.md:174`). Full-view comparison ignoring displayed ranks yielded `"LEADERBOARD dropped or modified data rows []"` and exactly one added data row, GH-970. Candidate follow-up changes only ledger-readback/provenance evidence; all three evidence files match committed candidate blobs. `TESTS-RESULTS/2026-10-08+GH-1003/pr-971/provenance.jsonl:1` explicitly limits the claim to merge proof and leaves final-head validation pending, accurately.
+
+Required fixes: none. [Unverified — needs clone run] The harness must supply final-head validation before landing.
+
+Relay closed (Approved), no further review turn needed. Handing the completed result to Producer **merge-cleanup** for the separate final-head gate and landing decision.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
