@@ -309,3 +309,7 @@ Publication integration update: development advanced to `3c829e0d`, including me
 Publication qualification: exact composed revision `85a03218` passed the configured full macOS push gate 409/409 in 970 seconds; Python layer21 also passed and identity stayed intact. The initial network update raced the earlier gated publisher and was rejected after GREEN. Fresh remote readback plus ancestry/unchanged-head proof justified the documented already-gated `XYZ_SKIP_PREPUSH=1` retry, which pushed normally without force. Both the rejected update and successful retry are retained in `publication/`; the first successful older-base 409/409 run is historical `first-green/`. The final evidence/status-only follow-up uses the normal deterministic documentation gate. These push gates are PR checks, not promotion evidence or permission to merge.
 
 Retirement: preserve this task clone and its disposable verification/gate clones until the PR lands and required origin verification finishes. Raw local receipts and probe fixtures remain under their `temp/` directories; no teardown is performed here. After verified landing, use `/merge-cleanup` with the repository safety checks.
+
+## Merge evidence
+
+- PR #1014 merged 2026-10-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
