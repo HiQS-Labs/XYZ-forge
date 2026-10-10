@@ -918,7 +918,8 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     # root file in the throwaway worktree is moved into RTL_ROOT's .tick/scratch for inspection
     # (the worktree itself is destroyed below, which would otherwise destroy the evidence) and the
     # turn is NOT failed on it.
-    rtl_scratch_relocate "$path" "$wt" "$RTL_ROOT" && continue
+    rtl_scratch_relocate "$path" "$wt" "$RTL_ROOT" nested && continue   # GH-1002: nested files too
+    rtl_scratch_relocate_dir "$path" "$wt" "$RTL_ROOT" && continue      # GH-1002: all-scratch new dir
     rtl_offlane_hint "$path"                         # GH-90: name a file-vs-directory lane-spec mistake
     rtl_trace "rtl_worktree_end: OFFLANE path=$path"
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
@@ -1139,22 +1140,56 @@ rtl_orphan_backup() {  # <path> — copy pre-revert content aside; must never bl
 # The destination is .tick/scratch/ (exempted intrinsically, never rides into a commit, recoverable
 # for inspection) — NOT .relay-scratch/, which rtl_enforce sweeps at end of turn and which would
 # therefore destroy the evidence this function exists to preserve.
-rtl_scratch_relocate() {  # <path> <src-root> [dest-root] — 0 = relocated, 1 = not scratch-shaped
-  local p="$1" src_root="$2" dest_root="${3:-$2}" dest
+#
+# GH-1002 widened two things, worktree side only where it matters:
+#   - hyphenated prefixes (test-*, fix-*, repro-*, probe-*) count as scratch — agy names probes that way;
+#   - with the 4th arg `nested` (passed ONLY by rtl_worktree_end), a nested untracked FILE whose
+#     basename is scratch-shaped relocates too. That is safe there because worktree copy-back is
+#     allowlist-only, so nothing outside the lane can land in ROOT either way; the in-ROOT rtl_check
+#     path never passes `nested`, so a nested scratch-shaped path there still violates (gh113 2b).
+rtl_scratch_shaped() {  # <path> <src-root> [nested] — 0 = untracked scratch-shaped file/path, no side effects
+  local p="$1" src_root="$2" mode="${3:-}" name
   [[ -n "$p" && -n "$src_root" ]] || return 1
-  case "$p" in ""|.|..|*/*|.*) return 1 ;; esac
-  [[ "$p" =~ ^(tmp|temp|scratch|debug|test_|fix_|repro_|probe_) ]] \
-    || [[ "$p" =~ \.(tmp|temp|bak|orig)$ ]] \
-    || [[ "$p" == *~ ]] \
+  case "$p" in ""|.|..|.*|*/) return 1 ;; esac
+  if [[ "$p" == */* ]]; then
+    [[ "$mode" == nested ]] || return 1
+    case "/$p" in */.*) return 1 ;; esac   # no dot-directory components
+    [[ -f "$src_root/$p" ]] || return 1
+  fi
+  name="${p##*/}"
+  [[ "$name" =~ ^(tmp|temp|scratch|debug|(test|fix|repro|probe)[-_]) ]] \
+    || [[ "$name" =~ \.(tmp|temp|bak|orig)$ ]] \
+    || [[ "$name" == *~ ]] \
     || return 1
   git -C "$src_root" ls-files --error-unmatch -- "$p" >/dev/null 2>&1 && return 1
   [[ -e "$src_root/$p" ]] || return 1
+  return 0
+}
+
+rtl_scratch_relocate() {  # <path> <src-root> [dest-root] [nested] — 0 = relocated, 1 = not scratch-shaped
+  local p="$1" src_root="$2" dest_root="${3:-$2}" mode="${4:-}" dest
+  rtl_scratch_shaped "$p" "$src_root" "$mode" || return 1
   dest="${RTL_SCRATCH_DIR:="${dest_root:?}/.tick/scratch/$(date -u +%Y%m%dT%H%M%SZ)-$$"}"
-  mkdir -p "$dest" 2>/dev/null || return 1
+  mkdir -p "$dest/$(dirname "$p")" 2>/dev/null || return 1
   mv "$src_root/$p" "$dest/$p" 2>/dev/null || return 1
-  printf '%s-turn: SCRATCH RELOCATION (GH-113): untracked root-level %s moved to %s — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.\n' \
+  printf '%s-turn: SCRATCH RELOCATION (GH-113): untracked %s moved to %s — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.\n' \
     "${RTL_TOOL:-relay}" "$p" "$dest" >&2
   rtl_log_always "rtl_scratch_relocate: path=$p src=$src_root dest=$dest (GH-113)"
+  return 0
+}
+
+# GH-1002: git's default porcelain reports a wholly new directory as ONE "dir/" entry, so a probe
+# inside it never reaches rtl_scratch_relocate. Expand only such an entry (the caller has already
+# applied the allowlist and containment-ignore checks): relocate its files only if EVERY one is
+# scratch-shaped; otherwise move nothing and let the caller flag the entry off-lane as before.
+rtl_scratch_relocate_dir() {  # <dir/> <src-root> <dest-root> — 0 = whole dir relocated, 1 = not all scratch
+  local d="$1" src_root="$2" dest_root="$3" f files=()
+  [[ "$d" == */ ]] || return 1
+  while IFS= read -r -d '' f; do files+=("$f"); done \
+    < <(git -C "$src_root" ls-files --others --exclude-standard -z -- "$d" 2>/dev/null)
+  ((${#files[@]} > 0)) || return 1
+  for f in "${files[@]}"; do rtl_scratch_shaped "$f" "$src_root" nested || return 1; done
+  for f in "${files[@]}"; do rtl_scratch_relocate "$f" "$src_root" "$dest_root" nested || return 1; done
   return 0
 }
 

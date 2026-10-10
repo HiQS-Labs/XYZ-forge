@@ -17,6 +17,32 @@ ratchet. The unchanged non-Small GH-492 idle suite failed parallel timing assert
 focused; per the standing AGENTS #802/#853 decision, it is removed from the full registry and
 retained for manual use. Its diagnostics runtime is unchanged.
 Existing suite and manual red/green evidence: `TESTS-RESULTS/2026-10-09+GH-1006/`.
+## 2026-10-09 — Surgical SWE governance (GH-1007)
+
+Extended SWE from planning to implementation and review, with explicit safety, security,
+maintainability and performance tradeoffs. New tests and blocking CI placement require
+separate justification; performance baselines remain advisory and reuse existing task
+evidence. Replaced rigid scaffolding with risk-scaled guidance while retaining mutation,
+migration and intervention-deadline safeguards. Source format passes, missing-name red
+control fails, seven manual instruction scenarios are recorded, and plan QA is Approved.
+Evidence: `TESTS-RESULTS/2026-10-09+GH-1007/`; final QA precedes PR readiness.
+
+## 2026-10-08 — Vendored marathons: own root despite a global XYZ_HARNESS; probes no longer sink a phase (GH-1001, GH-1002)
+
+A vendored `marathon-drive` on a Mac that exports `XYZ_HARNESS` resolved its repo root to the global
+harness clone and parked the lane on that repo's issue. The cause was `e53f5d06` (GH-396 review
+fixups, 2026-09-02), which put the `XYZ_HARNESS` check ahead of the running script's own `.xyz/` copy
+in `harness_home()`; the running copy now wins and `XYZ_HARNESS` is the fallback. The issue-closed
+preflight now queries the lane's target repo and its park message names that repo.
+In isolated worktree turns, untracked builder probes with hyphenated names (`test-satori.mjs`), nested
+probes (`tools/spike/test_satori.mjs`) and wholly new all-scratch directories are relocated to
+`.tick/scratch/` with a warning instead of failing the turn; mixed directories, nested non-scratch
+files and the in-ROOT path still fail as before. A lane at its attempt cap now parks before any relay
+commit, and dry-run prints attempts against the cap. Containment failures still count toward the cap
+(GH-45). Verification: gh396 42/42 and gh113 27/27 with red controls on the base revision (and a
+mutation witness for the mixed-directory refusal); manual checks for the issue query and cap ordering,
+red on base; focused suites green in a disposable clone. Evidence under `TESTS-RESULTS/2026-10-08+GH-1001/`
+and `+GH-1002/`. Reversibility: Easy.
 
 ## 2026-10-07 — ADK lessons: bounded command and retained trajectory assessment (GH-998)
 

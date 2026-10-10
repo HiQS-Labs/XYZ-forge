@@ -1,0 +1,41 @@
+{
+  "runs": [
+    {
+      "label": "gh609-current",
+      "started": "2026-10-10T04:58:32.113446+00:00",
+      "finished": "2026-10-10T04:58:32.505854+00:00",
+      "source_sha": "209fd0bd675a7134bf26440777fd5c825e21e577",
+      "variant": "candidate unchanged",
+      "argv": [
+        "bash",
+        "test/gh609-sdlc-agent-gaps.sh"
+      ],
+      "rc": 1
+    },
+    {
+      "label": "gh609-parent-swe-control",
+      "started": "2026-10-10T04:58:32.523272+00:00",
+      "finished": "2026-10-10T04:58:33.145752+00:00",
+      "source_sha": "209fd0bd675a7134bf26440777fd5c825e21e577",
+      "variant": "parent-of-1009 SWE only",
+      "argv": [
+        "bash",
+        "test/gh609-sdlc-agent-gaps.sh"
+      ],
+      "rc": 0
+    }
+  ],
+  "before": {
+    "head": "209fd0bd675a7134bf26440777fd5c825e21e577",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.tagopt=--no-tags\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*",
+    "status": ""
+  },
+  "after": {
+    "head": "209fd0bd675a7134bf26440777fd5c825e21e577",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.tagopt=--no-tags\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*",
+    "status": ""
+  },
+  "identity_unchanged": true
+}
