@@ -2,7 +2,7 @@
 gh_issue: 1016
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1016
 title: "releases ledger: bare repos.slug from the folder name never matches a differently named GitHub repo, so wave_reconcile silently skips every roadmap row"
-status: "Working — plan QA"
+status: "Working — implementation"
 created: 2026-10-10
 updated: 2026-10-10
 owner: Claude
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked and rated 70/60/50/70; recon traced; red control recorded (pre-fix 9/15); plan QA round 1 FAIL (3 Should) dispositioned and plan revised. | Codex plan-QA round 2 (`relay-system/2026-10-10/gh1016-plan-qa.md`). |
+| Intake parked and rated 70/60/50/70; recon traced; red control recorded (pre-fix 9/15); plan QA Approved in round 2 (r1 FAIL, 3 Should, all dispositioned). | Implementation under `--accepted-start`. |
 
 ## Table of contents
 
@@ -270,6 +270,11 @@ Round 1 (Codex, FAIL, `relay-system/2026-10-10/gh1016-plan-qa.md`):
   `repos.slug` and `settings.repo_slug`.
 - **[Nit] Control count. Implemented.** The count now reads nine controls of 15. Wave case 4 is
   described as a qualified dry-run.
+
+Round 2 (Codex, PASS, Approved; attested at reviewed head `80f43a32`): four Pass findings.
+
+- **[Nit] Name debug-mantra. Implemented.** If an execution check fails, apply debug-mantra before
+  changing the fix.
 
 ## Implementation evidence
 
