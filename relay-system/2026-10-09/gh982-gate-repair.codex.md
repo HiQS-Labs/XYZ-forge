@@ -101,4 +101,12 @@ Read the complete packet, all 393 lines of test/gh609-sdlc-agent-gaps.sh, the co
 
 Relay closed (Approved), no further review turn needed. Producer codex-producer owns the outstanding disposable-full-clone qualification. The completion action is the env-pinned tick done, not release to an actor named done; the harness owns the one-file commit.
 
+
+### Attestation · relay-drive — 2026-10-10T05:05:12Z
+task: RELAY-gh982-gate-repair
+reviewer: codex
+status: Approved
+reviewed-head: 3185c8b4b2287f9d5830c73be36f2a36dae82e7e
+added-range: 6280+6844
+added-sha256: 74b6935fb55c53316a9f10e39ebe56d87d76911c5cf6d7023453109ed17c0283
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
