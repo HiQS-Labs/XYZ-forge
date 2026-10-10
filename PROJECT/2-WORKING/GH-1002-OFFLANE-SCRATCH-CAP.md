@@ -36,3 +36,7 @@ Shared plan lives in [`GH-1001-VENDORED-HARNESS-ROOT.md`](GH-1001-VENDORED-HARNE
 - Dry-run shows the lane's attempts versus its cap.
 - Containment failures keep counting toward the cap (GH-45); the issue's "don't count them" option is
   rejected because an outer re-fire loop would become unbounded.
+
+## Merge evidence
+
+- PR #1004 merged 2026-10-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
