@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -128,5 +128,28 @@ Handing off to Producer (claude-a) — disposition the Should finding, make the 
 - Gates on the new code head `b76a693e` in the disposable gate clone: pre-push tier 2 (range classified releases) GREEN in 319s, then the full `RELAY_SELF_SUFFICIENCY_SKIP=1 ./validate.sh` exit 0, 406/406 suites rc=0, 980s, identity intact (`TESTS-RESULTS/2026-10-10+GH-1016/validate-full-b76a693e.log`, `provenance.jsonl` last line). Commits after `b76a693e` are docs/evidence only.
 
 Round 2 question: is the Should resolved, and do the GH-1016 Pass findings still hold at the new head?
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+VERDICT: PASS
+Basis: The sole round-1 Should is resolved with a falsifiable recorded command check; the original GH-1016 implementation and its acceptance still hold. No open Blocker or Should remains.
+
+Whole-file scope: carried forward the round-1 complete sweep of both implementation files and re-read the corrected repoint command and identity/init/onboard seams. A read-only commit/tree-object comparison proves onboard is byte-identical to the swept revision and releases_app differs only at the success message below; no additional confirmed pre-existing defects were found. This is a continued whole-file review, not a claim to have newly re-read all 6,000+ unchanged lines. Graph tier Verify: all 82 project entries checked, none matches this seed; nearest XYZ-forge is another root, generation 2026-09-01T15:54:30Z. Symbol search/coverage remain stale, changed, missing or excluded, so direct source and object bytes are authoritative.
+
+- [Pass] **Round-1 Should resolved.** `utils/py/releases_app.py:3809` formats a numbered row as GH-N and otherwise uses its GID; the existing writer at `:3807` is unchanged. The manual check at `TESTS-RESULTS/2026-10-10+GH-1016/identity_check.py:160` invokes the exact requested GID command and numbered control on a temp ledger copy, requiring exit 0 and the exact status text at `:167`. Retained `red-control-9a923f3c-r2.jsonl:16` reports rc=1 and TypeError; `green-48013cbc.jsonl:16` reports rc=0 and "repointed rmi-01M0H9CC0A81K3083ASEGK37HK -> PROJECT/3-COMPLETED/GH-108-GH-111-EXECUTION-TODO.md"; `:17` preserves "repointed GH-1016 -> PROJECT/2-WORKING/GH-1016-REPO-SLUG-IDENTITY.md". Keep the correction. Probe `PYTHONDONTWRITEBYTECODE=1 python3 -B "$PWD/.relay-scratch/tmp/receipt_audit.py"` (read JSON/hash/counts and compile only the pure resolver functions and final print AST) exited 0; direct print evaluation produced both expected labels without calling any writer. Actual end-to-end commands were assessed from retained receipts, not rerun here.
+
+- [Pass] **Identity and shared parser decisions remain intact.** `releases_app.py:5410` normalizes case and -/_ only, `:5411` retains exact bare matching and bounds tolerance to a one-row bare slug, and `:5414` still requires URL repo and issue-number equality. The same pure-function probe exited 0: own=true, foreign-owner=false, foreign-repo=false, multi-tolerant=false, multi-exact=true, number-mismatch=false, qualified=true. `releases_app.py:2178` retains explicit/origin/basename precedence and writes the selected value to both fields at `:2187`/`:2194`; onboard `:99` imports the existing helper from the resolved app directory, `:101` refuses process/import errors, `:104` preserves precedence and `:110`/`:113` preserve shared origin/explicit URL fallback. The unchanged standard-library module import and guarded CLI remain sound for Tier 2 as reviewed in round 1. Keep these seams; wave output at `green-48013cbc.jsonl:4` is qualified dry-run evidence, not proof of a persisted move.
+
+- [Pass] **The reviewed seed has the gated executable bytes and no new machinery.** Probe `PYTHONDONTWRITEBYTECODE=1 python3 -B "$PWD/.relay-scratch/tmp/object_audit.py"` (read-only loose/packed object decoder and tree comparison, no git subprocess) exited 0: seed HEAD=0f1fd7e8bf0643ee20d6aca7a9fec00f7b4e98de; both implementation files and validate.sh match HEAD. The entire 1cb42805..HEAD source difference is the three-line status-message replacement; b76a693e..HEAD contains only the plan, three receipt/log files and this relay. Base..HEAD has no test/ or validate.sh change; the permitted recorded manual check extends its existing artifact at `identity_check.py:152`. No duplicate parser/writer, verb, schema, suite or registry entry was introduced. Keep the scope. The initial loose-only audit exited 1 because the base object is packed; the read-only packed-object decoder resolved that lookup, without altering repository state.
+
+- [Pass] **Receipts support the final correction and gate, within their qualification.** The receipt-audit command above exited 0: all eight retained output/log SHA-256 comparisons matched; the original red is 9/15, original green 15/15, expanded red 10/17 and expanded green 17/17. Current manual-check SHA-256 is bf3113c1409b0a114be4490f9a5f88e4e1f08eb9e49c519d7b484db53d28e261, matching `provenance.jsonl:10`/`:11`. The nonempty full log is 33,265 bytes with rc counts {'0': 406}, no nonzero rc; `validate-full-b76a693e.log:886` says "validate exit=0 in 980s" and records unchanged HEAD, bare=false, the GitHub origin and dirty=0. Its SHA-256 d8a8debaca999e1ab3817fb00feff61b9d101a584a8e2cd048334e77a5be2741 matches `provenance.jsonl:14`; tier-2 log `:302` says "tier 2 gate GREEN in 319s". Keep the explicit self-check qualification: this is retained disposable-clone execution evidence, not an independent gate rerun or ci-local promotion attestation in this reviewer turn.
+
+- [Pass] **Documentation and rating still fit.** `CHANGELOG.md:15` accurately adds the unnumbered-row correction and `:21` gives the expanded red/green evidence. The plan's final-QA disposition at `PROJECT/2-WORKING/GH-1016-REPO-SLUG-IDENTITY.md:283` and final gate evidence at `:316` agree with the receipts. `releases.sql:842` retains 70/60/50/70 with no override. The small message correction adds no material impact or effort warranting a rating change; retain round-1 rationale and its unknown recurrence trend.
+
+Only this relay was edited outside exempt scratch. No git command, suite, gate, pytest, executable fixture, source/artifact edit, or external posting was performed. Runtime checks requiring those operations were reviewed through the cited committed receipts, under the operator's review-only envelope.
+
+Relay closed (Approved), no further turn needed. NEXT is Producer (claude-a) for the outer harness/PR workflow; closing the relay token with done as instructed for approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
