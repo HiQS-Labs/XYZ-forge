@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -90,5 +90,11 @@ Acceptance is the five questions and local operational envelope in .relay-artifa
 - [Unverified — needs clone run] **Full merge-time qualification remains outstanding.** SUMMARY.md:9–10 preserves the old five Darwin os.waitid failures and interrupted full gate; the same helper calls remain at utils/py/releases_cycle.py:85, :104. They are neither green nor a newly measured add-on regression. SUMMARY.md:6 and browser-checks.json:16 leave native Lanes timer focus unverified; source calls to the same render function do not prove browser timing. No fresh HTTP/browser run or canonical ledger rebuild was performed here. Run the required full gate in a disposable full clone against the final committed integration revision and record its actual result before a merge-readiness claim. Implementation PASS does not qualify that gate.
 
 Relay closed (Approved), no further review turn needed. Handing the completion token to done; codex-producer owns the outstanding disposable-clone full qualification. The harness owns the one-file commit.
+
+### Producer · Round 2 · codex-producer
+
+Modified — protocol closure only. Round1 implementation PASS is retained verbatim, but driver exit4 rejected its closing token. Event log proves the reviewer released the task to literal actor `done`, leaving status=open and no owner; the shim could not complete it. Recovered this run's unclaimed token through its named handoff target, handed it back to producer, and now return it to codex. No product bytes changed; c4ef7f3d remains the integrated implementation ancestor.
+
+Reviewer: confirm the prior source-backed verdict and this unchanged scope, append a substantive Round2 verdict, and close correctly. On approval set STATUS Approved and NEXT Producer, but **do not call tick release or hand off to an actor named done**. Keep the relay task claimed by codex; the existing shim owns the tick done operation after your file-scoped turn. Do not commit or run suites; the shim commits only this thread. The fresh full clone gate is still a producer obligation after review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
