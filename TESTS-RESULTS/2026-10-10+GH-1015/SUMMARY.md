@@ -1,6 +1,6 @@
 # GH-1015 observer path verification
 
-Base `9a923f3c`; candidate source `4ddc2ab4`. Independent plan QA Approved in the committed relay with attestation. Full qualifying gate and final QA remain pending.
+Base `9a923f3c`; candidate source `4ddc2ab4`. Independent plan QA Approved in the committed relay with attestation. Independent final QA Approved (b59b42ee); source bytes match approved-source-hashes.json. Full qualifying gate remains pending.
 
 The retained `manual-replay.py` is a one-off manual evidence replay, outside the suite/registry. Run with `python3 TESTS-RESULTS/2026-10-10+GH-1015/manual-replay.py relay-automation/marathon.sh --expect-fixed` from a disposable full clone (create its ignored temp directory first). It extracts the exact embedded Python and exercises init/phase/finish/emit/finite observe with synthetic receipts and a controlled clock. No provider, worker, paid call, or live marathon was invoked. Fixture paths in raw evidence are ephemeral; the replay reconstructs its own fixtures.
 
