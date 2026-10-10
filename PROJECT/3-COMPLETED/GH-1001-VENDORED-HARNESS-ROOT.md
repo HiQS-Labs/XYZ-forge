@@ -2,9 +2,9 @@
 gh_issue: 1001
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1001
 title: "harness_paths: global XYZ_HARNESS overrides vendored .xyz root; marathon-drive parks lane on the wrong repo's issue"
-status: In Progress
+status: Complete
 created: 2026-10-08
-updated: 2026-10-08
+updated: 2026-10-10
 owner: operator
 doc_type: bugfix
 goal: "A vendored marathon run resolves its own repo and survives incidental builder scratch, so one stray probe or one global env var no longer kills a phase."
