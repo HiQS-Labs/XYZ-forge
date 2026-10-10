@@ -137,4 +137,4 @@ Routine generated leaderboard changes excluded per AGENTS. No production code ch
 
 Publication: [PR #1019](https://github.com/HiQS-Labs/XYZ-forge/pull/1019) targets `development`, non-draft and mergeable at initial inspection. Full pre-push gate on `a0547ec1` passed 409/409 in 909s, without bypass; Git identity unchanged and status clean. One process-group permission error passed the built-in isolated retry; original log retained and cause unconfirmed. Evidence/status-only follow-up commits use the normal documentation gate. Hosted checks are verified separately on the final PR head; this is not promotion evidence.
 
-Retained task clone: `/Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-merge-history-policy`. Retire via `/merge-cleanup` only after landings are verified. Issue remains open; nothing merged, deployed, or removed.
+Retained task clone: `XYZ-forge-merge-history-policy` (sibling of the maintained primary clone). Retire via `/merge-cleanup` only after landings are verified. Issue remains open; nothing merged, deployed, or removed.
