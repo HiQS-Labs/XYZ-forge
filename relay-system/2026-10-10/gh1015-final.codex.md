@@ -100,4 +100,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer codex-author proceeds with the pending clone gate and publication checks.
 
+
+### Attestation · relay-drive — 2026-10-10T16:52:54Z
+task: RELAY-gh1015-final
+reviewer: codex
+status: Approved
+reviewed-head: b59b42ee1b51cc55886e4ac893b0ae4b15439f25
+added-range: 7741+5648
+added-sha256: 06876e059da98e6375928d0ad1bc7d67018152183e29b6785aa4b43a9e3e7dec
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
