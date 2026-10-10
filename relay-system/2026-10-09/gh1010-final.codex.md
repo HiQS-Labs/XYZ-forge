@@ -160,4 +160,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Closing the claimed token with the env-pinned `tick done RELAY-gh1010-final --agent codex`, not release; Producer (codex-producer) owns the subsequent final harness gate/publication workflow. Only this relay file was edited.
 
+
+### Attestation · relay-drive — 2026-10-10T18:19:33Z
+task: RELAY-gh1010-final
+reviewer: codex
+status: Approved
+reviewed-head: 93d7591128174372f8a537b3a6a222a051ee1a32
+added-range: 16686+3465
+added-sha256: c2983d2acd3b9e6ba4cde9b5d975cb61bdffa5ce79bf85429d8f86b22390fe0c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
