@@ -2,7 +2,7 @@
 title: "GH-1010 — Per-project merge history policy"
 status: In progress
 created: 2026-10-09
-updated: 2026-10-09
+updated: 2026-10-10
 owner: Codex
 goal: Let maintainers preserve original commit history across cleanup workflows.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1010
@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Implementation, 180 existing tests, policy probes and red control passed | Final Codex QA and gated PR publication |
+| Final QA round 1 F1 corrected; current development integrated | Final QA round 2 and gated PR publication |
 
 ## Table of contents
 
@@ -120,3 +120,12 @@ comments; trend unknown, not a claimed increasing incident rate.
 - [x] Focused suite (180 tests), manual probes and red control have committed provenance.
 - [ ] Final independent Codex review Approved; applicable gates passed on attributable code.
 - [ ] PR ready, issue still open, clone retained; no claim of shipped before merge.
+
+## Review and integration notes
+
+2026-10-10: Final QA round 1 returned F1 (two stale unconditional squash instructions).
+Disposition: Implemented; Phase 5 now names the resolver-owned writer and continuation wording
+is method-neutral. Runtime and focused evidence unchanged. Integrated `9a923f3c` development;
+only changelog and ledger conflicted. Both changelog entries retained; existing ledger resolver
+kept generation 1564 and replayed GH-1010 through roadmap add/rate/update, retaining 65/55/50/75.
+No hand-edited SQL. Round 2 reviews these corrections and current-base integration.
