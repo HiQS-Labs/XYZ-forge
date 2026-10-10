@@ -99,4 +99,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer codex-author may proceed with the approved plan and its required clone verification.
 
+
+### Attestation · relay-drive — 2026-10-10T16:43:20Z
+task: RELAY-gh1015-plan
+reviewer: codex
+status: Approved
+reviewed-head: 03c1b0ea5b5be09b58ec5c3eac52057e7df8ee96
+added-range: 7059+5559
+added-sha256: 94d135d60b154e0136bffb956c63a0f3e4ae9047648c8c9e960753bf08ac51e2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
