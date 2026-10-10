@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -119,5 +119,26 @@ Dispositions (also recorded in the plan's "Plan QA dispositions"):
 - [Nit] control count: **Implemented** (nine controls of 15; wave case labelled a qualified dry-run).
 
 Round 2 question for the Reviewer: do the revised plan step 3, acceptance map, and evidence resolve the three Should findings without adding a parser, writer, verb, schema change or suite?
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+Reviewed the whole revised plan, the complete manual-check artifact and recorded output, and the cited writer/resolver/caller seams. SWE rubric applied. Codebase Memory tier: Verify, with direct-source fallback. The nearest graph is `XYZ-forge` at another root, generation `2026-09-01T15:54:30Z`; its search still places `cmd_init` at 1792. Coverage for the nine evidence paths reports changed, missing or untracked metadata, so local source is the evidence. No git commands, suites, gates or executable fixtures were run. No additional pre-existing defects were found in the plan beyond the earlier findings and the optional wording nit below.
+
+- [Pass] **The shared parser resolves the dotted-name finding without another parser or writer.** Plan `PROJECT/2-WORKING/GH-1016-REPO-SLUG-IDENTITY.md:163-174` calls the already-resolved app's helper once, preserves explicit slug precedence and the explicit owner/name URL fallback, and removes the Bash regex. `utils/py/releases_app.py:2082-2090` already supports dots. Read-only probe: `python3 -B` heredoc using `ast.parse(Path('utils/py/releases_app.py').read_text())`, selecting the string constant containing `github\.com` from `_github_slug_from_origin`, then `re.search(pattern, url)` → exit 0; decisive output: `https://github.com/test-org/foo.js.git => test-org/foo.js`, `https://github.com/test-org/happy-repo.git => test-org/happy-repo`, `git@github.com:test-org/foo.js.git => test-org/foo.js`, `../GH Repos/XYZ-forge => None`. This measures the existing regex without importing or executing fixtures. Keep this proposal.
+
+- [Pass] **The onboard acceptance now fails if the edit is omitted.** `TESTS-RESULTS/2026-10-10+GH-1016/identity_check.py:128-150` invokes the onboard entry point and compares both `repos.slug` and `settings.repo_slug` for default, dotted, explicit and absent-origin cases. The recorded red output at `red-control-9a923f3c.jsonl:12-16` shows default/dotted failing and explicit/no-origin passing. The acceptance map at plan `:249-254` covers that seam, and steps 4/5 require a fix-tree run and disposable full-clone gate. Keep these checks. Runtime execution in this reviewer turn remains **[Unverified — needs clone run]**; approval concerns the plan.
+
+- [Pass] **The retained evidence closes the provenance finding, with honest runtime limits.** `TESTS-RESULTS/2026-10-10+GH-1016/provenance.jsonl:1-5` records the red-control command, full source SHA, exit 1, hashes, AEGIS observation, recurrence results and author-reported symptoms. Read-only probe: `python3 -B` heredoc reading the first receipt with `json.loads`, computing `hashlib.sha256((base/filename).read_bytes()).hexdigest()` for both named artifacts, and parsing/counting nonempty case rows → exit 0; decisive output: `identity_check.py hash_matches= True 0b3a34d2b35ab0b0b4144f1ec23d5699e7041d265b274d2b4ad62f9c4f2d2b1f`, `red-control-9a923f3c.jsonl hash_matches= True d738f4cb7eb6c5880997ef9a544aff2bad5f36770f41b7b814b8a079303c6bf2`, `nonempty_cases= 15 passed= 9`; the six failed case names agree with the receipt. `releases.sql:842` stores 70/60/50/70 (sum 250). The single observed AEGIS incident and unknown trend support the bounded rationale; these retained author observations/search results were not independently re-run here. Keep the distinction between recorded evidence and execution-time verification.
+
+- [Pass] **The original core decision still satisfies the definition of done.** Plan `:149-160` retains exact matching, restricts the new normalized bare match to one repo row, and leaves URL-owner/name and issue-number equality intact (`releases_app.py:5397-5406`). The concrete foreign rows in `identity_check.py:80-85` cannot become valid through the proposed branch. All cited callers build unfiltered repo maps (`releases_app.py:3944/:4067/:5112/:5493`, `express.py:673`, `work_connectors/__init__.py:149`, `wave_reconcile.py:1485`). `cmd_init:2176-2196` remains the originating writer; `load_dump:6056-6064` copies values, and settings rejects identity edits (`:3821-3828`). Existing owner/name support (`:2102-2113/:5400`) makes rollback compatible; resolver repair leaves digest state untouched (`:1128/:1303-1305`). Keep the no-migration, no-new-verb, no-new-suite scope and arbitrary-folder-name non-goal.
+
+- [Nit] **Name the execution debugging protocol.** The plan's existing log/reproduction path and full-clone proof are sufficient for this small fix, but SWE's Diagnosable rubric asks it to name debug-mantra explicitly. Cheapest follow-up: add “If execution fails, apply debug-mantra before changing the fix” to the execution instructions. This is optional plan wording, not a new runtime requirement or an approval blocker.
+
+VERDICT: PASS
+Basis: All three round-1 Should findings are resolved in the revised plan and retained evidence. The fix extends existing resolver/init behavior, shares the existing origin parser with onboard, preserves foreign-row refusal and stored-state compatibility, and defines falsifiable red/green acceptance without new suites or gate machinery. This is approval for implementation; the final green manual receipt and full-clone gate remain outstanding.
+
+Relay closed (Approved), no further review turn needed. Token handed back to Producer (claude-a) with done for implementation under the approved plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
