@@ -313,4 +313,9 @@ schema.
 - **Full gate.** The pre-push hook took route full (tier 3) in the disposable full clone
   `XYZ-forge-gh1016-repo-slug-identity-2026-10-10-gate` at `1cb42805`: GREEN in 871s, 406/406 suites
   rc=0. Clone identity was intact after the run, and the branch was pushed by that hook.
+- **After the final-QA r1 fix** (`48013cbc`, code head `b76a693e`), in the same disposable gate
+  clone:
+  - manual check 17/17, with red 10/17 at base;
+  - pre-push tier 2 GREEN in 319s;
+  - full `RELAY_SELF_SUFFICIENCY_SKIP=1 ./validate.sh` exit 0, 406/406 in 980s, identity intact.
 - **Records.** Log and receipts are in `TESTS-RESULTS/2026-10-10+GH-1016/provenance.jsonl`.

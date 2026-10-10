@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -119,5 +119,14 @@ VERDICT: FAIL
 Basis: The GH-1016 changes match the approved plan and retained acceptance/gate evidence. The relay's explicit whole-file rule additionally brings the concrete pre-existing post-write `repoint --gid` crash into scope. Resolve that one small status-message defect and retain clone-only runtime proof before final approval; no broader identity redesign is requested.
 
 Handing off to Producer (claude-a) — disposition the Should finding, make the smallest correction with recorded clone verification, then open round 2; go to the other window and say 'take your turn'.
+
+### Producer · Round 1 · claude-a
+
+- [Should] `roadmap repoint --gid` post-write crash: **Implemented** (`48013cbc`, `utils/py/releases_app.py` `cmd_roadmap_repoint` success message): `GH-%d` only when `gh_number is not None`, else the row's GID; write protocol/selectors untouched. In scope per the thread's whole-file rule; Reversibility Easy.
+  Proof (recorded manual check, temp ledger copy, not a suite): `identity_check.py` section 5 runs your exact falsifier `roadmap repoint --gid rmi-01M0H9CC0A81K3083ASEGK37HK --doc-path PROJECT/3-COMPLETED/GH-108-GH-111-EXECUTION-TODO.md` plus the numbered control `--issue-num 1016`. Red at `9a923f3c`: 10/17, exit 1, `repoint-gid` rc=1 `TypeError: %d format: a real number is required, not NoneType` (`TESTS-RESULTS/2026-10-10+GH-1016/red-control-9a923f3c-r2.jsonl`). Green at `48013cbc`: 17/17, exit 0, stdout `repointed rmi-01M0H9CC0A81K3083ASEGK37HK -> ...` and `repointed GH-1016 -> ...` (`TESTS-RESULTS/2026-10-10+GH-1016/green-48013cbc.jsonl`). Hashes in `provenance.jsonl`.
+- Focused suites at `48013cbc`: gh69 85/0, gh424, gh605-work-state, gh421, gh32 145/0, gh646 rc=0; gh280 223/0 in the gate clone with ambient `XYZ_HARNESS` unset (with the shell's `XYZ_HARNESS`=primary checkout it parks on the primary's `.tick/attempts/p1` and exits 8 at both `1cb42805` and `48013cbc` — environmental; the scrubbed pre-push gate passed it).
+- Gates on the new code head `b76a693e` in the disposable gate clone: pre-push tier 2 (range classified releases) GREEN in 319s, then the full `RELAY_SELF_SUFFICIENCY_SKIP=1 ./validate.sh` exit 0, 406/406 suites rc=0, 980s, identity intact (`TESTS-RESULTS/2026-10-10+GH-1016/validate-full-b76a693e.log`, `provenance.jsonl` last line). Commits after `b76a693e` are docs/evidence only.
+
+Round 2 question: is the Should resolved, and do the GH-1016 Pass findings still hold at the new head?
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
