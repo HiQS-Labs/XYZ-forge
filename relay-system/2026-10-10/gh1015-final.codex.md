@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -83,5 +83,21 @@ Append concrete findings and citations, swept file: yes/no, VERDICT PASS/FAIL/PA
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: All five final-QA questions are satisfied within the stated local observer envelope. No required correction remains. Approval covers source review and retained evidence; PR readiness remains contingent on the full macOS publication gate.
+swept file: yes
+
+- [Pass] Read the complete packet, parent plan/recon, entire `relay-automation/marathon.sh` and `validate.sh`, driver receipt producer/writer, existing GH-609 checker, CHANGELOG entry and retained evidence. No additional required pre-existing defect found in the two-file sweep. Direct comparison to integration base `9a923f3cc131f432f2682e7a11f57d03597fb5df` found exactly two observer-line changes and one registry-comment change; driver source is identical. Scope matches `PROJECT/2-WORKING/GH-1015-OBSERVER-PATH.md:39`. Nearest graph project is the primary checkout, generation `2026-10-10T08:23:22Z`, not this worktree; direct local source governs. Reported coverage gaps at marathon.sh:416 and :694 were read.
+- [Pass] Init now uses `os.path.abspath(args.product_root)` (`relay-automation/marathon.sh:267`), matching explicit-target storage at `utils/py/marathon_drive.py:325` and receipt serialization at :250. Ordinary default root is forwarded through MARATHON_ROOT (`relay-automation/marathon.sh:642–646`); explicit physical/absolute/relative targets receive the same argument at :565 and :604. Exact schema/execution/phase/lane/target/token predicates (:135–144) and qualification (:148–157,294) are unchanged against base. No reader-side realpath tolerance or driver/schema change was introduced.
+- [Pass] Missed-check output sorts keys (`relay-automation/marathon.sh:240–241`) like normal output (:208). The GH-609 comment (`validate.sh:144`) reflects existing workload-scoped online-migration safeguards and offline exemption (`test/gh609-sdlc-agent-gaps.sh:113–119`). Archive inspection found 18 members, excludes marathon.sh, and every member matches live source, consistent with `skills/1-hourly/relay-automation/make-pkg.sh:12–30` and retained `TESTS-RESULTS/2026-10-10+GH-1015/package.log` (“3 pass, 0 fail”). No archive regeneration is needed.
+- [Pass] Nonempty retained results support three valid and eight rejecting cases (`TESTS-RESULTS/2026-10-10+GH-1015/SUMMARY.md:9–17`, `provenance.jsonl:3–5`). Candidate counts are `[1,1,1,0,0,0,0,0,0,0,0]`, with three finite sorted JSON emissions. Base/old-init counts are `[1,0,0,0,0,0,0,0,0,0,0]`; old-sort retains valid counts but ordering `[false,true,true]`. Provenance records candidate exit 0 and sensitivity exits `[1,1,1]`. All 13 artifact hashes match; baseline provenance hash, candidate source revision `4ddc2ab4`, and base/isolated-mutation source hashes match. Identity brackets are byte-identical before/after at their respective revisions. Focused logs retain codex-turn 43/0 on base, GH-609 33/0 and package 3/0 on candidate, correctly distinguished in `SUMMARY.md:17`. These are retained synthetic observations, not a fresh runtime reproduction or live provider qualification.
+- [Pass] Scope fits the approved plan and persisted rating (`PROJECT/2-WORKING/GH-1015-OBSERVER-PATH.md:45–55`, `releases.sql:842`, `CHANGELOG.md:3–11`). Base/current DB comparison changes only roadmap row 347 (GH-1015); release rows are unchanged. Rating remains 60/35/50/90, override NULL, neutral appeal and unknown recurrence. Changed paths comprise the three production lines, owned intake/ledger, review records and manual evidence. No new registered suite/member, gate/controller, continuation or unrelated production edit. The retained replay is explicitly a one-off manual artifact (`SUMMARY.md:5`).
+- [Pass] Read-only probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 .relay-scratch/audit.py`, exit 0. The scratch-only stdlib script compared stored object data/source, JSON/hashes, identity and archive members; decisive output: `artifact_hashes_match 13`, `base_candidate_mutation_source_hashes_match True`, `identity_brackets_equal True`, `package 18 marathon_excluded; all members match`, and ledger rating 60/35/50/90 with NULL override. Follow-up `python3 -` queried read-only SQLite and an in-memory base DB and compared candidate object data, exit 0: `ledger_changed roadmap_items [347]`, `ledger_changed releases []`, `candidate_commit_sources_match True`, `baseline_provenance_hash_match True`. A bounded `python3 -` hash-location query, exit 0, found `match byte delta 24`: the retained plan-review content matches `plan-attestation.json` SHA 24 bytes after its historical added-start offset; that offset is not a current-file locator. Preliminary summary probes exited 1 on my list-shape/schema assumptions; corrected queries supplied the cited evidence. No git executable or executable fixture was invoked. Evidence citations: `SUMMARY.md:3,15–17`, `provenance.jsonl:1–5`, and `relay-system/2026-10-10/gh1015-plan.codex.md` (“STATUS: Approved”).
+- [Unverified — needs clone run] Full classified macOS pre-push gate remains pending, explicitly required at `PROJECT/2-WORKING/GH-1015-OBSERVER-PATH.md:49,59` and `SUMMARY.md:3`. Source is suitable to proceed to that gate; QA approval does not attest a passing gate or ready PR. Run the publication gate in a disposable full clone against final committed state, retain provenance/identity evidence, then inspect emitted PR base/head/checks. No suite, pytest, provider or publication command ran here.
+
+Relay closed (Approved), no further turn needed. Producer codex-author proceeds with the pending clone gate and publication checks.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
