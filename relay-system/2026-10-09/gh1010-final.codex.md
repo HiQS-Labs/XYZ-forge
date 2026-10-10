@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -89,5 +89,23 @@ this relay file may change; shim commits. Full final gate follows approval at th
 
 Append findings with concrete falsifiers and citations; set STATUS Approved on PASS. Otherwise
 return bounded actionable findings. Keep pre-existing unrelated changes outside this feature.
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The shared implementation and retained evidence support the policy, but two consumer instructions still prescribe unconditional squash. Correct those bounded documentation inconsistencies before approval.
+swept file: yes
+
+- [Should] **F1 — Remove unconditional squash from the consumer instructions.** skills/2-daily/merge-cleanup/SKILL.md:228 still gives “gh pr merge <PR_NUM> --squash --delete-branch”, and line 283 says “merges are squash commits on a remote branch.” These contradict the new Project merge policy section and Forge's enabled root policy. The literal direct-gh command bypasses the Python resolver. Replace the Phase 5 example with the policy-selected method (explicitly refer to the resolver), and make the continuation description method-neutral. No runtime change or new test is requested.
+  Observed input: .merge-cleanup.json contains {"preserve_commit_history": true} while SKILL.md:228 specifies --squash; the read-only reporter returns "strategy": "merge" for this primary.
+  Affected scope: Those two instruction spans in the cleanup skill, for opted-in projects and explicit non-squash strategies.
+  Falsifier: If line 228 already selected the resolver's method and line 283 did not universally describe squash, this finding would be unnecessary. After correction, following Phase 5 with the seeded true policy must select merge; absent/false policy must retain the legacy squash default.
+  Probe: rg -n "squash commits|Executes remote merges" skills/2-daily/merge-cleanup/SKILL.md returned both cited spans. python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$PWD" --show-merge-policy emitted {"preserve_commit_history": true, "strategy": "merge", "source": "/private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow/.merge-cleanup.json"}. The combined read/probe command exited 0; Python startup also printed Xcode cache/event-stream warnings to stderr.
+- [Pass] **Policy enforcement is shared and refreshed.** merge_cleanup.py:150 strictly resolves missing/boolean/invalid policy and explicit strategy; :194 guards the direct merge writer; :908 guards landing entry; :931 re-reads before each PR's repair/retarget; :1269 resolves before Phase 0 and exposes the JSON-only report. The writer receives the original args.strategy, preserving omission rather than freezing an earlier effective method. check_merge_capability (:176) requires positive hosting capability without settings mutation or fallback. No additional in-scope pre-existing runtime defect found in the whole-file sweep.
+- [Pass] **Deep/vendor consumers preserve the intended boundaries.** Deep Phase 0 says “Do not parse another config or infer policy from a stale clone or the vendored harness”; Phase 3 says “Missing ancestry is not proof of missing content or a retroactive policy violation”; its agent template includes MERGE_POLICY and separate ancestry/content evidence. Vendor-stack's Project merge-history choice says “If they decline or have not chosen, leave the file absent” and “Do not copy Forge's own policy into a target.” The whole cleanup/deep/template/vendor files were read; no further in-scope consumer issue beyond F1 was found.
+- [Pass] **Retained focused evidence is internally attributable.** TESTS-RESULTS/2026-10-09+GH-1010/cleanup-focused.log:3474 records “Ran 180 tests in 257.522s”, followed by “OK”; policy-red.log records “AssertionError: forbidden squash reached the merge writer after enforcement removal”; green/restored logs end “ALL POLICY PROBES PASSED”. Read-only Python check: parse each provenance row, assert its artifact is nonempty and hashlib.sha256(bytes).hexdigest() equals the recorded sha256, then compare identity-before/after bytes; exit 0, decisive output “10 nonempty artifact digests match; clone identity snapshots match”. Canonical plan's Rating rationale explicitly records neutral appeal 50 and an unknown trend; its verification plan uses existing suites and retained manual probes.
+- [Unverified — needs clone run] No suites, fixtures, git commands, live merges or hosting mutations were run in this reviewer worktree. The full final harness gate remains outstanding as the packet states. The base-to-HEAD git diff and revision attribution were not independently queried because this turn expressly forbids git; review used complete named implementation/consumer artifacts and retained evidence instead. Graph indexing was refused by tool approval policy, so source reads were used.
+
+Handing off to Producer (codex-producer) — correct F1, record its disposition, then return for Round 2. Only this relay file was edited.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
