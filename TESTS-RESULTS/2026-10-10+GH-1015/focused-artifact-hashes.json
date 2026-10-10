@@ -1,0 +1,15 @@
+{
+  "manual-replay.py": "f5caf1ff3e209c1a7dafa0945064ad8f4a2c1a61188fc1353e3bdcf4c827db9f",
+  "manual-base.json": "056354161812bd19c6ee9ecbab13fba4a1cdff5c974938e87cd47875a68f1efa",
+  "manual-base-red.json": "d5b8f96fa61d771f9d0fa2c2df3b373383240b3e3219467b39a83b289383956f",
+  "manual-candidate.json": "50fe4ab789f33d320c894984dd4c15b529204f245157c0a9d98ad0d48fa24199",
+  "old-init-red.json": "8f5b3886692129f1b4a87f21aae8f9e5b5a5986cbb913cc7f8c7fd7c1953cdad",
+  "old-json-order-red.json": "1afb46f18960ab7cf9bac7229c02dc7c1b95c7148de982fd1a1f766a009993ca",
+  "codex-turn.log": "67f3f36ef80b921f734df153145025e1d6a194bb302499c5e5a6293a032c943b",
+  "identity-before.json": "87d47302b2ece017914d2d662b57ea3f1f8d9ee5e410d33ada9f3a97eef09620",
+  "identity-after.json": "87d47302b2ece017914d2d662b57ea3f1f8d9ee5e410d33ada9f3a97eef09620",
+  "candidate-identity-before.json": "7ab33701049faaa40a31a344279c81495a489730fbd14238a276223041b8a821",
+  "candidate-identity-after.json": "7ab33701049faaa40a31a344279c81495a489730fbd14238a276223041b8a821",
+  "gh609.log": "4b84cfbf296efd6de0d6e55c7fc564bb827a1234a25bd57f026b752b01db17bd",
+  "package.log": "b7b06557c669ee5db5c9595e0c65a6977cbb0d858d532cd77255af648acfc19a"
+}

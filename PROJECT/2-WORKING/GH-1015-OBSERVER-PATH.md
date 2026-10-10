@@ -2,7 +2,7 @@
 title: "GH-1015 · Progress observer receipt path attribution"
 gh_issue: 1015
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1015
-status: Implementation — candidate verification pending
+status: Verification — final independent QA pending
 created: 2026-10-10
 updated: 2026-10-10
 owner: Codex
@@ -18,7 +18,7 @@ Scope: observer init path representation, missed-check JSON ordering, stale GH-6
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved; exact ledger admission; three source edits implemented | Disposable-clone candidate checks and final QA |
+| Three source edits; manual candidate and red controls; focused checks passed with intact identity | Independent final Codex QA, then full classified publication gate |
 
 ## Recon and root cause
 
@@ -56,4 +56,4 @@ Recurrence search: created 2026-09-26 through 2026-10-10 versus 2026-09-12 throu
 
 ## QA and handoff
 
-Plan QA: Approved (`relay-system/2026-10-10/gh1015-plan.codex.md`, driver exit 0, attested review head 03c1b0ea). Final QA: pending. Verification: baseline reproduced; candidate and qualifying gate pending. Issue remains open until landing; batch #1012 remains open for other carry-overs. Task clone retained until merge-cleanup verifies origin landing.
+Plan QA: Approved (`relay-system/2026-10-10/gh1015-plan.codex.md`, driver exit 0, attested review head 03c1b0ea). Final QA: pending. Verification: candidate valid counts [1,1,1], eight negative cases unverified, all three JSON emissions sorted; base/old-init/old-sort sensitivity controls failed as expected. Codex-turn 43/43, GH-609 33/33, package freshness 3/3 and Bash syntax passed in disposable clone with intact identity. Full qualifying gate pending. See TESTS-RESULTS/2026-10-10+GH-1015/SUMMARY.md and provenance.jsonl. Issue remains open until landing; batch #1012 remains open for other carry-overs. Task clone retained until merge-cleanup verifies origin landing.

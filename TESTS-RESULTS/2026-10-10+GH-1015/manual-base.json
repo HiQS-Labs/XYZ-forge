@@ -1,0 +1,163 @@
+{
+  "source_sha256": "4cbe9ba92d25574a4c5bd758557a36e260e170d3f30d2005e4924b1ebc1aacba",
+  "observations": [
+    {
+      "case": "physical",
+      "verified_phases": 1,
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    },
+    {
+      "case": "absolute-symlink",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/logical"
+    },
+    {
+      "case": "relative-symlink",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/logical"
+    },
+    {
+      "case": "foreign-execution_id",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    },
+    {
+      "case": "foreign-token",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    },
+    {
+      "case": "foreign-schema",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    },
+    {
+      "case": "foreign-phase",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    },
+    {
+      "case": "foreign-lane",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    },
+    {
+      "case": "foreign-target",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/other"
+    },
+    {
+      "case": "non-green",
+      "verified_phases": 0,
+      "gate": {
+        "exit": 1,
+        "result": "red"
+      },
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    },
+    {
+      "case": "missing-review",
+      "verified_phases": 0,
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical"
+    }
+  ],
+  "finite_emissions": [
+    {
+      "kind": "missed-check",
+      "run_id": "4fb1655129724babb8d1718ea5721596",
+      "check": 1,
+      "count": 2
+    },
+    {
+      "check": 2,
+      "coordination_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__",
+      "count": 2,
+      "gate": "unknown",
+      "harness_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__",
+      "heartbeat": {
+        "state": "unknown"
+      },
+      "initial_head": "9a923f3cc131f432f2682e7a11f57d03597fb5df",
+      "initial_origin": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10",
+      "kind": "check",
+      "last_product_milestone": null,
+      "observed_at": "2026-10-10T16:42:06.653512+00:00",
+      "phase": "p1",
+      "phase_index": 1,
+      "plan": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/plan.yaml",
+      "product_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/phases/p1/RELAY.md",
+      "relay_status": "unknown",
+      "result_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/absolute-symlink.receipt.json",
+      "returned_success": 1,
+      "reviewed_candidate": "unknown",
+      "role": "unknown",
+      "run_id": "4fb1655129724babb8d1718ea5721596",
+      "run_log": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/run.log",
+      "total_phases": 1,
+      "verified_phases": 0
+    },
+    {
+      "coordination_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__",
+      "execution_status": "continues independently",
+      "gate": "unknown",
+      "harness_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__",
+      "heartbeat": {
+        "state": "unknown"
+      },
+      "initial_head": "9a923f3cc131f432f2682e7a11f57d03597fb5df",
+      "initial_origin": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10",
+      "kind": "observation-ended",
+      "last_product_milestone": null,
+      "next_action": "Inspect this run log or use marathon-detail.sh; no automatic retry",
+      "observed_at": "2026-10-10T16:42:06.653573+00:00",
+      "phase": "p1",
+      "phase_index": 1,
+      "plan": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/plan.yaml",
+      "product_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/physical",
+      "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/phases/p1/RELAY.md",
+      "relay_status": "unknown",
+      "result_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/absolute-symlink.receipt.json",
+      "returned_success": 1,
+      "reviewed_candidate": "unknown",
+      "role": "unknown",
+      "run_id": "4fb1655129724babb8d1718ea5721596",
+      "run_log": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10-verify/temp/gh1015-manual-mh7nq7__/run.log",
+      "total_phases": 1,
+      "verified_phases": 0
+    }
+  ],
+  "sorted_json_keys": [
+    false,
+    true,
+    true
+  ],
+  "limits": "Synthetic receipts and controlled clock; no provider worker or live product execution."
+}
