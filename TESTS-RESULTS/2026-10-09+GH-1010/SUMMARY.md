@@ -23,3 +23,5 @@ origin, bare flag, local email); working tree clean after restoring the delibera
 
 No live GitHub merges, host settings mutations, new test suites, or teardown were performed.
 Final independent review and gated publication are recorded in the plan and PR when complete.
+
+Final full pre-push gate: **409 / 409 passed**, 909 seconds, on `a0547ec15ea47fddb6d34a9260dbabca92f79aad` in a separate full clone. Git identity unchanged and working tree clean. The initial pooled `gh648-l4-285-revalidate.sh` attempt raised `PermissionError` while observing/cleaning a process group; the gate's built-in isolated retry passed. Both observations retained; the underlying cause is unconfirmed. Gate and push exited 0, without bypass. Plan and final Codex relay QA are Approved with exit-0 attestations. Subsequent edits are evidence/task-status documentation only.

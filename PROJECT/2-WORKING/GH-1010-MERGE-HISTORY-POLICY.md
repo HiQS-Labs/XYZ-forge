@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Final Codex QA Approved and attested, round 3 exit 0 | Full pre-push gate and development PR |
+| Final QA Approved; full gate 409/409; PR [#1019](https://github.com/HiQS-Labs/XYZ-forge/pull/1019) open | Await merge; retain clone for merge-cleanup handoff |
 
 ## Table of contents
 
@@ -118,8 +118,8 @@ comments; trend unknown, not a claimed increasing incident rate.
 ### Phase 2 QA
 
 - [x] Focused suite (180 tests), manual probes and red control have committed provenance.
-- [ ] Final independent Codex review Approved; applicable gates passed on attributable code.
-- [ ] PR ready, issue still open, clone retained; no claim of shipped before merge.
+- [x] Final independent Codex review Approved; applicable gates passed on attributable code.
+- [x] PR ready, issue still open, clone retained; no claim of shipped before merge.
 
 ## Review and integration notes
 
@@ -134,3 +134,7 @@ Final review: round 2 returned PASS text but exit 4 close-mismatch (reviewer rel
 closed token); not accepted as approval. Round 3 closed correctly, Approved and attested (exit 0).
 Routine generated leaderboard changes excluded per AGENTS. No production code changed after
 `aa479b18`; final review includes integrated base and F1 doc corrections. Full gate next.
+
+Publication: [PR #1019](https://github.com/HiQS-Labs/XYZ-forge/pull/1019) targets `development`, non-draft and mergeable at initial inspection. Full pre-push gate on `a0547ec1` passed 409/409 in 909s, without bypass; Git identity unchanged and status clean. One process-group permission error passed the built-in isolated retry; original log retained and cause unconfirmed. Evidence/status-only follow-up commits use the normal documentation gate. Hosted checks are verified separately on the final PR head; this is not promotion evidence.
+
+Retained task clone: `/Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-merge-history-policy`. Retire via `/merge-cleanup` only after landings are verified. Issue remains open; nothing merged, deployed, or removed.
