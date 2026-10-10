@@ -1,0 +1,38 @@
+== test: marathon ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-marathon.XXXXXX.IvxUbDkdFE
+  PASS: full chain exits 0
+  PASS: phases run in execution order p1,p2,p3
+  PASS: p2: round-cap=7, reviewer + artifact passed through, timeout exported, lane namespace set
+  PASS: p1: round-cap=5, no timeout override by default, lane namespace set
+  PASS: marathon.complete emitted on full success
+  PASS: halt propagates the failing phase's exit (4)
+  PASS: chain halts after p2 — p3 NOT started
+  PASS: no marathon.complete on halt
+  PASS: orchestrator runs in depends_on order (a before b)
+  PASS: phase without a brief -> error (exit 2)
+  PASS: malformed plan halts before any phase runs (exit 2)
+  PASS: --retry run still exits 0 (full chain)
+  PASS: --retry p2: relay-task overridden to MARATHON-P2-TURN-2 (first unused suffix), lane namespace preserved
+  PASS: --retry p2: p1's task-name derivation unaffected (no --relay-task)
+  PASS: --retry p2: p3's task-name derivation unaffected (no --relay-task)
+  PASS: --retry p2: MARATHON-P2-TURN-2 already used -> bumps to -3 (checked via tick info, not hardcoded), lane namespace preserved
+  PASS: no --retry: phases-ran byte-for-byte unchanged
+  PASS: GH-205: timeout + artifact + green gate resumes and phase completes
+  PASS: GH-205: marathon-drive re-entered relay-drive for the reviewer round after exit 7
+  PASS: GH-205: resumed reviewer round approved the relay
+  PASS: GH-205: timeout with no artifact still halts (exit 7)
+  PASS: GH-205: no-artifact timeout does not re-enter relay-drive
+  PASS: GH-205: no-artifact timeout escalation reason recorded
+  PASS: GH-206: vendored marathon.sh runs with zero env overrides
+  PASS: GH-206: vendored run resolves repo-local briefs/phases separately from harness-local tick
+  PASS: GH-206: vendored run emits marathon.complete in the consumer repo tick log
+  PASS: GH-212: plan outside PROJECT/2-WORKING/ is refused by default (exit 2)
+  PASS: GH-212: refusal names the plan-location convention
+  PASS: GH-212: refused plan runs zero phases
+  PASS: GH-212: MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 permits a plan outside PROJECT/2-WORKING/
+  PASS: GH-212: override run actually executes the phase
+  PASS: GH-212: a plan under MARATHON_HOME (harness-owned reference material) is exempt
+  PASS: GH-212: harness-home-exempt plan actually executes the phase
+  PASS: GH-485: chain with --phases-dir custom/nested/phases exits 0
+  PASS: GH-485: --phases-dir is passed through to the driver
+  marathon: 35 pass, 0 fail

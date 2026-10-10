@@ -1,0 +1,323 @@
+{
+  "at": "2026-10-10T05:59:07.369880+00:00",
+  "source_commit": "ed1594481aef8417f1da912927b7ac24752c19c0",
+  "source": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ed1594481aef8417f1da912927b7ac24752c19c0/registry/latest.json",
+  "capturedAt": "2026-10-09T02:15:40.067Z",
+  "trustStatus": "unsigned_beta",
+  "raw_sha256": "48565121214b9eeb9071a9b38616c1f7666869bfac0880cca39dbb0b75254682",
+  "byte_count": 193891,
+  "recipes": [
+    {
+      "claimRefs": [
+        "c-gemini-grounded-search-public-smoke"
+      ],
+      "claims": [
+        {
+          "id": "c-gemini-grounded-search-public-smoke",
+          "layer": "published",
+          "observedAt": "2026-10-06T04:34:00.250Z",
+          "predicate": "recipe.public_example_operation_smoke",
+          "recordedAt": "2026-10-06T05:29:19.056Z",
+          "recordedBy": "HiQS bootstrap smoke via Codex (automated)",
+          "source": {
+            "category": "reproducible_test_report",
+            "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl"
+          },
+          "subject": "recipe:hiqs/gemini-grounded-search@r1",
+          "value": {
+            "providers": [
+              "gemini"
+            ],
+            "scope": "Independent credential/operation availability on public example.com and IANA sources; does not assert full sequential research or live fallback."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "capturedDigest": "52668aed216dfafb2ed230d45ab649149aed17f902c4293ca39eb66572850e7a",
+          "expiresAt": "2026-11-05T04:34:00.250Z",
+          "id": "ev-gemini-grounded-search-gemini",
+          "kind": "reproduction_report",
+          "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl",
+          "observedAt": "2026-10-06T04:34:00.250Z",
+          "observer": "Codex automated smoke; no independent human attestation",
+          "outcome": "pass",
+          "scope": "step",
+          "stepRef": "service:google/gemini-api@r1",
+          "subjectDigest": "e694f729d256af1a3dd1629449ddbd4e60cb5458856a5dd1db19c12d9d016252",
+          "testContract": "public-source-operation-auth-smoke",
+          "testContractVersion": "1",
+          "testedCapabilities": [
+            "grounded_search"
+          ]
+        }
+      ],
+      "expiresAt": "2026-11-05T04:34:00.250Z",
+      "id": "gemini-grounded-search",
+      "kind": "recipe",
+      "label": "gemini-grounded-search",
+      "layer": "published",
+      "lifecycle": "active",
+      "namespace": "hiqs",
+      "recordedAt": "2026-10-06T05:29:19.056Z",
+      "recordedBy": "HiQS recipe bootstrap via Codex (automated)",
+      "revision": "r1",
+      "subject": {
+        "capability": "grounded_search",
+        "cascade": [
+          {
+            "requiresAllow": [
+              "paid",
+              "cloud"
+            ],
+            "step": "service:google/gemini-api@r1",
+            "triggers": [
+              "http_403",
+              "http_429",
+              "http_5xx",
+              "challenge",
+              "empty_body",
+              "boilerplate_body",
+              "timeout",
+              "contract_rejected"
+            ]
+          }
+        ],
+        "type": "capability"
+      }
+    },
+    {
+      "claimRefs": [
+        "c-perplexity-cross-check-public-smoke"
+      ],
+      "claims": [
+        {
+          "id": "c-perplexity-cross-check-public-smoke",
+          "layer": "published",
+          "observedAt": "2026-10-06T04:32:54.737Z",
+          "predicate": "recipe.public_example_operation_smoke",
+          "recordedAt": "2026-10-06T05:29:19.056Z",
+          "recordedBy": "HiQS bootstrap smoke via Codex (automated)",
+          "source": {
+            "category": "reproducible_test_report",
+            "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl"
+          },
+          "subject": "recipe:hiqs/perplexity-cross-check@r1",
+          "value": {
+            "providers": [
+              "perplexity"
+            ],
+            "scope": "Independent credential/operation availability on public example.com and IANA sources; does not assert full sequential research or live fallback."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "capturedDigest": "52668aed216dfafb2ed230d45ab649149aed17f902c4293ca39eb66572850e7a",
+          "expiresAt": "2026-11-05T04:32:54.737Z",
+          "id": "ev-perplexity-cross-check-perplexity",
+          "kind": "reproduction_report",
+          "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl",
+          "observedAt": "2026-10-06T04:32:54.737Z",
+          "observer": "Codex automated smoke; no independent human attestation",
+          "outcome": "pass",
+          "scope": "step",
+          "stepRef": "service:perplexityai/api-platform@r1",
+          "subjectDigest": "1e10ce445496887a10f1f37a77fd94062bb51dcca6bf683d932fb89b74d485f0",
+          "testContract": "public-source-operation-auth-smoke",
+          "testContractVersion": "1",
+          "testedCapabilities": [
+            "research_cross_check"
+          ]
+        }
+      ],
+      "expiresAt": "2026-11-05T04:32:54.737Z",
+      "id": "perplexity-cross-check",
+      "kind": "recipe",
+      "label": "perplexity-cross-check",
+      "layer": "published",
+      "lifecycle": "active",
+      "namespace": "hiqs",
+      "recordedAt": "2026-10-06T05:29:19.056Z",
+      "recordedBy": "HiQS recipe bootstrap via Codex (automated)",
+      "revision": "r1",
+      "subject": {
+        "capability": "research_cross_check",
+        "cascade": [
+          {
+            "requiresAllow": [
+              "paid",
+              "cloud"
+            ],
+            "step": "service:perplexityai/api-platform@r1",
+            "triggers": [
+              "http_403",
+              "http_429",
+              "http_5xx",
+              "challenge",
+              "empty_body",
+              "boilerplate_body",
+              "timeout",
+              "contract_rejected"
+            ]
+          }
+        ],
+        "type": "capability"
+      }
+    },
+    {
+      "claimRefs": [
+        "c-web-extraction-fallback-public-smoke"
+      ],
+      "claims": [
+        {
+          "id": "c-web-extraction-fallback-public-smoke",
+          "layer": "published",
+          "observedAt": "2026-10-06T04:32:54.231Z",
+          "predicate": "recipe.public_example_operation_smoke",
+          "recordedAt": "2026-10-06T05:29:19.056Z",
+          "recordedBy": "HiQS bootstrap smoke via Codex (automated)",
+          "source": {
+            "category": "reproducible_test_report",
+            "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl"
+          },
+          "subject": "recipe:hiqs/web-extraction-fallback@r1",
+          "value": {
+            "providers": [
+              "firecrawl",
+              "browserbase",
+              "parallel"
+            ],
+            "scope": "Independent credential/operation availability on public example.com and IANA sources; does not assert full sequential research or live fallback."
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "capturedDigest": "52668aed216dfafb2ed230d45ab649149aed17f902c4293ca39eb66572850e7a",
+          "expiresAt": "2026-11-05T04:32:54.231Z",
+          "id": "ev-web-extraction-fallback-firecrawl",
+          "kind": "reproduction_report",
+          "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl",
+          "observedAt": "2026-10-06T04:32:54.231Z",
+          "observer": "Codex automated smoke; no independent human attestation",
+          "outcome": "pass",
+          "scope": "step",
+          "stepRef": "service:firecrawl/firecrawl@r1",
+          "subjectDigest": "a2027cf1722c77711a88db4fe8f9bbe9a749a2c3fd39640be56067ea5fe57632",
+          "testContract": "public-source-operation-auth-smoke",
+          "testContractVersion": "1",
+          "testedCapabilities": [
+            "web_fetch"
+          ]
+        },
+        {
+          "capturedDigest": "52668aed216dfafb2ed230d45ab649149aed17f902c4293ca39eb66572850e7a",
+          "expiresAt": "2026-11-05T04:32:54.231Z",
+          "id": "ev-web-extraction-fallback-browserbase",
+          "kind": "reproduction_report",
+          "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl",
+          "observedAt": "2026-10-06T04:32:54.232Z",
+          "observer": "Codex automated smoke; no independent human attestation",
+          "outcome": "pass",
+          "scope": "step",
+          "stepRef": "service:browserbase/browserbase@r1",
+          "subjectDigest": "a2027cf1722c77711a88db4fe8f9bbe9a749a2c3fd39640be56067ea5fe57632",
+          "testContract": "public-source-operation-auth-smoke",
+          "testContractVersion": "1",
+          "testedCapabilities": [
+            "web_fetch"
+          ]
+        },
+        {
+          "capturedDigest": "52668aed216dfafb2ed230d45ab649149aed17f902c4293ca39eb66572850e7a",
+          "expiresAt": "2026-11-05T04:32:54.231Z",
+          "id": "ev-web-extraction-fallback-parallel",
+          "kind": "reproduction_report",
+          "locator": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/ac2c321cbc5bb27533bf0503f97aaeed257bf734/registry/evidence/2026-10-06/recipe-component-smoke.jsonl",
+          "observedAt": "2026-10-06T04:32:54.232Z",
+          "observer": "Codex automated smoke; no independent human attestation",
+          "outcome": "pass",
+          "scope": "step",
+          "stepRef": "service:parallel/web-apis@r1",
+          "subjectDigest": "a2027cf1722c77711a88db4fe8f9bbe9a749a2c3fd39640be56067ea5fe57632",
+          "testContract": "public-source-operation-auth-smoke",
+          "testContractVersion": "1",
+          "testedCapabilities": [
+            "web_fetch"
+          ]
+        }
+      ],
+      "expiresAt": "2026-11-05T04:32:54.231Z",
+      "id": "web-extraction-fallback",
+      "kind": "recipe",
+      "label": "web-extraction-fallback",
+      "layer": "published",
+      "lifecycle": "active",
+      "namespace": "hiqs",
+      "recordedAt": "2026-10-06T05:29:19.056Z",
+      "recordedBy": "HiQS recipe bootstrap via Codex (automated)",
+      "revision": "r1",
+      "subject": {
+        "capability": "web_fetch",
+        "cascade": [
+          {
+            "requiresAllow": [
+              "paid",
+              "cloud"
+            ],
+            "step": "service:firecrawl/firecrawl@r1",
+            "triggers": [
+              "http_403",
+              "http_429",
+              "http_5xx",
+              "challenge",
+              "empty_body",
+              "boilerplate_body",
+              "timeout",
+              "contract_rejected"
+            ]
+          },
+          {
+            "requiresAllow": [
+              "paid",
+              "cloud"
+            ],
+            "step": "service:browserbase/browserbase@r1",
+            "triggers": [
+              "http_403",
+              "http_429",
+              "http_5xx",
+              "challenge",
+              "empty_body",
+              "boilerplate_body",
+              "timeout",
+              "contract_rejected"
+            ]
+          },
+          {
+            "requiresAllow": [
+              "paid",
+              "cloud"
+            ],
+            "step": "service:parallel/web-apis@r1",
+            "triggers": [
+              "http_403",
+              "http_429",
+              "http_5xx",
+              "challenge",
+              "empty_body",
+              "boilerplate_body",
+              "timeout",
+              "contract_rejected"
+            ]
+          }
+        ],
+        "type": "capability"
+      }
+    }
+  ],
+  "published_recipe_count": 3,
+  "scope": "Complete recipes array in this one immutable published snapshot; not an exhaustive audit of other catalogs or unpublished data.",
+  "observation": "All three recipes in this immutable published snapshot are capability recipes (Gemini search, Perplexity cross-check and web extraction). No Claude advisory route recipe is present in this snapshot; this does not establish absence from every other catalog."
+}

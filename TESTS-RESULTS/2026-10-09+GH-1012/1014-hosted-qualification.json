@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-10T08:20:32.881503+00:00",
+  "run_id": 38033370756,
+  "conclusion": "success",
+  "source_integration_head": "48eb283da4b2d2bda8afc37c6cbe34d0c2b5a48c",
+  "receipt_path": "TESTS-RESULTS/2026-10-10+GH-591/wave-0d85603280a92b14f981e8e1efea06f01c9ff6e9/provenance.jsonl",
+  "qualification": {
+    "artifact_kind": "pr",
+    "gate": "validate.sh --sequential",
+    "landing_commit": "0d85603280a92b14f981e8e1efea06f01c9ff6e9",
+    "passed": 409,
+    "pr": 1014,
+    "rc": 0,
+    "result": "pass",
+    "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38033370756",
+    "schema_version": "wave-qualification@1",
+    "telemetry": "TESTS-RESULTS/2026-10-10+GH-591/wave-0d85603280a92b14f981e8e1efea06f01c9ff6e9/validation.jsonl",
+    "telemetry_sha256": "2723d39b4edd03831073ea79c00bc97583d6578a5689a7a5b92a7074060dcee8",
+    "tested_commit": "0d85603280a92b14f981e8e1efea06f01c9ff6e9",
+    "timestamp": "2026-10-10T08:11:30.878536+00:00",
+    "total": 409
+  },
+  "reviewed_runtime_policy_and_registry_trees_unchanged": {
+    "addons/paperclip-dashboard/ATTRIBUTION.md": "100644 blob d71f84627da82f4a8c2c4b3d2fd8311f9b34d2cd\taddons/paperclip-dashboard/ATTRIBUTION.md",
+    "addons/paperclip-dashboard/LICENSE.paperclip": "100644 blob a63594a5150d0ae00c3ddc36b61fa8f708c3ca8c\taddons/paperclip-dashboard/LICENSE.paperclip",
+    "addons/paperclip-dashboard/README.md": "100644 blob 92e27e5ecf8b2c838ce6774daefbeb96b6429eb5\taddons/paperclip-dashboard/README.md",
+    "addons/paperclip-dashboard/app.css": "100644 blob 07f00ffcff136f25762ddd5e70b06b4c5b3567eb\taddons/paperclip-dashboard/app.css",
+    "addons/paperclip-dashboard/app.js": "100644 blob 411fc1a8a2d48009d0afee70061f81e5a2be988d\taddons/paperclip-dashboard/app.js",
+    "addons/paperclip-dashboard/demo.mjs": "100644 blob 43f1b2a27b1d34c31bc8feda3ff03f8cfa0823c4\taddons/paperclip-dashboard/demo.mjs",
+    "addons/paperclip-dashboard/index.html": "100644 blob 027f780a7b7638f3409732b41a90b2d5546932d1\taddons/paperclip-dashboard/index.html",
+    "addons/paperclip-dashboard/preview.py": "100644 blob 84cb821c993dad8197e95eb7ff4016247e5bb53f\taddons/paperclip-dashboard/preview.py",
+    "skills/1-hourly/swe/SKILL.md": "100644 blob cd739d5df78ecd27197e3aa2a2098deeb59b7cb1\tskills/1-hourly/swe/SKILL.md",
+    "test/gh609-sdlc-agent-gaps.sh": "100755 blob 6c1770237fec76f58501ad657ef714a811e7e712\ttest/gh609-sdlc-agent-gaps.sh",
+    "relay-automation/marathon.sh": "100755 blob 74c077bfe48085791ce8a4ff34343f2566ea5056\trelay-automation/marathon.sh",
+    "relay-automation/README.md": "100644 blob 2ebd6232cb863ae6fd161c297773f82d57c0edc0\trelay-automation/README.md",
+    "skills/1-hourly/relay-xyz/SKILL.md": "100644 blob 486760217d17c10130fa6e6d6a24949143f9c1b9\tskills/1-hourly/relay-xyz/SKILL.md",
+    "test/gh306-registry-bidirectional.sh": "100644 blob a58b14ea674a9f4fe4d911dbf353f266f7c20f50\ttest/gh306-registry-bidirectional.sh",
+    "validate.sh": "100755 blob 19293c6eb27db221086f5ee7666ba4cc691efb3a\tvalidate.sh",
+    "skills/1-hourly/relay-automation/relay-pkg.tar.gz": "100644 blob d45fcb1a3c599a930782eb07e7863c39aee12f94\tskills/1-hourly/relay-automation/relay-pkg.tar.gz"
+  },
+  "reuse": "Actual post-merge full registry in a separate disposable full clone covers all three landings; no redundant local rerun or promotion is claimed."
+}

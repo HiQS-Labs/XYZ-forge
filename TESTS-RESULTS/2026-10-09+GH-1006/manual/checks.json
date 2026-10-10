@@ -1,0 +1,329 @@
+[
+  {
+    "check": "default six and explicit eighteen",
+    "passed": true
+  },
+  {
+    "check": "clock jump consumes missed slots without extension",
+    "passed": true
+  },
+  {
+    "check": "phase-independent same clock",
+    "passed": true
+  },
+  {
+    "check": "red control N+1 rejected",
+    "passed": true,
+    "observed_mutant": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  {
+    "check": "red control phase reset rejected",
+    "passed": true,
+    "observed_mutant": []
+  },
+  {
+    "check": "matching approved optional-acceptance receipt qualifies",
+    "passed": true
+  },
+  {
+    "check": "foreign execution_id cannot qualify",
+    "passed": true
+  },
+  {
+    "check": "foreign phase cannot qualify",
+    "passed": true
+  },
+  {
+    "check": "foreign lane cannot qualify",
+    "passed": true
+  },
+  {
+    "check": "foreign token cannot qualify",
+    "passed": true
+  },
+  {
+    "check": "foreign target_repo cannot qualify",
+    "passed": true
+  },
+  {
+    "check": "empty/malformed receipt unknown ''",
+    "passed": true
+  },
+  {
+    "check": "empty/malformed receipt unknown '{bad'",
+    "passed": true
+  },
+  {
+    "check": "empty/malformed receipt unknown '[]'",
+    "passed": true
+  },
+  {
+    "check": "FIFO read bounded",
+    "passed": true
+  },
+  {
+    "check": "symlink receipt rejected",
+    "passed": true
+  },
+  {
+    "check": "bad-16",
+    "passed": true,
+    "exit_code": 2,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/bad-16/MARATHON.yaml",
+      "--progress-check-count",
+      "0"
+    ]
+  },
+  {
+    "check": "bad-17",
+    "passed": true,
+    "exit_code": 2,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/bad-17/MARATHON.yaml",
+      "--progress-check-count",
+      "145"
+    ]
+  },
+  {
+    "check": "bad-18",
+    "passed": true,
+    "exit_code": 2,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/bad-18/MARATHON.yaml",
+      "--progress-interval-s",
+      "86401"
+    ]
+  },
+  {
+    "check": "bad-19",
+    "passed": true,
+    "exit_code": 2,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/bad-19/MARATHON.yaml",
+      "--progress-interval-s",
+      "86400",
+      "--progress-check-count",
+      "2"
+    ]
+  },
+  {
+    "check": "bad-20",
+    "passed": true,
+    "exit_code": 2,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/bad-20/MARATHON.yaml",
+      "--progress-interval-s",
+      "9999999999999999999999"
+    ]
+  },
+  {
+    "check": "bad-21",
+    "passed": true,
+    "exit_code": 2,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/bad-21/MARATHON.yaml",
+      "--progress-check-count"
+    ]
+  },
+  {
+    "check": "legacy opt-in refusal",
+    "passed": true,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/legacy/MARATHON.yaml",
+      "--progress-check-count",
+      "1"
+    ]
+  },
+  {
+    "check": "dry effective 600x18",
+    "passed": true,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/dry/MARATHON.yaml",
+      "--dry-run",
+      "--progress-check-count",
+      "18"
+    ]
+  },
+  {
+    "check": "window ends while executor survives",
+    "passed": true,
+    "observer_pid": null
+  },
+  {
+    "check": "no extra slot and terminal after window",
+    "passed": true,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/window/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "2"
+    ]
+  },
+  {
+    "check": "missing never invents product milestone",
+    "passed": true,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/missing/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "6"
+    ]
+  },
+  {
+    "check": "reverify never invents product milestone",
+    "passed": true,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/reverify/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "6"
+    ]
+  },
+  {
+    "check": "child exit status and no successor",
+    "passed": true,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/halt/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "6"
+    ]
+  },
+  {
+    "check": "term cancellation",
+    "passed": true,
+    "latency_s": 0.199,
+    "exit_code": 143,
+    "observer_pid": 37263,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/term/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "6"
+    ]
+  },
+  {
+    "check": "term terminal/owner report",
+    "passed": true
+  },
+  {
+    "check": "int cancellation",
+    "passed": true,
+    "latency_s": 0.204,
+    "exit_code": 130,
+    "observer_pid": 37689,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/int/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "6"
+    ]
+  },
+  {
+    "check": "int terminal/owner report",
+    "passed": true
+  },
+  {
+    "check": "group cancellation",
+    "passed": true,
+    "latency_s": 0.079,
+    "exit_code": 143,
+    "observer_pid": 38087,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/group/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "6"
+    ]
+  },
+  {
+    "check": "group terminal/owner report",
+    "passed": true
+  },
+  {
+    "check": "ownerloss cancellation",
+    "passed": true,
+    "latency_s": 0.185,
+    "exit_code": -9,
+    "observer_pid": 38475,
+    "command": [
+      "bash",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/relay-automation/marathon.sh",
+      "--plan",
+      "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/ownerloss/MARATHON.yaml",
+      "--progress-interval-s",
+      "1",
+      "--progress-check-count",
+      "6"
+    ]
+  },
+  {
+    "check": "ownerloss terminal/owner report",
+    "passed": true
+  },
+  {
+    "check": "clone identity intact",
+    "passed": true
+  }
+]

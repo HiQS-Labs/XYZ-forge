@@ -1,0 +1,109 @@
+from pathlib import Path
+import importlib.util,json,os,signal,subprocess,time,hashlib
+from datetime import datetime,timezone
+ROOT=Path.cwd().resolve(); OUT=ROOT/'temp/gh1006-embedded-verified'; OUT.mkdir(exist_ok=True)
+source=ROOT/'relay-automation/marathon.sh'
+payload=source.read_text().split("<<'MARATHON_PROGRESS_PY'\n",1)[1].split('\nMARATHON_PROGRESS_PY',1)[0]
+import types
+m=types.ModuleType('progress');exec(compile(payload,str(source),'exec'),m.__dict__)
+rows=[]
+def record(name,ok,**details):
+ rows.append(dict(check=name,passed=bool(ok),**details)); assert ok,(name,details)
+def identity():
+ def g(*a): return subprocess.run(['git',*a],text=True,capture_output=True).stdout.strip()
+ return {'head':g('rev-parse','HEAD'),'bare':g('config','--get','core.bare'),'origin':g('remote','get-url','origin'),'email':g('config','--local','--get','user.email')}
+before=identity(); (OUT/'identity-before.json').write_text(json.dumps(before))
+(OUT/'tick').write_text('#!/bin/bash\nexit 0\n');(OUT/'tick').chmod(0o755)
+(OUT/'yaml').write_text('#!/bin/bash\nprintf "p1\\tcodex\\t1\\t\\tbrief.md\\t\\t\\tOne\\np2\\tcodex\\t1\\t\\tbrief.md\\t\\t\\tTwo\\n"\n');(OUT/'yaml').chmod(0o755)
+(OUT/'drive.sh').write_text('#!/bin/bash\nexec python3 "'+str(OUT/'drive.py')+'" "$@"\n')
+(OUT/'drive.py').write_text('''import os,sys,time,json
+from pathlib import Path
+from datetime import datetime,timezone
+args=sys.argv[1:]; get=lambda k: args[args.index(k)+1] if k in args else ''
+p=get('--phase-id'); root=Path(os.environ['MARATHON_ROOT']); lane=os.environ['MARATHON_LANE_NS'] or p
+(root/'started').open('a').write(p+'\\n')
+if '--dry-run' in args: sys.exit(0)
+now=datetime.now(timezone.utc).isoformat()
+phase=root/'marathon-system'/lane;phase.mkdir(parents=True,exist_ok=True);(phase/'RELAY.md').write_text('STATUS: Open\\nNEXT: Reviewer\\n')
+(root/'.tick').mkdir(exist_ok=True);(root/'.tick/driver-heartbeat.json').write_text(json.dumps(dict(pid=os.getpid(),started_utc=now,updated_utc=now,phase_id=p,relay_task='MARATHON-'+p.upper()+'-TURN')))
+time.sleep(float(os.environ.get('PROBE_SLEEP','0.4')))
+rc=int(os.environ.get('PROBE_RC','0')); result=get('--result-file'); sha=('b' if p=='p1' or os.environ.get('PROBE_SAME_CANDIDATE') else 'c')*40
+if result and os.environ.get('PROBE_RECEIPT','yes')!='no':
+ Path(result).write_text(json.dumps(dict(schema='marathon-drive/result@1',execution_id=get('--execution-id'),phase=p,lane=lane,token='MARATHON-'+p.upper()+'-TURN',target_repo={'path':str(root)},outcome='approved' if rc==0 else 'escalated',exit_code=rc,gate={'result':'green' if rc==0 else 'red','exit':rc},reviewed_candidate=sha,reviewed_head=sha,attest_path=str(phase/'attest.json'),reason=os.environ.get('PROBE_REASON','approved, gate passed'),acceptance={'checked':False})))
+sys.exit(rc)
+''')
+def events(log):
+ return [json.loads(x.split('marathon-progress: ',1)[1]) for x in log.read_text().splitlines() if x.startswith('marathon-progress: ')]
+def observer_pid(parent):
+ out=subprocess.run(['ps','-axo','pid=,ppid=,command='],capture_output=True,text=True).stdout
+ for line in out.splitlines():
+  parts=line.strip().split(None,2)
+  if len(parts)==3 and parts[1]==str(parent) and ' - observe ' in parts[2]: return int(parts[0])
+ return None
+def alive(pid):
+ if pid is None:return False
+ out=subprocess.run(['ps','-p',str(pid),'-o','stat='],capture_output=True,text=True).stdout.strip()
+ return bool(out) and not out.startswith('Z')
+def launch(name,flags=(),**overrides):
+ home=OUT/name;home.mkdir(exist_ok=True);(home/'MARATHON.yaml').write_text('name: probe\n');(home/'brief.md').write_text('probe\n')
+ log=OUT/(name+'.log'); stream=log.open('w')
+ env=os.environ.copy()
+ for k in ['XYZ_HARNESS','TICK_REPO_ROOT','XYZ_ARCHIVE_ROOT','XYZ_PYTHON','RTL_DRIVER_HEARTBEAT_FILE']:env.pop(k,None)
+ env.update(MARATHON_ROOT=str(home),MARATHON_HOME=str(ROOT),MARATHON_DRIVE=str(OUT/'drive.sh'),MARATHON_YAML_BIN=str(OUT/'yaml'),TICK_BIN=str(OUT/'tick'),XYZ_APPEND_BIN='/nonexistent',MARATHON_ALLOW_PLAN_OUTSIDE_WORKING='1',**overrides)
+ cmd=['bash',str(ROOT/'relay-automation/marathon.sh'),'--plan',str(home/'MARATHON.yaml'),*flags]
+ proc=subprocess.Popen(cmd,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+ return proc,home,log,stream,cmd
+
+def finish(proc,stream):
+ rc=proc.wait(timeout=15);time.sleep(.1);stream.close();return rc
+try:
+ # Controlled scheduling; these are pure same-start calls, not hours of fake history.
+ record('default six and explicit eighteen',list(m.due_slots(0,600,6,0,3600))==list(range(1,7)) and list(m.due_slots(0,600,18,6,10800))==list(range(7,19)))
+ record('clock jump consumes missed slots without extension',list(m.due_slots(0,600,6,1,99999))==list(range(2,7)))
+ record('phase-independent same clock',list(m.due_slots(0,600,6,3,2400))==[4])
+ mutated={"__name__":"probe_mutation"};exec(compile(payload.replace('min(count, int(', 'min(count + 1, int('),str(source), 'exec'),mutated)
+ red=list(mutated['due_slots'](0,600,6,0,4200))
+ record('red control N+1 rejected',red!=list(range(1,7)),observed_mutant=red)
+ red_reset=list(m.due_slots(1800,600,6,3,2400));record('red control phase reset rejected',red_reset!=[4],observed_mutant=red_reset)
+ receipt=OUT/'receipt.json';ctx={'phase':dict(result_file=str(receipt),execution_id='exact',id='p1',lane='probe--p1',token_family='MARATHON-P1-TURN'),'product_root':str(OUT)}
+ good=dict(schema='marathon-drive/result@1',execution_id='exact',phase='p1',lane='probe--p1',token='MARATHON-P1-TURN',target_repo={'path':str(OUT)},outcome='approved',exit_code=0,gate={'result':'green','exit':0},reviewed_candidate='a'*40,reviewed_head='a'*40,attest_path='retained',acceptance={'checked':False})
+ receipt.write_text(json.dumps(good));record('matching approved optional-acceptance receipt qualifies',m.qualified(m.matching_receipt(ctx)))
+ for field,bad in [('execution_id','old'),('phase','p2'),('lane','foreign'),('token','FOREIGN'),('target_repo',{'path':'/foreign'})]:
+  receipt.write_text(json.dumps({**good,field:bad}));record('foreign '+field+' cannot qualify',not m.qualified(m.matching_receipt(ctx)))
+ for text in ['', '{bad', '[]']:
+  receipt.write_text(text);record('empty/malformed receipt unknown '+repr(text),not m.qualified(m.matching_receipt(ctx)))
+ special=OUT/'fifo';os.mkfifo(special);start=time.monotonic();record('FIFO read bounded',m.bounded_read(special) is None and time.monotonic()-start<.1)
+ receipt.write_text(json.dumps(good));link=OUT/'link';link.symlink_to(receipt);record('symlink receipt rejected',m.bounded_read(link) is None)
+ for flags in [('--progress-check-count','0'),('--progress-check-count','145'),('--progress-interval-s','86401'),('--progress-interval-s','86400','--progress-check-count','2'),('--progress-interval-s','9999999999999999999999'),('--progress-check-count',)]:
+  n='bad-'+str(len(rows));proc,home,log,s,cmd=launch(n,flags);rc=finish(proc,s);record(n,rc==2 and not (home/'started').exists(),exit_code=rc,command=cmd)
+ proc,home,log,s,cmd=launch('legacy',('--progress-check-count','1'),XYZ_PYTHON='0');rc=finish(proc,s);record('legacy opt-in refusal',rc==2 and not(home/'started').exists(),command=cmd)
+ proc,home,log,s,cmd=launch('dry',('--dry-run','--progress-check-count','18'));rc=finish(proc,s);record('dry effective 600x18',rc==0 and 'interval=600s count=18' in log.read_text() and not events(log),command=cmd)
+ proc,home,log,s,cmd=launch('window',('--progress-interval-s','1','--progress-check-count','2'),PROBE_SLEEP='2.6')
+ time.sleep(.3);initial_observer=observer_pid(proc.pid);assert initial_observer;time.sleep(2.0);obs=observer_pid(proc.pid);record('window ends while executor survives',proc.poll() is None and obs is None,observer_pid=obs)
+ rc=finish(proc,s);e=events(log);record('no extra slot and terminal after window',rc==0 and [x['check'] for x in e if x['kind']=='check']==[1,2] and sum(x['kind']=='observation-ended' for x in e)==1 and e[-1]['kind']=='terminal' and e[-1]['verified_phases']==2 and e[-1]['last_product_milestone']['candidate']=='c'*40,command=cmd)
+ for name,options in [('missing',{'PROBE_RECEIPT':'no'}),('reverify',{'PROBE_REASON':'already-satisfied'})]:
+  proc,home,log,s,cmd=launch(name,('--progress-interval-s','1','--progress-check-count','6'),**options);rc=finish(proc,s);terminal=events(log)[-1]
+  record(name+' never invents product milestone',rc==0 and terminal['last_product_milestone'] is None and terminal['verified_phases']==(0 if name=='missing' else 2),command=cmd)
+ proc,home,log,s,cmd=launch('halt',('--progress-interval-s','1','--progress-check-count','6'),PROBE_RC='5');rc=finish(proc,s);record('child exit status and no successor',rc==5 and (home/'started').read_text().splitlines()==['p1'] and events(log)[-1]['exit_code']==5 and observer_pid(proc.pid) is None,command=cmd)
+ for name,sig,group in [('term',signal.SIGTERM,False),('int',signal.SIGINT,False),('group',signal.SIGTERM,True),('ownerloss',signal.SIGKILL,False)]:
+  proc,home,log,s,cmd=launch(name,('--progress-interval-s','1','--progress-check-count','6'),PROBE_SLEEP='10')
+  deadline=time.monotonic()+3;obs=None
+  while time.monotonic()<deadline:
+   obs=observer_pid(proc.pid)
+   if obs and(home/'started').exists():break
+   time.sleep(.03)
+  assert obs
+  start=time.monotonic();os.killpg(proc.pid,sig) if group else os.kill(proc.pid,sig)
+  rc=proc.wait(timeout=2)
+  while alive(obs) and time.monotonic()-start<2:time.sleep(.02)
+  latency=time.monotonic()-start
+  record(name+' cancellation',not alive(obs) and latency<=1 and rc==(-9 if sig==signal.SIGKILL else 130 if sig==signal.SIGINT else 143) and (home/'started').read_text().splitlines()==['p1'],latency_s=round(latency,3),exit_code=rc,observer_pid=obs,command=cmd)
+  # Clean only this probe's process group; descendant stop is not a product guarantee.
+  try:os.killpg(proc.pid,signal.SIGKILL)
+  except ProcessLookupError:pass
+  time.sleep(.1);s.close();record(name+' terminal/owner report',any(x['kind']==('owner-lost' if name=='ownerloss' else 'terminal') for x in events(log)))
+ after=identity();(OUT/'identity-after.json').write_text(json.dumps(after));record('clone identity intact',before==after)
+finally:
+ (OUT/'checks.json').write_text(json.dumps(rows,indent=2)+'\n')
+ (OUT/'provenance.jsonl').write_text(json.dumps({'command':'python3 temp/gh1006-manual/probe.py','cwd':str(ROOT),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'launcher_sha256':hashlib.sha256((ROOT/'relay-automation/marathon.sh').read_bytes()).hexdigest(),'checks':len(rows),'passed':sum(r['passed'] for r in rows),'recorded_utc':datetime.now(timezone.utc).isoformat()})+'\n')
+print('manual checks',len(rows),'passed')

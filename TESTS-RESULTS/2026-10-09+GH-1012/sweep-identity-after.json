@@ -1,0 +1,6 @@
+{
+  "HEAD": "47fb72dfcb13af1d0f64ed7d527a8db467171cbb",
+  "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.tagopt=--no-tags\nremote.origin.fetch=+refs/heads/development:refs/remotes/origin/development\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development",
+  "status": ""
+}

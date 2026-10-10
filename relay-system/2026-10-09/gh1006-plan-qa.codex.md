@@ -1,0 +1,29 @@
+# Independent Codex plan QA receipt
+
+Extracted verbatim from the committed Round 3 reviewer block; full protocol and attestation in gh1006-plan-qa.md.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+
+Basis: The actual seeded plan resolves R1/R2 and the R3 input mismatch. Approve the bounded observation plus supervising-agent repair-to-PR implementation plan. This is textual/source-grounded plan readiness, not runtime acceptance; continuation remains held and the full cancellation proof remains required before shipping.
+
+swept file: yes
+
+Read the entire 270-line plan and launcher, the relevant driver receipt/heartbeat/approval paths, existing launcher/monitor/receipt assertions, all three advisory conclusions, retained baseline receipts and the GH-1006 ledger row. Applied SWE and relay-xyz's commensurate-complexity rubric. No additional pre-existing plan defects found. This is a bounded review, not an exhaustive driver audit. Graph project/status/coverage tools are unavailable this turn; the plan's September 1 graph generation is stale, so current source was read directly, including launcher line 351. No fresh graph-coverage claim. No git commands, suites, pytest, executable fixtures or artifact/source edits were performed.
+
+- **[Pass] R1 resolved — finite scheduling is consistently parameterized.** `PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md:157–181` defines validated defaults, effective N, phase-independent absolute deadlines, missed slots consuming N, and the whole-window suspension outcome. Default N=6 forbids check 7; explicit N=18 permits it and ends at 18. The matching checks are explicit at :221–227 and :266. Retain these outcomes in implementation and manual red/green evidence.
+
+- **[Pass] R2 resolved at plan level — signal handling has a concrete contract and falsifier.** Plan :169–176 keeps one phase child, waits before any successor, limits the background/wait change to opt-in observation, preserves 130/143 interruption status and disclaims descendant-stop guarantees. Plan :225–227 separately requires child exit, launcher-only TERM/INT, process-group TERM and owner-disappearance measurements against the one-second bound. This addresses the current foreground-call baseline (`relay-automation/marathon.sh:310–329`) without introducing another executor. Keep the required full-launcher proof; shell timing alone cannot discharge it.
+
+- **[Pass] R3 resolved — revised bytes and evidence are available here.** Plan :151–153 now points to the signal receipt, and the seeded `TESTS-RESULTS/2026-10-09+GH-1006/baseline/provenance.jsonl:1–3` records the two baseline runs and the limited signal probe. The logs end with `marathon: 35 pass, 0 fail` and `marathon-monitor: 17 pass, 0 fail`; recorded before/after identities match. These are retained producer results, not tests rerun by this reviewer.
+
+  Read-only probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` used `hashlib.sha256(Path("PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md").read_bytes()).hexdigest()`, checked the six named baseline files for positive `stat().st_size`, compared the parsed identity JSON objects, and queried `SELECT gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,doc_path FROM roadmap_items WHERE gh_number='1006'` through `sqlite3.connect(Path("releases.db").resolve().as_uri()+"?mode=ro&immutable=1", uri=True)`. Exit **0**. Decisive output: `plan_sha256 c9a1a705752c18da93c04cd2ea8502e3454a369357d7029a17b58660745c53aa`; `plan_lines 270`; `evidence_nonempty True`; `recorded_identity_equal True`; `roadmap [(1006, 80, 65, 80, 45, None, 'PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md')]`. No probe files were written.
+
+- **[Pass] Progress and ownership remain grounded.** Plan :163–188 gives the context one launcher writer, binds run/phase/execution identity, requires matching approved receipts with green gate and bound reviewer candidate, and separates `already-satisfied` verification from new milestones. Current receipt fields exist at `utils/py/marathon_drive.py:235–275`; success binds them at :2663–2737. Existing assertions cover receipt identity and gate fields at `test/gh280-jog-marathon-adapter.sh:274–284`. Keep heartbeat/prose non-authoritative and missing data unknown. Stdlib reader, existing run-log delivery, unchanged default invocation, rollback by omitting flags, and no new suite/gate machinery are proportionate (plan :70–74, :157–193, :218–234).
+
+- **[Pass] Recovery, held dependencies and rating remain honest.** Plan :116–119 and :195–208 requires three affirmative advisory seats, an active authorized caller, one episode, a shared absolute UTC deadline and isolated independent QA before publish-and-park. Plan :244–256 holds continuation behind exact revision, stopped descendants, preserved state/attempts, #752 and #1004 composition; it cannot close the issue as guaranteed unattended recovery. This correctly treats partial consult success as insufficient (`utils/py/consult.py:925–934`). Plan :48–55 retains 80/65/80/45, qualitative appeal and unknown incident trends; `releases.sql:833` and the read-only row above agree. Retain those qualifications.
+
+- **[Unverified — needs clone run]** Full observer lifecycle, signal forwarding, cancellation latency, scheduling and status preservation have not been executed here. The retained signal JSON reports 0.954s versus 0.001s and exit 143; its provenance gives a descriptive command rather than the complete probe source. Treat those timings as limited producer evidence, not independent reproduction. Plan :221–240 already requires the full macOS clone checks, red controls, retained provenance and final QA; those obligations remain open for implementation.
+
+Relay closed (Approved), no further review turn needed. Producer (`codex-author`) may proceed with the approved implementation boundary and its required clone verification; PR-based continuation remains held.

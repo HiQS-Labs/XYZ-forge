@@ -1,0 +1,31 @@
+from pathlib import Path
+import re,os,subprocess,json
+rows=[]
+for path in ['relay-automation/README.md','skills/1-hourly/relay-xyz/SKILL.md']:
+ for block in re.findall(r'```bash\n(.*?)```',Path(path).read_text(),re.S):
+  if 'relay-drive.sh' not in block or '--agent-cmd' not in block:continue
+  start=re.search(r'^(CODEX|AGY|PI|COMMANDCODE)_AGENT=(\w+)',block,re.M)
+  if not start:continue
+  script=block[start.start():]
+  script=re.sub(r'^(?:relay-automation/relay-drive.sh|"\$HARNESS/relay-automation/relay-drive.sh") \\',r'''python3 -c 'import sys,json; print(json.dumps(sys.argv[1:]))' \\''',script,flags=re.M)
+  for inherited in (None,'wrong-inherited-actor'):
+   env=os.environ.copy();var=start.group(1)+'_AGENT'
+   if inherited is None:env.pop(var,None)
+   else:env[var]=inherited
+   env.update(HARNESS='/harmless-fixture',RELAY='probe.md',TASK='PROBE',ARTIFACT='target.txt')
+   r=subprocess.run(['bash','-c',script],capture_output=True,text=True,env=env);assert r.returncode==0,(path,r.stderr)
+   args=json.loads(r.stdout);reviewer=args[args.index('--reviewer')+1]
+   assert reviewer==start.group(2),(path,reviewer)
+   rows.append({'source':path,'worker':start.group(2),'inherited':inherited,'reviewer':reviewer,'exit_code':r.returncode})
+assert len(rows)==16,len(rows)
+env=os.environ.copy();env.pop('CODEX_AGENT',None)
+r=subprocess.run(['bash','-c','CODEX_AGENT=codex printf "reviewer_arg=<%s>\\n" "$CODEX_AGENT"'],env=env,capture_output=True,text=True)
+assert r.stdout=='reviewer_arg=<>\n'
+rows.append({'red_control':'old inline env assignment expansion','output':r.stdout.strip(),'expected_corrected':'reviewer_arg=<codex>','fails_corrected_expectation':True})
+# Verification guidance resolves suites only after clone and cd; it does not use HARNESS suite paths.
+s=Path('skills/1-hourly/relay-xyz/SKILL.md').read_text().split('## Verify the harness is green before a real run',1)[1].split('## Relationship',1)[0]
+assert 'git clone --no-local' in s and 'cd "$VERIFY_CLONE" || exit 1' in s and 'bash "$HARNESS/validate.sh"' not in s and 'bash "$HARNESS/test/' not in s
+rows.append({'check':'suite instructions in disposable full clone','passed':True})
+Path('temp/gh1006-recipe-proof/checks.json').write_text(json.dumps(rows,indent=2)+'\n')
+Path('temp/gh1006-recipe-proof/provenance.jsonl').write_text(json.dumps({'command':'python3 temp/gh1006-recipe-proof/probe.py','exit_code':0,'scope':'harmless argv substitution of eight actual documented recipes; unset/conflicting inherited actor plus old-command red control; static clone routing'})+'\n')
+print('16 recipe expansions, old-command red control and clone routing pass')

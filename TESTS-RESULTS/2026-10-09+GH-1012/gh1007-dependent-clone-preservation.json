@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-10T06:43:15.885577+00:00",
+  "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1007-swe-governance-2026-10-09-verify",
+  "origin": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1007-swe-governance-2026-10-09",
+  "disposition": "PRESERVE_UNVERIFIED_SESSION",
+  "query": [
+    "node",
+    "bin/tick",
+    "claims",
+    "--json"
+  ],
+  "TICK_REPO_ROOT": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1007-swe-governance-2026-10-09-verify",
+  "rc": 3,
+  "stdout": "",
+  "stderr": "tick claims: tick-dir-missing: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1007-swe-governance-2026-10-09-verify/.tick\n",
+  "mutated": false,
+  "source_clone_preserved_due_to_local_origin_dependency": true
+}

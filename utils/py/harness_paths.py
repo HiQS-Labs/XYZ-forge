@@ -30,7 +30,9 @@ import sys
 def harness_home(path=None, anchor_file=None):
     """Dir containing relay-automation/ + utils/: repo root, or <repo>/.xyz when vendored.
 
-    Derived from THIS file's location (or anchor_file if provided), or XYZ_HARNESS environment variable.
+    Precedence: explicit path / anchor_file; the running script's own .xyz/ copy; XYZ_HARNESS;
+    THIS file's location. A script running from inside a vendored .xyz/ must resolve to that copy
+    even when the shell exports a global XYZ_HARNESS (GH-1001), so that check comes first.
     Never uses os.path.realpath so symlinked .xyz directories preserve their .xyz identity.
     """
     if path is not None:
@@ -41,8 +43,6 @@ def harness_home(path=None, anchor_file=None):
         if os.path.isfile(anchor_file):
             return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(anchor_file)), "..", ".."))
         return os.path.abspath(anchor_file)
-    if os.environ.get("XYZ_HARNESS") and os.path.isdir(os.environ["XYZ_HARNESS"]):
-        return os.path.abspath(os.environ["XYZ_HARNESS"])
     # If the main running script is under .xyz/, use its location to preserve symlinked .xyz
     main_mod = sys.modules.get("__main__")
     main_file = getattr(main_mod, "__file__", None)
@@ -53,6 +53,8 @@ def harness_home(path=None, anchor_file=None):
             if ".xyz" in parts:
                 idx = parts.index(".xyz")
                 return os.sep.join(parts[:idx + 1])
+    if os.environ.get("XYZ_HARNESS") and os.path.isdir(os.environ["XYZ_HARNESS"]):
+        return os.path.abspath(os.environ["XYZ_HARNESS"])
     return os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 
 

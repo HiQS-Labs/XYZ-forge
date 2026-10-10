@@ -1,0 +1,25 @@
+{
+ "attempts": [
+  {
+   "by": "script",
+   "clone_path": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-_plqjc18/pr-1014-f398b112-coqueuw0",
+   "commit": "ba503bb2f093644e52433be371fdf0c4ab1e0914",
+   "finished": "2026-10-10T00:06:28-0700",
+   "head_sha": "f398b11218708b88b3b2892d9c434c7308eba7d8",
+   "outcome": "resolved",
+   "rung": "B1",
+   "started": "2026-10-10T00:06:23-0700"
+  }
+ ],
+ "base_sha": "f398b11218708b88b3b2892d9c434c7308eba7d8",
+ "conflict_files": [
+  "releases.db",
+  "releases.sql"
+ ],
+ "last_side_touched": {},
+ "merge_base": "",
+ "pr": 1014,
+ "pre_repair": {},
+ "repo": "https://github.com/HiQS-Labs/XYZ-forge.git",
+ "schema": 1
+}

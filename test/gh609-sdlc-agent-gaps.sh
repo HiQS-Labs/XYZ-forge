@@ -3,7 +3,7 @@
 # Unified, shared contract validators and adversarial mutation controls for:
 # - workhorse (durable identity, 4-state recovery, local/remote stale-writer fence, preservation split, semantic verification)
 # - start-task (resume reconciliation, transport drop handling)
-# - swe (expand-contract 6-stage lifecycle, continuous sync, convergence, 4-gate contraction)
+# - swe (conditional online migration, ordering/convergence, safe fallback, retirement guards)
 # - recon (lane-scoped mapping of active readers/writers in B, async queues/delayed consumers in C, tripwires in D)
 # - ci-optimize (Principle 13 bounded stress + active quarantine with UTC expiry, Principle 14 workload-scoped performance fences)
 # - ci-debug (strictly ordered 4-tier containment ladder preserving worktree safety)
@@ -110,23 +110,13 @@ check_swe_contract() {
   local target="$1"
   [ -s "$target" ] || return 1
 
-  grep -q "Zero-Downtime Expand-Contract Schema & State Migration Rubric" "$target" || return 1
-  grep -q "Stage 1 — Expand:" "$target" || return 1
-  grep -q "concurrent write synchronization" "$target" || return 1
-  grep -q "Stage 2 — Backfill & Continuous Sync:" "$target" || return 1
-  grep -q "conflict/ordering strategy" "$target" || return 1
-  grep -q "Stage 3 — Convergence Gate:" "$target" || return 1
-  grep -q "parity/reconciliation assertion verifying data convergence" "$target" || return 1
-  grep -q "Stage 4 — Switch Reads:" "$target" || return 1
-  grep -q "graceful fallback" "$target" || return 1
-  grep -q "Stage 5 — Dual-Write & Mixed-Version Support:" "$target" || return 1
-  grep -q "bidirectional synchronization" "$target" || return 1
-  grep -q "throughout the entire mixed-version window" "$target" || return 1
-  grep -q "Stage 6 — Contract & Retire:" "$target" || return 1
-  grep -q "Full retirement and migration of all legacy writers" "$target" || return 1
-  grep -q "Full retirement of all legacy readers" "$target" || return 1
-  grep -q "Full retirement of delayed, queued, or asynchronous consumers" "$target" || return 1
-  grep -q "Closure of the application rollback window" "$target" || return 1
+  # GH-1007 replaced mandatory stages with workload-scoped safeguards. Pin those
+  # safeguards and their scope rather than requiring the retired recipe again.
+  grep -Fq "For online schema or persistent-state migrations across mixed versions, establish compatibility, bounded backfill, concurrent-update ordering, convergence evidence, read cutover, and rollback before retirement." "$target" || return 1
+  grep -Fq "Use the simplest synchronization method that preserves those contracts; bidirectional synchronization and fallback reads are not universal requirements." "$target" || return 1
+  grep -Fq "If used, fallback must not silently return stale or unsafe data." "$target" || return 1
+  grep -Fq "Retire legacy storage only after old readers, writers, queued/delayed consumers, and the rollback window are accounted for." "$target" || return 1
+  grep -Fq "A safe offline migration need not inherit a rolling-deployment protocol." "$target" || return 1
   return 0
 }
 
@@ -202,7 +192,7 @@ else
 fi
 
 if check_swe_contract "$SWE"; then
-  pass "swe: satisfies unified contract (6-stage expand-contract lifecycle, continuous sync, convergence gate, 4-gate contraction)"
+  pass "swe: satisfies unified contract (conditional online migration, ordering/convergence, safe fallback, retirement guards)"
 else
   fail "swe: failed unified contract check"
 fi
@@ -319,21 +309,21 @@ run_mutation_test \
   "$WORK/mut6-start-task-no-remote-pr.md" \
   "sed -i.bak 's/gh pr list --head <branch>/git branch/g' '$WORK/mut6-start-task-no-remote-pr.md'"
 
-# Mutation 7: SWE - Remove Stage 5 dual-write / continuous sync during mixed-version window
+# Mutation 7: SWE - Remove concurrent-update ordering from online migrations
 run_mutation_test \
   "negative control 7 (swe)" \
   "check_swe_contract" \
   "$SWE" \
-  "$WORK/mut7-swe-no-dual-write.md" \
-  "sed -i.bak '/Stage 5 — Dual-Write/d' '$WORK/mut7-swe-no-dual-write.md'"
+  "$WORK/mut7-swe-no-ordering.md" \
+  "sed -i.bak 's/concurrent-update ordering/unordered updates/g' '$WORK/mut7-swe-no-ordering.md'"
 
-# Mutation 8: SWE - Remove rollback window closure gating from Stage 6 contraction
+# Mutation 8: SWE - Remove rollback-window accounting before retirement
 run_mutation_test \
   "negative control 8 (swe)" \
   "check_swe_contract" \
   "$SWE" \
   "$WORK/mut8-swe-no-rollback-closure.md" \
-  "sed -i.bak '/Closure of the application rollback window/d' '$WORK/mut8-swe-no-rollback-closure.md'"
+  "sed -i.bak 's/, and the rollback window are accounted for/ are accounted for/g' '$WORK/mut8-swe-no-rollback-closure.md'"
 
 # Mutation 9: Recon - Misassign Lane B state/data mapping to Lane A
 run_mutation_test \
