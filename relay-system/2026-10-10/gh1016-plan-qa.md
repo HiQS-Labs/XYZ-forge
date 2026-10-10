@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,32 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) with `file:lin
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+Reviewed the entire plan, including its existing claims and non-goals, and the cited resolver/writer/caller seams. Review tier: Verify with direct-source fallback. The exact relay worktree is not indexed; the nearest graph is `XYZ-forge`, generation `2026-09-01T15:54:30Z`, at another root. Symbol search is stale (e.g. `cmd_init` at 1792 rather than 2171); coverage reports changed/missing metadata. Consequently graph results are orientation only; local source reads and literal searches are the evidence. No git commands, executable fixtures, suites, or gates were run.
+
+- [Should] **The proposed onboard default inherits a concrete parser gap.** Plan `PROJECT/2-WORKING/GH-1016-REPO-SLUG-IDENTITY.md:154` reuses `GH_BASE`, but the existing regex at `relay-automation/xyz-releases-onboard.sh:108` excludes dots from the repository name. A legitimate dotted repo therefore still gets a basename slug despite the stated new-ledger requirement. This is a pre-existing defect in the source seam the plan changes. Cheapest fix: permit dotted repository names in that existing parse while stripping only the terminal `.git`, and include a recorded manual acceptance for it; no second parser or new suite.
+  Observed input: `ORIGIN_URL=https://github.com/test-org/foo.js.git`, no explicit `SLUG`, target folder `different-folder`; the current parse yields empty `GH_BASE`, so the planned fallback yields `different-folder` rather than `test-org/foo.js`.
+  Affected scope: default onboarding slug selection for GitHub repository names containing dots; explicit slug precedence and non-GitHub fallback remain as specified.
+  Falsifier: the same input must produce `test-org/foo.js`; the existing `https://github.com/test-org/happy-repo.git` input must still produce `test-org/happy-repo`, and a local-path origin must keep the basename.
+  Probe: `bash` heredoc containing `url='https://github.com/test-org/foo.js.git'; if [[ "$url" =~ github\.com[:/]([^/]+)/([^/.]+)(\.git)?$ ]]; then printf 'matched=%s/%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"; else printf 'NO_MATCH: %s\n' "$url"; fi` → exit 0, decisive output `NO_MATCH: https://github.com/test-org/foo.js.git`. This is a builtin regex probe, not an executable fixture.
+
+- [Should] **Give the measured evidence its required provenance and bound the rating claims.** The plan cites an executed red control at `:105-111` and prior search results at `:61-64`/`:122-125`, but the seeded evidence directory contains only `identity_check.py` and `red-control-9a923f3c.jsonl`. Probe `rg --files TESTS-RESULTS/2026-10-10+GH-1016` → exit 0, exactly those two files; `cat TESTS-RESULTS/2026-10-10+GH-1016/provenance.jsonl` → exit 1, `No such file or directory`. AGENTS.md:100-102 requires committed provenance for cited runs. Plan step 4 promises it later, which does not ground the present measured claim. Add the red-control receipt now (command, source SHA, exit status, output path), plus the retained AEGIS observations/search commands and decisive results supporting priority and recurrence; alternatively label unretained claims as author-reported/unverified. `releases.sql:842` and `:3306` support the stored 70/60/50/70 rating, and its sum is 250, but do not prove the historical search or the downstream exit-6 assertion. No runtime behavior change requested.
+
+- [Should] **Add a falsifiable acceptance for step 3.** Plan `:158` names only gh197 staying green; it also explicitly says that suite does not pin the slug (`:117-118`). The current happy-path assertions at `test/gh197-vendor-tier-split.sh:131-151` check files, mapped URLs, consistency and no automatic commit, without asserting either stored slug. `identity_check.py:109-120` invokes direct `init`, never onboard. Omitting the entire onboard edit could therefore satisfy the stated checks. Add a recorded manual check, run only in a disposable full clone, that reads `repos.slug` and `settings.repo_slug` after onboarding the existing `onboard_happy` / `test-org/happy-repo` shape; require both to equal `test-org/happy-repo` and witness the old basename as the red control. Include explicit-slug and no-origin fallback checks. No new test file or gate machinery requested; this is a proof change, not a new runtime requirement.
+
+- [Pass] **The core resolver fix is bounded and the one-row guard receives complete repo maps.** `releases_app.py:5397-5406` independently compares URL repo and number; the planned branch at plan `:141-147` only binds a bare slug to origin and retains those comparisons. Concrete foreign rows `repo_id=1, gh_number=300, issue_url=https://github.com/Other-Org/AEGIS-Sleuth-Slackbot/issues/300` and `repo_id=1, gh_number=301, issue_url=https://github.com/HiQS-Labs/XYZ-forge/issues/301` cannot become valid through that branch when origin is `HiQS-Labs/AEGIS-Sleuth-Slackbot`. All discovered production call sites build unfiltered maps: `releases_app.py:3944`, `:4067`, `:5112`, `:5493`; `express.py:673`; `work_connectors/__init__.py:149`; `wave_reconcile.py:1485`. Keep the exact-match branch outside the one-row restriction, as specified. This proof concerns newly accepted bare-slug rows; existing qualified `/` slugs retain existing semantics.
+
+- [Pass] **Writer/reader choice and scope are appropriate.** `cmd_init` at `releases_app.py:2176-2196` supplies the same slug to both fields; `load_dump:6056-6064` copies stored values. The local literal search found no `UPDATE repos` in this module; `settings set:3821` excludes identity edits. `tracking_token_to_url:2102-2113` already accepts owner/name, `releases_cycle.py:207` displays it, and `business_digest:1303-1305` hashes the dump that includes slug at `:1128`. Resolver repair avoids changing stored digest state. Onboard passes explicit basename into an origin-less staging repo (`xyz-releases-onboard.sh:96-101`), so step 3 is necessary, subject to the findings above. Retain GitHub-origin helper reuse in init and the stated arbitrary-folder-name non-goal (`plan:195-197`); rollback compatibility follows from the existing `/` branch at `releases_app.py:5400`.
+
+- [Pass] **The manual check reaches the reported skip path, with limits.** `identity_check.py:68-72` calls real `wave.update_roadmap_entry(..., dry_run=True)` and captures its skip message; `wave_reconcile.py:1481-1493` contains the corresponding qualification and refusal. Recorded output includes `"wave-reconcile-moves-own-row"` with `"logged_skip": true, "moved": false`. It is a falsifiable qualification/dry-run check, not proof of a persisted ledger move. Execution remains [Unverified — needs clone run] in this turn. The JSON contains seven passing controls and four failures; plan `:110` says six controls, a [Nit] counting typo. Call case 4 a qualified dry-run move, and retain the full-clone runtime gate and committed final receipts in step 4/5.
+
+VERDICT: FAIL
+Basis: The resolver and init strategy fit the task and add no second writer, verb, schema, or suite. Approval needs a concrete dotted-name onboard correction, a non-vacuous onboard acceptance, and provenance/qualification for the measured evidence and rating history. No additional pre-existing defects were found in the plan beyond the findings recorded above; this is plan QA, not final implementation sign-off.
+
+Handing off to Producer (claude-a) — disposition these findings, revise the plan/evidence, then open round 2; go to the other window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
