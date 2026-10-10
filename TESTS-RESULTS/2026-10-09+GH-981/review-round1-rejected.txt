@@ -1,0 +1,28 @@
+relay-drive: NOTE — relay file is not committed at HEAD: relay-system/2026-10-09/gh982-merge.codex.md
+  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, but its own
+  worktree-seeding step copies this file's current content in regardless — this is
+  usually fine. Commit it for a clean paper trail, or re-run with
+  RELAY_WORKTREE_ISOLATION=0 if you want to rule out isolation entirely; neither is required.
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/merge-cleanup-2026-10-09/pr-982-7ea3c7d3-bfec72my (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/merge-cleanup-2026-10-09/pr-982-7ea3c7d3-bfec72my) changed-files=1
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.wCQVCn)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wCQVCn) changed-files=2
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wCQVCn) changed-files=2
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wCQVCn) changed-files=2
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wCQVCn) changed-files=2
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wCQVCn) changed-files=2
+rtl: GH-654 off-lane candidate: .relay-artifacts/982-qa-packet.md
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/merge-cleanup-2026-10-09/pr-982-7ea3c7d3-bfec72my/relay-system/2026-10-09/gh982-merge.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: WARN could not `tick done RELAY-gh982-merge` as codex (not current owner?) — inspect `tick info RELAY-gh982-merge`
+relay-drive: terminal STATUS Approved by reviewer codex REFUSED — close-mismatch
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 5m 47s
+per done-task: n/a (0 tasks done)
+  turn peak RSS: codex: 298MB peak RSS
+

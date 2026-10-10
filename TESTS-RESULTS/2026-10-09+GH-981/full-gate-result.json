@@ -1,0 +1,15 @@
+{
+  "started": "2026-10-10T05:18:32.599808+00:00",
+  "finished": "2026-10-10T05:33:45.500885+00:00",
+  "argv": [
+    "git",
+    "push",
+    "origin",
+    "HEAD:refs/heads/feat/gh981-paperclip-dashboard"
+  ],
+  "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/merge-cleanup-2026-10-09/pr-982-publication-r2",
+  "source_sha": "59a924bafd0414b47be92ff402906375c1729075",
+  "rc": 0,
+  "ledger_check_rc": 0,
+  "identity_unchanged": true
+}
