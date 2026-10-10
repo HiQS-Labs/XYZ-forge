@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-10-10 — Releases ledger: bare repo slugs match a differently cased GitHub name (GH-1016)
+
+A ledger whose `repos.slug` is the checkout folder name (`aegis-sleuth-slack-bot`) never matched its
+GitHub repo (`HiQS-Labs/AEGIS-Sleuth-Slackbot`). Every roadmap row resolved `identity_valid False`, and
+`wave_reconcile` silently skipped every ledger move.
+
+- `resolve_roadmap_identity` now also accepts a bare slug that equals the origin name after casefolding
+  and removing `-`/`_`, but only when the ledger has exactly one `repos` row. Validity still requires
+  the row's issue URL to name origin exactly, so foreign rows stay invalid.
+- `releases init` and `xyz-releases-onboard.sh` now record the github.com owner/name through the
+  existing `_github_slug_from_origin`. The folder basename is the fallback when there is no GitHub
+  origin. The onboard script's own regex, which rejected dotted repo names, is gone.
+
+No stored slug is rewritten, so receipts and digests are untouched. There is no new verb, schema
+change or suite. Existing ledgers recover on re-vendor plus a re-run of the reconcile. Revert the
+`fix(GH-1016)` commits to roll back; owner/name slugs written meanwhile stay valid under the old
+resolver. Evidence, a manual check with red control (9/15 at `9a923f3c`, 15/15 fixed), is in
+`TESTS-RESULTS/2026-10-10+GH-1016/`.
+
 ## 2026-10-09 — Marathon: bounded observation and repair-to-PR handoff (GH-1006)
 
 Opt-in chain observations now use one finite reader across phase transitions, report exact driver
