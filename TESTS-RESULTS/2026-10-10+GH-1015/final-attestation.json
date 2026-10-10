@@ -1,0 +1,19 @@
+{
+  "added_len": 5648,
+  "added_sha256": "06876e059da98e6375928d0ad1bc7d67018152183e29b6785aa4b43a9e3e7dec",
+  "added_start": 7741,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-10T16:52:54Z",
+  "driver_pid": 51330,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10/relay-system/2026-10-10/gh1015-final.codex.md",
+  "relay_file_rel": "relay-system/2026-10-10/gh1015-final.codex.md",
+  "reviewed_head": "b59b42ee1b51cc55886e4ac893b0ae4b15439f25",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10",
+  "task": "RELAY-gh1015-final",
+  "trailer_sha256": "a8902b9bbd0de41438bf80b54da5b02f48a4a4f6a28829a786285421b43bc765",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10"
+}
