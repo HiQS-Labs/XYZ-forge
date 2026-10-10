@@ -29,3 +29,10 @@ the standing AGENTS #802/#853 rule, with a gh306 exemption. Its source/runtime i
 Final code QA Approved round 3 supersedes the historical round 2 approval; the isolated shipped
 relay exited 0 and its attestation/provenance are in `final-qa-r3/`. A passing
 classified full macOS gate is still required before PR readiness.
+
+`integration/` retains development `3c829e0d` adoption, native ledger conflict resolution/readback,
+launcher35, receipt-adapter223, package3 and composed PDDA exit0 with an intact disposable-clone
+identity bracket. GH-1006’s original admission and ratings survive; the native writer updates its
+summary to code-QA-complete/publication-next. All five authored production files match round3
+source; imported #1004 changes have their own upstream independent QA receipt. Raw upstream logs
+and consult transcripts retain their original whitespace; authored-source whitespace checks pass.

@@ -1,0 +1,40 @@
+releases-merge-resolve: took either side of releases.db in the working tree (it is regenerated below, so the choice cannot matter)
+releases-merge-resolve: rebuilding releases.db from the merged releases.sql
+OK: foreign_keys pragma asserted per connection
+FAIL: rule=generation-mismatch: settings.generation=1530 but releases.sql says 1556 — write in progress, crashed, or a torn trio
+OK: receipt chain intact (1718 receipt(s), business-state digest matches, 176 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 14 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+rebuilt releases.db from releases.sql (generation 1530 -> 1557); displaced DB backed up at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09/releases.db.bak
+OK: post-rebuild verification — DB rebuilt from releases.sql, displaced DB at releases.db.bak
+check: clean (0 failures, 9 warning(s))
+releases-merge-resolve: verifying
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1557 (DB <-> dump)
+OK: receipt chain intact (1746 receipt(s), business-state digest matches, 180 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 52 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 14 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))
+releases-merge-resolve: regenerating adopted views: LEADERBOARD.md
+releases-merge-resolve:   -> leaderboard.sh
+leaderboard: wrote /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09/LEADERBOARD.md
+releases-merge-resolve: resolving releases.db in the index now that the rebuild verified clean
+releases-merge-resolve: artifacts are consistent and staged. Review, then commit the merge yourself —
+releases-merge-resolve: this script deliberately does not commit.
+releases-merge-resolve: note: releases.db.bak holds the DB that was displaced; it is untracked and safe to delete.
