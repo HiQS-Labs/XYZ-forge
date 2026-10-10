@@ -27,3 +27,5 @@ Blast radius: existing gh609 static contract and fixture inputs only. Reversibil
 Easy: one-file adaptation. The bet is that assertions pin the intentionally changed
 policy without dropping its safety guarantees; independent review must validate
 that bet. The new full gate remains pending.
+
+Independent [Codex repair QA](../../relay-system/2026-10-09/gh982-gate-repair.codex.md) is Approved with mechanical attestation; driver exits 0. This approves the one-file adaptation and retained safety properties, not full qualification.
