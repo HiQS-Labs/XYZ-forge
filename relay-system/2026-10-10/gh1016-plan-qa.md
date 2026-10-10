@@ -141,4 +141,12 @@ Basis: All three round-1 Should findings are resolved in the revised plan and re
 
 Relay closed (Approved), no further review turn needed. Token handed back to Producer (claude-a) with done for implementation under the approved plan.
 
+
+### Attestation · relay-drive — 2026-10-10T17:32:07Z
+task: RELAY-gh1016-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 80f43a32b68342ddf3c942ab4768be9bf361e80c
+added-range: 18987+5383
+added-sha256: 338a38de3762bbdbad5a1543074a452c52556ba65eca1a024c0f739ce5ac2785
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
