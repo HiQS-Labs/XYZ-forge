@@ -182,6 +182,7 @@ The normal full pre-push gate refused candidate `209fd0bd` (409/410; gh609 only)
 in an independent disposable full clone, without Git identity drift. The existing
 SWE contract checker is adapted to #1009’s intentionally changed policy, with
 [retained differential and red controls](../../TESTS-RESULTS/2026-10-09+GH-981/gate-repair.md).
-Independent review and the repaired full gate remain pending; no merge readiness
+Independent repair review is Approved; the completed development reconciliation
+is integrated at `bd6300c7`. The repaired full gate remains pending; no merge readiness
 is claimed here. Historical focused Darwin failures and the interrupted Lanes
 timer-focus observation remain bounded findings; no expectations were weakened.
