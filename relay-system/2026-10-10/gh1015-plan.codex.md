@@ -71,7 +71,7 @@ Local opted-in developer CLI observer; three proposed local edits. Grade against
 
 Append a concrete review with file:line support; required behavior-change findings include Observed input/Affected scope/Falsifier. Approve if no required issue remains; else hand off to producer codex-author. Do not implement the proposal. Use the scaffolded relay's status/turn/tick protocol.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Approve only if all four review questions are satisfied and the planned acceptance checks distinguish the reproduced failure from valid/foreign receipts; no implementation is authorized until plan QA is Approved.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
