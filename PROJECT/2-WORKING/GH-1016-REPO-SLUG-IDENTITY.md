@@ -2,7 +2,7 @@
 gh_issue: 1016
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1016
 title: "releases ledger: bare repos.slug from the folder name never matches a differently named GitHub repo, so wave_reconcile silently skips every roadmap row"
-status: "Working — final QA"
+status: "Working — PR ready; awaiting review/merge"
 created: 2026-10-10
 updated: 2026-10-10
 owner: Claude
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implemented and gated: manual check 15/15 (red 9/15 at base), focused suites green, full pre-push gate GREEN 406/406 in a disposable clone; branch pushed. | Codex final QA (`relay-system/2026-10-10/gh1016-final-qa.md`), then PR against development. |
+| Plan QA Approved r2; final QA Approved r2 (r1 Should on `roadmap repoint --gid` fixed); manual check 17/17 (red 10/17 at base); full gate 406/406 on code head `b76a693e` in a disposable clone. | PR review/merge; after merge, re-vendor AEGIS `.xyz/` and re-run its reconcile. |
 
 ## Table of contents
 
@@ -287,6 +287,9 @@ Round 1 (Codex, FAIL, `relay-system/2026-10-10/gh1016-final-qa.md`):
 - **Proof.** The manual check gained `repoint-gid` plus a numbered `repoint-issue-num` control, both
   run on a temp copy of the ledger. Red: 10/17 at `9a923f3c`, with `TypeError` exit 1. Green: 17/17
   at `48013cbc`.
+
+Round 2 (Codex, PASS, Approved; attested at reviewed head `0f1fd7e8`): five Pass findings and no
+open Blocker or Should.
 
 ## Implementation evidence
 
