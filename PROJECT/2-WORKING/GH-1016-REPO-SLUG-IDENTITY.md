@@ -276,6 +276,18 @@ Round 2 (Codex, PASS, Approved; attested at reviewed head `80f43a32`): four Pass
 - **[Nit] Name debug-mantra. Implemented.** If an execution check fails, apply debug-mantra before
   changing the fix.
 
+## Final QA dispositions
+
+Round 1 (Codex, FAIL, `relay-system/2026-10-10/gh1016-final-qa.md`):
+
+- **[Should] `roadmap repoint --gid` crashes after writing an unnumbered row. Implemented** in
+  `48013cbc`. The relay's whole-file rule (GH-268) puts a pre-existing defect in a touched file in
+  scope, and the fix is one message expression. Numbered rows still print `GH-N`; unnumbered rows
+  print the GID.
+- **Proof.** The manual check gained `repoint-gid` plus a numbered `repoint-issue-num` control, both
+  run on a temp copy of the ledger. Red: 10/17 at `9a923f3c`, with `TypeError` exit 1. Green: 17/17
+  at `48013cbc`.
+
 ## Implementation evidence
 
 Commits:

@@ -13,10 +13,13 @@ GitHub repo (`HiQS-Labs/AEGIS-Sleuth-Slackbot`). Every roadmap row resolved `ide
   existing `_github_slug_from_origin`. The folder basename is the fallback when there is no GitHub
   origin. The onboard script's own regex, which rejected dotted repo names, is gone.
 
+Final QA also found that `roadmap repoint --gid` on an unnumbered row crashed after its write by
+formatting a NULL `gh_number`. That row is now named by its GID; numbered rows still print `GH-N`.
+
 No stored slug is rewritten, so receipts and digests are untouched. There is no new verb, schema
 change or suite. Existing ledgers recover on re-vendor plus a re-run of the reconcile. Revert the
 `fix(GH-1016)` commits to roll back; owner/name slugs written meanwhile stay valid under the old
-resolver. Evidence, a manual check with red control (9/15 at `9a923f3c`, 15/15 fixed), is in
+resolver. Evidence, a manual check with red control (10/17 at `9a923f3c`, 17/17 fixed), is in
 `TESTS-RESULTS/2026-10-10+GH-1016/`.
 
 ## 2026-10-09 — Marathon: bounded observation and repair-to-PR handoff (GH-1006)

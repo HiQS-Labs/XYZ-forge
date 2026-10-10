@@ -1,0 +1,18 @@
+{"case": "legacy-bare-own-row-valid", "observed": {"identity_valid": false, "issue_url": "https://github.com/HiQS-Labs/AEGIS-Sleuth-Slackbot/issues/221", "number": 221, "repo": null, "repo_id": 1}, "pass": false}
+{"case": "legacy-foreign-same-name-other-owner-invalid", "observed": {"identity_valid": false, "issue_url": "https://github.com/Other-Org/AEGIS-Sleuth-Slackbot/issues/300", "number": 300, "repo": null, "repo_id": 1}, "pass": true}
+{"case": "legacy-foreign-other-repo-invalid", "observed": {"identity_valid": false, "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/301", "number": 301, "repo": null, "repo_id": 1}, "pass": true}
+{"case": "wave-reconcile-moves-own-row", "observed": {"logged_skip": true, "moved": false}, "pass": false}
+{"case": "wave-reconcile-skips-foreign-row", "observed": {"logged_skip": true, "moved": false}, "pass": true}
+{"case": "multi-repo-ledger-keeps-exact-match", "observed": {"identity_valid": false, "issue_url": "https://github.com/HiQS-Labs/AEGIS-Sleuth-Slackbot/issues/221", "number": 221, "repo": null, "repo_id": 1}, "pass": true}
+{"case": "init-records-origin-owner-name", "observed": {"repo_slug": ["aegis-fresh-folder"], "repos": [["aegis-fresh-folder"]]}, "pass": false}
+{"case": "init-fresh-own-row-valid", "observed": {"identity_valid": false, "issue_url": "https://github.com/HiQS-Labs/AEGIS-Sleuth-Slackbot/issues/221", "number": 221, "repo": null, "repo_id": 1}, "pass": false}
+{"case": "init-local-path-origin-keeps-basename", "observed": [["local-origin-clone"]], "pass": true}
+{"case": "init-no-origin-keeps-basename", "observed": [["no-origin-repo"]], "pass": true}
+{"case": "init-explicit-slug-wins", "observed": [["chosen"]], "pass": true}
+{"case": "onboard-default-records-origin-owner-name", "observed": {"repo_slug": ["different-folder"], "repos": [["different-folder"]]}, "pass": false}
+{"case": "onboard-dotted-repo-name", "observed": {"repo_slug": ["dotted-folder"], "repos": [["dotted-folder"]]}, "pass": false}
+{"case": "onboard-explicit-slug-wins", "observed": {"repo_slug": ["chosen"], "repos": [["chosen"]]}, "pass": true}
+{"case": "onboard-no-origin-keeps-basename", "observed": {"repo_slug": ["onboard-no-origin"], "repos": [["onboard-no-origin"]]}, "pass": true}
+{"case": "repoint-gid", "observed": {"rc": 1, "stderr": "H-%d -> %s\" % (row[\"gh_number\"], new))\n          ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~\nTypeError: %d format: a real number is required, not NoneType", "stdout": ""}, "pass": false}
+{"case": "repoint-issue-num", "observed": {"rc": 0, "stderr": "", "stdout": "repointed GH-1016 -> PROJECT/2-WORKING/GH-1016-REPO-SLUG-IDENTITY.md"}, "pass": true}
+{"app_dir": "<scratch>/base/utils/py", "passed": 10, "summary": true, "total": 17}
