@@ -2,7 +2,7 @@
 gh_issue: 1006
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1006
 title: "Marathon: bounded progress and safe repair handoff"
-status: "Working — independent final code QA Approved round 3; full gate pending"
+status: "Working — PR ready; awaiting review/merge"
 created: 2026-10-09
 updated: 2026-10-09
 owner: Codex
@@ -19,7 +19,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Plan and final code QA Approved round 3; current embedded observation and required non-Small flake retirement verified. | Passing classified macOS gate, retained provenance, then PR into development. |
+| Plan/final code QA Approved round 3; current-development macOS full gate 409/409, intact clone identity; tested revision published. | PR review/merge; retain #1006 open for held conditional continuation. |
 
 ## Table of contents
 
@@ -305,3 +305,7 @@ as guaranteed unattended recovery; the PR must describe this delivery boundary.
 Final code QA round 3 independently Approved the current artifact at `c0abced3`; the shipped relay exited 0 and attested the review. Receipt: `relay-system/2026-10-09/gh1006-final-qa-r3.codex.md`. The three-round budget is exhausted. Required classified full gate and PR checks remain separate obligations.
 
 Publication integration update: development advanced to `3c829e0d`, including merged PR #1004 (`53e40d6c`). Merge `5129704d` resolved only CHANGELOG, ledger dump/derived DB and the generated relay package. The repository resolver retained the original GH-1006 admission/rating/history and all five selected issue rows; GH-1005 uses upstream’s latest existing row. The composed 18-file package matches source. All five authored production files are byte-identical to round-3-approved source; upstream driver receipt/heartbeat shapes are unchanged. Imported GH-1001/1002 seams have their own independent Approved receipt at `relay-system/2026-10-08/gh1001-1002-final-qa.md`. No fourth review round or fresh recovery budget is opened. Fresh composed launcher35, receipt-adapter223, package3 and PDDA checks pass; clone identity stayed intact. Receipts are in `TESTS-RESULTS/2026-10-09+GH-1006/integration/`. The required publication gate remains pending. #1004 adoption is now observed on this branch; #752-safe re-entry, stopped descendants, ownership and budget attribution still hold automatic continuation.
+
+Publication qualification: exact composed revision `85a03218` passed the configured full macOS push gate 409/409 in 970 seconds; Python layer21 also passed and identity stayed intact. The initial network update raced the earlier gated publisher and was rejected after GREEN. Fresh remote readback plus ancestry/unchanged-head proof justified the documented already-gated `XYZ_SKIP_PREPUSH=1` retry, which pushed normally without force. Both the rejected update and successful retry are retained in `publication/`; the first successful older-base 409/409 run is historical `first-green/`. The final evidence/status-only follow-up uses the normal deterministic documentation gate. These push gates are PR checks, not promotion evidence or permission to merge.
+
+Retirement: preserve this task clone and its disposable verification/gate clones until the PR lands and required origin verification finishes. Raw local receipts and probe fixtures remain under their `temp/` directories; no teardown is performed here. After verified landing, use `/merge-cleanup` with the repository safety checks.

@@ -36,3 +36,12 @@ identity bracket. GH-1006’s original admission and ratings survive; the native
 summary to code-QA-complete/publication-next. All five authored production files match round3
 source; imported #1004 changes have their own upstream independent QA receipt. Raw upstream logs
 and consult transcripts retain their original whitespace; authored-source whitespace checks pass.
+
+`first-green/` is the historical first published reviewed feature snapshot (409/409 in 1012s).
+`publication/` is the current-development revision85a03218 full macOS gate (409/409 in970s,
+Python layer21, intact identity). The command exited1 only because the remote branch appeared
+after its initial advertisement; gate exit0 is recorded separately. The documented already-gated
+retry used XYZ_SKIP_PREPUSH=1 on the identical SHA, after fresh remote/ancestry checks, and
+pushed successfully without force. Both logs/exit results are retained; no skipped check is
+represented as newly executed. The live self-sufficiency check uses the wrapper’s normal skip
+(unchanged turn shim/shared prompt/fixture in this PR’s net diff); this is not promotion evidence.
