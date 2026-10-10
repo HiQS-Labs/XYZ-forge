@@ -3805,7 +3805,9 @@ def cmd_roadmap_repoint(args):
                          "WHERE global_id = ?", (new, raw_text, now_iso(), row["global_id"]))
 
         perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
-        print("repointed GH-%d -> %s" % (row["gh_number"], new))
+        # An unnumbered row is selectable only by --gid; name it by GID rather than crash after the write.
+        print("repointed %s -> %s" % ("GH-%d" % row["gh_number"] if row["gh_number"] is not None
+                                      else row["global_id"], new))
     finally:
         conn.close()
 

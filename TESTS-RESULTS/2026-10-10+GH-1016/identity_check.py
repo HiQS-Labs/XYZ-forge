@@ -149,6 +149,24 @@ with tempfile.TemporaryDirectory(prefix="gh1016-") as base:
         got = onboard(folder, url, *extra)
         record(case, got == {"repos": [(want,)], "repo_slug": [want]}, got)
 
+    # 5. Final-QA r1 finding: `roadmap repoint --gid` on an unnumbered row must not crash after its
+    #    write. Runs on a temp copy of this checkout's ledger (cwd), never the ledger itself.
+    import shutil
+    ledger = os.path.join(base, "ledger-copy")
+    os.makedirs(ledger)
+    git(ledger, "init", "-q")
+    for name in ("releases.db", "releases.sql"):
+        shutil.copy2(name, ledger)
+    for doc, gid_or_num in (("PROJECT/3-COMPLETED/GH-108-GH-111-EXECUTION-TODO.md",
+                             ("--gid", "rmi-01M0H9CC0A81K3083ASEGK37HK")),
+                            ("PROJECT/2-WORKING/GH-1016-REPO-SLUG-IDENTITY.md", ("--issue-num", "1016"))):
+        os.makedirs(os.path.dirname(os.path.join(ledger, doc)), exist_ok=True)
+        open(os.path.join(ledger, doc), "a").close()
+        proc = cli(ledger, "roadmap", "repoint", *gid_or_num, "--doc-path", doc)
+        want = "repointed %s -> %s" % (gid_or_num[1] if gid_or_num[0] == "--gid" else "GH-1016", doc)
+        record("repoint-%s" % gid_or_num[0].strip("-"), proc.returncode == 0 and proc.stdout.strip() == want,
+               {"rc": proc.returncode, "stdout": proc.stdout.strip()[-160:], "stderr": proc.stderr.strip()[-160:]})
+
 summary = {"summary": True, "passed": sum(results), "total": len(results), "app_dir": APP_DIR}
 print(json.dumps(summary, sort_keys=True))
 sys.exit(0 if results and all(results) else 1)
