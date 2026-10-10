@@ -2,7 +2,7 @@
 title: "GH-1015 · Progress observer receipt path attribution"
 gh_issue: 1015
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1015
-status: Planning — independent plan QA pending
+status: Implementation — candidate verification pending
 created: 2026-10-10
 updated: 2026-10-10
 owner: Codex
@@ -18,7 +18,7 @@ Scope: observer init path representation, missed-check JSON ordering, stale GH-6
 
 | What was just completed | What's next |
 |---|---|
-| Independent baseline reproduction, intake and rating; bounded recon completed | Independent Codex plan QA before implementation |
+| Plan QA Approved; exact ledger admission; three source edits implemented | Disposable-clone candidate checks and final QA |
 
 ## Recon and root cause
 
@@ -56,4 +56,4 @@ Recurrence search: created 2026-09-26 through 2026-10-10 versus 2026-09-12 throu
 
 ## QA and handoff
 
-Plan QA: pending. Final QA: pending. Verification: baseline reproduced; candidate and qualifying gate pending. Issue remains open until landing; batch #1012 remains open for other carry-overs. Task clone retained until merge-cleanup verifies origin landing.
+Plan QA: Approved (`relay-system/2026-10-10/gh1015-plan.codex.md`, driver exit 0, attested review head 03c1b0ea). Final QA: pending. Verification: baseline reproduced; candidate and qualifying gate pending. Issue remains open until landing; batch #1012 remains open for other carry-overs. Task clone retained until merge-cleanup verifies origin landing.
