@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-10-09T10:36:44.582602+00:00",
+  "tested_commit": "a59c583eb84470c4d6942e43e8c58560eafd4a23",
+  "prs": [
+    {
+      "headRefOid": "6a9fa3e33cb8fdb82816a3dbf2a0288b3c6a5cfc",
+      "mergeCommit": {
+        "oid": "671149cd98c5cc47cf7358311da46a9243068955"
+      },
+      "number": 979,
+      "state": "MERGED"
+    },
+    {
+      "headRefOid": "bc91ec21d08c5dc649784f748f7a7604007fa674",
+      "mergeCommit": {
+        "oid": "89c7bb24d870e60bdf830341894fa4192bb31615"
+      },
+      "number": 999,
+      "state": "MERGED"
+    },
+    {
+      "headRefOid": "2496549f9b0267a8ce02ab143c5a37e5a4d650ef",
+      "mergeCommit": {
+        "oid": "bf107dd01d221c522ec1fa8186f45c9070e20fe4"
+      },
+      "number": 953,
+      "state": "MERGED"
+    },
+    {
+      "headRefOid": "8f409eac4e41b7be4db12f50c0e5c551e9afad6a",
+      "mergeCommit": {
+        "oid": "1864b5cd370013fbe431f949db2a31468cd21507"
+      },
+      "number": 966,
+      "state": "MERGED"
+    },
+    {
+      "headRefOid": "80c5566fad3967611ef14b571d0f0e6b9356e986",
+      "mergeCommit": {
+        "oid": "a59c583eb84470c4d6942e43e8c58560eafd4a23"
+      },
+      "number": 971,
+      "state": "MERGED"
+    }
+  ],
+  "command": [
+    "bash",
+    "validate.sh",
+    "--throttle"
+  ],
+  "rc": 1,
+  "identity_intact": true,
+  "before": {
+    "head": "a59c583eb84470c4d6942e43e8c58560eafd4a23\n",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git\n",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development\n",
+    "status": ""
+  },
+  "after": {
+    "head": "a59c583eb84470c4d6942e43e8c58560eafd4a23\n",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git\n",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development\n",
+    "status": ""
+  },
+  "elapsed_s": 1617.9,
+  "environment_scrubbed_names": [
+    "GIT_PAGER",
+    "XYZ_HARNESS"
+  ],
+  "environment_explicit": {
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "TICK_REPO_ROOT": "disposable full clone",
+    "RELAY_SELF_SUFFICIENCY_SKIP": "1"
+  },
+  "log_sha256": "9cc82c9605190e5b26b84f2f3cf9752f35582a748399daad0e6e2d494d6a2168",
+  "limitations": "full existing registry in disposable macOS clone; no interactive operator/deployed-skill checks"
+}

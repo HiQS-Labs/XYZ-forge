@@ -1,0 +1,46 @@
+agy-turn: SCRATCH RELOCATION (GH-113): untracked root-level tmp.json moved to /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/scratch/20261009T070348Z-90714 — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.
+agy-turn: SCRATCH RELOCATION (GH-113): untracked root-level fix_lens1.py moved to /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/scratch/20261009T070348Z-90714 — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.
+agy-turn: SCRATCH RELOCATION (GH-113): untracked root-level test_lens6.py moved to /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/scratch/20261009T070348Z-90714 — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.
+  PASS: rtl_check: root tmp.json/fix_*/test_* scratch is NOT a violation
+  PASS: rtl_check: scratch files are gone from the tree root
+  PASS: rtl_check: tmp.json relocated under .tick/scratch/ (recoverable)
+  PASS: rtl_check: fix_lens1.py relocated under .tick/scratch/ (recoverable)
+  PASS: rtl_check: test_lens6.py relocated under .tick/scratch/ (recoverable)
+  PASS: rtl_check: relocated content is intact
+agy-turn: OFF-ALLOWLIST change: offlane.md — reverting
+agy-turn: pre-revert copy of offlane.md saved under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/orphan-backups/20261009T070348Z-90714
+  PASS: CONTROL: untracked non-scratch root file (offlane.md) still violates
+agy-turn: OFF-ALLOWLIST change: src/tmp.json — reverting
+agy-turn: pre-revert copy of src/tmp.json saved under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/orphan-backups/20261009T070348Z-90714
+  PASS: CONTROL: nested untracked src/tmp.json still violates (root-level only)
+agy-turn: OFF-ALLOWLIST change: tracked.md — reverting
+agy-turn: pre-revert copy of tracked.md saved under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/orphan-backups/20261009T070348Z-90714
+  PASS: CONTROL: off-lane edit to a TRACKED file still violates (exit-6 path intact)
+agy-turn: OFF-ALLOWLIST change: .env.tmp-local — reverting
+agy-turn: pre-revert copy of .env.tmp-local saved under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/orphan-backups/20261009T070348Z-90714
+  PASS: CONTROL: dot-prefixed root file still violates
+agy-turn: SCRATCH RELOCATION (GH-113): untracked root-level tmp2.json moved to /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/scratch/20261009T070348Z-90714 — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+  PASS: rtl_enforce: lane edit + root scratch -> exit 0 (turn not failed)
+  PASS: rtl_enforce: scratch relocated (not reverted-and-lost, not committed)
+  PASS: rtl_enforce: commit contains no scratch
+  PASS: rtl_enforce: the legitimate lane edit was committed
+  PASS: CONTROL(worktree): non-scratch worktree write still sets RTL_WT_OFFLANE
+agy-turn: SCRATCH RELOCATION (GH-113): untracked root-level tmp_wt.json moved to /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh113-headless-scratch.QdD3iJ/repo/.tick/scratch/20261009T070348Z-90714 — turn NOT failed. Write scratch under $TMPDIR or .relay-scratch/ instead.
+  PASS: rtl_worktree_end: root scratch in the worktree does NOT fail the turn
+  PASS: rtl_worktree_end: worktree scratch relocated into ROOT .tick/scratch before teardown
+  FAIL: GH-1002 hyphenated root probe test-satori.mjs: expected RTL_WT_OFFLANE=0, got 1
+  FAIL: GH-1002: test-satori.mjs not relocated
+  FAIL: GH-1002 nested probe in a tracked dir tools/spike/test_satori.mjs: expected RTL_WT_OFFLANE=0, got 1
+  FAIL: GH-1002: tools/spike/test_satori.mjs not relocated
+  FAIL: GH-1002 scratch-only new dir probes/probe_x.mjs: expected RTL_WT_OFFLANE=0, got 1
+  FAIL: GH-1002: new-dir probe_x.mjs not relocated
+  PASS: CONTROL GH-1002 mixed new dir mixed/probe_y.mjs + mixed/notes.md: RTL_WT_OFFLANE=1
+  PASS: CONTROL GH-1002: mixed dir relocated nothing
+  PASS: CONTROL GH-1002: mixed dir not copied back into ROOT
+  PASS: CONTROL GH-1002 nested non-scratch tools/spike/notes.md: RTL_WT_OFFLANE=1
+
+gh113-headless-scratch: 21 passed, 6 failed

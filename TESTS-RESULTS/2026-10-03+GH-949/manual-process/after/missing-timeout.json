@@ -1,0 +1,22 @@
+{
+  "returncode": 2,
+  "sentinel_exists": false,
+  "correct_properties": {
+    "refused": true,
+    "no_spawn": true
+  },
+  "case": "missing-timeout",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/py/proc_group.py",
+    "--pgid-file",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/missing-timeout.pgid",
+    "--",
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-c",
+    "import pathlib,time; pathlib.Path('/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/missing-timeout-sentinel').write_text('spawned'); time.sleep(120)"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:18:43.548584+00:00",
+  "finished_utc": "2026-10-03T07:18:43.875811+00:00"
+}

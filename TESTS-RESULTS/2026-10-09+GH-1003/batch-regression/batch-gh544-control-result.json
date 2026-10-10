@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-09T10:28:06.950633+00:00",
+  "tested_commit": "a59c583eb84470c4d6942e43e8c58560eafd4a23",
+  "command": [
+    "bash",
+    "test/gh544-pre-push-gate.sh"
+  ],
+  "control_change": "isolated Git fixture config: init.defaultBranch=main",
+  "rc": 0,
+  "identity_intact": true,
+  "before": {
+    "head": "a59c583eb84470c4d6942e43e8c58560eafd4a23\n",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git\n",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development\n",
+    "status": ""
+  },
+  "after": {
+    "head": "a59c583eb84470c4d6942e43e8c58560eafd4a23\n",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git\n",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development\n",
+    "status": ""
+  },
+  "elapsed_s": 15.2,
+  "limitations": "focused existing suite only; original full run retains its own result"
+}

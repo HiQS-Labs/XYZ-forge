@@ -41,7 +41,7 @@ It coordinates existing specialized skills (`debug-mantra`, `recon`, `ponytail`,
 > 2. **Establish ground truth on current item (Rung 1).** For the top priority item, inspect raw artifacts and live state directly, capture a deterministic repro, trace fail paths end-to-end, and run disproofs first before theorizing.
 > 3. **Design least-mechanism & check governance (Rungs 2–3).** Apply `/ponytail` (YAGNI, standard library first, shortest diff); strictly extend existing subsystems with zero code sprawl or duplicate write paths, complying with `AGENTS.md`/`SOP.md`.
 > 4. **Stress-test via cross-model consensus (Rung 4).** Where Rung 4 requires it, fan out the plan to independent advisors (Codex + Agy via `/consult`), surface technical disagreements without averaging, and resolve all blocking feedback.
-> 5. **Prove preservation, execute & advance queue (Rungs 5–6).** Classify reversibility (`Easy`/`Costly`/`One-way door`), prove preservation invariants, apply minimal diff, verify against runnable checks, tick the item in the run checklist, and loop back to the next open item until none remain; report once at the end.
+> 5. **Prove preservation, execute & advance queue (Rungs 5–6).** Classify reversibility (`Easy`/`Costly`/`One-way door`), prove preservation invariants, apply minimal diff, verify against runnable checks, tick the item in the run checklist only with acceptance evidence, and loop back to the next open item until none remain; then audit the result against the requested outcome before reporting once at the end.
 >
 > **Overall Goal:** Complete triage queue resolved serially — each item root-cause proven, simplest architecture validated across independent models where Rung 4 requires it, and solution executed with zero code sprawl and verified preservation.
 
@@ -78,15 +78,66 @@ When `/workhorse` is invoked on a large or ambiguous problem, intake typically a
      (repo-local; never committed). If the session id was not substituted (non-Claude harnesses), use a
      UTC timestamp slug instead. One line per item, highest priority first:
      - `- [ ] W1 P0 <atomic item> — <acceptance check>` open
-     - `- [x]` done
-     - `- [-]` parked, with its `PARKED/` or issue pointer
+     - `- [x] <item> — <acceptance check> — evidence: <path, commit, URL, or quoted output>` verified done
+     - `- [-]` optional/out-of-scope or explicitly user-deferred, with its reason and pointer
      - `- [!]` blocked, with the exact blocker or decision the operator must supply
 
      This file, not the conversation, is the record of unfinished work. On resume or after compaction,
      re-read it before acting. In Claude Code, the skill's Stop hook refuses to end the turn while it has
-     a `- [ ]` line.
+     a `- [ ]` line or a `- [x]` line without an `evidence:` pointer. That hook is Claude-only and checks
+     that evidence was recorded, not that it is true; a fabricated pointer still passes it. Claude and
+     Codex follow the contract below.
    - **Incidental Findings (`PARKED/` first):** For a finding outside the current task, check for an existing record, then write a short sourced item under `<repo-root>/PARKED/` when that folder is part of the repository's governance. Do not invent the folder in another repo or open an issue merely to park the finding; follow that repo's intake policy. During triage here, promote selected work through structured intake (`PROJECT/1-INBOX/GH-<NUM>-<topic>.md` plus RELEASES roadmap); mark the PARKED item with the promoted issue/doc link. Preserve one execution record and do not duplicate a canonical plan. Work required to finish the current task stays in the active queue.
-4. **Serial Execution Loop:** Select the highest-priority `- [ ]` item and advance it through Rungs 1–6. When it resolves, tick it (`[x]`, `[-]` or `[!]`) and immediately advance to the next `- [ ]` item, without reporting or asking in between. Stop only when no `- [ ]` line remains.
+4. **Serial Execution Loop:** Select the highest-priority feasible required item and advance it through Rungs 1–6. Mark `[x]` only with acceptance evidence; mark `[!]` for a concrete external blocker (an operator decision, an unknown target, a Costly or One-way-door confirmation, or missing input/access/window), then finish independent authorized items. Required findings stay active regardless of being called housekeeping or incidental. Parking must not silently reduce authorized scope. Reconcile the outcome before stopping under the contract below.
+
+### Shared continuation and completion contract (Claude and Codex)
+
+- **Continue in the same turn:** After completing a subtask, briefly answering a status question,
+  receiving restored credentials, or producing a plan/handoff, resume the next authorized action.
+  Retry the blocked authentication step when access is restored; reconcile remote state before
+  retrying a mutation (Rung 5). A status question steers ongoing work unless it explicitly pauses,
+  cancels, or replaces the request. Do not end with an offer to continue work already authorized.
+- **Evidence before ticking:** Each completed item needs a result tied to its acceptance check and
+  current target/revision: inspectable output, artifact, test receipt, or observed state (Rung 6
+  steps 2–3 define what counts). A handoff, recommendation, attempted command, or partial preflight
+  cannot satisfy an execution outcome. Plans/handoffs satisfy only outcomes that requested them.
+- **Audit before ending:** Reconcile the checklist against the original requested outcome, subsequent
+  user instructions, acceptance criteria, and unresolved findings. Restore missing or prematurely
+  checked required items to the active queue and execute feasible work. An empty checklist is
+  insufficient evidence of completion. Keep genuinely optional work separate; only explicit user
+  deferral can remove required work from the current scope.
+- **Operational gates need operational evidence:** An acceptance check that requires a measurement
+  (active-job inventory, a captured baseline, quiescence) stays open until that measurement is taken
+  and meets the criterion. Passing CI or static checks does not substitute for it; any live activity
+  the criterion forbids keeps the gate unfinished until it resolves and is rechecked. Discovering such
+  activity does not authorize cancelling it.
+- **Stop only for verified completion, explicit user pause/cancellation, or a concrete external
+  blocker:** Identify the exact unfinished action, why it cannot proceed, and the input/access/window
+  needed to resume. Finish independent authorized work first. An awaited operator decision or a
+  Rung 5 Costly/One-way-door confirmation is an external blocker; a recoverable local failure or an
+  intermediate milestone is not. Record a truthful unfinished state if a runtime limit forces the
+  turn to end; exhaustion is not completion.
+- **Continuation preserves authorization:** It grants no permission to deploy, send messages, delete
+  data, bypass gates, or expand scope. Honor existing approvals, safety controls, retry limits, and
+  deployment windows; a future window means finish independent work now and hold deployment until
+  the authorized time. Do not keep a busy loop running while awaiting an external dependency.
+
+**Instructions versus runtime enforcement.** These rules guide Claude and Codex; this skill does not install a
+Codex runtime gate. Its `hooks: Stop` frontmatter and `stop-hook.sh` are for Claude Code, not automatic
+Codex enforcement. Where available and explicitly requested, use Codex's native Goal mechanism with
+the same outcome, evidence, scope, constraints and blocker conditions; respect its budget and lifecycle
+controls, and audit evidence before marking it complete. An ordinary task request does not authorize
+creating a Goal. Goals can continue an idle active thread within runtime limits, but cannot guarantee
+correct completion judgments. Separately configured Codex Stop hooks can request continuation and
+require hook configuration and trust; do not invent a hook, bypass trust, or install one implicitly.
+See official [Goals](https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex) and
+[hooks](https://learn.chatgpt.com/docs/hooks) documentation before configuring those mechanisms.
+
+**Claude runtime.** The existing Stop hook blocks on open checklist lines and on ticked lines with no
+`evidence:` pointer; it checks that evidence was recorded, not that it is true. Claude does not call Stop on user interrupts; API failures use StopFailure, which ignores
+continuation decisions, so retry the authorized action when access is restored. When available and
+explicitly requested, Claude's `/goal` shortcut adds a session-scoped prompt-based Stop check; it
+still relies on model judgment and does not expand authorization. See [Claude hooks](https://code.claude.com/docs/en/hooks#stop).
 
 ---
 
@@ -265,30 +316,41 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      artifact. Post-deletion absence alone cannot prove that nothing was lost; the proof must already
      exist from Rung 5.
 3. **Ledger Closeout & PDDA Reconciliation:**
-   - *Doc Promotion:* If a working doc was created, update frontmatter to `status: completed` and move to `PROJECT/3-COMPLETED/` (or let `wave_reconcile` handle it).
+   - *Doc Promotion:* Only after the outcome audit and the repository's landing contract permit completion, update a working doc to `status: completed` and move to `PROJECT/3-COMPLETED/` (or let `wave_reconcile` handle it).
    - *Ledger & Lifecycle Integrity:* Run the applicable canonical repository checks (e.g. `python3 utils/py/releases_app.py check`, `utils/pdda/pdda.sh roadmap-coverage`, `roadmap`, `stale`, `issue-doc-sync`, and `utils/pdda-local-checks.sh`). Inspect reported warnings/findings rather than relying on exit code alone, and ensure all ledger invariants, milestone mappings, and doc sync contracts are satisfied.
 4. **Tick & Continue, then Report Once (GH-911):**
-   - Per item: tick its run-checklist line and continue with the next `- [ ]` item. A resolved item is an
-     intermediate checkpoint, never the end of the turn; do not summarize to the operator or ask what to do
-     next between items.
-   - When no `- [ ]` line remains, present one concise completion summary covering every item:
+   - Per item: apply the evidence-before-ticking rule above, update the run checklist and immediately
+     continue the next feasible required item. A repair, plan, or handoff is an intermediate checkpoint.
+   - Before reporting completion, perform the outcome audit above, including operational/governance
+     findings. Then present one concise completion summary covering every item:
+     - Outcome audit result: requested outcome vs. delivered, with the evidence pointer per item.
      - Root cause & ground truth established (Rung 1).
      - Minimal diff & reused modules (Rung 2).
      - Governance checks passed (Rung 3).
      - Consult reconciliation takeaways (Rung 4).
      - Preservation proof, reversibility classification, and confirmation result (Rung 5).
-     - Test execution and verification results (Rung 6).
+     - Test execution and verification results (Rung 6), plus any genuinely optional follow-ups.
+   - If paused or externally blocked, report the accurate unfinished state and precise resumption
+     requirement instead of claiming completion.
 5. **Re-Entry & Autonomous Loop:**
-   - **Direct invocation (GH-911):** the run checklist is the resume target. While it has a `- [ ]` line,
-     finishing an item is not completion: take the next open item. To hand control back early, record the
-     reason on the line as `[!]` (blocked: needs an operator decision, an unknown target, or a Costly or
-     One-way-door confirmation) or `[-]` (parked), then report.
-   - **Parent orchestrator or batch queue:** when `/workhorse` is invoked to diagnose, repair, or resolve an item within a parent orchestrator or multi-item queue (`merge-cleanup`, `jog`, `marathon`, `/10days`):
-     - **A repair is an intermediate checkpoint, never the end of the turn.** Do NOT stop after committing a repair to report to the operator or ask what to do next.
-     - Record the outcome in the item's attempt record (e.g. `finish --outcome resolved` or `parked`).
-     - **Immediately re-invoke the parent orchestrator with `--resume`** (e.g. `python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --execute --resume`).
-     - **Autonomous Loop Invariant:** Repeat the `drive → repair/park → --resume → loop` cycle autonomously until the entire batch is completed, all remaining items are parked/held, or an unresolvable external blocker requires operator escalation.
-     - **Anti-Abandonment:** Completing one sub-item repair while other queue items remain unattempted is an active in-flight state, not a milestone to prompt the operator.
+   - **Direct invocation:** re-read the run checklist on resume, reconcile it with the request, and
+     continue feasible required work. `[!]` records a blocker; `[-]` is not an escape from required scope.
+   - **Parent orchestrator or batch queue** (`merge-cleanup`, `jog`, `marathon`, `/10days`): record the
+     evidenced item outcome in the parent's attempt record (e.g. `attempt_record.py finish --outcome
+     resolved|parked` for merge-cleanup), then immediately re-enter the parent by the mechanism that
+     matches the item's actual state, never a universal resume:
+     - `merge-cleanup`: `python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --execute --resume`
+     - `jog`: pick the Recovery Verb from `skills/2-daily/jog/SKILL.md` that fits what must be redone:
+       `releases jog resume <GH-NUM>` only reconciles state and re-projects a valid terminal receipt after
+       a crash/restart; `releases jog retry-gate <GH-NUM>` re-runs the gate on the same head when the fix
+       landed outside the build; `releases jog retry-build <GH-NUM>` is the real rebuild.
+     - `marathon` / `/10days`: there is no resume or re-fire verb. After a material correction, re-run
+       the affected check once within `LANE_MAX_ATTEMPTS`; a parked lane stays held and returns through
+       the standing queue and the operator's firing confirmation (`start-marathon` recovery rules).
+     Respect parent safety/retry limits. Repeat `drive → repair → re-enter` until the requested batch
+     outcome passes the completion audit, the user pauses/cancels, or a concrete external blocker
+     prevents the remaining work after independent items finish. A held/parked queue alone does not
+     prove completion. Keep required unresolved findings active in the parent record.
 
 ---
 

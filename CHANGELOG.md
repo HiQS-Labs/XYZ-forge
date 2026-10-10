@@ -1,8 +1,127 @@
 # Changelog
 
+## 2026-10-09 — Surgical SWE governance (GH-1007)
+
+Extended SWE from planning to implementation and review, with explicit safety, security,
+maintainability and performance tradeoffs. New tests and blocking CI placement require
+separate justification; performance baselines remain advisory and reuse existing task
+evidence. Replaced rigid scaffolding with risk-scaled guidance while retaining mutation,
+migration and intervention-deadline safeguards. Source format passes, missing-name red
+control fails, seven manual instruction scenarios are recorded, and plan QA is Approved.
+Evidence: `TESTS-RESULTS/2026-10-09+GH-1007/`; final QA precedes PR readiness.
+
+## 2026-10-08 — Vendored marathons: own root despite a global XYZ_HARNESS; probes no longer sink a phase (GH-1001, GH-1002)
+
+A vendored `marathon-drive` on a Mac that exports `XYZ_HARNESS` resolved its repo root to the global
+harness clone and parked the lane on that repo's issue. The cause was `e53f5d06` (GH-396 review
+fixups, 2026-09-02), which put the `XYZ_HARNESS` check ahead of the running script's own `.xyz/` copy
+in `harness_home()`; the running copy now wins and `XYZ_HARNESS` is the fallback. The issue-closed
+preflight now queries the lane's target repo and its park message names that repo.
+In isolated worktree turns, untracked builder probes with hyphenated names (`test-satori.mjs`), nested
+probes (`tools/spike/test_satori.mjs`) and wholly new all-scratch directories are relocated to
+`.tick/scratch/` with a warning instead of failing the turn; mixed directories, nested non-scratch
+files and the in-ROOT path still fail as before. A lane at its attempt cap now parks before any relay
+commit, and dry-run prints attempts against the cap. Containment failures still count toward the cap
+(GH-45). Verification: gh396 42/42 and gh113 27/27 with red controls on the base revision (and a
+mutation witness for the mixed-directory refusal); manual checks for the issue query and cap ordering,
+red on base; focused suites green in a disposable clone. Evidence under `TESTS-RESULTS/2026-10-08+GH-1001/`
+and `+GH-1002/`. Reversibility: Easy.
+
+## 2026-10-07 — ADK lessons: bounded command and retained trajectory assessment (GH-998)
+
+Recorded five selected harmless command examples and their refusal controls, plus a retained real
+marathon review/attestation path and a separate red advance-gate witness. The report preserves
+different attempt IDs and missing token/gate evidence as unknown. Existing canonicalization digests
+match; an in-memory altered-text control fails. No runtime, SDK or test-suite change. Evidence and
+source revisions: `TESTS-RESULTS/2026-10-07+GH-998/`.
+
+## 2026-10-07 — Merge-cleanup: continuation contract for reversible steps (GH-990)
+
+The merge-cleanup drive loop now names what a merge-cleanup request authorizes and which reversible
+steps proceed without asking: `--execute` after the dry run, `--resume --execute` after exit 3, fixing
+the primary, the batch issue, bounded repair rungs and Trash teardown of verified-clean checkouts. Real
+decisions are a closed list: out-of-queue PRs, override flags, preserved checkouts, an exhausted repair
+budget, Costly or One-way-door actions, and a classifier block that survives its retry. Independent
+work finishes before any ask. Documentation only; the parity guard suite stays green.
+
+## 2026-10-06 — Workhorse: Claude Stop guidance preserves required scope (GH-985)
+
+The existing Claude Stop-hook message now resumes authorized feasible required work, demands evidence
+and an outcome audit, retains required findings, and permits a genuine external blocker after independent
+work. Optional/deferred markers no longer advertise a parking escape. The decision logic is unchanged;
+Claude runtime notes explain the documented cap, interrupt/API-error limits and explicitly requested
+`/goal`. No mod, new gate or implicit activation. Bounded ten-case protocol checks and old-message red
+control are retained under `TESTS-RESULTS/2026-10-06+GH-985/`; these do not guarantee live multi-turn behavior.
+
+## 2026-10-06 — Workhorse: Codex completion follows the requested outcome (GH-983)
+
+Workhorse now resumes authorized work after subtasks, status answers, restored access and handoffs,
+and reconciles evidence, acceptance criteria and required findings before ending. Checked boxes and
+parked required work cannot replace completion; operational preflight needs job/worker inventory and
+a service baseline. Authorization and deployment windows remain binding. The text distinguishes
+instructions from explicitly activated native Goals and configured, trusted hooks. The Claude Stop hook
+now also blocks a stop while a ticked `- [x]` line has no `evidence:` pointer, and its hand-back message
+names `[!]` only (`[-]` is optional/user-deferred work, not an escape); installer bytes are preserved.
+Bounded decision fixtures cover the seven scenarios and operational
+regression, with a missing-evidence red control; base also passes, so no measured reliability gain is
+claimed. Raw quick_validate retains its existing Claude-hooks rejection; metadata projection passes.
+Evidence: `TESTS-RESULTS/2026-10-06+GH-983/`.
+
+## 2026-10-05 — relay-drive: receipt-only commits no longer count as convergence (GH-976)
+
+The GH-115 round-cap extension treated any HEAD movement as progress, and every relay turn commits
+its own transcript in the sampled repo, so a lane that repaired nothing kept being extended to the
+hard ceiling (user-sage-backend#75: cap 10 on transcript commits alone). `utils/py/relay_drive.py`
+now counts the HEAD arm only when a changed path lies outside `relay-system/`, `marathon-system/`,
+`.tick/`, `.relay-scratch/`, `TESTS-RESULTS/` or the relay file itself; the `[x]` resolved-items arm
+and the hard ceiling are unchanged. Verification: five manual controls on base and candidate plus
+the existing GH-115 suite. Receipts: `TESTS-RESULTS/2026-10-05+GH-976/`.
+
 ## 2026-10-05 — Defer HiQS advisory-intake classifier revisit (GH-974)
 
 Captured Needle-fork #71 as a deferred RELEASES roadmap item, with real chain evidence and measured reviewer burden required before an advisory contribution-screening experiment. Resolver, attestation and publishing boundaries remain deterministic. Verification: targeted PDDA checks and RELEASES consistency/readback; invalid triage rating fails the frontmatter red control. Receipts: `TESTS-RESULTS/2026-10-05+GH-974/`.
+
+## 2026-10-04 — Close oracle CLI cancellation gap from PR953 QA (GH-949)
+
+Both oracle CLI entry points now use the existing cancellation handler, allowing the
+shared runner to clean up session-isolated commands on TERM/INT and retain143/130.
+Base comparison separates an inherited direct-signal gap from the outer-cap regression.
+All eight repaired manual controls and three existing focused suites pass; exact-source
+red controls and owned-process cleanup are retained under `TESTS-RESULTS/2026-10-04+GH-949/`.
+The repair is Easy to reverse at the two entry points. The bet is that existing cleanup
+works under catchable cancellation; any surviving owned process is the revisit trigger.
+Renewed Codex QA is attested Approved round1. Full macOS push gate GREEN in808s
+on `9e7eaddc`;407 shell suites and21 Python tests pass with unchanged clone identity.
+Hosted smoke succeeds on that SHA; raw receipts and provenance are retained.
+PR953 is ready awaiting merge. Nonblocking config S1 is parked.
+
+## 2026-10-04 — `/xyz-status`: a read-only Claude Code mod for in-flight status (GH-964)
+
+Claude Code 2.1.287 added **mods**: plugins whose TypeScript hooks run inside Claude Code. The new
+`xyz-mod` skill ships one, under `skills/2-daily/xyz-mod/mod/`, loaded with `claude --plugin-dir`.
+It adds `/xyz-status`, which runs at once, even mid-turn, costs no model turn, and replies when its readers finish (15 s cap each):
+
+- **What it prints:** the repo root it read, then the recent hosted runs on `development`
+  (`gh run list`), `tick` claims and marathon/relay driver state (`marathon-ls.sh`). It runs those
+  existing readers and has no logic of its own.
+- **Read-only:** it registers no tool-call, prompt or transcript hook, so it cannot approve, block or
+  rewrite anything. Rollback is deleting the folder (Easy).
+- **Failures stay visible:** a reader that fails, times out or prints nothing shows its error in its
+  own section; the other sections still answer.
+- **Verification:** a manual checklist in the skill (no new suite, GH-831). Not covered: relay
+  threads no driver runs, and the issue's optional `/xyz row N`.
+
+## 2026-10-05 — Task clones get one naming formula (GH-970)
+
+Each agent used to name and place task clones its own way, so a cleanup on 2026-10-05 found 50 kept clones
+across three folders under mixed names. `/start-task` step 3 now sets the rule, and `SOP.md`'s example matches it:
+
+- **Folder:** `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, placed beside the primary clone.
+- **Branch:** the same string with a `feat/`, `fix/`, `chore/` or `docs/` prefix. `AGENTS.md`'s branch
+  carve-out now lists all four types.
+- **Edge cases:** the description is the issue's capture-doc slug, and the date is the local date of first
+  provisioning; a multi-issue group uses its lowest issue number; helper clones end in `-gate` or `-verify` and are
+  never resumed; an existing task folder is resumed, never duplicated, and two candidates go to the operator.
 
 ## 2026-10-03 — XYZ-forge is the upstream again: one central publisher for every standalone repo (GH-955)
 
@@ -75,6 +194,26 @@ Verification:
   kind, stale row, uncommitted registry, child deletion and re-addition, and drop/re-add.
 - `test/gh620-skills-army-mini-sync.sh` 29/0, including the retired-by-default refusal.
 - Red controls: removing carry-forward and substring origin matching each fail the suite.
+
+## 2026-10-03 — ATE cancellation, oracle observation and gate environment (GH-949, GH-912)
+
+The GH-435 campaign exposed continuing child processes after cancellation, timed-out oracle
+commands that could pass before a late write, invisible directory-link and linked Git configuration
+changes, and ATE admission/record errors. The shared process-group helper now cleans up on
+exceptional unwind; ATE and its CLI wrapper translate INT/TERM into bounded cleanup. Oracles use
+that helper for every idempotence repetition and refuse incomplete observations. Tree snapshots
+include directory links, and host identity resolves shared and per-worktree Git configuration.
+
+ATE rejects an empty grid before writes, reports no-work budgets, appends a failure row on launch
+failure or cancellation, and emits actual UTC timestamps. Discovery tolerates an unset HOME;
+the existing runner envelope removes inherited harness selectors while retaining the explicit
+harness database override and per-case fixture assignments.
+
+This is a Costly shared-contract bet: existing helpers suffice without another executor, suite,
+registry entry or schema. Revert the focused repair commits on caller-shape or containment
+regression. Normal successful background-child policy is unchanged; forced SIGKILL and deliberate
+session escape are outside this cancellation contract. Before/after controls and final validation
+are retained under `TESTS-RESULTS/2026-10-03+GH-949/`; independent final QA is Approved and the full local push gate passed (870s, no bypass).
 
 ## 2026-10-02 — relay-xyz setup skips install.sh on Skills Army-managed Macs (GH-938)
 
@@ -1140,6 +1279,19 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
+
+## [Unreleased] - 2026-10-09
+
+### Fixed
+- **GH-1005: merge-cleanup: park documentation-only local commits on temp branches.** (express hotfix, GH-267 lane; existing suite test/gh436-merge-cleanup.sh as the landing gate.)
+
+## [Unreleased] - 2026-10-07
+
+### Fixed
+- **GH-995: test(gh620): skills-army-mini payload pin is red since GH-988 added BOT-DAILY-HEALTH-CHECK.md.** (express hotfix, GH-267 lane; existing suite test/gh620-skills-army-mini-sync.sh as the landing gate.)
+- **GH-993: skills-army-hq: intake --apply leaves Git Pulse collection dirty, which stalls the hourly pulse entirely; commit own paths when the root is a git repo.** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
+- **GH-989: skills-army-hq: rename bot-monitor-prompt.md to BOT-DAILY-HEALTH-CHECK.md.** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
+- **GH-988: skills-army-hq: ship bot-monitor-prompt.md, a paste-able daily QA prompt for always-on agents (foreign skill folders + broken symlinks).** (express hotfix, GH-267 lane; existing suite test/skills-army-hq.sh as the landing gate.)
 
 ## [Unreleased] - 2026-09-24
 
