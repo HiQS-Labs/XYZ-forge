@@ -2,7 +2,7 @@
 title: "GH-1015 · Progress observer receipt path attribution"
 gh_issue: 1015
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1015
-status: Verification — gates passed; PR publication pending
+status: Active — PR ready; awaiting merge
 created: 2026-10-10
 updated: 2026-10-10
 owner: Codex
@@ -18,7 +18,7 @@ Scope: observer init path representation, missed-check JSON ordering, stale GH-6
 
 | What was just completed | What's next |
 |---|---|
-| Full hooked macOS gate 409/409; intact identity/source hashes; branch published | Publish evidence-only tail through docs gate, open ready PR |
+| Gates passed; evidence-only docs push passed; PR #1017 open to development | Merge handoff; issue stays open until landing, then reconcile and retire task clone |
 
 ## Recon and root cause
 
@@ -57,3 +57,8 @@ Recurrence search: created 2026-09-26 through 2026-10-10 versus 2026-09-12 throu
 ## QA and handoff
 
 Plan QA: Approved (`relay-system/2026-10-10/gh1015-plan.codex.md`, driver exit 0, attested review head 03c1b0ea). Final QA: Approved (`relay-system/2026-10-10/gh1015-final.codex.md`, driver exit 0, attested review head b59b42ee; production source hashes unchanged). Verification: candidate valid counts [1,1,1], eight negative cases unverified, all three JSON emissions sorted; base/old-init/old-sort sensitivity controls failed as expected. Codex-turn 43/43, GH-609 33/33, package freshness 3/3 and Bash syntax passed in disposable clone with intact identity. Full macOS hooked gate passed 409/409 on 039de104 in 878s with intact identity and matching approved source hashes. GH-75 dashboard initial Broken-pipe assertion failure passed the built-in sequential retry; both attempts remain reported. See TESTS-RESULTS/2026-10-10+GH-1015/SUMMARY.md and provenance.jsonl. Issue remains open until landing; batch #1012 remains open for other carry-overs. Task clone retained until merge-cleanup verifies origin landing.
+
+
+## Ready PR handoff
+
+[PR #1017](https://github.com/HiQS-Labs/XYZ-forge/pull/1017) targets development and closes only #1015. Plan/final QA Approved; full local hooked gate 409/409 on 039de104, intact identity/source hashes; evidence-only update df1b5a8d passed its normal documentation gate (62s). The dashboard pooled failure/serial pass remains visible in retained evidence and PARKED. Hosted advisory status is checked on the emitted head, not inferred from workflow configuration. Retain the task clone until merge-cleanup verifies origin landing; then retire it via merge-cleanup. No merge or post-merge reconciliation has been performed by this task.
