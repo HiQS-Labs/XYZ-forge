@@ -38,3 +38,7 @@ sentinel question re-opens.
   is the hazard GH-139 exists to ban, still live in this suite. Fix is to write `$out` to a file
   in $WORK and grep the file. Pre-existing and unrelated to GH-346 Phase 3a — noticed because the
   suite failed a gate run on a branch that had not touched it.
+
+## Repeat observed during GH-1015 (2026-10-10)
+
+- `test/gh75-dashboard.sh:11` retains `printf '%s' "$1" | grep -Fq -- "$2"` under pipefail. The full macOS gate on 039de104 reported `printf: write error: Broken pipe` and failed its trust-header assertion; its built-in sequential retry passed and the final gate passed 409/409. Source: `TESTS-RESULTS/2026-10-10+GH-1015/gh75-full-gate-failure.log`, full-gate-push.log.gz and provenance.jsonl. Dashboard/test source was unchanged by GH-1015. The runner's generic “driver-lock contention” diagnosis is not established by this artifact. This repeats the quiet-grep hazard already noted above and addressed in GH-807's separate suite. Outside the three observer-review edits; no longer a publication blocker after the existing gate's successful retry. Next CI triage: verify the helper failure and Small membership, then apply AGENTS' existing tier/retirement policy; do not add a new suite or move it into the driver-lock lane merely on the generic warning.
