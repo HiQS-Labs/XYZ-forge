@@ -113,4 +113,12 @@ Read the complete seeded packet and relay, all eight add-on files, canonical pla
 
 Relay closed (Approved), no further review turn needed. NEXT Producer identifies codex-producer as owner of outstanding disposable-clone qualification. Per the current user instruction, close with the actual env-pinned `tick done RELAY-gh982-merge --agent codex`; never release to an actor named done. This supersedes the Producer's embedded suggestion to leave completion to the shim. The harness owns the one-file commit.
 
+
+### Attestation · relay-drive — 2026-10-10T04:36:17Z
+task: RELAY-gh982-merge
+reviewer: codex
+status: Approved
+reviewed-head: 7b1673f3be8713adbd9a361d8d64eae191b01a63
+added-range: 13521+4462
+added-sha256: c570f2849a437c033a6b06fced290d8ddf4c7bcaa6e397b797520fa0204dd91a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
