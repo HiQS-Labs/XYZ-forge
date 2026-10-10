@@ -26,6 +26,6 @@ suite, gate, runner, registry entry or product behavior is added.
 Blast radius: existing gh609 static contract and fixture inputs only. Reversibility
 Easy: one-file adaptation. The bet is that assertions pin the intentionally changed
 policy without dropping its safety guarantees; independent review must validate
-that bet. The new full gate remains pending.
+that bet. The full retry now passes 410/410 on 59a924ba; normal publication succeeds, with unchanged Git identity. The retained full result and provenance are in this directory; hosted landing qualification remains outstanding.
 
 Independent [Codex repair QA](../../relay-system/2026-10-09/gh982-gate-repair.codex.md) is Approved with mechanical attestation; driver exits 0. This approves the one-file adaptation and retained safety properties, not full qualification.
