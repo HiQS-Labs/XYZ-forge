@@ -1,0 +1,40 @@
+{
+  "pr": 1014,
+  "head": "f398b11218708b88b3b2892d9c434c7308eba7d8",
+  "reviewed_head": "c0abced3ae47fc9e0e4345f55eb7fc8cdf049e6d",
+  "changedFiles": 142,
+  "all_pages_fetched": true,
+  "owned_source_vector": [
+    {
+      "path": "relay-automation/README.md",
+      "reviewed_blob": "2ebd6232cb863ae6fd161c297773f82d57c0edc0",
+      "current_blob": "2ebd6232cb863ae6fd161c297773f82d57c0edc0",
+      "same": true
+    },
+    {
+      "path": "relay-automation/marathon.sh",
+      "reviewed_blob": "74c077bfe48085791ce8a4ff34343f2566ea5056",
+      "current_blob": "74c077bfe48085791ce8a4ff34343f2566ea5056",
+      "same": true
+    },
+    {
+      "path": "skills/1-hourly/relay-xyz/SKILL.md",
+      "reviewed_blob": "486760217d17c10130fa6e6d6a24949143f9c1b9",
+      "current_blob": "486760217d17c10130fa6e6d6a24949143f9c1b9",
+      "same": true
+    },
+    {
+      "path": "test/gh306-registry-bidirectional.sh",
+      "reviewed_blob": "a58b14ea674a9f4fe4d911dbf353f266f7c20f50",
+      "current_blob": "a58b14ea674a9f4fe4d911dbf353f266f7c20f50",
+      "same": true
+    },
+    {
+      "path": "validate.sh",
+      "reviewed_blob": "19293c6eb27db221086f5ee7666ba4cc691efb3a",
+      "current_blob": "19293c6eb27db221086f5ee7666ba4cc691efb3a",
+      "same": true
+    }
+  ],
+  "package_regenerated_and_current_composition_receipts_required": true
+}

@@ -1,0 +1,38 @@
+{
+ "attempts": [
+  {
+   "by": "caller",
+   "clone_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/merge-cleanup-2026-10-09/pr-982-7ea3c7d3-bfec72my",
+   "commit": "c4ef7f3dbd2ed937150fd84d3aef0f0d2335946e",
+   "finished": "2026-10-09T21:24:05-0700",
+   "head_sha": "7ea3c7d3c76a7225b790e2fafd635eb1ded8d1d2",
+   "outcome": "resolved",
+   "reason": "resolved through the writer path; merge commit c4ef7f3dbd",
+   "rung": "ponytail",
+   "started": "2026-10-09T21:23:59-0700"
+  },
+  {
+   "by": "caller",
+   "clone_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/merge-cleanup-2026-10-09/pr-982-7ea3c7d3-bfec72my",
+   "commit": "1f749678477cb1ab50f2ba5be72e15992b6a5131",
+   "finished": "2026-10-09T22:36:32-0700",
+   "head_sha": "209fd0bd675a7134bf26440777fd5c825e21e577",
+   "outcome": "resolved",
+   "reason": "Reviewed existing-SWE-check adaptation and final development integration; full push gate 410/410 on 59a924ba; receipt-only final head published with unchanged code/identity.",
+   "rung": "ponytail",
+   "started": "2026-10-09T21:59:27-0700"
+  }
+ ],
+ "base_sha": "7ea3c7d3c76a7225b790e2fafd635eb1ded8d1d2",
+ "conflict_files": [
+  "LEADERBOARD.md",
+  "releases.db",
+  "releases.sql"
+ ],
+ "last_side_touched": {},
+ "merge_base": "",
+ "pr": 982,
+ "pre_repair": {},
+ "repo": "https://github.com/HiQS-Labs/XYZ-forge.git",
+ "schema": 1
+}

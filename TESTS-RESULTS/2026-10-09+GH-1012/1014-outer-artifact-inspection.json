@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-10T07:04:32.916726+00:00",
+  "pr": 1014,
+  "head": "f398b11218708b88b3b2892d9c434c7308eba7d8",
+  "gated_source": "85a03218654e283abde30e4a27d16e056b19b3d6",
+  "reviewed_owned_sources_byte_identical": true,
+  "full_gated_sources_and_archive_byte_identical": true,
+  "retained_publication_logs_hash_match": true,
+  "configured_full_gate": "409/409, gate_rc0; network push initially rc1, followed by disclosed already-gated same-SHA retry, then normal docs gate",
+  "actual_final_head_CI": {
+    "conclusion": "success",
+    "headSha": "f398b11218708b88b3b2892d9c434c7308eba7d8",
+    "status": "completed"
+  },
+  "pagination_files": 142,
+  "runtime_added_files": [],
+  "source_receipts": "TESTS-RESULTS/2026-10-09+GH-1006/publication/provenance.jsonl"
+}

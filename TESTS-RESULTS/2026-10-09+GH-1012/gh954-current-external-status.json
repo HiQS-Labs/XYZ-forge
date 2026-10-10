@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-10T05:50:46.468496+00:00",
+  "upstream_prs": [
+    {
+      "number": 6,
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-10-05T16:10:48Z",
+      "merge_commit_sha": "c7e59af201947183037caeda0d57b146ca56fd0c",
+      "html_url": "https://github.com/NeochromeTeam/hiqs-ai-resolve/pull/6"
+    },
+    {
+      "number": 29,
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-10-04T02:23:57Z",
+      "merge_commit_sha": "428370572f728f9ddcd54571f9263adb7ad69e8d",
+      "html_url": "https://github.com/NeochromeTeam/hiqs-ai-resolve/pull/29"
+    }
+  ],
+  "reviewed_docs": [
+    {
+      "path": "docs/CONSUMER-PROTOCOL.md",
+      "commit": "ee86c053d7b5f2410b39ec7cab6e4231bbf7e696",
+      "sha256": "0c90b22dcf0b9c9a646f2971c18d35e39876fd53d2d5658e82330c37a74193db",
+      "retained": "hiqs-CONSUMER-PROTOCOL.md"
+    },
+    {
+      "path": "docs/qa-recipe-fallback-20261005/README.md",
+      "commit": "ee86c053d7b5f2410b39ec7cab6e4231bbf7e696",
+      "sha256": "89b9ff65e48ff7d866b2fef1bd193bc850c8531b3a2ac4720ae8ea0db2d55482",
+      "retained": "hiqs-README.md"
+    },
+    {
+      "path": "docs/qa-recipe-fallback-20261005/provider-smoke.jsonl",
+      "commit": "ee86c053d7b5f2410b39ec7cab6e4231bbf7e696",
+      "sha256": "52668aed216dfafb2ed230d45ab649149aed17f902c4293ca39eb66572850e7a",
+      "retained": "hiqs-provider-smoke.jsonl"
+    }
+  ],
+  "scope": "Bounded current upstream source/document review, not an exhaustive catalog audit. PR6/29 are merged; retained consumer docs explicitly identify the offline vector as fictional source/fixture proof. Independent smoke receipts cover other providers, not the required Claude advisory exact recipe pilot. No provider called."
+}
