@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -117,5 +117,19 @@ and ledger conflicts: preserved both entries and used existing resolve_ledger_co
 replay GH-1010 onto the newer ledger; logs retained. Rating 65/55/50/75 remains.
 Re-review F1 and integration against the same requirements; prior runtime checks remain on the
 same implementation bytes. Full gate will run once at final push. Do not rerun tests here.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: F1 is resolved; the integrated policy implementation, consumer instructions and retained evidence meet the implementation-review requirements. Final execution gates remain the harness's responsibility.
+swept file: yes
+
+- [Pass] **F1 closed.** skills/2-daily/merge-cleanup/SKILL.md:228 now says “through `execute_pr_merge`, using the method selected by the project policy resolver”; its continuation contract says “merges land on a remote branch using the policy-selected method.” Read the complete cleanup skill, not only these replacements.
+- [Pass] **Shared enforcement and consumers remain coherent.** Whole-file sweep of merge_cleanup.py and the cleanup/deep/vendor skills plus deep agent template found no additional in-scope pre-existing defect. merge_cleanup.py:150 owns strict resolution, :194 guards the merge writer, :908 and :931 resolve at landing entry and per PR, and the final writer receives `strategy=args.strategy` rather than freezing the effective default. Deep Phase 3 explicitly says “Missing ancestry is not proof of missing content or a retroactive policy violation”; vendor instructions retain “If they decline or have not chosen, leave the file absent.” No policy-based relaxation of teardown evidence was found.
+- [Pass] **Seeded reporter selects merge.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$PWD" --show-merge-policy`, with TMPDIR pinned to .relay-scratch/tmp; exit 0. Decisive output: `{"preserve_commit_history": true, "strategy": "merge", "source": "/private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.ET6qT7/.merge-cleanup.json"}`.
+- [Pass] **Retained evidence and integration record remain internally consistent.** Read-only `python3 -` probe parsed every nonempty provenance.jsonl row, required nonempty artifact bytes and asserted `hashlib.sha256(b).hexdigest()==row['sha256']`, then compared identity-before/after bytes; exit 0, output “12 nonempty artifact digests match; clone identity snapshots match”. The same probe opened `sqlite3.connect('file:releases.db?mode=ro',uri=True)`, executed `select * from roadmap_items where gh_number=1010`, and asserted exactly one row; output retains the working-plan doc_path and ratings 65/55/50/75, override null. integration.log quotes “keep=theirs generation ours/theirs=(1533, 1564) replay=1 op(s)” and successful writer add/rate/update/rebuild. SUMMARY.md attributes the 180-test run and witnessed enforcement-removal red control to aa479b18. Python startup emitted Xcode cache/event-stream warnings; the probe completed successfully.
+- [Unverified — needs clone run] No suites, fixtures, git commands or hosting mutations were run here. The final gate on the integrated committed state is still outstanding. Base-to-HEAD diff, unchanged-runtime-byte claim and revision ancestry were not independently measured because git is prohibited in this turn; retained evidence is not a claim of a new integrated-head test run. Graph search found this worktree unindexed and indexing was denied by approval policy, so complete source reads were used.
+
+Relay closed (Approved), no further review turn needed. Handing the token to Producer (codex-producer) for the final harness gate and publication workflow. Only this relay file was edited.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
