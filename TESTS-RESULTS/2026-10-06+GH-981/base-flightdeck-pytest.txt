@@ -1,0 +1,946 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+rootdir: $GATE_CLONE/temp/gh981/base-clone
+configfile: pytest.ini
+collected 20 items
+
+test/flightdeck/test_work_status.py .FF...........FF.F..                 [100%]
+
+=================================== FAILURES ===================================
+_____ WorkStatusTests.test_descendants_are_stopped_even_when_parent_exits ______
+
+self = <test_work_status.WorkStatusTests testMethod=test_descendants_are_stopped_even_when_parent_exits>
+
+    def test_descendants_are_stopped_even_when_parent_exits(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / "utils/py/releases_app.py"
+            script.parent.mkdir(parents=True)
+            (root / "releases.db").write_bytes(b"nonempty sentinel")
+            for inherited in (True, False):
+                pid_file = root / "child.pid"
+                script.write_text("import subprocess,sys,pathlib\n"
+                    "def load_work_evidence(path,as_of=None):\n"
+                    f" p=subprocess.Popen([sys.executable,'-c','import time;time.sleep(10)'],stdout={'None' if inherited else 'subprocess.DEVNULL'})\n"
+                    f" pathlib.Path({str(pid_file)!r}).write_text(str(p.pid))\n"
+                    " return {'schema_ready':True,'issues':[{'number':1}]}\n")
+>               report = read_work_status(root, root, time.monotonic() + 0.3)
+
+test/flightdeck/test_work_status.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+harness_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpf4nil4t3')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpf4nil4t3')
+deadline = 0.761218583, as_of = None
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+>                   while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+E                   AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:85: AttributeError
+_____ WorkStatusTests.test_direct_entry_never_calls_main_config_or_writers _____
+
+harness_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpvtzz2b29')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpvtzz2b29')
+deadline = 1.5677943330000002, as_of = None
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+>                   while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+E                   AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:85: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+harness_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpvtzz2b29')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpvtzz2b29')
+deadline = 1.5677943330000002, as_of = None
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+>                       os.killpg(proc.pid, signal.SIGKILL)
+E                       PermissionError: [Errno 1] Operation not permitted
+
+utils/py/releases_cycle.py:98: PermissionError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_work_status.WorkStatusTests testMethod=test_direct_entry_never_calls_main_config_or_writers>
+
+    def test_direct_entry_never_calls_main_config_or_writers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / "utils/py/releases_app.py"
+            script.parent.mkdir(parents=True)
+            script.write_text("def main(): raise AssertionError('main/writer called')\n"
+                              "def load_work_evidence(path,as_of=None): return {'schema_ready':True,'issues':[{'number':1}]}\n"
+                              "if __name__ == '__main__': main()\n")
+            (root / "releases.db").write_bytes(b"nonempty sentinel")
+>           self.assertEqual(read_work_status(root, root, time.monotonic() + 1)["issues"], [{"number": 1}])
+
+test/flightdeck/test_work_status.py:315: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+harness_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpvtzz2b29')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpvtzz2b29')
+deadline = 1.5677943330000002, as_of = None
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    except PermissionError:
+                        # Darwin reports EPERM for an otherwise empty group whose
+                        # only member is the already-exited (uid=0) zombie.
+>                       exited = os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+E                       AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:104: AttributeError
+_ WorkStatusTests.test_real_helper_null_url_and_canonical_duplicate_do_not_poison_peers _
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp__xihu0d')
+deadline = 3.325649416, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+>                   while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+E                   AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:85: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp__xihu0d')
+deadline = 3.325649416, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+>                       os.killpg(proc.pid, signal.SIGKILL)
+E                       PermissionError: [Errno 1] Operation not permitted
+
+utils/py/releases_cycle.py:98: PermissionError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_work_status.WorkStatusTests testMethod=test_real_helper_null_url_and_canonical_duplicate_do_not_poison_peers>
+
+    def test_real_helper_null_url_and_canonical_duplicate_do_not_poison_peers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ledger(root)
+            cx = sqlite3.connect(root / "releases.db")
+            cx.execute("CREATE UNIQUE INDEX owned_issue ON roadmap_items(repo_id,gh_number)")
+            cx.execute("INSERT INTO repos VALUES('r2','Project')")
+            for gid, repo_id, number in (("legacy1", "r2", 1), ("historical3", "r1", 3)):
+                cx.execute("INSERT INTO roadmap_items VALUES(?,?,?,NULL,'In progress','🚧',50,50,50,50,NULL,'in-progress')", (gid, repo_id, number))
+            cx.execute("INSERT INTO work_events VALUES(3,'r1',3,'in_flight',?,?)", (json.dumps({"source": "roadmap-update", "transition": True}), AS_OF))
+            cx.commit(); cx.close()
+            before = (root / "releases.db").read_bytes()
+>           report = read_work_status(ROOT, root, time.monotonic() + 2, AS_OF)
+
+test/flightdeck/test_work_status.py:172: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp__xihu0d')
+deadline = 3.325649416, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    except PermissionError:
+                        # Darwin reports EPERM for an otherwise empty group whose
+                        # only member is the already-exited (uid=0) zombie.
+>                       exited = os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+E                       AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:104: AttributeError
+___ WorkStatusTests.test_real_helper_reads_nonempty_schema9_without_mutation ___
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpnq_y0jg3')
+deadline = 3.473902083, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+>                   while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+E                   AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:85: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpnq_y0jg3')
+deadline = 3.473902083, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+>                       os.killpg(proc.pid, signal.SIGKILL)
+E                       PermissionError: [Errno 1] Operation not permitted
+
+utils/py/releases_cycle.py:98: PermissionError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_work_status.WorkStatusTests testMethod=test_real_helper_reads_nonempty_schema9_without_mutation>
+
+    def test_real_helper_reads_nonempty_schema9_without_mutation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ledger(root)
+            before = (root / "releases.db").read_bytes()
+>           report = read_work_status(ROOT, root, time.monotonic() + 2, AS_OF)
+
+test/flightdeck/test_work_status.py:282: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpnq_y0jg3')
+deadline = 3.473902083, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    except PermissionError:
+                        # Darwin reports EPERM for an otherwise empty group whose
+                        # only member is the already-exited (uid=0) zombie.
+>                       exited = os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+E                       AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:104: AttributeError
+____ WorkStatusTests.test_schema8_missing_and_unsafe_state_are_not_inactive ____
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpyo9h1bx_')
+deadline = 3.6204915, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+>                   while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+E                   AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:85: AttributeError
+
+During handling of the above exception, another exception occurred:
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpyo9h1bx_')
+deadline = 3.6204915, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+>                       os.killpg(proc.pid, signal.SIGKILL)
+E                       PermissionError: [Errno 1] Operation not permitted
+
+utils/py/releases_cycle.py:98: PermissionError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_work_status.WorkStatusTests testMethod=test_schema8_missing_and_unsafe_state_are_not_inactive>
+
+    def test_schema8_missing_and_unsafe_state_are_not_inactive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(read_work_status(ROOT, root, time.monotonic() + 1)["error_code"], "missing-source")
+            ledger(root, 8)
+>           report = read_work_status(ROOT, root, time.monotonic() + 2, AS_OF)
+
+test/flightdeck/test_work_status.py:296: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+harness_root = PosixPath('$GATE_CLONE/temp/gh981/base-clone')
+ledger_root = PosixPath('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpyo9h1bx_')
+deadline = 3.6204915, as_of = '2026-09-17T20:00:00Z'
+
+    def read_work_status(harness_root, ledger_root, deadline, as_of=None):
+        """Bounded data-only invocation of XYZ's existing qualified RO helper.
+    
+        The configured harness is trusted executable code. Never load code from a
+        ledger root, invoke CLI/main/config, or open a source through a writer factory.
+        Output and process lifetime are bounded before parsing; errors are opaque.
+        """
+        script = Path(harness_root).expanduser().resolve() / "utils/py/releases_app.py"
+        database = Path(ledger_root).expanduser().resolve() / "releases.db"
+        if not script.is_file() or not database.is_file():
+            return {"schema_ready": False, "error_code": "missing-source", "issues": []}
+        bootstrap = (
+            "import importlib.util,json,sys; "
+            "s=importlib.util.spec_from_file_location('qualified_releases_reader',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(json.dumps(m.load_work_evidence(sys.argv[2],as_of=sys.argv[3] or None)))"
+        )
+        proc = None
+        output = bytearray()
+        try:
+            if time.monotonic() >= deadline:
+                raise TimeoutError
+            with tempfile.TemporaryDirectory(prefix="xyz-work-read-") as cwd:
+                proc = subprocess.Popen(
+                    [sys.executable, "-I", "-c", bootstrap, str(script), str(database), as_of or ""],
+                    cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, start_new_session=True,
+                )
+                try:
+                    with selectors.DefaultSelector() as selector:
+                        selector.register(proc.stdout, selectors.EVENT_READ)
+                        while selector.get_map():
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise TimeoutError
+                            for key, _ in selector.select(min(remaining, 0.1)):
+                                chunk = os.read(key.fileobj.fileno(), 65536)
+                                if not chunk:
+                                    selector.unregister(key.fileobj)
+                                else:
+                                    output.extend(chunk)
+                                    if len(output) > 2 * 1024 * 1024:
+                                        raise ValueError("output-limit")
+                    # Observe exit without reaping: the PID remains ours until group
+                    # cleanup, including children which closed or inherited stdout.
+                    while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError
+                        time.sleep(min(0.01, remaining))
+                    report = json.loads(output)
+                    if not isinstance(report, dict) or not isinstance(report.get("issues"), list):
+                        raise ValueError("invalid-report")
+                    if not report.get("schema_ready"):
+                        report["error_code"] = "unavailable-evidence"
+                finally:
+                    # Never poll/wait before this: a reaped PID could be reused.
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    except PermissionError:
+                        # Darwin reports EPERM for an otherwise empty group whose
+                        # only member is the already-exited (uid=0) zombie.
+>                       exited = os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
+E                       AttributeError: module 'os' has no attribute 'waitid'
+
+utils/py/releases_cycle.py:104: AttributeError
+=========================== short test summary info ============================
+FAILED test/flightdeck/test_work_status.py::WorkStatusTests::test_descendants_are_stopped_even_when_parent_exits
+FAILED test/flightdeck/test_work_status.py::WorkStatusTests::test_direct_entry_never_calls_main_config_or_writers
+FAILED test/flightdeck/test_work_status.py::WorkStatusTests::test_real_helper_null_url_and_canonical_duplicate_do_not_poison_peers
+FAILED test/flightdeck/test_work_status.py::WorkStatusTests::test_real_helper_reads_nonempty_schema9_without_mutation
+FAILED test/flightdeck/test_work_status.py::WorkStatusTests::test_schema8_missing_and_unsafe_state_are_not_inactive
+========================= 5 failed, 15 passed in 1.65s =========================

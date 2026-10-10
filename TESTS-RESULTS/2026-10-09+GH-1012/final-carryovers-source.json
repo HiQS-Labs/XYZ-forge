@@ -1,0 +1,63 @@
+{
+  "1009": {
+    "body": "SWE currently applies only to plans and prescribes fixed scaffolding that can encourage unnecessary code and CI maintenance. This revision governs planning, implementation, and review with explicit safety/security/maintainability/performance tradeoffs, reuse-first changes, separate justification for new tests and blocking CI, and advisory performance baselines in existing task records.\n\nPreserves failure, migration, rollback, and last-safe-intervention contracts while reducing the skill from 236 to 114 lines. Runtime code, test registries, CI workflows, and deployed skills are unchanged. An unrelated pre-existing architecture description is recorded in PARKED for later triage.\n\nCloses #1007. Performance-measurement skill #1008 remains issue-only until this prerequisite lands.\n\nValidation:\n- Independent Codex plan QA: Approved, Round 2 (`relay-system/2026-10-09/gh1007-plan.codex.md`). Restored an intervention-deadline omission found in Round 1.\n- Independent Codex final QA: Approved, Round 2 (`relay-system/2026-10-09/gh1007-final.codex.md`); seven textual scenarios and complete diff reviewed.\n- Existing skill format validator passes; missing-name red control fails as expected.\n- Existing Codex shim preflight: 43 pass / 0 fail in a disposable full clone; identity unchanged.\n- Actual classifier: docs/tier 1. Documentation gate: no errors, 28 warnings in other repository docs. Normal pre-push documentation gate passed on initial publication `7dbdb7e8`; committed receipt in `publication.txt`, no bypass. Receipt/status-only follow-up is also pushed through the normal gate.\n- Committed evidence and provenance: `TESTS-RESULTS/2026-10-09+GH-1007/`.\n\nFormat and textual review do not prove future agent compliance. No product-performance improvement is claimed for this Markdown change. Merge and deployment remain separate from this /start-task PR.\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n* **Documentation**\n  * Updated SWE guidance to cover planning, implementation, and code review, with attention to safety, security, maintainability, and performance.\n  * Added guidance on evidence-based decisions, focused verification, performance measurement, failure handling, and rollback considerations.\n  * Clarified how review and verification should scale with risk, while retaining safeguards for irreversible changes.\n  * Explained when new tests or blocking CI checks need separate justification, and that performance baselines remain advisory.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOT5mrCM8AAAABWI3SGw",
+        "number": 1007,
+        "repository": {
+          "id": "R_kgDOT5mrCA",
+          "name": "XYZ-forge",
+          "owner": {
+            "id": "O_kgDOEjwOzw",
+            "login": "HiQS-Labs"
+          }
+        },
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1007"
+      }
+    ],
+    "mergeCommit": {
+      "oid": "47fb72dfcb13af1d0f64ed7d527a8db467171cbb"
+    },
+    "number": 1009,
+    "state": "MERGED",
+    "title": "Sharpen SWE governance and justify recurring test cost",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1009"
+  },
+  "982": {
+    "body": "Adds an optional Paperclip-inspired dashboard under `addons/paperclip-dashboard/`. It launches explicitly, uses labelled synthetic demo data by default, and opts into existing local Flightdeck readers with `--live`. The preview binds to loopback and retains source attribution and the upstream MIT notice.\n\nThe operator's 2026-10-09 merge-cleanup request supplies intent to retain and land the renderer. Current development `8037a18a` is integrated; all eight add-on files remain byte-identical to the original independently reviewed spike. No default startup, core UI, producer, schema or dependency change is introduced.\n\nThe required full gate exposed one integration failure from #1009: the existing gh609 checker still required retired six-stage SWE migration wording. This PR adapts that existing checker and its two existing mutations to the reviewed conditional migration policy, retaining compatibility/backfill, ordering/convergence, read cutover/rollback, safe fallback and retirement accounting. No new suite, gate, runner or registry entry is added. The ledger resolver replayed only GH981; the existing checker is the sole executable change since the original spike.\n\nValidation:\n\n- Independent original plan/final QA, renewed current-development implementation QA, and separate existing-contract adaptation QA: Approved, with mechanical receipts under `relay-system/2026-10-06/` and `relay-system/2026-10-09/gh982-{merge,gate-repair}.codex.md`.\n- Normal full pre-push retry on `59a924bafd0414b47be92ff402906375c1729075`: **410/410, exit 0**, no bypass, unchanged before/after Git identity. The independent publication clone's ledger check also passes. Raw result, nonempty log, source hashes and provenance are committed under `TESTS-RESULTS/2026-10-09+GH-981/`. The final receipt-only follow-up preserves every reviewed code hash. This is a local push self-check; hosted landing qualification and promotion remain separate.\n- Existing gh609 suite: 33 pass; its ordering and rollback-window mutations are rejected. Manual convergence removal makes that same suite fail (31 pass/2 fail). The unmodified integrated candidate fails, and replacing only SWE with its pre-#1009 version passes; the original full refusal and differential are retained.\n- Original Flightdeck fixture/manual checks and synthetic desktop/compact/browser evidence remain retained under `TESTS-RESULTS/2026-10-06+GH-981/`. The original focused pytest result was 34 pass/5 fail, reproducing the same Darwin `os.waitid` failures on its base; this is bounded historical evidence, not a new green claim. The interrupted October 6 full run remains recorded as interrupted and is superseded by the current full retry.\n\nCarry-over:\n\n- [ ] A later Lanes timer-focus browser observation was interrupted by a window switch and remains unverified.\n\nCounts remain observations within source coverage; lane intent does not establish liveness, progress is unmeasured, and PRs require current-head verification.\n\nCloses #981.\nMerge-batch record: [#1012](https://github.com/HiQS-Labs/XYZ-forge/issues/1012).\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n* **New Features**\n  * Added an optional dashboard preview for browsing work, activity, repository status, and source freshness.\n  * Explore synthetic demo data by default, or explicitly enable live reads. Search, filters, observation details, appearance options, and compact layouts are available.\n  * The preview is read-only and runs locally; it does not publish data or change existing workflows.\n* **Documentation**\n  * Added guidance on launching the preview, navigating its views, and understanding data freshness and limitations.\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "closingIssuesReferences": [
+      {
+        "id": "I_kwDOT5mrCM8AAAABVaBhUQ",
+        "number": 981,
+        "repository": {
+          "id": "R_kgDOT5mrCA",
+          "name": "XYZ-forge",
+          "owner": {
+            "id": "O_kgDOEjwOzw",
+            "login": "HiQS-Labs"
+          }
+        },
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/981"
+      }
+    ],
+    "mergeCommit": {
+      "oid": "3c829e0de674914725603981fb7069c2ff041228"
+    },
+    "number": 982,
+    "state": "MERGED",
+    "title": "feat: add optional Paperclip-inspired dashboard (GH-981)",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/982"
+  },
+  "1014": {
+    "body": "Marathons could remain silent after a halt, and a heartbeat did not establish accepted work. This adds opt-in, finite chain observations using existing driver receipts, plus a bounded supervising-agent procedure for eligible machinery repairs.\n\n- One reader spans phases; default 600\u00d76, explicit longer windows, missed-slot accounting, terminal/parent cancellation and durable stdout/run-log reports.\n- Run/execution/phase/root attribution separates liveness and already-satisfied verification from newly accepted reviewed candidates. Ordinary calls retain existing execution behavior.\n- Repair requires explicit authorization, one episode, a shared UTC deadline, three affirmative advisory seats, isolated implementation, independent plan/final QA and required gates. Publish a repair PR to development and park by default.\n- Applies the existing no-growth rule by embedding the Python reader in the existing launcher; no new executable or weakened inventory baseline. Removes the non-Small GH-492 suite from the full registry under the standing AGENTS flaky-suite policy after parallel timing failures and successful serial/focused runs; retains the suite and diagnostics unchanged.\n- Corrects two pre-existing documentation defects found by whole-file QA: literal reviewer IDs in headless recipes and disposable-full-clone test instructions; refreshes the existing relay package.\n\nRefs #1006. This is the observation and repair-to-PR delivery. Automatic continuation from an unmerged repair PR remains held behind #752-safe re-entry, stopped descendants, exact-revision/state and original-budget proof; this PR does not close that remaining work. No automatic merge, new suites/registry/gates or runtime recovery controller.\n\nValidation: independent plan QA Approved round 3 and final code QA Approved round 3; retained 51 manual controls with red witnesses; existing launcher 35/35, monitor 17/17, receipt adapter 223/223, package freshness and frozen-twin checks. All mutation-heavy verification runs in separate disposable full clones. First macOS full gate refused GH-777; intact clone identity, original RED log and GH-492 retry results retained. Current embedded placement passes fresh 51 manual controls, launcher 35/35, strict inventory negative controls and registry checks. Current-development revision `85a03218` passed the configured full macOS push gate **409/409 in 970s** (Python layer 21/21); identity stayed intact. The wrapper\u2019s unchanged live self-sufficiency check uses its documented default skip; this is not promotion evidence. Current development includes merged #1004; authored production files remain identical to final QA source. Routine changelog/ledger/package conflicts were resolved with retained records and the existing generator. Composed launcher 35/35, receipt adapter 223/223, package 3/3 and PDDA passed. Publication disclosure: the network update raced the earlier gated publisher and failed after full GREEN. Fresh remote readback verified an ancestor and unchanged gated SHA; the documented `XYZ_SKIP_PREPUSH=1` already-gated retry pushed the same revision normally, without force. The evidence/status-only follow-up passed the normal deterministic documentation gate at `61fa94dd` (60s, inherited warn-only diagnostics retained); the final receipt-only push also uses the normal hook. No untested runtime, merge or promotion is authorized by that retry.\n\nRetained evidence: TESTS-RESULTS/2026-10-09+GH-1006/ and relay-system/2026-10-09/gh1006-plan-qa.codex.md and gh1006-final-qa-r3.codex.md.\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n* **New Features**\n  * Added optional, time-bounded progress updates for marathon runs. Updates use verified run evidence; reaching the observation limit does not stop the work.\n  * Added an explicitly authorized, bounded repair procedure with independent review and QA. It publishes a verified repair PR and parks by default; automatic continuation remains unavailable.\n* **Documentation**\n  * Added guidance for progress observation, repair authorization, and validation in a disposable clone.\n* **Tests**\n  * Expanded verification for progress evidence, timing, and cancellation behavior. Kept the GH-492 timing-flake suite available for manual runs, but removed it from the full test registry.\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+    "closingIssuesReferences": [],
+    "mergeCommit": {
+      "oid": "0d85603280a92b14f981e8e1efea06f01c9ff6e9"
+    },
+    "number": 1014,
+    "state": "MERGED",
+    "title": "Marathon: bounded progress reports and safe repair PR handoff",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1014"
+  }
+}
