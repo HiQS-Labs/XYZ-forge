@@ -2,9 +2,9 @@
 title: Sharpen SWE governance
 gh_issue: 1007
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1007
-status: Reviewed — awaiting merge
+status: Complete
 created: 2026-10-09
-updated: 2026-10-09
+updated: 2026-10-10
 owner: Codex
 goal: Smallest sound changes across planning, implementation, and review without CI proliferation
 doc_type: project

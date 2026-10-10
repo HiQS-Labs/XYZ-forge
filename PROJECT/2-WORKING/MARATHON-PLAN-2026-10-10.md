@@ -99,7 +99,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #141 GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison — `already-landed`
 - #807 GH-807 · test: pre-existing signal-triage quiet-grep pipeline produces false failure under load — `already-closed`
 - #886 GH-886 · Linux portability canary: 3 advisory failures (gh425, gh478, gh153) — `already-closed`
-- #1007 GH-1007 · Sharpen SWE governance — `already-closed`
 - #275 GH-275 · medium-level write-ops logging of agent disk-write commands — `already-landed`
 - #396 GH-396 · Harness root resolution: one resolver, two roots, pinned — `already-closed`
 - #416 GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer — `already-landed`
