@@ -387,9 +387,11 @@ def main():
     prompt = (
         "SCRATCH DISCIPLINE (hard requirement, GH-113): every probe script, test file, or temporary "
         "output you create must be written under $TMPDIR or the repo's .relay-scratch/ directory — "
-        "NEVER the repository root. A root-level scratch file (tmp.json, fix_*.py, test_*.py, ...) is "
-        "auto-relocated out of the tree by containment and reported; an off-lane edit to a TRACKED "
-        "file still fails the whole turn at exit 6.\n\n" + prompt)
+        "NEVER the repository root. An untracked scratch-named file (tmp.json, fix_*.py, test_*.py, "
+        "test-*.mjs, probe_*, ...) at the root is auto-relocated out of the tree by containment and "
+        "reported; a nested one (e.g. tools/x/test_y.mjs) is relocated too, but ONLY in an isolated "
+        "worktree turn — in a non-isolated turn it fails the turn. Any other off-lane file, and any "
+        "off-lane edit to a TRACKED file, fails the whole turn at exit 6.\n\n" + prompt)
     drift_brief = rtl.drift_brief(me, tick_repo_root)
     if drift_brief:
         prompt = drift_brief + "\n" + prompt
