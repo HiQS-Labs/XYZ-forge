@@ -2,7 +2,7 @@
 gh_issue: 1016
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1016
 title: "releases ledger: bare repos.slug from the folder name never matches a differently named GitHub repo, so wave_reconcile silently skips every roadmap row"
-status: "Working — implementation"
+status: "Working — final QA"
 created: 2026-10-10
 updated: 2026-10-10
 owner: Claude
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked and rated 70/60/50/70; recon traced; red control recorded (pre-fix 9/15); plan QA Approved in round 2 (r1 FAIL, 3 Should, all dispositioned). | Implementation under `--accepted-start`. |
+| Implemented and gated: manual check 15/15 (red 9/15 at base), focused suites green, full pre-push gate GREEN 406/406 in a disposable clone; branch pushed. | Codex final QA (`relay-system/2026-10-10/gh1016-final-qa.md`), then PR against development. |
 
 ## Table of contents
 
@@ -278,4 +278,27 @@ Round 2 (Codex, PASS, Approved; attested at reviewed head `80f43a32`): four Pass
 
 ## Implementation evidence
 
-_(filled during execution)_
+Commits:
+
+- `198a56b6` resolver plus `cmd_init` default;
+- `128d7ddf` onboard through the shared parser;
+- `1cb42805` CHANGELOG plus green receipt.
+
+The diff against `9a923f3c` touches `utils/py/releases_app.py` (+11/−3) and
+`relay-automation/xyz-releases-onboard.sh` (+7/−8). It adds no new suite, registry entry, verb or
+schema.
+
+- **Manual check.** 15/15, exit 0, in the task clone at `128d7ddf` and in the disposable gate clone at
+  `1cb42805`. The red control is 9/15, exit 1, at `9a923f3c`.
+- **Focused existing suites** (task clone, `128d7ddf`), all rc=0:
+  - gh646-status-label;
+  - gh605-work-state;
+  - gh605-board-policy;
+  - gh32-releases-app: 145/0;
+  - gh197-vendor-tier-split: 73/0;
+  - relay-pkg-freshness: 3/0;
+  - gh238-hq-releases-mode.
+- **Full gate.** The pre-push hook took route full (tier 3) in the disposable full clone
+  `XYZ-forge-gh1016-repo-slug-identity-2026-10-10-gate` at `1cb42805`: GREEN in 871s, 406/406 suites
+  rc=0. Clone identity was intact after the run, and the branch was pushed by that hook.
+- **Records.** Log and receipts are in `TESTS-RESULTS/2026-10-10+GH-1016/provenance.jsonl`.
