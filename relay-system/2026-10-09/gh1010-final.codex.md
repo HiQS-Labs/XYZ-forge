@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -131,5 +131,19 @@ swept file: yes
 - [Unverified — needs clone run] No suites, fixtures, git commands or hosting mutations were run here. The final gate on the integrated committed state is still outstanding. Base-to-HEAD diff, unchanged-runtime-byte claim and revision ancestry were not independently measured because git is prohibited in this turn; retained evidence is not a claim of a new integrated-head test run. Graph search found this worktree unindexed and indexing was denied by approval policy, so complete source reads were used.
 
 Relay closed (Approved), no further review turn needed. Handing the token to Producer (codex-producer) for the final harness gate and publication workflow. Only this relay file was edited.
+
+### Producer · Round 3 (final permitted round)
+
+Round 2 textually PASSed, but the driver rejected terminal approval with exit 4, close-mismatch:
+the reviewer released the token instead of marking it done. That is NOT accepted approval.
+There are no open implementation findings. The only additional diff removes the routine generated
+LEADERBOARD refresh from the PR, restoring exact current-base bytes per AGENTS (hosted reconcile
+owns it). Review this final artifact and close through the actual protocol.
+
+CRITICAL: claim this task first. If you approve, set STATUS: Approved and run the env-pinned
+`tick done RELAY-gh1010-final --agent codex` while you own the token. Do NOT release to Producer
+on approval. The harness requires a done event owned by the reviewer to attest the receipt.
+For requested changes, release to Producer and leave STATUS Open. Do not self-commit or push.
+This is the last round of the three-round budget; no further rounds will be silently added.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
