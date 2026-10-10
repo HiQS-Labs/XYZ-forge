@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -96,5 +96,21 @@ Relay closed (Approved), no further review turn needed. Handing the completion t
 Modified — protocol closure only. Round1 implementation PASS is retained verbatim, but driver exit4 rejected its closing token. Event log proves the reviewer released the task to literal actor `done`, leaving status=open and no owner; the shim could not complete it. Recovered this run's unclaimed token through its named handoff target, handed it back to producer, and now return it to codex. No product bytes changed; c4ef7f3d remains the integrated implementation ancestor.
 
 Reviewer: confirm the prior source-backed verdict and this unchanged scope, append a substantive Round2 verdict, and close correctly. On approval set STATUS Approved and NEXT Producer, but **do not call tick release or hand off to an actor named done**. Keep the relay task claimed by codex; the existing shim owns the tick done operation after your file-scoped turn. Do not commit or run suites; the shim commits only this thread. The fresh full clone gate is still a producer obligation after review.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: The implementation approval from Round 1 remains applicable to the packet's five acceptance questions and local optional developer envelope. This protocol-only round exposes no new implementation blocker or additional blocking pre-existing defect in the reviewed files. Full merge-time qualification remains outstanding; this approval is not gate qualification or a merge-readiness attestation.
+swept file: yes
+
+Read the complete seeded packet and relay, all eight add-on files, canonical plan, prior final QA and current SUMMARY/manual/browser receipts. Reread the renderer, launcher, shared presentation/issue selectors and Flightdeck server/aggregate/configuration seams. Round 1's broader connector/helper, ledger-preservation and complete ancestry/scope findings remain retained evidence, not freshly rerun checks. Graph lookup returned zero add-on symbols; coverage generation 2026-09-01T15:54:30Z is for the main checkout and reports missing/not-tracked paths, so current source supplies the material evidence. No Git commands, suites, executable fixtures, server or browser sessions ran. Only this relay file was edited.
+
+- [Pass] **Optional launch/read boundary still meets the packet.** addons/paperclip-dashboard/preview.py:21–29 retains seven finite asset routes; :34–46 rejects foreign Host, demo snapshot reads and unknown routes; :64–68 binds 127.0.0.1 and attaches the shared aggregator only with --live. src/flightdeck/server.py:27–35 supplies no-store/CSP/nosniff/referrer headers and :44–51 supplies bounded snapshot failure. Preserve this explicit optional read boundary; no behavior change requested.
+- [Pass] **Current shared signatures and conservative display remain aligned.** app.js:37–40 calls issueCards(repo, now, sourceHealthy), matching web/flightdeck/issue-context.mjs:49–81; app.js:93 calls laneIssues(item, repo), matching that module's :5–12. app.js:20 uses textContent; :66/:71 retain distinct card/row focus keys; :91–98 retains current-head QA, unmeasured progress and selectable handoff; :100–116 retains timeout, failure pause and independent expiry rendering. Attribution and MIT notice remain explicit at ATTRIBUTION.md:3–17 and LICENSE.paperclip:1–21. No additional blocking pre-existing defect was found in these complete add-on files.
+- [Pass] **Producer's unchanged add-on scope is supported by a fresh narrow comparison.** Read-only command `PYTHONDONTWRITEBYTECODE=1 python3 -` (Path byte comparison and SHA1-checked loose commit decode), exit 0: `PASS eight nonempty add-on files byte-identical to producer checkout`; `EXPECTED RED same byte comparison rejects in-memory alteration`; candidate parents `7ea3c7d3c76a7225b790e2fafd635eb1ded8d1d2` and `47fb72dfcb13af1d0f64ed7d527a8db467171cbb`. Round 1's complete object and ledger-preservation comparisons remain the evidence for unchanged candidate runtime and development preservation. Two attempted loose-only tree queries exited 1 with FileNotFoundError for stored objects; they cannot independently re-attest packed-tree scope and are not product failures. No success is inferred from them.
+- [Pass] **Retained red controls remain bounded and honest.** TESTS-RESULTS/2026-10-06+GH-981/manual-boundary.txt:9–14 retains demo denial, nonempty immutable live fixture, bounded 503 and `EXPECTED RED source immutability assertion rejected a deliberately modified disposable fixture: source bytes changed`, followed by restored success. These are inspected producer receipts, not repeated HTTP or fixture execution.
+- [Unverified — needs clone run] **Qualification is still the producer's next obligation.** SUMMARY.md:9–10 retains five Darwin failures and the interrupted full run; browser-checks.json:16 leaves timer focus unverified. Run and record the required full gate against the final committed integration revision in a disposable full clone before claiming merge readiness. No fresh ledger rebuild or browser timer observation is attested here.
+
+Relay closed (Approved), no further review turn needed. NEXT Producer identifies codex-producer as owner of outstanding disposable-clone qualification. Per the current user instruction, close with the actual env-pinned `tick done RELAY-gh982-merge --agent codex`; never release to an actor named done. This supersedes the Producer's embedded suggestion to leave completion to the shim. The harness owns the one-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
