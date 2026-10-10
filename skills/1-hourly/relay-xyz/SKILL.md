@@ -64,6 +64,45 @@ Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`),
 **Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), or work that needs a human checkpoint between every turn (use plain `/relay`
 manual mode).
 
+## Bounded marathon repair to PR
+
+This procedure is performed by an **active supervising caller**, not by the progress observer or
+a durable background skill. Before launch, obtain explicit machinery-repair authorization and an
+absolute UTC recovery deadline. The allowance is **one repair episode and at most one continuation
+dispatch**, shared across diagnosis, consult, implementation, plan/final QA, gates and publication.
+Do not pause or extend the deadline during repair, nest recovery, raise caps, use `--force`, or
+reset attempts by choosing a new token. Without that authorization, report the halt and park.
+
+1. Preserve the original halt, result receipt, relay/escalation and run-log pointers; record the
+   exact plan, product/coordination/harness roots, revision, failure attempts and remaining deadline.
+   Distinguish liveness from product progress (a newly accepted revision with gate and independent
+   review) and preparation progress (a reviewed repair PR or actionable reproduced blocker).
+2. Reproduce and trace a local machinery defect using debug-mantra. Name its failing input, narrow
+   write allowlist and falsifier; inspect current issues/PRs before creating duplicate work. A small
+   diff is insufficient. Exclude lock/ownership, containment, gate/review semantics, schemas,
+   auth/network bridges, dependency expansion, deletion, product-scope changes and unknown causes.
+3. Run `$consult` with three distinct seats reading the same retained evidence. Require three
+   affirmative recommendations for this unattended repair; dissent, abstention, missing output or
+   timeout parks. Record disagreements and your disposition. A successful consult command is not
+   quorum, and advice never overrides the exclusions, deterministic checks or independent QA.
+4. Use `$start-task` in a fresh full clone for the eligible fix: grounded plan and independent Codex
+   plan QA, implementation, existing covering verification in a disposable full clone, final
+   independent Codex QA and required exact-revision gate. No new suites/gates/controllers. Stop at
+   the original deadline or any exhausted cap and retain unfinished work with its next action.
+5. Publish the verified repair PR against `development`; inspect its actual base, head SHA, diff
+   and review/gate receipts. Default to **publish and park**. Report original failure, repair SHA,
+   evidence and one specific next action. Do not merge, hot-patch an installed harness, or rewrite
+   the original failure as a successful run.
+6. **Held capability:** this delivery does not automatically continue from an unmerged repair PR.
+   A future continuation must prove exclusive ownership and stopped descendants, exact PR revision
+   and independent QA/gate evidence, #752-safe re-entry and #1004 adoption, preserved original
+   authorization/plan/state roots/attempts/deadline, and normal preflight/dry-run. It needs explicit
+   authorization for the unmerged dependency and an immutable per-run harness checkout. Unknown
+   predicates mean park; neither publication nor the consult vote authorizes a bypass or a merge.
+
+An idle gap can be correct. Promise a bounded attempt and durable, attributable evidence; never
+promise an accepted product change merely because several unattended hours were authorized.
+
 ## First-time setup on a new clone or machine (make the skill discoverable)
 
 First check whether Skills Army HQ already manages this skill on the machine:
@@ -365,7 +404,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/codex-turn.sh \
-  --reviewer   "$CODEX_AGENT" \
+  --reviewer   codex \
   --round-cap  4
 ```
 
@@ -387,7 +426,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/agy-turn.sh \
-  --reviewer   "$AGY_AGENT" \
+  --reviewer   agy \
   --round-cap  4
 ```
 
@@ -409,7 +448,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/commandcode-turn.sh \
-  --reviewer   "$COMMANDCODE_AGENT" \
+  --reviewer   commandcode \
   --round-cap  4
 ```
 
@@ -602,14 +641,28 @@ runs a bare executable path directly, so an **absolute path with spaces** (a clo
 
 ## Verify the harness is green before a real run
 
-These are anchored on `$HARNESS` (set by Preconditions) so they resolve whatever your CWD is — don't
-drop the `$HARNESS/` prefix or they'll 404 from a foreign session:
+Run mutation-heavy suites only in a **separate disposable full clone**, never in the maintained
+`$HARNESS` or a linked worktree. Commit the inputs first: cloning does not copy uncommitted edits.
+For a vendored install without its own Git checkout, select the maintained XYZ-forge full clone
+containing that harness revision as `VERIFY_SOURCE`.
 
 ```bash
-bash "$HARNESS/validate.sh"            # the tick/automation suite
-bash "$HARNESS/test/codex-turn.sh"     # before a Codex run
-bash "$HARNESS/test/agy-turn.sh"       # before an agy run
+VERIFY_SOURCE="$HARNESS"   # must be a full XYZ-forge clone with committed test inputs
+[ -d "$VERIFY_SOURCE/.git" ] || { echo "select a full harness clone as VERIFY_SOURCE"; exit 1; }
+VERIFY_CLONE="$(mktemp -d "${TMPDIR:-/tmp}/xyz-verify.XXXXXX")" || exit 1
+[ -n "$VERIFY_CLONE" ] && [ -d "$VERIFY_CLONE" ] || exit 1
+git clone --no-local "$VERIFY_SOURCE" "$VERIFY_CLONE" || exit 1
+cd "$VERIFY_CLONE" || exit 1
+unset XYZ_HARNESS TICK_REPO_ROOT  # test fixtures must not inherit the maintained clone
+# Bracket identity as described in WORKTREE-SAFETY.md (HEAD, origin, bare flag, local identity).
+bash ./validate.sh             # when the task's classified gate requires it
+bash ./test/codex-turn.sh      # focused check before a Codex run
+bash ./test/agy-turn.sh        # focused check before an agy run
+# Compare the identity bracket before trusting results; drift invalidates them.
 ```
+
+See [WORKTREE-SAFETY.md](https://github.com/HiQS-Labs/XYZ-forge/blob/development/WORKTREE-SAFETY.md)
+for the existing identity and recovery procedure. Run only the checks applicable to the task.
 
 **If your turn's `--artifact`/`ALLOW_PATHS` includes anything under `relay-automation/`, re-run
 `bash "$HARNESS/skills/1-hourly/relay-automation/make-pkg.sh"` after the turn lands, before trusting a green
