@@ -152,4 +152,12 @@ Only this relay was edited outside exempt scratch. No git command, suite, gate, 
 
 Relay closed (Approved), no further turn needed. NEXT is Producer (claude-a) for the outer harness/PR workflow; closing the relay token with done as instructed for approval.
 
+
+### Attestation · relay-drive — 2026-10-10T18:32:16Z
+task: RELAY-gh1016-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0f1fd7e8bf0643ee20d6aca7a9fec00f7b4e98de
+added-range: 19768+5976
+added-sha256: 8ef1684089c7ade87d77e7ca68f2f21b8457c73d1e8f5fa5510207236f216b3a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
