@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-09 — Surgical SWE governance (GH-1007)
+
+Extended SWE from planning to implementation and review, with explicit safety, security,
+maintainability and performance tradeoffs. New tests and blocking CI placement require
+separate justification; performance baselines remain advisory and reuse existing task
+evidence. Replaced rigid scaffolding with risk-scaled guidance while retaining mutation,
+migration and intervention-deadline safeguards. Source format passes, missing-name red
+control fails, seven manual instruction scenarios are recorded, and plan QA is Approved.
+Evidence: `TESTS-RESULTS/2026-10-09+GH-1007/`; final QA precedes PR readiness.
+
 ## 2026-10-08 — Vendored marathons: own root despite a global XYZ_HARNESS; probes no longer sink a phase (GH-1001, GH-1002)
 
 A vendored `marathon-drive` on a Mac that exports `XYZ_HARNESS` resolved its repo root to the global
