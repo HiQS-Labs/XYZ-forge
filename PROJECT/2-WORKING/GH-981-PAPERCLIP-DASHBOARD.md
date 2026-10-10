@@ -2,9 +2,9 @@
 gh_issue: 981
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/981
 title: Optional Paperclip dashboard — technical spike
-status: Awaiting operator visual review
+status: Awaiting merge qualification
 created: 2026-10-06
-updated: 2026-10-06
+updated: 2026-10-09
 owner: Codex
 goal: Let the operator evaluate a Paperclip-inspired dashboard without making it a core path or merging before review.
 doc_type: experiment
@@ -22,7 +22,7 @@ branch: feat/gh981-paperclip-dashboard
 
 | What was just completed | What's next |
 |---|---|
-| Draft [PR #982](https://github.com/HiQS-Labs/XYZ-forge/pull/982) published and inspected; final peer QA Approved. | Operator visual review and keep/revise/abandon decision; full suite at merge. |
+| Current-development integration prepared; renewed independent Codex QA Approved Round2 with driver attestation. | Complete the full merge-time gate in a disposable full clone, then land and reconcile under the 2026-10-09 operator request. |
 
 ## Quad Concepts
 - Evaluate a denser operator UI → isolated, optional Paperclip-inspired presentation.
@@ -150,8 +150,9 @@ React build, control APIs or domain model. Browser review caught and fixed row
 focus loss. Evidence: [verification](../../TESTS-RESULTS/2026-10-06+GH-981/SUMMARY.md).
 Existing focused checks report 34 pass / 5 fail at a pre-existing Darwin `waitid`
 incompatibility; manual fixture boundary checks passed. No merge readiness claim.
-Operator decision after viewing: keep this optional renderer, revise its density/
-layout, or abandon it. No merge has been authorized.
+The original visual-review phase offered keep/revise/abandon. The 2026-10-09
+operator request below supplies landing intent; merge readiness still requires
+the deferred full gate.
 
 ## Operator steering — 2026-10-06
 
@@ -160,3 +161,24 @@ additive spike defers full-suite qualification until merge. The full run already
 in progress was stopped (143), not qualified; its transcript and unchanged Git
 identity are retained in the [gate disposition](../../TESTS-RESULTS/2026-10-06+GH-981/gate-disposition.md).
 Runtime bytes remain those independently reviewed. No merge is authorized.
+
+
+## Operator steering — 2026-10-09
+
+The operator requested merge-cleanup of all open PRs except the held test-canary
+PR #930. This supplies intent to retain and land this optional renderer once
+its merge criteria pass. It supersedes the earlier review-only/no-merge direction;
+it does not waive the deferred full gate or authorize network exposure.
+
+Prepared integration `c4ef7f3dbd2ed937150fd84d3aef0f0d2335946e` is based on
+`47fb72dfcb13af1d0f64ed7d527a8db467171cbb`. Only disjoint ledger conflicts were
+resolved; all eight add-on files retain their original reviewed bytes.
+Renewed independent [Codex merge QA](../../relay-system/2026-10-09/gh982-merge.codex.md)
+is Approved Round2 with a mechanical attestation. Round1's implementation PASS
+was rejected for a closure-protocol mismatch; both rounds and their provenance
+are retained under [current receipts](../../TESTS-RESULTS/2026-10-09+GH-981/SUMMARY.md).
+
+The normal full pre-push gate is running on committed candidate `209fd0bd` in
+an independent disposable full clone. No current green result or merge readiness
+is claimed here. Historical focused Darwin failures and the interrupted Lanes
+timer-focus observation remain bounded findings; no expectations were weakened.
