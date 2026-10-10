@@ -17,7 +17,7 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forg
 > 1. **Verify primary landing readiness (Phase 0).** Confirm the primary on-disk checkout is clean, on the integration branch (`development`), and ready to fast-forward before any remote action.
 > 2. **Inventory checkouts & protect active sessions (Phases 1–3).** Scan worktrees and task clones across safe roots; preserve any checkout with active file handles, driver locks, `.tick` claims, or recent edits (10m/60m recency ladder).
 > 3. **Sequence PRs & pre-gate conflicts (Phases 4–5).** Fetch open PRs into a topological DAG to prevent file collisions; pre-simulate landings and resolve disjoint ledger/doc conflicts.
-> 4. **Merge & reconcile governance (Phase 5).** Remote squash-merge in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
+> 4. **Merge & reconcile governance (Phase 5).** Merge using the project policy in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
 > 5. **Safe teardown & status confirmation (Phase 6).** Deregister worktrees via canonical git protocol, move clean disposable clones to Trash, prune dangling skill symlinks, and confirm all PRs are landed.
 > 6. **Document qualifying batches (GH-944).** When the sequenced queue holds **three or more PRs**, open a `merge-batch` GitHub issue **before the first merge** and keep it current as the run progresses — merge sequence, problems, ad-hoc fixes/pivots, findings. After the batch, run the `/debug-mantra` regression sweep (findings become issue checklist items) and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
 >
@@ -32,10 +32,45 @@ Then begin work.
 When the operator speaks naturally:
 - `"Run merge-cleanup on this repo"`: Reviews the primary on-disk checkout first (Phase 0), then audits the other checkouts, reports the sequence, and proceeds within the session's authorized PR and cleanup scope. Discovery does not add unrelated PRs to that scope; an explicit audit/dry-run request remains read-only.
 - `"Scan all clones and worktrees"`: Runs Phase 1–3 discovery and outputs the status matrix of all worktrees and clones.
-- `"Sequence and merge open PRs"`: Reports Phase 0 for the primary checkout first — a PR sequence is not actionable until the tree it lands in can receive it — then determines topological order of open PRs, detects file collisions, and executes remote squash merges followed by wave reconciliation.
+- `"Sequence and merge open PRs"`: Reports Phase 0 for the primary checkout first — a PR sequence is not actionable until the tree it lands in can receive it — then determines topological order of open PRs, detects file collisions, and executes policy-selected remote merges followed by wave reconciliation.
 - `"Tear down clean task clones"`: Safely removes verified clean, non-active clones and worktrees.
 
 ---
+
+## Project merge policy
+
+Before any caller-owned doc parking or executing cleanup, read the target project's policy:
+
+```bash
+python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --show-merge-policy
+```
+
+Use the installed script path when running outside Forge. `--primary` selects the policy root;
+never read the policy from the harness source or `.xyz/`. This JSON-only mode performs no scan,
+GitHub query, or mutation. A nonzero exit stops the run; do not interpret an empty report as disabled.
+
+Maintainers opt in by committing `.merge-cleanup.json` at their project root:
+
+```json
+{"preserve_commit_history": true}
+```
+
+With preservation enabled, omitted `--strategy` selects `merge`; explicit `squash` or `rebase`
+is refused. Merge commits preserve the PR's original commit IDs and ancestry as they exist at
+landing; this does not recover commits already rewritten during development. Cleanup verifies
+GitHub permits merge commits and refuses when unavailable or unknown, without changing repository
+settings or falling back. GitHub branch rules can still refuse a merge.
+
+Missing file/key or `false` keeps the legacy default (`squash`) and permits explicit
+`--strategy merge|squash|rebase`. This does not infer conventions from GitHub's allowed methods;
+maintainers retain their existing explicit strategy choice. Invalid/unreadable policy, unknown keys,
+or a non-boolean value fails closed. No global preference overrides a project's opt-in.
+
+Both cleanup skills use this one resolver. Vendoring alone never enables preservation; recommend
+it to maintainers starting a new project and retain existing choices on updates. GitHub's settings
+remain an independent control for humans and other tools. Forge opts in through its root file.
+Historical squash provenance and all dirty/stash/session/teardown checks remain unchanged. To
+change future behavior, review and commit the project setting; never rewrite old history.
 
 ## 7-Phase Ladder Logic
 
@@ -190,7 +225,7 @@ Parking preserves work for later review; it never qualifies it for integration o
 - **One durable attempt record per PR, at the pinned coordinator (C):** before B1 runs, the script reserves a repair slot in `<primary>/.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json` — `<primary>` is the explicit `--primary` path the run started with, never a disposable clone's CWD. Every writer (this script, and each caller repair rung via `attempt_record.py`) holds `fcntl.flock` on `<record>.lock` for the whole read → reserve → write; that lock is independent of the driver's mkdir lock, so a worker under a running driver still reserves. A lock timeout **stops** the attempt (never "skipped"). Only repairs count (`B1`, `ponytail`, `start-task`); `debug-mantra`/`recon` are notes. **Two repairs per PR, whatever the head**: at the ceiling the PR is **parked** with the record path, and B1 does not run. Any handoff or park prints `export MERGE_CLEANUP_RECORD=<record>` for the caller ladder below.
 - **Only HARD dependencies block on a failed predecessor (C + GH-623):** Phase 4 orders; Phase 5 keeps a runtime map of predecessor outcomes and skips a PR whose declared dependency (`depends on #N`) was handed off, parked or deferred, naming it. File-collision edges are SOFT: a collision-adjacent PR is attempted anyway and its own landing simulation decides — a genuinely conflicting successor hands off on its own merits instead of never being tried (the incident's S3 cascade: one handoff removed most of the queue). Independent PRs still land. A run with any non-landed outcome (handoff / park / defer) exits 3 after the sequence; a stop (unknown state, gate red, merge/reconcile failure, unreadable record) exits 2 immediately.
 - **`--resume` continues a previous run (GH-623):** the live refresh stays first and authoritative. Only when a PR's landing actually conflicts — a repair would be needed — does the attempt record decide: at the ceiling with `--resume`, the PR is skipped as `previously parked` without re-running the B1 machinery (and without consuming a slot). A PR whose last recorded repair finished `resolved` and whose head now merges cleanly LANDS — a resume run completes a successful repair's work, never strands it. Without `--resume`, `reserve()` is the under-lock authority and the behavior is unchanged. Resume mode announces itself (`Resume mode: ...`) and the end-of-run summary breaks out parked-on-resume counts.
-- Executes remote merges in topological sequence (`gh pr merge <PR_NUM> --squash --delete-branch`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails. A non-zero or killed `gh pr merge` is re-queried once too, and a PR that reads `MERGED` with a merge commit continues to the post-merge sequence (GH-852). After a B1 push, the re-gate first waits (up to 6 × 15s) until GitHub reports the pushed head, because the old head's `CONFLICTING` is still showing (GH-851). `--reconcile-pr` refuses (exit 2) unless the PR reads `MERGED`, and looks up the hosted run by that PR's head and merge commit (GH-852).
+- Executes remote merges in topological sequence through `execute_pr_merge`, using the method selected by the project policy resolver (never a hardcoded direct `gh pr merge --squash`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails. A non-zero or killed `gh pr merge` is re-queried once too, and a PR that reads `MERGED` with a merge commit continues to the post-merge sequence (GH-852). After a B1 push, the re-gate first waits (up to 6 × 15s) until GitHub reports the pushed head, because the old head's `CONFLICTING` is still showing (GH-851). `--reconcile-pr` refuses (exit 2) unless the PR reads `MERGED`, and looks up the hosted run by that PR's head and merge commit (GH-852).
 - After each verified remote merge, performs one ordered durability sequence before looking at the next PR: **fast-forward primary → reconcile → emit `pr_merged` → commit all resulting primary-side ledger/governance writes → push `origin/<integration-branch>` → assert the primary is clean and `HEAD == origin/<integration-branch>`**. The emitter therefore runs only after both the landing fast-forward and any fast-forward performed by reconciliation; a failure at any step stops the run.
 - Executes post-merge reconciliation, **gating** (a failure stops the run before emission, commit, push, the next PR, teardown, and symlink pruning; `--reconcile-pr` propagates the same exit):
   - Query the hosted `wave-reconcile.yml` runs (`gh run list --workflow wave-reconcile.yml`) and match the PR head or the merge commit. If the run is queued or in progress, poll until completion for at most `MERGE_CLEANUP_HOSTED_WAIT_S` seconds (default 5400, #854 D5: full-registry reconciles take 53–66 min); timing out while it remains active stops the landing rather than racing it locally.
@@ -245,7 +280,7 @@ skipping one. The same contract as `/workhorse` applies, specialised here:
 - **Proceed without asking on reversible steps.** Do not pause to ask "should I execute?", "should I
   re-run with `--resume`?", "should I commit the intake doc?", "should I open the batch issue?", or
   "should I tear down the clean clones?". Each is in scope, gated by the script, and recoverable:
-  merges are squash commits on a remote branch, ledger writes are reconciled and pushed, teardown
+  merges land on a remote branch using the policy-selected method, ledger writes are reconciled and pushed, teardown
   goes to Trash, and the attempt record bounds repairs. After each step, take the next one in the
   same turn. A status question from the operator is answered briefly and the loop resumes.
 - **Ask only at a real decision.** Stop and ask for exactly one of: a PR outside the requested
@@ -392,7 +427,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | batch-regression-sweep | 5 | caller | — |
 | post-deploy-carryover-dual-sink | 5 | caller | — |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`.
 
 ## CLI Usage
 

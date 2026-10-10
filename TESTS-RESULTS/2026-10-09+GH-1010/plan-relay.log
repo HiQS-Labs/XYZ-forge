@@ -1,0 +1,17 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-merge-history-policy (#129)
+codex-turn: worktree isolation ON (/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T//rtl-wt.4XRyJx)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.4XRyJx) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-merge-history-policy/relay-system/2026-10-09/gh1010-plan.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: attested Approved by codex — reviewed eb8a32455ef3, 3088 bytes of review text, record /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-merge-history-policy/.git/relay-attest/RELAY-gh1010-plan.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1m 19s
+per done-task: ≥0 tokens, 1m 19s wall-clock
+  turn peak RSS: codex: 303MB peak RSS
+

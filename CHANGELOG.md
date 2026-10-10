@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-09 — Per-project cleanup merge-history policy (GH-1010)
+
+Maintainers can opt in with tracked `.merge-cleanup.json` to require merge commits in cleanup;
+explicit squash/rebase and unavailable hosting capability refuse without fallback. Forge opts in.
+Deep audit shares the policy report and distinguishes original commit ancestry from landed content;
+vendoring recommends a choice without copying Forge policy or changing GitHub settings. Historical
+squash provenance and teardown gates remain intact. Existing cleanup suite: 180 tests pass; manual
+policy/vendor/ancestry probes and enforcement-removal red control retained under
+`TESTS-RESULTS/2026-10-09+GH-1010/`.
+
 ## 2026-10-09 — Marathon: bounded observation and repair-to-PR handoff (GH-1006)
 
 Opt-in chain observations now use one finite reader across phase transitions, report exact driver

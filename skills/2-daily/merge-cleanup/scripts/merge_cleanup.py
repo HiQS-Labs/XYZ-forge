@@ -147,8 +147,56 @@ def log_err(msg: str):
     print(f"merge-cleanup: ERROR — {msg}", file=sys.stderr)
 
 
-def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry_run: bool = True) -> bool:
-    """Merges a pull request via gh CLI."""
+def resolve_merge_policy(repo_path: Path, strategy: Optional[str] = None) -> Dict[str, Any]:
+    """Read the maintainer's target-project policy, never the installed harness's policy."""
+    policy_path = repo_path / ".merge-cleanup.json"
+    try:
+        data = json.loads(policy_path.read_text(encoding="utf-8"))
+        source = str(policy_path)
+    except FileNotFoundError as exc:
+        if policy_path.is_symlink() or not repo_path.is_dir():
+            raise ValueError(f"cannot read merge policy {policy_path}: {exc}") from exc
+        data, source = {}, "legacy default (no .merge-cleanup.json)"
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"cannot read merge policy {policy_path}: {exc}") from exc
+    if not isinstance(data, dict) or set(data) - {"preserve_commit_history"}:
+        raise ValueError(f"{policy_path}: expected an object with only preserve_commit_history")
+    preserve = data.get("preserve_commit_history", False)
+    if type(preserve) is not bool:
+        raise ValueError(f"{policy_path}: preserve_commit_history must be a JSON boolean")
+    if strategy not in (None, "merge", "squash", "rebase"):
+        raise ValueError(f"unsupported merge strategy: {strategy!r}")
+    if preserve and strategy not in (None, "merge"):
+        raise ValueError(f"{policy_path}: preserve_commit_history=true requires --strategy merge; "
+                         f"--strategy {strategy} is not permitted")
+    return {"preserve_commit_history": preserve,
+            "strategy": strategy or ("merge" if preserve else "squash"), "source": source}
+
+
+def check_merge_capability(repo_path: Path, policy: Dict[str, Any]) -> None:
+    """An opted-in project must support merge commits; never change hosting settings."""
+    if not policy["preserve_commit_history"]:
+        return
+    result = _gh(["repo", "view", "--json", "mergeCommitAllowed"], repo_path)
+    try:
+        info = json.loads(result.stdout) if result.returncode == 0 else {}
+    except ValueError:
+        info = {}
+    if not isinstance(info, dict) or info.get("mergeCommitAllowed") is not True:
+        raise ValueError("history preservation requires GitHub merge commits, but availability "
+                         "was not confirmed; no fallback or settings change. "
+                         + (result.stderr.strip() or "Check the repository's merge settings."))
+
+
+def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = None, dry_run: bool = True) -> bool:
+    """Merge through the project policy even when called without the CLI orchestrator."""
+    try:
+        policy = resolve_merge_policy(repo_path, strategy)
+        check_merge_capability(repo_path, policy)
+    except ValueError as exc:
+        log_err(f"PR #{pr_num}: {exc}")
+        return False
+    strategy = policy["strategy"]
     delete_branch = pr_num not in _WITHHOLD_BRANCH_DELETE
     _WITHHOLD_BRANCH_DELETE.discard(pr_num)
     delete_text = " --delete-branch" if delete_branch else ""
@@ -856,6 +904,12 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     in a disposable clone against the CURRENT integration head, merged only on green, verified
     MERGED on re-query, then reconciled (gating). The first failure stops everything."""
     branch = args.integration_branch
+    try:
+        policy = resolve_merge_policy(primary_repo, args.strategy)
+        check_merge_capability(primary_repo, policy)
+    except ValueError as exc:
+        log_err(str(exc))
+        return 2
     workdir = Path(tempfile.mkdtemp(prefix="merge-cleanup-"))
     keep_workdir = False
     origin = origin_url(primary_repo) or ""
@@ -872,6 +926,16 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     pending = {pr["number"] for pr in ordered_prs}
     try:
         for pr in ordered_prs:
+            # A prior landing can update the tracked policy. Re-read before any repair/retarget.
+            try:
+                policy = resolve_merge_policy(primary_repo, args.strategy)
+                check_merge_capability(primary_repo, policy)
+            except ValueError as exc:
+                log_err(str(exc))
+                return 2
+            strategy = policy["strategy"]
+            log(f"Merge policy: preserve_commit_history={policy['preserve_commit_history']}; "
+                f"strategy={strategy}; source={policy['source']}")
             p_num = pr["number"]
             # C + GH-623: only HARD dependencies (explicit "depends on #N") block a PR on a
             # failed predecessor. Collision edges (`_soft_deps`) decide sequence only — a
@@ -1079,7 +1143,7 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
 
             if dry_run:
-                log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{args.strategy} --delete-branch`")
+                log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy} --delete-branch`")
                 continue
             live = refresh_pr_with_retry(p_num, primary_repo)
             if live.get("error"):
@@ -1179,7 +1243,8 @@ def main():
     parser.add_argument("--root", action="append", help="Root directory to search for checkouts")
     parser.add_argument("--prefix", default="", help="Filter checkouts by repo name substring")
     parser.add_argument("--exclude", action="append", default=[], help="Pattern, branch, or PR number to exclude from cleanup and PR sequencing")
-    parser.add_argument("--strategy", choices=["squash", "merge", "rebase"], default="squash", help="PR merge strategy")
+    parser.add_argument("--strategy", choices=["squash", "merge", "rebase"], default=None, help="PR merge strategy (default: project policy, otherwise squash)")
+    parser.add_argument("--show-merge-policy", action="store_true", help="Print the effective project merge policy as JSON and exit without scanning or contacting GitHub")
     parser.add_argument("--scan-only", action="store_true", help="Only audit and list checkouts")
     parser.add_argument("--prs-only", action="store_true", help="Only list and sequence open PRs")
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
@@ -1200,6 +1265,16 @@ def main():
     except (OSError, RuntimeError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
+    try:
+        policy = resolve_merge_policy(primary_repo, args.strategy)
+    except ValueError as exc:
+        log_err(str(exc))
+        return 2
+    if args.show_merge_policy:
+        print(json.dumps(policy))
+        return 0
+    log(f"Merge policy: preserve_commit_history={policy['preserve_commit_history']}; "
+        f"strategy={policy['strategy']}; source={policy['source']}")
     search_roots = [Path(r).expanduser().resolve() for r in args.root] if args.root else DEFAULT_SAFE_ROOTS
     dry_run = not args.execute
 
