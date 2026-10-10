@@ -1,6 +1,22 @@
+---
+title: "GH-1015 observer receipt Recon Map"
+status: Reference — bounded recon complete
+created: 2026-10-10
+updated: 2026-10-10
+owner: Codex
+goal: Record the existing observer and driver receipt boundary.
+roadmap_exempt: true
+---
+
 # Recon Map — progress observer receipt attribution
 
 Commit: 9a923f3cc131f432f2682e7a11f57d03597fb5df · Mode: graph+read · Lanes: one bounded lane in the main context.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Bounded source and graph recon captured | Follow the parent GH-1015 plan for implementation and QA |
 
 ## Subject and change class
 
