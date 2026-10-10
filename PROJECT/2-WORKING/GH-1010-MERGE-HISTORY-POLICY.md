@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Final QA round 1 F1 corrected; current development integrated | Final QA round 2 and gated PR publication |
+| Final Codex QA Approved and attested, round 3 exit 0 | Full pre-push gate and development PR |
 
 ## Table of contents
 
@@ -129,3 +129,8 @@ is method-neutral. Runtime and focused evidence unchanged. Integrated `9a923f3c`
 only changelog and ledger conflicted. Both changelog entries retained; existing ledger resolver
 kept generation 1564 and replayed GH-1010 through roadmap add/rate/update, retaining 65/55/50/75.
 No hand-edited SQL. Round 2 reviews these corrections and current-base integration.
+
+Final review: round 2 returned PASS text but exit 4 close-mismatch (reviewer released rather than
+closed token); not accepted as approval. Round 3 closed correctly, Approved and attested (exit 0).
+Routine generated leaderboard changes excluded per AGENTS. No production code changed after
+`aa479b18`; final review includes integrated base and F1 doc corrections. Full gate next.
