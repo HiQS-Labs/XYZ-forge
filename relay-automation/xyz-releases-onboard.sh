@@ -95,20 +95,19 @@ cleanup_stage() {
 trap cleanup_stage EXIT INT TERM HUP
 git init -q "$STAGE_DIR"
 
+# GH-1016: one origin parser for init and onboard — the github.com owner/name, or empty.
+ORIGIN_SLUG="$(python3 -B -c 'import os, sys; sys.path.insert(0, os.path.dirname(sys.argv[1]))
+from releases_app import _github_slug_from_origin; print(_github_slug_from_origin(sys.argv[2]) or "")' \
+  "$RELEASES_APP" "$TARGET_REPO")" || die "origin slug lookup failed"
+
 note "== Step 1: Initializing ledger and importing legacy RELEASES.md =="
-EFFECTIVE_SLUG="${SLUG:-$(basename "$TARGET_REPO")}"
+EFFECTIVE_SLUG="${SLUG:-${ORIGIN_SLUG:-$(basename "$TARGET_REPO")}}"
 init_args=(--slug "$EFFECTIVE_SLUG")
 python3 "$RELEASES_APP" --root "$STAGE_DIR" init "${init_args[@]}" || die "releases init failed"
 python3 "$RELEASES_APP" --root "$STAGE_DIR" import "$TARGET_REPO/RELEASES.md" || die "releases import failed"
 
 note "== Step 2: Checking for tracking reference collisions =="
-GH_BASE=""
-ORIGIN_URL="$(git -C "$TARGET_REPO" config --get remote.origin.url 2>/dev/null || true)"
-if [ -n "$ORIGIN_URL" ]; then
-  if [[ "$ORIGIN_URL" =~ github\.com[:/]([^/]+)/([^/.]+)(\.git)?$ ]]; then
-    GH_BASE="https://github.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
-  fi
-fi
+GH_BASE="${ORIGIN_SLUG:+https://github.com/$ORIGIN_SLUG}"
 if [ -z "$GH_BASE" ] && [ -n "$SLUG" ]; then
   case "$SLUG" in
     */*) GH_BASE="https://github.com/$SLUG" ;;

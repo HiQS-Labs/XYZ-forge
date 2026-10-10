@@ -2173,7 +2173,9 @@ def cmd_init(args):
     paths = artifact_paths(root)
     if os.path.exists(paths["db"]):
         refuse("already-initialized", "%s already exists here" % DB_NAME)
-    slug = args.slug or os.path.basename(os.path.normpath(root))
+    # GH-1016: prefer the GitHub owner/name so roadmap identity matches issue URLs; the folder
+    # basename is only the fallback for a repo without a github.com origin.
+    slug = args.slug or _github_slug_from_origin(root) or os.path.basename(os.path.normpath(root))
     lock = WriterLock(root)
     lock.acquire()
     try:
@@ -3803,7 +3805,9 @@ def cmd_roadmap_repoint(args):
                          "WHERE global_id = ?", (new, raw_text, now_iso(), row["global_id"]))
 
         perform_write(root, conn, "roadmap-repoint", row["global_id"], mutate)
-        print("repointed GH-%d -> %s" % (row["gh_number"], new))
+        # An unnumbered row is selectable only by --gid; name it by GID rather than crash after the write.
+        print("repointed %s -> %s" % ("GH-%d" % row["gh_number"] if row["gh_number"] is not None
+                                      else row["global_id"], new))
     finally:
         conn.close()
 
@@ -5399,7 +5403,13 @@ def resolve_roadmap_identity(row, repo_rows, origin_repo=None):
     url_repo, number = _repo_from_issue_url(row["issue_url"])
     slug = repo_rows.get(row["repo_id"])
     source = slug if slug and "/" in slug else None
-    if slug and origin_repo and slug == origin_repo.rsplit("/", 1)[-1]:
+    name = origin_repo.rsplit("/", 1)[-1] if origin_repo else None
+    # GH-1016: a legacy bare slug is the checkout folder name, which may differ from the GitHub
+    # name by case or -/_ ("aegis-sleuth-slack-bot" vs "AEGIS-Sleuth-Slackbot"). Tolerate that only
+    # for a single-repo ledger; validity below still needs the URL to name origin exactly.
+    key = lambda s: s.casefold().replace("-", "").replace("_", "")
+    if slug and name and (slug == name or ("/" not in slug and len(repo_rows) == 1
+                                           and key(slug) == key(name))):
         source = origin_repo
     valid = bool(source and url_repo == source and number == row["gh_number"])
     return {"repo": source, "number": row["gh_number"], "identity_valid": valid,
@@ -6514,7 +6524,7 @@ def build_parser():
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sp = sub.add_parser("init", help="create the DB + dump; settings default lenient")
-    sp.add_argument("--slug", help="repo slug (default: root directory basename)")
+    sp.add_argument("--slug", help="repo slug (default: github.com origin owner/name, else root directory basename)")
 
     sp = sub.add_parser("import", help="ONE-SHOT legacy ledger import (Phase 0)")
     sp.add_argument("file", nargs="?",
