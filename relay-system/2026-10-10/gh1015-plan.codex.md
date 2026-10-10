@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -82,5 +82,21 @@ Append a concrete review with file:line support; required behavior-change findin
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: All four plan questions are satisfied. The proposed correction preserves strict attribution, the acceptance matrix distinguishes the reproduced failure from valid and foreign receipts, and verification remains a prerequisite to publication rather than an assertion of implementation success.
+swept file: yes
+
+- [Pass] Whole embedded packet, working plan and recon read; full `relay-automation/marathon.sh` swept, including pre-existing code. No additional required pre-existing defect found in that sweep. Driver receipt seams and GH-609 safeguards were read directly. Graph Verify evidence: nearest indexed project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-10-10T08:23:22Z`, ready; `_result_arm` inbound trace names `main`, with no remaining pagination. This is the primary checkout's graph, not this worktree's index; local source is the evidence of record. Coverage gaps at marathon.sh:416 and :694 were read; the working plan was absent from that graph and read locally in full. Scope and unknowns are explicit at `PROJECT/2-WORKING/GH-1015-OBSERVER-PATH.md:15,39–41,55`.
+- [Pass] Path correction is grounded: init currently resolves product_root (`relay-automation/marathon.sh:267`), while `_result_arm` uses `os.path.abspath(target_root)` for explicit targets and retains root for the default (`utils/py/marathon_drive.py:325`); the writer serializes that stored value at :250. The launcher sends the same target spelling to observer and driver at `relay-automation/marathon.sh:565,604`, and exports its default root to the driver at :642–646. Replacing only init product_root with abspath aligns normal default and explicit absolute/relative symlink targets without changing the exact schema/execution/phase/lane/target/token predicates at :135–144 or qualification at :148–157. No reader-side realpath tolerance or driver edit is needed.
+- [Pass] The other two edits are local and earned: normal output already sorts keys (`relay-automation/marathon.sh:208`) and missed-check output does not (:240–241); GH-609's registry comment still says “expand-contract migrations” (`validate.sh:144`), whereas its existing checker explicitly scopes online migrations and says offline work need not inherit rolling-deployment protocol (`test/gh609-sdlc-agent-gaps.sh:113–119`). Package exclusion is correct: `skills/1-hourly/relay-automation/make-pkg.sh:12–30` lists 18 members and excludes marathon.sh. Read-only command `tar -tzf skills/1-hourly/relay-automation/relay-pkg.tar.gz` displayed those same 18 paths; an independent stdlib archive query below measured `package_members= 18 marathon.sh_present= False`.
+- [Pass] Blast, rollback and acceptance are proportionate (`PROJECT/2-WORKING/GH-1015-OBSERVER-PATH.md:33–49`): three reversible edits, no new suite/gate/controller or schema/qualification change, synthetic receipts and controlled clock, nonempty parsed output, foreign execution/token/target/schema/phase/lane negatives, missing/non-green qualification negatives, and base/candidate/restored-old-init red/green/red. Existing focused checks, source hashes/provenance, independent final QA and the macOS full pre-push gate are required in disposable full clones. The full route is conservative and correct for the validate.sh comment edit (`utils/ci-route.sh:325–329`). No live provider run or merge is authorized.
+- [Pass] Ledger identity/rating fit the observed consequence. `releases.sql:842` names the owned GH-1015 row `rmi-01M4KATWBJ8T1GHXBSQMACY5KE`, correct issue/doc, 60/35/50/90 and NULL override. Plan :45 admits only that exact row through accepted-start; the existing writer requires `--gid` (:3902–3905), qualified owned/open issue (:3942–3953), and rechecks identity/state before mutation (`utils/py/releases_app.py:3994–4006`). Plan :53–55 appropriately treats this as observation-fidelity loss, neutral appeal and unknown recurrence, without inventing a safety consequence or trend. Keep that existing writer and exact row; no second ledger mechanism is warranted.
+- [Pass] Retained baseline is nonempty and internally matches its provenance: `TESTS-RESULTS/2026-10-10+GH-1015/baseline-observations.json` records physical/logical/foreign counts `[1,0,0]`; provenance quotes “Synthetic qualified receipt; no worker, provider or live marathon invoked.” Read-only probe command: `python3 -` with stdlib `tarfile.getnames()`, `json.loads(Path(...baseline-observations.json).read_text())`, `hashlib.sha256(p.read_bytes()).hexdigest()`, and `ast.parse()` of the embedded payload. Exit 0; decisive output: `package_members= 18 marathon.sh_present= False`, `baseline_nonempty= True counts= [1, 0, 0] sha256= 0e6a643e848cc28155022ac696726ca7cef49ba995519f6cca33495d40229968`, `observer_parse=OK`. This verifies retained evidence integrity and source parsing, not a fresh runtime reproduction. An initial probe had a parenthesis typo and exited 1 before execution; the corrected probe produced the cited result.
+- [Unverified — needs clone run] Candidate acceptance, negative controls, clock/output exercise and qualifying gate have not run in this reviewer worktree. They remain explicitly pending at `PROJECT/2-WORKING/GH-1015-OBSERVER-PATH.md:47–49,59`; plan approval does not certify those future results. No executable fixture, suite, provider or git command was run this turn.
+
+Relay closed (Approved), no further turn needed. Producer codex-author may proceed with the approved plan and its required clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
