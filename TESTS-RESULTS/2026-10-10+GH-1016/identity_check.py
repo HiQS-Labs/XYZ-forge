@@ -119,6 +119,36 @@ with tempfile.TemporaryDirectory(prefix="gh1016-") as base:
     explicit = fixture(base, "explicit-slug", "https://github.com/%s.git" % ORIGIN, slug="chosen")
     record("init-explicit-slug-wins", slugs(explicit)[0] == [("chosen",)], slugs(explicit)[0])
 
+    # 4. Onboarding (relay-automation/xyz-releases-onboard.sh) records the same slug as init.
+    onboard_sh = os.path.join(os.path.dirname(os.path.dirname(APP_DIR)), "relay-automation",
+                              "xyz-releases-onboard.sh")
+    legacy_md = ("Release: 0.1.0\nStatus: shipped\nCodename: Alpha\nTarget Date: 2026-01-10\n"
+                 "Tracking Issue: #101\nDescription: Alpha milestone.\n")
+
+    def onboard(folder, origin_url, *extra):
+        root = os.path.join(base, folder)
+        os.makedirs(root)
+        git(root, "init", "-q")
+        if origin_url:
+            git(root, "remote", "add", "origin", origin_url)
+        with open(os.path.join(root, "RELEASES.md"), "w") as fh:
+            fh.write(legacy_md)
+        proc = subprocess.run(["bash", onboard_sh, root, *extra], capture_output=True, text=True)
+        assert proc.returncode == 0, proc.stderr + proc.stdout
+        repos, setting = slugs(root)
+        return {"repos": repos, "repo_slug": list(setting)}
+
+    for case, folder, url, extra, want in (
+            ("onboard-default-records-origin-owner-name", "different-folder",
+             "https://github.com/test-org/happy-repo.git", (), "test-org/happy-repo"),
+            ("onboard-dotted-repo-name", "dotted-folder", "https://github.com/test-org/foo.js.git", (),
+             "test-org/foo.js"),
+            ("onboard-explicit-slug-wins", "onboard-explicit", "https://github.com/test-org/happy-repo.git",
+             ("--slug", "chosen"), "chosen"),
+            ("onboard-no-origin-keeps-basename", "onboard-no-origin", None, (), "onboard-no-origin")):
+        got = onboard(folder, url, *extra)
+        record(case, got == {"repos": [(want,)], "repo_slug": [want]}, got)
+
 summary = {"summary": True, "passed": sum(results), "total": len(results), "app_dir": APP_DIR}
 print(json.dumps(summary, sort_keys=True))
 sys.exit(0 if results and all(results) else 1)

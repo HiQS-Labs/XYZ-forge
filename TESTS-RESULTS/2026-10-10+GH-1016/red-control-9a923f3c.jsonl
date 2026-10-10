@@ -9,4 +9,8 @@
 {"case": "init-local-path-origin-keeps-basename", "observed": [["local-origin-clone"]], "pass": true}
 {"case": "init-no-origin-keeps-basename", "observed": [["no-origin-repo"]], "pass": true}
 {"case": "init-explicit-slug-wins", "observed": [["chosen"]], "pass": true}
-{"app_dir": "<scratch>/base/utils/py", "passed": 7, "summary": true, "total": 11}
+{"case": "onboard-default-records-origin-owner-name", "observed": {"repo_slug": ["different-folder"], "repos": [["different-folder"]]}, "pass": false}
+{"case": "onboard-dotted-repo-name", "observed": {"repo_slug": ["dotted-folder"], "repos": [["dotted-folder"]]}, "pass": false}
+{"case": "onboard-explicit-slug-wins", "observed": {"repo_slug": ["chosen"], "repos": [["chosen"]]}, "pass": true}
+{"case": "onboard-no-origin-keeps-basename", "observed": {"repo_slug": ["onboard-no-origin"], "repos": [["onboard-no-origin"]]}, "pass": true}
+{"app_dir": "<scratch>/base/utils/py", "passed": 9, "summary": true, "total": 15}

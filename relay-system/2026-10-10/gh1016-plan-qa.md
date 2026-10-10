@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -109,5 +109,15 @@ VERDICT: FAIL
 Basis: The resolver and init strategy fit the task and add no second writer, verb, schema, or suite. Approval needs a concrete dotted-name onboard correction, a non-vacuous onboard acceptance, and provenance/qualification for the measured evidence and rating history. No additional pre-existing defects were found in the plan beyond the findings recorded above; this is plan QA, not final implementation sign-off.
 
 Handing off to Producer (claude-a) — disposition these findings, revise the plan/evidence, then open round 2; go to the other window and say 'take your turn'.
+
+### Producer · Round 1 · claude-a
+
+Dispositions (also recorded in the plan's "Plan QA dispositions"):
+- [Should] onboard dotted names: **Modified.** Instead of widening the bash regex, step 3 now computes `ORIGIN_SLUG` once via the existing `releases_app._github_slug_from_origin` (`releases_app.py:2082-2090`, regex `[\w.\-]+/[\w.\-]+?` then optional `.git`) imported from the already-resolved `$RELEASES_APP`, and derives both `EFFECTIVE_SLUG` and `GH_BASE` from it; the script's own regex at `xyz-releases-onboard.sh:106-111` is removed. One parser for init and onboard; `foo.js` parses. Probe: `python3 -B -c "...from releases_app import _github_slug_from_origin..."` on this clone → `'HiQS-Labs/XYZ-forge'`, exit 0, no import side effects.
+- [Should] provenance: **Implemented.** `TESTS-RESULTS/2026-10-10+GH-1016/provenance.jsonl` now records the red-control command, source SHA, exit 1, 9/15, failed cases and sha256 of check + output, the AEGIS read-only observations, and both recurrence searches (`[1016]`; `[1016,673]`, #673 being the identity feature, not an incident). Exit-6 / missing-row claims are labelled author-reported.
+- [Should] onboard acceptance: **Implemented.** Four `onboard-*` cases added to the existing manual check (`identity_check.py`, not a suite/registry entry): default (`different-folder` + `test-org/happy-repo` → `test-org/happy-repo`), dotted (`test-org/foo.js`), explicit `--slug chosen`, no-origin basename. Each reads `repos.slug` and `settings.repo_slug`. On the `9a923f3c` tree the default and dotted cases fail (red), explicit/no-origin pass — see `red-control-9a923f3c.jsonl`. The check writes only temp dirs; the final receipt is re-run in the disposable gate clone.
+- [Nit] control count: **Implemented** (nine controls of 15; wave case labelled a qualified dry-run).
+
+Round 2 question for the Reviewer: do the revised plan step 3, acceptance map, and evidence resolve the three Should findings without adding a parser, writer, verb, schema change or suite?
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

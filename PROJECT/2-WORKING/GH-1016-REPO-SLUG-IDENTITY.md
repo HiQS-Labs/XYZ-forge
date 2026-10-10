@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked and rated 70/60/50/70; recon traced; red control recorded (pre-fix 7/11); plan drafted. | Codex plan-QA relay (`relay-system/2026-10-10/gh1016-plan-qa.md`). |
+| Intake parked and rated 70/60/50/70; recon traced; red control recorded (pre-fix 9/15); plan QA round 1 FAIL (3 Should) dispositioned and plan revised. | Codex plan-QA round 2 (`relay-system/2026-10-10/gh1016-plan-qa.md`). |
 
 ## Table of contents
 
@@ -106,9 +106,17 @@ disposable clone made from a local path (SOP Step 2) must not record a bogus `ow
 `HiQS-Labs/AEGIS-Sleuth-Slackbot`, the schema is v7, and 14 rows carry
 `https://github.com/HiQS-Labs/AEGIS-Sleuth-Slackbot/issues/N` (71 have no URL). Red control: the
 recorded manual check `TESTS-RESULTS/2026-10-10+GH-1016/identity_check.py`, run on the `9a923f3c`
-tree, scores **7/11 and exits 1**. The four target cases fail: the own row, the wave move, the init
-slug, and the fresh-init row. The six controls pass: foreign rows invalid, multi-repo exact,
-local-path/no-origin/explicit init.
+tree (`utils/py` and `relay-automation` from `git archive 9a923f3c`), scores **9/15 and exits 1**.
+The six target cases fail: the own row, the qualified dry-run wave move, the init slug, the fresh-init
+row, the onboard default slug and the onboard dotted repo name. The nine controls pass: foreign rows
+invalid, wave skips the foreign row, multi-repo exact, local-path/no-origin/explicit init, and
+explicit/no-origin onboard. The command, source SHA, exit status, hashes, AEGIS observations and
+recurrence searches are in `TESTS-RESULTS/2026-10-10+GH-1016/provenance.jsonl`. The `marathon-plan`
+exit-6 symptom and the missing GH-201/211/219 rows are author-reported from the issue body; they were
+not re-measured here. Wave case 4 is a qualified dry-run (`update_roadmap_entry(..., dry_run=True)`
+returns True and does not log the skip); it is not proof of a persisted move. The onboard script's
+own GitHub parse (`xyz-releases-onboard.sh:108`, `([^/.]+)`) also refuses dotted repo names:
+`https://github.com/test-org/foo.js.git` does not match (Codex plan QA r1 probe).
 
 **Existing suites covering the seam.** `test/gh646-status-label.sh` (`gh646_status_label.py`: wave
 foreign-row and owned-row identity, express identity, all on `init --slug owner/project` with a
@@ -145,20 +153,29 @@ connectors treat AEGIS's own rows as owned without a hand repair. Foreign rows s
    `aegis-sleuth-slack-bot` → `aegissleuthslackbot` == `AEGIS-Sleuth-Slackbot` →
    `aegissleuthslackbot`. Validity is unchanged: `url_repo == origin_repo` exactly, and the number
    matches.
-   -> expect manual check cases 1, 4 and 6 to pass; `bash test/gh646-status-label.sh` and
+   -> expect manual check cases `legacy-bare-own-row-valid`, `wave-reconcile-moves-own-row` and
+   `multi-repo-ledger-keeps-exact-match` to pass; `bash test/gh646-status-label.sh` and
    `bash test/gh605-work-state.sh` to stay green.
 2. `cmd_init` (`:2176`): `slug = args.slug or _github_slug_from_origin(root) or basename`. The same
    value goes to `settings.repo_slug`, as today. An explicit `--slug` still wins.
-   -> expect manual check cases 7, 8, 9, 10 and 11 to pass; `bash test/gh32-releases-app.sh` to
+   -> expect the five `init-*` manual check cases to pass; `bash test/gh32-releases-app.sh` to
    stay green.
-3. `relay-automation/xyz-releases-onboard.sh`: move the existing `ORIGIN_URL`/`GH_BASE` parse
-   (`:105-111`) above Step 1, then
-   `EFFECTIVE_SLUG="${SLUG:-${GH_BASE#https://github.com/}}"`, falling back to the basename when
-   `GH_BASE` is empty. This adds no new parser.
-   -> expect `bash test/gh197-vendor-tier-split.sh` to stay green.
-4. Record the manual check: run `identity_check.py` on the fix tree (expect 11/11, exit 0) and on the
-   `9a923f3c` tree (red control: 7/11, exit 1). Commit both outputs and `provenance.jsonl` under
-   `TESTS-RESULTS/2026-10-10+GH-1016/`. Add a CHANGELOG entry.
+3. `relay-automation/xyz-releases-onboard.sh`: before Step 1, compute
+   `ORIGIN_SLUG` once by calling the same `releases_app._github_slug_from_origin` the init default
+   uses. The call is a `python3 -c` import from the already-resolved `$RELEASES_APP` directory,
+   against `$TARGET_REPO`. Then:
+   - `EFFECTIVE_SLUG="${SLUG:-${ORIGIN_SLUG:-$(basename "$TARGET_REPO")}}"`;
+   - `GH_BASE="${ORIGIN_SLUG:+https://github.com/$ORIGIN_SLUG}"` replaces the script's own regex at
+     `:106-111`, and the existing `--slug owner/name` fallback at `:112-116` stays.
+
+   One parser serves init and onboard. Dotted names (`foo.js`) now parse, which fixes the r1
+   finding.
+   -> expect the four `onboard-*` manual check cases to pass (onboard default, dotted name, explicit
+   slug, no-origin basename); `bash test/gh197-vendor-tier-split.sh` to stay green.
+4. Record the manual check: run `identity_check.py` on the committed fix tree (expect 15/15,
+   exit 0). The red control (9/15, exit 1) is already recorded. Append the green run to
+   `provenance.jsonl` under `TESTS-RESULTS/2026-10-10+GH-1016/`. The check writes only temp dirs; it
+   is re-run in the disposable gate clone for the final receipt. Add a CHANGELOG entry.
 5. Final gate: `ci-local.sh` or full `validate.sh`, once, in a separate disposable full clone of the
    committed branch. The route is full, because `relay-automation/` is a full-gate surface.
 
@@ -233,13 +250,26 @@ The stale rows then resolve as owned and move. No ledger repair command is neede
 | AEGIS-shaped bare slug resolves own rows `identity_valid True` | manual check cases 1, 4 (fix tree) |
 | Foreign-repo rows stay invalid | manual check cases 2, 3, 5 |
 | Multi-repo ledgers unchanged | manual check case 6; gh605 suites |
-| New ledgers record GitHub owner/name; non-GitHub origins keep basename | cases 7–11; gh32, gh197 |
-| Red control: pre-fix code fails the same check | `identity_check.py` on `9a923f3c` → 7/11, exit 1 |
+| New ledgers record GitHub owner/name; non-GitHub origins keep basename | five `init-*` cases; gh32 |
+| Onboarding records the same slug, including dotted names; explicit/no-origin unchanged | four `onboard-*` cases (red on base); gh197 |
+| Red control: pre-fix code fails the same check | `identity_check.py` on `9a923f3c` → 9/15, exit 1 (`provenance.jsonl`) |
 | No regression | gh646, gh605-work-state, gh605-board-policy, gh32, gh197 focused; full gate in a disposable clone |
 
 ## Plan QA dispositions
 
-_(filled from the relay thread)_
+Round 1 (Codex, FAIL, `relay-system/2026-10-10/gh1016-plan-qa.md`):
+
+- **[Should] Onboard dotted-name parse gap. Modified.** Onboard now reuses
+  `releases_app._github_slug_from_origin` for both its slug and `GH_BASE`, in place of its own bash
+  regex. That fixes dotted names with one parser and no second implementation (plan step 3).
+- **[Should] Provenance and rating claims. Implemented.** The red-control receipt, hashes, AEGIS
+  observations and both recurrence searches are now in `provenance.jsonl`. The exit-6 and missing-row
+  claims are labelled author-reported.
+- **[Should] Falsifiable onboard acceptance. Implemented.** Four `onboard-*` cases were added to the
+  existing manual check (not a suite). They are red on base (default and dotted fail) and read
+  `repos.slug` and `settings.repo_slug`.
+- **[Nit] Control count. Implemented.** The count now reads nine controls of 15. Wave case 4 is
+  described as a qualified dry-run.
 
 ## Implementation evidence
 
