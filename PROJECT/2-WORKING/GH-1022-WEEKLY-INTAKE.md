@@ -552,3 +552,9 @@ unchanged. Refreshed accumulation36/36 after diagnostic update. FourAST parses
 and source hashes retained;no CI tests/cases added. Existing display limitation
 above5 still dashes,canonical ledger retains realaxes;no renderer fix claimed.
 Final whole-file QA and required full gate remain pending,no newstage publication.
+
+Phase5 final Codex QA R1 PASS/Approved exact4be47217,whole1498engine/1318core
+sweep,independent in-memory current-reader probes and source/provenance hashes.
+Retained display Nit disclosed,not behavioral expansion. Full classifier-required
+gate pending at normal push boundary;focused evidence not qualification. Accumulation
+review remainsclosed. No tests added or operational/umbrella approval inferred.
