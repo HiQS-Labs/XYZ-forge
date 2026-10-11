@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -75,5 +75,29 @@ Candidate evidence721a43c6:reader10/10 with witnessed2oldfailures;actual isolate
 Questions: verify actualsharedprojection/read semantics and numbered/NULL-gh override correctness;preservation oftextaxes/optionalschema/required-errors/ambiguity/partial holds;correct existing score/wave/render consumption and preserved legacyfallback;source/evidence hashes and witnessedreds;no accidental policy/effect/dispatch authority from diagnosticupdate. Whole-file direct sweep required for BOTH changed source files,notdiff-only;read relevant sharedownerhelpers and docs. Report exact observed failures,scope/falsifier andseverityimpact for actionable findings. Do not claim broad W7–W11 readiness/immutable approval/sharedboundary completion;those remain required andheld.
 
 Only this relay maychange. No external/Git writes,suites/pytest,executablefixtures,source edits or extraagents;harmless in-memory/read-only probes allowed. No mutationheavygates in reviewerlinkedcheckout. Source/evidence frozen duringreview. Cap3 binding;no reinterpretation ofoldaccumulation budget. Handing off to Reviewer(codex)—perform bounded finalQA ofthis new slice.
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the bounded Phase5 implementation and corrected HELD diagnostic. The reader delegates effective rank to the canonical owner while preserving required schema, historical integer conversion, identity resolution and downstream scoring contracts. Required final classifier/full-gate qualification remains pending; this approval grants no publication, landing or dispatch authority.
+swept file: yes
+
+Scope: Direct whole-file sweep of all 1498 lines of utils/py/_marathon_plan.py and all 1318 lines of planner_core.py, plus the complete weekly skill, Phase5 plan, relevant shared owner helpers and Phase5 evidence/provenance. No graph tools were exposed in this session; exact local source replaces graph evidence. No suites, pytest, executable fixture program, full-engine invocation, Git command, external write or extra agent ran in this reviewer checkout.
+
+- [Pass] Single owner, bounded reader: utils/py/_marathon_plan.py:788–800 uses existing _has_column with historical NULL alias, retains the first eight SELECT fields, converts fully-rated values and calls roadmap_rating_view. utils/py/releases_app.py:4444–4455 owns the sum/override rule. Numbered and NULL-gh rows share that rank; :802–815 retains identity/ambiguity indexing. No schema writer or second scorer is introduced.
+
+  Independent narrow probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY' ... PY`, exit **0**. The inline body AST-extracted the exact reader and owner _table_exists/_has_column/_col/roadmap_rating_view; substituted only an in-memory SQLite connection and renderer/parser stubs. Input was [777,70,65,50,25,"gid-a","PROJECT/2-WORKING/A.md","Owner",320], with the named variants below. Decisive output: **numbered override: 320; ordinary: 210; partial override: None; unrated override: None; NULL-gh override: 320; historical text axes: 320; missing optional: 210; missing required: error3; duplicate NULL-gh identity: ambiguous, rank/axes None; zero override: 0 (not replaced by sum)**. An initial probe exited **1**, NameError "_table_exists" in the extracted helper namespace; including that actual helper corrected the probe setup without any source edit. These are reader measurements, not full-engine or readiness measurements.
+
+- [Pass] Source-bound evidence and witnessed reds: independent read-only Python hash/AST probe, same command prefix, reported **source hashes and AST: 4/4 match** and **phase5 provenance artifacts: 16/16 nonempty and hash match**. Those completed assertions preceded the initial extraction setup error above; their results are distinct from that failed reader attempt. Sources match phase5-source-hashes.json:2–5, including reader a2321cbd and core 3d1b47e3. Nonempty provenance.jsonl:75–90 binds every Phase5 artifact. phase5-reader-before.json records the two actual **210 vs 320** failures; phase5-reader-after.json records 10 matching controls. Retained phase5-full-engine-results.json records old/candidate order **778,777 → 777,778**, score/rank **-210/210 → -320/320**, and unchanged ledger bytes. These retained full-engine results were inspected, not rerun here.
+
+- [Pass] Consumer preservation: _marathon_plan.py:832–850 separates explicit Markdown and DB sources; :865–897 preserves identity/rated precedence; :1093–1113 negates dbRank and retains dependency/zone/gated adjustments and legacy scoring; :1143–1190 packs ready lanes; :1380–1385 renders that rank with dbAxes. Retained gh698 log ends **16 pass, 0 fail**, marathon-plan log **70 passed, 0 failed, 2 skipped**, and gh362 log **9 pass, 0 fail** (provenance.jsonl:84–86). Existing Bash render-parity skips are disclosed, not counted as verified parity. No suite was run here.
+
+- [Pass] Diagnostic corrects the hold without granting authority: planner_core.py:941–942 now says owner rank alone grants no execution authority; :993 returns **status="HELD", dispatch_allowed=False**, and :1154 still accounts each issue as **HELD**, "criterion delivery/readiness not reviewed". weekly/SKILL.md:74–79 describes the repaired Python owner rank and retains selection hold; :96–98 retains all-result HELD. Phase5 plan:520–525 explicitly leaves W7–W11 readiness/freeze/shared-boundary obligations required. Retained phase5-accumulation-results.json contains 36 passing controls bound to core/owner/library hashes; this diagnostic change does not reopen the closed accumulation review.
+
+- [Nit] Retained, explicitly disclosed display defect: _marathon_plan.py:104–108 formats only 1..5, while :1383–1385 applies it to DB axes. The retained full-engine owner row shows **—/—/—/— · rank 320** for 70/65/50/25. "Every input is shown" at :1370 remains overbroad. Existing approved plan disposition and weekly/SKILL.md:78–79 disclose the limitation; keep it disclosed, with no renderer expansion in this slice. The whole-file sweep found no additional actionable defect requiring this bounded implementation to change; pre-existing advisory readiness/closure heuristics remain explicitly unshipped obligations, not newly attested behavior.
+
+- [Unverified — needs clone run] The required final classifier/full gate has not run against the approved final source. It belongs in a disposable full clone after this turn, as Phase5 plan:516–518 and :557 require. Recorded focused/manual evidence is not full-gate qualification. No assertion of merge readiness, immutable approval, W7–W11 completion or live dispatch is made.
+
+Relay closed (Approved), no further reviewer turn needed. Handing the completed token back to author — run the required final gate in a disposable full clone and retain exact-source evidence before any separately authorized publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
