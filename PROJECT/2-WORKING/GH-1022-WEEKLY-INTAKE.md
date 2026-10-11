@@ -18,7 +18,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 
 | What was just completed | What's next |
 |---|---|
-| Held accumulation draft1024 at4770f091; QA5 Approved,normalgate28/28,hosted smoke passed. | Required W7–W11: remote lifecycle/global work,plan readiness,freeze/approval and shared safety. |
+| Canonical override reader published6e6db879;plan/finalQA Approved,fullgate409/409,hosted smoke passed. | W7 qualified work reconciliation;remaining W8–W11 readiness,freeze/approval and shared safety. |
 
 ## Table of contents
 
@@ -558,3 +558,13 @@ sweep,independent in-memory current-reader probes and source/provenance hashes.
 Retained display Nit disclosed,not behavioral expansion. Full classifier-required
 gate pending at normal push boundary;focused evidence not qualification. Accumulation
 review remainsclosed. No tests added or operational/umbrella approval inferred.
+
+Phase5 source published6e6db879 via unchanged normal full prepush:409/409,
+Python21,envelope clean,GREEN821s,no bypass. Hosted38181222495 exactSHA
+completedSUCCESS: blocking smokeSUCCESS,macOS/ubuntuSKIPPED,nottested/green.
+This is full local self-check,not ci-local/macOS promotion. Owner task ledger
+progress updated through canonical CLI with allrating/override/GID/status/doc
+fields preserved,connectorsdisabled;canonical checkclean. Proof/progress commit
+is code-identical and takes normal docs/ledger gate. Phase5 prerequisite done;
+W8 overallnotdone andW7–W11remainactive. Next independent Jog reader identity
+scope is grounded in actualbare-GH joinfailure;observerPR1017 remainsowned.

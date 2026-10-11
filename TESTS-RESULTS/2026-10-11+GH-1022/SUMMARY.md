@@ -214,3 +214,9 @@ sweep,independent in-memory current-reader probes and source/provenance hashes.
 Retained display Nit disclosed,not behavioral expansion. Full classifier-required
 gate pending at normal push boundary;focused evidence not qualification. Accumulation
 review remainsclosed. No tests added or operational/umbrella approval inferred.
+
+Phase5 published6e6db879:normalfullgate409/409in821s,Python21,cleanenvelope;
+hosted38181222495 exactSHA smokeSUCCESS,promotion/portabilitySKIPPED. No full
+promotion or liveexecution inferred. Owner progress CLI preservesallscore/status/
+GID/doc fields;canon checkclean. Allreviewedsourcehashesunchanged in proofcommit.
+W7–W11stillrequiredactive;nextpure Jog ownership seamrecon,observeroverlapheld.
