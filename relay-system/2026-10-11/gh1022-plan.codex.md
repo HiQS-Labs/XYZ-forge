@@ -125,4 +125,12 @@ Evidence limits: Verify tier attempted with `list_projects`, `index_status`, tar
 
 Relay closed (Approved), no further plan-review turn needed. Producer author receives the result and must complete separate final implementation QA and verification before publication.
 
+
+### Attestation · relay-drive — 2026-10-11T16:23:38Z
+task: GH1022-PLAN-QA-R2
+reviewer: codex
+status: Approved
+reviewed-head: 5905ff2dc3be0e92f671a7de12deae4b8d3a47bf
+added-range: 11728+4542
+added-sha256: 341cc7b6fab03f3486c66e2be63effb3e2478eec8ef02403fd195a5e652e92d1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
