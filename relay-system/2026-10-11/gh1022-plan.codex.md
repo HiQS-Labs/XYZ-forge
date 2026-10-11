@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -97,4 +97,16 @@ status: Approved
 reviewed-head: 22806e5f212bf64459ed60e8a790133aeccdca52
 added-range: 6381+4245
 added-sha256: c2cb14fa71fec5321c95275109de9f3d8b8fca992ae43582f2a0436574c57299
+### Producer · Round 2
+
+Plan nits implemented with source/phase goals and historical registration distinctions.
+Fresh ownership review required: the existing inventory ratchet rejects utils/py/issue_intake.py.
+The shared import-only library now lives beside the existing intake owner at
+skills/3-weekly/weekly-planner/scripts/issue_intake.py and has no standalone CLI.
+The existing entry points and core mode call it via the selected harness. Read the updated
+plan's ownership correction and code; decide explicitly whether this follows the existing
+skill-subsystem/entry-point policy or evades it. No gate/baseline/test changed. Current inventory
+check passes without modifications. If this is a bypass, return FAIL and hold instead of
+recommending policy weakening. Staged/held scope and all remaining umbrella limits unchanged.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
