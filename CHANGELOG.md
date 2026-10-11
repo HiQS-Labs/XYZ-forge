@@ -8,7 +8,12 @@ The private 10days adapter reports missing modes as usage errors. Explicit RELEA
 baseline capture rechecks live owner state inside its existing transaction and
 refuses a concurrent baseline cleanly; the SQL write-once safeguard remains.
 Manual before/after evidence retained; corrective review and publication pending.
-Runtime bundle provenance and bounded IO findings remain open; weekly stays HELD.
+Complete source/vendor bundles now retain their own runtime; separately copied
+skills retain central discovery, with clear refusal for invalid explicit hints.
+Preparation records/rechecks actual runtime paths/hashes and uses the existing
+process-group runner with60s IO containment. Held accounting ignores only check
+URL/time noise while retaining material readiness/scope changes and returning
+fresh PR metadata on no-op. Producer verification/final review pending;weekly HELD.
 
 
 ## 2026-10-11 — Canonical planner owner overrides (GH-1022, phase 5)

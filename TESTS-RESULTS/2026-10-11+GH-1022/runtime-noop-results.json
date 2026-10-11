@@ -1,0 +1,68 @@
+[
+  {
+    "control": "S1-stale-explicit-harness",
+    "rc": 0,
+    "stdout": "{\"issue\":777,\"doc\":null,\"bucket\":null,\"has_contract\":false}",
+    "stderr": ""
+  },
+  {
+    "control": "N1-invalid-explicit-harness",
+    "rc": 2,
+    "stdout": "",
+    "stderr": "10days: explicit harness is unavailable or incomplete"
+  },
+  {
+    "control": "S6-CI-rerun-bookkeeping",
+    "first_commit": "e48a5c3a4ecbcff305e3f99cef72c21f6ef3c18e",
+    "second_commit": "e48a5c3a4ecbcff305e3f99cef72c21f6ef3c18e",
+    "changed": false,
+    "fresh_check_url": "https://example.invalid/check/2",
+    "dispatch_allowed": false,
+    "scope": "local accounting commits and fresh advisory observation; no freeze/approval/execution authority"
+  },
+  {
+    "control": "S6-material-check-result",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-mergeability",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-review-decision",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-head",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-body",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-files",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-unknown-check-field",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-draft",
+    "changed": true,
+    "dispatch_allowed": false
+  },
+  {
+    "control": "S6-material-null-checks",
+    "changed": true,
+    "dispatch_allowed": false
+  }
+]

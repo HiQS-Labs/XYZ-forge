@@ -21,29 +21,42 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+# Byte identity of this entry point; verification is separate from execution approval.
+PLANNER_SOURCE_SHA256 = __import__("hashlib").sha256(Path(__file__).read_bytes()).hexdigest()
+WEEKLY_IO_TIMEOUT_SECONDS = 60
+
 
 def load_issue_intake():
     """Locate harness code without importing planner main or creating scratch."""
     import importlib.util
-    here = Path(__file__).resolve()
-    candidates = []
     override = os.environ.get("XYZ_HARNESS") or os.environ.get("XYZ_REPO_ROOT")
-    if override:
-        candidates.append(Path(override) / "skills/1-hourly/relay-xyz/find-harness.sh")
-    candidates.append(here.parents[3] / "1-hourly/relay-xyz/find-harness.sh")
-    for directory in (".codex/skills", ".agents/skills", ".claude/skills", ".gemini/config/skills",
-                      ".gemini/antigravity/skills", ".gemini/antigravity-cli/skills", ".zcode/skills"):
-        candidates.append(Path.home() / directory / "relay-xyz/find-harness.sh")
-    locator = next((path for path in candidates if path.is_file()), None)
-    if locator is None:
-        raise RuntimeError("harness locator not found; set XYZ_HARNESS")
-    harness = Path(run_cmd(["bash", str(locator), "--root", "--quiet"]))
-    module_file = harness / "skills/3-weekly/weekly-planner/scripts/issue_intake.py"
-    if not module_file.is_file():
-        raise RuntimeError("selected harness lacks issue_intake.py; update harness")
+    if override and not (Path(override) / "relay-automation/relay-drive.sh").is_file():
+        raise RuntimeError("explicit harness is unavailable or incomplete")
+    here = Path(__file__).resolve()
+    bundled = here.parents[4]
+    module_file = bundled / "skills/3-weekly/weekly-planner/scripts/issue_intake.py"
+    if not all(path.is_file() for path in (module_file, bundled / "utils/py/releases_app.py",
+                                          bundled / "utils/hq/hq-lib.sh",
+                                          bundled / "relay-automation/relay-drive.sh")):
+        candidates = []
+        if override:
+            candidates.append(Path(override) / "skills/1-hourly/relay-xyz/find-harness.sh")
+        candidates.append(here.parents[3] / "1-hourly/relay-xyz/find-harness.sh")
+        for directory in (".codex/skills", ".agents/skills", ".claude/skills", ".gemini/config/skills",
+                          ".gemini/antigravity/skills", ".gemini/antigravity-cli/skills", ".zcode/skills"):
+            candidates.append(Path.home() / directory / "relay-xyz/find-harness.sh")
+        locator = next((path for path in candidates if path.is_file()), None)
+        if locator is None:
+            raise RuntimeError("harness locator not found; set XYZ_HARNESS")
+        harness = Path(run_cmd(["bash", str(locator), "--root", "--quiet"]))
+        module_file = harness / "skills/3-weekly/weekly-planner/scripts/issue_intake.py"
+        if not module_file.is_file():
+            raise RuntimeError("selected harness lacks issue_intake.py; update harness")
     spec = importlib.util.spec_from_file_location("issue_intake", module_file)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    data = module_file.read_bytes()
+    exec(compile(data, str(module_file), "exec"), module.__dict__)
+    module.loaded_sha256 = __import__("hashlib").sha256(data).hexdigest()
     return module
 
 
@@ -813,7 +826,30 @@ def prepare_weekly(args, source_root, command=None):
     renderer = harness / "utils/hq/hq-lib.sh"
     spec = importlib.util.spec_from_file_location("weekly_releases_owner", app)
     canonical = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(canonical)
+    app_bytes = app.read_bytes()
+    exec(compile(app_bytes, str(app), "exec"), canonical.__dict__)
+    process_path = harness / "utils/py/proc_group.py"
+    process_spec = importlib.util.spec_from_file_location("weekly_process_owner", process_path)
+    process = importlib.util.module_from_spec(process_spec)
+    sys.modules[process_spec.name] = process  # dataclasses resolves its owning module
+    process_bytes = process_path.read_bytes()
+    exec(compile(process_bytes, str(process_path), "exec"), process.__dict__)
+    runtime_files = {"planner": Path(__file__).resolve(), "intake": Path(intake.__file__).resolve(),
+                     "writer": app, "renderer": renderer, "process_runner": process_path}
+    runtime_hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in runtime_files.items()}
+    if (runtime_hashes["planner"] != PLANNER_SOURCE_SHA256
+            or runtime_hashes["intake"] != intake.loaded_sha256
+            or runtime_hashes["writer"] != hashlib.sha256(app_bytes).hexdigest()
+            or runtime_hashes["process_runner"] != hashlib.sha256(process_bytes).hexdigest()):
+        raise ValueError("runtime code changed while loading; refresh without side effects")
+    runtime = {"harness": str(harness), "paths": {name: str(path.resolve()) for name, path in runtime_files.items()},
+               "sha256": runtime_hashes, "io_timeout_seconds": WEEKLY_IO_TIMEOUT_SECONDS}
+
+    def check_runtime():
+        if any(str(path.resolve()) != runtime["paths"][name]
+               or hashlib.sha256(path.read_bytes()).hexdigest() != runtime_hashes[name]
+               for name, path in runtime_files.items()):
+            raise ValueError("runtime code changed during preparation; preserve partial state and refresh")
 
     def require_unrated_title(issue):
         # Canonical add parses rating tokens from its rendered line, including
@@ -847,12 +883,16 @@ def prepare_weekly(args, source_root, command=None):
     env = dict(os.environ, XYZ_WORK_CONNECTORS="0", PYTHONDONTWRITEBYTECODE="1")
     if command is None:
         def command(argv, cwd):
-            result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True)
-            if result.returncode:
-                raise RuntimeError(f"command refused ({result.returncode}): {argv[0]} {result.stderr.strip()}")
+            result = process.run_bounded(argv, cwd=str(cwd), env=env,
+                                         timeout=WEEKLY_IO_TIMEOUT_SECONDS, grace=1)
+            if result.timed_out:
+                raise RuntimeError(f"command timed out after {WEEKLY_IO_TIMEOUT_SECONDS}s: {argv[0]}; preserve partial state")
+            if result.rc:
+                raise RuntimeError(f"command refused ({result.rc}): {argv[0]} {result.stderr.strip()}")
             return result.stdout
 
     def durable(path, value):
+        check_runtime()
         path.parent.mkdir(parents=True, exist_ok=True)
         fd, temporary = tempfile.mkstemp(prefix=".weekly-", dir=path.parent)
         try:
@@ -870,6 +910,7 @@ def prepare_weekly(args, source_root, command=None):
                 os.unlink(temporary)
 
     def git(argv, cwd=source_root):
+        check_runtime()
         return command(["git", *argv], cwd).strip()
 
     remote = git(["remote", "get-url", "origin"])
@@ -939,6 +980,15 @@ def prepare_weekly(args, source_root, command=None):
         observed["issues"] = intake.deduplicate(observed["issues"] + backfill)
         observed["pages"]["initial_open"] = pages
     stable = {key: value for key, value in observed.items() if key not in ("observedAt", "since", "pages")}
+    # URLs/times identify a check attempt, not a change to held accounting.
+    # Retain every result/readiness/unknown field; executable freeze receipts
+    # must bind fresh full check evidence separately and remain unimplemented.
+    volatile_check_fields = {"detailsUrl", "url", "startedAt", "completedAt"}
+    stable["prs"] = [dict(pr, statusCheckRollup=[
+        {key: value for key, value in check.items() if key not in volatile_check_fields}
+        for check in pr["statusCheckRollup"]]) if isinstance(pr.get("statusCheckRollup"), list)
+        else dict(pr) for pr in observed["prs"]]
+    stable["runtime"] = runtime
     stable["holds"] = ["Local canonical accounting only; dependency expansion, authoritative selection, criterion review, freeze and shared dispatch boundaries remain held.",
                        "Owner rank alone grants no execution authority; selection requires separately reviewed readiness and criterion evidence."]
     def inspect_members(ledger_rows, directory):
@@ -980,10 +1030,11 @@ def prepare_weekly(args, source_root, command=None):
         if not isinstance(ledger_rows, list) or any(not isinstance(row, dict) for row in ledger_rows):
             raise ValueError("invalid canonical ledger response")
         writes = inspect_members(ledger_rows, inspection_root)
-        return dict(observed, holds=stable["holds"], preparation={"root": str(root), "branch": branch, "target_head": base,
+        return dict(observed, runtime=runtime, holds=stable["holds"], preparation={"root": str(root), "branch": branch, "target_head": base,
                     "effects": "apply creates/resumes full clone, canonical captures/DB/dump and local receipts; never pushes",
                     "initial_backfill": args.initial_backfill, "intended_writes": writes}, status="HELD", dispatch_allowed=False)
     if not root.exists():
+        check_runtime()
         command(["git", "clone", "--no-hardlinks", "--", remote, str(root)], source_root)
         if (root / ".git").is_file() or (root / ".git").is_symlink():
             raise ValueError("clone did not produce an independent Git directory")
@@ -1002,6 +1053,7 @@ def prepare_weekly(args, source_root, command=None):
         return hashlib.sha256(path.read_bytes()).hexdigest()
 
     def ledger(*argv):
+        check_runtime()
         return command([sys.executable, str(app), "--root", str(root), *argv], root).strip()
 
     def rows():
@@ -1123,6 +1175,7 @@ def prepare_weekly(args, source_root, command=None):
                 if created_at.tzinfo is None or any(char in issue["title"] for char in "\r\n\0"):
                     raise ValueError("new capture requires qualified createdAt and a single-line title")
                 created = created_at.date().isoformat()
+                check_runtime()
                 content = command(["bash", "-c", 'source "$1"; shift; hq_render_capture "$@"', "weekly-capture",
                                    str(renderer), str(issue["number"]), issue["url"], issue["title"], created,
                                    "feedback", repository, repository, issue["body"]], root)
@@ -1184,7 +1237,8 @@ def prepare_weekly(args, source_root, command=None):
                     state["checkpoint_cut"] = old["checkpoint_cut"]
                     if resuming_partial:
                         durable(receipt_path, state)
-                    return dict(old, changed=False, planning_commit=state["complete_commit"])
+                    return dict(old, prs=observed["prs"], observedAt=observed["observedAt"],
+                                changed=False, planning_commit=state["complete_commit"])
                 if target_head(root) != base or rows() != state["ledger_rows"] or int(ledger("settings", "get", "generation")) != state["generation"]:
                     raise ValueError("target/ledger drift before commit; preserve partial state")
                 if any((root / item["doc_path"]).is_symlink() or digest(root / item["doc_path"]) != item["doc_sha256"] for item in accounting):
@@ -1216,7 +1270,8 @@ def prepare_weekly(args, source_root, command=None):
                     raise ValueError("committed accounting/branch drift; preserve commit without complete checkpoint")
                 state["complete_commit"] = completed
                 durable(receipt_path, state)  # checkpoint becomes complete only after commit
-                return dict(payload, changed=True, planning_commit=state["complete_commit"])
+                return dict(payload, prs=observed["prs"], observedAt=observed["observedAt"],
+                            changed=True, planning_commit=state["complete_commit"])
         except SystemExit as error:
             raise ValueError("canonical writer refused commit boundary; preserve partial state") from error
 

@@ -662,22 +662,25 @@ Current published source is 7d0bd85e19cccd81cf6cce060b1027a1c8bb49fc;
 local pre-correction HEAD 9eadca0aa74ac8e2a9040c308e38709392cd5d38 adds only
 Phase6 plan/evidence. Full findings and inline comments were read before fixes.
 The completed accumulation R5 (5/5 Approved) remains closed, unchanged. It cannot
-attest these changed bytes. Additional corrective review authority is pending;
+attest these changed bytes. Additional corrective final review authority is pending;
 no new review dispatched, cap reset, final qualifying gate or corrective push.
+The operator explicitly directed continued feasible producer remediation; the
+runtime/IO repairs below reuse the documented existing mechanisms. No independent
+pre-implementation review or fresh Approved claim is inferred from that direction.
 Phase6 is paused; no Jog owner implementation or QA has started.
 
 | ID | Disposition / observed impact |
 |---|---|
-| S1 | Valid qualification gap: inherited old harness loads different/missing helper. Loader ownership-policy repair pending plan/final review authority; current code unchanged here. |
-| S2 | Valid runtime provenance gap: selected intake/writer/renderer can differ from target HEAD. Documented actual ownership; source fingerprint behavior pending with S1. No runtime attestation claimed. |
+| S1 | Fixed locally: a complete source/vendor runtime uses its own shared helper and canonical owners; separately copied skills use the central locator. Inherited stale valid hints no longer redirect a complete source bundle away from its tested bytes. Independent final qualification remains pending. |
+| S2 | Fixed locally: preparation records actual planner/intake/writer/renderer/process-runner resolved paths and SHA256 bytes, checks drift before effects/reads/commit boundaries, and binds them into local receipts. Runtime observations remain distinct from target HEAD and execution approval. |
 | S3 | Valid rollout limit. Explicitly documented consistent helper/Python3/harness update prerequisite and old-vendor failure; no deployment or vendor writes authorized/performed. |
 | S4 | Fixed locally: qualified identity stays lowercase while the validated observed GitHub URL retains canonical casing. Actual canonical registration retains Fixture/Repo URL, existing owner rows unchanged. No global URL rewrite. |
 | S5 | Fixed locally: reuse dry inspection to validate the whole batch before any capture or registration. Rated third title and malformed createdAt reject without earlier new rows/files; corrected title resumes successfully. Per-member drift checks remain. Already-partial unknown clones remain preserved, not silently reset. |
-| S6 | CI URL churn reproduced: a fresh check URL makes a local accounting commit, with fresh metadata and dispatch false. Proposed omission is not accepted as a blind safety change: PR observation currently forms the complete receipt input. A durable-scope/live-observation policy split needs an explicit reviewed contract; execution no-op for delivered work is still unimplemented. This is local bookkeeping churn, not duplicate work dispatch. |
-| S7 | Valid availability risk: default preparation subprocess and target reads are unbounded, including under WriterLock. Bounded IO repair must reuse utils/py/proc_group.py; pending corrective plan review, not implemented. No hook/signing bypass or cached-target substitution. |
+| S6 | Fixed locally for witnessed metadata noise: omit only check URLs/start/completion times from durable accounting comparison, return fresh full PRs on every call including no-op. Keep result/draft/review/mergeability/head/body/files/unknown changes material. No current approval-invalidation policy decision is needed because accounting is HELD and grants no execution authority; future frozen approvals still require fresh full evidence. Actual delivered-work execution no-op remains unimplemented. |
+| S7 | Fixed locally: default weekly commands reuse utils/py/proc_group.py run_bounded with60s IO ceiling/1s termination grace. Actual slow hook/remote controls terminate owned resistant child groups, release locks and retain retry receipts. Normal hooks/signing and fresh target reads remain active. Copied locator startup and legacy modes are outside this scoped command change. |
 | S8 | Valid CI coverage gap; permanent drivers/tests not authorized. Three individual cases proposed in [#1027](https://github.com/HiQS-Labs/XYZ-forge/issues/1027), each separately awaiting operator approval. Existing tests unchanged. |
 | S9 | Fixed locally as a clean locked refusal. Canonical race reproduced a SQL IntegrityError; existing write-once trigger preserved baseline1 rather than overwriting it with2. Current transaction rechecks live GID baseline and manifest before capture; automatic activation and SQL trigger unchanged. Claimed current data loss disproved. |
-| N1 | Valid invalid-override fallback behavior reproduced; pending with S1 loader ownership policy. Do not alter shared locator semantics globally. |
+| N1 | Fixed locally in the two intake loaders: an unavailable/incomplete explicit harness hint refuses clearly before fallback. Shared locator semantics remain untouched. |
 | N2 | Fixed locally: missing/invalid private adapter mode returns usage/rc2 before lookup, without traceback. Existing scan/find wrapper interfaces unchanged. |
 | N3 | Lost-root-check race reproduced: another initializer finishes between absent-root check and clone; losing git clone refuses nonempty directory, winner HEAD/complete receipt and clean state remain intact. Existing writer lock/HEAD checks protect resumed clones. Added bootstrap framework rejected absent a failing preservation case; normal loser refusal is acceptable. |
 | N4 | Broad generic SQL guard refactor rejected: independently named stale-row predicates preserve existing writer transactions and validated row contracts. The new baseline refusal includes GID. No policy weakened to remove guards. |
@@ -695,7 +698,7 @@ writes are local fixture effects; GH/target transport is stubbed, connectors off
 Existing36 accumulation controls and focused gh32(145/145),gh69(85/85),gh369(14/14) pass on exact corrective source41f225bd8726499c999184162037d1fd826140a1 in the disposable fullclone. Corrective source remains unpublished and independently unreviewed.
 No tests/cases/parametrizations, CI registry, gate or policy weakening added.
 
-### Pending corrective plan (S1/S2/N1 and S7)
+### Corrective producer contract (S1/S2/N1/S6 and S7)
 
 Outcome: entry-point verification identifies the executable bundle actually used,
 and a stalled command cannot hold an owned preparation writer indefinitely.
@@ -713,7 +716,7 @@ normal hooks/signing and immediate fresh target checks. Injected fixture runner
 contract remains unchanged. Timeout returns held/unknown and preserves partial
 state, with no surviving owned child group. Legacy planner modes remain unchanged.
 
-Ordered work once corrective plan/review authority is resolved: (1) review loader
+Producer work under the operator's continued remediation direction: (1) review loader
 ownership/override/copy/old-vendor contract with current sources; (2) implement thin
 loaders and actual-runtime pins, verifying inherited stale override, standalone
 copy, old vendor and changed code boundary controls; (3) extend only default weekly
@@ -724,3 +727,17 @@ and exact-SHA draft publication. No separate discovery scanner or orchestration
 framework. PR1026 c1a0e543fb79a1e405ec962b6dba289f9d00c3e8 owns start-task prior-art
 merged/issues/sibling/REST work; its scanner and skills remain untouched and its
 landing is not assumed. PR1017 observer ownership also remains separate.
+
+
+S6 decision clarification: the current file is held canonical accounting, not an
+operator-approved freeze. Therefore filtering known check locator/time noise is
+an ordinary in-scope no-op correction, with fresh full PR data returned separately.
+Alternative1 retains every run URL/time as material (safe but needless commits).
+Chosen alternative2 ignores only four known locator/time keys, preserving all
+readiness/result/unknown fields as material. Alternative3 ignores actual CI,
+review or mergeability transitions too; rejected for this scope because it needs
+an approval-invalidation contract and stronger fresh-evidence boundary already
+required in unimplemented W9–W11. No operator policy waiver is sought or applied.
+The narrow outstanding operator decision is one consolidated corrective final
+review authorization after producer verification, preserving the closed R5.
+No S8 individual CI test is approved by that review authorization.

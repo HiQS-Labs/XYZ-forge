@@ -262,3 +262,37 @@ No new final qualifying gate or review ran;closed R5 is preserved and new review
 authority remains pending. Corrective source/evidence retained locally,unpublished.
 
 Additional actual-source concurrent manifest-cut control returns baseline-empty-manifest/rc3 and preservesNULL baseline. OwnGID canonical progress raw_text updated to the held corrective state;all other returned owner fields preserved,check clean0failures9warnings. Task-local DB/dump/receipt writes only,connectorsdisabled. Source bytes remain41f225bd;no review/gate/push.
+
+
+Continued producer remediation per explicit operator direction, no independent
+review or R5 restart: S1/S2/N1 runtime ownership/pins andS7 default bounded IO
+implemented locally. Complete bundle uses own shared runtime; standalone copies
+use central locator;invalid explicit hints refuse. Actual runtime paths/bytes
+are checked before side effects and bound separately from target Git HEAD.
+S6 no-op comparison omits only known check URL/time keys, preserves all
+result/readiness/unknown fields, and returns fresh full PR metadata even onno-op.
+This is held accounting,not frozen approval;future full check evidence and
+approval-invalidation enforcement remain required in W9–W11.
+
+Producer verification:19 actual-source controls pass, including copied/old
+harness choices, invalidhint refusal,five runtime hashes/private receipt,
+default command actual canonical apply,slow Git hook andremote timeouts with
+TERM-resistant owned child groups,locks released,uncompleted receipt retained,
+exact-input retry/once commit,runtime drift before capture intent andafter
+canonical writer transaction,and exact-source restoration/adoption. Default
+production deadline60s is shortened to2s only in loaded fixture namespace.
+No task/deployed runtime files modified by drift controls:copied temporary
+runtime only. A ps read of owned PIDs required sandbox escalation;initial
+fixture PATH leak andmacOS /var-/private path comparison were corrected before
+retained successful control run. No policy or source bypass made it green.
+
+S6 check-URL no-op retainsHEAD and returns freshURL;9 material mutations
+(result,mergeability,review,head,body,files,unknowncheckfield,draft,nullchecks)
+all causeheld accounting changes. Existing36 accumulation manual controls and
+20 discovery/legacy/copy probes pass,including5 unchanged scan interfaces.
+All are temporary manual verification;no permanent drivers,new CI cases,gate
+registrations orpaid independent review. Fixtures write canonicalDB/dumps,
+captures,intents/receipts andlocal commits,stub transport,connectorsdisabled;
+no real Marathon/Jog,recurring scheduling,installation,push ordeployment.
+Final source hashes recorded;existing focused checks andconsolidated final
+review remain pending before qualification/publication.

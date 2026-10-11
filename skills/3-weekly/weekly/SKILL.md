@@ -22,19 +22,28 @@ never claim umbrella completion, enable scheduling or run a real Marathon/Jog.
 
 ## Read-only observation
 
-Resolve `/relay-xyz`'s shipped `find-harness.sh --root`; require Python3 and
-`skills/3-weekly/weekly-planner/scripts/issue_intake.py` in that selected harness.
-Copied skills must use this locator, not cwd-relative sibling imports. Set HARNESS
-to the returned root and confirm the explicit repo/timestamp:
-The selected harness supplies the intake library, canonical RELEASES writer and
-HQ renderer; SOURCE_ROOT's Git HEAD does not identify those executable bytes.
-A preparation record currently pins the target and plan state, not a runtime-code
-attestation. Runtime ownership/fingerprint remediation is pending; keep dispatch
-held. Copied skills and older `.xyz` vendors need the new shared helper and Python3
-from a consistently updated harness. Copying only the adapter into an old vendor
-is insufficient. Use the established vendor/copy workflow when separately
-authorized; this task does not update any vendor or deployed skill collection.
+Resolve `/relay-xyz`'s shipped `find-harness.sh --root` for a separately copied
+skill; require Python3 and the shared intake helper in that selected harness.
+A complete repository/vendor bundle uses its own intake, canonical RELEASES
+writer and HQ renderer as one runtime, even when an inherited valid harness hint
+points elsewhere. Invalid explicit `XYZ_HARNESS`/`XYZ_REPO_ROOT` hints fail clearly;
+they do not silently become profile fallback. A separately copied skill retains
+central locator discovery, without a sibling-skill dependency. Set HARNESS to the
+current runtime root and confirm the explicit repo/timestamp.
 
+Preparation records actual planner/intake/writer/renderer/process-runner paths and
+SHA256 hashes, separately from SOURCE_ROOT's target Git HEAD. It checks these
+bytes and resolved paths before side effects, target/ledger reads and final commit
+boundaries. Code drift preserves uncompleted state for explicit reconciliation or
+retry with the exact original runtime; this observation is not an execution
+approval or protection against an adversarial change/revert sequence.
+
+Copied skills and older `.xyz` vendors need Python3 and a consistent current
+harness with the shared helper and process runner. Copying only an adapter into an
+old vendor is insufficient. Use the established vendor/copy workflow when
+separately authorized; this task does not update any vendor or deployed skill
+collection. Locator startup and legacy planner/10days command policies remain
+unchanged except this scoped runtime ownership/invalid-hint correction.
 
 ```bash
 XYZ_HARNESS="$HARNESS" PYTHONDONTWRITEBYTECODE=1   python3 "$HARNESS/skills/3-weekly/weekly-planner/scripts/planner_core.py"   --repo-root "$SOURCE_ROOT" --gh-repo "$TARGET_REPO" --mode weekly-intake   --since "$SINCE"
@@ -50,6 +59,23 @@ prevents import cache writes. Redirecting stdout explicitly writes a local file.
 The outline sequencing/audit fields are advisory, never readiness or delivery proof.
 
 ## Explicit local accumulation
+
+Default weekly preparation commands use the existing `proc_group.run_bounded`
+runner: 60-second per-command IO ceiling, one-second termination grace, with
+owned-child group cleanup. This includes fresh remote checks and normal Git hooks
+or signing while the canonical writer lock is held. Timeout returns held/unknown
+and preserves partial state for retry; it does not disable hooks or replace fresh
+target checks with cached refs. The ceiling is mechanical IO containment, not a
+builder budget, recurring schedule or dispatch permission. Injected fixture
+runners retain their existing contract; separately copied locator startup and
+legacy modes do not acquire this new command policy.
+
+Held accounting excludes only check URLs/start/completion times from durable
+change detection. CI results, draft/review/mergeability state, heads, bodies,
+files and unknown metadata remain material. Every returned observation includes
+fresh full PR metadata, even when no commit is made; an unchanged input preserves
+the committed cut/receipt/HEAD. The accounting artifact is not a frozen execution
+receipt: future freeze/fire checks must bind fresh full check evidence separately.
 
 Preparation uses the existing core's opt-in `weekly-prepare` mode. Specify every
 policy input; no timezone/date/backfill/overlap defaults are invented. First inspect
