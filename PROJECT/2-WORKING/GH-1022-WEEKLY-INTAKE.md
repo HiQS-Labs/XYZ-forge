@@ -18,7 +18,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 
 | What was just completed | What's next |
 |---|---|
-| Foundation draft #1024 published at d7ef2bc9; exact-head hosted smoke passed. | Phase 4 accumulation plan QA/implementation; umbrella safeguards remain active. |
+| Held local accumulation QA5 Approved at e016d29a; exact-source gate28/28. | Publish reviewed stage through normal gates; continue required W7–W11 safeguards. |
 
 ## Table of contents
 
@@ -34,7 +34,7 @@ Outcome: complete issue observations shared by weekly and 10days, without import
 10days' auto-fire policy. Smallest viable staged bet: one harness-owned issue_intake.py,
 thin existing shell adapters, and an explicit read-only weekly-intake preview in the
 existing planner core. The new weekly skill describes the held preparation entry point.
-This PR is a foundation, not completion of umbrella #1022. The entire workflow is held
+This PR delivers shared discovery and held local accumulation; umbrella #1022 remains incomplete. The entire workflow is held
 until branch reconciliation and execution safeguards ship and receive separate review.
 
 Calling the whole 10days workflow is rejected because it re-rates and auto-fires.
@@ -176,7 +176,7 @@ failure diagnosis; no speculative acceptance expansion or new CI tests.
 
 - [x] Phase 1 current sources and installed-name inventory characterized.
 - [x] Phase 2 shared read module, compatible adapters, explicit held core mode and skill.
-- [ ] Phase 3 final independent QA and exact final gate/publication.
+- [x] Phase 3 foundation final QA/gate/publication — ca4c9b5a review; draft1024 at d7ef2bc9; hosted38156666103 smoke passed.
 
 Sources: scan-issues.sh and find-doc.sh pre-extraction at base f1225359; planner_core.py
 run_cmd/ensure_temp_dir/get_open_prs/detect_merge_sequence/pivot_daily/ingest_weekly_intake;
@@ -446,3 +446,18 @@ writer-diagnosis-final.json for path coverage,remaining limits and next review s
 Same artifact remainsEscalated4/4;no further review authorized/no attestation.
 Publication held;W7–W11 required active,umbrella incomplete. Next action requires
 explicit operator cap decision for this consolidated same-artifact review scope.
+
+### Scoped Round5 approval and publication disposition
+
+The user authorized exactly one further review plus issue filing for concrete
+findings below High before normal gated draft publication. All four earlier FAIL
+rounds preserved;same artifact5/5. Independent Codex R5 PASS/Approved attested
+exact reviewed e016d29a,whole-file sweep and source-bound in-memory witnessed reds;
+no unresolved Critical/High and no new actionable lower finding. High owner-loss
+impacts were fixed,not downgraded. Therefore no follow-up issue created this turn.
+No clean-verdict fabrication or repo-wide policy change. Source hashes still equal
+verified a0b484b5;normal push gate will check the final evidence/documentation commit.
+This is limited held accumulation approval. Full umbrella W7–W11,global clone/
+remote planning lifecycle,canonical planner override/readiness,freeze/exact approval
+and shared fire/phase/resume/landing safeguards remain required and unimplemented.
+No merge,deployment,installation,schedule,live execution or new CI test authorized.
