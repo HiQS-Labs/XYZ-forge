@@ -89,4 +89,12 @@ Evidence limits: Verify-tier graph attempted against nearest indexed canonical p
 
 Relay closed (Approved), no further turn needed. Producer author may implement the staged plan and address the documentation nits; final implementation QA remains required.
 
+
+### Attestation · relay-drive — 2026-10-11T16:10:46Z
+task: GH1022-PLAN-QA
+reviewer: codex
+status: Approved
+reviewed-head: 22806e5f212bf64459ed60e8a790133aeccdca52
+added-range: 6381+4245
+added-sha256: c2cb14fa71fec5321c95275109de9f3d8b8fca992ae43582f2a0436574c57299
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
