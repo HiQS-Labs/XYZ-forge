@@ -97,4 +97,12 @@ Scope: Read all 533 lines of the owning plan, all 1489 engine lines, the entire 
 
 Relay closed (Approved), no further plan-review turn needed. Handing the completed token back to author; proceed with the scoped implementation and its separately required final QA/gates.
 
+
+### Attestation · relay-drive — 2026-10-11T22:12:34Z
+task: GH1022-PHASE5-PLAN-R1
+reviewer: codex
+status: Approved
+reviewed-head: 45d55239b9affb74b866d3bef3f46e1c812a560c
+added-range: 7622+5152
+added-sha256: a58301f135755fbb48ac3d52ca5560951ac794c48e77edc18c9a984ebf63ef72
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
