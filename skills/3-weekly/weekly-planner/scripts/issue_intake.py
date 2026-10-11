@@ -246,6 +246,19 @@ def discover_weekly(repository: str, since: str, root: Path, previous: dict | No
         fields = "number,title,url,state,updatedAt,isDraft,headRefName,baseRefName,headRefOid,mergeable,reviewDecision,statusCheckRollup,body,author,changedFiles,labels,createdAt,closedAt"
         pr = json.loads(runner(["gh", "pr", "view", str(item["number"]), "-R", repository, "--json", fields], root))
         fresh = normalize_record(pr, repository, "pr")
+        # Validate the fields consumed by existing advisory helpers, without
+        # changing their policy or coercing malformed observations into readiness.
+        for field in ("reviewDecision", "mergeable", "headRefName", "baseRefName"):
+            if pr.get(field) is not None and not isinstance(pr[field], str):
+                raise ValueError(f"invalid PR {field}: {item['identity']}")
+        rollup = pr.get("statusCheckRollup")
+        if rollup is not None:
+            if not isinstance(rollup, list) or any(not isinstance(check, dict) for check in rollup):
+                raise ValueError(f"invalid PR statusCheckRollup: {item['identity']}")
+            for check in rollup:
+                for field in ("__typename", "state", "status", "conclusion"):
+                    if check.get(field) is not None and not isinstance(check[field], str):
+                        raise ValueError(f"invalid PR CI {field}: {item['identity']}")
         if fresh != item:
             raise ValueError(f"PR changed during intake: {item['identity']}; refresh")
         files, _ = read_pages(f"repos/{repository}/pulls/{item['number']}/files?per_page=100", root, runner)

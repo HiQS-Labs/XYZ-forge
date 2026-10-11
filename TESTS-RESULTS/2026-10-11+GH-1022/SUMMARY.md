@@ -46,3 +46,10 @@ values with ValueError. In-memory core controls: valid open remains HELD/exit 0;
 null/numeric return complete false, UNKNOWN, dispatch false and exit 2. Pre-fix
 bytes failed both invalid-state assertions, a witnessed red control. All original
 20 manual checks also pass on updated source hashes. No new CI test/case added.
+
+Final QA round 2 found numeric PR reviewDecision escaping advisory sequencing as
+AttributeError. The weekly read boundary now validates text fields and CI collection/
+item text types consumed by those existing helpers. Legacy policy is unchanged;
+valid/null review values remain held. Seven manual variants pass; five invalid
+variants fail on pre-fix bytes, then return UNKNOWN/exit 2 on candidate. Original
+20 checks pass with refreshed hashes. No tests/cases/gates added.

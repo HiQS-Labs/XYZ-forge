@@ -1,0 +1,117 @@
+{
+  "source_sha256": "24e10581374558a42fe8fc95891f3d6452cf7db52566b182b15b17d67d0c3e60",
+  "records": [
+    {
+      "revision": "red-control-before-fix",
+      "name": "approved",
+      "rc": 0,
+      "status": "HELD",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "red-control-before-fix",
+      "name": "null-review",
+      "rc": 0,
+      "status": "HELD",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "red-control-before-fix",
+      "name": "numeric-review",
+      "rc": 1,
+      "status": null,
+      "error": "AttributeError: 'int' object has no attribute 'upper'",
+      "promised_contract_satisfied": false
+    },
+    {
+      "revision": "red-control-before-fix",
+      "name": "numeric-mergeable",
+      "rc": 1,
+      "status": null,
+      "error": "AttributeError: 'int' object has no attribute 'upper'",
+      "promised_contract_satisfied": false
+    },
+    {
+      "revision": "red-control-before-fix",
+      "name": "string-rollup",
+      "rc": 1,
+      "status": null,
+      "error": "AttributeError: 'str' object has no attribute 'get'",
+      "promised_contract_satisfied": false
+    },
+    {
+      "revision": "red-control-before-fix",
+      "name": "nonobject-check",
+      "rc": 1,
+      "status": null,
+      "error": "AttributeError: 'int' object has no attribute 'get'",
+      "promised_contract_satisfied": false
+    },
+    {
+      "revision": "red-control-before-fix",
+      "name": "numeric-ci-state",
+      "rc": 1,
+      "status": null,
+      "error": "AttributeError: 'int' object has no attribute 'upper'",
+      "promised_contract_satisfied": false
+    },
+    {
+      "revision": "candidate",
+      "name": "approved",
+      "rc": 0,
+      "status": "HELD",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "name": "null-review",
+      "rc": 0,
+      "status": "HELD",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "name": "numeric-review",
+      "rc": 2,
+      "status": "UNKNOWN",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "name": "numeric-mergeable",
+      "rc": 2,
+      "status": "UNKNOWN",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "name": "string-rollup",
+      "rc": 2,
+      "status": "UNKNOWN",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "name": "nonobject-check",
+      "rc": 2,
+      "status": "UNKNOWN",
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "name": "numeric-ci-state",
+      "rc": 2,
+      "status": "UNKNOWN",
+      "error": null,
+      "promised_contract_satisfied": true
+    }
+  ]
+}

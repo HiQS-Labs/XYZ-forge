@@ -209,3 +209,18 @@ before uppercasing, routing malformed null/numeric issue/PR/prior records throug
 the existing ValueError → UNKNOWN JSON boundary. Valid-state control and pre-fix
 red controls retained in state-type-controls.json; manual hashes refreshed.
 This is a surgical normalization fix, not a new safety-policy layer or CI test.
+
+## Final QA round 2 and Workhorse continuation
+
+Implemented observed reviewDecision Should at the weekly PR-read boundary. Validate
+text/CI shapes consumed by existing advisory helpers with ValueError; preserve
+legitimate null/absent review semantics and all legacy sequencing policy. Manual
+valid/invalid/pre-fix controls retained; source hashes refreshed. Third final QA is
+the remaining round in the configured three-round budget.
+
+The user requested Workhorse monitoring: .workhorse/2026-10-11-gh1022.md retains the
+active evidence-backed checklist (local excluded runtime state, no hooks/Goals).
+Remaining umbrella acceptance is required and active, not silently removed by the
+foundation draft. Continue feasible authorized work after intermediate reports.
+No authority to merge, deploy, schedule, fire real work, add tests or extra agents.
+CommandCode is not used; #1023 is outside this task's validation and implementation.

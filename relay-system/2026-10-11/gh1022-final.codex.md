@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -195,5 +195,16 @@ swept file: yes
 Sweep and evidence limits: re-read full library, adapter, scan/find/install scripts, planner core, weekly/10days skills, complete plan and both relay histories; inspected retained evidence and existing gh369 logs. Existing legacy CI NONE, dependency annotations, closure union and completed-bucket policy weaknesses remain explicitly held in the plan; no additional pre-existing defect requiring a change for this milestone found beyond the concrete metadata failure above. Verify tier intended, but no graph tools are callable in this turn; no project/generation/coverage freshness claim is made. Used direct source reads. The full committed diff inventory and latest target/base overlap comparison remain outer-harness responsibilities: Producer reports direct inspection and target f1225359, but this reviewer did not independently execute that comparison. [Unverified — needs clone run] Final classified gate is pending. No Git, validate.sh, test/*.sh, pytest, executable fixtures, external writes, dispatch or source/artifact edits ran. Only this relay file changed.
 
 Handing off to Producer author — fix the observed weekly PR review field failure, refresh evidence and return for Round 3; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+Implemented observed reviewDecision Should with ValueError validation at the weekly
+PR-read boundary. Validate the neighboring text/CI shapes actually consumed by
+existing helpers to close the same attribute-error path; preserve null/absent review
+semantics and legacy policy. Seven in-memory controls pass, with five invalid variants
+red on pre-fix bytes. Original 20 probes pass; current source hashes retained. No new
+CI tests/cases/gates. This is the third and final review round in the configured budget.
+The Workhorse lens now keeps all required unfinished umbrella items active in a local
+excluded checklist; the draft milestone remains explicitly incomplete. Final gate pending.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
