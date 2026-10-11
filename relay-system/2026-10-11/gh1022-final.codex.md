@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -133,5 +133,67 @@ manual checks pass; all source hashes refreshed. No new tests/cases/gates. Revie
 fix and retained failed result, preserve staged/held scope. Outer direct diff inspection
 finds no test/registry/workflow/ratchet changes; git ls-remote confirms target development
 still f1225359 and current four PRs show no overlap. Final classified gate remains pending.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The Round 1 state-type correction passes and its negative control fails as expected. A concrete malformed PR review field still escapes the promised UNKNOWN JSON boundary; resolve the narrow finding below. This remains a held discovery milestone, not umbrella completion or landing approval.
+swept file: yes
+
+- [Pass] Round 1 Should is resolved at `skills/3-weekly/weekly-planner/scripts/issue_intake.py:166–171`, using ValueError rather than coercing malformed state. In-memory core probe of open/null/7 states returned respectively HELD/rc0 and UNKNOWN/rc2/complete false/dispatch false. Removing only the two-line type guard in memory reproduced AttributeError and empty stdout for null/7. Probe process exit 0; exceptions captured intentionally. Retained `state-type-controls.json` contains the same candidate and failed pre-fix controls.
+- [Should] Reject the observed non-string PR reviewDecision before passing metadata into advisory sequencing. `issue_intake.py:245–260` validates common record fields but retains the raw PR review field; `planner_core.py:185` calls upper() on it, and `:828` does not catch AttributeError. Concrete fix: validate this non-null reviewDecision value as a string at the weekly PR-read boundary, raising ValueError; preserve valid strings and legitimate absent/null semantics. Record valid and invalid manual controls plus a red control; no new CI test/case/gate. Do not change legacy sequencing policy.
+  Observed input: exact PR object in the command below with `reviewDecision: 7`, supplied by both paginated PR listing and PR view; empty issue/file pages, changedFiles 0. Output is AttributeError and empty stdout.
+  Affected scope: weekly-intake PR snapshots carrying a present non-null, non-string reviewDecision, before advisory sequencing consumes that field.
+  Falsifier: the same snapshot with reviewDecision "APPROVED" must remain complete HELD/rc0/dispatch false. Numeric 7 must return UNKNOWN/rc2/complete false/dispatch false. If those already occur on the reviewed bytes, the finding is unnecessary.
+
+  Executed command (no external readers, source edits, fixtures or Git):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PROBE'
+  import contextlib,io,json,sys,types
+  from pathlib import Path
+  def load(name):
+   p=Path("skills/3-weekly/weekly-planner/scripts")/(name+".py")
+   m=types.ModuleType(name); m.__file__=str(p.resolve())
+   exec(compile(p.read_text(),str(p),"exec"),m.__dict__); return m
+  for decision in ("APPROVED",7):
+   m=load("issue_intake"); c=load("planner_core")
+   pr=dict(number=2,url="https://github.com/example/repo/pull/2",title="two",
+    updatedAt="2026-10-11T00:00:00Z",state="OPEN",body="",labels=[],
+    changedFiles=0,headRefName="feat/two",baseRefName="development",
+    headRefOid="a"*40,isDraft=False,mergeable="MERGEABLE",
+    reviewDecision=decision,statusCheckRollup=[],author={"login":"owner"})
+   def runner(argv,root):
+    if "/issues?" in argv[-1] or "/files?" in argv[-1]: return "[[]]"
+    if "/pulls?" in argv[-1]: return json.dumps([[pr]])
+    if argv[1:3]==["pr","view"]: return json.dumps(pr)
+    raise AssertionError(argv)
+   original=m.discover_weekly
+   m.discover_weekly=lambda *a:original(*a,runner=runner)
+   c.load_issue_intake=lambda:m
+   c.ensure_temp_dir=lambda *a:(_ for _ in ()).throw(AssertionError("scratch reached"))
+   sys.argv=["core","--mode","weekly-intake","--gh-repo","example/repo",
+    "--since","2026-10-01T00:00:00Z"]
+   out=io.StringIO()
+   try:
+    with contextlib.redirect_stdout(out): c.main()
+    d=json.loads(out.getvalue())
+    print(repr(decision),"rc=0",d["status"],"dispatch="+str(d["dispatch_allowed"]))
+   except BaseException as e:
+    print(repr(decision),type(e).__name__,str(e),"stdout="+repr(out.getvalue()))
+  PROBE
+  ```
+  Probe process exit 0 (exceptions captured for measurement); decisive output:
+  ```text
+  'APPROVED' rc=0 HELD dispatch=False
+  7 AttributeError 'int' object has no attribute 'upper' stdout=''
+  ```
+- [Pass] Refreshed manual source hashes match all three current files. Command: `PYTHONDONTWRITEBYTECODE=1 python3 -c 'import hashlib,json,pathlib; d=json.loads(pathlib.Path("TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json").read_text()); print([(p,hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==h) for p,h in d["source_hashes"].items()])'` (equivalent loop executed in the first in-memory probe); exit 0; all three True. Its 20 records say passed; those are producer observations, not a reviewer re-run of the covering suite.
+- [Pass] Preview still routes before scratch and capped reads (`planner_core.py:814–834`), reports advisory helpers separately and holds dispatch unconditionally (`issue_intake.py:261–265`). The weekly skill's "Capability status" and plan's "Remaining acceptance" retain the unshipped reconciliation/freeze/readiness/fire/resume/landing boundaries. Preserve that scope.
+
+Sweep and evidence limits: re-read full library, adapter, scan/find/install scripts, planner core, weekly/10days skills, complete plan and both relay histories; inspected retained evidence and existing gh369 logs. Existing legacy CI NONE, dependency annotations, closure union and completed-bucket policy weaknesses remain explicitly held in the plan; no additional pre-existing defect requiring a change for this milestone found beyond the concrete metadata failure above. Verify tier intended, but no graph tools are callable in this turn; no project/generation/coverage freshness claim is made. Used direct source reads. The full committed diff inventory and latest target/base overlap comparison remain outer-harness responsibilities: Producer reports direct inspection and target f1225359, but this reviewer did not independently execute that comparison. [Unverified — needs clone run] Final classified gate is pending. No Git, validate.sh, test/*.sh, pytest, executable fixtures, external writes, dispatch or source/artifact edits ran. Only this relay file changed.
+
+Handing off to Producer author — fix the observed weekly PR review field failure, refresh evidence and return for Round 3; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
