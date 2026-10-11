@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -206,5 +206,96 @@ red on pre-fix bytes. Original 20 probes pass; current source hashes retained. N
 CI tests/cases/gates. This is the third and final review round in the configured budget.
 The Workhorse lens now keeps all required unfinished umbrella items active in a local
 excluded checklist; the draft milestone remains explicitly incomplete. Final gate pending.
+
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Both observed malformed-metadata findings are resolved. The final PR-read guard passes independent in-memory controls and fails its red control. Approval covers the explicitly held discovery foundation, not umbrella completion, execution, publication or landing; final clone gate and target/base checks remain separate.
+swept file: yes
+
+- [Pass] Round 2 Should is resolved at `skills/3-weekly/weekly-planner/scripts/issue_intake.py:249–261`. Non-null text values and CI collection/item/text shapes are validated with ValueError before advisory helpers consume them. Valid APPROVED, null and absent review values remain HELD/rc0/complete true/dispatch false. All five concrete malformed variants return UNKNOWN/rc2/complete false/dispatch false. Removing only this guard in memory reproduces AttributeError/empty stdout for all five; valid/null/absent controls remain HELD. Preserve this narrow read-boundary correction and unchanged legacy sequencing policy.
+- [Pass] Current library, adapter and core source hashes all match `TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json`'s `source_hashes`; current library also matches `pr-metadata-controls.json`'s `source_sha256`. Retained records name candidate and failed pre-fix controls; the independent command below corroborates them. Historical state-type-controls bind the earlier revision, not the latest library; the state guard remains at `issue_intake.py:166–171`.
+- [Pass] Preview still routes before legacy scratch/capped reads (`planner_core.py:814–834`), uses existing advisory helpers (`:823–825`) and returns unconditional HELD/dispatch false (`issue_intake.py:274–278`). Qualified normalization, conflicting deduplication, paginated transport, carried-member refresh, PR refresh comparison and file-count/shape/duplicate checks remain explicit (`issue_intake.py:145–248`, `:262–270`). Keep transport completeness distinct from atomic snapshot/readiness.
+- [Pass] Legacy scan/find extraction retains defaults/projection/200 ceiling, root precedence, jq handling and first bucket match (`issue_intake.py:41–135`); copied entry points resolve the selected current harness (`skills/3-weekly/10days/intake_adapter.py:12–42`). The 10days “Shared discovery compatibility” section explicitly names Python/current-harness prerequisites. Existing suite and parity receipts are producer evidence, not a reviewer suite run.
+- [Unverified — no citation] Unshipped branch/ledger/checkpoint/freeze/fire/resume/landing work remains explicit in the plan's “Remaining acceptance” and weekly skill's “Capability status” / “Required continuation before freeze or dispatch”. The skill says “Treat every result as HELD” and “No dispatch entry point is added in this staged skill.” Preserve this scope; no umbrella completion is approved.
+
+Independent probe command (in-memory injected read responses; no external readers, executable fixtures or source edits):
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import contextlib,copy,hashlib,io,json,sys,types
+from pathlib import Path
+base=Path("skills/3-weekly/weekly-planner/scripts")
+src=(base/"issue_intake.py").read_text()
+def load(name,source=None):
+ p=base/(name+".py"); m=types.ModuleType(name); m.__file__=str(p.resolve())
+ exec(compile(source if source is not None else p.read_text(),str(p),"exec"),m.__dict__)
+ return m
+pr=dict(number=2,url="https://github.com/example/repo/pull/2",title="two",
+ updatedAt="2026-10-11T00:00:00Z",state="OPEN",body="",labels=[],changedFiles=0,
+ headRefName="feat/two",baseRefName="development",headRefOid="a"*40,isDraft=False,
+ mergeable="MERGEABLE",reviewDecision="APPROVED",statusCheckRollup=[],author={"login":"owner"})
+variants={"approved":{},"null-review":{"reviewDecision":None},
+ "absent-review":{},"numeric-review":{"reviewDecision":7},
+ "numeric-mergeable":{"mergeable":7},"string-rollup":{"statusCheckRollup":"bad"},
+ "nonobject-check":{"statusCheckRollup":[7]},
+ "numeric-ci-state":{"statusCheckRollup":[{"__typename":"StatusContext","state":7}]}}
+start=src.index('        # Validate the fields consumed')
+end=src.index('        if fresh != item:',start)
+for revision,code in (("candidate",src),("red",src[:start]+src[end:])):
+ for name,patch in variants.items():
+  row=copy.deepcopy(pr); row.update(patch)
+  if name=="absent-review": row.pop("reviewDecision")
+  m=load("issue_intake",code); c=load("planner_core")
+  def runner(argv,root):
+   if "/issues?" in argv[-1] or "/files?" in argv[-1]: return "[[]]"
+   if "/pulls?" in argv[-1]: return json.dumps([[row]])
+   if argv[1:3]==["pr","view"]: return json.dumps(row)
+   raise AssertionError(argv)
+  original=m.discover_weekly; m.discover_weekly=lambda *a:original(*a,runner=runner)
+  c.load_issue_intake=lambda:m
+  c.ensure_temp_dir=lambda *a:(_ for _ in ()).throw(AssertionError("scratch reached"))
+  sys.argv=["core","--mode","weekly-intake","--gh-repo","example/repo","--since","2026-10-01T00:00:00Z"]
+  out=io.StringIO(); rc=0
+  try:
+   with contextlib.redirect_stdout(out): c.main()
+  except SystemExit as e: rc=e.code
+  except Exception as e:
+   print(revision,name,type(e).__name__,"stdout="+repr(out.getvalue())); continue
+  d=json.loads(out.getvalue())
+  print(revision,name,"rc="+str(rc),d["status"],"complete="+str(d["complete"]),"dispatch="+str(d["dispatch_allowed"]))
+manual=json.loads(Path("TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json").read_text())
+print("source_hashes",[(p,hashlib.sha256(Path(p).read_bytes()).hexdigest()==h) for p,h in manual["source_hashes"].items()])
+controls=json.loads(Path("TESTS-RESULTS/2026-10-11+GH-1022/pr-metadata-controls.json").read_text())
+print("metadata_control_hash",hashlib.sha256(src.encode()).hexdigest()==controls["source_sha256"])
+PROBE
+```
+Probe process exit 0 (red exceptions intentionally captured); decisive output:
+```text
+candidate approved rc=0 HELD complete=True dispatch=False
+candidate null-review rc=0 HELD complete=True dispatch=False
+candidate absent-review rc=0 HELD complete=True dispatch=False
+candidate numeric-review rc=2 UNKNOWN complete=False dispatch=False
+candidate numeric-mergeable rc=2 UNKNOWN complete=False dispatch=False
+candidate string-rollup rc=2 UNKNOWN complete=False dispatch=False
+candidate nonobject-check rc=2 UNKNOWN complete=False dispatch=False
+candidate numeric-ci-state rc=2 UNKNOWN complete=False dispatch=False
+red approved rc=0 HELD complete=True dispatch=False
+red null-review rc=0 HELD complete=True dispatch=False
+red absent-review rc=0 HELD complete=True dispatch=False
+red numeric-review AttributeError stdout=''
+red numeric-mergeable AttributeError stdout=''
+red string-rollup AttributeError stdout=''
+red nonobject-check AttributeError stdout=''
+red numeric-ci-state AttributeError stdout=''
+source_hashes [('skills/3-weekly/weekly-planner/scripts/issue_intake.py', True), ('skills/3-weekly/10days/intake_adapter.py', True), ('skills/3-weekly/weekly-planner/scripts/planner_core.py', True)]
+metadata_control_hash True
+```
+
+Sweep and evidence limits: read the full library, adapter, scan/find/install scripts, planner core, weekly/10days skills and complete plan; inspected both relay histories and retained evidence/provenance. Pre-existing CI NONE readiness, unmet dependencies/cycle handling, missing draft handling, closure-number union and completed-bucket policy weaknesses remain held as described in the plan; no additional pre-existing defect requiring a change for this milestone found. Verify tier intended; graph tools are not callable, so no graph project/generation/coverage completeness claim is made. Direct source fallback used. Full committed diff inventory, absence of unrelated test/gate changes, and latest target/base redundancy comparison are not independently attested because Git is forbidden and no seeded comparison was supplied. The outer harness must check them before publication. [Unverified — needs clone run] Final classified gate remains pending; no implication it passed. No Git, validate.sh, test/*.sh, pytest, executable fixtures, external writes, dispatch or source/artifact edits ran. Only this relay file changed; mkdir was confined to approved scratch.
+
+Relay closed (Approved), no further review turn needed. Producer author / outer harness acts next: commit this file, run the final applicable gate in a disposable full clone and inspect target/base before any separately authorized publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
