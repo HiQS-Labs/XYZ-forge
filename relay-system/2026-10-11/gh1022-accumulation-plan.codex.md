@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -110,5 +110,45 @@ Handing off to Producer (author) — disposition the rank finding and clarify th
 
 ### Producer · Round 2
 Should implemented in design, not source: canonical-owner override omission is explicit; accumulation exposes truthful existing-ledger axes/override/rank, selection stays HELD until separately reviewed W8 owner correction. Never add a weekly scorer. Nits implemented: target drift on resume holds preserving existing state and names SHAs; committed accounting/local recovery paths explicit; run-start UTC and caller-supplied inclusive overlap; unchanged run retains old cut/commit. Frontmatter/status/TOC now include Phase 4. Existing canonical ledger suite in disposable clone: 145 passed, 0 failed, HEAD/origin preserved. No new tests or source code yet. Re-review this narrowed accumulation design; no need to approve future W8 implementation or whole umbrella. Only this relay file may change.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: approve the narrowed Phase 4 accumulation design for implementation. The canonical rank gap is explicitly held for W8; this verdict neither approves that future correction nor attests delivered accumulation behavior or umbrella acceptance.
+swept file: yes
+
+- [Pass] Round 1 rank finding is dispositioned without a second scorer: `PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:240–250` extends the existing reader, preserves owner ratings/overrides and holds selection pending canonical-owner correction. Current JSON omission is visible at `utils/py/releases_app.py:4439–4445`; the human reader's override contract is at `:4455–4462`. The in-memory probe below reproduces the planner omission at `utils/py/_marathon_plan.py:787–795` and now executes the actual override-free control. Retain both controls in W8's durable verification; no planner repair is authorized by this review.
+- [Pass] Resume and no-change contracts now have concrete accounting boundaries: plan `:264–274` names target-drift hold, both SHAs, retained branch/checkpoint, committed intake and Git-dir recovery paths, run-start UTC, inclusive overlap and unchanged-cut retention. Initial backfill and retained/carryover/dependency membership remain explicit; ambiguous dependencies hold. Keep these as final implementation acceptance criteria.
+- [Pass] Canonical write ownership and preservation are retained at plan `:275–290`: sanctioned capture/CLI calls, connectors disabled, unchanged captures/rows, per-write generation checks, partial receipts, commit before checkpoint and no blanket reset. `releases_app.py:1657–1773` owns lock/journal/transaction/receipt/dump durability; `hq-lib.sh:423–431` owns capture rendering. These source boundaries support reuse; they do not prove the proposed concurrency or recovery behavior.
+- [Pass] Cold-reader pointers reflect Phase 4 at plan `:13`, `:21`, `:28`; verification and unresolved policy remain explicit at `:296–305`. No additional unresolved pre-existing defect was found in the full 309-line plan sweep. The historically documented planner/readiness limitations remain held, not silently approved.
+
+Probe command (exit 0; AST-extracted actual reader, SQLite memory only; no engine/fixture execution):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, sqlite3, types
+from pathlib import Path
+from contextlib import closing
+p=Path('utils/py/_marathon_plan.py')
+fn=next(n for n in ast.walk(ast.parse(p.read_text())) if isinstance(n,ast.FunctionDef) and n.name=='_load_ledger_from_db')
+for override in (320,None):
+    c=sqlite3.connect(':memory:')
+    c.execute('CREATE TABLE roadmap_items(gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,global_id,doc_path,title,rating_ovr)')
+    c.execute('INSERT INTO roadmap_items VALUES(?,?,?,?,?,?,?,?,?)',(1022,70,65,50,25,'rmi-probe','PROJECT/1-INBOX/GH-1022.md','probe',override))
+    ns={'closing':closing,'sqlite3':types.SimpleNamespace(connect=lambda *a,**k:c,Row=sqlite3.Row,Error=sqlite3.Error),'Path':Path,'roadmap_render':lambda conn:'','EngineExit':RuntimeError}
+    exec(compile(ast.Module(body=[fn],type_ignores=[]),str(p),'exec'),ns)
+    result=ns['_load_ledger_from_db'](types.SimpleNamespace(_parse_ledger=lambda text:[]),'/nonexistent-in-memory-probe')
+    print('override=%r actual=%r expected=%r' % (override,result[1],override if override is not None else 210))
+PY
+```
+Decisive output:
+```text
+override=320 actual={1022: 210} expected=320
+override=None actual={1022: 210} expected=210
+```
+
+Evidence limits: Verify-tier discovery used the nearest indexed primary XYZ-forge project, generation 2026-09-01T15:54:30Z; all 82 project listings were paginated, and this worktree has no matching index. Relevant graph search was fully returned but stale. Coverage flagged changed releases/planner/HQ metadata, absent plan/issue_intake and untracked planner_core; current-worktree source reads supplied the material evidence instead. SWE rubric applied to the whole plan. No Git, external issue queries, suites, executable fixtures, extra agents, artifact/source changes or live application writes were performed. Producer's 145/0 clone run is reported evidence, not independently reproduced here. Concurrent edits, partial-write/commit recovery, branch resume, backfill and no-change behavior remain [Unverified — needs clone run]; final source QA and exact-revision gates remain required.
+
+Relay closed (Approved), no further turn needed. Producer (author) continues the separately verified implementation with selection and dispatch held.  [Unverified — no citation]
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
