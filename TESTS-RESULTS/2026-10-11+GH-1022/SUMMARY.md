@@ -200,3 +200,11 @@ macOSpromotion andubuntuportabilitySKIPPED bypolicy,nottested/green. No manual
 workflow dispatched,no full promotion. R5PASS atreviewede016 sourcehashesunchanged.
 No actionable lower finding/no issue filed. W7–W11 remain required/incomplete.
 Publication evidence commit follows;only docs/evidence,normal gate again.
+
+Phase5 canonical override prerequisite is locally implemented after planQA
+Approved45d55239. Candidate da603c70 reader10/10,fullengine2 before/afterordering
+controls,gh69816/16,marathon-plan70/0with2skips,gh3629/9,accumulation36pass.
+Ledger bytes unchanged during fullengine;isolated canon ledger creation/reports/
+fixture Git commits were actuallocalwrites with stubbedGH/no live dispatch.
+Foursourcehash/AST evidence committed. Historical axisdisplaydashes retained and
+disclosed. FinalQA/fullclassifiergate pending;weeklyHELD/W7–W11incomplete.

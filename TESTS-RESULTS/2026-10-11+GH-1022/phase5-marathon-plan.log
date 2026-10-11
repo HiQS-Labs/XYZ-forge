@@ -1,0 +1,76 @@
+== test: marathon-plan ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//marathon-plan.r7MJ2x
+  PASS: A: clean plan → exit 0
+  PASS: A: MARATHON-PLAN doc written
+  PASS: A: 5 active across 2 waves
+  PASS: A: two disjoint independents share Wave 1
+  PASS: A: two kernel items never share a wave (100=1 101=2)
+  PASS: A: shim dep-on-kernel sequenced strictly later (shim=2 kernel=1)
+  PASS: A: #100 gets a deterministic suggested_branch
+  PASS: A: all 5 active lanes carry a suggested_branch
+  PASS: A: suggested_branch is stable across a same-day re-run
+  PASS: B: drift present → exit 4
+  PASS: B: #200 flagged already-closed
+  PASS: B: closed item excluded from waves
+  PASS: B: #210 flagged already-landed (fix_probes landed)
+  PASS: B: landed item excluded from waves
+  PASS: B: #220 flagged partial (2 signals)
+  PASS: B: #221 NOT flagged partial (1 signal < threshold)
+  PASS: B: one-signal item still active (in a wave)
+  PASS: B: #230 flagged unrated
+  PASS: B: dead doc pointer flagged drift
+  PASS: B: note-only bullet flagged
+  PASS: B: gated item parked in Held/Gated bucket
+  PASS: B: gated item excluded from active waves
+  PASS: C: quick-wins ranks low-risk first
+  PASS: C: derisk-first ranks high-risk first (order flipped)
+  PASS: D: gh disabled → still emits a plan, exit 0
+  PASS: D: report announces gh=off
+  PASS: D: --require-gh + gh-off → exit 6
+  PASS: E: --check in sync → exit 0
+  PASS: E: ledger change → --check detects drift (exit 1)
+  PASS: F: --format json emits one valid JSON object per line
+  PASS: F: json includes a summary record
+  PASS: G: dep on a HELD item EXCLUDES the dependent (700=wave1; 701 blocked-dep, not waved) [agy Blocker r1+r3]
+  PASS: H: oxford-comma deps all parsed — multi-dep follows ALL kernels (800=1 801=2 803=3 802=4) [agy Blocker r2]
+  PASS: I: title GH-910 wins over the in-prose closed #911 (item stays active, not already-closed) [agy Blocker r4]
+  PASS: J: (a) edit-existing-file lane in CHANGELOG is READY / active (not partial) [GH-85]
+  PASS: J: (b) lane with genuine partial signals is STILL partial [GH-85]
+  PASS: K: contract seam flagged — #920 ‖ #921 share src/schema/ (pin a contract)
+  PASS: K: #922 in a disjoint subtree is NOT flagged as coupled (no false seam)
+  PASS: K: plan states the 'pin a contract' step for the seam
+  PASS: L: trailing-slash directory artifact (src/api/) still produces a seam on src/api
+  PASS: M: deepest seam chosen by SEGMENT COUNT (x/a/b/c), not string length (src/loooongname)
+  PASS: N: (a) no PR-REVIEW-QUEUE doc -> no Review lanes section [GH-86]
+  PASS: N: (b) overlay present -> Review lanes section appears [GH-86]
+  PASS: N: (b) lane R1 listed with PR + reviewer [GH-86]
+  PASS: N: (b) lane R2 listed with PR + reviewer [GH-86]
+  PASS: N: (b) section links the overlay doc [GH-86]
+  PASS: N: (c) How-to-fire guidance warns that fs-touching tests are read-only specs in-turn [GH-54]
+  PASS: O: explicit default zones config is byte-identical to the built-in default [GH-48]
+  PASS: P: case-insensitive pathRegex classifies relay-automation/agy-turn.sh into a foreign zone name [GH-48]
+  PASS: P: escalateOrchestratorOnly reclassifies an artifact under lanes.orchestrator_only [GH-48]
+  PASS: P: foreign maxPerWave=1 zone serializes helper lanes without exact write-set collision [GH-48]
+  PASS: P: collision map renders a foreign capped zone row [GH-48]
+  PASS: Q: root-local .marathon-plan-zones.json applies when no higher tier is set [GH-48]
+  PASS: Q: QUEUE_PLAN_ZONES_FILE overrides the root-local file [GH-48]
+  PASS: Q: --zones-config overrides QUEUE_PLAN_ZONES_FILE [GH-48]
+  PASS: R: malformed --zones-config fails loud (exit 3), no silent fallback [GH-48]
+  PASS: R: malformed QUEUE_PLAN_ZONES_FILE also fails loud (exit 3) [GH-48]
+  PASS: S: docOf prefers the lane's own GH-111 pointer over an earlier PROJECT doc link [GH-150]
+  PASS: T: explicit zones dry-run output matches between the BASH engine and XYZ_PYTHON=1 [GH-154/GH-348]
+  SKIP: T: bash↔python render parity intentionally diverged — GH-698 ratings column ships python-side only; frozen twin keeps the legacy render [GH-698/GH-154/GH-348]
+  PASS: T: mutating the Bash engine IS detected — the parity comparison is genuinely cross-lane [GH-348]
+  PASS: U: unknown flag exits 2 on the DEFAULT lane (XYZ_PYTHON unset) [GH-349]
+  PASS: U: the error names the offending flag, on stderr [GH-349]
+  PASS: U: usage still goes to stdout (Bash parity: usage stdout, error stderr)
+  PASS: U: --help still exits 0
+  PASS: U: the Bash lane also exits 2 (codes agree across lanes) [GH-349]
+  PASS: V: the Bash engine no longer hardcodes 'branch: main' [GH-346]
+  PASS: V: the native Python engine no longer hardcodes 'branch: main' [GH-346]
+  PASS: V: a non-git root renders 'branch: unknown', not a false 'main' [GH-346]
+  PASS: V: QUEUE_PLAN_BRANCH overrides the derived value (Python lane) [GH-346]
+  PASS: V: QUEUE_PLAN_BRANCH overrides the derived value (Bash lane) [GH-346]
+  SKIP: V: bash↔python render parity intentionally diverged (GH-698 ratings column) [GH-346/GH-348]
+
+  marathon-plan: 70 passed, 0 failed, 2 skipped

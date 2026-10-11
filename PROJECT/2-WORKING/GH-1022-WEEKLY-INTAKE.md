@@ -541,3 +541,14 @@ policy/dispatch and other algorithms unchanged. This diagnostic/status correctio
 will be covered in final QA and refreshed accumulation controls,not capability
 promotion. No source code before approved plan;already-active owned admission
 confirmed by canonical accepted-start returning original-start preserved.
+
+Phase5 candidate da603c70:10/10 reader controls pass;full actual engine in
+isolated canonically-created fixture changes owner ordering778,777→777,778 and
+rank210→320,while DB/dump bytes stay identical. GH/native reads/branch inventory
+stubbed;full-engine report files and fixture canon ledger/receipts/Git commit were
+local writes,not live dispatch. Existing disposable-clone gh69816/16,
+marathon-plan70pass0fail2establishedskips,gh3629/9;cloneHEAD/origin/trackedstate
+unchanged. Refreshed accumulation36/36 after diagnostic update. FourAST parses
+and source hashes retained;no CI tests/cases added. Existing display limitation
+above5 still dashes,canonical ledger retains realaxes;no renderer fix claimed.
+Final whole-file QA and required full gate remain pending,no newstage publication.

@@ -1,0 +1,76 @@
+{
+  "source_sha256": "a2321cbd839db8b7287fc34706eb61a6d5cc16588d5b10bfd9d0ae9fe75790e4",
+  "method": "actual source AST reader;SQLite in-memory fixture only;render/parse stubbed,no filesystem DB/fullengine/dispatch",
+  "controls": [
+    {
+      "name": "ordinary-rated",
+      "expected": 210,
+      "actual": 210,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "owner-override",
+      "expected": 320,
+      "actual": 320,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "partial-rating-override",
+      "expected": null,
+      "actual": null,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "unrated-override",
+      "expected": null,
+      "actual": null,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "doc-only-override",
+      "expected": 320,
+      "actual": 320,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "doc-only-unrated",
+      "expected": null,
+      "actual": null,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "old-schema-no-override",
+      "expected": 210,
+      "actual": 210,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "duplicate-doc-identity",
+      "expected": null,
+      "actual": null,
+      "matches": true,
+      "identity_ambiguous": true
+    },
+    {
+      "name": "historical-text-axes",
+      "expected": 210,
+      "actual": 210,
+      "matches": true,
+      "identity_ambiguous": false
+    },
+    {
+      "name": "missing-required-column",
+      "expected": "read-error-3",
+      "actual": "read-error-3",
+      "matches": true,
+      "identity_ambiguous": false
+    }
+  ]
+}
