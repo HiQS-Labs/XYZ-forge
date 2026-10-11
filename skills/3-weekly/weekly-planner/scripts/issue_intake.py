@@ -163,7 +163,10 @@ def normalize_record(record: dict, repository: str, kind: str = "issue") -> dict
     parsed = datetime.fromisoformat(updated.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         raise ValueError(f"unqualified timestamp: {expected}")
-    state = record.get("state", "").upper()
+    raw_state = record.get("state", "")
+    if not isinstance(raw_state, str):
+        raise ValueError(f"invalid state type: {expected}")
+    state = raw_state.upper()
     if state not in ("OPEN", "CLOSED", "MERGED"):
         raise ValueError(f"invalid state: {expected}")
     if record.get("body") is not None and not isinstance(record["body"], str):

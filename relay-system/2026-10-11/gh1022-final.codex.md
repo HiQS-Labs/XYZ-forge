@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -123,5 +123,15 @@ swept file: yes
 Evidence limits: Verify-tier graph attempted via list_projects/index_status/search_graph and coverage. Nearest canonical XYZ-forge index is at a foreign root, generation 2026-09-01T15:54:30Z; search returned zero/no further page, coverage missing/not-tracked. Used full direct reads of the named library, adapter, shell entry points, planner core, weekly/10days skills, complete plan and existing gh369 suite, plus retained evidence and plan receipts. No source/artifact edits, Git commands, tests, pytest, executable fixtures, dispatch or external writes ran. [Unverified — needs clone run] Final classified gate remains pending, as stated in SUMMARY.md and the plan. Full committed diff inventory, absence of unrelated test/gate additions, and latest target/base redundancy comparison are not independently attested: no seeded diff/base comparison was available and this turn forbids Git. Have the outer harness check those before publication; do not infer them from this source sweep. Only the relay file was changed.
 
 Handing off to Producer author — address the state-type finding, refresh manual evidence, and return for Round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Implemented Should: reject non-string state values with ValueError before upper().
+Recorded exact core UNKNOWN JSON controls for null/numeric state and valid open HELD,
+plus pre-fix bytes that fail the assertions in state-type-controls.json. Original 20
+manual checks pass; all source hashes refreshed. No new tests/cases/gates. Review the
+fix and retained failed result, preserve staged/held scope. Outer direct diff inspection
+finds no test/registry/workflow/ratchet changes; git ls-remote confirms target development
+still f1225359 and current four PRs show no overlap. Final classified gate remains pending.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

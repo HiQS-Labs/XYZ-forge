@@ -200,3 +200,12 @@ all planner_core, add a writer or orchestrator, or deploy a sibling skill depend
 Request independent review of this ownership decision; if judged a policy bypass,
 hold implementation/publication and seek an explicit operator decision instead of
 relaxing the ratchet. All remaining umbrella acceptance remains held.
+
+
+## Final QA round 1 disposition
+
+Implemented the observed Should finding: state normalization validates string type
+before uppercasing, routing malformed null/numeric issue/PR/prior records through
+the existing ValueError → UNKNOWN JSON boundary. Valid-state control and pre-fix
+red controls retained in state-type-controls.json; manual hashes refreshed.
+This is a surgical normalization fix, not a new safety-policy layer or CI test.

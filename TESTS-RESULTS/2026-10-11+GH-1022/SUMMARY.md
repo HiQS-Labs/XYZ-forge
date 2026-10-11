@@ -38,3 +38,11 @@ all four open PRs, with changedFiles matching collected file counts. It returned
 complete transport, HELD and dispatch false. Narrow state/count evidence is retained
 in live-preview.json; raw response was intentionally redirected to task-local scratch.
 This did not write a ledger/checkpoint or run a planner dry-run with hidden mutations.
+
+
+Final QA round 1 returned FAIL for non-string state handling: null/numeric records
+raised AttributeError instead of UNKNOWN JSON. The normalizer now rejects those
+values with ValueError. In-memory core controls: valid open remains HELD/exit 0;
+null/numeric return complete false, UNKNOWN, dispatch false and exit 2. Pre-fix
+bytes failed both invalid-state assertions, a witnessed red control. All original
+20 manual checks also pass on updated source hashes. No new CI test/case added.
