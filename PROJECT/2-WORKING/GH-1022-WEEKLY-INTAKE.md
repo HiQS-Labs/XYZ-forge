@@ -10,7 +10,7 @@ doc_type: feature
 effort: 4
 complexity: 4
 risk: 3
-phases: 4
+phases: 5
 goal: Reuse shared discovery for a held weekly proposal without importing unattended execution policy.
 ---
 
@@ -26,6 +26,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 - [Phase 2 — Shared extraction and held preview](#phase-2--shared-extraction-and-held-preview)
 - [Phase 3 — Verification and draft](#phase-3--verification-and-draft)
 - [Phase 4 — Canonical branch accumulation](#phase-4--canonical-branch-accumulation-active-design)
+- [Phase 5 — Canonical planner override reader](#phase-5--canonical-planner-override-reader-w8-prerequisite)
 - [Remaining acceptance](#remaining-acceptance)
 
 ## Bet and scope
@@ -466,3 +467,59 @@ Reviewed held stage published at4770f091 to existing draft1024 through normal
 tier2prepush (GREEN315s,28/28) and hosted38178591497 exactSHA smokeSUCCESS.
 Promotion/portabilitySKIPPED,notqualification. No merge/newtest/liveexecution.
 This fulfills staged publication only;remaining umbrella checklist stays active.
+
+## Phase 5 — Canonical planner override reader (W8 prerequisite)
+
+Active genuinely new scope after accumulation R5 closed Approved; do not reopen
+that review or reuse its cap. Canonical remote development remainsf1225359 and
+published branch31ba903e;no intervening target/source change. Current issue1022
+body/comments reread;four other open PR write-sets have no planner/reader overlap.
+Search found historical DB-planning umbrellas,not equivalent delivered override
+support. Existing `_load_ledger_from_db` SELECT omits rating_ovr and sums axes.
+The actual-reader in-memory observation gives210 for owner70/65/50/25,ovr320,
+including a NULL-gh/doc-only row. This fails the owner-override requirement.
+Ordinary210,partial/unrated holds,old sparse schema and duplicate doc identity
+already work and must remain unchanged;not eligible for rewriting as new work.
+
+Reuse `releases_app.roadmap_rating_view`,the reviewed canonical reader projection.
+No weekly scorer or copied arithmetic. `_marathon_plan.Engine._load_ledger_from_db`
+feeds DB rank/axes to existing score_of (rank negation plus existing dependency/
+zone/gated adjustments),wave packing and rendered Per-item scoring. CLI wrapper
+marathon_plan.py selects that authoritative Python engine;frozen Bash fallback
+remains unchanged. Reader does not rate/write the ledger or grant readiness.
+
+Bet: owner overrides should determine canonical rank wherever this existing reader
+already consumes fully-rated canonical rows. Easy rollback: revert only the reader
+seam;no schema/data/dispatch change. Blast radius is Python ledger-derived rank and
+ordering for fully-rated override rows,both numbered and doc-only. Ordinary ranks,
+legacy Markdown mode,identity/ambiguity rules,score adjustment and packing remain.
+A weekly-side override scorer was rejected because it would compete with the owner.
+
+Ordered implementation and acceptance:
+1. Preserve the existing required eight-column query and identity positions. Add
+   the optional override via existing canonical schema inspection,with NULL alias
+   for historical fixtures missing only rating_ovr. Missing required columns must
+   still follow the existing read-error behavior. Use shared projection for rank;
+   preserve existing integer axis conversion for fully-rated rows rather than
+   silently changing historical numeric-field behavior. No second schema layer.
+2. Route fully-rated numbered and uniquely resolved NULL-gh/doc-only rows through
+   canonical effective rank. Owner70/65/50/25+ovr320 becomes320;no-override210 stays.
+   An override on partial/unrated rows must not invent readiness. True duplicate
+   doc/title identities still resolve to ambiguous GIDs with no rank/axes.
+3. Verify with existing gh698-planner-db-ratings.sh,marathon-plan.sh and covering
+   CLI/frozen-twin checks in disposable full clone. Record source-bound in-memory
+   actual-reader before/after controls including missing optional column,identity
+   ambiguity and partial/unrated scores. Retain witnessed210vs320 failure. A safe
+   isolated full-engine fixture may write local reports/temp plan docs using existing
+   fixture seams;disable connectors/stub GH,never invoke driver/live dispatch.
+4. Final Codex whole-file QA of changed engine/source/evidence under its OWN normal
+   three-round cap. Keep all earlier accumulation rounds unchanged. Run the existing
+   classifier's final required route at approved source,then update existingdraft1024
+   only after verified review/gates. No new test/case/parametrization/gate/framework.
+
+Not delivered by this slice: weekly selection/promotion,required-CI/draft/dependency
+policy,closure/Completed delivery proof,active/global-work/branch lifecycle,immutable
+freeze/exact approval,criterion HEAD/plan receipts and pre-fire/phase/resume/landing
+checks. Those remain required W7–W11. Weekly stays HELD;no Marathon/Jog generation
+or dispatch is authorized by this reader repair. No production ledger writes,
+new tests,installation,scheduling,merge/deploy or unrelated issue closures.
