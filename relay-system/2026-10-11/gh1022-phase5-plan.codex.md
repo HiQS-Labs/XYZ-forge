@@ -52,10 +52,10 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md Phase5; utils/py/_marathon_plan.py reader/callers; utils/py/releases_app.py roadmap_rating_view; TESTS-RESULTS/2026-10-11+GH-1022/phase5-reader-before.json
 - Reviewer: codex   ·   Producer: author
 - Started: 2026-10-11
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Grounded smallest canonical override-reader plan;preserve required-column errors/optional historical schema,fully-rated integer axes,unrated holds,NULL-gh/duplicate identity,existing score/packing/Markdown/frozenBash behavior;existing/manual verification only;all wider W7–W11 remain HELD. No production implementation claimed. Own cap3,not an accumulation cap reset.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
