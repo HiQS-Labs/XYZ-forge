@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Open
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -108,5 +108,21 @@ plan's ownership correction and code; decide explicitly whether this follows the
 skill-subsystem/entry-point policy or evades it. No gate/baseline/test changed. Current inventory
 check passes without modifications. If this is a bypass, return FAIL and hold instead of
 recommending policy weakening. Staged/held scope and all remaining umbrella limits unchanged.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: The ownership correction follows existing skill-subsystem ownership and existing-entry-point routing; it is not a loose-script policy bypass. Approval covers the staged plan and this ownership decision. Final implementation QA and disposable-clone verification remain owed.
+swept file: yes
+
+- [Pass] GH-777's policy is explicit: "new CLI verbs must route through existing entry points or subcommands" (`utils/pdda/check_inventory_ratchet.py:9`), and its script inventory deliberately scans `utils`, `scripts`, and `bin` (`:50–62`). This is not permission to relocate an arbitrary CLI outside the scanner. Here the substance matches the policy: `issue_intake.py:1–262` is a function library beside the existing intake owner, the weekly preview is an existing-core mode (`planner_core.py:814–831`), and scan/find continue through their original shell entry points and the bundled adapter (`intake_adapter.py:33–42`). Plan `:189–202` explains the rejected location and explicitly forbids relaxing the ratchet. Keep this ownership and the unchanged gate/baseline; no policy exception is needed for this design.
+- [Pass] The import-only characterization has direct source support (`issue_intake.py:7–21`, function definitions through `:262`). Narrow static probe command: `PYTHONDONTWRITEBYTECODE=1 python3 -c 'import ast,pathlib; t=ast.parse(pathlib.Path("skills/3-weekly/weekly-planner/scripts/issue_intake.py").read_text()); print("top_level_if",sum(isinstance(n,ast.If) for n in t.body)); print("top_level_calls",sum(isinstance(n,ast.Call) for s in t.body if not isinstance(s,(ast.FunctionDef,ast.ClassDef)) for n in ast.walk(s)))'`; exit 0; decisive output: `top_level_if 0`, `top_level_calls 0`. This measures the absence of a top-level main guard/call in the library, not runtime no-write behavior or dependency imports.
+- [Pass] Harness ownership remains distinct from swept-root ownership. Adapter `intake_adapter.py:29–42` selects the module from the locator-returned harness, fails clearly when missing, and supplies caller CWD to the legacy functions. Core `planner_core.py:25–47` selects the same harness-relative library. Plan `:70–74`, `:183–186` and `:194–199` explicitly retain installed-copy support and the current-harness prerequisite. Moving the library does not create an independently deployed sibling-skill requirement.
+- [Pass] Full-plan scope remains held and preserves executable-plan ownership (`plan:30–48`, `:139–163`; `utils/py/marathon_plan.py:23–24`). Preview routing precedes scratch creation (`planner_core.py:814–832`), reports advisory helpers separately, and leaves `dispatch_allowed` false (`issue_intake.py:258–262`). Legacy CI NONE/dependency/closure weaknesses remain visible in the full source (`planner_core.py:194–241`, `:495–509`) and segregated in plan `:76–82`, `:145–159`. No additional pre-existing plan defect blocking this milestone found during the sweep; this does not attest legacy readiness or approve any execution.
+- [Pass] Proof remains a required next phase: plan `:123–137`, `:161–176` requires legacy parity, pagination/malformed/offline/conflict controls, import/preview no-write evidence, existing gh369, exact final revision, independent final QA and a disposable-clone gate. The ownership change does not satisfy or waive those checks. Preserve the remaining checkbox and staged draft disclosure.
+
+Evidence limits: Verify tier attempted with `list_projects`, `index_status`, targeted `search_graph` (zero results, no further page) and one coverage query for all material paths and the library scope. The nearest canonical `XYZ-forge` graph is at a different root and generation `2026-09-01T15:54:30Z`; coverage reports missing/not-tracked/changed metadata. Findings therefore use current direct source reads, not graph completeness. Read the complete 202-line plan, library, adapter, planner core, Setup-named sources and existing gh369 suite. [Unverified — needs clone run] Runtime parity, installed-copy execution, complete metadata/error controls, no-write behavior and final gate. No tests, executable fixtures, Git commands, dispatch or source/artifact edits ran this turn. The explicit user reviewer assignment and latest Producer request resolve the stale `NEXT: Producer` header for this turn.
+
+Relay closed (Approved), no further plan-review turn needed. Producer author receives the result and must complete separate final implementation QA and verification before publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
