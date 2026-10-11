@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-11 — Claude review corrections (GH-1022, local/unqualified)
+
+Weekly batch inspection rejects deterministic member errors before captures or
+canonical registration. Qualified identities retain validated GitHub URL casing.
+The private 10days adapter reports missing modes as usage errors. Explicit RELEASES
+baseline capture rechecks live owner state inside its existing transaction and
+refuses a concurrent baseline cleanly; the SQL write-once safeguard remains.
+Manual before/after evidence retained; corrective review and publication pending.
+Runtime bundle provenance and bounded IO findings remain open; weekly stays HELD.
+
+
 ## 2026-10-11 — Canonical planner owner overrides (GH-1022, phase 5)
 
 The authoritative Python Marathon reader now uses the existing RELEASES rating
@@ -9,7 +20,8 @@ without the optional override retain their fallback. No second scorer or ledger
 writer, and the frozen Bash fallback is unchanged. Existing report axis formatting
 above five remains a disclosed limitation. Weekly selection stays HELD for required
 readiness, criterion evidence, freeze/approval and shared execution safeguards.
-Verification/final QA pending; no new CI tests or live execution.
+Phase5 plan/final QA Approved; existing full gate409/409 and hosted smoke passed.
+Promotion jobs skipped by existing policy; no new CI tests or live execution.
 
 ## 2026-10-11 — Local canonical weekly accumulation (GH-1022, phase 4)
 

@@ -18,7 +18,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 
 | What was just completed | What's next |
 |---|---|
-| Canonical override reader published6e6db879;plan/finalQA Approved,fullgate409/409,hosted smoke passed. | W7 qualified work reconciliation;remaining W8–W11 readiness,freeze/approval and shared safety. |
+| Canonical override reader published6e6db879;plan/finalQA Approved,fullgate409/409,hosted smoke passed. | Claude review remediation first; Phase6 Jog plan paused. W7–W11 remain active and held. |
 
 ## Table of contents
 
@@ -651,3 +651,76 @@ W8 construction/readiness,W9–W11 approval/sharedsafety remainrequiredactive.
 #1017 activelyowns observer source;do not duplicate its pathrepair orpretend a
 complete Marathon inventory hasbeen obtained. No live Marathon/Jog,merge/deploy,
 installation,scheduling ornewtest authorized. No production code forPhase6 yet.
+
+
+## Claude review remediation — current disposition and review boundary
+
+External COMMENTED review at 31ba903e3e75de4a8fd44b28b20db003f350bbbe:
+[full summary](https://github.com/HiQS-Labs/XYZ-forge/pull/1024#issuecomment-6114773074),
+[inline review](https://github.com/HiQS-Labs/XYZ-forge/pull/1024#pullrequestreview-5485368258).
+Current published source is 7d0bd85e19cccd81cf6cce060b1027a1c8bb49fc;
+local pre-correction HEAD 9eadca0aa74ac8e2a9040c308e38709392cd5d38 adds only
+Phase6 plan/evidence. Full findings and inline comments were read before fixes.
+The completed accumulation R5 (5/5 Approved) remains closed, unchanged. It cannot
+attest these changed bytes. Additional corrective review authority is pending;
+no new review dispatched, cap reset, final qualifying gate or corrective push.
+Phase6 is paused; no Jog owner implementation or QA has started.
+
+| ID | Disposition / observed impact |
+|---|---|
+| S1 | Valid qualification gap: inherited old harness loads different/missing helper. Loader ownership-policy repair pending plan/final review authority; current code unchanged here. |
+| S2 | Valid runtime provenance gap: selected intake/writer/renderer can differ from target HEAD. Documented actual ownership; source fingerprint behavior pending with S1. No runtime attestation claimed. |
+| S3 | Valid rollout limit. Explicitly documented consistent helper/Python3/harness update prerequisite and old-vendor failure; no deployment or vendor writes authorized/performed. |
+| S4 | Fixed locally: qualified identity stays lowercase while the validated observed GitHub URL retains canonical casing. Actual canonical registration retains Fixture/Repo URL, existing owner rows unchanged. No global URL rewrite. |
+| S5 | Fixed locally: reuse dry inspection to validate the whole batch before any capture or registration. Rated third title and malformed createdAt reject without earlier new rows/files; corrected title resumes successfully. Per-member drift checks remain. Already-partial unknown clones remain preserved, not silently reset. |
+| S6 | CI URL churn reproduced: a fresh check URL makes a local accounting commit, with fresh metadata and dispatch false. Proposed omission is not accepted as a blind safety change: PR observation currently forms the complete receipt input. A durable-scope/live-observation policy split needs an explicit reviewed contract; execution no-op for delivered work is still unimplemented. This is local bookkeeping churn, not duplicate work dispatch. |
+| S7 | Valid availability risk: default preparation subprocess and target reads are unbounded, including under WriterLock. Bounded IO repair must reuse utils/py/proc_group.py; pending corrective plan review, not implemented. No hook/signing bypass or cached-target substitution. |
+| S8 | Valid CI coverage gap; permanent drivers/tests not authorized. Three individual cases proposed in [#1027](https://github.com/HiQS-Labs/XYZ-forge/issues/1027), each separately awaiting operator approval. Existing tests unchanged. |
+| S9 | Fixed locally as a clean locked refusal. Canonical race reproduced a SQL IntegrityError; existing write-once trigger preserved baseline1 rather than overwriting it with2. Current transaction rechecks live GID baseline and manifest before capture; automatic activation and SQL trigger unchanged. Claimed current data loss disproved. |
+| N1 | Valid invalid-override fallback behavior reproduced; pending with S1 loader ownership policy. Do not alter shared locator semantics globally. |
+| N2 | Fixed locally: missing/invalid private adapter mode returns usage/rc2 before lookup, without traceback. Existing scan/find wrapper interfaces unchanged. |
+| N3 | Lost-root-check race reproduced: another initializer finishes between absent-root check and clone; losing git clone refuses nonempty directory, winner HEAD/complete receipt and clean state remain intact. Existing writer lock/HEAD checks protect resumed clones. Added bootstrap framework rejected absent a failing preservation case; normal loser refusal is acceptable. |
+| N4 | Broad generic SQL guard refactor rejected: independently named stale-row predicates preserve existing writer transactions and validated row contracts. The new baseline refusal includes GID. No policy weakened to remove guards. |
+| N5 | Valid historical provenance defects: append-only audit identifies19 missing revision fields and8 stale artifact hashes in98 original rows;7 old blobs remain recoverable,1 original log not found. Exact storage links provided; unknown tested revisions remain unqualified, not fabricated. Original history preserved. |
+| N6 | Historical log deletion/compression rejected for this corrective scope: hashes/attestations refer to those immutable artifacts. New summary indexes current relevant controls; no duplicate permanent replay driver added. |
+| N7 | Historical evidence path redaction rejected because it changes bound bytes. Paths are not secrets; future source-hash keys use repo-relative names. No unrelated content/secrets inspected. |
+
+The four local source corrections are deterministic repairs to existing reviewed
+contracts (qualified identity, no partial deterministic input writes, named CLI
+refusals, usage errors), rather than new orchestration policy. Easy rollback:
+revert the corrective commit; no schema/data migration or deployed state change.
+Before/after controls use actual modules and canonical second-process writers in
+temporary independent repositories. Their init/add/rate/capture/receipt/commit
+writes are local fixture effects; GH/target transport is stubbed, connectors off.
+Existing36 accumulation controls pass; final focused suites still pending.
+No tests/cases/parametrizations, CI registry, gate or policy weakening added.
+
+### Pending corrective plan (S1/S2/N1 and S7)
+
+Outcome: entry-point verification identifies the executable bundle actually used,
+and a stalled command cannot hold an owned preparation writer indefinitely.
+Smallest bet: a complete repository/vendored source bundle uses its own sibling
+intake and canonical writer/renderer; a separately copied skill uses the existing
+locator. Validate malformed explicit overrides rather than treating them as
+absence. Preserve scan/find defaults and fail clearly on an old missing-helper
+vendor. Record actual core/intake/writer/renderer/process-runner file hashes in
+local preparation receipts, and recheck those bytes before each side-effect and
+final commit boundary. Do not claim target HEAD identifies external runtime code,
+execution authority or protection against adversarial change/revert sequences.
+Use the existing process-group runner with an explicit mechanical IO deadline
+for default weekly preparation commands, including remote reads/hooks; preserve
+normal hooks/signing and immediate fresh target checks. Injected fixture runner
+contract remains unchanged. Timeout returns held/unknown and preserves partial
+state, with no surviving owned child group. Legacy planner modes remain unchanged.
+
+Ordered work once corrective plan/review authority is resolved: (1) review loader
+ownership/override/copy/old-vendor contract with current sources; (2) implement thin
+loaders and actual-runtime pins, verifying inherited stale override, standalone
+copy, old vendor and changed code boundary controls; (3) extend only default weekly
+IO through proc_group, verifying a slow owned process group times out and releases
+locks without bypassing hooks/signing; (4) run affected existing suites in the
+disposable clone and independent corrective final QA, then classified final gate
+and exact-SHA draft publication. No separate discovery scanner or orchestration
+framework. PR1026 c1a0e543fb79a1e405ec962b6dba289f9d00c3e8 owns start-task prior-art
+merged/issues/sibling/REST work; its scanner and skills remain untouched and its
+landing is not assumed. PR1017 observer ownership also remains separate.

@@ -8,6 +8,9 @@ import sys
 
 
 def main():
+    if len(sys.argv) < 2 or sys.argv[1] not in ("scan", "find"):
+        print("usage: intake_adapter.py {scan|find} [arguments...]", file=sys.stderr)
+        return 2
     here = Path(__file__).resolve().parent
     candidates = []
     override = os.environ.get("XYZ_HARNESS") or os.environ.get("XYZ_REPO_ROOT")

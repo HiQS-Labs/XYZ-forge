@@ -183,7 +183,7 @@ def normalize_record(record: dict, repository: str, kind: str = "issue") -> dict
     if any(not isinstance(label, str) for label in labels):
         raise ValueError(f"invalid label names: {expected}")
     return {"identity": f"{repository}/{segment}/{number}", "repository": repository,
-            "kind": kind, "number": number, "url": expected, "title": record["title"],
+            "kind": kind, "number": number, "url": url, "title": record["title"],
             "state": state, "body": record.get("body") or "", "updatedAt": updated,
             "createdAt": record.get("created_at", record.get("createdAt")),
             "closedAt": record.get("closed_at", record.get("closedAt")), "labels": labels}

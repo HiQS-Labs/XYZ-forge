@@ -2566,7 +2566,19 @@ def cmd_baseline(args):
                    % args.gid)
 
         def mutate(conn):
-            count = _capture_baseline(conn, row["id"], "observed")
+            # Pre-lock checks are advisory. A competing baseline or manifest
+            # writer may have committed since they ran; preserve that snapshot
+            # and refuse through the CLI contract rather than a SQL traceback.
+            current = find_release(conn, args.gid)
+            if current["baseline_count"] is not None:
+                refuse("baseline-already-set",
+                       "release %s already has a write-once baseline; owner state preserved"
+                       % args.gid)
+            if not _live_manifest_count(conn, current["id"]):
+                refuse("baseline-empty-manifest",
+                       "release %s has no dialed-in or shipped members; owner state preserved"
+                       % args.gid)
+            count = _capture_baseline(conn, current["id"], "observed")
             print("baseline for %s captured at %d (observed)" % (args.gid, count))
 
         perform_write(root, conn, "baseline", args.gid, mutate)

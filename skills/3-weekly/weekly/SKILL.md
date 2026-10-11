@@ -26,6 +26,15 @@ Resolve `/relay-xyz`'s shipped `find-harness.sh --root`; require Python3 and
 `skills/3-weekly/weekly-planner/scripts/issue_intake.py` in that selected harness.
 Copied skills must use this locator, not cwd-relative sibling imports. Set HARNESS
 to the returned root and confirm the explicit repo/timestamp:
+The selected harness supplies the intake library, canonical RELEASES writer and
+HQ renderer; SOURCE_ROOT's Git HEAD does not identify those executable bytes.
+A preparation record currently pins the target and plan state, not a runtime-code
+attestation. Runtime ownership/fingerprint remediation is pending; keep dispatch
+held. Copied skills and older `.xyz` vendors need the new shared helper and Python3
+from a consistently updated harness. Copying only the adapter into an old vendor
+is insufficient. Use the established vendor/copy workflow when separately
+authorized; this task does not update any vendor or deployed skill collection.
+
 
 ```bash
 XYZ_HARNESS="$HARNESS" PYTHONDONTWRITEBYTECODE=1   python3 "$HARNESS/skills/3-weekly/weekly-planner/scripts/planner_core.py"   --repo-root "$SOURCE_ROOT" --gh-repo "$TARGET_REPO" --mode weekly-intake   --since "$SINCE"

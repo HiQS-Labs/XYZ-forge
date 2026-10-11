@@ -220,3 +220,33 @@ hosted38181222495 exactSHA smokeSUCCESS,promotion/portabilitySKIPPED. No full
 promotion or liveexecution inferred. Owner progress CLI preservesallscore/status/
 GID/doc fields;canon checkclean. Allreviewedsourcehashesunchanged in proofcommit.
 W7–W11stillrequiredactive;nextpure Jog ownership seamrecon,observeroverlapheld.
+
+
+Claude review corrective checkpoint (local, final QA/publication pending):
+full31ba review and8 inline findings read against published7d plus local9ead plan.
+Six targeted actual-source controls pass: ordinary baseline, competing baseline
+clean rc3/preserved1 (pre-fix SQL crash, existing trigger already preserved1),
+third-member rated-title batch refusal with no new captures/rows (pre-fix row2
+was left written), corrected retry and canonical-case URL registration, malformed
+createdAt no partial writes, private adapter no-argument usage/rc2. Existing36
+accumulation manual controls pass on the source hashes in
+claude-correction-source-hashes.json. Temporary scripts remain outside the repo;
+no permanent asserted drivers, CI cases or registry changes. These probes wrote
+canonical DB/dumps/receipts/captures/commits only in temporary fixture full clones;
+GH/target reads stubbed, connectors disabled, no push or live Marathon/Jog.
+
+N3 interleaving control preserves winning full-clone HEAD/complete receipt and
+clean state; the losing bootstrap git clone refuses its now-nonempty directory.
+S1 stale explicit harness and N1 invalid-override fallback confirmed; S6 check-URL
+churn confirmed as local accounting commit with fresh metadata and dispatchfalse.
+Those observations are not fixed by the four deterministic source corrections.
+S1/S2/N1 runtime-bundle policy and S7 bounded IO remain pending reviewed repair;
+Phase6 Jog scope is paused. S8 individual test proposals tracked in GH1027,
+none approved or added. Full16-finding disposition is in the canonical project doc.
+
+Historical provenance audit, N5:98 original rows,19 without revision fields,8
+current artifact hash mismatches. Seven historic artifact versions are available
+as exact Git blobs; one original log is unavailable. Append-only correction index
+links recoverable versions and withdraws the unavailable historical claim. Missing
+source bindings remain unqualified; no invented tested SHA or overwritten receipt.
+Keep original artifacts to preserve later attestation hashes.

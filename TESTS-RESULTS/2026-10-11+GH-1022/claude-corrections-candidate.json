@@ -1,0 +1,48 @@
+{
+  "head": "9eadca0aa74ac8e2a9040c308e38709392cd5d38",
+  "source_sha256": {
+    "utils/py/releases_app.py": "74d2f2ed943373af71aec9b8c17e4e5e8aefdca4b76e342ea625ad8cf373491c",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "76533e94f60c8a18b02031c77a9e8eb29dddb75208c56cdd00a17c71d2e5bd4e"
+  },
+  "controls": [
+    {
+      "control": "S9-baseline",
+      "injected": false,
+      "rc": 0,
+      "baseline_count": 1,
+      "safe": true
+    },
+    {
+      "control": "S9-baseline",
+      "injected": true,
+      "rc": 3,
+      "baseline_count": 1,
+      "safe": true
+    },
+    {
+      "control": "S5-batch",
+      "rc": 2,
+      "message": "new issue title contains canonical rating tokens; explicit reconciliation required",
+      "new_rows": [],
+      "captures": [],
+      "safe": true
+    },
+    {
+      "control": "S4-case-and-S5-corrected-retry",
+      "url": "https://github.com/Fixture/Repo/issues/2",
+      "identity": "fixture/repo/issues/2",
+      "safe": true
+    },
+    {
+      "control": "S5-invalid-created-batch",
+      "safe": true
+    },
+    {
+      "control": "N2-no-arguments",
+      "rc": 2,
+      "stderr": "usage: intake_adapter.py {scan|find} [arguments...]",
+      "safe": true
+    }
+  ],
+  "local_effects": "independent temporary fixture repositories and canonical DB/dump/receipt writes; GH and remote reads stubbed; no live connector writes"
+}

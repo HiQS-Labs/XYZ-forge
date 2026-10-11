@@ -941,6 +941,36 @@ def prepare_weekly(args, source_root, command=None):
     stable = {key: value for key, value in observed.items() if key not in ("observedAt", "since", "pages")}
     stable["holds"] = ["Local canonical accounting only; dependency expansion, authoritative selection, criterion review, freeze and shared dispatch boundaries remain held.",
                        "Owner rank alone grants no execution authority; selection requires separately reviewed readiness and criterion evidence."]
+    def inspect_members(ledger_rows, directory):
+        writes = []
+        for issue in observed["issues"]:
+            matches = [row for row in ledger_rows if row.get("gh_number") == issue["number"] or intake.github_url_matches(row.get("issue_url"), issue["url"])]
+            if len(matches) > 1 or (matches and not intake.github_url_matches(matches[0].get("issue_url"), issue["url"])):
+                raise ValueError("ambiguous/foreign canonical identity during preparation")
+            candidates = [path for bucket in intake.BUCKETS
+                          for path in (directory / "PROJECT" / bucket).glob(f"GH-{issue['number']}-*.md")]
+            if not matches:
+                require_unrated_title(issue)
+            if not matches and len(candidates) > 1:
+                raise ValueError("ambiguous capture during preparation")
+            doc = matches[0].get("doc_path") if matches else (str(candidates[0].relative_to(directory)) if candidates else None)
+            if not matches and not candidates:
+                created_at = issue.get("createdAt")
+                if not isinstance(created_at, str):
+                    raise ValueError("new canonical capture requires qualified createdAt")
+                if (datetime.fromisoformat(created_at.replace("Z", "+00:00")).tzinfo is None
+                        or any(char in issue["title"] for char in "\r\n\0")):
+                    raise ValueError("new capture requires qualified createdAt and a single-line title")
+                local_path(f"PROJECT/1-INBOX/GH-{issue['number']}-WEEKLY-CAPTURE.md", directory)
+            if matches and not doc:
+                raise ValueError("existing canonical row has no capture; explicit reconciliation required")
+            if doc and not local_path(doc, directory).is_file():
+                raise ValueError("canonical capture missing during preparation")
+            writes.append({"identity": issue["identity"], "existing_row": matches[0] if matches else None,
+                           "capture": doc or f"PROJECT/1-INBOX/GH-{issue['number']}-WEEKLY-CAPTURE.md",
+                           "action": "preserve" if matches else ("register-only" if doc else "capture-and-register")})
+        return writes
+
     if not args.apply:
         inspection_root = root if root.exists() else source_root
         if not root.exists() and git(["rev-parse", "HEAD"], source_root) != base:
@@ -949,25 +979,7 @@ def prepare_weekly(args, source_root, command=None):
                                          "roadmap", "list", "--json"], inspection_root))
         if not isinstance(ledger_rows, list) or any(not isinstance(row, dict) for row in ledger_rows):
             raise ValueError("invalid canonical ledger response")
-        writes = []
-        for issue in observed["issues"]:
-            matches = [row for row in ledger_rows if row.get("gh_number") == issue["number"] or intake.github_url_matches(row.get("issue_url"), issue["url"])]
-            if len(matches) > 1 or (matches and not intake.github_url_matches(matches[0].get("issue_url"), issue["url"])):
-                raise ValueError("ambiguous/foreign canonical identity in dry preparation")
-            candidates = [path for bucket in intake.BUCKETS
-                          for path in (inspection_root / "PROJECT" / bucket).glob(f"GH-{issue['number']}-*.md")]
-            if not matches:
-                require_unrated_title(issue)
-            if not matches and len(candidates) > 1:
-                raise ValueError("ambiguous capture in dry preparation")
-            doc = matches[0].get("doc_path") if matches else (str(candidates[0].relative_to(inspection_root)) if candidates else None)
-            if matches and not doc:
-                raise ValueError("existing canonical row has no capture; explicit reconciliation required")
-            if doc and not local_path(doc, inspection_root).is_file():
-                raise ValueError("canonical capture missing in dry preparation")
-            writes.append({"identity": issue["identity"], "existing_row": matches[0] if matches else None,
-                           "capture": doc or f"PROJECT/1-INBOX/GH-{issue['number']}-WEEKLY-CAPTURE.md",
-                           "action": "preserve" if matches else ("register-only" if doc else "capture-and-register")})
+        writes = inspect_members(ledger_rows, inspection_root)
         return dict(observed, holds=stable["holds"], preparation={"root": str(root), "branch": branch, "target_head": base,
                     "effects": "apply creates/resumes full clone, canonical captures/DB/dump and local receipts; never pushes",
                     "initial_backfill": args.initial_backfill, "intended_writes": writes}, status="HELD", dispatch_allowed=False)
@@ -1072,6 +1084,9 @@ def prepare_weekly(args, source_root, command=None):
             state = {"repository": repository, "branch": branch, "base": base, "snapshot": stable,
                      "generation": generation, "ledger_rows": current_rows, "paths": {}, "complete_commit": None,
                      "checkpoint_cut": cut}
+        # Validate the entire batch before the first capture/registration.
+        # Per-member checks below still guard intervening owner changes.
+        inspect_members(state["ledger_rows"], root)
         accounting = []
         capture_objects = {}
         for issue in observed["issues"]:
