@@ -52,8 +52,12 @@ Then begin work.
    (`ROUTER.md` where present), `AGENTS.md`, `SOP.md`, guiding principles, active
    roadmap, and relevant project docs. Resolve issue numbers against the actual
    remote; use full repo/issue URLs across repos. Inspect existing issues, PRs,
-   plans, and active work before creating anything (`python3 utils/py/prior_art_recon.py --query <seam>` where available).
+   plans, and active work before creating anything (`python3 utils/py/prior_art_recon.py --query <seam>` where available;
+   add `--repo OWNER/NAME` per sibling repo). It also reports recently merged PRs and matching issues in any state.
    Reuse an existing issue and its canonical plan; never create duplicate intake for an already tracked ask.
+   If it lists an `existing_fix_candidates` entry (a merged PR or an issue closed as completed) that may
+   already solve the ask, stop and confirm with the user before planning: the fix may only need verifying,
+   deploying or reopening. Where the scan reports a GitHub error, run the same searches by hand.
    Follow the target repo's branch and governance contracts. Missing PDDA or
    RELEASES infrastructure is not permission to install it or invent a substitute.
    Record which local equivalent applies or that the repo has none.
@@ -126,7 +130,7 @@ Then begin work.
    trace the relevant entry point through callers/callees to state writes and
    visible outputs; inspect tests, configuration knobs, and likely affected
    consumers. Run `python3 utils/py/prior_art_recon.py --query <seam>` (where available) to inspect
-   open PRs across repos, `releases.db` roadmap, and existing utilities (`lib/*`,
+   open and recently merged PRs, issues, the `releases.db` roadmap, and existing utilities (`lib/*`,
    `utils/py/*`) before authoring new utilities. Import existing helpers rather
    than reinventing them. Prefer the repo's graph tools where available, falling back
    when coverage is insufficient. Trace enough to size the change; name untraced paths
