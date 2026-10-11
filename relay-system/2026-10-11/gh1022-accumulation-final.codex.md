@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `skills/3-weekly/weekly-planner/scripts/planner_core.py`, `issue_intake.py`, `utils/py/releases_app.py`, weekly SKILL, Phase 4 plan, and accumulation evidence. Review whole touched source and legacy interfaces; sanctioned writes only in separate owned full clones.
+- Artifact under review: `skills/3-weekly/weekly-planner/scripts/planner_core.py`, `skills/3-weekly/weekly-planner/scripts/issue_intake.py`, `utils/py/releases_app.py`, weekly SKILL, Phase 4 plan, and accumulation evidence. Review whole touched source and legacy interfaces; sanctioned writes only in separate owned full clones.
 - Reviewer: codex   ·   Producer: author
 - Started: 2026-10-11
 - Definition of Done: Narrow approved Phase 4 accumulation contract in GH-1022 plan: preserve owner GIDs/ratings/overrides/docs; qualified complete discovery and all-open backfill; canonical CLI/HQ owners; exact target/base and local ownership/lock; interrupted writes/resume/concurrency/no-change holds; checkpoint only after committed accounting; always HELD, no dispatch/selection. Do not infer whole #1022 completion or W8 planner repair. No new test cases or gate changes authorized. This is a new phase artifact with its own cap 3; earlier foundation cap is closed. Read source/evidence, use only harmless in-memory probes. No external/Git writes, suites, fixture execution, extra agents or source edits; only this relay transcript may change. Mutation-heavy suites belong in disposable full clone, never reviewer linked checkout. Report observed inputs/affected scope/falsifier for behavior findings. Evidence is producer-run, independently reproduce only when safe.
