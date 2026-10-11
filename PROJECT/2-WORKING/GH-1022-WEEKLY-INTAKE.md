@@ -18,7 +18,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 
 | What was just completed | What's next |
 |---|---|
-| Held local accumulation QA5 Approved at e016d29a; exact-source gate28/28. | Publish reviewed stage through normal gates; continue required W7–W11 safeguards. |
+| Held accumulation draft1024 at4770f091; QA5 Approved,normalgate28/28,hosted smoke passed. | Required W7–W11: remote lifecycle/global work,plan readiness,freeze/approval and shared safety. |
 
 ## Table of contents
 
@@ -461,3 +461,8 @@ This is limited held accumulation approval. Full umbrella W7–W11,global clone/
 remote planning lifecycle,canonical planner override/readiness,freeze/exact approval
 and shared fire/phase/resume/landing safeguards remain required and unimplemented.
 No merge,deployment,installation,schedule,live execution or new CI test authorized.
+
+Reviewed held stage published at4770f091 to existing draft1024 through normal
+tier2prepush (GREEN315s,28/28) and hosted38178591497 exactSHA smokeSUCCESS.
+Promotion/portabilitySKIPPED,notqualification. No merge/newtest/liveexecution.
+This fulfills staged publication only;remaining umbrella checklist stays active.
