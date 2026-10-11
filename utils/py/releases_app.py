@@ -3791,7 +3791,7 @@ def cmd_roadmap_repoint(args):
             refuse("selector", "pass exactly one of --issue-num or --gid")
         where, param, label = (("gh_number = ?", args.issue_num, "GH-%d" % args.issue_num)
                                if args.issue_num is not None else ("global_id = ?", gid, gid))
-        rows = conn.execute("SELECT global_id, gh_number, doc_path, raw_text FROM roadmap_items "
+        rows = conn.execute("SELECT * FROM roadmap_items "
                             "WHERE %s LIMIT 2" % where, (param,)).fetchall()
         if not rows:
             refuse("no-such-row", "no roadmap row for %s" % label)
@@ -3811,6 +3811,11 @@ def cmd_roadmap_repoint(args):
             return
 
         def mutate(conn):
+            current = conn.execute("SELECT * FROM roadmap_items WHERE global_id = ?",
+                                   (row["global_id"],)).fetchone()
+            if current is None or dict(current) != dict(row):
+                refuse("roadmap-repoint-stale",
+                       "roadmap row changed after validation; owner state preserved; retry against current state")
             conn.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? "
                          "WHERE global_id = ?", (new, raw_text, now_iso(), row["global_id"]))
 

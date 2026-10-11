@@ -396,3 +396,36 @@ pass; six old/candidate controls and canonical checks clean. No new CI cases.
 Existing exact-source verification pending; cap4/4 Escalated, no extra review or
 approval attestation. W7–W11 remain active; no umbrella completion or held-source
 publication. Further independent review requires explicit operator cap decision.
+
+### Consolidated stale-snapshot writer diagnosis (producer, no new review)
+
+Parent requested same-class diagnosis before another cap decision. Directly
+checked perform_write, roadmap add/rate/repoint/update/move/reconcile-state/sync,
+canonical release update and weekly prepare's accounting boundaries. Real
+second-process controls show rate and repoint both derived replacement raw_text
+before the lock and could erase each other's owner text. Both now compare the
+full selected row inside BEGIN IMMEDIATE before writing; no new protocol/helper.
+Release update already has its equivalent guard from Round3.
+
+Real controls: quiet repoint succeeds; intervening rating/override399 is preserved
+by named repoint stale refusal; marker-only update and move after repoint preserve
+WORKING doc_path/raw_text; concurrent add keeps exactly one GID via existing
+UNIQUE(repo_id,gh_number), with transaction rollback for the losing add. Its
+IntegrityError is nonzero rather than a named duplicate; changing that UX is not
+required to preserve state. Explicit raw_text update intentionally replaces caller-
+specified text/rating; marker/section/URL-only writes never fill unrelated columns
+from old snapshots. Accepted-start and reconcile-state already re-read full rows
+inside the transaction and refuse stale snapshots (source review; no new native
+lookup execution). Legacy roadmap sync skips in releases mode; legacy mirror
+concurrency is outside this weekly branch policy and was not enabled or repaired.
+Settings set writes explicit values only. Release ship/manifest/import/rebuild and
+Jog execution are outside this planning write-set and were not claimed race-free.
+No general CRUD concurrency guarantee follows from this bounded diagnosis.
+
+Weekly uses add for new rows and preserves existing rows; final canonical WriterLock,
+full-row/generation/target/accounting guards hold concurrent owner changes. Cross-clone
+coordination and remote rollover remain unimplemented. Smallest justified next
+review is these two roadmap stale-row guards plus their mutual-interleaving,
+quiet/force/partial-field controls, prior release guard and exact-source existing
+gate evidence, within the same held accumulation contract and repo whole-file rule.
+Cap remains4/4 Escalated; no independent review is dispatched or inferred.

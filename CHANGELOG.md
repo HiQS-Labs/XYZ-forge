@@ -7,6 +7,14 @@
   fields. Actual second-process red/control evidence retained; review cap is
   escalated and this late repair is awaiting final independent approval.
 
+- The single operator-approved fourth review confirmed the release guard, then
+  found a preexisting roadmap rating/repoint race. Canonical rating now refuses
+  a changed owner row before replacing its text inside the existing transaction.
+  Actual second-process red/quiet/force controls preserve the newer document link.
+  Same-class diagnosis also protects repoint from erasing a newer owner rating;
+  partial-field update/move and unique add controls preserve existing owner data.
+  Review remains Escalated4/4; this repair is unreviewed, not operational approval.
+
 Existing planner_core gains opt-in weekly-prepare: explicit date/ref/backfill/overlap,
 read-only write preview or authorized local application in a separate owned full
 clone. It preserves existing captures/GIDs/ratings/overrides/status, uses HQ capture
