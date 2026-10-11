@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -70,5 +70,23 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The staged, held discovery milestone is buildable without a second orchestrator or execution authority. Approval covers this plan, not runtime correctness, umbrella completion, dispatch, or landing.
+swept file: yes
+
+- [Pass] Legacy extraction is grounded: plan lines 59–66 preserve defaults, window query, projection, failure status, root precedence, bucket order and contract heuristics. Sources: `skills/3-weekly/10days/scan-issues.sh:26–54`, `skills/3-weekly/10days/find-doc.sh:19–94`. Installed-copy lookup is explicitly harness-owned (plan lines 68–72, 103–104); the existing locator supports copied/symlinked skills and foreign CWD (`skills/1-hourly/relay-xyz/find-harness.sh:103–110`, `177–254`). Keep harness lookup separate from the swept doc root as specified.
+- [Pass] Preview belongs in the existing core and must bypass its effectful path: `planner_core.py:786–789` creates scratch and performs capped PR discovery before routing; `:498–561` writes fallback outlines. Plan lines 74–80, 100–110, 119–121 explicitly require pure helper reuse, no import/write effects and complete independent reads. `utils/py/marathon_plan.py:23–24`, `:135–175`, `:195–201` retains executable-plan ownership. Implement the new mode before legacy scratch/fetch calls; preserve existing default modes.
+- [Pass] Held input boundaries are explicit: plan lines 105–114 require paginated issues/PR metadata, qualified deduplication, UNKNOWN/nonzero on failures/conflicts/malformed snapshots, re-fetch of carried IDs and rejection of foreign snapshots. Closed state remains observation. Completeness must include every metadata collection actually consumed by the advisory helpers, including PR files (`planner_core.py:259–275`), rather than merely the outer PR page list.
+- [Pass] Existing policy defects are acknowledged rather than laundered into readiness: missing draft discovery (`planner_core.py:108`), CI NONE readiness (`:171–172`), unmet dependencies as annotations (`:204–207`), closure-number union (`:468–481`). Plan lines 74–80 and 139–153 segregate these and the unfinished shared protocol; lines 115–117 prohibit a new fire entry point. No additional pre-existing defect blocking this held milestone found in the full plan/source sweep.
+- [Pass] Rating, rollback and proof are proportionate: plan lines 45–48 name adapter/module rollback and affected consumers; lines 85–91 separate recurrence evidence from incident assumptions; lines 98–99, 119–131, 155–157 require provenance, manual negative controls, existing gh369, exact final revision, independent QA and disposable-clone gates without new tests/cases. Preserve those evidence requirements during implementation.
+- [Nit] Timestamp the historical discovery claims at plan lines 55–57 and 91. The seeded `releases.sql:843` already contains the #1022 active pointer and 70/65/50/25 ratings; `:3323–3325` records registration/rating/transition at 16:06:48Z. Cheapest fix: distinguish the earlier reconnaissance from the current registered state; no ledger rewrite needed.
+- [Nit] Add source citations to the reconnaissance paragraphs, explicit phase goals, trackable QA checkboxes and the execution-time debug-mantra reference. These improve the SWE proof/diagnosis surface without adding runtime machinery or tests.
+
+Evidence limits: Verify-tier graph attempted against nearest indexed canonical project `XYZ-forge`; generation 2026-09-01T15:54:30Z is foreign/stale for this seeded worktree, structural search returned no matches and coverage reported untracked/changed metadata. All material claims above therefore use direct current source reads, not graph completeness. Full artifact read (157 lines), plus all Setup-named sources and the existing gh369 resolver suite read. [Unverified — needs clone run] Legacy byte parity, pagination/error negative controls, import/preview no-write behavior and final gate remain prospective; no tests, executable fixtures, Git commands or live dispatch ran here.
+
+Relay closed (Approved), no further turn needed. Producer author may implement the staged plan and address the documentation nits; final implementation QA remains required.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
