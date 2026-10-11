@@ -57,3 +57,25 @@ variants fail on pre-fix bytes, then return UNKNOWN/exit 2 on candidate. Origina
 Final independent QA round 3 Approved, attested implementation ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978. Reviewer reproduced five invalid PR metadata red controls and valid/null/absent review behavior; source hashes match. Subsequent changes here record evidence only.
 
 Final classified docs/skill gate on aeabcdeb026cfd5f70fbded531623e261f4cf521, disposable full clone: exit 0, zero errors and 430 warnings (unavailable issue-state reads and existing governance/Marathon-QA findings). LLM readiness skipped by the existing gate. This is not a full runtime-suite or issue-state verification claim. Final gh369: 14/14; AST parses pass; no tracked clone mutations; primary clean at a58378289863548968ea907cbbddfd2b8d6f4f28. Push hook will recheck the evidence-only final revision.
+
+
+Phase 4 local accumulation candidate (required continuation, not umbrella completion):
+36 manual controls pass on source hashes in accumulation-results.json. Fixtures used
+ephemeral independent Git clones, canonical RELEASES init/add/rate commands, HQ
+captures, local receipts/locks and commits. Reads were stubbed; connectors disabled;
+no pushes, schedules or dispatch. Existing mixed-case owner URLs and all owner rating
+axes/override/GID/document bytes remain preserved. New rows stay unrated/held; closed
+issues are not asserted delivered. Interrupted canonical registration, refused commit,
+and lost successful-commit reply recover without duplicate rows or a second commit.
+No-change retains receipt bytes/mtime, checkpoint and HEAD. Target/ledger drift, lock
+contention, incomplete discovery, malformed persisted state and symlink captures hold.
+
+Witnessed red input: the mixed-case canonical URL incorrectly held as foreign before
+using shared URL equality; accumulation-case-before.log records it. Independent plan
+review approved the narrowed accumulation design at 8de581db. Canonical JSON reader now
+reports owner axes/override/calculated/effective rank. The authoritative planner's
+override omission remains held for separately reviewed W8 correction, evidenced by
+planner-rank-before-controls.json. No CI cases or permanent test harness added.
+Phase 4 final implementation QA and classified existing suites are still pending.
+Remote branch resume/publication, dependency/active-run handling, canonical selection,
+freeze/approval and fresh fire/phase/resume/landing receipts remain required active work.

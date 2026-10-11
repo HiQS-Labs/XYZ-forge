@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-11 — Local canonical weekly accumulation (GH-1022, phase 4)
+
+Existing planner_core gains opt-in weekly-prepare: explicit date/ref/backfill/overlap,
+read-only write preview or authorized local application in a separate owned full
+clone. It preserves existing captures/GIDs/ratings/overrides/status, uses HQ capture
+and RELEASES CLI writers for missing rows, commits complete accounting before the
+checkpoint, and holds drift/concurrency/unknown partial state. Unchanged runs retain
+the prior cut/commit/receipt; known committed additions or refused commits can resume
+without duplicates. All results remain HELD, with no push or dispatch.
+
+Canonical roadmap reader JSON now exposes existing rating axes, override, calc and
+effective rank through the same projection as its human view. Shared URL comparison
+preserves legitimate repository casing without rewriting stored owner URLs. The
+authoritative planner still ignores overrides: selection remains held for separate
+canonical-owner correction. Remote planning-branch/rollover/global-run reconciliation,
+dependency expansion, executable artifacts, freeze/exact approval and shared boundary
+safety remain required and unimplemented. No new CI tests/cases/gates or live actions.
+
 ## 2026-10-11 — Shared discovery and held weekly intake preview (GH-1022, staged)
 
 The existing 10days scan and capture lookup now use harness-owned `issue_intake.py`
@@ -8,7 +26,7 @@ Python3 and a current selected harness are explicit prerequisites for copied ski
 The existing weekly/daily planner core gains an opt-in complete issue/PR read preview;
 `/weekly` names this held preparation entry point while existing planner names remain.
 
-This foundation does not complete #1022: branch ledger accumulation/checkpoints,
+At the foundation milestone, #1022 remained incomplete: branch ledger accumulation/checkpoints,
 authoritative plan construction, readiness fixes, immutable freeze and exact approval,
 criterion-level pre-fire/phase/resume and pre-landing redundancy safeguards remain
 unimplemented. Preview always holds dispatch. No new tests, schedules, installations,

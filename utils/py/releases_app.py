@@ -4426,6 +4426,20 @@ def cmd_roadmap_render(args):
         sys.stdout.write(rendered)
 
 
+def roadmap_rating_view(row):
+    """One canonical rating projection for machine and human ledger readers.
+
+    An override replaces the calculated rank only for a fully rated row. This
+    exposes owner state; it does not rate an issue or establish readiness.
+    """
+    result = {column: _col(row, column) for column in RATING_COLUMNS}
+    axes = [result[column] for column in RATING_COLUMNS[:4]]
+    calc = sum(axes) if all(axis is not None for axis in axes) else None
+    result["rating_calc"] = calc
+    result["rating_rank"] = (result["rating_ovr"] if result["rating_ovr"] is not None else calc) if calc is not None else None
+    return result
+
+
 def cmd_roadmap_list(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
@@ -4443,6 +4457,7 @@ def cmd_roadmap_list(args):
                                  "raw_text": _col(r, "raw_text")})
                     rows[-1]["status_label_supported"] = _has_column(conn, "roadmap_items", "status_label")
                     rows[-1]["status_label"] = _col(r, "status_label")
+                    rows[-1].update(roadmap_rating_view(r))
             print(json.dumps(rows, ensure_ascii=False))
             return
         if not _table_exists(conn, "roadmap_items"):
@@ -4455,8 +4470,9 @@ def cmd_roadmap_list(args):
             # calc is DERIVED here, never stored — the equal-weighted sum of the four axes, and
             # the override wins over it for ranking wherever both exist.
             score = "-"
-            if _col(r, "rating_pri") is not None:
-                calc = sum(_col(r, c) for c in RATING_COLUMNS[:4])
+            rating = roadmap_rating_view(r)
+            if rating["rating_calc"] is not None:
+                calc = rating["rating_calc"]
                 score = str(calc)
                 if _col(r, "rating_ovr") is not None:
                     score = "%s>%d" % (score, r["rating_ovr"])

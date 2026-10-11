@@ -139,18 +139,20 @@ QA gate: exact-revision evidence, final review verdict, draft PR with remaining 
 
 ## Remaining acceptance
 
-Issue staged checklist: 1 characterization and 2 extraction addressed here; 3 shared
-core connection only read preview; 4 policy differences identified, not implemented;
-5 discovery parity/separation only. No umbrella completion/closure claim.
+Issue phased checklist: characterization/extraction are implemented; shared core now
+supports observations and local canonical accumulation with separate policy/effects.
+Existing/manual controls cover this stage. Authoritative selection and execution
+policy differences remain held; no umbrella completion/closure claim.
 
-Architecture checklist 1–10 remaining: auto-yyyy-mm-dd one-writer branch lifecycle;
-complete restartable checkpoint after durable canonical capture/ledger/receipt writes;
-ALL relevant registration through hq_render_capture and releases_app preserving GIDs,
-ratings/status/owner edits with XYZ_WORK_CONNECTORS=0; concurrent reconciliation;
-active Marathon/Jog/PR decisions/locks; bounded authoritative plan/YAML construction;
-structured IDs/draft/required-CI/unmet-dependency readiness corrections; immutable
-freeze and drift invalidation; exact operator approval and pre-fire enforcement;
-full manual acceptance scenarios and scheduling review.
+Architecture checklist status: local auto-* full-clone creation, scoped lock, complete
+canonical accounting, owner preservation and commit-bound checkpoint/recovery are
+implemented in Phase 4. This does not establish published-branch rollover/concurrent
+integration or global one-run coordination. ALL relevance depends on explicit
+backfill/prior-member inputs; dependency expansion remains unimplemented. Active
+Marathon/Jog/PR decision accounting, authoritative bounded artifacts, draft/required-CI/
+unmet-dependency readiness, freeze/drift invalidation, exact operator approval and
+shared boundary enforcement remain required W7–W11 work. Unknown canonical journals
+and remote existing planning branches hold for explicit sanctioned reconciliation.
 
 Mandatory shared protocol remains UNSHIPPED: criterion-by-criterion independent current-code
 review, exact target HEAD/plan/branch commit receipts, delta/no-op/overlap holds,
@@ -307,3 +309,30 @@ freeze/exact approval and shared fire/phase/resume/landing protocol stays requir
 ### Phase 4 plan round 1 dispositions
 
 Should implemented in design: authoritative planner currently ignores overrides; expose canonical reader rank and hold selection until separately reviewed W8 owner correction. No weekly scorer. Nit implemented: target advance on resume holds preserving branch/checkpoint, paths and run-start/overlap cut explicit; frontmatter/TOC/status reflect active phase. The observed rank probe is source-grounded; no actual override-free run was recorded in that reviewer turn. Add such a manual control during W8 verification. No source behavior claimed or changed by this disposition.
+
+## Phase 4 implementation and verification (in progress)
+
+Implemented existing-core weekly-prepare policy with explicit inputs, disjoint new/
+owned full-clone preparation, clone-local lock, canonical capture/CLI registration,
+owned partial intent and generation checks, and commit-before-complete checkpoint.
+Shared URL comparison preserves legitimate stored repository casing. Canonical
+reader exposes truthful rating axes/override/calc/rank; existing owner rows/captures
+are preserved. No source planner rank repair, scoring engine, execution artifacts,
+freeze or dispatch authority ships in this phase.
+
+Manual controls in /tmp use sanctioned CLI fixtures only (no direct fixture SQL),
+GH responses stubbed and connectors disabled. Initial 22 passed; expanded controls
+include unchanged receipt bytes/mtime, malformed receipts/observations, symlink
+capture and concurrent owner rating changes. The first concurrent injection failed
+because Mac /var resolved to /private/var: callback count 0. Resolve paths in the
+fixture; actual injection count 2 then held and preserved changed owner override.
+A mixed-case canonical owner URL reproduced a false foreign hold before the shared
+case-normalization fix; owner stored URL stays unchanged. Retain these breadcrumbs.
+
+Known limits remain active: existing remote planning branch and advanced target
+hold for explicit reconciliation; clone-local lock is not cross-clone coordination;
+unknown canonical journals require sanctioned stopped-owner recovery; dependency
+expansion/global active-run accounting, authoritative selection/rank correction,
+freeze and shared criterion/fire/phase/resume/landing protocol are unimplemented.
+Final phase-source QA, exact tier-2 gate and PR update remain pending. No new CI
+case/test/parametrization/registry/gate or operator approval inferred.

@@ -792,11 +792,364 @@ def format_daily_markdown(date_str: str, pivot_data: dict) -> str:
     return "\n".join(lines)
 
 
+def prepare_weekly(args, source_root, command=None):
+    """Local canonical accumulation; never selection, approval, publication or fire.
+
+    The caller supplies a separate preparation directory. New directories are full
+    clones; existing ones require this entry point's ownership record. Canonical
+    RELEASES transactions retain their own locks/journal. This receipt records only
+    preparation intent and owned file hashes, not a competing ledger or scheduler.
+    """
+    import fcntl
+    import hashlib
+    import math
+    import tempfile
+
+    source_root = Path(source_root).resolve()
+    intake = load_issue_intake()
+    harness = Path(intake.__file__).resolve().parents[4]
+    app = harness / "utils/py/releases_app.py"
+    renderer = harness / "utils/hq/hq-lib.sh"
+    repository = intake.repository_name(args.gh_repo)
+    date = datetime.strptime(args.planning_date, "%Y-%m-%d").date().isoformat()
+    if date != args.planning_date or not math.isfinite(args.overlap_hours) or args.overlap_hours < 0:
+        raise ValueError("planning date must be YYYY-MM-DD; overlap must be finite and nonnegative")
+    branch = "auto-" + date
+    root = Path(args.prepare_root).resolve()
+    if (root.is_relative_to(source_root) or source_root.is_relative_to(root)
+            or root.is_relative_to(harness) or harness.is_relative_to(root)
+            or Path(args.prepare_root).is_symlink()):
+        raise ValueError("preparation directory must be a separate owned full clone")
+
+    def local_path(relative, directory=root):
+        if not isinstance(relative, str) or Path(relative).is_absolute():
+            raise ValueError("canonical preparation paths must be relative")
+        path = directory / relative
+        if (not path.resolve().is_relative_to(directory)
+                or any(part.is_symlink() for part in (path, *path.parents) if part.is_relative_to(directory))):
+            raise ValueError("canonical preparation path is foreign or symlinked")
+        return path
+    env = dict(os.environ, XYZ_WORK_CONNECTORS="0", PYTHONDONTWRITEBYTECODE="1")
+    if command is None:
+        def command(argv, cwd):
+            result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True)
+            if result.returncode:
+                raise RuntimeError(f"command refused ({result.returncode}): {argv[0]} {result.stderr.strip()}")
+            return result.stdout
+
+    def durable(path, value):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd, temporary = tempfile.mkstemp(prefix=".weekly-", dir=path.parent)
+        try:
+            with os.fdopen(fd, "w") as stream:
+                json.dump(value, stream, indent=2, sort_keys=True); stream.write("\n")
+                stream.flush(); os.fsync(stream.fileno())
+            os.replace(temporary, path)
+            directory = os.open(path.parent, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+
+    def git(argv, cwd=source_root):
+        return command(["git", *argv], cwd).strip()
+
+    remote = git(["remote", "get-url", "origin"])
+    match = re.fullmatch(r"(?:https://github\.com/|git@github\.com:)([\w.-]+/[\w.-]+?)(?:\.git)?", remote)
+    if not match or intake.repository_name(match[1]) != repository:
+        raise ValueError("origin must name the exact GitHub repository")
+    git(["check-ref-format", "refs/heads/" + args.target_ref])
+
+    def target_head(cwd):
+        rows = git(["ls-remote", "origin", "refs/heads/" + args.target_ref], cwd).splitlines()
+        if len(rows) != 1 or not re.fullmatch(r"[0-9a-f]{40}\trefs/heads/" + re.escape(args.target_ref), rows[0]):
+            raise ValueError("canonical target HEAD unavailable or ambiguous")
+        return rows[0].split("\t")[0]
+
+    base = target_head(source_root)
+    cut = datetime.now(timezone.utc).isoformat()
+    relative = f"PROJECT/4-MISC/weekly/{date}/intake.json"
+    observation_path = local_path(relative)
+    owner = root / ".git/weekly-owner.json"
+    previous = None
+    starting_commit = None
+    if root.exists():
+        if not owner.is_file() or owner.is_symlink():
+            raise ValueError("existing preparation directory is not owned; preserve it for inspection")
+        ownership = json.loads(owner.read_text())
+        if ownership != {"repository": repository, "branch": branch}:
+            raise ValueError("preparation ownership mismatch")
+        if git(["rev-parse", "--is-bare-repository"], root) != "false" or (root / ".git").is_symlink():
+            raise ValueError("preparation requires a non-bare full clone")
+        common = Path(git(["rev-parse", "--git-common-dir"], root))
+        actual = Path(git(["rev-parse", "--git-dir"], root))
+        if (root / common).resolve() != (root / actual).resolve() or not (root / ".git").is_dir():
+            raise ValueError("linked worktrees are refused")
+        if git(["remote", "get-url", "origin"], root) != remote or git(["branch", "--show-current"], root) != branch:
+            raise ValueError("preparation origin/branch changed; preserve state")
+        starting_commit = git(["rev-parse", "HEAD"], root)
+        if (root / relative).is_file():
+            previous = json.loads((root / relative).read_text())
+            if not isinstance(previous, dict) or previous.get("complete") is not True:
+                raise ValueError("prior committed observation is incomplete or malformed")
+            if previous.get("planning_base") != base:
+                raise ValueError(f"target advanced: planning base {previous.get('planning_base')} current {base}; explicit reconciliation required")
+    if args.intake_file:
+        supplied = json.loads(Path(args.intake_file).read_text())
+        if (not isinstance(supplied, dict) or supplied.get("complete") is not True
+                or intake.repository_name(supplied.get("repository")) != repository
+                or not isinstance(supplied.get("issues"), list)):
+            raise ValueError("explicit carryovers must be complete and repository-qualified")
+        supplied = dict(supplied, issues=intake.deduplicate([intake.normalize_record(item, repository) for item in supplied["issues"]]))
+        if previous is not None:
+            supplied = dict(supplied, issues=intake.deduplicate(supplied["issues"] + previous["issues"]))
+        previous = supplied
+    since = datetime.fromisoformat(args.since.replace("Z", "+00:00"))
+    if since.tzinfo is None:
+        raise ValueError("since must include timezone")
+    if previous is not None and previous.get("checkpoint_cut"):
+        if not isinstance(previous["checkpoint_cut"], str):
+            raise ValueError("invalid prior checkpoint cut")
+        prior_cut = datetime.fromisoformat(previous["checkpoint_cut"].replace("Z", "+00:00"))
+        if prior_cut.tzinfo is None:
+            raise ValueError("prior checkpoint cut requires timezone")
+        since = min(since, prior_cut - timedelta(hours=args.overlap_hours))
+    observed = intake.discover_weekly(repository, since.isoformat(), source_root, previous, runner=command)
+    if args.initial_backfill == "all-open":
+        records, pages = intake.read_pages(f"repos/{repository}/issues?state=open&per_page=100", source_root, command)
+        backfill = [intake.normalize_record(record, repository) for record in records if "pull_request" not in record]
+        observed["issues"] = intake.deduplicate(observed["issues"] + backfill)
+        observed["pages"]["initial_open"] = pages
+    stable = {key: value for key, value in observed.items() if key not in ("observedAt", "since", "pages")}
+    stable["holds"] = ["Local canonical accounting only; dependency expansion, authoritative selection, criterion review, freeze and shared dispatch boundaries remain held.",
+                       "Authoritative Marathon rank currently ignores owner overrides; selection requires separately reviewed canonical-owner correction."]
+    if not args.apply:
+        inspection_root = root if root.exists() else source_root
+        if not root.exists() and git(["rev-parse", "HEAD"], source_root) != base:
+            raise ValueError("dry preparation needs source at exact canonical target HEAD; preserve source and use a fresh full clone")
+        ledger_rows = json.loads(command([sys.executable, str(app), "--root", str(inspection_root),
+                                         "roadmap", "list", "--json"], inspection_root))
+        if not isinstance(ledger_rows, list) or any(not isinstance(row, dict) for row in ledger_rows):
+            raise ValueError("invalid canonical ledger response")
+        writes = []
+        for issue in observed["issues"]:
+            matches = [row for row in ledger_rows if row.get("gh_number") == issue["number"] or intake.github_url_matches(row.get("issue_url"), issue["url"])]
+            if len(matches) > 1 or (matches and not intake.github_url_matches(matches[0].get("issue_url"), issue["url"])):
+                raise ValueError("ambiguous/foreign canonical identity in dry preparation")
+            candidates = [path for bucket in intake.BUCKETS
+                          for path in (inspection_root / "PROJECT" / bucket).glob(f"GH-{issue['number']}-*.md")]
+            if not matches and len(candidates) > 1:
+                raise ValueError("ambiguous capture in dry preparation")
+            doc = matches[0].get("doc_path") if matches else (str(candidates[0].relative_to(inspection_root)) if candidates else None)
+            if matches and not doc:
+                raise ValueError("existing canonical row has no capture; explicit reconciliation required")
+            if doc and not local_path(doc, inspection_root).is_file():
+                raise ValueError("canonical capture missing in dry preparation")
+            writes.append({"identity": issue["identity"], "existing_row": matches[0] if matches else None,
+                           "capture": doc or f"PROJECT/1-INBOX/GH-{issue['number']}-WEEKLY-CAPTURE.md",
+                           "action": "preserve" if matches else ("register-only" if doc else "capture-and-register")})
+        return dict(observed, holds=stable["holds"], preparation={"root": str(root), "branch": branch, "target_head": base,
+                    "effects": "apply creates/resumes full clone, canonical captures/DB/dump and local receipts; never pushes",
+                    "initial_backfill": args.initial_backfill, "intended_writes": writes}, status="HELD", dispatch_allowed=False)
+    if not root.exists():
+        command(["git", "clone", "--no-hardlinks", "--", remote, str(root)], source_root)
+        if (root / ".git").is_file() or (root / ".git").is_symlink():
+            raise ValueError("clone did not produce an independent Git directory")
+        if git(["rev-parse", "refs/remotes/origin/" + args.target_ref], root) != base:
+            raise ValueError("target drift during clone; preserve clone and refresh")
+        # Do not overwrite a previously published planning branch with a new base.
+        known = git(["branch", "-r", "--list", "origin/" + branch], root)
+        if known:
+            raise ValueError("remote planning branch already exists; explicit preserved-branch reconciliation required")
+        git(["switch", "-c", branch, base], root)
+        durable(owner, {"repository": repository, "branch": branch})
+    gitdir = root / ".git"
+    receipt_path = gitdir / ("weekly-" + date + ".json")
+
+    def digest(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def ledger(*argv):
+        return command([sys.executable, str(app), "--root", str(root), *argv], root).strip()
+
+    def rows():
+        value = json.loads(ledger("roadmap", "list", "--json"))
+        if not isinstance(value, list) or any(not isinstance(row, dict) for row in value):
+            raise ValueError("invalid canonical ledger response")
+        return value
+
+    def dirty_paths():
+        raw = command(["git", "status", "--porcelain=v1", "-z", "--untracked-files=all"], root)
+        entries = [entry for entry in raw.split("\0") if entry]
+        if any(len(entry) < 4 or any(code in entry[:2] for code in "RCU") for entry in entries):
+            raise ValueError("renamed/conflicting preparation paths require explicit reconciliation")
+        return {entry[3:] for entry in entries}
+
+    with (gitdir / "weekly-prepare.lock").open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise RuntimeError("weekly preparation writer is active") from error
+        if starting_commit is not None and git(["rev-parse", "HEAD"], root) != starting_commit:
+            raise ValueError("preparation branch changed during discovery; refresh without overwriting it")
+        if (gitdir / "releases-app-journal.json").exists():
+            raise ValueError("canonical writer journal present; preserve it and recover via canonical CLI before retry")
+        ledger("check")
+        current_rows = rows()
+        generation = int(ledger("settings", "get", "generation"))
+        state = json.loads(receipt_path.read_text()) if receipt_path.is_file() else None
+        if state is not None and (not isinstance(state, dict) or type(state.get("generation")) is not int
+                or not isinstance(state.get("ledger_rows"), list) or not isinstance(state.get("paths"), dict)):
+            raise ValueError("malformed preparation receipt; preserve it for inspection")
+        if state is not None:
+            if state.get("repository") != repository or state.get("branch") != branch or state.get("base") != base:
+                raise ValueError("preparation receipt identity/base conflict; preserve it")
+            completed = state.get("complete_commit")
+            if not isinstance(state.get("checkpoint_cut"), str) or datetime.fromisoformat(state["checkpoint_cut"].replace("Z", "+00:00")).tzinfo is None:
+                raise ValueError("invalid preparation checkpoint cut")
+            if completed is not None and (not isinstance(completed, str) or not re.fullmatch(r"[0-9a-f]{40}", completed)):
+                raise ValueError("invalid preparation commit receipt")
+            if completed:
+                if previous is None:
+                    raise ValueError("committed observation missing; preserve receipt and reconcile explicitly")
+                git(["merge-base", "--is-ancestor", completed, "HEAD"], root)
+        resuming_partial = state is not None and not state.get("complete_commit")
+        if resuming_partial:
+            if state.get("repository") != repository or state.get("branch") != branch or state.get("base") != base or state.get("snapshot") != stable:
+                raise ValueError("partial preparation drift; preserve receipt and reconcile explicitly")
+            # A CLI transaction may have committed before receipt persistence
+            # failed. Adopt only the exact intended addition, with every old row
+            # unchanged and one canonical generation increment. Otherwise hold.
+            intent = state.get("pending_add")
+            additions = [row for row in current_rows if row not in state["ledger_rows"]]
+            if (intent and generation == state["generation"] + 1
+                    and len(additions) == 1 and len(current_rows) == len(state["ledger_rows"]) + 1
+                    and all(row in current_rows for row in state["ledger_rows"])
+                    and all(additions[0].get(key) == value for key, value in intent.items())
+                    and all(additions[0].get(key) is None for key in ("rating_pri", "rating_sev", "rating_appeal", "rating_effort", "rating_ovr"))):
+                state.update(ledger_rows=current_rows, generation=generation, pending_add=None)
+                durable(receipt_path, state)
+            if state["generation"] != generation or state["ledger_rows"] != current_rows:
+                raise ValueError("ledger changed during partial preparation; preserve state and reconcile explicitly")
+            for path, expected in state["paths"].items():
+                if not isinstance(path, str) or not re.fullmatch(r"PROJECT/1-INBOX/GH-[1-9][0-9]*-WEEKLY-CAPTURE\.md", path):
+                    raise ValueError("receipt names an unowned capture path")
+                actual = local_path(path)
+                if (not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected)
+                        or not actual.resolve().is_relative_to(root)):
+                    raise ValueError("invalid owned partial path/hash")
+                if actual.exists() and (actual.is_symlink() or digest(actual) != expected):
+                    raise ValueError(f"owned partial file changed: {path}")
+            allowed = set(state["paths"]) | {"releases.db", "releases.sql", relative}
+            if dirty_paths() - allowed:
+                raise ValueError("unrelated dirty state in preparation clone")
+        else:
+            if dirty_paths():
+                raise ValueError("preparation clone has owner edits not yet committed; preserve them")
+            state = {"repository": repository, "branch": branch, "base": base, "snapshot": stable,
+                     "generation": generation, "ledger_rows": current_rows, "paths": {}, "complete_commit": None,
+                     "checkpoint_cut": cut}
+        accounting = []
+        for issue in observed["issues"]:
+            if target_head(root) != base:
+                raise ValueError("canonical target advanced during preparation; preserve partial state")
+            if int(ledger("settings", "get", "generation")) != state["generation"] or rows() != state["ledger_rows"]:
+                raise ValueError("concurrent ledger change; preserve owner state")
+            matches = [row for row in state["ledger_rows"] if row.get("gh_number") == issue["number"] or intake.github_url_matches(row.get("issue_url"), issue["url"])]
+            if len(matches) > 1 or (matches and not intake.github_url_matches(matches[0].get("issue_url"), issue["url"])):
+                raise ValueError(f"ambiguous/foreign canonical identity: {issue['identity']}")
+            if matches:
+                doc = matches[0].get("doc_path")
+                if not doc:
+                    raise ValueError("existing canonical row has no capture; explicit reconciliation required")
+            else:
+                candidates = [path for bucket in intake.BUCKETS
+                              for path in (root / "PROJECT" / bucket).glob(f"GH-{issue['number']}-*.md")]
+                if len(candidates) > 1:
+                    raise ValueError("multiple capture candidates; preserve owner docs and reconcile explicitly")
+                doc = str(candidates[0].relative_to(root)) if candidates else None
+            if doc:
+                path = local_path(doc)
+                if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
+                    raise ValueError(f"canonical capture unavailable or foreign: {doc}")
+            else:
+                doc = f"PROJECT/1-INBOX/GH-{issue['number']}-WEEKLY-CAPTURE.md"
+                path = local_path(doc)
+                if path.is_symlink() or not path.resolve().is_relative_to(root):
+                    raise ValueError("capture path escapes preparation clone")
+                if not isinstance(issue.get("createdAt"), str):
+                    raise ValueError("new canonical capture requires qualified createdAt")
+                created_at = datetime.fromisoformat(issue["createdAt"].replace("Z", "+00:00"))
+                if created_at.tzinfo is None or any(char in issue["title"] for char in "\r\n\0"):
+                    raise ValueError("new capture requires qualified createdAt and a single-line title")
+                created = created_at.date().isoformat()
+                content = command(["bash", "-c", 'source "$1"; shift; hq_render_capture "$@"', "weekly-capture",
+                                   str(renderer), str(issue["number"]), issue["url"], issue["title"], created,
+                                   "feedback", repository, repository, issue["body"]], root)
+                expected = hashlib.sha256(content.encode()).hexdigest()
+                state["paths"][doc] = expected
+                durable(receipt_path, state)  # intent before exclusive capture creation
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with path.open("x") as stream:
+                    stream.write(content)
+            before_hash = digest(path)
+            if not matches:
+                state["pending_add"] = {"gh_number": issue["number"], "issue_url": issue["url"],
+                                        "title": issue["title"], "doc_path": doc,
+                                        "section": "Queue / parked intake", "status_marker": "🆕"}
+                durable(receipt_path, state)
+                ledger("roadmap", "add", "--issue-num", str(issue["number"]), "--issue-url", issue["url"],
+                       "--title", issue["title"], "--created", date, "--doc-path", doc)
+                updated = rows()
+                new = [row for row in updated if row.get("issue_url") == issue["url"]]
+                if len(new) != 1 or any(row not in updated for row in state["ledger_rows"]) or len(updated) != len(state["ledger_rows"]) + 1:
+                    raise ValueError("unexpected concurrent registration; preserve canonical result")
+                after_generation = int(ledger("settings", "get", "generation"))
+                if after_generation != state["generation"] + 1:
+                    raise ValueError("unexpected writer generation; preserve canonical result")
+                state.update(ledger_rows=updated, generation=after_generation, pending_add=None)
+                durable(receipt_path, state)
+                matches = new
+            if digest(path) != before_hash:
+                raise ValueError("capture changed during registration; preserve owner edits")
+            accounting.append({"identity": issue["identity"], "global_id": matches[0]["global_id"],
+                               "doc_path": doc, "doc_sha256": before_hash, "ledger": matches[0],
+                               "decision": "HELD", "reason": "criterion delivery/readiness not reviewed"})
+        payload = dict(stable, planning_base=base, planning_branch=branch, accounting=accounting,
+                       initial_backfill=args.initial_backfill, overlap_hours=args.overlap_hours)
+        old = json.loads((root / relative).read_text()) if (root / relative).is_file() else None
+        old_stable = {key: value for key, value in old.items() if key != "checkpoint_cut"} if old else None
+        if old_stable == payload and not dirty_paths():
+            state["complete_commit"] = git(["rev-parse", "HEAD"], root)
+            state["checkpoint_cut"] = old["checkpoint_cut"]
+            if resuming_partial:
+                durable(receipt_path, state)
+            return dict(old, changed=False, planning_commit=state["complete_commit"])
+        if target_head(root) != base or rows() != state["ledger_rows"] or int(ledger("settings", "get", "generation")) != state["generation"]:
+            raise ValueError("target/ledger drift before commit; preserve partial state")
+        if any((root / item["doc_path"]).is_symlink() or digest(root / item["doc_path"]) != item["doc_sha256"] for item in accounting):
+            raise ValueError("owner capture changed before commit; preserve edits")
+        payload["checkpoint_cut"] = state["checkpoint_cut"]
+        durable(receipt_path, state)
+        durable(root / relative, payload)
+        allowed = set(state["paths"]) | {"releases.db", "releases.sql", relative}
+        if dirty_paths() - allowed:
+            raise ValueError("unrelated changes before commit; preserve state")
+        git(["add", "--", relative, "releases.db", "releases.sql", *sorted(state["paths"])], root)
+        git(["commit", "-m", f"weekly: accumulate {repository} intake for {date}"], root)
+        state["complete_commit"] = git(["rev-parse", "HEAD"], root)
+        durable(receipt_path, state)  # checkpoint becomes complete only after commit
+        return dict(payload, changed=True, planning_commit=state["complete_commit"])
+
+
 def main():
     parser = argparse.ArgumentParser(description="Planner Core Engine")
     parser.add_argument("--repo-root", default=".", help="Path to repository root")
     parser.add_argument("--gh-repo", default=None, help="Target GitHub repo (e.g. Org/Name)")
-    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "weekly-intake"], default="weekly")
+    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "weekly-intake", "weekly-prepare"], default="weekly")
     parser.add_argument("--plan-file", help="Path to existing weekly plan JSON/MD")
     parser.add_argument("--decisions-issue", help="Canonical GH issue number for provisional decisions tracker")
     parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int, help="Team weekly issue number for focus assignments")
@@ -805,19 +1158,30 @@ def main():
 
     parser.add_argument("--since", help="UTC/offset ISO timestamp for held weekly intake")
     parser.add_argument("--intake-file", help="Previous complete weekly-intake JSON; carry every member")
+    parser.add_argument("--prepare-root", help="Separate new/owned full clone for local weekly preparation")
+    parser.add_argument("--planning-date", help="Explicit YYYY-MM-DD for auto-* planning branch")
+    parser.add_argument("--target-ref", help="Explicit canonical target branch")
+    parser.add_argument("--initial-backfill", choices=["all-open", "updated-only"])
+    parser.add_argument("--overlap-hours", type=float, help="Explicit inclusive checkpoint overlap")
+    parser.add_argument("--apply", action="store_true", help="Apply held preparation locally; never push/fire")
 
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     if not repo_root.is_dir():
         print(f"[ERROR] repo root not found: {repo_root}", file=sys.stderr)
         sys.exit(2)
-    if args.mode == "weekly-intake":
+    if args.mode in ("weekly-intake", "weekly-prepare"):
         # Opt-in discovery, before legacy scratch creation. Installed copies use
         # the same shipped harness locator as 10days; no sibling-skill dependency.
         try:
             intake_module = load_issue_intake()
             if not args.gh_repo or not args.since:
                 raise ValueError("weekly-intake requires --gh-repo OWNER/REPO and --since with timezone")
+            if args.mode == "weekly-prepare":
+                if not all((args.prepare_root, args.planning_date, args.target_ref, args.initial_backfill)) or args.overlap_hours is None:
+                    raise ValueError("weekly-prepare requires prepare-root, planning-date, target-ref, initial-backfill and overlap-hours")
+                print(json.dumps(prepare_weekly(args, repo_root), indent=2))
+                return
             previous = json.loads(Path(args.intake_file).read_text()) if args.intake_file else None
             result = intake_module.discover_weekly(args.gh_repo, args.since, repo_root, previous)
             result["advisory_merge_sequence"] = detect_merge_sequence(result["prs"])

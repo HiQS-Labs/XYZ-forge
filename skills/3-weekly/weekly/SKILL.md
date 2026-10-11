@@ -1,82 +1,119 @@
 ---
 name: weekly
 description: >-
-  Prepare held GitHub intake for an accumulating, branch-backed weekly Jog or Marathon
-  proposal. Uses shared 10days discovery and the existing weekly/daily planner core.
-  This staged implementation exposes a read-only complete intake preview; ledger
-  reconciliation, freeze and dispatch enforcement remain unavailable. Does not auto-fire.
+  Prepare held GitHub issue observations and explicit local branch accumulation for
+  a weekly Jog or Marathon proposal. Shares 10days discovery and the existing
+  weekly/daily planner core; canonical capture and RELEASES writers preserve owner
+  state. Selection, freeze, exact approval and shared dispatch enforcement remain
+  unavailable. Never auto-fire or schedule.
 ---
 
-# Weekly — held issue intake preview
+# Weekly — held canonical intake
 
-This entry point is distinct from `/weekly-planner` (team outline) and `/daily-planner`
-(closure pivot). Never invoke the whole `/10days` workflow to collect weekly issues:
-its unattended rating/promotion/dispatch exception does not apply here.
+Distinct from `/weekly-planner` (team outline) and `/daily-planner` (closure pivot).
+Never invoke the entire `/10days` workflow for discovery: its unattended rating,
+promotion and dispatch exception does not apply to weekly.
 
-**Capability status:** staged foundation for [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022).
-Only shared discovery and a held preview are implemented. No executable weekly
-proposal, `auto-yyyy-mm-dd` lifecycle, durable checkpoint, ledger reconciliation,
-frozen approval packet or dispatch/resume/landing enforcement ships here. Keep the
-workflow held; do not claim the umbrella complete or enable scheduling/execution.
+**Capability status:** staged implementation for [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022).
+Shared discovery and local canonical accumulation are implemented. Executable
+selection/artifacts, immutable freeze, exact approval, dependency expansion and
+shared fire/phase/resume/landing enforcement remain unavailable. Keep dispatch held;
+never claim umbrella completion, enable scheduling or run a real Marathon/Jog.
 
-1. Resolve the shipped harness with `/relay-xyz`'s `find-harness.sh --root`; require
-   `skills/3-weekly/weekly-planner/scripts/issue_intake.py` and Python3 in that harness. A copied skill must use
-   this selected harness, never assume cwd is Forge or another skill is installed.
-   Set `HARNESS` to its returned root. Confirm the swept repo and explicit timestamp.
-2. Run the existing core's new, opt-in intake mode:
-   ```bash
-   PYTHONDONTWRITEBYTECODE=1 python3 "$HARNESS/skills/3-weekly/weekly-planner/scripts/planner_core.py" \
-     --repo-root "$TARGET_ROOT" --gh-repo "$TARGET_REPO" --mode weekly-intake \
-     --since "$SINCE"
-   ```
-   `SINCE` is an ISO timestamp with timezone (e.g. `2026-10-05T00:00:00Z`);
-   no Monday/Friday/timezone defaults are inferred. `--intake-file PATH` optionally
-   carries every prior observed member and re-fetches its current issue state.
-   Pass explicitly known carryovers/dependencies in that complete prior snapshot;
-   dependency expansion and initial backfill policy remain unimplemented.
-3. Inspect `complete`, `issues`, `prs`, `pages`, `holds` and qualified `identity`.
-   All updated states (including closed/reopened), all supplied previous members,
-   and all open PR pages/files are read. PR entries in the issues endpoint are
-   excluded. Duplicate conflicts, foreign URLs, malformed data, partial/offline
-   reads or changed PR metadata return UNKNOWN/nonzero. Never advance a checkpoint
-   or write a ledger from an incomplete report. Pagination completeness means
-   transport completion, not an atomic GitHub snapshot.
-4. Treat every result as HELD: `dispatch_allowed` is always false. The reused
-   merge sequencing and audit are labeled advisory; their legacy CI/dependency/
-   closure heuristics do not establish readiness or acceptance. A closed issue,
-   completed doc bucket or linked PR cannot establish criterion delivery.
+## Read-only observation
 
-The preview prints JSON only; it performs authenticated read requests and no
-connector writes, DB commits, scratch/output writes, branches, checkpoints,
-fetches or dispatch. Setting `PYTHONDONTWRITEBYTECODE=1` also prevents Python import
-cache files. Redirecting stdout is an explicit caller-owned local file write;
-that output is an observation artifact, never approval or an executable plan.
-10days preserves its 10/0 open-updated 200-item scan and document lookup interfaces.
+Resolve `/relay-xyz`'s shipped `find-harness.sh --root`; require Python3 and
+`skills/3-weekly/weekly-planner/scripts/issue_intake.py` in that selected harness.
+Copied skills must use this locator, not cwd-relative sibling imports. Set HARNESS
+to the returned root and confirm the explicit repo/timestamp:
 
-## Required continuation before freeze or dispatch
+```bash
+XYZ_HARNESS="$HARNESS" PYTHONDONTWRITEBYTECODE=1   python3 "$HARNESS/skills/3-weekly/weekly-planner/scripts/planner_core.py"   --repo-root "$SOURCE_ROOT" --gh-repo "$TARGET_REPO" --mode weekly-intake   --since "$SINCE"
+```
+
+SINCE must include timezone. `--intake-file PATH` supplies a complete same-repo
+prior observation, retaining/refetching every member/carryover/dependency named
+there. All updated states, prior members and open PR pages/files are observed.
+Duplicate conflicts, malformed/partial/offline data and changing PR snapshots
+return UNKNOWN/nonzero. Pagination is complete transport, not an atomic snapshot.
+This mode prints JSON and performs authenticated reads only; the bytecode flag
+prevents import cache writes. Redirecting stdout explicitly writes a local file.
+The outline sequencing/audit fields are advisory, never readiness or delivery proof.
+
+## Explicit local accumulation
+
+Preparation uses the existing core's opt-in `weekly-prepare` mode. Specify every
+policy input; no timezone/date/backfill/overlap defaults are invented. First inspect
+its dry preview on a clean source at exact canonical target HEAD (or an owned
+preparation clone). This enumerates preserve/register/capture intentions:
+
+```bash
+XYZ_HARNESS="$HARNESS" PYTHONDONTWRITEBYTECODE=1   python3 "$HARNESS/skills/3-weekly/weekly-planner/scripts/planner_core.py"   --repo-root "$SOURCE_ROOT" --gh-repo "$TARGET_REPO" --mode weekly-prepare   --prepare-root "$PREP_ROOT" --planning-date "$PLANNING_DATE"   --target-ref "$TARGET_REF" --since "$SINCE"   --initial-backfill all-open --overlap-hours "$OVERLAP_HOURS"
+```
+
+`updated-only` is an explicit alternative relevance/backfill policy, not a silent
+fallback. `all-open` additionally paginates current open issues. Known carryovers
+and dependencies must be included through `--intake-file`; expansion of unknown
+or ambiguous dependency references remains unavailable. Every observed member is
+accounted regardless of eventual selection; closed status never proves delivery.
+
+Add `--apply` only when local preparation writes are authorized. It creates a new
+independent full clone in PREP_ROOT, cuts `auto-yyyy-mm-dd` at freshly checked target
+HEAD, or resumes its owned clone. SOURCE_ROOT and the harness must be separate from
+PREP_ROOT, with no nesting. Unknown existing directories, linked worktrees, changed
+origins/branches, existing remote planning branches and target-base drift hold for
+explicit preserved-state reconciliation. It never resets, rebases or pushes.
+
+Apply writes are real: full clone/fetch, branch, canonical captures through
+`hq_render_capture`, missing RELEASES rows through `releases_app` CLI with
+`XYZ_WORK_CONNECTORS=0`, local lock/receipts and a fixture/planning commit. Existing
+rows, GIDs, ratings/overrides/status and owner-authored captures remain unchanged.
+New rows stay unrated; captures carry provisional ratings from the sanctioned
+renderer. Canonical reader JSON exposes axes, override, calc and effective rank.
+The authoritative Marathon planner currently ignores overrides; selection remains
+held until a separately reviewed correction, with no weekly scorer substituted.
+
+Committed accounting is `PROJECT/4-MISC/weekly/<date>/intake.json`. Recovery intent
+is in the clone Git-dir `weekly-<date>.json`; a nonblocking clone-local writer lock
+prevents simultaneous preparation there. Canonical DB lock/journal/receipt/generation
+ownership remains in releases_app. Foreign/ambiguous identities, missing/symlinked
+captures, owner edits, malformed receipts, ledger generation changes and unknown
+partial state hold rather than overwrite. A committed CLI addition whose return was
+lost can be adopted only when the exact intended new row, old rows and one generation
+increment match. Present canonical journals hold for stopped-owner inspection and
+sanctioned recovery; never delete/reset them blindly.
+
+Checkpoint cut is run-start UTC with inclusive caller-supplied overlap. Completion
+is recorded after canonical accounting and commit succeed. Failed intake does not
+advance; a refused commit retains partial evidence for retry. Unchanged input keeps
+the old cut/commit and does not rewrite the completed receipt. This local lock is
+not proof of global coordination across clones. Remote branch reconciliation,
+rollover/concurrent integration and active-run accounting remain required work.
+
+Every result remains HELD with `dispatch_allowed: false`. Local accounting and
+commits are observations, not execution/approval artifacts. No executable YAML,
+freeze packet or builder dispatch is generated by these modes.
+
+## Required continuation
 
 Continue the canonical [GH-1022 plan](../../../PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md)
-and full current issue checklist. Extend existing canonical writers/planners;
-never add a second backlog, scoring engine, orchestrator, or `JOG.yaml` contract.
-All relevant issues need canonical captures via `hq_render_capture` and RELEASES
-CLI registration/reconciliation preserving GIDs, owner ratings/status/overrides,
-with `XYZ_WORK_CONNECTORS=0` for unmerged planning writes. Source implementation
-belongs on its feature branch; eventual planning uses isolated full clones and
-`auto-yyyy-mm-dd`. Concurrent ledger state must reconcile through sanctioned APIs.
+and full current issue. Reuse canonical writers and authoritative Marathon/Jog owners;
+never add a second backlog, scorer, orchestration framework or JOG.yaml contract.
+Implement durable published-branch reconciliation, global active-run/PR handling,
+authoritative bounded selection/artifacts, draft/required-CI/dependency readiness,
+immutable freeze and exact operator approval before adding dispatch authority.
 
-The unimplemented shared safety protocol requires independent code-aware evidence
-for every acceptance criterion on exact target HEAD/plan hash/planning commit;
-already delivered work becomes no-op, partial work narrows/regenerates, overlapping
-active work or conflicting/unknown evidence holds. Recheck immediately before fire,
-each phase and resume, and separately before landing for duplication/regressions.
-Exact operator approval names the immutable packet/order/reviewer/budget and cannot
-survive material drift. Preserve #752/#1020 recovery holds, existing active-run limits
-and separate landing authority. Never use these instructions as proof runtime gates
-exist. No dispatch entry point is added in this staged skill.
+The shared safety protocol remains UNSHIPPED: independent criterion-by-criterion
+current-code review; exact target HEAD/plan hash/planning commit receipts; delivered
+no-op, partial-delta regeneration and overlap/unknown holds; fresh pre-fire/phase/
+resume checks; and separate latest-target redundancy/regression review before landing.
+Preserve #752/#1020 recovery holds and separate landing authority. Never treat a
+closed issue, Completed bucket/row, linked PR or advisory PASS as criterion delivery.
 
-Every individual new CI test, including cases in existing suites, requires explicit
-operator approval identifying it. Proposals stay outside executable write-sets until
-approved. Existing checks/manual negative controls may run in disposable full clones;
-no installation, schedule, real Marathon/Jog, merge or deployment is authorized by
-running this skill. Recheck exact `weekly` names/aliases before separately approved
-Skills Army deployment; preserve weekly-planner/daily-planner routing.
+Every individual new CI test, including cases/parametrizations in existing suites,
+requires explicit operator approval identifying it. No test additions are authorized
+by this skill, generated plans or review/fire/landing approval. Use existing checks
+and recorded manual controls in disposable full clones. This implementation enables
+no scheduler, deployed-skill installation, live Marathon/Jog, merge or deployment.
+Recheck exact weekly names/aliases before any separately authorized deployment;
+preserve weekly-planner/daily-planner routing.

@@ -142,6 +142,11 @@ def repository_name(value: str) -> str:
     return value.lower()
 
 
+def github_url_matches(value: str | None, canonical: str) -> bool:
+    """Compare observed URL casing with an already qualified canonical identity."""
+    return isinstance(value, str) and value.lower() == canonical.lower()
+
+
 def normalize_record(record: dict, repository: str, kind: str = "issue") -> dict:
     """Repository-qualified identities; reject malformed/foreign evidence."""
     repository = repository_name(repository)
@@ -153,7 +158,7 @@ def normalize_record(record: dict, repository: str, kind: str = "issue") -> dict
     segment = "issues" if kind == "issue" else "pull"
     url = record.get("html_url", record.get("url", ""))
     expected = f"https://github.com/{repository}/{segment}/{number}"
-    if not isinstance(url, str) or url.lower() != expected:
+    if not github_url_matches(url, expected):
         raise ValueError(f"foreign or invalid {kind} URL: {url}")
     if not isinstance(record.get("title"), str) or not record["title"]:
         raise ValueError(f"missing title: {expected}")
