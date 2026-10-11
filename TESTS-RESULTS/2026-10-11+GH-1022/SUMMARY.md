@@ -146,3 +146,37 @@ pass; six old/candidate controls and canonical checks clean. No new CI cases.
 Existing exact-source verification pending; cap4/4 Escalated, no extra review or
 approval attestation. W7–W11 remain active; no umbrella completion or held-source
 publication. Further independent review requires explicit operator cap decision.
+
+Consolidated producer diagnosis after the single authorized Round4 FAIL:
+rate and repoint both derived raw_text before the lock; mutual actual canonical
+interleavings reproduce owner loss. Both now snapshot/check the full row inside
+existing transaction, refusing named stale writes. Old/candidate controls10 plus
+rating/repoint6 and protected-writer4 pass, with all local canonical checks clean.
+Accepted-start/reconcile native issue reads were stubbed; canonical second-process
+owner writes were real. Marker/move preserve unrelated fields; add uniqueness
+retains one GID and rolls back the loser (nonzero IntegrityError,not named duplicate).
+Legacy sync skips releases mode; general release/Jog CRUD race-freedom not claimed.
+36 accumulation controls pass and all4 source hashes bind a0b484b5. First rate
+repair gate3c5264a7 passed28/28 incl24 release suites/Python21;not final evidence
+for repoint guard. Final a0b gate pending. No new CI tests/gates/frameworks.
+Smallest next review: both guards and mutual/quiet/force/partial-field preservation,
+previous release guard and exact final gate evidence within held accumulation
+contract and repo whole-file rule. Review remains Escalated4/4;no extra review,
+cap reset,publication or umbrella completion. W7–W11 remain required active work.
+
+Consolidated exact source a0b484b5adaca6f959d30ebe6694d3d8d3905cfe:
+final existing classified gate exit0,28/28 including24 release suites and
+Python21/21,docs/static/clone identity;not promotion. Final gh36914/14,
+ledgercheck clean0failures9existingwarnings,unchanged inventory clean,4AST/whitespace
+checks pass. 36 accumulation,6 rating/repoint,10 same-class and4 protected-writer
+controls have matching final source hashes and retained witnessed old-source
+failures;all canonical fixture checks clean. Native reads for protected paths
+stubbed,no actual GH reads or connector writes. Temporary drivers not added to CI.
+Disposable clone retains canonical origin/HEADa0b484b5 and clean tracked tree;
+primary cleana5837828/development. Remote base remainsf1225359,draft#1024 remains
+foundationd7ef2bc9. Both narrow roadmap guards are complete for the observed
+mutual snapshot overwrite;general all-CRUD concurrency not claimed. See committed
+writer-diagnosis-final.json for path coverage,remaining limits and next review scope.
+Same artifact remainsEscalated4/4;no further review authorized/no attestation.
+Publication held;W7–W11 required active,umbrella incomplete. Next action requires
+explicit operator cap decision for this consolidated same-artifact review scope.

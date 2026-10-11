@@ -1,0 +1,8 @@
+refused: rule=accepted-start-stale: row changed during native lookup; retry admission
+refused: rule=roadmap-state-stale: GH-777 changed during lookup; rerun the sweep
+updated rmi-01M4PA41TE1H9P1D8W2RQ8PQTE
+{'kind': 'accepted-quiet', 'rc': 0, 'doc_path': 'PROJECT/1-INBOX/GH-777-OWNER.md', 'section': 'In progress', 'safe': True}
+{'kind': 'accepted-stale', 'rc': 3, 'doc_path': 'PROJECT/2-WORKING/GH-777-OWNER.md', 'section': 'Queue / parked intake', 'safe': True}
+moved GH-777: Queue / parked intake -> Completed
+{'kind': 'reconcile-quiet', 'rc': 0, 'doc_path': 'PROJECT/1-INBOX/GH-777-OWNER.md', 'section': 'Completed', 'safe': True}
+{'kind': 'reconcile-stale', 'rc': 3, 'doc_path': 'PROJECT/2-WORKING/GH-777-OWNER.md', 'section': 'Queue / parked intake', 'safe': True}
