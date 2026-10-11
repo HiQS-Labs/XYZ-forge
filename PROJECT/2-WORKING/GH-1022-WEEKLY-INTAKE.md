@@ -523,3 +523,11 @@ freeze/exact approval,criterion HEAD/plan receipts and pre-fire/phase/resume/lan
 checks. Those remain required W7–W11. Weekly stays HELD;no Marathon/Jog generation
 or dispatch is authorized by this reader repair. No production ledger writes,
 new tests,installation,scheduling,merge/deploy or unrelated issue closures.
+
+Phase5 baseline refreshed with actual AST reader and SQLite in-memory fixtures:
+10 controls,exactly two owner-override210vs320 failures;ordinary,partial/unrated,
+NULL-gh,duplicate-doc,missing optional column,historical text axes andmissing
+required-column exit3 controls retain current behavior. Renderer/parser stubbed;
+no filesystem DB or full-engine action. Existing classifier maps this engine as
+unmapped tier3/full;final required full gate belongs after final Approved source
+at normal push boundary,not repeated during plan/text rounds. No gate-policy edit.
