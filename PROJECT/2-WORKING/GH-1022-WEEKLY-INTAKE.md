@@ -352,3 +352,13 @@ The first review transcript contains concrete FAIL findings but no attestation:
 producer refreshed a manual evidence file during review; containment reverted it.
 Its saved bytes and review are preserved. Round 2 will use a fixed input tree.
 Whole-module releases CLI direct source sweep is still required before approval.
+
+### Phase4 final QA round2 disposition
+
+A capture edit during observation persistence reproduced a stale complete receipt
+on f4dba01f. Bind SHA256 accounting and expected Git blob to one immutable byte
+snapshot, also requiring owned creation intent; staged/committed/live checks retain
+that original object. Candidate holds before commit with the owner CRLF edit
+preserved. Fresh pre/post-commit target checks hold drift and preserve post-drift
+commits without completing checkpoint. Existing classified f4 gate passed28/28
+selections incl24 release suites; final source gate and QA3 remain pending.

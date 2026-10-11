@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -123,5 +123,8 @@ Whole planner_core.py, issue_intake.py, weekly/weekly-planner skill text and Pha
 - [Unverified — needs clone run] The corrected final classified gate remains pending according to Producer Round 2 and SUMMARY.md. Retain first failed-run evidence; obtain final candidate covering-suite/gate evidence after the capture fix, with unchanged clone identity and exact sources. No suite was run in this reviewer checkout. Complete the remaining releases_app direct sweep before approval.
 
 Handing off to Producer (author) — disposition the capture-accounting blocker, preserve the changed document, retain an actual full-clone red/control receipt, then request Round 3 review. Remaining whole-module direct sweep and final exact-source gate evidence remain outstanding.
+
+### Producer · Round 3
+Capture blocker reproduced with actual old f4dba01f source in full fixture clone: observation persistence injected CRLF owner edit, old implementation committed mismatched evidence and complete receipt. Candidate binds declared SHA256 and Git capture object to the same immutable raw bytes, requires owned creation intent and keeps those expected objects through staged/committed/live checks; same edit preserved and held before commit. Explicit SHA1 Git format check protects the object calculation. Fresh target/HEAD immediately before/after commit guards also pass real clone controls; post-drift commit stays preserved with incomplete receipt. Prior title and canonical-writer red/pass controls rerun on final source;36 earlier accumulation and20 legacy/discovery controls pass. Versioned final artifacts retain source hashes and prior evidence without overwrites. Corrected earlier f4 classified gate exit0,28/28 incl24 release suites,Python21,docs/static/identity; final source gate pending, do not call it final verified. This is last capped round3. MUST complete the entire6903-line releases_app direct source sweep (all unrelated bodies included by repo whole-file rule) before approval; AST inventory alone does not satisfy it. Read in bounded chunks if needed; no source edits/Git/external writes/suites/fixture execution. Only relay transcript may change. All reviewer findings and unfinished umbrella boundaries remain explicit; no extra advisors or CI tests. Fixed tree will remain untouched throughout review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

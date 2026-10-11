@@ -1,0 +1,1497 @@
+validate.sh: classified tier 2 — subsystems: releases (GH-35)
+validate.sh: SEQUENTIAL mode — explicit --sequential
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh gh153-releases-sidebar-rollup.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh549-work-events.sh gh567-roadmap-dashboard-retired.sh gh568-releases-md-retired.sh gh646-status-label.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 docs gate (docs paths in the change set)
+===============================
+nice: setpriority: Operation not permitted
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+ERROR [pdda-check-hardcoded-paths] PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:327 hardcoded path detected (/private/)
+SUMMARY [pdda-check-hardcoded-paths] errors=1 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/README.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS/recon-deploy-skills.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L1-oracle.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L2-token-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L3-consult-cap.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L4-285-revalidate.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L5-gh237-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L6-muse-attribution.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L7-checkout-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L8-zero-output-handback.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L9-369-regression.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L2-measure-c1-d2.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L3-timing-claims-and-summary.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-22.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-30.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-05.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-09.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-agy-model-probe.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-closeout-evidence.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-end-of-week.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh796-integration.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh949-ate-remediation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-install-sh-link-steal.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=87
+
+== pdda-check-changelog ==
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md:1 issue #325 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md PROJECT/3-COMPLETED/GH-325-CANONICAL-SKILLS-HOME.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md:1 issue #396 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md PROJECT/3-COMPLETED/GH-396-HARNESS-ROOT-RESOLVER.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md:1 issue #421 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md PROJECT/3-COMPLETED/GH-421-AUTO-WAVE-RECONCILE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md:1 issue #424 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md PROJECT/3-COMPLETED/GH-424-ROADMAP-STATUS-MARKER-WRITER.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md:1 issue #425 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md PROJECT/3-COMPLETED/GH-425-GATE-PROVENANCE-CHECK.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md:1 issue #454 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md PROJECT/3-COMPLETED/GH-454-RECONCILE-GATE-DEFECTS.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md:1 issue #491 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md PROJECT/3-COMPLETED/GH-491-ROADMAP-SECTION-VALIDATION.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-591-RECONCILER-LIFECYCLE.md:1 issue #591 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-591-RECONCILER-LIFECYCLE.md PROJECT/3-COMPLETED/GH-591-RECONCILER-LIFECYCLE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 issue #648 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md PROJECT/3-COMPLETED/CAPTURE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md:1 issue #807 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md PROJECT/3-COMPLETED/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md:1 issue #886 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md PROJECT/3-COMPLETED/GH-886-LINUX-PORTABILITY-CANARY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-consumer.md PROJECT/3-COMPLETED/recon-flightdeck-consumer.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md PROJECT/3-COMPLETED/recon-flightdeck-issue-visibility.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-session-context.md PROJECT/3-COMPLETED/recon-flightdeck-session-context.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 issue #496 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md PROJECT/3-COMPLETED/recon-gh496-merge-churn-and-telemetry.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md:1 issue #981 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md PROJECT/3-COMPLETED/recon-gh981-paperclip-dashboard.md
+WARN [pdda-check-issue-doc-sync] releases.db issue #18 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #215 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #325 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #396 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #421 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #424 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #425 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #454 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #491 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #591 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #589 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #644 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #690 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #807 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #886 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=31 info=0
+
+== pdda-check-releases ==
+INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:54 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:63 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] README.md:90 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:45 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:435 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:505 dead reference 'blank.md' — no file at blank.md
+INFO [pdda-check-governance] src/project.js:335 comment reference '.tick/STATE.md' in source tree cites generated/ignored state — exempt from existence check
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+SUMMARY [pdda-check-governance] errors=0 warns=8 info=1
+
+== pdda-check-marathon-qa ==
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:78 Wave 1 item pending verification: 'Wave 1 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 item pending verification: 'Wave 1 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:80 Wave 1 item pending verification: 'Wave 1 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:83 Wave 2 item pending verification: 'Wave 2 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 item pending verification: 'Wave 2 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:85 Wave 2 item pending verification: 'Wave 2 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 missing '## Acceptance & Quality Checklist' section
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+
+== pdda-doc-ready ==
+skipped pdda-doc-ready — fix the deterministic findings above first ( pdda-check-hardcoded-paths)
+
+PDDA run complete: failures: pdda-check-hardcoded-paths
+
+===============================
+Running tier-2 static syntax checks on changed files
+===============================
+  bash -n skills/3-weekly/10days/find-doc.sh
+nice: setpriority: Operation not permitted
+  python3 ast-parse skills/3-weekly/10days/intake_adapter.py
+nice: setpriority: Operation not permitted
+  bash -n skills/3-weekly/10days/scan-issues.sh
+nice: setpriority: Operation not permitted
+  python3 ast-parse skills/3-weekly/weekly-planner/scripts/issue_intake.py
+nice: setpriority: Operation not permitted
+  python3 ast-parse skills/3-weekly/weekly-planner/scripts/planner_core.py
+nice: setpriority: Operation not permitted
+  python3 ast-parse utils/py/releases_app.py
+nice: setpriority: Operation not permitted
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.gV5JTD/harnesses.db), envelope state captured
+
+===============================
+Running gh32-releases-app.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh32-releases-app ==
+-- A: init, exact-shape GIDs, append-only triggers, FK pragma
+  PASS: init creates releases.db + releases.sql
+  PASS: fresh init checks clean (FK pragma asserted per connection)
+  PASS: migration carries the exact-shape GID check written out in full (26 Crockford classes)
+  PASS: schema refuses a too-short global_id (length is schema-enforced)
+  PASS: schema refuses a wrong-alphabet global_id (Crockford excludes I/L/O/U)
+  PASS: manifest_state_events is append-only (UPDATE refused by trigger)
+  PASS: op_receipts is append-only (DELETE refused by trigger)
+  PASS: the CLI's FK surface: a marathon_id that resolves to nothing is refused before the write
+-- B: import the real RELEASES.md; grandfather ledger; side-by-side gen
+  PASS: import brings in all 9 blocks of the real ledger (9th = Cargo 0.9.0, cut 2026-08-20)
+  PASS: the 100-line preamble lands verbatim in doc_lines (release-less document content)
+  PASS: doc_lines hold the verbatim first line
+  PASS: every tolerated violation is recorded in grandfather_entries (import is not a silent fill)
+  PASS: all 9 imported blocks got import-only MIG- placeholder refs (importer is uniform; GH_URL lines land in legacy_lines)
+  PASS: each MIG- ref is a tracked grandfather entry (rule=tracking-issue-missing)
+  PASS: unmapped lines (Iterations bands, Shipped prose, manifest prose) survive in legacy_lines
+  PASS: check is green right after import (DB<->dump consistent, chain intact)
+  PASS: second import is refused (the legacy import is ONE-SHOT)
+  PASS: releases gen is refused (retired in GH-568)
+  PASS: gen does NOT write RELEASES.generated.md or drift report
+  PASS: the fixture ledger is byte-identical (hash unchanged; read-only contract)
+  PASS: rebuild preserves the BUSINESS state exactly (digest equal; receipts/generation excluded by definition)
+  PASS: the canonical dump contains no integer PKs/FKs as values (rows are GID/natural-keyed)
+  PASS: grandfather_entries rows in the dump carry their PRD natural key (gf-key comments)
+-- C: structural rules refuse in BOTH modes; every refusal names its rule
+  PASS: bad tracking URL shape refused, rule named
+  PASS: MIG- placeholder refused in an ordinary write (import-only shape)
+  PASS: versioned-duplicate refusal (UNIQUE(repo_id, version) — the narrowed guarantee)
+  PASS: unversioned same-codename pair does NOT refuse — check WARNS instead
+  PASS: manifest duplicate refused (UNIQUE(release_id, issue_ref_id))
+  PASS: manifest cut without a reason refused (structural, both modes)
+  PASS: structural refusal is strict even in lenient mode: refused calls wrote nothing
+-- D: mode table for thresholds
+  PASS: lenient mode WARNS and WRITES an over-threshold description
+  PASS: strict mode REFUSES the same write, naming the rule
+-- E: cut needs a reason; events append-only; coupling detectable
+  PASS: a task dialed into a second release is REFUSED, naming the holder (GH-111 exclusivity)
+  PASS: cut-then-dial-in re-homes a task to another release, leaving BOTH rows as history
+  PASS: cut with a reason flips state AND appends the event in one transaction
+  PASS: cut is terminal for that row: a second cut is refused with the transition rule
+  PASS: a direct writer flipping item state WITHOUT an event is caught by the digest chain
+-- F: offline create -> staleness at +7d -> reconcile -> clean
+  PASS: fresh temp ref (T0) draws no staleness warning
+  PASS: temp ref older than 7 days warns (mocked clock)
+  PASS: reconcile fills the real URL and the row keeps its identity
+  PASS: post-reconcile there is no staleness warning at any clock
+-- G: simulated concurrent writer; lock-audit sidecar
+  PASS: a write under a held lock is refused with exit 4 and the writer-lock rule
+  PASS: the refused attempt changed NO committed artifact (r4 control)
+  PASS: lock evidence went to the append-only sidecar in the git common-dir, not the DB
+  PASS: after the holder exits, the same write succeeds (the lock was the only barrier)
+-- H: journal protocol recovery, per boundary
+  PASS: [pre-commit] the injected crash kills the writer (exit 70)
+  PASS: [pre-commit] check recovers and leaves a consistent trio (green)
+  PASS: [pre-commit] pre-COMMIT: the DB never changed — the operation was discarded
+  PASS: [pre-commit] no staged .tmp remnants or journals survive recovery
+  PASS: [post-commit] the injected crash kills the writer (exit 70)
+  PASS: [post-commit] check recovers and leaves a consistent trio (green)
+  PASS: [post-commit] post-COMMIT: the committed operation is PRESERVED
+  PASS: [post-commit] no staged .tmp remnants or journals survive recovery
+  PASS: [post-stage] the injected crash kills the writer (exit 70)
+  PASS: [post-stage] check recovers and leaves a consistent trio (green)
+  PASS: [post-stage] post-COMMIT: the committed operation is PRESERVED
+  PASS: [post-stage] no staged .tmp remnants or journals survive recovery
+  PASS: [mid-rename] the injected crash kills the writer (exit 70)
+  PASS: [mid-rename] check recovers and leaves a consistent trio (green)
+  PASS: [mid-rename] post-COMMIT: the committed operation is PRESERVED
+  PASS: [mid-rename] no staged .tmp remnants or journals survive recovery
+  PASS: [post-rename] the injected crash kills the writer (exit 70)
+  PASS: [post-rename] check recovers and leaves a consistent trio (green)
+  PASS: [post-rename] post-COMMIT: the committed operation is PRESERVED
+  PASS: [post-rename] no staged .tmp remnants or journals survive recovery
+-- I: check failure controls — dump divergence, stale -wal, receipt-less write, dup GID
+  PASS: (1) deliberate DB<->dump divergence fails check
+  PASS: divergence recovery is check --rebuild (atomic, with a .bak of the displaced DB)
+  PASS: (2) a stale -wal with no live journal fails check loudly
+  PASS: (3) a receipt-less direct write fails the business-state digest chain (bypass DETECTED)
+  PASS: (4) a duplicate global ID across two fixture DBs fails the aggregation LOUDLY
+  PASS: cross-repo codename collision WARNS in the aggregation (the survey case), never refuses
+-- J: the tested merge conflict procedure (dump grammar -> check --rebuild)
+  PASS: the two divergent sides carry DISTINCT import runs (same-second imports cannot collide)
+  PASS: unresolved timestamp-distinct generation settings refuse rebuild
+OK: foreign_keys pragma asserted per connection
+FAIL: rule=generation-mismatch: settings.generation=1 but releases.sql says 2 — write in progress, crashed, or a torn trio
+OK: receipt chain intact (0 receipt(s), business-state digest matches)
+info: 0 grandfather_entries pending disposition (the strict flip requires none pending)
+rebuilt releases.db from releases.sql (generation 1 -> 3); displaced DB backed up at /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh32-app.CDoQbz/j-merged/releases.db.bak
+OK: post-rebuild verification — DB rebuilt from releases.sql, displaced DB at releases.db.bak
+check: clean (0 failures, 0 warning(s))
+  PASS: the merged dump rebuilds atomically and checks green
+  PASS: BOTH sides' releases survive the rebuild (4 rows from two 2-block imports)
+  PASS: BOTH sides' grandfather history survives the rebuild (2 import runs, entries on each)
+  PASS: the merge fork is tolerated under the merge-rebuild receipt (the one legal chain fork)
+-- K: ship, update, immutability
+  PASS: ship without evidence is refused, rule named
+  PASS: ship with evidence flips status, stamps the date, rides the audit trail
+  PASS: re-shipping a shipped release is refused (transition legality is CLI-enforced)
+  PASS: GH-222 re-point via URL writes through perform_write (check clean, old ref row kept, gh never consulted — closed targets work)
+  PASS: GH-222 bare number with no org/repo slug and no origin remote is refused, rule named
+  PASS: GH-222 bare number expands against the github origin remote (slug 'kappa' is not org/repo)
+  PASS: GH-222 non-GitHub URL refused, rule named
+  PASS: GH-222 re-point to a TMP- placeholder refused, nothing changed (a re-point is URL-to-URL; placeholders belong to add/reconcile)
+  PASS: the receipt log records >=2 distinct ops with session ids (the exit gate reads these)
+-- L: the preview is not regenerated (removal regression guard)
+  PASS: init does NOT create RELEASES-PREVIEW.md
+  PASS: a CLI write does NOT create RELEASES-PREVIEW.md
+  PASS: releases gen does NOT create RELEASES-PREVIEW.md
+  PASS: check is clean with no preview present (the preview-stale rule is gone)
+  PASS: check output no longer mentions a preview at all
+  PASS: the dump and DB are still written (removing the preview did not disturb the staged-write protocol)
+-- M: show + next readers
+  PASS: next picks the earliest-target unshipped release, then lists the rest in order
+  PASS: next excludes shipped releases
+  PASS: an undated release sorts LAST and is labeled unplanned, not urgent
+  PASS: show resolves by --version (no GID lookup round-trip needed)
+  PASS: show by --gid returns the identical record
+  PASS: show with neither selector is refused (rule=selector)
+  PASS: show with BOTH selectors is refused (exactly one)
+  PASS: show on an unknown version is refused by rule, not a silent empty record
+  PASS: long values are elided by default and state their true length
+  PASS: --full prints the value verbatim with no elision marker
+  PASS: the readers take no lock and mutate nothing (DB byte-identical, no journal)
+-- N: releases migrate, migration registry, baseline capture, extended dump grammar
+  PASS: the v2 fixture starts at ledger {1,2} — pre-004 by construction, not by assumption
+  PASS: its manifest rows carry the pre-GH-111 'open' vocabulary
+  PASS: GH-111-first: a registry without 003 stamps {1,2,4} and never claims 3
+  PASS: and the gap is REAL — roadmap_items has none of 003's rating columns
+  PASS: the migrated ledger checks clean (dump regenerated, digest chain intact)
+  PASS: every 'open' row became 'dialed_in' — a vocabulary rename, not a state change
+  PASS: historical EVENTS still say 'open' — copied verbatim, never rewritten (no silent history edit)
+  PASS: an already-active release is backfilled to its current count, flagged 'backfilled' not 'observed'
+  PASS: 003 applies cleanly ON TOP of 004; the ledger reaches the full registry
+  PASS: and the rating columns now exist (5 of them)
+  PASS: migrate is idempotent: nothing pending is a clean no-op that does not bump the generation
+  PASS: the OTHER entry point agrees: a rebuilt v2 dump reports the registry's versions, not {1,2}
+  PASS: a pre-migration dump carrying state='open' still loads and maps to dialed_in
+  PASS: the rebuilt v2 ledger checks clean
+  PASS: a failure mid-migration propagates and RESTORES foreign-key enforcement on the connection
+  PASS: neither pending migration survives: the ledger is still {1,2} (003 did NOT commit mid-flight)
+  PASS: neither migration's SCHEMA survives either (all-or-nothing across both)
+  PASS: no generation bump and no staged dump: the receipt/artifact protocol never reached its stamp
+  PASS: the journal is LEFT IN PLACE — an interrupted migration stops the world, unlike a refused write
+  PASS: plain check recovers the interrupted migration (pre-COMMIT: discarded) and clears the journal
+  PASS: after recovery the same migration succeeds and reaches the registry
+  PASS: draft -> active with a NON-EMPTY manifest captures the baseline automatically, flagged observed
+  PASS: active -> draft -> active preserves the ORIGINAL snapshot silently (a legitimate round trip must not fail)
+  PASS: the EXPLICIT verb refuses a second capture — write-once, because overwriting erases what it measures
+  PASS: write-once is STRUCTURAL: a direct DB writer is refused by trigger, not merely detected
+  PASS: a PARTIAL baseline is refused by trigger (count without provenance can never reach rendering)
+  PASS: baseline PROVENANCE is write-once too — 'observed' cannot be quietly rewritten
+  PASS: and so is baseline_at — the snapshot cannot be back-dated
+  PASS: `add --status active` lands BASELINE-LESS (not a misleading zero) — there is no transition to hook
+  PASS: capturing a baseline on an EMPTY manifest is refused — zero would report every later commitment as growth
+  PASS: the explicit verb fills the activate-first case afterwards (1/observed)
+  PASS: activating an EMPTY manifest takes no baseline at all — baseline-less is the honest state
+  PASS: cut -> redial -> cut on ONE release works: transitions select the LIVE row, not the historical one
+  PASS: manifest ship moves a dialed-in member to shipped (mid-release progress is finally reportable)
+  PASS: dialing in with ANOTHER release's marathon is refused by name (the door #109 came through)
+  PASS: a marathon cannot be named by two releases (partial unique index; links are permanent)
+  PASS: the manifest record's three new fields ride the dump in fixed trailing order, marathon by GID
+  PASS: and marathon_id (an integer FK) never appears as a dump value
+  PASS: a dump -> rebuild round trip preserves every new column AND the business digest
+  PASS: the rebuilt ledger's manifest event digest chain still verifies
+  PASS: a merged dump carrying a duplicate schema_migrations version is refused BY NAME, before anything is written
+PASS: populated v6 migrate and old-dump rebuild; exact dump/load bytes; rebuild preservation
+PASS: all nine insert paths and release/ref/manifest mutation paths maintain timestamps
+PASS: negative controls reject NULL, stale stamp, and actual UPDATE/INSERT omissions
+  PASS: GH-355 timestamp migration and writer coverage
+
+== gh32-releases-app: 145 passed, 0 failed ==
+
+===============================
+Running gh103-timeline-exporter.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh103-timeline-exporter ==
+  PASS: --json emits the payload to stdout and writes no files
+-- GH-109: the marathon box contains members, and only members
+  PASS: the release renders exactly ONE marathon group
+  PASS: the group holds only the two LINKED items — not every card on the release
+  PASS: the non-member renders as a SIBLING beside the box (the #109 defect, inverted)
+  PASS: the cut item is a sibling too, and still rendered rather than dropped
+-- GH-110: a shipped member renders the done marker
+  PASS: the shipped item carries marker=done and section=done
+-- GH-111: denominator, baseline, growth
+  PASS: itemsTotal counts dialed_in + shipped and EXCLUDES the cut row (4, not 5)
+  PASS: the baseline captured at activation is emitted with its provenance
+  PASS: growth is NEGATIVE when more was cut than added — a real, meaningful number, not an error
+  PASS: a release with no baseline emits null, never a placeholder zero
+-- GH-108: metrics, effectiveScore, override precedence, hot flag
+  PASS: a rated card carries all four axes under their PUBLIC names (no rating_ prefix leaks)
+  PASS: calc is the equal-weighted SUM of the four axes (90+85+70+60 = 305)
+  PASS: effectiveScore falls back to calc when there is no override
+  PASS: sev >= 80 flags the card hot (one constant, not a threshold system)
+  PASS: an override REPLACES calc for ranking while the honest axes stay underneath
+  PASS: an UNRATED card carries no metrics key at all — no placeholder, no 0/400 noise
+  PASS: a rated DETOUR is scored too (detours reparse the markdown; the index is handed to them)
+-- the pinned ranking command
+  PASS: the ranking is ordered by effectiveScore, override first, with no ties
+-- the template renders what the exporter emits
+  PASS: BOTH metric loops (card renderer and what's-next strip) carry appeal and effort
+  PASS: the footer legend reads 100 = strongest — legend and data never disagree in a committed artifact
+  PASS: the release node renders the baseline/growth pair
+-- read-only contract
+  PASS: --preview bakes a self-contained page with the payload inline
+  PASS: the exporter wrote no DB bytes (opened read-only; the page never writes back)
+  PASS: the ledger still checks clean after every projection
+-- the leaderboard pipeline
+  PASS: leaderboard.sh renders LEADERBOARD.md from the exporter's JSON
+  PASS: the file carries the releases-app generation marker
+  PASS: the file announces itself as generated (never hand-edited)
+  PASS: the script's ranking matches the pinned --json ordering EXACTLY (one scorer, proven)
+  PASS: the highest-scoring task is called out by name, override included
+  PASS: a rated DETOUR ranks too — not just manifest cards
+  PASS: regeneration is idempotent — a second run is byte-identical
+  PASS: --check passes when the committed copy is in sync
+  PASS: --check FAILS on drift (a stale checked-in copy is a review signal)
+  PASS: --leaderboard bakes a self-contained page from the SAME template
+  PASS: the payload carries view=leaderboard — one template, two baked artifacts
+  PASS: both artifacts share ONE renderer bundle (no second copy of the design system)
+  PASS: the cross-link lives in .top, which never collapses
+  PASS: and NOT in #fbar, which disappears with the header caret
+  PASS: the leaderboard view hides #fbar rather than shipping an inert search box
+-- GH-250: codename-only releases (version NULL)
+  PASS: fixture holds codename-only rows (version IS NULL in the ledger)
+  PASS: --json succeeds on a ledger with NULL-version releases
+  PASS: --preview bakes (the crash refresh_preview's warn-only path used to hide)
+  PASS: --leaderboard bakes on the same ledger
+  PASS: codename-only releases carry stable, unique, non-empty ids
+  PASS: the id derives from the codename, lowercased with spaces dashed (c-night-owl)
+
+== gh103-timeline-exporter: 45 passed, 0 failed ==
+
+===============================
+Running gh32-releases-artifacts.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh32-releases-artifacts ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh32-releases-artifacts.XXXXXX.3m17mPkVU5
+  PASS: releases.db is present in this clone
+  PASS: releases.sql is present in this clone
+  PASS: releases check is clean against the committed artifacts (rc=0)
+  PASS: the generation trio is consistent (DB <-> dump)
+  PASS: the op_receipt digest chain is intact
+  PASS: the clone's artifacts are byte-identical after the check (the gate did not write to the repo it checks)
+  PASS: no releases.db.bak was produced (this suite never runs --rebuild)
+  PASS: NEGATIVE CONTROL: a divergent dump makes check fail (rc=1) — the assertion above is falsifiable
+  PASS: NEGATIVE CONTROL: the failure names rule=dump-divergence (the operator is told which rule broke)
+  PASS: the clone is still byte-identical after the negative control
+  gh32-releases-artifacts: 10 pass, 0 fail
+
+===============================
+Running gh53-releases-merge-resolve.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh53-releases-merge-resolve ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh53-releases-merge-resolve.XXXXXX.5BDJ9I3RB6
+  PASS: releases-merge-resolve.sh is executable
+  PASS: releases.db is marked -diff (its diff is generated noise)
+  PASS: releases.db is marked linguist-generated (collapsed in PR review)
+  PASS: releases.db has NO merge driver — it conflicts on purpose, so the rebuild cannot be skipped silently
+  PASS: releases.sql keeps its normal diff (it is the artifact humans actually merge)
+  PASS: releases.db conflicted, as designed (the conflict is the signal)
+  PASS: fixture: the two sides' generation rows carry distinct timestamps (the GH-686 shape is exercised)
+  PASS: union keeps ONE generation settings row (the higher value, then the later timestamp)
+  PASS: resolver completed on disjoint inserts
+  PASS: after resolution, releases check is clean
+  PASS: BOTH sides' releases survived the rebuild (2 rows)
+  PASS: no unmerged paths remain — the merge is ready to commit
+  PASS: the merge is left UNCOMMITTED — the resolver stages, the operator decides
+  PASS: fixture reproduces the union artefact: 2 generation headers in one dump
+  PASS: NEGATIVE CONTROL: a multi-header dump is REFUSED (rc!=0), not silently rebuilt
+  PASS: the refusal names the generation headers, so the operator knows what to fix
+  PASS: NEGATIVE CONTROL: a dump with conflict markers is REFUSED
+  gh53-releases-merge-resolve: 17 pass, 0 fail
+
+===============================
+Running gh54-merged-dump-refusals.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh54-merged-dump-refusals ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh54-merged-dump-refusals.XXXXXX.t4vlYqi7RG
+  PASS: fixture is real: a naive union of unequal-write branches produced 2 generation headers
+  PASS: two-header dump: refused (rc=3)
+  PASS: two-header dump: names rule=dump-multi-generation, so the operator knows which line to fix
+  PASS: two-header dump: no Python traceback — a refusal, not a crash
+  PASS: two-header dump: the live DB is untouched (1 rows before and after)
+  PASS: fixture is real: header-deduped union still left 4 settings rows
+  PASS: duplicate settings row: refused (rc=3)
+  PASS: duplicate settings row: names rule=dump-duplicate-setting, so the operator knows which line to fix
+  PASS: duplicate settings row: no Python traceback — a refusal, not a crash
+  PASS: duplicate settings row: the live DB is untouched (1 rows before and after)
+  PASS: fixture has a release to duplicate (rel-01M4P184FX2F73WYQ1CF7GYCGF)
+  PASS: fixture is real: global_id rel-01M4P184FX2F73WYQ1CF7GYCGF now appears 3 times, as a union of two edits would leave it
+  PASS: same global_id twice: refused (rc=3)
+  PASS: same global_id twice: names rule=dump-duplicate-gid, so the operator knows which line to fix
+  PASS: same global_id twice: no Python traceback — a refusal, not a crash
+  PASS: same global_id twice: the live DB is untouched (1 rows before and after)
+  PASS: the GID refusal explains it is a CONTENT conflict, not a mechanical one
+  PASS: POSITIVE CONTROL: a correctly merged dump still rebuilds (the refusals are not blanket)
+  PASS: POSITIVE CONTROL: both sides' releases survived (2 rows)
+  gh54-merged-dump-refusals: 19 pass, 0 fail
+
+===============================
+Running gh57-live-merge-resolve.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh57-live-merge-resolve ==
+-- 1: the shape of a real conflict
+  PASS: a concurrent ledger write conflicts BOTH artifacts, not just the dump
+  PASS:   and git wrote conflict markers into releases.sql
+  PASS:   and the conflicted dump carries both sides' generation headers
+-- 2: refusals against a genuinely conflicted index
+  PASS: resolver refuses while releases.sql is unmerged (rc=1)
+  PASS:   and says which file needs judgment
+  PASS:   and did NOT touch the live DB (byte-identical after the refusal)
+  PASS: resolver refuses a staged dump that still contains conflict markers (rc=1)
+  PASS:   and names the markers as the reason
+-- 3: conflict -> resolve dump -> resolver -> commit
+  PASS: resolver completes a real hand-resolved merge (rc=0)
+  PASS:   and says it deliberately did not commit
+  PASS:   and left no unmerged paths
+  PASS:   and the ledger checks clean afterwards
+  PASS:   and BOTH sides' releases survived the merge
+  PASS:   and `git commit` closes the merge
+  PASS:   and the committed tree carries both artifacts
+-- 4: the failure path leaves the merge open (regression: it did not)
+  PASS: fixture has a release row to duplicate
+  PASS:   and that GID now appears twice in the dump
+  PASS: resolver fails on an unsettleable content conflict (rc=1)
+  PASS:   and releases.db is STILL unmerged — the merge is open, as the message claims
+-- 5: a rewound generation header is refused (regression: it was accepted)
+  PASS: fixture really has unequal parent generations (HEAD=2 MERGE_HEAD=4)
+  PASS: resolver refuses a header below the highest parent (rc=1)
+  PASS:   and names both parents' generations
+  PASS:   and says what to set it to
+  PASS: POSITIVE CONTROL: the SAME merge with the highest header resolves cleanly (rc=0)
+  PASS:   and the ledger's generation did not go backwards
+-- 6: releases.db.bak is ignored, not merely unmentioned
+  PASS: the rebuild really produced a .bak to worry about
+  PASS: this repo's .gitignore covers releases.db.bak
+-- 7: --root '' is a caller bug, not a request for the current repo
+  PASS: resolver refuses an explicitly empty --root (rc=2)
+  PASS:   and says it will not fall back to the current repository
+  PASS:   and this repo's ledger is byte-identical after that call
+-- 8: adopted views are regenerated + staged (GH-272)
+wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c8/RELEASES-PREVIEW.html (0 releases, self-contained, read-only snapshot of /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c8/releases.db)
+wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c8/LEADERBOARD.html (0 rated task(s), self-contained)
+leaderboard: wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh57-live.QXwIFv/c8/LEADERBOARD.md
+  PASS: fixture adopted RELEASES-PREVIEW.html before the merge
+  PASS: fixture adopted LEADERBOARD.html before the merge
+  PASS: fixture adopted LEADERBOARD.md before the merge
+  PASS: the adopted views really conflicted (both sides wrote them)
+  PASS: resolver completes with adopted views in play (rc=0)
+  PASS:   and says it regenerated them
+  PASS:   and left no unmerged paths (views included)
+  PASS:   RELEASES-PREVIEW.html is staged resolved
+  PASS:   RELEASES-PREVIEW.html carries no conflict markers
+  PASS:   RELEASES-PREVIEW.html carries neither side's stale touch
+  PASS:   LEADERBOARD.html is staged resolved
+  PASS:   LEADERBOARD.html carries no conflict markers
+  PASS:   LEADERBOARD.html carries neither side's stale touch
+  PASS:   LEADERBOARD.md is staged resolved
+  PASS:   LEADERBOARD.md carries no conflict markers
+  PASS:   LEADERBOARD.md carries neither side's stale touch
+leaderboard: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh57-live.QXwIFv/c8/LEADERBOARD.md is in sync
+  PASS: staged LEADERBOARD.md matches a fresh render (--check in sync)
+  PASS: staged RELEASES-PREVIEW.html reflects the MERGED ledger (both sides' releases present)
+wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c9-deleted-on-incoming/RELEASES-PREVIEW.html (0 releases, self-contained, read-only snapshot of /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c9-deleted-on-incoming/releases.db)
+wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c9-deleted-on-incoming/LEADERBOARD.html (0 rated task(s), self-contained)
+leaderboard: wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh57-live.QXwIFv/c9-deleted-on-incoming/LEADERBOARD.md
+  PASS: [deleted-on-incoming] the view really is a delete/modify conflict
+  PASS: [deleted-on-incoming] resolver completes (rc=0)
+  PASS: [deleted-on-incoming] it says it honoured the deletion
+  PASS: [deleted-on-incoming] RELEASES-PREVIEW.html is GONE from the working tree (not regenerated)
+  PASS: [deleted-on-incoming] RELEASES-PREVIEW.html is GONE from the index
+  PASS: [deleted-on-incoming] no unmerged paths remain
+  PASS: [deleted-on-incoming] the still-adopted leaderboard was regenerated anyway
+wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c9-deleted-on-head/RELEASES-PREVIEW.html (0 releases, self-contained, read-only snapshot of /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c9-deleted-on-head/releases.db)
+wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh57-live.QXwIFv/c9-deleted-on-head/LEADERBOARD.html (0 rated task(s), self-contained)
+leaderboard: wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh57-live.QXwIFv/c9-deleted-on-head/LEADERBOARD.md
+  PASS: [deleted-on-head] the view really is a delete/modify conflict
+  PASS: [deleted-on-head] resolver completes (rc=0)
+  PASS: [deleted-on-head] it says it honoured the deletion
+  PASS: [deleted-on-head] RELEASES-PREVIEW.html is GONE from the working tree (not regenerated)
+  PASS: [deleted-on-head] RELEASES-PREVIEW.html is GONE from the index
+  PASS: [deleted-on-head] no unmerged paths remain
+  PASS: [deleted-on-head] the still-adopted leaderboard was regenerated anyway
+
+  gh57-live-merge-resolve: 62 pass, 0 fail
+
+===============================
+Running gh69-roadmap-shadow.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh69-roadmap-shadow ==
+  PASS: first sync succeeds (rc=0)
+  PASS:   and captured all four ledger entries
+  PASS:   and ROADMAP.md is byte-identical (shadow never writes the markdown)
+  PASS:   and the planner-invisible section IS mirrored (mirror the file, not the planner)
+  PASS:   and nothing outside ## Ledger leaked in
+  PASS:   and cx/risk/eff parsed as integers
+  PASS:   and legacy HiQS-Suite doc link + issue url landed
+  PASS:   and HiQS-Labs issue url landed (GH-228)
+  PASS:   and HiQS-Labs pull url landed (GH-228)
+  PASS:   and raw_text is the entry verbatim (lossless)
+  PASS:   and check is clean after the sync
+  PASS: no-change sync is a no-op (rc=0)
+  PASS:   and the generation did not move
+  PASS:   and the dump is byte-identical (no churn for clones to conflict over)
+  PASS: dry run names the pending update (rc=0)
+  PASS:   and wrote nothing
+  PASS: edit+removal sync applies both (rc=0)
+  PASS:   and GH-32's GID is stable across the update
+  PASS:   and the removed row is gone
+  PASS:   and the receipt chain is still intact
+  PASS: check --rebuild accepts a dump carrying roadmap rows (rc=0)
+  PASS:   and every shadow row survived the dump -> DB round-trip, GIDs intact
+  PASS:   and check is clean on the rebuilt DB
+  PASS: duplicate GH number refuses (rc=3)
+  PASS:   and names the rule
+  PASS:   and nothing was written
+-- 7: the rating grammar (GH-108)
+  PASS: a rated entry syncs (rc=0)
+  PASS:   and the four axes land in the rating_ columns, in pri/sev/appeal/effort order
+  PASS:   and no override is implied by its absence
+  PASS:   and calc is DERIVED at read time, never stored (roadmap list shows the sum)
+  PASS:   and calc appears nowhere in the dump (a stored derived value is the drift class this avoids)
+  PASS:   and the word "rated" in the entry's own TITLE is prose, not a second score token
+  PASS: prose naming the two token words around a real score parses the score, not the prose (rc=0)
+  PASS: an override parses and rides alongside the honest axes
+  PASS:   and the override wins over calc for ranking (roadmap list shows calc>ovr)
+  PASS: three numbers refuses with rule=rating-shape
+  PASS: five numbers refuses with rule=rating-shape
+  PASS: a non-numeric axis refuses with rule=rating-shape
+  PASS: an axis over 100 refuses with rule=rating-range
+  PASS: an axis of zero refuses with rule=rating-range
+  PASS: two rated tokens refuses with rule=rating-duplicate
+  PASS: two ovr tokens refuses with rule=ovr-duplicate
+  PASS: a mistyped ovr refuses with rule=ovr-shape
+  PASS: an out-of-scale ovr refuses with rule=ovr-range
+  PASS: an ovr with no rated refuses with rule=ovr-orphan
+  PASS: both vocabularies on one entry refuses with rule=rating-vocabulary-clash
+  PASS:   and not one of those refusals wrote anything
+  PASS: prose "rated 3rd" beside a real score is ONE rating, not a duplicate (rc=0)
+  PASS: unbackticked prose naming ovr does not refuse an entry that carries a real score (rc=0)
+  PASS: a bare truncated `rated 70` still refuses — the presence test was not weakened
+  PASS: a legacy cx/risk/eff entry still syncs (grandfathered, not broken)
+  PASS: converting it to `rated` NULLs the legacy columns in the SAME sync (no row-level coexistence)
+  PASS:   and the next sync is a NO-OP (the mirror agrees with its source; no forever-update loop)
+  PASS: the five rating columns retain their fixed order before status_label
+  PASS:   and survive a dump -> rebuild round trip
+  PASS:   and check is clean afterwards
+  PASS: GH-249: --dry-run reports the parsed rating before any write
+  PASS:   and --dry-run writes nothing
+  PASS:   a rated line handed to `roadmap add` STORES the four axes (GH-169 dropped them silently)
+  PASS:   and leaves ovr NULL when the line carries no override
+  PASS:   an `ovr` override on the intake line is stored too
+  PASS:   NEGATIVE CONTROL: an unrated intake line still stores NULL (the pass above is earned)
+  PASS:   a malformed `rated` token on intake is REFUSED by name, not read as unrated
+  PASS:   intake-stored ratings survive a dump -> rebuild round trip
+  PASS: GH-253: a row parked unrated starts NULL (the state the backfill has to reach)
+  PASS:   --dry-run previews the rewritten line and the parsed scores
+  PASS:   and --dry-run writes nothing
+  PASS:   rating a parked row stores the four axes
+  PASS:   and rewrites raw_text so the ledger line and the columns cannot disagree
+  PASS:   re-rating without --force is REFUSED (re-scoring is deliberate, not a retry)
+  PASS:   NEGATIVE CONTROL: the refused re-rate left the original score intact
+  PASS:   --force replaces the score, and leaves exactly ONE rated token behind (no stacking)
+  PASS:   an --ovr override is stored alongside the honest axes
+  PASS:   a malformed --rated is refused by the SAME parser, by name
+  PASS:   rating a row that was never parked is refused by name
+  PASS:   --gid path: fixture has no gh_number-less row; selector guards below cover the flag
+  PASS:   passing BOTH selectors is refused by name (no ambiguous target)
+  PASS:   passing NEITHER selector is refused by name
+  PASS: repoint --dry-run previews both the path and the rewritten line
+  PASS:   and --dry-run writes nothing
+  PASS:   repoint moves doc_path
+  PASS:   and rewrites the embedded path in raw_text (no half-move)
+  PASS:   NEGATIVE CONTROL: re-pointing at a nonexistent doc is refused by name
+  PASS:   backfilled ratings survive a dump -> rebuild round trip
+  PASS:   and check is clean afterwards
+
+  gh69-roadmap-shadow: 85 pass, 0 fail
+
+===============================
+Running gh32-release-target-advisory.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh32-release-target-advisory ==
+  PASS: check still EXITS 0 with an overdue release (advisory, never a refusal)
+  PASS:   and names rule=release-overdue
+  PASS:   and names WHICH release
+  PASS:   and counts the days (12)
+  PASS:   and says what to do about it
+  PASS:   and is tallied as a warning, not a failure
+  PASS: NEGATIVE CONTROL: a release whose target has NOT passed stays silent
+  PASS: check still EXITS 0 with both an overdue active and a stale draft
+  PASS:   and the draft gets rule=release-target-passed, not release-overdue
+  PASS:   and names the stale draft
+  PASS:   and both advisories are tallied
+  PASS: shipping clears the overdue advisory
+  PASS:   and the untouched draft advisory survives (only the shipped one cleared)
+  PASS: moving the target clears the stale-draft advisory
+  PASS:   and check reports fully clean again
+  PASS: a release with NO target_date neither warns nor crashes
+  PASS:   and is not named by either advisory
+
+  gh32-release-target-advisory: 17 pass, 0 fail
+
+===============================
+Running gh39-releases-project-sync.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh39-releases-project-sync ==
+  PASS: dry-run plans cards but leaves GitHub unchanged
+  PASS: apply creates one card per immutable Release ID
+  PASS: repeat apply updates cards without duplicates
+  PASS: missing required Project field fails loudly
+== result: 4 pass, 0 fail ==
+
+===============================
+Running gh153-releases-sidebar-rollup.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh153-releases-sidebar-rollup ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh153.AirT7u
+-- module: JSON contract against a real ledger copy --
+  PASS: cycle module exits 0 on a real ledger (invoked via exec bit, as rollup.sh does)
+  PASS: JSON shape: all sections present, counts internally consistent
+-- module: markdown render + repo-label override --
+  PASS: markdown render exits 0
+  PASS: markdown section present: # RELEASES cycle — SPIKE-REPO
+  PASS: markdown section present: ## Releases — 
+  PASS: markdown section present: ## Roadmap shadow — 
+  PASS: markdown section present: ## Marathons — 
+  PASS: markdown section present: ## Manifest outcomes
+  PASS: markdown section present: ## Latest state events
+-- module: exit 2 on missing / corrupt DB (rollup.sh degrades on this code) --
+  PASS: missing DB -> exit 2
+  PASS: missing DB names the path on stderr
+  PASS: corrupt DB -> exit 2
+  PASS: corrupt DB explains itself on stderr
+-- exporter: additive payload keys --
+  PASS: exporter --json exits 0 with the cycle import in place
+  PASS: payload carries projects + cycle + meta.repoUrl, values sane
+-- exporter: sidebar chrome baked into BOTH artifacts from the one template --
+  PASS: preview bake exits 0
+  PASS: leaderboard bake exits 0
+  PASS: RELEASES-PREVIEW.html: id="sidenav-toggle"
+  PASS: RELEASES-PREVIEW.html: id="sidenav"
+  PASS: RELEASES-PREVIEW.html: id="sn-project"
+  PASS: RELEASES-PREVIEW.html: id="sn-min"
+  PASS: RELEASES-PREVIEW.html: data-snfocus="rel"
+  PASS: RELEASES-PREVIEW.html: class="sn-item sn-ph"
+  PASS: RELEASES-PREVIEW.html: __snCycle
+  PASS: RELEASES-PREVIEW.html: data-sn="expanded"
+  PASS: RELEASES-PREVIEW.html: id="ledger-data"
+  PASS: LEADERBOARD.html: id="sidenav-toggle"
+  PASS: LEADERBOARD.html: id="sidenav"
+  PASS: LEADERBOARD.html: id="sn-project"
+  PASS: LEADERBOARD.html: id="sn-min"
+  PASS: LEADERBOARD.html: data-snfocus="rel"
+  PASS: LEADERBOARD.html: class="sn-item sn-ph"
+  PASS: LEADERBOARD.html: __snCycle
+  PASS: LEADERBOARD.html: data-sn="expanded"
+  PASS: LEADERBOARD.html: id="ledger-data"
+-- template: states + placeholders are source-level facts --
+  PASS: template carries: body\[data-sn="rail"\]
+  PASS: template carries: body\[data-sn="hidden"\]
+  PASS: template carries: placeholder — no destination yet
+  PASS: template carries: localStorage.setItem(KEY,state)
+  PASS: template carries: window.__snCycle=function(data)
+== gh153-releases-sidebar-rollup: 40 passed, 0 failed ==
+
+===============================
+Running releases-skill.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: releases-skill ==
+  PASS: plural skill exists
+  PASS: singular repo folder is retired
+  PASS: frontmatter name is plural
+  PASS: default route is read-only
+  PASS: cleanup route is documented
+  PASS: planning route is documented
+  PASS: publication route is documented
+  PASS: Radar handoff is conditional
+  PASS: Finish Line handoff is conditional
+  PASS: closed-only PRs are rejected as shipment evidence
+  PASS: closed-unmerged PRs are still inspected
+  PASS: description warning caps at four sentences
+  PASS: manifest count triggers review rather than rejection
+  PASS: Codex mutation is forbidden
+  PASS: backend detection is a preflight step
+  PASS: app-managed mutations name the CLI implementation
+  PASS: direct edits are refused in app-managed repos
+  PASS: clean route delegates via releases update
+  PASS: plan route delegates via releases add
+  PASS: publish write-back delegates via releases ship
+  PASS: anchor route delegates as a command pair
+  PASS: legacy repos keep the direct-edit path
+  PASS: app-managed preflight runs the consistency check
+  PASS: preflight names the next reader
+  PASS: preflight names the detail reader
+  PASS: the retired preview is not offered as a whole-ledger read surface
+  PASS: the doc says where the whole-ledger view went instead
+  PASS: command preview replaces the patch preview, confirmation unchanged
+  PASS: router doc names the plural front door
+  PASS: PDDA contract names one consolidated skill
+  PASS: canonical routing docs contain no legacy release skill
+  PASS: installer parses
+  PASS: installer is Claude-only
+  PASS: installer succeeds with legacy symlinks
+  PASS: installer creates plural Claude symlink
+  PASS: plural symlink targets the repo-owned skill
+  PASS: installer retires both legacy aliases
+  PASS: idempotent rerun still retires a resurrected legacy alias
+  PASS: real legacy directory is refused
+  PASS: refusal leaves the destination untouched
+  releases-skill: 40 pass, 0 fail
+
+===============================
+Running gh284-p3-release-milestone.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh284-p3-release-milestone ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh284-p3-release-milestone.XXXXXX.sOTEAgZ2oN
+  PASS: dated unshipped release with no Milestone is warned
+  PASS: the missing-Milestone finding is a WARN, not an error
+  PASS: the check still never gates the exit code
+  PASS: a populated Milestone silences the warning
+  PASS: undated and Shipped blocks are exempt from the Milestone warning
+  PASS: empty Release: version still reported
+  PASS: malformed Target Date still warned
+  PASS: overdue unshipped release still warned
+  PASS: an error finding still does not gate the exit code
+  PASS: releases-current prints the milestone when set
+  PASS: a milestone-less release is still named explicitly (by the local check, not the roll-up)
+  PASS: the release carrying a milestone is not flagged
+  PASS: Description still lands in the Description slot
+  PASS: GH_URL still lands in the GH_URL slot
+  PASS: Milestone lands in its own slot, not shifted
+  PASS: the repo's releases.db carries a Milestone for every dated, unshipped release
+  gh284-p3-release-milestone: 16 pass, 0 fail
+
+===============================
+Running gh284-p4-release-lanes.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh284-p4-release-lanes ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh284-p4-release-lanes.XXXXXX.KJUutMSvRY
+  PASS: rollup runs with an explicit --milestone
+  PASS: --release resolves via Codename:
+  PASS: --release resolves via Release:
+  PASS: auto-resolve picks the single in-progress release, excluding Shipped history
+  PASS: a release with no Milestone: fails loudly rather than seeding nothing
+  PASS: an unknown --release exits 3
+  PASS: two in-progress releases with join keys is an error that names both
+  PASS: red control: missing releases.db exits 3
+  PASS: a conventional scope fix(GH-101) counts as landed
+  PASS: a leading bare GH-102 scope counts as landed
+  PASS: a scope with a phase suffix feat(GH-103 P3) counts as landed
+  PASS: a subject that only MENTIONS GH-104 is not landed (fix(RELEASES): … GH-104 …)
+  PASS: GH-105 inside another issue's scoped commit is not landed (fix(GH-101): … GH-105 …)
+  PASS: a fix inside a marathon commit that claims no issue reads as MENTIONED, not landed
+  PASS: a bare #107 in a subject is a PR number and never lands issue 107
+  PASS: an issue with no trunk reference is ABSENT
+  PASS: a commit claiming an OPEN issue is IN FLIGHT, not landed (#308's real shape)
+  PASS: closed+claimed lands, open+claimed does not — the discriminator is the issue state
+  PASS: GH-10 is not matched by GH-101 (no prefix bleed)
+  PASS: headline reports the correct landed/total against the named trunk
+  PASS: the IN FLIGHT bucket is surfaced explicitly in the summary
+  PASS: the MENTIONED bucket is surfaced explicitly, not folded into a not-landed tally
+  PASS: the rollup states which trunk it measured against
+  PASS: each landed row cites the commit that claimed it
+  PASS: --json carries the same counts, trunk and total as the text report
+  PASS: the buckets sum to the total (no issue is dropped from the tally)
+  PASS: seed emits the same keys as skills/3-weekly/10days/scan-issues.sh
+  PASS: seed emits one JSON object per open issue
+  PASS: an empty milestone seeds exit 4, never 0
+  PASS: an empty milestone rollup exits 4, never 0
+  PASS: an empty rollup prints no report at all before exiting
+  PASS: an unauthenticated gh exits 3 with a named reason
+  PASS: an unauthenticated run emits no partial list that could look complete
+  PASS: the gh-absent fixture really resolves no gh (the case is not vacuous)
+  PASS: a missing gh exits 3 with a named reason
+  PASS: an unknown verb exits 2
+  PASS: an unknown flag exits 2
+  PASS: --milestone and --release together exit 2
+  PASS: --help exits 0
+  gh284-p4-release-lanes: 39 pass, 0 fail
+
+===============================
+Running litmus-release.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: litmus-release ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-litmus-release.XXXXXX.cbLyKDrvHB
+  OK   #375 complete — test/gh375-agy-auth-preflight.sh(pre-fix-replay) (issue: unknown)
+  OK   #390 complete — test/gh390-gate-guard.sh(deliberate-mutation) (issue: unknown)
+  OK   #407 complete — test/gh407-gate-ran-attribution.sh(pre-fix-replay) (issue: unknown)
+  OK   #417 complete — test/gh417-turn-root-symlink-prefix.sh(pre-fix-replay) (issue: unknown)
+  OK   #457 complete — test/gh457-gate-tiers.sh(deliberate-mutation) (issue: unknown)
+  OK   #461 complete — test/gh401-dry-run-no-mutation.sh(pre-fix-replay) (issue: unknown)
+  PASS: no manifest entry claims completion it cannot support (0 false completion claims)
+  manifest: 6/6 complete, 0 remaining, 0 false claim(s)
+litmus-release: 1 pass, 0 fail
+
+===============================
+Running nightwatch-release.sh
+===============================
+nice: setpriority: Operation not permitted
+== nightwatch-release (suite) — release 0.3.0 frozen-manifest goalpost ==
+
+-- half A: the frozen manifest
+  PASS: the frozen manifest here matches releases.db's Nightwatch block in both directions (8 entries)
+  PASS: #408 complete — test/gh408-tick-failure-visibility.sh registered, control recorded
+  PASS: #409 complete — test/gh409-claim-leak.sh registered, control recorded
+  PASS: #426 complete — test/gh426-worktree-leak.sh registered, control recorded
+  PASS: #388 complete — test/gh388-run-log-durability.sh registered, control recorded
+  PASS: #387 complete — test/gh387-gate-not-first-executor.sh registered, control recorded
+  PASS: #384 complete — test/gh384-crash-recovery.sh registered, control recorded
+  PASS: #358 complete — test/gh358-lock-instrumentation.sh registered, control recorded
+  PASS: #354 complete — test/gh376-relay-drive-lock-parity.sh registered, control recorded
+
+manifest: 8 complete, 0 remaining, 0 false completion claim(s)
+
+  nightwatch-release: 9 passed, 0 failed, 0 informational
+  (suite mode is green while the release is in progress — run --release-gate for the goalpost)
+
+===============================
+Running meter-release.sh
+===============================
+nice: setpriority: Operation not permitted
+== meter-release (suite) — release 0.6.0 public-launch goalpost ==
+
+-- the frozen manifest
+  PASS: the frozen manifest here matches releases.db's Manifest-Members field in both directions ( 555 563)
+  INFO: #555 remaining — evidence machinery in place, issue state UNAVAILABLE (gh absent or unauthed); not credited  (the release's own exit criterion — this file, re-pointed at the launch)
+  INFO: #563 remaining — no-recorded-control(test/baselines/GH-563-negative-control.md)  (the public-launch checklist: artifact, onboarding, secret review, licensing, CI, publication)
+
+manifest: 0 complete, 2 remaining, 0 false completion claim(s)
+
+  meter-release: 1 passed, 0 failed, 2 informational
+  (suite mode is green while the launch is in progress — run --release-gate for the goalpost)
+
+===============================
+Running ballast-release.sh
+===============================
+nice: setpriority: Operation not permitted
+== ballast-release (suite) — release 0.7.0 post-launch-hardening goalpost ==
+
+-- the frozen manifest
+  PASS: the frozen manifest here matches releases.db's Manifest-Members field in both directions ( 14 15 4 3)
+  INFO: #14 remaining — evidence machinery in place, issue state UNAVAILABLE (gh absent or unauthed); not credited  (atomic event append — appendEvent publishes via temp+rename)
+  INFO: #15 remaining — evidence machinery in place, issue state UNAVAILABLE (gh absent or unauthed); not credited  (parallel contention retry — extends the pre-existing GH-528 suite)
+  INFO: #4 explicitly exempt from automatic gating — retained control, no release completion credit
+  INFO: #3 remaining — evidence machinery in place, issue state UNAVAILABLE (gh absent or unauthed); not credited  (state-dir durability (GH-430 landed pre-Ballast; control completed here))
+
+manifest: 0 complete, 4 remaining, 0 false completion claim(s)
+
+  ballast-release: 1 passed, 0 failed, 4 informational
+  (suite mode is green while Ballast is in progress — run --release-gate for the goalpost)
+
+===============================
+Running gh57-releases-fuzz.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: gh57-releases-fuzz ==
+-- Scenario 1: concurrent branch divergence and GID-keyed merge
+  PASS: disjoint branch dumps rebuild successfully
+  PASS: ULID GIDs do not collide across concurrent branch writes
+  PASS: rebuild deterministically renumbers physical rowids from GID-keyed dump order
+  PASS: merged receipt chain remains intact after merge-rebuild
+-- Scenario 2: unequal write counts and generation headers
+  PASS: unequal-write union reproduces multiple generation headers
+  PASS: multi-generation dump refuses rebuild
+  PASS: multi-generation dump names rule=dump-multi-generation
+  PASS: multi-generation dump leaves the live DB untouched
+  PASS: releases-merge-resolve rebuilds the manually resolved unequal-write merge
+  PASS: resolver leaves unequal-write merge ledger clean
+-- Scenario 3: duplicate settings and content collision
+  PASS: header-repaired unequal union still carries duplicate settings rows
+  PASS: duplicate settings dump refuses rebuild
+  PASS: duplicate settings dump names rule=dump-duplicate-setting
+  PASS: duplicate settings dump leaves the live DB untouched
+  PASS: fixture contains two differing rows for one release GID
+  PASS: duplicate GID content collision refuses rebuild
+  PASS: duplicate GID content collision names rule=dump-duplicate-gid
+  PASS: duplicate GID content collision leaves the live DB untouched
+-- Scenario 4: crash injection and journal recovery
+  PASS: [pre-commit] injected writer exits 70
+  PASS: [pre-commit] a live journal refuses the next write until check
+  PASS: [pre-commit] check recovers the journal and verifies the trio
+  PASS: [post-commit] injected writer exits 70
+  PASS: [post-commit] a live journal refuses the next write until check
+  PASS: [post-commit] check recovers the journal and verifies the trio
+  PASS: [post-stage] injected writer exits 70
+  PASS: [post-stage] a live journal refuses the next write until check
+  PASS: [post-stage] check recovers the journal and verifies the trio
+  PASS: [mid-rename] injected writer exits 70
+  PASS: [mid-rename] a live journal refuses the next write until check
+  PASS: [mid-rename] check recovers the journal and verifies the trio
+  PASS: [post-rename] injected writer exits 70
+  PASS: [post-rename] a live journal refuses the next write until check
+  PASS: [post-rename] check recovers the journal and verifies the trio
+-- Scenario 5: writer lock contention in git common-dir
+  PASS: writer lock fixture targets the resolved git common-dir
+  PASS: writer contention is refused with the writer-lock rule and exit 4
+  PASS: lock refusal leaves the committed DB unchanged
+  PASS: the same writer succeeds after the common-dir lock is released
+-- Scenario 6: malformed and torn dump protection
+  PASS: torn dump with duplicate repo natural key refuses rebuild
+  PASS: torn dump with duplicate repo natural key names rule=dump-load
+  PASS: torn dump with duplicate repo natural key leaves the live DB untouched
+-- Scenario 7: releases gen is retired (GH-568)
+  PASS: gen refuses as retired
+  PASS: no generated view or drift report is produced
+
+== gh57-releases-fuzz: 42 passed, 0 failed ==
+
+===============================
+Running gh257-roadmap-ledger-fixes.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: GH-257 ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.rhlfuYS6xb
+initialized /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.rhlfuYS6xb/repo/releases.db (slug 'test-repo', enforcement=lenient, generation 1); canonical dump at /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.rhlfuYS6xb/repo/releases.sql
+  PASS: roadmap add refused malformed raw_text: '- [ ] #255 malformed checkbox'
+  PASS: roadmap add refused malformed raw_text: '-   **GH-255 · repeated spaces** 🆕'
+  PASS: roadmap add refused malformed raw_text: '-	**GH-255 · tab after dash** 🆕'
+  PASS: roadmap add refused malformed raw_text: '- **GH-255 unclosed bold'
+  PASS: roadmap add refused malformed raw_text: '- **** empty title GH-255'
+  PASS: roadmap add refused malformed raw_text: '- **GH-255 · title**
+- [ ] #999 smuggled row'
+  PASS: roadmap add refused malformed raw_text: '- **GH-255 · title**
+malformed continuation'
+  PASS: roadmap add refused mismatched issue number
+added roadmap entry rmi-01M4P19FWAY5N2P7XPCVS5TJX5 for GH-255
+  PASS: roadmap add succeeded with valid raw_text
+  PASS: roadmap update refused malformed raw_text: '- [ ] #255 bad update'
+  PASS: roadmap update refused malformed raw_text: '-   **GH-255 · extra spaces**'
+  PASS: roadmap update refused malformed raw_text: '-	**GH-255 · tab after dash**'
+  PASS: roadmap update refused malformed raw_text: '- **GH-255 unclosed title'
+  PASS: roadmap update refused malformed raw_text: '- **** empty title GH-255'
+  PASS: roadmap update refused malformed raw_text: '- **GH-255 · title**
+- [ ] #999 bad line'
+  PASS: roadmap update refused malformed raw_text: '- **GH-255 · title**
+continuation'
+  PASS: roadmap update --dry-run reported planned diff
+  PASS: dry-run verified non-mutating against database
+updated GH-255
+  PASS: roadmap update succeeded for GH-255
+  PASS: roadmap list reflects updated raw_text
+  PASS: releases.sql carries roadmap-update receipt
+  PASS: roadmap update idempotent when text unchanged
+  PASS: idempotent update wrote zero additional receipts
+updated GH-255
+  PASS: roadmap update correctly populated all 5 rating columns
+updated GH-255
+  PASS: roadmap update correctly cleared all 5 rating columns to NULL on unrated line
+initialized /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.rhlfuYS6xb/pre_migration_repo/releases.db (slug 'old-repo', enforcement=lenient, generation 1); canonical dump at /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.rhlfuYS6xb/pre_migration_repo/releases.sql
+added roadmap entry rmi-01M4P19HGYBNXE3JRDWQ26T1RT for GH-100
+  PASS: roadmap update refused rated line on pre-migration ledger with schema-behind
+  PASS: red control (negative): well-formed ledger emits no dropped-row warning
+  PASS: roadmap render warned on dropped unparseable rows on stderr
+  PASS: red control (positive): unparseable rows are omitted from rendered markdown output
+== GH-257 ALL PASSED ==
+
+===============================
+Running gh269-roadmap-retired.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: GH-269 ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-269.XXXXXX.lQQ52KS314
+  PASS: ROADMAP.md is absent at repo root
+  PASS: marathon_plan.py executed without ROADMAP.md (exit 4)
+  PASS: releases_app.py roadmap list passed from releases.db source
+  PASS: pdda.sh roadmap-coverage passed from releases.db
+  PASS: pdda.sh roadmap passed cleanly when ROADMAP.md is absent
+  PASS: fixture: roadmap add inserted item into Queue / parked intake
+  PASS: fixture: roadmap move moved item to Completed
+  PASS: fixture: roadmap sync gracefully skips with no ROADMAP.md
+  PASS: all GH-269 roadmap retirement checks passed
+
+===============================
+Running gh549-work-events.sh
+===============================
+nice: setpriority: Operation not permitted
+GH-549 work-state event stream:
+1. migration 008
+  ok  - schema_migrations carries version 8
+  ok  - work_events, connector_cursors and both triggers exist
+  ok  - trigger work_events_no_update present
+  ok  - trigger work_events_no_delete present
+2. work_events is append-only (witnessed refusals)
+  ok  - UPDATE refused: work_events is append-only
+  ok  - DELETE refused: work_events is append-only
+5. real verbs emit the right events
+  ok  - roadmap add/rate/update emitted parked,rated,in_flight
+  ok  - check is clean after three emitting writes
+6. dump placement (the load-bearing decision), with rows present
+  ok  - work_events is in the canonical dump but NOT in the business-digest view
+  ok  - connector_cursors is in neither — device-local by design
+7. the extractor registry is total
+  ok  - every derived op is mapped or allowlisted (ops=28 unclassified=none)
+  ok  - an unclassified op raises, so a new verb cannot silently drop a state
+8. rebuild round-trips work_events
+  ok  - check --rebuild preserved all 702 work_events rows
+9. RED CONTROL A — work_events above the include_receipts guard breaks the chain
+  ok  - mutated placement makes check report receipt-chain (the red fires)
+10. RED CONTROL B — connector_cursors in the dump breaks the dump comparison
+  ok  -   baseline: mutated build is clean before any cursor exists
+  ok  - cursor in the dump + post-transaction advance => dump-divergence (the red fires)
+  ok  - SHIPPED code is clean under the identical cursor advance (the fix holds)
+11. shared nested-block config resolution (device_config.resolve_device_block)
+  ok  - an absent config is a silent no-op returning the defaults
+  ok  - a malformed config reports an error instead of looking absent
+  ok  - an empty config file counts as absent, not malformed
+  ok  - the file tier resolves, and a bare string where a list belongs is coerced
+  ok  - the env tier outranks the file and coerces to the default's type
+  ok  - board_sync config still resolves through the shared block resolver
+12. connector dispatch: concurrent, bounded, isolated
+  ok  - two connectors, one failing: the good one advanced, the bad one did not, its error was recorded
+  ok  - two 5s connectors finished in 5.06s — launched concurrently, not serially
+  ok  - two hung connectors cost ONE 2.05s window, not one timeout each
+  ok  - a connector killed at the deadline does not advance its cursor
+13. dispatch never changes a host verb's exit code
+  ok  - a ledger verb exits 0 even with a connector configured that cannot succeed
+  ok  - and the ledger row is committed regardless
+  ok  - and check is clean after a dispatching write
+14. work emit — one row, real txn_id, its own receipt
+  ok  - one work emit creates EXACTLY one row (not zero, not two)
+  ok  - the row carries the real transaction id minted inside perform_write
+  ok  - and it went through perform_write — its own receipt is on the chain
+  ok  - check is clean after work emit
+15. work reconcile — replay, idempotence, reset
+  ok  - unconfigured reconcile is a no-op that says so
+  FAIL- reconcile did not replay: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- reconcile was not idempotent: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- --reset did not replay: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- an overshot cursor still replayed: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+15b. a connector cannot advance its own cursor out of the batch it was handed (impl QA r1)
+  FAIL- overshoot was not refused: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  ok  - and its cursor did NOT move — the batch stays replayable
+  FAIL- no overshoot error persisted (last_error=)
+  FAIL- a backwards advanced_to was accepted: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+15c. red control — the bounds guard is load-bearing
+  FAIL- red control did not reproduce the defect (cursor=703, expected 709)
+16. the merge emitter keys on the issue, never the PR
+  ok  - a merged PR's closed issues are what get the event
+  ok  - a PR that closes nothing emits nothing — no card for a non-work-item
+  ok  - a dry run emits nothing
+  ok  - merge-cleanup waits for hosted reconciliation before emission, then commits and pushes the event
+17. the VENDORED github_board connector, through normal config, offline (impl QA r2)
+  FAIL- the vendored connector did not complete: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- the card did not reach the configured column (was 'absent', now 'absent')
+  FAIL- the cursor did not advance to this leg's event (seeded 702, now '702', newest 703)
+mapping-ok
+  ok  - the event -> column mapping is user config: an override wins and an empty value disables it
+18. XYZ_WORK_CONNECTORS=0 is a GLOBAL kill switch, not just a hot-path one (impl QA r2)
+  ok  - with the switch off, work reconcile spawned NO connector child
+  ok  - and no cursor was written
+  ok  - and it says why, rather than looking like an empty config
+  FAIL- red control: the child did not run even with the switch off (work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile)
+19. two overlapping dispatches are serialized, and a cursor never goes backwards (impl QA r3)
+  FAIL- the connector lock did not serialize: 0 children ran
+  FAIL- the cursor finished at 703, expected 704
+  FAIL- red control did not reproduce the overlap (0 children)
+monotonic-ok
+  ok  - a late older persist cannot lower the cursor (9 stays 9)
+20. the connector lock fails CLOSED, and --reset is inside it (impl QA r4)
+work_connectors: cannot open the connector lock (NotADirectoryError(20, 'Not a directory')) — deferring this batch
+work_connectors: another dispatch holds the connector lock — leaving this batch for the next run
+fail-closed-ok
+  ok  - a lock that cannot be opened DEFERS the batch instead of dispatching unserialized
+  ok  - and no connector child ran at all under the unopenable lock
+  ok  - and no cursor moved, so the batch stays replayable
+  FAIL- fixture guard: cursor not advanced before the reset probe
+  FAIL- --reset stopped replaying after the lock change: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+21. work backfill — projects existing ledger state, idempotent, through the one seam (GH-564)
+  ok  - fixture rows built through the verbs, one per mapping cell
+  ok  - 21a dry-run: zero events and zero receipts written
+  ok  - 21a dry-run prints the plan and says 0 written
+  ok  - 21a red: without the dry-run return, --dry-run DOES write (711 -> 1054)
+  ok  - 21b Completed/🆕 -> completed (section wins; NOT pr_merged)
+  ok  - 21b 🚧 -> in_flight
+  ok  - 21b rated 🆕 -> rated
+  ok  - 21b unrated 🆕 -> parked
+  ok  - 21g Deferred + 🚧 -> skipped (Deferred is checked first)
+  ok  - 21b backfill never emits pr_merged
+  ok  - 21g red: with the order swapped, Deferred/🚧 DOES emit in_flight — the order is load-bearing
+  ok  - 21c a second backfill emits zero (backfill: 0 emitted, 352 skipped, 0 failed)
+  ok  - 21c red: without the transactional guard a second backfill DUPLICATES (1054 -> 1397)
+  ok  - 21d every backfill event (343) has its own work-emit receipt, joined on txn_id (0 orphans)
+  ok  - 21d releases check is clean after backfill
+  ok  - 21e two concurrent backfills produced exactly one event per row (343 = 343), not two
+  ok  - 21e red: no racer crashed (exit codes: 4 0; 4 = writer-lock refusal)
+  ok  - 21e red: with the read moved outside the transaction, the race DUPLICATES (346 > 343)
+22. review_ready from open non-draft PRs, inside reconcile, fail-soft (GH-564)
+  FAIL- 22a got 'rated': work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- 22a card column: absent
+  ok  - 22b a DRAFT PR emitted nothing
+  ok  - 22b a PR closing nothing emitted nothing
+  FAIL- 22g no --repo in: 
+  FAIL- 22g from no-git CWD: 
+  FAIL- 22c review_ready count 0 -> 0
+  FAIL- 21f fixture guard: unexpected sequence 'parked,parked'
+  ok  - 21f backfill after a review_ready does NOT re-emit — it compares against its OWN last projection
+  ok  - 21f reconcile after a backfill does NOT re-emit review_ready — it ignores backfill rows
+  ok  - 21f an open PR against a COMPLETED issue does not pull it back to review_ready
+  FAIL- 21f red(i) did not reproduce (1 -> 1)
+  FAIL- 21f red(iii) did not reproduce (0 -> 0)
+  FAIL- 21f red(ii) did not reproduce
+  ok  - 22a red: with the event name swapped, 405 does NOT get review_ready
+  FAIL- 22b red (draft) did not reproduce
+  FAIL- 22b red (linked) did not reproduce
+  ok  - 22d with gh pr list failing, reconcile exits 0
+  FAIL- 22d no reason printed: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- 22d did not replay: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  ok  - 22f one emission raising: reconcile still exits 0
+  FAIL- 22f 9905 did not land: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- 22f failure not reported: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- 22f dispatch did not run (cursor '702', seeded 702)
+  FAIL- 22f red did not reproduce (rc=0)
+  ok  - 22e XYZ_WORK_CONNECTORS=0: the scan made no gh call
+  FAIL- 22e red: gh not called
+23. completed is a mapped column, user-overridable (GH-564)
+ok
+  ok  - 23 completed -> Done by default; a user's empty override disables it
+  ok  - 23 red: with the key deleted, completed is unmapped — the entry is load-bearing
+24. the producer-scoped lookup has no row cap (impl QA r1), and every backfill event has ITS OWN receipt
+views-ok
+  ok  - 24 backfill's own latest is still found under 60 newer rows from another producer
+  ok  - 24 ...so a backfill after 60 unrelated events still emits nothing
+  ok  - 24 red: with LIMIT 50 restored, the own-row is hidden and backfill DUPLICATES (1 -> 2)
+  ok  - 24 every one of the 2 new backfill events has its OWN work-emit receipt (join on txn_id)
+  ok  - 24 red: a copy that bypasses perform_write leaves 344 receipt-less event(s) — the join catches it
+25. a non-object payload on an older row cannot break the producer views (impl QA r2)
+views-ok
+  ok  - 25 both producer views survive list/null/string payloads above the backfill row
+  ok  - 25 backfill exits 0 and skips 9930 (still its own latest) with non-object rows present
+  ok  - 25 red: with the raw .get restored, backfill DIES with AttributeError (rc=1)
+26. a writer REFUSAL for one issue cannot take reconcile down before dispatch (impl QA r3)
+  ok  - 26 with one emission REFUSING (SystemExit), reconcile still exits 0
+  FAIL- 26 9907 did not land: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- 26 refusal not reported: work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+no connectors enabled — nothing to reconcile
+  FAIL- 26 dispatch did not run (cursor '702', seeded 702)
+  FAIL- 26 red did not reproduce (rc=0, cursors=702)
+  ok  - 26 on a ledger without work_events the scan returns (0,0,0) instead of exiting
+
+GH-549 work-state event stream: 87 passed, 39 failed
+
+===============================
+Running gh567-roadmap-dashboard-retired.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: GH-567 ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-567.XXXXXX.eEn5vBc2cl
+  PASS: static canary: ROADMAP-DASHBOARD.md and retired scripts absent from repo root
+  PASS: releases_app.py roadmap list operates cleanly without ROADMAP-DASHBOARD.md
+  PASS: releases_app.py roadmap render operates on-demand to stdout without writing file
+  PASS: wave_reconcile.py executes cleanly without dashboard dependencies
+  PASS: audit scanned 263 candidate production files (empty-input guard passed)
+  PASS: writer audit: zero active writers or guards found in production paths
+  PASS: red control 1: canary correctly reported RED when ROADMAP-DASHBOARD.md was injected
+  PASS: red control 2: canary correctly reported RED when utils/roadmap-dashboard.sh was injected
+  PASS: red control 3: canary correctly reported RED when githooks/dashboard-staleness-guard.sh was injected
+  PASS: red control 4: writer audit correctly reported RED when an active artifact reference was injected
+  PASS: red control 5: writer audit correctly reported RED when guard invocation was injected
+  PASS: red control 6: empty-input guard correctly returned exit 2 on empty candidate directory
+  PASS: red control 7: writer audit correctly reported RED when roadmap-dashboard.sh invocation was injected
+== GH-567 ALL PASSED ==
+
+===============================
+Running gh568-releases-md-retired.sh
+===============================
+nice: setpriority: Operation not permitted
+== test: GH-568 ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-568.XXXXXX.r7uVREmOJY
+  PASS: static canary: RELEASES.md and RELEASES.generated.md absent from repo root
+  PASS: artifact_paths() exposes only DB artifacts (no gen, drift, or ledger keys)
+  PASS: releases_app.py gen exits nonzero (3), reports rule=retired, and creates no retired artifacts
+  PASS: releases_app.py list operates cleanly without RELEASES.md
+  PASS: releases_app.py show operates cleanly without RELEASES.md
+  PASS: releases_app.py check operates cleanly without RELEASES.md
+  PASS: wave_reconcile.py executes cleanly without RELEASES.generated.md
+  PASS: utils/release-lanes.sh executes cleanly without RELEASES.md
+  PASS: runtime probe: pre-created RELEASES.md and RELEASES.generated.md are never touched by releases add
+  PASS: audit scanned 274 candidate production files (empty-input guard passed)
+  PASS: writer audit: zero active writers or redirects found in production paths
+  PASS: red control 1: canary correctly reported RED when RELEASES.md was injected
+  PASS: red control 2: canary correctly reported RED when RELEASES.generated.md was injected
+  PASS: red control 3: writer audit correctly reported RED when write redirection was injected
+  PASS: red control 4: writer audit correctly reported RED when Python write was injected
+  PASS: red control 5: empty-input guard correctly returned exit 2 on empty candidate directory
+  PASS: red control 6: runtime probe correctly reported RED when retired file was modified
+  PASS: red control 7: writer audit correctly reported RED when JS/TS write was injected
+  PASS: red control 8: writer audit correctly reported RED when nested expression Python write was injected
+== GH-568 ALL PASSED ==
+
+===============================
+Running gh646-status-label.sh
+===============================
+nice: setpriority: Operation not permitted
+test_active_appearance_changes_preserve_original_start (__main__.StatusLabelTests.test_active_appearance_changes_preserve_original_start) ... ok
+test_admission_rejects_combined_fields_and_closed_native (__main__.StatusLabelTests.test_admission_rejects_combined_fields_and_closed_native) ... refused: rule=accepted-start-fields: --accepted-start requires only --gid (and optional --dry-run)
+refused: rule=accepted-start-native: accepted start requires an open native issue
+ok
+test_ambiguous_owned_rows_refuse (__main__.StatusLabelTests.test_ambiguous_owned_rows_refuse) ... ok
+test_backfill_safe_skip_partial_and_over500_replay (__main__.StatusLabelTests.test_backfill_safe_skip_partial_and_over500_replay) ... ok
+test_board_payload_unchanged_repair_only_no_child (__main__.StatusLabelTests.test_board_payload_unchanged_repair_only_no_child) ... ok
+test_cancelled_and_explicit_inactive_open_removal (__main__.StatusLabelTests.test_cancelled_and_explicit_inactive_open_removal) ... ok
+test_close_during_definition_and_after_add_retains_conflict (__main__.StatusLabelTests.test_close_during_definition_and_after_add_retains_conflict) ... ok
+test_concurrent_duplicate_admission_rechecked_inside_lock (__main__.StatusLabelTests.test_concurrent_duplicate_admission_rechecked_inside_lock) ... ok
+test_corrupt_label_and_future_authority_refuse (__main__.StatusLabelTests.test_corrupt_label_and_future_authority_refuse) ... ok
+test_direct_close_refuses_mismatched_native_identity (__main__.StatusLabelTests.test_direct_close_refuses_mismatched_native_identity) ... refused: rule=roadmap-issue-state: https://github.com/owner/project/issues/646 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+refused: rule=roadmap-issue-state: https://github.com/owner/project/issues/646 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+refused: rule=roadmap-issue-state: https://github.com/owner/project/issues/646 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state
+ok
+test_direct_close_with_caught_up_cursor_and_cancellation (__main__.StatusLabelTests.test_direct_close_with_caught_up_cursor_and_cancellation) ... ok
+test_disallowed_repo_and_native_closed_do_not_add (__main__.StatusLabelTests.test_disallowed_repo_and_native_closed_do_not_add) ... ok
+test_duplicate_metadata_and_restart_authority (__main__.StatusLabelTests.test_duplicate_metadata_and_restart_authority) ... ok
+test_express_admission_dry_refusal_has_no_filesystem_writes (__main__.StatusLabelTests.test_express_admission_dry_refusal_has_no_filesystem_writes) ... express-refused: rule=roadmap-identity — no exact owned issue row; run express ledger first
+express-refused: rule=roadmap-identity — no exact owned issue row; run express ledger first
+ok
+test_express_dry_run_no_admission_write_and_foreign_row_refused (__main__.StatusLabelTests.test_express_dry_run_no_admission_write_and_foreign_row_refused) ... ok
+test_express_land_and_run_reject_second_owned_foreign_repository (__main__.StatusLabelTests.test_express_land_and_run_reject_second_owned_foreign_repository) ... express-refused: rule=roadmap-identity — requested repository differs from the landing root repository
+express-refused: rule=roadmap-identity — requested repository differs from the landing root repository
+ok
+test_express_manifest_state_uses_exact_issue_url_in_both_orders (__main__.StatusLabelTests.test_express_manifest_state_uses_exact_issue_url_in_both_orders) ... ok
+test_express_missing_ledger_identity_preview_never_creates_database (__main__.StatusLabelTests.test_express_missing_ledger_identity_preview_never_creates_database) ... express-refused: rule=roadmap-identity — existing ledger unavailable: unable to open database file
+express-refused: rule=roadmap-identity — existing ledger unavailable: unable to open database file
+ok
+test_express_refuses_before_activation_and_requalifies_before_snapshot (__main__.StatusLabelTests.test_express_refuses_before_activation_and_requalifies_before_snapshot) ... ok
+test_express_registration_and_resume_do_not_start (__main__.StatusLabelTests.test_express_registration_and_resume_do_not_start) ... ok
+test_express_resume_committed_receipt_cannot_authorize_foreign_repo (__main__.StatusLabelTests.test_express_resume_committed_receipt_cannot_authorize_foreign_repo) ... express-refused: rule=resume-identity — requested repository differs from the landing root repository
+express-refused: rule=resume-identity — requested repository differs from the landing root repository
+ok
+test_failed_removal_reopen_replay_and_cursor_retention (__main__.StatusLabelTests.test_failed_removal_reopen_replay_and_cursor_retention) ... ok
+test_foreign_url_closure_preserves_owned_start_and_sweeps_valid_row (__main__.StatusLabelTests.test_foreign_url_closure_preserves_owned_start_and_sweeps_valid_row) ... ok
+test_label_readback_mismatch_and_definition_permission_refuse (__main__.StatusLabelTests.test_label_readback_mismatch_and_definition_permission_refuse) ... ok
+test_may_terminalize_issue_pins_both_branches (__main__.StatusLabelTests.test_may_terminalize_issue_pins_both_branches)
+Merged closers keep GH-202 authority (unknown state promotes; positively OPEN does not); ... ok
+test_migration_metadata_never_establishes_label (__main__.StatusLabelTests.test_migration_metadata_never_establishes_label) ... ok
+test_native_rest_validation (__main__.StatusLabelTests.test_native_rest_validation) ... ok
+test_opt_out_no_network (__main__.StatusLabelTests.test_opt_out_no_network) ... work_connectors: XYZ_WORK_CONNECTORS=0 — connectors disabled, dispatching nothing
+ok
+test_ordinary_active_appearance_never_establishes_label (__main__.StatusLabelTests.test_ordinary_active_appearance_never_establishes_label) ... ok
+test_owned_identity_and_pr_refusal (__main__.StatusLabelTests.test_owned_identity_and_pr_refusal) ... refused: rule=accepted-start-identity: roadmap row does not have qualified owned issue identity
+refused: rule=accepted-start-native: native issue identity/state unavailable or pull request
+ok
+test_owned_opted_out_repo_before_included_start_progresses (__main__.StatusLabelTests.test_owned_opted_out_repo_before_included_start_progresses) ... ok
+test_repair_rejects_active_foreign_and_open_conflict (__main__.StatusLabelTests.test_repair_rejects_active_foreign_and_open_conflict) ... refused: rule=label-repair-active: repair requires a NULL terminal row
+refused: rule=label-repair-identity: unqualified owned issue identity
+ok
+test_roundtrip_new_old_and_corrupt_field (__main__.StatusLabelTests.test_roundtrip_new_old_and_corrupt_field) ... ok
+test_same_number_foreign_rows_never_borrow_owner (__main__.StatusLabelTests.test_same_number_foreign_rows_never_borrow_owner) ... refused: rule=accepted-start-identity: roadmap row does not have qualified owned issue identity
+ok
+test_schema8_evidence_supported_labels_unavailable (__main__.StatusLabelTests.test_schema8_evidence_supported_labels_unavailable) ... refused: rule=status-label-unsupported: schema009 required; migrate deliberately first
+ok
+test_source_unavailable_pending_journal (__main__.StatusLabelTests.test_source_unavailable_pending_journal) ... ok
+test_terminal_precedence_and_nonempty_lifecycle_loop (__main__.StatusLabelTests.test_terminal_precedence_and_nonempty_lifecycle_loop) ... ok
+test_unchanged_legacy_admission_and_dry_run (__main__.StatusLabelTests.test_unchanged_legacy_admission_and_dry_run) ... ok
+test_wave_closeout_qualifies_owned_gid_in_both_orders_and_foreign_only (__main__.StatusLabelTests.test_wave_closeout_qualifies_owned_gid_in_both_orders_and_foreign_only) ... ok
+test_wave_foreign_only_row_cannot_be_completed_by_root_issue_number (__main__.StatusLabelTests.test_wave_foreign_only_row_cannot_be_completed_by_root_issue_number) ... ok
+test_wave_requires_confirmed_closed_issue_before_terminalizing_label (__main__.StatusLabelTests.test_wave_requires_confirmed_closed_issue_before_terminalizing_label)
+A declined PR is not terminal authority for an active owned issue. ... ok
+test_zero_event_completed_cancelled_qualified_repair (__main__.StatusLabelTests.test_zero_event_completed_cancelled_qualified_repair) ... ok
+
+----------------------------------------------------------------------
+Ran 42 tests in 9.340s
+
+OK
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+nice: setpriority: Operation not permitted
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022-verify
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================= 21 passed in 21.09s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 24 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022-verify/.tick/telemetry/validate-sequential-1791740789758-64717.jsonl (27 suite events, 406 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh549-work-events.sh  209.315  1
+  gh32-releases-app.sh  22.244  0
+  gh269-roadmap-retired.sh  17.789  0
+  gh57-live-merge-resolve.sh  10.651  0
+  gh57-releases-fuzz.sh  10.037  0
+  gh646-status-label.sh  9.506  0
+  gh69-roadmap-shadow.sh  7.735  0
+  gh53-releases-merge-resolve.sh  6.355  0
+  gh103-timeline-exporter.sh  3.886  0
+  gh54-merged-dump-refusals.sh  3.607  0
+re-run ladder: 0 suite(s), 0.000s total
+passed: 26 / 28
+  + tier2:static
+  + gh32-releases-app.sh
+  + gh103-timeline-exporter.sh
+  + gh32-releases-artifacts.sh
+  + gh53-releases-merge-resolve.sh
+  + gh54-merged-dump-refusals.sh
+  + gh57-live-merge-resolve.sh
+  + gh69-roadmap-shadow.sh
+  + gh32-release-target-advisory.sh
+  + gh39-releases-project-sync.sh
+  + gh153-releases-sidebar-rollup.sh
+  + releases-skill.sh
+  + gh284-p3-release-milestone.sh
+  + gh284-p4-release-lanes.sh
+  + litmus-release.sh
+  + nightwatch-release.sh
+  + meter-release.sh
+  + ballast-release.sh
+  + gh57-releases-fuzz.sh
+  + gh257-roadmap-ledger-fixes.sh
+  + gh269-roadmap-retired.sh
+  + gh567-roadmap-dashboard-retired.sh
+  + gh568-releases-md-retired.sh
+  + gh646-status-label.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+failed:
+  - tier2:pdda
+  - gh549-work-events.sh

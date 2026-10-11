@@ -92,3 +92,17 @@ First classified gate was NOT green: plan path wording error plus global connect
 disabling defeated existing fixture connectors; neither was masked or skipped.
 Corrected gate and final source QA remain pending. First QA driver had a containment
 failure from producer evidence refresh during review; findings retained, no approval.
+
+Phase4 final QA r2: FAIL for a capture edit after SHA256 accounting and before
+Git-object sampling. Actual old f4dba01f clone control completes a stale checkpoint;
+final candidate preserves the injected CRLF edit and holds before commit. Capture
+Git objects now derive from the exact immutable bytes used for declared SHA256,
+including owned creation intent. Staged/committed checks cannot resample different
+capture bytes as proof. SHA1 Git object format is explicit; unknown formats hold.
+Fresh target/HEAD checks immediately before and after commit hold drift without
+discarding any post-drift commit or completing its checkpoint. Versioned artifacts
+bind final source:36 accumulation,20 discovery,2 capture red/pass,4 title/writer
+red/pass and2 commit drift controls. No permanent test driver or new CI case added.
+Corrected classified f4dba01f gate: exit0,28/28 selections,24 release suites and
+existing Python layer21/21,docs/static,clone identity; zero errors/48 docs warnings;
+not promotion and before capture fix. Final-source gate and last QA round3 pending.

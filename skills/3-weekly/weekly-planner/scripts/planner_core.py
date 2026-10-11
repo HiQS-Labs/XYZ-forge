@@ -1014,6 +1014,8 @@ def prepare_weekly(args, source_root, command=None):
             raise ValueError("preparation branch changed during discovery; refresh without overwriting it")
         if (gitdir / "releases-app-journal.json").exists():
             raise ValueError("canonical writer journal present; preserve it and recover via canonical CLI before retry")
+        if git(["rev-parse", "--show-object-format"], root) != "sha1":
+            raise ValueError("unsupported planning Git object format; preserve state")
         preparation_head = git(["rev-parse", "HEAD"], root)
         ledger("check")
         current_rows = rows()
@@ -1071,6 +1073,7 @@ def prepare_weekly(args, source_root, command=None):
                      "generation": generation, "ledger_rows": current_rows, "paths": {}, "complete_commit": None,
                      "checkpoint_cut": cut}
         accounting = []
+        capture_objects = {}
         for issue in observed["issues"]:
             if target_head(root) != base:
                 raise ValueError("canonical target advanced during preparation; preserve partial state")
@@ -1114,7 +1117,16 @@ def prepare_weekly(args, source_root, command=None):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with path.open("x") as stream:
                     stream.write(content)
-            before_hash = digest(path)
+            capture_bytes = path.read_bytes()
+            before_hash = hashlib.sha256(capture_bytes).hexdigest()
+            if doc in state["paths"] and state["paths"][doc] != before_hash:
+                raise ValueError("owned creation intent differs from capture; preserve owner edit")
+            # Bind Git's blob to the SAME immutable bytes as declared SHA-256
+            # evidence; sampling the live path after observation persistence
+            # would incorrectly certify an intervening owner edit.
+            capture_objects[doc] = hashlib.sha1(
+                f"blob {len(capture_bytes)}\0".encode() + capture_bytes,
+                usedforsecurity=False).hexdigest()
             if not matches:
                 state["pending_add"] = {"gh_number": issue["number"], "issue_url": issue["url"],
                                         "title": issue["title"], "doc_path": doc,
@@ -1170,13 +1182,17 @@ def prepare_weekly(args, source_root, command=None):
                     raise ValueError("unrelated changes before commit; preserve state")
                 owned = {relative, "releases.db", "releases.sql", *[item["doc_path"] for item in accounting]}
                 expected_objects = {path: git(["hash-object", "--", path], root) for path in owned}
+                expected_objects.update(capture_objects)
                 git(["add", "--", relative, "releases.db", "releases.sql", *sorted(state["paths"])], root)
                 if any(git(["rev-parse", ":" + path], root) != value for path, value in expected_objects.items()):
                     raise ValueError("staged canonical accounting differs; preserve partial state")
+                if target_head(root) != base or git(["rev-parse", "HEAD"], root) != preparation_head:
+                    raise ValueError("target/HEAD drift immediately before commit; preserve partial state")
                 git(["commit", "-m", f"weekly: accumulate {repository} intake for {date}"], root)
                 completed = git(["rev-parse", "HEAD"], root)
                 if (git(["branch", "--show-current"], root) != branch
                         or git(["rev-parse", "HEAD^"], root) != preparation_head
+                        or target_head(root) != base
                         or rows() != state["ledger_rows"]
                         or int(ledger("settings", "get", "generation")) != state["generation"]
                         or any(git(["rev-parse", "HEAD:" + path], root) != value
