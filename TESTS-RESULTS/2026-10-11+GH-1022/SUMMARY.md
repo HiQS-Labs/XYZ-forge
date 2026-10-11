@@ -134,3 +134,15 @@ cap reset or publication of held source has occurred. Exact next target is the
 evidence-only commit carrying this record;its4 source hashes equalbc934d52.
 Published draft#1024 remainsd7ef2bc9 with hosted smokeSUCCESS;promotion/portability
 SKIPPED by policy. Mandatory remaining umbrella work stays ACTIVE.
+
+Operator authorized exactly one additional accumulation review; same artifact
+extended to4/4 preserving all3 failures and original escalation. Round4 at84d6e53b
+FAIL: release-update fix and final-source evidence passed, but whole-file sweep
+found preexisting roadmap-rate restoring stale raw_text after canonical repoint.
+Actual second-process writers reproduce old document-link loss. Narrow repair
+checks the full selected row inside existing transaction and refuses roadmap-rate-stale
+before writing, preserving owner text/path. Quiet and deliberate force controls
+pass; six old/candidate controls and canonical checks clean. No new CI cases.
+Existing exact-source verification pending; cap4/4 Escalated, no extra review or
+approval attestation. W7–W11 remain active; no umbrella completion or held-source
+publication. Further independent review requires explicit operator cap decision.

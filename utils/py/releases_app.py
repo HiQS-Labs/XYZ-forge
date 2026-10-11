@@ -3720,7 +3720,7 @@ def cmd_roadmap_rate(args):
         else:
             where, param, label = "global_id = ?", args.gid, args.gid
         rows = conn.execute(
-            "SELECT global_id, title, raw_text, rating_pri, complexity, risk, effort "
+            "SELECT * "
             "FROM roadmap_items WHERE " + where + " LIMIT 2", (param,)).fetchall()
         if not rows:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
@@ -3757,6 +3757,11 @@ def cmd_roadmap_rate(args):
             return
 
         def mutate(conn):
+            current = conn.execute("SELECT * FROM roadmap_items WHERE global_id = ?",
+                                   (row["global_id"],)).fetchone()
+            if current is None or dict(current) != dict(row):
+                refuse("roadmap-rate-stale",
+                       "roadmap row changed after validation; owner state preserved; retry against current state")
             conn.execute(
                 "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
                 % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),

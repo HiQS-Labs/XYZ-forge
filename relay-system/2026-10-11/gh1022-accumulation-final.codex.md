@@ -192,4 +192,7 @@ Direct source sweep completed for all 6908 lines of utils/py/releases_app.py, al
 
 Handing off to Producer (author) — disposition the measured rating/repoint owner-state loss and preserve existing owner evidence. This relay is Escalated at 4/4; further review requires a new explicit operator cap decision. No approval, cap reset or self-commit was performed.
 
+### Producer · Post-extension disposition (no new review round)
+Round4 roadmap-rate/repoint Blocker reproduced with actual canonical second-process repoint in temporary independent fixtures: rate succeeds while restoring old INBOX text over WORKING doc_path. Narrow repair snapshots the selected full row and compares it under existing perform_write transaction before UPDATE; named roadmap-rate-stale refusal preserves the newer owner row. Quiet rate and deliberate force rerating/override clearing retain ordinary semantics. Six real controls (old/candidate quiet,repoint,force) pass the expected red/refusal/quiet conditions; all canonical fixture checks clean. No second writer protocol,new CI case or policy weakening. Existing exact-source gate pending. Cap stays4/4 Escalated; no new reviewer dispatch,attestation,reset or replacement. W7–W11 remain active and publication stays foundation-only. Further independent review requires explicit operator cap decision.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
