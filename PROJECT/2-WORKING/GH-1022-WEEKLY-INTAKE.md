@@ -692,7 +692,7 @@ revert the corrective commit; no schema/data migration or deployed state change.
 Before/after controls use actual modules and canonical second-process writers in
 temporary independent repositories. Their init/add/rate/capture/receipt/commit
 writes are local fixture effects; GH/target transport is stubbed, connectors off.
-Existing36 accumulation controls pass; final focused suites still pending.
+Existing36 accumulation controls and focused gh32(145/145),gh69(85/85),gh369(14/14) pass on exact corrective source41f225bd8726499c999184162037d1fd826140a1 in the disposable fullclone. Corrective source remains unpublished and independently unreviewed.
 No tests/cases/parametrizations, CI registry, gate or policy weakening added.
 
 ### Pending corrective plan (S1/S2/N1 and S7)

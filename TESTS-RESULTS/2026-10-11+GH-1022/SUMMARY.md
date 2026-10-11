@@ -250,3 +250,13 @@ as exact Git blobs; one original log is unavailable. Append-only correction inde
 links recoverable versions and withdraws the unavailable historical claim. Missing
 source bindings remain unqualified; no invented tested SHA or overwritten receipt.
 Keep original artifacts to preserve later attestation hashes.
+
+Focused existing suites at exact corrective source41f225bd8726499c999184162037d1fd826140a1:
+gh32-releases-app145/145,gh69-roadmap-shadow85/85,gh369-find-doc-root-resolution14/14.
+Separate disposable fullclone stayed clean at41f225bd with canonical GitHub origin
+before/after;runtime harness/tick/connector overrides unset and device config null.
+All four source hashes match the witnessed candidate and committed bytes;AST pass.
+Primary checkout remains clean at a58378289863548968ea907cbbddfd2b8d6f4f28.
+Changed-path audit has no test/registry/gate additions or modifications.
+No new final qualifying gate or review ran;closed R5 is preserved and new review
+authority remains pending. Corrective source/evidence retained locally,unpublished.
