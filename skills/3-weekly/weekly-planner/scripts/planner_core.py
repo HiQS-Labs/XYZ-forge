@@ -38,7 +38,7 @@ def load_issue_intake():
     if locator is None:
         raise RuntimeError("harness locator not found; set XYZ_HARNESS")
     harness = Path(run_cmd(["bash", str(locator), "--root", "--quiet"]))
-    module_file = harness / "utils/py/issue_intake.py"
+    module_file = harness / "skills/3-weekly/weekly-planner/scripts/issue_intake.py"
     if not module_file.is_file():
         raise RuntimeError("selected harness lacks issue_intake.py; update harness")
     spec = importlib.util.spec_from_file_location("issue_intake", module_file)

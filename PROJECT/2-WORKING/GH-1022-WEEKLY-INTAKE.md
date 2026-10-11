@@ -101,7 +101,7 @@ Goal: share read mechanics with a held, effect-free preview.
 
 1. Characterize legacy adapters before edits in disposable fixtures, save source hashes,
    commands/results and nonempty provenance under TESTS-RESULTS/2026-10-11+GH-1022.
-2. Add utils/py/issue_intake.py: explicit clock/root/runner; UTC query, discovery/doc lookup,
+2. Add skills/3-weekly/weekly-planner/scripts/issue_intake.py: explicit clock/root/runner; UTC query, discovery/doc lookup,
    qualified normalization/deduplication. Read adapters are effectful I/O, no writes/import
    effects. Legacy subcommands preserve gh command/projection/limit and doc schema.
 3. Replace original scripts with thin locator+Python exec adapters; preserve interfaces,
@@ -184,3 +184,19 @@ First manual probe correctly refused the inherited XYZ_HARNESS pointing to the o
 primary harness lacking issue_intake.py. This is an explicit update dependency, not a
 fallback to duplicated code. Candidate probes select the task harness; installed
 adapters must select a current harness before running. No deployment performed.
+
+
+## Shared module ownership correction — plan round 2
+
+GH-777's existing inventory ratchet rejects every new .py file under utils/scripts/bin,
+including import libraries. The original proposed utils/py/issue_intake.py failed that
+existing check. No baseline/rule/test was changed. Use the existing intake owner's
+`skills/3-weekly/weekly-planner/scripts/issue_intake.py` instead: one import-only bundled
+library adjacent to planner_core, no standalone executable CLI. Existing scan/find
+entry points call its functions through the selected harness; weekly-intake stays an
+existing-core submode. This follows existing skill-subsystem ownership and the
+ratchet's documented new-verbs-through-existing-entry-points rule. It does not move
+all planner_core, add a writer or orchestrator, or deploy a sibling skill dependency.
+Request independent review of this ownership decision; if judged a policy bypass,
+hold implementation/publication and seek an explicit operator decision instead of
+relaxing the ratchet. All remaining umbrella acceptance remains held.

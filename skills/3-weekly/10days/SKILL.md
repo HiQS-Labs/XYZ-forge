@@ -552,7 +552,7 @@ of being re-typed as ad hoc `gh`/`ls`/`grep` one-liners each invocation.
 ## Shared discovery compatibility (GH-1022)
 
 The bundled scan/find-doc entry points now execute harness-owned
-`utils/py/issue_intake.py` through `intake_adapter.py` and the existing harness
+`skills/3-weekly/weekly-planner/scripts/issue_intake.py` through `intake_adapter.py` and the existing harness
 locator. Python3 is required; copied installs must select a current harness via
 `XYZ_HARNESS` or the installed locator. A missing/old harness fails explicitly.
 The scan still uses 10/0 defaults, open-updated selection and the 200-item ceiling;

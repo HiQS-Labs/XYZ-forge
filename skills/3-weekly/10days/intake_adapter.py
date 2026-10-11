@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Locate the harness-owned intake implementation for copied or linked 10days."""
+import importlib.util
 import os
 from pathlib import Path
 import subprocess
@@ -29,11 +30,16 @@ def main():
     if result.returncode:
         print(result.stderr.strip(), file=sys.stderr)
         return 2
-    module = Path(result.stdout.strip()) / "utils/py/issue_intake.py"
+    module = Path(result.stdout.strip()) / "skills/3-weekly/weekly-planner/scripts/issue_intake.py"
     if not module.is_file():
-        print("10days: selected harness lacks utils/py/issue_intake.py; update the harness before using this adapter", file=sys.stderr)
+        print("10days: selected harness lacks skills/3-weekly/weekly-planner/scripts/issue_intake.py; update the harness before using this adapter", file=sys.stderr)
         return 2
-    os.execv(sys.executable, [sys.executable, str(module), *sys.argv[1:]])
+    spec = importlib.util.spec_from_file_location("issue_intake", module)
+    intake = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(intake)
+    if sys.argv[1] == "scan":
+        return intake.legacy_scan(sys.argv[2:], Path.cwd())
+    return intake.legacy_find(sys.argv[2:], Path.cwd())
 
 
 if __name__ == "__main__":

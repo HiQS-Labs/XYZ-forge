@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-11 — Shared discovery and held weekly intake preview (GH-1022, staged)
+
+The existing 10days scan and capture lookup now use harness-owned `issue_intake.py`
+through thin compatibility adapters, preserving scan defaults/limit and lookup roots.
+Python3 and a current selected harness are explicit prerequisites for copied skills.
+The existing weekly/daily planner core gains an opt-in complete issue/PR read preview;
+`/weekly` names this held preparation entry point while existing planner names remain.
+
+This foundation does not complete #1022: branch ledger accumulation/checkpoints,
+authoritative plan construction, readiness fixes, immutable freeze and exact approval,
+criterion-level pre-fire/phase/resume and pre-landing redundancy safeguards remain
+unimplemented. Preview always holds dispatch. No new tests, schedules, installations,
+connector writes or live execution. Revert shared module/adapters/core mode together.
+Existing/manual evidence is retained under `TESTS-RESULTS/2026-10-11+GH-1022/`.
+
 ## 2026-10-10 — Releases ledger: bare repo slugs match a differently cased GitHub name (GH-1016)
 
 A ledger whose `repos.slug` is the checkout folder name (`aegis-sleuth-slack-bot`) never matched its

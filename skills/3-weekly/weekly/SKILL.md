@@ -20,7 +20,7 @@ frozen approval packet or dispatch/resume/landing enforcement ships here. Keep t
 workflow held; do not claim the umbrella complete or enable scheduling/execution.
 
 1. Resolve the shipped harness with `/relay-xyz`'s `find-harness.sh --root`; require
-   `utils/py/issue_intake.py` and Python3 in that harness. A copied skill must use
+   `skills/3-weekly/weekly-planner/scripts/issue_intake.py` and Python3 in that harness. A copied skill must use
    this selected harness, never assume cwd is Forge or another skill is installed.
    Set `HARNESS` to its returned root. Confirm the swept repo and explicit timestamp.
 2. Run the existing core's new, opt-in intake mode:

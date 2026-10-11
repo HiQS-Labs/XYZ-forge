@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Shared issue discovery for 10days and the held weekly preview (GH-1022).
 
 Read adapters take explicit roots/runners/clocks. Import and normalization do no
@@ -251,6 +250,8 @@ def discover_weekly(repository: str, since: str, root: Path, previous: dict | No
             raise ValueError(f"incomplete PR files: {item['identity']}")
         if any(not isinstance(file.get("filename"), str) for file in files):
             raise ValueError(f"malformed PR file: {item['identity']}")
+        if len({file["filename"] for file in files}) != len(files):
+            raise ValueError(f"duplicate PR files: {item['identity']}")
         pr["files"] = [{"path": file["filename"]} for file in files]
         pr["identity"] = item["identity"]
         prs.append(pr)
@@ -259,18 +260,3 @@ def discover_weekly(repository: str, since: str, root: Path, previous: dict | No
             "issues": deduplicate(issues), "prs": prs, "pages": {"issues": issue_pages, "prs": pr_pages},
             "relevance": "updated-since plus explicit previous members; dependencies must be supplied",
             "holds": ["Branch ledger reconciliation, independent criterion review, readiness, immutable freeze and dispatch enforcement are not implemented."]}
-
-
-def main() -> int:
-    if len(sys.argv) < 2:
-        return 2
-    if sys.argv[1] == "scan":
-        return legacy_scan(sys.argv[2:], Path.cwd())
-    if sys.argv[1] == "find":
-        return legacy_find(sys.argv[2:], Path.cwd())
-    print("issue_intake: expected scan or find", file=sys.stderr)
-    return 2
-
-
-if __name__ == "__main__":
-    sys.exit(main())
