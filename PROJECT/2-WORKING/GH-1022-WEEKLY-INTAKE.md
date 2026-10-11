@@ -531,3 +531,13 @@ required-column exit3 controls retain current behavior. Renderer/parser stubbed;
 no filesystem DB or full-engine action. Existing classifier maps this engine as
 unmapped tier3/full;final required full gate belongs after final Approved source
 at normal push boundary,not repeated during plan/text rounds. No gate-policy edit.
+
+Phase5 plan QA R1 Approved at45d55239;cap3 not extended. Nit disposition:
+retain/disclose preexisting _rating_num display1..5 limitation;no renderer change
+or newtest. Reader now uses canonical effective rank,required query/optionalNULL
+alias and historical int conversion. One existing weekly hold reason and skill
+status are updated to avoid falsely claiming the omission remains;HELD shape,
+policy/dispatch and other algorithms unchanged. This diagnostic/status correction
+will be covered in final QA and refreshed accumulation controls,not capability
+promotion. No source code before approved plan;already-active owned admission
+confirmed by canonical accepted-start returning original-start preserved.

@@ -70,8 +70,11 @@ Apply writes are real: full clone/fetch, branch, canonical captures through
 rows, GIDs, ratings/overrides/status and owner-authored captures remain unchanged.
 New rows stay unrated; captures carry provisional ratings from the sanctioned
 renderer. Canonical reader JSON exposes axes, override, calc and effective rank.
-The authoritative Marathon planner currently ignores overrides; selection remains
-held until a separately reviewed correction, with no weekly scorer substituted.
+The authoritative Python Marathon reader uses the same effective owner rank for
+fully rated rows; its historical Bash fallback is unchanged. Selection remains
+held until readiness and criterion evidence are reviewed; no weekly scorer is
+substituted. The existing report formatter may show DB axes above five as dashes;
+the canonical ledger reader retains the actual axes and effective rank.
 
 Committed accounting is `PROJECT/4-MISC/weekly/<date>/intake.json`. Recovery intent
 is in the clone Git-dir `weekly-<date>.json`; a nonblocking clone-local writer lock

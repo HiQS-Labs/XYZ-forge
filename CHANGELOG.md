@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-11 — Canonical planner owner overrides (GH-1022, phase 5)
+
+The authoritative Python Marathon reader now uses the existing RELEASES rating
+projection for fully-rated effective rank, including owner overrides. Ordinary,
+partial/unrated and doc-only identity behavior is preserved; historical schemas
+without the optional override retain their fallback. No second scorer or ledger
+writer, and the frozen Bash fallback is unchanged. Existing report axis formatting
+above five remains a disclosed limitation. Weekly selection stays HELD for required
+readiness, criterion evidence, freeze/approval and shared execution safeguards.
+Verification/final QA pending; no new CI tests or live execution.
+
 ## 2026-10-11 — Local canonical weekly accumulation (GH-1022, phase 4)
 
 - GH-1022 review: canonical release updates now refuse a stale validated row inside

@@ -940,7 +940,7 @@ def prepare_weekly(args, source_root, command=None):
         observed["pages"]["initial_open"] = pages
     stable = {key: value for key, value in observed.items() if key not in ("observedAt", "since", "pages")}
     stable["holds"] = ["Local canonical accounting only; dependency expansion, authoritative selection, criterion review, freeze and shared dispatch boundaries remain held.",
-                       "Authoritative Marathon rank currently ignores owner overrides; selection requires separately reviewed canonical-owner correction."]
+                       "Owner rank alone grants no execution authority; selection requires separately reviewed readiness and criterion evidence."]
     if not args.apply:
         inspection_root = root if root.exists() else source_root
         if not root.exists() and git(["rev-parse", "HEAD"], source_root) != base:
