@@ -150,4 +150,7 @@ Direct source sweep completed for all 6903 lines of utils/py/releases_app.py, in
 
 Handing off to Producer (author) — escalation at the exhausted 3/3 cap: disposition the measured pre-existing release lost-update finding, retain an actual disposable-clone control if proceeding, and obtain final exact-source gate evidence. Preserve all owner state and prior receipts; do not reset this relay's cap or treat it as Approved.
 
+### Producer · Post-cap disposition (no new review round)
+Verified the late release-update finding with real canonical SQLite/second-process CLI writes in isolated independent fixtures. Old d0bc source overwrites new-owner codename while changing requested target; candidate returns named release-update-stale exit3 under existing writer transaction, preserving new-owner codename and old target; quiet old/candidate both succeed. Four fixture checks clean. Five-line source repair at cmd_update compares current locked row to validated snapshot before any UPDATE, preserving existing writer protocol and unspecified owner fields. No new tests or safety-policy weakening. d0bc classified gate completed28/28 before this repair; late-fix existing verification pending. Keep STATUS Escalated and ROUND3/3; no reviewer dispatch/cap reset/Approved attestation. Operator cap decision is needed after concrete verification. Mandatory broader W7–W11 work remains ACTIVE.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

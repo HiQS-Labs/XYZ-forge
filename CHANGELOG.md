@@ -2,6 +2,11 @@
 
 ## 2026-10-11 — Local canonical weekly accumulation (GH-1022, phase 4)
 
+- GH-1022 review: canonical release updates now refuse a stale validated row inside
+  the existing writer transaction, preserving a concurrent owner's unrelated
+  fields. Actual second-process red/control evidence retained; review cap is
+  escalated and this late repair is awaiting final independent approval.
+
 Existing planner_core gains opt-in weekly-prepare: explicit date/ref/backfill/overlap,
 read-only write preview or authorized local application in a separate owned full
 clone. It preserves existing captures/GIDs/ratings/overrides/status, uses HQ capture

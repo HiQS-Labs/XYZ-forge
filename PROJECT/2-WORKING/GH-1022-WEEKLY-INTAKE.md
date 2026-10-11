@@ -362,3 +362,17 @@ that original object. Candidate holds before commit with the owner CRLF edit
 preserved. Fresh pre/post-commit target checks hold drift and preserve post-drift
 commits without completing checkpoint. Existing classified f4 gate passed28/28
 selections incl24 release suites; final source gate and QA3 remain pending.
+
+### Phase4 final QA3 escalation and concrete repair
+
+All6903 release-owner source lines swept. Accumulation blockers passed the reviewer
+controls, but a preexisting release cmd_update reads before writer lock then uses
+stale fallback fields in its full-row update. Actual second-process canonical
+update reproduces owner codename loss. Minimal repair compares the validated row
+inside existing perform_write's transaction and refuses release-update-stale,
+preserving the owner row; quiet updates still succeed. Canonical fixtures check
+clean. This repairs the observed existing writer boundary, not a new framework.
+Review3/3 remains Escalated; no Approved attestation,cap reset or replacement
+review. Operator decision is required for further review after late-fix existing
+verification. d0bc final gate passed28/28 before this five-line repair. W7–W11
+remain required active work, not implicitly waived by staged publication.

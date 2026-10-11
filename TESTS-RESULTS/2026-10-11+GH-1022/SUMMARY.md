@@ -106,3 +106,16 @@ red/pass and2 commit drift controls. No permanent test driver or new CI case add
 Corrected classified f4dba01f gate: exit0,28/28 selections,24 release suites and
 existing Python layer21/21,docs/static,clone identity; zero errors/48 docs warnings;
 not promotion and before capture fix. Final-source gate and last QA round3 pending.
+
+Final accumulation source d0bc939a classified gate completed exit0,28/28
+selections incl24 release suites,Python21/21,docs/static/clone identity;48 docs
+warnings,not promotion. Independent QA3 swept all6903 canonical releases lines
+and confirmed all accumulation fixes but FAILed a preexisting release updater
+lost-update. Review cap3 exhausted, STATUS Escalated, no approval attestation.
+Actual second-process canonical owner update reproduced old codename loss; narrow
+repair checks the validated row inside the existing writer transaction and refuses
+release-update-stale, preserving owner changes. Quiet updates succeed and all4
+canonical fixture checks pass. No new test case/runner/gate. Fixtures wrote only
+local canonical DB/dump/lock/audit/receipts; connectors disabled, no GH or dispatch.
+Late repair existing checks are pending. Further source review requires the
+operator's explicit cap decision; no cap reset or replacement review is started.

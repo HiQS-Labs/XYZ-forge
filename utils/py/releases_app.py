@@ -2456,6 +2456,11 @@ def cmd_update(args):
                                 exit_criterion=args.exit_criterion, editing_gid=args.gid)
 
         def mutate(conn):
+            # Validation used a pre-lock snapshot. Never use its unspecified
+            # fallback fields after another sanctioned writer changed this row.
+            if dict(find_release(conn, args.gid)) != dict(row):
+                refuse("release-update-stale",
+                       "release changed after validation; owner state preserved; retry against current state")
             tracking_ref_id = row["tracking_ref_id"]
             if new_tracking_url is not None:
                 ref = issue_ref_for_token(conn, new_tracking_url)
