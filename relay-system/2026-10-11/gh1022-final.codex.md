@@ -298,4 +298,12 @@ Sweep and evidence limits: read the full library, adapter, scan/find/install scr
 
 Relay closed (Approved), no further review turn needed. Producer author / outer harness acts next: commit this file, run the final applicable gate in a disposable full clone and inspect target/base before any separately authorized publication.
 
+
+### Attestation · relay-drive — 2026-10-11T16:37:49Z
+task: GH1022-FINAL-QA-R3
+reviewer: codex
+status: Approved
+reviewed-head: ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978
+added-range: 21677+8510
+added-sha256: 439e097c4208db916a70890764a1a5e4db009b8a34bd63366e8c35f35ce070ec
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
