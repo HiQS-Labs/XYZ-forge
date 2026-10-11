@@ -324,7 +324,7 @@ Manual controls in /tmp use sanctioned CLI fixtures only (no direct fixture SQL)
 GH responses stubbed and connectors disabled. Initial 22 passed; expanded controls
 include unchanged receipt bytes/mtime, malformed receipts/observations, symlink
 capture and concurrent owner rating changes. The first concurrent injection failed
-because Mac /var resolved to /private/var: callback count 0. Resolve paths in the
+because macOS temporary paths had two filesystem aliases: callback count 0. Resolve paths in the
 fixture; actual injection count 2 then held and preserved changed owner override.
 A mixed-case canonical owner URL reproduced a false foreign hold before the shared
 case-normalization fix; owner stored URL stays unchanged. Retain these breadcrumbs.
@@ -336,3 +336,19 @@ expansion/global active-run accounting, authoritative selection/rank correction,
 freeze and shared criterion/fire/phase/resume/landing protocol are unimplemented.
 Final phase-source QA, exact tier-2 gate and PR update remain pending. No new CI
 case/test/parametrization/registry/gate or operator approval inferred.
+
+### Phase 4 final QA round 1 dispositions
+
+Two source-boundary blockers reproduced manually in disposable full fixtures:
+rating-like issue title assigned axes/override; canonical rating change at staging
+produced stale accounting with a complete checkpoint. New-title validation now
+uses the canonical parser and holds before registration without changing existing
+rated rows. The final no-op/check/stage/commit boundary holds canonical WriterLock,
+checks target, branch/HEAD and generation, validates staged and committed object
+bytes and keeps incomplete receipts on any mismatch. Existing writer lock/audit
+sidecars are local effects. No canonical transaction is called inside that lock.
+Provenance now binds accumulation artifacts and exact source hashes/attribution.
+The first review transcript contains concrete FAIL findings but no attestation:
+producer refreshed a manual evidence file during review; containment reverted it.
+Its saved bytes and review are preserved. Round 2 will use a fixed input tree.
+Whole-module releases CLI direct source sweep is still required before approval.

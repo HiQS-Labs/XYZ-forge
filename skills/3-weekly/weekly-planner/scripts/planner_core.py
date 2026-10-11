@@ -802,6 +802,7 @@ def prepare_weekly(args, source_root, command=None):
     """
     import fcntl
     import hashlib
+    import importlib.util
     import math
     import tempfile
 
@@ -810,6 +811,20 @@ def prepare_weekly(args, source_root, command=None):
     harness = Path(intake.__file__).resolve().parents[4]
     app = harness / "utils/py/releases_app.py"
     renderer = harness / "utils/hq/hq-lib.sh"
+    spec = importlib.util.spec_from_file_location("weekly_releases_owner", app)
+    canonical = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(canonical)
+
+    def require_unrated_title(issue):
+        # Canonical add parses rating tokens from its rendered line, including
+        # the title. Weekly never treats GitHub title text as an owner rating.
+        try:
+            rating = canonical.parse_rating(issue["title"], issue["title"])
+        except SystemExit as error:
+            raise ValueError("new issue title contains invalid canonical rating tokens; explicit reconciliation required") from error
+        if any(value is not None for value in rating.values()):
+            raise ValueError("new issue title contains canonical rating tokens; explicit reconciliation required")
+
     repository = intake.repository_name(args.gh_repo)
     date = datetime.strptime(args.planning_date, "%Y-%m-%d").date().isoformat()
     if date != args.planning_date or not math.isfinite(args.overlap_hours) or args.overlap_hours < 0:
@@ -941,6 +956,8 @@ def prepare_weekly(args, source_root, command=None):
                 raise ValueError("ambiguous/foreign canonical identity in dry preparation")
             candidates = [path for bucket in intake.BUCKETS
                           for path in (inspection_root / "PROJECT" / bucket).glob(f"GH-{issue['number']}-*.md")]
+            if not matches:
+                require_unrated_title(issue)
             if not matches and len(candidates) > 1:
                 raise ValueError("ambiguous capture in dry preparation")
             doc = matches[0].get("doc_path") if matches else (str(candidates[0].relative_to(inspection_root)) if candidates else None)
@@ -997,6 +1014,7 @@ def prepare_weekly(args, source_root, command=None):
             raise ValueError("preparation branch changed during discovery; refresh without overwriting it")
         if (gitdir / "releases-app-journal.json").exists():
             raise ValueError("canonical writer journal present; preserve it and recover via canonical CLI before retry")
+        preparation_head = git(["rev-parse", "HEAD"], root)
         ledger("check")
         current_rows = rows()
         generation = int(ledger("settings", "get", "generation"))
@@ -1066,6 +1084,7 @@ def prepare_weekly(args, source_root, command=None):
                 if not doc:
                     raise ValueError("existing canonical row has no capture; explicit reconciliation required")
             else:
+                require_unrated_title(issue)
                 candidates = [path for bucket in intake.BUCKETS
                               for path in (root / "PROJECT" / bucket).glob(f"GH-{issue['number']}-*.md")]
                 if len(candidates) > 1:
@@ -1105,6 +1124,8 @@ def prepare_weekly(args, source_root, command=None):
                        "--title", issue["title"], "--created", date, "--doc-path", doc)
                 updated = rows()
                 new = [row for row in updated if row.get("issue_url") == issue["url"]]
+                if (len(new) != 1 or any(new[0].get(key) is not None for key in canonical.RATING_COLUMNS)):
+                    raise ValueError("registration produced assessed ratings; preserve result and reconcile explicitly")
                 if len(new) != 1 or any(row not in updated for row in state["ledger_rows"]) or len(updated) != len(state["ledger_rows"]) + 1:
                     raise ValueError("unexpected concurrent registration; preserve canonical result")
                 after_generation = int(ledger("settings", "get", "generation"))
@@ -1120,30 +1141,53 @@ def prepare_weekly(args, source_root, command=None):
                                "decision": "HELD", "reason": "criterion delivery/readiness not reviewed"})
         payload = dict(stable, planning_base=base, planning_branch=branch, accounting=accounting,
                        initial_backfill=args.initial_backfill, overlap_hours=args.overlap_hours)
-        old = json.loads((root / relative).read_text()) if (root / relative).is_file() else None
-        old_stable = {key: value for key, value in old.items() if key != "checkpoint_cut"} if old else None
-        if old_stable == payload and not dirty_paths():
-            state["complete_commit"] = git(["rev-parse", "HEAD"], root)
-            state["checkpoint_cut"] = old["checkpoint_cut"]
-            if resuming_partial:
+        try:
+            with canonical.WriterLock(str(root)) as writer:
+                if Path(writer.journal_path).exists():
+                    raise ValueError("canonical writer journal appeared before commit; preserve state")
+                if (git(["branch", "--show-current"], root) != branch
+                        or git(["rev-parse", "HEAD"], root) != preparation_head):
+                    raise ValueError("preparation branch/HEAD changed before commit; preserve state")
+                if target_head(root) != base or rows() != state["ledger_rows"] or int(ledger("settings", "get", "generation")) != state["generation"]:
+                    raise ValueError("target/ledger drift before commit; preserve partial state")
+                old = json.loads((root / relative).read_text()) if (root / relative).is_file() else None
+                old_stable = {key: value for key, value in old.items() if key != "checkpoint_cut"} if old else None
+                if old_stable == payload and not dirty_paths():
+                    state["complete_commit"] = git(["rev-parse", "HEAD"], root)
+                    state["checkpoint_cut"] = old["checkpoint_cut"]
+                    if resuming_partial:
+                        durable(receipt_path, state)
+                    return dict(old, changed=False, planning_commit=state["complete_commit"])
+                if target_head(root) != base or rows() != state["ledger_rows"] or int(ledger("settings", "get", "generation")) != state["generation"]:
+                    raise ValueError("target/ledger drift before commit; preserve partial state")
+                if any((root / item["doc_path"]).is_symlink() or digest(root / item["doc_path"]) != item["doc_sha256"] for item in accounting):
+                    raise ValueError("owner capture changed before commit; preserve edits")
+                payload["checkpoint_cut"] = state["checkpoint_cut"]
                 durable(receipt_path, state)
-            return dict(old, changed=False, planning_commit=state["complete_commit"])
-        if target_head(root) != base or rows() != state["ledger_rows"] or int(ledger("settings", "get", "generation")) != state["generation"]:
-            raise ValueError("target/ledger drift before commit; preserve partial state")
-        if any((root / item["doc_path"]).is_symlink() or digest(root / item["doc_path"]) != item["doc_sha256"] for item in accounting):
-            raise ValueError("owner capture changed before commit; preserve edits")
-        payload["checkpoint_cut"] = state["checkpoint_cut"]
-        durable(receipt_path, state)
-        durable(root / relative, payload)
-        allowed = set(state["paths"]) | {"releases.db", "releases.sql", relative}
-        if dirty_paths() - allowed:
-            raise ValueError("unrelated changes before commit; preserve state")
-        git(["add", "--", relative, "releases.db", "releases.sql", *sorted(state["paths"])], root)
-        git(["commit", "-m", f"weekly: accumulate {repository} intake for {date}"], root)
-        state["complete_commit"] = git(["rev-parse", "HEAD"], root)
-        durable(receipt_path, state)  # checkpoint becomes complete only after commit
-        return dict(payload, changed=True, planning_commit=state["complete_commit"])
-
+                durable(root / relative, payload)
+                allowed = set(state["paths"]) | {"releases.db", "releases.sql", relative}
+                if dirty_paths() - allowed:
+                    raise ValueError("unrelated changes before commit; preserve state")
+                owned = {relative, "releases.db", "releases.sql", *[item["doc_path"] for item in accounting]}
+                expected_objects = {path: git(["hash-object", "--", path], root) for path in owned}
+                git(["add", "--", relative, "releases.db", "releases.sql", *sorted(state["paths"])], root)
+                if any(git(["rev-parse", ":" + path], root) != value for path, value in expected_objects.items()):
+                    raise ValueError("staged canonical accounting differs; preserve partial state")
+                git(["commit", "-m", f"weekly: accumulate {repository} intake for {date}"], root)
+                completed = git(["rev-parse", "HEAD"], root)
+                if (git(["branch", "--show-current"], root) != branch
+                        or git(["rev-parse", "HEAD^"], root) != preparation_head
+                        or rows() != state["ledger_rows"]
+                        or int(ledger("settings", "get", "generation")) != state["generation"]
+                        or any(git(["rev-parse", "HEAD:" + path], root) != value
+                               or git(["hash-object", "--", path], root) != value
+                               for path, value in expected_objects.items())):
+                    raise ValueError("committed accounting/branch drift; preserve commit without complete checkpoint")
+                state["complete_commit"] = completed
+                durable(receipt_path, state)  # checkpoint becomes complete only after commit
+                return dict(payload, changed=True, planning_commit=state["complete_commit"])
+        except SystemExit as error:
+            raise ValueError("canonical writer refused commit boundary; preserve partial state") from error
 
 def main():
     parser = argparse.ArgumentParser(description="Planner Core Engine")

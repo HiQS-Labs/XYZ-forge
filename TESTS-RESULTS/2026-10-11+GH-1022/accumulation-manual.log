@@ -19,7 +19,7 @@ malformed-receipt-held-17 PASS
 malformed-observation-held PASS
 symlink-capture-held PASS
 CONCURRENT_OBSERVED concurrent ledger change; preserve owner state
-CONCURRENT_STATE True [2] [{'global_id': 'rmi-01M4P10GWRAMAE7F57G42B9Q9X', 'gh_number': 1, 'rating_ovr': 321}] rmi-01M4P10GWRAMAE7F57G42B9Q9X
+CONCURRENT_STATE True [2] [{'global_id': 'rmi-01M4P1H2VWHW3WEMECRHDJ1846', 'gh_number': 1, 'rating_ovr': 321}] rmi-01M4P1H2VWHW3WEMECRHDJ1846
 concurrent-owner-rating-change-held-preserved PASS
 concurrent-change-no-complete-checkpoint PASS
 incomplete-failure-held PASS
@@ -36,4 +36,4 @@ post-commit-result-loss-held PASS
 post-commit-result-loss-incomplete-receipt PASS
 post-commit-retry-no-second-commit PASS
 post-commit-retry-completes-receipt PASS
-RESULT 36 manual controls passed; fixtures: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-xrqg_hal
+RESULT 36 manual controls passed; fixtures: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-dlqk0dpk

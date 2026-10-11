@@ -79,3 +79,16 @@ planner-rank-before-controls.json. No CI cases or permanent test harness added.
 Phase 4 final implementation QA and classified existing suites are still pending.
 Remote branch resume/publication, dependency/active-run handling, canonical selection,
 freeze/approval and fresh fire/phase/resume/landing receipts remain required active work.
+
+Phase 4 final QA r1 found two blockers; accumulation-blocker-results.json/log
+retain actual canonical CLI fixture red failures and candidate passes. Titles
+containing parsed rating tokens now hold before registration. Final commit boundary
+coordinates with canonical WriterLock, checks branch/HEAD/target/generation and
+staged/committed/live objects before completing the checkpoint. All36 controls
+still pass on updated hashes. Local canonical lock/audit sidecars are additional
+explicit effects. The no-change guard removal red control fails the receipt assertion.
+Provenance binds accumulation/manual/red and ledger145 baseline/candidate evidence.
+First classified gate was NOT green: plan path wording error plus global connector
+disabling defeated existing fixture connectors; neither was masked or skipped.
+Corrected gate and final source QA remain pending. First QA driver had a containment
+failure from producer evidence refresh during review; findings retained, no approval.

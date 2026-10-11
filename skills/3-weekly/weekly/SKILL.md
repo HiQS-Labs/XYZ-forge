@@ -117,3 +117,9 @@ and recorded manual controls in disposable full clones. This implementation enab
 no scheduler, deployed-skill installation, live Marathon/Jog, merge or deployment.
 Recheck exact weekly names/aliases before any separately authorized deployment;
 preserve weekly-planner/daily-planner routing.
+
+New-issue titles containing canonical rating tokens hold before registration;
+GitHub title text cannot assign owner ratings. Final accounting/staging/commit
+holds the existing RELEASES writer lock and validates branch/HEAD and committed
+object bytes. Lock acquisition writes the canonical local lock/audit sidecars.
+Unknown or concurrent owner state is preserved and never completes a checkpoint.
