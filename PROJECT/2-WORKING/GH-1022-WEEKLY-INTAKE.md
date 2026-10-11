@@ -224,3 +224,7 @@ Remaining umbrella acceptance is required and active, not silently removed by th
 foundation draft. Continue feasible authorized work after intermediate reports.
 No authority to merge, deploy, schedule, fire real work, add tests or extra agents.
 CommandCode is not used; #1023 is outside this task's validation and implementation.
+
+## Final approved staged artifact
+
+Final Codex round 3 Approved at ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978; attestation and red controls retained. Existing gh369 14/14 and classified docs/skill gate exit 0, zero errors, 430 warnings on evidence revision aeabcdeb. Issue sync unavailable and existing governance/Marathon warnings explicitly retained; no full runtime-suite claim. Final publication/hosted checks next. Remaining umbrella W6–W11 stays active.

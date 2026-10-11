@@ -55,3 +55,5 @@ variants fail on pre-fix bytes, then return UNKNOWN/exit 2 on candidate. Origina
 20 checks pass with refreshed hashes. No tests/cases/gates added.
 
 Final independent QA round 3 Approved, attested implementation ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978. Reviewer reproduced five invalid PR metadata red controls and valid/null/absent review behavior; source hashes match. Subsequent changes here record evidence only.
+
+Final classified docs/skill gate on aeabcdeb026cfd5f70fbded531623e261f4cf521, disposable full clone: exit 0, zero errors and 430 warnings (unavailable issue-state reads and existing governance/Marathon-QA findings). LLM readiness skipped by the existing gate. This is not a full runtime-suite or issue-state verification claim. Final gh369: 14/14; AST parses pass; no tracked clone mutations; primary clean at a58378289863548968ea907cbbddfd2b8d6f4f28. Push hook will recheck the evidence-only final revision.
