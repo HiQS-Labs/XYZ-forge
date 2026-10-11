@@ -53,3 +53,5 @@ item text types consumed by those existing helpers. Legacy policy is unchanged;
 valid/null review values remain held. Seven manual variants pass; five invalid
 variants fail on pre-fix bytes, then return UNKNOWN/exit 2 on candidate. Original
 20 checks pass with refreshed hashes. No tests/cases/gates added.
+
+Final independent QA round 3 Approved, attested implementation ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978. Reviewer reproduced five invalid PR metadata red controls and valid/null/absent review behavior; source hashes match. Subsequent changes here record evidence only.
