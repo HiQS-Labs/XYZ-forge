@@ -260,3 +260,5 @@ Primary checkout remains clean at a58378289863548968ea907cbbddfd2b8d6f4f28.
 Changed-path audit has no test/registry/gate additions or modifications.
 No new final qualifying gate or review ran;closed R5 is preserved and new review
 authority remains pending. Corrective source/evidence retained locally,unpublished.
+
+Additional actual-source concurrent manifest-cut control returns baseline-empty-manifest/rc3 and preservesNULL baseline. OwnGID canonical progress raw_text updated to the held corrective state;all other returned owner fields preserved,check clean0failures9warnings. Task-local DB/dump/receipt writes only,connectorsdisabled. Source bytes remain41f225bd;no review/gate/push.
