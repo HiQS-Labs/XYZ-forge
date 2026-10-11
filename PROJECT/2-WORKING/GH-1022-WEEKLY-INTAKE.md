@@ -10,7 +10,7 @@ doc_type: feature
 effort: 4
 complexity: 4
 risk: 3
-phases: 3
+phases: 4
 goal: Reuse shared discovery for a held weekly proposal without importing unattended execution policy.
 ---
 
@@ -18,13 +18,14 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 
 | What was just completed | What's next |
 |---|---|
-| Independent Codex plan QA Approved; shared extraction and held preview implemented. | Final existing/manual verification, independent QA and draft publication. |
+| Foundation draft #1024 published at d7ef2bc9; exact-head hosted smoke passed. | Phase 4 accumulation plan QA/implementation; umbrella safeguards remain active. |
 
 ## Table of contents
 
 - [Phase 1 — Discovery and compatibility](#phase-1--discovery-and-compatibility)
 - [Phase 2 — Shared extraction and held preview](#phase-2--shared-extraction-and-held-preview)
 - [Phase 3 — Verification and draft](#phase-3--verification-and-draft)
+- [Phase 4 — Canonical branch accumulation](#phase-4--canonical-branch-accumulation-active-design)
 - [Remaining acceptance](#remaining-acceptance)
 
 ## Bet and scope
@@ -240,7 +241,11 @@ Ground truth: releases_app roadmap list --json omits the rating columns, while t
 canonical planner already reads/ranks DB ratings. Therefore weekly must not invent
 another scoring engine or parse display text. Extend that existing JSON reader with
 RATING_COLUMNS and a canonical rank field derived exactly as its human reader; reuse
-the authoritative Marathon planner for selection. Existing rows are never re-rated,
+the authoritative Marathon planner after a separately reviewed rank-contract correction.
+Current _marathon_plan.py ignores rating_ovr (witnessed 320 override → 210 sum);
+selection remains HELD until W8 fixes that canonical-owner gap. This accumulation
+phase exposes truthful rank through the existing reader but does not repair or
+substitute planner selection. Existing rows are never re-rated,
 re-promoted or marked complete based on GitHub state; preserve all GIDs/status/ovr.
 New rows stay provisional/unrated until independently assessed. Canonical capture
 renderer is utils/hq/hq-lib.sh::hq_render_capture; no new capture template.
@@ -257,6 +262,12 @@ Implementation design, pending independent plan QA:
    nonblocking planning lock in this full clone. Preserve primary/source checkouts;
    changes occur only in the explicitly supplied isolated preparation clone.
 3. Create/resume auto-yyyy-mm-dd from the exact refreshed canonical target SHA.
+   Existing branch base differing from refreshed target holds: report both SHAs,
+   retain branch/checkpoint and require explicit reconciliation; no automatic rebase
+   or merge-rebuild. Use PROJECT/4-MISC/weekly/<planning-date>/intake.json for committed
+   accounting and the clone Git-dir weekly-<planning-date>.json for local recovery.
+   Checkpoint cut is run-start UTC with caller-supplied inclusive overlap; unchanged
+   runs retain the old cut and commit.
    Preserve every prior complete member, explicit carryover/dependency and current
    relevant observation. Initial open-backfill must paginate all open issues;
    no partial failure advances a durable checkpoint. Cross-repository/ambiguous
@@ -292,3 +303,7 @@ only the already authorized Codex relay harness; no extra advisor agents.
 Open policy inputs are explicit invocation requirements, not guessed permanent policy.
 Remaining W8–W11 executable construction, required-CI/dependency readiness, immutable
 freeze/exact approval and shared fire/phase/resume/landing protocol stays required.
+
+### Phase 4 plan round 1 dispositions
+
+Should implemented in design: authoritative planner currently ignores overrides; expose canonical reader rank and hold selection until separately reviewed W8 owner correction. No weekly scorer. Nit implemented: target advance on resume holds preserving branch/checkpoint, paths and run-start/overlap cut explicit; frontmatter/TOC/status reflect active phase. The observed rank probe is source-grounded; no actual override-free run was recorded in that reviewer turn. Add such a manual control during W8 verification. No source behavior claimed or changed by this disposition.

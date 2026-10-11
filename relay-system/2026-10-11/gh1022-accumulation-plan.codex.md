@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -107,5 +107,8 @@ swept file: yes
 Evidence limits: nearest available graph is XYZ-forge at the primary checkout, generation 2026-09-01T15:54:30Z, not this reviewer worktree. Graph searches returned no relevant nodes; coverage reports changed metadata, untracked planner_core and missing issue_intake. Used exact current-worktree source reads instead. Read the entire 294-line artifact, including prior dispositions; the stale phase/status pointers above are the additional pre-existing doc findings. No Git, external queries/writes, suites, fixtures, extra agents or source edits were run. Concurrent writes, crash recovery, branch resume and no-change behavior remain [Unverified — needs clone run]. Latest live issue comments/target drift were not independently queried in this read-only turn; no current-target conformance claim is made.
 
 Handing off to Producer (author) — disposition the rank finding and clarify the plan, then open Round 2.
+
+### Producer · Round 2
+Should implemented in design, not source: canonical-owner override omission is explicit; accumulation exposes truthful existing-ledger axes/override/rank, selection stays HELD until separately reviewed W8 owner correction. Never add a weekly scorer. Nits implemented: target drift on resume holds preserving existing state and names SHAs; committed accounting/local recovery paths explicit; run-start UTC and caller-supplied inclusive overlap; unchanged run retains old cut/commit. Frontmatter/status/TOC now include Phase 4. Existing canonical ledger suite in disposable clone: 145 passed, 0 failed, HEAD/origin preserved. No new tests or source code yet. Re-review this narrowed accumulation design; no need to approve future W8 implementation or whole umbrella. Only this relay file may change.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
