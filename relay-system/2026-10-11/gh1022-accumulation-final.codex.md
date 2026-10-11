@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -194,5 +194,20 @@ Handing off to Producer (author) — disposition the measured rating/repoint own
 
 ### Producer · Post-extension disposition (no new review round)
 Round4 roadmap-rate/repoint Blocker reproduced with actual canonical second-process repoint in temporary independent fixtures: rate succeeds while restoring old INBOX text over WORKING doc_path. Narrow repair snapshots the selected full row and compares it under existing perform_write transaction before UPDATE; named roadmap-rate-stale refusal preserves the newer owner row. Quiet rate and deliberate force rerating/override clearing retain ordinary semantics. Six real controls (old/candidate quiet,repoint,force) pass the expected red/refusal/quiet conditions; all canonical fixture checks clean. No second writer protocol,new CI case or policy weakening. Existing exact-source gate pending. Cap stays4/4 Escalated; no new reviewer dispatch,attestation,reset or replacement. W7–W11 remain active and publication stays foundation-only. Further independent review requires explicit operator cap decision.
+
+### Producer · Round 5 — explicit one-round extension and scoped severity disposition
+Authority: parent supplied the user’s exact authorization: “Yes do one more but unless it’s critical or high, file an issue and then commit, push to a PR”. This authorizes exactly ONE further independent review of THIS SAME accumulation artifact, Round5/5; all prior four FAIL rounds and cap escalations remain preserved. It does not authorize another loop under a new name, new CI tests/cases, merge/deploy/install/schedule/live Marathon/Jog, or repo-wide policy changes.
+
+Frozen ready target0be364a24a504f6796dc2dcfda1cfea1a0a6dab7 verified clean;all4 source hashes equal a0b484b5adaca6f959d30ebe6694d3d8d3905cfe. Remote development remainsf1225359e1f677ef029117598625d1e5b4488b50 and draft1024 remainsd7ef2bc973c18970dc458a403a2115209e06c672. This handoff commit changes only this relay,not source/evidence.
+
+Round4 rating/repoint blocker Implemented: both cmd_roadmap_rate (:3722,:3759–3764) and cmd_roadmap_repoint (:3795,:3815–3820) snapshot the full selected row and refuse a named stale write inside existing perform_write/BEGIN IMMEDIATE before replacing raw_text. Real canonical second-process controls show both directions of old owner text loss and candidate owner-preserving refusal. Quiet/force rating and quiet repoint succeed. Same-class producer diagnosis covers ten canonical writer/transaction paths, detailed in writer-diagnosis-final.json. Partial-field marker/move preserve unrelated owner fields;add uniqueness/rollback retains one GID;accepted-start/reconcile-state existing fullrow guards pass real local controls with native reads stubbed. Existing release-update guard preserved. General all-CRUD race-freedom not claimed;legacy sync skips releases-mode. No second writer framework or new CI test.
+
+Verification: exact-source a0b existing classified gate28/28 incl24 release suites/Python21,gh36914/14,ledgercheck0failures9warnings,inventory unchanged,AST4/diff clean.36 accumulation+6 rating/repoint+10 same-class+4 protected-writer controls pass,source hashes match. Final evidence804f72cd docs exit0,noerrors48existingwarnings,LLMreadinessskipped;0be adds only log/provenance. Actual fixture DB/dump/lock/audit/receipts and fixture Git commits were local writes;connectors disabled,noGHwrites/dispatch. Not full promotion. Source/evidence remain frozen during review.
+
+REVIEW SEVERITY REQUIREMENT: retain original Blocker/Should/Nit grading and truthful VERDICT/Basis, but add an explicit Severity: Critical|High|Medium|Low|Informational and impact rationale to EVERY actionable finding. Determine severity from actual failure consequences and affected scope. Owner data loss, concurrency integrity corruption or unauthorized side effects must not be downgraded merely to enable publication. A grade is not an automatic severity mapping: classify explicitly. If impact cannot be established, say severity unclear and identify missing evidence;producer must obtain explicit mapping before any publication. State whether any unresolved Critical/High finding remains. Re-read whole touched files under the original whole-file rule;scope/unfinished umbrella requirements are unchanged.
+
+The user’s disposition changes only this stage’s publication decision: Critical/High findings block. Concrete findings below High are filed as deduplicated GitHub issues (or linked canonical existing issues), with evidence/impact/acceptance and1022/1024 linkage, before normal gated draft publication. Do not fabricate PASS/Approved if the original rubric still gives FAIL for nonblocking findings;report both actual verdict and severity outcome. No self-attestation or gate weakening is authorized. Reviewer makes no GitHub writes;producer files authorized follow-ups after review. Only relay transcript may change;no external/Git writes,suites,executable fixtures,source edits or extra agents;harmless in-memory probes permitted.
+
+Remaining W7–W11 remote lifecycle/global active work/dependencies,authoritative artifacts/readiness/override,immutable freeze/exact approval,and shared HEAD/plan-bound fire/phase/resume/landing safeguards stay required and unimplemented. Every output remains HELD/no dispatch. This is staged accumulation review,not umbrella completion or operational/landing approval. Handing off to Reviewer (codex) — take the one final authorized Round5, classify real severity honestly,preserve all prior history,and stop at this cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
