@@ -228,3 +228,67 @@ CommandCode is not used; #1023 is outside this task's validation and implementat
 ## Final approved staged artifact
 
 Final Codex round 3 Approved at ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978; attestation and red controls retained. Existing gh369 14/14 and classified docs/skill gate exit 0, zero errors, 430 warnings on evidence revision aeabcdeb. Issue sync unavailable and existing governance/Marathon warnings explicitly retained; no full runtime-suite claim. Final publication/hosted checks next. Remaining umbrella W6–W11 stays active.
+
+## Phase 4 — Canonical branch accumulation (active design)
+
+Goal: make every relevant observation durable on an explicit local auto-yyyy-mm-dd
+planning branch, using the existing canonical writers and preserving owner state.
+This phase is required continuation of #1022; the published discovery draft is not
+completion. Dispatch remains unavailable throughout this phase.
+
+Ground truth: releases_app roadmap list --json omits the rating columns, while the
+canonical planner already reads/ranks DB ratings. Therefore weekly must not invent
+another scoring engine or parse display text. Extend that existing JSON reader with
+RATING_COLUMNS and a canonical rank field derived exactly as its human reader; reuse
+the authoritative Marathon planner for selection. Existing rows are never re-rated,
+re-promoted or marked complete based on GitHub state; preserve all GIDs/status/ovr.
+New rows stay provisional/unrated until independently assessed. Canonical capture
+renderer is utils/hq/hq-lib.sh::hq_render_capture; no new capture template.
+
+Implementation design, pending independent plan QA:
+
+1. Keep writes in an opt-in weekly-prepare policy path in existing planner_core.
+   Shared issue_intake retains read/normalization mechanics. Require explicit
+   planning date, repository, target ref, since bound and initial backfill choice;
+   no timezone, budget, thresholds, dispatch or scheduler defaults. Weekly preparation
+   is local only; no automatic push. All output remains HELD.
+2. Refuse linked worktrees/bare repos, dirty unrelated state, mismatched origin and
+   unresolved canonical writer journal. Use existing Git-dir resolution and a single
+   nonblocking planning lock in this full clone. Preserve primary/source checkouts;
+   changes occur only in the explicitly supplied isolated preparation clone.
+3. Create/resume auto-yyyy-mm-dd from the exact refreshed canonical target SHA.
+   Preserve every prior complete member, explicit carryover/dependency and current
+   relevant observation. Initial open-backfill must paginate all open issues;
+   no partial failure advances a durable checkpoint. Cross-repository/ambiguous
+   dependencies hold rather than silently disappear. Unknown acceptance stays held.
+4. Inspect canonical ledger through sanctioned reader APIs; reject duplicate or
+   foreign identity conflicts. For missing captures call hq_render_capture with
+   argument-array subprocess invocation (no interpolated shell code), then roadmap
+   add via releases_app CLI with XYZ_WORK_CONNECTORS=0. Preserve existing captures
+   byte-for-byte and existing rows untouched. Updated issue bodies remain durable
+   observation evidence, not destructive replacements of owner-authored docs.
+5. Check ledger generation/target/branch before and after each sanctioned write and
+   before committing. Canonical writer lock/journal owns DB crash recovery; weekly
+   keeps a scoped partial-progress receipt so retry can reconcile successful additions
+   without duplicates. Concurrent/unknown owner edits hold instead of blanket reset,
+   DB replacement, forced rating, or unsupported automatic merge-rebuild.
+6. Commit only durable canonical captures/DB/dump and the complete weekly observation
+   accounting. Stable content excludes a fresh observedAt from no-change comparison;
+   unchanged input produces no commit. Advance high-water/checkpoint only after all
+   observations have canonical accounting and the commit succeeds. Preserve failure
+   evidence and checkpoint; failed inputs never become complete or dispatchable.
+7. Read-only dry preview enumerates intended writes; applying in manual verification
+   writes local fixture branch/captures/DB/dump/checkpoints and those effects must be
+   disclosed. No actual user's planning branch or live connector writes during
+   verification. No executable weekly artifact, freeze, approval or fire is inferred.
+
+Verification: existing releases/ledger/capture suites where applicable in disposable
+full clone; isolated recorded manual controls for repeated/no-change runs, new+updated+
+reopened+closed membership, preserved GID/rating/ovr/owner doc, incomplete discovery,
+failed write/commit and recovery, lock contention and concurrent generation changes.
+No individual CI test/case is proposed or added. Independent plan and final QA use
+only the already authorized Codex relay harness; no extra advisor agents.
+
+Open policy inputs are explicit invocation requirements, not guessed permanent policy.
+Remaining W8–W11 executable construction, required-CI/dependency readiness, immutable
+freeze/exact approval and shared fire/phase/resume/landing protocol stays required.
