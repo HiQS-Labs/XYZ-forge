@@ -151,4 +151,12 @@ Evidence limits: Verify-tier discovery used the nearest indexed primary XYZ-forg
 
 Relay closed (Approved), no further turn needed. Producer (author) continues the separately verified implementation with selection and dispatch held.  [Unverified — no citation]
 
+
+### Attestation · relay-drive — 2026-10-11T16:54:35Z
+task: GH1022-ACCUMULATION-PLAN-R2
+reviewer: codex
+status: Approved
+reviewed-head: 8de581dbf5c34e6346651737cd6625becb7f2ab6
+added-range: 12944+4671
+added-sha256: f47a8040bd9cb9b7413faba420e33cc39bab5d206679dd468544675cbb3029a1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
