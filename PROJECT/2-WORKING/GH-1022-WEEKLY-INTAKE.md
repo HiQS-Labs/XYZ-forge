@@ -10,7 +10,7 @@ doc_type: feature
 effort: 4
 complexity: 4
 risk: 3
-phases: 5
+phases: 6
 goal: Reuse shared discovery for a held weekly proposal without importing unattended execution policy.
 ---
 
@@ -27,6 +27,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 - [Phase 3 — Verification and draft](#phase-3--verification-and-draft)
 - [Phase 4 — Canonical branch accumulation](#phase-4--canonical-branch-accumulation-active-design)
 - [Phase 5 — Canonical planner override reader](#phase-5--canonical-planner-override-reader-w8-prerequisite)
+- [Phase 6 — Qualified canonical Jog observations](#phase-6--qualified-canonical-jog-observations-w7-prerequisite)
 - [Remaining acceptance](#remaining-acceptance)
 
 ## Bet and scope
@@ -568,3 +569,85 @@ fields preserved,connectorsdisabled;canonical checkclean. Proof/progress commit
 is code-identical and takes normal docs/ledger gate. Phase5 prerequisite done;
 W8 overallnotdone andW7–W11remainactive. Next independent Jog reader identity
 scope is grounded in actualbare-GH joinfailure;observerPR1017 remainsowned.
+
+## Phase 6 — Qualified canonical Jog observations (W7 prerequisite)
+
+Observed failure: current cmd_jog_list LEFT JOIN uses only gh_number. A legal
+in-memory fixture with one Repo A queued GID and Repo A/Repo B roadmap issue777
+returns that queue GID twice, including Repo B title/doc/issue URL. Snapshot
+consumers cannot use that as qualified global-work evidence. Fix in the owner;
+no weekly-side shadow queue reader/scorer. Source app hash09384ac9,real AST query
+probe retained outside CI. Existing connect already refuses a missing DB;
+that protection is delivered,not a new implementation claim.
+
+Small coherent change: reuse one canonical row reader from legacy list and a
+new explicit `jog list --inventory-json` read-only view. Canonical supported
+schemas join roadmap on BOTH repo_id/gh_number. Default human/--json outputs
+retain fields/filter/order and missing-table[] behavior;the qualified join fixes
+the legal canonical collision. Unsupported legacy schema stays advisory in
+legacy viewer and is UNKNOWN in inventory,not silently migrated/guessed.
+
+Inventory is opt-in metadata over the existing queue,not a second backlog:
+initialized/read_complete,generation,qualified repository + stable repo/queue
+GIDs,all old row fields,held reasons and explicit no-dispatch. `--all` remains
+explicit and required by weekly consumers so terminal/carryover rows are read.
+Missing DB/table/required identity fields,invalid generation,live canonical
+journal or generation change => nonzero UNKNOWN;never success-empty for
+unsupported state. Use existing schema/settings/journal helpers. An optional
+read-only connection mode extends existing connect without changing writer or
+legacy default behavior. No initialize,migrate,recover,lease,signal,write,fetch,
+push or connector action;SQLite read-only URI and existing must-exist guard.
+Read completeness describes this declared root's snapshot,not integrity review,
+criterion delivery,global quiescence or execution/landing approval.
+
+Before/after manual controls: Repo A/B same issue identity,unregistered queue
+row,default output/filter/order compatibility,real initialized empty vs missing
+schema/missing DB(no creation),canonical generation/journal drift,read-only
+mutation refusal and unchanged artifact bytes. Existing jog-queue/gh280 and
+covering release checks run in disposable full clone;no new CI test/case/flag
+registry/gate. Whole owner-file QA under a new normal cap3 and mapped finalgate.
+
+Easy rollback: revert owner read API/query only;no data/schema migration.
+Existing canonical queue/write/lease ownership unchanged. No default policy or
+parallel orchestration. This unlocks a subsequent shared-intake adapter using
+qualified observations;it does not itself select/register execution work.
+
+Remaining W7 global aggregation/authority roots,branch lifecycle/rollover/PR
+routing andlater W8–W11 stay active. Marathon observer file is actively owned by
+PR1017;do not modify or duplicate its path repair. Future reconciliation must
+consume canonical observations and hold unavailable/conflicting state,not infer
+completion from queue/PR/ledger markers or cancel live work. No live execution,
+scheduling,installation,merge/deploy or newtests authorized.
+
+Concrete intended shape: default `jog list`/`--json` retain their field set,filter
+andordering,with repository-qualified join on supported canonical schema. One
+shared owner query feeds opt-in inventory metadata (including repository slug,
+repo/queue/ledger GIDs where available). New inventory must use SQLite readonly
+mode;extend existing connect with optional readonly argument,default unchanged.
+Existing must-exist guard remains. Snapshot uses existing schema/settings/journal
+helpers to distinguish initialized empty from unsupported/missing state and
+refuse live journal or generation drift without recovery. It must not borrow
+get_generation's invalid-value→0 fallback as proof of a stable generation.
+No unsupported legacy schema migration or invented identity. Missing optional
+ledger row stays observable as unregistered work rather than dropping the queue.
+Metadata explicitly describes one caller-declared root;not global integrity,
+quiescence,criterion delivery or execution approval. Shared intake/caller policy
+integration is the next step,not falsely claimed by this owner-read seam.
+
+Ordered acceptance: (1) qualify supported join andpreserve legacy output;RepoA/B
+same issue777 yields one RepoA queueGID/metadata. (2) opt-in readonly inventory
+exposes stable ownership andinitialized/read_complete/generation/held reasons;
+invalid schema/generation,journal/drift yields nonzeroUNKNOWN,no create/migrate/
+recover/signal/connector operations. (3) safe in-memory andcanonically-created
+fixture controls for ownership,unregistered rows,emptyvsunknown,defaultparity,
+readonly mutation refusal,missingDB andunchanged bytes;existingjog-queue/gh280
+checks in disposable fullclone,no newCItests/cases. (4) own normalplan/finalQA
+cap3,mapped finalgate andverified draftupdate,not old accumulation review reset.
+
+No need for a second queue,DBwriter,backgroundwatcher ornew checker/gate. Easy
+rollback: owner query/view/optional connection mode only;no data/schema migration.
+W7 broader aggregation/authority roots,branch lifecycle/rollover andPRrouting,
+W8 construction/readiness,W9–W11 approval/sharedsafety remainrequiredactive.
+#1017 activelyowns observer source;do not duplicate its pathrepair orpretend a
+complete Marathon inventory hasbeen obtained. No live Marathon/Jog,merge/deploy,
+installation,scheduling ornewtest authorized. No production code forPhase6 yet.
