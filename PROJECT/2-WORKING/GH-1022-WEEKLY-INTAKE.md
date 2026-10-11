@@ -2,7 +2,7 @@
 gh_issue: 1022
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1022
 title: "Weekly issue intake — staged shared discovery"
-status: Proposed
+status: In progress
 created: 2026-10-11
 updated: 2026-10-11
 owner: Codex
@@ -18,7 +18,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 
 | What was just completed | What's next |
 |---|---|
-| Current issue/comments, open PRs, ledger and discovery/planner owners inspected. | Independent plan QA before implementation. |
+| Independent Codex plan QA Approved; shared extraction and held preview implemented. | Final existing/manual verification, independent QA and draft publication. |
 
 ## Table of contents
 
@@ -49,11 +49,13 @@ Required safety-policy hardening is recorded separately below, never hidden in e
 
 ## Phase 1 — Discovery and compatibility
 
+Goal: characterize interfaces and distinguish mechanical extraction from policy.
+
 Base: f1225359e1f677ef029117598625d1e5b4488b50, origin/development.
 2026-10-11 issue updated 15:41:28 UTC; all three comments read. Four open PRs:
 #1019 cleanup history, #1017 observer path, #954 recipe profiles, #930 held canary.
 No intake ownership or equivalent shared module found. prior_art_recon --query intake
-reports PASS; roadmap has no #1022 row. Source implementation is isolated on
+reports PASS; pre-registration reconnaissance found no #1022 row; canonical CLI later registered rmi-01M4NVEZG8FAM7BBS950TRBWH9 and rated 70/65/50/25. Source implementation is isolated on
 feat/gh1022-weekly-intake, never an auto-* planning branch.
 
 scan-issues.sh: numeric MAX/MIN positional values, 10/0 defaults; MAX > MIN;
@@ -88,12 +90,14 @@ Appeal neutral; broad safety work is costly. Recurrence reconnaissance: weekly-r
 issues updated in last 14 days (Sep 28–Oct 11) include #1022, #889, #897, #942;
 preceding Sep 14–27 includes #775/#841/#606. These are distinct proposals/skill defects,
 not measured recurring duplicate-dispatch incidents. Incident trend unknown; no
-severity downgrade inferred. No existing rating or owner override for #1022.
+severity downgrade inferred. Before registration, no existing rating or owner override for #1022; current CLI row preserves the registered rating.
 
 QA gate: findings written here; baseline manual successful/failed scan and doc/root
 collision probes retained; existing gh369 suite is the covering doc resolver check.
 
 ## Phase 2 — Shared extraction and held preview
+
+Goal: share read mechanics with a held, effect-free preview.
 
 1. Characterize legacy adapters before edits in disposable fixtures, save source hashes,
    commands/results and nonempty provenance under TESTS-RESULTS/2026-10-11+GH-1022.
@@ -121,6 +125,8 @@ pagination/PR filtering/reopen/update/membership/malformed/offline/conflicting d
 pure-helper import and preview no-write evidence. No new permanent tests.
 
 ## Phase 3 — Verification and draft
+
+Goal: retain falsifiable evidence and publish a truthful staged draft.
 
 Run existing gh369 suite in disposable full clone, bracket Git identity. Record manual
 negative controls and source hashes/provenance; inspect forbidden test additions.
@@ -155,3 +161,26 @@ closed status, linked commits, outline PASS, or a generated report for delivery 
 Moratorium: no proposed CI tests in executable write-set; existing gh369 and manual
 verification suffice for this staged discovery. All future test proposals need individual
 operator approval, including cases inside existing suites. No approval inferred from QA.
+
+
+## Plan review dispositions and current implementation
+
+2026-10-11 independent Codex plan QA Approved, attested to 22806e5f.
+Nit 1 implemented: historical absent-row/rating observations now distinguish registration.
+Nit 2 partially implemented: phase goals and source inventory are present; the single
+ordered implementation list is retained. Use /debug-mantra for any execution-time
+failure diagnosis; no speculative acceptance expansion or new CI tests.
+
+- [x] Phase 1 current sources and installed-name inventory characterized.
+- [x] Phase 2 shared read module, compatible adapters, explicit held core mode and skill.
+- [ ] Phase 3 final independent QA and exact final gate/publication.
+
+Sources: scan-issues.sh and find-doc.sh pre-extraction at base f1225359; planner_core.py
+run_cmd/ensure_temp_dir/get_open_prs/detect_merge_sequence/pivot_daily/ingest_weekly_intake;
+utils/py/marathon_plan.py delegates to _marathon_plan.py. These names bind the recon
+claims after line numbers move. No executable-plan owners or default modes changed.
+
+First manual probe correctly refused the inherited XYZ_HARNESS pointing to the old
+primary harness lacking issue_intake.py. This is an explicit update dependency, not a
+fallback to duplicated code. Candidate probes select the task harness; installed
+adapters must select a current harness before running. No deployment performed.

@@ -22,6 +22,31 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 
+def load_issue_intake():
+    """Locate harness code without importing planner main or creating scratch."""
+    import importlib.util
+    here = Path(__file__).resolve()
+    candidates = []
+    override = os.environ.get("XYZ_HARNESS") or os.environ.get("XYZ_REPO_ROOT")
+    if override:
+        candidates.append(Path(override) / "skills/1-hourly/relay-xyz/find-harness.sh")
+    candidates.append(here.parents[3] / "1-hourly/relay-xyz/find-harness.sh")
+    for directory in (".codex/skills", ".agents/skills", ".claude/skills", ".gemini/config/skills",
+                      ".gemini/antigravity/skills", ".gemini/antigravity-cli/skills", ".zcode/skills"):
+        candidates.append(Path.home() / directory / "relay-xyz/find-harness.sh")
+    locator = next((path for path in candidates if path.is_file()), None)
+    if locator is None:
+        raise RuntimeError("harness locator not found; set XYZ_HARNESS")
+    harness = Path(run_cmd(["bash", str(locator), "--root", "--quiet"]))
+    module_file = harness / "utils/py/issue_intake.py"
+    if not module_file.is_file():
+        raise RuntimeError("selected harness lacks issue_intake.py; update harness")
+    spec = importlib.util.spec_from_file_location("issue_intake", module_file)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def run_cmd(cmd: list[str] | str, cwd: Path | None = None, check: bool = True) -> str:
     """Run a shell command safely and return stripped stdout."""
     res = subprocess.run(
@@ -771,18 +796,39 @@ def main():
     parser = argparse.ArgumentParser(description="Planner Core Engine")
     parser.add_argument("--repo-root", default=".", help="Path to repository root")
     parser.add_argument("--gh-repo", default=None, help="Target GitHub repo (e.g. Org/Name)")
-    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake"], default="weekly")
+    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "weekly-intake"], default="weekly")
     parser.add_argument("--plan-file", help="Path to existing weekly plan JSON/MD")
     parser.add_argument("--decisions-issue", help="Canonical GH issue number for provisional decisions tracker")
     parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int, help="Team weekly issue number for focus assignments")
     parser.add_argument("--hours", type=int, default=36, help="Lookback interval in hours for daily mode")
     parser.add_argument("--fallback", action="store_true", help="Force scratch markdown fallback intake")
 
+    parser.add_argument("--since", help="UTC/offset ISO timestamp for held weekly intake")
+    parser.add_argument("--intake-file", help="Previous complete weekly-intake JSON; carry every member")
+
     args = parser.parse_args()
     repo_root = Path(args.repo_root).resolve()
     if not repo_root.is_dir():
         print(f"[ERROR] repo root not found: {repo_root}", file=sys.stderr)
         sys.exit(2)
+    if args.mode == "weekly-intake":
+        # Opt-in discovery, before legacy scratch creation. Installed copies use
+        # the same shipped harness locator as 10days; no sibling-skill dependency.
+        try:
+            intake_module = load_issue_intake()
+            if not args.gh_repo or not args.since:
+                raise ValueError("weekly-intake requires --gh-repo OWNER/REPO and --since with timezone")
+            previous = json.loads(Path(args.intake_file).read_text()) if args.intake_file else None
+            result = intake_module.discover_weekly(args.gh_repo, args.since, repo_root, previous)
+            result["advisory_merge_sequence"] = detect_merge_sequence(result["prs"])
+            result["advisory_audit"] = audit_adversarial({"prs": result["prs"]}, prs=result["prs"])
+            result["holds"].append("Outline sequencing/audit are advisory; CI NONE, dependencies and completion heuristics are not readiness proof.")
+            print(json.dumps(result, indent=2))
+            return
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as error:
+            print(json.dumps({"complete": False, "status": "UNKNOWN", "dispatch_allowed": False,
+                              "error": str(error)}))
+            sys.exit(2)
     temp_dir = ensure_temp_dir(repo_root)
 
     prs = get_open_prs(repo_root, args.gh_repo)

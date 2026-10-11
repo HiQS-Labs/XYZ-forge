@@ -547,3 +547,21 @@ what actually happened).
 
 Both exist so the mechanical parts of this sweep run byte-identical every time instead
 of being re-typed as ad hoc `gh`/`ls`/`grep` one-liners each invocation.
+
+
+## Shared discovery compatibility (GH-1022)
+
+The bundled scan/find-doc entry points now execute harness-owned
+`utils/py/issue_intake.py` through `intake_adapter.py` and the existing harness
+locator. Python3 is required; copied installs must select a current harness via
+`XYZ_HARNESS` or the installed locator. A missing/old harness fails explicitly.
+The scan still uses 10/0 defaults, open-updated selection and the 200-item ceiling;
+find-doc retains root precedence, bucket order and presence-only contract signals.
+No 10days rating/selection/dispatch policy changes in this mechanical extraction.
+
+`/weekly` consumes shared read mechanics, never this auto-firing workflow.
+Its staged preview is always held. The stronger criterion-level prior-art protocol
+in #1022 is not yet implemented at the shared fire/resume/landing boundary; legacy
+completed-bucket and linked-commit shortcuts must not be borrowed by weekly or
+reported as satisfying that protocol. Their replacement is a separate safety-policy
+change requiring review; this extraction is not approval to dispatch weekly work.
