@@ -31,3 +31,10 @@ Independent plan ownership QA round 2 Approved at 5905ff2d: the import-only libr
 beside the existing planner matches the explicit skill-subsystem and entry-point policy;
 no gate/baseline change or policy exception needed. Earlier location rejection is
 retained in the plan. Exact CLI/copy/parity probe source hashes reflect the new library.
+
+
+Live read-only preview with the final helper location observed two updated issues and
+all four open PRs, with changedFiles matching collected file counts. It returned
+complete transport, HELD and dispatch false. Narrow state/count evidence is retained
+in live-preview.json; raw response was intentionally redirected to task-local scratch.
+This did not write a ledger/checkpoint or run a planner dry-run with hidden mutations.
