@@ -233,4 +233,12 @@ Verification limit: no Git commands, validate.sh, test/*.sh, pytest, executable 
 
 Relay closed (Approved), no further review turn needed. Returning completion to author for the authorized normal gated draft-PR workflow; preserve this scoped approval and all unfinished umbrella requirements.
 
+
+### Attestation · relay-drive — 2026-10-11T21:52:45Z
+task: GH1022-ACCUMULATION-FINAL-R5
+reviewer: codex
+status: Approved
+reviewed-head: e016d29a4f79ec5d8014fafc5476e8224c3b4a4e
+added-range: 53169+7707
+added-sha256: f9e235d4faa540e8cd108ceb1b8c034866053288b71e2c023ba3427d00ba0de7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
