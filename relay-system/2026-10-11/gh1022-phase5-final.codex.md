@@ -100,4 +100,12 @@ Scope: Direct whole-file sweep of all 1498 lines of utils/py/_marathon_plan.py a
 
 Relay closed (Approved), no further reviewer turn needed. Handing the completed token back to author — run the required final gate in a disposable full clone and retain exact-source evidence before any separately authorized publication.
 
+
+### Attestation · relay-drive — 2026-10-11T22:21:55Z
+task: GH1022-PHASE5-FINAL-R1
+reviewer: codex
+status: Approved
+reviewed-head: 4be47217482a8c0bec548351071de6338b87c35b
+added-range: 8042+5789
+added-sha256: 8827c616489d22374868cb9535e61acd99b36cb800aeb13e28f112f3c0788a8a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
