@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -152,5 +152,16 @@ Handing off to Producer (author) — escalation at the exhausted 3/3 cap: dispos
 
 ### Producer · Post-cap disposition (no new review round)
 Verified the late release-update finding with real canonical SQLite/second-process CLI writes in isolated independent fixtures. Old d0bc source overwrites new-owner codename while changing requested target; candidate returns named release-update-stale exit3 under existing writer transaction, preserving new-owner codename and old target; quiet old/candidate both succeed. Four fixture checks clean. Five-line source repair at cmd_update compares current locked row to validated snapshot before any UPDATE, preserving existing writer protocol and unspecified owner fields. No new tests or safety-policy weakening. d0bc classified gate completed28/28 before this repair; late-fix existing verification pending. Keep STATUS Escalated and ROUND3/3; no reviewer dispatch/cap reset/Approved attestation. Operator cap decision is needed after concrete verification. Mandatory broader W7–W11 work remains ACTIVE.
+
+### Producer · Round 4 — explicit one-round operator extension
+Authority: parent delegated the user’s exact approval “Yes one more review” after asking for one additional independent review of the corrected accumulation phase. Original three FAIL rounds and exhausted-cap disposition remain intact. This extends the SAME artifact to one final fourth round; it is not a reset or replacement. No further round, new CI case, merging, deployment, live Marathon/Jog, scheduling or skill installation is approved.
+
+Ready frozen target a0f7b5138708676c43494cd03620115c40c8f678 was verified clean with all four late-fix-source-hashes.json entries matching; canonical remote development remains f1225359e1f677ef029117598625d1e5b4488b50 and draft #1024 remains d7ef2bc973c18970dc458a403a2115209e06c672. This handoff commit changes only the relay transcript; reviewed source/evidence are identical to that frozen target.
+
+Round3 release lost-update Blocker: Implemented at utils/py/releases_app.py:2459–2464. Inside the existing locked transaction, compare the current full release row to the validated pre-lock snapshot and refuse release-update-stale before UPDATE on mismatch. Actual canonical second-process fixtures retain old-source red and candidate owner-preserving refusal; quiet update succeeds. No second protocol or new test. Review full touched files and all prior fixes, including whole6908-line releases module; assess the narrow stale refusal against owner preservation and ordinary compatibility.
+
+Verification: source bc934d5288e8d859f5be72fbd6a418f157e49ff8 has existing classified gate28/28 incl24 release suites, Python21/21, docs/static/clone identity; final gh36914/14, ledger check clean, inventory ratchet clean, AST4 and whitespace pass,36 accumulation controls pass. Versioned late-fix-* artifacts and provenance bind this exact source; handoff source hashes match. Producer-run actual fixtures wrote only isolated local canonical DB/dump/lock/audit/receipts; connectors disabled, no GitHub writes/dispatch. Full promotion not run. Review evidence attribution independently; do not call producer execution independently reproduced.
+
+Only relay transcript may change in this review. No external/Git writes, suites, executable fixtures, source edits or extra agents; harmless in-memory probes allowed. Do not run mutation-heavy suites in reviewer linked checkout. Task tree will remain frozen throughout review. This is bounded held accumulation approval only; W7–W11 dependency/readiness/authoritative override/immutable freeze/exact approval/active-run/fire-phase-resume/landing safeguards remain required and unimplemented. Handing off to Reviewer (codex) — take the single authorized final round, preserve all prior history and escalate again if not Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
