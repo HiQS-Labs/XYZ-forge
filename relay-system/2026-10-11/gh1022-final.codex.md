@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -71,5 +71,57 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The held architecture and source-bound evidence support this staged milestone, but malformed state values escape the promised UNKNOWN JSON contract. Resolve the focused finding below before approval; final clone gate/publication remain separate.
+swept file: yes
+
+- [Should] Validate state type before uppercasing in `skills/3-weekly/weekly-planner/scripts/issue_intake.py:166`. A null or numeric state raises AttributeError, which the weekly-intake error boundary at `planner_core.py:828–831` does not handle. Consumers receive no JSON observation rather than UNKNOWN. This remains fail-closed for dispatch, so it is not graded a data-loss blocker. Concrete fix: reject non-string states with ValueError before calling upper(); retain the existing valid-state allowlist. Record a manual negative control and valid-state control; no new CI case/suite/gate.
+  Observed input: paginated issues response `[[{"number":1,"html_url":"https://github.com/example/repo/issues/1","title":"one","updated_at":"2026-10-11T00:00:00Z","state":null}]]`; same result for `state: 7`; PR response `[[]]`.
+  Affected scope: issue/PR/prior-member records whose state is explicitly null or another non-string value at the shared normalization boundary.
+  Falsifier: identical input with `state: "open"` must still return complete HELD with dispatch false; null/numeric inputs must produce UNKNOWN, complete false, dispatch false and exit 2 without partial success or writes. If that already happens on the reviewed bytes, this finding is unnecessary.
+  Probe command (in-memory injected reads; no external commands, fixture executables or source edits):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PROBE'
+  import contextlib,io,json,sys,types
+  from pathlib import Path
+  def load(name):
+      p=Path("skills/3-weekly/weekly-planner/scripts")/(name+".py")
+      m=types.ModuleType(name); m.__file__=str(p.resolve())
+      exec(compile(p.read_text(),str(p),"exec"),m.__dict__); return m
+  m=load("issue_intake"); c=load("planner_core"); original=m.discover_weekly
+  for state in ("open",None,7):
+      row=dict(number=1,html_url="https://github.com/example/repo/issues/1",title="one",updated_at="2026-10-11T00:00:00Z",state=state)
+      def runner(argv,root): return json.dumps([[row]]) if "/issues?" in argv[-1] else "[[]]"
+      m.discover_weekly=lambda *a: original(*a,runner=runner)
+      c.load_issue_intake=lambda:m
+      sys.argv=["core","--mode","weekly-intake","--gh-repo","example/repo","--since","2026-10-01T00:00:00Z"]
+      out=io.StringIO()
+      try:
+          with contextlib.redirect_stdout(out): c.main()
+          result=json.loads(out.getvalue()); outcome=f'{result["status"]}, dispatch={result["dispatch_allowed"]}'
+      except BaseException as e: outcome=f"{type(e).__name__}: {e}; stdout={out.getvalue()!r}"
+      print(f"state={state!r}: {outcome}")
+  PROBE
+  ```
+  Probe process exit 0 (exceptions intentionally captured for measurement); decisive output:
+  ```text
+  state='open': HELD, dispatch=False
+  state=None: AttributeError: 'NoneType' object has no attribute 'upper'; stdout=''
+  state=7: AttributeError: 'int' object has no attribute 'upper'; stdout=''
+  ```
+- [Pass] Preview routes before scratch/capped legacy reads (`planner_core.py:814–834`), reuses existing advisory functions (`:823–825`), and returns unconditional HELD/dispatch false (`issue_intake.py:258–262`). The new weekly skill explicitly holds ledger/freeze/dispatch and warns that advisory heuristics are not readiness (`skills/3-weekly/weekly/SKILL.md:15–19`, `:43–46`). Preserve this scope.
+- [Pass] Transport uses paginated/slurped REST reads (`issue_intake.py:194–202`); prior members absent from the update window are refreshed (`:231–239`); PR-file count, shape and duplicate checks protect the file collection (`:248–254`). Qualified URL validation and conflicting normalized duplicates are explicit (`:145–191`). These are source findings, not an attestation of all malformed metadata.
+- [Pass] Legacy extraction retains scan defaults/projection/200 ceiling (`issue_intake.py:61–89`), root precedence/jq handling (`:92–135`), first-match bucket traversal (`:41–58`), and a clear current-harness requirement (`intake_adapter.py:29–42`; `10days/SKILL.md`, “Python3 is required; copied installs must select a current harness”). Keep these interfaces. Retained gh369 logs report “14 pass / 0 fail”; manual-results records five baseline scan comparisons and copied-skill execution. These are recorded producer results, not reviewer suite runs.
+- [Pass] The three `manual-results.json` source_hashes match current library, adapter and core bytes. Reviewer command: `PYTHONDONTWRITEBYTECODE=1 python3 -c 'import hashlib,json,pathlib; d=json.loads(pathlib.Path("TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json").read_text()); print([(p,hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==h) for p,h in d["source_hashes"].items()])'` (equivalent hash loop executed within the first in-memory probe); process exit 0; all three comparisons True. Evidence contains offline/missing-file/conflicting/foreign controls and a removed-file red control; it does not cover the state-type failure above. Refresh hashes/evidence after the fix.
+- [Pass] Existing outline policy weaknesses were swept: CI NONE readiness and unmet dependencies (`planner_core.py:199–241`), missing draft handling in legacy PR discovery (`:127–131`), and closure-number union (`:495–509`). They remain explicitly segregated in the plan's Remaining acceptance and preview warning (`:825`); this held milestone does not approve execution. No additional pre-existing defect requiring a change for this milestone found in the named source sweep.
+
+Evidence limits: Verify-tier graph attempted via list_projects/index_status/search_graph and coverage. Nearest canonical XYZ-forge index is at a foreign root, generation 2026-09-01T15:54:30Z; search returned zero/no further page, coverage missing/not-tracked. Used full direct reads of the named library, adapter, shell entry points, planner core, weekly/10days skills, complete plan and existing gh369 suite, plus retained evidence and plan receipts. No source/artifact edits, Git commands, tests, pytest, executable fixtures, dispatch or external writes ran. [Unverified — needs clone run] Final classified gate remains pending, as stated in SUMMARY.md and the plan. Full committed diff inventory, absence of unrelated test/gate additions, and latest target/base redundancy comparison are not independently attested: no seeded diff/base comparison was available and this turn forbids Git. Have the outer harness check those before publication; do not infer them from this source sweep. Only the relay file was changed.
+
+Handing off to Producer author — address the state-type finding, refresh manual evidence, and return for Round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
