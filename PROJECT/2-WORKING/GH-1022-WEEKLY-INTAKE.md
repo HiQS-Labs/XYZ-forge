@@ -376,3 +376,11 @@ Review3/3 remains Escalated; no Approved attestation,cap reset or replacement
 review. Operator decision is required for further review after late-fix existing
 verification. d0bc final gate passed28/28 before this five-line repair. W7–W11
 remain required active work, not implicitly waived by staged publication.
+
+Late repair verification complete on bc934d52: existing classified gate28/28
+(incl24 release suites andPython21),gh36914/14,canonicalcheck clean,inventory
+unchanged,AST/diff checks pass. Refreshed36 accumulation controls pass. No new
+CI cases or proposed test approvals. Parent requested one additional existing
+Codex review;operator approval pending,cap3/3 preserved. Review target will be
+the evidence-only commit carrying these results;source hashes equalbc934d52.
+No held-source push and no whole#1022 acceptance claim.
