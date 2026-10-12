@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-10-11 — start-task: prior-art scan finds merged PRs and issues (GH-1025)
+
+`/start-task` checked only open PRs in the current repo, so a fix merged yesterday, a closed issue,
+or work in a sibling repo went unseen. In cloud sessions `gh pr list` (GraphQL) is refused, so the
+scan returned nothing at all.
+
+- `prior_art_recon.py` now also reports PRs merged in the last `--since-days` (default 30) and
+  issues in any state. Search matches titles and bodies, so `Fixes #N` links count. `--repo
+  OWNER/NAME` scans sibling repos. When `gh ... list` fails, it falls back to repo-scoped REST.
+- Merged PRs and issues closed as completed are listed as `existing_fix_candidates`. `start-task`
+  Step 1 now stops and confirms with the user when one appears.
+
+The existing suite `gh777-start-task-prior-art` gained stub-gh checks for both paths (red at
+base: `--repo` unrecognised). There is no new suite or script. Revert the `fix(GH-1025)` commit to
+roll back; the JSON only gains keys, so existing consumers are unaffected.
+
+## 2026-10-10 — Releases ledger: bare repo slugs match a differently cased GitHub name (GH-1016)
+
+A ledger whose `repos.slug` is the checkout folder name (`aegis-sleuth-slack-bot`) never matched its
+GitHub repo (`HiQS-Labs/AEGIS-Sleuth-Slackbot`). Every roadmap row resolved `identity_valid False`, and
+`wave_reconcile` silently skipped every ledger move.
+
+- `resolve_roadmap_identity` now also accepts a bare slug that equals the origin name after casefolding
+  and removing `-`/`_`, but only when the ledger has exactly one `repos` row. Validity still requires
+  the row's issue URL to name origin exactly, so foreign rows stay invalid.
+- `releases init` and `xyz-releases-onboard.sh` now record the github.com owner/name through the
+  existing `_github_slug_from_origin`. The folder basename is the fallback when there is no GitHub
+  origin. The onboard script's own regex, which rejected dotted repo names, is gone.
+
+Final QA also found that `roadmap repoint --gid` on an unnumbered row crashed after its write by
+formatting a NULL `gh_number`. That row is now named by its GID; numbered rows still print `GH-N`.
+
+No stored slug is rewritten, so receipts and digests are untouched. There is no new verb, schema
+change or suite. Existing ledgers recover on re-vendor plus a re-run of the reconcile. Revert the
+`fix(GH-1016)` commits to roll back; owner/name slugs written meanwhile stay valid under the old
+resolver. Evidence, a manual check with red control (10/17 at `9a923f3c`, 17/17 fixed), is in
+`TESTS-RESULTS/2026-10-10+GH-1016/`.
+
+## 2026-10-10 — Observer receipt attribution through logical target paths (GH-1015)
+
+The opt-in marathon observer now keeps the driver’s absolute logical target-path spelling, so
+qualified receipts through symlink paths are recognized while exact attribution stays strict.
+Missed-check JSON uses the existing sorted-key convention, and the GH-609 registry comment reflects
+workload-scoped online migrations. Manual physical/absolute-symlink/relative-symlink checks pass,
+eight foreign or unqualified cases stay unverified, and restoring either old behavior makes the
+acceptance check fail. Existing GH-609 and package checks pass 33/33 and 3/3 in a disposable clone
+with intact Git identity. Evidence: `TESTS-RESULTS/2026-10-10+GH-1015/`.
+
 ## 2026-10-09 — Per-project cleanup merge-history policy (GH-1010)
 
 Maintainers can opt in with tracked `.merge-cleanup.json` to require merge commits in cleanup;

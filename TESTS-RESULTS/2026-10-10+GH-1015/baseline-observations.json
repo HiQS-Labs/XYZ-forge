@@ -1,0 +1,20 @@
+[
+  {
+    "case": "physical-control",
+    "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/glm-review-1012-2026-10-10/own-repro/physical",
+    "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/glm-review-1012-2026-10-10/own-repro/physical",
+    "verified_phases": 1
+  },
+  {
+    "case": "logical-repro",
+    "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/glm-review-1012-2026-10-10/own-repro/physical",
+    "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/glm-review-1012-2026-10-10/own-repro/logical",
+    "verified_phases": 0
+  },
+  {
+    "case": "foreign-execution-control",
+    "context_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/glm-review-1012-2026-10-10/own-repro/physical",
+    "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/glm-review-1012-2026-10-10/own-repro/physical",
+    "verified_phases": 0
+  }
+]
