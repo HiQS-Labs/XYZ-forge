@@ -1,0 +1,31 @@
+{
+  "recovery_attempts": [
+    {
+      "attempt": 1,
+      "accepted": false,
+      "failure": "UnicodeDecodeError while decoding binary-containing wrong-mainline diff; evidence logger only; original fixture clones preserved"
+    },
+    {
+      "attempt": 2,
+      "accepted": true,
+      "correction": "compare full tree IDs and raw mode/blob diff; fresh fixture clones; no product edits",
+      "receipt": "recovery-rehearsal.json"
+    }
+  ],
+  "test_policy": "no new CI suites/cases/parameters/registrations; one-off manual records only",
+  "canonical_issue_plan_updated": false,
+  "distribution_attempts": [
+    {
+      "attempt": 1,
+      "accepted": false,
+      "failure": "existing init guard refused symlink ancestor /tmp; initial fixtures preserved; no deployment ran"
+    },
+    {
+      "attempt": 2,
+      "accepted": true,
+      "correction": "fresh fixture root under resolved /private/tmp; no product changes",
+      "receipt": "distribution-falsifiers.json",
+      "result": "both predicted defects reproduced"
+    }
+  ]
+}

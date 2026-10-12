@@ -1,0 +1,47 @@
+{
+  "head": {
+    "rc": 0,
+    "value": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+    "stderr": ""
+  },
+  "origin": {
+    "rc": 0,
+    "value": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "stderr": ""
+  },
+  "bare": {
+    "rc": 0,
+    "value": "false",
+    "stderr": ""
+  },
+  "name": {
+    "rc": 1,
+    "value": "",
+    "stderr": ""
+  },
+  "email": {
+    "rc": 1,
+    "value": "",
+    "stderr": ""
+  },
+  "status": {
+    "rc": 0,
+    "value": "",
+    "stderr": ""
+  },
+  "common": {
+    "rc": 0,
+    "value": ".git",
+    "stderr": ""
+  },
+  "gitdir": {
+    "rc": 0,
+    "value": "/private/tmp/xyz1012-regression-20261012-2008/.git",
+    "stderr": ""
+  },
+  "local_config": {
+    "rc": 0,
+    "value": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.docs/gh1012-release-review-20261012.remote=origin\nbranch.docs/gh1012-release-review-20261012.merge=refs/heads/docs/gh1012-release-review-20261012",
+    "stderr": ""
+  }
+}

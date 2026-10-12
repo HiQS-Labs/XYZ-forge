@@ -1,0 +1,2 @@
+GOT: rc=4 reason=cap-stalled extensions=0 extension_records=0 stub_turns=2
+EXPECT: rc=4 reason=cap-stalled extensions=0 extension_records=0 stub_turns=2
