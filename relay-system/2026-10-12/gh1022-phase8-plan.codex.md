@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,10 +72,28 @@ ROUND: 1 / 3
 VERDICT: PARKED
 Basis: New canonical API plan is ready for independent QA; no source implementation.
 
-Exact source35391f04; published census437/d09 verified full409+Python21 GREEN826s and smokeSUCCESS. Expanded recon ran four read-only lanes, field/backup/caller/cost cutoffs recorded. Read Phase8 current plan: ordinary clear/reload is NOT chosen. Actual in-memory current schema rejected op_receipts DELETE with append-only trigger and retained row (phase8-trigger-grounding.json). Existing perform_migration is also in-place, not a staged swap. New mode must factor/reuse _rebuild's staged canonical constructor and extend the existing owner journal/recovery for publication; no duplicate importer/orchestration/scorer/source of truth or trigger weakening. Existing fixed backups remain untouched. Current-schema/nullable/default/generation/labels/receipt-source/roundtrip guards must precede mutation; nonempty device-local cursors hold. Supplied target commit is not fresh remote/criterion/human evidence.
+Exact source35391f04; published census437/d09 verified full409+Python21 GREEN826s and smokeSUCCESS. Expanded recon ran four read-only lanes, field/backup/caller/cost cutoffs recorded. Read Phase8 current plan: ordinary clear/reload is NOT chosen. Actual in-memory current schema rejected op_receipts DELETE with append-only trigger and retained row (phase8-trigger-grounding.json). Existing perform_migration is also in-place, not a staged swap. New mode must factor/reuse _rebuild's staged canonical constructor and extend the existing owner journal/recovery for publication; no duplicate importer/orchestration/scorer/source of truth or trigger weakening. Existing fixed backups remain untouched. Current-schema/nullable/default/generation/labels/receipt-source/roundtrip guards must precede mutation; nonempty device-local cursors hold. Supplied target commit is not fresh remote/criterion/human evidence.  [Unverified — no citation]
 
 Read whole plan and relevant existing owner/fixture sources before assessing. Missing/malformed/conflicting/deleted/unknown source shapes hold, no guessing. Confirm existing reanchor semantics, source-chain integrity, old/new generation and recovery identity; proposed dry localGit+memory preview has no root file/audit/DB/init/recovery/fetch/index/commit/push effects. Explicit apply is local owner data/journal/adopted-view effect and remains dispatchfalse. No new migration/event/test/gate/runner or self-authored approval authority.
 
 No source edits, extra agents, executable suites/fixtures, network/connectors/paid/live actions or Git writes except this relay; harmless in-memory source probes permitted. Any behavior-change finding needs concrete input/scope/falsifier. Preserve R6FAIL6/6/Medium1028 and closed Phase6/7, no cap reset/relabel. This plan is genuinely new owner functionality, not a title-grammar corrective review. W7coordination/rollover and W8–11 remainactive. No individual CI test/case/param/registry approved. Handing off to Reviewer(codex)—take new-scope plan Round1.
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the bounded Phase8 plan, not implementation, publication or full GH1022 delivery. The plan puts conservative source admission and exact roundtrip ahead of journaled staged publication, keeps canonical ownership and legacy defaults, and leaves unsupported state held. No blocking defect observed in the reviewed plan.
+swept file: yes
+
+- [Pass] Whole 1,088-line intake document and complete expanded recon map read, including earlier dispositions. Closed R6/Medium1028 and Phase6/7 remain explicit; Phase8 grants no readiness, consent or dispatch (`PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:980`, `:1000`, `:1054`, `:1078`). No additional pre-existing actionable plan defect found beyond the documentation nits below. Source inspection was bounded to the relevant canonical serialization, writer, parser/loader, check/reanchor, rebuild and recovery seams and covering fixture sources; this is not an exhaustive audit of every unrelated CLI verb.
+- [Pass] The chosen owner seam matches source: `utils/py/releases_app.py:6537` validates before load, `:6541` restores into the staged DB, `:6588` appends the scoped merge receipt, while `:6603`–`:6608` overwrite the fixed backup and swap before dump publication. Phase8 explicitly replaces only the new mode's publication boundary with journaled recovery, retains legacy defaults and rejects clear/reload (`PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:983`, `:1028`, `:1083`). Reusing the builder does not establish reuse of legacy publication as safe.
+- [Pass] Source validity and preservation have falsifiable admission criteria rather than trusting the merge-damage validator: nonempty inputs, current identical schema, exact roundtrip, held deletions/conflicts, labels and generation floor (`PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:993`, `:1011`, `:1035`). This matters because `load_dump` defaults timestamps (`utils/py/releases_app.py:6307`), omits connector cursors (`:6485`) and serialization substitutes NULL for lease_pid (`:1271`). The cursor/live-lease cutoff is conservative and honest.
+- [Pass] Pure preview is correctly separated from legacy check's effectful lock/recovery entry (`utils/py/releases_app.py:5921`, `:5946`; plan `:1019`). New publication requires exact before/after recovery identity and durable directory boundaries (`:1039`); existing recovery currently branches on generation alone (`utils/py/releases_app.py:1952`), so this approval does not credit unchanged recovery as sufficient for a swapped database. Existing crash/reanchor fixtures are suitable starting evidence, not proof of the new mode (`test/gh32-releases-app.sh:264`, `test/gh360-scoped-receipt-chain-rebuild.sh:156`).
+- [Nit] Phase8 still says the 437 gate retry “is underway” (`PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:978`), contradicting the current status table at `:21`. Cheapest fix: label that sentence as historical or align it with the already recorded completion; do not infer a fresh gate from this review.
+- [Nit] The Phase8 blast paragraph (`PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:1002`) lacks its own explicit reversibility grade. Cheapest fix: label the shared writer/recovery extension Costly, distinguish code revert from interrupted-operation recovery, and state that an already durable merge is completed/reconciled rather than blindly replayed or restored over later owner writes. The existing preservation/recovery criteria already require that distinction; this is documentation clarity, not a new mechanism.
+- [Unverified — needs clone run] New API determinism, no-write preview, concurrent-writer preservation, no-op idempotence and crash recovery remain unimplemented acceptance criteria. No validate.sh, test suite, pytest, executable fixture, Git command or live/provider action ran in this turn. No new test/case/parameter/registry or review-budget extension is approved.
+
+Evidence method: graph project listing fully paginated; no index for this relay checkout. Nearest XYZ-forge graph generation 2026-09-01T15:54:30Z is a different root; coverage reports owner metadata changed and plan paths missing. Direct current source reads therefore supersede graph snippets. No runtime probe results claimed.
+
+Relay closed (Approved), no further turn needed. Author may address the nits and proceed through the separately required implementation/final-QA/gate process within existing authority.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
