@@ -1436,3 +1436,30 @@ on this blocked completion boundary; W9 freeze and W10 shared fire/phase/resume/
 landing remain unimplemented. A separate pending human policy question concerns
 fresh mandatory receipts for new legacy plain-brief builder execution while
 preserving reconciliation that dispatches nothing. No answer/approval is inferred.
+
+### S4 bounded remediation — genuine new operator authorization
+
+The earlier purported extension was withdrawn after its quoted approval was shown
+to belong to completed R6. One uncommitted 42-addition/1-deletion core edit and
+syntax-only AST check occurred before withdrawal; no reviewer, fixture suite,
+commit or push occurred on that mistaken authority. The edit was preserved.
+
+A later direct human answer to the pending S4-specific question explicitly said
+“Authorize S4 repair and one review.” This is one bounded corrective extension
+for this group, not a reset of the prior FAIL/Escalated3/3 history or authority for
+additional loops, CI tests or unrelated execution. Exactly one review remains
+available after actual repair and verification; genuine prior failures stay intact.
+
+Repair reuses native Git reads and the existing preparation private receipt. Bind
+parent, full intended tree and owned objects before commit; verify that immutable
+tree contains only allowed changes and exact owned blobs. Require exact sole parent,
+full result tree, clean state and owned live/committed objects before completion.
+Partial recovery rejects unknown results before progressing; the no-change shortcut
+requires the same bound result before adopting a lost commit. A pre-commit failure
+may retry only the identical intended result. No new store/schema/framework/gate,
+canonical writer, test case or default selection policy is introduced.
+
+Actual source-qualified completion/refusal/partial/lost-result/no-change controls
+and applicable existing checks are pending before the one corrective review.
+Original R3/S4 red evidence, R6FAIL/#1028 and unapproved #1027 remain retained.
+W8–W11 remain incomplete; no new human fire/merge/deploy/schedule/install authority.
