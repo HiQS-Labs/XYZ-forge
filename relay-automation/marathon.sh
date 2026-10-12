@@ -238,7 +238,7 @@ def observe(path):
         for slot in slots:
             if slot != slots[-1]:
                 print("marathon-progress: " + json.dumps({"kind": "missed-check", "run_id": initial["run_id"],
-                                                        "check": slot, "count": count}), flush=True)
+                                                        "check": slot, "count": count}, sort_keys=True), flush=True)
             else:
                 emit(context, "check", check=slot, count=count)
             emitted = slot
@@ -264,7 +264,7 @@ def main():
         return
     if args.action == "init":
         context = {"run_id": uuid.uuid4().hex, "owner": args.owner, "plan": str(Path(args.plan).resolve()),
-                   "root": str(Path(args.root).resolve()), "product_root": str(Path(args.product_root).resolve()),
+                   "root": str(Path(args.root).resolve()), "product_root": os.path.abspath(args.product_root),
                    "harness_root": str(Path(args.harness_root).resolve()), "run_log": args.run_log,
                    "phases_dir": str(Path(args.phases_dir).resolve()), "heartbeat_file": args.heartbeat_file,
                    "initial_head": git_value(args.product_root, "rev-parse", "HEAD"),

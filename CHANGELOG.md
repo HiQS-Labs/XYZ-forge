@@ -75,6 +75,21 @@ criterion-level pre-fire/phase/resume and pre-landing redundancy safeguards rema
 unimplemented. Preview always holds dispatch. No new tests, schedules, installations,
 connector writes or live execution. Revert shared module/adapters/core mode together.
 Existing/manual evidence is retained under `TESTS-RESULTS/2026-10-11+GH-1022/`.
+## 2026-10-11 — start-task: prior-art scan finds merged PRs and issues (GH-1025)
+
+`/start-task` checked only open PRs in the current repo, so a fix merged yesterday, a closed issue,
+or work in a sibling repo went unseen. In cloud sessions `gh pr list` (GraphQL) is refused, so the
+scan returned nothing at all.
+
+- `prior_art_recon.py` now also reports PRs merged in the last `--since-days` (default 30) and
+  issues in any state. Search matches titles and bodies, so `Fixes #N` links count. `--repo
+  OWNER/NAME` scans sibling repos. When `gh ... list` fails, it falls back to repo-scoped REST.
+- Merged PRs and issues closed as completed are listed as `existing_fix_candidates`. `start-task`
+  Step 1 now stops and confirms with the user when one appears.
+
+The existing suite `gh777-start-task-prior-art` gained stub-gh checks for both paths (red at
+base: `--repo` unrecognised). There is no new suite or script. Revert the `fix(GH-1025)` commit to
+roll back; the JSON only gains keys, so existing consumers are unaffected.
 
 ## 2026-10-10 — Releases ledger: bare repo slugs match a differently cased GitHub name (GH-1016)
 
@@ -97,6 +112,16 @@ change or suite. Existing ledgers recover on re-vendor plus a re-run of the reco
 `fix(GH-1016)` commits to roll back; owner/name slugs written meanwhile stay valid under the old
 resolver. Evidence, a manual check with red control (10/17 at `9a923f3c`, 17/17 fixed), is in
 `TESTS-RESULTS/2026-10-10+GH-1016/`.
+
+## 2026-10-10 — Observer receipt attribution through logical target paths (GH-1015)
+
+The opt-in marathon observer now keeps the driver’s absolute logical target-path spelling, so
+qualified receipts through symlink paths are recognized while exact attribution stays strict.
+Missed-check JSON uses the existing sorted-key convention, and the GH-609 registry comment reflects
+workload-scoped online migrations. Manual physical/absolute-symlink/relative-symlink checks pass,
+eight foreign or unqualified cases stay unverified, and restoring either old behavior makes the
+acceptance check fail. Existing GH-609 and package checks pass 33/33 and 3/3 in a disposable clone
+with intact Git identity. Evidence: `TESTS-RESULTS/2026-10-10+GH-1015/`.
 
 ## 2026-10-09 — Marathon: bounded observation and repair-to-PR handoff (GH-1006)
 

@@ -141,7 +141,7 @@ TESTS=(
   "gh788-python-path-space.sh"    # GH-788 (stub launcher + quoted interpreter survive a spaced Python path; ratchet)
   "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)
   "gh777-inventory-ratchet.sh"  # GH-777 (inventory ratchet: shrink-only script/connect guards)
-  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, expand-contract migrations, containment)
+  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, workload-scoped online migrations, containment)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
