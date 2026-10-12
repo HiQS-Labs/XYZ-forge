@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | Phase8 prerequisite published with evidence d22. Phase9 plan ApprovedR1/3 at836e7813; caller implemented locally, final qualification/QA pending. W8–W11 active; R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
+| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | Phase8 prerequisite published with evidence d22. Phase9 plan ApprovedR1/3; caller implemented locally but finalQA FAIL/Escalated3/3 at0144826a. S4 actual Git/hook checkpoint admission reproduced; caller edits/publication held for operator disposition. W8–W11 remain incomplete; R6FAIL/1028 and #1027 unapproved unchanged. |
 
 ## Table of contents
 
@@ -1388,3 +1388,51 @@ was corrected without product changes; its error log is retained. Older cached
 writer execution, exhaustive interleavings, full normal-hook caller budget and
 final harness gate remain unqualified. R3 uses this same cap3/token/artifact; no
 R6/closed Phase6–8 reset. W8–W11/full1022 remain required and unimplemented.
+
+
+### Phase9 final R3 escalation — no caller approval/publication
+
+FinalR3 FAIL/Escalated3/3 at0144826a. S3 exact ordinary preservation ancestry repair
+passed independent current/mutated controls at both completion and recovery. R3
+reread the whole core but declared fresh full-scope sweep no; R2's complete sweep
+remains historical. No fresh all-owner/pre-existing-defect clearance is asserted.
+
+S4 is UNFIXED. The delegated final preparation commit still certifies selected
+objects and first parent rather than the complete intended tree/parent list.
+Actual owned fixture installed pre-commit hook added/staged README after intended
+staging: caller returned complete and private complete_commit included that unknown
+path. A separate actual native commit-tree result with an unexpected second parent
+and exact intended tree was likewise certified. Both retain predecessor HEAD; no
+production planning branch or connector was written. Logs/source hashes/provenance
+are phase9-s4-hook-red, phase9-s4-parent-red, phase9-r3-escalation.json. These are
+producer runtime grounding, not an additional review or permanent CI test.
+
+Root cause/fix boundary: the existing final preparation completion and its partial
+no-change/recovery admission must share the native intended-tree/exact-parent
+proof. Persist that bounded intended result in the existing private receipt before
+commit, verify exact result before complete checkpoint, refuse unknown history and
+retain partial evidence. The no-change/resume shortcut must not certify an unknown
+HEAD after a refused/lost result. This is a proposed bounded repair, NOT implemented
+or approved. No new store/schema/framework/gate is proposed.
+
+The authorized cap is exhausted. Start-task says exhausted caps stop that group's
+implementation; no Round4, reset, alternate-review workaround, normal qualifying
+gate or caller publication is started. Further repair/review disposition requires
+actual operator authority. Status requests add none. Existing draft1024 remains
+published d22 (Phase8 prerequisite), with smoke/CodeRabbit SUCCESS and macOS/Ubuntu
+SKIPPED. Current caller/source repairs are local/unpublished. Full1022 is incomplete.
+
+Fourteen frozen-source fixture flows and disposable existing gh418/gh69816 pass are
+retained as scoped evidence, not S4 clearance. Additional exactd22 older runtime
+loaded before transfer/initial preparation and invoked afterward refused retired
+ownership and preserved private bytes/HEAD. This does not cover an already-in-flight
+metadata cache. Whole caller time/cost and exhaustive interleavings remain unknown.
+No test/case/parameter/registry was added; #1027 stays unapproved, R6FAIL/#1028 and
+closed Phase6–8 unchanged. Primary read clean d09; no task writes there.
+
+Independent remaining W8 projection/artifact scope is recorded as an unreviewed
+reference draft, not executable production work. Its canonical preparation depends
+on this blocked completion boundary; W9 freeze and W10 shared fire/phase/resume/
+landing remain unimplemented. A separate pending human policy question concerns
+fresh mandatory receipts for new legacy plain-brief builder execution while
+preserving reconciliation that dispatches nothing. No answer/approval is inferred.
