@@ -336,4 +336,12 @@ For the second probe, compiled complete issue_intake.py with `__name__="probe"`,
 
 Relay closed (Approved), no further review turn needed. Handing completion to Producer (author) for the required disposable-clone final gate and source-qualified reporting; full W7–11 remains active.
 
+
+### Attestation · relay-drive — 2026-10-12T07:01:13Z
+task: GH1022-PHASE7-FINAL-R3
+reviewer: codex
+status: Approved
+reviewed-head: 4e7594611565ba8939ffcd1a776906f1c31a5b40
+added-range: 30767+7587
+added-sha256: 864ea7360c4560847a8f4b207c29ec58b2cd1cb379f604e9660bb67e76e7abde
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
