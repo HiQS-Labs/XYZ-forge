@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 preservation planQA ApprovedR1/3; canonical preservation sourceQA ApprovedR2/3 at8dfc8fe2, sourcee64; R1 failure/red/green evidence retained. Final existing checks and normal gated publication next. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
+| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | W7 preservation planQA ApprovedR1/3; W7 canonical reconciliation/rollover caller integration next; canonical API prerequisite is published. W8–W11 active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
 
 ## Table of contents
 
@@ -1180,3 +1180,21 @@ provenance bind e64 bytes. Canonical progress update at8c9 changed only GH1022
 raw_text/updated_at; all349 other roadmap rows and this row's GID/status/ratings/
 override/doc/first_seen remain exact. No new CI addition or broad ledger redesign.
 Final normal gate, push and exact hosted/remote verification remain pending.
+
+
+### Phase8 published checkpoint
+
+Implementation442b32196f8685f63746798519ed38af59a7a3e7 is exact remote head for
+DraftPR1024; canonical target d09b8f9dedd436be3e5f883f68deff985719fe1b unchanged
+on observed read. Normal pre-push selected existing RELEASES/docs tier2:28/28,
+including Python21/static/PDDA/clone identity, GREEN326s. This is subsystem evidence,
+not a full-registry run or promotion claim. Existing covering owner/source controls
+are recorded above. Hosted38232967663: blocking smokeSUCCESS, macOS/UbuntuSKIPPED,
+CodeRabbitSUCCESS. Draft remains MERGEABLE/CLEAN on observed read. Proof retained
+in phase8-normal-push.log/phase8-published-pr.json with provenance. No broader
+ledger/schema redesign, new CI additions, live execution, merge or deployment.
+
+W7 coordination/rollover integration and W8–W11 continue. Current canonical API
+supports the bounded current-schema roadmap/history shape; unsupported identities,
+owner conflicts, cursor/lease/driver state and unknown recovery hold. It is not
+proof of global idle, fresh remote state, criterion delivery or human consent.
