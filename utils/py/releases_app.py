@@ -4675,7 +4675,9 @@ def read_jog_inventory(root, show_all=False):
         for repo in repo_records:
             identity = resolve_roadmap_identity({"repo_id": repo["id"], "gh_number": None,
                                                  "issue_url": None}, repos, origin)
-            if (not identity["repo"] or not isinstance(repo["global_id"], str)
+            if (not identity["repo"]
+                    or not GH_ISSUE_URL_RE.fullmatch("https://github.com/%s/issues/1" % identity["repo"])
+                    or not isinstance(repo["global_id"], str)
                     or not re.fullmatch("repo-" + CROCKFORD_GLOB_CLASS + "{26}", repo["global_id"])):
                 raise ValueError("canonical repository identity/GID unavailable")
             repo["repository"] = identity["repo"]
