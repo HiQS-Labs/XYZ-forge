@@ -65,12 +65,19 @@ an actual defect demands a code change; review recon covers the pinned promotion
 
 ## Ordered execution and acceptance
 
-1. Complete ready in-scope landings using merge-cleanup prerequisites and the existing peer
-   handoff. Preserve original commit ancestry for PR1019's opt-in policy using merge strategy.
+1. Complete ready in-scope landings using the existing peer handoff and merge-cleanup readiness,
+   dependency, exact-head QA and disposable-clone ledger simulation checks. Use the ordinary
+   GitHub PR merge with `--merge --match-head-commit <head>`; verify MERGED before proceeding.
+   Wait for hosted reconciliation using the existing reconcile-only path, then fast-forward
+   primary from verified origin. Publish any required caller-owned governance writes through
+   a normal hooked push from a separate disposable full clone, never from primary; if there
+   are no writes, there is no push. Preserve the coordinator attempt records and emitter
+   semantics; emit only a merge this caller witnessed. Do not invoke its unconditional primary
+   push path, substitute another primary, bypass hooks or add an alternate driver. Preserve original commit ancestry for PR1019's opt-in policy using merge strategy.
    Verify exact published head, independent QA, gates, merge commit and reconciliation receipts.
    Keep drafts held until their actual requirements pass or the operator explicitly defers them.
    -> Acceptance: all agreed prerequisites merged/reconciled, primary clean/equal origin.
-2. Pin main base and reconciled development head, enumerate the complete range and map changed
+2. Record provisional main base and reconciled development head, enumerate the complete range and map changed
    contracts/cross-PR seams. Obtain independent plan QA and the required workhorse consult on
    promotion/preservation before consequential execution. -> Acceptance: grounded scope and
    agreed stop/rollback conditions; refresh if either remote moves.
@@ -83,13 +90,22 @@ an actual defect demands a code change; review recon covers the pinned promotion
    through existing task/repair rails and rerun affected checks/QA after candidate changes.
    -> Acceptance: no unresolved promotion blockers, graded review posted to #1012 and rendered
    in chat, independent `relay-system/` receipt bound to the candidate.
-5. Open a promotion PR from the approved development head into main. Record base/head, evidence,
+5. Freeze final base `B` and development candidate `D` after all pre-promotion evidence/QA
+   publications and reconciliation. Refresh full-range assessment if either changed. Open a
+   promotion PR from the approved development head into main. Record base/head, evidence,
    nonblocking findings and fix-forward strategy. -> Acceptance: base intentionally main,
    reviewed head matches published head, required PR checks current and review approved.
-6. Complete the authorized promotion through that PR with unchanged branch protections, then
+6. Demonstrate recovery in a disposable full clone before landing: synthesize the intended
+   two-parent promotion merge, revert with mainline 1, compare restored full tree/modes to
+   last-good main `B`, and retain successful recovery and a deliberately wrong-mainline red
+   control with provenance. Then complete the authorized promotion through the PR using
+   `--merge --match-head-commit D`, retain the development branch, recheck unchanged `B` and
+   branch protections immediately before submission, and verify the resulting main SHA `M`. Then
    watch the exact resulting main SHA's hosted macOS boundary. -> Acceptance: full sequential
    boundary SUCCESS and `MACOS-BOUNDARY: green <SHA>`; required checks green, Ubuntu drift disclosed.
-7. Record stable qualification tied to that SHA and receipts, update #1012/PRS/PDDA through
+7. Record `Stable qualified` in #1012 as the selected evidence-linked designation, bound to
+   immutable `M`, the boundary run/job and independent QA receipts. Do not invent a release
+   version/tag or transfer qualification to later metadata commits. Update #1012/PRS/PDDA through
    canonical writers and retire only verified complete owned clones with backup/Trash proof.
    -> Acceptance: outcome audit covers every required item; no stable claim on a red or stale SHA.
 
@@ -99,7 +115,10 @@ Intake edits are Easy, confined to this owned task branch. Remote development la
 recoverable through explicit revert commits with reviewed/gated evidence. Main promotion is
 Costly: existing main remains reachable, but consumers can pull the candidate. Revert/fix forward
 through an ordinary reviewed PR; never reset/force-push main or weaken branch protection.
-A red promotion boundary prevents the stable designation and release publication. No release
+This Codex session owns the recovery decision: a red boundary prevents the stable designation
+and triggers diagnosis/fix-forward or the rehearsed revert via a reviewed PR; an absent/queued
+boundary stays unqualified until observed or its bounded wait expires. A red promotion boundary
+prevents the stable designation and release publication. No release
 version, tag or package publication is selected by this plan. Refresh exact-head evidence before
 any merge; an active peer, changed PR head or unknown remote outcome prevents replay.
 
@@ -110,11 +129,23 @@ any merge; an active peer, changed PR head or unknown remote outcome prevents re
 - Current main branch protections/required checks need fresh review before promotion.
 - Full promotion-range recon, behavior probes, local qualification and final review are pending;
   historical 409/409 checks are not evidence for the current candidate.
-- Stable metadata representation is not yet selected. Whichever label/designation is used must
-  point to qualified SHA/receipts; do not imply a mere GitHub label proves stability.
+- Stable representation is the evidence-linked `Stable qualified` designation on #1012 for
+  exact `M`; GitHub labels, versions and releases are not substituted for qualification.
 
 ## PRS assessment
 
 Rated 85/55/65/50, no override: operator-requested promotion is high priority; regression exposure
 matters to adopters; a stable pin has clear value; full-range review and platform qualification
 have material effort. The queued capture is not accepted-start or completion evidence.
+
+## Workhorse consult disposition
+
+Both Codex and Agy answered the 2026-10-12 operational preflight. Both identify the primary
+unconditional push as blocking and recommend the existing disposable publication + ordinary
+GitHub PR/hosted reconciliation path. Codex also flags evidence-ordering drift, atomic head
+binding, untested recovery and undefined stable representation; the execution sequence above
+now addresses those before main landing. Agy did not discuss those additional gaps; silence
+is not disagreement or proof. Neither advisor approves held drafts or the final promotion range.
+The harness stamped Codex's response `NO FIRSTHAND VERIFICATION CITED`; this is advisory
+plan input, not runnable qualification. Original transcripts and prompt remain retained locally;
+a condensed disposition is committed separately. No new gate, test or runtime helper is added.
