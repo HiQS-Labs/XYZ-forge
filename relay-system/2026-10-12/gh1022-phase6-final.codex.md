@@ -387,4 +387,12 @@ unregistered_title: None
 
 Relay closed (Approved), no further review turn needed. Handing the completed token back to author via done; author/harness owns the file-scoped commit and the separate exact-candidate gate/Linux qualification. Preserve corrective R6 and all earlier round history; W7–W11 remain active and weekly HELD.
 
+
+### Attestation · relay-drive — 2026-10-12T04:18:14Z
+task: GH1022-PHASE6-FINAL-R1
+reviewer: codex
+status: Approved
+reviewed-head: a87ac64a9d6439cdae5baae5505779244cc983a7
+added-range: 30818+11030
+added-sha256: 2f715295741a830193a6a445863105f25687091790d0cf84a6785096f71c939e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
