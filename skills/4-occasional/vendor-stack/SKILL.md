@@ -69,6 +69,23 @@ skill's owning Forge tree. A stale override is an error, never a silent fallback
 This is idempotent: re-running re-mirrors and re-stamps `<target>/.xyz/VERSION`.
 It also gitignores `.xyz/` and writes the XYZ registry row.
 
+### Project merge-history choice
+
+Vendoring does not change a project's merge policy or GitHub settings. Preserve any existing
+root `.merge-cleanup.json`. For a new project without a choice, recommend **preserving original
+commit history**, and offer it as a maintainer decision; do not silently enable it merely because
+XYZ was installed. Existing projects keep their conventions and explicit cleanup strategy.
+
+If the maintainer chooses preservation, add `{"preserve_commit_history": true}` to the target's
+tracked `.merge-cleanup.json` (outside `.xyz/`) for review/commit. If they decline or have not
+chosen, leave the file absent. Reuse existing session authorization rather than asking again.
+Do not copy Forge's own policy into a target or modify GitHub repository settings.
+
+Verify with the installed `merge_cleanup.py --primary <target> --show-merge-policy`. The
+[cleanup policy contract](../../2-daily/merge-cleanup/SKILL.md#project-merge-policy) owns the schema,
+method restrictions and default; the deep audit uses the same report. This installer only takes
+an existing directory, so this recommendation adds no repository-creation flow.
+
 ### 3. Ask about PDDA
 
 Ask the user plainly: **"Also install PDDA doc-governance into this repo?"** —
