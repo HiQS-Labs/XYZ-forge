@@ -10,7 +10,7 @@ doc_type: feature
 effort: 4
 complexity: 4
 risk: 3
-phases: 7
+phases: 8
 goal: Implement shared weekly intake, bounded canonical planning and exact approval safeguards without enabling live execution.
 ---
 
@@ -29,6 +29,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 - [Phase 5 — Canonical planner override reader](#phase-5--canonical-planner-override-reader-w8-prerequisite)
 - [Phase 6 — Qualified canonical Jog observations](#phase-6--qualified-canonical-jog-observations-w7-prerequisite)
 - [Phase 7 — Canonical declared-work census](#phase-7--canonical-declared-work-census-next-w7-prerequisite)
+- [Phase 8 — Canonical preservation transaction](#phase-8--canonical-preservation-transaction-w7-prerequisite)
 - [Remaining acceptance](#remaining-acceptance)
 
 ## Bet and scope
@@ -970,3 +971,101 @@ no remote publication or blanket green claimed. Red and repaired results are ret
 Root cause: owned recon document omitted working-doc metadata. Fix site: that document.
 Why not upstream/downstream: the existing valid checker and protected contract remain
 unchanged. No new test/case or review round; R6/Phase6/Phase7 history is preserved.
+
+
+## Phase 8 — Canonical preservation transaction (W7 prerequisite)
+
+Status: implementation plan only. Phase7 source is Approved3/3; normal437 gate retry
+is underway after a required recon Status-table repair. No new API is implemented
+or approved. This is genuinely new W7 reconciliation scope; corrective R6's title
+grammar and closed Phase6/7 reviews are not reopened or relabeled.
+
+Grounding: [expanded four-lane Recon Map](GH-1022-WEEKLY-INTAKE/recon-integration-and-shared-boundaries.md).
+Canonical B1 verb replay remints GIDs/events. Rebuild overwrites its fixed backup
+and swaps DB before rewriting dump without an ordinary intent. Current ordinary
+perform_write already owns journal/transaction/recovery, but its local generation
+increment and old-row label maintenance need explicit preservation semantics for
+importing an already canonical merge. Reuse that writer; do not add a weekly SQL
+merger, store, runner, gate, event or schema migration. Existing callers and legacy
+check/rebuild defaults remain their current contracts.
+
+Bet: a conservative, explicit canonical merge API can preserve reviewed parent
+logical rows/history in one existing journaled write. Support current identical
+schema only; disjoint roadmap additions/updates plus append-only receipts/events
+and generation reconciliation. Unsupported local edits/deletes, conflicting GIDs,
+qualified natural identities, references, schema/columns or source validity hold.
+The target side's supported canonical rows remain exact; no direct SQL/dump edits
+outside the owner. Physical IDs and device-local cursors are not portable identity.
+No delivery, global-idle, readiness, human approval or dispatch follows this merge.
+
+Blast begins with canonical rows/receipts/events, writer/check/recovery and all
+existing CLI/readers. The plan adds one opt-in check merge preview/apply interface,
+a pure owner-side row selector and narrow existing-writer merge semantics. Runtime
+source code and root Git/input identities stay separate. This does not yet add
+weekly coordinator/adoption/rollover, proposal/freeze or a firing path. Undo local
+fixture/code changes normally; production-like owner data is never replayed during
+validation. Committed parent objects plus the ordinary intent/rollback protocol
+preserve pre-operation evidence; existing .bak files remain untouched.
+
+1. Read and characterize canonical source snapshots, including receipt-chain forks,
+   schema/nullable-field behavior, labels, generation and natural identities. Factor
+   only the existing receipt-chain mechanics needed by both check and the new source
+   admission; preserve existing diagnostics/defaults. Require nonempty canonical
+   inputs and prove full roundtrip preservation before mutation. -> Owned fixtures
+   include rated/overridden and NULL-gh rows, accepted-start labels/history, ordered
+   receipt/event tails, higher target generation and existing backup/cursor evidence;
+   malformed/schema/natural-key/conflicting/deleted sources return held UNKNOWN.
+2. Add a pure conservative three-way row selection helper to the canonical owner,
+   and opt-in `check --merge-base SHA --merge-target SHA --expected-head SHA
+   --expected-branch NAME` preview. Explicit root/full clone, exact immutable local
+   Git commits/unique merge base and source/generation/shape identities are required.
+   Preview performs local Git reads and in-memory canonical validation only; no lock
+   audit, database/cache/receipt/index/capture/recovery/fetch/commit/push. Its JSON
+   distinguishes supplied target commit from fresh remote evidence, counts preservation
+   and held reasons, and remains dispatchfalse. -> Same inputs are deterministic apart
+   from observation time, empty/missing/ambiguous/ref/branch drift never passes.
+3. Add explicit `--apply` through the existing canonical perform_write transaction.
+   Refuse existing intents/SQLite sidecars, live local leases and stale root/parent
+   bytes; require connectors0 for this local projection operation. Use canonical
+   parser/loader and a bounded supported schema; no migrations or legacy B1 replay.
+   Existing merge-rebuild receipt semantics reanchor only actual combined forks;
+   retain all parent GIDs/ratings/status/raw/first_seen/captures/history and append
+   only the operation receipt. Set the next generation above both parents, preserve
+   imported valid labels and verify exact supported roundtrip inside the transaction.
+   Guard root Git identity immediately before commit and report observed afterward
+   drift incomplete. Do not touch existing backups. Native post-durability adopted
+   view effects, if applicable, must be declared. -> Witness rollback/pre-commit and
+   post-commit/journal recovery with existing crash seams in owned fixtures; second
+   sanctioned writer/root drift holds without losing its work; quiet sources apply.
+4. Expose the new canonical API and its exact supported shape/effects in the weekly
+   and ledger documentation. No CLI output is fresh remote/criterion/human consent
+   proof. Apply returns source-bound local transaction evidence; unknown interruption
+   requires existing canonical recovery and explicit reconciliation, no blind replay.
+   -> Repeat identical desired state returns no new write/generation/receipt where
+   provably already integrated; unsupported or contradictory state preserves evidence.
+5. Run applicable existing owner/artifact/refusal/status/history/Python checks in the
+   disposable full clone and recorded actual CLI/manual controls with witnessed red
+   inputs. Inspect actual source/diff for unrelated policy/test additions. Own normal
+   new-scope plan/final QA cap3 from prior authority; keep every failed round. Run the
+   normal gate and verify exact implementation-branch remote/hosted evidence before
+   publication claims. -> No new CI test/case/param/registry, no weak assertions or
+   bypass, no real planning-branch publication, live builder/Jog/Marathon, schedule,
+   installation, merge/deploy/closure or primary/auth/secret changes in validation.
+
+Alternatives: B1 replay loses identity/history; generic dump union cannot decide
+conflicts; repeated rebuild does not provide the required crash boundary; a parallel
+weekly importer duplicates ownership. The narrow journaled canonical path is chosen.
+Strongest counterargument: a full-row restore can normalize nullable/defaulted data
+or discard device-local state. The supported-shape/roundtrip/lease/cursor refusal
+and preservation contract must resolve that before apply, or narrow/hold the case.
+
+Review questions: Is the supported merge shape honest and sufficient for real weekly
+owner edits? Can existing writer label/generation/reanchor semantics host this without
+weakening other operations? Is cursor handling declared/preserved safely? If not,
+return a concrete failing input/scope/falsifier; do not invent a generic framework.
+Root cause addressed: replay/rebuild lack exact logical preservation under the
+ordinary journaled boundary. Fix site: canonical owner, upstream of weekly callers.
+Why not a downstream wrapper: it cannot repair reminted identities or a committed
+unjournaled replacement. Red/manual evidence lands under the existing GH-1022
+TESTS-RESULTS directory with source provenance. No individual new CI test is proposed
+or authorized by this plan. Full W7 coordination/rollover and W8–W11 remain active.
