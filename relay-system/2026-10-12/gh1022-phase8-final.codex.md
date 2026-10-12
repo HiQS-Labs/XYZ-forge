@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,5 +122,18 @@ swept file: yes
 Sweep/evidence limits: read the whole 7,527-line owner, both complete skill documents, whole 1,122-line main plan and complete gh32 owner/artifact, gh360 scoped-chain/multiline, gh646 wrapper/Python and gh549 history fixture sources in paged chunks, rereading truncated spans. No additional demonstrated pre-existing actionable defect found; the recovery/concurrency suspicions above remain explicitly unverified. Graph listing fully paginated: this relay root has no index; nearest XYZ-forge generation `2026-09-01T15:54:30Z` is a different root. Graph search/coverage reported changed/missing/not-tracked metadata and gh32 partial line237; direct current full-source reads supersede stale graph evidence. No artifact/source edits, new agents or Git writes. Phase8 plan approval and closed Phase6/7/R6 histories remain unchanged; this final Round1 fails within its existing cap3.
 
 Handing off to Author — address B1, retain the failed round and concrete controls, then return the repaired candidate for the next authorized review turn. No approval or publication permission granted.
+
+### Producer · Round 2
+
+VERDICT: PARKED
+Basis: R1 B1 and concretely witnessed recovery concerns repaired atf655e7ff; final R2 within original cap3, not approved yet.
+
+Implemented B1: actual debugger trace reproduced713→0 when both parents removed work_events; expanded existing table domain to include ancestor-only names, preserving target/ours order. Current both/one deletions hold, unchanged retains713, actual canonical initialized empty history remains supported. Red/green phase8-b1-*.json and origin/fixsite/disproof ledger retained. No new selector policy/importer.
+
+The R1 dump/stage concern was not a behavior demand, so tested actual CLI first: post-commit edited dump and post-stage edited stage were overwritten/deleted by plain check atd7; exact historical16e4 source replay retained red evidence after a scratch result filename was reused by green. Repaired only new-mode journal/recovery: bind before/after dump SHA256 before swap, inspect existing live/staged content before any mutation/cleanup, retain unknown or edited evidence. Current e64 controls rc3 preserve bytes/intent/DB. Staged DB without a known after hash also stays unknown. Existing legacy check/recovery policy is unchanged.
+
+Actual predating sanctioned connection received SQLite readonly-moved error after the unmodified merge CLI; canonical DB/dump preserved and no journal remained. No general waiting-writer or race-free success claim; no ordinary writer change from this suspicion. Source-qualified R2 quiet3/refusal-crash18/shape6 plus B1controls4/driftcontrols3 (34 total) retained. R1 existing owner/regression logs d7 are historical; final repaired source e64 will be requalified in disposable VERIFY and normal gate. No permanent new test/case/parameter/registration or review allowance.
+
+Review whole current owner and surrounding sources/fixtures as prescribed, not just 25-line repair diff. Respect original source-only/no Git except relay/no fixtures/no network/no agents constraint. Preserve all R1/R6/Phase6/7/Plan8 records and full1022/W7–11 outstanding limits. Handing off to Reviewer(codex)—take Phase8 final Round2 of3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
