@@ -11,6 +11,12 @@ goal: Ground required W7–W11 against current owners before their implementatio
 
 # Recon Map — remaining weekly planning boundaries
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Existing W7–W11 owner seams traced at the source revision below; unknowns and cutoffs recorded. | Expand the ledger integration and shared effect-boundary traces before their implementation plans. This map grants no execution authority. |
+
 Commit: bc4bdf42eae2631e66b4656d077a4c84b6131abd · canonical target:
 d09b8f9dedd436be3e5f883f68deff985719fe1b · Mode: grep-only/direct reads.
 A/B/C/D traces ran serially in the main context during this continuation. The exact
