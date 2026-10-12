@@ -12,8 +12,10 @@ existing normal hooks and uses explicit bounded ordinary fast-forward push.
 Preparation now records its intended full tree, sole parent and owned objects in
 the existing receipt before committing. Completion and partial/no-change recovery
 inspect the exact captured commit; unknown results retain incomplete evidence.
-Failed reviews and actual extra-file/parent red controls remain retained. A single
-operator-authorized corrective review is pending; this entry does not claim approval.
+Failed reviews and actual extra-file/parent red controls remain retained. The single
+operator-authorized corrective review passed S4 source checks but returned FAIL for
+a separate Medium ancestry-completion gap tracked at GH-1031, with fresh full-scope
+sweep incomplete. This entry does not claim caller approval.
 No new CI test/case/registration, live run, schedule or installation occurred. Strict
 selection/artifacts, freeze/exact approval and shared fire/resume/landing remain
 unimplemented; observations and local commits confer no dispatch authority.

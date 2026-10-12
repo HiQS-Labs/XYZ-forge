@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | Phase8 prerequisite published with evidence d22. Phase9 plan ApprovedR1/3; prior finalQA FAIL/Escalated3/3 retained. Genuine direct S4 approval authorizes the bounded repair and exactly one corrective review. Repair f18b051a is under qualification; no caller approval/publication yet. W8–W11 incomplete; R6FAIL/1028 and #1027 unapproved unchanged. |
+| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | Phase8 prerequisite published with evidence d22. Phase9 plan ApprovedR1/3; prior finalQA FAIL/Escalated3/3 retained. Genuine direct S4 approval consumed exactly one corrective review atdef75ab1: FAIL/Escalated4/4, S4 source pass, separate Medium S5 tracked1031 and incomplete fresh full-scope sweep. Normal gated draft publication pending under existing lower-severity disposition; no caller approval. W8–W11 incomplete; R6FAIL/1028 and #1027 unapproved unchanged. |
 
 ## Table of contents
 
@@ -1477,3 +1477,35 @@ All source hashes/provenance/limits are phase9-s4-final-qualified.json. Programs
 stay ephemeral; no CI test/case/parametrization/registration was added. Whole caller
 budget/exhaustive interleavings and already-in-flight older metadata caches remain
 unqualified. One authorized corrective source review next; no additional loop.
+
+
+### Single corrective review result and lower-severity disposition
+
+Reviewer d51ed68a reviewed exact headdef75ab1; codef18b051a source hashes match the
+qualified manifest. Verdict remains FAIL/Escalated4/4. S4 exact captured-result,
+sole-parent/full-tree and partial/no-change proof passed independent sensitive
+source checks. A separate normal native ancestry-completion gap S5 is Should,
+SeverityMedium; no Critical/High finding was reported. Fresh full-scope sweep was
+incomplete (whole core/intake/skills read, not all owner/main plan/fixture sources).
+No fresh blanket clearance or additional review/implementation authority follows.
+
+Actual isolated caller controls confirmed S5: installed pre-commit hook adds/stages
+README during ancestry, and a controlled adapter supplies a real three-parent
+ancestry result. Both proceed into preparation and clear pending ancestry intent;
+predecessor is retained and dispatch false. The third-parent adapter is result
+admission evidence, not an assertion that a normal hook creates that parent.
+Source/helpers/provenance distinguish reviewer AST from these actual Git controls.
+
+S5 is UNFIXED and tracked at https://github.com/HiQS-Labs/XYZ-forge/issues/1031.
+The standing operator lower-severity issue-and-draft disposition permits recording
+it and normal gated draft publication; it cannot convert FAIL to Approved. No S5
+repair, Round5, alternate reviewer or cap reset is started. Sanctioned HQ capture
+and RELEASES add/rate with connectors0 registered its provisional60/60/50/80,
+calc250/nulloverride. All350 previous rows/GIDs/ratings/status/docs remain exact;
+proof is phase9-r4-disposition.json. #1027 tests remain unapproved, R6FAIL/#1028 and
+closedPhase6–8 remain unchanged. W8–W11/full1022 incomplete and caller stays HELD.
+
+Normal gate/remote SHA/hosted CI qualification remain pending; local scoped controls
+are not an overall caller approval. Whole caller time/cost, already-in-flight older
+metadata caches and exhaustive interleavings remain unqualified. No new test/case/
+parameter/registration or live planning execution was added.

@@ -267,5 +267,8 @@ immutable commit SHA and requires that result plus clean live state. Partial
 no-change recovery can adopt only the same exact bound result; missing bindings
 or unknown extra files/parents retain the incomplete receipt and commit for
 explicit reconciliation. Exact lost-result recovery makes no second commit.
-This bounded S4 remediation is under its one authorized corrective review;
-prior FAIL/Escalated history remains retained and no dispatch authority follows.
+The one authorized corrective review passed this S4 source predicate, but the
+caller remains FAIL/Escalated4/4 for Medium normal-ancestry completion GH-1031
+and incomplete fresh full-scope sweep. Existing lower-severity draft publication
+disposition does not grant caller approval; prior FAIL history remains retained
+and no dispatch authority follows.
