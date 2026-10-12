@@ -1158,11 +1158,12 @@ def prepare_weekly(args, source_root, command=None, carryover=None, reconciled_b
             raise ValueError("renamed/conflicting preparation paths require explicit reconciliation")
         return {entry[3:] for entry in entries}
 
-    def exact_commit_result(intent):
-        return (git(["rev-list", "--parents", "-n", "1", "HEAD"], root).split()[1:] == [intent["parent"]]
-                and git(["rev-parse", "HEAD^{tree}"], root) == intent["tree"]
+    def exact_commit_result(intent, completed):
+        return (git(["rev-parse", "HEAD"], root) == completed
+                and git(["rev-list", "--parents", "-n", "1", completed], root).split()[1:] == [intent["parent"]]
+                and git(["rev-parse", completed + "^{tree}"], root) == intent["tree"]
                 and not dirty_paths()
-                and all(git(["rev-parse", "HEAD:" + path], root) == value
+                and all(git(["rev-parse", completed + ":" + path], root) == value
                         and git(["hash-object", "--", path], root) == value
                         for path, value in intent["objects"].items()))
 
@@ -1248,7 +1249,7 @@ def prepare_weekly(args, source_root, command=None, carryover=None, reconciled_b
                 for path in pending_commit["objects"]:
                     local_path(path)
                 if (preparation_head != pending_commit["parent"]
-                        and not exact_commit_result(pending_commit)):
+                        and not exact_commit_result(pending_commit, preparation_head)):
                     raise ValueError("unknown preparation commit result; preserve intent")
         else:
             if dirty_paths():
@@ -1353,13 +1354,14 @@ def prepare_weekly(args, source_root, command=None, carryover=None, reconciled_b
                 old = json.loads((root / relative).read_text()) if (root / relative).is_file() else None
                 old_stable = {key: value for key, value in old.items() if key != "checkpoint_cut"} if old else None
                 if old_stable == payload and not dirty_paths():
+                    completed = git(["rev-parse", "HEAD"], root)
                     if resuming_partial:
                         pending_commit = state.get("pending_commit")
                         expected_paths = {relative, "releases.db", "releases.sql", *[item["doc_path"] for item in accounting]}
                         if (not pending_commit or set(pending_commit["objects"]) != expected_paths
-                                or not exact_commit_result(pending_commit)):
+                                or not exact_commit_result(pending_commit, completed)):
                             raise ValueError("unbound partial no-change result; preserve incomplete checkpoint")
-                    state["complete_commit"] = git(["rev-parse", "HEAD"], root)
+                    state["complete_commit"] = completed
                     state["checkpoint_cut"] = old["checkpoint_cut"]
                     if resuming_partial:
                         durable(receipt_path, state)
@@ -1398,7 +1400,7 @@ def prepare_weekly(args, source_root, command=None, carryover=None, reconciled_b
                 git(["commit", "-m", f"weekly: accumulate {repository} intake for {date}"], root)
                 completed = git(["rev-parse", "HEAD"], root)
                 if (git(["branch", "--show-current"], root) != branch
-                        or not exact_commit_result(intended_commit)
+                        or not exact_commit_result(intended_commit, completed)
                         or target_head(root) != base
                         or rows() != state["ledger_rows"]
                         or int(ledger("settings", "get", "generation")) != state["generation"]
