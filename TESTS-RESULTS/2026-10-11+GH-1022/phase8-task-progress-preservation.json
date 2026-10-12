@@ -1,0 +1,12 @@
+{
+  "head": "8c9e6a6b",
+  "base": "fa8a930e",
+  "gid": "rmi-01M4NVEZG8FAM7BBS950TRBWH9",
+  "changed_columns": [
+    "raw_text",
+    "updated_at"
+  ],
+  "other_rows_unchanged": 349,
+  "gids_status_ratings_override_doc_first_seen_preserved": true,
+  "method": "canonical CLI update then official parser comparison of committed before SQL and current owner SQL; no direct DB/SQL edits"
+}
