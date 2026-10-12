@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-10-11 — Claude review corrections (GH-1022, local/unqualified)
+## 2026-10-12 — Claude review corrections (GH-1022, local/unqualified)
 
 Weekly batch inspection rejects deterministic member errors before captures or
 canonical registration. Qualified identities retain validated GitHub URL casing.
@@ -13,7 +13,8 @@ skills retain central discovery, with clear refusal for invalid explicit hints.
 Preparation records/rechecks actual runtime paths/hashes and uses the existing
 process-group runner with60s IO containment. Held accounting ignores only check
 URL/time noise while retaining material readiness/scope changes and returning
-fresh PR metadata on no-op. Producer verification/final review pending;weekly HELD.
+fresh PR metadata on no-op. Producer controls andexisting focused suites pass at1044969d;consolidated
+final review/publication pending,weekly HELD.
 
 
 ## 2026-10-11 — Canonical planner owner overrides (GH-1022, phase 5)

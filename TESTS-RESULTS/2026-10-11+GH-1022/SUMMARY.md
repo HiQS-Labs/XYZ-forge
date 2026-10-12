@@ -296,3 +296,14 @@ captures,intents/receipts andlocal commits,stub transport,connectorsdisabled;
 no real Marathon/Jog,recurring scheduling,installation,push ordeployment.
 Final source hashes recorded;existing focused checks andconsolidated final
 review remain pending before qualification/publication.
+
+Existing focused checks at exact consolidated corrective source1044969dcad23a08e19219e3fb195d58715187d4:
+gh32 145/145,gh69 85/85,gh36914/14 clean environment and14/14 with
+inherited stale harness hint,Pythonlayer21/21. Disposable fullclone remained
+clean at1044969d withcanonical GitHub origin;all6source hashes match the
+committed candidate. Primary remainsclean at a58378289863548968ea907cbbddfd2b8d6f4f28.
+No test/registry/CIroute/guard additions/modifications in corrective diff.
+No independent reviewer ornew qualifying fullgate/push ran;closedR5 untouched.
+Only outstanding permission for corrective qualification is one consolidated
+final Codex review ofthese completed corrections. Review permission does not
+approveS8's threeCIcase proposals. FullW7–W11 remainsactive after that boundary.
