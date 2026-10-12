@@ -1,0 +1,78 @@
+{
+  "focused-identity-after.json": {
+    "bytes": 767,
+    "sha256": "db4aee9d1859adce757339a36a9e4b23153ccef18bc7cb1e7cb5e7c69e31e4be"
+  },
+  "ownership-refusal-controls.json": {
+    "bytes": 10939,
+    "sha256": "3240134f15de9522e3b511ae47b9e8f0572aeac7a2e827f05c0d18474d253a5c"
+  },
+  "marker-retry-control.log": {
+    "bytes": 1196,
+    "sha256": "365c0d8baee219f8c136bbe2d1f4707431a2496facd72cf4638af64628ecb184"
+  },
+  "distribution-green.py": {
+    "bytes": 4527,
+    "sha256": "5973f7253693b67b7aaf872343fcd713dcf020659ad5e2732963d804461be8a6"
+  },
+  "issue-body.md": {
+    "bytes": 1578,
+    "sha256": "69c71f77c934185e3aa723b79c718ff428590a962561fe3c20f785d9c542309c"
+  },
+  "marker-retry-control.json": {
+    "bytes": 11701,
+    "sha256": "0d5813770ee6f954f32b9a90ff8cb58711fd90d80205258d8b1914899a9e1fa2"
+  },
+  "focused-gate.log": {
+    "bytes": 11323,
+    "sha256": "053b21f416b9d522df8d9a9edf56a2bf5bf90a776f0db611cff9c4050d593716"
+  },
+  "SUMMARY.md": {
+    "bytes": 1626,
+    "sha256": "723d303af45e66f8837065f04f2bd8dece053143fb742b7ec5c2cf5a7d6177ca"
+  },
+  "distribution-green.log": {
+    "bytes": 891,
+    "sha256": "d5acc03b8ff7067ac171129d20bcf17cb2be632930eea3edee06abeca809c98d"
+  },
+  "marker-retry-control.py": {
+    "bytes": 3116,
+    "sha256": "91e3762236135638b62291e9b186fc3e2deebad3c61cf73dde1c541bd351ff34"
+  },
+  "focused-telemetry.jsonl": {
+    "bytes": 2229,
+    "sha256": "a7052248f15a0fdebb5601fb771c2699eddeb107aa5ff76b42453a484d0f99b7"
+  },
+  "ownership-refusal-controls.py": {
+    "bytes": 3065,
+    "sha256": "b00cb2b6b6f0da20e6dbbd9309af2111deb6efc2ffe56ee5848d62b15828810b"
+  },
+  "baseline-distribution-red.json": {
+    "bytes": 13568,
+    "sha256": "240389e8abe869803a1cf80b771c5c225d580068fbca2f893e2bdbb76f9ba3be"
+  },
+  "roadmap-registered.json": {
+    "bytes": 299784,
+    "sha256": "598f6531d82d74ba17ef790b35f386e009267b70b60518966d29363502622ca7"
+  },
+  "roadmap-before.json": {
+    "bytes": 299210,
+    "sha256": "8fbb50ad924139cfeb88a54447dce353d7d03f87a2915fc3ce2421d5b81dd1dd"
+  },
+  "provenance.jsonl": {
+    "bytes": 674,
+    "sha256": "3fa6e7f92fa3bea0785cb5e8009bfacdd28b1aa13cf35480f93c3b2f8622c326"
+  },
+  "distribution-falsifiers.json": {
+    "bytes": 12681,
+    "sha256": "cb1718583097029c89a08b8ff296521f8ded27d13b77651950e58a3884118b71"
+  },
+  "ownership-refusal-controls.log": {
+    "bytes": 996,
+    "sha256": "21af1ad94b61278b599300d9062c7a18af41ca203788d0408ff98e981dfb9e79"
+  },
+  "focused-identity-before.json": {
+    "bytes": 767,
+    "sha256": "db4aee9d1859adce757339a36a9e4b23153ccef18bc7cb1e7cb5e7c69e31e4be"
+  }
+}

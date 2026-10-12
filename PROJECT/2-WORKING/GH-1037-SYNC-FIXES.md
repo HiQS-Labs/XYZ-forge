@@ -16,7 +16,7 @@ branch: fix/XYZ-forge-gh1012-sync-fixes-2026-10-12
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA approved round 1; own ledger row admitted; both localized fixes implemented | Existing checks and manual controls, then independent implementation QA |
+| Both fixes pass existing focused checks6/6 and recorded red/green/ownership controls | Independent implementation QA, gated PR and authorized landing |
 
 ## Scope and evidence
 

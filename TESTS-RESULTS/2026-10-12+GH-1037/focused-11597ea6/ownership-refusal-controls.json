@@ -1,0 +1,337 @@
+{
+  "candidate": "11597ea6ba4fb491da70681d21e793eec5ec4d94",
+  "rows": [
+    {
+      "case": "unrelated-dirt",
+      "head_unchanged": true,
+      "dirty": " M README.md\n M notes.txt\n M skills-army-hq/README.md\n",
+      "warning": "skills-army-hq: WARN not committed in /private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt: unrelated uncommitted changes: notes.txt \u2014 commit by hand or the hourly pulse stays blocked\n",
+      "foreign_edit_preserved": true,
+      "limit": "Other dirty file bytes preserved."
+    },
+    {
+      "case": "preexisting-readme",
+      "head_unchanged": true,
+      "dirty": "MM README.md\n M skills-army-hq/README.md\n",
+      "warning": "skills-army-hq: WARN not committed in /private/tmp/xyz1037-distribution-green-20261012/preexisting-readme: unrelated uncommitted changes: README.md \u2014 commit by hand or the hourly pulse stays blocked\n",
+      "foreign_edit_preserved": true,
+      "limit": "Existing transaction still refreshes working root README; this check verifies it is not auto-committed and the staged original is preserved."
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/manager-source",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Ownership Fixture"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/manager-source",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/manager-source",
+      "argv": [
+        "git",
+        "add",
+        "--",
+        "/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq/README.md"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/manager-source",
+      "argv": [
+        "git",
+        "commit",
+        "-qm",
+        "fixture second revision"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/private/tmp/xyz1037-distribution-green-20261012/pulse-collection",
+        "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Ownership Fixture"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+        "--apply",
+        "init",
+        "--adopt-existing"
+      ],
+      "exit": 0,
+      "stdout": "{\"operation\": \"adopt-existing\", \"root\": \"/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt\", \"skills\": [\"skills-army-hq\"], \"apply\": true}\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+      "argv": [
+        "git",
+        "add",
+        "notes.txt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+      "argv": [
+        "git",
+        "commit",
+        "-qm",
+        "fixture note baseline"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "c21310e42128787525ba46110a6c07febf55e84a\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+        "--apply",
+        "update",
+        "skills-army-hq",
+        "--source",
+        "/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"operation\": \"update\",\n  \"apply\": true,\n  \"name\": \"skills-army-hq\",\n  \"source\": \"/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq\",\n  \"before\": \"e0d5ca1dbb0fcfc4553b9a17e27b3baac282aef4d4dc49f4b70e3da7efda8058\",\n  \"after\": \"2d735d34e41ce163fe67b9392830a671ba265a3696d62f1d4c794a8ef7a2e12d\",\n  \"commit\": \"8ea50a335d283afc54375f8b0d9baddd8f5def41\",\n  \"backup\": \"backups/skills-army-hq-2026-10-12.zip\"\n}\n",
+      "stderr": "skills-army-hq: WARN not committed in /private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt: unrelated uncommitted changes: notes.txt \u2014 commit by hand or the hourly pulse stays blocked\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "c21310e42128787525ba46110a6c07febf55e84a\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/unrelated-dirt",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1"
+      ],
+      "exit": 0,
+      "stdout": " M README.md\n M notes.txt\n M skills-army-hq/README.md\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/private/tmp/xyz1037-distribution-green-20261012/pulse-collection",
+        "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Ownership Fixture"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+        "--apply",
+        "init",
+        "--adopt-existing"
+      ],
+      "exit": 0,
+      "stdout": "{\"operation\": \"adopt-existing\", \"root\": \"/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme\", \"skills\": [\"skills-army-hq\"], \"apply\": true}\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "add",
+        "README.md"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "888c63bc0f3b44f8323d05d9e9b922d7c3c35738\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "show",
+        ":README.md"
+      ],
+      "exit": 0,
+      "stdout": "preexisting staged README edit\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+        "--apply",
+        "update",
+        "skills-army-hq",
+        "--source",
+        "/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"operation\": \"update\",\n  \"apply\": true,\n  \"name\": \"skills-army-hq\",\n  \"source\": \"/private/tmp/xyz1037-distribution-green-20261012/manager-source/skills/3-weekly/skills-army-hq\",\n  \"before\": \"e0d5ca1dbb0fcfc4553b9a17e27b3baac282aef4d4dc49f4b70e3da7efda8058\",\n  \"after\": \"2d735d34e41ce163fe67b9392830a671ba265a3696d62f1d4c794a8ef7a2e12d\",\n  \"commit\": \"8ea50a335d283afc54375f8b0d9baddd8f5def41\",\n  \"backup\": \"backups/skills-army-hq-2026-10-12.zip\"\n}\n",
+      "stderr": "skills-army-hq: WARN not committed in /private/tmp/xyz1037-distribution-green-20261012/preexisting-readme: unrelated uncommitted changes: README.md \u2014 commit by hand or the hourly pulse stays blocked\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "888c63bc0f3b44f8323d05d9e9b922d7c3c35738\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1"
+      ],
+      "exit": 0,
+      "stdout": "MM README.md\n M skills-army-hq/README.md\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1037-distribution-green-20261012/preexisting-readme",
+      "argv": [
+        "git",
+        "show",
+        ":README.md"
+      ],
+      "exit": 0,
+      "stdout": "preexisting staged README edit\n",
+      "stderr": ""
+    }
+  ]
+}
