@@ -912,3 +912,18 @@ state, unknown cost/runtime enforcement, unsupported schema/dependencies and mis
 human confirmation remain held. No recurring cadence/budget/default is enabled.
 
 Corrected-source Linux qualification verified: existingCI38204784286 exactbc4 completedSUCCESS, Ubuntu407/407 withgh123parallelrc0 andblockingSmokeSUCCESS, macOSpromotionSKIPPED. ActualrunJSON/fulljoblog andnormalpushlog are retainedwithcommittedprovenance. No workflowbypass/restart,newCIcase orrealMarathon/provider acceptance. PublishedHEADbc4 matchesremote andcurrentd09 target; latestPRreadMERGEABLE/CLEAN. Phase6source/gatepublication verified; W7censusmap/plan next, allW7–W11 remainactive. OwnprogressCLI preserves GID/axes/ovr/status/doc/first_seen,changesonlyraw_text/updated_at.
+
+
+### Phase7 implementation checkpoint — 2026-10-12
+
+Implemented the approved census seam in the canonical work inventory, existing
+observer snapshot, shared normalization and thin weekly-work adapter. Actual owner
+and CLI manual controls: Jog24, work15, observer8, core12; existing preparation
+runtime controls19 passed. UNKNOWN observer exit2 payloads, malformed raw facts and
+final runtime drift retain observations rather than erasing evidence. Source-bound
+manual outputs/provenance are committed; ephemeral drivers remain outside the repo.
+Fixtures create owned local DB/Git/context state, while census reads leave those
+bytes and sidecars unchanged. No CI test/case/registration or live dispatch added.
+Phase7 final owner QA and covering existing suites remain pending. Census is a W7
+prerequisite: reconciliation/rollover, authoritative selection, freeze/exact approval,
+shared fire/phase/resume/landing and the full W11 audit still require implementation.

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-12 — Held declared-work census (GH-1022, Phase7)
+
+Weekly can now observe explicitly declared roots through the existing RELEASES and
+Marathon observer owners. One guarded ledger read retains Marathon/Jog/raw lifecycle
+facts; one-shot bounded context reads retain UNKNOWN evidence. Shared normalization
+preserves every source, deduplicates qualified stable identities and holds conflicts.
+The core adapter measures runtime bytes and target heads, with no ledger, context,
+connector or dispatch writes. Existing preparation uses the extracted bounded-runtime
+helpers with its defaults preserved. Read completeness never grants global-idle,
+criterion-delivery or execution authority. Full weekly reconciliation, freeze and
+shared fire/resume/landing remain required. No CI test/case/registration was added.
+
 ## 2026-10-12 — Escape canonical dashboard text (GH-1022 owner review)
 
 The existing dashboard now escapes ledger text with Python's html.escape when

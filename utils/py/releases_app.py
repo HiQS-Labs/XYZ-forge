@@ -4630,11 +4630,14 @@ def _jog_rows(conn, show_all=False, inventory=False):
     return [dict(r) for r in conn.execute(query).fetchall()]
 
 
-def read_jog_inventory(root, show_all=False):
+def _read_work_inventory(root, show_all=False, include_work=False):
     """One declared root's held queue observation; never recovery or execution approval."""
     result = {"status": "UNKNOWN", "initialized": False, "read_complete": False,
               "root": root, "include_terminal": show_all, "generation": None,
               "repositories": [], "rows": [], "held_reasons": [], "dispatch": False}
+    if include_work:
+        result.update(schema="releases/work-inventory@1", schema_version=None,
+                      marathons=[], lifecycle=[], driver_lock=None, git_head=None)
     conn = None
     try:
         db = artifact_paths(root)["db"]
@@ -4656,6 +4659,12 @@ def read_jog_inventory(root, show_all=False):
             "jog_queue": ("id", "global_id", "repo_id", "gh_number", "position", "status",
                           "attempt_count", "lease_pid", "failure_reason", "created_at", "updated_at"),
         }
+        if include_work:
+            required.update({
+                "marathons": ("id", "global_id", "repo_id", "tracking_ref_id", "status", "created_at"),
+                "issue_refs": ("id", "global_id", "url", "temp_id"),
+                "work_events": ("id", "global_id", "repo_id", "gh_number", "txn_id", "event", "payload", "at"),
+            })
         for table, columns in required.items():
             if not _table_exists(conn, table) or any(not _has_column(conn, table, c) for c in columns):
                 raise ValueError("required queue inventory schema unavailable: " + table)
@@ -4668,6 +4677,34 @@ def read_jog_inventory(root, show_all=False):
             return int(value)
         initial = generation()
         result.update(initialized=True, generation=initial)
+        if include_work:
+            versions = [r[0] for r in conn.execute("SELECT version FROM schema_migrations")]
+            if any(type(v) is not int for v in versions) or 8 not in versions:
+                raise ValueError("work schema migration 8 not recorded")
+            result["schema_version"] = max(versions)
+            def head():
+                value = subprocess.check_output(["git", "-C", root, "rev-parse", "--verify", "HEAD^{commit}"],
+                                                text=True, stderr=subprocess.DEVNULL, timeout=10).strip()
+                if not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", value):
+                    raise ValueError("declared-root Git HEAD unavailable")
+                return value
+            initial_head = head()
+            # Reuse the shared owner resolver. Presence is uncertainty/contention evidence,
+            # never a licence to reap an owner or declare a fleet idle.
+            rtl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rtl.py")
+            with open(rtl_path, "rb") as stream:
+                rtl_bytes = stream.read()
+            rtl_owner = {"__name__": "work_inventory_lock_owner", "__file__": rtl_path}
+            exec(compile(rtl_bytes, rtl_path, "exec"), rtl_owner)
+            driver_path, driver_label = rtl_owner["driver_lock_path"](root)
+            result["lock_resolver"] = {"path": rtl_path, "sha256": hashlib.sha256(rtl_bytes).hexdigest()}
+            def lock_observation():
+                if not os.path.lexists(driver_path):
+                    return {"path": driver_path, "label": driver_label, "present": False}
+                st = os.lstat(driver_path)
+                return {"path": driver_path, "label": driver_label, "present": True,
+                        "identity": [st.st_dev, st.st_ino, st.st_mtime_ns, st.st_size]}
+            initial_lock = lock_observation()
         repo_records = [dict(r) for r in conn.execute("SELECT id, global_id, slug FROM repos")]
         repos = {r["id"]: r["slug"] for r in repo_records}
         if not repos:
@@ -4705,16 +4742,74 @@ def read_jog_inventory(root, show_all=False):
             if row["roadmap_global_id"] is None:
                 row["held_reasons"].append("unregistered-roadmap")
             row["dispatch"] = False
+        if include_work:
+            by_repo = {r["id"]: r for r in repo_records}
+            def qualify(row, prefix):
+                owner = by_repo.get(row["repo_id"])
+                if (owner is None or not isinstance(row["global_id"], str)
+                        or not re.fullmatch(prefix + CROCKFORD_GLOB_CLASS + "{26}", row["global_id"])):
+                    raise ValueError("work fact repository/GID ownership unavailable")
+                row.update(repository=owner["repository"], repo_global_id=owner["global_id"],
+                           held_reasons=["execution-not-authorized"], dispatch=False)
+            marathons = [dict(r) for r in conn.execute("""
+                SELECT m.*, t.global_id AS tracking_global_id, t.url AS tracking_url,
+                       t.temp_id AS tracking_temp_id
+                FROM marathons m LEFT JOIN issue_refs t ON t.id = m.tracking_ref_id ORDER BY m.id
+            """)]
+            for row in marathons:
+                qualify(row, "mar-")
+                tracking = row["tracking_global_id"]
+                if not isinstance(tracking, str) or not re.fullmatch("ref-" + CROCKFORD_GLOB_CLASS + "{26}", tracking):
+                    row["held_reasons"].append("unresolved-tracking-reference")
+                repo, number = _repo_from_issue_url(row["tracking_url"])
+                row.update(tracking_repository=repo, tracking_number=number)
+                if repo is None:
+                    row["held_reasons"].append("no-native-tracking-reference")
+                if row["status"] not in ("planned", "running", "done", "escalated", "abandoned"):
+                    row["held_reasons"].append("unknown-marathon-status")
+            lifecycle = [dict(r) for r in conn.execute("SELECT * FROM work_events ORDER BY id")]
+            for row in lifecycle:
+                qualify(row, "wev-")
+                row["issue_identity"] = ("%s#%s" % (row["repository"].casefold(), row["gh_number"])
+                                         if type(row["gh_number"]) is int and row["gh_number"] > 0 else None)
+                if row["issue_identity"] is None:
+                    row["held_reasons"].append("no-qualified-issue-reference")
+                try:
+                    row["payload_decoded"] = json.loads(row["payload"]) if row["payload"] is not None else None
+                except (ValueError, TypeError):
+                    row["payload_decoded"] = None
+                    row["held_reasons"].append("invalid-event-payload")
+            with open(rtl_path, "rb") as stream:
+                if stream.read() != rtl_bytes:
+                    raise ValueError("lock resolver code changed during observation")
+            if (head() != initial_head or lock_observation() != initial_lock):
+                raise ValueError("declared-root Git HEAD/driver observation changed during read")
+        if include_work:
+            json.dumps({"rows": rows, "marathons": marathons, "lifecycle": lifecycle})
         if generation() != initial or stable_file() != before:
             raise ValueError("canonical queue generation/artifact changed during observation")
         result.update(status="PASS", read_complete=True, repositories=repo_records, rows=rows,
                       held_reasons=["execution-not-authorized"])
-    except (OSError, sqlite3.Error, ValueError, SystemExit) as error:
+        if include_work:
+            result.update(marathons=marathons, lifecycle=lifecycle, driver_lock=initial_lock,
+                          git_head=initial_head)
+    except (OSError, sqlite3.Error, ValueError, TypeError, KeyError, SystemExit, subprocess.SubprocessError) as error:
         result["held_reasons"] = [str(error)]
     finally:
         if conn is not None:
             conn.close()
     return result
+
+
+def read_jog_inventory(root, show_all=False):
+    return _read_work_inventory(root, show_all)
+
+
+def cmd_work_inventory(args):
+    result = _read_work_inventory(resolve_root(args.root), True, include_work=True)
+    print(json.dumps(result, indent=2))
+    if not result["read_complete"]:
+        raise SystemExit(2)
 
 
 def cmd_jog_list(args):
@@ -6807,6 +6902,7 @@ def build_parser():
 
     sp_work = sub.add_parser("work", help="GH-549 work-state event stream and its connectors")
     wsub = sp_work.add_subparsers(dest="work_cmd", required=True)
+    wsub.add_parser("inventory", help="read-only declared-root held Marathon/Jog/raw-lifecycle JSON")
     sp_we = wsub.add_parser("emit", help="record one work event (used by merge-cleanup)")
     sp_we.add_argument("--event", required=True, help="domain event name, e.g. pr_merged")
     we_selector = sp_we.add_mutually_exclusive_group(required=True)
@@ -7020,7 +7116,7 @@ def main(argv=None):
         "settings": lambda a: {"set": cmd_settings_set,
                                "list": cmd_settings_list,
                                "get": cmd_settings_get}[a.settings_cmd](a),
-        "work": lambda a: {"emit": cmd_work_emit, "backfill": cmd_work_backfill,
+        "work": lambda a: {"inventory": cmd_work_inventory, "emit": cmd_work_emit, "backfill": cmd_work_backfill,
                            "reconcile": cmd_work_reconcile,
                            "status": cmd_work_status}[a.work_cmd](a),
         "dashboard": cmd_dashboard,

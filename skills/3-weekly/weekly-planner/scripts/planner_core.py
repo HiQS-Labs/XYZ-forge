@@ -805,6 +805,122 @@ def format_daily_markdown(date_str: str, pivot_data: dict) -> str:
     return "\n".join(lines)
 
 
+def load_weekly_runtime(intake, extra_files=None):
+    import hashlib
+    import importlib.util
+    harness = Path(intake.__file__).resolve().parents[4]
+    app = harness / "utils/py/releases_app.py"
+    renderer = harness / "utils/hq/hq-lib.sh"
+    spec = importlib.util.spec_from_file_location("weekly_releases_owner", app)
+    canonical = importlib.util.module_from_spec(spec)
+    app_bytes = app.read_bytes()
+    exec(compile(app_bytes, str(app), "exec"), canonical.__dict__)
+    process_path = harness / "utils/py/proc_group.py"
+    process_spec = importlib.util.spec_from_file_location("weekly_process_owner", process_path)
+    process = importlib.util.module_from_spec(process_spec)
+    sys.modules[process_spec.name] = process  # dataclasses resolves its owning module
+    process_bytes = process_path.read_bytes()
+    exec(compile(process_bytes, str(process_path), "exec"), process.__dict__)
+    runtime_files = {"planner": Path(__file__).resolve(), "intake": Path(intake.__file__).resolve(),
+                     "writer": app, "renderer": renderer, "process_runner": process_path}
+    runtime_files.update(extra_files or {})
+    runtime_hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in runtime_files.items()}
+    if (runtime_hashes["planner"] != PLANNER_SOURCE_SHA256
+            or runtime_hashes["intake"] != intake.loaded_sha256
+            or runtime_hashes["writer"] != hashlib.sha256(app_bytes).hexdigest()
+            or runtime_hashes["process_runner"] != hashlib.sha256(process_bytes).hexdigest()):
+        raise ValueError("runtime code changed while loading; refresh without side effects")
+    runtime = {"harness": str(harness), "paths": {name: str(path.resolve()) for name, path in runtime_files.items()},
+               "sha256": runtime_hashes, "io_timeout_seconds": WEEKLY_IO_TIMEOUT_SECONDS}
+
+    def check_runtime():
+        if any(str(path.resolve()) != runtime["paths"][name]
+               or hashlib.sha256(path.read_bytes()).hexdigest() != runtime_hashes[name]
+               for name, path in runtime_files.items()):
+            raise ValueError("runtime code changed during preparation; preserve partial state and refresh")
+
+    return harness, canonical, process, runtime, check_runtime
+
+
+def weekly_command(process, env, accepted_returncodes=(0,)):
+    def command(argv, cwd):
+        result = process.run_bounded(argv, cwd=str(cwd), env=env,
+                                     timeout=WEEKLY_IO_TIMEOUT_SECONDS, grace=1)
+        if result.timed_out:
+            raise RuntimeError(f"command timed out after {WEEKLY_IO_TIMEOUT_SECONDS}s: {argv[0]}; preserve partial state")
+        if result.rc not in accepted_returncodes:
+            raise RuntimeError(f"command refused ({result.rc}): {argv[0]} {result.stderr.strip()}")
+        return result.stdout
+    return command
+
+
+def observe_weekly_work(authority_file, repo_root, command=None):
+    """Explicit declared-root observations only; no preparation, selection or dispatch."""
+    intake = load_issue_intake()
+    harness = Path(intake.__file__).resolve().parents[4]
+    _, _, process, runtime, check = load_weekly_runtime(intake, {
+        "observer": harness / "relay-automation/marathon.sh",
+        "lock_resolver": harness / "utils/py/rtl.py",
+    })
+    authority = json.loads(Path(authority_file).read_text())
+    if (not isinstance(authority, dict) or authority.get("schema") != "weekly/authorities@1"
+            or not isinstance(authority.get("roots"), list) or not authority["roots"]):
+        raise ValueError("explicit weekly/authorities@1 nonempty root list required")
+    ids = set()
+    for source in authority["roots"]:
+        if not isinstance(source, dict) or not isinstance(source.get("id"), str) or not source["id"] or source["id"] in ids:
+            raise ValueError("declared root IDs must be unique and nonempty")
+        ids.add(source["id"])
+        if not isinstance(source.get("root"), str) or not Path(source["root"]).is_absolute():
+            raise ValueError("declared root must be an explicit absolute path")
+        intake.repository_name(source.get("repository"))
+        if not isinstance(source.get("contexts"), list):
+            raise ValueError("every root must explicitly declare its context list")
+        for context in source["contexts"]:
+            for key in ("path", "coordination_root", "product_root"):
+                if not isinstance(context, dict) or not isinstance(context.get(key), str) or not Path(context[key]).is_absolute():
+                    raise ValueError("observer path/coordination/product roots must be explicit absolute paths")
+            if not isinstance(context.get("metadata_roots", []), list) or any(not isinstance(x, str) or not Path(x).is_absolute() for x in context.get("metadata_roots", [])):
+                raise ValueError("observer metadata roots must be absolute paths")
+    if command is None:
+        command = weekly_command(process, dict(os.environ, PYTHONDONTWRITEBYTECODE="1", XYZ_WORK_CONNECTORS="0"),
+                                 accepted_returncodes=(0, 2))
+    observations = []
+    for source in authority["roots"]:
+        root = source["root"]
+        item = {"id": source["id"], "declared_root": root,
+                "repository": intake.repository_name(source["repository"]), "contexts": []}
+        try:
+            check()
+            item["inventory"] = json.loads(command([sys.executable, str(harness / "utils/py/releases_app.py"),
+                                                   "--root", root, "work", "inventory"], repo_root))
+            check()
+            for context in source["contexts"]:
+                argv = ["bash", str(harness / "relay-automation/marathon.sh"), "--progress-observer", "snapshot",
+                        context["path"], "--root", context["coordination_root"], "--product-root", context["product_root"]]
+                for directory in context.get("metadata_roots", []):
+                    argv.extend(["--metadata-root", directory])
+                check()
+                raw = command(argv, repo_root)
+                check()
+                prefix = "marathon-progress: "
+                if not raw.startswith(prefix):
+                    raise ValueError("unsupported observer output; no legacy fallback")
+                item["contexts"].append(json.loads(raw[len(prefix):]))
+        except (OSError, ValueError, RuntimeError, TypeError) as error:
+            item["error"] = str(error)
+        observations.append(item)
+    result = intake.normalise_work_observations(observations)
+    try:
+        check()
+    except (OSError, ValueError) as error:
+        result.update(complete=False, status="UNKNOWN")
+        result["holds"].append(str(error))
+    result.update(runtime=runtime, authority=authority,
+                  observedAt=datetime.now(timezone.utc).isoformat())
+    return result
+
+
 def prepare_weekly(args, source_root, command=None):
     """Local canonical accumulation; never selection, approval, publication or fire.
 
@@ -821,35 +937,9 @@ def prepare_weekly(args, source_root, command=None):
 
     source_root = Path(source_root).resolve()
     intake = load_issue_intake()
-    harness = Path(intake.__file__).resolve().parents[4]
+    harness, canonical, process, runtime, check_runtime = load_weekly_runtime(intake)
     app = harness / "utils/py/releases_app.py"
     renderer = harness / "utils/hq/hq-lib.sh"
-    spec = importlib.util.spec_from_file_location("weekly_releases_owner", app)
-    canonical = importlib.util.module_from_spec(spec)
-    app_bytes = app.read_bytes()
-    exec(compile(app_bytes, str(app), "exec"), canonical.__dict__)
-    process_path = harness / "utils/py/proc_group.py"
-    process_spec = importlib.util.spec_from_file_location("weekly_process_owner", process_path)
-    process = importlib.util.module_from_spec(process_spec)
-    sys.modules[process_spec.name] = process  # dataclasses resolves its owning module
-    process_bytes = process_path.read_bytes()
-    exec(compile(process_bytes, str(process_path), "exec"), process.__dict__)
-    runtime_files = {"planner": Path(__file__).resolve(), "intake": Path(intake.__file__).resolve(),
-                     "writer": app, "renderer": renderer, "process_runner": process_path}
-    runtime_hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in runtime_files.items()}
-    if (runtime_hashes["planner"] != PLANNER_SOURCE_SHA256
-            or runtime_hashes["intake"] != intake.loaded_sha256
-            or runtime_hashes["writer"] != hashlib.sha256(app_bytes).hexdigest()
-            or runtime_hashes["process_runner"] != hashlib.sha256(process_bytes).hexdigest()):
-        raise ValueError("runtime code changed while loading; refresh without side effects")
-    runtime = {"harness": str(harness), "paths": {name: str(path.resolve()) for name, path in runtime_files.items()},
-               "sha256": runtime_hashes, "io_timeout_seconds": WEEKLY_IO_TIMEOUT_SECONDS}
-
-    def check_runtime():
-        if any(str(path.resolve()) != runtime["paths"][name]
-               or hashlib.sha256(path.read_bytes()).hexdigest() != runtime_hashes[name]
-               for name, path in runtime_files.items()):
-            raise ValueError("runtime code changed during preparation; preserve partial state and refresh")
 
     def require_unrated_title(issue):
         # Canonical add parses rating tokens from its rendered line, including
@@ -882,14 +972,7 @@ def prepare_weekly(args, source_root, command=None):
         return path
     env = dict(os.environ, XYZ_WORK_CONNECTORS="0", PYTHONDONTWRITEBYTECODE="1")
     if command is None:
-        def command(argv, cwd):
-            result = process.run_bounded(argv, cwd=str(cwd), env=env,
-                                         timeout=WEEKLY_IO_TIMEOUT_SECONDS, grace=1)
-            if result.timed_out:
-                raise RuntimeError(f"command timed out after {WEEKLY_IO_TIMEOUT_SECONDS}s: {argv[0]}; preserve partial state")
-            if result.rc:
-                raise RuntimeError(f"command refused ({result.rc}): {argv[0]} {result.stderr.strip()}")
-            return result.stdout
+        command = weekly_command(process, env)
 
     def durable(path, value):
         check_runtime()
@@ -1279,7 +1362,7 @@ def main():
     parser = argparse.ArgumentParser(description="Planner Core Engine")
     parser.add_argument("--repo-root", default=".", help="Path to repository root")
     parser.add_argument("--gh-repo", default=None, help="Target GitHub repo (e.g. Org/Name)")
-    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "weekly-intake", "weekly-prepare"], default="weekly")
+    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "weekly-intake", "weekly-prepare", "weekly-work"], default="weekly")
     parser.add_argument("--plan-file", help="Path to existing weekly plan JSON/MD")
     parser.add_argument("--decisions-issue", help="Canonical GH issue number for provisional decisions tracker")
     parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int, help="Team weekly issue number for focus assignments")
@@ -1288,6 +1371,7 @@ def main():
 
     parser.add_argument("--since", help="UTC/offset ISO timestamp for held weekly intake")
     parser.add_argument("--intake-file", help="Previous complete weekly-intake JSON; carry every member")
+    parser.add_argument("--authority-file", help="Explicit weekly/authorities@1 root/context declarations for held work reads")
     parser.add_argument("--prepare-root", help="Separate new/owned full clone for local weekly preparation")
     parser.add_argument("--planning-date", help="Explicit YYYY-MM-DD for auto-* planning branch")
     parser.add_argument("--target-ref", help="Explicit canonical target branch")
@@ -1300,6 +1384,19 @@ def main():
     if not repo_root.is_dir():
         print(f"[ERROR] repo root not found: {repo_root}", file=sys.stderr)
         sys.exit(2)
+    if args.mode == "weekly-work":
+        try:
+            if not args.authority_file or args.apply:
+                raise ValueError("weekly-work requires authority-file and does not accept apply")
+            result = observe_weekly_work(args.authority_file, repo_root)
+            print(json.dumps(result, indent=2))
+            if not result["complete"]:
+                sys.exit(2)
+            return
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as error:
+            print(json.dumps({"complete": False, "status": "UNKNOWN", "dispatch_allowed": False,
+                              "error": str(error)}))
+            sys.exit(2)
     if args.mode in ("weekly-intake", "weekly-prepare"):
         # Opt-in discovery, before legacy scratch creation. Installed copies use
         # the same shipped harness locator as 10days; no sibling-skill dependency.

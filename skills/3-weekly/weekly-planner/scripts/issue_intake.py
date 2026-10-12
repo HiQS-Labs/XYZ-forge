@@ -281,3 +281,86 @@ def discover_weekly(repository: str, since: str, root: Path, previous: dict | No
             "issues": deduplicate(issues), "prs": prs, "pages": {"issues": issue_pages, "prs": pr_pages},
             "relevance": "updated-since plus explicit previous members; dependencies must be supplied",
             "holds": ["Branch ledger reconciliation, independent criterion review, readiness, immutable freeze and dispatch enforcement are not implemented."]}
+
+
+def normalise_work_observations(observations: list[dict]) -> dict:
+    """Deduplicate declared owner facts, retaining every source and conflict; no policy/effects."""
+    if not isinstance(observations, list) or not observations:
+        raise ValueError("nonempty declared work observations required")
+    result = {"complete": True, "status": "HELD", "dispatch_allowed": False,
+              "observations": observations, "facts": [], "holds": ["Declared observations are not global quiescence, criterion delivery or dispatch approval."]}
+    seen = {}
+    for source in observations:
+        inventory = source.get("inventory")
+        if (source.get("error") or not isinstance(inventory, dict)
+                or inventory.get("schema") != "releases/work-inventory@1"
+                or inventory.get("read_complete") is not True or inventory.get("initialized") is not True
+                or inventory.get("dispatch") is not False):
+            result["complete"] = False
+            result["holds"].append("Unavailable/unsupported declared root: " + source["id"])
+            continue
+        repositories = inventory.get("repositories")
+        owners = {}
+        try:
+            if (type(inventory.get("generation")) is not int or inventory["generation"] <= 0
+                    or type(inventory.get("schema_version")) is not int or inventory["schema_version"] < 8
+                    or not isinstance(inventory.get("git_head"), str)
+                    or not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", inventory["git_head"])
+                    or not isinstance(repositories, list) or not repositories):
+                raise ValueError("owner source identities unavailable")
+            for repo in repositories:
+                name = repository_name(repo.get("repository"))
+                gid = repo.get("global_id")
+                if name in owners or not isinstance(gid, str) or not re.fullmatch(r"repo-[0-9A-HJKMNP-TV-Z]{26}", gid):
+                    raise ValueError("ambiguous repository/GID ownership")
+                owners[name] = gid
+            if source["repository"] not in owners:
+                raise ValueError("declared repository ownership mismatch")
+        except (ValueError, TypeError, AttributeError):
+            result["complete"] = False
+            result["holds"].append("Declared owner source identity mismatch: " + source["id"])
+            continue
+        for kind, key in (("jog", "rows"), ("marathon", "marathons"), ("lifecycle", "lifecycle")):
+            values = inventory.get(key)
+            if not isinstance(values, list):
+                result["complete"] = False
+                result["holds"].append("Missing fact collection: " + source["id"] + ":" + key)
+                continue
+            for fact in values:
+                try:
+                    if not isinstance(fact, dict) or not isinstance(fact.get("global_id"), str) or fact.get("dispatch") is not False:
+                        raise ValueError("malformed owner work fact")
+                    name = repository_name(fact.get("repository"))
+                    prefix = {"jog": "jog-", "marathon": "mar-", "lifecycle": "wev-"}[kind]
+                    if (owners.get(name) != fact.get("repo_global_id")
+                            or not re.fullmatch(prefix + r"[0-9A-HJKMNP-TV-Z]{26}", fact["global_id"])):
+                        raise ValueError("work fact ownership/source identity mismatch")
+                except (ValueError, TypeError):
+                    result["complete"] = False
+                    result["holds"].append("Malformed owned fact retained in raw source: " + source["id"] + ":" + kind)
+                    continue
+                identity = (kind, name, fact["global_id"])
+                # Local SQLite IDs are not global identity; all business values stay material.
+                semantic = {k: v for k, v in fact.items() if k not in ("id", "repo_id", "tracking_ref_id")}
+                provenance = {"root_id": source["id"], "root": source["declared_root"],
+                              "git_head": inventory.get("git_head"), "generation": inventory.get("generation")}
+                if identity in seen and seen[identity]["fact"] != semantic:
+                    result["complete"] = False
+                    result["holds"].append("Conflicting stable work identity: " + ":".join(identity))
+                    seen[identity].setdefault("conflicts", []).append({"fact": semantic, "source": provenance})
+                elif identity in seen:
+                    seen[identity]["sources"].append(provenance)
+                else:
+                    record = {"identity": list(identity), "fact": semantic, "sources": [provenance]}
+                    seen[identity] = record
+                    result["facts"].append(record)
+        for context in source.get("contexts", []):
+            if (not isinstance(context, dict) or context.get("schema") != "marathon/observer-snapshot@1"
+                    or context.get("read_complete") is not True or context.get("dispatch") is not False):
+                result["complete"] = False
+                result["holds"].append("Unavailable/unsupported observer: " + source["id"])
+        if not source.get("contexts"):
+            result["holds"].append("No observer contexts declared for " + source["id"] + "; absence does not prove idle.")
+    if not result["complete"]:
+        result["status"] = "UNKNOWN"
+    return result

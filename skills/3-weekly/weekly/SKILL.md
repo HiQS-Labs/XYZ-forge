@@ -15,7 +15,7 @@ Never invoke the entire `/10days` workflow for discovery: its unattended rating,
 promotion and dispatch exception does not apply to weekly.
 
 **Capability status:** staged implementation for [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022).
-Shared discovery and local canonical accumulation are implemented. Executable
+Shared discovery, local canonical accumulation and a held declared-work census are implemented. Executable
 selection/artifacts, immutable freeze, exact approval, dependency expansion and
 shared fire/phase/resume/landing enforcement remain unavailable. Keep dispatch held;
 never claim umbrella completion, enable scheduling or run a real Marathon/Jog.
@@ -57,6 +57,36 @@ return UNKNOWN/nonzero. Pagination is complete transport, not an atomic snapshot
 This mode prints JSON and performs authenticated reads only; the bytecode flag
 prevents import cache writes. Redirecting stdout explicitly writes a local file.
 The outline sequencing/audit fields are advisory, never readiness or delivery proof.
+
+## Declared work census
+
+The opt-in existing-core `weekly-work` mode reads canonical Marathon/Jog/raw lifecycle
+facts and explicitly named observer contexts without preparation or dispatch:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 "$HARNESS/skills/3-weekly/weekly-planner/scripts/planner_core.py" --repo-root "$SOURCE_ROOT" --mode weekly-work --authority-file "$AUTHORITIES"
+```
+
+AUTHORITIES is an explicit JSON `weekly/authorities@1` object with a nonempty
+`roots` list. Every root declares unique `id`, absolute `root`, qualified
+`repository` and `contexts` (even when empty). Each context declares absolute
+`path`, `coordination_root`, `product_root` and optional absolute `metadata_roots`.
+No registry, primary checkout or fleet scan is inferred. Metadata containment uses
+physical roots; product ownership preserves the observer's logical path contract.
+
+The canonical `work inventory` owner observes all queue, Marathon and raw lifecycle
+rows under one guarded generation/head envelope, including NULL issue references
+and unregistered/unknown held evidence. Driver-lock presence is observed through
+the shared resolver without acquiring or reaping it. The existing observer's
+`snapshot` action reads bounded context/heartbeat/receipt metadata once. Missing,
+foreign, malformed or observed drift stays UNKNOWN/nonzero; available raw responses
+and per-root provenance remain in accounting. Identical stable facts deduplicate
+with all sources; conflicts hold. Runtime paths and bytes are measured separately
+from target Git HEADs. Read completeness grants no readiness, authentic peer
+attestation, stopped-descendant/global-idle proof or execution approval. Empty
+context lists explicitly cannot prove absence of activity. No DB/context/capture,
+Git/lease/audit writes, watchers or connectors occur. Redirecting stdout writes the
+caller-chosen local output. Durable reconciliation and rollover remain unimplemented.
 
 ## Explicit local accumulation
 
