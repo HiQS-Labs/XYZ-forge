@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -281,5 +281,110 @@ Handing off to Producer (author) — disposition S2 within this same normal cap3
 S2 Implemented: one-line dashboard warning formatting displays unavailable for parserNone; canonical parsing and recovery unchanged. Exact actual-render matching/different/no-header/empty controls preserve firsttwo behaviors andwitness lasttwo pre-fix TypeError→explicit unavailable stale warning withHTML. Source-bound before/afterJSON retains parserNone. Current Jog24 andthreeescaping×sevenstored-text controls refreshed/pass. No newCI test/case/param/registration/gate, no browser/JS/live DB orconnector execution. Existing e654 dashboard/artifact checks retained; exactcandidate fullnormal gate andcorrectedLinuxexistingCI remainpending.
 
 All S1/S2 dispositions now concrete; review current exactsource/evidence andowningfiles. Round3/3 is the last turn in the previouslyauthorized normalnew-scope cap; preserveall R1/R2 history. If findings remain, set Escalated atcap—no reset/replacement oradditionalround. R6FAIL6/6 remainsclosedunchanged; MediumGH1028 tracked,GH1027 individualtest proposals unapproved. W7–W11 active;this readerprerequisite isnot umbrella/landing/execution approval. No source edits/agents/suites/pytest/fixture programs/network/builders/external writes; onlythisrelay,harmlessin-memory renderer/readprobes. Handing off to Reviewer(codex)—take the last normalPhase6 turn.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: S1 and S2 are resolved on the current source. The qualified Jog reader meets the reviewed owner-read contract in source and bounded in-memory checks; no additional actionable pre-existing defect was established by this owning-file sweep. Approval closes only this genuinely new Phase6 final-QA relay at its existing cap3. It does not attest the pending full gate/Linux qualification, grant execution or landing permission, or complete W7–W11/weekly/GH1022. Corrective accumulation R6 remains closed FAIL6/6; GH1028 remains Medium and GH1027 remains unapproved.
+
+swept file: yes
+Swept the entire current releases_app.py (7040 lines), all 102 gh123 fixture lines and the production telemetry writer; read Phase6 and its resumption, the plan/final histories and current manual/provenance evidence. This is a static owning-file review with narrow read/render measurements, not exhaustive concurrency, provider or all-CRUD clearance.
+
+- [Pass] S2 resolved at utils/py/releases_app.py:6545: absent parser generation now formats as "unavailable". Fresh actual-render checks preserve matching generation1 without STALE SYNC and differing generation2 with STALE SYNC; both no-header and empty dump render with an explicit unavailable/stale warning while the parser still returns None (:1300). Restoring the former numeric formatter solely in memory reproduces TypeError and zero HTML. That witnessed red control grounds the repair; canonical parsing/recovery policy is unchanged.
+- [Pass] S1 remains resolved at utils/py/releases_app.py:6572, :6573, :6575, :6593, :6596. Fresh actual-render controls return seven escaped occurrences each for the exact img/event-handler payload, ordinary comparison text and Unicode; active_img is False. Stored values and non-HTML readers are untouched by these interpolation boundaries. No browser/JavaScript executed.
+- [Pass] The shared query qualifies BOTH repo_id and gh_number (utils/py/releases_app.py:4614). Fresh actual _jog_rows returns exactly one Owner A row beside Foreign B issue777, retains title=None after deleting only the owning enrichment, and retains the exact legacy13 fields. Active filter/order and missing-table legacy behavior remain explicit (:4602, :4616, :4731); unsupported default schemas remain advisory (:4618).
+- [Pass] Inventory is one declared root's held observation, using optional readonly connect with writer default unchanged (utils/py/releases_app.py:432, :4651). Required tables/columns, migration6, positive generation, all declared repositories and observed GIDs qualify before publication (:4652–:4702). Common-dir journal/SQLite sidecar/WAL header checks precede opening; generation/artifact drift withholds rows (:4640–:4649, :4708). UNKNOWN/nonzero and no-dispatch remain explicit (:4634, :4704, :4722). These are source checks; the seeded filesystem/CLI controls were not independently rerun.
+- [Pass] Fresh source SHA256 is 77e99f1783313347ad8f672d31751759731f466af7c8fba6f62d98e2d5a46960. Current Jog24, dashboard escaping and generation-after JSON all bind these bytes, and their artifact hashes match retained provenance.jsonl receipts at 2026-10-12T04:13:07. The 24/24 Jog results are Producer evidence, distinguished from fresh bounded query/render observations.
+- [Pass] Existing gh123 correction is confined to open(..., 'w+') (test/gh123-lock-progress-bound.sh:63), preserving the six inherited-descriptor handovers, pwrite/truncate and existing assertions/bounds (:65–:100). Production retains O_RDWR|O_CREAT (utils/telemetry/append-xyz-completion.sh:69), per-holder default30 and separate total cap (:55–:56). No new CI case/assertion/registration or production token-policy change is part of this correction.
+- [Unverified — needs clone run] Exact-current-source full normal gate and corrected Linux qualification remain pending, as recorded in PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md's final Phase6 resumption. Earlier focused receipts do not attest this final source. The post-turn harness/disposable clone must establish them before the corresponding publication/qualification claim. No validate.sh, test/*.sh, pytest, executable fixture program, Git command, connector/network/builder or live queue action ran here.
+
+Graph limitation: list_projects returned all82 entries with has_more=false and omitted this worktree. Nearest Forge coverage generation2026-09-01T15:54:30Z reports metadata_changed for owner/test/writer and missing plan/evidence freshness. Direct current-source inspection grounds the review; no reindex or exhaustive current caller-graph claim.
+
+Quoted fresh probe command (module definitions, actual in-memory read/render calls; temp dump bytes only in .relay-scratch; transposed red changes only an in-memory function):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast, contextlib, hashlib, io, json, sqlite3
+from pathlib import Path
+from types import SimpleNamespace
+p=Path('utils/py/releases_app.py'); source=p.read_text()
+ns={'__name__':'review_probe','__file__':str(p.resolve())}
+exec(compile(ast.parse(source),str(p),'exec'),ns)
+sha=hashlib.sha256(p.read_bytes()).hexdigest()
+print('source_sha256:',sha)
+base=Path('TESTS-RESULTS/2026-10-11+GH-1022')
+receipts=[json.loads(x) for x in (base/'provenance.jsonl').read_text().splitlines() if x.strip()]
+for name in ['phase6-jog-manual-results.json','phase6-dashboard-after.json','phase6-dashboard-generation-after.json']:
+ data=json.loads((base/name).read_text()); digest=hashlib.sha256((base/name).read_bytes()).hexdigest()
+ print(name,'source_matches:',data['source_sha256']==sha,'provenance_matches:',any(r.get('artifact')==str(base/name) and r.get('sha256')==digest for r in receipts))
+ if 'count' in data: print('recorded_Jog_controls:',data['count'],len(data['controls']),sum(x['pass'] for x in data['controls']))
+original=sqlite3.connect
+dump=Path('.relay-scratch/tmp/r3-header.sql').resolve()
+ns['resolve_root']=lambda root:root
+ns['artifact_paths']=lambda root:{'db':'/dev/null','dump':str(dump)}
+ddl="CREATE TABLE settings(key,value); INSERT INTO settings VALUES('generation','1'); CREATE TABLE op_receipts(id); CREATE TABLE releases(version,codename,status,target_date,shipped_date,description,exit_criterion,id); CREATE TABLE manifest_items(release_id,state); CREATE TABLE roadmap_items(section,gh_number,title,status_marker,position);"
+def render(header,value=None):
+ dump.write_text(header)
+ c=original(':memory:');c.row_factory=sqlite3.Row;c.executescript(ddl)
+ if value is not None:
+  c.execute('INSERT INTO releases VALUES(?,?,?,NULL,NULL,?,?,1)',(value,value,value,value,value))
+  c.execute('INSERT INTO roadmap_items VALUES(?,777,?,?,1)',(value,value,value))
+ sqlite3.connect=lambda *a,**k:c
+ out=io.StringIO()
+ try:
+  with contextlib.redirect_stdout(out): ns['cmd_dashboard'](SimpleNamespace(root='read-probe'))
+  html=out.getvalue()
+  return {'rendered':bool(html),'stale':'STALE SYNC' in html,'unavailable':'Dump generation (unavailable)' in html,'escaped_count':html.count(ns['html_escape'](value)) if value else None,'active_img':'<img ' in html}
+ except Exception as e: return {'error':type(e).__name__+': '+str(e),'rendered':bool(out.getvalue())}
+ finally: sqlite3.connect=original
+for header in ['-- generation: 1\n','-- generation: 2\n','-- releases-app canonical dump\n','']:
+ print('header:',repr(header),'parser:',ns['dump_generation_from_text'](header),'result:',render(header))
+for value in ['<img src=x onerror="alert(1)">','A & B < C','Ordinary owner ✅']:
+ print('escaping:',repr(value),render('-- generation: 1\n',value))
+f=next(x for x in ast.parse(source).body if isinstance(x,ast.FunctionDef) and x.name=='cmd_dashboard')
+text=ast.get_source_segment(source,f)
+needle='(db_gen, dump_gen if dump_gen is not None else "unavailable")'
+assert needle in text
+red=text.replace('!= Dump generation (%s)','!= Dump generation (%d)').replace(needle,'(db_gen, dump_gen)')
+saved=ns['cmd_dashboard']
+exec(compile(red,'<in-memory-S2-red-control>','exec'),ns)
+print('S2_transposed_red:',render('-- releases-app canonical dump\n'))
+ns['cmd_dashboard']=saved
+c=original(':memory:');c.row_factory=sqlite3.Row
+c.executescript('CREATE TABLE jog_queue(id,global_id,repo_id,gh_number,position,status,attempt_count,lease_pid,failure_reason,created_at,updated_at); CREATE TABLE roadmap_items(repo_id,global_id,gh_number,title,doc_path,issue_url);')
+c.execute("INSERT INTO jog_queue VALUES(1,?,1,777,1,'pending',0,NULL,NULL,'2026-10-12','2026-10-12')",('jog-'+'1'*26,))
+for rid,title in [(1,'Owner A'),(2,'Foreign B')]:
+ c.execute('INSERT INTO roadmap_items VALUES(?,?,777,?,NULL,?)',(rid,'rmi-'+str(rid)*26,title,'https://github.com/acme/'+('a' if rid==1 else 'b')+'/issues/777'))
+rows=ns['_jog_rows'](c)
+print('qualified_query:',len(rows),[r['title'] for r in rows],'legacy_keys:',','.join(rows[0]))
+c.execute('DELETE FROM roadmap_items WHERE repo_id=1')
+print('unregistered_title:',ns['_jog_rows'](c)[0]['title'])
+c.close()
+PY
+```
+
+Exit status: 0. Decisive output:
+
+```text
+source_sha256: 77e99f1783313347ad8f672d31751759731f466af7c8fba6f62d98e2d5a46960
+phase6-jog-manual-results.json source_matches: True provenance_matches: True
+recorded_Jog_controls: 24 24 24
+phase6-dashboard-after.json source_matches: True provenance_matches: True
+phase6-dashboard-generation-after.json source_matches: True provenance_matches: True
+header: '-- generation: 1\n' parser: 1 result: {'rendered': True, 'stale': False, 'unavailable': False, 'escaped_count': None, 'active_img': False}
+header: '-- generation: 2\n' parser: 2 result: {'rendered': True, 'stale': True, 'unavailable': False, 'escaped_count': None, 'active_img': False}
+header: '-- releases-app canonical dump\n' parser: None result: {'rendered': True, 'stale': True, 'unavailable': True, 'escaped_count': None, 'active_img': False}
+header: '' parser: None result: {'rendered': True, 'stale': True, 'unavailable': True, 'escaped_count': None, 'active_img': False}
+escaping: '<img src=x onerror="alert(1)">' {'rendered': True, 'stale': False, 'unavailable': False, 'escaped_count': 7, 'active_img': False}
+escaping: 'A & B < C' {'rendered': True, 'stale': False, 'unavailable': False, 'escaped_count': 7, 'active_img': False}
+escaping: 'Ordinary owner ✅' {'rendered': True, 'stale': False, 'unavailable': False, 'escaped_count': 7, 'active_img': False}
+S2_transposed_red: {'error': 'TypeError: %d format: a real number is required, not NoneType', 'rendered': False}
+qualified_query: 1 ['Owner A'] legacy_keys: id,global_id,gh_number,position,status,attempt_count,lease_pid,failure_reason,created_at,updated_at,title,doc_path,issue_url
+unregistered_title: None
+```
+
+Relay closed (Approved), no further review turn needed. Handing the completed token back to author via done; author/harness owns the file-scoped commit and the separate exact-candidate gate/Linux qualification. Preserve corrective R6 and all earlier round history; W7–W11 remain active and weekly HELD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
