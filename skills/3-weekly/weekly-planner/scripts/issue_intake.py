@@ -292,7 +292,10 @@ def normalise_work_observations(observations: list[dict]) -> dict:
     seen = {}
     for source in observations:
         inventory = source.get("inventory")
-        if (source.get("error") or not isinstance(inventory, dict)
+        if source.get("error"):
+            result["complete"] = False
+            result["holds"].append("Declared source observation error: " + source["id"] + ": " + str(source["error"]))
+        if (not isinstance(inventory, dict)
                 or inventory.get("schema") != "releases/work-inventory@1"
                 or inventory.get("read_complete") is not True or inventory.get("initialized") is not True
                 or inventory.get("dispatch") is not False):

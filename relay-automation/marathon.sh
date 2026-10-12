@@ -271,6 +271,7 @@ def snapshot(args):
         text = bounded_read(owned(str(args.context)))
         if text is None:
             raise ValueError("observer context unavailable")
+        answer["raw_metadata"] = {str(args.context): text}
         context = json.loads(text)
         if not isinstance(context, dict):
             raise ValueError("observer context is not an object")
@@ -305,6 +306,7 @@ def snapshot(args):
                 raise ValueError("observer phase PID unavailable")
             refs.extend((owned(phase["result_file"]), owned(phase["relay_file"])))
         before = {path: bounded_read(path) for path in refs}
+        answer["raw_metadata"] = before
         # Preserve missing raw facts visibly: a context is not proof of stopped descendants,
         # an authentic peer receipt, completed criteria or global absence of execution.
         missing = [path for path, value in before.items() if value is None]
@@ -313,14 +315,22 @@ def snapshot(args):
         with contextlib.redirect_stdout(buffer):
             emit(context, "snapshot")
         report = json.loads(buffer.getvalue()[len("marathon-progress: "):].strip())
+        invalid = []
+        if phase:
+            if not receipt:
+                invalid.append("observer receipt malformed or foreign")
+            if report["heartbeat"].get("state") == "unknown":
+                invalid.append("observer heartbeat malformed or foreign")
+            if report["role"] == "unknown" or report["relay_status"] == "unknown":
+                invalid.append("observer relay metadata unavailable")
         if before != {path: bounded_read(path) for path in refs} or before[str(args.context)] != text:
             raise ValueError("observer context/receipt/heartbeat changed during read")
-        answer.update(status="PASS" if not missing else "UNKNOWN", read_complete=not missing,
+        answer.update(status="PASS" if not missing and not invalid else "UNKNOWN", read_complete=not missing and not invalid,
                       context=context, observation=report, receipt=receipt,
                       source_sha256={path: hashlib.sha256(value.encode()).hexdigest() if value is not None else None
                                      for path, value in before.items()},
                       held_reasons=["execution-not-authorized", "receipt-authenticity-and-criteria-not-verified"]
-                                   + (["observer metadata unavailable"] if missing else []))
+                                   + (["observer metadata unavailable"] if missing else []) + invalid)
     except (OSError, ValueError, TypeError, KeyError, AttributeError) as error:
         answer["held_reasons"] = [str(error)]
     print("marathon-progress: " + json.dumps(answer, sort_keys=True), flush=True)

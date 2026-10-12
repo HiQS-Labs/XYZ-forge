@@ -927,3 +927,15 @@ bytes and sidecars unchanged. No CI test/case/registration or live dispatch adde
 Phase7 final owner QA and covering existing suites remain pending. Census is a W7
 prerequisite: reconciliation/rollover, authoritative selection, freeze/exact approval,
 shared fire/phase/resume/landing and the full W11 audit still require implementation.
+
+
+Phase7 final R1 FAIL is retained: B1 malformed/foreign receipt reported complete,
+B2 later observer failure removed normalized known inventory, S1 missing capability
+in existing planner skill. B1 now holds rejected receipt/heartbeat/relay attribution
+and retains bounded raw metadata; B2 keeps valid qualified facts alongside source
+errors. S1 documents explicit authority roots and no-idle/no-dispatch limits in the
+repository planner skill. Actual remediation controls core13/observer12/work15 PASS.
+Earlier candidate existing suites adapter223/lifecycle125/work-state28/lock18/
+artifacts10/refusals19 passed in disposable clone. These receipts retain their
+exact candidate scope; R2 complete owner sweep and final-clone qualification pending.
+R6FAIL/Medium1028 and Phase6Approved3/3 unchanged. Full1022 remains incomplete.

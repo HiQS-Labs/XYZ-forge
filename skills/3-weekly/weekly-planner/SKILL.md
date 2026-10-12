@@ -135,3 +135,30 @@ python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --m
 4. Promotes newly unblocked tasks to the top of today's operator queue.
 5. Runs the Adversarial Northstars check on the pivoted day plan before presenting to the user.
 6. Emits both `temp/planner/daily-pivot-<date>.json` and `temp/planner/DAILY-PIVOT-<date>.md`.
+
+
+## Opt-in declared work observation
+
+The distinct `/weekly` workflow uses this core's held `weekly-work` read mode:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root "$SOURCE_ROOT" --mode weekly-work --authority-file "$AUTHORITIES"
+```
+
+AUTHORITIES explicitly names sources; no primary/fleet/registry scan is inferred:
+
+```json
+{"schema":"weekly/authorities@1","roots":[{"id":"repo","root":"/absolute/clone","repository":"OWNER/REPO","contexts":[{"path":"/absolute/coord/run.log.progress.json","coordination_root":"/absolute/coord","product_root":"/logical/product","metadata_roots":["/absolute/metadata"]}]}]}
+```
+
+Every root requires a unique id, absolute path, qualified repository and explicit
+contexts list (which may be empty). Context metadata must lie within the declared
+physical roots; product ownership preserves the observer's logical path. Complete
+observations remain HELD with dispatch_allowed false. Missing, malformed, foreign,
+conflicting or observed drifting evidence is UNKNOWN/nonzero, with available raw
+sources and known qualified facts retained. A complete read does not prove criterion
+delivery, authentic peer approval, stopped descendants or global absence of work.
+Empty context lists do not prove idle. This mode reads existing canonical owners
+once; it does not prepare, select, write ledger/context/captures, schedule or dispatch.
+Legacy weekly/daily outline modes keep their existing interfaces. See the separate
+[weekly skill](../weekly/SKILL.md) for accumulation and capability limits.

@@ -1,0 +1,86 @@
+{
+  "source_sha256": "cb6d48915adac75d9949cd0f2c3b5347980daf63b67118f80df40d6313089495",
+  "method": "actual core CLI with owned authority-file fixtures; existing runtime/owner reads only; no prepare/ledger/context/capture/Git writes,builders,CI additions",
+  "count": 13,
+  "controls": [
+    {
+      "name": "actual complete owner adapter held with all facts",
+      "pass": true,
+      "rc": 0,
+      "complete": true,
+      "status": "HELD"
+    },
+    {
+      "name": "duplicate root IDs",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "relative root refused",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "implicit contexts refused",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "unqualified repository refused",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "missing owner returns UNKNOWN with source retained",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "apply does not become a writer",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "empty authority root set",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "injected runner preserves existing bounded-default seam",
+      "pass": true
+    },
+    {
+      "name": "actual UNKNOWN observer JSON retained on exit two",
+      "pass": true,
+      "rc": 2,
+      "complete": false,
+      "status": "UNKNOWN"
+    },
+    {
+      "name": "malformed fact held while raw source and valid facts retained",
+      "pass": true
+    },
+    {
+      "name": "later observer error retains qualified known inventory facts",
+      "pass": true
+    },
+    {
+      "name": "final runtime drift UNKNOWN retains observed facts and sources",
+      "pass": true
+    }
+  ]
+}
