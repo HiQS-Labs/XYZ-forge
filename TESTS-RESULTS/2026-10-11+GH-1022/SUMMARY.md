@@ -320,3 +320,5 @@ Explicituser policypermitslowertracked draftpublication throughnormal gates,
 withoutturning actualFAIL intoPASS. Full1022/W7–W11 remainsincomplete.
 
 Required integration-base fullgate at0cd4c353:exit0,409/409 selections,Python21/21,runner-envelopeclean;disposableidentity/HEAD/trackedtree remainedunchanged. Sourcehashes identicalto1044969d/R6 target. This isnotci-local orpromotionqualification. Normalincrementalpre-push stillrequired. R6 remainsFAIL/oneMediumGH1028/noCriticalHigh,notApproved. NewlymergedPR1026/1017 areverifiedprerequisites only;currentdraftmergeability conflicts andW7–W11 remainunqualified. No rebase/sourceedit toinvalidatefrozen gate.
+
+Normal sourcepublication3035d128 passedtier2 28/28/Python21 andcleanrunner in319s,no bypass. DraftHEAD3035verified,CONFLICTING,no automaticActionsrun forSHA;CodeRabbitstatussuccess isnotActionsqualification. Supportedexistingci.yml manualdispatch willverifyfinalbranchhead afterevidence-onlynormalpush;no promotion ordeployment. Currentdevelopmentref45afc936 verified,changedafterfrozen integrationbasef122;no rebase ornewreview solelyfor thisupdate.
