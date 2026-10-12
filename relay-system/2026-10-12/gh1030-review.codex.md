@@ -125,4 +125,12 @@ An earlier invocation also supplied returncode=1/empty stdout and reported "capa
 
 Relay closed (Approved), no further reviewer turn needed. Operator-review retains responsibility for external gate evidence and landing-conflict resolution. Driver owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-10-12T18:14:32Z
+task: RELAY-GH1030-REVIEW
+reviewer: codex
+status: Approved
+reviewed-head: c1e945c71775c71e4260a551c95126a977d812eb
+added-range: 7979+7743
+added-sha256: 145c18f669e90a2b19cd77e9befac10c7d3ef1702567e1631e708421ec04698b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
