@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-11 — start-task: prior-art scan finds merged PRs and issues (GH-1025)
+
+`/start-task` checked only open PRs in the current repo, so a fix merged yesterday, a closed issue,
+or work in a sibling repo went unseen. In cloud sessions `gh pr list` (GraphQL) is refused, so the
+scan returned nothing at all.
+
+- `prior_art_recon.py` now also reports PRs merged in the last `--since-days` (default 30) and
+  issues in any state. Search matches titles and bodies, so `Fixes #N` links count. `--repo
+  OWNER/NAME` scans sibling repos. When `gh ... list` fails, it falls back to repo-scoped REST.
+- Merged PRs and issues closed as completed are listed as `existing_fix_candidates`. `start-task`
+  Step 1 now stops and confirms with the user when one appears.
+
+The existing suite `gh777-start-task-prior-art` gained stub-gh checks for both paths (red at
+base: `--repo` unrecognised). There is no new suite or script. Revert the `fix(GH-1025)` commit to
+roll back; the JSON only gains keys, so existing consumers are unaffected.
+
 ## 2026-10-10 — Releases ledger: bare repo slugs match a differently cased GitHub name (GH-1016)
 
 A ledger whose `repos.slug` is the checkout folder name (`aegis-sleuth-slack-bot`) never matched its
