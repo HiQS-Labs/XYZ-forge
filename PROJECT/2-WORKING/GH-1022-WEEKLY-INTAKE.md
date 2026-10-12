@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | Phase8 prerequisite published with evidence d22. Phase9 plan ApprovedR1/3; caller implemented locally but finalQA FAIL/Escalated3/3 at0144826a. S4 actual Git/hook checkpoint admission reproduced; caller edits/publication held for operator disposition. W8–W11 remain incomplete; R6FAIL/1028 and #1027 unapproved unchanged. |
+| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | Phase8 prerequisite published with evidence d22. Phase9 plan ApprovedR1/3; prior finalQA FAIL/Escalated3/3 retained. Genuine direct S4 approval authorizes the bounded repair and exactly one corrective review. Repair f18b051a is under qualification; no caller approval/publication yet. W8–W11 incomplete; R6FAIL/1028 and #1027 unapproved unchanged. |
 
 ## Table of contents
 
@@ -1463,3 +1463,17 @@ Actual source-qualified completion/refusal/partial/lost-result/no-change control
 and applicable existing checks are pending before the one corrective review.
 Original R3/S4 red evidence, R6FAIL/#1028 and unapproved #1027 remain retained.
 W8–W11 remain incomplete; no new human fire/merge/deploy/schedule/install authority.
+
+
+S4 qualification atf18b051a: twenty frozen-source flow/control batches plus the
+existing36 accumulation controls pass. Exact staged failure retries; exact final
+commit/result-loss resumes without a second commit; stable repeat keeps checkpoint
+and private bytes; actual extra-file/extra-parent commit and both entry-point retries
+hold with unknown HEAD/intent/checkpoint preserved. Removing the pending binding
+from an unknown clean result also holds at partial no-change rather than certify it.
+The result checks inspect the captured immutable SHA, not an interchangeable moving
+HEAD. Existing gh418 PASS/gh69816/0 in identity-intact disposable full clone pass.
+All source hashes/provenance/limits are phase9-s4-final-qualified.json. Programs
+stay ephemeral; no CI test/case/parametrization/registration was added. Whole caller
+budget/exhaustive interleavings and already-in-flight older metadata caches remain
+unqualified. One authorized corrective source review next; no additional loop.

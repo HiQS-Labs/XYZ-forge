@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Author
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -52,10 +52,10 @@ ROUND: 3 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: whole planner_core.py, unchanged canonical releases_app.py, shared intake, weekly skills, main plan, retained current qualification and relevant unchanged fixture sources; exact committed HEAD captured by driver.
 - Reviewer: codex   ·   Producer: Author
 - Started: 2026-10-12
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: bounded S4 completion/partial/lost-result/no-change intended-tree and sole-parent binding; retain unknown history/evidence, preserve existing interfaces/writers, no new CI tests; whole-source review and accurate remaining limits. This is not W8–W11/full1022 acceptance.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -375,5 +375,20 @@ Only this relay tracked file changed. Scratch creation stayed under `.relay-scra
 
 Handing off to Author — this relay is Escalated at3/3. Disposition S4 and the remaining qualification limits through the existing operator escalation; do not open Round4 or reset this relay. Go to the Author window and say 'take your turn'.
 
+
+### Producer · Round 4 — single authorized corrective extension
+
+VERDICT: PARKED
+Basis: Genuine direct human reply to the S4-specific question said “Authorize S4 repair and one review.” Exactly ONE corrective review is authorized; prior FAIL and R3 Escalated3/3 are retained. Header4/4 adds one bounded turn, not a reset/new loop. The recycled earlier R6 approval was withdrawn and is NOT used.
+
+S4 Implemented atf18b051a: existing preparation receipt binds intended parent/tree/owned blobs before commit; immutable tree is verified to contain only allowed changes and exact owned objects. Completion inspects the captured commit SHA, exact sole parent/full tree plus clean live/owned objects and existing branch/target/ledger checks. Partial recovery rejects unknown results before progress; no-change adoption needs the same binding and exact path accounting; unbound clean partial results hold. Identical intended pre-commit retry may commit; exact lost result adopts without a second commit. No new store/schema/writer/framework/gate. Default selection/10days policy is untouched.
+
+Qualification: phase9-s4-final-qualified.json binds current source bytes to20 rc0 flow/control batches plus existing36 accumulation controls. Actual installed fixture pre-commit extra file and native extra-parent result now refuse; both caller/default retries preserve unknown SHA/incomplete receipt. Exact final lost result/pre-commit failure/no-change repeat pass; unbound no-change negative holds. All other recovery/hook/qualified-PR/rollover/same-date controls requalified. Existing disposable gh418 PASS/gh69816/0 and identity intact. Previous reds and failed source reviews remain immutable. Programs remain ephemeral; no new CI case/test/parameter/registry. Actual local fixture writes disclosed. Helper timeout/older post-handoff invocation are limited proofs, not whole-run cost/time or in-flight cache/exhaustive interleaving guarantees. Full normal qualifying gate follows permissible review result, not claimed now.
+
+Review the exact driver-captured current committed head and whole current core, whole7552-line canonical owner (source hash unchanged), shared intake/weekly skills/main plan and relevant unchanged covering fixture source in bounded untruncated pages. Declare swept file accurately; do not approve only diff or silently reuse partial historical sweep. Source-only: no new agents, suites/executable fixtures/network/connectors/live actions or Git commands except this relay; harmless in-memory AST controls allowed. Every requested change needs actual failing input/scope/falsifier/citation. Give each open finding an explicit Severity: Critical/High/Medium/Low as well as protocol grade, so binding blocking/lower-severity disposition can be evaluated without guessing. Preserve the actual PASS/FAIL/PARKED verdict; a lower-severity issue disposition cannot turn FAIL into Approved. Critical/High remains blocking. There is NO further review loop authority after this turn.
+
+Scope remains held caller preparation/reconciliation, not completed #1022. Preserve original R6FAIL6/6/Medium1028,1027unapproved, closedPhase6–8 and Phase9planApprovedR1/3. W8–W11 unimplemented. No implementation/landing/human approval follows generated accounting or this source review. If unavailable, incomplete or failing, report honestly within the one-turn allowance rather than inventing authority.
+
+Handing off to Reviewer(codex) — take the single authorized corrective Round4; no additional loop.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

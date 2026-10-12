@@ -259,3 +259,13 @@ GitHub title text cannot assign owner ratings. Final accounting/staging/commit
 holds the existing RELEASES writer lock and validates branch/HEAD and committed
 object bytes. Lock acquisition writes the canonical local lock/audit sidecars.
 Unknown or concurrent owner state is preserved and never completes a checkpoint.
+
+
+Preparation's existing private receipt now binds the intended complete Git tree,
+sole parent and owned objects before commit. Completion inspects the captured
+immutable commit SHA and requires that result plus clean live state. Partial
+no-change recovery can adopt only the same exact bound result; missing bindings
+or unknown extra files/parents retain the incomplete receipt and commit for
+explicit reconciliation. Exact lost-result recovery makes no second commit.
+This bounded S4 remediation is under its one authorized corrective review;
+prior FAIL/Escalated history remains retained and no dispatch authority follows.

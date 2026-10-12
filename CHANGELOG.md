@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-12 — Preserved held weekly rollover (GH-1022, Phase9)
+
+The existing weekly core can explicitly reconcile an owned or exactly published
+predecessor into a new auto-date full clone, preserve canonical GIDs/owner ratings/
+history and captures, retain predecessor ancestry, and refresh broad intake. Existing
+private ownership/locks govern handoff and stopped recovery. Unknown edits or histories
+hold; unchanged input makes no new commit. Optional publication checks/installs the
+existing normal hooks and uses explicit bounded ordinary fast-forward push.
+
+Preparation now records its intended full tree, sole parent and owned objects in
+the existing receipt before committing. Completion and partial/no-change recovery
+inspect the exact captured commit; unknown results retain incomplete evidence.
+Failed reviews and actual extra-file/parent red controls remain retained. A single
+operator-authorized corrective review is pending; this entry does not claim approval.
+No new CI test/case/registration, live run, schedule or installation occurred. Strict
+selection/artifacts, freeze/exact approval and shared fire/resume/landing remain
+unimplemented; observations and local commits confer no dispatch authority.
+
 ## 2026-10-12 — Canonical local-parent preservation (GH-1022, Phase8)
 
 The RELEASES owner now offers an opt-in local-parent `check` preview/apply API for
