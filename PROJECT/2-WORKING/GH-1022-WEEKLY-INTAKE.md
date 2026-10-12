@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase7 held declared-work census implemented; source QA Approved3/3 at4e759461, R1/R2 failures preserved. Phase6 publishedbc4/d09 retains full409/Python21 and Ubuntu407/407. | Final normal gate/publication of census next. Complete W7 reconciliation/rollover, W8 authoritative proposal/readiness, W9 freeze/approval, W10 shared boundaries and W11 audit. R6FAIL/Medium1028 and #1027 unapproved tests retained. |
+| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 canonical preservation API plan grounded; new-scope planQA then implementation. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
 
 ## Table of contents
 
@@ -982,10 +982,11 @@ grammar and closed Phase6/7 reviews are not reopened or relabeled.
 
 Grounding: [expanded four-lane Recon Map](GH-1022-WEEKLY-INTAKE/recon-integration-and-shared-boundaries.md).
 Canonical B1 verb replay remints GIDs/events. Rebuild overwrites its fixed backup
-and swaps DB before rewriting dump without an ordinary intent. Current ordinary
-perform_write already owns journal/transaction/recovery, but its local generation
-increment and old-row label maintenance need explicit preservation semantics for
-importing an already canonical merge. Reuse that writer; do not add a weekly SQL
+and swaps DB before rewriting dump without an ordinary intent. The ordinary
+writer owns journal/recovery; append-only table triggers forbid clear/reload inside
+its mutation. Current _rebuild already owns staged schema/load/generation/labels,
+but its publication lacks that intent. Factor/reuse the existing staged builder
+and extend the canonical journal publication/recovery boundary; do not add a weekly SQL
 merger, store, runner, gate, event or schema migration. Existing callers and legacy
 check/rebuild defaults remain their current contracts.
 
@@ -1000,7 +1001,7 @@ No delivery, global-idle, readiness, human approval or dispatch follows this mer
 
 Blast begins with canonical rows/receipts/events, writer/check/recovery and all
 existing CLI/readers. The plan adds one opt-in check merge preview/apply interface,
-a pure owner-side row selector and narrow existing-writer merge semantics. Runtime
+a pure owner-side row selector and narrow existing staged-builder/journal merge semantics. Runtime
 source code and root Git/input identities stay separate. This does not yet add
 weekly coordinator/adoption/rollover, proposal/freeze or a firing path. Undo local
 fixture/code changes normally; production-like owner data is never replayed during
@@ -1024,15 +1025,20 @@ preserve pre-operation evidence; existing .bak files remain untouched.
    distinguishes supplied target commit from fresh remote evidence, counts preservation
    and held reasons, and remains dispatchfalse. -> Same inputs are deterministic apart
    from observation time, empty/missing/ambiguous/ref/branch drift never passes.
-3. Add explicit `--apply` through the existing canonical perform_write transaction.
-   Refuse existing intents/SQLite sidecars, live local leases and stale root/parent
-   bytes; require connectors0 for this local projection operation. Use canonical
-   parser/loader and a bounded supported schema; no migrations or legacy B1 replay.
+3. Add explicit `--apply` through an extension of the existing canonical intent/recovery
+   protocol around the staged builder/publication boundary.
+   Refuse existing intents/SQLite sidecars, nonempty device-local cursor state,
+   present local driver ownership/live leases and stale root/parent
+   bytes; require connectors0 for this local projection operation. Factor/reuse _rebuild's existing staged parser/schema/loader builder. Keep append-only triggers and
+   every historical row; do not clear live history or disable its policies. Use a
+   bounded supported schema; no migrations or legacy B1 replay.
    Existing merge-rebuild receipt semantics reanchor only actual combined forks;
    retain all parent GIDs/ratings/status/raw/first_seen/captures/history and append
    only the operation receipt. Set the next generation above both parents, preserve
-   imported valid labels and verify exact supported roundtrip inside the transaction.
-   Guard root Git identity immediately before commit and report observed afterward
+   imported valid labels and verify exact supported roundtrip in the staged database before publication.
+   Journal before staging/swap, fsync the relevant intent/staged-file/directory
+   boundaries, retain exact before/after identity for recovery and guard root Git
+   identity immediately before publication; report observed afterward
    drift incomplete. Do not touch existing backups. Native post-durability adopted
    view effects, if applicable, must be declared. -> Witness rollback/pre-commit and
    post-commit/journal recovery with existing crash seams in owned fixtures; second
@@ -1054,14 +1060,15 @@ preserve pre-operation evidence; existing .bak files remain untouched.
 
 Alternatives: B1 replay loses identity/history; generic dump union cannot decide
 conflicts; repeated rebuild does not provide the required crash boundary; a parallel
-weekly importer duplicates ownership. The narrow journaled canonical path is chosen.
+weekly importer duplicates ownership. The narrow journaled canonical staged-publication path is chosen.
 Strongest counterargument: a full-row restore can normalize nullable/defaulted data
 or discard device-local state. The supported-shape/roundtrip/lease/cursor refusal
 and preservation contract must resolve that before apply, or narrow/hold the case.
 
 Review questions: Is the supported merge shape honest and sufficient for real weekly
-owner edits? Can existing writer label/generation/reanchor semantics host this without
-weakening other operations? Is cursor handling declared/preserved safely? If not,
+owner edits? Can existing staged builder and journal/generation/reanchor semantics host this without
+weakening other operations? Nonempty device-local cursors must hold until preservation is proven; never
+   reset/remap them by assumption. Is that cutoff honest? If not,
 return a concrete failing input/scope/falsifier; do not invent a generic framework.
 Root cause addressed: replay/rebuild lack exact logical preservation under the
 ordinary journaled boundary. Fix site: canonical owner, upstream of weekly callers.
@@ -1069,3 +1076,13 @@ Why not a downstream wrapper: it cannot repair reminted identities or a committe
 unjournaled replacement. Red/manual evidence lands under the existing GH-1022
 TESTS-RESULTS directory with source provenance. No individual new CI test is proposed
 or authorized by this plan. Full W7 coordination/rollover and W8–W11 remain active.
+
+
+Phase8 grounding correction before plan QA: actual current in-memory migration/receipt
+control rejected DELETE with `op_receipts is append-only` and retained its row.
+Clear/reload under perform_write is not chosen; no trigger/policy weakening. Existing
+migration writer is also an in-place registry transaction, not a staged replacement.
+Use the existing rebuild staged builder plus an explicit journalled publication/recovery
+extension for this new mode. Legacy check/rebuild behavior remains unchanged; no
+unprotected rebuild default is described as atomic recovery. This control is in-memory
+source grounding, not a new CI test or proof of the unimplemented operation.
