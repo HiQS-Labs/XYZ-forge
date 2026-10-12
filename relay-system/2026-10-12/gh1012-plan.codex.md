@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
-ROUND: 1 / 3
+NEXT: Producer
+STATUS: Approved
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -129,7 +129,7 @@ an actual defect demands a code change; review recon covers the pinned promotion
    dependency, exact-head QA and disposable-clone ledger simulation checks. Use the ordinary
    GitHub PR merge with `--merge --match-head-commit <head>`; verify MERGED before proceeding.
    Wait for hosted reconciliation using the existing reconcile-only path, then fast-forward
-   primary from verified origin. Publish any required caller-owned governance writes through
+   primary from verified origin. Publish any required caller-owned governance writes through  [Unverified — no citation]
    a normal hooked push from a separate disposable full clone, never from primary; if there
    are no writes, there is no push. Preserve the coordinator attempt records and emitter
    semantics; emit only a merge this caller witnessed. Do not invoke its unconditional primary
@@ -166,7 +166,7 @@ an actual defect demands a code change; review recon covers the pinned promotion
 7. Record `Stable qualified` in #1012 as the selected evidence-linked designation, bound to
    immutable `M`, the boundary run/job and independent QA receipts. Do not invent a release
    version/tag or transfer qualification to later metadata commits. Update #1012/PRS/PDDA through
-   canonical writers and retire only verified complete owned clones with backup/Trash proof.
+   canonical writers and retire only verified complete owned clones with backup/Trash proof.  [Unverified — no citation]
    -> Acceptance: outcome audit covers every required item; no stable claim on a red or stale SHA.
 
 ## Preservation and rollback
@@ -359,7 +359,7 @@ an actual defect demands a code change; review recon covers the pinned promotion
    dependency, exact-head QA and disposable-clone ledger simulation checks. Use the ordinary
    GitHub PR merge with `--merge --match-head-commit <head>`; verify MERGED before proceeding.
    Wait for hosted reconciliation using the existing reconcile-only path, then fast-forward
-   primary from verified origin. Publish any required caller-owned governance writes through
+   primary from verified origin. Publish any required caller-owned governance writes through  [Unverified — no citation]
    a normal hooked push from a separate disposable full clone, never from primary; if there
    are no writes, there is no push. Preserve the coordinator attempt records and emitter
    semantics; emit only a merge this caller witnessed. Do not invoke its unconditional primary
@@ -400,7 +400,7 @@ an actual defect demands a code change; review recon covers the pinned promotion
 7. Record `Stable qualified` in #1012 as the selected evidence-linked designation, bound to
    immutable `M`, the boundary run/job and independent QA receipts. Do not invent a release
    version/tag or transfer qualification to later metadata commits. Update #1012/PRS/PDDA through
-   canonical writers and retire only verified complete owned clones with backup/Trash proof.
+   canonical writers and retire only verified complete owned clones with backup/Trash proof.  [Unverified — no citation]
    -> Acceptance: outcome audit covers every required item; no stable claim on a red or stale SHA.
 
 ## Preservation and rollback
@@ -451,5 +451,25 @@ Review R1 correction and full conditional plan; final promotion-range execution 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Reviewer · Round 2
+
+**Approved — conditional operational plan only.**
+VERDICT: PASS
+Basis: R1 is resolved in the current canonical plan. Recovery evidence publication now precedes final freeze; publication-induced candidate changes require refreshed range/checks/QA and final B/D recovery binding. Approval does not qualify the release range or authorize held drafts.
+
+swept file: yes
+
+Read the entire relay and current canonical plan, including its unchanged sections. No additional plan defects identified in this bounded sweep; unread release-range code remains outside this verdict. The review envelope's five questions supply the criteria; the scaffold Definition of Done remains a placeholder, not evidence of release completion.
+
+- [Pass] **R1 resolved.** Current canonical step 5 says “Commit/publish the rehearsal's non-empty provenance ... before claiming it as proof. Record tested and carrier SHAs” (this file:383–392). It requires refreshed range/checks/QA when development changes, explicit blob/mode accounting, final-D revert/tree comparison, and a separately identified committed evidence carrier without advancing frozen D. Step 6 requires recovery proof already durable before submission (393–399). This removes the original ordering gap without new machinery. Correction: none; execution must supply those immutable receipt bindings.
+- [Pass] **Readiness and valued-clone isolation remain required.** Step 1 retains dependency, exact-head QA, disposable ledger simulation, hosted reconciliation, verified fast-forward, hooked publication only from a disposable full clone, no empty push and witnessed-merge-only emission (358–369). Read-only probe `nl -ba skills/2-daily/merge-cleanup/scripts/merge_cleanup.py | sed -n '610,660p'`, exit 0: line 648's push remains outside the status conditional at 638–646. The plan explicitly avoids that path. Correction: none.
+- [Pass] **SHA boundaries, ancestry and protection requirements are explicit.** Steps 5–7 distinguish provisional tested/carrier SHAs, final B/D and resulting M; require unchanged B and published D, preserved protections/development, `--merge --match-head-commit D`, and immutable-M stable designation without transfer to metadata commits (383–404). Read-only probe `nl -ba .github/workflows/ci.yml | sed -n '130,225p'`, exit 0: line 152 limits macOS to main push, line 203 runs `./validate.sh --sequential`, and line 210 emits `MACOS-BOUNDARY: green ${GITHUB_SHA}`. Correction: none.
+- [Pass] **Whole-range review and unresolved scope stay mandatory.** “A missing answer keeps the current prerequisites” (333); steps 3–4 require full local qualification with committed provenance and final review-code plus independent relay receipt (374–382); Unknowns says qualification remains pending (421–425). Read-only probe `rg -n "provenance|Orchestrator vs|Run the suite|No new tests" AGENTS.md`, exit 0: lines 100–101 require committed provenance, 326 requires independent QA, and 350 requires a separate full clone. Correction: none; consult is advisory and this plan QA cannot substitute for final candidate QA.
+- [Unverified — needs clone run] Full local qualification, material-seam red controls, two-parent recovery/full-tree-mode comparison and wrong-mainline negative control remain execution prerequisites. No test, fixture, gate, Git command or remote command ran in this turn. Live PR state, counts, remote heads/protections and hosted-main success were not queried or attested.
+
+Evidence limits: Verify intent with direct-source fallback. `list_projects(limit=100)` returned all 82 projects (`has_more=false`), none matching this worktree/task clone. Nearest XYZ-forge graph is another checkout, generation `2026-09-01T15:54:30Z`. Coverage marked policy/CI paths metadata-changed, coordinator not-tracked and this relay missing; current local text supports the bounded findings, not that stale index. Read-only probe `nl -ba relay-system/2026-10-12/gh1012-plan.codex.md | sed -n '306,385p'`, exit 0, and the earlier 385–505 span supply the cited canonical plan. No scratch output is treated as durable qualification.
+
+Relay closed (Approved), no further review turn needed. Handing the completed result to Producer (codex-producer) for the conditional execution prerequisites; final promotion-range execution remains held until they pass.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
