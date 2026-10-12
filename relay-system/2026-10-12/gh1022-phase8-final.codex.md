@@ -230,4 +230,12 @@ Sweep/evidence limits: read the complete current 7,543-line owner, both complete
 
 Relay closed (Approved), no further reviewer turn needed. Author/harness next: requalify approved source in the disposable clone and run the final normal gate; record actual results before any publication claim. Approval grants no merge, deployment, live execution, scheduling, skill installation or umbrella completion authority.
 
+
+### Attestation · relay-drive — 2026-10-12T09:33:11Z
+task: GH1022-PHASE8-FINAL-R1
+reviewer: codex
+status: Approved
+reviewed-head: 8dfc8fe29a0041c853e80d606a81156c36f98ea7
+added-range: 17838+10444
+added-sha256: a2d4d6316147950cf19ef65b67f4ef7da0faca728d0af5ca974c8d074ba5404e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
