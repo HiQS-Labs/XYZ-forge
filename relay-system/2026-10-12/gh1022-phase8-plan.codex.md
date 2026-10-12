@@ -96,4 +96,12 @@ Evidence method: graph project listing fully paginated; no index for this relay 
 
 Relay closed (Approved), no further turn needed. Author may address the nits and proceed through the separately required implementation/final-QA/gate process within existing authority.
 
+
+### Attestation · relay-drive — 2026-10-12T08:33:40Z
+task: GH1022-PHASE8-PLAN-R1
+reviewer: codex
+status: Approved
+reviewed-head: 5c276d7c411ad4cd2a4a5a69d8d648b0930b294a
+added-range: 8106+4431
+added-sha256: 3a30a99e070edd059df04ab776d2687003867353df5f59d92417e663e58c9c5c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
