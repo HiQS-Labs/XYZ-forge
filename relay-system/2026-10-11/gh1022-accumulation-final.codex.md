@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 5 / 5
+NEXT: codex
+STATUS: Open
+ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -241,4 +241,89 @@ status: Approved
 reviewed-head: e016d29a4f79ec5d8014fafc5476e8224c3b4a4e
 added-range: 53169+7707
 added-sha256: f9e235d4faa540e8cd108ceb1b8c034866053288b71e2c023ba3427d00ba0de7
+### Producer · Round 6 — one explicit corrective extension
+
+Operator authorization received2026-10-12: assistant asked one consolidated final
+Codex review because previous allowance was exhausted;user replied "Sure run one
+final coded review". This extends this SAME history from5 to6 for EXACTLY ONE
+reviewer turn. R1–R5 text and R5 attestation remain unchanged. No replacement loop,
+reset,retry-review oradditional reviewer is authorized. Earlier Setup's original
+cap3 is historical;this block governs the explicit extension. Only this relay file
+may change;no source,ledger,external/GitHub writes,suites,pytest,executable fixtures
+or extra agents. Read-only/in-memory probes under scratch permitted.
+
+Frozen inputs:source1044969dcad23a08e19219e3fb195d58715187d4;
+full evidence/ledgerHEAD142a377ce5ddbfaa9da3aca8715d3fe0d34eb26a,clean andsix
+runtime-source-hashes.json entries verified against both current bytes and1044969d
+blobs. Handoff commit changes onlythis transcript. Remote draft1024 remainsOPEN,
+isDraft=true,head7d0bd85e19cccd81cf6cce060b1027a1c8bb49fc;integrationtarget
+f1225359e1f677ef029117598625d1e5b4488b50. AdjacentPR1026 remainsOPEN atc1a0e543,
+prior-art scanner/skill untouched,landing not assumed. Primary remainsclean at
+originala58378289863548968ea907cbbddfd2b8d6f4f28.
+
+Scope is consolidated Claude feedback remediation,NOT full1022 acceptance.
+Read full current GH-1022 canonical plan,weeklySKILL andSUMMARY/provenance,
+Claude summary dispositionS1–S9/N1–N7 inplan,and ALL owning source:
+planner_core.py,issue_intake.py,10days/intake_adapter.py,releases_app.py;
+read reused proc_group.py/HQ renderer contracts andcaller interactions.
+Whole owning-file sweep is required;declare swept file yes/no andhonest limits.
+External review is cited inplan at31ba;current scope combines41f corrections with
+1044969d runtime/no-op/IO corrections. No newtest/case/parametrization orCIregistry
+change;S8's individually proposed cases inGH1027 remainunapproved. Never request
+oradd permanent replay drivers as a workaround.
+
+Questions:
+1. Does source/vendor bundle ownership keep actual tested intake/writer/renderer
+coherent while standalone copies retain central discovery? Do invalid explicit
+hints refuse without silently selecting another profile? Are legacy scan/find
+interfaces/defaults preserved,including inherited-stale-hint context?
+2. Do actual resolved runtime paths/byte hashes describe loaded implementation,
+remain separate from targetGitHEAD,and refuse drift beforeeffects andatpartial
+resume/commit boundaries? Are source changes held/preserved without granting
+execution approval orclaiming adversarial change/revert protection?
+3. Is full-batch deterministic inspection beforefirst capture/registration
+consistent with dry preview,existing owner docs/ratings andexact partial recovery?
+Does retained validated URL casing preserve qualified identity/legacy consumers?
+4. Do default weekly commands reuse the single existing process-group runner,
+bound hooks/freshremote reads underlocks,kill onlyowned groups ontimeout,release
+locks andpreserve incomplete receipts forsafe retry? Are legacy modes/copied
+locator startup expresslyoutside this command policy,with nohook/signing bypass?
+5. Does S6 ignore only knowncheck URL/time noise,return freshfull PR observations
+onno-op,retain material result/draft/review/mergeability/head/body/files/unknown
+changes,andavoid weakening futurefreeze evidence? Accounting remainsHELD and
+neverapproves execution;no operatorpolicy waiver inferred.
+6. Does baseline capture nowrecheck liveGID baseline/manifest insideexisting
+transaction withclean refusal andpreservation,keeping write-onceSQL andautomatic
+activation unchanged? Are priorstale-row ownerguards maintained?
+7. Are N3/N4/N6/N7 dispositions supported andproportionate,with historical N5
+unknown-source/storage evidence honestlyqualified andnew exactSHA provenance
+correct? Is producerverification commensurate andsourcebound,without making
+existing/manual controls imply recurringCIcoverage orindependent execution?
+8. Are cross-fix interactions,pre-existing defects in owning files,andstrict
+unknown/overlap/target/owner state holds correct? MandatoryW7–W11 remainsrequired
+andunimplemented,Phase6paused,alloutputHELD/no dispatch. No claimof fullissue,
+merge/promotion/schedule/deployment/install/live Marathon/Jog qualification.
+
+Evidence:runtime-producer-results.json19;runtime-accumulation-results.json36;
+runtime-discovery-parity.json20 including5legacyparity;runtime-noop-results.json
+metadata-onlysameHEAD/freshfull PR and9materialvariants;priorclaude controls7;
+existingfocused1044969d gh32 145/145,gh69 85/85,gh36914/14 clean+14/14stalehint,
+Pythonlayer21/21 inclean disposable fullclone. ActualfixtureDB/dump/capture/receipt/
+Git writes disclosed;transportstubbed,connectorsoff;timeoutclock2s only inloaded
+fixturememory. Actualsourcefiles matchrecorded hashes. Reviewer mayverify retained
+source/artifacts andnarrowin-memory paths;DO NOT runmutation-heavy suites/fixtures.
+No newqualifying fullgate orcorrectivepush yet.
+
+REQUIRED severity disposition: everyactionable finding MUST retain truthful
+Blocker/Should/Nit grade andVERDICT plus explicit Severity Critical|High|Medium|
+Low|Informational,observed impact,input/scope/falsifier andcitations. Critical/High
+BLOCKpublication. Loweractionable findings willbededuplicated/tracked byProducer
+before normalgated draftpublication under theuser's existing scoped disposition;
+that cannotturn FAIL into PASS ordown-rank actualowner loss/concurrency integrity/
+unauthorizedeffects. Stateexplicitly whether anyunresolvedCritical/Highremains.
+Ifseverity unclear identifymissing evidence;no cleanverdict fabrication. This
+single allowance endsafteryourone completedturn,includingFAIL;no automaticsecond
+review. Preserveall previousblocks,appendonlyyourR6block andupdateheader truthfully.
+Handingoff toReviewer(codex)—take theone authorizedconsolidatedcorrectiveturn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
