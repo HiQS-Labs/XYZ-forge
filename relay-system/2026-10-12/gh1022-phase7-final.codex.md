@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -195,5 +195,72 @@ S1 Implemented: repository weekly-planner skill now documents weekly-work/author
 Exact source candidate3bf10ded; complete source hashes in phase7-r2-source-hashes.json. Earlier candidate53c covering suites passed adapter223/lifecycle125/work-state28/lock18/artifact10/refusal19; R2 snapshot/normalization source now has actual source-bound manual evidence and AST/Bash syntax passed. Qualification statements retain their exact source limits; final-clone full gate remains pending. No new CI test/case/parameter/registration.
 
 Complete the four-owner and applicable fixture sweep before any PASS: R1 explicitly swept file no; do not inherit a whole-owner approval. Read the remaining canonical RELEASES owner in small bounded chunks with line-count coverage so no tool truncation hides pre-existing code. Preserve all R1 findings, R6FAIL/Medium1028 and Phase6Approved history. No source edits, extra agents, suite/fixture executable runs, network/connectors or live effects; only relay writes and harmless in-memory probes. Own cap2/3, not a reset. FullW7–11 active, no umbrella/landing approval. Handing off to Reviewer(codex)—take Round2 on the exact candidate.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: R1's malformed/foreign receipt and late-observer fact-loss controls now pass, but an observed malformed-relay case still yields complete/PASS. New-scope R2/3 only; R6FAIL6/6/MediumGH1028 and Phase6Approved3/3 remain immutable. No full1022/W7–11, publication, landing or merge approval.
+
+swept file: yes
+
+Sweep boundary: Read all four owners in full: releases_app.py lines1–7136, marathon.sh lines1–796, planner_core.py lines1–1485 and issue_intake.py lines1–369. Bounded follow-up reads recovered truncated spans, including RELEASES schema and dashboard/parser boundaries and planner preparation/legacy classification. Read the Phase7 plan and complete repository weekly-planner skill. No graph tools were exposed, so project/generation/coverage could not be queried; direct source fallback used. Inspected complete existing jog-queue, marathon, marathon-monitor, gh698, gh448, gh32-artifacts and gh54 fixture sources; the large gh549/gh280/gh605 suites were not completely swept or executed this turn. This FAIL is not exhaustive fixture qualification. No additional newly witnessed pre-existing defect in the four owners; existing advisory readiness limitations at planner_core.py:207–208 and cycle handling at :222–225 are already recorded for W8 and remain unapproved readiness policy, not reopened corrective findings.
+
+- [Blocker] **B3 — Present malformed relay fields still count as complete.** `relay-automation/marathon.sh:324` tests only the literal sentinel `unknown`; `emit` copies arbitrary or empty field values at :198. Consequently stable declared metadata containing `STATUS: Banana\nNEXT: Nobody\n`, or `STATUS: \nNEXT: \n`, yields rc0/PASS/read_complete=true. The Phase7 contract explicitly requires malformed records to return UNKNOWN/nonzero (`PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:868`). The R2 manual “unsupported relay metadata UNKNOWN” control only exercises missing fields, leaving this admission gap.
+  Observed input: The first complete response in `TESTS-RESULTS/2026-10-11+GH-1022/phase7-r2-observer-manual.json`, with only its raw RELAY.md value replaced by the two exact strings above. The matching context/receipt/heartbeat are otherwise unchanged. Valid `STATUS: Approved/NEXT: Builder` produces rc0/PASS; removing RELAY.md produces rc2/UNKNOWN; unsupported and empty fields produce rc0/PASS.
+  Affected scope: One-shot snapshot admission of a declared phase's bounded relay role/status metadata. Validate nonempty supported values using the existing relay contract, retain available raw/context/receipt observations and return UNKNOWN/nonzero for unsupported/empty fields. Keep legacy emit/observe/finish policy unchanged; this is structural completeness, not criterion or authenticity approval.
+  Falsifier: Same stable input with valid Builder/Reviewer and supported relay status stays PASS/rc0; the two exact malformed strings become UNKNOWN/rc2 with raw bytes and known context/receipt retained; missing fields remain UNKNOWN/rc2. If either malformed input already returned UNKNOWN against the candidate source, this finding would be unnecessary; it did not.
+  Root cause: snapshot mistakes the absence sentinel for a vocabulary/shape validator. Fix site: snapshot's relay completeness admission. Why not upstream/downstream: legacy emit is a reporting helper and must preserve its outputs; downstream receives read_complete=true after this owner accepted unsupported metadata. Use existing/manual controls only; no CI test/case/registration requested.
+
+- [Pass] **R1 B1 receipt rejection repaired for the witnessed inputs.** Actual unchanged snapshot/parser/matcher functions, with bounded reads substituted by the seeded raw dictionary, returned matching rc0/PASS and malformed/foreign/missing rc2/UNKNOWN; context remained present in all four results. Repair predicate and retained outputs: `marathon.sh:320–333`. This is narrow in-memory evidence, not an executable CLI/clone gate or receipt-authenticity finding.
+- [Pass] **R1 B2 retained known fact repaired.** The same valid generation1/schema8/HEAD a×40 inventory and owned pending jog-1×26 fact used in R1 returns facts=1/HELD without error and facts=1/UNKNOWN with the later observer error. Source error qualification no longer skips admission (`issue_intake.py:295–300`); original provenance is retained at :345–349.
+- [Pass] **R1 S1 capability documented.** Complete repository skill now includes the opt-in invocation, minimal authority JSON, explicit roots/context metadata and “Complete observations remain HELD with dispatch_allowed false” / “Empty context lists do not prove idle” (`skills/3-weekly/weekly-planner/SKILL.md`, “Opt-in declared work observation”). No deployed-skill assertion.
+- [Pass] **Complete-byte candidate identity.** SHA256 comparison returned true for all four paths against `TESTS-RESULTS/2026-10-11+GH-1022/phase7-r2-source-hashes.json:4`. No Git/remote identity assertion.
+- [Unverified — needs clone run] Final committed-state covering suites, complete remaining fixture sweep and preparation runtime compatibility. Producer logs/provenance are explicitly source-qualified: existing adapter223/lifecycle125/work-state28 receipts precede R2 remediation; `phase7-runtime-controls.log` records19 controls. They are not independent final-candidate qualification. The harness must run the appropriate gate in a disposable full clone after the turn; no forbidden suite/pytest/executable-fixture or Git command ran here.
+
+Probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` (exit0). Decisive output, retained because scratch is disposable:
+```text
+valid 0 PASS True Builder Approved
+unsupported 0 PASS True Nobody Banana
+empty 0 PASS True [empty role] [empty status]
+missing 2 UNKNOWN False unknown unknown
+receipt matching 0 PASS context_present=True
+receipt malformed 2 UNKNOWN context_present=True
+receipt foreign 2 UNKNOWN context_present=True
+receipt missing 2 UNKNOWN context_present=True
+inventory None 1 HELD
+inventory command refused (2): bash malformed observer output 1 UNKNOWN
+hashes: releases_app=True, marathon=True, planner_core=True, issue_intake=True
+```
+
+Reproduction of B3 (in-memory source probe; no artifact/fixture executable or Git invocation):
+```python
+import ast, contextlib, copy, io, json
+from pathlib import Path
+from types import SimpleNamespace
+src = Path("relay-automation/marathon.sh").read_text().split(
+    "<<'MARATHON_PROGRESS_PY'\n", 1)[1].split("\nMARATHON_PROGRESS_PY", 1)[0]
+tree = ast.parse(src)
+tree.body = [n for n in tree.body if isinstance(n, (ast.Import, ast.ImportFrom, ast.FunctionDef))]
+ns = {"__name__": "probe"}
+exec(compile(tree, "observer", "exec"), ns)
+seed = json.loads(Path("TESTS-RESULTS/2026-10-11+GH-1022/phase7-r2-observer-manual.json").read_text())["controls"][0]["response"]
+ctx, data = seed["context"], copy.deepcopy(seed["raw_metadata"])
+ns["bounded_read"] = lambda p: data.get(str(p))
+args = SimpleNamespace(root=ctx["root"], product_root=ctx["product_root"], metadata_root=[],
+    context=Path(next(p for p in data if p.endswith(".progress.json"))))
+relay = ctx["phase"]["relay_file"]
+original = data[relay]
+for label, value in [("valid", original), ("unsupported", "STATUS: Banana\nNEXT: Nobody\n"),
+                     ("empty", "STATUS: \nNEXT: \n"), ("missing", None)]:
+    data[relay] = value
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        rc = ns["snapshot"](args)
+    r = json.loads(out.getvalue().split("marathon-progress: ", 1)[1])
+    print(label, rc, r["status"], r["read_complete"], r.get("observation", {}).get("role"),
+          r.get("observation", {}).get("relay_status"))
+```
+
+Handing off to Producer (author) — address B3 with existing/manual source-bound controls, retain all prior findings/history and open R3/3. Complete remaining fixture inspection and final-clone qualification before any later PASS. Go to the author window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
