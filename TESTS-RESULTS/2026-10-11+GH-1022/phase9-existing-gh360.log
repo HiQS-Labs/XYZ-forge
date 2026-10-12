@@ -1,0 +1,29 @@
+== test: gh360-scoped-receipt-chain-rebuild ==
+  PASS: clean repo passes releases check (rc=0)
+  PASS: un-reanchored chain break fails check (rc=1)
+  PASS: error message states git branch switching / rebasing as likely cause
+  PASS: error message does NOT claim 'spliced or forged audit trail'
+  PASS: error message gives remediation command 'releases check --rebuild'
+  PASS: releases check --rebuild succeeds (rc=0)
+  PASS: merge-rebuild receipt recorded reanchor:2 in target_gid (reanchor:2)
+  PASS: after rebuild, releases check passes with tolerated break note (rc=0)
+  PASS: check output announces 2 merge forks tolerated
+  PASS: subsequent break after previous rebuild fails check (rc=1)
+  PASS: error message distinguishes new breaks from previously re-anchored breaks
+  PASS: second releases check --rebuild succeeds (rc=0)
+  PASS: second merge-rebuild receipt recorded reanchor:4 in target_gid (reanchor:4)
+  PASS: after second rebuild, releases check passes (rc=0)
+  PASS: check output announces 4 merge forks tolerated
+  PASS: legacy NULL target_gid merge-rebuild receipts pass when no new breaks exist (rc=0)
+  PASS: legacy check has no dump-divergence failure
+  PASS: malformed non-NULL target_gid fails check (rc=1)
+  PASS: error output reports malformed-reanchor-receipt rule
+  PASS: malformed check has no dump-divergence failure
+  PASS: non-canonical breaks:999 fails check (rc=1)
+  PASS: error output reports malformed-reanchor-receipt on breaks:999
+  PASS: non-canonical embedded string fails check (rc=1)
+  PASS: error output reports malformed-reanchor-receipt on embedded string
+  PASS: break occurring after legacy NULL target_gid receipt fails check (rc=1)
+  PASS: error output announces new break after legacy receipt
+  PASS: post-legacy check isolates receipt-chain failure without dump-divergence
+gh360: 27 passed, 0 failed

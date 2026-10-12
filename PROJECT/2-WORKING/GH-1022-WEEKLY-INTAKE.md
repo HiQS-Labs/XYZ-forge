@@ -1319,3 +1319,14 @@ qualification remains required. No every-interleaving/race-free, budget/hook or
 wholeW7 claim. Publication uses injected local bare routing, not live GitHub and not
 a demonstrated real harness pre-push ceiling. Root-level artifact evidence is held,
 not human approval or criterion-delivery proof. W8–W11 remain unimplemented.
+
+
+Phase9 current candidate5c09a12c:9 frozen-source fixture flows pass (eight preserved
+flows plus six explicit input refusals as one batch); owner145/scoped27/planner
+sourcePASS/rating16 on disposable VERIFY. Current core and writer SHA256s are in
+phase9-qualified.json; all runtime source bytes remained unchanged through the batch.
+The reported-state field is now included in current qualification. Preserved red
+logs remain historical controls; no permanent executable fixture program was added.
+Full finalQA and normal gate/publication are pending. Hook-budget and older cached
+writer proof, nonempty associated PR/accounting and exhaustive transfer interleavings
+remain limits to independently assess, never inferred from quiet flow success.
