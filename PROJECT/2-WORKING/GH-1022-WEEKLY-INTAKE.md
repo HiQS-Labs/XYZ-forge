@@ -959,3 +959,14 @@ remain pending. No full W7–11 or issue completion, live/landing permission or
 correction to R6/Phase6 history. Existing owners remain authoritative; subsequent
 reconciliation and approval/provenance artifacts are views/audits of those owners,
 not a second backlog, ledger, authority store or replacement runtime.
+
+
+Phase7 first normal push refused at7214ed3c: full408/409, Python21 pass,876s.
+The unchanged PDDA contract failed in parallel, serial retry and direct reproduction:
+new working recon map lacked its required Status table. Source owners were not the
+failure; source bytes remain exactR3. Added the required table at232c292a; existing
+PDDA now reports no errors/48 existing warnings. Full normal retry still required;
+no remote publication or blanket green claimed. Red and repaired results are retained.
+Root cause: owned recon document omitted working-doc metadata. Fix site: that document.
+Why not upstream/downstream: the existing valid checker and protected contract remain
+unchanged. No new test/case or review round; R6/Phase6/Phase7 history is preserved.
