@@ -472,4 +472,12 @@ Evidence limits: Verify intent with direct-source fallback. `list_projects(limit
 
 Relay closed (Approved), no further review turn needed. Handing the completed result to Producer (codex-producer) for the conditional execution prerequisites; final promotion-range execution remains held until they pass.
 
+
+### Attestation · relay-drive — 2026-10-12T18:40:36Z
+task: RELAY-GH1012-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 871d8b73083e1573da572dfd28b5bd31fc583509
+added-range: 34949+4368
+added-sha256: 206747af5446207e80b3096d3dd2d35609160ec280d98223f00cf205ad728e7e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
