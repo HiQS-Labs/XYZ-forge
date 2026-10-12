@@ -939,3 +939,13 @@ Earlier candidate existing suites adapter223/lifecycle125/work-state28/lock18/
 artifacts10/refusals19 passed in disposable clone. These receipts retain their
 exact candidate scope; R2 complete owner sweep and final-clone qualification pending.
 R6FAIL/Medium1028 and Phase6Approved3/3 unchanged. Full1022 remains incomplete.
+
+
+Phase7 final R2 FAIL retained: owner sweep completed; B1/B2/S1 fixed, B3
+unsupported/empty present relay fields still counted complete. Snapshot now validates
+supported status and roles, including declared named actors in both shipped Python
+annotated and frozen Bash bare-id headers, using their existing token-family context.
+Actual observer18 controls PASS, including witnessed malformed/empty cases and all
+four named forms; raw context/receipt/metadata remain retained. Existing Jog34/34
+passed on the R2 candidate. Whole census R3/3 and final normal gate pending; no
+census publication/umbrella completion claimed. R6 and Phase6 history unchanged.

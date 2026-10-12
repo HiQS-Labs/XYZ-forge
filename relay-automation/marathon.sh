@@ -321,8 +321,15 @@ def snapshot(args):
                 invalid.append("observer receipt malformed or foreign")
             if report["heartbeat"].get("state") == "unknown":
                 invalid.append("observer heartbeat malformed or foreign")
-            if report["role"] == "unknown" or report["relay_status"] == "unknown":
-                invalid.append("observer relay metadata unavailable")
+            roles = {"Builder", "Producer", "Reviewer"}
+            # Both shipped drivers declare actor IDs in this header; Python
+            # annotates NEXT with the role, while the frozen Bash driver does not.
+            actors = re.search(r"<!-- marathon-drive: task=(\S+) builder=(\S+) reviewer=(\S+) round-cap=([1-9][0-9]*) -->",
+                               before.get(phase["relay_file"]) or "")
+            if actors and (actors[1] == phase["token_family"] or actors[1].startswith(phase["token_family"] + "-")):
+                roles.update((actors[2], actors[3], actors[2] + " (Builder)", actors[3] + " (Reviewer)"))
+            if report["role"] not in roles or report["relay_status"] not in ("Open", "Approved", "Closed", "Escalated"):
+                invalid.append("observer relay role/status unsupported or empty")
         if before != {path: bounded_read(path) for path in refs} or before[str(args.context)] != text:
             raise ValueError("observer context/receipt/heartbeat changed during read")
         answer.update(status="PASS" if not missing and not invalid else "UNKNOWN", read_complete=not missing and not invalid,
