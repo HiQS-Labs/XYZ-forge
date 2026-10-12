@@ -10,7 +10,7 @@ doc_type: feature
 effort: 4
 complexity: 4
 risk: 3
-phases: 6
+phases: 7
 goal: Implement shared weekly intake, bounded canonical planning and exact approval safeguards without enabling live execution.
 ---
 
@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase6 final QA Approved3/3 at a87 source77e99f17; qualified Jog/manual24 and dashboard controls pass. Latest d09 canonical rows plus exact task GID/history reconciled in preserving merges. | Normal exact-source push gate and corrected Linux verification next; published3b5 currently conflicts with newer d09. W7–W11 active, weekly HELD; R6 FAIL6/6/Medium1028 retained. |
+| Phase6 publishedbc4/d09, sourceQA Approved3/3, normalfull409/409+Python21/830s, correctedUbuntu407/407 inclgh123 andsmokeSUCCESS. CurrentdraftMERGEABLE/CLEAN onverifiedsnapshot. | W7 declared-work census recon/plan ready; normalnew-scope planQA then implementation. W7–W11 active; R6FAIL6/6/Medium1028 retained, #1027 tests unapproved. |
 
 ## Table of contents
 
@@ -28,6 +28,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 - [Phase 4 — Canonical branch accumulation](#phase-4--canonical-branch-accumulation-active-design)
 - [Phase 5 — Canonical planner override reader](#phase-5--canonical-planner-override-reader-w8-prerequisite)
 - [Phase 6 — Qualified canonical Jog observations](#phase-6--qualified-canonical-jog-observations-w7-prerequisite)
+- [Phase 7 — Canonical declared-work census](#phase-7--canonical-declared-work-census-next-w7-prerequisite)
 - [Remaining acceptance](#remaining-acceptance)
 
 ## Bet and scope
@@ -825,3 +826,89 @@ Independent W8 readiness recon records actualadvisorysequencer missingCI,draft,u
 Phase6R2 at3b9fb56b confirmed S1 repaired and new Jog seam/bindings; FAILforoneadditional pre-existing LowS2 dashboard diagnostic: dump parserNone was passed to %d andcrashed. One-line warning-format repair retains canonicalparserNone/recovery/policy andrendersexplicitDump generation(unavailable). Fouractual-render controls preserve matching/differentgeneration behavior andwitnessno-header/empty red→pass; refreshedsource-boundJog24 andescaping controls pass. Source/currentstatus updatedbefore Round3 withinunchangedPhase6cap3; no R6review/reset/newtest orbudget extension. Final normalgate/Linuxqualification pending.
 
 Phase6 completed its pre-authorized normalcap3: R3 Approved at a87ac64a, attested8a2a0159; all R1/R2 history/negativecontrols preserved. Exactowner source77e99f17 matches current bytes; no morePhase6 orR6round authorized/invoked. Targetadvancedfromff895tod09; published3b5MERGEABLEclaim qualified/corrected afterfreshactualCONFLICTING/DIRTY read. Currentd09 resolution uses existing classifier pluscanonicalparse/formatter/validator anddocumented merge-resolve/rebuild. Ownoldbase rows unchanged; retain allcurrenttargetowner rowvalues exactly plusgenuine task additions. PreservetaskGID70/65/50/25/nulloverride/status_label/first_seen/doc/raw/start history; preserveoriginaldisplacedDB backup outsideclone. Canonicalcheck0fail9warnings, existingartifacts10/refusals19. Standardmerges f36f4a5b/fd6d2c5d retain development/review history; no primarywrite/forcepush/GitHubmerge. Sanctioned taskprogress writer changes only ownraw_text/updated_at, preserves allowner fields/history prefix. Normalfullpushgate and correctedLinuxexistingCI next; correction sufficiencyunverifieduntilthat result. This is sourceQA plusknownintegration proof, not freshfull-umbrella prior-art/landingapproval. W7–W11 active.
+
+## Phase 7 — Canonical declared-work census (next W7 prerequisite)
+
+Current recon is [the remaining-boundaries map](GH-1022-WEEKLY-INTAKE/recon-remaining-boundaries.md)
+at bc4/d09. This plan is a bounded next seam, not a redefinition of full scope.
+W7 global writer/rollover, W8 strict readiness/artifacts, W9 freeze/approval, W10
+shared fire/resume/landing and W11 full audit remain required after this census.
+No implementation or independent plan approval is claimed here.
+
+Bet: existing ledger/Jog, lifecycle, shared driver-lock resolver and landed observer
+are the owners of work facts. A caller-declared read census can expose those facts
+without claiming global quiescence or inventing a backlog. Missing roots, schema,
+context, identity, stale/conflicting observations or unsupported owners stay held.
+A marker/count alone never proves delivery or permission to replace a Marathon.
+
+Blast starts from the recon radius: weekly/daily core, shared intake, canonical
+ledger/observer reads and consumers. This next seam introduces two opt-in owner
+read views and one thin core observation mode/declared-root input. Writers, legacy
+list/observe outputs, scoring/selection and dispatch stay with their current owners.
+No new coordinator, scanner, checker/gate, runner, event type, schema migration,
+background watcher or deployed registry. Easy rollback: remove new read views and
+caller adapter; no persistent data conversion. Source/runtime byte identities remain
+separate from observed target heads, with the existing IO runner and bundle ownership.
+
+1. Extend the canonical RELEASES read owner with an opt-in work inventory covering
+   qualified Marathon/Jog and existing lifecycle facts under one stable read envelope.
+   Reuse the Phase6 connection/schema/journal/generation guards and queries rather
+   than writing a weekly SQL reader. Refactor only the shared held-read envelope
+   needed by these views; preserve `jog list` defaults/fields/order/filter and its
+   standalone inventory. Require current declared schema/identities; retain
+   unregistered rows and contradictory/unknown evidence as visible held facts.
+   Never migrate/init/recover/acquire leases/signal/read connector secrets/config or
+   write a DB, audit, receipt or capture. -> Actual module/CLI fixture reads distinguish
+   initialized empty from unsupported, qualified multi-repo facts from ambiguous,
+   stable generation from second-connection drift; bytes/sidecars remain unchanged.
+2. Add a one-shot read action to the existing observer owner using its bounded JSON,
+   matching-receipt and heartbeat helpers. Preserve the #1017 logical product-root
+   representation and existing init/observe/phase/finish/terminal behavior. Validate
+   required context shape and declared ownership before following metadata paths;
+   unavailable/malformed/foreign/drifting records return UNKNOWN/nonzero rather
+   than empty/complete. Read completeness does not imply process quiescence,
+   criterion completion or attestation authenticity; consumer still validates the
+   actual canonical peer receipt. -> Actual one-shot read has no context writes,
+   loop/thread/signal/owner cleanup; transposed/missing/partial and logical-path
+   fixture controls are recorded, with original observer outputs preserved.
+3. Add only shared normalization/deduplication/evidence mechanics beside intake and
+   a thin existing-core `weekly-work` caller. Require a caller-declared authority
+   file/root list; no implicit fleet/primary/registry/path scan or default authority.
+   Use complete selected runtime owner commands with existing bounded IO and actual
+   runtime paths/hashes. Preserve every root's observation/provenance; identical
+   stable identities can be deduplicated with their sources retained, conflicting
+   observations hold rather than choosing a winner. Keep terminal/carryover reads
+   explicit/all, include driver-lock/context evidence through their existing owners,
+   and reject unsupported/missing outputs without legacy success-empty fallback.
+   -> Read-only fixture batch covers empty/missing/foreign/duplicate/conflicting roots,
+   older unsupported owners and root/head/code drift; returns held accounting and
+   dispatchfalse, never a selected/runnable plan.
+4. Expose the read seam in weekly's capability documentation while preserving
+   distinct weekly-planner/daily-planner/10days policy and scan/find-doc interfaces.
+   No installation, scheduling, clone/ledger/commit/push or builder side effect in
+   this observation mode. Carry the unapproved individual test proposals separately;
+   no generated write-set grants a CI test/case addition. -> Existing covering
+   release/Jog/observer suites run only in the disposable full clone, plus recorded
+   witnessed manual controls, source/schema/lint checks and normal classifier gate.
+5. Obtain normal new-scope plan/final QA under the existing repository process and a
+   named cap, then publish only the implementation branch after exact source/remote/
+   hosted checks. R6FAIL6/6, #1028 and #1027 decisions remain unchanged; this census
+   cannot re-review/relabel corrective findings or attest full W7–W11 delivery.
+
+Before implementation, the precise work-envelope extraction and one-shot observer
+shape need plan QA. Authority-root completeness remains a caller/independent-review
+claim, not a filesystem absence heuristic. Live provider/fleet integration is not
+established and is forbidden in this task. The ROOT/HEAD/generation/context results
+are evidence for later strict readiness, not that readiness itself.
+
+Remaining policy changes must be reviewed explicitly: clone-global one-writer and
+known GID-preserving rollover, required-CI/draft/dependency treatment, immutable
+budget/order/reviewer approval, criterion receipts at each effect boundary and a
+separate latest-target redundancy/regression receipt before publication/landing.
+Closeout currently permits missing hosted CI under the GH544 private-phase policy;
+weekly must require an explicit per-packet CI policy and hold missing/unknown policy,
+without silently weakening/reinterpreting either rule. Contradictory #752/#1020
+state, unknown cost/runtime enforcement, unsupported schema/dependencies and missing
+human confirmation remain held. No recurring cadence/budget/default is enabled.
+
+Corrected-source Linux qualification verified: existingCI38204784286 exactbc4 completedSUCCESS, Ubuntu407/407 withgh123parallelrc0 andblockingSmokeSUCCESS, macOSpromotionSKIPPED. ActualrunJSON/fulljoblog andnormalpushlog are retainedwithcommittedprovenance. No workflowbypass/restart,newCIcase orrealMarathon/provider acceptance. PublishedHEADbc4 matchesremote andcurrentd09 target; latestPRreadMERGEABLE/CLEAN. Phase6source/gatepublication verified; W7censusmap/plan next, allW7–W11 remainactive. OwnprogressCLI preserves GID/axes/ovr/status/doc/first_seen,changesonlyraw_text/updated_at.
