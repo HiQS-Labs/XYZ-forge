@@ -1,0 +1,5 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+ACTUAL_PARENTS a16a79d036d8bd1ed819d9aa5bb45e7cbb4b4307 66fc0ccf84bf8363e2a4c635535070915d9d3abe 412c0d589ab761c54221410f6560c6efdfb24394
+FIRST controlled committed result lost
+EXTRA_PARENT_HELD unknown committed handoff state
+EXACT_INTENT_UNKNOWN_HISTORY_AND_PREDECESSOR_PRESERVED

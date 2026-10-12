@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Author
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -216,5 +216,18 @@ Verify-tier graph: all82 projects enumerated, no matching worktree/task root. Ne
 Only this relay tracked file changed; scratch directory only under `.relay-scratch/`. No Git command, suite, pytest, executable fixture, network/connectors, live operation or extra agent was used. The absolute pinned tick's `release --help` returned usage/exit2 (unsupported help flag); it made no release. Preserve R6FAIL6/6 / MediumGH1028, GH1027 unapproved, closedPhase6/7/8 and Phase9planApprovedR1/3. No new cap/tests/agents; W8–W11/fullGH1022 remain active.
 
 Handing off to Author — disposition S3, correct the capability prose and R2 attribution, and retain the qualification limits; go to the Author window and say 'take your turn'.
+
+### Producer · Round 3
+
+VERDICT: PARKED
+Basis: S3 repaired atd9e7d6a7, exact frozen source requalified; final independent round pending in SAME cap3/artifact/token. No extra allowance requested or inferred.
+
+S3 Implemented: actual native Git commit-tree two-parent ordinary result with exact intended tree/first parent/blobs and clean state was admitted before repair (`phase9-r2-extra-parent-red.log`). Both ordinary admission/completion now read the complete native rev-list parents and require exactly [recorded previous HEAD]. The intentional ancestry merge retains its separate exact ordered two-parent contract. Current actual extra-parent flow refuses, retaining exact intent/unknown HEAD/predecessor; exact single-parent lost commit and intentional lost two-parent ancestry still resume (`phase9-r3-extra-parent-hold.log`, `phase9-r3-commit-loss.log`, `phase9-r3-ancestry-loss.log`). No new store/schema/gate/CI case.
+
+Nit Implemented: earlier weekly prose now points observation/API limits to implemented reconciliation section under verification. Attribution Implemented: append-only existing provenance now binds R2 twelve flows/nonempty PR/full Git red plus R3 fourteen flows and disposable existing suites. Wrong helper identity/unused Path expression errors were corrected without product changes and retained; these are helper errors, not product reds. Current `phase9-r3-qualified.json` matches owner/core source bytes atd9; fourteen flows rc0, including full nonempty draft PR + foreign same-number link (UNKNOWN delivery), actual parent refusal, recovery/interleavings already scoped, normal installed/refusing hooks/timeout leaf/same-date. Existing gh418 PASS, gh69816/0 and disposable Git identity preserved. No full normal gate claimed yet.
+
+Review whole current core/owner/plan/skills/covering unchanged fixture sources; R2 whole sweep yes is retained, not reset. Independent controls/citations/actual input/scope/falsifier remain required. Source-only: no new agent, suite/executable fixture/network/connectors/live action or Git except relay. Remaining older cached-writer/exhaustive interleavings/whole-caller budget qualification limits are explicit; do not invent a blanket guarantee. Default advisory heuristics and original R6/GH1028 remain separately documented, not silently repaired by this scope. W8–W11/full1022 incomplete; no firing/landing authority or universal idle proof. Keep closed Phase6–8, Phase9planApprovedR1/3, R6FAIL6/6/Medium1028 and1027 unapproved immutable. If new finding remains at cap, escalate honestly rather than reset.
+
+Handing off to Reviewer(codex) — take final Phase9 Round3 within the existing cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
