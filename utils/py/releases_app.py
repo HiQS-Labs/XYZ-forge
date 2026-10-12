@@ -6542,7 +6542,7 @@ def cmd_dashboard(args):
         
         staleness_banner = ""
         if dump_gen != db_gen:
-            staleness_banner = "<div style='background: red; color: white; padding: 10px; font-weight: bold;'>STALE SYNC: DB generation (%d) != Dump generation (%d)</div>" % (db_gen, dump_gen)
+            staleness_banner = "<div style='background: red; color: white; padding: 10px; font-weight: bold;'>STALE SYNC: DB generation (%d) != Dump generation (%s)</div>" % (db_gen, dump_gen if dump_gen is not None else "unavailable")
             
         # Releases panel
         releases = conn.execute("""

@@ -5,7 +5,9 @@
 The existing dashboard now escapes ledger text with Python's html.escape when
 rendering releases, roadmap headings and issue rows. Stored data and other readers
 are unchanged. Whole-owner Phase6 review reproduced active HTML from a legal title;
-manual rendering controls witness the repair. No CI test or case was added.
+manual rendering controls witness the repair. A missing dump generation now
+keeps an explicit unavailable/stale warning visible instead of crashing the dashboard;
+canonical parsing/recovery remain unchanged. No CI test or case was added.
 
 ## 2026-10-12 — Qualified held Jog observations (GH-1022, Phase6)
 
