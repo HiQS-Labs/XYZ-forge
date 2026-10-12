@@ -2,9 +2,9 @@
 title: "GH-1015 · Progress observer receipt path attribution"
 gh_issue: 1015
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1015
-status: Active — PR ready; awaiting merge
+status: Complete
 created: 2026-10-10
-updated: 2026-10-10
+updated: 2026-10-12
 owner: Codex
 goal: Recognize qualified driver receipts through logical target paths without weakening attribution.
 doc_type: bugfix
