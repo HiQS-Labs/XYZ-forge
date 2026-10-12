@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -167,5 +167,113 @@ S1 Implemented at e6549bb7: standard-library html_escape at all seven stored-tex
 Continue ONLY within previously authorized genuine Phase6 normal cap3; Round2/3 in this same artifact with all R1 history retained. Status checkpoint did not grant additional authority. Accumulation corrective R6FAIL6/6 remains closed/unchanged and MediumGH1028 tracked; do not reopen/reset it or call its source Approved. Whole final owner sweep remains required by this new-scope protocol; report any pre-existing finding with input/scope/falsifier/severity. No producer source edits beyond S1 and current status/history clarification. No new review budget, test approval, gate bypass, live execution or full1022 completion. W7–W11 active and weeklyHELD.
 
 Review current exact HEAD/source/evidence; no source edits, agents, executable fixtures/suites/pytest, connectors/network/production writes or Git edits outside this relay. Harmless in-memory rendering/read probes permitted. Handing off to Reviewer(codex)—take Round2 within the existing cap.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: S1 is resolved on current source. The whole owning-file sweep established one additional pre-existing Low diagnostic defect, S2, requiring Producer disposition. No defect was established in the new qualified Jog read seam. This verdict is confined to the existing Phase6 final-QA cap3; corrective accumulation R6 remains FAIL6/6, GH1028 remains Medium, GH1027 remains unapproved, and weekly/W7–W11 remain held. No landing, execution or umbrella approval.
+
+swept file: yes
+Read all 7040 lines of utils/py/releases_app.py, the entire 102-line gh123 fixture and production telemetry writer, Phase6 and its current resumption, the complete plan/final relay histories, current manual JSON and retained suite/provenance evidence. S2 is the additional pre-existing defect established this turn; this sweep is not an exhaustive runtime/concurrency attestation.
+
+- [Pass] S1 resolved: all seven stored-text boundaries use standard-library html_escape (utils/py/releases_app.py:6572, :6573, :6575, :6593, :6596), including derived issue text. Fresh actual-render controls below return seven escaped occurrences each for the exact malicious title, ordinary comparison text and Unicode; no active img markup. Current source SHA256 is ac72d6f83e75db54cb52ab7c5135a8a20fd358a1defbd32789bff8bdbf8bfad8. The R1 raw-markup failure remains the red control; no browser/JavaScript executed.
+- [Should] S2 — Low, pre-existing: a present dump without a generation header prevents the entire dashboard from rendering its diagnostic warning. dump_generation_from_text returns None, which cmd_dashboard passes to the numeric %d formatter (utils/py/releases_app.py:6541, :6545). Keep the observation visibly stale/unavailable and render the dashboard; format the absent dump generation explicitly without changing canonical parsing, writing, recovery or acceptance policy. A recorded narrow manual control is sufficient; no new CI case/suite/gate requested. Producer may explicitly disposition this small owning-file diagnostic defect; it does not expand corrective R6.
+  Observed input: existing dump bytes "-- releases-app canonical dump\n", DB settings generation="1", otherwise readable in-memory dashboard tables. Actual renderer produced no HTML and raised "TypeError: %d format: a real number is required, not NoneType". Probe exit0 catches and reports this renderer exception.
+  Affected scope: dashboard rendering when a present dump has no parseable canonical generation header (including a truncated/empty dump); the DB remains independently readable. No request to accept the dump as canonical.
+  Falsifier: run the quoted exact control with matching generation1, differing generation2, and the no-header bytes. Expected matching output without STALE SYNC, differing output with STALE SYNC, and no-header output with an explicit unavailable/stale warning and no exception. Already-rendered no-header output would disprove S2; current output fails.
+  Root cause: dashboard assumes the canonical parser always returns an integer while diagnosing noncanonical dump state; Fix site: dashboard warning formatting; Why not upstream/downstream: parser's None accurately reports missing evidence and should remain unchanged.
+- [Pass] Qualified Jog query still joins both repo_id and gh_number (utils/py/releases_app.py:4614). Fresh in-memory actual _jog_rows execution yielded one Owner A row beside Foreign B issue777; deleting only the owned roadmap row retained title=None. Exact legacy 13 fields/filter/order remain (:4602–:4627); inventory reads via readonly connect (:4651), validates all declared repositories/GIDs and generation (:4662–:4702), withholds rows on drift (:4708) and always denies dispatch (:4704). These source/bounded-query checks do not establish filesystem concurrency behavior.
+- [Pass] Current Jog manual evidence binds the current source, contains 24 controls/24 recorded passes, and hashes to 7b26eb982d1f37a620feb924586ca16bb80376912727e129619fbd810614abc6; the dashboard-after JSON also binds current source and hashes to e2fe111ea3b4ef035d7c896cc11be1d3ec90ccf3c27991ff3198773cf6e001e1. Both are retained in TESTS-RESULTS/2026-10-11+GH-1022/provenance.jsonl (timestamp 2026-10-12T04:02:44). Seeded 24 filesystem/CLI controls were read, not independently rerun.
+- [Pass] Fixture correction remains open(..., 'w+') (test/gh123-lock-progress-bound.sh:63) with the existing six handovers, pwrite/truncate and bounds (:65–:86); production O_RDWR|O_CREAT remains (utils/telemetry/append-xyz-completion.sh:69). Seeded e654 dashboard log ends "gh75-dashboard.sh: all pass"; artifacts log ends "10 pass, 0 fail", with matching recorded provenance entries at 2026-10-12T04:04:09. These are Producer clone receipts, not fresh suite executions by this reviewer.
+- [Unverified — needs clone run] Exact-candidate normal gate and corrected Linux qualification remain pending as explicitly stated in the Phase6 resumption. No validate.sh, test/*.sh, pytest, executable fixture program, Git command, network/provider/connector/build execution or live queue operation ran here. No CI addition is requested. W7–W11 remain active and the inventory grants no execution authority (PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md Phase6; utils/py/releases_app.py:4704).
+
+Graph limitation: list_projects returned all82 entries with has_more=false and omitted this worktree. Nearest XYZ-forge graph refers to another checkout, generation2026-09-01T15:54:30Z. Coverage reported metadata_changed for owner/test/writer and missing freshness for plan/evidence. Direct current-source reads cover the material claims; no reindex or exhaustive caller-graph claim.
+
+Quoted S1/source-binding probe command (definitions and in-memory renderer only; exit0):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, contextlib, hashlib, io, json, sqlite3
+from pathlib import Path
+from types import SimpleNamespace
+p=Path('utils/py/releases_app.py')
+ns={'__name__':'review_probe','__file__':str(p.resolve())}
+exec(compile(ast.parse(p.read_text()),str(p),'exec'),ns)
+print('source_sha256:',hashlib.sha256(p.read_bytes()).hexdigest())
+ns['resolve_root']=lambda root:root
+ns['artifact_paths']=lambda root:{'db':'/dev/null','dump':str(Path('.relay-scratch/tmp/absent').resolve())}
+original=sqlite3.connect
+for value in ['<img src=x onerror="alert(1)">','A & B < C','Ordinary owner ✅']:
+ c=original(':memory:');c.row_factory=sqlite3.Row
+ c.executescript("CREATE TABLE settings(key,value); INSERT INTO settings VALUES('generation','1'); CREATE TABLE op_receipts(id); CREATE TABLE releases(version,codename,status,target_date,shipped_date,description,exit_criterion,id); CREATE TABLE manifest_items(release_id,state); CREATE TABLE roadmap_items(section,gh_number,title,status_marker,position);")
+ c.execute('INSERT INTO releases VALUES(?,?,?,NULL,NULL,?,?,1)',(value,value,value,value,value))
+ c.execute('INSERT INTO roadmap_items VALUES(?,777,?,?,1)',(value,value,value))
+ sqlite3.connect=lambda *a,**k:c
+ output=io.StringIO()
+ try:
+  with contextlib.redirect_stdout(output): ns['cmd_dashboard'](SimpleNamespace(root='read-probe'))
+  rendered=output.getvalue()
+  print(repr(value),'escaped_count:',rendered.count(ns['html_escape'](value)),'active_img:', '<img ' in rendered)
+ finally: sqlite3.connect=original
+base=Path('TESTS-RESULTS/2026-10-11+GH-1022')
+for name in ['phase6-jog-manual-results.json','phase6-dashboard-after.json']:
+ data=json.loads((base/name).read_text())
+ print(name,'source_matches:',data['source_sha256']==hashlib.sha256(p.read_bytes()).hexdigest(),'sha256:',hashlib.sha256((base/name).read_bytes()).hexdigest())
+ if 'count' in data: print('seed_controls:',data['count'],len(data['controls']),sum(x['pass'] for x in data['controls']))
+PY
+```
+
+Decisive output:
+
+```text
+source_sha256: ac72d6f83e75db54cb52ab7c5135a8a20fd358a1defbd32789bff8bdbf8bfad8
+'<img src=x onerror="alert(1)">' escaped_count: 7 active_img: False
+'A & B < C' escaped_count: 7 active_img: False
+'Ordinary owner ✅' escaped_count: 7 active_img: False
+phase6-jog-manual-results.json source_matches: True sha256: 7b26eb982d1f37a620feb924586ca16bb80376912727e129619fbd810614abc6
+seed_controls: 24 24 24
+phase6-dashboard-after.json source_matches: True sha256: e2fe111ea3b4ef035d7c896cc11be1d3ec90ccf3c27991ff3198773cf6e001e1
+```
+
+Quoted S2 diagnostic probe command (definitions/in-memory DB; dump controls only under .relay-scratch; exit0):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, contextlib, io, sqlite3
+from pathlib import Path
+from types import SimpleNamespace
+p=Path('utils/py/releases_app.py')
+ns={'__name__':'review_probe','__file__':str(p.resolve())}
+exec(compile(ast.parse(p.read_text()),str(p),'exec'),ns)
+original=sqlite3.connect
+dump=Path('.relay-scratch/tmp/dashboard-header-control.sql').resolve()
+ns['resolve_root']=lambda root:root
+ns['artifact_paths']=lambda root:{'db':'/dev/null','dump':str(dump)}
+for header in ['-- generation: 1\n','-- generation: 2\n','-- releases-app canonical dump\n']:
+ dump.write_text(header)
+ c=original(':memory:');c.row_factory=sqlite3.Row
+ c.executescript("CREATE TABLE settings(key,value); INSERT INTO settings VALUES('generation','1'); CREATE TABLE op_receipts(id); CREATE TABLE releases(version,codename,status,target_date,shipped_date,description,exit_criterion,id); CREATE TABLE manifest_items(release_id,state); CREATE TABLE roadmap_items(section,gh_number,title,status_marker,position);")
+ sqlite3.connect=lambda *a,**k:c
+ output=io.StringIO()
+ try:
+  with contextlib.redirect_stdout(output): ns['cmd_dashboard'](SimpleNamespace(root='read-probe'))
+  print(repr(header),'rendered:',bool(output.getvalue()),'stale:', 'STALE SYNC' in output.getvalue())
+ except Exception as e:
+  print(repr(header),'rendered:',bool(output.getvalue()),'error:',type(e).__name__+': '+str(e))
+ finally: sqlite3.connect=original
+PY
+```
+
+Decisive output:
+
+```text
+'-- generation: 1\n' rendered: True stale: False
+'-- generation: 2\n' rendered: True stale: True
+'-- releases-app canonical dump\n' rendered: False error: TypeError: %d format: a real number is required, not NoneType
+```
+
+Handing off to Producer (author) — disposition S2 within this same normal cap3, preserving all R1/R2 history and corrective R6's closed FAIL6/6. Go to the author window and say 'take your turn'. Full gate/Linux qualification remain required separately.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
