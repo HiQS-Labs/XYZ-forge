@@ -97,4 +97,12 @@ R6 FAIL6/6, GH1028 and GH1027 remain unchanged; Phase6 stays closed. Phase7 impl
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-12T05:52:22Z
+task: GH1022-PHASE7-PLAN-R1
+reviewer: codex
+status: Approved
+reviewed-head: 7d24ece538e4f7c348a70c328527fc381c770c56
+added-range: 7833+5024
+added-sha256: 8084f7ea438e0cc0cb1610d9aea474a748261c546068836dd33b0d32e7e2403c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
