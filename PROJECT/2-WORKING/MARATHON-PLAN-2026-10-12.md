@@ -84,7 +84,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #591 GH-591 · Reconciler provenance lifecycle — `already-closed`
 - #807 GH-807 · test: pre-existing signal-triage quiet-grep pipeline produces false failure under load — `already-closed`
 - #886 GH-886 · Linux portability canary: 3 advisory failures (gh425, gh478, gh153) — `already-closed`
-- #1015 GH-1015 · Progress observer receipt path attribution — `already-closed`
 - #215 GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth — `already-closed`
 - #18 GH-18 · Harness evaluation: Command Code (cmd) and model matrix — `already-closed`
 - #275 GH-275 · medium-level write-ops logging of agent disk-write commands — `already-landed`
