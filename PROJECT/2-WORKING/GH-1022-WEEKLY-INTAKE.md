@@ -791,3 +791,23 @@ orintegration rebase inferred. PR1026 merged6ebe4ca84ca245d75075061eb8e72d440b60
 andPR1017 merged45afc936d5d29a8c0c37e6ccae63295bacebd4c7;fetch/recon fresh
 remote beforefutureW7,do notclaimlive-provideracceptance orW7completion.
 Currentreviewed source unchanged;normalincremental pushgate/publication pending.
+
+
+## Original scope resumed — safe integration and Ubuntu attribution
+
+Localmerge4dd28049 reconciles9ebe4b21 withff895c83 throughdeclaredcanonical
+dump resolution/rebuild;originaltask andtargetbothancestors,allparentrows and
+eventsretainidentities,original1022ownerfields exact. Canonicalcheck0failures/
+9existingwarnings,gh32artifacts10/10,gh54refusals19/19. SixR6sourcebytes
+unchanged;mechanical data/docs conflictresolution introducesno behaviorchange
+andneedsno replacementcorrectivereview. Normalpushgate remainsrequired.
+Primaryuntouched;no GitHubmerge/forcepush. FulloriginalW7–W11 stillactive.
+
+Ubuntu exactSHA9ebe failure remainsunqualifiedportability:gh123movingqueue
+3failedassertions inparallel andalone. Failpath writer/testblobs identical
+onf122/9ebe/ff895/merge. Strongest hypothesis isfixturea+ O_APPEND:Linux
+pwrite appendsignoringoffset andftruncate removesnewtoken;productionO_RDWR
+avoidsflag. BaselineexistingCIrun38198894599 boundtoff895 remainsrunning.
+Do notclaimbaseexecutionorrootcausereproduceduntilresult;no testcasechangeyet.
+R6FAIL/Medium1028 andunapproved1027 remainexplicit;Phase6 mayresumenewscope
+afterbranchstabilization,usinglanded1017/1026 withoutclaimingprovideracceptance.

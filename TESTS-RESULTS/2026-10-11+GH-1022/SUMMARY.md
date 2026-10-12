@@ -322,3 +322,21 @@ withoutturning actualFAIL intoPASS. Full1022/W7–W11 remainsincomplete.
 Required integration-base fullgate at0cd4c353:exit0,409/409 selections,Python21/21,runner-envelopeclean;disposableidentity/HEAD/trackedtree remainedunchanged. Sourcehashes identicalto1044969d/R6 target. This isnotci-local orpromotionqualification. Normalincrementalpre-push stillrequired. R6 remainsFAIL/oneMediumGH1028/noCriticalHigh,notApproved. NewlymergedPR1026/1017 areverifiedprerequisites only;currentdraftmergeability conflicts andW7–W11 remainunqualified. No rebase/sourceedit toinvalidatefrozen gate.
 
 Normal sourcepublication3035d128 passedtier2 28/28/Python21 andcleanrunner in319s,no bypass. DraftHEAD3035verified,CONFLICTING,no automaticActionsrun forSHA;CodeRabbitstatussuccess isnotActionsqualification. Supportedexistingci.yml manualdispatch willverifyfinalbranchhead afterevidence-onlynormalpush;no promotion ordeployment. Currentdevelopmentref45afc936 verified,changedafterfrozen integrationbasef122;no rebase ornewreview solelyfor thisupdate.
+
+Originalscope resumed:localintegration merge4dd28049 includesdevelopment
+ff895c83 withoutrebase,historyrewrite,forcepush orprimarywrite. Conflicts
+onlyCHANGELOG/SQL/derivedDB;canonical logicaldump parse/emitter/validation and
+documentedresolver rebuild retainedALLparent nonsettingsrows andeventhistory,
+original1022GID/status_label/ratings/override/dates/doc/rawtext exact,genmax1586.
+Automaticreplayhelper declined becauseit remintsnewrowGIDs. Changelogstrict
+prefixhelper refusedchangedupstreamhistory;onlyvisible additiveconflictjoined
+andGit'snonoverlap targetchanges preserved. AdoptingtargetLEADERBOARD bytes
+followsno-routine-taskview policy;resolver-generated viewretainedinscratch.
+Intentionalrebuild backup matchedoriginal9ebe DBandwaspreservedoutsideverify
+becauseartifactgate correctlyrefuses repairbackups. Gh32artifacts10/10 and
+gh54mergedrefusals19/19 pass. Sixreviewedsourcehashes unchanged,R6FAIL/Medium
+GH1028 retained,S8GH1027 unapproved. Linuxfixture hypothesis:O_APPEND in
+existinghandovercase makesLinuxpwriteappend,thenftruncate32discardnewtoken;
+productionwriterO_RDWR;test/writer blobsidenticalonf122/9ebe/ff895/merge.
+UntoucheddevelopmentCI38198894599 atff895 runningforactualbaseattribution.
+No newCIcase/assertion,installation,gatedowngrade orrealworkdispatch.
