@@ -2,9 +2,9 @@
 gh_issue: 1025
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1025
 title: "start-task prior-art scan misses merged PRs, issues and sibling repos, and fails silently in cloud sessions"
-status: "Working — PR ready; awaiting review/merge"
+status: Complete
 created: 2026-10-11
-updated: 2026-10-11
+updated: 2026-10-12
 owner: Claude
 goal: "/start-task finds an existing fix (recently merged PR or completed issue) before planning new work, in local and cloud sessions"
 branch: fix/XYZ-forge-gh1025-prior-art-merged-issues-2026-10-11
