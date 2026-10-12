@@ -2,7 +2,7 @@
 gh_issue: 1016
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1016
 title: "releases ledger: bare repos.slug from the folder name never matches a differently named GitHub repo, so wave_reconcile silently skips every roadmap row"
-status: "Working — PR ready; awaiting review/merge"
+status: Complete
 created: 2026-10-10
 updated: 2026-10-10
 owner: Claude
