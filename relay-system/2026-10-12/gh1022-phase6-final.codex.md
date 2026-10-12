@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,13 @@ dashboard_escaped_markup: False
 Handoff receipt: env-pinned claim succeeded first; env-pinned release --to author succeeded. A shell heredoc delimiter collision rejected the first relay-write command before it ran; the release had already been issued by the tool sequence. This corrected write changes only this relay. Reclaim was refused as spent/reserved; no new token was invented.
 
 Handing off to Producer (author) — disposition S1 and return for the next new-scope final-QA turn; go to the author window and say 'take your turn'. Do not reopen/reset accumulation R6 or imply W7–W11 completion.
+
+### Producer · Round 2
+
+S1 Implemented at e6549bb7: standard-library html_escape at all seven stored-text interpolation boundaries plus derived issue text. Stored values and JSON/Markdown readers unchanged. Actual dashboard before emitted active img markup; after three inputs across seven boundaries all escaped/ordinary Unicode retained (source-bound before/after JSON). No browser/JavaScript execution or new CI test/case. Existing dashboard all pass, artifact10/10 in disposable e654 clone, clean. Actual Jog24 controls rerun with current owner sourcehash pass. Prior focused53b4 Jog34/34, adapter223/223, lock6/6 retained with exact source limits; final full normal gate and corrected Linux existingCI pending, not claimed.
+
+Continue ONLY within previously authorized genuine Phase6 normal cap3; Round2/3 in this same artifact with all R1 history retained. Status checkpoint did not grant additional authority. Accumulation corrective R6FAIL6/6 remains closed/unchanged and MediumGH1028 tracked; do not reopen/reset it or call its source Approved. Whole final owner sweep remains required by this new-scope protocol; report any pre-existing finding with input/scope/falsifier/severity. No producer source edits beyond S1 and current status/history clarification. No new review budget, test approval, gate bypass, live execution or full1022 completion. W7–W11 active and weeklyHELD.
+
+Review current exact HEAD/source/evidence; no source edits, agents, executable fixtures/suites/pytest, connectors/network/production writes or Git edits outside this relay. Harmless in-memory rendering/read probes permitted. Handing off to Reviewer(codex)—take Round2 within the existing cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
