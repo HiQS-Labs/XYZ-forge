@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 canonical preservation API plan grounded; new-scope planQA then implementation. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
+| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 preservation planQA ApprovedR1/3; canonical local merge API implemented with manual positive/refusal/crash evidence; finalQA and existing owner checks next. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
 
 ## Table of contents
 
@@ -975,9 +975,9 @@ unchanged. No new test/case or review round; R6/Phase6/Phase7 history is preserv
 
 ## Phase 8 — Canonical preservation transaction (W7 prerequisite)
 
-Status: implementation plan only. Phase7 source is Approved3/3; normal437 gate retry
-is underway after a required recon Status-table repair. No new API is implemented
-or approved. This is genuinely new W7 reconciliation scope; corrective R6's title
+Status: Phase8 plan ApprovedR1/3 at5c276d7c; implementation is in progress and
+not yet final-QA approved. Phase7 source is Approved3/3; its normal437 gate retry
+completed409/409+Python21 and published437462a4 after the recon Status-table repair. This is genuinely new W7 reconciliation scope; corrective R6's title
 grammar and closed Phase6/7 reviews are not reopened or relabeled.
 
 Grounding: [expanded four-lane Recon Map](GH-1022-WEEKLY-INTAKE/recon-integration-and-shared-boundaries.md).
@@ -1003,7 +1003,10 @@ Blast begins with canonical rows/receipts/events, writer/check/recovery and all
 existing CLI/readers. The plan adds one opt-in check merge preview/apply interface,
 a pure owner-side row selector and narrow existing staged-builder/journal merge semantics. Runtime
 source code and root Git/input identities stay separate. This does not yet add
-weekly coordinator/adoption/rollover, proposal/freeze or a firing path. Undo local
+weekly coordinator/adoption/rollover, proposal/freeze or a firing path. Reversibility:
+**Costly** for the shared writer/recovery extension; code revert is distinct from
+interrupted-operation recovery. Complete/reconcile an already durable merge through
+its exact intent; never replay or restore over later owner writes. Undo local
 fixture/code changes normally; production-like owner data is never replayed during
 validation. Committed parent objects plus the ordinary intent/rollback protocol
 preserve pre-operation evidence; existing .bak files remain untouched.
@@ -1086,3 +1089,34 @@ Use the existing rebuild staged builder plus an explicit journalled publication/
 extension for this new mode. Legacy check/rebuild behavior remains unchanged; no
 unprotected rebuild default is described as atomic recovery. This control is in-memory
 source grounding, not a new CI test or proof of the unimplemented operation.
+
+
+### Phase8 implementation checkpoint — local, not published
+
+The canonical owner now exposes opt-in local-parent `check` preview/apply. Receipt
+arithmetic is shared with ordinary check; the staged constructor is shared with
+legacy rebuild. Source admission requires current schema, exact logical roundtrip,
+valid receipt chain and conservative three-way preservation. The new journal binds
+root/branch/HEAD, both parents, selection hash, owner bytes, generations and exact
+before/after DB hashes. It records the same transaction ID as its scoped receipt.
+Staged data must match the selection before swap. Plain check's new-kind recovery
+runs before legacy cleanup; unknown state preserves intent/evidence. Legacy defaults,
+append-only triggers, fixed backup and connector policy remain intact.
+
+Manual evidence: `phase8-manual-results.json` (preview/apply/repeat),
+`phase8-negative-results.json` (refusals, backup, five actual crash boundaries and
+unknown later owner state) and `phase8-shape-results.json` (nonempty source,
+malformed/duplicate/conflicting/deleted data; NULL-gh/override/start/history retained)
+under the existing GH1022 TESTS-RESULTS directory. Source hashes qualify these claims.
+A first shape-control attempt used the wrong field name `rating_override`; corrected
+to the canonical `rating_ovr` and reran against an actual overridden fixture row.
+This was a manual-control error, not a product defect. Existing current-target
+roundtrip grounding is separately retained as historical source-specific evidence.
+
+These ephemeral controls write owned fixture Git/DB/dump/intent/audit/staging only,
+with connectors0. No new CI test, case, parameter, registration or permanent manual
+fixture program was added. Existing suites and new-scope finalQA remain required;
+no full-issue, weekly coordination/rollover, criterion, consent or dispatch coverage
+is claimed. Phase8 plan-review nits are addressed: published Phase7 gate state is
+current, shared writer/recovery reversibility is Costly, durable merges require
+completion/reconciliation rather than replay over later owner writes.

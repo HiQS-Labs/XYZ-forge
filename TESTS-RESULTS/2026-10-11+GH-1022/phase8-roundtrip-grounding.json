@@ -1,0 +1,25 @@
+{
+  "source_sha256": "b72df3ea23129102cda3102c1f319ddf047c51d28d9a68361b6061d3fa50ad43",
+  "canonical_target": "d09b8f9dedd436be3e5f883f68deff985719fe1b",
+  "method": "actual canonical parser/current registry/loader/formatter on nonempty currenttarget SQL in-memory; readonly Git object; no root DB/file/index/fixture program/network/CI additions",
+  "all_tables_exact": true,
+  "table_counts": {
+    "schema_migrations": 9,
+    "settings": 3,
+    "repos": 1,
+    "issue_refs": 101,
+    "marathons": 6,
+    "releases": 13,
+    "manifest_items": 98,
+    "manifest_state_events": 87,
+    "doc_lines": 86,
+    "legacy_lines": 28,
+    "grandfather_entries": 24,
+    "roadmap_items": 349,
+    "jog_queue": 18,
+    "op_receipts": 1774,
+    "work_events": 702
+  },
+  "business_digest": "901ff677a8bcb2fae4514b7ecf615e4572428b49aa3ea9004cd2eb0e662d4d20",
+  "meaning": "currenttarget logical values/order/GIDs/history roundtrip exactly; not a merge API implementation or broader schema guarantee"
+}

@@ -73,6 +73,24 @@ edited that ledger, finish with `releases roadmap sync` (a no-change sync is a f
 4. Parse a block from one `Release:` line to the next `Release:` line or end of file. Blank lines do
    not end blocks.
 
+## Opt-in local canonical preservation API
+
+For the weekly coordinator's separate prerequisite, `releases_app.py --root ROOT
+check --merge-base BASE_SHA --merge-target TARGET_SHA --expected-head HEAD_SHA
+--expected-branch BRANCH` is a read-only JSON preview against exact supplied local
+parents in a full clone. It does not invoke ordinary check's lock/recovery and does
+not prove fresh remote state. Current identical schema and conservative disjoint
+roadmap changes/append-only histories are supported; unknown or conflicting rows
+hold. See the [weekly contract](../../3-weekly/weekly/SKILL.md#canonical-local-merge-prerequisite)
+for source validity, preservation and exclusions.
+
+Explicit `XYZ_WORK_CONNECTORS=0` and `--apply` opt into local canonical staged
+publication, intent/audit/scoped receipt and adopted-view writes only. No Git or
+connector writes occur. Exact before/after journal recovery runs through plain
+`check`; unknown state retains the intent and owner evidence. Existing `check`,
+`check --rebuild` and merge-resolver defaults are unchanged. Do not substitute this
+API's HELD output for operator consent, global-idle proof or dispatch authority.
+
 ## Default route — read and synthesize
 
 Run this route before every other route unless the same invocation already established fresh state.
