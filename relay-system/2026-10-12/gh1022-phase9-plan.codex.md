@@ -97,4 +97,12 @@ Graph evidence: Verify tier attempted; no indexed project matches this review wo
 
 Relay closed (Approved), no further review turn needed. Handing the completed plan verdict to Author for bounded implementation and later independent final QA within existing authority.
 
+
+### Attestation · relay-drive — 2026-10-12T10:28:16Z
+task: GH1022-PHASE9-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 836e7813f3d91e3dc45852f993e68ead3dba41b0
+added-range: 7782+5484
+added-sha256: 2e8b56e194bd815f3e2055ef513313402064cc6aea50ccd6da592480dd0b7309
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
