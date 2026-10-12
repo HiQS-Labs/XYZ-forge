@@ -1,0 +1,11 @@
+{
+  "head": "afa2763516ac988ab7d02a424237f9eddd581eed",
+  "origin_development": "afa2763516ac988ab7d02a424237f9eddd581eed",
+  "status": "",
+  "core_bare": "false",
+  "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "pr1019_head_ancestor": true,
+  "policy": {
+    "preserve_commit_history": true
+  }
+}

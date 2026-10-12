@@ -24,7 +24,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Operator authorized workhorse execution. Fresh read confirms PR1017 merged; PR954 and PR1024 are drafts. A peer is refreshing PR1019 through a normal full push gate. Disposable task clone provisioned; no product code changed. | Verify the peer's PR1019 refresh/landing. Await the operator's scope decision for the two held drafts, then pin the release candidate; no final qualification or stable claim yet. |
+| Conditional plan QA Approved in Round2 with attestation. PR1019 merged atafa27635 and primary fast-forwarded cleanly; hosted reconciliation38292804195 remains active. Intake/evidence is retained in draft PR1034. No product code changed. | Finish hosted reconciliation without a competing local writer. Await the operator scope decision for held drafts954/1024, then freeze/review the full promotion range. No final qualification or stable claim yet. |
 
 ## Current facts and scope
 
@@ -35,8 +35,10 @@ there are 333 development-only commits and 2,041 changed paths. These counts are
 not the frozen candidate. The final review must cover the whole promotion range, not just this batch.
 
 Current scope includes PR954, PR1019 and PR1024; PR930 remains held. No later PR is implicitly added.
-PR1019 is also tracked by the active peer's merge record #1030; use its published result rather
-than competing with its current repair. PR954 lacks a published Claude advisory route and an
+PR1019 is also tracked by the peer merge record #1030. Its refresh published final QA7cda123d
+and this caller merged it atafa27635 with original ancestry; hosted reconciliation is pending.
+Keep peer draft evidence PR1033 separate. This plan/evidence intake is draft PR1034 and must
+be governed/landed before any final candidate freeze; it is not the requested main promotion PR. PR954 lacks a published Claude advisory route and an
 explicitly authorized real advisory pilot. PR1024 remains FAIL/Escalated4/4 with Medium1031 and
 unfinished W8–W11; no capped review reset, live dispatch or new test approval is inferred.
 An operator scope decision is pending: keep both drafts as prerequisites or defer them from this
@@ -129,7 +131,8 @@ any merge; an active peer, changed PR head or unknown remote outcome prevents re
 ## Unknowns and blockers
 
 - Operator decision for held PR954/PR1024 is pending; prerequisite defaults remain in force.
-- PR1019's active refresh has not yet published; no concurrent branch write is permitted.
+- PR1019 is merged; hosted reconciliation38292804195 is active. No local reconcile writer
+  may race it. Capture the successful qualification/reconciled SHA before closing this step.
 - Current main branch protections/required checks need fresh review before promotion.
 - Full promotion-range recon, behavior probes, local qualification and final review are pending;
   historical 409/409 checks are not evidence for the current candidate.

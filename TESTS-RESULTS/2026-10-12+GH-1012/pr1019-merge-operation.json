@@ -1,0 +1,24 @@
+{
+  "operation_id": "gh1012-land-pr1019-7cda123d",
+  "target_arn_or_url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1019",
+  "request_fingerprint": "20658b25c165f39b2e71738239b97f645afd462a2afeed5de5f44a425239a06d",
+  "idempotency_key": "GitHub PR1019 merge state + match-head-commit 7cda123d",
+  "request": {
+    "pr": 1019,
+    "head": "7cda123dcd5ad7b5acd178940a8d8bc105aa7e44",
+    "base": "d09b8f9dedd436be3e5f883f68deff985719fe1b",
+    "strategy": "merge",
+    "retain_branch": true
+  },
+  "status": "confirmed_success",
+  "command_returncode": 0,
+  "remote": {
+    "headRefOid": "7cda123dcd5ad7b5acd178940a8d8bc105aa7e44",
+    "mergeCommit": {
+      "oid": "afa2763516ac988ab7d02a424237f9eddd581eed"
+    },
+    "mergedAt": "2026-10-12T18:43:06Z",
+    "state": "MERGED",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1019"
+  }
+}

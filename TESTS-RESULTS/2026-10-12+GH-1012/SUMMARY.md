@@ -21,3 +21,16 @@ Round1 reported an evidence-ordering gap and driverexit6: the producer created e
 during the containment window, so the harness backed it up and reverted that off-lane
 addition. The backup was restored after the turn and committed; R1 was corrected. These
 results are retained and do not count as final promotion-range review or qualification.
+
+## Verified landing and current external prerequisites
+
+PR1019 merged atafa27635 through an ordinary atomic-head-bound merge, retaining its branch.
+Fresh disposable-clone ledger simulation was green againstd09; warnings remain in the JSON
+receipt. Primary fast-forward was clean/equal with native PR-head ancestry and preserved
+opt-in history policy. Hosted reconciliation38292804195 remains in progress; this landing is
+not yet claimed fully reconciled. Drafts954/1024 remain prerequisites and user scope decision
+is pending. New peer evidence PR1033 stays draft/outside the original scope.
+
+This plan/evidence intake is draft PR1034, not the requested promotion PR into main. Its
+normal documentation push gate passed in74s at51daae90; retained log is gzip/hash-bound.
+No final full-range regression/recovery/final review-code or exact-main qualification has run.
