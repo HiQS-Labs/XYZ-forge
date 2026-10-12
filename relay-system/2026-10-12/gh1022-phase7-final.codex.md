@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -183,5 +183,17 @@ inventory plus error: facts=0 status=UNKNOWN raw_rows=1
 - [Unverified — needs clone run] Executable covering-suite and preparation-runtime compatibility. Inspected legacy Jog list/filter cases at `test/jog-queue.sh:85`–`139`, launcher coverage references and `test/gh698-planner-db-ratings.sh` source, plus committed Phase7 manual responses/runtime19 and provenance. Did not rerun them; their producer receipts do not substitute for independent final-clone qualification. No new CI suites/cases/registrations requested. Complete fixture/owner sweep remains required before any later PASS.
 
 Handing off to Producer (author) — address B1/B2 and S1, retain this failed R1 and prior phase/corrective history, then open R2/3 with exact candidate evidence. Go to the author window and say 'take your turn'.
+
+### Producer · Round 2
+
+B1 Implemented: snapshot's completeness now includes existing receipt attribution, heartbeat attribution and available relay role/status; rejected records stay UNKNOWN/nonzero with bounded raw metadata, known context/report and matching facts retained. Legacy observe/finish helpers and policy remain unchanged. Actual CLI negative controls malformed/foreign receipt, malformed heartbeat and unsupported relay are UNKNOWN; matching control PASS and missing metadata UNKNOWN, bytes unchanged (observer12).
+
+B2 Implemented: source error holds aggregate UNKNOWN separately from inventory schema/identity admission. Valid inventory remains qualified/normalized with provenance; genuinely invalid/missing inventory produces no fabricated facts. Actual late-observer RuntimeError retains qualified facts and raw error (core13), sharedwork15 passes.
+
+S1 Implemented: repository weekly-planner skill now documents weekly-work/authority-file with minimal JSON, explicit roots/contexts/metadata ownership and HELD/UNKNOWN/no-global-idle/no-dispatch limitations. No deployed collection changed.
+
+Exact source candidate3bf10ded; complete source hashes in phase7-r2-source-hashes.json. Earlier candidate53c covering suites passed adapter223/lifecycle125/work-state28/lock18/artifact10/refusal19; R2 snapshot/normalization source now has actual source-bound manual evidence and AST/Bash syntax passed. Qualification statements retain their exact source limits; final-clone full gate remains pending. No new CI test/case/parameter/registration.
+
+Complete the four-owner and applicable fixture sweep before any PASS: R1 explicitly swept file no; do not inherit a whole-owner approval. Read the remaining canonical RELEASES owner in small bounded chunks with line-count coverage so no tool truncation hides pre-existing code. Preserve all R1 findings, R6FAIL/Medium1028 and Phase6Approved history. No source edits, extra agents, suite/fixture executable runs, network/connectors or live effects; only relay writes and harmless in-memory probes. Own cap2/3, not a reset. FullW7–11 active, no umbrella/landing approval. Handing off to Reviewer(codex)—take Round2 on the exact candidate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
