@@ -1,8 +1,8 @@
 ---
 title: "GH-537: skills: new skill /five — the 5-and-5 decision checksum (5 key highlights + 5 explicit non-goals)"
-status: active
+status: Complete
 created: 2026-09-09
-updated: 2026-09-09
+updated: 2026-09-10
 owner: orchestrator (Claude Code)
 goal: give the operator a skimmable checksum layer over any plan/feature/fix — exactly 5 load-bearing decisions and 5 explicit non-goals, each grounded in the artifact — so unasked-for decisions surface at approval time instead of after
 gh_issue: 537
