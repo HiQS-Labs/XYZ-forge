@@ -1,8 +1,8 @@
 ---
 title: "GH-1010 — Merge history recon"
-status: Reference
+status: Complete
 created: 2026-10-09
-updated: 2026-10-09
+updated: 2026-10-12
 owner: Codex
 roadmap_exempt: true
 goal: Ground the merge policy implementation.

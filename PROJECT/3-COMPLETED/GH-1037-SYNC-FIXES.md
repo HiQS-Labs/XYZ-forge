@@ -1,6 +1,6 @@
 ---
 title: "GH-1037: release-review sync ownership fixes"
-status: active
+status: Complete
 created: 2026-10-12
 updated: 2026-10-12
 owner: Codex
