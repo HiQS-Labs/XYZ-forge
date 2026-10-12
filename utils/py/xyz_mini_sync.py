@@ -139,7 +139,7 @@ TARGETS = {
         "log": "agent-chorus-sync",
     },
 }
-MANIFEST_FILE = "MANIFEST.txt"        # managed paths of the last publication (drives deletions)
+MANIFEST_FILE = "MANIFEST.txt"        # payload paths plus adapted-root markers ending in /
 REVISION_FILE = ".xyz-forge-revision"  # source SHA of the last publication
 SECRET_PATTERNS = (
     ("aws-access-key", re.compile(rb"(?<![A-Z0-9])(AKIA|ASIA)[A-Z0-9]{16}(?![A-Z0-9])")),
@@ -237,7 +237,7 @@ def destination_ready(source, dest, files, tracked, revision, message):
         if (parent.returncode == subject.returncode == old_manifest.returncode == old_revision.returncode == 0
                 and parent.stdout.strip() == remote and subject.stdout.strip() == message
                 and old_manifest.stdout == wanted_manifest and old_revision.stdout == revision):
-            previous = set(remote_manifest.stdout.splitlines()) if remote_manifest.returncode == 0 else set()
+            previous = {p for p in remote_manifest.stdout.splitlines() if not p.endswith("/")} if remote_manifest.returncode == 0 else set()
             seeds = {dst for _, dst, mode in files if mode == "seed"}
             allowed = set(tracked) | previous | seeds | {MANIFEST_FILE, REVISION_FILE}
             changed_paths = set(changed.stdout.splitlines()) if changed.returncode == 0 else {"<unreadable>"}
@@ -362,14 +362,17 @@ def publish_one(target, a):
                              "(publishing would overwrite or prune mini-owned bytes): " + " ".join(stale))
         prev_path = os.path.join(dest, MANIFEST_FILE)
         with open(prev_path, encoding="utf-8") if os.path.isfile(prev_path) else open(os.devnull) as fh:
-            prev = set(fh.read().split())
+            prev_manifest = set(fh.read().split())
+        # Root markers retain adapted ownership even when the child deletes every payload file.
+        # They are metadata only, never deletion or copy paths.
+        prev = {p for p in prev_manifest if not p.endswith("/")}
         # ownership is per adapted entry: an entry already published to the child keeps whatever the
         # child tracks under it (its own additions and deletions included); a never-published entry
         # is seeded from forge bytes once
-        established = sorted(r for r in adapted_roots if any(under(p, r) for p in prev))
+        established = sorted(r for r in adapted_roots if any(under(p, r) for p in prev_manifest))
         carried = sorted(f for f in git(dest, "ls-files", "-z", "--", *established).stdout.split("\0") if f) if established else []
         seeded = sorted({d for _, d, m in files if m == "adapted" and not any(under(d, r) for r in established)})
-        tracked = sorted(set(managed) | set(carried) | set(seeded))
+        tracked = sorted(set(managed) | set(carried) | set(seeded) | {r + "/" for r in adapted_roots})
         revision = expected_revision(sha, branch, dirty)
         message = f"sync: XYZ-forge@{sha[:12]} ({branch}){' [dirty source]' if dirty else ''}"
         if branch != "development":

@@ -1,6 +1,6 @@
 ---
 title: "GH-1037: release-review sync ownership fixes"
-status: captured
+status: active
 created: 2026-10-12
 updated: 2026-10-12
 owner: Codex
@@ -16,7 +16,7 @@ branch: fix/XYZ-forge-gh1012-sync-fixes-2026-10-12
 
 | What was just completed | What's next |
 |---|---|
-| Two P2 release-review defects reproduced on development 2f8969a2; operator authorized both bounded fixes and corrected release merge | Independent bounded plan QA, implement, existing checks and retained manual red/green controls |
+| Independent plan QA approved round 1; own ledger row admitted; both localized fixes implemented | Existing checks and manual controls, then independent implementation QA |
 
 ## Scope and evidence
 

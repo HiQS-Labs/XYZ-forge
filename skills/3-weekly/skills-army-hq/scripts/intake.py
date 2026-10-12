@@ -436,22 +436,22 @@ def dirty_paths(top):
     return paths
 
 
-def commit_skill(root, name, message):
-    """GH-993: commit only this skill's folder so the hourly pulse (which refuses foreign dirt) keeps
+def commit_skill(root, name, message, owned_paths=()):
+    """GH-993: commit this skill and explicitly transaction-owned paths so the hourly pulse keeps
     syncing. Never pushes — the pulse is the single network writer. Refuses over unrelated changes."""
     top = collection_repo(root)
     if top is None:
         return None
     rel = Path(os.path.relpath(root.resolve() / name, top)).as_posix()
     paths = dirty_paths(top)
-    mine = [p for p in paths if p == rel or p.startswith(rel + "/")]
+    mine = [p for p in paths if p == rel or p.startswith(rel + "/") or p in owned_paths]
     other = [p for p in paths if p not in mine]
     if other:
         return {"committed": False, "repo": str(top),
                 "reason": "unrelated uncommitted changes: " + ", ".join(other[:5]) + (" …" if len(other) > 5 else "")}
     if not mine:
         return {"committed": False, "repo": str(top), "reason": "nothing to commit"}
-    for step in (("add", "-A", "--", rel), ("commit", "--quiet", "--only", "-m", message, "--", rel)):
+    for step in (("add", "-A", "--", rel, *owned_paths), ("commit", "--quiet", "--only", "-m", message, "--", rel, *owned_paths)):
         run = git_at(top, *step)
         if run.returncode:
             return {"committed": False, "repo": str(top), "reason": f"git {step[0]} failed: {run.stderr.strip()}"}
@@ -742,6 +742,17 @@ def main(argv=None):
             # each other (each remove still acknowledges exactly one; the rest keep blocking).
             found = inventory(root, state, list(state["skills"]) if args.command == "remove" else [])
             details, actions = {}, []
+            owned_paths = ()
+            # Only a clean tracked mirror belongs to this manager-update transaction.
+            if args.command == "update" and args.name == "skills-army-hq":
+                top = collection_repo(root)
+                readme = root / "README.md"
+                if top is not None and readme.is_file() and not readme.is_symlink():
+                    rel_readme = Path(os.path.relpath(readme, top)).as_posix()
+                    if (git_at(top, "ls-files", "--error-unmatch", "--", rel_readme).returncode == 0
+                            and rel_readme not in dirty_paths(top)
+                            and regular_bytes(readme) == regular_bytes(root / "skills-army-hq" / "README.md")):
+                        owned_paths = (rel_readme,)
             if args.command == "activate-manager":
                 require("skills-army-hq" in found, "Import skills-army-hq before activation")
                 require(found["skills-army-hq"]["digest"] == state["skills"]["skills-army-hq"]["digest"],
@@ -810,7 +821,9 @@ def main(argv=None):
                 transact(root, state, config, actions, args.command, details)
                 if args.command in ("add", "update", "remove"):
                     origin = f" from {Path(details['source']).name}@{details['commit'][:12]}" if details.get("commit") else ""
-                    result = commit_skill(root, details["name"], f"vendor: {args.command} {details['name']}{origin}")
+                    if owned_paths and regular_bytes(root / "README.md") != regular_bytes(root / "skills-army-hq" / "README.md"):
+                        owned_paths = ()
+                    result = commit_skill(root, details["name"], f"vendor: {args.command} {details['name']}{origin}", owned_paths)
                     if result and result["committed"]:
                         print(f"skills-army-hq: committed {details['name']} in {result['repo']} ({result['commit']}); "
                               "git-pulse pushes it on its next run", file=sys.stderr)
