@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -74,5 +74,27 @@ Current source baf67495; actual deployed-source qualification snapshot bc4/d09. 
 Caller authority list is explicit; no inferred primary/fleet scan. Terminal/carryover scope is explicit/all. Existing IO containment/runtime path+byte binding must remain real. Root/head/generation/context read completeness remains distinct from code readiness, delivery and dispatch. Full W7–W11 staysactive; globalwriter/rollover,strictreadiness,freeze/approval/effectguards are not claimed. R6FAIL6/6/MediumGH1028 andGH1027unapprovedtests unchanged; Phase6closedApproved3/3—not reopened. This is newly planned read capability, no review reset/relabel or checkrestart.
 
 No source edits/suites/pytest/fixture executables/agents/network/connectors/live operations; onlythisrelay, harmlessin-memory source queries permitted. Bounded owner-seam plan review; full-file final QA after implementation. State actionable input/scope/falsifier/severity and unknowns; no speculative blockers. No new CI cases/gates/runners requested. LastScopeModel receipt authenticity/human/cost/fleet questions remain explicit unknowns for later scopes, not excuses to build mechanisms now. Handing off to Reviewer(codex)—take the genuinelynew plan turn within cap3.
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the genuinely new Phase7 read-only design only. Existing owners support this bounded extension; no blocking plan defect found. This is neither implementation qualification nor full W7–W11/R6/Phase6 approval.
+swept file: yes
+
+Scope: Read the whole 914-line intake document and 103-line remaining-boundaries map, including historical failures and remaining acceptance; directly inspected the named ledger, observer, intake/core and lock-resolver seams. No additional actionable pre-existing defect found in these plan artifacts. This was a bounded owner-seam review, not a whole-source-file final QA sweep. Graph discovery/coverage used XYZ-forge generation 2026-09-01T15:54:30Z; its root is another checkout, with changed/missing coverage and marathon.sh partial range351. Current seeded source reads supersede that stale graph; no exhaustive caller claim follows.
+
+- [Pass] Ownership/minimality: Phase7 lines853–863 require canonical RELEASES queries/guards, preserve standalone Jog inventory and forbid recovery/writes. Current `releases_app.py:433` supplies readonly connect; `:4601` owns the qualified Jog query; `:4633` supplies strict generation/artifact guards. Approve a small shared guarded-read envelope inside that owner, with all Marathon/Jog/lifecycle extraction under the same observation boundary. Do not compose independently sampled generations and label them one snapshot. Existing `load_work_evidence` is an advisory projection, not the complete census: `:5660` excludes NULL-gh events and `:5674–5677` projects from roadmap rows; `cmd_work_status:5751` also loads connector configuration. Reuse owner extraction logic, retaining raw unregistered/unknown facts as required by Phase7 line859; do not call that config-reading CLI or treat its summaries as complete raw evidence.
+
+- [Pass] Smallest adequate shape: use one opt-in RELEASES JSON envelope with version, declared root, schema/generation, initialized/read_complete, repositories, typed Marathon/Jog/lifecycle facts, source identities, held reasons and dispatch=false. Keep native work GIDs distinct from qualified issue identity; event identity is its work-event GID, Marathon identity its marathon GID plus tracking-ref ownership, Jog identity its queue GID. Existing `releases_app.py:520` stores Marathon repo/tracking-ref separately, and `:897` allows lifecycle gh_number=NULL: neither a missing issue number nor a temporary tracking ref licenses dropping the fact or inventing an issue identity. Preserve raw owner values; qualify or hold them. Read-complete PASS describes extraction only, never absence of active work or permission to act (Phase7 lines839–842,869–871).
+
+- [Pass] Observer reuse: approve one explicit read action before the existing write/observe branches, using bounded reads and validated caller ownership. `marathon.sh:81` bounds regular-file reads; `:129` matches phase/execution/lane/token/product attribution; `:166` describes heartbeat liveness; `:254` currently separates observe from init/phase/driver/finish/terminal. Preserve logical product_root spelling (`:267` uses abspath), and keep physical containment checks separate. Return context/receipt/heartbeat observations and unknown reasons; do not turn `qualified()` counters into receipt authenticity or criterion delivery. Missing optional observer context remains explicit unavailable evidence, never global idle. This matches Phase7 lines864–873.
+
+- [Pass] Consumer/compatibility: Phase7 lines874–892 require explicit authority, retained per-root provenance, conflict holds, bounded runtime-pinned owner commands and no legacy fallback. `planner_core.py:1303` branches opt-in reads before legacy scratch creation; `:808` already owns runtime path/hash and bounded IO mechanics. Reuse those mechanics without invoking preparation or adding another runner. Keep root observations separate even when deduplicating identical facts; retain observed time/provenance outside the semantic equality comparison. Driver-lock evidence must use `rtl.py:966`'s common-dir resolver without acquiring/removing a lock. No new default authority, registry, scanner or policy engine is justified.
+
+- [Unverified — needs clone run] Implementation, red controls and legacy parity have not run in this reviewer worktree. Required witnessed controls and committed provenance remain as Phase7 lines861–885,890–892 specify; use existing suites/manual records in a disposable full clone. No validate.sh, test/*.sh, pytest, executable fixture, Git command or live operation was run here. Historical gate/publication claims were read as producer evidence, not independently re-attested.
+
+R6 FAIL6/6, GH1028 and GH1027 remain unchanged; Phase6 stays closed. Phase7 implementation/final QA retains its own normal cap3 and must sweep complete changed owner files. No extra test/case/gate, publication/merge or operational authority is granted by this plan verdict.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
