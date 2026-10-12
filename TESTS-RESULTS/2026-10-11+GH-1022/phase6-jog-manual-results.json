@@ -1,7 +1,7 @@
 {
-  "source_sha256": "aed2ae502b03ebd90a1526fb223716865dd947edc12eb658245f252c841403db",
+  "source_sha256": "ac72d6f83e75db54cb52ab7c5135a8a20fd358a1defbd32789bff8bdbf8bfad8",
   "method": "actual owner module/CLI; only isolated canonical-schema fixture data and negative-control mutation writes; no connectors/builders or CI additions",
-  "fixture_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase6-manual-y4p4isxt",
+  "fixture_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase6-manual-nw_r2rg3",
   "count": 24,
   "controls": [
     {
@@ -11,19 +11,19 @@
         "status": "PASS",
         "initialized": true,
         "read_complete": true,
-        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase6-manual-y4p4isxt/fixture #?",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase6-manual-nw_r2rg3/fixture #?",
         "include_terminal": true,
         "generation": 1,
         "repositories": [
           {
             "id": 1,
-            "global_id": "repo-01M4Q3SZ50GC42H16SGNKNVCRJ",
+            "global_id": "repo-01M4Q4AYE6EGGY7MDEBGZK102V",
             "slug": "acme/a",
             "repository": "acme/a"
           },
           {
             "id": 2,
-            "global_id": "repo-01M4Q3SZ500TE6PJ0SQPZMD7KV",
+            "global_id": "repo-01M4Q4AYE6RX1VQ3JWFGFY1WWZ",
             "slug": "acme/b",
             "repository": "acme/b"
           }
@@ -31,11 +31,11 @@
         "rows": [
           {
             "repo_id": 1,
-            "repo_global_id": "repo-01M4Q3SZ50GC42H16SGNKNVCRJ",
+            "repo_global_id": "repo-01M4Q4AYE6EGGY7MDEBGZK102V",
             "repo_slug": "acme/a",
-            "roadmap_global_id": "rmi-01M4Q3SZ50593FQM1MJPAXK0Z9",
+            "roadmap_global_id": "rmi-01M4Q4AYE6KFBWNZCEJMRK3AH7",
             "id": 1,
-            "global_id": "jog-01M4Q3SZ50147B0SSJQJ5YWFTE",
+            "global_id": "jog-01M4Q4AYE6G0D4M07BW82YS3XW",
             "gh_number": 777,
             "position": 1,
             "status": "pending",
@@ -55,11 +55,11 @@
           },
           {
             "repo_id": 1,
-            "repo_global_id": "repo-01M4Q3SZ50GC42H16SGNKNVCRJ",
+            "repo_global_id": "repo-01M4Q4AYE6EGGY7MDEBGZK102V",
             "repo_slug": "acme/a",
             "roadmap_global_id": null,
             "id": 2,
-            "global_id": "jog-01M4Q3SZ50KMMH8SMX3MRNBF0D",
+            "global_id": "jog-01M4Q4AYE6P7J77CERYEA0PE2M",
             "gh_number": 778,
             "position": 2,
             "status": "pending",
@@ -80,11 +80,11 @@
           },
           {
             "repo_id": 1,
-            "repo_global_id": "repo-01M4Q3SZ50GC42H16SGNKNVCRJ",
+            "repo_global_id": "repo-01M4Q4AYE6EGGY7MDEBGZK102V",
             "repo_slug": "acme/a",
             "roadmap_global_id": null,
             "id": 3,
-            "global_id": "jog-01M4Q3SZ506E2DWVGW98369SX5",
+            "global_id": "jog-01M4Q4AYE6W202HPKQ2G7ZNVD0",
             "gh_number": 779,
             "position": 3,
             "status": "completed",

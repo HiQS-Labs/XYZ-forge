@@ -58,6 +58,7 @@ import argparse
 import datetime as _dt
 import fcntl
 import hashlib
+from html import escape as html_escape
 import json
 import os
 import re
@@ -6568,10 +6569,10 @@ def cmd_dashboard(args):
             
             releases_html += f"""
             <div style='border: 1px solid #ccc; padding: 1rem; min-width: 250px;'>
-                <h3>{r['version'] or ''} {r['codename'] or ''}</h3>
-                <p>Status: {r['status']}{days_str}</p>
+                <h3>{html_escape(str(r['version'] or ''))} {html_escape(str(r['codename'] or ''))}</h3>
+                <p>Status: {html_escape(str(r['status']))}{days_str}</p>
                 <p>Manifest: {open_items} open / {closed_items} closed</p>
-                <p>Exit: {r['exit_criterion'] or 'None'}</p>
+                <p>Exit: {html_escape(str(r['exit_criterion'] or 'None'))}</p>
             </div>
             """
         releases_html += "</div>"
@@ -6589,10 +6590,10 @@ def cmd_dashboard(args):
             
         roadmap_html = "<h2>Roadmap</h2>"
         for section, items in roadmap_by_section.items():
-            roadmap_html += f"<h3>{section}</h3><ul>"
+            roadmap_html += f"<h3>{html_escape(str(section))}</h3><ul>"
             for i in items:
                 gh = f"GH-{i['gh_number']} " if i['gh_number'] else ""
-                roadmap_html += f"<li>{i['status_marker'] or ''} {gh}{i['title']}</li>"
+                roadmap_html += f"<li>{html_escape(str(i['status_marker'] or ''))} {html_escape(gh)}{html_escape(str(i['title']))}</li>"
             roadmap_html += "</ul>"
 
         html = f"""<!DOCTYPE html>

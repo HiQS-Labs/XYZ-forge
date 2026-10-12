@@ -1,0 +1,27 @@
+{
+  "source_sha256": "ac72d6f83e75db54cb52ab7c5135a8a20fd358a1defbd32789bff8bdbf8bfad8",
+  "method": "actual dashboard renderer on in-memory read-only inputs; no browser/JS, file DB, CLI, connectors or CI cases",
+  "controls": [
+    {
+      "input": "<img src=x onerror=\"alert(1)\">",
+      "escaped": true,
+      "raw_active_markup": false,
+      "expected_count": 7,
+      "ordinary_preserved": null
+    },
+    {
+      "input": "A & B < C",
+      "escaped": true,
+      "raw_active_markup": false,
+      "expected_count": 7,
+      "ordinary_preserved": null
+    },
+    {
+      "input": "Ordinary owner \u2705",
+      "escaped": true,
+      "raw_active_markup": false,
+      "expected_count": 7,
+      "ordinary_preserved": true
+    }
+  ]
+}

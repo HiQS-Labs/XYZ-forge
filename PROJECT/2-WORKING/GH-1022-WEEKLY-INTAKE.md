@@ -1,7 +1,7 @@
 ---
 gh_issue: 1022
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1022
-title: "Weekly issue intake — staged shared discovery"
+title: "Weekly issue intake and approval-bound planning"
 status: In progress
 created: 2026-10-11
 updated: 2026-10-12
@@ -11,14 +11,14 @@ effort: 4
 complexity: 4
 risk: 3
 phases: 6
-goal: Reuse shared discovery for a held weekly proposal without importing unattended execution policy.
+goal: Implement shared weekly intake, bounded canonical planning and exact approval safeguards without enabling live execution.
 ---
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| Consolidated Claude producer corrections locally verified1044969d;published draft remains7d0bd85e. | R6 completedFAIL,oneMedium trackedGH1028,noCriticalHigh. Normalgates/publication pending;Phase6 paused,W7–W11 active/held. |
+| Reconciled draft3b5 is mergeable; full409/409 and hosted smoke pass. Qualified Jog seam/manual24 implemented; Phase6R1 found Medium dashboard HTML defect, locally fixed with witnessed rendering controls. | Existing checks and exact-source Phase6 review/publication qualification remain pending. R6 staysFAIL6/6/Medium1028; W7–W11 active and weekly HELD. |
 
 ## Table of contents
 
@@ -650,7 +650,7 @@ W7 broader aggregation/authority roots,branch lifecycle/rollover andPRrouting,
 W8 construction/readiness,W9–W11 approval/sharedsafety remainrequiredactive.
 #1017 observer repair landed;do not duplicate its pathrepair orpretend a
 complete Marathon inventory hasbeen obtained. No live Marathon/Jog,merge/deploy,
-installation,scheduling ornewtest authorized. No production code forPhase6 yet.
+installation,scheduling ornewtest authorized. Production was unchanged at that original plan draft; the resumption below records the subsequent implementation.
 
 
 ## Claude review remediation — current disposition and review boundary
@@ -817,3 +817,7 @@ Phase6 resumption at3b5fb32e: developmentff895c83 reconciled by preserving merge
 Phase6 source implemented after planQA Approved atbf6f389a (attested373fc7d7). Actual module/CLI24 isolated-fixture controls pass, including multi-repo collision, unregistered/terminal rows, legacy fields, read-only URI/mutation refusal, empty/UNKNOWN, sidecars/journal, second-connection generation drift and no creation. Fixtures write only owned local git/schema/data/negative-control artifacts; no connectors or builders. Formal GIDs and all declared repository identities required; inventories remain dispatchfalse, not global execution proof. Existing suite runs/final QA next.
 
 Untoucheddevelopmentff895 Ubuntu38198894599 confirms same gh123 failures as9ebe; existing fixture O_APPEND positional-write mismatch narrowed. Correction changes existing PYMOVE openmode a+ to w+, retains cases/assertions/bounds; no newCI test/case/parameter/registration or production lock change. Corrected Linux hosted qualification pending. Reconciled draft3b5 full normalgate409/409+Python21/822s, remoteSHA matches, mergeable; hosted38201048871 blocking smokeSUCCESS/macOS+UbuntuSKIPPED. R6 remains FAIL6/6/Medium1028; no corrective review/reset. W7–W11 active, new reader prerequisite does not complete W7.
+
+Phase6 finalR1 at3378bed1 returnedFAIL withonepre-existing Medium dashboard text-to-HTML S1. Whole7039-line owner/test/writer sweep completed; qualified read seam passed bounded reviewer checks. S1 implemented using stdlib html_escape at all seven stored-text boundaries (plus derived issue text), preserving stored values and legacy non-HTML readers. Actual-render before control emitted active img markup; after three inputs×seven boundaries emit escapedtext and preserve ordinaryUnicode display. No browser/JS execution, productionDB ornewCI case. Current24 Jog controls stillpass with updatedsourcehash. Existing disposable53b4 Jog34/34,adapter223/223,lock6/6; canonical3378 clean0fail9warnings. Exactnewcandidate gate/review and correctedLinuxqualification remainpending. No additionalreviewround invoked aftercheckpoint; R6artifact unchanged.
+
+Independent W8 readiness recon records actualadvisorysequencer missingCI,draft,unknownexternaldependency andcycle enteringready; knownnot-readydependency remainsinreadylistwithblocked_by_unmerged marker. These are existing outline heuristics, not proposal/dispatch proof. Shared strict readiness policy and evidence-bound authoritativeconstruction remain required; no duplicate scorer/engine or enabled execution.

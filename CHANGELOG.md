@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-12 — Escape canonical dashboard text (GH-1022 owner review)
+
+The existing dashboard now escapes ledger text with Python's html.escape when
+rendering releases, roadmap headings and issue rows. Stored data and other readers
+are unchanged. Whole-owner Phase6 review reproduced active HTML from a legal title;
+manual rendering controls witness the repair. No CI test or case was added.
+
 ## 2026-10-12 — Qualified held Jog observations (GH-1022, Phase6)
 
 Canonical Jog list now joins roadmap metadata by repository and issue number,
