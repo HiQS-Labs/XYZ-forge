@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Author
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -229,5 +229,151 @@ Nit Implemented: earlier weekly prose now points observation/API limits to imple
 Review whole current core/owner/plan/skills/covering unchanged fixture sources; R2 whole sweep yes is retained, not reset. Independent controls/citations/actual input/scope/falsifier remain required. Source-only: no new agent, suite/executable fixture/network/connectors/live action or Git except relay. Remaining older cached-writer/exhaustive interleavings/whole-caller budget qualification limits are explicit; do not invent a blanket guarantee. Default advisory heuristics and original R6/GH1028 remain separately documented, not silently repaired by this scope. W8–W11/full1022 incomplete; no firing/landing authority or universal idle proof. Keep closed Phase6–8, Phase9planApprovedR1/3, R6FAIL6/6/Medium1028 and1027 unapproved immutable. If new finding remains at cap, escalate honestly rather than reset.
 
 Handing off to Reviewer(codex) — take final Phase9 Round3 within the existing cap.
+
+
+### Reviewer · Round 3
+
+VERDICT: FAIL
+Basis: S3 is repaired at both ordinary preservation boundaries, but S4 observes the same incomplete result identity in the existing final preparation commit reached by this caller. At Round3/3 this relay is Escalated, without resetting the cap or authorizing more work. This is a source-decision failure; actual end-to-end Git/hook impact still needs a disposable-clone control.
+swept file: no
+
+- [Should] **S4 — final preparation certifies selected blobs and first parent, not the complete intended commit.** The caller invokes `prepare_weekly` at `skills/3-weekly/weekly-planner/scripts/planner_core.py:1759–1761`. Its existing final commit leaf (`:1349–1373`) stages and checks selected objects, then checks only `HEAD^`, ledger/generation and those objects before persisting `complete_commit`. It does not bind the intended full tree or full parent list. The subsequent reconciliation check (`:1769–1771`) tests HEAD against that newly certified commit and dirty state, so a clean committed extra path/additional parent has no distinguishing signal there. Extend this existing preparation completion boundary using the native intended-tree and exact single-parent checks already used by reconciliation's preservation commit; retain intent/unknown results rather than certifying them. Do not add a store, suite or gate.
+  Observed input: actual preparation final-commit AST leaf below, recorded predecessor `a*40`, returned HEAD `d*40`, exact branch/base/ledger/generation, all intended staged/live/committed blobs `b*40`. With an extra committed `README.md` change (`3*40 -> f*40`) it returns `changed=True` and records `complete_commit=d*40`. Separately, with parents `[a*40,e*40]` and the exact intended paths it also records completion. Exact control completes; wrong-owned-blob refuses. These are in-memory decisions with mocked native reads, not real Git fixture runs.
+  Affected scope: final local `prepare_weekly` commit completion, including reconciliation's delegated fresh preparation. This is pre-existing source in the touched core, not a request to reopen legacy readiness heuristics, R6 or closed Phase6–8.
+  Falsifier: exact intended full staged tree with sole recorded previous HEAD must complete; extra committed README or extra parent must refuse and retain uncompleted evidence. A disposable-clone control showing that the caller already rejects either concrete result before checkpoint completion would narrow or disprove its end-to-end impact; record that evidence before claiming runtime qualification.
+  Root cause: the final preparation boundary still treats selected blob/first-parent checks as complete commit identity. Fix site: existing preparation staging/completion. Why not upstream/downstream: before-commit checks cannot certify the returned result, and downstream compares against the same already-certified HEAD; a clean result carries no dirty-path signal.
+
+  Quoted command:
+  ```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import ast
+from pathlib import Path
+p=Path('skills/3-weekly/weekly-planner/scripts/planner_core.py')
+f=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='prepare_weekly')
+t=next(n for n in ast.walk(f) if isinstance(n,ast.With) and any(isinstance(s,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='owned' for x in s.targets) for s in n.body))
+start=next(i for i,s in enumerate(t.body) if isinstance(s,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='owned' for x in s.targets))
+leaf=ast.FunctionDef(name='leaf',args=ast.arguments(posonlyargs=[],args=[],kwonlyargs=[],kw_defaults=[],defaults=[]),body=t.body[start:],decorator_list=[])
+module=ast.fix_missing_locations(ast.Module(body=[leaf],type_ignores=[]))
+for mode in ('exact','extra-readme','extra-parent','wrong-owned-blob'):
+    previous='a'*40; current='d'*40; base='c'*40; blob='b'*40
+    parents=[previous]+(['e'*40] if mode=='extra-parent' else [])
+    before={'releases.db':'0'*40,'releases.sql':'1'*40,'PROJECT/4-MISC/weekly/2026-10-12/intake.json':'2'*40,'README.md':'3'*40}
+    after={**before,'releases.db':blob,'releases.sql':blob,'PROJECT/4-MISC/weekly/2026-10-12/intake.json':blob}
+    if mode=='extra-readme': after['README.md']='f'*40
+    if mode=='wrong-owned-blob': after['releases.sql']='f'*40
+    reads=[]; committed=False
+    def git(argv,root):
+        global committed
+        reads.append(argv)
+        if argv[0]=='commit': committed=True; return ''
+        if argv[0]=='add': return ''
+        if argv==['branch','--show-current']: return 'auto-2026-10-12'
+        if argv==['rev-parse','HEAD']: return current if committed else previous
+        if argv==['rev-parse','HEAD^']: return parents[0]
+        if argv[0]=='hash-object': return after[argv[-1]] if committed else blob
+        if argv[0]=='rev-parse' and argv[1].startswith('HEAD:'): return after[argv[1][5:]]
+        if argv[0]=='rev-parse' and argv[1].startswith(':'): return blob
+        raise AssertionError(argv)
+    state={'paths':{},'ledger_rows':[{'global_id':'fixture'}],'generation':5}
+    ns=dict(state=state,git=git,root=None,relative='PROJECT/4-MISC/weekly/2026-10-12/intake.json',
+            accounting=[],capture_objects={},base=base,preparation_head=previous,branch='auto-2026-10-12',
+            date='2026-10-12',repository='fixture/repo',target_head=lambda root:base,rows=lambda:state['ledger_rows'],
+            ledger=lambda *a:'5',durable=lambda *a:None,receipt_path=None,payload={},observed={'prs':[],'observedAt':'fixture'})
+    exec(compile(module,str(p),'exec'),ns)
+    try: ns['leaf'](); result='COMPLETE'
+    except ValueError as e: result='REFUSED '+str(e)
+    print(mode,result,'parent_count='+str(len(parents)),
+          'changed_paths='+repr([k for k in after if before[k]!=after[k]]),
+          'complete_commit='+str(state.get('complete_commit')))
+PROBE
+  ```
+  Exit 0; decisive output:
+  ```text
+exact COMPLETE parent_count=1 changed_paths=['releases.db', 'releases.sql', 'PROJECT/4-MISC/weekly/2026-10-12/intake.json'] complete_commit=dddddddddddddddddddddddddddddddddddddddd
+extra-readme COMPLETE parent_count=1 changed_paths=['releases.db', 'releases.sql', 'PROJECT/4-MISC/weekly/2026-10-12/intake.json', 'README.md'] complete_commit=dddddddddddddddddddddddddddddddddddddddd
+extra-parent COMPLETE parent_count=2 changed_paths=['releases.db', 'releases.sql', 'PROJECT/4-MISC/weekly/2026-10-12/intake.json'] complete_commit=dddddddddddddddddddddddddddddddddddddddd
+wrong-owned-blob REFUSED committed accounting/branch drift; preserve commit without complete checkpoint parent_count=1 changed_paths=['releases.db', 'releases.sql', 'PROJECT/4-MISC/weekly/2026-10-12/intake.json'] complete_commit=None
+  ```
+  Two earlier probe-helper attempts exited1 (`StopIteration` from looking for the statements directly in a Try rather than their With body, then `NameError: repository` from an omitted mock binding). Both were corrected in memory; neither is an artifact failure. No product bytes were changed.
+
+- [Pass] **S3's stated ordinary-preservation repair passes independent sensitive controls.** Both `planner_core.py:1653` and `:1677` now require the entire native parent list to equal `[previous]`; tree/dirty checks remain. Actual nested commit AST execution at recovery AND normal completion accepts exact single-parent results and refuses extra-parent, wrong-parent, wrong-tree and dirty results, retaining pending intent. An in-memory mutation replacing only those complete-parent predicates with their old first-parent equivalent admits extra-parent at BOTH boundaries. The intentional ancestry recovery remains separately ordered-two-parent (`:1713–1717`). Retained producer Git evidence separately records `EXTRA_PARENT_HELD unknown committed handoff state` and `EXACT_INTENT_UNKNOWN_HISTORY_AND_PREDECESSOR_PRESERVED` (`TESTS-RESULTS/2026-10-11+GH-1022/phase9-r3-extra-parent-hold.log:4–5`), plus lost ordinary/native ancestry results (`phase9-r3-commit-loss.log:2–3`, `phase9-r3-ancestry-loss.log:2–3`). These logs were inspected, not reexecuted here.
+
+  Quoted independent command:
+  ```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import ast, copy, hashlib, json
+from pathlib import Path
+p=Path('skills/3-weekly/weekly-planner/scripts/planner_core.py')
+r=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='reconcile_weekly')
+c=next(n for n in ast.walk(r) if isinstance(n,ast.FunctionDef) and n.name=='commit')
+class FirstParentOnly(ast.NodeTransformer):
+    def visit_Compare(self,n):
+        if (isinstance(n.left,ast.Subscript) and isinstance(n.left.value,ast.Call)
+                and isinstance(n.left.value.func,ast.Attribute) and n.left.value.func.attr=='split'
+                and ast.unparse(n.left.value).startswith("git(['rev-list'")):
+            return ast.copy_location(ast.Compare(
+                left=ast.Call(func=ast.Name(id='git',ctx=ast.Load()),args=[
+                    ast.List(elts=[ast.Constant('rev-parse'),ast.Constant('HEAD^')],ctx=ast.Load()),
+                    ast.Name(id='root',ctx=ast.Load())],keywords=[]),
+                ops=copy.deepcopy(n.ops),comparators=[ast.Name(id='previous',ctx=ast.Load())]),n)
+        return self.generic_visit(n)
+for variant in ('current','first-parent-only'):
+    node=copy.deepcopy(c)
+    if variant!='current': node=FirstParentOnly().visit(node)
+    module=ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[]))
+    for boundary in ('recovery','completion'):
+        for mode in ('exact','extra-parent','wrong-parent','wrong-tree','dirty'):
+            previous='a'*40; current='d'*40; tree='c'*40; blob='b'*40
+            parents=[previous]+(['e'*40] if mode=='extra-parent' else [])
+            if mode=='wrong-parent': parents=['f'*40]
+            state={'root_head':previous,'pending_commit':{'releases.db':blob} if boundary=='recovery' else None,
+                   'pending_tree':tree if boundary=='recovery' else None}
+            committed=boundary=='recovery'; reads=[]
+            def git(argv,root):
+                global committed
+                reads.append(argv)
+                if argv==['rev-parse','HEAD']: return current if committed else previous
+                if argv==['rev-parse','HEAD^']: return parents[0]
+                if argv==['rev-list','--parents','-n','1','HEAD']: return ' '.join([current,*parents])
+                if argv==['rev-parse','HEAD^{tree}']: return ('f'*40 if mode=='wrong-tree' else tree)
+                if argv==['write-tree']: return tree
+                if argv==['diff','--cached','--name-only']: return 'releases.db'
+                if argv[0]=='commit': committed=True; return ''
+                if argv[0]=='add': return ''
+                if argv[0] in ('hash-object','rev-parse'): return blob
+                raise AssertionError(argv)
+            def dirty(root):
+                return {'releases.db'} if not committed else ({'README.md'} if mode=='dirty' else set())
+            ns=dict(state=state,git=git,root=None,guard=lambda:None,dirty=dirty,durable=lambda *a:None,receipt_path=None)
+            exec(compile(module,str(p),'exec'),ns)
+            try: ns['commit'](['releases.db'],'unused'); result='ADOPTED'
+            except ValueError as e: result='REFUSED '+str(e)
+            print(variant,boundary,mode,result,'intent_retained='+str(state['pending_commit'] is not None))
+e=json.loads(Path('TESTS-RESULTS/2026-10-11+GH-1022/phase9-r3-qualified.json').read_text())
+old=json.loads(Path('TESTS-RESULTS/2026-10-11+GH-1022/phase9-r2-qualified.json').read_text())
+for f,h in e['source_sha256'].items():
+    print('SOURCE_HASH_MATCH',f,hashlib.sha256(Path(f).read_bytes()).hexdigest()==h)
+print('OWNER_IDENTICAL_TO_R2',old['source_sha256']['utils/py/releases_app.py']==e['source_sha256']['utils/py/releases_app.py'])
+print('CONTROL_COUNT',len(e['controls']),'ALL_RC_ZERO',all(x['rc']==0 for x in e['controls']))
+PROBE
+  ```
+  Exit0. Decisive output: `current recovery exact ADOPTED intent_retained=False`; `current recovery extra-parent REFUSED unknown committed handoff state intent_retained=True`; `current completion exact ADOPTED intent_retained=False`; `current completion extra-parent REFUSED committed preservation result differs; retain intent intent_retained=True`; wrong-parent/wrong-tree/dirty refuse at both boundaries. Mutation output: `first-parent-only recovery extra-parent ADOPTED intent_retained=False` and `first-parent-only completion extra-parent ADOPTED intent_retained=False`. This proves those source predicates, not S4's separate preparation path.
+
+- [Pass] **R2 attribution and capability-prose dispositions are present.** Existing `provenance.jsonl:228–231` appends R2 twelve-flow, nonempty-PR and extra-parent-red attribution, then R3 source-qualified evidence. Earlier weekly statements now point to the reconciliation section under verification (`skills/3-weekly/weekly/SKILL.md:89`, `:193`); the held/UNKNOWN and unavailable execution boundaries remain explicit (`:199–248`). No prior FAIL is relabeled.
+- [Pass] **Current manifest matches source, with limits intact.** The quoted independent command exits0 and prints `SOURCE_HASH_MATCH utils/py/releases_app.py True`, `SOURCE_HASH_MATCH skills/3-weekly/weekly-planner/scripts/planner_core.py True`, `OWNER_IDENTICAL_TO_R2 True`, `CONTROL_COUNT 14 ALL_RC_ZERO True`. These inspect `phase9-r3-qualified.json`'s fourteen records and byte identities; they do not independently rerun those flows. Nonempty producer evidence retains draft PR lead for issue1 and no foreign same-number lead for issue2, with UNKNOWN delivery (`phase9-r3-nonempty-pr.log:847–881`, `:958`). Hook refusal and timeout retain their measured limits (`phase9-r3-hook-refusal.log:2–4`; `phase9-r3-hook-timeout.log:932–933`), not a full normal-gate or whole-caller budget proof.
+- [Unverified — needs clone run] S4 real Git/commit-hook/caller replay, older cached-writer execution, exhaustive interrupted-transfer interleavings, whole-caller time/cost and final normal harness gate remain unverified here. No validate/test/pytest/executable fixture, Git command, live action, network/connector or extra agent was run. The final harness gate remains outside this turn.
+
+Sweep disclosure: R2's documented complete core/owner/plan/skills/unchanged-fixture sweep is retained, not reset or silently withdrawn. This turn independently reread ALL current 1,990-line core and both weekly skills, canonical merge selector/recovery/apply/builder spans, installer, current plan checkpoint/dispositions and retained evidence. The current owner hash is identical to R2. I did NOT independently repeat the entire 7,552-line owner, whole main plan and all fixture-source rereads this turn; truncated outputs were not counted for omitted spans. Hence `swept file: no` for a fresh full-scope R3 sweep. S4 was observed in the pre-existing preparation completion source during the whole-core reread; there is no fresh blanket pre-existing-defect clearance.
+
+Verify-tier graph: all82 projects enumerated/no matching task worktree; nearest primary XYZ-forge generation `2026-09-01T15:54:30Z`. Reconcile search0/no more. Coverage for candidate core/owner/plan/skills/installer/covering fixture paths is stale/missing/not-tracked, with gh32 parse-partial237 retained from R2. Current direct source and quoted probes support the findings; no completeness claim relies on this foreign graph, and no reindex occurred.
+
+Only this relay tracked file changed. Scratch creation stayed under `.relay-scratch/tmp`. A literal CLI-usage search initially hit zsh's `no matches found: src/cli*`; the corrected bounded literal search was read-only. Preserve R6FAIL6/6 / MediumGH1028, GH1027 unapproved, closed Phase6/7/8 and Phase9planApprovedR1/3. W8–W11/fullGH1022 remain incomplete. No cap extension, new CI authority, dispatch, landing, deployment or clone teardown follows.
+
+Handing off to Author — this relay is Escalated at3/3. Disposition S4 and the remaining qualification limits through the existing operator escalation; do not open Round4 or reset this relay. Go to the Author window and say 'take your turn'.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
