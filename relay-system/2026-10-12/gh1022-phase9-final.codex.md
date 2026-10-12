@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -381,7 +381,7 @@ Handing off to Author — this relay is Escalated at3/3. Disposition S4 and the 
 VERDICT: PARKED
 Basis: Genuine direct human reply to the S4-specific question said “Authorize S4 repair and one review.” Exactly ONE corrective review is authorized; prior FAIL and R3 Escalated3/3 are retained. Header4/4 adds one bounded turn, not a reset/new loop. The recycled earlier R6 approval was withdrawn and is NOT used.
 
-S4 Implemented atf18b051a: existing preparation receipt binds intended parent/tree/owned blobs before commit; immutable tree is verified to contain only allowed changes and exact owned objects. Completion inspects the captured commit SHA, exact sole parent/full tree plus clean live/owned objects and existing branch/target/ledger checks. Partial recovery rejects unknown results before progress; no-change adoption needs the same binding and exact path accounting; unbound clean partial results hold. Identical intended pre-commit retry may commit; exact lost result adopts without a second commit. No new store/schema/writer/framework/gate. Default selection/10days policy is untouched.
+S4 Implemented atf18b051a: existing preparation receipt binds intended parent/tree/owned blobs before commit; immutable tree is verified to contain only allowed changes and exact owned objects. Completion inspects the captured commit SHA, exact sole parent/full tree plus clean live/owned objects and existing branch/target/ledger checks. Partial recovery rejects unknown results before progress; no-change adoption needs the same binding and exact path accounting; unbound clean partial results hold. Identical intended pre-commit retry may commit; exact lost result adopts without a second commit. No new store/schema/writer/framework/gate. Default selection/10days policy is untouched.  [Unverified — no citation]
 
 Qualification: phase9-s4-final-qualified.json binds current source bytes to20 rc0 flow/control batches plus existing36 accumulation controls. Actual installed fixture pre-commit extra file and native extra-parent result now refuse; both caller/default retries preserve unknown SHA/incomplete receipt. Exact final lost result/pre-commit failure/no-change repeat pass; unbound no-change negative holds. All other recovery/hook/qualified-PR/rollover/same-date controls requalified. Existing disposable gh418 PASS/gh69816/0 and identity intact. Previous reds and failed source reviews remain immutable. Programs remain ephemeral; no new CI case/test/parameter/registry. Actual local fixture writes disclosed. Helper timeout/older post-handoff invocation are limited proofs, not whole-run cost/time or in-flight cache/exhaustive interleaving guarantees. Full normal qualifying gate follows permissible review result, not claimed now.
 
@@ -390,5 +390,94 @@ Review the exact driver-captured current committed head and whole current core, 
 Scope remains held caller preparation/reconciliation, not completed #1022. Preserve original R6FAIL6/6/Medium1028,1027unapproved, closedPhase6–8 and Phase9planApprovedR1/3. W8–W11 unimplemented. No implementation/landing/human approval follows generated accounting or this source review. If unavailable, incomplete or failing, report honestly within the one-turn allowance rather than inventing authority.
 
 Handing off to Reviewer(codex) — take the single authorized corrective Round4; no additional loop.
+
+
+### Reviewer · Round 4 — single authorized corrective review
+
+VERDICT: FAIL
+Basis: S4's preparation identity repair passes bounded independent source controls, but the whole-core review observes a separate normal ancestry-completion decision that clears intent for an unknown committed result (S5). This is a source-decision failure, not an independently executed Git/hook failure. The full-scope fresh sweep is also incomplete. This is the one authorized corrective turn; STATUS remains Escalated at4/4, with no further review loop or implementation authority inferred.
+swept file: no
+
+- [Should] **S5 — normal native ancestry completion clears its intent without checking the returned tree or complete parent list. Severity: Medium.** At `skills/3-weekly/weekly-planner/scripts/planner_core.py:1789–1794`, the tree/dirty checks occur BEFORE `git commit`; afterwards the code reads only HEAD, advances `root_head`, moves to prepare and clears `pending_merge`. By contrast, interrupted-result recovery at `:1755–1762` checks the exact ordered two parents, intended tree and clean state. Reuse that same existing result check at normal completion before advancing/clearing intent, preferably against the captured immutable result SHA. Keep intentional ancestry's two-parent contract and preparation's separate sole-parent contract; no store, framework, suite or gate requested.
+  Observed input: actual normal-completion AST leaf with `pending_merge={head:a*40,tree:c*40}`, predecessor `b*40`, exact clean pre-commit state, successful returned HEAD `d*40`, and clean returned state. With a returned tree `f*40` representing an additional committed README change, it advances to `phase=prepare` and clears intent. Separately, returned parents `[a*40,b*40,e*40]` with exact intended tree do the same. Only post-commit read is `rev-parse HEAD`. These are mocked native-read source decisions, not actual Git commits.
+  Affected scope: normal successful return from the existing intentional ancestry merge commit, including an installed commit hook or intervening writer changing the result. The interrupted-result path already refuses these concrete inputs. A clean extra README/result parent is not distinguished by downstream `guard`, which checks predecessor/target/runtime/private evidence; `:1801–1803` supplies the newly accepted `root_head` to fresh preparation, whose intended result is bound relative to its own starting HEAD.
+  Falsifier: exact returned tree `c*40` and exactly ordered parents `[a*40,b*40]` must advance; extra README tree or third parent must retain phase/intent and refuse. The existing recovery leaf does exactly that. An in-memory copy inserting that existing recovery check after commit makes both bad normal-result controls refuse while preserving the exact control. A disposable-clone whole-caller control that already rejects either result BEFORE the ancestry intent is cleared would narrow/disprove runtime impact; it remains unexecuted here.
+  Root cause: ancestry's pre-commit checks are treated as proof of its returned committed result. Fix site: existing normal ancestry completion before `:1794`. Why not upstream/downstream: the result does not exist before commit, and the downstream preparation sees the accepted result as its starting parent; S4 certifies its own subsequent commit, not this prior ancestry result.
+  Severity rationale: local held projection can absorb unaccounted content/history and lose the pending ancestry distinction; predecessor bytes/HEAD remain preserved and no dispatch/delivery authority follows. This is not a Critical/High live data-loss claim. A lower-severity disposition cannot change this observed FAIL into Approved.
+
+  Quoted independent command (AST execution only; no subprocess, Git command or source write):
+  ```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import ast, copy
+from pathlib import Path
+p=Path('skills/3-weekly/weekly-planner/scripts/planner_core.py')
+m=ast.parse(p.read_text())
+r=next(n for n in m.body if isinstance(n,ast.FunctionDef) and n.name=='reconcile_weekly')
+a=next(n for n in ast.walk(r) if isinstance(n,ast.If) and ast.unparse(n.test)=="state['phase'] == 'ancestry'")
+recovery=next(n for n in ast.walk(r) if isinstance(n,ast.If) and ast.unparse(n.test).startswith("pending_merge and "))
+for boundary in ('normal','recovery','normal-with-recovery-check'):
+    nodes=copy.deepcopy(a.body[-3:] if boundary!='recovery' else [recovery])
+    if boundary=='normal-with-recovery-check': nodes.insert(1,copy.deepcopy(recovery))
+    f=ast.FunctionDef(name='leaf',args=ast.arguments(posonlyargs=[],args=[],kwonlyargs=[],kw_defaults=[],defaults=[]),body=nodes,decorator_list=[])
+    compiled=compile(ast.fix_missing_locations(ast.Module(body=[f],type_ignores=[])),str(p),'exec')
+    for mode in ('exact','extra-readme-tree','extra-parent'):
+        before='a'*40; old='b'*40; current='d'*40; tree='c'*40
+        parents=[before,old]+(['e'*40] if mode=='extra-parent' else [])
+        state={'phase':'ancestry','root_head':before,'pending_merge':{'head':before,'tree':tree}}
+        committed=boundary=='recovery'; after_reads=[]
+        def git(argv,root):
+            global committed
+            if argv[0]=='commit': committed=True; return ''
+            if committed: after_reads.append(argv)
+            if argv==['rev-parse','HEAD']: return current if committed else before
+            if argv[0]=='rev-list': return ' '.join([current,*parents])
+            if argv==['rev-parse','HEAD^{tree}']:
+                return 'f'*40 if committed and mode=='extra-readme-tree' else tree
+            raise AssertionError(argv)
+        class MergeHead:
+            def exists(self): return True
+        ns=dict(state=state,root=None,git=git,merge_head=MergeHead(),dirty=lambda root:set(),
+                guard=lambda:None,durable=lambda *args:None,receipt_path=None,
+                pending_merge=state['pending_merge'],old_head=old)
+        exec(compiled,ns)
+        try: ns['leaf'](); result='ACCEPTED'
+        except ValueError as error: result='REFUSED '+str(error)
+        print(boundary,mode,result,'phase='+state['phase'],
+              'intent_retained='+str(state['pending_merge'] is not None),
+              'result_reads='+repr(after_reads))
+PROBE
+  ```
+  Exit 0; decisive output:
+  ```text
+normal exact ACCEPTED phase=prepare intent_retained=False result_reads=[['rev-parse', 'HEAD']]
+normal extra-readme-tree ACCEPTED phase=prepare intent_retained=False result_reads=[['rev-parse', 'HEAD']]
+normal extra-parent ACCEPTED phase=prepare intent_retained=False result_reads=[['rev-parse', 'HEAD']]
+recovery exact ACCEPTED phase=prepare intent_retained=False result_reads=[['rev-parse', 'HEAD'], ['rev-list', '--parents', '-n', '1', 'HEAD'], ['rev-parse', 'HEAD^{tree}'], ['rev-parse', 'HEAD']]
+recovery extra-readme-tree REFUSED unknown native ancestry result; preserve evidence phase=ancestry intent_retained=True result_reads=[['rev-parse', 'HEAD'], ['rev-list', '--parents', '-n', '1', 'HEAD'], ['rev-parse', 'HEAD^{tree}']]
+recovery extra-parent REFUSED unknown native ancestry result; preserve evidence phase=ancestry intent_retained=True result_reads=[['rev-parse', 'HEAD'], ['rev-list', '--parents', '-n', '1', 'HEAD']]
+normal-with-recovery-check exact ACCEPTED phase=prepare intent_retained=False result_reads=[['rev-parse', 'HEAD'], ['rev-list', '--parents', '-n', '1', 'HEAD'], ['rev-parse', 'HEAD^{tree}'], ['rev-parse', 'HEAD'], ['rev-parse', 'HEAD']]
+normal-with-recovery-check extra-readme-tree REFUSED unknown native ancestry result; preserve evidence phase=ancestry intent_retained=True result_reads=[['rev-parse', 'HEAD'], ['rev-list', '--parents', '-n', '1', 'HEAD'], ['rev-parse', 'HEAD^{tree}']]
+normal-with-recovery-check extra-parent REFUSED unknown native ancestry result; preserve evidence phase=ancestry intent_retained=True result_reads=[['rev-parse', 'HEAD'], ['rev-list', '--parents', '-n', '1', 'HEAD']]
+  ```
+  This control witnesses exact-vs-unknown behavior and sensitivity to the existing result predicate; it does not measure the full caller, real Git hooks or concurrent writes.
+
+- [Pass] **S4 preparation source repair is present and independently distinguishes exact results.** `planner_core.py:1161–1168` inspects the captured immutable commit, exact sole parent, full tree, clean state and owned objects. Existing partial admission rejects a non-parent HEAD unless this predicate accepts it; partial no-change additionally requires the exact owned-path set (`:1236–1253`, `:1358–1364`). Intended tree/path/object accounting and persistence precede commit (`:1381–1400`), and normal completion invokes the predicate before `complete_commit` (`:1401–1414`). Independent AST execution of the actual `exact_commit_result` helper with completed SHA `d*40`, sole parent `a*40`, tree `c*40`, exact owned blob `9*40`, and clean state returned ACCEPTED; changing only tree to `f*40`, adding parent `e*40`, or introducing dirty README each returned REFUSED (exit0). This closes S4's observed source predicate gap, not S5 or full runtime acceptance.
+  Command method: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PROBE'`, parse current core with `ast.parse`, extract `prepare_weekly.exact_commit_result`, compile only that FunctionDef in memory, supply the stated mocked Git reads and `dirty_paths`, call it for exact/wrong-tree/wrong-parents/dirty, print result, then `PROBE`. Initial helper attempt exited1 because the mock omitted `dirty_paths`; corrected binding produced the stated exit0 results. That helper error is not an artifact defect.
+  Retained producer actual controls separately record unknown preparation commit refusal and both caller/default retry holds (`TESTS-RESULTS/2026-10-11+GH-1022/phase9-s4-final-held-hook.log:2–5`, `phase9-s4-final-held-parent.log:3–6`); unbound no-change holds are at `phase9-s4-final-unbound-nochange.log:4–6`. Lost-result/pre-commit retry logs say `FIRST controlled committed result lost` / `FIRST controlled pre-commit result lost` and `RESULT preserved GIDs/current owner override/predecessor HEAD/tree` (`phase9-s4-final-final-prepare-loss.log:2–3`, `phase9-s4-final-final-prepare-before.log:2–3`). Logs were inspected, not reexecuted.
+
+- [Pass] **Current source identity and attribution match the final manifest.** `phase9-s4-final-qualified.json` identifies source commit `f18b051a98551b8da6c5adf5f8d3f87c99ab7a6a`; its final attribution is appended in `TESTS-RESULTS/2026-10-11+GH-1022/provenance.jsonl` under `phase9-s4-authorized-corrective-qualification`, retaining earlier FAIL/red history and limits. Read-only command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with `import hashlib,json; from pathlib import Path; e=json.loads(Path('TESTS-RESULTS/2026-10-11+GH-1022/phase9-s4-final-qualified.json').read_text()); [print('SOURCE_HASH_MATCH',f,hashlib.sha256(Path(f).read_bytes()).hexdigest()==h) for f,h in e['source_sha256'].items()]; print('CONTROL_BATCHES',len(e['controls']),'ALL_RC_ZERO',all(x['rc']==0 for x in e['controls']))`, then `PY`. Executed as the final section of the earlier independent AST command; exit0, both SOURCE_HASH_MATCH True and CONTROL_BATCHES21 ALL_RC_ZERO True. This counts twenty producer flow/control batches plus the existing36-control batch, not21 independently reexecuted flows. No Git HEAD query was run.
+
+- [Unverified — needs clone run] **Remaining runtime qualification. Severity: Medium for the S5 runtime question; no additional behavior change requested here.** Real installed-hook/native ancestry result admission and whole-caller continuation for S5 remain unexecuted. Final normal qualifying gate, whole-caller time/cost, already-in-flight older metadata caches and exhaustive interleavings remain unqualified, consistent with `phase9-s4-final-qualified.json["limits"]` and `PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md:1470–1479`. No validate.sh, test/*.sh, pytest, executable fixture, network/connector, live action, Git command or extra agent ran.
+
+Sweep disclosure: read the entire current 2,033-line core, all369 lines of shared `issue_intake.py`, and both weekly skills. Inspected canonical owner `releases_app.py:6489–7047`, current main-plan escalation/authorization/qualification sections, unchanged gh418/gh698 fixture sources, current provenance/manifest and cited logs. Did NOT independently complete all7,552 lines of the owner, all1,479 lines of the main plan, or all remaining unchanged owner/receipt fixture sources. Truncated output was not counted for missing spans; an installer read was truncated and is not claimed complete. Therefore no fresh full-scope/pre-existing-defect clearance or approval follows. Historical R2 full sweep remains historical, not silently reused. S5 is an additional observed defect in the current reconciliation source; no other newly witnessed pre-existing defect is asserted.
+
+Verify-tier graph: enumerated all82 projects with has_more=false; no task worktree/clone project matches. Nearest primary XYZ-forge coverage generation2026-09-01T15:54:30Z; prepare/reconcile search returned0/has_more=false. Exact core/owner/skills/plan/intake/installer/fixture/evidence coverage queried: foreign primary metadata changed/missing/not-tracked, installer metadata_match, gh32 parse_partial237. Initial intake coverage used the wrong candidate path; corrected current shared intake path was separately checked and reports missing. Findings use direct current source and quoted probes, not this stale foreign graph; no reindex, exhaustive graph claim or gh32 clearance.
+
+Probe bookkeeping: the first evidence-log literal query guessed filenames without the final prefix, reported missing paths, and was corrected with bounded filename discovery; no missing-file result was counted as proof. Only this relay tracked file changed; scratch directory creation stayed under .relay-scratch/tmp. Preserve original R6FAIL6/6/MediumGH1028, GH1027 unapproved, closedPhase6–8, Phase9planApprovedR1/3 and all earlier finalQA FAIL/Escalated turns. W8–W11/fullGH1022 remain incomplete. No further loop, implementation, normal gate, publication, landing, deployment, scheduling, install or teardown authority is granted by this review.
+
+Handing off to Author — Round4 FAIL, relay Escalated4/4. Record disposition through the existing operator escalation; do not open Round5 or treat S4's bounded source pass as caller approval. Go to the Author window and say 'take your turn'.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
