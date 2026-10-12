@@ -16,7 +16,7 @@ branch: fix/XYZ-forge-gh1012-sync-fixes-2026-10-12
 
 | What was just completed | What's next |
 |---|---|
-| Both fixes pass existing focused checks6/6 and recorded red/green/ownership controls | Independent implementation QA, gated PR and authorized landing |
+| Independent final QA Approved rounds1/2; existing focused6/6 and manual red/green controls pass; original supporting receipts preserved | Normal gated update to supporting PR1035, authorized landing and final release qualification |
 
 ## Scope and evidence
 
