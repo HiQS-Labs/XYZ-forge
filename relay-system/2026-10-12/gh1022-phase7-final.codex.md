@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -272,5 +272,68 @@ Measured complete source hashes phase7-r3-source-hashes.json: canonical/core/int
 Actual existing covering suite records: adapter223/lifecycle125/work-state28/lock18/artifact10/refusal19 at53c; Jog34 at3cdf (queue owner bytes unchanged). Preparation runtime19 uses final core bytes unchanged sinceR1. Core13/work15 fromR2 use current core/intake bytes; observer18 uses final current owner. These are scoped clone/manual qualification, not the yet-to-run mandatory final normal pre-push full gate. No new CI tests/cases/registrations. Producer will run that existing gate in the disposable clone after a source review approval; no push or broad completion precedes it. Any approval here must remain code/scope qualified, not final gate/remote/live/full1022 permission.
 
 Retain R1/R2 failures and closed R6FAIL6/6/Medium1028 and Phase6Approved3/3 without resets. Own final cap3/3. Full W7–11 remains required. Handing off to Reviewer(codex)—take Round3 on the exact candidate and record any remaining proven defect without broadening or downranking history.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the Phase7 held census source scope: B1/B2/B3 and S1 are addressed for the witnessed inputs, the whole changed observer has been reviewed, and the previously outstanding fixture-source inspection is complete. This is source-review approval at new-scope R3/3, with the mandatory final normal gate still pending in a disposable full clone. Preserve R1/R2 failures, R6FAIL6/6/MediumGH1028 and Phase6Approved3/3. No full1022/W7–11, publication, production, landing or merge approval.
+
+swept file: yes
+
+Sweep boundary: Whole-owner review spans R2 plus this R3: R2's full RELEASES/core/intake sweep remains applicable because independently measured complete bytes are identical; this turn re-read their census/admission/runtime seams and the complete intake, and read the entire changed marathon.sh (1–805), recovering truncated output with bounded follow-ups. Completed the outstanding fixture-source sweep: gh549-work-events.sh (1–1512), gh280-jog-marathon-adapter.sh (1–1287), both gh605 wrappers and their actual Python bodies test_gh605_work_state.py (1–650) and test_gh605_board_policy.py (1–1029). R2's other completed fixture-source reads remain recorded above. No additional witnessed pre-existing owner defect found. This does not claim repository-wide fixture exhaustion or executable-suite qualification.
+
+Graph limitation: list_projects returned all82 projects, no current worktree index. Nearest canonical XYZ-forge is a different checkout; index_status/check_index_coverage report generation2026-09-01T15:54:30Z, changed owner metadata, missing intake and partial marathon range351. That index cannot attest this candidate. Exact local source reads, including the reported partial range, and measured bytes supplied the evidence; no indexing or source mutation occurred.
+
+- [Pass] **B3 repaired without rejecting the shipped actor forms.** The actual snapshot/parser/report functions now return rc2/UNKNOWN/read_complete=false for the exact `STATUS: Banana\nNEXT: Nobody\n` and empty-field inputs, retaining context/raw metadata. Matching generic role returns rc0/PASS; matching marker actor forms `codex`, `agy`, `codex (Builder)` and `agy (Reviewer)` all return rc0/PASS. Named actor with a foreign token marker returns rc2/UNKNOWN. Admission is at marathon.sh:324–340; the declared actor vocabulary comes from the actual marker constructors at utils/py/marathon_drive.py:2964–2966 and relay-automation/marathon-drive.sh:1036–1039. This establishes structural read completeness only; it does not authenticate a peer or approve criteria.
+- [Pass] **B1/B2 regression inputs remain repaired.** Malformed `{`, foreign execution ID and missing receipt all return rc2/UNKNOWN with context/raw metadata retained (marathon.sh:320–340). The same owned pending jog fact and generation1/schema8/HEAD a×40 used in R1 returns facts1/HELD without error and facts1/UNKNOWN with the later observer error; provenance retains root A, /declared/a, original HEAD and generation (issue_intake.py:295–300,345–359). No observer error was suppressed.
+- [Pass] **Owner/adapter policy remains held and distinct from readiness.** RELEASES explicitly includes terminal facts and raw lifecycle rows, including unqualified issue references and decoded/raw payloads (releases_app.py:4753–4783); the adapter calls the selected canonical owners with declared roots, checks runtime identity and retains source errors (planner_core.py:854–923). The normalizer retains raw observations and conflicting stable facts with provenance, returns HELD/UNKNOWN and dispatch_allowed=false (issue_intake.py:287–369). The repository skill's complete “Opt-in declared work observation” section documents explicit roots, contexts and metadata ownership and says “Empty context lists do not prove idle.” This carries no readiness/global-idle or deployed-skill assertion.
+- [Pass] **Complete-byte continuity.** All four SHA256 measurements equal phase7-r3-source-hashes.json:4; RELEASES/core/intake also equal R2 hashes, observer differs as declared. This is byte identity, not Git/remote identity. The producer's observer18 JSON and runtime19 log are source-qualified records, not an independent gate run.
+- [Unverified — needs clone run] **Final committed-state execution and preparation compatibility.** No validate.sh, test/*.sh, pytest or executable fixture ran here. Prior producer suite/runtime receipts remain scoped to the revisions/bytes named in their provenance. The harness/Producer must run the existing final normal gate in a disposable full clone after this relay-only turn; this approval must not substitute for that result. No new test/case/registration requested.
+
+Independent probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -` (observer/hash exit0); second `python3 -` (normalizer exit0). Both used in-memory source only. The observer AST retained only Import/ImportFrom/FunctionDef nodes, so main/launcher never ran; bounded_read alone was replaced by the seeded dictionary. Exact R2 reproduction above remains valid, with these R3 variations:
+
+```python
+# After R2's ns/ctx/data/args/relay initialization:
+original = copy.deepcopy(data)
+receipt = ctx["phase"]["result_file"]
+family = ctx["phase"]["token_family"]
+# Call unchanged ns["snapshot"] under redirected stdout for each variation.
+for value in [original[relay], "STATUS: Banana\nNEXT: Nobody\n",
+              "STATUS: \nNEXT: \n", None]:
+    data[relay] = value
+    # rc / status / read_complete / context-present / raw-present recorded below
+for actor in ["codex", "agy", "codex (Builder)", "agy (Reviewer)"]:
+    data[relay] = (f"STATUS: Open\nNEXT: {actor}\n"
+        f"<!-- marathon-drive: task={family} builder=codex reviewer=agy round-cap=3 -->\n")
+# Foreign marker: same named actor, task=FOREIGN.
+# B1: restore original dictionary, substitute receipt "{", foreign execution_id, None.
+# Hash: hashlib.sha256(Path(path).read_bytes()).hexdigest() against each R3/R2 value.
+```
+
+Decisive output:
+```text
+hash releases_app=True unchanged_R2=True
+hash marathon=True unchanged_R2=False
+hash planner_core=True unchanged_R2=True
+hash issue_intake=True unchanged_R2=True
+valid 0 PASS True context True raw True
+unsupported 2 UNKNOWN False context True raw True
+empty 2 UNKNOWN False context True raw True
+missing 2 UNKNOWN False context True raw True
+codex 0 PASS True context True raw True
+agy 0 PASS True context True raw True
+codex (Builder) 0 PASS True context True raw True
+agy (Reviewer) 0 PASS True context True raw True
+foreign marker 2 UNKNOWN False context True raw True
+receipt malformed 2 UNKNOWN False context True raw True
+receipt foreign 2 UNKNOWN False context True raw True
+receipt missing 2 UNKNOWN False context True raw True
+inventory None 1 HELD provenance=A,/declared/a,HEAD a×40,generation1
+inventory 'command refused (2): bash malformed observer output' 1 UNKNOWN same provenance
+```
+
+For the second probe, compiled complete issue_intake.py with `__name__="probe"`, used R1's exact inv/fact shape and `normalise_work_observations([source])`, changing only source error as shown; root=/declared/a. No DB, Git, connector, worker, signal, dispatch, artifact or fixture executable was invoked. Only this relay was edited; scratch directory is under .relay-scratch.
+
+Relay closed (Approved), no further review turn needed. Handing completion to Producer (author) for the required disposable-clone final gate and source-qualified reporting; full W7–11 remains active.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
