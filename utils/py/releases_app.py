@@ -429,12 +429,16 @@ class WriterLock:
 
 # ── DB connection (PRAGMA foreign_keys asserted per connection) ─────────────────────────────────
 
-def connect(db_path, must_exist=True):
+def connect(db_path, must_exist=True, readonly=False):
     if must_exist and not os.path.exists(db_path):
         refuse("not-initialized", "no %s here; run `releases init` first" % DB_NAME)
     # isolation_level=None: transactions are BEGIN/COMMIT'd explicitly by perform_write, so the
     # intent journal -> COMMIT -> stage -> rename ordering is the ONLY ordering that exists.
-    conn = sqlite3.connect(db_path, isolation_level=None)
+    if readonly:
+        db_uri = "file:%s?mode=ro" % urllib.parse.quote(os.path.abspath(db_path), safe="/")
+        conn = sqlite3.connect(db_uri, uri=True, isolation_level=None)
+    else:
+        conn = sqlite3.connect(db_path, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     if conn.execute("PRAGMA foreign_keys").fetchone()[0] != 1:
@@ -4593,8 +4597,131 @@ def cmd_jog_add(args):
         conn.close()
 
 
+def _jog_rows(conn, show_all=False, inventory=False):
+    where_clause = "" if show_all else "WHERE jq.status IN ('pending', 'running')"
+    has_rm = _table_exists(conn, "roadmap_items")
+    qualified = has_rm and _has_column(conn, "jog_queue", "repo_id") and _has_column(conn, "roadmap_items", "repo_id")
+    if has_rm:
+        query = """
+            SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
+                   jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
+                   ri.title, ri.doc_path, ri.issue_url
+            FROM jog_queue jq
+            LEFT JOIN roadmap_items ri ON %s
+            %s
+            ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
+        """ % ("ri.repo_id = jq.repo_id AND ri.gh_number = jq.gh_number" if qualified else "ri.gh_number = jq.gh_number", where_clause)
+        if not qualified:
+            print("Jog list: legacy unqualified schema; advisory view only.", file=sys.stderr)
+    else:
+        query = """
+            SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
+                   jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
+                   NULL AS title, NULL AS doc_path, NULL AS issue_url
+            FROM jog_queue jq
+            %s
+            ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
+        """ % where_clause
+
+    if inventory:
+        query = query.replace("jq.id, jq.global_id", "jq.repo_id, r.global_id AS repo_global_id, r.slug AS repo_slug, ri.global_id AS roadmap_global_id, jq.id, jq.global_id")
+        query = query.replace("FROM jog_queue jq", "FROM jog_queue jq LEFT JOIN repos r ON r.id = jq.repo_id")
+    return [dict(r) for r in conn.execute(query).fetchall()]
+
+
+def read_jog_inventory(root, show_all=False):
+    """One declared root's held queue observation; never recovery or execution approval."""
+    result = {"status": "UNKNOWN", "initialized": False, "read_complete": False,
+              "root": root, "include_terminal": show_all, "generation": None,
+              "repositories": [], "rows": [], "held_reasons": [], "dispatch": False}
+    conn = None
+    try:
+        db = artifact_paths(root)["db"]
+        _, _, intent = lock_paths(root)
+        def stable_file():
+            if os.path.islink(db) or not os.path.isfile(db):
+                raise ValueError("missing or symlinked releases.db")
+            if _sqlite_header_uses_wal(db) or any(os.path.lexists(p) for p in
+                    (intent, db + "-wal", db + "-shm", db + "-journal")):
+                raise ValueError("live or ambiguous canonical journal/SQLite state")
+            st = os.stat(db)
+            return (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns)
+        before = stable_file()
+        conn = connect(db, readonly=True)
+        required = {
+            "settings": ("key", "value"), "schema_migrations": ("version",),
+            "repos": ("id", "global_id", "slug"),
+            "roadmap_items": ("repo_id", "global_id", "gh_number", "title", "doc_path", "issue_url"),
+            "jog_queue": ("id", "global_id", "repo_id", "gh_number", "position", "status",
+                          "attempt_count", "lease_pid", "failure_reason", "created_at", "updated_at"),
+        }
+        for table, columns in required.items():
+            if not _table_exists(conn, table) or any(not _has_column(conn, table, c) for c in columns):
+                raise ValueError("required queue inventory schema unavailable: " + table)
+        if conn.execute("SELECT 1 FROM schema_migrations WHERE version = 6").fetchone() is None:
+            raise ValueError("Jog schema migration 6 not recorded")
+        def generation():
+            value = get_setting(conn, GENERATION_KEY)
+            if not isinstance(value, str) or not re.fullmatch(r"[1-9][0-9]*", value):
+                raise ValueError("missing or invalid canonical generation")
+            return int(value)
+        initial = generation()
+        result.update(initialized=True, generation=initial)
+        repo_records = [dict(r) for r in conn.execute("SELECT id, global_id, slug FROM repos")]
+        repos = {r["id"]: r["slug"] for r in repo_records}
+        if not repos:
+            raise ValueError("canonical repository ownership unavailable")
+        origin = _origin_repo_identity(root)
+        for repo in repo_records:
+            identity = resolve_roadmap_identity({"repo_id": repo["id"], "gh_number": None,
+                                                 "issue_url": None}, repos, origin)
+            if (not identity["repo"] or not isinstance(repo["global_id"], str)
+                    or not re.fullmatch("repo-" + CROCKFORD_GLOB_CLASS + "{26}", repo["global_id"])):
+                raise ValueError("canonical repository identity/GID unavailable")
+            repo["repository"] = identity["repo"]
+        rows = _jog_rows(conn, show_all, inventory=True)
+        if len({row["global_id"] for row in rows}) != len(rows):
+            raise ValueError("duplicate owned queue observations")
+        for row in rows:
+            for field, prefix in (("global_id", "jog-"), ("repo_global_id", "repo-"),
+                                  ("roadmap_global_id", "rmi-")):
+                gid = row[field]
+                if field == "roadmap_global_id" and gid is None:
+                    continue
+                if not isinstance(gid, str) or not re.fullmatch(prefix + CROCKFORD_GLOB_CLASS + "{26}", gid):
+                    raise ValueError("queue repository/GID ownership unavailable")
+            if row["status"] not in ("pending", "running", "completed", "parked", "failed", "dropped", "archived"):
+                raise ValueError("unknown canonical queue status")
+            if type(row["gh_number"]) is not int or row["gh_number"] <= 0:
+                raise ValueError("queue issue number unavailable")
+            identity = resolve_roadmap_identity(row, repos, origin)
+            if not identity["repo"] or (row["roadmap_global_id"] and not identity["identity_valid"]):
+                raise ValueError("queue repository/issue identity is ambiguous")
+            row["repository"] = identity["repo"]
+            row["held_reasons"] = ["execution-not-authorized"]
+            if row["roadmap_global_id"] is None:
+                row["held_reasons"].append("unregistered-roadmap")
+            row["dispatch"] = False
+        if generation() != initial or stable_file() != before:
+            raise ValueError("canonical queue generation/artifact changed during observation")
+        result.update(status="PASS", read_complete=True, repositories=repo_records, rows=rows,
+                      held_reasons=["execution-not-authorized"])
+    except (OSError, sqlite3.Error, ValueError, SystemExit) as error:
+        result["held_reasons"] = [str(error)]
+    finally:
+        if conn is not None:
+            conn.close()
+    return result
+
+
 def cmd_jog_list(args):
     root = resolve_root(args.root)
+    if getattr(args, "inventory_json", False):
+        result = read_jog_inventory(root, args.show_all)
+        print(json.dumps(result, indent=2))
+        if not result["read_complete"]:
+            raise SystemExit(2)
+        return
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4605,29 +4732,7 @@ def cmd_jog_list(args):
                 print("Jog queue is empty (table not initialized).")
             return
 
-        where_clause = "" if args.show_all else "WHERE jq.status IN ('pending', 'running')"
-        has_rm = _table_exists(conn, "roadmap_items")
-        if has_rm:
-            query = """
-                SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
-                       jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
-                       ri.title, ri.doc_path, ri.issue_url
-                FROM jog_queue jq
-                LEFT JOIN roadmap_items ri ON ri.gh_number = jq.gh_number
-                %s
-                ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
-            """ % where_clause
-        else:
-            query = """
-                SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
-                       jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
-                       NULL AS title, NULL AS doc_path, NULL AS issue_url
-                FROM jog_queue jq
-                %s
-                ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
-            """ % where_clause
-
-        rows = [dict(r) for r in conn.execute(query).fetchall()]
+        rows = _jog_rows(conn, args.show_all)
         if args.as_json:
             print(json.dumps(rows, indent=2))
             return
@@ -6813,6 +6918,8 @@ def build_parser():
     sp_jl = jsub.add_parser("list", help="list active jog queue items")
     sp_jl.add_argument("--all", dest="show_all", action="store_true", help="include completed/dropped/archived items")
     sp_jl.add_argument("--json", dest="as_json", action="store_true", help="output as JSON array")
+    sp_jl.add_argument("--inventory-json", action="store_true",
+                       help="read-only held ownership snapshot; use --all for terminal/carryover rows")
 
     sp_jb = jsub.add_parser("bump", help="bump an issue to the head of the jog queue (position 1)")
     sp_jb.add_argument("target", help="issue number (e.g. 123 or GH-123)")

@@ -613,8 +613,8 @@ parallel orchestration. This unlocks a subsequent shared-intake adapter using
 qualified observations;it does not itself select/register execution work.
 
 Remaining W7 global aggregation/authority roots,branch lifecycle/rollover/PR
-routing andlater W8–W11 stay active. Marathon observer file is actively owned by
-PR1017;do not modify or duplicate its path repair. Future reconciliation must
+routing andlater W8–W11 stay active. Marathon observer path repair landed in
+PR1017;consume its owner and avoid duplicate repair. Future reconciliation must
 consume canonical observations and hold unavailable/conflicting state,not infer
 completion from queue/PR/ledger markers or cancel live work. No live execution,
 scheduling,installation,merge/deploy or newtests authorized.
@@ -648,7 +648,7 @@ No need for a second queue,DBwriter,backgroundwatcher ornew checker/gate. Easy
 rollback: owner query/view/optional connection mode only;no data/schema migration.
 W7 broader aggregation/authority roots,branch lifecycle/rollover andPRrouting,
 W8 construction/readiness,W9–W11 approval/sharedsafety remainrequiredactive.
-#1017 activelyowns observer source;do not duplicate its pathrepair orpretend a
+#1017 observer repair landed;do not duplicate its pathrepair orpretend a
 complete Marathon inventory hasbeen obtained. No live Marathon/Jog,merge/deploy,
 installation,scheduling ornewtest authorized. No production code forPhase6 yet.
 
@@ -813,3 +813,7 @@ R6FAIL/Medium1028 andunapproved1027 remainexplicit;Phase6 mayresumenewscope
 afterbranchstabilization,usinglanded1017/1026 withoutclaimingprovideracceptance.
 
 Phase6 resumption at3b5fb32e: developmentff895c83 reconciled by preserving merge4dd28049; #1017/#1026 merged, previous active-ownership blocker superseded. This does not prove complete Marathon/live-provider observations. Own genuinely-new-scope plan review cap3 next, no corrective R6 review/reset. All W7–W11 remain active and weekly HELD.
+
+Phase6 source implemented after planQA Approved atbf6f389a (attested373fc7d7). Actual module/CLI24 isolated-fixture controls pass, including multi-repo collision, unregistered/terminal rows, legacy fields, read-only URI/mutation refusal, empty/UNKNOWN, sidecars/journal, second-connection generation drift and no creation. Fixtures write only owned local git/schema/data/negative-control artifacts; no connectors or builders. Formal GIDs and all declared repository identities required; inventories remain dispatchfalse, not global execution proof. Existing suite runs/final QA next.
+
+Untoucheddevelopmentff895 Ubuntu38198894599 confirms same gh123 failures as9ebe; existing fixture O_APPEND positional-write mismatch narrowed. Correction changes existing PYMOVE openmode a+ to w+, retains cases/assertions/bounds; no newCI test/case/parameter/registration or production lock change. Corrected Linux hosted qualification pending. Reconciled draft3b5 full normalgate409/409+Python21/822s, remoteSHA matches, mergeable; hosted38201048871 blocking smokeSUCCESS/macOS+UbuntuSKIPPED. R6 remains FAIL6/6/Medium1028; no corrective review/reset. W7–W11 active, new reader prerequisite does not complete W7.

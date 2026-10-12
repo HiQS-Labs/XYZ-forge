@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-10-12 — Qualified held Jog observations (GH-1022, Phase6)
+
+Canonical Jog list now joins roadmap metadata by repository and issue number,
+preventing another repository's same-number issue from enriching the owned queue.
+The opt-in `jog list --inventory-json` observes one declared root read-only,
+with qualified repository/GIDs, explicit terminal scope and no dispatch authority.
+Missing schema/ownership, invalid generation, journals or observed drift return
+UNKNOWN/nonzero without creating, migrating or recovering a ledger. Default
+JSON/human fields, ordering, filter and missing-table behavior stay compatible.
+Weekly global reconciliation, executable freeze and shared dispatch remain required.
+
+The existing lock-progress fixture now opens its owned fresh token file without
+O_APPEND, so Linux positional writes can replace tokens before truncation. The
+production lock policy, existing cases/assertions and CI registration are unchanged.
+Untouched-development Ubuntu reproduces the baseline failure; corrected Linux
+qualification remains pending. No individual CI test was added.
+
 ## 2026-10-12 — Claude review corrections (GH-1022, local/unqualified)
 
 Weekly batch inspection rejects deterministic member errors before captures or
@@ -15,7 +32,7 @@ process-group runner with60s IO containment. Held accounting ignores only check
 URL/time noise while retaining material readiness/scope changes and returning
 fresh PR metadata on no-op. Producer controls andexisting focused suites pass at1044969d;consolidated
 R6 final review isFAIL withoneMedium title-grammar preflight gap trackedGH1028
-andno unresolvedCritical/High. Normalgated draftpublication pending;weeklyHELD.
+andno unresolvedCritical/High. Normalgated draftpublished3b5fb32e;weeklyHELD.
 
 
 ## 2026-10-11 — Canonical planner owner overrides (GH-1022, phase 5)

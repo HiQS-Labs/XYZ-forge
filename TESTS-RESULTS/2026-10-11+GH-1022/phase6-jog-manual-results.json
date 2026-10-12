@@ -1,0 +1,245 @@
+{
+  "source_sha256": "d912b5793db8aaedda0a29d65482af3500c3d0f1419e8c83a755313e4009e2c4",
+  "method": "actual owner module/CLI; only isolated canonical-schema fixture data and negative-control mutation writes; no connectors/builders or CI additions",
+  "fixture_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase6-manual-8e7fskyu",
+  "count": 24,
+  "controls": [
+    {
+      "name": "qualified collision fixes owned GID foreign enrichment",
+      "pass": true,
+      "detail": {
+        "status": "PASS",
+        "initialized": true,
+        "read_complete": true,
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase6-manual-8e7fskyu/fixture #?",
+        "include_terminal": true,
+        "generation": 1,
+        "repositories": [
+          {
+            "id": 1,
+            "global_id": "repo-01M4Q3R2ZB3A8EPM5V8PX74CZ8",
+            "slug": "acme/a",
+            "repository": "acme/a"
+          },
+          {
+            "id": 2,
+            "global_id": "repo-01M4Q3R2ZBV099NVXC2ZBEJNS3",
+            "slug": "acme/b",
+            "repository": "acme/b"
+          }
+        ],
+        "rows": [
+          {
+            "repo_id": 1,
+            "repo_global_id": "repo-01M4Q3R2ZB3A8EPM5V8PX74CZ8",
+            "repo_slug": "acme/a",
+            "roadmap_global_id": "rmi-01M4Q3R2ZBFNDBMQA4BZ3R70ZS",
+            "id": 1,
+            "global_id": "jog-01M4Q3R2ZB43CSDXPR79NQEMHD",
+            "gh_number": 777,
+            "position": 1,
+            "status": "pending",
+            "attempt_count": 0,
+            "lease_pid": null,
+            "failure_reason": null,
+            "created_at": "2026-10-12",
+            "updated_at": "2026-10-12",
+            "title": "Owner A",
+            "doc_path": null,
+            "issue_url": "https://github.com/acme/a/issues/777",
+            "repository": "acme/a",
+            "held_reasons": [
+              "execution-not-authorized"
+            ],
+            "dispatch": false
+          },
+          {
+            "repo_id": 1,
+            "repo_global_id": "repo-01M4Q3R2ZB3A8EPM5V8PX74CZ8",
+            "repo_slug": "acme/a",
+            "roadmap_global_id": null,
+            "id": 2,
+            "global_id": "jog-01M4Q3R2ZBGR8XBH29KJPJ47NC",
+            "gh_number": 778,
+            "position": 2,
+            "status": "pending",
+            "attempt_count": 0,
+            "lease_pid": null,
+            "failure_reason": null,
+            "created_at": "2026-10-12",
+            "updated_at": "2026-10-12",
+            "title": null,
+            "doc_path": null,
+            "issue_url": null,
+            "repository": "acme/a",
+            "held_reasons": [
+              "execution-not-authorized",
+              "unregistered-roadmap"
+            ],
+            "dispatch": false
+          },
+          {
+            "repo_id": 1,
+            "repo_global_id": "repo-01M4Q3R2ZB3A8EPM5V8PX74CZ8",
+            "repo_slug": "acme/a",
+            "roadmap_global_id": null,
+            "id": 3,
+            "global_id": "jog-01M4Q3R2ZB2CMFER1ZGWDVDET7",
+            "gh_number": 779,
+            "position": 3,
+            "status": "completed",
+            "attempt_count": 0,
+            "lease_pid": null,
+            "failure_reason": null,
+            "created_at": "2026-10-12",
+            "updated_at": "2026-10-12",
+            "title": null,
+            "doc_path": null,
+            "issue_url": null,
+            "repository": "acme/a",
+            "held_reasons": [
+              "execution-not-authorized",
+              "unregistered-roadmap"
+            ],
+            "dispatch": false
+          }
+        ],
+        "held_reasons": [
+          "execution-not-authorized"
+        ],
+        "dispatch": false
+      }
+    },
+    {
+      "name": "unregistered row remains visible and held",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "all metadata and rows deny dispatch",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "quiet read preserves DB bytes and creates no SQLite sidecars",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "legacy filter order and exact fields",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "optional RO connect denies mutation including URI metacharacters",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "active-only view advertises terminal omission",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "actual opt-in CLI gives complete held inventory",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "canonical intent holds without recovery",
+      "pass": true,
+      "detail": [
+        "live or ambiguous canonical journal/SQLite state"
+      ]
+    },
+    {
+      "name": "canonical intent preserved",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "SQLite sidecar -journal holds before opening",
+      "pass": true,
+      "detail": [
+        "live or ambiguous canonical journal/SQLite state"
+      ]
+    },
+    {
+      "name": "sidecar preserved -journal",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "SQLite sidecar -wal holds before opening",
+      "pass": true,
+      "detail": [
+        "live or ambiguous canonical journal/SQLite state"
+      ]
+    },
+    {
+      "name": "sidecar preserved -wal",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "SQLite sidecar -shm holds before opening",
+      "pass": true,
+      "detail": [
+        "live or ambiguous canonical journal/SQLite state"
+      ]
+    },
+    {
+      "name": "sidecar preserved -shm",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "invalid generation never defaults to zero",
+      "pass": true,
+      "detail": [
+        "missing or invalid canonical generation"
+      ]
+    },
+    {
+      "name": "registered URL foreign identity holds",
+      "pass": true,
+      "detail": [
+        "queue repository/issue identity is ambiguous"
+      ]
+    },
+    {
+      "name": "actual second-connection generation drift holds",
+      "pass": true,
+      "detail": [
+        "canonical queue generation/artifact changed during observation"
+      ]
+    },
+    {
+      "name": "initialized empty differs from UNKNOWN",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "missing queue table is not success-empty",
+      "pass": true,
+      "detail": [
+        "required queue inventory schema unavailable: jog_queue"
+      ]
+    },
+    {
+      "name": "legacy missing-table contract remains distinguishable",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "missing DB not initialized or created",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "actual UNKNOWN CLI is nonzero JSON",
+      "pass": true,
+      "detail": null
+    }
+  ]
+}
