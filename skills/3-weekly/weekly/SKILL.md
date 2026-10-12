@@ -222,8 +222,10 @@ through prepare_weekly, with no new commit/receipt on unchanged material input.
 `--adopt-predecessor` explicitly adopts only a fresh exact published commit with
 complete canonical issue/capture accounting. `--publish` requires apply plus an
 explicit finite `--publication-timeout` sufficient for the actual normal hooks;
-there is no default paid/build budget or force push. Publication uses ordinary
-fast-forward Git semantics and exact remote readback. This task validates publication
+there is no default paid/build budget or force push. Publication first reuses the existing hook installer check/install/check in the
+owned clone, holding missing/foreign configuration or bypass flags. Installer bytes
+are runtime-bound. It uses ordinary fast-forward Git semantics and exact remote
+readback. This task validates publication
 only against owned local bare fixtures; it pushes only its implementation branch.
 Associated PR references are review/landing leads, reported ledger/work states retain
 provenance, and criterion delivery/overlap/readiness remain independently unreviewed.

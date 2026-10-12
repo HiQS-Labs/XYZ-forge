@@ -1330,3 +1330,34 @@ logs remain historical controls; no permanent executable fixture program was add
 Full finalQA and normal gate/publication are pending. Hook-budget and older cached
 writer proof, nonempty associated PR/accounting and exhaustive transfer interleavings
 remain limits to independently assess, never inferred from quiet flow success.
+
+
+### Phase9 final R1 disposition
+
+R1FAIL atc181; partial owner/plan/fixture sweep accurately markedno. S1 actual nested
+commit decision admitted an unrelated README while intended ledger blobs matched.
+An actual controlled Git commit/result-loss replay confirmed admission. Root cause:
+selected blobs were recorded without the full intended committed result. Fix site:
+existing pending-commit receipt/admission. Why not upstream/downstream: a clean
+committed extra file evades dirty checks and clearing intent discards its distinction.
+Before commit, verify all cached paths accounted and record native write-tree result;
+both normal completion and resume require exact full tree/parent/blob/live state
+before clearing intent. Exact commit resumes; extra tree refuses with original
+intent, README and HEAD preserved. No new store, gate, schema or CI case.
+
+S2 was an explicitly unverified concern, so actual fresh-clone/localbare probe ran:
+hook absent and ordinary push succeeded. Reuse existing githooks/install.sh
+check/install/check in owned destination before publication; installer path/bytes
+join runtime identity. Unsupported/missing/foreign hook configuration holds and
+explicit pre-push bypass conflicts with publication. Actual installed/refusing-hook
+controls ran against local bare fixtures; refused publication retained local state,
+retry made no new commit and normal hooked publication succeeded. Actual default
+bounded publication helper leaf with a slow hook timed out at0.25s, stopped the
+owned group and left remote unchanged. This leaf is not full caller budget proof.
+Original60s preparation default remains dynamic; publication ceiling stays explicit.
+
+Current targeted logs/provenance retain observed reds and repaired actual controls.
+Full frozen-source requalification, complete owner/plan/fixture sweep in finalR2,
+and normal gate remain required. R1 is not erased or relabeled; cap remains3.
+No new CI addition, live planning publication, builder, merge, schedule or broader
+ledger/authority change follows. W8–W11/full1022 remain active and unimplemented.

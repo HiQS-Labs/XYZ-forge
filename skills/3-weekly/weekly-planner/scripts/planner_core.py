@@ -1382,7 +1382,8 @@ def reconcile_weekly(args, source_root, command=None):
     source_root = Path(source_root).resolve()
     intake = load_issue_intake()
     harness, canonical, process, runtime, check = load_weekly_runtime(intake, {
-        'lock_resolver': Path(intake.__file__).resolve().parents[4] / 'utils/py/rtl.py'})
+        'lock_resolver': Path(intake.__file__).resolve().parents[4] / 'utils/py/rtl.py',
+        'hook_installer': Path(intake.__file__).resolve().parents[4] / 'githooks/install.sh'})
     env = dict(os.environ, XYZ_WORK_CONNECTORS='0', PYTHONDONTWRITEBYTECODE='1')
     supplied_command = command
     command = command or weekly_command(process, env)
@@ -1400,6 +1401,8 @@ def reconcile_weekly(args, source_root, command=None):
             or Path(args.predecessor_root).is_symlink() or Path(args.prepare_root).is_symlink()):
         raise ValueError('exact separate predecessor/new full-clone roots required')
     branch = 'auto-' + date
+    if args.publish and os.environ.get('XYZ_SKIP_PREPUSH', '0') not in ('', '0'):
+        raise ValueError('normal-hook bypass is incompatible with held publication')
     if args.publish and (args.publication_timeout is None or not math.isfinite(args.publication_timeout)
                          or args.publication_timeout <= 0 or not args.apply):
         raise ValueError('publication requires explicit apply and finite normal-hook IO budget')
@@ -1645,12 +1648,14 @@ def reconcile_weekly(args, source_root, command=None):
                 if pending:
                     current = git(['rev-parse', 'HEAD'], root)
                     if current != previous:
-                        if (git(['rev-parse', 'HEAD^'], root) != previous
+                        if (not state.get('pending_tree')
+                                or git(['rev-parse', 'HEAD^{tree}'], root) != state['pending_tree']
+                                or git(['rev-parse', 'HEAD^'], root) != previous
                                 or any(git(['rev-parse', 'HEAD:' + p], root) != h
                                        or git(['hash-object', '--', p], root) != h for p, h in pending.items())
                                 or dirty(root)):
                             raise ValueError('unknown committed handoff state')
-                        state.update(root_head=current, pending_commit=None); durable(receipt_path, state); return
+                        state.update(root_head=current, pending_commit=None, pending_tree=None); durable(receipt_path, state); return
                     if any(git(['hash-object', '--', p], root) != h for p, h in pending.items()):
                         raise ValueError('pending preservation bytes changed; retain evidence')
                 elif git(['rev-parse', 'HEAD'], root) != previous:
@@ -1664,10 +1669,16 @@ def reconcile_weekly(args, source_root, command=None):
                 git(['add', '--', *paths], root)
                 if any(git(['rev-parse', ':' + p], root) != h for p, h in blobs.items()):
                     raise ValueError('staged preservation differs')
+                staged_paths = set(git(['diff', '--cached', '--name-only'], root).splitlines())
+                if staged_paths - set(paths):
+                    raise ValueError('unaccounted staged preservation paths; retain intent')
+                state['pending_tree'] = git(['write-tree'], root); durable(receipt_path, state)
                 guard(); git(['commit', '-m', message], root)
-                if git(['rev-parse', 'HEAD^'], root) != previous:
-                    raise ValueError('unexpected commit parent')
-                state.update(root_head=git(['rev-parse', 'HEAD'], root), pending_commit=None); durable(receipt_path, state)
+                if (git(['rev-parse', 'HEAD^'], root) != previous
+                        or git(['rev-parse', 'HEAD^{tree}'], root) != state['pending_tree']
+                        or dirty(root)):
+                    raise ValueError('committed preservation result differs; retain intent')
+                state.update(root_head=git(['rev-parse', 'HEAD'], root), pending_commit=None, pending_tree=None); durable(receipt_path, state)
             if state.get('pending_commit'):
                 commit(list(state['pending_commit']), 'weekly: complete exact pending preservation')
             if state['phase'] in ('intent', 'ledger'):
@@ -1789,6 +1800,22 @@ def reconcile_weekly(args, source_root, command=None):
                         or args.publication_timeout <= 0):
                     raise ValueError('publication requires an explicit finite normal-hook IO budget')
                 guard()
+                hook_installer = harness / 'githooks/install.sh'
+                def installed_hook():
+                    check()
+                    result = process.run_bounded(['bash', str(hook_installer), '--check'],
+                                                 cwd=str(root), env=env, timeout=WEEKLY_IO_TIMEOUT_SECONDS, grace=1)
+                    check()
+                    if result.timed_out or result.rc not in (0, 1):
+                        raise ValueError('existing hook check unavailable; preserve local projection')
+                    return result.rc == 0
+                if not installed_hook():
+                    command(['bash', str(hook_installer)], root)
+                    if not installed_hook():
+                        raise ValueError('normal hook is not installed; publication held')
+                response['hook_workflow'] = {'installer': str(hook_installer),
+                                             'sha256': runtime['sha256']['hook_installer'], 'checked': True,
+                                             'effects': 'existing installer may wire owned-clone hook metadata; no new gate'}
                 remote_rows = git(['ls-remote', 'origin', 'refs/heads/' + branch], root).splitlines()
                 remote_head = None
                 if remote_rows:
