@@ -16,4 +16,8 @@ Original transcripts are retained as gzip and hash-bound, without committing ver
 
 Read-only PDDA frontmatter and status-table checks: 0 errors, 0 warnings each on the intake
 plan. These checks do not qualify product behavior or a promotion. No suite/gate/test case
-was added or run in the owned task clone. Independent conditional plan QA is pending.
+was added or run in the owned task clone. Independent conditional plan QA is Approved in Round2, driverexit0, reviewed871d8b73.
+Round1 reported an evidence-ordering gap and driverexit6: the producer created evidence
+during the containment window, so the harness backed it up and reverted that off-lane
+addition. The backup was restored after the turn and committed; R1 was corrected. These
+results are retained and do not count as final promotion-range review or qualification.
