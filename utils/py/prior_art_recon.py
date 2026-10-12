@@ -187,7 +187,8 @@ def main() -> int:
         merged_prs += repo_merged
         issues += repo_issues
         gh_errors += [f"{repo or 'current'}: {e}" for e in pr_errs + ([issue_err] if issue_err else [])]
-    fix_candidates = merged_prs + [
+    # Without a query the merged list is just recent history, not a match for the ask.
+    fix_candidates = (merged_prs if args.query else []) + [
         i for i in issues if i.get("state") == "CLOSED" and i.get("stateReason") == "COMPLETED"
     ]
 

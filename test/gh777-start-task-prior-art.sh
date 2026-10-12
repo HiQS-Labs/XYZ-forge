@@ -65,6 +65,13 @@ assert 10 not in [i['number'] for i in d['issues']], 'PRs must not be reported a
   grep -q -e "--repo acme/sibling" -e "repos/acme/sibling/" "$STUB_DIR/calls.log" \
     || { echo "FAIL: sibling repo not scanned"; exit 1; }
 done
+STUB_MODE=list STUB_DIR="$STUB_DIR" PATH="$STUB_DIR:$PATH" \
+  python3 "$ROOT/utils/py/prior_art_recon.py" --json > "$TMP_JSON"
+python3 -c "
+import json
+d = json.load(open('$TMP_JSON'))
+assert d['existing_fix_candidates_count'] == 0, 'no query must not flag unrelated merged PRs'
+"
 echo "  stub gh: list and REST fallback paths verified"
 
 echo "PASS: prior_art_recon.py verified"
