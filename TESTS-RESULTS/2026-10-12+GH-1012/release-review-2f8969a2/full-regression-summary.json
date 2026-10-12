@@ -1,0 +1,39 @@
+{
+  "exit_code": 0,
+  "start": {
+    "v": 1,
+    "ts_ms": 1791836498814,
+    "run": "2f8969a29-59038",
+    "runner": "validate",
+    "event": "run.start",
+    "commit": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+    "host": "noels-Mac-Studio",
+    "mode": "sequential",
+    "width": 1,
+    "tier": 3,
+    "registered": 406
+  },
+  "summary": {
+    "v": 1,
+    "ts_ms": 1791839766209,
+    "run": "2f8969a29-59038",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 409,
+    "failed": 0,
+    "total": 409,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "408",
+    "run_set": "406",
+    "registered": "406",
+    "suite_events_match": "yes"
+  },
+  "telemetry_sha256": "cbc0d2c669bfaeeaa2a41a29d6de9474867d257c361c499b39ea0c59d73f95df",
+  "identity_unchanged": true,
+  "declared_environment": {
+    "RELAY_SELF_SUFFICIENCY_SKIP": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "qualification": "full existing registry on exact D; skipped live-agent self-sufficiency turn; no main MACOS-BOUNDARY receipt"
+}
