@@ -122,4 +122,12 @@ unregistered: [('jog-11111111111111111111111111', None)]
 
 Relay closed (Approved), no further plan-review turn needed. Producer may implement the authorized seam, address the documentation Nit, and return for separately required final QA. Broader work remains held.
 
+
+### Attestation · relay-drive — 2026-10-12T03:44:39Z
+task: GH1022-PHASE6-PLAN-R1
+reviewer: codex
+status: Approved
+reviewed-head: bf6f389a6424afcba63953beef8e92c1659fe2f3
+added-range: 7208+6451
+added-sha256: 23d0d255a36b8c130dbcb6cd625dd7d7ef9c646e35776c34e696622488b14d95
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
