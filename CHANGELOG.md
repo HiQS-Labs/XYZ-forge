@@ -38,6 +38,16 @@ change or suite. Existing ledgers recover on re-vendor plus a re-run of the reco
 resolver. Evidence, a manual check with red control (10/17 at `9a923f3c`, 17/17 fixed), is in
 `TESTS-RESULTS/2026-10-10+GH-1016/`.
 
+## 2026-10-10 — Observer receipt attribution through logical target paths (GH-1015)
+
+The opt-in marathon observer now keeps the driver’s absolute logical target-path spelling, so
+qualified receipts through symlink paths are recognized while exact attribution stays strict.
+Missed-check JSON uses the existing sorted-key convention, and the GH-609 registry comment reflects
+workload-scoped online migrations. Manual physical/absolute-symlink/relative-symlink checks pass,
+eight foreign or unqualified cases stay unverified, and restoring either old behavior makes the
+acceptance check fail. Existing GH-609 and package checks pass 33/33 and 3/3 in a disposable clone
+with intact Git identity. Evidence: `TESTS-RESULTS/2026-10-10+GH-1015/`.
+
 ## 2026-10-09 — Marathon: bounded observation and repair-to-PR handoff (GH-1006)
 
 Opt-in chain observations now use one finite reader across phase transitions, report exact driver
