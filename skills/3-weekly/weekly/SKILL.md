@@ -86,7 +86,7 @@ from target Git HEADs. Read completeness grants no readiness, authentic peer
 attestation, stopped-descendant/global-idle proof or execution approval. Empty
 context lists explicitly cannot prove absence of activity. No DB/context/capture,
 Git/lease/audit writes, watchers or connectors occur. Redirecting stdout writes the
-caller-chosen local output. Durable reconciliation and rollover remain unimplemented.
+caller-chosen local output. This census mode observes only; the preserved reconciliation/rollover caller below is under verification.
 
 ## Explicit local accumulation
 
@@ -190,7 +190,7 @@ means discard this owned staging, exact after means complete its dump, unknown
 identity/state preserves evidence for reconciliation. Never replay or restore over
 later owner writes. This API performs no Git merge, commit, push, capture, remote
 check, approval, scheduling or dispatch. Every result remains HELD/dispatchfalse.
-Weekly coordination/adoption/rollover is still a separate unimplemented caller.
+The opt-in weekly coordination/adoption/rollover caller below is implemented and under verification.
 
 ## Preserved reconciliation and rollover (implementation under verification)
 

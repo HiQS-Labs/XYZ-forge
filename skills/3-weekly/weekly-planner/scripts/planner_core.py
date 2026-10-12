@@ -1650,7 +1650,7 @@ def reconcile_weekly(args, source_root, command=None):
                     if current != previous:
                         if (not state.get('pending_tree')
                                 or git(['rev-parse', 'HEAD^{tree}'], root) != state['pending_tree']
-                                or git(['rev-parse', 'HEAD^'], root) != previous
+                                or git(['rev-list', '--parents', '-n', '1', 'HEAD'], root).split()[1:] != [previous]
                                 or any(git(['rev-parse', 'HEAD:' + p], root) != h
                                        or git(['hash-object', '--', p], root) != h for p, h in pending.items())
                                 or dirty(root)):
@@ -1674,7 +1674,7 @@ def reconcile_weekly(args, source_root, command=None):
                     raise ValueError('unaccounted staged preservation paths; retain intent')
                 state['pending_tree'] = git(['write-tree'], root); durable(receipt_path, state)
                 guard(); git(['commit', '-m', message], root)
-                if (git(['rev-parse', 'HEAD^'], root) != previous
+                if (git(['rev-list', '--parents', '-n', '1', 'HEAD'], root).split()[1:] != [previous]
                         or git(['rev-parse', 'HEAD^{tree}'], root) != state['pending_tree']
                         or dirty(root)):
                     raise ValueError('committed preservation result differs; retain intent')

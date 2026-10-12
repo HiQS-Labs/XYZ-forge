@@ -1361,3 +1361,30 @@ Full frozen-source requalification, complete owner/plan/fixture sweep in finalR2
 and normal gate remain required. R1 is not erased or relabeled; cap remains3.
 No new CI addition, live planning publication, builder, merge, schedule or broader
 ledger/authority change follows. W8–W11/full1022 remain active and unimplemented.
+
+### Phase9 final R2 disposition — final round pending
+
+R2FAIL preserved at7a331e3c; complete core/7,552-line owner/main plan/skills/covering
+fixture source sweep declared yes. No additional newly witnessed pre-existing
+failure was asserted. S1 full-tree and S2 installed-hook repairs passed source
+controls, not blanket concurrency or budget qualification.
+
+S3 actual native commit-tree result-loss control admitted an unexpected second
+parent with the intended tree, matching first parent/ledger blobs and clean state.
+Root cause: first-parent identity was treated as complete history identity. Fix
+site: the two existing ordinary preservation completion/admission predicates now
+read native rev-list --parents and require exactly the recorded sole parent.
+The intentional ancestry integration retains its separate ordered two-parent
+contract. Unknown history must retain HEAD and private intent rather than clear it.
+Focused/red-control reruns and frozen-source requalification are pending before R3.
+No new store/schema/gate/CI case or extra review allowance.
+
+Earlier weekly capability sentences now distinguish observation-only modes from
+the reconciliation caller under verification. Existing provenance appends actual
+12-flow R2 attribution, full nonempty draft-PR/caller accounting (qualified local
+same-number foreign reference stays unlinked; all delivery UNKNOWN), and the S3
+actual Git red. An initial helper assertion used the wrong identity spelling and
+was corrected without product changes; its error log is retained. Older cached
+writer execution, exhaustive interleavings, full normal-hook caller budget and
+final harness gate remain unqualified. R3 uses this same cap3/token/artifact; no
+R6/closed Phase6–8 reset. W8–W11/full1022 remain required and unimplemented.
