@@ -1,0 +1,4 @@
+PASS: harness CLOSED, consumer OPEN -> continue — rc=0 first_call=(('git', '-C', '/consumer', 'remote', 'get-url', 'origin'), None)
+PASS: harness OPEN, consumer CLOSED -> exit 4 naming consumer — rc=4 stderr=['marathon-drive: lane parked — issue 1 in example/consumer is already closed'] log=['lane GH1 parked — issue 1 in example/consumer is already closed']
+PASS: forced gh repo view fallback runs with cwd=consumer — rc=4 fallback=[(('gh', 'repo', 'view', '--json', 'nameWithOwner', '--jq', '.nameWithOwner'), '/consumer')]
+PASS: mocked-state branch keeps working — rc=4 stderr=['marathon-drive: lane parked — issue 1 in (mocked state) is already closed']

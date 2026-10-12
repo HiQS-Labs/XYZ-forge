@@ -1,0 +1,22 @@
+{
+  "mini": {
+    "seeded": true,
+    "absent_after_first_publication": true,
+    "recreated_after_second_publication": false,
+    "accepted_behavior": true,
+    "child": "/private/tmp/xyz1037-distribution-green-20261012/mini-child",
+    "push": false,
+    "origin": "/private/tmp/xyz1037-distribution-green-20261012/mini-child"
+  },
+  "manager": {
+    "head_before": "d9a285476106933812e7a1719c22a6e1837c84d6",
+    "head_after": "888c63bc0f3b44f8323d05d9e9b922d7c3c35738",
+    "status": "",
+    "warning": "skills-army-hq: committed skills-army-hq in /private/tmp/xyz1037-distribution-green-20261012/pulse-collection (888c63b); git-pulse pushes it on its next run\n",
+    "all_targets_disabled": true,
+    "root_readme_refreshed": true,
+    "accepted_behavior": true,
+    "collection": "/private/tmp/xyz1037-distribution-green-20261012/pulse-collection",
+    "network_publish": false
+  }
+}

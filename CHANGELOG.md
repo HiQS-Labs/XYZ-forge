@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-12 — Sync ownership survives child deletions and manager README updates (GH-1037)
+
+A child that deletes an entire adapted entry keeps that deletion across later publications. The
+existing `MANIFEST.txt` now retains adapted-root markers separately from payload paths; upstream
+entry removal/re-addition still controls its ownership lifecycle.
+
+A Skills Army manager update can commit its generated root README with the manager folder only
+when that README was a clean tracked mirror before the transaction and matches the new mirror
+afterward. Unrelated dirt still refuses auto-commit; Git Pulse remains the sole push writer.
+
+The two defects were reproduced in the GH-1012 release review. Verification uses existing suites
+and retained isolated manual controls only; no CI cases or registration are added. Revert the
+GH-1037 implementation commit to undo these localized ownership changes.
+
 ## 2026-10-11 — start-task: prior-art scan finds merged PRs and issues (GH-1025)
 
 `/start-task` checked only open PRs in the current repo, so a fix merged yesterday, a closed issue,
