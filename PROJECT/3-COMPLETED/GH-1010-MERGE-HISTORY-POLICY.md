@@ -1,8 +1,8 @@
 ---
 title: "GH-1010 — Per-project merge history policy"
-status: In progress
+status: Complete
 created: 2026-10-09
-updated: 2026-10-10
+updated: 2026-10-12
 owner: Codex
 goal: Let maintainers preserve original commit history across cleanup workflows.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1010
