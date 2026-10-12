@@ -318,3 +318,5 @@ onstarredtitle refusal,complete_commitnull,existing ownerrow/docbytespreserved
 anddispatchfalse. This findingremainsunfixed;no sourcechange afterreview.
 Explicituser policypermitslowertracked draftpublication throughnormal gates,
 withoutturning actualFAIL intoPASS. Full1022/W7–W11 remainsincomplete.
+
+Required integration-base fullgate at0cd4c353:exit0,409/409 selections,Python21/21,runner-envelopeclean;disposableidentity/HEAD/trackedtree remainedunchanged. Sourcehashes identicalto1044969d/R6 target. This isnotci-local orpromotionqualification. Normalincrementalpre-push stillrequired. R6 remainsFAIL/oneMediumGH1028/noCriticalHigh,notApproved. NewlymergedPR1026/1017 areverifiedprerequisites only;currentdraftmergeability conflicts andW7–W11 remainunqualified. No rebase/sourceedit toinvalidatefrozen gate.
