@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
+NEXT: Author
 STATUS: Open
 ROUND: 2 / 3
 
@@ -153,5 +153,68 @@ Basis: S1 implemented and S2 qualified/repaired at source commit50b4a78e; same a
 - Remaining limits: nonempty associated PR/accounting, older cached writer and exhaustive interrupted-transfer interleavings/full normal gate remain unqualified. Findings cannot be cleared by empty census. Metadata delivery remains UNKNOWN/HELD. W8–W11/full1022 active. Preserve R6FAIL6/6/Medium1028,1027unapproved, closedPhase6/7/8 and Phase9planApprovedR1/3. No cap extension or new test authority.
 
 Handing off to Reviewer(codex) — take Phase9 final Round2 within the same three-round cap.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: S1's tree repair passes the bounded source controls and S2 now reuses the installed-hook workflow. Exact interrupted-commit admission still accepts an unexpected second parent (S3), clearing the intent for an unknown history result. Repair or disposition that concrete input within the existing cap. This verdict does not reopen R6 or closed Phase6/7/8.
+swept file: yes
+
+- [Should] **S3 — exact ordinary preservation recovery checks only the first parent.** `planner_core.py:1653` uses `HEAD^`, and normal completion at `:1677` has the same predicate. An unexpected merge commit with the intended tree, exact blobs/live bytes, clean state and first parent equal to `root_head` is adopted; its additional parent is never inspected. The caller's separate native ancestry recovery already checks the complete ordered parent list (`:1713–1717`). Reuse that native parent-list read for ordinary preservation completion/admission and require the intended single parent before clearing intent. Keep the separate intentional ancestry merge's two-parent contract; no new store, suite or gate.
+  Observed input: actual nested `commit` AST executed in memory with `root_head=a*40`, `pending_tree=c*40`, pending `releases.db=b*40`, HEAD `d*40`, parents `[a*40,e*40]`, tree `c*40`, matching live/committed blob `b*40`, clean state. It returns, advances `root_head` and clears `pending_commit`; no full-parent read occurs. This is an observed source-decision failure, **not** an executed Git merge/crash fixture.
+  Affected scope: ordinary pending-preservation result admission and normal preservation commit completion; commits intended to have exactly the recorded previous HEAD as their sole parent. Intentional native ancestry integration remains separately governed.
+  Falsifier: sole parent `[a*40]` with exact tree/blobs must adopt; extra parent `[a*40,e*40]`, wrong first parent or wrong tree must refuse and retain intent. Current exact/wrong-first-parent/wrong-tree controls behave accordingly, but extra-parent adopts. In a disposable clone, an extra-parent lost-result control that already refuses through another caller predicate would narrow or disprove the end-to-end impact; record it before claiming actual Git qualification.
+  Root cause: first-parent identity is treated as complete parent identity; Fix site: existing commit completion/admission predicates; Why not upstream/downstream: a clean committed result contains no dirty-path signal, and clearing the receipt loses the distinction. The existing ancestry path demonstrates the native full-parent mechanism.
+
+  Quoted source-decision command (no subprocess, Git execution, executable fixture or source write):
+  ```bash
+  PYTHONDONTWRITEBYTECODE=1 python3 - <<'PROBE'
+  import ast
+  from pathlib import Path
+  p=Path('skills/3-weekly/weekly-planner/scripts/planner_core.py')
+  r=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='reconcile_weekly')
+  c=next(n for n in ast.walk(r) if isinstance(n,ast.FunctionDef) and n.name=='commit')
+  for mode in ('exact','extra-parent','wrong-first-parent','wrong-tree'):
+      parents=['a'*40]+(['e'*40] if mode=='extra-parent' else [])
+      if mode=='wrong-first-parent': parents[0]='f'*40
+      state={'root_head':'a'*40,'pending_commit':{'releases.db':'b'*40},'pending_tree':'c'*40}
+      reads=[]
+      def git(argv,root):
+          reads.append(argv)
+          if argv==['rev-parse','HEAD']: return 'd'*40
+          if argv==['rev-parse','HEAD^']: return parents[0]
+          if argv==['rev-parse','HEAD^{tree}']: return ('f' if mode=='wrong-tree' else 'c')*40
+          if argv[0] in ('hash-object','rev-parse'): return 'b'*40
+          if argv==['rev-list','--parents','-n','1','HEAD']: return ' '.join(['d'*40,*parents])
+          raise AssertionError(argv)
+      ns=dict(state=state,git=git,root=None,guard=lambda:None,dirty=lambda root:set(),durable=lambda *a:None,receipt_path=None)
+      exec(compile(ast.Module(body=[c],type_ignores=[]),str(p),'exec'),ns)
+      try: ns['commit'](['releases.db'],'unused'); result='ADOPTED'
+      except ValueError as e: result='REFUSED '+str(e)
+      print(mode,result,'parent_count='+str(len(parents)),'intent_retained='+str(state['pending_commit'] is not None),'all_parents_read='+str(any(x[0]=='rev-list' for x in reads)))
+  PROBE
+  ```
+  Exit 0; decisive output:
+  ```text
+  exact ADOPTED parent_count=1 intent_retained=False all_parents_read=False
+  extra-parent ADOPTED parent_count=2 intent_retained=False all_parents_read=False
+  wrong-first-parent REFUSED unknown committed handoff state parent_count=1 intent_retained=True all_parents_read=False
+  wrong-tree REFUSED unknown committed handoff state parent_count=1 intent_retained=True all_parents_read=False
+  ```
+
+- [Pass] **S1 full-tree repair, limited to its stated data predicate.** `planner_core.py:1672–1675` rejects unaccounted staged paths and records native `write-tree`; `:1651–1657` and `:1677–1680` require that tree before completion. Independent in-memory execution of the actual nested AST gave `exact ADOPTED intent_retained=False`; extra-tree, wrong-parent, wrong-blob and dirty each gave `REFUSED unknown committed handoff state intent_retained=True` (exit 0). Removing only the two tree predicates in an in-memory AST copy changed extra-tree to `ADOPTED intent_retained=False`, witnessing the control's sensitivity. Retained actual producer evidence separately says `EXTRA_TREE_HELD unknown committed handoff state` and `INTENT_AND_OWNER_WORK_PRESERVED` (`TESTS-RESULTS/2026-10-11+GH-1022/phase9-r2-extra-tree-hold.log:3–4`); the old observed admission remains in `phase9-r1-extra-tree-red.log:3`. S3 above prevents treating this as full commit-identity clearance.
+- [Pass] **S2 source repair uses the existing hook owner.** Runtime loading pins `hook_installer` (`planner_core.py:1385–1386`); publication performs check/install/check before push (`:1803–1818`). `githooks/install.sh:64–91` checks executable marked stub and rejects overriding hooksPath; its installation refuses foreign configuration/hooks. Producer evidence retains `FRESH_HOOK_PRESENT False` / `ORDINARY_PUSH_SUCCEEDED_WITHOUT_HOOK` (`phase9-r1-hook-absence-red.log:2–3`), current refusing push (`phase9-r2-hook-refusal.log:2`), and current timeout plus unchanged remote (`phase9-r2-hook-timeout.log:932–933`). These are inspected producer controls, not reviewer-reexecuted hook or full-budget qualification. The empty-env suspicion was falsified: `${XYZ_SKIP_PREPUSH:-0}` in `githooks/pre-push:82` and the installer's fallback defaults empty to zero, consistent with the caller's `('', '0')` allowance.
+- [Pass] **Nonempty accounting decision leaf retains holds.** Independently compiled only `planner_core.py:1770–1798` with one issue77, one completed lifecycle fact and a draft PR. Exit 0: bodies `fixes #77` and the exact `fixture/repo/issues/77` URL produce `REVIEW_OR_LANDING leads=1`; `fixes #777`, `other/repo/issues/77` and unrelated text produce `HELD leads=0`. All five retain `UNKNOWN; reported completion is not criterion evidence`. This measures that leaf, not a full nonempty GitHub/caller flow. Command method: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PROBE'`, AST-extract the contiguous accounting assignments/loop preceding `if args.publish`, compile in memory with the stated nonempty dictionaries and a stubbed canonical reported-state function, print decision/lead-count/delivery, then `PROBE`.
+- [Pass] **Qualification manifest identifies the current source bytes.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with `import hashlib,json; from pathlib import Path; e=json.loads(Path('TESTS-RESULTS/2026-10-11+GH-1022/phase9-r2-qualified.json').read_text()); [print('SOURCE_HASH_MATCH',f,hashlib.sha256(Path(f).read_bytes()).hexdigest()==h) for f,h in e['source_sha256'].items()]`, then `PY`. Exit 0: both owner and core `SOURCE_HASH_MATCH ... True`. The manifest's twelve rc0 entries remain producer evidence; this does not independently prove their runtime execution.
+- [Nit] **Weekly capability prose contradicts its new section.** `skills/3-weekly/weekly/SKILL.md:89` still says “Durable reconciliation and rollover remain unimplemented,” and `:193` calls it a “separate unimplemented caller”; the later “Preserved reconciliation and rollover (implementation under verification)” section describes the implemented caller. Qualify those earlier sentences as prior-mode limits or point them to the current under-verification section, while keeping global coordination/dispatch limits explicit.
+- [Unverified — needs clone run] Full nonempty associated-PR/caller accounting, older cached-source-writer execution, exhaustive interrupted-transfer interleavings, actual normal-hook/full-caller IO qualification and final harness gate remain unqualified here. The user reserves suites/executable fixtures for a disposable full clone; none were run. R2 source hashes match, but `provenance.jsonl`'s last entry is still `phase9-r1-repairs`, listing R1 repair logs rather than the new twelve-flow R2 manifest. Add the R2 run attribution to the existing provenance ledger before citing those reruns as independent qualification; preserve historical entries.
+
+Sweep: read complete current `planner_core.py` (1,990 lines), canonical `releases_app.py` (7,552), main plan (1,363), both weekly skills and shared intake (369), plus unchanged `gh32-releases-app.sh`, `gh32-releases-artifacts.sh`, `gh360-scoped-receipt-chain-rebuild.sh`, `gh418-planner-ledger-source.sh` and `gh698-planner-db-ratings.sh` source. Truncated multi-file outputs were not counted for omitted spans; those source spans were reread in smaller pages. This includes pre-existing writer/read/schema/dump/recovery/default CLI paths, not just the new diff. No additional newly witnessed pre-existing defect is asserted beyond the already documented legacy advisory heuristics and R6/GH1028 limitation; this is not an all-CRUD concurrency or fleet-completeness guarantee.
+
+Verify-tier graph: all82 projects enumerated, no matching worktree/task root. Nearest primary `XYZ-forge` generation `2026-09-01T15:54:30Z`; reconcile lookup0/no more. Coverage checked exact core/owner/intake/skills/plan/installer/fixture paths: changed/missing/not-tracked primary metadata, plus gh32 parse-partial237 (read directly). Evidence comes from current direct source, not this stale foreign graph; no reindex or negative claim relies on it.
+
+Only this relay tracked file changed; scratch directory only under `.relay-scratch/`. No Git command, suite, pytest, executable fixture, network/connectors, live operation or extra agent was used. The absolute pinned tick's `release --help` returned usage/exit2 (unsupported help flag); it made no release. Preserve R6FAIL6/6 / MediumGH1028, GH1027 unapproved, closedPhase6/7/8 and Phase9planApprovedR1/3. No new cap/tests/agents; W8–W11/fullGH1022 remain active.
+
+Handing off to Author — disposition S3, correct the capability prose and R2 attribution, and retain the qualification limits; go to the Author window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
