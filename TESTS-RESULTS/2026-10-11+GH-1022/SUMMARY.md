@@ -307,3 +307,14 @@ No independent reviewer ornew qualifying fullgate/push ran;closedR5 untouched.
 Only outstanding permission for corrective qualification is one consolidated
 final Codex review ofthese completed corrections. Review permission does not
 approveS8's threeCIcase proposals. FullW7–W11 remainsactive after that boundary.
+
+R6 single authorized corrective review completedFAIL,Escalated6/6,driverrc4:
+oneMediumShould,no unresolvedCritical/High established. No Approvedreceipt
+inferred,no capreset orsecondreview. Fullowning-file sweep andread-only
+independent probes retained inoriginalrelayhistory. MediumS5 exactcanonical
+raw_text grammar gap trackedGH1028 BEFOREproducer publicationcommits. Actual
+fullfixture reproduction confirmsdryacceptance,earlierrow2 andcaptures2/3 left
+onstarredtitle refusal,complete_commitnull,existing ownerrow/docbytespreserved
+anddispatchfalse. This findingremainsunfixed;no sourcechange afterreview.
+Explicituser policypermitslowertracked draftpublication throughnormal gates,
+withoutturning actualFAIL intoPASS. Full1022/W7–W11 remainsincomplete.

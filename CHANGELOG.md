@@ -14,7 +14,8 @@ Preparation records/rechecks actual runtime paths/hashes and uses the existing
 process-group runner with60s IO containment. Held accounting ignores only check
 URL/time noise while retaining material readiness/scope changes and returning
 fresh PR metadata on no-op. Producer controls andexisting focused suites pass at1044969d;consolidated
-final review/publication pending,weekly HELD.
+R6 final review isFAIL withoneMedium title-grammar preflight gap trackedGH1028
+andno unresolvedCritical/High. Normalgated draftpublication pending;weeklyHELD.
 
 
 ## 2026-10-11 — Canonical planner owner overrides (GH-1022, phase 5)

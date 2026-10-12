@@ -18,7 +18,7 @@ goal: Reuse shared discovery for a held weekly proposal without importing unatte
 
 | What was just completed | What's next |
 |---|---|
-| Consolidated Claude producer corrections locally verified1044969d;published draft remains7d0bd85e. | One corrective final review authority pending;closedR5 preserved. Phase6 paused,W7–W11 active/held. |
+| Consolidated Claude producer corrections locally verified1044969d;published draft remains7d0bd85e. | R6 completedFAIL,oneMedium trackedGH1028,noCriticalHigh. Normalgates/publication pending;Phase6 paused,W7–W11 active/held. |
 
 ## Table of contents
 
@@ -754,3 +754,32 @@ checkclean0failures9warnings. Sourcehashes unchanged bythis evidence/progress
 checkpoint. No otherreview,fullqualifyinggate,push oroperator-policy waiver.
 The narrow nextdecision is oneconsolidated corrective finalCodex review,without
 resetting orreusing oldR5 approval forchanged bytes. S8tests remainunapproved.
+
+
+## R6 actual result and permitted publication disposition
+
+Exactlyone additional corrective Codexturn wasexplicitly authorized andcompleted
+inexistinghistory:Reviewercommit301b0e4b,FAIL/STATUS Escalated6/6,driverexit4.
+Wholeowning-file sweep completed. No unresolvedCritical/High wasestablished;
+allpreviousHighowner-integrity repairs remainpresent. This isNOT Approved.
+Singleallowance exhausted;no secondreview,capreset orfakecleantag.
+
+S5 retainsoneMediumShould:batchinspection omits exactcanonicalraw_text/Markdown
+titlegrammar. Actualtemporaryfullclone replaywithordinary issue2 andtitle
+`Fix * retry` issue3 confirmsdryaccepts,beforeapplyregisters2/createscaptures2+3
+andcanonicalCLIrefuses3. Existingowner row/GID/ratings/docbytes remainidentical,
+complete_commitnull,dispatchfalse. This isavoidablelocalpartial preparation
+requiringreconciliation,not observedownerloss ordispatch. Follow-up
+[GH1028](https://github.com/HiQS-Labs/XYZ-forge/issues/1028) deduplicated/filed
+beforepublication underuser'slower-severity disposition. Preservecanonical
+guard andunknownpartialstate;reusecanonicalregistrationpreview infuturefix.
+Source1044969d remainsunchanged;do notclaimS5 fullyfixed. S1/S2/S3/S4/S6/S7/S9
+andN1/N2 reviewedcorrections/dispositions retainR6 citedPasschecks;S8 remains
+GH1027 unapprovedtestgap. N3–N7 dispositions remainasdocumented.
+
+User'sexistingCritical/High-blocks/lower-track policypermitsotherwisegated
+draftpublication despiteactualFAIL,aftertrackingGH1028;it doesnotpermitmerge,
+promotion,operationalaction,fullissueclaim ornewCItests. Requiredfinalsource
+classifieragainstintegrationbase istier3/kernel;pushincrementfrompublished7d
+istier2/releases. Fullqualifyingcheck mustrunonce onthis reviewedunchanged
+source in disposablefullclone;normalpushhook also remainsrequired.
