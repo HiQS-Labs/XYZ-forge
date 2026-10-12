@@ -90,19 +90,23 @@ an actual defect demands a code change; review recon covers the pinned promotion
    through existing task/repair rails and rerun affected checks/QA after candidate changes.
    -> Acceptance: no unresolved promotion blockers, graded review posted to #1012 and rendered
    in chat, independent `relay-system/` receipt bound to the candidate.
-5. Freeze final base `B` and development candidate `D` after all pre-promotion evidence/QA
-   publications and reconciliation. Refresh full-range assessment if either changed. Open a
-   promotion PR from the approved development head into main. Record base/head, evidence,
-   nonblocking findings and fix-forward strategy. -> Acceptance: base intentionally main,
-   reviewed head matches published head, required PR checks current and review approved.
-6. Demonstrate recovery in a disposable full clone before landing: synthesize the intended
-   two-parent promotion merge, revert with mainline 1, compare restored full tree/modes to
-   last-good main `B`, and retain successful recovery and a deliberately wrong-mainline red
-   control with provenance. Then complete the authorized promotion through the PR using
-   `--merge --match-head-commit D`, retain the development branch, recheck unchanged `B` and
-   branch protections immediately before submission, and verify the resulting main SHA `M`. Then
-   watch the exact resulting main SHA's hosted macOS boundary. -> Acceptance: full sequential
-   boundary SUCCESS and `MACOS-BOUNDARY: green <SHA>`; required checks green, Ubuntu drift disclosed.
+5. Rehearse recovery before the final evidence freeze in a disposable full clone: synthesize
+   the intended two-parent promotion merge from last-good main `B` and provisional candidate,
+   revert with mainline 1, compare restored full tree/modes to `B`, and retain a deliberately
+   wrong-mainline red control. Commit/publish the rehearsal's non-empty provenance through
+   the existing evidence PR path before claiming it as proof. Record tested and carrier SHAs.
+   -> Acceptance: rehearsal/negative control provenance is committed and inspectable before
+   main submission. If evidence publication changes development, refresh the range/checks/QA
+   and re-bind recovery to final `B`/`D`: account explicitly for an evidence-only delta by
+   blob/mode inspection and isolated revert/tree comparison on final `D`; retain any final
+   receipt on a separately identified evidence-carrier PR without advancing frozen `D`.
+6. Freeze final `B` and development `D` after all pre-promotion evidence/QA landings/reconcile.
+   Open the requested promotion PR into main with exact tested/carrier/base/head evidence.
+   Recheck unchanged `B`, published `D` and protections immediately before submission; use
+   `--merge --match-head-commit D` and retain development. Verify resulting main `M`, then
+   watch its hosted macOS boundary. -> Acceptance: recovery proof is already durable, final
+   range reviewed/qualified, required PR checks green and full sequential main boundary
+   SUCCESS with `MACOS-BOUNDARY: green M`. A changed head/base invalidates submission.
 7. Record `Stable qualified` in #1012 as the selected evidence-linked designation, bound to
    immutable `M`, the boundary run/job and independent QA receipts. Do not invent a release
    version/tag or transfer qualification to later metadata commits. Update #1012/PRS/PDDA through

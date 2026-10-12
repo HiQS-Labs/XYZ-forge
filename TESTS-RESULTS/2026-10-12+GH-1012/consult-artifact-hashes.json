@@ -1,0 +1,14 @@
+[
+  {
+    "source": "gh1012-promotion-preflight.codex.md",
+    "raw_sha256": "7a84f1b6d912db0b61159454b7652bd3203828a28d22eb21908ce5caad2389b3",
+    "retained": "TESTS-RESULTS/2026-10-12+GH-1012/gh1012-promotion-preflight.codex.md.gz",
+    "gzip_sha256": "c2db17984a7ed939a800e05622ae3bd0f3d23dbb3246b362e80b9dedc27506c9"
+  },
+  {
+    "source": "gh1012-promotion-preflight.agy.md",
+    "raw_sha256": "26a4db1c62f7203b7f050c38f1b174f7b52d17a56ef7e21f667e2aa0af5c688a",
+    "retained": "TESTS-RESULTS/2026-10-12+GH-1012/gh1012-promotion-preflight.agy.md.gz",
+    "gzip_sha256": "bff17269ae28713758350764d22b2f2f5ca8f0328c4219bcf2657d4d1e2efd7a"
+  }
+]

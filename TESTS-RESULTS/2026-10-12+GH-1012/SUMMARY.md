@@ -1,0 +1,19 @@
+# GH-1012 stable-promotion intake — 2026-10-12
+
+No final regression, promotion review, main landing or stable qualification is claimed.
+
+Primary was clean on development at d09b8f9d; main at a076b1b1 is an ancestor. The initial
+range is 333 commits / 2,041 paths. These are intake observations, not a frozen candidate.
+PR1019's peer refresh/QA publication is active. PR954 and PR1024 remain held draft prerequisites
+unless explicitly deferred by the operator. Exact sources and captured metadata remain in
+the run's ignored temp folder; authoritative issue/PR links establish their current state.
+
+Both independent consult seats answered. Disposition: use existing landing checks and
+ordinary atomic-head-bound GitHub merges with disposable-clone hooked publication; keep
+primary push gates contained. Fix candidate/evidence ordering and demonstrate recovery.
+Codex was stamped NO FIRSTHAND VERIFICATION CITED; this is advisory plan input only.
+Original transcripts are retained as gzip and hash-bound, without committing verbose raw logs.
+
+Read-only PDDA frontmatter and status-table checks: 0 errors, 0 warnings each on the intake
+plan. These checks do not qualify product behavior or a promotion. No suite/gate/test case
+was added or run in the owned task clone. Independent conditional plan QA is pending.
