@@ -1,0 +1,56 @@
+== test: gh349-releases-roadmap-vendored ==
+  PASS: sync succeeds with link-style bullets (rc=0)
+  PASS:   and captured all 4 ledger entries
+  PASS:   and database has 4 roadmap items
+  PASS:   and GH-349 title extracted correctly
+  PASS:   and GH-349 doc_path extracted correctly
+  PASS:   and GH-349 external org issue URL extracted correctly
+  PASS:   and GH-349 rating_pri extracted correctly
+  PASS:   and GH-420 external org pull URL extracted correctly
+  PASS:   and GH-420 rating_ovr extracted correctly
+  PASS: second sync is no-op (rc=0)
+  PASS:   and reports already in sync
+  PASS: sync refuses on 0 parsed entries from non-empty ledger (rc=3)
+  PASS:   and refusal cites rule=roadmap-empty-parse
+  PASS:   and existing roadmap_items were NOT deleted
+  PASS: RELEASES-DB-FAQS.md exists
+  PASS:   and documents canonical rating grammar
+  PASS:   and documents cheapness effort axis
+  PASS:   and documents legacy cx/risk/eff separation
+  PASS: review-regression ledger syncs (rc=0)
+  PASS:   and task-list checkboxes are not entries (7 rows, not 9)
+  PASS:   and no empty-titled checkbox row was stored
+  PASS:   and a title that only MENTIONS GH-500/GH-501 is not keyed by either
+  PASS:   and a multi-issue umbrella title carries no key
+  PASS:   and a hash-prefixed single-issue title IS keyed
+  PASS:   and a dotted RANGE umbrella carries no key (agy QA)
+  PASS:   but an em-dash before a number is NOT a range — that title keeps its key
+  PASS:   and an issue-linked bullet leaves doc_path NULL, not a URL
+  PASS:   and that bullet's own link target becomes issue_url
+  PASS:   and a hook citing a foreign repo/PR does not re-key the entry
+  PASS:   and its real doc_path still resolves
+  PASS: roadmap ledger parser parses a non-empty ledger
+  PASS:   and yields no duplicate GH keys (would refuse roadmap sync)
+  PASS: codex-regression ledger syncs (rc=0)
+  PASS:   and an UNKEYED entry does not adopt a cited blocker as its identity
+  PASS:   and an absolute .md URL never reaches doc_path
+  PASS:   and that entry keeps no issue_url either (the link is not an issue)
+  PASS:   and a mailto: target is rejected (a scheme without // is still a scheme)
+  PASS:   and a leading-slash absolute path is rejected
+  PASS:   but a real relative doc survives, with its #anchor stripped
+  PASS:   and a dotted range umbrella carries no key
+  PASS:   and an EN DASH range umbrella carries no key (codex QA)
+  PASS:   but an EM DASH before a year is prose — that title keeps its key
+  PASS: sync refuses two identical UNKEYED titles (rc=3)
+  PASS:   and cites rule=roadmap-duplicate-title
+  PASS: an empty ledger still REFUSES by default (rc=3)
+  PASS:   and the refusal names the --allow-empty escape hatch
+  PASS:   and nothing was deleted
+  PASS: --allow-empty clears the mirror when the ledger is genuinely empty (rc=0)
+  PASS:   and roadmap_items is now empty
+  PASS: --allow-empty does NOT excuse a non-empty ledger that parses to 0 (rc=3)
+  PASS:   and still cites rule=roadmap-empty-parse
+  PASS: legacy GH_URL matcher still rejects a PR URL (no cross-caller widening)
+  PASS:   and still accepts an issue URL
+  PASS:   while the roadmap matcher accepts both PR and issue URLs
+Results: 54 passed, 0 failed

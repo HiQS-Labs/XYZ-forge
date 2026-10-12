@@ -1,0 +1,37 @@
+== test: jog-queue ==
+  PASS: releases init creates DB and dump
+  PASS: releases check reports clean on fresh DB
+  PASS: jog add 101 succeeds
+  PASS: jog add 102 succeeds
+  PASS: jog add 103 succeeds
+  PASS: jog list includes all enqueued items
+  PASS: jog list --json outputs structured JSON
+  PASS: jog add rejects duplicate active issue
+  PASS: jog bump 103 succeeds
+  PASS: jog bump moves GH-103 to position 1
+  PASS: jog drop 101 succeeds
+  PASS: dropped item GH-101 is excluded from active list
+  PASS: jog list --all includes dropped item
+  PASS: jog bump refuses terminal row
+  PASS: jog skip 103 succeeds
+  PASS: skipped item GH-103 is parked
+  PASS: jog retry 103 succeeds
+  PASS: retried item GH-103 is active pending
+  PASS: jog clear succeeds
+  PASS: jog clear archives dropped rows
+  PASS: jog to-marathon emits active issues
+  PASS: releases check clean after jog operations
+  PASS: releases check --rebuild succeeds with jog_queue
+  PASS: jog queue items survive dump rebuild
+  PASS: jog run --dry-run reports simulated execution plan
+  PASS: jog run --dry-run leaves pending item pending (zero mutation)
+  PASS: releases check remains clean after --dry-run
+  PASS: jog run refuses when relay-driver.lock is held by live PID
+  PASS: orphan lease reconciled back to pending
+  PASS: releases check clean after orphan lease reconciliation
+  PASS: jog run processes queue items in simulate mode
+  PASS: processed item is marked completed
+  PASS: releases check 100% clean after jog run (receipt chain & dump intact)
+  PASS: jog drop refuses already-completed item without --force
+
+34 passed, 0 failed

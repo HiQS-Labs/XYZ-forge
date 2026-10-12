@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 preservation planQA ApprovedR1/3; canonical local merge API implemented with manual positive/refusal/crash evidence; finalQA and existing owner checks next. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
+| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 preservation planQA ApprovedR1/3; canonical local merge API R1FAIL; ancestor-only history and observed dump/stage drift repaired with retained red/green controls; R2finalQA and final gate next. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
 
 ## Table of contents
 
@@ -1120,3 +1120,41 @@ no full-issue, weekly coordination/rollover, criterion, consent or dispatch cove
 is claimed. Phase8 plan-review nits are addressed: published Phase7 gate state is
 current, shared writer/recovery reversibility is Costly, durable merges require
 completion/reconciliation rather than replay over later owner writes.
+
+
+### Phase8 final R1 disposition
+
+R1FAIL atdf7241fa (source d7efd6d5), whole owner/plan/skills/covering fixture sweep.
+B1 reproduced under a Python debugger line trace: both parents omitted the entire
+ancestor work_events table, source admission succeeded and selection returned0
+instead of713. Single-parent deletion held and unchanged parents retained713.
+Root cause: iteration considered target/ours only; Fix site: selector domain union;
+Why not upstream/downstream: empty canonical tables are valid, and the existing
+per-table deletion/history guards are correct when visited. Include ancestor-only
+tables without changing output order or importing any new policy. Current controls
+hold both/one-sided deletion, retain713 unchanged and accept a legitimate empty
+history initialized through the canonical owner.
+
+R1 recovery concerns were explicitly unverified, so actual disposable-clone probes
+preceded repair. Both post-commit edited dump and post-stage edited stage were lost
+by plain check, which returned0 and removed intent. Root cause: new-kind recovery
+bound DB hashes but only checked dump/stage file types; Fix site: new merge journal
+and recovery content boundary; Why not upstream/downstream: later owner edits are
+valid external state and must be held before overwrite or cleanup. Record exact
+before/after dump hashes before swap, validate every existing owned stage and live
+dump before touching any evidence, and preserve unknown/edited contents. Current
+red transposition/green controls qualify this behavior. The original scratch
+result filename was reused by a green run; the red was re-witnessed on exact16e4a046
+owner bytes in an owned temporary runtime copy and retained explicitly as replay.
+No Task source/primary state was reverted to collect it.
+
+An actual sanctioned connection opened before the unmodified merge CLI subsequently
+failed with SQLite OperationalError (readonly moved database), retaining canonical
+DB/dump and no pending journal. No waiting-writer success or race-free guarantee is
+claimed; no ordinary writer/default policy was changed for this suspicion.
+
+Evidence: phase8-b1-red/green.json, phase8-drift-red/green.json and phase8-r2-*.json
+with source-qualified provenance. R1 existing owner145/scoped27/status42/artifact10/
+multiline7/refusal19/vendor54/Jog34/historyexit0 are historical d7 evidence; R2 e64
+requires final requalification. The failed peer report remains immutable. No new
+CI test/case/parameter/registration and no cap/reset beyond the existing final3.

@@ -6560,7 +6560,7 @@ def select_ledger_merge(base_text, ours_text, target_text):
     def row_key(row):
         return json.dumps(row, sort_keys=True, ensure_ascii=False)
     merged, changes = {}, []
-    for table in dict.fromkeys([*target, *ours]):
+    for table in dict.fromkeys([*target, *ours, *base]):
         b, o, t = [p.get(table, []) for p in (base, ours, target)]
         if table == 'settings':
             bm, om, tm = [{r['key']: r for r in rows} for rows in (b, o, t)]
@@ -6718,8 +6718,10 @@ def _recover_ledger_merge(root, conn, journal, journal_path):
     for stage in (staged, staged_dump):
         if os.path.lexists(stage) and (os.path.islink(stage) or not os.path.isfile(stage)):
             refuse('merge-recovery-stage', 'unknown staged file; preserve evidence')
-    if os.path.exists(staged) and journal.get('after_sha256') and _merge_file_hash(staged) != journal['after_sha256']:
-        refuse('merge-recovery-stage', 'staged DB changed; preserve evidence')
+    if os.path.exists(staged) and (not journal.get('after_sha256') or _merge_file_hash(staged) != journal['after_sha256']):
+        refuse('merge-recovery-stage', 'unknown or changed staged DB; preserve evidence')
+    if os.path.exists(staged_dump) and (not journal.get('after_dump_sha256') or _merge_file_hash(staged_dump) != journal['after_dump_sha256']):
+        refuse('merge-recovery-stage', 'unknown or changed staged dump; preserve evidence')
     current = _merge_file_hash(paths['db']); gen = get_generation(conn)
     before = current == journal.get('before_sha256') and gen == journal.get('before_generation')
     after = current == journal.get('after_sha256') and gen == journal.get('generation')
@@ -6727,10 +6729,19 @@ def _recover_ledger_merge(root, conn, journal, journal_path):
         refuse('merge-recovery-state', 'DB matches neither exact before nor after; preserve evidence')
     if os.path.lexists(paths['dump']) and (os.path.islink(paths['dump']) or not os.path.isfile(paths['dump'])):
         refuse('merge-recovery-state', 'unknown dump file; preserve evidence')
+    live_dump_hash = _merge_file_hash(paths['dump'])
+    allowed_dump_hashes = {journal.get('before_dump_sha256')}
+    if after:
+        allowed_dump_hashes.add(journal.get('after_dump_sha256'))
+    if live_dump_hash not in allowed_dump_hashes:
+        refuse('merge-recovery-state', 'owner dump changed; preserve all evidence')
     if after and not _ledger_selection_applied(conn, selected):
         refuse('merge-recovery-selection', 'durable data does not match declared selection; preserve evidence')
-    if after:
-        _atomic_write(paths['dump'], dump_text(conn, gen)); _sync_directory(root)
+    if after and live_dump_hash != journal.get('after_dump_sha256'):
+        canonical_dump = dump_text(conn, gen)
+        if hashlib.sha256(canonical_dump.encode()).hexdigest() != journal.get('after_dump_sha256'):
+            refuse('merge-recovery-state', 'canonical after dump identity changed; preserve evidence')
+        _atomic_write(paths['dump'], canonical_dump); _sync_directory(root)
     for stage in (staged, staged_dump):
         if os.path.exists(stage):
             os.unlink(stage)
@@ -6831,6 +6842,7 @@ def cmd_merge_ledger(args):
                               'owner_sha256': owner_sha256, 'selection_sha256': answer['selection_sha256'],
                               'db': paths['db'], 'before_generation': old_gen,
                               'generation': new_gen, 'before_sha256': before_hash, 'after_sha256': None,
+                              'before_dump_sha256': _merge_file_hash(paths['dump']), 'after_dump_sha256': None,
                               'staged_db': staged, 'staged_dump': paths['dump'] + '.tmp-' + txn, 'planned_outputs': [paths['db'], paths['dump']], 'started_at': now_iso()}
                     _merge_journal_write(intent, record)
                     _crash('pre-commit')
@@ -6839,6 +6851,8 @@ def cmd_merge_ledger(args):
                     try:
                         if not _ledger_selection_applied(probe, selected):
                             raise ValueError('staged owner data does not preserve exact selection')
+                        after_dump = dump_text(probe, new_gen)
+                        record['after_dump_sha256'] = hashlib.sha256(after_dump.encode()).hexdigest()
                     finally:
                         probe.close()
                     with open(staged, 'rb') as stream:
@@ -6850,14 +6864,16 @@ def cmd_merge_ledger(args):
                             raise ValueError('driver lock owner source changed; preserve evidence')
                     if os.path.lexists(namespace['driver_lock_path'](root)[0]):
                         raise ValueError('driver ownership changed before publication')
-                    if _merge_file_hash(paths['dump']) != hashlib.sha256(live_dump.encode()).hexdigest():
+                    if _merge_file_hash(paths['dump']) != record['before_dump_sha256']:
                         raise ValueError('owner dump changed before publication; preserve evidence')
                     if _merge_file_hash(paths['db']) != before_hash:
                         raise ValueError('owner DB changed before publication; preserve evidence')
                     conn.close(); conn = None
                     os.replace(staged, paths['db']); _sync_directory(root); _crash('post-commit')
                     conn = connect(paths['db'], readonly=True)
-                    _stage_write(paths['dump'], dump_text(conn, new_gen), record['staged_dump']); _sync_directory(root)
+                    if dump_text(conn, new_gen) != after_dump:
+                        raise ValueError('durable DB differs from staged dump; preserve evidence')
+                    _stage_write(paths['dump'], after_dump, record['staged_dump']); _sync_directory(root)
                     _crash('post-stage'); os.replace(record['staged_dump'], paths['dump'])
                     _sync_directory(root); _crash('mid-rename'); _crash('post-rename')
                     guard(); refresh_preview(root)
