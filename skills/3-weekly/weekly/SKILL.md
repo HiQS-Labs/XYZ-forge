@@ -192,6 +192,42 @@ later owner writes. This API performs no Git merge, commit, push, capture, remot
 check, approval, scheduling or dispatch. Every result remains HELD/dispatchfalse.
 Weekly coordination/adoption/rollover is still a separate unimplemented caller.
 
+## Preserved reconciliation and rollover (implementation under verification)
+
+The existing core's opt-in `weekly-reconcile` caller requires every preparation
+input plus absolute `--predecessor-root`, exact `--expected-predecessor-head` and
+`--authority-file`. It preserves a complete stopped predecessor into a distinct
+new full clone at fresh canonical target. `--apply` declares actual local clone,
+Git fetch/branch/commit, canonical DB/dump, capture integration, lock/intent/audit
+and adopted-view effects. Preview does not clone or advance a checkpoint. Every
+result remains HELD with dispatch false; no criterion/idle/delivery approval follows.
+
+The canonical check API's explicit `--merge-delta-parent target` imports the old
+bounded planning delta into the new canonical anchor through the same selector,
+staged builder and recovery. Its default remains local `ours`. Root receipt digests
+and parent order stay physical; no GID alias/remint or wider schema merge is added.
+Conflicting identity, unsupported source, owner edits or unaccounted incoming work
+hold. Only proven old captures and intake are integrated; the original intake is
+archived by source commit and old ancestry is retained only after full accounting.
+
+Versioned handoff envelopes in the predecessor's existing private ownership/date
+receipt files retain original fields and original bytes. They stop ordinary and
+older cached writers at their post-lock receipt boundary. The destination's existing
+preparation lock stays held through integration and final preparation; pending
+ownership holds other entrants. Exact directory, parent/tree/blob and split-intent
+proofs allow stopped-owner continuation; unknown state preserves evidence. The old
+worktree and HEAD remain unchanged. Completed repeats refresh complete discovery
+through prepare_weekly, with no new commit/receipt on unchanged material input.
+
+`--adopt-predecessor` explicitly adopts only a fresh exact published commit with
+complete canonical issue/capture accounting. `--publish` requires apply plus an
+explicit finite `--publication-timeout` sufficient for the actual normal hooks;
+there is no default paid/build budget or force push. Publication uses ordinary
+fast-forward Git semantics and exact remote readback. This task validates publication
+only against owned local bare fixtures; it pushes only its implementation branch.
+Associated PR references are review/landing leads, reported ledger/work states retain
+provenance, and criterion delivery/overlap/readiness remain independently unreviewed.
+
 ## Required continuation
 
 Continue the canonical [GH-1022 plan](../../../PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md)

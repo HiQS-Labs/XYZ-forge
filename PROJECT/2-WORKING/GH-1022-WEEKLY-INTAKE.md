@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | W7 preservation planQA ApprovedR1/3; W7 canonical reconciliation/rollover caller integration next; canonical API prerequisite is published. W8–W11 active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
+| Phase8 published442/d09; sourceQA ApprovedR2/3 at8df, normal RELEASES/docs tier2 28/28 including Python21, GREEN326s; hosted38232967663 smokeSUCCESS, macOS/UbuntuSKIPPED. Phase7 full409/409+Python21 remains historical. Failed R1 and red/green controls retained. | Phase8 prerequisite published with evidence d22. Phase9 plan ApprovedR1/3 at836e7813; caller implemented locally, final qualification/QA pending. W8–W11 active; R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
 
 ## Table of contents
 
@@ -1287,3 +1287,35 @@ Existing shared-policy/approval/total-budget questions remain queued in the curr
 Recon Map/full plan. Do not invent human-consent transport, cost infrastructure or
 new safety bypasses while implementing this caller. Any concrete requirement for
 broader ledger/identity authority must be surfaced, not silently expanded.
+
+
+### Phase9 implementation checkpoint — unpublished/unqualified
+
+PlanQA ApprovedR1/3 at836e7813, attestedc832bf65; no new cap or tests authorized.
+Existing owner selector/check now accepts opt-in delta-parent orientation, keeping
+original physical input/digest order and defaults. Existing core now has explicit
+weekly-reconcile: complete exact predecessor/accounting/capture validation, held
+read-only preview, source private ownership/receipt versioned handoff retaining
+original values/bytes, new-root directory identity/bootstrap, destination private
+lock reuse, canonical merge, native capture/intake preservation and ancestry,
+fresh broad preparation/no-op, explicit published adoption/ordinary FF publication
+with configured hook IO. Source worktree/HEAD remain unchanged. No GID alias,
+second store, schema/event/gate/test or auto-execution mechanism was added.
+
+Actual fixture controls witnessed and repaired lost ledger-commit, complete-clone,
+native-ancestry commit and split-intent results. Exact pending parent/tree/blob,
+directory and original-owner evidence govern resume; unknown state stays held.
+A competing default destination writer could commit before reconciliation ended;
+current pending destination ownership plus the existing held preparation lock now
+prevents that overlap. Existing prepare inherits the same verified lock handle
+instead of acquiring a second one. Cached source writers encounter the versioned
+receipt at their post-lock validation; current prepare also rechecks ownership.
+
+Preclassification batch:8 actual flows passed (rollover/no-op, lost commit/clone/
+ancestry/split intent, competing writer, explicit adoption/localbare publication,
+same-date advance). Six source/malformed/dirty/unknown-destination refusals retained.
+Those hashes precede only a reported-state field addition, so final current source
+qualification remains required. No every-interleaving/race-free, budget/hook or
+wholeW7 claim. Publication uses injected local bare routing, not live GitHub and not
+a demonstrated real harness pre-push ceiling. Root-level artifact evidence is held,
+not human approval or criterion-delivery proof. W8–W11 remain unimplemented.

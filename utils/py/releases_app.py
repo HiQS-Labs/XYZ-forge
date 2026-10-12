@@ -5918,7 +5918,7 @@ def cmd_work_reconcile(args):
 
 
 def cmd_check(args):
-    if any(getattr(args, key, None) for key in ('merge_base', 'merge_target', 'expected_head', 'expected_branch', 'apply')):
+    if any(getattr(args, key, None) for key in ('merge_base', 'merge_target', 'expected_head', 'expected_branch', 'merge_delta_parent', 'apply')):
         return cmd_merge_ledger(args)
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -6550,11 +6550,15 @@ def _merge_dump_text(tables, generation):
     return '\n'.join(lines) + '\n'
 
 
-def select_ledger_merge(base_text, ours_text, target_text):
+def select_ledger_merge(base_text, ours_text, target_text, delta_parent="ours"):
     """Conservative owner row selection; no I/O, rating edits, replay or delivery policy."""
     from collections import Counter
+    if delta_parent not in ('ours', 'target'):
+        raise ValueError('explicit supported delta parent required')
     parsed = [_merge_source(t) for t in (base_text, ours_text, target_text)]
     base, ours, target = [p[0] for p in parsed]
+    if delta_parent == 'target':
+        ours, target = target, ours  # row-selection policy only; physical input/digest order stays original
     if not (base['schema_migrations'] == ours['schema_migrations'] == target['schema_migrations']):
         raise ValueError('schema ownership changed; explicit reconciliation required')
     def row_key(row):
@@ -6631,7 +6635,8 @@ def select_ledger_merge(base_text, ours_text, target_text):
     finally:
         memory.close()
     return {'tables': merged, 'text': text, 'generation_floor': gen, 'changed_gids': changes,
-            'source_generations': [p[1] for p in parsed], 'source_digests': [p[2] for p in parsed]}
+            'source_generations': [p[1] for p in parsed], 'source_digests': [p[2] for p in parsed],
+            'delta_parent': delta_parent}
 
 
 def _merge_git(root, *argv, allow_missing=False):
@@ -6702,7 +6707,8 @@ def _recover_ledger_merge(root, conn, journal, journal_path):
     declared = argparse.Namespace(root=root, merge_base=journal.get('merge_base'),
                                   merge_target=journal.get('merge_target'),
                                   expected_head=journal.get('head'), expected_branch=journal.get('branch'))
-    selected = select_ledger_merge(*_merge_git_inputs(root, declared))
+    selected = select_ledger_merge(*_merge_git_inputs(root, declared),
+                                   delta_parent=journal.get('delta_parent', 'ours'))
     if hashlib.sha256(selected['text'].encode()).hexdigest() != journal.get('selection_sha256'):
         refuse('merge-recovery-selection', 'declared parent selection changed; preserve evidence')
     staged = journal.get('staged_db')
@@ -6785,8 +6791,8 @@ def cmd_merge_ledger(args):
             raise ValueError('merge mode cannot invoke legacy rebuild/recovery')
         owner_path = os.path.abspath(__file__); owner_sha256 = _merge_file_hash(owner_path)
         root = resolve_root(args.root); texts = _merge_git_inputs(root, args)
-        selected = select_ledger_merge(*texts)
-        answer.update(owner_sha256=owner_sha256, root=root, head=args.expected_head, branch=args.expected_branch,
+        selected = select_ledger_merge(*texts, delta_parent=getattr(args, 'merge_delta_parent', None) or 'ours')
+        answer.update(delta_parent=selected['delta_parent'], owner_sha256=owner_sha256, root=root, head=args.expected_head, branch=args.expected_branch,
                       merge_base=args.merge_base, supplied_target=args.merge_target,
                       target_freshness='not verified; supplied local commit only',
                       source_generations=selected['source_generations'],
@@ -6840,6 +6846,7 @@ def cmd_merge_ledger(args):
                               'session_id': session_id(), 'root': os.path.realpath(root), 'head': args.expected_head,
                               'branch': args.expected_branch, 'merge_base': args.merge_base, 'merge_target': args.merge_target,
                               'owner_sha256': owner_sha256, 'selection_sha256': answer['selection_sha256'],
+                              'delta_parent': selected['delta_parent'],
                               'db': paths['db'], 'before_generation': old_gen,
                               'generation': new_gen, 'before_sha256': before_hash, 'after_sha256': None,
                               'before_dump_sha256': _merge_file_hash(paths['dump']), 'after_dump_sha256': None,
@@ -7286,6 +7293,8 @@ def build_parser():
 
     for flag in ('merge-base', 'merge-target', 'expected-head', 'expected-branch'):
         sp.add_argument('--' + flag, help='explicit opt-in local logical ledger merge input')
+    sp.add_argument('--merge-delta-parent', choices=('ours', 'target'), default=None,
+                    help='explicit incoming delta orientation; default local ours')
     sp.add_argument('--apply', action='store_true', help='apply the explicit local ledger merge; default is held preview')
 
     sp = sub.add_parser("reconcile", help="fill real URLs into temp refs")

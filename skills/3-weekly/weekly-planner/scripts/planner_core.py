@@ -842,12 +842,13 @@ def load_weekly_runtime(intake, extra_files=None):
     return harness, canonical, process, runtime, check_runtime
 
 
-def weekly_command(process, env, accepted_returncodes=(0,)):
+def weekly_command(process, env, accepted_returncodes=(0,), timeout=None):
     def command(argv, cwd):
+        limit = WEEKLY_IO_TIMEOUT_SECONDS if timeout is None else timeout
         result = process.run_bounded(argv, cwd=str(cwd), env=env,
-                                     timeout=WEEKLY_IO_TIMEOUT_SECONDS, grace=1)
+                                     timeout=limit, grace=1)
         if result.timed_out:
-            raise RuntimeError(f"command timed out after {WEEKLY_IO_TIMEOUT_SECONDS}s: {argv[0]}; preserve partial state")
+            raise RuntimeError(f"command timed out after {limit}s: {argv[0]}; preserve partial state")
         if result.rc not in accepted_returncodes:
             raise RuntimeError(f"command refused ({result.rc}): {argv[0]} {result.stderr.strip()}")
         return result.stdout
@@ -921,7 +922,26 @@ def observe_weekly_work(authority_file, repo_root, command=None):
     return result
 
 
-def prepare_weekly(args, source_root, command=None):
+def weekly_durable(path, value, check_runtime):
+    import tempfile
+    check_runtime()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".weekly-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            json.dump(value, stream, indent=2, sort_keys=True); stream.write("\n")
+            stream.flush(); os.fsync(stream.fileno())
+        os.replace(temporary, path)
+        directory = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+def prepare_weekly(args, source_root, command=None, carryover=None, reconciled_base=None, private_lock=None):
     """Local canonical accumulation; never selection, approval, publication or fire.
 
     The caller supplies a separate preparation directory. New directories are full
@@ -975,22 +995,7 @@ def prepare_weekly(args, source_root, command=None):
         command = weekly_command(process, env)
 
     def durable(path, value):
-        check_runtime()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        fd, temporary = tempfile.mkstemp(prefix=".weekly-", dir=path.parent)
-        try:
-            with os.fdopen(fd, "w") as stream:
-                json.dump(value, stream, indent=2, sort_keys=True); stream.write("\n")
-                stream.flush(); os.fsync(stream.fileno())
-            os.replace(temporary, path)
-            directory = os.open(path.parent, os.O_RDONLY)
-            try:
-                os.fsync(directory)
-            finally:
-                os.close(directory)
-        finally:
-            if os.path.exists(temporary):
-                os.unlink(temporary)
+        return weekly_durable(path, value, check_runtime)
 
     def git(argv, cwd=source_root):
         check_runtime()
@@ -1034,10 +1039,11 @@ def prepare_weekly(args, source_root, command=None):
             previous = json.loads((root / relative).read_text())
             if not isinstance(previous, dict) or previous.get("complete") is not True:
                 raise ValueError("prior committed observation is incomplete or malformed")
-            if previous.get("planning_base") != base:
+            if previous.get("planning_base") != base and not (
+                    reconciled_base == (previous.get("planning_base"), base, starting_commit)):
                 raise ValueError(f"target advanced: planning base {previous.get('planning_base')} current {base}; explicit reconciliation required")
-    if args.intake_file:
-        supplied = json.loads(Path(args.intake_file).read_text())
+    if args.intake_file or carryover is not None:
+        supplied = json.loads(Path(args.intake_file).read_text()) if args.intake_file else carryover
         if (not isinstance(supplied, dict) or supplied.get("complete") is not True
                 or intake.repository_name(supplied.get("repository")) != repository
                 or not isinstance(supplied.get("issues"), list)):
@@ -1152,11 +1158,19 @@ def prepare_weekly(args, source_root, command=None):
             raise ValueError("renamed/conflicting preparation paths require explicit reconciliation")
         return {entry[3:] for entry in entries}
 
-    with (gitdir / "weekly-prepare.lock").open("a") as lock:
+    import contextlib
+    lock_context = contextlib.nullcontext(private_lock) if private_lock is not None else (gitdir / "weekly-prepare.lock").open("a")
+    with lock_context as lock:
+        if private_lock is not None and (Path(lock.name).resolve() != (gitdir / "weekly-prepare.lock").resolve()
+                or (os.fstat(lock.fileno()).st_dev, os.fstat(lock.fileno()).st_ino)
+                != ((gitdir / "weekly-prepare.lock").stat().st_dev, (gitdir / "weekly-prepare.lock").stat().st_ino)):
+            raise ValueError("inherited preparation lock identity differs")
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as error:
             raise RuntimeError("weekly preparation writer is active") from error
+        if json.loads(owner.read_text()) != {"repository": repository, "branch": branch}:
+            raise ValueError("preparation ownership changed before lock; preserve handoff state")
         if starting_commit is not None and git(["rev-parse", "HEAD"], root) != starting_commit:
             raise ValueError("preparation branch changed during discovery; refresh without overwriting it")
         if (gitdir / "releases-app-journal.json").exists():
@@ -1358,11 +1372,453 @@ def prepare_weekly(args, source_root, command=None):
         except SystemExit as error:
             raise ValueError("canonical writer refused commit boundary; preserve partial state") from error
 
+def reconcile_weekly(args, source_root, command=None):
+    """Preserve one exact predecessor into a new held projection; no execution authority."""
+    import base64
+    import fcntl
+    import hashlib
+    import math
+
+    source_root = Path(source_root).resolve()
+    intake = load_issue_intake()
+    harness, canonical, process, runtime, check = load_weekly_runtime(intake, {
+        'lock_resolver': Path(intake.__file__).resolve().parents[4] / 'utils/py/rtl.py'})
+    env = dict(os.environ, XYZ_WORK_CONNECTORS='0', PYTHONDONTWRITEBYTECODE='1')
+    supplied_command = command
+    command = command or weekly_command(process, env)
+    owner_command = supplied_command or weekly_command(process, env, (0, 2))
+    repository = intake.repository_name(args.gh_repo)
+    old = Path(args.predecessor_root).resolve()
+    root = Path(args.prepare_root).resolve()
+    date = datetime.strptime(args.planning_date, '%Y-%m-%d').date().isoformat()
+    if date != args.planning_date or not math.isfinite(args.overlap_hours) or args.overlap_hours < 0:
+        raise ValueError('explicit valid date/overlap required')
+    if (not Path(args.predecessor_root).is_absolute() or not Path(args.prepare_root).is_absolute()
+            or not re.fullmatch(r'[0-9a-f]{40}', args.expected_predecessor_head or '')
+            or old == source_root or any(a.is_relative_to(b) or b.is_relative_to(a)
+                                        for a, b in ((old, root), (root, source_root), (root, harness), (old, harness)))
+            or Path(args.predecessor_root).is_symlink() or Path(args.prepare_root).is_symlink()):
+        raise ValueError('exact separate predecessor/new full-clone roots required')
+    branch = 'auto-' + date
+    if args.publish and (args.publication_timeout is None or not math.isfinite(args.publication_timeout)
+                         or args.publication_timeout <= 0 or not args.apply):
+        raise ValueError('publication requires explicit apply and finite normal-hook IO budget')
+    def git(argv, directory=source_root):
+        check()
+        value = command(['git', *argv], directory)
+        check()
+        return value.strip()
+    def full_clone(directory):
+        if (not (directory / '.git').is_dir() or (directory / '.git').is_symlink()
+                or git(['rev-parse', '--show-toplevel'], directory) != str(directory)
+                or git(['rev-parse', '--is-shallow-repository'], directory) != 'false'):
+            raise ValueError('independent complete clone required')
+    def local(directory, relative):
+        path = directory / relative
+        if (not isinstance(relative, str) or Path(relative).is_absolute()
+                or not path.resolve().is_relative_to(directory)
+                or any(p.is_symlink() for p in (path, *path.parents) if p.is_relative_to(directory))):
+            raise ValueError('foreign/symlinked reconciliation path')
+        return path
+    def dirty(directory):
+        text = command(['git', 'status', '--porcelain=v1', '-z', '--untracked-files=all'], directory)
+        parts = [p for p in text.split('\0') if p]
+        if any(len(p) < 4 or any(x in p[:2] for x in 'RCU') for p in parts):
+            raise ValueError('renamed/conflicting state requires disposition')
+        return {p[3:] for p in parts}
+    def durable(path, value):
+        weekly_durable(path, value, check)
+    def owner(directory, *argv):
+        check()
+        output = owner_command([sys.executable, str(harness / 'utils/py/releases_app.py'),
+                                '--root', str(directory), *argv], directory)
+        check()
+        return output.strip()
+    full_clone(old)
+    old_branch = git(['branch', '--show-current'], old)
+    if not re.fullmatch(r'auto-\d{4}-\d{2}-\d{2}', old_branch):
+        raise ValueError('predecessor must be an explicit auto-date branch')
+    old_date = old_branch[5:]
+    datetime.strptime(old_date, '%Y-%m-%d')
+    old_relative = f'PROJECT/4-MISC/weekly/{old_date}/intake.json'
+    old_intake_path = local(old, old_relative)
+    old_intake = json.loads(old_intake_path.read_text())
+    if (not isinstance(old_intake, dict) or old_intake.get('complete') is not True or old_intake.get('planning_branch') != old_branch
+            or intake.repository_name(old_intake.get('repository')) != repository
+            or not re.fullmatch(r'[0-9a-f]{40}', old_intake.get('planning_base', ''))):
+        raise ValueError('complete exact committed predecessor intake required')
+    old_head = args.expected_predecessor_head
+    if git(['rev-parse', 'HEAD'], old) != old_head or dirty(old):
+        raise ValueError('predecessor HEAD/owner edits changed')
+    remote = git(['remote', 'get-url', 'origin'])
+    if git(['remote', 'get-url', 'origin'], old) != remote:
+        raise ValueError('predecessor origin differs')
+    match = re.fullmatch(r'(?:https://github\.com/|git@github\.com:)([\w.-]+/[\w.-]+?)(?:\.git)?', remote)
+    if not match or intake.repository_name(match[1]) != repository:
+        raise ValueError('exact GitHub origin required')
+    git(['check-ref-format', 'refs/heads/' + args.target_ref])
+    def fresh_target():
+        rows = git(['ls-remote', 'origin', 'refs/heads/' + args.target_ref]).splitlines()
+        if len(rows) != 1 or not re.fullmatch(r'[0-9a-f]{40}\trefs/heads/' + re.escape(args.target_ref), rows[0]):
+            raise ValueError('fresh canonical target unavailable')
+        return rows[0].split('\t')[0]
+    target = fresh_target()
+    owner_path = old / '.git/weekly-owner.json'
+    receipt_path = old / ('.git/weekly-' + old_date + '.json')
+    ownership = json.loads(owner_path.read_text()) if owner_path.is_file() else None
+    receipt = json.loads(receipt_path.read_text()) if receipt_path.is_file() else None
+    if ((ownership is not None and not isinstance(ownership, dict))
+            or (receipt is not None and not isinstance(receipt, dict))
+            or owner_path.is_symlink() or receipt_path.is_symlink()):
+        raise ValueError('malformed/symlinked predecessor private evidence')
+    spec = {'repository': repository, 'source_root': str(old), 'source_head': old_head,
+            'source_branch': old_branch, 'root': str(root), 'branch': branch, 'target': target,
+            'target_ref': args.target_ref, 'runtime': runtime}
+    if receipt and receipt.get('schema') == 'weekly/handoff@1':
+        if receipt.get('operation') != spec:
+            raise ValueError('handoff inputs drifted; preserve both roots')
+        original_owner = receipt.get('original_owner')
+        original_receipt = receipt['original']
+        if ownership and ownership.get('schema') == 'weekly/handoff@1':
+            if ownership.get('operation') != spec or ownership.get('original') != original_owner:
+                raise ValueError('handoff ownership pair differs')
+        elif (ownership != original_owner
+              or (base64.b64encode(owner_path.read_bytes()).decode() if owner_path.is_file() else None)
+              != receipt.get('original_owner_bytes')):
+            raise ValueError('partial ownership bytes changed; preserve evidence')
+    else:
+        original_owner, original_receipt = ownership, receipt
+        if ownership != {'repository': repository, 'branch': old_branch}:
+            if not args.adopt_predecessor or ownership is not None or receipt is not None:
+                raise ValueError('unknown predecessor ownership; explicit exact published adoption required')
+            published = git(['ls-remote', 'origin', 'refs/heads/' + old_branch])
+            if published != old_head + '\trefs/heads/' + old_branch:
+                raise ValueError('adoption commit differs from fresh published head')
+            original_owner = {'repository': repository, 'branch': old_branch}
+            original_receipt = {'repository': repository, 'branch': old_branch,
+                                'base': old_intake['planning_base'], 'complete_commit': old_head,
+                                'checkpoint_cut': old_intake.get('checkpoint_cut'), 'adopted': True}
+        if (not isinstance(original_receipt, dict) or original_receipt.get('complete_commit') != old_head
+                or original_receipt.get('base') != old_intake['planning_base']):
+            raise ValueError('partial/stale predecessor receipt; no blind adoption')
+    if (not isinstance(old_intake.get('issues'), list) or not isinstance(old_intake.get('accounting'), list)
+            or not isinstance(old_intake.get('checkpoint_cut'), str)
+            or datetime.fromisoformat(old_intake['checkpoint_cut'].replace('Z', '+00:00')).tzinfo is None):
+        raise ValueError('predecessor accounting/checkpoint shape incomplete')
+    members = intake.deduplicate([intake.normalize_record(item, repository) for item in old_intake['issues']])
+    accounts = old_intake['accounting']
+    if (len(accounts) != len(members) or any(not isinstance(a, dict) for a in accounts)
+            or {a.get('identity') for a in accounts} != {m['identity'] for m in members}):
+        raise ValueError('every predecessor member must have unique canonical accounting')
+    source_rows = json.loads(owner(old, 'roadmap', 'list', '--json'))
+    source_generation = int(owner(old, 'settings', 'get', 'generation'))
+    if not isinstance(source_rows, list) or any(not isinstance(row, dict) for row in source_rows):
+        raise ValueError('canonical predecessor rows unavailable')
+    if not original_receipt.get('adopted') and (
+            original_receipt.get('ledger_rows') != source_rows
+            or original_receipt.get('generation') != source_generation):
+        raise ValueError('predecessor owner changed since complete receipt')
+    for account in accounts:
+        row = next((r for r in source_rows if r['global_id'] == account.get('global_id')), None)
+        if row is None or account.get('ledger') != row or account.get('doc_path') != row.get('doc_path'):
+            raise ValueError('predecessor canonical accounting/GID drift')
+        path = local(old, account['doc_path'])
+        if (not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != account.get('doc_sha256')
+                or command(['git', 'show', old_head + ':' + account['doc_path']], old).encode() != path.read_bytes()):
+            raise ValueError('predecessor capture changed or is not committed')
+    if git(['show', old_head + ':' + old_relative], old) != old_intake_path.read_text().strip():
+        raise ValueError('predecessor observation differs from committed object')
+    census = observe_weekly_work(args.authority_file, source_root)
+    response = {'schema': 'weekly/reconciliation@1', 'complete': False, 'status': 'UNKNOWN',
+                'dispatch_allowed': False, 'operation': spec, 'work': census, 'holds': list(census['holds'])}
+    declared = {str(Path(s['declared_root']).resolve()): s for s in census['observations']}
+    if str(old) not in declared:
+        raise ValueError('predecessor must be included in declared authorities')
+    source_inventory = declared[str(old)].get('inventory', {})
+    if (not census['complete'] or source_inventory.get('driver_lock', {}).get('present')
+            or any(r.get('lease_pid') is not None for r in source_inventory.get('rows', []))):
+        response['holds'].append('Incomplete work/active predecessor ownership; preserve source')
+        return response
+    response.update(status='HELD', complete=True, effects='preview: Git/owner/declared-work reads only; apply: new full clone, existing owner/receipt handoff, canonical ledger/capture/Git commits; no execution')
+    if not args.apply:
+        return response
+    if root.exists() and (not receipt or receipt.get('schema') != 'weekly/handoff@1'):
+        raise ValueError('destination already exists without this handoff intent; preserve it')
+    with (old / '.git/weekly-prepare.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise ValueError('predecessor writer active') from error
+        if git(['rev-parse', 'HEAD'], old) != old_head or dirty(old) or fresh_target() != target:
+            raise ValueError('source/target changed before handoff')
+        latest_owner = json.loads(owner_path.read_text()) if owner_path.is_file() else None
+        latest_receipt = json.loads(receipt_path.read_text()) if receipt_path.is_file() else None
+        if latest_owner != ownership or latest_receipt != receipt:
+            raise ValueError('predecessor private ownership changed before lock')
+        if not receipt or receipt.get('schema') != 'weekly/handoff@1':
+            state = {'schema': 'weekly/handoff@1', 'operation': spec, 'original': original_receipt,
+                     'original_bytes': base64.b64encode(receipt_path.read_bytes()).decode() if receipt_path.is_file() else None,
+                     'original_owner': original_owner,
+                     'original_owner_bytes': base64.b64encode(owner_path.read_bytes()).decode() if owner_path.is_file() else None,
+                     'phase': 'intent', 'root_head': target, 'complete_commit': None}
+            # Receipt is inspected again after even an older writer's lock, so
+            # this envelope also stops a writer with cached pre-lock ownership.
+            durable(receipt_path, state)
+        else:
+            state = receipt
+        if not ownership or ownership.get('schema') != 'weekly/handoff@1':
+            durable(owner_path, {'schema': 'weekly/handoff@1', 'operation': spec,
+                                 'original': original_owner, 'original_bytes': state['original_owner_bytes']})
+        was_complete = state.get('phase') == 'complete'
+        def guard():
+            check()
+            if git(['rev-parse', 'HEAD'], old) != old_head or dirty(old) or fresh_target() != target:
+                raise ValueError('source/target drift; preserve handoff evidence')
+            expected_owner = {'schema': 'weekly/handoff@1', 'operation': spec,
+                              'original': original_owner, 'original_bytes': state['original_owner_bytes']}
+            if json.loads(owner_path.read_text()) != expected_owner or json.loads(receipt_path.read_text()) != state:
+                raise ValueError('predecessor ownership/intent drift; preserve evidence')
+        if not root.exists():
+            guard(); root.mkdir()
+            st = root.stat()
+            state.update(root_identity=[st.st_dev, st.st_ino], phase='bootstrap')
+            durable(receipt_path, state)
+        st = root.stat()
+        if state.get('root_identity') != [st.st_dev, st.st_ino]:
+            raise ValueError('destination directory identity unknown; preserve partial state')
+        if state['phase'] == 'bootstrap':
+            if not (root / '.git').exists():
+                if any(root.iterdir()):
+                    raise ValueError('unknown partial clone contents')
+                guard(); command(['git', 'clone', '--no-hardlinks', '--', remote, str(root)], source_root)
+            full_clone(root)
+            if (git(['remote', 'get-url', 'origin'], root) != remote
+                    or git(['rev-parse', 'refs/remotes/origin/' + args.target_ref], root) != target
+                    or dirty(root)):
+                raise ValueError('clone identity/target/owner state changed')
+            known = git(['branch', '-r', '--list', 'origin/' + branch], root)
+            if known and (branch != old_branch or git(['rev-parse', 'origin/' + branch], root) != old_head):
+                raise ValueError('unowned published destination branch')
+            current_branch = git(['branch', '--show-current'], root)
+            if current_branch != branch:
+                if git(['rev-parse', 'HEAD'], root) not in (target, git(['rev-parse', 'refs/remotes/origin/HEAD'], root)):
+                    raise ValueError('bootstrap checkout changed')
+                git(['switch', '-c', branch, target], root)
+            elif git(['rev-parse', 'HEAD'], root) != target:
+                raise ValueError('bootstrap branch changed')
+            destination_owner = root / '.git/weekly-owner.json'
+            expected_owner = {'schema': 'weekly/destination@1', 'operation': spec,
+                              'original': {'repository': repository, 'branch': branch}}
+            if destination_owner.exists():
+                if destination_owner.is_symlink() or json.loads(destination_owner.read_text()) != expected_owner:
+                    raise ValueError('bootstrap ownership changed')
+            else:
+                durable(destination_owner, expected_owner)
+            state.update(phase='intent', root_head=target); durable(receipt_path, state)
+        full_clone(root)
+        destination_owner_value = json.loads((root / '.git/weekly-owner.json').read_text())
+        standard_owner = {'repository': repository, 'branch': branch}
+        pending_owner = {'schema': 'weekly/destination@1', 'operation': spec, 'original': standard_owner}
+        allowed_owners = [pending_owner] + ([standard_owner] if state['phase'] in ('prepare', 'complete') else [])
+        if (destination_owner_value not in allowed_owners
+                or git(['branch', '--show-current'], root) != branch
+                or git(['remote', 'get-url', 'origin'], root) != remote):
+            raise ValueError('destination ownership changed')
+        destination_lock = (root / '.git/weekly-prepare.lock').open('a')
+        try:
+            try:
+                fcntl.flock(destination_lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as error:
+                raise ValueError('destination preparation writer is active') from error
+            git(['fetch', '--no-tags', '--', str(old), old_head], root)
+            common = git(['merge-base', '--all', target, old_head], root)
+            if common != old_intake['planning_base']:
+                raise ValueError('unique recorded canonical common base required')
+            incoming_paths = git(['diff', '--name-only', common, old_head], root).splitlines()
+            allowed_capture = re.compile(r'PROJECT/1-INBOX/GH-[1-9][0-9]*-WEEKLY-CAPTURE\.md')
+            if any(p not in ('releases.db', 'releases.sql', old_relative) and not allowed_capture.fullmatch(p) for p in incoming_paths):
+                raise ValueError('incoming non-owned work requires review/landing; preserve it')
+            def commit(paths, message):
+                guard()
+                previous = state['root_head']
+                pending = state.get('pending_commit')
+                if pending:
+                    current = git(['rev-parse', 'HEAD'], root)
+                    if current != previous:
+                        if (git(['rev-parse', 'HEAD^'], root) != previous
+                                or any(git(['rev-parse', 'HEAD:' + p], root) != h
+                                       or git(['hash-object', '--', p], root) != h for p, h in pending.items())
+                                or dirty(root)):
+                            raise ValueError('unknown committed handoff state')
+                        state.update(root_head=current, pending_commit=None); durable(receipt_path, state); return
+                    if any(git(['hash-object', '--', p], root) != h for p, h in pending.items()):
+                        raise ValueError('pending preservation bytes changed; retain evidence')
+                elif git(['rev-parse', 'HEAD'], root) != previous:
+                    raise ValueError('destination HEAD changed')
+                if not dirty(root):
+                    return
+                if dirty(root) - set(paths):
+                    raise ValueError('unrelated destination owner edits')
+                blobs = {p: git(['hash-object', '--', p], root) for p in paths}
+                state['pending_commit'] = blobs; durable(receipt_path, state)
+                git(['add', '--', *paths], root)
+                if any(git(['rev-parse', ':' + p], root) != h for p, h in blobs.items()):
+                    raise ValueError('staged preservation differs')
+                guard(); git(['commit', '-m', message], root)
+                if git(['rev-parse', 'HEAD^'], root) != previous:
+                    raise ValueError('unexpected commit parent')
+                state.update(root_head=git(['rev-parse', 'HEAD'], root), pending_commit=None); durable(receipt_path, state)
+            if state.get('pending_commit'):
+                commit(list(state['pending_commit']), 'weekly: complete exact pending preservation')
+            if state['phase'] in ('intent', 'ledger'):
+                guard()
+                reply = json.loads(owner(root, 'check', '--merge-base', common, '--merge-target', old_head,
+                                          '--expected-head', state['root_head'], '--expected-branch', branch,
+                                          '--merge-delta-parent', 'target', '--apply'))
+                response['ledger'] = reply
+                if reply.get('complete') is not True:
+                    response.update(complete=False, status='UNKNOWN'); return response
+                commit(['releases.db', 'releases.sql'], 'weekly: preserve canonical parent ledger')
+                state['phase'] = 'captures'; durable(receipt_path, state)
+            if state['phase'] == 'captures':
+                guard(); copied = []
+                for relative in incoming_paths:
+                    if not allowed_capture.fullmatch(relative):
+                        continue
+                    path = local(root, relative)
+                    incoming = command(['git', 'show', old_head + ':' + relative], root).encode()
+                    # Existing canonical content may differ only when the old branch
+                    # changed the same existing capture: that needs owner disposition.
+                    if path.exists() and path.read_bytes() != incoming:
+                        raise ValueError('canonical/predecessor capture conflict: ' + relative)
+                    if not path.exists():
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        with path.open('xb') as stream:
+                            stream.write(incoming); stream.flush(); os.fsync(stream.fileno())
+                    copied.append(relative)
+                commit(copied, 'weekly: preserve predecessor captures')
+                state['phase'] = 'ancestry'; durable(receipt_path, state)
+            pending_merge = state.get('pending_merge')
+            if pending_merge and git(['rev-parse', 'HEAD'], root) != pending_merge['head']:
+                parents = git(['rev-list', '--parents', '-n', '1', 'HEAD'], root).split()[1:]
+                if (parents != [pending_merge['head'], old_head]
+                        or git(['rev-parse', 'HEAD^{tree}'], root) != pending_merge['tree'] or dirty(root)):
+                    raise ValueError('unknown native ancestry result; preserve evidence')
+                state.update(root_head=git(['rev-parse', 'HEAD'], root), phase='prepare', pending_merge=None)
+                durable(receipt_path, state)
+            if state['phase'] == 'ancestry':
+                guard()
+                # Ledger/capture changes have been accounted for. Keep the original
+                # intake as an immutable source artifact, including same-date rollover.
+                archive = f'PROJECT/4-MISC/weekly/{date}/sources/{old_head}/intake.json'
+                archive_path = local(root, archive)
+                source_bytes = old_intake_path.read_bytes()
+                if archive_path.exists() and archive_path.read_bytes() != source_bytes:
+                    raise ValueError('source intake archive owner conflict')
+                if not archive_path.exists():
+                    archive_path.parent.mkdir(parents=True, exist_ok=True)
+                    with archive_path.open('xb') as stream:
+                        stream.write(source_bytes); stream.flush(); os.fsync(stream.fileno())
+                commit([archive], 'weekly: retain exact predecessor intake')
+                merge_head = root / '.git/MERGE_HEAD'
+                if merge_head.exists() and merge_head.read_text().strip() != old_head:
+                    raise ValueError('foreign native merge in progress')
+                if not merge_head.exists():
+                    result = process.run_bounded(['git', 'merge-base', '--is-ancestor', old_head, 'HEAD'],
+                                                 cwd=str(root), env=env, timeout=WEEKLY_IO_TIMEOUT_SECONDS, grace=1)
+                    if result.rc == 1:
+                        state['pending_merge'] = {'head': state['root_head'], 'tree': git(['rev-parse', 'HEAD^{tree}'], root)}
+                        durable(receipt_path, state)
+                        git(['merge', '--no-ff', '--no-commit', '-s', 'ours', old_head], root)
+                    elif result.rc != 0 or result.timed_out:
+                        raise ValueError('ancestry unavailable')
+                if merge_head.exists():
+                    if (not state.get('pending_merge') or dirty(root)
+                            or git(['rev-parse', 'HEAD^{tree}'], root) != state['pending_merge']['tree']):
+                        raise ValueError('native merge state/owner content unknown')
+                    guard(); git(['commit', '-m', 'weekly: retain fully preserved predecessor ancestry'], root)
+                state.update(root_head=git(['rev-parse', 'HEAD'], root), phase='prepare', pending_merge=None); durable(receipt_path, state)
+            if state['phase'] in ('prepare', 'complete'):
+                guard()
+                if state['phase'] == 'complete' and (git(['rev-parse', 'HEAD'], root) != state['complete_commit'] or dirty(root)):
+                    raise ValueError('active destination changed outside this operation; use its ordinary preparation owner')
+                if json.loads((root / '.git/weekly-owner.json').read_text()) == pending_owner:
+                    durable(root / '.git/weekly-owner.json', standard_owner)
+                prepared = prepare_weekly(args, source_root, command=supplied_command,
+                                          carryover=old_intake, reconciled_base=(old_intake['planning_base'], target, state['root_head']),
+                                          private_lock=destination_lock)
+                response['preparation'] = prepared
+                state.update(phase='complete', root_head=prepared['planning_commit'], complete_commit=prepared['planning_commit'])
+                if not was_complete or prepared.get('changed'):
+                    durable(receipt_path, state)
+            guard()
+            if state.get('complete_commit') != git(['rev-parse', 'HEAD'], root) or dirty(root):
+                raise ValueError('completed destination drift; preserve evidence')
+            response.update(changed=not was_complete or bool(response.get('preparation', {}).get('changed')),
+                            planning_commit=state['complete_commit'], preparation_root=str(root))
+            response['accounting'] = []
+            # Qualified explicit PR links are review leads, never completion proof.
+            prepared_observation = response.get('preparation') or json.loads(
+                (root / f'PROJECT/4-MISC/weekly/{date}/intake.json').read_text())
+            for member in prepared_observation.get('accounting', []):
+                identity = member['identity']
+                number = member['ledger']['gh_number']
+                facts = [fact for fact in census['facts'] if fact['fact'].get('repository') == repository
+                         and fact['fact'].get('gh_number') == number]
+                leads = []
+                for pr in prepared_observation.get('prs', []):
+                    body = pr.get('body') or ''
+                    qualified = re.search(r'https://github\.com/' + re.escape(repository) +
+                                          r'/issues/' + str(number) + r'(?![0-9])', body, re.I)
+                    scoped = re.search(r'(?i)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#' +
+                                       str(number) + r'(?![0-9])', body)
+                    if qualified or scoped:
+                        leads.append({'identity': pr['identity'], 'source': 'explicit-qualified-link' if qualified
+                                      else 'repository-scoped-closing-reference', 'isDraft': pr.get('isDraft'),
+                                      'head': pr.get('headRefOid'), 'meaning': 'review/landing lead; overlap/delivery unreviewed'})
+                response['accounting'].append({'identity': identity, 'global_id': member['global_id'],
+                                              'decision': 'REVIEW_OR_LANDING' if leads else 'HELD',
+                                              'existing_work': facts, 'pr_leads': leads,
+                                              'reported_ledger_state': canonical._live_roadmap_event(
+                                                  member['ledger'].get('section'), member['ledger'].get('status_marker'),
+                                                  member['ledger'].get('rating_rank') is not None),
+                                              'delivery': 'UNKNOWN; reported completion is not criterion evidence',
+                                              'reason': 'criterion delivery, active overlap and readiness require independent review'})
+            if args.publish:
+                if (args.publication_timeout is None or not math.isfinite(args.publication_timeout)
+                        or args.publication_timeout <= 0):
+                    raise ValueError('publication requires an explicit finite normal-hook IO budget')
+                guard()
+                remote_rows = git(['ls-remote', 'origin', 'refs/heads/' + branch], root).splitlines()
+                remote_head = None
+                if remote_rows:
+                    if len(remote_rows) != 1 or not re.fullmatch(r'[0-9a-f]{40}\trefs/heads/' + re.escape(branch), remote_rows[0]):
+                        raise ValueError('published destination identity unknown')
+                    remote_head = remote_rows[0].split('\t')[0]
+                    if remote_head not in (old_head, state['complete_commit']):
+                        raise ValueError('published branch has another owner; preserve all revisions')
+                if remote_head != state['complete_commit']:
+                    publish_command = supplied_command or weekly_command(process, env, timeout=args.publication_timeout)
+                    guard(); publish_command(['git', 'push', 'origin', 'HEAD:refs/heads/' + branch], root)
+                    guard()
+                    if git(['ls-remote', 'origin', 'refs/heads/' + branch], root) != state['complete_commit'] + '\trefs/heads/' + branch:
+                        raise ValueError('publication drift; retain completed local state')
+                response['published_commit'] = state['complete_commit']
+                response['publication_effects'] = 'explicit ordinary fast-forward Git push and normal hooks; no force/dispatch/merge'
+
+            response['holds'].append('Criterion/readiness/freeze/dispatch/landing remain unreviewed; source history preserved, not delivered')
+            return response
+
+        finally:
+            fcntl.flock(destination_lock.fileno(), fcntl.LOCK_UN)
+            destination_lock.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Planner Core Engine")
     parser.add_argument("--repo-root", default=".", help="Path to repository root")
     parser.add_argument("--gh-repo", default=None, help="Target GitHub repo (e.g. Org/Name)")
-    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "weekly-intake", "weekly-prepare", "weekly-work"], default="weekly")
+    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "weekly-intake", "weekly-prepare", "weekly-work", "weekly-reconcile"], default="weekly")
     parser.add_argument("--plan-file", help="Path to existing weekly plan JSON/MD")
     parser.add_argument("--decisions-issue", help="Canonical GH issue number for provisional decisions tracker")
     parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int, help="Team weekly issue number for focus assignments")
@@ -1377,13 +1833,35 @@ def main():
     parser.add_argument("--target-ref", help="Explicit canonical target branch")
     parser.add_argument("--initial-backfill", choices=["all-open", "updated-only"])
     parser.add_argument("--overlap-hours", type=float, help="Explicit inclusive checkpoint overlap")
+    parser.add_argument("--predecessor-root", help="Explicit preserved auto-date full clone")
+    parser.add_argument("--expected-predecessor-head", help="Exact predecessor commit SHA")
+    parser.add_argument("--adopt-predecessor", action="store_true", help="Explicit exact published predecessor adoption")
+    parser.add_argument("--publish", action="store_true", help="Explicit held planning-branch publication; reconciliation only")
+    parser.add_argument("--publication-timeout", type=float, help="Explicit normal Git-hook publication IO ceiling")
     parser.add_argument("--apply", action="store_true", help="Apply held preparation locally; never push/fire")
 
     args = parser.parse_args()
+    if args.publish and args.mode != "weekly-reconcile":
+        parser.error("publish is available only for explicit weekly-reconcile")
     repo_root = Path(args.repo_root).resolve()
     if not repo_root.is_dir():
         print(f"[ERROR] repo root not found: {repo_root}", file=sys.stderr)
         sys.exit(2)
+    if args.mode == "weekly-reconcile":
+        try:
+            if not all((args.gh_repo, args.since, args.prepare_root, args.planning_date, args.target_ref,
+                        args.initial_backfill, args.authority_file, args.predecessor_root,
+                        args.expected_predecessor_head)) or args.overlap_hours is None:
+                raise ValueError("weekly-reconcile requires all explicit preparation/predecessor/authority inputs")
+            result = reconcile_weekly(args, repo_root)
+            print(json.dumps(result, indent=2))
+            if not result["complete"]:
+                sys.exit(2)
+            return
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError) as error:
+            print(json.dumps({"complete": False, "status": "UNKNOWN", "dispatch_allowed": False,
+                              "error": str(error)}))
+            sys.exit(2)
     if args.mode == "weekly-work":
         try:
             if not args.authority_file or args.apply:
