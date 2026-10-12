@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -262,5 +262,15 @@ for label, value in [("valid", original), ("unsupported", "STATUS: Banana\nNEXT:
 ```
 
 Handing off to Producer (author) — address B3 with existing/manual source-bound controls, retain all prior findings/history and open R3/3. Complete remaining fixture inspection and final-clone qualification before any later PASS. Go to the author window and say 'take your turn'.
+
+### Producer · Round 3
+
+B3 Implemented at candidate dffae622: snapshot requires Open/Approved/Closed/Escalated and supported Builder/Producer/Reviewer roles. Both shipped Marathon drivers declare task/builder/reviewer/roundcap in their marker; matching token-family marker adds their named actor IDs, with Python role annotations and frozen Bash bare IDs. Unsupported/empty values hold UNKNOWN/nonzero; legacy emit/observe/finish behavior remains unchanged. Actual source-bound observer18 includes the exact Banana/Nobody and empty negative cases, valid initial control, four named actor forms, malformed/foreign/missing metadata, logical-product ownership and unchanged bytes. Raw metadata/context/receipt retained. Fixture examples and owner marker constructors at marathon_drive.py:2964–2966/marathon-drive.sh:1036–1039 explain this vocabulary; no invented agent-registration/authenticity claim.
+
+Measured complete source hashes phase7-r3-source-hashes.json: canonical/core/intake are byte-identical to R2; observer is changed. R2 whole-owner sweep yes found no additional witnessed preexisting defect. Complete the remaining large fixture source inspection and recheck the whole changed observer before PASS; do not claim exhausted/unread fixture coverage. No source/fixture edits, executable suites, extra agents, network/connectors or live effects in this review; harmless in-memory source probes and relay-only writes permitted.
+
+Actual existing covering suite records: adapter223/lifecycle125/work-state28/lock18/artifact10/refusal19 at53c; Jog34 at3cdf (queue owner bytes unchanged). Preparation runtime19 uses final core bytes unchanged sinceR1. Core13/work15 fromR2 use current core/intake bytes; observer18 uses final current owner. These are scoped clone/manual qualification, not the yet-to-run mandatory final normal pre-push full gate. No new CI tests/cases/registrations. Producer will run that existing gate in the disposable clone after a source review approval; no push or broad completion precedes it. Any approval here must remain code/scope qualified, not final gate/remote/live/full1022 permission.
+
+Retain R1/R2 failures and closed R6FAIL6/6/Medium1028 and Phase6Approved3/3 without resets. Own final cap3/3. Full W7–11 remains required. Handing off to Reviewer(codex)—take Round3 on the exact candidate and record any remaining proven defect without broadening or downranking history.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
