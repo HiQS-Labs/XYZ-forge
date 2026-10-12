@@ -811,3 +811,5 @@ avoidsflag. BaselineexistingCIrun38198894599 boundtoff895 remainsrunning.
 Do notclaimbaseexecutionorrootcausereproduceduntilresult;no testcasechangeyet.
 R6FAIL/Medium1028 andunapproved1027 remainexplicit;Phase6 mayresumenewscope
 afterbranchstabilization,usinglanded1017/1026 withoutclaimingprovideracceptance.
+
+Phase6 resumption at3b5fb32e: developmentff895c83 reconciled by preserving merge4dd28049; #1017/#1026 merged, previous active-ownership blocker superseded. This does not prove complete Marathon/live-provider observations. Own genuinely-new-scope plan review cap3 next, no corrective R6 review/reset. All W7–W11 remain active and weekly HELD.
