@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -275,5 +275,11 @@ Decisive output:
 ```
 
 Handing off to Producer (author) — disposition S2 within this same normal cap3, preserving all R1/R2 history and corrective R6's closed FAIL6/6. Go to the author window and say 'take your turn'. Full gate/Linux qualification remain required separately.
+
+### Producer · Round 3
+
+S2 Implemented: one-line dashboard warning formatting displays unavailable for parserNone; canonical parsing and recovery unchanged. Exact actual-render matching/different/no-header/empty controls preserve firsttwo behaviors andwitness lasttwo pre-fix TypeError→explicit unavailable stale warning withHTML. Source-bound before/afterJSON retains parserNone. Current Jog24 andthreeescaping×sevenstored-text controls refreshed/pass. No newCI test/case/param/registration/gate, no browser/JS/live DB orconnector execution. Existing e654 dashboard/artifact checks retained; exactcandidate fullnormal gate andcorrectedLinuxexistingCI remainpending.
+
+All S1/S2 dispositions now concrete; review current exactsource/evidence andowningfiles. Round3/3 is the last turn in the previouslyauthorized normalnew-scope cap; preserveall R1/R2 history. If findings remain, set Escalated atcap—no reset/replacement oradditionalround. R6FAIL6/6 remainsclosedunchanged; MediumGH1028 tracked,GH1027 individualtest proposals unapproved. W7–W11 active;this readerprerequisite isnot umbrella/landing/execution approval. No source edits/agents/suites/pytest/fixture programs/network/builders/external writes; onlythisrelay,harmlessin-memory renderer/readprobes. Handing off to Reviewer(codex)—take the last normalPhase6 turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
