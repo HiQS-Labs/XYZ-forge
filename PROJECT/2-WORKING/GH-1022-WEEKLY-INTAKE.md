@@ -10,7 +10,7 @@ doc_type: feature
 effort: 4
 complexity: 4
 risk: 3
-phases: 8
+phases: 9
 goal: Implement shared weekly intake, bounded canonical planning and exact approval safeguards without enabling live execution.
 ---
 
@@ -30,6 +30,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 - [Phase 6 — Qualified canonical Jog observations](#phase-6--qualified-canonical-jog-observations-w7-prerequisite)
 - [Phase 7 — Canonical declared-work census](#phase-7--canonical-declared-work-census-next-w7-prerequisite)
 - [Phase 8 — Canonical preservation transaction](#phase-8--canonical-preservation-transaction-w7-prerequisite)
+- [Phase 9 — Preserved W7 caller integration](#phase-9--preserved-w7-caller-integration)
 - [Remaining acceptance](#remaining-acceptance)
 
 ## Bet and scope
@@ -1198,3 +1199,91 @@ W7 coordination/rollover integration and W8–W11 continue. Current canonical AP
 supports the bounded current-schema roadmap/history shape; unsupported identities,
 owner conflicts, cursor/lease/driver state and unknown recovery hold. It is not
 proof of global idle, fresh remote state, criterion delivery or human consent.
+
+
+## Phase 9 — Preserved W7 caller integration
+
+Status: bounded new-scope plan, not implemented or approved. Phase8 owner source is
+closed ApprovedR2/3 and published with unchanged source in d22b9c5b. No corrective
+R6 reset, cap extension, new CI approval or broader ledger/schema redesign.
+
+Goal: integrate the published canonical preservation prerequisite through the
+existing planner core, preserving predecessor full clones/commits and all relevant
+members/GIDs/history while a canonical base advances or a week rolls forward.
+Do not rebase/reset an existing planning branch, invent GID aliases, replay verbs,
+hand-write SQL, replace the ledger or introduce another runner/coordinator framework.
+Unsupported identity/schema/owner/capture/history conflicts hold for disposition.
+
+Measured seam: actual canonical release-description advance plus an old planning
+roadmap override240. Existing owner select(base,fresh,incoming) holds unsupported
+local releases changes; select(base,incoming,fresh) preserves both existing release
+GID/description and incoming roadmap GID/override/history. Evidence
+phase9-direction-grounding.json binds e64. The minimal owner extension is an explicit
+opt-in delta-parent adapter, retaining current defaults and original physical-root
+parent/digest order. It changes policy orientation, not row selection/schema rules.
+Current Recon Map plus complete preparation/runtime/census/source reads ground the
+call path. Known Source inputs and selected Root source code remain separate.
+
+Reversibility: **Costly** for cross-clone handoff and journal/commit boundaries.
+Keep predecessor worktree/commits and original private ownership/receipt evidence.
+An interrupted durable owner operation completes/reconciles through exact existing
+recovery; never restore over later owner data. No production-like validation or
+live planning-branch publication in this task. All runtime controls use isolated
+fixtures with declared local Git/DB/intent/capture/audit effects and connectors0.
+
+1. Add explicit bounded incoming-delta orientation inside the existing canonical
+   selector/check API. Preserve original source generations/digests, root identity,
+   journal/selection binding and legacy defaults; no second merger or broader table
+   mutation support. -> Owned current-schema fixture imports old roadmap/history
+   into a canonical anchor with newer release data; both GIDs/owner edits/history
+   remain exact. Unknown/deleted/conflicting inputs still hold; default mode parity
+   and exact repeat/recovery stay qualified. No new CI case.
+2. Extend existing core with an opt-in reconciliation/rollover caller, explicit
+   predecessor root/HEAD, new preparation root/date/repository/target/ref/backfill/
+   overlap and declared authorities. Validate full-clone/source identity, a complete
+   committed old intake and stopped-owner state before effects. An explicitly
+   requested published-branch adoption must validate its exact remote commit and
+   complete accounting, not infer ownership from branch naming. Existing prepare
+   defaults retain their holds. -> Missing/dirty/partial/foreign/active/ambiguous
+   sources preserve available evidence; every member/carryover is retained. Read
+   completeness never grants global-idle, criterion or dispatch proof.
+3. Use existing private preparation ownership/receipt/locking for a stopped-owner
+   cross-clone handoff, not another store. Mark the predecessor transfer intent
+   before creating the new clone; older/default writers must safely hold rather
+   than keep writing. Preserve old commits and original ownership/receipt fields.
+   In the new independent clone at freshly checked target, fetch exact old objects,
+   verify unique common base and all incoming changed paths, then use canonical
+   preview/apply for the supported ledger delta. -> Source/target/runtime drift,
+   active writers, incomplete source or owner ambiguity holds; interrupted state
+   retains exact intents and resumes only its proven original operation.
+4. Integrate only proven canonical captures/intake bytes through native Git object
+   integration with path/symlink/three-way owner guards. Before recording old ancestry,
+   prove every incoming change accounted for; an ours strategy can never bypass an
+   unknown conflict or discard non-owned work. Commit through normal hooks. Reuse
+   prepare_weekly for fresh complete discovery/ALL relevant registration and advance
+   the intake checkpoint only after durable canonical accounting/commit. -> Current
+   canonical owner edits and old GIDs/captures/history survive; unrelated or divergent
+   capture/code/data edits hold. Exact repeats add no data/generation/commit. Current
+   R6 title-grammar limitation remains explicit and is not fixed under this scope.
+5. Reuse census/PR observations to classify existing planned/active/queued work and
+   PRs before eventual selection, retaining already-done/blocked/deferred/unknown
+   reasons without guessing criterion delivery. A published planning branch uses
+   explicit adoption/publication policy, exact remote head and ordinary fast-forward
+   push only; no force push. Publication IO must explicitly budget normal hooks
+   (existing prepare60s is shorter than the measured326s RELEASES gate). This task
+   validates only owned local bare remotes and pushes only its implementation branch.
+   -> Unknown/overlap/competing active long-horizon work holds proposal promotion;
+   no live builder, merge, recurring schedule or production connector action.
+6. Validate actual supported quiet/update/reopen/carryover/rollover/adoption/no-op,
+   concurrent canonical owner change, source/target drift, unknown identities,
+   capture conflicts and stopped-owner recovery with existing suites or recorded
+   ephemeral controls. Inspect complete diff for forbidden CI additions and source
+   qualification. Use normal genuine-new-scope plan/final QA within prior authority;
+   no allowance is created by this plan/status message. -> Report exact source-bound
+   evidence and limits, then normal gated implementation-branch publication. No claim
+   of W8–W11/shared fire/landing or whole1022 delivery follows this W7 caller scope.
+
+Existing shared-policy/approval/total-budget questions remain queued in the current
+Recon Map/full plan. Do not invent human-consent transport, cost infrastructure or
+new safety bypasses while implementing this caller. Any concrete requirement for
+broader ledger/identity authority must be surfaced, not silently expanded.
