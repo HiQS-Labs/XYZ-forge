@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-12 — Canonical local-parent preservation (GH-1022, Phase8)
+
+The RELEASES owner now offers an opt-in local-parent `check` preview/apply API for
+held weekly reconciliation. Pure preview validates exact local Git parents and
+current canonical schema; apply reuses the staged rebuild constructor with a new
+journal binding root/HEAD, selection, runtime and exact before/after DB/dump bytes.
+Disjoint roadmap changes and append-only histories preserve owner GIDs, ratings,
+overrides, start labels and nullable issue references. Unknown/conflicting/deleted
+history, edited owner files, cursor/lease/driver state and recovery drift hold.
+Repeated already integrated state adds no generation or receipt. Backups, immutable
+triggers and legacy check/rebuild defaults remain unchanged; connectors0 is required.
+Actual local fixture crash/refusal controls and independent sourceQA retain failed
+R1 and repaired R2 evidence. No CI test/case/registration was added. This is a
+canonical prerequisite; weekly coordination/rollover, freeze and shared dispatch/
+landing safeguards remain required, with no execution or full-issue authority.
+
 ## 2026-10-12 — Held declared-work census (GH-1022, Phase7)
 
 Weekly can now observe explicitly declared roots through the existing RELEASES and

@@ -18,7 +18,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 
 | What was just completed | What's next |
 |---|---|
-| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 preservation planQA ApprovedR1/3; canonical local merge API R1FAIL; ancestor-only history and observed dump/stage drift repaired with retained red/green controls; R2finalQA and final gate next. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
+| Phase7 published437/d09; sourceQA Approved3/3, normalfull409/409 + Python21, GREEN826s; hosted38219283130 blocking smokeSUCCESS, macOS/UbuntuSKIPPED. Red PDDA gate and document repair retained. | W7 preservation planQA ApprovedR1/3; canonical preservation sourceQA ApprovedR2/3 at8dfc8fe2, sourcee64; R1 failure/red/green evidence retained. Final existing checks and normal gated publication next. Coordination/rollover, W8–W11 remain active. R6FAIL/Medium1028 and #1027 unapproved tests unchanged. |
 
 ## Table of contents
 
@@ -1158,3 +1158,16 @@ with source-qualified provenance. R1 existing owner145/scoped27/status42/artifac
 multiline7/refusal19/vendor54/Jog34/historyexit0 are historical d7 evidence; R2 e64
 requires final requalification. The failed peer report remains immutable. No new
 CI test/case/parameter/registration and no cap/reset beyond the existing final3.
+
+
+### Phase8 source QA closed — runtime gate still pending
+
+FinalR2 Approved, attested reviewed-head8dfc8fe29a0041c853e80d606a81156c36f98ea7,
+ownerSHA256 e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004.
+Reviewer read the complete current7,543-line owner, both skills, whole1,160-line
+plan and covering fixture sources; independently transposed B1 to red and measured
+recovery decision refusals before any intercepted write. Actual disk controls remain
+producer source-qualified evidence, not reviewer runtime execution. Existing owner145,
+scoped-chain27 and PDDA0errors/48existingwarnings have requalified repaired source;
+remaining applicable suites and normal final gate/publication are pending. No new
+review allowance, individual CI addition, dispatch or umbrella completion follows.
