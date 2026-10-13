@@ -1,0 +1,21 @@
+{
+  "returncode": 0,
+  "result": {
+    "exception": "SystemExit",
+    "code": 77
+  },
+  "child_live_after": false,
+  "correct_properties": {
+    "exception_preserved": true,
+    "child_reaped": true
+  },
+  "independent_cleanup_child_absent": true,
+  "case": "base-exception",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/compat-after/base-exception.py"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:21:00.628048+00:00",
+  "finished_utc": "2026-10-03T07:21:01.351010+00:00"
+}

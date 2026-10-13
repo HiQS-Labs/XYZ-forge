@@ -1,0 +1,168 @@
+[
+  {
+    "gid": "rmi-01M24FQRXBZE1PRTQNQT0V0162",
+    "issue": "537",
+    "title": "skills: new skill /five \u2014 the 5-and-5 decision checksum (5 key highlights + 5 explicit non-goals)",
+    "changed": {
+      "section": {
+        "before": "Queue / parked intake",
+        "after": "Completed"
+      },
+      "status_marker": {
+        "before": "\ud83c\udd95",
+        "after": "\u2705"
+      },
+      "doc_path": {
+        "before": "PROJECT/2-WORKING/GH-537-FIVE-SKILL.md",
+        "after": "PROJECT/3-COMPLETED/GH-537-FIVE-SKILL.md"
+      },
+      "updated_at": {
+        "before": "2026-09-10T01:44:14Z",
+        "after": "2026-10-11T06:02:44Z"
+      }
+    }
+  },
+  {
+    "gid": "rmi-01M2RFN0VYYH0ANWRWGH3C67SB",
+    "issue": "506",
+    "title": "skills-army-hq: replicate a collection to a second device, migrate-from name mismatch, and status exit-code semantics",
+    "changed": {
+      "section": {
+        "before": "Queue / parked intake",
+        "after": "Deferred \u00b7 vision"
+      },
+      "doc_path": {
+        "before": "PROJECT/1-INBOX/GH-506-SKILLS-ARMY-HQ-REPLICATE.md",
+        "after": "PROJECT/4-MISC/GH-506-SKILLS-ARMY-HQ-REPLICATE.md"
+      },
+      "updated_at": {
+        "before": "2026-09-18T17:47:04Z",
+        "after": "2026-10-04T03:54:30Z"
+      },
+      "rating_pri": {
+        "before": "50",
+        "after": "NULL"
+      },
+      "rating_sev": {
+        "before": "50",
+        "after": "NULL"
+      },
+      "rating_appeal": {
+        "before": "50",
+        "after": "NULL"
+      },
+      "rating_effort": {
+        "before": "50",
+        "after": "NULL"
+      }
+    }
+  },
+  {
+    "gid": "rmi-01M32XWJVQKREQPY7NKGRBDD4M",
+    "issue": "732",
+    "title": "Mid September CI/CD optimizations \u2014 measured gate cost vs documented; fail-fast toolchain preflight; re-run ladder bound; tier-2 width; per-suite timings",
+    "changed": {
+      "section": {
+        "before": "Queue / parked intake",
+        "after": "Deferred \u00b7 vision"
+      },
+      "status_marker": {
+        "before": "\ud83d\udea7",
+        "after": "\u26d4"
+      },
+      "updated_at": {
+        "before": "2026-09-22T04:39:32Z",
+        "after": "2026-09-26T03:02:02Z"
+      }
+    }
+  },
+  {
+    "gid": "rmi-01M3A9VTSPC5M10DVZDAGXEQCW",
+    "issue": "789",
+    "title": "feat(merge-cleanup): zero-intervention autonomous merge pipeline & friction elimination",
+    "changed": {
+      "section": {
+        "before": "Queue / parked intake",
+        "after": "Completed"
+      },
+      "status_marker": {
+        "before": "\ud83c\udd95",
+        "after": "\u2705"
+      },
+      "doc_path": {
+        "before": "PROJECT/1-INBOX/GH-789-MERGE-CLEANUP-AUTONOMOUS-PIPELINE.md",
+        "after": "PROJECT/3-COMPLETED/GH-789-MERGE-CLEANUP-AUTONOMOUS-PIPELINE.md"
+      },
+      "updated_at": {
+        "before": "2026-09-24T18:11:54Z",
+        "after": "2026-10-06T18:53:28Z"
+      },
+      "rating_pri": {
+        "before": "NULL",
+        "after": "75"
+      },
+      "rating_sev": {
+        "before": "NULL",
+        "after": "70"
+      },
+      "rating_appeal": {
+        "before": "NULL",
+        "after": "50"
+      },
+      "rating_effort": {
+        "before": "NULL",
+        "after": "50"
+      }
+    }
+  },
+  {
+    "gid": "rmi-01M3B4T24D4ZFTHMK6NHJBNXR3",
+    "issue": "793",
+    "title": "Idle-kill control fails under parallel gate load",
+    "changed": {
+      "section": {
+        "before": "Queue / parked intake",
+        "after": "Completed"
+      },
+      "status_marker": {
+        "before": "\ud83c\udd95",
+        "after": "\u2705"
+      },
+      "doc_path": {
+        "before": "PROJECT/1-INBOX/GH-793-IDLE-CONTROL-PARALLEL.md",
+        "after": "PROJECT/3-COMPLETED/GH-793-IDLE-CONTROL-PARALLEL.md"
+      },
+      "updated_at": {
+        "before": "2026-09-25T02:02:48Z",
+        "after": "2026-09-28T17:27:22Z"
+      }
+    }
+  },
+  {
+    "gid": "rmi-01M3CW2W2ZZX4GG993EQ7PW39D",
+    "issue": "822",
+    "title": "2026-09-25 post-merge review \u2014 promote development to main and publish 0.9.0 Cargo",
+    "changed": {
+      "section": {
+        "before": "In progress",
+        "after": "Completed"
+      },
+      "status_marker": {
+        "before": "\ud83d\udea7",
+        "after": "\u2705"
+      },
+      "doc_path": {
+        "before": "PROJECT/2-WORKING/GH-822-PROMOTION.md",
+        "after": "PROJECT/3-COMPLETED/GH-822-PROMOTION.md"
+      },
+      "updated_at": {
+        "before": "2026-09-25T18:08:58Z",
+        "after": "2026-09-26T00:39:06Z"
+      },
+      "status_label": {
+        "before": "in-progress",
+        "after": "NULL"
+      }
+    }
+  }
+]

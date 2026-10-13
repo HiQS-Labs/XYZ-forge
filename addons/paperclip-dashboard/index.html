@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>XYZ Forge · Dashboard preview</title>
+  <link rel="stylesheet" href="/app.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body data-mode="__MODE__">
+  <a class="skip-link" href="#main">Skip to work</a>
+  <div class="viewport"><div class="shell">
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">X</span><span class="brand-copy">XYZ Forge<small>WORKSPACE</small></span><button id="collapse" class="icon-button" aria-label="Collapse sidebar" aria-expanded="true"></button></div>
+      <nav class="primary-nav" aria-label="Dashboard views">
+        <button data-section="work" class="nav-item"><span class="nav-icon" data-icon="grid"></span><span class="nav-label">Overview</span></button>
+        <button data-section="lanes" class="nav-item"><span class="nav-icon" data-icon="lanes"></span><span class="nav-label">Agent lanes</span><span id="laneCount" class="nav-count"></span></button>
+        <button data-section="prs" class="nav-item"><span class="nav-icon" data-icon="branch"></span><span class="nav-label">Pull requests</span><span id="prCount" class="nav-count"></span></button>
+      </nav>
+      <div class="nav-group"><h2 class="nav-label">REPOSITORIES</h2><div id="repoNav"></div></div>
+      <div class="sidebar-bottom"><span class="read-only-dot"></span><span class="nav-label">Read-only preview<small>Paperclip-inspired · optional add-on</small></span></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><div class="breadcrumb">Workspace<span>/</span><strong id="crumb">Overview</strong></div><div class="top-actions"><span id="mode" class="mode-pill">Preview</span><button id="theme" class="icon-button" aria-label="Switch appearance"></button></div></header>
+      <main id="main" tabindex="-1">
+        <div class="page-heading"><div><p class="eyebrow">YOUR OPERATIONS, AT A GLANCE</p><h1 id="title">Overview</h1><p id="subtitle">Pick up the thread. See the work behind each observation.</p></div><button id="refresh" class="button"><span data-icon="refresh"></span>Read latest</button></div>
+        <div id="readNotice" class="read-notice" role="status" aria-live="polite"></div>
+        <section id="metrics" class="metrics" aria-label="Observed work summary"></section>
+        <p id="coverage" class="coverage-note"></p>
+        <div class="content-grid">
+          <div class="main-column">
+            <section id="laneSection" class="section"><div class="section-heading"><h2>Agent observations</h2><span>Activity, not process liveness</span></div><div id="laneCards" class="lane-grid"></div></section>
+            <section class="work-section section"><div class="section-heading work-heading"><div class="tabs" role="group" aria-label="Work views"><button data-section="work">Work</button><button data-section="lanes">Lanes</button><button data-section="prs">Pull requests</button></div><label class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Filter this view…" aria-label="Filter displayed work"></label></div><div id="workList" class="work-list"></div></section>
+            <section class="section"><div class="section-heading"><h2>Recent activity</h2><span>Observed timestamps</span></div><div id="activity" class="activity-list"></div></section>
+          </div>
+          <aside id="detail" class="detail-panel" aria-label="Selected work details"></aside>
+        </div>
+        <footer class="source-footer"><div class="section-heading"><h2>Sources &amp; freshness</h2><span id="updated"></span></div><div id="sources" class="source-pills"></div><p>Progress is not measured by these feeds. PRs require current-head verification.</p></footer>
+      </main>
+    </div>
+  </div></div>
+</body>
+</html>

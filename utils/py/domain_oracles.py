@@ -49,6 +49,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+from proc_group import Cancelled, cancellation_signals, run_bounded
 from metamorphic_oracle import check_idempotence, check_realpath_containment, check_zero_mutation  # noqa: E402
 from telemetry_schema import (  # noqa: E402
     TelemetryEvent,
@@ -91,7 +92,7 @@ def tree_digest(root: str, excludes: Tuple[str, ...] = DEFAULT_EXCLUDES) -> Tupl
         rel_dir = "" if rel_dir == "." else rel_dir
         # prune excluded directories early
         dirnames[:] = [d for d in dirnames if not _excluded((rel_dir + "/" + d).lstrip("/"), excludes)]
-        for fn in sorted(filenames):
+        for fn in sorted(filenames + [d for d in dirnames if os.path.islink(os.path.join(dirpath, d))]):
             rel = (rel_dir + "/" + fn).lstrip("/")
             if _excluded(rel, excludes):
                 continue
@@ -120,17 +121,19 @@ def _run(cmd: List[str], cwd: str, env: Optional[Dict[str, str]], timeout: int) 
     if env:
         full_env.update(env)
     t0 = time.monotonic()
+    timed_out = False
+    completed = False
     try:
-        res = subprocess.run(cmd, cwd=cwd, env=full_env, capture_output=True, text=True, timeout=timeout)
-        rc, out, err = res.returncode, res.stdout, res.stderr
-    except subprocess.TimeoutExpired as exc:
-        rc = 124
-        out = (exc.stdout or b"").decode("utf-8", "replace") if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-        err = (exc.stderr or b"").decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else (exc.stderr or "")
-        err += f"\n[timeout after {timeout}s]"
-    except FileNotFoundError as exc:
-        rc, out, err = 127, "", f"command not found: {exc}"
-    return {"rc": rc, "stdout": out, "stderr": err, "duration_ms": (time.monotonic() - t0) * 1000.0}
+        res = run_bounded(cmd, cwd=cwd, env=full_env, timeout=timeout)
+        timed_out = res.timed_out
+        completed = not timed_out
+        rc, out, err = (124 if timed_out else res.rc), res.stdout, res.stderr
+        if timed_out:
+            err += f"\n[timeout after {timeout}s]"
+    except (OSError, ValueError) as exc:
+        rc, out, err = 127, "", f"command could not launch: {exc}"
+    return {"rc": rc, "stdout": out, "stderr": err, "timed_out": timed_out,
+            "completed": completed, "duration_ms": (time.monotonic() - t0) * 1000.0}
 
 
 def _git(root: str, *args: str) -> str:
@@ -215,13 +218,15 @@ def check_zero_state(
     git_view = check_zero_mutation(cmd=["true"], cwd=cwd, timeout=10) if os.path.isdir(os.path.join(cwd, ".git")) else None
     digest_ok = before == after
     reasons: List[str] = []
+    if not run["completed"]:
+        reasons.append("command observation incomplete (timeout or launch failure)")
     if not digest_ok:
         reasons.append(f"tree digest changed ({n_before} -> {n_after} files)")
     if not leaks["ok"]:
         reasons.append(f"{len(leaks['holders'])} leaked handle(s): " + ", ".join(f"pid {h['pid']} {h.get('cmd','?')} {h['path']}" for h in leaks["holders"][:5]))
     return {
         "oracle": "zero-state",
-        "passed": digest_ok and leaks["ok"],
+        "passed": not reasons,
         "reasons": reasons,
         "digest_before": before,
         "digest_after": after,
@@ -234,13 +239,35 @@ def check_zero_state(
 
 # ---- oracle 2: host containment ---------------------------------------------------------------
 def host_identity(host_root: str) -> Dict[str, Any]:
-    cfg = os.path.join(host_root, ".git", "config")
-    cfg_hash = ""
-    if os.path.isfile(cfg):
-        with open(cfg, "rb") as fh:
-            cfg_hash = hashlib.sha256(fh.read()).hexdigest()
+    errors = []
+    hashes = {}
+    for key, git_args in (
+        ("config_sha256", ("rev-parse", "--git-common-dir")),
+        ("worktree_config_sha256", ("rev-parse", "--git-path", "config.worktree")),
+    ):
+        try:
+            result = subprocess.run(["git", "-C", host_root, *git_args],
+                                    capture_output=True, text=True, timeout=30, check=True)
+            path = result.stdout.strip()
+            if not path:
+                raise ValueError("empty Git metadata path")
+            if not os.path.isabs(path):
+                path = os.path.join(host_root, path)
+            if key == "config_sha256":
+                path = os.path.join(path, "config")
+            try:
+                with open(path, "rb") as fh:
+                    hashes[key] = hashlib.sha256(fh.read()).hexdigest()
+            except FileNotFoundError:
+                if key == "config_sha256":
+                    raise
+                hashes[key] = None  # absence is part of the worktree snapshot
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            errors.append(f"{key}: {exc}")
+            hashes[key] = None
     return {
-        "config_sha256": cfg_hash,
+        **hashes,
+        "errors": errors,
         "core_bare": _git(host_root, "config", "--get", "core.bare"),
         "remotes": _git(host_root, "remote", "-v"),
         "head_ref": _git(host_root, "symbolic-ref", "-q", "HEAD"),
@@ -294,6 +321,10 @@ def check_host_containment(
     run = _run(cmd, work_root, env, timeout)
     after = host_identity(host_root)
     digest_after, _ = tree_digest(host_root, excludes)
+    if not run["completed"]:
+        reasons.append("command observation incomplete (timeout or launch failure)")
+    if before["errors"] or after["errors"]:
+        reasons.append("host Git metadata could not be read")
     for key in before:
         if before[key] != after[key]:
             reasons.append(f"host {key} changed")
@@ -341,16 +372,19 @@ def check_idempotence_oracle(
     inner = check_idempotence(cmd=cmd, repetitions=max(1, repetitions - 1), cwd=cwd, env=env, timeout=timeout)
     digest_n, _ = tree_digest(cwd, excludes)
     receipts_n = _count_lines(receipts)
+    if not first["completed"]:
+        reasons.append("first command observation incomplete (timeout or launch failure)")
     if not inner.get("passed", False):
         reasons.append("exit code / output digest diverged across repetitions")
     if digest_1 != digest_n:
         reasons.append("tree digest diverged after repeated runs")
     if receipts and receipts_n != receipts_1:
         reasons.append(f"duplicate receipts: {receipts_1} after run 1, {receipts_n} after run {repetitions}")
-    for r in inner.get("results", []) if isinstance(inner.get("results"), list) else []:
-        if isinstance(r, dict) and r.get("rc") != first["rc"]:
-            reasons.append("exit code differs from first run")
-            break
+    if any(rc != first["rc"] for rc in inner["exit_codes"]):
+        reasons.append("exit code differs from first run")
+    first_stdout_hash = hashlib.sha256(first["stdout"].encode()).hexdigest()
+    if any(digest != first_stdout_hash for digest in inner["stdout_hashes"]):
+        reasons.append("output digest differs from first run")
     return {
         "oracle": "idempotence",
         "passed": not reasons,
@@ -610,4 +644,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        with cancellation_signals():
+            sys.exit(main())
+    except Cancelled as exc:
+        sys.exit(128 + exc.signum)

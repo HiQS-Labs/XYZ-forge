@@ -1,0 +1,32 @@
+RELEASES check:
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1523 (DB <-> dump)
+OK: receipt chain intact (1705 receipt(s), business-state digest matches, 174 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 13 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))
+
+pdda issue-doc-sync:
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md:1 issue #396 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md PROJECT/3-COMPLETED/GH-396-HARNESS-ROOT-RESOLVER.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 issue #648 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md PROJECT/3-COMPLETED/CAPTURE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md:1 issue #807 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md PROJECT/3-COMPLETED/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md:1 issue #886 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md PROJECT/3-COMPLETED/GH-886-LINUX-PORTABILITY-CANARY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-consumer.md PROJECT/3-COMPLETED/recon-flightdeck-consumer.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md PROJECT/3-COMPLETED/recon-flightdeck-issue-visibility.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-session-context.md PROJECT/3-COMPLETED/recon-flightdeck-session-context.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 issue #496 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md PROJECT/3-COMPLETED/recon-gh496-merge-churn-and-telemetry.md
+WARN [pdda-check-issue-doc-sync] releases.db issue #396 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #589 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #644 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #690 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #807 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #886 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=14 info=0

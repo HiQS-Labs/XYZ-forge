@@ -1,0 +1,4 @@
+marathon: run log: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual/group/relay-system/run-logs/2026-10-09/marathon-MARATHON_-085339-80217.log
+marathon: plan: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual/group/MARATHON.yaml — 2 phase(s) in execution order
+marathon: progress observation: interval=1s count=6 window=6s; stdout/run-log only
+marathon: ── phase 1/2: p1 (reviewer=codex, round-cap=3) ──

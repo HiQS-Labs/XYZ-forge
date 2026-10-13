@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/manual-hook-check.py", line 40, in <module>
+    if expected: wording(got['stdout'])
+                 ~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/manual-hook-check.py", line 32, in wording
+    assert 'external blocker' in reason.split('Stop only',1)[1].split('[-]',1)[0], 'Stop-only clause omits external blocker'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Stop-only clause omits external blocker

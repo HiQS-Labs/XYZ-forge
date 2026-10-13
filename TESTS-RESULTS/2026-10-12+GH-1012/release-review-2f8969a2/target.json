@@ -1,0 +1,17 @@
+{
+  "captured_utc": "2026-10-12T20:21:06.716700+00:00",
+  "head": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+  "base": "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+  "commits": 357,
+  "changed_paths": 2082,
+  "full_regression": "validate.sh --sequential",
+  "reason": "existing full registry; avoids npm installation; dependencies copied from existing installed tree into disposable clone",
+  "exclusions": {
+    "954": "operator deferred",
+    "1024": "operator deferred",
+    "930": "held",
+    "1033": "separate"
+  },
+  "canonical_updates_authorized": false,
+  "main_merge_authorized": false
+}

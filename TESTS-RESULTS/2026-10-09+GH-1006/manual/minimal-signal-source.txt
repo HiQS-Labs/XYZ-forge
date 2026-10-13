@@ -1,0 +1,12 @@
+# Executed in disposable clone; only this probe's owned process groups are signalled.
+import subprocess, os, signal, time
+for name, protect, group in [('parent-control',False,False),('group-red',False,True),('group-disproof',True,True)]:
+    logger = "trap '' INT TERM; " if protect else ''
+    code = "exec > >(" + logger + "tee -a temp/gh1006-manual/minimal.log) 2>&1\ntrap 'sleep 0.05; echo cancelled; exit 143' TERM\necho ready\nsleep 10 &\nwait $!\n"
+    with open('temp/gh1006-manual/minimal-'+name+'.log','w') as f:
+        p = subprocess.Popen(['bash','-c',code],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+        time.sleep(.1)
+        os.killpg(p.pid,signal.SIGTERM) if group else os.kill(p.pid,signal.SIGTERM)
+        print(name,p.wait(timeout=2))
+        try: os.killpg(p.pid,signal.SIGKILL)
+        except ProcessLookupError: pass

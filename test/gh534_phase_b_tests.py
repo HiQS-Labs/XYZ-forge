@@ -75,7 +75,7 @@ def view(st, pr):
     git(st["probe"], "fetch", "-q", "origin")
     head = git(st["probe"], "rev-parse", "origin/" + pr["headRefName"]).stdout.strip() if pr["state"] == "OPEN" else pr.get("headRefOid")
     d = {"number": pr["number"], "state": pr["state"], "headRefName": pr["headRefName"], "baseRefName": st["base"],
-         "labels": [{"name": l} for l in pr.get("labels", [])], "headRefOid": head or pr.get("headRefOid"),
+         "isDraft": pr.get("isDraft", False), "labels": [{"name": l} for l in pr.get("labels", [])], "headRefOid": head or pr.get("headRefOid"),
          "mergeCommit": ({"oid": pr["mergeCommit"]} if pr.get("mergeCommit") else None),
          "url": f"https://example.invalid/pr/{pr['number']}", "title": f"PR {pr['number']}", "body": pr.get("body", ""),
          "files": pr.get("files", []), "createdAt": f"2026-09-01T0{pr['number'] % 10}:00:00Z", "statusCheckRollup": []}

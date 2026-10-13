@@ -1,0 +1,54 @@
+[
+  {
+    "check": "actual whole-window suspension N=6",
+    "passed": true
+  },
+  {
+    "check": "actual whole-window suspension N=18",
+    "passed": true
+  },
+  {
+    "check": "whole-second current heartbeat accepted only as liveness",
+    "passed": true
+  },
+  {
+    "check": "foreign heartbeat updated_utc unknown",
+    "passed": true
+  },
+  {
+    "check": "foreign heartbeat started_utc unknown",
+    "passed": true
+  },
+  {
+    "check": "foreign heartbeat pid unknown",
+    "passed": true
+  },
+  {
+    "check": "foreign heartbeat phase_id unknown",
+    "passed": true
+  },
+  {
+    "check": "foreign heartbeat relay_task unknown",
+    "passed": true
+  },
+  {
+    "check": "foreign heartbeat started_utc unknown",
+    "passed": true
+  },
+  {
+    "check": "foreign heartbeat updated_utc unknown",
+    "passed": true
+  },
+  {
+    "check": "oversize input bounded and unknown",
+    "passed": true
+  },
+  {
+    "check": "same candidate twice is one product milestone",
+    "passed": true
+  },
+  {
+    "check": "observer leaves context/receipt/relay bytes intact",
+    "passed": true
+  }
+]

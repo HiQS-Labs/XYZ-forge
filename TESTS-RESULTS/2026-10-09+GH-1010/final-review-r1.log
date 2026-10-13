@@ -1,0 +1,24 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-merge-history-policy (#129)
+codex-turn: worktree isolation ON (/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T//rtl-wt.KzhRow)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/rtl-wt.KzhRow) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-merge-history-policy/relay-system/2026-10-09/gh1010-final.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token RELAY-gh1010-final left as-is (set RELAY_PEER for auto-handoff)
+relay-drive: review-once — reviewer completed a turn (review block appended; STATUS: Open); non-approval handback, not a stall
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1m 19s
+per done-task: ≥0 tokens, 1m 19s wall-clock
+  turn peak RSS: codex: 303MB peak RSS
+

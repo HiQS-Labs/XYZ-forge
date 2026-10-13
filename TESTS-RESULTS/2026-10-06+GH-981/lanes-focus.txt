@@ -1,0 +1,6 @@
+						57 toggle button ↳ Review the next handoff XYZ Forge · Codex Observed 4m ago, Value: on
+						58 toggle button ↳ Check the containment boundary XYZ Forge · Agy Observed 12m ago, Value: off
+						59 toggle button ↳ Trace the next-action source Rebalance · Codex Observed 23m ago, Value: off
+The focused UI element is 57 toggle button ↳ Review the next handoff XYZ Forge · Codex Observed 4m ago, Value: on
+Timed browser check interrupted: user switched Safari to another window; no timer-focus verdict claimed.
+

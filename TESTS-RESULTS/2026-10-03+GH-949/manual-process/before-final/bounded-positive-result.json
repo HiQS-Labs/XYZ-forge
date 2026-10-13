@@ -1,0 +1,1 @@
+{"normal": {"rc": 0, "stdout": "123\n", "stderr": "", "timed_out": false, "pgid": 25291, "wall_seconds": 0.028134958003647625}, "own124": {"rc": 124, "stdout": "", "stderr": "", "timed_out": false, "pgid": 25331, "wall_seconds": 0.02823416597675532}, "timeout": {"rc": null, "stdout": "", "stderr": "", "timed_out": true, "pgid": 25364, "wall_seconds": 0.3072113749803975}}

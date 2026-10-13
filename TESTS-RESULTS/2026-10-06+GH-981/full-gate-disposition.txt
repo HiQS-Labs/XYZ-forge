@@ -1,0 +1,1 @@
+Stopped at operator request: additive spike; full suite deferred until merge. This interrupted run is not qualifying evidence. Captured gate root and fixture-owned process identities before signalling; no preview or peer process was signalled.

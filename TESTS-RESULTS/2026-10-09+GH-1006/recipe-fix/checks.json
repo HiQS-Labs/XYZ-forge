@@ -1,0 +1,124 @@
+[
+  {
+    "source": "relay-automation/README.md",
+    "worker": "codex",
+    "inherited": null,
+    "reviewer": "codex",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "codex",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "codex",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "agy",
+    "inherited": null,
+    "reviewer": "agy",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "agy",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "agy",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "pi",
+    "inherited": null,
+    "reviewer": "pi",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "pi",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "pi",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "codex",
+    "inherited": null,
+    "reviewer": "codex",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "codex",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "codex",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "agy",
+    "inherited": null,
+    "reviewer": "agy",
+    "exit_code": 0
+  },
+  {
+    "source": "relay-automation/README.md",
+    "worker": "agy",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "agy",
+    "exit_code": 0
+  },
+  {
+    "source": "skills/1-hourly/relay-xyz/SKILL.md",
+    "worker": "codex",
+    "inherited": null,
+    "reviewer": "codex",
+    "exit_code": 0
+  },
+  {
+    "source": "skills/1-hourly/relay-xyz/SKILL.md",
+    "worker": "codex",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "codex",
+    "exit_code": 0
+  },
+  {
+    "source": "skills/1-hourly/relay-xyz/SKILL.md",
+    "worker": "agy",
+    "inherited": null,
+    "reviewer": "agy",
+    "exit_code": 0
+  },
+  {
+    "source": "skills/1-hourly/relay-xyz/SKILL.md",
+    "worker": "agy",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "agy",
+    "exit_code": 0
+  },
+  {
+    "source": "skills/1-hourly/relay-xyz/SKILL.md",
+    "worker": "commandcode",
+    "inherited": null,
+    "reviewer": "commandcode",
+    "exit_code": 0
+  },
+  {
+    "source": "skills/1-hourly/relay-xyz/SKILL.md",
+    "worker": "commandcode",
+    "inherited": "wrong-inherited-actor",
+    "reviewer": "commandcode",
+    "exit_code": 0
+  },
+  {
+    "red_control": "old inline env assignment expansion",
+    "output": "reviewer_arg=<>",
+    "expected_corrected": "reviewer_arg=<codex>",
+    "fails_corrected_expectation": true
+  },
+  {
+    "check": "suite instructions in disposable full clone",
+    "passed": true
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "utc": "2026-10-05T05:40:14.791900+00:00",
+  "reviewed_sha": "157bf05afaff4884fd4053938823065c0a74f6dd",
+  "gated_sha": "9e7eaddc63e58d16cdceddb7477f3e4a421ac786",
+  "runtime_files": {
+    "utils/py/proc_group.py": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+    "utils/py/domain_oracles.py": "78c7d01ac9ac3ead91e4c7be0195150b00e3aa14a600bfd7abc5d46ec945f672",
+    "utils/py/metamorphic_oracle.py": "9048a6cb7cc1bda762cbcbc5d11a7724e617d9f6bb234e8b587692c1342c115d",
+    "utils/ate/scripts/run_variations.py": "7270edcd2cebaf4418afbbc3779acf9642a04d7fca12d548474a694e11a57ae5",
+    "skills/1-hourly/relay-xyz/find-harness.sh": "c63e7535b2ba44ee8ccfb136a7c0e35b71a9c4889707a73728650f96434cc945",
+    "test/lib/runner-envelope.sh": "1dab97963a9ee988dc0f8731301582cf2eccba3102bb94c4831d46daf659fb42"
+  },
+  "runtime_equal": true,
+  "gate_seconds": 808,
+  "shell_suites": 407,
+  "python_tests": 21,
+  "hosted": {
+    "conclusion": "success",
+    "headSha": "9e7eaddc63e58d16cdceddb7477f3e4a421ac786",
+    "status": "completed",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37268691818"
+  },
+  "releases_check_rc": 0
+}

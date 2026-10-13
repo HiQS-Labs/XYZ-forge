@@ -1,0 +1,18 @@
+{
+  "bare": {
+    "rc": 0,
+    "value": "false"
+  },
+  "remotes": {
+    "rc": 0,
+    "value": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\ntask\t$TASK_CLONE (fetch)\ntask\t$TASK_CLONE (push)"
+  },
+  "email": {
+    "rc": 1,
+    "value": ""
+  },
+  "head": {
+    "rc": 0,
+    "value": "c2bb39ddfbe0c1a8cd9d880cc86632d02e7321a2"
+  }
+}

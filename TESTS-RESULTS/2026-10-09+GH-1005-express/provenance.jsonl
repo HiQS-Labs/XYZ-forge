@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-09T15:26:30.833Z", "commit": "793b0a60fdb2b34c149c640e68e698b964aa296c", "issue": 1005, "case": "express-landing", "gate": "express-suite", "command": "bash test/gh436-merge-cleanup.sh", "rc": 0, "result": "pass", "environment": "express driver, direct development push"}

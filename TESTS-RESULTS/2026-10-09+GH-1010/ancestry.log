@@ -1,0 +1,2 @@
+PASS merge commit retains original feature SHA 4fd9ad9837a740298b98d23b905f653e6e1bd58f
+PASS squash control: identical content, original commit not ancestor

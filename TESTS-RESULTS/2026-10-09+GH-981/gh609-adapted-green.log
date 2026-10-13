@@ -1,0 +1,35 @@
+== test: gh609-sdlc-agent-gaps ==
+  PASS: File size non-empty guard: skills/2-daily/workhorse/SKILL.md (33564 bytes)
+  PASS: File size non-empty guard: skills/1-hourly/start-task/SKILL.md (26841 bytes)
+  PASS: File size non-empty guard: skills/1-hourly/swe/SKILL.md (14569 bytes)
+  PASS: File size non-empty guard: skills/1-hourly/recon/SKILL.md (11864 bytes)
+  PASS: File size non-empty guard: skills/4-occasional/ci-optimize/SKILL.md (17376 bytes)
+  PASS: File size non-empty guard: skills/2-daily/ci-debug/SKILL.md (11294 bytes)
+  PASS: workhorse: satisfies unified contract (durable identity, 4-state recovery, local/remote fence, preservation split, semantic verification)
+  PASS: start-task: satisfies unified contract (resume reconciliation against remote PR and live HEAD, transport drop handling)
+  PASS: swe: satisfies unified contract (conditional online migration, ordering/convergence, safe fallback, retirement guards)
+  PASS: recon: satisfies unified contract (Lane B readers/writers, Lane C async queues/delayed consumers, Lane D tripwires/rollback)
+  PASS: ci-optimize: satisfies unified contract (Principle 13 bounded stress + active quarantine with UTC expiry, Principle 14 workload performance fences)
+  PASS: ci-debug: satisfies unified contract (strictly ordered 4-tier containment ladder preserving worktree safety)
+  PASS: unmodified fixture control: workhorse validator accepts unmodified copy
+  PASS: unmodified fixture control: start-task validator accepts unmodified copy
+  PASS: unmodified fixture control: swe validator accepts unmodified copy
+  PASS: unmodified fixture control: recon validator accepts unmodified copy
+  PASS: unmodified fixture control: ci-optimize validator accepts unmodified copy
+  PASS: unmodified fixture control: ci-debug validator accepts unmodified copy
+  PASS: negative control 1 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 2 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 3 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 4 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 5 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 6 (start-task): mutated fixture properly rejected (reported RED)
+  PASS: negative control 7 (swe): mutated fixture properly rejected (reported RED)
+  PASS: negative control 8 (swe): mutated fixture properly rejected (reported RED)
+  PASS: negative control 9 (recon): mutated fixture properly rejected (reported RED)
+  PASS: negative control 10 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 11 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 12 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 13 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 14 (ci-debug): mutated fixture properly rejected (reported RED)
+  PASS: negative control 15: empty fixture (0 bytes) properly rejected by contract checker
+  gh609-sdlc-agent-gaps: 33 pass, 0 fail

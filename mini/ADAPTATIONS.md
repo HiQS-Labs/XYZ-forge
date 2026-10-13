@@ -45,3 +45,5 @@ kind; `ORIGIN.md` is the kind registry. Adaptations carry upstream debt: park it
 file it, and either re-upstream the change or maintain the fork consciously. Keep the ORIGIN.md
 table in sync when adding or dropping adapted entries — dropping an adapted entry deletes the
 child files on the next publication.
+
+Publication ownership survives complete child-side deletion through trailing-slash adapted-root markers in `MANIFEST.txt`. These rows are metadata, not payload files; dropping an upstream adapted entry removes its marker.

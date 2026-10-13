@@ -1,0 +1,8 @@
+SCHEMA_AND_DEALIAS_OK
+  PASS: checkin renders the category group
+  PASS: checkin summary carries the derived causes
+  PASS: exit-class severity reaches the LOW section (usage-class fail)
+  PASS: derived cause reaches the rollup signature
+  PASS: all five records counted
+  PASS: clean pass skipped via top-level status (no nested status required)
+PASS: gh102-telemetry-schema

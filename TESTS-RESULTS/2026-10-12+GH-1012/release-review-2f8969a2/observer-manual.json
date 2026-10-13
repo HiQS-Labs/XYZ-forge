@@ -1,0 +1,185 @@
+{
+  "source_sha256": "1d0d9fd29e60694ca788e33fdfc54be7736075c1be77e443ffe485ee6f1c8a00",
+  "observations": [
+    {
+      "case": "physical",
+      "verified_phases": 1,
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    },
+    {
+      "case": "absolute-symlink",
+      "verified_phases": 1,
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/logical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/logical"
+    },
+    {
+      "case": "relative-symlink",
+      "verified_phases": 1,
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/logical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/logical"
+    },
+    {
+      "case": "foreign-execution_id",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    },
+    {
+      "case": "foreign-token",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    },
+    {
+      "case": "foreign-schema",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    },
+    {
+      "case": "foreign-phase",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    },
+    {
+      "case": "foreign-lane",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    },
+    {
+      "case": "foreign-target",
+      "verified_phases": 0,
+      "gate": "unknown",
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/other"
+    },
+    {
+      "case": "non-green",
+      "verified_phases": 0,
+      "gate": {
+        "exit": 1,
+        "result": "red"
+      },
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    },
+    {
+      "case": "missing-review",
+      "verified_phases": 0,
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "context_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical",
+      "receipt_path": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/physical"
+    }
+  ],
+  "finite_emissions": [
+    {
+      "check": 1,
+      "count": 2,
+      "kind": "missed-check",
+      "run_id": "1afa45f8b65c419984612f1369800fdb"
+    },
+    {
+      "check": 2,
+      "coordination_root": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w",
+      "count": 2,
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "harness_root": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w",
+      "heartbeat": {
+        "state": "unknown"
+      },
+      "initial_head": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+      "initial_origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "kind": "check",
+      "last_product_milestone": {
+        "candidate": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed_at": "2026-10-12T21:16:14.686535+00:00",
+        "phase": "p1",
+        "result_file": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/absolute-symlink.receipt.json"
+      },
+      "observed_at": "2026-10-12T21:16:14.950601+00:00",
+      "phase": "p1",
+      "phase_index": 1,
+      "plan": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/plan.yaml",
+      "product_root": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/logical",
+      "relay_file": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/phases/p1/RELAY.md",
+      "relay_status": "unknown",
+      "result_file": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/absolute-symlink.receipt.json",
+      "returned_success": 1,
+      "reviewed_candidate": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "role": "unknown",
+      "run_id": "1afa45f8b65c419984612f1369800fdb",
+      "run_log": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/run.log",
+      "total_phases": 1,
+      "verified_phases": 1
+    },
+    {
+      "coordination_root": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w",
+      "execution_status": "continues independently",
+      "gate": {
+        "exit": 0,
+        "result": "green"
+      },
+      "harness_root": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w",
+      "heartbeat": {
+        "state": "unknown"
+      },
+      "initial_head": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+      "initial_origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "kind": "observation-ended",
+      "last_product_milestone": {
+        "candidate": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "observed_at": "2026-10-12T21:16:14.686535+00:00",
+        "phase": "p1",
+        "result_file": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/absolute-symlink.receipt.json"
+      },
+      "next_action": "Inspect this run log or use marathon-detail.sh; no automatic retry",
+      "observed_at": "2026-10-12T21:16:14.950674+00:00",
+      "phase": "p1",
+      "phase_index": 1,
+      "plan": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/plan.yaml",
+      "product_root": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/logical",
+      "relay_file": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/phases/p1/RELAY.md",
+      "relay_status": "unknown",
+      "result_file": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/absolute-symlink.receipt.json",
+      "returned_success": 1,
+      "reviewed_candidate": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "role": "unknown",
+      "run_id": "1afa45f8b65c419984612f1369800fdb",
+      "run_log": "/private/tmp/xyz1012-regression-20261012-2008/temp/gh1015-manual-sd2r0s0w/run.log",
+      "total_phases": 1,
+      "verified_phases": 1
+    }
+  ],
+  "sorted_json_keys": [
+    true,
+    true,
+    true
+  ],
+  "limits": "Synthetic receipts and controlled clock; no provider worker or live product execution."
+}

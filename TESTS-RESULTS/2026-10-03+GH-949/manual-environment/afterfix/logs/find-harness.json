@@ -1,0 +1,70 @@
+{
+  "suite": "test/find-harness.sh",
+  "argv": [
+    "python3",
+    "utils/py/proc_group.py",
+    "--timeout",
+    "150",
+    "--",
+    "bash",
+    "-c",
+    "source test/lib/runner-envelope.sh\nrunner_envelope_begin \"$PWD\" \"afterfix-find-harness\" || exit 80\n[ \"${XYZ_HARNESS+x}\" != x ] || { echo \"ASSERT_FAIL XYZ_HARNESS not scrubbed\"; exit 81; }\n[ \"${XYZ_REPO_ROOT+x}\" != x ] || { echo \"ASSERT_FAIL XYZ_REPO_ROOT not scrubbed\"; exit 82; }\n[ -n \"${XYZ_HARNESS_DB:-}\" ] && [ -f \"$XYZ_HARNESS_DB\" ] || { echo \"ASSERT_FAIL XYZ_HARNESS_DB missing\"; exit 83; }\ncase \"$XYZ_HARNESS_DB\" in \"${TMPDIR:-/tmp}\"/runner-envelope.*/harnesses.db) echo \"ASSERT_PASS selector overrides unset; XYZ_HARNESS_DB preserved in envelope scratch: $XYZ_HARNESS_DB\";; *) echo \"ASSERT_FAIL unexpected XYZ_HARNESS_DB=$XYZ_HARNESS_DB\"; exit 84;; esac\nbash \"test/find-harness.sh\"\nsuite_rc=$?\nrunner_envelope_assert \"$PWD\" \"afterfix-find-harness\"\nassert_rc=$?\npre_scrub_scratch=${RUNNER_ENVELOPE_SCRATCH:-}\npre_scrub_state=${RUNNER_ENVELOPE_STATE:-}\nrunner_envelope_scrub\n[ ! -d \"$pre_scrub_scratch\" ] && [ ! -d \"$pre_scrub_state\" ] || { echo \"ASSERT_FAIL envelope scratch not scrubbed\"; exit 85; }\necho \"ASSERT_PASS envelope scratch/state removed\"\n[ \"$suite_rc\" -eq 0 ] && [ \"$assert_rc\" -eq 0 ]\n"
+  ],
+  "cwd": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+  "ambient_injected": {
+    "XYZ_HARNESS": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+    "XYZ_REPO_ROOT": "/Users/noelsaw/task-clones/ate-remediation-20261003/task"
+  },
+  "started_utc": "2026-10-03T07:20:43+00:00",
+  "ended_utc": "2026-10-03T07:20:50+00:00",
+  "returncode": 0,
+  "output": "runner-envelope: afterfix-find-harness \u2014 harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.xqwls2/harnesses.db), envelope state captured\nASSERT_PASS selector overrides unset; XYZ_HARNESS_DB preserved in envelope scratch: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.xqwls2/harnesses.db\nfind-harness (GH-70 Phase 2):\n  PASS: skill front door searches the user install root\n  PASS: skill front door does not prescribe the CWD-relative command\n  PASS: harness clone: --check exits 0\n  PASS: harness clone: no concurrency warning\n  PASS: foreign no-.xyz: --check still exits 0 (fail-open)\n  PASS: foreign no-.xyz: emits the concurrency warning\n  PASS: foreign no-.xyz: points at xyz-vendor.sh\n  PASS: foreign no-.xyz: hint omits the bogus vendor subcommand\n  PASS: vendored .xyz: --check exits 0\n  PASS: vendored .xyz: no concurrency warning\n  PASS: vendored .xyz: resolves to the local .xyz\n  PASS: case-collision: --check still exits 0 (fail-open)\n  PASS: case-collision: emits the advisory warning\n  PASS: case-collision: names both colliding paths\n  PASS: case-collision: explains the exit-6 risk + git mv remedy\n  PASS: vendored collision: --check exits 0\n  PASS: vendored collision: emits the case-collision warning\n  PASS: vendored collision: names both colliding paths\n  PASS: vendored collision: stays scoped to caller repo\n  PASS: no-collision: --check exits 0\n  PASS: no-collision: case-collision warning absent\n  PASS: ignorecase=false collision: --check exits 0\n  PASS: ignorecase=false collision: warning absent\n  PASS: copied skill gives an actionable no-candidate failure\n  PASS: similarly named task clone cannot win discovery\n  PASS: wrong-origin XYZ-forge cannot win discovery\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GH Repos/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GH Repos/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GitHub/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GitHub/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GitHub Repos/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GitHub Repos/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GitHub-Repos/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GitHub-Repos/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/Github/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/Github/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/XYZ-forge\n  PASS: no-candidate diagnostic lists /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Developer/XYZ-forge\n  PASS: copied skill searches /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Developer/XYZ-forge\n  PASS: equally qualified clones cause a named refusal\n  PASS: unique development clone wins\nfind-harness: HARNESS=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GH Repos/XYZ-forge REPO_ROOT=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/find-harness.SDMyZ1/gh856-home/Documents/GH Repos/XYZ-forge vendored=0 via=override\n  PASS: --check config hint writes the chosen path\n  PASS: copied skill resolves the saved config\n  PASS: copied skill --env exports usable harness, repo root, and tick\n  PASS: copied skill warns on a non-development branch\n  PASS: invalid config falls through to canonical search\n  PASS: copied skill reports held lock and cached-upstream lag\n  PASS: dead holder is reported as a stale lock\n  PASS: copied skill compares vendored drift with configured live harness\n  find-harness: 50 pass, 0 fail\nrunner-envelope: clean \u2014 identity, tracked tree, worktrees, and driver lock unchanged under afterfix-find-harness\nASSERT_PASS envelope scratch/state removed\n",
+  "identity_before": {
+    "verify": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "development",
+      "status": "",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/development",
+      "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+    },
+    "task": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "fix/gh949-ate-remediation",
+      "status": "",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+    }
+  },
+  "identity_after": {
+    "verify": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/verify",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "development",
+      "status": "",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/verify\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/development",
+      "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+    },
+    "task": {
+      "path": "/Users/noelsaw/task-clones/ate-remediation-20261003/task",
+      "head": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+      "branch": "fix/gh949-ate-remediation",
+      "status": "",
+      "core_bare": "false",
+      "remotes": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "user_email": "",
+      "worktrees": "worktree /Users/noelsaw/task-clones/ate-remediation-20261003/task\nHEAD 76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d\nbranch refs/heads/fix/gh949-ate-remediation",
+      "config_sha256": "1c3ead69040f77bfa0e3bfa20b2b95514a01e32b7ec8bef7e78a527724893e0d"
+    }
+  }
+}

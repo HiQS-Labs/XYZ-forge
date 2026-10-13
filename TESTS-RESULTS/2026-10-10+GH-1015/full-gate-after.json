@@ -1,0 +1,13 @@
+{
+  "['rev-parse', 'HEAD']": "039de1044b1efe6b0ed444e08eda76ced1b126d9",
+  "['remote', 'get-url', 'origin']": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "['config', '--get', 'core.bare']": "false",
+  "['config', '--local', '--get', 'user.name']": "",
+  "['config', '--local', '--get', 'user.email']": "",
+  "finished_utc": "2026-10-10T17:11:01.102975+00:00",
+  "source_sha256": {
+    "relay-automation/marathon.sh": "1d0d9fd29e60694ca788e33fdfc54be7736075c1be77e443ffe485ee6f1c8a00",
+    "validate.sh": "b2cb6d1ef04b48f6a6f29e486c92476054fe29c296b21a08ff6ce190a6108dae",
+    "utils/py/marathon_drive.py": "85756ad4d6f35a44b7166f985eb2a5526ef38ffc055b69192f03009ab2e59c4e"
+  }
+}

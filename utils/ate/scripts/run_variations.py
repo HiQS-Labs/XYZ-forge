@@ -48,7 +48,7 @@ import yaml
 # start_new_session + group TERM/grace/KILL on expiry (also used by fuzz_engine.execute
 # and by the test/lib runaway guard's bash seam).
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "py"))
-from proc_group import run_bounded  # noqa: E402
+from proc_group import Cancelled, cancellation_signals, run_bounded  # noqa: E402
 
 # #141 Phase 5 / #146: the no-edit rule is NOT universal — it assumes the target is an EDIT
 # pipeline (the stock Aider grid). On a diagnostic probe (exit-0, no tree change is the expected
@@ -419,7 +419,7 @@ def main():
     aider_openai_api_base = os.environ.get("AIDER_OPENAI_API_BASE")
     aider_openai_api_key = os.environ.get("AIDER_OPENAI_API_KEY", "dummy")
 
-    run_id = f"run-{time.strftime('%Y%m%d%H%M%S')}-{os.getpid()}"
+    run_id = f"run-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}-{os.getpid()}"
 
     # Gate the destructive per-variation reset BEFORE anything runs — refuse the
     # harness repo itself, and refuse a remote-having (real-looking) repo unless
@@ -433,6 +433,9 @@ def main():
 
     grid = yaml.safe_load(Path(args.variations).read_text())
     combos = build_variations(grid)
+    if not combos:
+        print("[run_variations] empty variation grid; refusing to mutate the target", file=sys.stderr)
+        return 2
     # #141 Phase 5 / #146: which no-edit rule the classifier gets. Default true keeps the
     # stock Aider grid byte-compatible; a diagnostic grid declares expects_edits: false so an
     # exit-0 no-change run classifies as pass instead of fail/no_edit.
@@ -454,6 +457,7 @@ def main():
     print(f"[run_variations] {len(combos)} variations queued, "
           f"deadline in {args.minutes} min, logging to {log_path}")
 
+    records_written = 0
     for i, variation in enumerate(itertools.cycle(combos)):
         if time.time() > deadline:
             print("[run_variations] time budget exhausted, stopping.")
@@ -474,12 +478,26 @@ def main():
         else:
             cmd = build_aider_cmd(grid["model"], variation, grid["message"],
                                    openai_api_base=aider_openai_api_base, openai_api_key=aider_openai_api_key)
-        result = run_harness(cmd, args.repo, timeout)
+        stop_rc = None
+        failure_category = None
+        started = time.monotonic()
+        try:
+            result = run_harness(cmd, args.repo, timeout)
+        except (OSError, ValueError, KeyboardInterrupt) as exc:
+            interrupted = isinstance(exc, KeyboardInterrupt)
+            stop_rc = (128 + getattr(exc, "signum", 2)) if interrupted else 127
+            failure_category = "interrupted" if interrupted else "spawn_error"
+            result = {"command": " ".join(cmd), "cmd": cmd, "exit_code": None,
+                      "stdout": "", "stderr": str(exc),
+                      "wall_seconds": round(time.monotonic() - started, 1), "timed_out": False}
         # Deterministic signal: did the harness actually change the tree? Captured
         # before the next iteration's reset wipes it (GH-195 review).
         result["edited"] = detect_edit(args.repo, base_sha, keep_files)
 
-        if result["timed_out"]:
+        if failure_category:
+            classification = {"status": "fail", "severity": "high",
+                              "category": failure_category, "likely_cause": result["stderr"]}
+        elif result["timed_out"]:
             classification = {
                 "status": "fail",
                 "severity": "high",
@@ -531,7 +549,7 @@ def main():
             "run_id": run_id,
             "iteration": i,
             "engine": "ate_variations",
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "variation": variation,
             "status": classification.get("status", "pass" if result.get("exit_code") == 0 else "fail"),
             "duration_ms": duration_ms,
@@ -548,6 +566,10 @@ def main():
         }
         with log_path.open("a") as f:
             f.write(json.dumps(record) + "\n")
+        records_written += 1
+        if stop_rc is not None:
+            print(f"[run_variations] {failure_category}; record preserved in {log_path}", file=sys.stderr)
+            return stop_rc
 
         print(f"[{i}] {variation} -> {classification.get('status')}/"
               f"{classification.get('severity')} ({classification.get('category')})")
@@ -556,6 +578,9 @@ def main():
             print("[run_variations] hit iteration safety cap, stopping.")
             break
 
+    if not records_written:
+        print("[run_variations] no variations attempted in this invocation", file=sys.stderr)
+        return 2
     print("[run_variations] done.")
 
     # #142: propagate the filing outcome — main()'s caller already sys.exit()s on this value,
@@ -570,4 +595,8 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        with cancellation_signals():
+            sys.exit(main())
+    except Cancelled as exc:
+        sys.exit(128 + exc.signum)

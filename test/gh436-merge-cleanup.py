@@ -554,7 +554,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         with mock.patch.object(merge_cleanup, "_sleep") as sleep:
             rc, _, merged, _, _ = self._drive_phase5(
                 ["--primary", str(self.primary), "--execute"], prs=prs,
-                refresh_values=[dict(base, mergeable="UNKNOWN"), dict(base, mergeable="MERGEABLE")])
+                refresh_values=[dict(base, mergeable="UNKNOWN"), dict(base, mergeable="MERGEABLE"),
+                                dict(base, mergeable="MERGEABLE", isDraft=False)])
         self.assertEqual(rc, 0)
         merged.assert_called_once()
         sleep.assert_called_once_with(merge_cleanup.MERGEABLE_POLL_S)

@@ -1,0 +1,3 @@
+PASS first vendoring never copies Forge opt-in
+PASS repeated vendoring preserves target maintainer choice byte-for-byte
+PASS vendored reporter reads target policy, not Forge policy

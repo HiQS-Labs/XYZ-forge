@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/manual-hook-check.py", line 39, in <module>
+    if expected: wording(got['stdout'])
+                 ~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/manual-hook-check.py", line 30, in wording
+    assert term in reason.lower(), 'required guidance absent: '+term
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: required guidance absent: authorized

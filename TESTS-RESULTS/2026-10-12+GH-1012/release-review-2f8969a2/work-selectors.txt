@@ -1,0 +1,1 @@
+work-status production selector: nonempty agreement, quiet work, closure, uncertainty, identity and typed references passed

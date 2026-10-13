@@ -1,0 +1,10 @@
+PASS: dry-run at cap prints attempts 2/2 and PARK forecast
+PASS: dry-run --force at cap prints proceed forecast
+PASS: dry-runs leave attempts bytes and HEAD unchanged
+PASS: live fire at cap exits 8 (rc=8)
+PASS: parked fire adds no commit (HEAD count 2 -> 2)
+PASS: parked fire adds no attempt line (2)
+PASS: inherited LANE_ATTEMPT_COUNTED=1 at cap still exits 8 (rc=8)
+PASS: under-cap fire appends exactly one attempt (now 1, rc=3)
+PASS: forced at-cap fire proceeds (rc=3 != 8) and appends one (now 3)
+cap_order_check: 0 failure(s)

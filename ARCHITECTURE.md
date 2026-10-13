@@ -60,11 +60,11 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [sanity-check](skills/1-hourly/sanity-check/SKILL.md) | Assess whether a claimed problem or blocker is real, consequential, and worth fixing now. |
 | [standup](skills/1-hourly/standup/SKILL.md) | Session-scoped triage — what's open, rotting, or off-plan. |
 | [start-task](skills/1-hourly/start-task/SKILL.md) | Carry one or more issues through governed intake, grounded planning, relay QA, execution, and ready PRs. |
-| [swe](skills/1-hourly/swe/SKILL.md) | Software-engineering governance lens for build/spec/PRD docs. |
+| [swe](skills/1-hourly/swe/SKILL.md) | Surgical planning, implementation, and review balancing safety, security, maintainability, and performance. |
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (16)
+### `2-daily` — A few times a day (17)
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -86,6 +86,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [where-are-we-at](skills/2-daily/where-are-we-at/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
+| [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
 
 ### `3-weekly` — Weekly (14)
 

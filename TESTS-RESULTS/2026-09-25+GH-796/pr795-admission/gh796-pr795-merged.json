@@ -1,0 +1,28 @@
+{
+  "baseRefName": "development",
+  "closingIssuesReferences": [
+    {
+      "id": "I_kwDOT5mrCM8AAAABTBreHQ",
+      "number": 788,
+      "repository": {
+        "id": "R_kgDOT5mrCA",
+        "name": "XYZ-forge",
+        "owner": {
+          "id": "O_kgDOEjwOzw",
+          "login": "HiQS-Labs"
+        }
+      },
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/788"
+    }
+  ],
+  "headRefName": "fix/gh788-python-path-space",
+  "headRefOid": "f1560e48adf1de607c4be64742868115604702ca",
+  "mergeCommit": {
+    "oid": "41c07aa4b6f08adeb125672806ad06f04e21a16d"
+  },
+  "mergedAt": "2026-09-25T05:41:51Z",
+  "number": 795,
+  "state": "MERGED",
+  "title": "fix(gate): suites survive a Python path with a space \u2014 quoted stub launcher, quoted fuzz interpreter, ratchet (GH-788)",
+  "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/795"
+}

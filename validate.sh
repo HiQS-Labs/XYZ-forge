@@ -141,7 +141,7 @@ TESTS=(
   "gh788-python-path-space.sh"    # GH-788 (stub launcher + quoted interpreter survive a spaced Python path; ratchet)
   "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)
   "gh777-inventory-ratchet.sh"  # GH-777 (inventory ratchet: shrink-only script/connect guards)
-  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, expand-contract migrations, containment)
+  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, workload-scoped online migrations, containment)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
@@ -216,18 +216,7 @@ TESTS=(
                                  #   test/marathon.sh's GH-205 cases are the non-regression CONTROL,
                                  #   not the pin — they pass with OR without the probe, which is
                                  #   exactly why this file exists.
-  "gh492-idle-kill.sh"           # GH-492 (a blocked turn is killed on an IDLE threshold, not only at the
-                                 #   wall cap) — 16/0, covering both surfaces: agy-turn.py and consult.py.
-                                 #   The NEGATIVE CONTROLS are the point, because a trigger-happy bound is
-                                 #   worse than the hang it replaces — it kills reviewer turns, and a dead
-                                 #   reviewer turn takes a VERDICT with it. (1) a slow-but-progressing turn
-                                 #   must NOT be killed: measured 0.06s idle vs the blocked turn's 4.09s.
-                                 #   (2) consult scoping is pinned BOTH ways — a hung advisor reads 2.99s
-                                 #   idle scoped to its own pid and 0.14s under the shared parent, so the
-                                 #   case cannot pass on a build where scoping does nothing.
-                                 #   Behavioural mutation (not just a missing symbol): dropping worktree
-                                 #   progress from the idle signal makes the control fail, which is exactly
-                                 #   what a trigger-happy bound looks like.
+  # GH-1006 / AGENTS #802/#853: non-Small gh492 timing flake is retained for manual use.
   "gh432-failed-turn-persist.sh" # GH-432 (a failed turn still reaches rtl_enforce: commit + token handoff; both routes) — 12/0 post-fix, control 5/4 pre-fix
   "gh441-gate-env-contract.sh"   # GH-441 P2 (every driver export is classified scrub-or-pass; custom gates get the same clean env) — 13/0; controls: unhelped gate contaminated, orphaned helper fails loud
   "gh218-synthetic-nested-driver-lock.sh" # GH-218 (synthetic suites must not contend for the harness clone's driver lock: static sweep rejects RELAY_DRIVER_LOCKED=0 on/above any relay_drive/marathon_drive invocation in test/synthetic; dynamic repro holds the real lock dir+live pid and runs gh101 green — the live marathon pre-advance incident shape) — 2/0; negative control: detector flags the pre-fix gh101 line 101

@@ -118,8 +118,15 @@ LIVE_HARNESS_HEAD=""
 VENDORED_STATUS=""
 MAIN_CHECKOUT_VENDORED=""
 VIA=""
-CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness"
+CONFIG_FILE=""
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+  CONFIG_FILE="$XDG_CONFIG_HOME/xyz/harness"
+elif [ -n "${HOME:-}" ]; then
+  CONFIG_FILE="$HOME/.config/xyz/harness"
+fi
 SEARCH_CANDIDATES=("")
+SEARCH_ROOTS=("")
+if [ -n "${HOME:-}" ]; then
 SEARCH_ROOTS=(
   "$HOME/Documents/GH Repos/XYZ-forge"
   "$HOME/Documents/GitHub/XYZ-forge"
@@ -129,6 +136,7 @@ SEARCH_ROOTS=(
   "$HOME/XYZ-forge"
   "$HOME/Developer/XYZ-forge"
 )
+fi
 _read_config() {
   [ -f "$CONFIG_FILE" ] || return 1
   _configured=""
@@ -345,7 +353,7 @@ CODEX_PATH="$(_bin "${CODEX_BIN:-codex}")"
 AGY_PATH="$(_bin "${AGY_BIN:-agy}")"
 # Antigravity installs agy at ~/.local/bin/agy on macOS by default (not on system PATH).
 # Fall back to that well-known location when neither AGY_BIN nor PATH resolves it.
-if [ -z "$AGY_PATH" ] && [ -z "${AGY_BIN:-}" ] && [ -x "$HOME/.local/bin/agy" ]; then
+if [ -z "$AGY_PATH" ] && [ -z "${AGY_BIN:-}" ] && [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/agy" ]; then
   AGY_PATH="$HOME/.local/bin/agy"
 fi
 

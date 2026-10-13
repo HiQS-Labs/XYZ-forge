@@ -1,0 +1,35 @@
+[
+  {
+    "branch": "temp-merge-cleanup-2026-10-09-062ae45f",
+    "sha": "062ae45f01faf73bf78bcc10fcba86cd7d5c2ad7",
+    "file": "marathon-system/p1/RELAY.md",
+    "same_blob_on_current_integration": false,
+    "pending_disposition": true,
+    "integration_sha": "48eb283da4b2d2bda8afc37c6cbe34d0c2b5a48c",
+    "saved_blob": "4572ee56b2240fa05d52a67c608381e2dcc858e1",
+    "integration_blob": "cf6bcd5506600917b7942bc0324e1c1ea2014581",
+    "revisited_at": "2026-10-10T08:20:34.903129+00:00"
+  },
+  {
+    "branch": "temp-merge-cleanup-2026-10-09-8b310626",
+    "sha": "8b310626e2d4d7095390dfb12ca7375990bbc720",
+    "file": "marathon-system/p1/RELAY.md",
+    "same_blob_on_current_integration": false,
+    "pending_disposition": true,
+    "integration_sha": "48eb283da4b2d2bda8afc37c6cbe34d0c2b5a48c",
+    "saved_blob": "4572ee56b2240fa05d52a67c608381e2dcc858e1",
+    "integration_blob": "cf6bcd5506600917b7942bc0324e1c1ea2014581",
+    "revisited_at": "2026-10-10T08:20:35.245260+00:00"
+  },
+  {
+    "branch": "temp-merge-cleanup-2026-10-09-gh1005-qa-962b52db",
+    "sha": "962b52dbb951f176897d5e83ee75353468386cd4",
+    "file": "relay-system/2026-10-09/gh1005-temp-docs.codex.md",
+    "same_blob_on_current_integration": true,
+    "pending_disposition": true,
+    "integration_sha": "48eb283da4b2d2bda8afc37c6cbe34d0c2b5a48c",
+    "saved_blob": "6c423c74a2cea5c3499d01d38e41785375d1b53d",
+    "integration_blob": "6c423c74a2cea5c3499d01d38e41785375d1b53d",
+    "revisited_at": "2026-10-10T08:20:35.545638+00:00"
+  }
+]

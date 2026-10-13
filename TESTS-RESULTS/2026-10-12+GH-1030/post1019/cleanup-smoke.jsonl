@@ -1,0 +1,1 @@
+{"schema_version": "1.0", "issue": 1030, "pr": 1019, "git_sha": "afa2763516ac988ab7d02a424237f9eddd581eed", "kind": "post-merge-cleanup-opt-in-dry-run", "exit_code": 0, "live_merge": false, "summary": "merge-cleanup: [DRY RUN] Would merge PR #1019 via `gh pr merge 1019 --merge --delete-branch`", "source_sha256": "c9c246250f735e29144c9a0712ccee57d068c2540c84e5771a6107e7d173e334"}

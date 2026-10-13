@@ -1,0 +1,18 @@
+{
+  "before": {
+    "head": "6936702661d6f12d6a9a754dc3669302cdc98918",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development"
+  },
+  "after": {
+    "head": "6936702661d6f12d6a9a754dc3669302cdc98918",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development"
+  },
+  "same": true,
+  "push_exit": 0
+}

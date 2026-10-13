@@ -1,0 +1,5 @@
+{
+  "name": "xyz-mod",
+  "version": "0.1.0",
+  "description": "XYZ-forge: /xyz-status prints recent hosted runs, tick claims and marathon/relay drivers with no model turn (read-only, GH-964)"
+}

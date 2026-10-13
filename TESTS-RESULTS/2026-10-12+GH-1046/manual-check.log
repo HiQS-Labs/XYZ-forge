@@ -1,0 +1,98 @@
+# GH-1046 manual check — base d86f647 vs candidate 5b5f7bb, run in disposable full clone XYZ-forge-gh1046-copy-not-link-2026-10-12-verify
+# command: bash gh1046-check.sh <verify-clone> d86f647b245e866f23245211b8d36e4cc49ecc67
+## probe script
+    #!/usr/bin/env bash
+    # GH-1046 manual check: base vs candidate scripts on ONE temp collection.
+    # Usage: gh1046-check.sh <verify-clone> <base-sha> [candidate-bundle-dir]
+    set -u
+    CLONE="$1"; BASE="$2"; CAND="${3:-$CLONE/skills/3-weekly/skills-army-hq}"
+    W="$(mktemp -d "${TMPDIR:-/tmp}/gh1046.XXXXXX")"; [ -d "$W" ] || exit 1; W="$(cd "$W" && pwd -P)"
+    export HOME="$W/home"; mkdir -p "$HOME"; unset XYZ_FORGE_ROOT XYZ_SKILLS_ROOT
+    export PYTHONDONTWRITEBYTECODE=1
+    mkdir -p "$W/base"; git -C "$CLONE" archive "$BASE" skills/3-weekly/skills-army-hq | tar -x -C "$W/base"
+    B="$W/base/skills/3-weekly/skills-army-hq"
+    C="$W/coll"; R="$W/repo"
+    gi() { git -C "$R" -c user.name=F -c user.email=f@example.invalid "$@"; }
+    mk() { mkdir -p "$1"; printf -- '---\nname: %s\ndescription: Fixture %s.\n---\n\nBody %s\n' "$(basename "$1")" "$(basename "$1")" "${2:-1}" > "$1/SKILL.md"; }
+    mkdir -p "$R"; git -C "$R" init -q; mk "$R/skills/sample"; mk "$R/skills/other"; gi add -A; gi commit -qm one
+    I() { python3 -B "$CAND/scripts/intake.py" --root "$C" "$@"; }; S() { python3 -B "$CAND/scripts/sync.py" --root "$C" "$@"; }
+    I --apply init >/dev/null 2>&1 || { echo "FAIL init"; exit 1; }
+    I --apply add "$R/skills/sample" >/dev/null 2>&1 || { echo "FAIL add"; exit 1; }
+    mk "$C/handmade"; I --apply catalog >/dev/null 2>&1 || { echo "FAIL catalog"; exit 1; }
+    mkdir -p "$HOME/.claude/skills" "$HOME/.agents/skills"
+    I --apply targets --id claude --path "$HOME/.claude/skills" >/dev/null 2>&1 || { echo "FAIL target claude"; exit 1; }
+    I --apply targets --id codex --path "$HOME/.agents/skills" >/dev/null 2>&1 || { echo "FAIL target codex"; exit 1; }
+    S --apply >"$W/setup-sync.log" 2>&1 || { echo "FAIL sync"; cat "$W/setup-sync.log"; exit 1; }
+    I --apply targets --id codex --disable >/dev/null 2>&1 || { echo "FAIL disable"; exit 1; }     # disabled but still linked until sync
+    mk "$R/skills/sample" 2; gi commit -qam two                   # makes the update preview a real change
+    fail=0
+    for side in base cand; do
+      dir="$B"; [ "$side" = cand ] && dir="$CAND"
+      i() { python3 -B "$dir/scripts/intake.py" --root "$C" "$@"; }; s() { python3 -B "$dir/scripts/sync.py" --root "$C" "$@"; }
+      i list                          >"$W/$side.list.out" 2>"$W/$side.list.err"; echo "$side list rc=$?"
+      s --status                      >"$W/$side.status.out" 2>"$W/$side.status.err"; echo "$side status rc=$?"
+      i add "$R/skills/other"         >"$W/$side.add.out" 2>"$W/$side.add.err"; echo "$side add-preview rc=$?"
+      i update sample                 >"$W/$side.update.out" 2>"$W/$side.update.err"; echo "$side update-preview rc=$?"
+    done
+    for k in list status add update; do
+      [ -s "$W/base.$k.out" ] || { echo "FAIL $k: empty base stdout"; fail=1; }
+      if cmp -s "$W/base.$k.out" "$W/cand.$k.out"; then echo "PASS $k stdout byte-identical ($(wc -c <"$W/cand.$k.out") bytes)"
+      else echo "FAIL $k stdout differs"; fail=1; fi
+    done
+    want() { if grep -qF -- "$2" "$W/cand.$1.err"; then echo "PASS $1 stderr has: $2"; else echo "FAIL $1 stderr lacks: $2"; fail=1; fi; }
+    for k in list status; do
+      want $k "Each skill is a physical COPY"
+      want $k "sample: copy at $C/sample (recorded source $R/skills/sample @ "
+      want $k "linked from: claude, codex (disabled)"
+      want $k "handmade: copy at $C/handmade (recorded source manual/unadopted @ unknown)"
+      want $k "skills-army-hq: copy at $C/skills-army-hq (recorded source $CAND @ unknown)"
+    done
+    want add "will COPY $R/skills/other @ "
+    want update "will COPY $R/skills/sample @ "
+    for k in list status add update; do
+      if grep -q 'COPY\|copy at' "$W/base.$k.err"; then echo "FAIL base $k already had copy text"; fail=1; fi
+    done
+    echo "--- candidate list stderr ---"; cat "$W/cand.list.err"
+    echo "--- candidate status stderr ---"; cat "$W/cand.status.err"
+    echo "--- candidate add/update stderr ---"; cat "$W/cand.add.err" "$W/cand.update.err"
+    echo "RESULT fail=$fail workdir=$W"; exit $fail
+## output
+base list rc=0
+base status rc=0
+base add-preview rc=0
+base update-preview rc=0
+cand list rc=0
+cand status rc=0
+cand add-preview rc=0
+cand update-preview rc=0
+PASS list stdout byte-identical (    3167 bytes)
+PASS status stdout byte-identical (    1104 bytes)
+PASS add stdout byte-identical (     286 bytes)
+PASS update stdout byte-identical (     353 bytes)
+PASS list stderr has: Each skill is a physical COPY
+PASS list stderr has: sample: copy at $W/coll/sample (recorded source $W/repo/skills/sample @ 
+PASS list stderr has: linked from: claude, codex (disabled)
+PASS list stderr has: handmade: copy at $W/coll/handmade (recorded source manual/unadopted @ unknown)
+PASS list stderr has: skills-army-hq: copy at $W/coll/skills-army-hq (recorded source ~/Documents/GH Repos/XYZ-forge-gh1046-copy-not-link-2026-10-12-verify/skills/3-weekly/skills-army-hq @ unknown)
+PASS status stderr has: Each skill is a physical COPY
+PASS status stderr has: sample: copy at $W/coll/sample (recorded source $W/repo/skills/sample @ 
+PASS status stderr has: linked from: claude, codex (disabled)
+PASS status stderr has: handmade: copy at $W/coll/handmade (recorded source manual/unadopted @ unknown)
+PASS status stderr has: skills-army-hq: copy at $W/coll/skills-army-hq (recorded source ~/Documents/GH Repos/XYZ-forge-gh1046-copy-not-link-2026-10-12-verify/skills/3-weekly/skills-army-hq @ unknown)
+PASS add stderr has: will COPY $W/repo/skills/other @ 
+PASS update stderr has: will COPY $W/repo/skills/sample @ 
+--- candidate list stderr ---
+Each skill is a physical COPY in the collection; app roots symlink to that copy, never to the source. The source may be deleted after intake; refresh with: update NAME --source <newer checkout>. Sync withdraws links left in targets removed from config.
+handmade: copy at $W/coll/handmade (recorded source manual/unadopted @ unknown); linked from: claude, codex (disabled)
+sample: copy at $W/coll/sample (recorded source $W/repo/skills/sample @ 8567c2ed04ef); linked from: claude, codex (disabled)
+skills-army-hq: copy at $W/coll/skills-army-hq (recorded source ~/Documents/GH Repos/XYZ-forge-gh1046-copy-not-link-2026-10-12-verify/skills/3-weekly/skills-army-hq @ unknown); linked from: claude, codex (disabled)
+--- candidate status stderr ---
+skills-army-hq sync: WARN drift check skipped: no canonical XYZ-forge root resolved (set --canonical, XYZ_FORGE_ROOT, or targets.json "canonical")
+Each skill is a physical COPY in the collection; app roots symlink to that copy, never to the source. The source may be deleted after intake; refresh with: update NAME --source <newer checkout>. Sync withdraws links left in targets removed from config.
+handmade: copy at $W/coll/handmade (recorded source manual/unadopted @ unknown); linked from: claude, codex (disabled)
+sample: copy at $W/coll/sample (recorded source $W/repo/skills/sample @ 8567c2ed04ef); linked from: claude, codex (disabled)
+skills-army-hq: copy at $W/coll/skills-army-hq (recorded source ~/Documents/GH Repos/XYZ-forge-gh1046-copy-not-link-2026-10-12-verify/skills/3-weekly/skills-army-hq @ unknown); linked from: claude, codex (disabled)
+--- candidate add/update stderr ---
+skills-army-hq: will COPY $W/repo/skills/other @ cac35b076a67 into $W/coll/other; apps link to that copy, not to the source
+skills-army-hq: will COPY $W/repo/skills/sample @ cac35b076a67 into $W/coll/sample; apps link to that copy, not to the source
+RESULT fail=0 workdir=$W

@@ -1,0 +1,15 @@
+snapshot failed
+Traceback (most recent call last):
+  File "$GATE_CLONE/src/flightdeck/server.py", line 46, in do_GET
+    body = self.server.aggregator.snapshot()  # type: ignore[attr-defined]
+  File "$GATE_CLONE/temp/gh981/manual-boundary.py", line 38, in <lambda>
+    pair[0].aggregator.snapshot=lambda:(_ for _ in ()).throw(RuntimeError('deliberate fixture failure'))
+  File "$GATE_CLONE/temp/gh981/manual-boundary.py", line 38, in <genexpr>
+    pair[0].aggregator.snapshot=lambda:(_ for _ in ()).throw(RuntimeError('deliberate fixture failure'))
+RuntimeError: deliberate fixture failure
+PASS demo disabled snapshot; finite assets; loopback bind; host rejection; shared security headers
+PASS explicit live snapshot with existing fixture projection; nonempty source artifacts byte-unchanged
+PASS actual server failure returns bounded 503
+EXPECTED RED source immutability assertion rejected a deliberately modified disposable fixture: source bytes changed
+PASS restored disposable fixture passes same assertion
+PASS upstream license is byte-identical

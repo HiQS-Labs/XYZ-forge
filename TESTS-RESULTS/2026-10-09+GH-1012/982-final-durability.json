@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-10T06:54:46.712447+00:00",
+  "witnessed_merge": "3c829e0de674914725603981fb7069c2ff041228",
+  "original_witness_log": "resume-982.log",
+  "reconcile_rc": 0,
+  "closing_issue": 981,
+  "events_emitted": 1,
+  "before": "b8802f5c5464278978256712b7454f5bb4b963f9",
+  "after": "3986ee0fa042e47089076ea49246abad7bdc6c5f",
+  "changed_paths": [
+    " M releases.db",
+    " M releases.sql"
+  ],
+  "primary_clean_equal_origin": true,
+  "git_receipts": "982-durability-git-receipts.json"
+}

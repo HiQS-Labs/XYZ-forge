@@ -1,0 +1,20 @@
+== test: marathon-monitor ==
+  PASS: LIVE: clone with .git/relay-driver.lock + live pid -> LIVE
+  PASS: STALE: vendored .relay-driver.lock + dead pid (999999) -> STALE
+  PASS: IDLE: no lock + marathon.complete event -> IDLE
+  PASS: GONE: deleted path -> GONE
+  PASS: header row starts with REPO
+  PASS: LIVE pid column matches our PID (32342)
+  PASS: LIVE fixture has .git/relay-driver.lock (clone path)
+  PASS: STALE fixture has no .git/ (vendored path)
+  PASS: STALE fixture has .relay-driver.lock (vendored path)
+  PASS: GH-484: new default — RELAY-FILE resolves under marathon-system/
+  PASS: GH-484: legacy fallback — a pre-flip / not-yet-re-synced repo stays visible
+  PASS: GH-484: both populations present — the NEWER file wins regardless of which dir it is in
+  PASS: GH-484: marathon-detail.sh finds the legacy relay file too
+  PASS: syntax OK: marathon-ls.sh
+  PASS: syntax OK: marathon-detail.sh
+  PASS: syntax OK: marathon-tui.sh
+  PASS: syntax OK: marathon-monitor.sh
+
+marathon-monitor: 17 pass, 0 fail

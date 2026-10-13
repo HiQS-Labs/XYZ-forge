@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-10T05:58:52.748551+00:00",
+  "source": "https://github.com/HiQS-Labs/HiQS-AI-Resolve-Catalog/blob/main/registry/latest.json",
+  "raw_sha256": "48565121214b9eeb9071a9b38616c1f7666869bfac0880cca39dbb0b75254682",
+  "byte_count": 193891,
+  "keys": [
+    "aliases",
+    "attestations",
+    "bindings",
+    "capturedAt",
+    "claims",
+    "compatibility",
+    "dataRevision",
+    "dispositions",
+    "gateways",
+    "harnesses",
+    "label",
+    "models",
+    "namespace",
+    "recipes",
+    "registryId",
+    "runtimes",
+    "schemaVersion",
+    "services",
+    "trustStatus"
+  ],
+  "top_level_arrays": {
+    "aliases": 0,
+    "attestations": 0,
+    "bindings": 0,
+    "claims": 0,
+    "compatibility": 0,
+    "dispositions": 0,
+    "gateways": 27,
+    "harnesses": 54,
+    "models": 192,
+    "recipes": 3,
+    "runtimes": 37,
+    "services": 27
+  },
+  "nested_arrays": {}
+}

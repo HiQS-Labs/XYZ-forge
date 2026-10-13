@@ -1,0 +1,4 @@
+usage: proc_group.py [-h] [--timeout TIMEOUT] [--grace GRACE]
+                     [--pgid-file PGID_FILE] [--ack-file ACK_FILE]
+                     [--ack-wait ACK_WAIT] [--kill-pgid KILL_PGID]
+proc_group.py: error: --timeout is required unless --kill-pgid is used
