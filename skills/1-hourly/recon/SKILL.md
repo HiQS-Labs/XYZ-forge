@@ -68,13 +68,29 @@ Scale the lane count to the radius, and say which you ran: a two-file change wit
 | Lane | Question it answers | Owns |
 | --- | --- | --- |
 | **A. Entry & call paths** | How does control reach this code? | Callers and entry points — routes, CLI, cron, hooks, event handlers, tests — plus runtime registration, plugin dispatch, reflection, and anything invoked by name from config |
-| **B. State & data** | What reads and writes the state involved? | Read sites and *write* sites, active readers and writers, schema, migrations, caches, serialized formats, database triggers/views/procedures, and whether there is a single write path |
-| **C. Contracts & boundaries** | What crosses a line if this changes? | Public APIs, exported symbols with external consumers, events/queues, background worker queues, delayed/asynchronous consumers, config keys, env vars, feature flags, cross-service and cross-repository consumers |
-| **D. Build, failure & operations** | How is this built, how does it fail, who notices? | Build/CI config and package metadata, generated code and its generator, IaC and deploy manifests, error paths, retries, timeouts, operational tripwires, lock budgets, existing tests covering the subject, logs/metrics/traces, and the reverse-sync rollback path |
+| **B. State & data** | What reads and writes the state involved? | Read sites and *write* sites, active readers and writers, schema, migrations, caches, serialized formats, database triggers/views/procedures, and whether there is a single write path. **Step N+1:** verify whether an active reader, background reconciler, or UI consumer exists for any state or status being written. |
+| **C. Contracts & boundaries** | What crosses a line if this changes? | Public APIs, exported symbols with external consumers, events/queues, background worker queues, delayed/asynchronous consumers, config keys, env vars, feature flags, cross-service and cross-repository consumers. **Step N+1:** verify whether arguments passed into engines/solvers act as constraints (restricting) or generators (creating candidates). |
+| **D. Build, failure & operations** | How is this built, how does it fail, who notices? | Build/CI config and package metadata, generated code and its generator, IaC and deploy manifests, error paths, retries, timeouts, operational tripwires, lock budgets, existing tests covering the subject, logs/metrics/traces, and the reverse-sync rollback path. **Step N+1:** simulate what the enclosing caller or lease manager does on the next scheduled retry when an error is raised or claim held. |
 
 Budget each lane: **read-only, no edits, roughly 8 minutes, report what you found and what the budget cut off.** The budget is a prompt instruction, not a timeout — which is exactly why the report-what-you-cut rule is the part that has to hold. An empty lane is a finding, not a failure. Give every lane the same honesty instruction: *`file:line` for everything claimed; anything inferred, unverified, or graph-only is listed as an unknown, never smoothed into the findings.*
 
 No sub-agent capability? Run the lanes serially in the main context, same budget, same schema — and name in the map which lanes you curtailed and where you stopped. Serial is not licence to go shallow; it is licence to record what you skipped.
+
+## Step 3.5 — Step N+1 Downstream Verification (Default vs Deep)
+
+Recon must never stop at the local mutation site. An LLM agent that stops at the edit site will recommend `status = SENDING` without checking if a polling worker exists, recommend `raise` without checking if a distributed lease manager enters an infinite retry loop, or pass items into a solver without checking if the parameter generates entities instead of constraining them.
+
+### Default Mode: The Three 1-Hop Invariant Checks (Mandatory on Every Seam)
+Every recon touching state, error paths, or solver inputs must trace **exactly one hop downstream**:
+1. **The Consumer Hop (Lane B):** When a change proposes writing or transitioning state $S$ (e.g. status, flags, cache values), verify that an active reader, background reconciler, or UI consumer exists for $S$. If no consumer exists, flag it in the map as an **Incomplete State Machine** (do not leave state orphaned).
+2. **The Retry Hop (Lane D):** When a change proposes raising an exception or holding a claim on failure, trace the enclosing caller and temporal retry mechanism. Does the next scheduled execution cycle (e.g. Celery beat, cron, lease expiration) recover cleanly, or does it trigger an **infinite stuck retry loop** (e.g. retrying RECOVER on an unresolvable ID)?
+3. **The Parameter Role Check (Lane C):** When proposing to pass state or collections into an existing engine or solver (e.g. `compose_calendar(events=...)`), inspect the callee to verify whether the argument acts as a **constraint** (restricts/filters days) or a **generator** (creates new candidate entities), preventing unintentional entity duplication.
+
+### Deep Mode (`recon --deep`): Exhaustive Multi-Hop Simulation & Dataset Auditing
+Triggered explicitly via `recon --deep`, `/recon --deep`, or when analyzing multi-service architecture:
+- **Transitive Call Chains ($N+2, N+3$):** Trace downstream side effects through queues, webhooks, and third-party APIs.
+- **Automated Dataset Parsing:** Programmatically parse non-code datasets (e.g. running scripts to audit every article in a Help JSON/CSV catalog against registered router tables, rather than spot-checking documentation summaries).
+- **Distributed Failure Matrix:** Stress-test behavior under clock skew (DST transitions), worker crashes, network drops, and concurrent lease races.
 
 ## Step 4 — What each lane returns
 
@@ -107,6 +123,10 @@ Commit: <sha> · Mode: <graph+read | grep-only> · Lanes: <which ran>
 ## Contracts
 <name — consumer — breaking-if — where it is declared>
 ## Build, failure and rollback today
+## Step N+1 Downstream Checks
+- Consumer hop: <active reader/poller verified at file:line, or "none (incomplete state machine)">
+- Retry hop: <recovery behavior on next scheduled run verified at file:line, or "infinite loop risk">
+- Parameter role: <callee treats argument as constraint | generator | n/a>
 ## Unknowns
 | Unknown | Why it matters | What would settle it |
 ## Current-state radius, one line
