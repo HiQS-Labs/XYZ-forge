@@ -2,9 +2,9 @@
 gh_issue: 1046
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1046
 title: "skills-army-hq: state plainly that Deployed Skills holds copies (not links to the source) and show provenance per skill"
-status: In Progress
+status: Complete
 created: 2026-10-12
-updated: 2026-10-12
+updated: 2026-10-13
 owner: operator
 goal: "An agent can tell from SKILL.md or one command that Deployed Skills holds copies, where each came from, and which apps link to it."
 doc_type: feedback
