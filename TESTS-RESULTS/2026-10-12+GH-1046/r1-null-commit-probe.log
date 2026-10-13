@@ -1,0 +1,20 @@
+# GH-1046 final-QA R1 probe: copy_line on missing / null / full receipts
+## probe
+    import importlib.util, sys
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location('intake_probe', sys.argv[1])
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    root = Path('/nonexistent/collection')
+    receipt = {'digest':'a'*64, 'prerequisites':[], 'commit':None}
+    m.validate_state(root, {'schema':1,'root':str(root),'collection':'b'*32,'skills':{'sample':receipt},'links':{}})
+    for label, r in (('missing', {}), ('null', receipt), ('full', {'source':'/src/x','commit':'0123456789abcdef0123','dirty':True})):
+        try: print(label, '->', m.copy_line(root, 'sample', r, {'targets':[]}))
+        except Exception as e: print(label, '-> EXC', type(e).__name__, e)
+## pre-fix intake.py (66cd4701)
+missing -> sample: copy at /nonexistent/collection/sample (recorded source manual/unadopted @ unknown); linked from: none
+null -> EXC TypeError 'NoneType' object is not subscriptable
+full -> sample: copy at /nonexistent/collection/sample (recorded source /src/x @ 0123456789ab, dirty); linked from: none
+## fixed intake.py (cba245ae)
+missing -> sample: copy at /nonexistent/collection/sample (recorded source manual/unadopted @ unknown); linked from: none
+null -> sample: copy at /nonexistent/collection/sample (recorded source manual/unadopted @ unknown); linked from: none
+full -> sample: copy at /nonexistent/collection/sample (recorded source /src/x @ 0123456789ab, dirty); linked from: none
