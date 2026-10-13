@@ -1,0 +1,92 @@
+# tier-2 gate: ./validate.sh --paths-file <git diff --no-renames --name-only upstream/development(d86f647) bb2328fe>, disposable full clone XYZ-forge-gh1046-copy-not-link-2026-10-12-verify @ bb2328feb623e4e5c8a2956effcda4ff67096da6, rc=0
+## changed paths
+PROJECT/2-WORKING/GH-1046-COPY-NOT-LINK.md
+TESTS-RESULTS/2026-10-12+GH-1046/manual-check.log
+TESTS-RESULTS/2026-10-12+GH-1046/provenance.jsonl
+TESTS-RESULTS/2026-10-12+GH-1046/r1-null-commit-probe.log
+relay-system/2026-10-12/gh1046-final-qa.md
+relay-system/2026-10-12/gh1046-plan-qa.md
+releases.db
+releases.sql
+skills/3-weekly/skills-army-hq/SKILL.md
+skills/3-weekly/skills-army-hq/scripts/intake.py
+skills/3-weekly/skills-army-hq/scripts/sync.py
+## validate.sh summary (tail)
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.qaGeyl/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+  5 pooled suites + 0 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh620-skills-army-mini-sync.sh rc=0
+[parallel] skills-army-hq.sh rc=0
+[parallel] gh589-consult-no-tick.sh rc=0
+[parallel] gh589-skill-viewer.sh rc=0
+[parallel] gh589-xyz-mini-sync.sh rc=0
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: ~/Documents/GH Repos/XYZ-forge-gh1046-copy-not-link-2026-10-12-verify
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================= 21 passed in 22.43s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 5 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: ~/Documents/GH Repos/XYZ-forge-gh1046-copy-not-link-2026-10-12-verify/.tick/telemetry/validate-parallel-1791863923340-3441.jsonl (8 suite events, 406 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh589-xyz-mini-sync.sh  29.065  0
+  skills-army-hq.sh  23.185  0
+  gh620-skills-army-mini-sync.sh  19.312  0
+  gh589-consult-no-tick.sh  5.922  0
+  gh589-skill-viewer.sh  0.837  0
+re-run ladder: 0 suite(s), 0.000s total
+passed: 9 / 9
+  + tier2:pdda
+  + tier2:static
+  + gh620-skills-army-mini-sync.sh
+  + skills-army-hq.sh
+  + gh589-consult-no-tick.sh
+  + gh589-skill-viewer.sh
+  + gh589-xyz-mini-sync.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+## pdda.sh run (tail), rc=0
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: no errors, 435 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
