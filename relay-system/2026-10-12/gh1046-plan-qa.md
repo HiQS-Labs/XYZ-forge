@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,5 +113,22 @@ Handing off to Producer (claude-a): clarify R1–R3 in the plan and log each dis
 - R3 — **Implemented.** Step 6 adds a base-vs-candidate `cmp` of nonempty stdout for list, status, add preview and changed update preview on one temp collection, separate stderr assertions, an indent-change red control, and runs everything in a disposable full clone.
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: R1–R3 are resolved at plan level. The proposed change satisfies the four stated goals through existing receipt and link machinery, preserves the stdout contract, and specifies falsifiable verification without new tests, state or dependencies. Approval covers the plan, not implementation or runtime results.
+swept file: yes
+
+Re-read the entire plan, SKILL.md, intake.py, sync.py and test/test_deploy_skills.py, plus the named README span, wrapper, routing entries and standalone smoke consumers. No additional pre-existing defect requiring expansion of this clarity change was identified. Graph tools and tool-discovery tools are unavailable in this turn's tool inventory; current source reads were used instead. No graph generation or exhaustive consumer-coverage claim is made.
+
+- **[Pass] R1 resolved — truthful recorded provenance.** Plan `PROJECT/1-INBOX/GH-1046-COPY-NOT-LINK.md:63–70` specifies actual inventory, empty-receipt handling, `manual/unadopted`, `unknown`, and the local-Pulse meaning of adoption receipts. These match `intake.py:213–216`, `:289–301`, `:392–393` and the init/catalog receipt constructors. The summary need not inspect or retain the original checkout.
+- **[Pass] R2 modification accepted — bounded link observation.** Plan `:63–72` reuses the catalog's exact symlink-text predicate (`intake.py:386–390`), checks all configured targets and marks disabled ones. It explicitly excludes removed configuration and requires an explainer about withdrawal of owned links. That is a proportionate alternative to the enabled-only label; reconciliation already handles receipts for removed/disabled targets (`sync.py:117–150`). No new discovery or ownership state is needed.
+- **[Pass] R3 resolved — measurable stdout preservation.** Plan `:79–90` requires nonempty base/candidate byte comparisons on the same collection for all four changed paths, separate stderr assertions, and controls for formatting drift and stdout contamination. `test/test_deploy_skills.py:581`, `:617` and `:622` parse status JSON, while `:62–68` enforces exit status for the list/status calls. The suite's stderr assertions at `:586–587` and `:610` are substring checks; the inspected smoke at `test/gh620-skills-army-mini-sync.sh:192–215` uses exit codes/substrings rather than empty-stderr equality. This supports the stderr-only design within the inspected consumers.
+- **[Pass] Scope, reuse and core requirements remain sound.** Plan `:58–62` covers physical copies, clean merged source checkout, deletion after intake and explicit newer-source updates. `sync.py:17` already imports intake as shared; plan `:63–78` extends that seam and leaves catalog/JSON formats alone. The qualitative rating at `:95–100` is proportionate to the reported incident and small implementation; its recurrence and related-issue history remain reported inputs, not independently verified facts.
+- **[Nit] Recon shorthand is broader than its evidence.** Plan `:40–42` says the test parses “that JSON”; it parses status output, while several list/preview calls check only exit status. The precise acceptance procedure at `:81–90` already closes the gap, so this does not block execution. Also preserve the existing unchanged-update early return (`intake.py:775–776`): no copy is planned there.
+- **[Unverified — needs clone run]** No runtime suite, executable fixture, mutation probe or git command was run. The green suite, red controls, stderr content and byte comparisons must be obtained in the disposable full clone required by plan `:79`, with retained provenance. No runtime success is inferred from source inspection.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the approved plan and its recorded verification requirements.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
