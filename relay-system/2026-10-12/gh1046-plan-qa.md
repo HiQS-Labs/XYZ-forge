@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -76,5 +76,34 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The small stderr-only design is appropriate, but the plan leaves ordinary missing-provenance inputs unspecified, overstates the scope of its link summary, and does not yet establish byte-identical stdout. These need plan clarifications, not new machinery.
+swept file: yes
+
+Reviewed the entire plan, SKILL.md, intake.py, sync.py and test/test_deploy_skills.py, plus the named README, wrapper and routing surfaces. No additional pre-existing defect requiring expansion of this clarity change was identified. Verify-tier graph lookup was attempted: all 84 projects enumerated; this worktree has no index. Nearest `XYZ-forge` index is generation `2026-09-01T15:54:30Z`, a different checkout; symbol search returned zero and coverage marked the skill/test paths `not_tracked` and ci-route `metadata_changed`. Findings therefore use direct current source, not graph completeness claims.
+
+- **[Should] R1 — Specify truthful provenance fallbacks (plan lines 37–39, 63–65).** `source_record` supplies source/commit/dirty for add/update (`intake.py:205`), but plain init creates a manager receipt without commit/dirty (`intake.py:717`), catalog adoption has neither source nor commit (`intake.py:815`), and inventory can include an unadopted skill (`intake.py:289`). Reuse the catalog's existing `manual/unadopted` and `unknown` conventions (`intake.py:398`); iterate actual inventory with an empty-receipt fallback. Describe these as recorded provenance, not a newly verified source revision. `init --adopt-existing` does call source_record (`intake.py:655`), but records the local Pulse collection/revision, not the original author's checkout. Add these cases to the existing manual verification; no new receipt fields.
+  Observed input: the receipt literal at `intake.py:717` has `source` but no `commit`; the `setdefault` literal at `intake.py:817` has neither.
+  Affected scope: per-skill human summaries for initialized, catalog-adopted and unadopted skills.
+  Falsifier: a temp collection with those receipt shapes must list/status successfully with explicit unknown fields; an ordinary imported receipt must still display its recorded source, revision and dirty marker.
+
+- **[Should] R2 — Qualify the link summary's scope (plan lines 63–65).** The proposed helper checks only enabled targets but labels its answer `linked from: ...|none`. Disabling a target changes config without removing its symlinks (`intake.py:797`); later sync withdraws them (`sync.py:117–147`). Thus a disabled-but-still-linked app can be reported as no links. Smallest fix: label the line `linked enabled targets` and state that disabled/removed targets may retain links until sync; preserve the existing catalog predicate and format. No new filesystem discovery is requested.
+  Observed input: the existing sequence at `test/test_deploy_skills.py:374–377` removes/disables target configuration before separately applying sync to clear links.
+  Affected scope: human summaries between target disable/removal and link reconciliation.
+  Falsifier: with an existing matching symlink and its target disabled, the summary must not imply that no app can still read the copy; after sync the link should be absent under existing behavior.
+
+- **[Should] R3 — Make stdout preservation measurable (plan lines 40–42, 73–77).** Existing JSON parsing establishes syntax and selected values, not byte identity. `list` calls at `test/test_deploy_skills.py:171,222,315` discard stdout; add/update previews likewise lack JSON assertions (`:240,322`). Amend the planned manual check to capture nonempty baseline/candidate stdout on the same unchanged temp collection for list, status, add and changed-update previews, compare bytes, and assert expected stderr text separately. Run all suite/red-control work in a disposable full clone, not just the final gate. No test edits required.
+  Observed input: `test/test_deploy_skills.py:62–68` checks return code only; the list calls above do not inspect its returned output.
+  Affected scope: the stated byte-identical stdout acceptance criterion across the four changed command paths.
+  Falsifier: changing only JSON indentation must fail the manual byte comparison even though json.loads succeeds; a stdout human line must also fail it.
+
+- **[Pass] Reuse, core requirements and rating scale are proportionate.** Plan lines 58–62 cover copy/link, disposable clean merged checkout, and explicit newer-source update. `sync.py:17` already imports intake as shared, and `intake.py:379–399` owns catalog link rendering, so the shared helper is the right seam. The qualitative `55/40/50/85` rationale (plan lines 81–86) fits the reported single confusion incident and small scope; recurrence and related-issue history were not independently queried.
+- **[Pass] A status stdout red control has an existing consumer.** `test/test_deploy_skills.py:581,617,622` explicitly json.loads `--status` stdout. Use that named test/path for the existing-suite red control; do not claim a list-only mutation is covered. Existing stderr checks use substring assertions (`:586–587,610`), not empty-stderr equality; the wrapper runs this file (`test/skills-army-hq.sh:16`). The inspected standalone smoke reads exit codes/substrings (`test/gh620-skills-army-mini-sync.sh:192–215`), not exclusively JSON, which also narrows the Recon wording. No empty-stderr dependency was found in these inspected consumers.
+- **[Unverified — needs clone run]** No suite, executable fixture, mutation probe or git command was run. Runtime green/red sensitivity and stdout comparisons remain implementation evidence to obtain; this is plan QA only.
+
+Handing off to Producer (claude-a): clarify R1–R3 in the plan and log each disposition; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
