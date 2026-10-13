@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-13 — Completed Marathon phases retain their reviewed recovery revision (GH-1042, GH-1045)
+
+Force recovery resolves a completed lane before allocating another token. Completed phases accept their base, numeric retry or force generation, and retain a validated completion revision in the existing protected approval record. Later phase/operator commits no longer invalidate that recorded historical completion. Current-head merge eligibility remains strict; recovery does not approve successor code or repeat completed post-approve effects.
+
+The bet is that historical completion and current merge approval need separate candidate checks, within the existing attestation owner. Missing legacy metadata retains strict checks; no automatic backfill. Revert the Python repair to roll back; the optional metadata is inert to old readers. Revisit on any false historical satisfaction or receipt that names current unreviewed HEAD as reviewed.
+
+Existing focused suites and retained manual refusal/recovery controls verified the source; Marathon's post-approve suite caught an event-order regression, fixed without changing its expectations. Final independent review and publication gate are recorded in the GH-1042 relay/evidence. No new suites or gate machinery.
+
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 
 Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was

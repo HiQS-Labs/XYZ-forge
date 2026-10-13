@@ -1,6 +1,6 @@
 ---
 title: "GH-1042 + GH-1045: trusted phase completion recovery"
-status: In progress — plan QA approved
+status: Implemented — final QA and publication gate pending
 created: 2026-10-13
 updated: 2026-10-13
 owner: Codex
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Implement approved plan and verify recovery controls. |
+| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Final independent QA, full push gate and PR publication. |
 
 ## Scope and per-issue acceptance
 
@@ -74,3 +74,9 @@ Plan QA: Approved, third round, relay driver exit0; earlier two scaffold-invalid
 ## Ratings and recurrence (2026-10-13)
 
 Read-back RELEASES scores: GH1042 80/80/50/65 (sum275), GH1045 85/85/50/40 (sum260), no operator override. Severity reflects repeated unnecessary rebuilds and a recoverable work-blocking halt, not irreversible data loss. Priority respects user's explicit selection. Appeal neutral50; combined design makes GH1045 harder than token-only GH1042. Last14days (Sep30–Oct13) evidence is the same GH750 marathon, two force incidents and a broader base-token retry incident in its issue update; these are concrete examples, not independent user prevalence. Prior14days (Sep16–29) trend is unknown; no growth claim is made. GitHub search is bounded and duplicate reports are not counted as independent incidents.
+
+## Implementation checkpoint
+
+Source at 7128b496 implements the approved plan. Existing post-approve hooks revealed an event-timing regression at 0275a7a0; corrected by preserving the approval event before the hook while stamping completion only after final validation. Existing marathon-drive suite then passed. Manual recovery/refusal controls and two-phase shell traversal all passed, with exact raw records and provenance under TESTS-RESULTS/2026-10-13+GH-1042/.
+
+Plan QA completed with driver exit0 on round3. Round1 and round2 were structurally rejected due to the producer's scaffold/skill-runtime verdict mismatch; retained in the relay, not counted as approvals. Final QA and full route3 publication gate remain pending; this task is not shipped.
