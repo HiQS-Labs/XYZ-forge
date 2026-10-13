@@ -88,3 +88,11 @@ swept file: yes
 - [Unverified — needs clone run] Final full publication gate remains pending. This verdict approves the reviewed implementation for that next gate, not publication/merge readiness. Runtime behavior was assessed from retained producer evidence rather than independently rerun during this turn.
 
 Commit: none
+
+### Attestation · relay-drive — 2026-10-13T16:03:13Z
+task: RELAY-GH1042-FINAL-20261013-2
+reviewer: codex
+status: Approved
+reviewed-head: c98e12017fdf894a1ddd72e708ba50ca73fc2154
+added-range: 9915+5381
+added-sha256: 6d0b5287bdc959761411cc6ad14355d75604c02273163e476b3cc3509620582d
